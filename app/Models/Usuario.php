@@ -1,0 +1,27 @@
+<?php
+namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+
+class Usuario extends Model
+{
+    protected $table = 'tb_usuarios';
+
+    protected $fillable = [
+        'id',
+        'nombre',
+        'email',
+        'usuario',
+        'password'
+    ];
+
+    protected $hidden = [
+        'password'
+    ];
+
+    public $timestamps = false;
+
+    public function scopeActivo($query)
+    {
+        return $query->where('estatus', 0);
+    }
+}
