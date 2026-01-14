@@ -20,6 +20,11 @@ class Usuario extends Model
 
     public $timestamps = false;
 
+    public function puesto()
+    {
+        return $this->belongsTo(Puestos::class, 'id_puesto');
+    }
+
     public function scopeActivo($query)
     {
         return $query->where('estatus', 0);

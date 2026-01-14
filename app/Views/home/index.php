@@ -1,129 +1,190 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal3</title>
-
-    <link rel="stylesheet" href="/build/assets/app.css">
-    <script src="/build/assets/flowbite.min.js"></script>
     
-</head>
-<body>
+  <!-- Preloader -->
+  <div class="preloader">
+    <img src="../assets/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
+  </div>
+  <div id="main-wrapper">
+    <!-- Sidebar Start -->
+    <aside class="left-sidebar with-vertical">
+      <div><!-- ---------------------------------- -->
+        <!-- Start Vertical Layout Sidebar -->
+        <!-- ---------------------------------- -->
+        <div class="brand-logo d-flex align-items-center justify-content-between">
+          <a href="/main/index.html" class="text-nowrap logo-img">
+            <img src="/assets/images/logos/dark-logo.svg" class="dark-logo" alt="Logo-Dark" />
+            <img src="/assets/images/logos/light-logo.svg" class="light-logo" alt="Logo-light" />
+          </a>
+          <a href="javascript:void(0)" class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none">
+            <i class="ti ti-x"></i>
+          </a>
+        </div>
 
-<nav class="fixed top-0 z-50 w-full bg-neutral-primary-soft border-b border-default">
-  <div class="px-3 py-3 lg:px-5 lg:pl-3">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center justify-start rtl:justify-end">
-        <button data-drawer-target="top-bar-sidebar" data-drawer-toggle="top-bar-sidebar" aria-controls="top-bar-sidebar" type="button" class="sm:hidden text-heading bg-transparent box-border border border-transparent hover:bg-neutral-secondary-medium focus:ring-4 focus:ring-neutral-tertiary font-medium leading-5 rounded-base text-sm p-2 focus:outline-none">
-            <span class="sr-only">Open sidebar</span>
-            <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-  <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10"/>
-   </svg>
-         </button>
-        <a href="https://flowbite.com" class="flex ms-2 md:me-24">
-          <img src="https://flowbite.com/docs/images/logo.svg" class="h-6 me-3" alt="FlowBite Logo" />
-          <span class="self-center text-lg font-semibold whitespace-nowrap dark:text-white">Flowbite</span>
-        </a>
-      </div>
-      <div class="flex items-center">
-          <div class="flex items-center ms-3">
-            <div>
-              <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" aria-expanded="false" data-dropdown-toggle="dropdown-user">
-                <span class="sr-only">Open user menu</span>
-                <img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo">
-              </button>
+        <nav class="sidebar-nav scroll-sidebar" data-simplebar>
+          <ul id="sidebarnav">
+            <!-- ---------------------------------- -->
+            <!-- Configuración -->
+            <!-- ---------------------------------- -->
+            <li class="nav-small-cap">
+              <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+              <span class="hide-menu">Configuración</span>
+            </li>
+            <!-- ---------------------------------- -->
+            <!-- Dashboard -->
+            <!-- ---------------------------------- -->
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="/grupos" aria-expanded="false">
+                <span>
+                  <i class="ti ti-file"></i>
+                </span>
+                <span class="hide-menu">Grupos</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="/estaciones" aria-expanded="false">
+                <span>
+                  <i class="ti ti-file"></i>
+                </span>
+                <span class="hide-menu">Estaciones</span>
+              </a>
+            </li>
+
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="/usuarios" aria-expanded="false">
+                <span>
+                  <i class="ti ti-file"></i>
+                </span>
+                <span class="hide-menu">Usuarios</span>
+              </a>
+            </li>
+
+             <li class="sidebar-item">
+              <a class="sidebar-link" href="/modulos" aria-expanded="false">
+                <span>
+                  <i class="ti ti-file"></i>
+                </span>
+                <span class="hide-menu">Modulos</span>
+              </a>
+            </li>
+     
+          </ul>
+        </nav>
+
+        <div class="fixed-profile p-3 mx-3 mb-2 bg-secondary-subtle rounded mt-3">
+          <div class="hstack gap-3">
+            <div class="john-img">
+              <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="40" height="40" alt="modernize-img" />
             </div>
-            <div class="z-50 hidden bg-neutral-primary-medium border border-default-medium rounded-base shadow-lg w-44" id="dropdown-user">
-              <div class="px-4 py-3 border-b border-default-medium" role="none">
-                <p class="text-sm font-medium text-heading" role="none">
-                  <?= $user->nombre ?>
-                </p>
-                <p class="text-sm text-body truncate" role="none">
-                  neil.sims@flowbite.com
-                </p>
-              </div>
-              <ul class="p-2 text-sm text-body font-medium" role="none">
-                <li>
-                  <a href="#" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded" role="menuitem">Dashboard</a>
-                </li>
-                <li>
-                  <a href="#" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded" role="menuitem">Settings</a>
-                </li>
-                <li>
-                  <a href="#" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded" role="menuitem">Earnings</a>
-                </li>
-                <li>
-                  <a href="/logout" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded" role="menuitem">Sign out</a>
-                </li>
-              </ul>
+            <div class="john-title">
+              <h6 class="mb-0 fs-4 fw-semibold"><?=implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2));?></h6>
+              <span class="fs-2"><?=$user->puesto->tipo_puesto?></span>
             </div>
+            <a href="/logout" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
+              <i class="ti ti-power fs-6"></i>
+            </a>
           </div>
         </div>
-    </div>
-  </div>
-</nav>
 
-<aside id="top-bar-sidebar" class="fixed top-0 left-0 z-40 w-64 h-full transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
-   <div class="h-full px-3 py-4 overflow-y-auto bg-neutral-primary-soft border-e border-default">
-      <a href="https://flowbite.com/" class="flex items-center ps-2.5 mb-5">
-         <img src="https://flowbite.com/docs/images/logo.svg" class="h-6 me-3" alt="Flowbite Logo" />
-         <span class="self-center text-lg text-heading font-semibold whitespace-nowrap">Flowbite</span>
-      </a>
-      <ul class="space-y-2 font-medium">
-         <li>
-            <a href="#" class="flex items-center px-2 py-1.5 text-body rounded-base hover:bg-neutral-tertiary hover:text-fg-brand group">
-               <svg class="w-5 h-5 transition duration-75 group-hover:text-fg-brand" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6.025A7.5 7.5 0 1 0 17.975 14H10V6.025Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 3c-.169 0-.334.014-.5.025V11h7.975c.011-.166.025-.331.025-.5A7.5 7.5 0 0 0 13.5 3Z"/></svg>
-               <span class="ms-3">Dashboard</span>
-            </a>
-         </li>
-         <li>
-            <a href="#" class="flex items-center px-2 py-1.5 text-body rounded-base hover:bg-neutral-tertiary hover:text-fg-brand group">
-               <svg class="shrink-0 w-5 h-5 transition duration-75 group-hover:text-fg-brand" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v14M9 5v14M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/></svg>
-               <span class="flex-1 ms-3 whitespace-nowrap">Kanban</span>
-               <span class="bg-neutral-secondary-medium border border-default-medium text-heading text-xs font-medium px-1.5 py-0.5 rounded-sm">Pro</span>
-            </a>
-         </li>
-         <li>
-            <a href="#" class="flex items-center px-2 py-1.5 text-body rounded-base hover:bg-neutral-tertiary hover:text-fg-brand group">
-               <svg class="shrink-0 w-5 h-5 transition duration-75 group-hover:text-fg-brand" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 13h3.439a.991.991 0 0 1 .908.6 3.978 3.978 0 0 0 7.306 0 .99.99 0 0 1 .908-.6H20M4 13v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M4 13l2-9h12l2 9M9 7h6m-7 3h8"/></svg>
-               <span class="flex-1 ms-3 whitespace-nowrap">Inbox</span>
-               <span class="inline-flex items-center justify-center w-4.5 h-4.5 ms-2 text-xs font-medium text-fg-danger-strong bg-danger-soft border border-danger-subtle rounded-full">2</span>
-            </a>
-         </li>
-         <li>
-            <a href="#" class="flex items-center px-2 py-1.5 text-body rounded-base hover:bg-neutral-tertiary hover:text-fg-brand group">
-               <svg class="shrink-0 w-5 h-5 transition duration-75 group-hover:text-fg-brand" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
-               <span class="flex-1 ms-3 whitespace-nowrap">Users</span>
-            </a>
-         </li>
-         <li>
-            <a href="#" class="flex items-center px-2 py-1.5 text-body rounded-base hover:bg-neutral-tertiary hover:text-fg-brand group">
-               <svg class="shrink-0 w-5 h-5 transition duration-75 group-hover:text-fg-brand" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v4m3-2 .917 11.923A1 1 0 0 1 17.92 21H6.08a1 1 0 0 1-.997-1.077L6 8h12Z"/></svg>
-               <span class="flex-1 ms-3 whitespace-nowrap">Products</span>
-            </a>
-         </li>
-         <li>
-            <a href="/logout" class="flex items-center px-2 py-1.5 text-body rounded-base hover:bg-neutral-tertiary hover:text-fg-brand group">
-               <svg class="shrink-0 w-5 h-5 transition duration-75 group-hover:text-fg-brand" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12H4m12 0-4 4m4-4-4-4m3-4h2a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-2"/></svg>
-               <span class="flex-1 ms-3 whitespace-nowrap">Sign In</span>
-            </a>
-         </li>
-      </ul>
-   </div>
-</aside>
-
-<div class="p-4 sm:ml-64 mt-14">
-   <div class="p-4">
-
-   <!-- Contenido -->
-
-<?= htmlspecialchars($user->id_puesto) ?>
+        <!-- ---------------------------------- -->
+        <!-- Start Vertical Layout Sidebar -->
+        <!-- ---------------------------------- -->
+      </div>
+    </aside>
+    <!--  Sidebar End -->
+    <div class="page-wrapper">
+      <!--  Header Start -->
+      <header class="topbar">
+        <div class="with-vertical"><!-- ---------------------------------- -->
+          <!-- Start Vertical Layout Header -->
+          <!-- ---------------------------------- -->
+          <nav class="navbar navbar-expand-lg p-0">
+            <ul class="navbar-nav">
+              <li class="nav-item nav-icon-hover-bg rounded-circle ms-n2">
+                <a class="nav-link sidebartoggler" id="headerCollapse" href="javascript:void(0)">
+                  <i class="ti ti-menu-2"></i>
+                </a>
+              </li>
+            </ul>
       
-   </div>
+            <div class="d-block d-lg-none py-4">
+              <a href="../main/index.html" class="text-nowrap logo-img">
+                <img src="../assets/images/logos/dark-logo.svg" class="dark-logo" alt="Logo-Dark" />
+                <img src="../assets/images/logos/light-logo.svg" class="light-logo" alt="Logo-light" />
+              </a>
+            </div>
+            <a class="navbar-toggler nav-icon-hover-bg rounded-circle p-0 mx-0 border-0" href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+              <i class="ti ti-dots fs-7"></i>
+            </a>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+              <div class="d-flex align-items-center justify-content-between">
+               
+                <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-center">
+                  
+                  <!-- ------------------------------- -->
+                  <!-- start profile Dropdown -->
+                  <!-- ------------------------------- -->
+                  <li class="nav-item dropdown">
+                    <a class="nav-link pe-0" href="javascript:void(0)" id="drop1" aria-expanded="false">
+                      <div class="d-flex align-items-center">
+                        <div class="user-profile-img">
+                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35" alt="modernize-img" />
+                        </div>
+                      </div>
+                    </a>
+                    <div class="dropdown-menu content-dd dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop1">
+                      <div class="profile-dropdown position-relative" data-simplebar>
+                        <div class="py-3 px-7 pb-0">
+                          <h5 class="mb-0 fs-5 fw-semibold">Perfil de Usuario</h5>
+                        </div>
+                        <div class="d-flex align-items-center py-9 mx-7 border-bottom">
+                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="80" height="80" alt="modernize-img" />
+                          <div class="ms-3">
+                            <h5 class="mb-1 fs-3"><?= $user->nombre ?></h5>
+                            <span class="mb-1 d-block"><?php $user->puesto->tipo_puesto ?></span>
+                            <p class="mb-0 d-flex align-items-center gap-2">
+                              <i class="ti ti-mail fs-4"></i> <?= $user->email ?>
+                            </p>
+                          </div>
+                        </div>
+                        <div class="message-body">
+                          <a href="" class="py-8 px-7 mt-8 d-flex align-items-center">
+                            <span class="d-flex align-items-center justify-content-center text-bg-light rounded-1 p-6">
+                              <img src="/assets/images/svgs/icon-account.svg" alt="modernize-img" width="24" height="24" />
+                            </span>
+                            <div class="w-100 ps-3">
+                              <h6 class="mb-1 fs-3 fw-semibold lh-base">Mi Perfil</h6>
+                              <span class="fs-2 d-block text-body-secondary">Configuración</span>
+                            </div>
+                          </a>
+                        </div>
+                        <div class="d-grid py-4 px-7 pt-8">
+                          <a href="/logout" class="btn btn-outline-primary">Salir</a>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <!-- ------------------------------- -->
+                  <!-- end profile Dropdown -->
+                  <!-- ------------------------------- -->
+                </ul>
+              </div>
+            </div>
+          </nav>
+          <!-- ---------------------------------- -->
+          <!-- End Vertical Layout Header -->
+          <!-- ---------------------------------- -->
+         
+        </div>      
+      </header>
+      <!--  Header End -->
+
+       <div class="body-wrapper">
+        <div class="container-fluid">
+          
+
+         
+        </div>
+      </div>
+          
+    </div>
+
   </div>
-
-
-    
-</body>
-</html>
