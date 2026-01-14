@@ -9,6 +9,17 @@ return function(RouteCollector $r) {
 
         $r->addRoute('GET', '/home', Route::auth(['HomeController', 'index']));
         $r->addRoute('GET', '/logout', Route::auth(['AuthController', 'logout']));
+
+        // Estaciones
+        $r->addRoute('GET', '/estaciones', Route::auth(['EstacionController', 'viewIndex']));
+        $r->addRoute('GET', '/estaciones/listar', Route::auth(['EstacionController', 'listar']));
+        $r->addRoute('GET', '/estaciones/crear', Route::auth(['EstacionController', 'viewCrear']));
+        $r->addRoute('POST', '/estaciones/create-estacion', ['EstacionController', 'crearEstacion']);
+
+        // Personal
+
+        $r->addRoute('GET', '/usuarios', Route::auth(['UsuarioController', 'index']));
+        
         
 };
 

@@ -2,14 +2,19 @@
 namespace App\Controllers;
 use App\Models\Usuario;
 use App\Core\JWTService;
+use App\Core\View;
 
 class LoginController extends BaseController{
 
     
     public function index(){
         
-        $data = ['title' => 'Login Portal3'];
-        $this->view('login/index.php', $data);
+        $data = [
+            'title' => 'Login Portal3',
+            'scripts' => []
+        ];
+        
+        View::render('login/index', $data,'auth');
        
     }
 

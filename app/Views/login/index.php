@@ -1,161 +1,81 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="/build/assets/app.css">
-  <script src="/build/assets/flowbite.min.js"></script>
+  <!-- Preloader -->
+  <div class="preloader">
+    <img src="/assets/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
+  </div>
+  <div id="main-wrapper" class="auth-customizer-none">
+    <div class="position-relative overflow-hidden radial-gradient min-vh-100 w-100">
+      <div class="position-relative z-index-5">
+        <div class="row">
 
-  <!-- Alpine + Axios -->
-  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+                 
+        <div class="col-xl-5 col-xxl-4">
 
-  <script>
-    function loginForm() {
-      return {
-        usuario: '',
-        password: '',
-        message: '',
-        type: '',
-        loading: false,
 
-        login() {
-          if (this.loading) return;
+            <div class="authentication-login min-vh-100 bg-body row justify-content-center align-items-center p-4">
+            <div class="auth-max-width col-sm-8 col-md-6 col-xl-7 px-4">
 
-          this.message = '';
-          this.type = '';
+                <a class="logo-img d-block py-4 w-100">
+                    <img src="/assets/images/logos/dark-logo.svg" class="dark-logo" alt="Logo-Dark" />
+                </a>
 
-          if (!this.usuario || !this.password) {
-            this.message = 'Usuario y contraseña son obligatorios';
-            this.type = 'error';
-            return;
-          }
+                <h2 class="mb-4 fs-7 fw-bolder">Bienvenido al Portal3</h2>
+            
+                <form x-data="loginForm()" @submit.prevent="login">
+                  <div class="mb-3">
+                    <label for="usuario" class="form-label">Usuario</label>
+                    <input type="text" class="form-control" id="usuario" x-model="usuario" :disabled="loading">
+                  </div>
+                  <div class="mb-4">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" x-model="password" :disabled="loading">
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between mb-4">
 
-          this.loading = true;
+                    <div class="form-check">
+                      <input class="form-check-input primary" type="checkbox" value="" id="flexCheckChecked" checked>
+                      <label class="form-check-label text-dark fs-3" for="flexCheckChecked">
+                        Recordar este usuario
+                      </label>
+                    </div>
+                
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    class="btn btn-primary w-100 py-8 mb-4 rounded-2"
+                    :disabled="loading"
+                    >
+                    <template x-if="!loading">
+                        <span>Iniciar sesión</span>
+                    </template>
 
-          axios.post('/login', {
-            usuario: this.usuario,
-            password: this.password
-          })
-          .then(res => {
-            this.message = res.data.message;
-            this.type = res.data.type;
+                    <template x-if="loading">
+                        <span class="align-items-center gap-2">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        Cargando...
+                        </span>
+                    </template>
+                    </button>
 
-            if (this.type === 'success') {
-              setTimeout(() => {
-                window.location.href = '/home';
-              }, 800);
-            }
-          })
-          .catch(() => {
-            this.message = 'Error de servidor';
-            this.type = 'error';
-          })
-          .finally(() => {
-            this.loading = false;
-          });
-        }
-      }
-    }
-  </script>
-</head>
+                  <div x-show="message" x-transition
+                  :class="type === 'success'? 'alert alert-success text-success': 'alert alert-danger text-danger'" role="alert">
+                    <span x-text="message"></span>
+                </div>
+                 
+                </form>
+              </div>
+            </div>
+          </div>
 
-<body class="min-h-screen bg-gray-100 flex items-center justify-center">
-
-  <div class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-
-    <h2 class="text-2xl font-bold text-center text-gray-800">
-      Iniciar Sesión
-    </h2>
-
-    <p class="text-center text-sm text-gray-500 mb-6">
-      Accede a tu cuenta
-    </p>
-
-    <form x-data="loginForm()" @submit.prevent="login" class="space-y-4">
-
-      <!-- Usuario -->
-      <div>
-        <label class="block mb-1 text-sm font-medium text-gray-700">
-          Usuario
-        </label>
-        <input
-          type="text"
-          x-model="usuario"
-          :disabled="loading"
-          required
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm
-                 rounded-lg focus:ring-blue-500 focus:border-blue-500
-                 block w-full p-2.5"
-          placeholder="Usuario"
-        >
+          <div class="col-xl-7 col-xxl-8">
+            <div class="d-none d-xl-flex align-items-center justify-content-center h-n80">
+              <img src="/assets/images/backgrounds/login-security.svg" alt="modernize-img" class="img-fluid" width="500">
+            </div>
+          </div>
+          
+        </div>
       </div>
-
-      <!-- Contraseña -->
-      <div>
-        <label class="block mb-1 text-sm font-medium text-gray-700">
-          Contraseña
-        </label>
-        <input
-          type="password"
-          x-model="password"
-          :disabled="loading"
-          required
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm
-                 rounded-lg focus:ring-blue-500 focus:border-blue-500
-                 block w-full p-2.5"
-          placeholder="••••••••"
-        >
-      </div>
-
-      <!-- Botón -->
-      <button
-        type="submit"
-        :disabled="loading"
-        class="w-full text-white bg-blue-700 hover:bg-blue-800
-               focus:ring-4 focus:ring-blue-300 font-medium rounded-lg
-               text-sm px-5 py-2.5 text-center
-               disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        <span x-show="!loading">Entrar</span>
-
-        <span x-show="loading" class="flex items-center justify-center gap-2">
-          <svg class="w-4 h-4 animate-spin text-white"
-               xmlns="http://www.w3.org/2000/svg"
-               fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10"
-                    stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8z"></path>
-          </svg>
-          Validando...
-        </span>
-      </button>
-
-      <!-- Alerta -->
-      <div
-        x-show="message"
-        x-transition
-        class="flex items-center p-4 rounded-lg text-sm mt-4"
-        :class="type === 'success'
-          ? 'text-green-800 bg-green-50'
-          : 'text-red-800 bg-red-50'"
-        role="alert"
-      >
-        <svg class="w-5 h-5 mr-2 shrink-0"
-             xmlns="http://www.w3.org/2000/svg"
-             fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11H9v5h2V7zm0 6H9v2h2v-2z"/>
-        </svg>
-
-        <span x-text="message"></span>
-      </div>
-
-    </form>
+    </div>
 
   </div>
-
-</body>
-</html>

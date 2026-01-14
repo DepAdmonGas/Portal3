@@ -1,17 +1,20 @@
 <?php
 namespace App\Controllers;
 use App\Core\View;
-class HomeController extends BaseController{
-    
+
+class UsuarioController extends BaseController{
+
     public function index(){
-       
         $data = [
-            'title' => 'Portal3',
+            'title' => 'Usuarios',
             'scripts' => []
         ];
         
-        View::render('home/index', $data,'main');
-       
+        View::render('usuario/index', $data,'main');
     }
+
+
+
+
 
 }
