@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    $('#table-grupos').DataTable({
+    $('#table-estaciones').DataTable({
         processing: true,
         serverSide: false, // sigue siendo false si no hay server-side
         autoWidth: false,  // evita que DataTables recalculen los anchos
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/grupos/datatable',
+            url: '/estaciones/datatable',
             type: 'POST',
             contentType: 'application/json',
             data: function(d) {
@@ -18,11 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
             dataSrc: 'data' // indica dónde está el array de filas en la respuesta JSON
         },
         columns: [
-            { data: 'id', width: '60px', className: 'text-center' },
+            { data: 'id', width: '50px', className: 'text-center' },
             { data: 'nombre' },
+            { data: 'permisocre' },
+            { data: 'razonsocial' },
+            { data: 'rfc' },
             {
                 data: 'estatus',
-                width: '120px',
+                width: '80px',
                 className: 'text-center',
                 render: function(data) {
                     return data == 1
