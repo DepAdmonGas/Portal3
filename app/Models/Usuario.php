@@ -10,8 +10,11 @@ class Usuario extends Model
         'id',
         'nombre',
         'email',
+        'telefono',
+        'id_puesto',
         'usuario',
-        'password'
+        'password',
+        'estatus'
     ];
 
     protected $hidden = [

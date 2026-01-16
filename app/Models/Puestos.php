@@ -17,6 +17,7 @@ class Puestos extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id',
         'tipo_puesto',
         'estatus',
     ];

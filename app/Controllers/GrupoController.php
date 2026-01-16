@@ -14,7 +14,8 @@ class GrupoController extends BaseController{
             'scripts' => [
                 '/assets/js/vendor.min.js',
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/datatable/datatable.init.js'
+                '/assets/js/grupos/datatable.init.js',
+                '/assets/js/grupos/actions.init.js'
             ]
         ];
         
@@ -30,5 +31,55 @@ class GrupoController extends BaseController{
         ]);
         
     }
+
+    public function createGrupo(){
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (empty($data['nombre'])) {
+            http_response_code(422);
+            echo json_encode(['message' => 'Nombre requerido']);
+            exit;
+        }
+
+        Grupo::create([
+            'nombre' => $data['nombre'],
+            'estatus' => 1
+        ]);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    public function deleteGrupo()
+    {
+        // Leer JSON enviado por Axios
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+
+        if (!$id) {
+            echo json_encode(['message' => 'ID requerido']);
+            exit;
+        }
+
+        // Buscar el grupo
+        $grupo = Grupo::find($id);
+
+        if (!$grupo) {
+            echo json_encode(['message' => 'Grupo no encontrado']);
+            exit;
+        }
+
+        // Soft delete: cambiar estatus a 0
+        $grupo->estatus = 0;
+        $grupo->save();
+
+        // Devolver respuesta JSON
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
 
 }

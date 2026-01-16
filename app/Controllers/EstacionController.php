@@ -10,7 +10,14 @@ class EstacionController extends BaseController{
         
         $data = [
             'title' => 'Estaciones',
-            'scripts' => []
+            'links' =>[
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+            ],
+            'scripts' => [
+                '/assets/js/vendor.min.js',
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/estaciones/datatable.init.js'
+            ]
         ];
         
         View::render('estaciones/index', $data,'main');
@@ -26,14 +33,13 @@ class EstacionController extends BaseController{
         View::render('estaciones/crear', $data,'main');
     }
 
-    public function listar()
+    public function datatableEstaciones()
     {
 
     $estaciones = Estacion::orderBy('numlista')->get();
-
-    header('Content-Type: application/json');
-    echo json_encode($estaciones);
-    exit;
+         echo json_encode([
+            "data" => $estaciones
+        ]);
 
     }
 
