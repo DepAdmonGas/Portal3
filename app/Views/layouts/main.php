@@ -76,6 +76,15 @@
             </li>
 
             <li class="sidebar-item">
+              <a class="sidebar-link" href="/puestos" aria-expanded="false">
+                <span>
+                  <i class="ti ti-file"></i>
+                </span>
+                <span class="hide-menu">Puestos</span>
+              </a>
+            </li>
+
+            <li class="sidebar-item">
               <a class="sidebar-link" href="/usuarios" aria-expanded="false">
                 <span>
                   <i class="ti ti-file"></i>

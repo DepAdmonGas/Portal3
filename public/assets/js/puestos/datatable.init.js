@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    $('#table-grupos').DataTable({
+    $('#table-puestos').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -8,15 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/grupos/datatable',
-            type: 'GET',          // ✅ GET
+            url: '/puestos/datatable',
+            type: 'GET', 
             dataSrc: function (json) {
-                return json.data;
+                return json.data; 
             }
         },
         columns: [
             { data: 'id', width: '60px', className: 'text-center' },
-            { data: 'nombre' },
+            { data: 'tipo_puesto' },
             {
                 data: 'estatus',
                 width: '80px',

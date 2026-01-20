@@ -1,21 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    const params = new URLSearchParams(window.location.search);
+    const idestacion = params.get('idEstacion');
+
     $('#table-usuarios').DataTable({
         processing: true,
-        serverSide: false, // sigue siendo false si no hay server-side
-        autoWidth: false,  // evita que DataTables recalculen los anchos
+        serverSide: false,
+        autoWidth: false,
         language: {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
             url: '/usuarios/datatable',
-            type: 'POST',
-            contentType: 'application/json',
-            data: d => JSON.stringify(d),
+            type: 'GET',
+            data: function (d) {
+                d.idestacion = idestacion;
+            },             
             dataSrc: function (json) {
-                console.log('JSON recibido:', json);
-                return json.data;
-            } // indica dónde está el array de filas en la respuesta JSON
+                return json.data;  
+            }
         },
         columns: [
             { data: 'id', width: '60px', className: 'text-center' },
@@ -23,11 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
             { data: 'email' },
             { data: 'telefono' },
             { data: 'puesto' },
+            { data: 'razonsocial',
+              render: function (data) {
+                    return data && data.trim() !== '' ? data : 'Todas';
+                }
+             },
             {
                 data: 'estatus',
                 width: '80px',
                 className: 'text-center',
-                render: function(data) {
+                render: function (data) {
                     return data == 0
                         ? '<span class="mb-1 badge text-bg-success">Activo</span>'
                         : '<span class="mb-1 badge text-bg-danger">Eliminado</span>';
@@ -39,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle td-small',
-                render: function(data, type, row) {
+                render: function (data, type, row) {
                     return `
                         <div class="dropdown dropstart">
                             <a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown">

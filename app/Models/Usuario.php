@@ -6,11 +6,20 @@ class Usuario extends Model
 {
     protected $table = 'tb_usuarios';
 
+    protected $primaryKey = 'id';
+
+    public $incrementing = true;
+
+    protected $keyType = 'int';
+
+    public $timestamps = false;
+
     protected $fillable = [
         'id',
         'nombre',
         'email',
         'telefono',
+        'id_gas',
         'id_puesto',
         'usuario',
         'password',
@@ -21,11 +30,14 @@ class Usuario extends Model
         'password'
     ];
 
-    public $timestamps = false;
-
     public function puesto()
     {
         return $this->belongsTo(Puestos::class, 'id_puesto');
+    }
+
+    public function estacion()
+    {
+        return $this->belongsTo(Estacion::class, 'id_gas');
     }
 
     public function scopeActivo($query)

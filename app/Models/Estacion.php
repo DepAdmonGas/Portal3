@@ -13,6 +13,7 @@ class Estacion extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id',
         'numlista',
         'nombre',
         'es',
@@ -43,6 +44,7 @@ class Estacion extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
         'numlista' => 'integer',
         'latitud' => 'float',
         'longitud' => 'float',
@@ -65,6 +67,11 @@ class Estacion extends Model
     public static function guardar(array $data): self
     {
         return self::create($data);
+    }
+
+    public function usuarios()
+    {
+        return $this->hasMany(Usuario::class, 'id_gas');
     }
 
 }
