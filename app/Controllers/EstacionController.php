@@ -37,9 +37,12 @@ class EstacionController extends BaseController{
     {
 
     $estaciones = Estacion::orderBy('numlista')->get();
-         echo json_encode([
-            "data" => $estaciones
-        ]);
+
+    echo json_encode([
+        'data' => $estaciones
+    ]);
+    
+    exit;
 
     }
 

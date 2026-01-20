@@ -52,12 +52,21 @@ document.addEventListener('click', function(e) {
     if (!confirm('¿Seguro que deseas eliminar este grupo?')) return;
 
     axios.post('/grupos/delete', { id })
-        .then(() => {
-            $('#table-grupos').DataTable().ajax.reload(null, false);
+        .then(response => {
+        // Recargar DataTable
+        $('#table-grupos').DataTable().ajax.reload(null, false);
+
+        // Mostrar el mensaje que viene del servidor
+        const mensaje = response.data.message; // <- aquí está el texto enviado por PHP
+        alert(mensaje); // o usar toast
         })
         .catch(err => {
-            console.error(err);
-            alert('Error al cambiar el estatus');
+             // Si el backend devuelve error de validación
+            if (err.response && err.response.data && err.response.data.message) {
+                alert(err.response.data.message);
+            } else {
+                alert('Error al eliminar el grupo');
+            }
         });
 });
 

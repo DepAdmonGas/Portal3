@@ -26,9 +26,12 @@ class GrupoController extends BaseController{
     public function datatableGrupos(){
 
         $grupo = Grupo::all();
+
          echo json_encode([
             "data" => $grupo
         ]);
+        
+        exit;
         
     }
 
@@ -71,6 +74,11 @@ class GrupoController extends BaseController{
             exit;
         }
 
+        if ($grupo->estatus == 0) {
+        echo json_encode(['message' => 'No se puede eliminar un grupo ya inactivo']);
+        exit;
+        }
+
         // Soft delete: cambiar estatus a 0
         $grupo->estatus = 0;
         $grupo->save();
@@ -80,6 +88,5 @@ class GrupoController extends BaseController{
         echo json_encode(['success' => true]);
         exit;
     }
-
 
 }
