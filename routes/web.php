@@ -16,6 +16,7 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/grupos', Route::auth(['GrupoController', 'index']));
         $r->addRoute('GET', '/grupos/datatable', Route::auth(['GrupoController', 'datatableGrupos']));
         $r->addRoute('POST', '/grupos/create', Route::auth(['GrupoController', 'createGrupo']));
+        $r->addRoute('POST', '/grupos/update', Route::auth(['GrupoController', 'updateGrupo']));
         $r->addRoute('POST', '/grupos/delete', Route::auth(['GrupoController', 'deleteGrupo']));
         // Estaciones
         $r->addRoute('GET', '/estaciones', Route::auth(['EstacionController', 'viewIndex']));

@@ -55,6 +55,31 @@ class GrupoController extends BaseController{
         exit;
     }
 
+    public function updateGrupo()
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (empty($data['id']) || empty($data['nombre'])) {
+            echo json_encode(['message' => 'Datos incompletos']);
+            exit;
+        }
+
+        $grupo = Grupo::find($data['id']);
+
+        if (!$grupo) {
+            echo json_encode(['message' => 'Grupo no encontrado']);
+            exit;
+        }
+
+        $grupo->nombre = $data['nombre'];
+        $grupo->save();
+        
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+
     public function deleteGrupo()
     {
         // Leer JSON enviado por Axios
