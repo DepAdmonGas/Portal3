@@ -1,72 +1,148 @@
 function grupoForm() {
     return {
+        idGrupo: null,
         nombreGrupo: '',
+        modo: 'create', // create | edit
         enviando: false,
         error: false,
 
         guardarGrupo() {
             if (!this.nombreGrupo.trim()) {
-                 this.error = true;
+                this.error = true;
                 return;
             }
 
-            this.error = false;
             this.enviando = true;
 
             axios.post('/grupos/create', {
                 nombre: this.nombreGrupo
-            })
-            .then(() => {
-                // 1️⃣ Recargar DataTable
-                $('#table-grupos').DataTable().ajax.reload(null, false);
+            }).then(() => {
+                this.cerrarModal();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Creado',
+                    text: 'Grupo creado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }).finally(() => this.enviando = false);
+        },
 
-                // 2️⃣ Limpiar textarea
-                this.nombreGrupo = '';
-                this.error = false;
+        actualizarGrupo() {
+            if (!this.nombreGrupo.trim()) {
+                this.error = true;
+                return;
+            }
 
-                // 3️⃣ Cerrar modal
-                bootstrap.Modal.getInstance(
-                    document.getElementById('nuevoGrupo')
-                ).hide();
-            })
-            .catch(error => {
-                console.error(error);
-                
-            })
-            .finally(() => {
-                // 4️⃣ Botón vuelve a estado normal
-                this.enviando = false;
-            });
+            this.enviando = true;
+
+            axios.post('/grupos/update', {
+                id: this.idGrupo,
+                nombre: this.nombreGrupo
+            }).then(() => {
+                this.cerrarModal();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Actualizado',
+                    text: 'Grupo actualizado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }).finally(() => this.enviando = false);
+        },
+
+        abrirEditar(grupo) {
+            this.modo = 'edit';
+            this.idGrupo = grupo.id;
+            this.nombreGrupo = grupo.nombre;
+
+            new bootstrap.Modal(
+                document.getElementById('nuevoGrupo')
+            ).show();
+        },
+
+        cerrarModal() {
+            $('#table-grupos').DataTable().ajax.reload(null, false);
+            bootstrap.Modal.getInstance(
+                document.getElementById('nuevoGrupo')
+            ).hide();
+            this.resetForm();
+        },
+
+        resetForm() {
+            this.idGrupo = null;
+            this.nombreGrupo = '';
+            this.modo = 'create';
+            this.error = false;
+            this.enviando = false;
         }
     }
 }
+
  
 
-document.addEventListener('click', function(e) {
-    // Busca si el click fue en un btn-delete o dentro de él
+document.addEventListener('click', function (e) {
+
     const btn = e.target.closest('.btn-delete');
-    if (!btn) return;
+    if (!btn || btn.classList.contains('disabled')) return;
 
     const id = btn.dataset.id;
 
-    if (!confirm('¿Seguro que deseas eliminar este grupo?')) return;
+    Swal.fire({
+        title: '¿Cancelar grupo?',
+        text: 'El grupo será marcado como cancelado',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d'
+    }).then((result) => {
 
-    axios.post('/grupos/delete', { id })
-        .then(response => {
-        // Recargar DataTable
-        $('#table-grupos').DataTable().ajax.reload(null, false);
+        if (!result.isConfirmed) return;
 
-        // Mostrar el mensaje que viene del servidor
-        const mensaje = response.data.message; // <- aquí está el texto enviado por PHP
-        alert(mensaje); // o usar toast
-        })
-        .catch(err => {
-             // Si el backend devuelve error de validación
-            if (err.response && err.response.data && err.response.data.message) {
-                alert(err.response.data.message);
-            } else {
-                alert('Error al eliminar el grupo');
-            }
-        });
+        axios.post('/grupos/delete', { id })
+            .then(response => {
+
+                // Recargar DataTable sin perder página
+                $('#table-grupos').DataTable().ajax.reload(null, false);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Cancelado',
+                    text: response.data.message ?? 'Grupo cancelado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            })
+            .catch(err => {
+
+                const mensaje =
+                    err.response?.data?.message ||
+                    'Error al cancelar el grupo';
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: mensaje,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            });
+    });
+
 });
 
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-edit');
+    if (!btn) return;
+
+    window.dispatchEvent(new CustomEvent('editar-grupo', {
+        detail: {
+            id: btn.dataset.id,
+            nombre: btn.dataset.nombre
+        }
+    }));
+});

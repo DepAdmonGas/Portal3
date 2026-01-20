@@ -10,7 +10,8 @@
     <link rel="shortcut icon" type="image/png" href="/assets/images/logos/favicon.png" />
     <!-- Core Css -->
     <link rel="stylesheet" href="/assets/css/styles.css" />
-
+    <link rel="stylesheet" href="/assets/libs/sweetalert2/dist/sweetalert2.min.css">
+    
     <!-- Scripts por vista -->
     <?php if (!empty($links)): ?>
         <?php foreach ($links as $link): ?>
@@ -21,7 +22,7 @@
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
+      
 </head>
 <body class="link-sidebar">
 
@@ -239,7 +240,8 @@
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
   <!-- highlight.js (code view) -->
   <script src="/assets/js/highlights/highlight.min.js"></script>
-
+  <script src="/assets/libs/sweetalert2/dist/sweetalert2.min.js"></script>
+ 
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>
         <?php foreach ($scripts as $script): ?>

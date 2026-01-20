@@ -1,13 +1,9 @@
-<div class="card">
-  <div class="p-3">
 
-  
-<div class="action-btn layout-top-spacing d-flex align-items-center justify-content-between flex-wrap">
-  <h1 class="mb-0 fs-7">Grupos</h1>
-  <button type="button" class="btn mb-1 bg-primary-subtle text-primary px-4 fs-4" data-bs-toggle="modal" data-bs-target="#nuevoGrupo">Crear Nuevo Grupo</button>
-</div>
-
-</div>
+<div class="mb-2">
+  <div class="action-btn layout-top-spacing d-flex align-items-center justify-content-between flex-wrap">
+    <h1 class="mb-0 fs-7">Grupos</h1>
+    <button type="button" class="btn mb-1 bg-primary-subtle text-primary px-4 fs-4" data-bs-toggle="modal" data-bs-target="#nuevoGrupo">Nuevo Grupo</button>
+  </div>
 </div>
 
 <div class="datatables">
@@ -38,13 +34,14 @@
      tabindex="-1"
      data-bs-backdrop="static"
      data-bs-keyboard="false"
-     x-data="grupoForm()">
+     x-data="grupoForm()"
+     @editar-grupo.window="abrirEditar($event.detail)">
 
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Crear Nuevo Grupo</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h4 class="modal-title" x-text="modo === 'create' ? 'Crear Nuevo Grupo' : 'Editar Grupo'"></h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetForm()"></button>
             </div>
 
             <div class="modal-body">
@@ -66,18 +63,18 @@
             <div class="modal-footer">
                 <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
-                        :disabled="enviando">
+                        :disabled="enviando"
+                        @click="resetForm()">
                     Cancelar
                 </button>
 
                 <button class="btn btn-success"
-                        @click="guardarGrupo"
-                        :disabled="enviando">
-                    <span x-show="!enviando">Guardar</span>
-                    <span x-show="enviando">Enviando...</span>
-                </button>
+                @click="modo === 'create' ? guardarGrupo() : actualizarGrupo()"
+                :disabled="enviando">
+                  <span x-show="!enviando">Guardar</span>
+                  <span x-show="enviando">Enviando...</span>
+              </button>
             </div>
         </div>
     </div>
 </div>
-
