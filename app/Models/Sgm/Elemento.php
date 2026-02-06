@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Elemento extends Model
+{
+    protected $table = 'sgm_elementos';
+
+    protected $primaryKey = 'id';
+
+    public $incrementing = true;
+
+    protected $keyType = 'int';
+
+    public $timestamps = false;
+
+    protected $fillable = [
+        'no',
+        'criterio',
+    ];
+
+    protected $casts = [
+        'id' => 'integer',
+        'no' => 'string',
+        'criterio' => 'string',
+    ];
+}
