@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    $('#table-puestos').DataTable({
+    $('#table-aditivo').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -10,23 +10,46 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/puestos/datatable',
-            type: 'GET', 
+            url: '/bitacora-aditivo/datatable',
+            type: 'GET',
             dataSrc: function (json) {
-                return json.data; 
+                return json.data;
             }
         },
         columns: [
             { data: 'id', width: '60px', className: 'text-center' },
-            { data: 'tipo_puesto' },
+            { data: 'folio' },
+            { data: 'fecha',
+                render: function (data, type) {
+                if (!data) return '';
+
+                 if (type !== 'display') {
+                    return data;
+                }
+
+                const fecha = new Date(data);
+
+                return fecha.toLocaleDateString('es-MX', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            }
+            },
+            { data: 'litros' },
+            
+            { data: 'no_factura' },
+            { data: 'producto' },
+            { data: 'galones' },
+            { data: 'inventario_fisico' },
             {
-                data: 'estatus',
+                data: 'estado',
                 width: '80px',
                 className: 'text-center',
                 render: function (data) {
                     return data == 1
                         ? '<span class="mb-1 badge text-bg-success">Activo</span>'
-                        : '<span class="mb-1 badge text-bg-danger">Cancelado</span>';
+                        : '<span class="mb-1 badge text-bg-danger">Eliminado</span>';
                 }
             },
             {
@@ -47,13 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit" data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit ${disabled}" 
+                                    data-id="${row.id}" 
+                                    data-nombre="${row.nombre}">
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center gap-3 btn-delete ${disabled}" data-id="${row.id}">
-                                        <i class="fs-4 ti ti-trash"></i>Cancelar
+                                        <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
                             </ul>
