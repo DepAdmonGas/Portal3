@@ -1,3 +1,12 @@
+const notyf = new Notyf({
+    duration: 3000,
+    position: {
+        x: 'right',
+        y: 'top'
+    },
+    dismissible: true
+});
+
 function grupoForm() {
     return {
         idGrupo: null,
@@ -25,6 +34,9 @@ function grupoForm() {
                     timer: 2000,
                     showConfirmButton: false
                 });
+
+                notyf.success('Grupo creado correctamente');
+                
             }).finally(() => this.enviando = false);
         },
 
@@ -41,6 +53,7 @@ function grupoForm() {
                 nombre: this.nombreGrupo
             }).then(() => {
                 this.cerrarModal();
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Actualizado',
@@ -48,6 +61,9 @@ function grupoForm() {
                     timer: 2000,
                     showConfirmButton: false
                 });
+
+                notyf.success('Grupo actualizado correctamente');
+
             }).finally(() => this.enviando = false);
         },
 
@@ -115,6 +131,8 @@ document.addEventListener('click', function (e) {
                     showConfirmButton: false
                 });
 
+                notyf.success('Grupo cancelado correctamente');
+
             })
             .catch(err => {
 
@@ -130,12 +148,15 @@ document.addEventListener('click', function (e) {
                     showConfirmButton: false
                 });
 
+                notyf.error(mensaje);
+
             });
     });
 
 });
 
 document.addEventListener('click', function (e) {
+   
     const btn = e.target.closest('.btn-edit');
     if (!btn) return;
 

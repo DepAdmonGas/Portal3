@@ -11,6 +11,7 @@
     <!-- Core Css -->
     <link rel="stylesheet" href="/assets/css/styles.css" />
     <link rel="stylesheet" href="/assets/libs/sweetalert2/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     
     <!-- Scripts por vista -->
     <?php if (!empty($links)): ?>
@@ -102,6 +103,39 @@
                 <span class="hide-menu">Modulos</span>
               </a>
             </li>
+            <!-- Encargado -->
+            <li class="nav-small-cap">
+              <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+              <span class="hide-menu">Estaciones</span>
+            </li>
+            
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="/bitacora-aditivo" aria-expanded="false">
+                <span>
+                  <i class="ti ti-file"></i>
+                </span>
+                <span class="hide-menu">Bitácora de aditivo</span>
+              </a>
+            </li>
+
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="/solicitud-gafetes" aria-expanded="false">
+                <span>
+                  <i class="ti ti-file"></i>
+                </span>
+                <span class="hide-menu">Solicitud de Gafetes</span>
+              </a>
+            </li>
+
+             <li class="sidebar-item">
+              <a class="sidebar-link" href="/solicitud-tarjetas" aria-expanded="false">
+                <span>
+                  <i class="ti ti-file"></i>
+                </span>
+                <span class="hide-menu">Solicitud de Tarjetas</span>
+              </a>
+            </li>
+            <!-- -->
      
           </ul>
         </nav>
@@ -241,6 +275,7 @@
   <!-- highlight.js (code view) -->
   <script src="/assets/js/highlights/highlight.min.js"></script>
   <script src="/assets/libs/sweetalert2/dist/sweetalert2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
  
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>
