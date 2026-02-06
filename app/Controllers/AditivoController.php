@@ -1,7 +1,7 @@
 <?php
 namespace App\Controllers;
 use App\Core\View;
-use App\Models\BitacoraAditivo;
+use App\Models\Operativo\BitacoraAditivo;
 class AditivoController extends BaseController{
 
     public function index(){
