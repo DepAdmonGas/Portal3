@@ -59,8 +59,76 @@ return function(RouteCollector $r) {
                 $r->addRoute('GET', '', Route::auth(['TarjetasController', 'index']));
                 $r->addRoute('GET', '/datatable', Route::auth(['TarjetasController', 'datatableTarjetas']));
         });
-        
+
+        // SASISOPA
+        $r->addGroup('/sasisopa', function (RouteCollector $r) {
+                // index principal
+                $r->addRoute('GET', '', Route::auth(['SasisopaController', 'index']));
+                // Elemento 1
+                $r->addRoute('GET', '/politica', Route::auth(['SasisopaController', 'politica']));
+                // Elemento 2
+                $r->addRoute('GET', '/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales', Route::auth(['SasisopaController', 'identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales']));
+                // Elemento 3
+                $r->addRoute('GET', '/requisitos-legales', Route::auth(['SasisopaController', 'requisitosLegales']));
+                // Elemento 4
+                $r->addRoute('GET', '/objetivos-metas-indicadores', Route::auth(['SasisopaController', 'objetivosMetasIndicadores']));
+                // Elemento 5
+                $r->addRoute('GET', '/funciones-responsabilidades-autoridad', Route::auth(['SasisopaController', 'funcionesResponsabilidadesAutoridad']));
+                // Elemento 6
+                $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento', Route::auth(['SasisopaController', 'competenciaPersonalCapacitacionEntrenamiento']));
+                // Elemento 7
+                $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['SasisopaController', 'comunicacionParticipacionConsulta']));
+                // Elemento 8
+                $r->addRoute('GET', '/control-documentos-registros', Route::auth(['SasisopaController', 'controlDocumentosRegistros']));
+                // Elemento 9
+                $r->addRoute('GET', '/mejores-practicas-estandares', Route::auth(['SasisopaController', 'mejoresPracticasEstandares']));
+                // Elemento 10
+                $r->addRoute('GET', '/control-actividades-procesos', Route::auth(['SasisopaController', 'controlActividadesProcesos']));
+                // Elemento 11
+                $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['SasisopaController', 'integridadMecanicaAseguramiento']));
+                // Elemento 12
+                $r->addRoute('GET', '/seguridad-contratistas', Route::auth(['SasisopaController', 'seguridadContratistas']));
+                // Elemento 13
+                $r->addRoute('GET', '/preparacion-emergencias', Route::auth(['SasisopaController', 'preparacionEmergencias']));
+                // Elemento 14
+                $r->addRoute('GET', '/monitoreo-verificacion-evaluacion', Route::auth(['SasisopaController', 'monitoreoVerificacionEvaluacion']));
+                // Elemento 15
+                $r->addRoute('GET','/auditorias',Route::auth(handler: ['SasisopaController','auditorias']));
+                // Elemento 16
+                $r->addRoute('GET','/investigacion-incidentes-accidentes',Route::auth(handler: ['SasisopaController','investigacionIncidentesAccidentes']));
+                // Elemento 17
+                $r->addRoute('GET','/revision-resultados',Route::auth(handler: ['SasisopaController','revisionResultados']));
+                // Elemento 18
+                $r->addRoute('GET','/informes-desempeno',Route::auth(handler: ['SasisopaController','informesDesempeno']));
+        });
+
+         // SGM
+        $r->addGroup('/sgm', function (RouteCollector $r) {
+                // Index principal
+                $r->addRoute('GET', '', Route::auth(['SgmController', 'index']));
+                // Elemento 1
+                $r->addRoute('GET', '/estructura-sistema-medicion', Route::auth(['SgmController', 'estructuraSistemaMedicion']));
+                // Elemento 2
+                $r->addRoute('GET', '/control-documental-sistema-gestion-medicion', Route::auth(['SgmController', 'controlDocumentalSistemaGestionMedicion']));
+                // Elemento 3
+                $r->addRoute('GET', '/responsabilidades-direccion', Route::auth(['SgmController', 'responsabilidadesDireccion']));
+                // Elemento 4
+                $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente', Route::auth(['SgmController', 'establecimientoObjetivosEnfocadosCliente']));
+                // Elemento 5
+                $r->addRoute('GET', '/normatividad-aplicable-mediciones', Route::auth(['SgmController', 'normatividadAplicableMediciones']));
+                // Elemento 6
+                $r->addRoute('GET', '/gestion-recursos', Route::auth(['SgmController', 'gestionRecursos']));
+                // Elemento 7
+                $r->addRoute('GET', '/procesos-medicion', Route::auth(['SgmController', 'procesosMedicion']));
+                // Elemento 8
+                $r->addRoute('GET', '/gestion-riesgos-impactan-medicion', Route::auth(['SgmController', 'gestionRiesgosImpactanMedicion']));
+                // Elemento 9
+                $r->addRoute('GET', '/establecimiento-seguimiento-confirmacion-metrologica', Route::auth(['SgmController', 'establecimientoSeguimientoConfirmacionMetrologica']));
+                // Elemento 10
+                $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos', Route::auth(['SgmController', 'auditoriasInternasExternasAtencionHallazgos']));
+                // Elemento 11
+                $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion', Route::auth(['SgmController', 'evaluacionCumplimientoObjetivosRevisionDireccion']));
+        });
 
 };
-
 ?>
