@@ -50,136 +50,80 @@
 
         <nav class="sidebar-nav scroll-sidebar" data-simplebar>
           <ul id="sidebarnav">
+
+          <li class="sidebar-item">
+              <a class="sidebar-link" href="/home" aria-expanded="false">
+                <span>
+                  <i class="ti ti-home"></i>
+                </span>
+                 <span class="hide-menu">Home</span>
+              </a>
+            </li>
+
             <!-- ---------------------------------- -->
-            <!-- Configuración -->
+            <!-- SGM -->
             <!-- ---------------------------------- -->
             <li class="nav-small-cap">
               <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-              <span class="hide-menu">Configuración</span>
+              <span class="hide-menu">SGM</span>
             </li>
             <!-- ---------------------------------- -->
             <!-- Dashboard -->
             <!-- ---------------------------------- -->
             <li class="sidebar-item">
-              <a class="sidebar-link" href="/grupos" aria-expanded="false">
+              <a class="sidebar-link" href="/" aria-expanded="false">
                 <span>
-                  <i class="ti ti-file"></i>
+                  <i class="ti ti-calendar-event"></i>
                 </span>
-                <span class="hide-menu">Grupos</span>
+                <span class="hide-menu">Calendario de actividades</span>
               </a>
             </li>
             <li class="sidebar-item">
-              <a class="sidebar-link" href="/estaciones" aria-expanded="false">
+              <a class="sidebar-link" href="/" aria-expanded="false">
                 <span>
-                  <i class="ti ti-file"></i>
+                  <i class="ti ti-stack-3"></i>
                 </span>
-                <span class="hide-menu">Estaciones</span>
-              </a>
-            </li>
-
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/puestos" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Puestos</span>
+                <span class="hide-menu">Elementos SGM</span>
               </a>
             </li>
 
             <li class="sidebar-item">
-              <a class="sidebar-link" href="/usuarios" aria-expanded="false">
+              <a class="sidebar-link" href="/" aria-expanded="false">
                 <span>
-                  <i class="ti ti-file"></i>
+                  <i class="ti ti-gauge"></i>
                 </span>
-                <span class="hide-menu">Usuarios</span>
+                <span class="hide-menu">Descargar SGM</span>
+              </a>
+            </li>
+
+            <li class="sidebar-item">
+              <a class="sidebar-link" aria-expanded="false">
+                <span>
+                  <i class="ti ti-book-2"></i>
+                </span>
+                <span class="hide-menu">Manual de Procedimiento</span>
               </a>
             </li>
 
              <li class="sidebar-item">
-              <a class="sidebar-link" href="/modulos" aria-expanded="false">
+              <a class="sidebar-link" href="/" aria-expanded="false">
                 <span>
-                  <i class="ti ti-file"></i>
+                  <i class="ti ti-school"></i>
                 </span>
-                <span class="hide-menu">Modulos</span>
-              </a>
-            </li>
-            <!-- Encargado -->
-            <li class="nav-small-cap">
-              <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-              <span class="hide-menu">Estaciones</span>
-            </li>
-            
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/bitacora-aditivo" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Bitácora de aditivo</span>
-              </a>
-            </li>
-
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/solicitud-gafetes" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Solicitud de Gafetes</span>
+                <span class="hide-menu">Mis Cursos</span>
               </a>
             </li>
 
              <li class="sidebar-item">
-              <a class="sidebar-link" href="/solicitud-tarjetas" aria-expanded="false">
+              <a class="sidebar-link" href="/" aria-expanded="false">
                 <span>
-                  <i class="ti ti-file"></i>
+                  <i class="ti ti-users"></i>
                 </span>
-                <span class="hide-menu">Solicitud de Tarjetas</span>
+                <span class="hide-menu">Personal</span>
               </a>
             </li>
 
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/solicitud-tarjetas" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Solicitud de Tarjetas</span>
-              </a>
-            </li>
 
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/sasisopa" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">SASISOPA</span>
-              </a>
-            </li>
-
-             <li class="sidebar-item">
-              <a class="sidebar-link" href="/sgm" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">SGM</span>
-              </a>
-            </li>
-
-             <li class="sidebar-item">
-              <a class="sidebar-link" href="/dapartamento-operativo" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Operativo</span>
-              </a>
-            </li>
-
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/dapartamento-gestoria" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Gestoria</span>
-              </a>
-            </li>
             <!-- -->
      
           </ul>
@@ -304,7 +248,7 @@
 
        <div class="body-wrapper">
         <div class="container-fluid">
-          
+        <span class="mb-1 badge rounded-pill text-bg-primary"><?=$user->estacion->razonsocial??'Sistema de Gestión de Medición'?></span>      
         <?= $content ?>
          
         </div>
