@@ -36,7 +36,7 @@ class Router {
                 $vars    = $routeInfo[2];
 
                 if ($handler instanceof \Closure) {
-                    call_user_func_array($handler, $vars);
+                    call_user_func_array($handler, array_values($vars));
                     break;
                 }
 

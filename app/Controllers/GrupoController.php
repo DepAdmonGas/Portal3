@@ -3,115 +3,115 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Models\Grupo;
 class GrupoController extends BaseController{
-    
-    public function index(){
-       
-        $data = [
-            'title' => 'Grupos',
-            'links' =>[
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js',
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/grupos/datatable.init.js',
-                '/assets/js/grupos/actions.init.js'
-            ]
-        ];
-        
-        View::render('grupos/index', $data,'main');
-       
-    }
 
-    public function datatableGrupos(){
+public function index(){
 
-        $grupo = Grupo::all();
+$data = [
+'title' => 'Grupos',
+'links' =>[
+'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+],
+'scripts' => [
+'/assets/js/vendor.min.js',
+'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+'/assets/js/grupos/datatable.init.js',
+'/assets/js/grupos/actions.init.js'
+]
+];
 
-         echo json_encode([
-            "data" => $grupo
-        ]);
-        
-        exit;
-        
-    }
+View::render('grupos/index', $data,'main');
 
-    public function createGrupo(){
+}
 
-        $data = json_decode(file_get_contents('php://input'), true);
+public function datatableGrupos(){
 
-        if (empty($data['nombre'])) {
-            http_response_code(422);
-            echo json_encode(['message' => 'Nombre requerido']);
-            exit;
-        }
+$grupo = Grupo::all();
 
-        Grupo::create([
-            'nombre' => $data['nombre'],
-            'estatus' => 1
-        ]);
+echo json_encode([
+"data" => $grupo
+]);
 
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
-        exit;
-    }
+exit;
 
-    public function updateGrupo()
-    {
-        $data = json_decode(file_get_contents('php://input'), true);
+}
 
-        if (empty($data['id']) || empty($data['nombre'])) {
-            echo json_encode(['message' => 'Datos incompletos']);
-            exit;
-        }
+public function createGrupo(){
 
-        $grupo = Grupo::find($data['id']);
+$data = json_decode(file_get_contents('php://input'), true);
 
-        if (!$grupo) {
-            echo json_encode(['message' => 'Grupo no encontrado']);
-            exit;
-        }
+if (empty($data['nombre'])) {
+http_response_code(422);
+echo json_encode(['message' => 'Nombre requerido']);
+exit;
+}
 
-        $grupo->nombre = $data['nombre'];
-        $grupo->save();
-        
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
-        exit;
-    }
+Grupo::create([
+'nombre' => $data['nombre'],
+'estatus' => 1
+]);
+
+header('Content-Type: application/json');
+echo json_encode(['success' => true]);
+exit;
+}
+
+public function updateGrupo()
+{
+$data = json_decode(file_get_contents('php://input'), true);
+
+if (empty($data['id']) || empty($data['nombre'])) {
+echo json_encode(['message' => 'Datos incompletos']);
+exit;
+}
+
+$grupo = Grupo::find($data['id']);
+
+if (!$grupo) {
+echo json_encode(['message' => 'Grupo no encontrado']);
+exit;
+}
+
+$grupo->nombre = $data['nombre'];
+$grupo->save();
+
+header('Content-Type: application/json');
+echo json_encode(['success' => true]);
+exit;
+}
 
 
-    public function deleteGrupo()
-    {
-        // Leer JSON enviado por Axios
-        $data = json_decode(file_get_contents('php://input'), true);
-        $id = $data['id'] ?? null;
+public function deleteGrupo()
+{
+// Leer JSON enviado por Axios
+$data = json_decode(file_get_contents('php://input'), true);
+$id = $data['id'] ?? null;
 
-        if (!$id) {
-            echo json_encode(['message' => 'ID requerido']);
-            exit;
-        }
+if (!$id) {
+echo json_encode(['message' => 'ID requerido']);
+exit;
+}
 
-        // Buscar el grupo
-        $grupo = Grupo::find($id);
+// Buscar el grupo
+$grupo = Grupo::find($id);
 
-        if (!$grupo) {
-            echo json_encode(['message' => 'Grupo no encontrado']);
-            exit;
-        }
+if (!$grupo) {
+echo json_encode(['message' => 'Grupo no encontrado']);
+exit;
+}
 
-        if ($grupo->estatus == 0) {
-        echo json_encode(['message' => 'No se puede eliminar un grupo ya inactivo']);
-        exit;
-        }
+if ($grupo->estatus == 0) {
+echo json_encode(['message' => 'No se puede eliminar un grupo ya inactivo']);
+exit;
+}
 
-        // Soft delete: cambiar estatus a 0
-        $grupo->estatus = 0;
-        $grupo->save();
+// Soft delete: cambiar estatus a 0
+$grupo->estatus = 0;
+$grupo->save();
 
-        // Devolver respuesta JSON
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['success' => true]);
-        exit;
-    }
+// Devolver respuesta JSON
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode(['success' => true]);
+exit;
+}
 
 }
