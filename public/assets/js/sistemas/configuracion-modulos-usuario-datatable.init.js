@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-$('#table-puestos').DataTable({
+const params = new URLSearchParams(window.location.search);
+const idestacion = params.get('idEstacion');
+
+$('#table-usuarios-configuracion').DataTable({
 processing: true,
 serverSide: false,
 autoWidth: false,
@@ -10,15 +13,24 @@ language: {
 url: '/assets/libs/datatables.net/js/es-ES.json'
 },
 ajax: {
-url: '/puestos/datatable',
-type: 'GET', 
+url: '/usuarios/datatable',
+type: 'GET',
+data: function (d) {
+d.idestacion = idestacion;
+},             
 dataSrc: function (json) {
-return json.data; 
+return json.data;  
 }
 },
 columns: [
 { data: 'id', width: '60px', className: 'text-center' },
-{ data: 'tipo_puesto' },
+{ data: 'nombre' },
+{ data: 'puesto' },
+{ data: 'razonsocial',
+render: function (data) {
+return data && data.trim() !== '' ? data : 'Todas';
+}
+},
 {
 data: 'estatus',
 width: '80px',
@@ -26,7 +38,7 @@ className: 'text-center',
 render: function (data) {
 return data == 0
 ? '<span class="mb-1 badge text-bg-success">Activo</span>'
-: '<span class="mb-1 badge text-bg-danger">Cancelado</span>';
+: '<span class="mb-1 badge text-bg-danger">Eliminado</span>';
 }
 },
 {
@@ -39,26 +51,9 @@ render: function (data, type, row) {
 const disabled = row.estatus === 1
 ? 'disabled opacity-50 pointer-events-none'
 : '';
-
-return `
-<div class="dropdown dropstart">
-<a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown">
-<i class="ti ti-dots-vertical fs-6"></i>
-</a>
-<ul class="dropdown-menu">
-<li>
-<a class="dropdown-item d-flex align-items-center gap-3 btn-edit" data-id="${row.id}">
-<i class="fs-4 ti ti-edit"></i>Editar
-</a>
-</li>
-<li>
-<a class="dropdown-item d-flex align-items-center gap-3 btn-delete ${disabled}" data-id="${row.id}">
-<i class="fs-4 ti ti-trash"></i>Cancelar
-</a>
-</li>
-</ul>
-</div>
-`;
+return `<a href="configuracion-modulos-usuario/${row.id}" class="text-muted ${disabled}">
+<i class="ti ti-edit fs-6"></i>
+</a>`;
 }
 }
 ]
