@@ -93,10 +93,6 @@ $r->addRoute('PUT','/configuracion-modulos-usuario-permiso/{id:\d+}',Route::auth
 
 });
 
-// ========== RUTA DINÁMICA UNIVERSAL ==========
-$r->addRoute('GET', '/{url:.+}', Route::auth(['ModuloController', 'RutasModulos']));
-
-
 // SASISOPA
 $r->addGroup('/sasisopa', function (RouteCollector $r) {
 // index principal
@@ -166,6 +162,15 @@ $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos', Route::a
 // Elemento 11
 $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion', Route::auth(['SgmController', 'evaluacionCumplimientoObjetivosRevisionDireccion']));
 });
+
+
+
+
+
+
+
+// ========== RUTA DINÁMICA UNIVERSAL (SIEMPRTRE AL FINAL) ==========
+$r->addRoute('GET', '/{url:.+}', Route::auth(['ModuloController', 'RutasModulos']));
 
 };
 ?>
