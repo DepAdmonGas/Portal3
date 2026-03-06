@@ -70,12 +70,22 @@ return function(RouteCollector $r) {
                 $r->addRoute('GET', '/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales', Route::auth(['SasisopaController', 'identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales']));
                 // Elemento 3
                 $r->addRoute('GET', '/requisitos-legales', Route::auth(['SasisopaController', 'requisitosLegales']));
+                // Requisitos legales configuración
+                $r->addRoute('GET', '/requisitos-legales/configuracion', Route::auth(['SasisopaController', 'requisitosLegalesConfiguracion']));
+
                 // Elemento 4
                 $r->addRoute('GET', '/objetivos-metas-indicadores', Route::auth(['SasisopaController', 'objetivosMetasIndicadores']));
+                // Capacitación del personal
+                $r->addRoute('GET', '/objetivos-metas-indicadores/capacitacion-personal', Route::auth(['SasisopaController', 'objetivosMetasIndicadoresCapacitacionPersonal']));
+                // Experiencia del cliente
+                $r->addRoute('GET', '/objetivos-metas-indicadores/experiencia-cliente', Route::auth(['SasisopaController', 'objetivosMetasIndicadoresExperienciaCliente']));
+                // Indicadores de Ventas
+                $r->addRoute('GET', '/objetivos-metas-indicadores/indicador-ventas', Route::auth(['SasisopaController', 'objetivosMetasIndicadoresIndicadorVentas']));
+                              
                 // Elemento 5
                 $r->addRoute('GET', '/funciones-responsabilidades-autoridad', Route::auth(['SasisopaController', 'funcionesResponsabilidadesAutoridad']));
                 // Elemento 6
-                $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento', Route::auth(['SasisopaController', 'competenciaPersonalCapacitacionEntrenamiento']));
+                $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento', Route::auth(['SasisopaController', 'competenciaPersonalCapacitacionEntrenamiento']));                
                 // Elemento 7
                 $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['SasisopaController', 'comunicacionParticipacionConsulta']));
                 // Elemento 8
@@ -100,6 +110,13 @@ return function(RouteCollector $r) {
                 $r->addRoute('GET','/revision-resultados',Route::auth(handler: ['SasisopaController','revisionResultados']));
                 // Elemento 18
                 $r->addRoute('GET','/informes-desempeno',Route::auth(handler: ['SasisopaController','informesDesempeno']));
+                
+                // Calendario
+                $r->addRoute('GET','/calendario',Route::auth(handler: ['SasisopaController','calendario']));
+                // Cursos
+                $r->addRoute('GET','/cursos',Route::auth(handler: ['SasisopaController','cursos']));
+
+
         });
 
          // SGM

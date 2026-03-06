@@ -10,10 +10,10 @@
             <ul class="dropdown-menu animated rubberBand">
                 <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-help"></i> Ayuda</a></li>
                 <li>
-                    <a class="dropdown-item" href="bitacora-aditivo/reporte"><i class="ti ti-pencil"></i> Editar Politica</a>
+                    <a class="dropdown-item" href=""><i class="ti ti-pencil"></i> Editar Politica</a>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="bitacora-aditivo/inventario"><i class="ti ti-file-download"></i> Descargar Politica</a>
+                    <a class="dropdown-item" href=""><i class="ti ti-file-download"></i> Descargar Politica</a>
                 </li>
             </ul>
         </div>
@@ -26,7 +26,7 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a class="text-muted text-decoration-none" href="">SASISOPA</a>
+            <a class="link-info text-decoration-none" href="">SASISOPA</a>
         </li>
         <li class="breadcrumb-item" aria-current="page"><?=$title;?></li>
     </ol>
@@ -68,6 +68,7 @@
 
 </div>
 
+
 <div class="row">
 <div class="col-md-6">
 
@@ -77,7 +78,10 @@
   <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Fo.ADMONGAS.001 (Lista de comprobación)</h4>
       <div class="ms-auto">
-      <i class="ti ti-plus fs-8 text-primary"></i>
+        <button type="button" class="btn">
+        <i class="ti ti-plus fs-7 text-primary"></i>
+        </button>
+      
       </div>
   </div>
 
@@ -111,7 +115,9 @@
   <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
       <div class="ms-auto">
-      <i class="ti ti-plus fs-8 text-primary"></i>
+      <button type="button" class="btn">
+        <i class="ti ti-plus fs-7 text-primary"></i>
+        </button>
       </div>
   </div>
 
