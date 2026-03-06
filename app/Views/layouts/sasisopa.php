@@ -71,7 +71,7 @@
             <!-- Dashboard -->
             <!-- ---------------------------------- -->
             <li class="sidebar-item">
-              <a class="sidebar-link" href="/calendario" aria-expanded="false">
+              <a class="sidebar-link" href="/sasisopa/calendario" aria-expanded="false">
                 <span>
                   <i class="ti ti-calendar-event"></i>
                 </span>
@@ -133,7 +133,7 @@
             </li>
 
              <li class="sidebar-item">
-              <a class="sidebar-link" href="/" aria-expanded="false">
+              <a class="sidebar-link" href="/sasisopa/cursos" aria-expanded="false">
                 <span>
                   <i class="ti ti-school"></i>
                 </span>

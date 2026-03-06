@@ -68,6 +68,24 @@ class SasisopaController{
 
     }
 
+    public function requisitosLegalesConfiguracion(){
+
+         $data = [
+            'title' => 'REQUISITOS LEGALES CONFIGURACIÓN',
+             'links' =>[
+                
+            ],
+            'scripts' => [
+                '/assets/js/vendor.min.js'
+            ]
+        ];
+        
+        View::render('sasisopa/requisitos-legales-configuracion', $data,'sasisopa');
+
+    }
+
+    
+
     public function objetivosMetasIndicadores(){
 
          $data = [
@@ -83,6 +101,58 @@ class SasisopaController{
         View::render('sasisopa/objetivos-metas-indicadores', $data,'sasisopa');
 
     }
+
+    public function objetivosMetasIndicadoresCapacitacionPersonal(){
+
+         $data = [
+            'title' => 'Capacitación del personal',
+             'links' =>[
+                
+            ],
+            'scripts' => [
+                '/assets/js/vendor.min.js'
+            ]
+        ];
+        
+        View::render('sasisopa/capacitacion-personal', $data,'sasisopa');
+
+    }
+
+     public function objetivosMetasIndicadoresExperienciaCliente(){
+
+         $data = [
+            'title' => 'Experiencia del cliente',
+             'links' =>[
+                
+            ],
+            'scripts' => [
+                '/assets/js/vendor.min.js'
+            ]
+        ];
+        
+        View::render('sasisopa/experiencia-cliente', $data,'sasisopa');
+
+    }
+
+    public function objetivosMetasIndicadoresIndicadorVentas(){
+
+         $data = [
+            'title' => 'Indicadores de Ventas',
+             'links' =>[
+                
+            ],
+            'scripts' => [
+                '/assets/js/vendor.min.js'
+            ]
+        ];
+        
+        View::render('sasisopa/indicador-ventas', $data,'sasisopa');
+
+    }
+
+    
+
+    
 
     public function funcionesResponsabilidadesAutoridad(){
 
@@ -305,6 +375,41 @@ class SasisopaController{
         ];
         
         View::render('sasisopa/informes-desempeno', $data,'sasisopa');
+
+    }
+
+    //--------------------------------------------------------------
+
+
+        public function calendario(){
+
+         $data = [
+            'title' => 'Calendario',
+             'links' =>[
+                
+            ],
+            'scripts' => [
+                '/assets/js/vendor.min.js'
+            ]
+        ];
+        
+        View::render('sasisopa/calendario', $data,'sasisopa');
+
+    }
+
+     public function cursos(){
+
+         $data = [
+            'title' => 'Cursos',
+             'links' =>[
+                
+            ],
+            'scripts' => [
+                '/assets/js/vendor.min.js'
+            ]
+        ];
+        
+        View::render('sasisopa/cursos', $data,'sasisopa');
 
     }
 
