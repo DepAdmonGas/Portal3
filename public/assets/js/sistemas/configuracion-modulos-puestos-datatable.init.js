@@ -40,25 +40,9 @@ const disabled = row.estatus === 1
 ? 'disabled opacity-50 pointer-events-none'
 : '';
 
-return `
-<div class="dropdown dropstart">
-<a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown">
-<i class="ti ti-dots-vertical fs-6"></i>
-</a>
-<ul class="dropdown-menu">
-<li>
-<a class="dropdown-item d-flex align-items-center gap-3 btn-edit" data-id="${row.id}">
-<i class="fs-4 ti ti-edit"></i>Editar
-</a>
-</li>
-<li>
-<a class="dropdown-item d-flex align-items-center gap-3 btn-delete ${disabled}" data-id="${row.id}">
-<i class="fs-4 ti ti-trash"></i>Cancelar
-</a>
-</li>
-</ul>
-</div>
-`;
+return `<a href="configuracion-modulos-puesto/${row.id}" class="text-muted ${disabled}">
+<i class="ti ti-edit fs-6"></i>
+</a>`;
 }
 }
 ]
