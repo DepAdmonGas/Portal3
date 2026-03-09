@@ -180,6 +180,7 @@ return function(RouteCollector $r) {
                 });
 
 
+        // ========== RUTA DINÁMICA UNIVERSAL (SIEMPRTRE AL FINAL) ==========
         $r->addRoute('GET', '/{url:.+}', Route::auth(['ModuloController', 'RutasModulos']));
 
 };
