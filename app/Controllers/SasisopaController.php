@@ -1,10 +1,13 @@
 <?php
 namespace App\Controllers;
 use App\Core\View;
+use App\Models\Sasisopa\Sasisopa;
 
 class SasisopaController{
 
     public function index(){
+
+        $sasisopa = Sasisopa::all();
 
          $data = [
             'title' => 'SASISOPA',
@@ -13,7 +16,9 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'elementos' => $sasisopa
+
         ];
         
         View::render('sasisopa/index', $data,'sasisopa');

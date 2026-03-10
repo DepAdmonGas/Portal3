@@ -1,19 +1,29 @@
 <?php
 namespace App\Controllers;
 use App\Core\View;
+use App\Models\Sgm\Elemento;
+use App\Core\Breadcrumb;
 
 class SgmController{
 
     public function index(){
 
+        $title = 'SGM';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add($title, '');
+
+        $sgm = Elemento::all();
+
          $data = [
-            'title' => 'SGM',
+            'title' => $title,
              'links' =>[
                 
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'elementos' => $sgm
         ];
         
         View::render('sgm/index', $data,'sgm');
@@ -22,8 +32,13 @@ class SgmController{
 
     public function estructuraSistemaMedicion(){
 
+        $title = '1. Estructura del sistema de Medicion';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '1. Estructura del sistema de Medicion',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -38,8 +53,13 @@ class SgmController{
 
     public function controlDocumentalSistemaGestionMedicion(){
 
+        $title = '2. Control del documental del Sistema de Gestion de medición';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '2. Control del documental del Sistema de Gestion de medición',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -54,8 +74,13 @@ class SgmController{
 
     public function responsabilidadesDireccion(){
 
+        $title = '3. Responsabilidades de la direccion';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '3. Responsabilidades de la direccion',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -70,8 +95,13 @@ class SgmController{
 
     public function establecimientoObjetivosEnfocadosCliente(){
 
+        $title = '4. Establecimiento de objetivos enfocados al cliente';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '4. Establecimiento de objetivos enfocados al cliente',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -86,8 +116,13 @@ class SgmController{
 
     public function normatividadAplicableMediciones(){
 
+        $title = '5. Normatividad aplicable a mediciones';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '5. Normatividad aplicable a mediciones',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -102,8 +137,13 @@ class SgmController{
 
     public function gestionRecursos(){
 
+        $title = '6. Gestion de los Recursos';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '6. Gestion de los Recursos',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -118,8 +158,13 @@ class SgmController{
 
     public function procesosMedicion(){
 
+        $title = '7. Procesos de medición';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '7. Procesos de medición',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -134,8 +179,13 @@ class SgmController{
 
     public function gestionRiesgosImpactanMedicion(){
 
+        $title = '8. Gestión de Riesgos que impactan en la medición';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '8. Gestión de Riesgos que impactan en la medición',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -150,8 +200,13 @@ class SgmController{
 
     public function establecimientoSeguimientoConfirmacionMetrologica(){
 
+        $title = '9. Establecimiento y Seguimiento Confirmación Metrológica';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '9. Establecimiento y Seguimiento Confirmación Metrológica',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -166,8 +221,13 @@ class SgmController{
 
     public function auditoriasInternasExternasAtencionHallazgos(){
 
+        $title = '10. Auditorias, Internas, externas y Atención de hallazgos';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '10. Auditorias, Internas, externas y Atención de hallazgos',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -182,8 +242,13 @@ class SgmController{
 
     public function evaluacionCumplimientoObjetivosRevisionDireccion(){
 
+        $title = '11. Evaluación del cumplimiento de Objetivos y revisión por la Dirección';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '11. Evaluación del cumplimiento de Objetivos y revisión por la Dirección',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -195,7 +260,5 @@ class SgmController{
         View::render('sgm/evaluacion-cumplimiento-objetivos-revision-direccion', $data,'sgm');
 
     }
-
-    
 
 }
