@@ -95,5 +95,40 @@
  
 
 </div>
-
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 9 MEJORES PRÁCTICAS Y ESTÁNDARES
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+        <p>
+            Aquí vas a poder consultar la <b>NOM-005 ASEA 2016</b> para la etapa actual de tu estación de servicio
+          </p>
+          <p>
+            La política debe ser comunicada a todo el personal incluyendo clientes, prestadores de servicios y proveedores.
+          </p>
+
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">En extracto encontraras los artículos aplicables a la etapa actual de la estación</li>
+            <li class="list-group-item">Podrás descargar la Norma oficial mexicana completa dando clic en el enlace </li>
+          </ul>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label> el conocer y poner en práctica lo establecido en la <b>NOM-005 ASEA 2016</b>, esto con la finalidad de llevar acabo las mejores prácticas.</p>
+      
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

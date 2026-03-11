@@ -89,3 +89,45 @@
                     
   </div>
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 16. INVESTIGACIÓN DE INCIDENTES Y ACCIDENTES, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p>
+            En este apartado podrás registrar los accidentes ocurridos dentro de la estación de servicio.
+          </p>
+
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul>
+            <li>Da clic en el botón <i class="ti ti-plus fs-6 text-primary"></i> para agregar un nuevo registro sobre algún incidente o accidente ocurrido.</small></li>
+            <li>La investigación e informe de los eventos tipo 1 y 2 (Excepto cuando exista muerte de una o mas personas dentro de las instalaciones) puede realizarse por personal interno especializado utilizando un procedimiento para identificar la causa raíz de los accidentes, sin embargo también se podrá contratar un tercer autorizado ante la ASEA.</li>
+            <li>Cuando el evento es tipo 2 (Existe muerte de una o mas personas dentro de las instalaciones) y tipo 3 se deberá contratar aun tercer autorizado para realizar la investigación causa raíz.</li>
+          </ul>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label>, <label class="text-danger fw-bold">Representante Legal</label> y departamento de mantenimiento realizar la investigación causa raíz así como el informe detallado.</p>
+
+          <small>
+            <div>Nota:</div>
+            <p>No olvides los siguientes conceptos:</p>
+            <b>Accidente:</b> Evento que ocasiona afectaciones al personal, a la Población, a los bienes propiedad de la Nación, a los equipos e instalaciones, a los sistemas y/o procesos operativos y al medio ambiente.<br>
+            <b>Incidente:</b> Evento o combinación de eventos inesperados no deseados que alteran el funcionamiento normal de las Instalaciones, del proceso o de la industria; acompañado o no de afectación al Ambiente, a las Instalaciones, a la Población y/o al personal del Regulado, así como al personal de contratistas, subcontratistas, proveedores y prestadores de servicios.
+
+          </small>
+
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

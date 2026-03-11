@@ -89,3 +89,51 @@
 </div>
 
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+      <p>Aquí vas a encontrar el formato para el registro y seguimiento de la comunicación interna y externa de la empresa.</b>.</p>
+          <hr>
+          <label class="fw-bold">Que se comunica:</label>
+          <ul class="list-group list-group-flush">
+          <li class="list-group-item">Implementación del Sistema de Administración</li>
+          <li class="list-group-item">Política, objetivos y Metas</li>
+          <li class="list-group-item">Cumplimiento de requisitos legales</li>
+          <li class="list-group-item">Actos y condiciones inseguras</li>
+          <li class="list-group-item">Situaciones de emergencia</li>
+          <li class="list-group-item">Respuesta a quejas</li>
+          </ul>
+
+          <hr>
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+          <li >Atreves del correo electrónico</li>
+          <li class="list-group-item">Vía telefónica</li>
+          <li class="list-group-item">Distribución de minutas y actas de reuniones</li>
+          <li class="list-group-item">Tableros, carteles, trípticos</li>
+          <li class="list-group-item">Portal AdmonGas</li>
+          </ul>
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <a class="text-danger fw-bold">Representante Técnico</a> (RT), <a class="text-danger fw-bold">Gerente de la Estación</a>, hacer los registros del seguimiento a quejas y sugerencias de los clientes (Comunicación Externa), así como también registrar la comunicación interna que no se halla ejecutado a través del portal.
+          </p>
+          <p>
+            <label class="text-danger fw-bold">¡Importante!</label><br>
+            Las quejas son una oportunidad para afianzar nuestra relación con el cliente, se sentirá atendido, escuchado y como parte valiosa que aporta información de la empresa, por lo que, si aún no cuentas con un <b>buzón de quejas y sugerencias</b>, es momento de hacerlo.
+          </p>
+          <p class="text-muted"><small>*El buzón debe ser colocado en una parte visible de la estación y debe de contar en todo momento con papel y pluma, recuerda revisar el contenido una vez al mes y dar seguimiento.</small></p>
+
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

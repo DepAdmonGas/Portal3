@@ -103,3 +103,39 @@
 
 
 </div>
+
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 3 REQUISITOS LEGALES, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p>
+            Aquí vas a poder consultar, descargar e imprimir los requisitos legales aplicables a tu estación de servicio, así como también identificar el porcentaje de cumplimiento en los diferentes niveles de gobierno regulatorio.
+          </p>
+     
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Da clic en el botón de Requisitos Legales</li>
+            <li class="list-group-item">Selecciona el nivel de gobierno para visualizar los requisitos aplicables</li>
+            <li class="list-group-item">Da clic en el icono PDF para visualizar o descargar</li>
+          </ul>
+
+          <p><small class="text-danger">* La barra indica el porcentaje de cumplimiento general de tus requisitos legales</small></p>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label> y <label class="text-danger fw-bold">Departamento de Gestión</label> el actualizar aquellos requisitos legales que cuentes con vigencia.</p>
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

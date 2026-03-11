@@ -50,3 +50,44 @@
                     
   </div>
 </div>
+
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 17. REVISIÓN DE RESULTADOS, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p>
+            En este apartado podrás verificar los resultados arrojados en el elemento <b>14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN</b>, así como también proponer acciones de mejora para poder cumplir los objetivos y las metas.
+          </p>
+         
+
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Da clic en el icono de descargar para llenar el informe de revisión de resultados <b>(Fo.ADMONGAS.027)</b>.</li>
+            <li class="list-group-item">Lee detenidamente cada uno de los puntos del formato y realiza el llenado como se te indica.</li>
+            <li class="list-group-item">Dicha plantilla deberá ser retroalimentada en cuanto al contenido asegúrate de no dejar ningún punto en blanco.</li>
+            <li class="list-group-item">El informe deberá ser firmado por el Representante legal de la estación.</li>
+            <li class="list-group-item">Escanea y sube tu archivo en formato PDF, dando clic en el icono <i class="ti ti-plus fs-6 text-primary"></i> agregar documento.</li>
+            <li class="list-group-item">Podrás verificar el estado de tu documento en el icono PDF.</li>
+          </ul>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label>, el interpretar los resultados obtenidos durante el tiempo de implementación y el generar propuestas de mejora para obtener los resultados deseados.</p>
+
+          <small>Nota: El informe de revisión de resultados deberá ser actualizado anualmente </small>
+
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

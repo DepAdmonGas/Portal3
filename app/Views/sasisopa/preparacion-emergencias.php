@@ -101,3 +101,37 @@
                     
   </div>
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 13. PREPARACIÓN Y RESPUESTA A EMERGENCIAS, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p>
+           En este apartado podrás subir, descargar y/o consultar los protocolos de respuesta a emergencias que complementan a los cursos impartidos por el consultor de protección civil. Así como también realizar el registro de los simulacros que se lleven a cabo en la estación de servicio.
+          </p>
+         
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Da clic en el botón de PRE para consultar y/o descargar los protocolos de respuesta emergencias de tu estación (en caso de no contar con ellos sube el archivo en formato PDF para próximas consultas).</li>
+            <li class="list-group-item">Planifica tu simulacro con el personal involucrado en las brigadas de atención a emergencias.Deveras designar a personal capacitado que fungirá como evaluador del simulacro que se esta llevando a cabo (Imprimir formato Fo.ADMONGAS.016a).</li>
+            <li class="list-group-item">Da clic en el botón agregar para realizar el registro del simulacro y llena los campos se solicitan.</li>
+          </ul>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT) y <label class="text-danger fw-bold">Gerente de la Estación</label> y de quienes conformen las Brigadas de atención a emergencias coordinar los simulacros en fechas y tiempos establecidos.</p>
+
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

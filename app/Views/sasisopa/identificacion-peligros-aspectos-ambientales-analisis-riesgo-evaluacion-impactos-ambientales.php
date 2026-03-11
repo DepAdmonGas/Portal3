@@ -106,3 +106,41 @@
 </div>
 
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 2. IDENTIFICACIÓN DE PELIGROS Y ASPECTOS AMBIENTALES, ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p >
+           En este apartado podrás consultar las matrices para la identificación de aspectos e impactos ambientales así 
+           como la de Riesgos y peligros dela estación de servicio.
+          </p>
+
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item disabled">Da clic en recuadro Identificación y evaluación de Aspectos e Impactos Ambientales para visualizar la matriz </li>
+            <li class="list-group-item disabled">Da clic en el recuadro Identificación y evaluación de Riesgos y Peligros para registrar el análisis para visualizar la matriz</li>
+          </ul>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label> dar a conocer los aspectos ambientales significativos a todo el personal de la estación de servicio puede ser mediante trípticos, capacitaciones o enviando comunicados mediante el elemento numero 7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA.</p>
+
+          <small>Nota:<br>
+          Recuerda que para aquellos riesgos y peligros significativos se deben generar e implementar medidas de mitigación.
+          </small>
+         
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->
