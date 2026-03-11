@@ -23,7 +23,8 @@ class SasisopaController{
             'scripts' => [
                 '/assets/js/vendor.min.js'
             ],
-            'elementos' => $sasisopa
+            'elementos' => $sasisopa,
+            'help' => false
 
         ];
         
@@ -46,7 +47,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/politica', $data,'sasisopa');
@@ -68,7 +70,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales', $data,'sasisopa');
@@ -90,7 +93,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/requisitos-legales', $data,'sasisopa');
@@ -137,7 +141,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/objetivos-metas-indicadores', $data,'sasisopa');
@@ -232,7 +237,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/funciones-responsabilidades-autoridad', $data,'sasisopa');
@@ -254,7 +260,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/competencia-personal-capacitacion-entrenamiento', $data,'sasisopa');
@@ -276,7 +283,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/comunicacion-participacion-consulta', $data,'sasisopa');
@@ -298,7 +306,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/control-documentos-registros', $data,'sasisopa');
@@ -320,7 +329,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/mejores-practicas-estandares', $data,'sasisopa');
@@ -342,7 +352,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/control-actividades-procesos', $data,'sasisopa');
@@ -364,7 +375,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/integridad-mecanica-aseguramiento', $data,'sasisopa');
@@ -386,7 +398,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/seguridad-contratistas', $data,'sasisopa');
@@ -408,7 +421,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/preparacion-emergencias', $data,'sasisopa');
@@ -430,7 +444,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/monitoreo-verificacion-evaluacion', $data,'sasisopa');
@@ -452,7 +467,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/auditorias', $data,'sasisopa');
@@ -474,7 +490,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/investigacion-incidentes-accidentes', $data,'sasisopa');
@@ -496,7 +513,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/revision-resultados', $data,'sasisopa');
@@ -518,7 +536,8 @@ class SasisopaController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sasisopa/informes-desempeno', $data,'sasisopa');

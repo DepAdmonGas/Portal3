@@ -96,3 +96,35 @@
 </div>
 
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 5 FUNCIONES, RESPONSABILIDADES Y AUTORIDAD, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+         <p>
+            Aquí vas a poder consultar la estructura orgánica de la empresa, así como las funciones, responsabilidades y autoridad de cada puesto sobre el sistema de Administración.
+          </p>
+          
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Dar clic sobre el puesto para conocer las funciones, responsabilidades y autoridad</li>
+          </ul>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <span class="text-danger fw-bold">Representante Técnico (RT)</span>, <span class="text-danger fw-bold">Gerente de la Estación</span>, el dar a conocer a cada uno de los puestos sus funciones, responsabilidades dentro del Sistema de Administración. </p>
+
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

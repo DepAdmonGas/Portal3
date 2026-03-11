@@ -128,3 +128,43 @@
 </div>
 
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 1. POLITICA, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p>
+            Aquí vas a encontrar la política de tu empresa acorde a los requisitos solicitados en las Disposiciones 
+            Administrativas de Carácter General <b>(DACG)</b>, Sistemas de Administración de Seguridad Industrial, 
+            Seguridad Operativa y Protección al Medio Ambiente <b>(SASISOPA)</b>.
+          </p>
+          <p>
+            La política debe ser comunicada a todo el personal incluyendo clientes, prestadores de servicios y proveedores.
+          </p>
+
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item disabled">Elegir un día a la semana para comunicar política en una plática de 5 minutos</li>
+            <li class="list-group-item disabled">Imprimir y colocar en el tablón de anuncios de la estación</li>
+            <li class="list-group-item disabled">Subirla a la página web (en caso de contar)</li>
+            <li class="list-group-item disabled">Elaborar trípticos y distribuirlos entre los empleados</li>
+          </ul>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label> y <label class="text-danger fw-bold">Jefes de Piso</label>, comunicar la política a todas las partes interesadas.</p>
+
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

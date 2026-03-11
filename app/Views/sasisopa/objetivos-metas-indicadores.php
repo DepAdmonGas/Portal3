@@ -158,3 +158,37 @@
     </div>
   </div>
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 4. OBJETIVOS, METAS E INDICADORES, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p>
+            Aquí vas a poder consultar los objetivos y metas de la empresa, así como también visualizar las gráficas de los siguientes indicadores: Capacitación del personal, Experiencia del cliente y Ventas.
+          </p>
+
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Para evaluar la experiencia del cliente se tendrá que realizar cada 6 meses una encuesta de satisfacción (Dar clic en el botón PDF para descargarla e imprimirla)</li>
+            <li class="list-group-item">Se deberá coordinar para que en una semana se realicen el mayor número de encuestas a los clientes</li>
+            <li class="list-group-item">El resultado de cada una de las encuestas deberá ser vaciado en el apartado experiencia del cliente</li>
+          </ul>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label>, <label class="text-danger fw-bold">Jefes de Piso</label> y <label class="text-danger fw-bold">Despachadores</label> obtener los resultados del indicador Experiencia del cliente, así como proponer medidas necesarias para el logro de objetivos, metas e indicadores.</p>
+          
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->
