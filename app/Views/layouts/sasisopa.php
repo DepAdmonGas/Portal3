@@ -23,6 +23,23 @@
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+        <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const key = "scroll-" + window.location.pathname;
+
+        const scrollPosition = sessionStorage.getItem(key);
+        if (scrollPosition) {
+            window.scrollTo(0, parseInt(scrollPosition));
+        }
+
+        window.addEventListener("scroll", function () {
+            sessionStorage.setItem(key, window.scrollY);
+        });
+
+    });
+    </script>
       
 </head>
 <body class="link-sidebar">
@@ -221,6 +238,18 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
               <div class="d-flex align-items-center justify-content-between">
                 <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-center">
+
+                <!-- ----------------------------- -->
+                <!-- inicio boton de ayuda ------>
+                <!-- ----------------------------- -->
+                <li class="nav-item nav-icon-hover-bg rounded-circle">
+                    <a class="nav-link position-relative">
+                      <i class="ti ti-help"></i>
+                    </a>
+                  </li>
+                <!-- ----------------------------- -->
+                <!-- fin boton de ayuda ------>
+                <!-- ----------------------------- -->
                  
                 <li class="nav-item nav-icon-hover-bg rounded-circle">
                     <a class="nav-link moon dark-layout" href="javascript:void(0)" style="display: flex;">
@@ -292,7 +321,9 @@
        <div class="body-wrapper">
         <div class="container-fluid">
 
-          <span class="mb-1 badge rounded-pill text-bg-primary"><?=$user->estacion->razonsocial??'SASISOPA'?></span>        
+          <span class="mb-1 badge rounded-pill text-bg-primary"><?=$user->estacion->razonsocial??'SASISOPA'?></span>   
+          <h4 class="fw-semibold mt-3"><?=$title;?></h4>  
+          <?php \App\Core\Breadcrumb::render(); ?>     
           <?= $content ?>   
                 
         </div>
