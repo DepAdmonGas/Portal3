@@ -2,15 +2,21 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Models\Sasisopa\Sasisopa;
+use App\Core\Breadcrumb;
 
 class SasisopaController{
 
     public function index(){
 
+        $title = 'SASISOPA';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add($title, '');
+
         $sasisopa = Sasisopa::all();
 
          $data = [
-            'title' => 'SASISOPA',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -27,8 +33,14 @@ class SasisopaController{
 
     public function politica(){
 
+        $title = '1. POLÍTICA';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '1. POLÍTICA',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -43,8 +55,14 @@ class SasisopaController{
 
     public function identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales(){
 
+        $title = '2. IDENTIFICACIÓN DE PELIGROS Y ASPECTOS AMBIENTALES, ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '2. IDENTIFICACIÓN DE PELIGROS Y ASPECTOS AMBIENTALES, ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -59,8 +77,14 @@ class SasisopaController{
 
     public function requisitosLegales(){
 
+        $title = '3. REQUISITOS LEGALES';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '3. REQUISITOS LEGALES',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -75,8 +99,15 @@ class SasisopaController{
 
     public function requisitosLegalesConfiguracion(){
 
+        $title = 'REQUISITOS LEGALES CONFIGURACIÓN';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('3. REQUISITOS LEGALES', '/sasisopa/requisitos-legales');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => 'REQUISITOS LEGALES CONFIGURACIÓN',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -93,8 +124,14 @@ class SasisopaController{
 
     public function objetivosMetasIndicadores(){
 
+        $title = '4. OBJETIVOS, METAS E INDICADORES';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '4. OBJETIVOS, METAS E INDICADORES',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -109,8 +146,15 @@ class SasisopaController{
 
     public function objetivosMetasIndicadoresCapacitacionPersonal(){
 
+        $title = 'Capacitación del personal';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => 'Capacitación del personal',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -125,8 +169,15 @@ class SasisopaController{
 
      public function objetivosMetasIndicadoresExperienciaCliente(){
 
+        $title = 'Experiencia del cliente';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => 'Experiencia del cliente',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -141,8 +192,15 @@ class SasisopaController{
 
     public function objetivosMetasIndicadoresIndicadorVentas(){
 
+        $title = 'Indicadores de Ventas';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => 'Indicadores de Ventas',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -161,8 +219,14 @@ class SasisopaController{
 
     public function funcionesResponsabilidadesAutoridad(){
 
+        $title = '5. FUNCIONES, RESPONSABILIDADES Y AUTORIDAD';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '5. FUNCIONES, RESPONSABILIDADES Y AUTORIDAD',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -177,8 +241,14 @@ class SasisopaController{
 
     public function competenciaPersonalCapacitacionEntrenamiento(){
 
+        $title = '6. COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '6. COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -193,8 +263,14 @@ class SasisopaController{
 
     public function comunicacionParticipacionConsulta(){
 
+        $title = '7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -209,8 +285,14 @@ class SasisopaController{
 
     public function controlDocumentosRegistros(){
 
+        $title = '8. CONTROL DE DOCUMENTOS Y REGISTROS';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '8. CONTROL DE DOCUMENTOS Y REGISTROS',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -225,8 +307,14 @@ class SasisopaController{
 
     public function mejoresPracticasEstandares(){
 
+        $title = '9. MEJORES PRÁCTICAS Y ESTÁNDARES';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '9. MEJORES PRÁCTICAS Y ESTÁNDARES',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -241,8 +329,14 @@ class SasisopaController{
 
     public function controlActividadesProcesos(){
 
+        $title = '10. CONTROL DE ACTIVIDADES Y PROCESOS';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '10. CONTROL DE ACTIVIDADES Y PROCESOS',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -257,8 +351,14 @@ class SasisopaController{
 
     public function integridadMecanicaAseguramiento(){
 
+        $title = '11. INTEGRIDAD MECÁNICA Y ASEGURAMIENTO DE LA CALIDAD';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '11. INTEGRIDAD MECÁNICA Y ASEGURAMIENTO DE LA CALIDAD',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -273,8 +373,14 @@ class SasisopaController{
 
     public function seguridadContratistas(){
 
+        $title = '12. SEGURIDAD DE CONTRATISTAS';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '12. SEGURIDAD DE CONTRATISTAS',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -289,8 +395,14 @@ class SasisopaController{
 
     public function preparacionEmergencias(){
 
+        $title = '13. PREPARACIÓN Y RESPUESTA A EMERGENCIAS';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
         $data = [
-            'title' => '13. PREPARACIÓN Y RESPUESTA A EMERGENCIAS',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -305,8 +417,14 @@ class SasisopaController{
 
     public function monitoreoVerificacionEvaluacion(){
 
+        $title = '14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
     $data = [
-            'title' => '14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -321,8 +439,14 @@ class SasisopaController{
 
     public function auditorias(){
 
+        $title = '15. AUDITORÍAS';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '15. AUDITORÍAS',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -337,8 +461,14 @@ class SasisopaController{
 
     public function investigacionIncidentesAccidentes(){
 
+        $title = '16. INVESTIGACIÓN DE INCIDENTES Y ACCIDENTES';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '16. INVESTIGACIÓN DE INCIDENTES Y ACCIDENTES',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -353,8 +483,14 @@ class SasisopaController{
 
         public function revisionResultados(){
 
+        $title = '17. REVISIÓN DE RESULTADOS';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '17. REVISIÓN DE RESULTADOS',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -369,8 +505,14 @@ class SasisopaController{
 
     public function informesDesempeno(){
 
+        $title = '18. INFORMES DE DESEMPEÑO';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => '18. INFORMES DE DESEMPEÑO',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -388,8 +530,14 @@ class SasisopaController{
 
         public function calendario(){
 
+        $title = 'Calendario';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => 'Calendario',
+            'title' => $title,
              'links' =>[
                 
             ],
@@ -404,8 +552,14 @@ class SasisopaController{
 
      public function cursos(){
 
+        $title = 'Cursos';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
          $data = [
-            'title' => 'Cursos',
+            'title' => $title,
              'links' =>[
                 
             ],
