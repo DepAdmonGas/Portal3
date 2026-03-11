@@ -118,3 +118,24 @@
 
 </div>
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Ayuda
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+         <p><b>Bienvenido al elemento 5. Normatividad aplicable a mediciones</b>, en este elemento de manera anual deveras verificar si la legislación en materia de Mediciones se ha actualizado o han surgido nuevas normas o disposiciones a cumplir, dicha información tienes que registrarla en el formato 005
+          En el formato 006 de manera anual verifica que los requisitos legales a los que estas sujeto en Materia de Gestión de Medición, se encuentren vigentes.</p>
+          <p>Por ultimo no olvides que una vez que realices o complementes los registros debes dar a conocer a todo el personal la lista de normatividad a la que estamos sujetos y la lista de permisos con la que debemos contar, regístralo en el formato 001.
+          </p>
+          
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

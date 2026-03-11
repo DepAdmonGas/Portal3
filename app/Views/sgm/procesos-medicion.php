@@ -25,3 +25,21 @@
   </div>
 
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Ayuda
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+         <p>Bienvenido al elemento <b>7. PROCESOS DE MEDICIÓN.</b> A continuación, encontraras los programas de calibración y verificación de equipos de medición y patrones de medida, asi como sus respectivas bitácoras para el registro. </p>
+          
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

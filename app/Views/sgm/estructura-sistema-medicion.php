@@ -76,3 +76,23 @@
 </div>
 
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Ayuda
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p>
+            <b>Bienvenido al elemento 1 Estructura del sistema de Medición</b>, en este elemento de manera anual deberás verificar que el SGM cumpla con la legislación vigente requisitando el formato 002 y dando a conocer al personal involucrado (con el formato 001) los cambios en caso de haberlos, de lo contrario solo informar que se realizó la revisión del SGM y cumple. 
+          </p>
+        
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

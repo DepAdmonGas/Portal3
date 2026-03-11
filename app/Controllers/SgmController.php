@@ -23,7 +23,8 @@ class SgmController{
             'scripts' => [
                 '/assets/js/vendor.min.js'
             ],
-            'elementos' => $sgm
+            'elementos' => $sgm,
+            'help' => false
         ];
         
         View::render('sgm/index', $data,'sgm');
@@ -44,7 +45,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/estructura-sistema-medicion', $data,'sgm');
@@ -65,7 +67,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/control-documental-sistema-gestion-medicion', $data,'sgm');
@@ -86,7 +89,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/responsabilidades-direccion', $data,'sgm');
@@ -107,7 +111,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/establecimiento-objetivos-enfocados-cliente', $data,'sgm');
@@ -128,7 +133,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/normatividad-aplicable-mediciones', $data,'sgm');
@@ -149,7 +155,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/gestion-recursos', $data,'sgm');
@@ -170,7 +177,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/procesos-medicion', $data,'sgm');
@@ -191,7 +199,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/gestion-riesgos-impactan-medicion', $data,'sgm');
@@ -212,7 +221,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/establecimiento-seguimiento-confirmacion-metrologica', $data,'sgm');
@@ -233,7 +243,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/auditorias-internas-externas-atencion-hallazgos', $data,'sgm');
@@ -254,7 +265,8 @@ class SgmController{
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js'
-            ]
+            ],
+            'help' => true
         ];
         
         View::render('sgm/evaluacion-cumplimiento-objetivos-revision-direccion', $data,'sgm');

@@ -195,17 +195,14 @@
               <div class="d-flex align-items-center justify-content-between">
                
                 <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-center">
-                <!-- ----------------------------- -->
-                <!-- inicio boton de ayuda ------>
-                <!-- ----------------------------- -->
+                  
+                 <?php if (!empty($help)): ?>
                 <li class="nav-item nav-icon-hover-bg rounded-circle">
-                    <a class="nav-link position-relative">
-                      <i class="ti ti-help"></i>
+                    <a class="nav-link position-relative" data-bs-toggle="offcanvas" data-bs-target="#offcanvasHelp" aria-controls="offcanvasHelp">
+                        <i class="ti ti-help"></i>
                     </a>
-                  </li>
-                <!-- ----------------------------- -->
-                <!-- fin boton de ayuda ------>
-                <!-- ----------------------------- -->
+                </li>
+                <?php endif; ?>
 
                 <li class="nav-item nav-icon-hover-bg rounded-circle">
                     <a class="nav-link moon dark-layout" href="javascript:void(0)" style="display: flex;">

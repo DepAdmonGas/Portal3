@@ -90,3 +90,23 @@
 
 </div>
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Ayuda
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p>
+            <b>Bienvenido al elemento 3 Responsabilidades de la dirección</b>, este elemento esta correlacionado con el elemento 1 y 2 por lo que adicional solo deberás revisar de manera mensual deberás dar a conocer la política a los colaboradores, clientes, proveedores y de manera anual verificar que la política cumpla con los requerimientos de la estación de servicio, ambas actividades deberán registrarse bajo el formato 001.
+          </p>
+        
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->
