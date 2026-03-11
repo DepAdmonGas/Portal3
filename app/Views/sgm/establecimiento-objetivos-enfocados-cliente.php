@@ -96,3 +96,29 @@
 
 </div>
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Ayuda
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+          <p><b>Bienvenido al elemento 4 Establecimiento de objetivos enfocados al cliente</b>, en este elemento deberás analizar los datos obtenidos durante cada año de implementación del SGM, donde deberás identificar los resultados de los siguientes indicadores:</p>
+        
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">Implementación del SGM</li>
+          <li class="list-group-item">Calibración de equipos de medición</li>
+          <li class="list-group-item">Satisfacción del cliente</li>
+        </ul>
+
+        <p>Una vez analizados los resultados, deberás de verificar el % de cumplimiento de acuerdo a las metas propuestas, en caso de tener resultados desfavorables únete con tu equipo y propongan acciones a tomar para que en la siguiente evaluación los resultados sean mejores, no olvides hacer el registro en el formato 004 y dar a conocer al personal involucrado los resultados con el formato 001.</p>
+        
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

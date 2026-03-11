@@ -78,3 +78,22 @@ Pruebas de usuario continuas y actualizaciones basadas en feedback para mejorar 
 
 </div>
 </div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Ayuda
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+         <p>Bienvenido al elemento <b>8. GESTIÓN DE RIESGOS QUE IMPACTAN EN LA MEDICIÓN</b>. Lee atentamente el procedimiento del elemento 8 del Manual de procedimientos del SGM, una vez que analices los riesgos da a conocer las medidas de mitigación de cada riesgo y asienta el registro en el formato 001.
+          </p>
+          
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->
