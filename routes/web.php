@@ -98,6 +98,11 @@ return function(RouteCollector $r) {
                         $r->addRoute('GET', '', Route::auth(['SasisopaController', 'index']));
                         // Elemento 1
                         $r->addRoute('GET', '/politica', Route::auth(['SasisopaController', 'politica']));
+                        $r->addRoute('GET', '/datatable-lista-comprobacion', Route::auth(['SasisopaController', 'datatableListaComprobacion']));
+                        $r->addRoute('GET', '/datatable-lista-asistencia/elemento/{idsasisopa:\d+}', Route::auth(['SasisopaController', 'datatableListaAsistencia']));
+                        
+                        
+                        
                         // Elemento 2
                         $r->addRoute('GET', '/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales', Route::auth(['SasisopaController', 'identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales']));
                         // Elemento 3
