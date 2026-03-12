@@ -1,3 +1,5 @@
+<div id="container" data-idsasisopa="1">
+
 <div class="text-end mt-2">
 <div class="btn-group">
   <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -67,10 +69,12 @@
       </div>
   </div>
 
-  <div class="datatables mt-3">
+  <div class="datatables">
+
     <div class="table-responsive">
       <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
+
           <tr>
           <th>#</th>
           <th>Fecha</th>
@@ -78,10 +82,12 @@
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
+          
         </thead>
         <tbody></tbody>
       </table>
     </div>
+
   </div>
                     
   </div>
@@ -105,7 +111,7 @@
 
   <div class="datatables mt-3">
     <div class="table-responsive">
-      <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
            <th>#</th>
@@ -168,3 +174,5 @@
   </div>
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->
+
+</div>

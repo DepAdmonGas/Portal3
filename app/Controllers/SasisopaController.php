@@ -3,6 +3,8 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Models\Sasisopa\Sasisopa;
 use App\Core\Breadcrumb;
+use App\Models\Sasisopa\PoliticaListaComprobacion;
+use App\Models\Sasisopa\ListaAsistencia;
 
 class SasisopaController{
 
@@ -31,7 +33,8 @@ class SasisopaController{
         View::render('sasisopa/index', $data,'sasisopa');
 
     }
-
+    //----------------------------------------------------------------
+    //------------ 1 Politica ---------------------------------------
     public function politica(){
 
         $title = '1. POLÍTICA';
@@ -43,10 +46,13 @@ class SasisopaController{
          $data = [
             'title' => $title,
              'links' =>[
-                
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/assets/js/vendor.min.js',
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/sasisopa/politica.datatable.init.js',
+                '/assets/js/sasisopa/listaasistencia.datatable.init.js'
             ],
             'help' => true
         ];
@@ -54,6 +60,36 @@ class SasisopaController{
         View::render('sasisopa/politica', $data,'sasisopa');
 
     }
+
+    public function datatableListaComprobacion(){
+        $data = PoliticaListaComprobacion::where('id_estacion', 1)
+        ->groupBy('fecha')
+        ->get();
+
+         echo json_encode([
+            "data" => $data
+        ]);
+        
+        exit;
+    }
+
+    public function datatableListaAsistencia($elemento){
+        $data = ListaAsistencia::where('punto_sasisopa', $elemento)
+        ->where('id_estacion', 1)
+        ->groupBy('fecha')
+        ->get();
+
+         echo json_encode([
+            "data" => $data
+        ]);
+        
+        exit;
+    }
+
+    
+
+    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------
 
     public function identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales(){
 
