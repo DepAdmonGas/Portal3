@@ -5,6 +5,7 @@ declare(strict_types=1);
 // AUTOLOAD Y CONFIGURACIÓN INICIAL
 // --------------------------------------------------------
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../app/Helpers/helpers.php';
 
 use Dotenv\Dotenv;
 use App\Core\Bootstrap;

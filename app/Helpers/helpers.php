@@ -10,7 +10,7 @@ if (!function_exists('base_url')) {
 if (!function_exists('asset')) {
     function asset(string $path): string
     {
-        return base_url() . '/public/build/assets/' . ltrim($path, '/');
+        return base_url() . '/assets/' . ltrim($path, '/');
     }
 }
 
