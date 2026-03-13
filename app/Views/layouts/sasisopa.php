@@ -7,10 +7,10 @@
     <title><?= $title ?? 'Portal3' ?></title>
 
      <!-- Favicon icon-->
-    <link rel="shortcut icon" type="image/png" href="/assets/images/logos/favicon.png" />
+    <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/favicon.png') ?>" />
     <!-- Core Css -->
-    <link rel="stylesheet" href="/assets/css/styles.css" />
-    <link rel="stylesheet" href="/assets/libs/sweetalert2/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
+    <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     
     <!-- Scripts por vista -->
@@ -23,13 +23,30 @@
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+        <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const key = "scroll-" + window.location.pathname;
+
+        const scrollPosition = sessionStorage.getItem(key);
+        if (scrollPosition) {
+            window.scrollTo(0, parseInt(scrollPosition));
+        }
+
+        window.addEventListener("scroll", function () {
+            sessionStorage.setItem(key, window.scrollY);
+        });
+
+    });
+    </script>
       
 </head>
 <body class="link-sidebar">
 
   <!-- Preloader -->
   <div class="preloader">
-    <img src="../assets/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
+    <img src="<?= asset('images/logos/favicon.png') ?>" alt="loader" class="lds-ripple img-fluid" />
   </div>
 
     <div id="main-wrapper">
@@ -40,8 +57,8 @@
         <!-- ---------------------------------- -->
         <div class="brand-logo d-flex align-items-center justify-content-between">
           <a href="/main/index.html" class="text-nowrap logo-img">
-            <img src="/assets/images/logos/dark-logo.svg" class="dark-logo" alt="Logo-Dark" />
-            <img src="/assets/images/logos/light-logo.svg" class="light-logo" alt="Logo-light" />
+            <img src="<?= asset('images/logos/dark-logo.svg') ?>" class="dark-logo" alt="Logo-Dark" />
+            <img src="<?= asset('images/logos/light-logo.svg') ?>" class="light-logo" alt="Logo-light" />
           </a>
           <a href="javascript:void(0)" class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none">
             <i class="ti ti-x"></i>
@@ -71,7 +88,7 @@
             <!-- Dashboard -->
             <!-- ---------------------------------- -->
             <li class="sidebar-item">
-              <a class="sidebar-link" href="/calendario" aria-expanded="false">
+              <a class="sidebar-link" href="/sasisopa/calendario" aria-expanded="false">
                 <span>
                   <i class="ti ti-calendar-event"></i>
                 </span>
@@ -133,7 +150,7 @@
             </li>
 
              <li class="sidebar-item">
-              <a class="sidebar-link" href="/" aria-expanded="false">
+              <a class="sidebar-link" href="/sasisopa/cursos" aria-expanded="false">
                 <span>
                   <i class="ti ti-school"></i>
                 </span>
@@ -176,7 +193,7 @@
         <div class="fixed-profile p-3 mx-3 mb-2 bg-secondary-subtle rounded mt-3">
           <div class="hstack gap-3">
             <div class="john-img">
-              <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="40" height="40" alt="modernize-img" />
+              <img src="<?= asset('images/profile/user-1.jpg') ?>" class="rounded-circle" width="40" height="40" alt="modernize-img" />
             </div>
             <div class="john-title">
               <h6 class="mb-0 fs-4 fw-semibold"><?=implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2));?></h6>
@@ -211,8 +228,8 @@
       
             <div class="d-block d-lg-none py-4">
               <a href="../main/index.html" class="text-nowrap logo-img">
-                <img src="../assets/images/logos/dark-logo.svg" class="dark-logo" alt="Logo-Dark" />
-                <img src="../assets/images/logos/light-logo.svg" class="light-logo" alt="Logo-light" />
+                <img src="<?= asset('images/logos/dark-logo.svg') ?>" class="dark-logo" alt="Logo-Dark" />
+                <img src="<?= asset('images/logos/light-logo.svg') ?>" class="light-logo" alt="Logo-light" />
               </a>
             </div>
             <a class="navbar-toggler nav-icon-hover-bg rounded-circle p-0 mx-0 border-0" href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -221,6 +238,14 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
               <div class="d-flex align-items-center justify-content-between">
                 <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-center">
+
+                <?php if (!empty($help)): ?>
+                <li class="nav-item nav-icon-hover-bg rounded-circle">
+                    <a class="nav-link position-relative" data-bs-toggle="offcanvas" data-bs-target="#offcanvasHelp" aria-controls="offcanvasHelp">
+                        <i class="ti ti-help"></i>
+                    </a>
+                </li>
+                <?php endif; ?>
                  
                 <li class="nav-item nav-icon-hover-bg rounded-circle">
                     <a class="nav-link moon dark-layout" href="javascript:void(0)" style="display: flex;">
@@ -238,7 +263,7 @@
                     <a class="nav-link pe-0" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center">
                         <div class="user-profile-img">
-                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35" alt="modernize-img" />
+                          <img src="<?= asset('images/profile/user-1.jpg') ?>" class="rounded-circle" width="35" height="35" alt="modernize-img" />
                         </div>
                       </div>
                     </a>
@@ -248,7 +273,7 @@
                           <h5 class="mb-0 fs-5 fw-semibold">Perfil de Usuario</h5>
                         </div>
                         <div class="d-flex align-items-center py-9 mx-7 border-bottom">
-                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="80" height="80" alt="modernize-img" />
+                          <img src="<?= asset('images/profile/user-1.jpg') ?>" class="rounded-circle" width="80" height="80" alt="modernize-img" />
                           <div class="ms-3">
                             <h5 class="mb-1 fs-3"><?= $user->nombre ?></h5>
                             <span class="mb-1 d-block"><?php $user->puesto->tipo_puesto ?></span>
@@ -260,7 +285,7 @@
                         <div class="message-body">
                           <a href="" class="py-8 px-7 mt-8 d-flex align-items-center">
                             <span class="d-flex align-items-center justify-content-center text-bg-light rounded-1 p-6">
-                              <img src="/assets/images/svgs/icon-account.svg" alt="modernize-img" width="24" height="24" />
+                              <img src="<?= asset('images/svgs/icon-account.svg') ?>" alt="modernize-img" width="24" height="24" />
                             </span>
                             <div class="w-100 ps-3">
                               <h6 class="mb-1 fs-3 fw-semibold lh-base">Mi Perfil</h6>
@@ -292,8 +317,11 @@
        <div class="body-wrapper">
         <div class="container-fluid">
 
-          <span class="mb-1 badge rounded-pill text-bg-primary"><?=$user->estacion->razonsocial??'SASISOPA'?></span>        
+          <span class="mb-1 badge rounded-pill text-bg-primary"><?=$user->estacion->razonsocial??'SASISOPA'?></span>   
+          <h4 class="fw-semibold mt-3"><?=$title;?></h4>  
+          <?php \App\Core\Breadcrumb::render(); ?>     
           <?= $content ?>   
+
                 
         </div>
       </div>
@@ -305,18 +333,18 @@
   <div class="dark-transparent sidebartoggler"></div>
 
   <!-- Import Js Files -->
-  <script src="/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/assets/libs/simplebar/dist/simplebar.min.js"></script>
-  <script src="/assets/js/theme/app.init.js"></script>
-  <script src="/assets/js/theme/theme.js"></script>
-  <script src="/assets/js/theme/app.min.js"></script>
-  <script src="/assets/js/theme/sidebarmenu.js"></script>
+  <script src="<?= asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') ?>"></script>
+  <script src="<?= asset('libs/simplebar/dist/simplebar.min.js') ?>"></script>
+  <script src="<?= asset('js/theme/app.init.js') ?>"></script>
+  <script src="<?= asset('js/theme/theme.js') ?>"></script>
+  <script src="<?= asset('js/theme/app.min.js') ?>"></script>
+  <script src="<?= asset('js/theme/sidebarmenu.js') ?>"></script>
 
   <!-- solar icons -->
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
   <!-- highlight.js (code view) -->
-  <script src="/assets/js/highlights/highlight.min.js"></script>
-  <script src="/assets/libs/sweetalert2/dist/sweetalert2.min.js"></script>
+  <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
+  <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
   <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
  
     <!-- Scripts por vista -->

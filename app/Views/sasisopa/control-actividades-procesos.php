@@ -1,14 +1,140 @@
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-            <a class="text-muted text-decoration-none" href="">SASISOPA</a>
-        </li>
-        <li class="breadcrumb-item" aria-current="page"><?=$title;?></li>
-    </ol>
-</nav>
-
-<div class="mt-2 mb-2">
-  <div class="action-btn layout-top-spacing d-flex align-items-center justify-content-between flex-wrap">
-    <h4 class="fw-semibold"><?=$title;?></h4>
-  </div>
+<div class="text-end mt-2">
+  <div class="btn-group">
+            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="ti ti-dots-vertical fs-4"></i>
+            </button>
+            <ul class="dropdown-menu animated rubberBand">
+                <li>
+                    <a class="dropdown-item" href=""><i class="ti ti-pencil"></i> Editar Politica</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href=""><i class="ti ti-file-download"></i> Descargar Politica</a>
+                </li>
+            </ul>
+        </div>
 </div>
+
+<div class="row mt-2">
+
+  <div class="col-md-4 align-items-stretch">
+    <div class="card w-100">
+      <div class="card-body">
+        <h4 class="card-title">Procedimientos de Operación, Seguridad y Mantenimiento</h4>
+
+         <div class="text-end mt-4">
+          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+            <i class="ti ti-eye"></i>
+            Ver procedimientos
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 align-items-stretch">
+    <div class="card w-100">
+      <div class="card-body">
+        <h4 class="card-title">Programa anual de mantenimiento</h4>
+          
+          <div class="text-end mt-4">
+          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+            <i class="ti ti-eye"></i>
+            Ver programa
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+   <div class="col-md-4 align-items-stretch">
+    <div class="card w-100">
+      <div class="card-body">
+        <h4 class="card-title">Bitacoras</h4>
+          
+          <button type="button" class="btn mt-3 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+            <i class="ti ti-eye"></i>
+            Configuración Bitácora
+          </button>
+
+          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+            <i class="ti ti-eye"></i>
+            Recepción y Descarga del Producto
+          </button>
+
+          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+            <i class="ti ti-eye"></i>
+            Mantenimiento
+          </button>
+
+          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+            <i class="ti ti-eye"></i>
+            Calibración de equipos
+          </button>
+
+          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+            <i class="ti ti-eye"></i>
+            Bitácora PROFECO
+          </button>
+
+          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+            <i class="ti ti-eye"></i>
+            Bitácora PROFECO
+          </button>
+
+          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+            <i class="ti ti-eye"></i>
+            Mantenimiento V.1.2
+          </button>
+
+          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+            <i class="ti ti-eye"></i>
+            Bitácora de Residuos Peligrosos
+          </button>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ------------------------- -->
+<!-- inicio offcanvas -------- -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+            Bienvenido al elemento 10. CONTROL DE ACTIVIDADES Y PROCESOS, del Sistema de Administración
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body fs-4">
+
+       <p>
+            Aquí vas a encontrar tu programa anual de mantenimiento y tus procedimientos de Operación, Seguridad y Mantenimiento.
+          </p>
+          <p>
+           Recuerda que el programa anual de mantenimiento debe de empatar con los registros de la bitácora de mantenimiento preventivo y correctivo. 
+          </p>
+
+          <hr>
+
+          <label class="fw-bold">Como hacerlo:</label>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Da clic en el botón de ver procedimientos para visualizar y descargar los procedimientos de Operación, Seguridad y Mantenimiento.</li>
+            <li class="list-group-item">Mediante el tablón de noticias de la estación invita a todos los involucrados a consultar los procedimientos.</li>    
+            <li class="list-group-item">Da clic en el botón de programa para poder visualizar tu Programa de Mantenimiento.</li>   
+            <li class="list-group-item">Las fechas de las actividades del programa deben de empatar con las fechas de las bitácoras de mantenimiento preventivo y correctivo.</li>   
+          </ul>
+
+          <hr>
+
+          <label class="fw-bold">Responsables:</label>
+          <p>
+          Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label> y <label class="text-danger fw-bold">Jefes de Piso</label>, <label class="text-danger fw-bold">Departamento de Mantenimiento</label> o en su caso prestadores de servicio llenar y firmar los checklist de las verificaciones de las bitácoras.</p>
+
+    </div>
+  </div>
+<!-- ------------------------- -->
+<!-- fin offcanvas -------- -->

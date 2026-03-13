@@ -3,7 +3,6 @@ use FastRoute\RouteCollector;
 use App\Core\Route;
 
 return function(RouteCollector $r) {
-
 $r->addRoute('GET', '/', Route::guest(['LoginController', 'index']));
 $r->addRoute('POST', '/login', ['LoginController', 'login']);
 $r->addRoute('GET', '/logout', Route::auth(['AuthController', 'logout']));
@@ -134,7 +133,10 @@ $r->addRoute('GET','/revision-resultados',Route::auth(handler: ['SasisopaControl
 // Elemento 18
 $r->addRoute('GET','/informes-desempeno',Route::auth(handler: ['SasisopaController','informesDesempeno']));
 });
-
+// Calendario
+$r->addRoute('GET','/calendario',Route::auth(handler: ['SasisopaController','calendario']));
+// Cursos
+$r->addRoute('GET','/cursos',Route::auth(handler: ['SasisopaController','cursos']));
 // SGM
 $r->addGroup('/sgm', function (RouteCollector $r) {
 // Index principal
@@ -168,9 +170,7 @@ $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion', Rou
 
 
 
-
 // ========== RUTA DINÁMICA UNIVERSAL (SIEMPRTRE AL FINAL) ==========
 $r->addRoute('GET', '/{url:.+}', Route::auth(['ModuloController', 'RutasModulos']));
-
 };
 ?>
