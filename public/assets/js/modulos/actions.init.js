@@ -25,19 +25,6 @@ nombre: button.dataset.nombre
 }));
 }
 
-// 🔹 Editar Permisos
-if (e.target.closest('.btnEditarPermisos')) {
-let button = e.target.closest('.btnEditarPermisos');
-
-window.dispatchEvent(new CustomEvent('editar-permisos', {
-detail: {
-idEstructura: button.dataset.idEstructura,
-idPuesto: button.dataset.idPuesto,
-nombre: button.dataset.nombre
-}
-}));
-}
-
 });
 
 /* ===============================
@@ -79,6 +66,28 @@ y: 'top'
 dismissible: true
 });
 
+/* ==========================================
+PERMISOS BOTON AGREGAR MODULO
+========================================== */
+$(document).on('click', '.btn-agregar', function () {
+
+const tienePermiso = $(this).data('permiso-agregar');
+
+if (!tienePermiso) {
+
+notyf.error('No cuentas con permisos para agregar módulos');
+return;
+
+}
+
+// 🔥 Abrimos el modal manualmente
+const modal = new bootstrap.Modal(
+document.getElementById('modalAgregarModulo')
+);
+
+modal.show();
+
+});
 
 /* ===============================
 AGREGAR MODULOS 
@@ -158,6 +167,33 @@ this.enviando = false;
 }
 }
 
+/* ==========================================
+PERMISOS BOTON AGREGAR SUBMODULO
+========================================== */
+$(document).on('click', '.btnAbrirAsignarSubmodulo', function () {
+
+const tienePermiso = $(this).data('permiso-agregar');
+
+if (!tienePermiso) {
+notyf.error('No cuentas con permisos para agregar submódulos');
+return;
+}
+
+const idEstructura = $(this).data('id-estructura');
+const nombreModulo = $(this).data('nombre');
+
+/* colocar datos en el modal */
+$('#idModuloPrincipal').val(idEstructura);
+$('#nombreModuloPadre').val(nombreModulo);
+
+/* abrir modal manualmente */
+const modal = new bootstrap.Modal(
+document.getElementById('modalAgregarSubmodulo')
+);
+
+modal.show();
+
+});
 
 /* ===============================
 AGREGAR SUBMODULOS 
@@ -239,12 +275,22 @@ this.enviando = false;
 
 
 /* ===============================
-ELIMINAR MODULOS O SUBMODULOS 
+ELIMINAR MODULOS O SUBMODULOS
 =================================*/
 document.addEventListener('click', function (e) {
 
 const btn = e.target.closest('.btn-delete');
 if (!btn || btn.classList.contains('disabled')) return;
+
+/* 🔐 VALIDAR PERMISO */
+const tienePermiso = btn.dataset.permisoEliminar;
+
+if (!tienePermiso || tienePermiso == 0) {
+
+notyf.error('No cuentas con permisos para eliminar');
+return;
+
+}
 
 // ✅ Obtener correctamente los data-attributes
 const idEstructura = btn.dataset.idEstructura;
@@ -254,6 +300,7 @@ const idModuloPrincipal = btn.dataset.idModuloPrincipal;
 
 // 🔎 Validación extra por seguridad
 if (!idEstructura || !idPuesto) {
+
 console.error('Datos inválidos:', {
 idEstructura,
 idPuesto,
@@ -266,7 +313,9 @@ icon: 'error',
 title: 'Error',
 text: 'No se pudo obtener la información del módulo'
 });
+
 return;
+
 }
 
 Swal.fire({
@@ -326,6 +375,34 @@ notyf.error(mensaje);
 });
 
 });
+
+});
+
+
+/* ==========================================
+BOTON EDITAR PERMISOS
+========================================== */
+$(document).on('click', '.btnEditarPermisos', function () {
+
+const tienePermiso = $(this).data('permiso-editar');
+
+if (!tienePermiso) {
+
+notyf.error('No cuentas con permisos para editar');
+return;
+
+}
+
+const data = {
+idEstructura: $(this).data('id-estructura'),
+idPuesto: $(this).data('id-puesto'),
+nombre: $(this).data('nombre')
+};
+
+/* Disparar evento que escucha Alpine */
+window.dispatchEvent(new CustomEvent('editar-permisos', {
+detail: data
+}));
 
 });
 

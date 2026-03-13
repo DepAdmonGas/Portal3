@@ -5,7 +5,9 @@ use App\Core\Auth;
 use App\Models\Modulo;
 use App\Models\Catalogo;
 use App\Models\PuestoModuloEstructura;
+use App\Models\PuestoModuloPermiso;
 use App\Models\UsuarioModuloEstructura;
+use App\Models\UsuarioModuloPermiso;
 
 class CatalogoController extends BaseController{
 
@@ -29,51 +31,76 @@ $idUsuario = $user->id;
 $idPuesto  = $user->puesto->id;
 
 /*========== Detectar URL actual ==========*/
-$urlActual = trim(
-parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH),
-'/'
-);
-
+$urlActual = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH),'/');
 
 /*========== Buscar módulo ==========*/
-$modulo = Modulo::where('url', $urlActual)
-->where('status', 0)
-->first();
+$modulo = Modulo::where('url', $urlActual)->where('status', 0)->first();
+
+if (!$modulo) {
+header('Location: /home');
+exit;
+}
 
 $breadcrumb = [];
+$estructura = null;
+$permisos   = null;
 
-if ($modulo) {
+/* =========================================================
+1️⃣ BUSCAR ESTRUCTURA USUARIO
+========================================================= */
 
-/*========== 1️⃣ Buscar estructura usuario ==========*/
-$estructuraUsuario = UsuarioModuloEstructura::where('id_modulo',$modulo->id)
-->where('id_usuario',$idUsuario)
-->first();
+$estructuraUsuario = UsuarioModuloEstructura::where('id_modulo', $modulo->id)->where('id_usuario', $idUsuario)->first();
 
-/*========== 2️⃣ Si existe → usar usuario ==========*/
 if ($estructuraUsuario) {
-$breadcrumb =UsuarioModuloEstructura::breadcrumbCompleto($estructuraUsuario->id);
 
-/*========== 3️⃣ Si no existe → usar puesto ==========*/
-}else{
+$estructura = $estructuraUsuario;
+$breadcrumb = UsuarioModuloEstructura::breadcrumbCompleto($estructura->id);
+$permisos = UsuarioModuloPermiso::where('id_modulo_estructura', $estructura->id)->first();
 
-$estructuraPuesto =PuestoModuloEstructura::where('id_modulo',$modulo->id)
-->where('id_puesto',$idPuesto)
-->first();
+} else {
+
+/* =========================================================
+2️⃣ SI NO EXISTE → BUSCAR POR PUESTO
+========================================================= */
+
+$estructuraPuesto = PuestoModuloEstructura::where('id_modulo', $modulo->id)->where('id_puesto', $idPuesto)->first();
 
 if ($estructuraPuesto) {
-$breadcrumb =PuestoModuloEstructura::breadcrumbCompleto($estructuraPuesto->id);
-}
+$estructura = $estructuraPuesto;
+$breadcrumb = PuestoModuloEstructura::breadcrumbCompleto($estructura->id);
+$permisos = PuestoModuloPermiso::where('id_modulo_estructura',$estructura->id)->first();
 }
 }
 
-/*========== Obtener último módulo para title ==========*/
-$ultimoModulo =!empty($breadcrumb)? end($breadcrumb): null;
+/* =========================================================
+3️⃣ VALIDAR ESTRUCTURA
+========================================================= */
+
+if (!$estructura) {
+header('Location: /home');
+exit;
+}
+
+/* =========================================================
+4️⃣ VALIDAR PERMISOS
+========================================================= */
+
+if (!$permisos || !$permisos->ver) {
+header('Location: /home');
+exit;
+}
+
+/* =========================================================
+5️⃣ CONTINUAR NORMAL
+========================================================= */
+
+$ultimoModulo = !empty($breadcrumb) ? end($breadcrumb) : null;
 
 $data = [
 
-'title' =>$ultimoModulo->nombre_modulo ?? 'Inicio',
+'title' => $ultimoModulo->nombre_modulo ?? 'Inicio',
 'breadcrumb' => $breadcrumb,
-
+'permisos' => $permisos,
 'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
@@ -87,7 +114,10 @@ $data = [
 
 ];
 
-View::render('sistemas/catalogo-modulos-index',$data,'main'
+View::render(
+'sistemas/catalogo-modulos-index',
+$data,
+'main'
 );
 }
 
@@ -113,7 +143,6 @@ header('Content-Type: application/json');
 echo json_encode(['success' => true]);
 exit;
 }
-
 
 /* ==========================================
 ACTUALIZAR MODULO
@@ -146,5 +175,59 @@ header('Content-Type: application/json');
 echo json_encode(['success' => true]);
 exit;
 }
+
+/* ==========================================
+ELIMINAR MODULO
+========================================== */
+public function deleteModuloCatalogo()
+{
+
+$data = json_decode(file_get_contents('php://input'), true);
+
+if (empty($data['id'])) {
+
+http_response_code(422);
+header('Content-Type: application/json');
+
+echo json_encode([
+'success' => false,
+'message' => 'ID requerido'
+]);
+
+exit;
+
+}
+
+$modulo = Catalogo::find($data['id']);
+
+if (!$modulo) {
+
+http_response_code(404);
+header('Content-Type: application/json');
+
+echo json_encode([
+'success' => false,
+'message' => 'Módulo no encontrado'
+]);
+
+exit;
+
+}
+
+
+$modulo->status = 1;
+$modulo->save();
+
+header('Content-Type: application/json');
+
+echo json_encode([
+'success' => true,
+'message' => 'Módulo eliminado correctamente'
+]);
+
+exit;
+
+}
+
 
 }

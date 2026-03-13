@@ -17,6 +17,16 @@ protected $fillable = [
 'orden'
 ];
 
+/* ==========================================
+OBTENER ID MODULO ESTRUCTURA
+========================================== */
+
+public static function obtenerEstructura(int $idModulo, int $idPuesto)
+{
+return self::where('id_modulo', $idModulo)
+->where('id_puesto', $idPuesto)
+->first();
+}
 
 public static function breadcrumb($idModuloEstructura)
 {

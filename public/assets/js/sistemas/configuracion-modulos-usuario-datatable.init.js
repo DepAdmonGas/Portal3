@@ -48,11 +48,17 @@ orderable: false,
 searchable: false,
 className: 'text-center align-middle td-small',
 render: function (data, type, row) {
-const disabled = row.estatus === 1
-? 'disabled opacity-50 pointer-events-none'
+
+const disabled = row.estatus === 1 
+? 'opacity-50' 
 : '';
-return `<a href="configuracion-modulos-usuario/${row.id}" class="text-muted ${disabled}">
-<i class="ti ti-edit fs-6"></i>
+
+const click = row.estatus === 1 
+? 'onclick="event.preventDefault();"' 
+: '';
+
+return `<a href="configuracion-modulos-usuario/${row.id}" class="text-muted ${disabled}" ${click}>
+<i class="ti ti-eye fs-6"></i>
 </a>`;
 }
 }

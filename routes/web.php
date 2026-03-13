@@ -70,7 +70,7 @@ $r->addRoute('GET', '/catalogo-modulos',  Route::auth(['CatalogoController', 'in
 $r->addRoute('GET', '/catalogo-modulos/datatable', Route::auth(['CatalogoController', 'datatableCatalogos']));
 $r->addRoute('POST', '/catalogo-modulos/create', Route::auth(['CatalogoController', 'createModuloCatalogo']));
 $r->addRoute('POST', '/catalogo-modulos/update', Route::auth(['CatalogoController', 'updateModuloCatalogo']));
-
+$r->addRoute('POST', '/catalogo-modulos/delete', Route::auth(['CatalogoController', 'deleteModuloCatalogo']));
 
 // ========== CONFIGURACION PUESTO ==========
 $r->addRoute('GET', '/configuracion-modulos-puesto',  Route::auth(['EstructuraPuestoController', 'index']));
