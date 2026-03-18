@@ -1,3 +1,5 @@
+<div id="container" data-idsasisopa="1">
+
 <div class="row mt-4">
   <div class="col-md-6 d-flex align-items-stretch">
     <div class="card w-100">
@@ -72,7 +74,7 @@
     <div class="card-body">
 
     <div class="d-flex align-items-center">
-      <h4 class="card-title mb-0">Seguimiento y reporte de indicadores</h4>
+      <h4 class="card-title mb-0">Seguimiento de objetivos y metas</h4>
         <div class="ms-auto">
 
          <div class="dropdown dropstart">
@@ -94,14 +96,14 @@
 
     <div class="datatables mt-3">
       <div class="table-responsive">
-        <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+        <table id="table-lista-seguimiento-objetivosmetas" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
           <thead>
             <tr>
+            <th>#</th>
             <th>Fecha</th>
-            <th>Objetivo o meta</th>
-            <th>Nivel de cumplimiento</th>
-            <th>Medidas de acción para dar cumplimiento</th>
-            <th>Fecha de aplicación</th>
+            <th class="text-center">
+            <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
+            </th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -139,7 +141,7 @@
 
     <div class="datatables mt-3">
       <div class="table-responsive">
-        <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+        <table id="table-lista-seguimiento-indicadores" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
           <thead>
             <tr>
             <th>#</th>
@@ -157,6 +159,7 @@
     </div>
     </div>
   </div>
+</div>
 </div>
 
 <!-- ------------------------- -->

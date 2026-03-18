@@ -1,10 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const idSasisopa = document
-    .getElementById('container')
-    .dataset.idsasisopa;
-
-    $('#table-lista-asistencia').DataTable({
+     $('#table-lista-equipo-critico').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -14,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/datatable-lista-asistencia/elemento/' + idSasisopa,
+            url: '/sasisopa/datatable-lista-equipo-critico',
             type: 'GET',
             dataSrc: function (json) {
                 return json.data;
@@ -22,8 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         columns: [
             { data: 'id', width: '60px', className: 'text-center' },
+            { data: 'nombre_equipo' },
+            { data: 'marca_modelo' },
+            { data: 'funciones' },
             {
-            data: 'fecha',
+            data: 'fecha_instalacion',
             render: function (data, type) {
 
                 if (!data) return '';
@@ -47,26 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
             orderable: true,
             searchable: true
         },
-            {
-            data: 'hora',
-            render: function (data, type) {
 
-                if (!data) return '';
-
-                if (type !== 'display') {
-                    return data;
-                }
-
-                const hora = new Date('1970-01-01T' + data);
-
-                return hora.toLocaleTimeString('es-MX', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: true
-                });
-            }
-        },
+        { data: 'tiempo_vida' },
              
             {
                 data: null,

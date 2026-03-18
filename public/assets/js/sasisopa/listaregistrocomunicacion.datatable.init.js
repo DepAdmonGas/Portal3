@@ -1,10 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const idSasisopa = document
-    .getElementById('container')
-    .dataset.idsasisopa;
-
-    $('#table-lista-asistencia').DataTable({
+    $('#table-lista-registro-comunicacion').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -14,60 +10,46 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/datatable-lista-asistencia/elemento/' + idSasisopa,
+            url: '/sasisopa/datatable-lista-registro-comunicacion',
             type: 'GET',
             dataSrc: function (json) {
                 return json.data;
+            },
+            error: function (xhr) {
+                
             }
         },
         columns: [
             { data: 'id', width: '60px', className: 'text-center' },
             {
-            data: 'fecha',
-            render: function (data, type) {
+                data: 'fecha',
+                render: function (data, type) {
 
-                if (!data) return '';
+                    if (!data) return '';
 
-                const fecha = new Date(data);
+                    const fecha = new Date(data);
 
-                const fechaFormateada = fecha.toLocaleDateString('es-MX', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
+                    const fechaFormateada = fecha.toLocaleDateString('es-MX', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
 
-                // Para búsqueda y display usar el texto formateado
-                if (type === 'display' || type === 'filter') {
-                    return fechaFormateada;
-                }
+                    if (type === 'display' || type === 'filter') {
+                        return fechaFormateada;
+                    }
 
-                // Para ordenamiento usar la fecha real
-                return data;
-            },
-            orderable: true,
-            searchable: true
-        },
-            {
-            data: 'hora',
-            render: function (data, type) {
-
-                if (!data) return '';
-
-                if (type !== 'display') {
                     return data;
-                }
+                },
+                orderable: true,
+                searchable: true
+            },
+            { data: 'tema' },
+            { data: 'encargado_comunicacion' },
+            { data: 'tipo_comunicacion' },
+            { data: 'material' },
+            { data: 'seguimiento' },
 
-                const hora = new Date('1970-01-01T' + data);
-
-                return hora.toLocaleTimeString('es-MX', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: true
-                });
-            }
-        },
-             
             {
                 data: null,
                 width: '1%',
@@ -104,6 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 }
             }
+
+            
         ]
     });
 

@@ -1,3 +1,6 @@
+<div id="container" data-idsasisopa="2">
+
+
 <div class="row mt-4">
   <div class="col-md-4 d-flex align-items-stretch">
     <div class="card w-100">
@@ -45,7 +48,7 @@
 
   <div class="datatables mt-3">
     <div class="table-responsive">
-      <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-analisis-riesgo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
           <th>#</th>
@@ -83,7 +86,7 @@
 
   <div class="datatables mt-3">
     <div class="table-responsive">
-      <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
            <th>#</th>
@@ -102,6 +105,8 @@
   </div>
 </div>
  
+
+</div>
 
 </div>
 

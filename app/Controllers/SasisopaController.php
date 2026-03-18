@@ -5,6 +5,13 @@ use App\Models\Sasisopa\Sasisopa;
 use App\Core\Breadcrumb;
 use App\Models\Sasisopa\PoliticaListaComprobacion;
 use App\Models\Sasisopa\ListaAsistencia;
+use App\Models\Sasisopa\AnalisisRiesgo;
+use App\Models\Sasisopa\SeguimientoObjetivosMetas;
+use App\Models\Sasisopa\SeguimientoReporteIndicador;
+use App\Models\Sasisopa\RepresentanteTecnico;
+use App\Models\Sasisopa\ComunicacionIE;
+use App\Models\Sasisopa\QuejasSugerencia;
+use App\Models\Sasisopa\EquipoCritico;
 
 class SasisopaController{
 
@@ -91,6 +98,9 @@ class SasisopaController{
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
+    //------------------------------------------------------------------------------------
+    //------------ 2 Identificacion de peligros y aspectos ambientales -------------------
+
     public function identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales(){
 
         $title = '2. IDENTIFICACIÓN DE PELIGROS Y ASPECTOS AMBIENTALES, ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES';
@@ -102,10 +112,13 @@ class SasisopaController{
          $data = [
             'title' => $title,
              'links' =>[
-                
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/assets/js/vendor.min.js',
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/sasisopa/analisisriesgo.datatable.init.js',
+                '/assets/js/sasisopa/listaasistencia.datatable.init.js'
             ],
             'help' => true
         ];
@@ -113,6 +126,24 @@ class SasisopaController{
         View::render('sasisopa/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales', $data,'sasisopa');
 
     }
+
+    public function datatableListaAnalisisRiesgo(){
+        $data = AnalisisRiesgo::where('id_estacion',2)
+        ->groupBy('fecha')
+        ->get();
+
+         echo json_encode([
+            "data" => $data
+        ]);
+        
+        exit;
+    }
+
+    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------
+
+    //------------------------------------------------------------------------------------
+    //------------ 3 Requisitos legales -------------------    
 
     public function requisitosLegales(){
 
@@ -125,10 +156,12 @@ class SasisopaController{
          $data = [
             'title' => $title,
              'links' =>[
-                
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/assets/js/vendor.min.js',
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/sasisopa/listaasistencia.datatable.init.js'
             ],
             'help' => true
         ];
@@ -136,6 +169,7 @@ class SasisopaController{
         View::render('sasisopa/requisitos-legales', $data,'sasisopa');
 
     }
+
 
     public function requisitosLegalesConfiguracion(){
 
@@ -160,7 +194,11 @@ class SasisopaController{
 
     }
 
-    
+     //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------
+
+    //------------------------------------------------------------------------------------
+    //---------------- 4 Objetivos, metas e indicadores ----------------------------------
 
     public function objetivosMetasIndicadores(){
 
@@ -173,16 +211,43 @@ class SasisopaController{
          $data = [
             'title' => $title,
              'links' =>[
-                
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/assets/js/vendor.min.js',
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/sasisopa/listaseguimientoindicadores.datatable.init.js',
+                '/assets/js/sasisopa/listaseguimientoobjetivosmetas.datatable.init.js'
             ],
             'help' => true
         ];
         
         View::render('sasisopa/objetivos-metas-indicadores', $data,'sasisopa');
 
+    }
+
+    public function datatableListaSeguimientoIndicadores(){
+        $data = SeguimientoReporteIndicador::where('id_estacion',2)
+        ->groupBy('fecha')
+        ->get();
+
+         echo json_encode([
+            "data" => $data
+        ]);
+        
+        exit;
+    }
+
+    public function datatableListaSeguimientoObjetivosMetas(){
+        $data = SeguimientoObjetivosMetas::where('id_estacion',2)
+        ->groupBy('fecha')
+        ->get();
+
+         echo json_encode([
+            "data" => $data
+        ]);
+        
+        exit;
     }
 
     public function objetivosMetasIndicadoresCapacitacionPersonal(){
@@ -254,8 +319,11 @@ class SasisopaController{
 
     }
 
-    
+    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------
 
+    //------------------------------------------------------------------------------------
+    //------------- 5 Funciones, responsabilidades y auditoria ---------------------------
     
 
     public function funcionesResponsabilidadesAutoridad(){
@@ -269,10 +337,13 @@ class SasisopaController{
          $data = [
             'title' => $title,
              'links' =>[
-                
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/assets/js/vendor.min.js',
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/sasisopa/listaasistencia.datatable.init.js',
+                '/assets/js/sasisopa/listarepresentantetecnico.datatable.init.js'
             ],
             'help' => true
         ];
@@ -280,6 +351,24 @@ class SasisopaController{
         View::render('sasisopa/funciones-responsabilidades-autoridad', $data,'sasisopa');
 
     }
+
+    public function datatableListaRepresentanteTecnico(){
+        $data = RepresentanteTecnico::where('id_estacion',5)
+        ->groupBy('fecha')
+        ->get();
+
+         echo json_encode([
+            "data" => $data
+        ]);
+        
+        exit;
+    }
+
+    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------
+
+    //------------------------------------------------------------------------------------
+    //------------- 6 ---------------------------
 
     public function competenciaPersonalCapacitacionEntrenamiento(){
 
@@ -304,6 +393,12 @@ class SasisopaController{
 
     }
 
+    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------
+
+    //------------------------------------------------------------------------------------
+    //------------- 7 Comunicacion, participacion y consulta ---------------------------
+
     public function comunicacionParticipacionConsulta(){
 
         $title = '7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA';
@@ -315,10 +410,13 @@ class SasisopaController{
          $data = [
             'title' => $title,
              'links' =>[
-                
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/assets/js/vendor.min.js',
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/sasisopa/listaregistrocomunicacion.datatable.init.js',
+                '/assets/js/sasisopa/listaquejassugerencias.datatable.init.js'
             ],
             'help' => true
         ];
@@ -326,6 +424,37 @@ class SasisopaController{
         View::render('sasisopa/comunicacion-participacion-consulta', $data,'sasisopa');
 
     }
+
+    public function datatableListaRegistroComunicacion(){
+        $data = ComunicacionIE::where('id_estacion',5)
+        ->groupBy('fecha')
+        ->get();
+
+         echo json_encode([
+            "data" => $data
+        ]);
+        
+        exit;
+    }
+
+    public function datatableListaQuejasSugerencias(){
+        $data = QuejasSugerencia::where('id_estacion',5)
+        ->groupBy('fecha')
+        ->get();
+
+         echo json_encode([
+            "data" => $data
+        ]);
+        
+        exit;
+    }
+
+    
+
+    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------
+
+    
 
     public function controlDocumentosRegistros(){
 
@@ -396,6 +525,8 @@ class SasisopaController{
 
     }
 
+    //------------------------------------------------------------------------------------
+    //------------- 11 integridad mecanica y aseguramiento de la calidad ---------------------------
     public function integridadMecanicaAseguramiento(){
 
         $title = '11. INTEGRIDAD MECÁNICA Y ASEGURAMIENTO DE LA CALIDAD';
@@ -407,10 +538,12 @@ class SasisopaController{
          $data = [
             'title' => $title,
              'links' =>[
-                
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/assets/js/vendor.min.js',
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/sasisopa/listaequipocritico.datatable.init.js'
             ],
             'help' => true
         ];
@@ -418,6 +551,21 @@ class SasisopaController{
         View::render('sasisopa/integridad-mecanica-aseguramiento', $data,'sasisopa');
 
     }
+
+    public function datatableListaEquipoCritico(){
+        $data = EquipoCritico::where('id_estacion',1)
+        ->groupBy('fecha_instalacion')
+        ->get();
+
+         echo json_encode([
+            "data" => $data
+        ]);
+        
+        exit;
+    }
+
+    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------
 
     public function seguridadContratistas(){
 

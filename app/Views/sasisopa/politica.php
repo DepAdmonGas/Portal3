@@ -135,6 +135,8 @@
 
 </div>
 
+</div>
+
 <!-- ------------------------- -->
 <!-- inicio offcanvas -------- -->
   <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
@@ -174,5 +176,3 @@
   </div>
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->
-
-</div>

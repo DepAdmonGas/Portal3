@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
-class RepresentanteTecnico extends Model
+class SeguimientoObjetivosMetas extends Model
 {
-    protected $table = 'tb_representante_tecnico';
+    protected $table = 'tb_seguimiento_objetivos_metas';
 
     protected $primaryKey = 'id';
 
@@ -14,14 +14,14 @@ class RepresentanteTecnico extends Model
 
     protected $fillable = [
         'id_estacion',
-        'nom_representante',
-        'fecha',
-        'archivo'
+        'id_usuario',
+        'fecha'
     ];
 
     protected $casts = [
         'id' => 'int',
         'id_estacion' => 'int',
-        'fecha' => 'date'
+        'id_usuario' => 'int',
+        'fecha' => 'datetime'
     ];
 }
