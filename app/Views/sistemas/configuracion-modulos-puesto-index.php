@@ -1,6 +1,6 @@
 <div class="row">
 <div class="col-12">
-
+    
 <div class="card bg-info-subtle position-relative overflow-hidden mb-3">
 <div class="card-body px-4 py-3">
 <div class="row align-items-center">
@@ -17,7 +17,7 @@
 <nav aria-label="breadcrumb">
 <ol class="breadcrumb mb-0">
 <li class="breadcrumb-item">
-<a href="/main" class="text-muted text-decoration-none">
+<a href="/home" class="text-muted text-decoration-none">
 <i class="ti ti-home-2 me-1"></i> Inicio
 </a>
 </li>
@@ -46,8 +46,7 @@
 
 </div>
 </div>
-
-
+   
 <div class="col-12">
 <div class="datatables">
 
@@ -60,7 +59,7 @@
 <th>Nombre del Puesto</th>
 <th>Estatus</th>
 <th class="text-center">
-<a class="text-muted"><i class="ti ti-edit fs-6"></i></a>
+<a class="text-muted"><i class="ti ti-eye fs-6"></i></a>
 </th>
 </tr>
 

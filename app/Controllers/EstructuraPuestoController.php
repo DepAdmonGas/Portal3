@@ -5,10 +5,13 @@ use App\Core\Auth;
 use App\Models\Modulo;
 use App\Models\Puestos;
 use App\Models\PuestoModuloEstructura;
-use App\Models\UsuarioModuloEstructura;
 use App\Models\PuestoModuloPermiso;
+use App\Models\UsuarioModuloEstructura;
+use App\Models\UsuarioModuloPermiso;
+
 
 class EstructuraPuestoController extends BaseController{
+
 
 public function index()
 {
@@ -22,52 +25,62 @@ exit;
 $idUsuario = $user->id;
 $idPuesto  = $user->puesto->id;
 
-/*========== Detectar URL actual ==========*/
-$urlActual = trim(
-parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH),
-'/'
-);
+/* ---------- DETECTA EL URL ACTUAL ---------- */
+$urlActual = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH),'/');
 
+/* ---------- BUSCA EL MODULO ---------- */
+$modulo = Modulo::where('url', $urlActual)->where('status', 0)->first();
 
-/*========== Buscar módulo ==========*/
-$modulo = Modulo::where('url', $urlActual)
-->where('status', 0)
-->first();
+if (!$modulo) {
+header('Location: /home');
+exit;
+}
 
 $breadcrumb = [];
+$estructura = null;
+$permisos   = null;
 
-if ($modulo) {
+/* ---------- 1️⃣ BUSCAR ESTRUCTURA USUARIO ---------- */
+$estructuraUsuario = UsuarioModuloEstructura::where('id_modulo', $modulo->id)->where('id_usuario', $idUsuario)->first();
 
-/*========== 1️⃣ Buscar estructura usuario ==========*/
-$estructuraUsuario = UsuarioModuloEstructura::where('id_modulo',$modulo->id)
-->where('id_usuario',$idUsuario)
-->first();
-
-/*========== 2️⃣ Si existe → usar usuario ==========*/
 if ($estructuraUsuario) {
-$breadcrumb =UsuarioModuloEstructura::breadcrumbCompleto($estructuraUsuario->id);
 
-/*========== 3️⃣ Si no existe → usar puesto ==========*/
-}else{
+$estructura = $estructuraUsuario;
+$breadcrumb = UsuarioModuloEstructura::breadcrumbCompleto($estructura->id);
+$permisos = UsuarioModuloPermiso::where('id_modulo_estructura', $estructura->id)->first();
 
-$estructuraPuesto =PuestoModuloEstructura::where('id_modulo',$modulo->id)
-->where('id_puesto',$idPuesto)
-->first();
+} else {
+
+/* ---------- 2️⃣ SI NO EXISTE, BUSCAR POR PUESTO ---------- */
+$estructuraPuesto = PuestoModuloEstructura::where('id_modulo', $modulo->id)->where('id_puesto', $idPuesto)->first();
 
 if ($estructuraPuesto) {
-$breadcrumb =PuestoModuloEstructura::breadcrumbCompleto($estructuraPuesto->id);
+$estructura = $estructuraPuesto;
+$breadcrumb = PuestoModuloEstructura::breadcrumbCompleto($estructura->id);
+$permisos = PuestoModuloPermiso::where('id_modulo_estructura',$estructura->id)->first();
 }
 }
+ 
+/* ---------- 3️⃣ VALIDAR ESTRUCTURA ---------- */
+if (!$estructura) {
+header('Location: /home');
+exit;
 }
 
-/*========== Obtener último módulo para title ==========*/
-$ultimoModulo =!empty($breadcrumb)? end($breadcrumb): null;
+/* ---------- 4️⃣ VALIDAR PERMISOS ---------- */
+if (!$permisos || !$permisos->ver) {
+header('Location: /home');
+exit;
+}
+
+/* ---------- 5️⃣ CONTINUAR NORMAL ---------- */
+$ultimoModulo = !empty($breadcrumb) ? end($breadcrumb) : null;
 
 $data = [
 
 'title' =>$ultimoModulo->nombre_modulo ?? 'Inicio',
 'breadcrumb' => $breadcrumb,
-
+'permisos' => $permisos,
 'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
@@ -80,17 +93,79 @@ $data = [
 
 ];
 
-View::render('sistemas/configuracion-modulos-puesto-index',$data,'main'
-);
+View::render('sistemas/configuracion-modulos-puesto-index',$data,'main');
 }
+
 
 
 public function indexEstructuraPuesto($idPuesto)
 {
-    
+
+$user = Auth::user();
+
+if (!$user) {
+header('Location: /login');
+exit;
+}
+
+$idUsuario = $user->id;
+$idPuestoUsuario  = $user->puesto->id;
+
+
+/* ---------- 1️⃣  OBTENER MÓDULO BASE (SIN EL /{id}) ---------- */
+$modulo = Modulo::where('url', 'configuracion-sistemas/configuracion-modulos-puesto')->first();
+
+if (!$modulo) {
+header('Location: /home');
+exit;
+}
+
+/* ---------- 2️⃣ BUSCAR ESTRUCTURA POR USUARIO ---------- */
+$estructura = null;
+$permisos   = null;
+
+$estructuraUsuario = UsuarioModuloEstructura::where('id_modulo', $modulo->id)
+->where('id_usuario', $idUsuario)
+->first();
+
+if ($estructuraUsuario) {
+$estructura = $estructuraUsuario;
+$permisos = UsuarioModuloPermiso::where('id_modulo_estructura', $estructura->id)->first();
+
+} else {
+
+/* ---------- 3️⃣ SI NO EXISTE, BUSCAR POR PUESTO ---------- */
+$estructuraPuesto = PuestoModuloEstructura::where('id_modulo', $modulo->id)
+->where('id_puesto', $idPuestoUsuario)
+->first();
+
+if ($estructuraPuesto) {
+$estructura = $estructuraPuesto;
+$permisos = PuestoModuloPermiso::where('id_modulo_estructura', $estructura->id)->first();
+}
+}
+
+/* ---------- 4️⃣ VALIDAR ESTRUCTURA ---------- */
+if (!$estructura) {
+header('Location: /home');
+exit;
+}
+
+/* ---------- 5️⃣ VALIDAR PERMISO PARA VER EL MODULO ---------- */
+if (!$permisos || !$permisos->ver) {
+header('Location: /home');
+exit;
+}
+
+/* ---------- 5️⃣ BUSCA SI EL PUESTO SE ENCUENTRA HABILITADO ---------- */
+$puestoStatus = Puestos::find($idPuesto);
+if (!$puestoStatus || $puestoStatus->estatus != 0) {
+header('Location: /home');
+exit;
+}
+
 $puesto = Puestos::find($idPuesto);
 $nombrePuesto = $puesto->tipo_puesto;
-
 $modulosDisponibles = Modulo::obtenerTodos();
 
 // 🔥 Traer estructura usando id_modulo_principal
@@ -110,6 +185,7 @@ $data = [
 'puesto' => $puesto,
 'modulos' => $modulos,
 'modulosDisponibles' => $modulosDisponibles,
+'permisos' => $permisos, 
 'links' => [
 '/assets/css/styles.min.css'
 ],
@@ -140,7 +216,6 @@ public function createModuloPuesto()
 {
 header('Content-Type: application/json');
 
-// 🔹 Obtener JSON
 $data = json_decode(file_get_contents('php://input'), true);
 
 if (!$data) {
@@ -149,7 +224,7 @@ echo json_encode(['message' => 'Datos inválidos']);
 return;
 }
 
-// 🔹 Validar campos
+
 $idPuesto = isset($data['id_puesto']) ? (int)$data['id_puesto'] : 0;
 $id_modulo_principal = isset($data['id_modulo_principal']) ? (int)$data['id_modulo_principal'] : 0;
 

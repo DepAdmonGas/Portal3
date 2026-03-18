@@ -19,7 +19,7 @@
 <nav aria-label="breadcrumb">
 <ol class="breadcrumb mb-0">
 <li class="breadcrumb-item">
-<a href="/main" class="text-muted text-decoration-none">
+<a href="/home" class="text-muted text-decoration-none">
 <i class="ti ti-home-2 me-1"></i> Inicio
 </a>
 </li>
@@ -64,7 +64,7 @@
 <th>Estación</th>
 <th>Estatus</th>
 <th class="text-center">
-<a class="text-muted"><i class="ti ti-edit fs-6"></i></a>
+<a class="text-muted"><i class="ti ti-eye fs-6"></i></a>
 </th>
 </tr>
 

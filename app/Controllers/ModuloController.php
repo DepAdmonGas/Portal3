@@ -10,6 +10,7 @@ use App\Models\UsuarioModuloEstructura;
 
 class ModuloController extends BaseController
 {
+    
 /*
 |--------------------------------------------------------------------------
 | RUTEO DINÁMICO DE MÓDULOS
@@ -26,14 +27,9 @@ exit;
 
 $idUsuario = $user->id;
 $idPuesto  = $user->puesto->id;
-
 $urlActual = trim($url, '/');
 
-/*
-================================
-1️⃣ Buscar módulo
-================================
-*/
+/* ---------- 1️⃣ BUSCAR MODULO ---------- */
 $modulo = Modulo::where('url', $urlActual)
 ->where('status', 0)
 ->first();
@@ -42,26 +38,14 @@ if (!$modulo) {
 $this->abort404();
 }
 
-
-/*
-================================
-2️⃣ Buscar estructura (USUARIO primero)
-================================
-*/
-
+/* ---------- 2️⃣ BUSCA LA ESTRUCTURA (PRIMERO POR USUARIO) ---------- */
 $estructura = UsuarioModuloEstructura::where('id_modulo', $modulo->id)
 ->where('id_usuario', $idUsuario)
 ->first();
 
 $tipo = 'usuario';
 
-
-/*
-================================
-3️⃣ Si no existe → buscar puesto
-================================
-*/
-
+/* ---------- 3️⃣ SI NO EXISTE, BUSCA POR PUESTO ---------- */
 if (!$estructura) {
 
 $estructura = PuestoModuloEstructura::where('id_modulo', $modulo->id)
@@ -71,87 +55,39 @@ $estructura = PuestoModuloEstructura::where('id_modulo', $modulo->id)
 $tipo = 'puesto';
 }
 
-
 if (!$estructura) {
 $this->abort403();
 }
 
-
-/*
-================================
-4️⃣ Validar permisos
-================================
-*/
-
-if (!Modulo::usuarioTieneAcceso(
-$estructura->id,
-$idUsuario,
-$idPuesto
-)) {
+/* ---------- 4️⃣ VALIDA LOS PERMISOS DEL MODULO ---------- */
+if (!Modulo::usuarioTieneAcceso($estructura->id,$idUsuario,$idPuesto)) {
 $this->abort403();
 }
 
+/* ---------- 5️⃣ OBTIENE LOS SUBMODULOS ---------- */
+$hijos = Modulo::submodulosUsuario($estructura->id,$idUsuario,$idPuesto);
 
-/*
-================================
-5️⃣ Obtener submódulos
-================================
-*/
-
-$hijos = Modulo::submodulosUsuario(
-$estructura->id,
-$idUsuario,
-$idPuesto
-);
-
-
-/*
-================================
-6️⃣ Breadcrumb correcto
-================================
-*/
-
+/* ---------- 6️⃣ OBTIENE BREADCRUMB ---------- */
 if ($tipo === 'usuario') {
-
-$breadcrumb =
-UsuarioModuloEstructura::breadcrumbCompleto(
-$estructura->id
-);
+$breadcrumb = UsuarioModuloEstructura::breadcrumbCompleto($estructura->id);
 
 } else {
+$breadcrumb =PuestoModuloEstructura::breadcrumbCompleto($estructura->id);
 
-$breadcrumb =
-PuestoModuloEstructura::breadcrumbCompleto(
-$estructura->id
-);
 }
 
-
-/*
-================================
-7️⃣ Si tiene hijos → mostrar listado
-================================
-*/
-
+/* ---------- 7️⃣ SI TIENE HIJOS, MUESTRA EL LISTADO ---------- */
 if ($hijos->count() > 0) {
 
 return View::render('modulo/index', [
-
 'title'      => $modulo->nombre_modulo,
 'modulo'     => $modulo,
 'modulos'    => $hijos,
 'breadcrumb' => $breadcrumb
-
 ], 'main');
 }
 
-
-/*
-================================
-8️⃣ Vista final
-================================
-*/
-
+/* ---------- 8️⃣ SI NO TIENE HIJOS, MUESTRA LA VISTA FINAL ---------- */
 $vista = 'modulos/' . $modulo->url;
 
 $rutaVista =
