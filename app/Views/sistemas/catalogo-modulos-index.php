@@ -13,9 +13,8 @@
 </h4>
 
 <button type="button"
-class="btn btn-rounded btn-primary d-flex align-items-center"
-data-bs-toggle="modal"
-data-bs-target="#modalAgregarModulo">
+class="btn btn-rounded btn-primary d-flex align-items-center btn-agregar"
+data-permiso-agregar="<?= $permisos->agregar ? 1 : 0 ?>">
 <i class="ti ti-plus fs-4 me-2"></i>
 Agregar
 </button>
@@ -25,7 +24,7 @@ Agregar
 <nav aria-label="breadcrumb">
 <ol class="breadcrumb mb-0">
 <li class="breadcrumb-item">
-<a href="/main" class="text-muted text-decoration-none">
+<a href="/home" class="text-muted text-decoration-none">
 <i class="ti ti-home-2 me-1"></i> Inicio
 </a>
 </li>
@@ -60,19 +59,21 @@ Agregar
 <div class="datatables">
 
 <div class="table-responsive">
-<table id="table-catalogo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
-<thead>
+<table id="table-catalogo" class="table table-striped table-bordered mb-0 text-nowrap align-middle"
+data-permiso-editar="<?= $permisos->editar ? 1 : 0 ?>" data-permiso-eliminar="<?= $permisos->eliminar ? 1 : 0 ?>">
 
+<thead>
 <tr>
 <th class="text-center" width="48px">#</th>
 <th>Nombre del Módulo / Submodulo</th>
 <th class="text-center">URL</th>
+<th class="text-center">Estatus</th>
 <th class="text-center" width="48px">
 <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
 </th>
 </tr>
-
 </thead>
+
 <tbody></tbody>
 </table>
 </div>

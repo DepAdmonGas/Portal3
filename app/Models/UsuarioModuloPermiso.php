@@ -22,20 +22,18 @@ protected $fillable = [
 ];
 
 /* ==========================================
-RELACIONES
-==========================================*/
+🔎 OBTENER PERMISOS POR ID_MODULO_ESTRUCTURA
+========================================== */
 
-public function estructura()
+public static function obtenerPorEstructura(int $idModuloEstructura)
 {
-return $this->belongsTo(
-PuestoModuloEstructura::class,
-'id_modulo_estructura'
-);
+return self::where('id_modulo_estructura', $idModuloEstructura)
+->first();
 }
 
 /* ==========================================
-SCOPES ÚTILES
-==========================================*/
+🔎 SCOPE OPCIONAL
+========================================== */
 
 public function scopePorEstructura($query, $idEstructura)
 {
