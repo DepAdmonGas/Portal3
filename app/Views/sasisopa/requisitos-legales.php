@@ -1,3 +1,5 @@
+<div id="container" data-idsasisopa="3">
+
     <div class="text-end mt-2">
         <div class="btn-group">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -80,7 +82,7 @@
 
   <div class="datatables mt-3">
     <div class="table-responsive">
-      <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
           <th>#</th>
@@ -103,7 +105,7 @@
 
 
 </div>
-
+</div>
 
 <!-- ------------------------- -->
 <!-- inicio offcanvas -------- -->

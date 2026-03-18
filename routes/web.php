@@ -105,6 +105,9 @@ return function(RouteCollector $r) {
                         
                         // Elemento 2
                         $r->addRoute('GET', '/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales', Route::auth(['SasisopaController', 'identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales']));
+                        $r->addRoute('GET', '/datatable-lista-analisis-riesgo', Route::auth(['SasisopaController', 'datatableListaAnalisisRiesgo']));
+                        
+                        
                         // Elemento 3
                         $r->addRoute('GET', '/requisitos-legales', Route::auth(['SasisopaController', 'requisitosLegales']));
                         // Requisitos legales configuración
@@ -112,6 +115,10 @@ return function(RouteCollector $r) {
 
                         // Elemento 4
                         $r->addRoute('GET', '/objetivos-metas-indicadores', Route::auth(['SasisopaController', 'objetivosMetasIndicadores']));
+                        $r->addRoute('GET', '/datatable-lista-seguimiento-indicadores', Route::auth(['SasisopaController', 'datatableListaSeguimientoIndicadores']));
+                        $r->addRoute('GET', '/datatable-lista-seguimiento-objetivosmetas', Route::auth(['SasisopaController', 'datatableListaSeguimientoObjetivosMetas']));
+                        
+                        
                         // Capacitación del personal
                         $r->addRoute('GET', '/objetivos-metas-indicadores/capacitacion-personal', Route::auth(['SasisopaController', 'objetivosMetasIndicadoresCapacitacionPersonal']));
                         // Experiencia del cliente
@@ -121,10 +128,16 @@ return function(RouteCollector $r) {
                                 
                         // Elemento 5
                         $r->addRoute('GET', '/funciones-responsabilidades-autoridad', Route::auth(['SasisopaController', 'funcionesResponsabilidadesAutoridad']));
+                        $r->addRoute('GET', '/datatable-lista-representante-tecnico', Route::auth(['SasisopaController', 'datatableListaRepresentanteTecnico']));
+                        
                         // Elemento 6
                         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento', Route::auth(['SasisopaController', 'competenciaPersonalCapacitacionEntrenamiento']));                
                         // Elemento 7
                         $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['SasisopaController', 'comunicacionParticipacionConsulta']));
+                        $r->addRoute('GET', '/datatable-lista-registro-comunicacion', Route::auth(['SasisopaController', 'datatableListaRegistroComunicacion']));
+                        $r->addRoute('GET', '/datatable-lista-quejas-sugerencias', Route::auth(['SasisopaController', 'datatableListaQuejasSugerencias']));
+                        
+                        
                         // Elemento 8
                         $r->addRoute('GET', '/control-documentos-registros', Route::auth(['SasisopaController', 'controlDocumentosRegistros']));
                         // Elemento 9
@@ -133,6 +146,8 @@ return function(RouteCollector $r) {
                         $r->addRoute('GET', '/control-actividades-procesos', Route::auth(['SasisopaController', 'controlActividadesProcesos']));
                         // Elemento 11
                         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['SasisopaController', 'integridadMecanicaAseguramiento']));
+                        $r->addRoute('GET', '/datatable-lista-equipo-critico', Route::auth(['SasisopaController', 'datatableListaEquipoCritico']));
+                        
                         // Elemento 12
                         $r->addRoute('GET', '/seguridad-contratistas', Route::auth(['SasisopaController', 'seguridadContratistas']));
                         // Elemento 13
