@@ -53,7 +53,6 @@ console.log('Error al recargar estructura:', error);
 });
 }
 
-
 /* ===============================
 NOTYF
 =================================*/
