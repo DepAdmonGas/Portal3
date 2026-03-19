@@ -25,19 +25,6 @@ nombre: button.dataset.nombre
 }));
 }
 
-// 🔹 Editar Permisos
-if (e.target.closest('.btnEditarPermisos')) {
-let button = e.target.closest('.btnEditarPermisos');
-
-window.dispatchEvent(new CustomEvent('editar-permisos', {
-detail: {
-idEstructura: button.dataset.idEstructura,
-idUsuario: button.dataset.idUsuario,
-nombre: button.dataset.nombre
-}
-}));
-}
-
 });
 
 /* ===============================
@@ -66,7 +53,6 @@ console.log('Error al recargar estructura:', error);
 });
 }
 
-
 /* ===============================
 NOTYF
 =================================*/
@@ -79,6 +65,28 @@ y: 'top'
 dismissible: true
 });
 
+/* ==========================================
+PERMISOS BOTON AGREGAR MODULO
+========================================== */
+$(document).on('click', '.btn-agregar', function () {
+
+const tienePermiso = $(this).data('permiso-agregar');
+
+if (!tienePermiso) {
+
+notyf.error('No cuentas con permisos para agregar módulos');
+return;
+
+}
+
+// 🔥 Abrimos el modal manualmente
+const modal = new bootstrap.Modal(
+document.getElementById('modalAgregarModulo')
+);
+
+modal.show();
+
+});
 
 /* ===============================
 AGREGAR MODULOS 
@@ -158,6 +166,33 @@ this.enviando = false;
 }
 }
 
+/* ==========================================
+PERMISOS BOTON AGREGAR SUBMODULO
+========================================== */
+$(document).on('click', '.btnAbrirAsignarSubmodulo', function () {
+
+const tienePermiso = $(this).data('permiso-agregar');
+
+if (!tienePermiso) {
+notyf.error('No cuentas con permisos para agregar submódulos');
+return;
+}
+
+const idEstructura = $(this).data('id-estructura');
+const nombreModulo = $(this).data('nombre');
+
+/* colocar datos en el modal */
+$('#idModuloPrincipal').val(idEstructura);
+$('#nombreModuloPadre').val(nombreModulo);
+
+/* abrir modal manualmente */
+const modal = new bootstrap.Modal(
+document.getElementById('modalAgregarSubmodulo')
+);
+
+modal.show();
+
+});
 
 /* ===============================
 AGREGAR SUBMODULOS 
@@ -246,6 +281,14 @@ document.addEventListener('click', function (e) {
 const btn = e.target.closest('.btn-delete');
 if (!btn || btn.classList.contains('disabled')) return;
 
+/* 🔐 VALIDAR PERMISO */
+const tienePermiso = btn.dataset.permisoEliminar;
+
+if (!tienePermiso || tienePermiso == 0) {
+notyf.error('No cuentas con permisos para eliminar');
+return;
+}
+
 // ✅ Obtener correctamente los data-attributes
 const idEstructura = btn.dataset.idEstructura;
 const idUsuario = btn.dataset.idUsuario;
@@ -330,6 +373,31 @@ notyf.error(mensaje);
 });
 
 
+
+/* ==========================================
+BOTON EDITAR PERMISOS
+========================================== */
+$(document).on('click', '.btnEditarPermisos', function () {
+
+const tienePermiso = $(this).data('permiso-editar');
+if (!tienePermiso) {
+notyf.error('No cuentas con permisos para editar');
+return;
+}
+
+const data = {
+idEstructura: $(this).data('id-estructura'),
+idPuesto: $(this).data('id-puesto'),
+nombre: $(this).data('nombre')
+};
+
+/* Disparar evento que escucha Alpine */
+window.dispatchEvent(new CustomEvent('editar-permisos', {
+detail: data
+}));
+
+});
+
 /* ===============================
 MODAL PERMISOS DEL MODULO
 =================================*/
@@ -351,8 +419,27 @@ enviando:false,
 cargando:false,
 
 /* =========================
-ABRIR MODAL Y CARGAR DATA
+CONTROL DE PERMISOS
 ========================= */
+
+// 🔥 Si quitan "ver" → quitar todo
+toggleVer() {
+if (!this.ver) {
+this.descargar = false;
+this.agregar   = false;
+this.editar    = false;
+this.eliminar  = false;
+}
+
+},
+
+// 🔥 Si activan cualquier permiso → activar "ver"
+togglePermiso() {
+if (this.descargar || this.agregar || this.editar || this.eliminar) {
+this.ver = true;
+}
+},
+
 /* =========================
 ABRIR MODAL Y CARGAR DATA
 ========================= */
@@ -391,19 +478,16 @@ text: 'Error al cargar permisos'
 }
 
 this.cargando = false;
-
 const modalElement = document.getElementById('modalEditarPermisos');
 const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
 modal.show();
 
 },
 
-
 /* =========================
 GUARDAR PERMISOS
 ========================= */
 async guardar() {
-
 this.enviando = true;
 
 try {
@@ -457,9 +541,7 @@ text: 'No se pudieron actualizar los permisos'
 }
 
 this.enviando = false;
-
 },
-
 
 /* =========================
 RESET FORM
