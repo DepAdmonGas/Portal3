@@ -1,3 +1,5 @@
+<div id="container" data-idsasisopa="101">
+
 <div class="row mt-4">
 <div class="col-md-6">
 
@@ -16,7 +18,7 @@
 
   <div class="datatables mt-3">
     <div class="table-responsive">
-      <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
           <th>#</th>
@@ -53,7 +55,7 @@
 
   <div class="datatables mt-3">
     <div class="table-responsive">
-      <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-revision-sgm" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
            <th>#</th>
@@ -75,6 +77,7 @@
 
 </div>
 
+</div>
 </div>
 
 <!-- ------------------------- -->

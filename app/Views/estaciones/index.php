@@ -1,7 +1,6 @@
 <div class="datatables">
 <div class="">
     <div class="">
-        <h4 class="">Estaciones</h4>
     <div class="table-responsive">
     <table id="table-estaciones" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
                     <thead>

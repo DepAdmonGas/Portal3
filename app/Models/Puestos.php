@@ -27,6 +27,11 @@ class Puestos extends Model
         'estatus' => 'integer',
     ];
 
+    public function menus()
+    {
+        return $this->belongsToMany(Menu::class, 'roles_menus', 'puesto_id', 'menu_id');
+    }
+
      public function usuarios()
     {
         return $this->hasMany(Usuario::class, 'id_puesto');

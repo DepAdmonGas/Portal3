@@ -44,4 +44,10 @@ class Usuario extends Model
     {
         return $query->where('estatus', 0);
     }
+
+    public function menus()
+    {
+        return $this->belongsToMany(Menu::class, 'usuarios_menus', 'usuario_id', 'menu_id')
+                    ->withPivot('tipo');
+    }
 }

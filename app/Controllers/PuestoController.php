@@ -2,12 +2,19 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Models\Puestos;
+use App\Core\Breadcrumb;
+
 class PuestoController extends BaseController{
 
     public function index(){
 
+        $title = 'Puestos';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add($title, '');
+
      $data = [
-            'title' => 'Puestos',
+            'title' => $title,
              'links' =>[
                 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],

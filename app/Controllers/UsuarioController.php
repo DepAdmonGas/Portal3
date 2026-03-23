@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 Use App\Models\Usuario;
 Use App\Models\Estacion;
+use App\Core\Breadcrumb;
 
 class UsuarioController extends BaseController{
 
@@ -15,8 +16,13 @@ class UsuarioController extends BaseController{
             $razonsocial = Estacion::where('id', $idestacion)->value('razonsocial');
         }
 
+        $title = 'Usuarios';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add($title, '');
+
         $data = [
-            'title' => 'Usuarios',
+            'title' => $title,
             'idestacion' => $idestacion,
             'razonsocial' => $razonsocial,
              'links' =>[
