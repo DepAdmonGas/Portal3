@@ -100,7 +100,6 @@ View::render('sistemas/configuracion-modulos-puesto-index',$data,'main');
 
 public function indexEstructuraPuesto($idPuesto)
 {
-
 $user = Auth::user();
 
 if (!$user) {
@@ -110,7 +109,6 @@ exit;
 
 $idUsuario = $user->id;
 $idPuestoUsuario  = $user->puesto->id;
-
 
 /* ---------- 1️⃣  OBTENER MÓDULO BASE (SIN EL /{id}) ---------- */
 $modulo = Modulo::where('url', 'configuracion-sistemas/configuracion-modulos-puesto')->first();
@@ -156,7 +154,7 @@ if (!$permisos || !$permisos->ver) {
 header('Location: /home');
 exit;
 }
-
+ 
 /* ---------- 5️⃣ BUSCA SI EL PUESTO SE ENCUENTRA HABILITADO ---------- */
 $puestoStatus = Puestos::find($idPuesto);
 if (!$puestoStatus || $puestoStatus->estatus != 0) {
@@ -197,7 +195,7 @@ $data = [
 
 View::render('sistemas/configuracion-modulos-puesto-formulario', $data, 'main');
 }
-
+ 
 
 public function datatableCatalogos(){
 $puesto = Puestos::all();

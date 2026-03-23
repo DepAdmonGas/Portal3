@@ -1,5 +1,5 @@
 <div class="row">
-
+ 
 <div class="col-12">
 <div class="card bg-info-subtle position-relative overflow-hidden mb-3">
 <div class="card-body px-4 py-3">
@@ -13,11 +13,10 @@ Configuracion de Modulos (Usuario) - <?=$usuario->nombre?>
 </h4>
 
 <button type="button"
-class="btn btn-rounded btn-primary d-flex align-items-center"
-data-bs-toggle="modal"
-data-bs-target="#modalAgregarModulo">
+class="btn btn-rounded btn-primary d-flex align-items-center btn-agregar"
+data-permiso-agregar="<?= $permisos->agregar ? 1 : 0 ?>">
 <i class="ti ti-plus fs-4 me-2"></i>
-Agregar módulo
+Agregar módulo 
 </button>
 </div>
 
@@ -52,7 +51,7 @@ $tree[$parent][] = $modulo;
 FUNCIÓN PARA SUB-SUB-MÓDULOS (RECURSIVA)
 ============================================================ */
 
-function renderTreeLines($tree, $parentId, $idPuesto)
+function renderTreeLines($tree, $parentId, $idUsuario, $permisos)
 {
 if (!isset($tree[$parentId])) return;
 
@@ -73,27 +72,25 @@ echo '
 </div>
 
 <div class="d-flex gap-1">
-
 <button class="btn btn-sm btn-primary btnAbrirAsignarSubmodulo"
-data-bs-toggle="modal"
-data-bs-target="#modalAgregarSubmodulo"
+data-permiso-agregar="'.$permisos->agregar.'"
 data-id-estructura="'.$node->id_estructura.'"
 data-nombre="'.htmlspecialchars($node->nombre_modulo).'">
 <i class="ti ti-plus"></i>
 </button>
 
 <button class="btn btn-sm btn-warning btnEditarPermisos"
-data-bs-toggle="modal"
-data-bs-target="#modalEditarPermisos"
+data-permiso-editar="'.$permisos->editar.'"
 data-id-estructura="'.$node->id_estructura.'"
-data-id-usuario="'.$idPuesto.'"
+data-id-usuario="'.$idUsuario.'"
 data-nombre="'.htmlspecialchars($node->nombre_modulo).'">
 <i class="ti ti-key text-dark"></i>
 </button>
 
 <button class="btn btn-sm btn-danger btn-delete"
+data-permiso-eliminar="'.$permisos->eliminar.'"
 data-id-estructura="'.$node->id_estructura.'"
-data-id-usuario="'.$idPuesto.'"
+data-id-usuario="'.$idUsuario.'"
 data-id-modulo="'.$node->id_modulo.'"
 data-id-modulo-principal="'.($node->id_modulo_principal ?: 0).'">
 <i class="ti ti-trash"></i>
@@ -103,7 +100,7 @@ data-id-modulo-principal="'.($node->id_modulo_principal ?: 0).'">
 </div>
 ';
 
-renderTreeLines($tree, $node->id_estructura, $idPuesto);
+renderTreeLines($tree, $node->id_estructura, $idUsuario, $permisos);
 
 echo '</li>';
 }
@@ -116,7 +113,7 @@ echo '</ul>';
 FUNCIÓN PARA SUBMÓDULOS (CARDS)
 ============================================================ */
 
-function renderSubModulosCards($tree, $parentId, $idPuesto)
+function renderSubModulosCards($tree, $parentId, $idUsuario, $permisos)
 {
 if (!isset($tree[$parentId]) || empty($tree[$parentId])) {
 
@@ -154,25 +151,24 @@ echo '
 <div class="d-flex gap-1">
 
 <button class="btn btn-sm btn-primary btnAbrirAsignarSubmodulo"
-data-bs-toggle="modal"
-data-bs-target="#modalAgregarSubmodulo"
+data-permiso-agregar="'.$permisos->agregar.'"
 data-id-estructura="'.$sub->id_estructura.'"
 data-nombre="'.htmlspecialchars($sub->nombre_modulo).'">
-<i class="ti ti-plus"></i>
+<i class="ti ti-plus"></i> 
 </button>
 
 <button class="btn btn-sm btn-warning btnEditarPermisos"
-data-bs-toggle="modal"
-data-bs-target="#modalEditarPermisos"
+data-permiso-editar="'.$permisos->editar.'"
 data-id-estructura="'.$sub->id_estructura.'"
-data-id-usuario="'.$idPuesto.'"
+data-id-usuario="'.$idUsuario.'"
 data-nombre="'.htmlspecialchars($sub->nombre_modulo).'">
 <i class="ti ti-key text-dark"></i>
 </button>
 
 <button class="btn btn-sm btn-danger btn-delete"
+data-permiso-eliminar="'.$permisos->eliminar.'"
 data-id-estructura="'.$sub->id_estructura.'"
-data-id-usuario="'.$idPuesto.'"
+data-id-usuario="'.$idUsuario.'"
 data-id-modulo="'.$sub->id_modulo.'"
 data-id-modulo-principal="'.($sub->id_modulo_principal ?: 0).'">
 <i class="ti ti-trash"></i>
@@ -182,7 +178,7 @@ data-id-modulo-principal="'.($sub->id_modulo_principal ?: 0).'">
 
 </div>';
 
-renderTreeLines($tree, $sub->id_estructura, $idPuesto);
+renderTreeLines($tree, $sub->id_estructura, $idUsuario, $permisos);
 
 echo '
 </div>
@@ -216,23 +212,22 @@ foreach ($tree[0] as $moduloPadre) {
 <div class="d-flex gap-1">
 
 <button class="btn btn-sm btn-light btnAbrirAsignarSubmodulo"
-data-bs-toggle="modal"
-data-bs-target="#modalAgregarSubmodulo"
+data-permiso-agregar="<?= $permisos->agregar ? 1 : 0 ?>"
 data-id-estructura="<?= $moduloPadre->id_estructura ?>"
 data-nombre="<?= htmlspecialchars($moduloPadre->nombre_modulo) ?>">
-<i class="ti ti-plus"></i>
+<i class="ti ti-plus"></i> 
 </button>
 
 <button class="btn btn-sm btn-warning btnEditarPermisos"
-data-bs-toggle="modal"
-data-bs-target="#modalEditarPermisos"
+data-permiso-editar="<?= $permisos->editar ? 1 : 0 ?>"
 data-id-estructura="<?= $moduloPadre->id_estructura ?>"
-data-id-usuario="<?= $idPuesto ?? $usuario->id ?>"
+data-id-usuario="<?= $idUsuario ?? $usuario->id ?>"
 data-nombre="<?= htmlspecialchars($moduloPadre->nombre_modulo) ?>">
-<i class="ti ti-key text-dark"></i>
+<i class="ti ti-key text-dark"></i> 
 </button>
 
 <button class="btn btn-sm btn-danger btn-delete"
+data-permiso-eliminar="<?= $permisos->eliminar ? 1 : 0 ?>"
 data-id-estructura="<?= $moduloPadre->id_estructura ?>"
 data-id-usuario="<?= $usuario->id ?>"
 data-id-modulo="<?= $moduloPadre->id_modulo ?>"
@@ -245,7 +240,7 @@ data-id-modulo-principal="0">
 </div>
 
 <div class="card-body pb-0">
-<?php renderSubModulosCards($tree, $moduloPadre->id_estructura, $usuario->id); ?>
+<?php renderSubModulosCards($tree, $moduloPadre->id_estructura, $usuario->id, $permisos); ?>
 </div>
 
 </div>
@@ -365,39 +360,23 @@ Cancelar
 </div>
 
 <!---------- MODAL EDITAR PERMISOS ---------->
-<div class="modal fade"
-id="modalEditarPermisos"
-tabindex="-1"
-data-bs-backdrop="static"
-data-bs-keyboard="false"
-x-data="permisosForm()"
+<div class="modal fade" id="modalEditarPermisos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-data="permisosForm()"
 @editar-permisos.window="abrirEditar($event.detail)">
 
 <div class="modal-dialog modal-md">
 <div class="modal-content">
 
 <div class="modal-header bg-primary">
-<h5 class="modal-title text-white">
-Editar permisos del módulo / submódulo
-</h5>
-<button type="button"
-class="btn-close btn-close-white"
-data-bs-dismiss="modal"
-@click="resetForm()">
-</button>
+<h5 class="modal-title text-white">Editar permisos del módulo / submódulo</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="resetForm()"></button>
 </div>
 
 <div class="modal-body">
 
 <!-- Nombre -->
 <div class="mb-3">
-<label class="form-label fw-semibold">
-Nombre del módulo / submódulo:
-</label>
-<input type="text"
-class="form-control"
-x-model="nombreModulo"
-disabled>
+<label class="form-label fw-semibold">Nombre del módulo / submódulo:</label>
+<input type="text"class="form-control"x-model="nombreModulo"disabled>
 </div>
 
 <!-- Loader -->
@@ -438,28 +417,14 @@ Permisos del módulo / submódulo:
 </div>
 
 </div>
-
 </div>
 
 <div class="modal-footer">
-
-<button type="button"
-class="btn bg-danger-subtle text-danger"
-data-bs-dismiss="modal"
-@click="resetForm()"
-:disabled="enviando">
-Cancelar
-</button>
-
-<button class="btn btn-success"
-@click="guardar()"
-:disabled="enviando || cargando">
-
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="resetForm()" :disabled="enviando">Cancelar</button>
+<button class="btn btn-success" @click="guardar()" :disabled="enviando || cargando">
 <span x-show="!enviando">Guardar</span>
 <span x-show="enviando">Guardando...</span>
-
 </button>
-
 </div>
 
 </div>
