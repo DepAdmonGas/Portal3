@@ -2,22 +2,28 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Models\Grupo;
+use App\Core\Breadcrumb;
 class GrupoController extends BaseController{
 
 public function index(){
 
-$data = [
-'title' => 'Grupos',
-'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-],
-'scripts' => [
-'/assets/js/vendor.min.js',
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/grupos/datatable.init.js',
-'/assets/js/grupos/actions.init.js'
-]
-];
+     $title = 'Grupos';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add($title, '');
+
+    $data = [
+    'title' => $title,
+    'links' =>[
+    '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+    ],
+    'scripts' => [
+    '/assets/js/vendor.min.js',
+    '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+    '/assets/js/grupos/datatable.init.js',
+    '/assets/js/grupos/actions.init.js'
+    ]
+    ];
 
 View::render('grupos/index', $data,'main');
 

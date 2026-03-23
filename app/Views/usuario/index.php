@@ -3,8 +3,7 @@
 <div class="datatables">
     <div class="">
     <div class="">
-    <h4 class="">Usuarios</h4>
-
+    
     <?= (!empty($idestacion))? '<h5 class="">'.$razonsocial.'</h5>' : ''; ?>
 
     <div class="d-flex flex-wrap gap-6">

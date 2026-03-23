@@ -23,6 +23,58 @@
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+function menuApp() {
+    return {
+        menus: [],
+
+        init() {
+            this.cargarMenus();
+        },
+
+        cargarMenus() {
+    fetch('/menu')
+        .then(res => res.json())
+        .then(data => {
+            this.menus = this.buildTree(data);
+        });
+},
+
+        buildTree(data) {
+            return data.map(grupo => {
+                let map = {};
+                let items = [];
+
+                grupo.items.forEach(item => {
+                    item.children = [];
+                    item.open = false;
+                    map[item.id] = item;
+                });
+
+                grupo.items.forEach(item => {
+                    if (item.padre_id) {
+                        map[item.padre_id]?.children.push(item);
+                    } else {
+                        items.push(item);
+                    }
+                });
+
+                grupo.items = items;
+                return grupo;
+            });
+        },
+
+        toggle(item) {
+            if (item.children.length > 0) {
+                item.open = !item.open;
+            } else {
+                window.location.href = item.ruta;
+            }
+        }
+    }
+}
+</script>
       
 </head>
 <body class="link-sidebar">
@@ -48,142 +100,77 @@
           </a>
         </div>
 
-        <nav class="sidebar-nav scroll-sidebar" data-simplebar>
-          <ul id="sidebarnav">
-            <!-- ---------------------------------- -->
-            <!-- Configuración -->
-            <!-- ---------------------------------- -->
+        <nav class="sidebar-nav scroll-sidebar" data-simplebar 
+          x-data="menuApp()" 
+          x-init="init()">
+
+    <ul id="sidebarnav">
+
+    <!-- 🔹 HOME -->
+    <li class="sidebar-item">
+        <a class="sidebar-link" href="/">
+            <span>
+                <i class="ti ti-home"></i>
+            </span>
+            <span class="hide-menu">Home</span>
+        </a>
+    </li>
+
+    <!-- LOOP DE GRUPOS -->
+    <template x-for="grupo in menus" :key="grupo.nombre">
+
+        <div>
+
+            <!-- 🔹 CATEGORÍA -->
             <li class="nav-small-cap">
-              <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-              <span class="hide-menu">Configuración</span>
-            </li>
-            <!-- ---------------------------------- -->
-            <!-- Dashboard -->
-            <!-- ---------------------------------- -->
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/grupos" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Grupos</span>
-              </a>
-            </li>
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/estaciones" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Estaciones</span>
-              </a>
+                <i :class="(grupo.icono || 'ti ti-dots') + ' nav-small-cap-icon fs-4'"></i>
+                <span class="hide-menu" x-text="grupo.nombre"></span>
             </li>
 
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/puestos" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Puestos</span>
-              </a>
-            </li>
+            <!-- ITEMS -->
+            <template x-for="item in grupo.items" :key="item.id">
+                
+                <li class="sidebar-item">
 
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/usuarios" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Usuarios</span>
-              </a>
-            </li>
+                    <a 
+                    class="sidebar-link"
+                    :class="{'has-arrow': item.children.length > 0}"
+                    :href="item.children.length ? '#' : item.ruta"
+                    @click="if(item.children.length){ $event.preventDefault(); toggle(item); }"
+                >
+                        <span class="d-flex">
+                            <i :class="item.icono"></i>
+                        </span>
+                        <span class="hide-menu" x-text="item.nombre"></span>
+                    </a>
 
-             <li class="sidebar-item">
-              <a class="sidebar-link" href="/modulos" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Modulos</span>
-              </a>
-            </li>
-            <!-- Encargado -->
-            <li class="nav-small-cap">
-              <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-              <span class="hide-menu">Estaciones</span>
-            </li>
-            
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/bitacora-aditivo" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Bitácora de aditivo</span>
-              </a>
-            </li>
+                    <!-- SUBMENÚ -->
+                    <ul 
+                        class="collapse first-level"
+                        :class="{'show': item.open}"
+                    >
+                        <template x-for="child in item.children" :key="child.id">
+                            <li class="sidebar-item">
+                                <a :href="child.ruta" class="sidebar-link">
+                                    <div class="round-16 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-circle"></i>
+                                    </div>
+                                    <span class="hide-menu" x-text="child.nombre"></span>
+                                </a>
+                            </li>
+                        </template>
+                    </ul>
 
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/solicitud-gafetes" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Solicitud de Gafetes</span>
-              </a>
-            </li>
+                </li>
 
-             <li class="sidebar-item">
-              <a class="sidebar-link" href="/solicitud-tarjetas" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Solicitud de Tarjetas</span>
-              </a>
-            </li>
+            </template>
 
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/solicitud-tarjetas" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Solicitud de Tarjetas</span>
-              </a>
-            </li>
+        </div>
 
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/sasisopa" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">SASISOPA</span>
-              </a>
-            </li>
+    </template>
 
-             <li class="sidebar-item">
-              <a class="sidebar-link" href="/sgm" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">SGM</span>
-              </a>
-            </li>
-
-             <li class="sidebar-item">
-              <a class="sidebar-link" href="/dapartamento-operativo" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Operativo</span>
-              </a>
-            </li>
-
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="/dapartamento-gestoria" aria-expanded="false">
-                <span>
-                  <i class="ti ti-file"></i>
-                </span>
-                <span class="hide-menu">Gestoria</span>
-              </a>
-            </li>
-            <!-- -->
-     
-          </ul>
-        </nav>
+</ul>
+</nav>
 
         <div class="fixed-profile p-3 mx-3 mb-2 bg-secondary-subtle rounded mt-3">
           <div class="hstack gap-3">
@@ -264,7 +251,7 @@
                           <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="80" height="80" alt="modernize-img" />
                           <div class="ms-3">
                             <h5 class="mb-1 fs-3"><?= $user->nombre ?></h5>
-                            <span class="mb-1 d-block"><?php $user->puesto->tipo_puesto ?></span>
+                            <span class="mb-1 d-block"><?=$user->puesto->tipo_puesto?></span>
                             <p class="mb-0 d-flex align-items-center gap-2">
                               <i class="ti ti-mail fs-4"></i> <?= $user->email ?>
                             </p>
@@ -303,8 +290,10 @@
       <!--  Header End -->
 
        <div class="body-wrapper">
-        <div class="container-fluid">
-          
+        <div class="container-fluid">    
+        <h4 class="fw-semibold mt-3"><?=$title;?></h4>  
+        <?php \App\Core\Breadcrumb::render(); ?>    
+        
         <?= $content ?>
          
         </div>

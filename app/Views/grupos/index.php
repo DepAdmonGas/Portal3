@@ -1,9 +1,6 @@
 
-<div class="mb-2">
-  <div class="action-btn layout-top-spacing d-flex align-items-center justify-content-between flex-wrap">
-    <h1 class="mb-0 fs-7">Grupos</h1>
-    <button type="button" class="btn mb-1 bg-primary-subtle text-primary px-4 fs-4" data-bs-toggle="modal" data-bs-target="#nuevoGrupo">Nuevo Grupo</button>
-  </div>
+<div class="text-end">
+<button type="button" class="btn mb-1 bg-primary-subtle text-primary px-4 fs-4" data-bs-toggle="modal" data-bs-target="#nuevoGrupo">Nuevo Grupo</button>
 </div>
 
 <div class="datatables">

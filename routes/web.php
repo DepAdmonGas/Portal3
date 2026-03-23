@@ -12,6 +12,8 @@ return function(RouteCollector $r) {
     // ---------------- HOME ----------------
     $r->addRoute('GET', '/home', Route::auth(['HomeController', 'index']));
 
+    $r->addRoute('GET', '/menu', Route::auth(['MenuController', 'index']));
+
     // ---------------- GRUPOS ----------------
     $r->addGroup('/grupos', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['GrupoController', 'index']));
@@ -124,7 +126,10 @@ return function(RouteCollector $r) {
     // ---------------- SGM ----------------
     $r->addGroup('/sgm', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['SgmController', 'index']));
+
         $r->addRoute('GET', '/estructura-sistema-medicion', Route::auth(['SgmController', 'estructuraSistemaMedicion']));
+        $r->addRoute('GET', '/datatable-lista-revision-sgm', Route::auth(['SgmController', 'datatableListaRevisionSgm']));
+        
         $r->addRoute('GET', '/control-documental-sistema-gestion-medicion', Route::auth(['SgmController', 'controlDocumentalSistemaGestionMedicion']));
         $r->addRoute('GET', '/responsabilidades-direccion', Route::auth(['SgmController', 'responsabilidadesDireccion']));
         $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente', Route::auth(['SgmController', 'establecimientoObjetivosEnfocadosCliente']));

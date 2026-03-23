@@ -3,13 +3,19 @@ namespace App\Controllers;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Models\Estacion;
 use App\Core\View;
+use App\Core\Breadcrumb;
 
 class EstacionController extends BaseController{
 
     public function viewIndex(){
+
+        $title = 'Estaciones';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add($title, '');
         
         $data = [
-            'title' => 'Estaciones',
+            'title' => $title,
             'links' =>[
                 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],

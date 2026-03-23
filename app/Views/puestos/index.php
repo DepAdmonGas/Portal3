@@ -1,15 +1,3 @@
-<div class="card">
-  <div class="p-3">
-
-  
-<div class="action-btn layout-top-spacing d-flex align-items-center justify-content-between flex-wrap">
-  <h1 class="mb-0 fs-7">Puestos</h1>
-  <button type="button" class="btn mb-1 bg-primary-subtle text-primary px-4 fs-4" data-bs-toggle="modal" data-bs-target="#nuevoPuesto">Crear Nuevo Puesto</button>
-</div>
-
-</div>
-</div>
-
 <div class="datatables">
 
     <div class="table-responsive">
