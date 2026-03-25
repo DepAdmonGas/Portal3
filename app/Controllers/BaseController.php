@@ -1,13 +1,16 @@
 <?php
 namespace App\Controllers;
+use App\Core\Session;
 
 class BaseController {
 
-    protected function json($data)
+    public function __construct()
     {
-        header('Content-Type: application/json');
-        echo json_encode($data);
-        exit;
+        //  Validar sesión
+        if (!Session::isLogged()) {
+            header('Location: /');
+            exit;
+        }
     }
 
 }

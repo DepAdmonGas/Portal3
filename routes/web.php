@@ -143,5 +143,5 @@ return function(RouteCollector $r) {
     });
 
     // ---------------- RUTA FINAL ----------------
-    $r->addRoute('GET', '/{url:.+}', Route::auth(['ModuloController', 'RutasModulos']));
+    //$r->addRoute('GET', '/{url:.+}', Route::auth(['ModuloController', 'RutasModulos']));
 };
