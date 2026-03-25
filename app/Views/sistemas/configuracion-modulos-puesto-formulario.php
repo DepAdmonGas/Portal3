@@ -19,7 +19,7 @@ data-permiso-agregar="<?= $permisos->agregar ? 1 : 0 ?>">
 Agregar módulo
 </button>
 </div>
-
+ 
 <nav aria-label="breadcrumb">
 <ol class="breadcrumb mb-0">
 <li class="breadcrumb-item text-muted text-decoration-none" onclick="history.go(-1)">
@@ -199,7 +199,7 @@ if (isset($tree[0])) {
 
 foreach ($tree[0] as $moduloPadre) {
 ?>
-
+ 
 <div class="col-xl-4 col-lg-6 col-md-12 col-sm-12">
 <div class="card">
 
@@ -377,7 +377,8 @@ Cancelar
 <!-- Nombre -->
 <div class="mb-3">
 <label class="form-label fw-semibold">Nombre del módulo / submódulo:</label>
-<input type="text"class="form-control"x-model="nombreModulo"disabled></div>
+<input type="text"class="form-control"x-model="nombreModulo"disabled>
+</div>
 
 <!-- Loader -->
 <div class="text-center my-3" x-show="cargando">
@@ -417,29 +418,16 @@ Permisos del módulo / submódulo:
 </div>
 
 </div>
-
 </div>
 
 <div class="modal-footer">
-
-<button type="button"
-class="btn bg-danger-subtle text-danger"
-data-bs-dismiss="modal"
-@click="resetForm()"
-:disabled="enviando">
-Cancelar
-</button>
-
-<button class="btn btn-success"
-@click="guardar()"
-:disabled="enviando || cargando">
-
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="resetForm()" :disabled="enviando">Cancelar</button>
+<button class="btn btn-success" @click="guardar()" :disabled="enviando || cargando">
 <span x-show="!enviando">Guardar</span>
 <span x-show="enviando">Guardando...</span>
-
 </button>
-
 </div>
+
 
 </div>
 </div>
