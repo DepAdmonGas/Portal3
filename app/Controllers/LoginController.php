@@ -52,6 +52,16 @@ class LoginController extends BaseController{
             'nombre' => $user->nombre
         ]);
 
+        $multiestacion = ($user->id_gas == 8);
+
+        // SESIÓN
+        $_SESSION['usuario'] = [
+            'id' => $user->id,
+            'nombre' => $user->nombre,
+            'id_estacion' => $user->id_gas,
+            'multiestacion' => $multiestacion
+        ];
+
         setcookie(
     'token',
     $token,

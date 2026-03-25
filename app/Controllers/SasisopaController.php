@@ -12,6 +12,8 @@ use App\Models\Sasisopa\RepresentanteTecnico;
 use App\Models\Sasisopa\ComunicacionIE;
 use App\Models\Sasisopa\QuejasSugerencia;
 use App\Models\Sasisopa\EquipoCritico;
+use App\Services\ModuloService;
+use App\Core\Auth;
 
 class SasisopaController{
 
@@ -22,17 +24,21 @@ class SasisopaController{
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add($title, '');
 
+        $usuario = Auth::user();
+        // Buscar permisos de los modulos
+        $permisos = ModuloService::getPermisos($usuario->id);
+
         $sasisopa = Sasisopa::all();
 
          $data = [
             'title' => $title,
-             'links' =>[
-                
-            ],
+            'elementos' => $sasisopa,
+            'permisos' => $permisos,
+            'modulo' => 'sasisopa',
+            'links' =>[],
             'scripts' => [
                 '/assets/js/vendor.min.js'
             ],
-            'elementos' => $sasisopa,
             'help' => false
 
         ];
