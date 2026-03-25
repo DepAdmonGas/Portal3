@@ -5,6 +5,9 @@ class AuthController
 {
     public function logout()
     {
+        session_unset();
+        session_destroy();
+        
         // Eliminar cookie JWT
         setcookie(
             'token',

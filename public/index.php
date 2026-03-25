@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-session_start();
 // --------------------------------------------------------
 // AUTOLOAD Y CONFIGURACIÓN INICIAL
 // --------------------------------------------------------
@@ -12,6 +11,9 @@ use App\Core\Bootstrap;
 use App\Core\ErrorHandler;
 use App\Core\Database;
 use App\Core\Router;
+use App\Core\Session;
+
+Session::init();
 
 // --------------------------------------------------------
 // CARGAR VARIABLES DE ENTORNO (.env)

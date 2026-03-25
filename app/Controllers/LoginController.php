@@ -3,8 +3,10 @@ namespace App\Controllers;
 use App\Models\Usuario;
 use App\Core\JWTService;
 use App\Core\View;
+use App\Services\ModuloService;
+use App\Core\Session;
 
-class LoginController extends BaseController{
+class LoginController{
 
     
     public function index(){
@@ -47,20 +49,23 @@ class LoginController extends BaseController{
             return;
         }
 
+        $multiestacion = ($user->id_gas == 8);
+
          $token = JWTService::create([
             'id' => $user->id,
             'nombre' => $user->nombre
         ]);
 
-        $multiestacion = ($user->id_gas == 8);
-
-        // SESIÓN
-        $_SESSION['usuario'] = [
+        // Guardar sesión
+        Session::set('usuario', [
             'id' => $user->id,
             'nombre' => $user->nombre,
             'id_estacion' => $user->id_gas,
             'multiestacion' => $multiestacion
-        ];
+        ]);
+
+        // Control de tiempo
+        Session::set('LAST_ACTIVITY', time());
 
         setcookie(
     'token',
@@ -73,6 +78,8 @@ class LoginController extends BaseController{
         'samesite' => 'Lax'
         ]
         );
+
+        ModuloService::guardarEnSesion($user->id);
 
         // Login correcto
         echo json_encode([
