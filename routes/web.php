@@ -51,7 +51,10 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/reporte', Route::auth(['AditivoController', 'reporte']));
         $r->addRoute('GET', '/inventario', Route::auth(['AditivoController', 'inventario']));
 
+        $r->addRoute('POST', '/create', Route::auth(['AditivoController', 'createAditivo']));
         $r->addRoute('POST', '/delete', Route::auth(['AditivoController', 'deleteAditivo']));
+        $r->addRoute('POST', '/update', Route::auth(['AditivoController', 'updateAditivo']));
+        
     });
 
     // ---------------- GAFETES ----------------

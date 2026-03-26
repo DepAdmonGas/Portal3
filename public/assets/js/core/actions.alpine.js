@@ -82,19 +82,34 @@ document.addEventListener('alpine:init', () => {
         // CREATE
         async createAction({ url, data = {}, table }) {
 
-            if (this.loading) return;
-            this.loading = true;
+        if (this.loading) return;
+        this.loading = true;
 
-            try {
-                const response = await axios.post(url, data);
-                this.handleResponse(response, table);
+        try {
+            const response = await axios.post(url, data);
 
-            } catch (err) {
-                this.notify('error', 'Error al crear');
-            } finally {
-                this.loading = false;
-            }
+            this.handleResponse(response, table);
+
+            // RETORNAR RESPUESTA
+            return response.data;
+
+        } catch (err) {
+
+            const mensaje =
+                err.response?.data?.message ||
+                'Error al crear';
+
+            this.notify('error', mensaje);
+
+            return {
+                success: false,
+                message: mensaje
+            };
+
+        } finally {
+            this.loading = false;
         }
+    }
 
     }));
 
