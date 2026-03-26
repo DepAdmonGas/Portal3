@@ -6,6 +6,7 @@ return function(RouteCollector $r) {
 
     // ---------------- AUTH ----------------
     $r->addRoute('GET', '/', Route::guest(['LoginController', 'index']));
+    $r->addRoute('GET', '/login', Route::guest(['LoginController', 'index']));
     $r->addRoute('POST', '/login', ['LoginController', 'login']);
     $r->addRoute('GET', '/logout', Route::auth(['AuthController', 'logout']));
 
@@ -49,6 +50,11 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/datatable', Route::auth(['AditivoController', 'datatableAditivo']));
         $r->addRoute('GET', '/reporte', Route::auth(['AditivoController', 'reporte']));
         $r->addRoute('GET', '/inventario', Route::auth(['AditivoController', 'inventario']));
+
+        $r->addRoute('POST', '/create', Route::auth(['AditivoController', 'createAditivo']));
+        $r->addRoute('POST', '/delete', Route::auth(['AditivoController', 'deleteAditivo']));
+        $r->addRoute('POST', '/update', Route::auth(['AditivoController', 'updateAditivo']));
+        
     });
 
     // ---------------- GAFETES ----------------

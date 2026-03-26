@@ -3,7 +3,7 @@ namespace App\Core;
 
 class Session
 {
-    private static $lifetime = 86000; 
+    private static $lifetime = 90000; 
 
     public static function init()
     {
@@ -30,11 +30,19 @@ class Session
      */
     private static function check()
     {
+        $current = $_SERVER['REQUEST_URI'];
+
+        // 🔥 NO validar en login
+        if (str_contains($current, '/login')) {
+            return;
+        }
+
         if (isset($_SESSION['LAST_ACTIVITY'])) {
 
             if (time() - $_SESSION['LAST_ACTIVITY'] > self::$lifetime) {
                 self::destroy();
-                header('Location: /');
+
+                header('Location: /login');
                 exit;
             }
         }
