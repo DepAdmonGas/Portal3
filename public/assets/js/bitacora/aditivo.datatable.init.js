@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
 
     */
+    let permisos = {};
+
     const table = $('#table-aditivo').DataTable({
         processing: true,
         serverSide: false,
@@ -40,7 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ajax: {
             url: '/bitacora-aditivo/datatable',
             type: 'GET',
-            dataSrc: json => json.data
+            dataSrc: function (json) {
+            //guardas permisos globalmente
+            permisos = json.permisos;
+            return json.data;
+        }
         },
         columns: [
             { data: 'folio' },
@@ -89,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
 
-            // 🔥 ACCIONES
+            // ACCIONES
             {
             data: null,
             orderable: false,
@@ -97,52 +103,63 @@ document.addEventListener('DOMContentLoaded', () => {
             className: 'text-center',
             render: function (data, type, row) {
 
-                const disabled = row.estado === 0;
+            const disabled = row.estado === 0;
 
-                return `
-                    <div x-data="actions()" class="d-flex gap-1 justify-content-center">
+            const noEdit = !permisos.editar || disabled;
+            const noDelete = !permisos.eliminar || disabled;
 
-                        <!-- DROPDOWN -->
-                        <div class="dropdown dropstart">
-                            <a href="javascript:void(0)" data-bs-toggle="dropdown">
-                                <i class="ti ti-dots-vertical fs-6"></i>
-                            </a>
+            return `
+                <div x-data="actions()" class="d-flex gap-1 justify-content-center">
 
-                            <ul class="dropdown-menu">
+                    <div class="dropdown dropstart">
+                        <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                            <i class="ti ti-dots-vertical fs-6"></i>
+                        </a>
 
-                                <li>
-                                    <a 
-                                        class="dropdown-item ${disabled ? 'disabled' : ''}"
-                                        @click="editAction({
-                                            url: '/bitacora-aditivo',
-                                            id: ${row.id},
-                                            table: '#table-aditivo'
-                                        })"
-                                    >
-                                        <i class="ti ti-edit"></i> Editar
-                                    </a>
-                                </li>
+                        <ul class="dropdown-menu">
 
-                                <li>
-                                    <a 
-                                        class="dropdown-item ${disabled ? 'disabled' : ''}"
-                                        @click="deleteAction({
-                                            url: '/bitacora-aditivo/delete',
-                                            id: ${row.id},
-                                            name: '${row.folio}',
-                                            table: '#table-aditivo'
-                                        })"
-                                    >
-                                        <i class="ti ti-trash"></i> Eliminar
-                                    </a>
-                                </li>
+                            <li>
+                                <a 
+                                    href="javascript:void(0)"
+                                    class="dropdown-item ${noEdit ? 'disabled' : ''}"
+                                    ${noEdit ? '' : `
+                                    @click='$dispatch("open-edit", {
+                                        id: ${row.id},
+                                        litros: ${row.litros},
+                                        producto: "${row.producto}",
+                                        galones: ${row.galones},
+                                        fecha: "${row.fecha}",
+                                        no_factura: "${row.no_factura}"
+                                    })'
+                                    `}
+                                >
+                                    <i class="ti ti-edit"></i> Editar
+                                </a>
+                            </li>
 
-                            </ul>
-                        </div>
+                            <li>
+                                <a 
+                                    href="javascript:void(0)"
+                                    class="dropdown-item ${noDelete ? 'disabled' : ''}"
+                                    ${noDelete ? '' : `
+                                    @click='deleteAction({
+                                        url: "/bitacora-aditivo/delete",
+                                        id: ${row.id},
+                                        name: "${row.folio}",
+                                        table: "#table-aditivo"
+                                    })'
+                                    `}
+                                >
+                                    <i class="ti ti-trash"></i> Eliminar
+                                </a>
+                            </li>
 
+                        </ul>
                     </div>
-                `;
-            }
+
+                </div>
+            `;
+        }
         }
         ]
     });
