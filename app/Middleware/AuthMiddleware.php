@@ -3,6 +3,7 @@ namespace App\Middleware;
 
 use App\Core\JWTService;
 use Firebase\JWT\ExpiredException;
+use App\Core\Session;
 
 class AuthMiddleware
 {
@@ -10,34 +11,44 @@ class AuthMiddleware
     {
         $token = $_COOKIE['token'] ?? null;
 
+        // No hay token
         if (!$token) {
-            $this->unauthorized('No autenticado');
+            $this->forceLogout('No autenticado');
         }
 
         try {
+            // Validar token
             $payload = JWTService::validate($token);
-
             $GLOBALS['user'] = (array) $payload;
 
+            // Validar sesión
+            if (!Session::get('usuario')) {
+                $this->forceLogout('Sesión expirada');
+            }
+
         } catch (ExpiredException $e) {
-            $this->clearToken();
-            $this->unauthorized('Sesión expirada');
+            $this->forceLogout('Sesión expirada');
 
         } catch (\Exception $e) {
-            $this->clearToken();
-            $this->unauthorized('Token inválido');
+            $this->forceLogout('Token inválido');
         }
     }
 
-    private function clearToken(): void
+    private function forceLogout(string $message): void
     {
+        // Destruir sesión
+        Session::destroy();
+
+        // Eliminar cookie
         setcookie('token', '', [
             'expires'  => time() - 3600,
             'path'     => '/',
-            'secure'   => true,
+            'secure'   => false, // ojo aquí en local
             'httponly' => true,
-            'samesite' => 'Strict'
+            'samesite' => 'Lax'
         ]);
+
+        $this->unauthorized($message);
     }
 
     private function unauthorized(string $message): void

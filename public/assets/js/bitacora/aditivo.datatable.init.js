@@ -1,10 +1,40 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    $('#table-aditivo').DataTable({
+    /*
+
+                        <!--BOTÓN EDIT -->
+                        <button 
+                            class="btn btn-warning btn-sm ${disabled ? 'disabled' : ''}"
+                            @click="editAction({
+                                url: '/bitacora-aditivo',
+                                id: ${row.id},
+                                table: '#table-aditivo'
+                            })"
+                        >
+                            <i class="ti ti-edit"></i>
+                        </button>
+
+                        <!--BOTÓN DELETE -->
+                        <button 
+                            class="btn btn-danger btn-sm ${disabled ? 'disabled' : ''}"
+                            @click="deleteAction({
+                                url: '/bitacora-aditivo/delete',
+                                id: ${row.id},
+                                name: '${row.folio}',
+                                table: '#table-aditivo'
+                            })"
+                        >
+                            <i class="ti ti-trash"></i>
+                        </button>
+
+    */
+    let permisos = {};
+
+    const table = $('#table-aditivo').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
-        stateSave: true, 
+        stateSave: true,
         order: [[0, 'desc']],
         language: {
             url: '/assets/libs/datatables.net/js/es-ES.json'
@@ -13,80 +43,130 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/bitacora-aditivo/datatable',
             type: 'GET',
             dataSrc: function (json) {
-                return json.data;
-            }
+            //guardas permisos globalmente
+            permisos = json.permisos;
+            return json.data;
+        }
         },
         columns: [
-            { data: 'id', width: '60px', className: 'text-center' },
             { data: 'folio' },
-            { data: 'fecha',
-                render: function (data, type) {
-                if (!data) return '';
 
-                 if (type !== 'display') {
+            {
+                data: 'fecha',
+                render: function (data, type) {
+                    if (!data) return '';
+
+                    const fecha = new Date(data);
+                    const formateada = fecha.toLocaleDateString('es-MX', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+
+                    if (type === 'display') return formateada;
+                    if (type === 'filter') return formateada + ' ' + data;
+
                     return data;
                 }
-
-                const fecha = new Date(data);
-
-                return fecha.toLocaleDateString('es-MX', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
-            }
             },
-            { data: 'litros' },
-            
+
+            {
+                data: 'litros',
+                render: function (data, type) {
+                    if (!data) return '0';
+                    if (type !== 'display') return data;
+
+                    return Number(data).toLocaleString('es-MX');
+                }
+            },
+
             { data: 'no_factura' },
             { data: 'producto' },
             { data: 'galones' },
             { data: 'inventario_fisico' },
+
             {
                 data: 'estado',
-                width: '80px',
                 className: 'text-center',
                 render: function (data) {
                     return data == 1
-                        ? '<span class="mb-1 badge text-bg-success">Activo</span>'
-                        : '<span class="mb-1 badge text-bg-danger">Eliminado</span>';
+                        ? '<span class="badge text-bg-success">Activo</span>'
+                        : '<span class="badge text-bg-danger">Eliminado</span>';
                 }
             },
-            {
-                data: null,
-                width: '1%',
-                orderable: false,
-                searchable: false,
-                className: 'text-center align-middle td-small',
-                render: function (data, type, row) {
-                    const disabled = row.estatus === 0
-                        ? 'disabled opacity-50 pointer-events-none'
-                        : '';
 
-                    return `
-                        <div class="dropdown dropstart">
-                            <a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown">
-                                <i class="ti ti-dots-vertical fs-6"></i>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit ${disabled}" 
-                                    data-id="${row.id}" 
-                                    data-nombre="${row.nombre}">
-                                        <i class="fs-4 ti ti-edit"></i>Editar
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete ${disabled}" data-id="${row.id}">
-                                        <i class="fs-4 ti ti-trash"></i>Eliminar
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    `;
-                }
-            }
+            // ACCIONES
+            {
+            data: null,
+            orderable: false,
+            searchable: false,
+            className: 'text-center',
+            render: function (data, type, row) {
+
+            const disabled = row.estado === 0;
+
+            const noEdit = !permisos.editar || disabled;
+            const noDelete = !permisos.eliminar || disabled;
+
+            return `
+                <div x-data="actions()" class="d-flex gap-1 justify-content-center">
+
+                    <div class="dropdown dropstart">
+                        <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                            <i class="ti ti-dots-vertical fs-6"></i>
+                        </a>
+
+                        <ul class="dropdown-menu">
+
+                            <li>
+                                <a 
+                                    href="javascript:void(0)"
+                                    class="dropdown-item ${noEdit ? 'disabled' : ''}"
+                                    ${noEdit ? '' : `
+                                    @click='$dispatch("open-edit", {
+                                        id: ${row.id},
+                                        litros: ${row.litros},
+                                        producto: "${row.producto}",
+                                        galones: ${row.galones},
+                                        fecha: "${row.fecha}",
+                                        no_factura: "${row.no_factura}"
+                                    })'
+                                    `}
+                                >
+                                    <i class="ti ti-edit"></i> Editar
+                                </a>
+                            </li>
+
+                            <li>
+                                <a 
+                                    href="javascript:void(0)"
+                                    class="dropdown-item ${noDelete ? 'disabled' : ''}"
+                                    ${noDelete ? '' : `
+                                    @click='deleteAction({
+                                        url: "/bitacora-aditivo/delete",
+                                        id: ${row.id},
+                                        name: "${row.folio}",
+                                        table: "#table-aditivo"
+                                    })'
+                                    `}
+                                >
+                                    <i class="ti ti-trash"></i> Eliminar
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+
+                </div>
+            `;
+        }
+        }
         ]
+    });
+
+    // REINICIALIZAR ALPINE DESPUÉS DE DIBUJAR TABLA
+    $('#table-aditivo').on('draw.dt', function () {
+        Alpine.initTree(document.querySelector('#table-aditivo'));
     });
 
 });

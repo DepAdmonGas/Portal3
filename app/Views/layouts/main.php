@@ -11,7 +11,7 @@
 <!-- Core Css -->
 <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
 <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+
 
 <!-- Scripts por vista -->
 <?php if (!empty($links)): ?>
@@ -258,10 +258,11 @@
 <!-- solar icons -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 <!-- highlight.js (code view) -->
- 
-<script src="<?=asset('js/highlights/highlight.min.js')?>"></script>
-<script src="<?=asset('libs/sweetalert2/dist/sweetalert2.min.js')?>"></script>
+<script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
+<script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+<script src="<?= asset('js/core/notify.js?v=1.1') ?>"></script> 
+<script src="<?= asset('js/core/actions.alpine.js?v=1.3') ?>"></script>
 
 <!-- Scripts por vista -->
 <?php if (!empty($scripts)): ?>
