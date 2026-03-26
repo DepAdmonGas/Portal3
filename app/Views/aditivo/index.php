@@ -1,26 +1,43 @@
 <div id="container" class="mb-4">
 
-<div class="datatables">
-
-<div class="text-end">
-    <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
-            <ul class="dropdown-menu animated rubberBand">
-                <?= !empty($permisos['crear']) ? 
-                    '<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nuevo">Nuevo</a></li>' 
-                    : '' 
-                ?>
-                <li>
-                    <a class="dropdown-item" href="bitacora-aditivo/reporte">Reporte</a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="bitacora-aditivo/inventario">Inventario</a>
-                </li>
-            </ul>
+<div class="row mt-4 mb-4">
+    <div class="col-md-6 order-2 order-md-1">
+        <div class="fs-3">
+        Inventario (Gasolina Hitec 6590C):
+        <span class="badge rounded-pill text-bg-info fs-1" id="inv-gasolina"><?= $inventario['gasolina'] ?> Galones </span>
         </div>
+
+        <div class="fs-3">
+        Inventario (Diesel Hitec 4133G): 
+        <span class="badge rounded-pill text-bg-info fs-1" id="inv-diesel"><?= $inventario['diesel'] ?> Galones </span>
+        </div>
+    </div>
+    <div class="col-md-6 order-1 order-md-2">
+
+        <div class="text-end">
+        <div class="btn-group">
+                <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="ti ti-dots-vertical fs-4"></i>
+                </button>
+                <ul class="dropdown-menu animated rubberBand">
+                    <?= !empty($permisos['crear']) ? 
+                        '<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nuevo">Nuevo</a></li>' 
+                        : '' 
+                    ?>
+                    <li>
+                        <a class="dropdown-item" href="bitacora-aditivo/reporte">Reporte</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="bitacora-aditivo/inventario">Inventario</a>
+                    </li>
+                </ul>
+            </div>
+    </div>
+
+    </div>
 </div>
+
+<div class="datatables">
 
     <div class="table-responsive">
       <table id="table-aditivo" class="table table-md table-striped table-bordered mb-0 text-nowrap align-middle">
@@ -45,7 +62,9 @@
       </table>
       </div>
 
-</div>              
+</div>         
+
+</div>
 
 <div class="modal fade"
      id="nuevo"
@@ -160,6 +179,4 @@
 
         </div>
     </div>
-</div>
-
 </div>
