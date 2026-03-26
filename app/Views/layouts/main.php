@@ -11,8 +11,7 @@
     <!-- Core Css -->
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
-    
+        
     <!-- Scripts por vista -->
     <?php if (!empty($links)): ?>
         <?php foreach ($links as $link): ?>
@@ -23,6 +22,7 @@
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
 
     <script>
 function menuApp() {
@@ -291,8 +291,8 @@ function menuApp() {
 
        <div class="body-wrapper">
         <div class="container-fluid">  
-        <span class="mb-1 badge rounded-pill text-bg-info"><?=$user->estacion->razonsocial?></span>   
-        <h4 class="fw-semibold mt-3"><?=$title;?></h4>  
+        <span class="badge rounded-pill text-bg-info fs-2"><?=$user->estacion->razonsocial?></span>   
+        <h4 class="fw-semibold mt-2"><?=$title;?></h4>  
         <?php \App\Core\Breadcrumb::render(); ?>    
         
         <?= $content ?>
@@ -307,19 +307,20 @@ function menuApp() {
   <div class="dark-transparent sidebartoggler"></div>
 
   <!-- Import Js Files -->
-  <script src="/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/assets/libs/simplebar/dist/simplebar.min.js"></script>
-  <script src="/assets/js/theme/app.init.js"></script>
-  <script src="/assets/js/theme/theme.js"></script>
-  <script src="/assets/js/theme/app.min.js"></script>
-  <script src="/assets/js/theme/sidebarmenu.js"></script>
+  <script src="<?= asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') ?>"></script>
+  <script src="<?= asset('libs/simplebar/dist/simplebar.min.js') ?>"></script>
+  <script src="<?= asset('js/theme/app.init.js') ?>"></script>
+  <script src="<?= asset('js/theme/theme.js') ?>"></script>
+  <script src="<?= asset('js/theme/app.min.js') ?>"></script>
+  <script src="<?= asset('js/theme/sidebarmenu.js') ?>"></script>
 
   <!-- solar icons -->
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
   <!-- highlight.js (code view) -->
-  <script src="/assets/js/highlights/highlight.min.js"></script>
-  <script src="/assets/libs/sweetalert2/dist/sweetalert2.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+  <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
+  <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
+  <script src="<?= asset('js/core/notify.js?v=1.1') ?>"></script> 
+  <script src="<?= asset('js/core/actions.alpine.js?v=1.2') ?>"></script>
  
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>

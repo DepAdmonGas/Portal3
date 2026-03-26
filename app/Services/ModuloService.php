@@ -120,4 +120,11 @@ class ModuloService
 
         return !empty($permisos[$accion]);
     }
+
+    public static function validaPermiso($modulo, $accion)
+    {
+        $permisos = self::permisosSesion($modulo);
+
+        return !empty($permisos[$accion]);
+    }
 }
