@@ -3,8 +3,11 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Models\Operativo\BitacoraAditivo;
 use App\Models\Operativo\InventarioAditivo;
+use App\Models\Operativo\InventarioAditivoHist;
 use App\Services\ModuloService;
 use App\Core\Breadcrumb;
+use Illuminate\Database\Capsule\Manager as Capsule;
+
 
 class AditivoController extends BaseController{
 
@@ -14,6 +17,7 @@ class AditivoController extends BaseController{
 
         // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
+        $inventario = InventarioAditivo::where('id_estacion', $this->estacionId())->first();
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add($this->title, '');
@@ -23,14 +27,18 @@ class AditivoController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'inventario' =>[
+                'gasolina' => $inventario->gasolina,
+                'diesel' => $inventario->diesel
+            ],
             'links' =>[
                 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/assets/js/vendor.min.js',
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/bitacora/aditivo.datatable.init.js?v=1.0',
-                '/assets/js/bitacora/actions.init.js?v=1.0'
+                '/assets/js/bitacora/aditivo.datatable.init.js?v=1.2',
+                '/assets/js/bitacora/actions.init.js?v=1.3'
             ],
             'help' => false
         ];
@@ -57,46 +65,110 @@ class AditivoController extends BaseController{
         exit;
     }
 
-    public function deleteAditivo(){
-    // Leer JSON enviado por Axios
-    header('Content-Type: application/json; charset=utf-8');
-    $data = json_decode(file_get_contents('php://input'), true);
-    $id = $data['id'] ?? null;
+    public function totalInventario()
+    {
+        $inventario = InventarioAditivo::where('id_estacion', $this->estacionId())->first();
 
-    if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
         echo json_encode([
-            'success' => false,
-            'message' => 'No tienes permiso para eliminar'
+            'gasolina' => $inventario->gasolina ?? 0,
+            'diesel'   => $inventario->diesel ?? 0
         ]);
         exit;
     }
 
 
-    if (!$id) {
-    echo json_encode(['success' => false,'message' => 'ID requerido']);
-    exit;
-    }
+    public function deleteAditivo(){
 
-    // Buscar el folio
-    $bitacora = BitacoraAditivo::find($id);
+        header('Content-Type: application/json; charset=utf-8');
 
-    if (!$bitacora) {
-    echo json_encode(['success' => false,'message' => 'Folio no encontrado']);
-    exit;
-    }
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
 
-    if ($bitacora->estado == 0) {
-    echo json_encode(['success' => false,'message' => 'No se puede eliminar un folio ya inactivo']);
-    exit;
-    }
+        if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para eliminar'
+            ]);
+            exit;
+        }
 
-    // Soft delete: cambiar estatus a 0
-    $bitacora->estado = 0;
-    $bitacora->save();
+        if (!$id) {
+            echo json_encode(['success' => false,'message' => 'ID requerido']);
+            exit;
+        }
 
-    // Devolver respuesta JSON
-    echo json_encode(['success' => true,'message' => 'Folio eliminado correctamente']);
-    exit;
+        // 🔹 BITÁCORA
+        $bitacora = BitacoraAditivo::find($id);
+
+        if (!$bitacora) {
+            echo json_encode(['success' => false, 'message' => 'Folio no encontrado']);
+            exit;
+        }
+
+        if ($bitacora->estado == 0) {
+            echo json_encode(['success' => false, 'message' => 'No se puede eliminar un folio ya inactivo']);
+            exit;
+        }
+
+        // 🔹 INVENTARIO
+        $inventario = InventarioAditivo::where('id_estacion', $bitacora->id_estacion)->first();
+
+        if (!$inventario) {
+            echo json_encode(['success' => false, 'message' => 'Inventario no encontrado']);
+            exit;
+        }
+
+        $producto = $bitacora->producto;
+        $galones  = $bitacora->galones;
+        $folio    = $bitacora->folio;
+
+        // 🔹 CALCULAR INVENTARIO
+        if ($producto === "G SUPER" || $producto === "G PREMIUM") {
+            $inventario->gasolina += $galones;
+            $aditivoNombre = 'Gasolina Hitec 6590C';
+        } elseif ($producto === "G DIESEL") {
+            $inventario->diesel += $galones;
+            $aditivoNombre = 'Diesel Hitec 4133G';
+        }
+
+        Capsule::beginTransaction();
+
+        try {
+
+            // 1️⃣ ELIMINAR (SOFT)
+            $bitacora->estado = 0;
+            $bitacora->save();
+
+            // 2️⃣ INVENTARIO
+            $inventario->save();
+
+            // 3️⃣ HISTÓRICO
+            InventarioAditivoHist::create([
+                'id_estacion' => $bitacora->id_estacion,
+                'aditivo'     => $aditivoNombre,
+                'galones'     => $galones,
+                'detalle'     => 'Se agrega aditivo por cancelación del folio 00' . $folio
+            ]);
+
+            Capsule::commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Folio eliminado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Capsule::rollBack();
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al eliminar',
+                'error'   => $e->getMessage()
+            ]);
+        }
+
+        exit;
     }
 
     public function createAditivo(){

@@ -142,12 +142,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                     href="javascript:void(0)"
                                     class="dropdown-item ${noDelete ? 'disabled' : ''}"
                                     ${noDelete ? '' : `
-                                    @click='deleteAction({
+                                    @click='async () => {
+                                    const res = await deleteAction({
                                         url: "/bitacora-aditivo/delete",
                                         id: ${row.id},
                                         name: "${row.folio}",
                                         table: "#table-aditivo"
-                                    })'
+                                    });
+
+                                    if (res && res.success) {
+                                        window.aditivoInstance.updateInventario();
+                                    }
+                                }'
                                     `}
                                 >
                                     <i class="ti ti-trash"></i> Eliminar

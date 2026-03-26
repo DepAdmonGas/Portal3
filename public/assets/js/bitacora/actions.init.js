@@ -121,68 +121,91 @@ document.addEventListener('alpine:init', () => {
         // SUBMIT
         async submit() {
 
-            if (!this.validate()) {
-                this.notify('error', 'Completa los campos obligatorios');
-                return;
-            }
+        if (!this.validate()) {
+            this.notify('error', 'Completa los campos obligatorios');
+            return;
+        }
 
-            let payload = {};
-            let url = '';
+        let payload = {};
+        let url = '';
 
-            if (this.mode === 'create') {
+        if (this.mode === 'create') {
 
-                url = '/bitacora-aditivo/create';
+            url = '/bitacora-aditivo/create';
 
-                payload = {
-                    litros: this.litros,
-                    producto: this.producto,
-                    galones: this.galones,
-                    fecha: this.fecha,
-                    no_factura: this.no_factura
-                };
+            payload = {
+                litros: this.litros,
+                producto: this.producto,
+                galones: this.galones,
+                fecha: this.fecha,
+                no_factura: this.no_factura
+            };
 
-            } else {
+        } else {
 
-                url = '/bitacora-aditivo/update';
+            url = '/bitacora-aditivo/update';
 
-                payload = {
-                    id: this.id,
-                    no_factura: this.no_factura
-                };
-            }
+            payload = {
+                id: this.id,
+                no_factura: this.no_factura
+            };
+        }
 
-            try {
+        try {
 
-                const res = await this.createAction({
-                    url,
-                    data: payload,
-                    table: '#table-aditivo'
-                });
+            const res = await this.createAction({
+                url,
+                data: payload,
+                table: '#table-aditivo'
+            });
 
-                // IMPORTANTE: createAction debe retornar response.data
-                if (res && res.success) {
+            if (res && res.success) {
 
                 const modalEl = document.getElementById('nuevo');
 
-                //quitar foco activo (CLAVE)
+                //quitar foco (error aria-hidden)
                 document.activeElement.blur();
 
-                //esperar a que cierre correctamente
+                //IMPORTANTE: esperar a que cierre
                 modalEl.addEventListener('hidden.bs.modal', () => {
+
                     this.resetForm();
+
+                    // ACTUALIZAR INVENTARIO AQUÍ
+                    this.updateInventario();
+
                 }, { once: true });
 
                 const modal = bootstrap.Modal.getInstance(modalEl);
 
-                if (modal) modal.hide();
+                if (modal) {
+                    modal.hide();
+                }
+
             }
 
-            } catch (error) {
-                this.notify('error', 'Error al guardar');
-            }
-
-          
+        } catch (error) {
+            this.notify('error', 'Error al guardar');
         }
+    },
+        updateInventario() {
+
+        axios.get('/bitacora-aditivo/totalInventario')
+            .then(res => {
+
+                const gas = document.getElementById('inv-gasolina');
+                const die = document.getElementById('inv-diesel');
+
+                if (gas) gas.textContent = res.data.gasolina + ' galones';
+                if (die) die.textContent = res.data.diesel  + ' galones';
+
+                console.log(res.data.gasolina)
+
+            })
+            .catch(() => {
+                this.notify('error', 'Error al actualizar inventario');
+            });
+    }
 
     }));
 
