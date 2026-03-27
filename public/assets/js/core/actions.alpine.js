@@ -60,6 +60,8 @@ document.addEventListener('alpine:init', () => {
                 const response = await axios.post(url, { id });
                 this.handleResponse(response, table);
 
+                return response.data;
+
             } catch (err) {
 
                 const mensaje =
