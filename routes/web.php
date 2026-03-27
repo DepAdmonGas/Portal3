@@ -12,6 +12,10 @@ return function(RouteCollector $r) {
 
     // ---------------- HOME ----------------
     $r->addRoute('GET', '/home', Route::auth(['HomeController', 'index']));
+    
+    // ---------------- SWITCHEO DE LA SESION DE LA ESTACION ----------------
+    $r->addRoute('POST','/switch-estacion',Route::auth(['SwitchEstacionController', 'switchSessionEstacion']));
+
 
     $r->addRoute('GET', '/menu', Route::auth(['MenuController', 'index']));
 
