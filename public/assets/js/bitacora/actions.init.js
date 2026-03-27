@@ -199,8 +199,6 @@ document.addEventListener('alpine:init', () => {
                 if (gas) gas.textContent = res.data.gasolina + ' galones';
                 if (die) die.textContent = res.data.diesel  + ' galones';
 
-                console.log(res.data.gasolina)
-
             })
             .catch(() => {
                 this.notify('error', 'Error al actualizar inventario');

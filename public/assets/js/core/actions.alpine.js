@@ -82,26 +82,78 @@ document.addEventListener('alpine:init', () => {
         },
 
         // CREATE
-        async createAction({ url, data = {}, table }) {
+        async createAction({
+        url,
+        data = {},
+        table = null,
+        method = 'POST',
+        headers = {},
+        onSuccess = null,
+        onError = null
+        }) {
 
         if (this.loading) return;
         this.loading = true;
 
         try {
-            const response = await axios.post(url, data);
 
-            this.handleResponse(response, table);
+            let config = {
+                method,
+                url,
+                data,
+                headers: { ...headers }
+            };
 
-            // RETORNAR RESPUESTA
-            return response.data;
+            // DETECTAR FORM DATA (ARCHIVOS)
+            if (data instanceof FormData) {
+                config.headers['Content-Type'] = 'multipart/form-data';
+            }
+
+            const response = await axios(config);
+
+            const res = response.data;
+
+            // MANEJO GLOBAL
+            if (res.success) {
+
+                // RECARGAR TABLA SI EXISTE
+                if (table) {
+                    $(table).DataTable().ajax.reload(null, false);
+                }
+
+                // NOTIFICACIÓN (opcional)
+                if (res.message) {
+                    this.notify('success', res.message);
+                }
+
+                // CALLBACK PERSONALIZADO
+                if (typeof onSuccess === 'function') {
+                    onSuccess(res);
+                }
+
+            } else {
+
+                this.notify('error', res.message || 'Error');
+
+                if (typeof onError === 'function') {
+                    onError(res);
+                }
+            }
+
+            return res;
 
         } catch (err) {
 
             const mensaje =
                 err.response?.data?.message ||
-                'Error al crear';
+                err.message ||
+                'Error en la solicitud';
 
             this.notify('error', mensaje);
+
+            if (typeof onError === 'function') {
+                onError({ success: false, message: mensaje });
+            }
 
             return {
                 success: false,
@@ -111,6 +163,17 @@ document.addEventListener('alpine:init', () => {
         } finally {
             this.loading = false;
         }
+    },
+    download(tipo, archivo) {
+
+        if (!archivo) {
+            this.notify('error', 'Archivo no disponible');
+            return;
+        }
+
+        const url = `/download?tipo=${tipo}&file=${encodeURIComponent(archivo)}`;
+
+        window.open(url, '_blank');
     }
 
     }));

@@ -1,5 +1,5 @@
 <div id="container" class="mb-4">
-
+    
 <div class="row mt-4 mb-4">
     <div class="col-md-6 order-2 order-md-1">
         <div class="fs-3">
@@ -21,14 +21,14 @@
                 </button>
                 <ul class="dropdown-menu animated rubberBand">
                     <?= !empty($permisos['crear']) ? 
-                        '<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nuevo">Nuevo</a></li>' 
+                        '<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nuevo"> <i class="ti ti-plus"></i> Nuevo </a></li>' 
                         : '' 
                     ?>
                     <li>
-                        <a class="dropdown-item" href="bitacora-aditivo/reporte">Reporte</a>
+                        <a class="dropdown-item" href="bitacora-aditivo/reporte"> <i class="ti ti-report-analytics"></i> Reporte</a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="bitacora-aditivo/inventario">Inventario</a>
+                        <a class="dropdown-item" href="bitacora-aditivo/inventario"> <i class="ti ti-list-check"></i> Inventario</a>
                     </li>
                 </ul>
             </div>

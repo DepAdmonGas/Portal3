@@ -49,7 +49,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         },
         columns: [
-            { data: 'folio' },
+            { data: 'folio',
+                render: function(data, type, row) {
+                // Convertir a string y rellenar con ceros a la izquierda
+                return '00' + data;
+            }
+             },
 
             {
                 data: 'fecha',

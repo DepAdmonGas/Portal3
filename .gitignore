@@ -1,6 +1,7 @@
 /vendor
 /storage/
 /public/build
+/public/uploads
 /node_modules
 .env
 composer.lock

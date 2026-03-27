@@ -10,6 +10,8 @@ return function(RouteCollector $r) {
     $r->addRoute('POST', '/login', ['LoginController', 'login']);
     $r->addRoute('GET', '/logout', Route::auth(['AuthController', 'logout']));
 
+    $r->addRoute('GET', '/download', Route::auth(['DownloadController', 'download']));
+
     // ---------------- HOME ----------------
     $r->addRoute('GET', '/home', Route::auth(['HomeController', 'index']));
     
@@ -53,6 +55,7 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['AditivoController', 'index']));
         $r->addRoute('GET', '/datatable', Route::auth(['AditivoController', 'datatableAditivo']));
         $r->addRoute('GET', '/reporte', Route::auth(['AditivoController', 'reporte']));
+
         $r->addRoute('GET', '/inventario', Route::auth(['AditivoController', 'inventario']));
 
         $r->addRoute('POST', '/create', Route::auth(['AditivoController', 'createAditivo']));
@@ -60,7 +63,14 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/update', Route::auth(['AditivoController', 'updateAditivo']));
         $r->addRoute('GET', '/totalInventario', Route::auth(['AditivoController', 'totalInventario']));
 
-        
+        //Inventario
+        $r->addRoute('GET', '/datatable-inventario', Route::auth(['AditivoController', 'datatableInventario']));
+        $r->addRoute('POST', '/create-inventario', Route::auth(['AditivoController', 'createInventario']));
+        //Reporte
+        $r->addRoute('GET', '/datatable-reporte', Route::auth(['AditivoController', 'datatableReporte']));
+        $r->addRoute('POST', '/create-reporte', Route::auth(['AditivoController', 'createReporte']));
+        $r->addRoute('POST', '/delete-reporte', Route::auth(['AditivoController', 'deleteReporte']));
+                    
         
     });
 
