@@ -7,7 +7,6 @@ use App\Models\Operativo\InventarioAditivoHist;
 use App\Models\Operativo\BitacoraReporte;
 use App\Services\ModuloService;
 use App\Core\Breadcrumb;
-use App\Core\DownloadFile;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 

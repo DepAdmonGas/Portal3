@@ -8,28 +8,22 @@ class Route
     {
         return function (...$params) use ($middlewares, $handler) {
 
-            // Ejecutar middlewares
             Kernel::handle($middlewares);
 
-            // Obtener controlador y método
             [$controller, $method] = $handler;
 
-            // Armar namespace completo
-            $controller = "App\\Controllers\\$controller";
+            $controllerClass = "App\\Controllers\\{$controller}";
 
-            // Verificar que exista la clase
-            if (!class_exists($controller)) {
-                throw new \Exception("Controlador {$controller} no encontrado");
+            if (!class_exists($controllerClass)) {
+                throw new \Exception("Controlador {$controllerClass} no encontrado");
             }
 
-            $instance = new $controller;
+            $instance = new $controllerClass;
 
-            // Verificar que exista el método
             if (!method_exists($instance, $method)) {
-                throw new \Exception("Método {$method} no existe en {$controller}");
+                throw new \Exception("Método {$method} no existe en {$controllerClass}");
             }
 
-            // Ejecutar método pasando parámetros dinámicos
             return $instance->$method(...array_values($params));
         };
     }

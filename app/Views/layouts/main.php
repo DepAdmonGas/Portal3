@@ -235,15 +235,23 @@
 
 <div class="d-flex align-items-center">
 <!-- IZQUIERDA -->
-<?php 
-$idEstacion = $filtro_usuario['id_estacion'] ?? null;
+<?php
+$idEstacion    = $filtro_usuario['id_estacion'] ?? null;
 $multiestacion = !empty($filtro_usuario['multiestacion']);
-$esTodas = $idEstacion == 8;
+$esTodas       = (int)$idEstacion === 8;
 
-if (!$esTodas) : ?>
-<span class="mb-1 badge rounded-pill text-bg-info">
-<?= $filtro_estacion->razonsocial ?? '' ?>
-</span>
+// Obtener razón social según tipo
+$razonsocial = $multiestacion
+    ? ($filtro_usuario['razonsocial'] ?? '')
+    : ($user->estacion->razonsocial ?? '');
+
+$razonsocial = trim($razonsocial);
+?>
+
+<?php if (!$esTodas && $razonsocial !== ''): ?>
+    <span class="mb-1 badge rounded-pill text-bg-info">
+        <?= $razonsocial ?>
+    </span>
 <?php endif; ?>
 
 <!-- DERECHA -->

@@ -61,6 +61,7 @@ class LoginController{
             'id' => $user->id,
             'nombre' => $user->nombre,
             'id_estacion' => $user->id_gas,
+            'razonsocial' => 'Todas las estaciones',
             'multiestacion' => $multiestacion
         ]);
 
