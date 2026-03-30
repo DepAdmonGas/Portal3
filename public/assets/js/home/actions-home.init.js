@@ -1,54 +1,87 @@
 function menuApp() {
-return {
-menus: [],
+    return {
+        menus: [],
+        modulo: null,
+        loading: false,
 
-init() {
-this.cargarMenus();
-},
+        init() {
+            // 🔥 obtener módulo desde el HTML
+            this.modulo = this.$el.dataset.modulo || '';
 
-cargarMenus() {
-fetch('/menu')
-.then(res => res.json())
-.then(data => {
-this.menus = this.buildTree(data);
-});
-},
+            this.cargarMenus();
+        },
 
-buildTree(data) {
-return data.map(grupo => {
-let map = {};
-let items = [];
+        async cargarMenus() {
+            this.loading = true;
 
-grupo.items.forEach(item => {
-item.children = [];
-item.open = false;
-map[item.id] = item;
-});
+            try {
+                const res = await fetch(`/menu?modulo=${encodeURIComponent(this.modulo)}`);
+                const json = await res.json();
 
-grupo.items.forEach(item => {
-if (item.padre_id) {
-map[item.padre_id]?.children.push(item);
-} else {
-items.push(item);
+                // 🔥 SOPORTA {success, data} o array directo
+                let data = json.data ?? json;
+
+                if (!Array.isArray(data)) {
+                    console.warn('Menu no es array:', data);
+                    data = [];
+                }
+
+                this.menus = this.buildTree(data);
+
+            } catch (err) {
+                console.error('Error cargando menú:', err);
+                this.menus = [];
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        buildTree(data) {
+
+            return data.map(grupo => {
+
+                // 🔥 VALIDACIÓN CRÍTICA
+                if (!grupo.items || !Array.isArray(grupo.items)) {
+                    grupo.items = [];
+                }
+
+                let map = {};
+                let items = [];
+
+                grupo.items.forEach(item => {
+                    item.children = [];
+                    item.open = false;
+                    map[item.id] = item;
+                });
+
+                grupo.items.forEach(item => {
+                    if (item.padre_id && map[item.padre_id]) {
+                        map[item.padre_id].children.push(item);
+                    } else {
+                        items.push(item);
+                    }
+                });
+
+                grupo.items = items;
+                return grupo;
+            });
+        },
+
+        toggle(item) {
+            if (item.children && item.children.length > 0) {
+                item.open = !item.open;
+            } else if (item.ruta) {
+                window.location.href = item.ruta;
+            }
+        },
+
+        // 🔥 detectar ruta activa (mejorado)
+        isActive(ruta) {
+            if (!ruta) return false;
+
+            const current = window.location.pathname;
+
+            return current === ruta || current.startsWith(ruta + '/');
+        }
+    }
 }
-});
-
-grupo.items = items;
-return grupo;
-});
-},
-
-toggle(item) {
-if (item.children.length > 0) {
-item.open = !item.open;
-} else {
-window.location.href = item.ruta;
-}
-}
-}
-}
-
-hljs.initHighlightingOnLoad();
-document.querySelectorAll("pre.code-view > code").forEach((codeBlock) => {
-codeBlock.textContent = codeBlock.innerHTML;
-});
