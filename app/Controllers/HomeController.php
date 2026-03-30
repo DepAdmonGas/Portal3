@@ -5,6 +5,7 @@ use App\Core\Session;
 
 class HomeController extends BaseController
 {
+
     public function index()
     {   
 
@@ -13,7 +14,8 @@ class HomeController extends BaseController
 
         $data = [
         'title'   => 'Home',
-        'modulos' => $modulos,
+        'modulo' => '',
+        'modulousuario' => $modulos,
         'scripts' => []
         ];
 

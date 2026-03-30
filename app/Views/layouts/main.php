@@ -48,11 +48,10 @@
 <i class="ti ti-x"></i>
 </a>
 </div>
-
-<nav class="sidebar-nav scroll-sidebar" data-simplebar x-data="menuApp()" x-init="init()">
+<nav class="sidebar-nav scroll-sidebar" data-modulo="<?= $modulo ?? '' ?>" data-simplebar x-data="menuApp()" x-init="init()">
 
 <ul id="sidebarnav">
-<!-- 🔹 HOME -->
+<!-- HOME -->
 <li class="sidebar-item">
 <a class="sidebar-link" href="/">
 <span>
@@ -66,7 +65,7 @@
 <template x-for="grupo in menus" :key="grupo.nombre">
 
 <div>
-<!-- 🔹 CATEGORÍA -->
+<!-- CATEGORÍA -->
 <li class="nav-small-cap">
 <i :class="(grupo.icono || 'ti ti-dots') + ' nav-small-cap-icon fs-4'"></i>
 <span class="hide-menu" x-text="grupo.nombre"></span>
@@ -271,6 +270,7 @@ $razonsocial = trim($razonsocial);
 
 <h4 class="fw-semibold mt-3"><?=$title;?></h4>
 <?php \App\Core\Breadcrumb::render(); ?>
+
 <?= $content ?>
 
 </div>
@@ -282,7 +282,7 @@ $razonsocial = trim($razonsocial);
 
 <div class="dark-transparent sidebartoggler"></div>
 <!-- Import Js Files -->
-<script src="<?=asset('js/home/actions-home.init.js')?>"></script>
+<script src="<?=asset('js/home/actions-home.init.js?v=1.1')?>"></script>
 <script src="<?=asset('js/switch.estacion.min.js')?>"></script>
 <script src="<?=asset('js/loader.min.js')?>"></script>
 <script src="<?=asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js')?>"></script>
