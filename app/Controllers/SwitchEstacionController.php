@@ -6,93 +6,91 @@ use App\Models\Estacion;
 class SwitchEstacionController extends BaseController
 {
 
-public function switchSessionEstacion()
-{
-header('Content-Type: application/json');
+    public function switchSessionEstacion()
+    {
+        header('Content-Type: application/json');
 
-try {
+        try {
 
-$input = json_decode(
-file_get_contents('php://input'),
-true
-);
+        $input = json_decode(
+        file_get_contents('php://input'),
+        true
+        );
 
-$idEstacion = $input['id_estacion'] ?? null;
+        $idEstacion = $input['id_estacion'] ?? null;
 
-if (!$idEstacion) {
+        if (!$idEstacion) {
 
-echo json_encode([
-'ok' => false,
-'type' => 'error',
-'message' => 'Estación inválida'
-]);
+        echo json_encode([
+        'ok' => false,
+        'type' => 'error',
+        'message' => 'Estación inválida'
+        ]);
 
-return;
-}
+        return;
+        }
 
-$usuario = Session::get('usuario');
+        $usuario = Session::get('usuario');
 
-if (!$usuario) {
+        if (!$usuario) {
 
-echo json_encode([
-'ok' => false,
-'type' => 'error',
-'message' => 'Sesión no válida'
-]);
+        echo json_encode([
+        'ok' => false,
+        'type' => 'error',
+        'message' => 'Sesión no válida'
+        ]);
 
-return;
-}
+        return;
+        }
 
-if (!$usuario['multiestacion']) {
+        if (!$usuario['multiestacion']) {
 
-echo json_encode([
-'ok' => false,
-'type' => 'error',
-'message' => 'No autorizado'
-]);
+        echo json_encode([
+        'ok' => false,
+        'type' => 'error',
+        'message' => 'No autorizado'
+        ]);
 
-return;
-}
+        return;
+        }
 
-$existe = Estacion::where(
-'id',
-$idEstacion
-)->exists();
+       $estacion = Estacion::find($idEstacion);
 
-if (!$existe) {
+        if (!$estacion) {
 
-echo json_encode([
-'ok' => false,
-'type' => 'error',
-'message' => 'La estación no existe'
-]);
+        echo json_encode([
+        'ok' => false,
+        'type' => 'error',
+        'message' => 'La estación no existe'
+        ]);
 
-return;
-}
+        return;
+        }
 
-$usuario['id_estacion'] = (int) $idEstacion;
+        $usuario['id_estacion'] = (int) $idEstacion;
+        $usuario['razonsocial'] = $estacion->razonsocial;
 
-Session::set(
-'usuario',
-$usuario
-);
+        Session::set(
+        'usuario',
+        $usuario
+        );
 
-echo json_encode([
-'ok' => true,
-'type' => 'success',
-'message' => 'Estación cambiada'
-]);
+        echo json_encode([
+        'ok' => true,
+        'type' => 'success',
+        'message' => 'Estación cambiada'
+        ]);
 
-} catch (\Throwable $e) {
+        } catch (\Throwable $e) {
 
-echo json_encode([
-'ok' => false,
-'type' => 'error',
-'message' => $e->getMessage()
-]);
+        echo json_encode([
+        'ok' => false,
+        'type' => 'error',
+        'message' => $e->getMessage()
+        ]);
 
-}
+        }
 
-}
+    }
 
 }

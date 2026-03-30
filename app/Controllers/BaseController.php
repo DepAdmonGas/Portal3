@@ -7,12 +7,6 @@ class BaseController {
 
     public function __construct()
     {
-        //  Validar sesión
-        if (!Session::isLogged()) {
-            header('Location: /login');
-            exit;
-        }
-
         // filtro de usuarios
         $this->filtro_usuario = Session::get('usuario');
     }

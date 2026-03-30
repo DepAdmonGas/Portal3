@@ -4,77 +4,44 @@ namespace App\Core;
 use App\Core\Auth;
 use App\Controllers\BaseController;
 use App\Models\Estacion;
+use App\Core\Session;
 
 class View
 {
 protected static function globals(): array
 {
 
-// Crear instancia para reutilizar lógica existente
-$baseController = new class extends BaseController {
+    $filtro_usuario = Session::get('usuario') ?? null;
 
-public function getFiltroUsuario() {
-return $this->filtro_usuario;
+    // Obtener listado de estaciones
+    $estaciones = [];
+
+    if (($filtro_usuario['multiestacion'] ?? false)) {
+    $estaciones = Estacion::where('numlista', '<=', 8)
+        ->orderBy('numlista', 'ASC')
+        ->get();
 }
 
-public function getEstacionId() {
-return $this->estacionId();
-}
+        return [
+        'user' => Auth::user(),
+        'filtro_usuario'  => $filtro_usuario,
+        'estaciones'      => $estaciones
+        ];
 
-public function getIsMultiEs() {
-return $this->isMultiEs();
-}
+    }
 
-};
+    public static function render(string $view,array $data = [],string $layout = 'main') {
 
-// Filtro de usuarios
-$filtro_usuario = $baseController->getFiltroUsuario();
+        // Variables globales + datos de la vista
+        extract(array_merge(self::globals(), $data), EXTR_SKIP);
 
-// Obtener estacion de la session
-$filtro_estacion = null;
-if ($baseController->getEstacionId()) {
-$filtro_estacion = Estacion::find(
-$baseController->getEstacionId()
-);
-}
+        $viewPath   = __DIR__ . "/../Views/{$view}.php";
+        $layoutPath = __DIR__ . "/../Views/layouts/{$layout}.php";
 
-// Obtener listado de estaciones
-$estaciones = [];
-if ($baseController->getIsMultiEs()) {
-$estaciones = Estacion::where('numlista', '<=', 8)
-->orderBy('numlista', 'ASC')
-->get();
-}
+        ob_start();
+        require $viewPath;
+        $content = ob_get_clean();
 
-// Obtener estación
-$filtro_estacion = null;
-if ($baseController->getEstacionId()) {
-$filtro_estacion = Estacion::find(
-$baseController->getEstacionId()
-);
-}
-
-return [
-'user' => Auth::user(),
-'filtro_usuario'  => $filtro_usuario,
-'filtro_estacion' => $filtro_estacion,
-'estaciones'      => $estaciones
-];
-
-}
-
-public static function render(string $view,array $data = [],string $layout = 'main') {
-
-// Variables globales + datos de la vista
-extract(array_merge(self::globals(), $data), EXTR_SKIP);
-
-$viewPath   = __DIR__ . "/../Views/{$view}.php";
-$layoutPath = __DIR__ . "/../Views/layouts/{$layout}.php";
-
-ob_start();
-require $viewPath;
-$content = ob_get_clean();
-
-require $layoutPath;
-}
+        require $layoutPath;
+    }
 }
