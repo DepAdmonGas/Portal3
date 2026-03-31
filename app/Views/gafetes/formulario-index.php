@@ -1,26 +1,24 @@
-<div id="container" class="mt-4">
+<div id="container" class="mt-4" data-estacion="<?= $idEstacion ?>" data-reporte="<?= $noReporte ?>">
 
 <?= !empty($permisos['crear']) ? 
-'<div class="row">
-<div class="col-12 mb-4">
+'<div class="row mb-3">
+<div class="col-12">
 <button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Agregar </button>
 </div>
 </div>' : '' 
 ?>
-  
+
 <div class="datatables">
 <div class="table-responsive">
-<table id="table-gafetes" class="table table-bordered mb-0 text-nowrap align-middle">
+<table id="table-gafetes-formulario" class="table  table-bordered mb-0 text-nowrap align-middle">
 <thead>
 
 <tr>
-<th class="text-center align-middle">#</th>
-<th class="text-center align-middle">No. Solicitud</th>
-<th class="text-center align-middle">Fecha</th>
-<th class="text-center align-middle">Solicita</th>
+<th class="text-center align-middle" width="96px">#</th>
+<th class="text-center align-middle">Clave</th>
+<th class="text-center align-middle">Nombre Completo</th>
 <th class="text-center align-middle">Estación</th>
-<th class="text-center align-middle">Estatus</th>
-<th class="text-center align-middle"><a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a></th>
+<th class="text-center align-middle" width="48px"><a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a></th>
 </tr>
 
 </thead>
@@ -31,16 +29,17 @@
 
 </div>
 
+
 <!---------- MODAL AGREGAR GAFETES ---------->
 <div class="modal fade" id="nuevo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
-x-data="{ ...actions(), ...gafetesForm() }" @open-edit.window="openEdit($event.detail)">
+x-data="{ ...actions(), ...gafetesForm() }" @open-edit.window="openEdit($event.detail)" data-estacion="<?= $idEstacion ?>" data-reporte="<?= $noReporte ?>">
 
 <div class="modal-dialog modal-dialog-scrollable modal-lg">
 <div class="modal-content">
 
 <!-- HEADER -->
 <div class="modal-header">
-<h4 class="modal-title">Crear registro</h4>
+<h4 class="modal-title">Agregar registro (No. Reporte: <?=$noReporte?>)</h4>
 <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetForm()"></button>
 </div>
 
@@ -70,3 +69,4 @@ x-data="{ ...actions(), ...gafetesForm() }" @open-edit.window="openEdit($event.d
 </div>
 </div>
 </div>
+

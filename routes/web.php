@@ -78,6 +78,13 @@ return function(RouteCollector $r) {
     $r->addGroup('/solicitud-gafetes', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['GafetesController', 'index']));
         $r->addRoute('GET', '/datatable', Route::auth(['GafetesController', 'datatableGafetes']));
+        $r->addRoute('POST', '/create-reporte', Route::auth(['GafetesController', 'createReporte']));
+        $r->addRoute('POST', '/delete-reporte', Route::auth(['GafetesController', 'deleteReporte']));
+
+        $r->addRoute('GET','/{idEstacion}/{noReporte}',Route::auth(['GafetesController', 'formularioReporte']));
+        $r->addRoute('GET','/datatable-formulario/{idEstacion}/{noReporte}',Route::auth(['GafetesController', 'datatableGafetesFormulario']));
+        $r->addRoute('POST', '/create-reporte-formulario', Route::auth(['GafetesController', 'createReporteFormulario']));
+
     });
 
     // ---------------- TARJETAS ----------------
