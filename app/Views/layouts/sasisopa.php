@@ -11,12 +11,11 @@
     <!-- Core Css -->
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     
     <!-- Scripts por vista -->
     <?php if (!empty($links)): ?>
         <?php foreach ($links as $link): ?>
-            <link rel="stylesheet" href="<?= $link ?>" />
+            <link rel="stylesheet" href="<?= asset($link) ?>" />
         <?php endforeach; ?>
     <?php endif; ?>
 
@@ -24,30 +23,14 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-        <script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-        const key = "scroll-" + window.location.pathname;
-
-        const scrollPosition = sessionStorage.getItem(key);
-        if (scrollPosition) {
-            window.scrollTo(0, parseInt(scrollPosition));
-        }
-
-        window.addEventListener("scroll", function () {
-            sessionStorage.setItem(key, window.scrollY);
-        });
-
-    });
-    </script>
       
 </head>
 <body class="link-sidebar">
 
   <!-- Preloader -->
-  <div class="preloader">
-    <img src="<?= asset('images/logos/favicon.png') ?>" alt="loader" class="lds-ripple img-fluid" />
-  </div>
+ <div class="loader-admongas">
+<img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
+</div>
 
     <div id="main-wrapper">
     <!-- Sidebar Start -->
@@ -57,8 +40,8 @@
         <!-- ---------------------------------- -->
         <div class="brand-logo d-flex align-items-center justify-content-between">
           <a href="/main/index.html" class="text-nowrap logo-img">
-            <img src="<?= asset('images/logos/dark-logo.svg') ?>" class="dark-logo" alt="Logo-Dark" />
-            <img src="<?= asset('images/logos/light-logo.svg') ?>" class="light-logo" alt="Logo-light" />
+            <img src="<?=asset('images/logos/Logo.png')?>" class="dark-logo w-100" alt="Logo Admongas" />
+            <img src="<?=asset('images/logos/Logo-dark.png')?>" class="light-logo w-100" alt="Logo Admongas Dark" />
           </a>
           <a href="javascript:void(0)" class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none">
             <i class="ti ti-x"></i>
@@ -228,8 +211,8 @@
       
             <div class="d-block d-lg-none py-4">
               <a href="../main/index.html" class="text-nowrap logo-img">
-                <img src="<?= asset('images/logos/dark-logo.svg') ?>" class="dark-logo" alt="Logo-Dark" />
-                <img src="<?= asset('images/logos/light-logo.svg') ?>" class="light-logo" alt="Logo-light" />
+                <img src="<?= asset('images/logos/Logo.png') ?>" class="dark-logo" alt="Logo-Dark" />
+                <img src="<?= asset('images/logos/Logo-dark.png') ?>" class="light-logo" alt="Logo-light" />
               </a>
             </div>
             <a class="navbar-toggler nav-icon-hover-bg rounded-circle p-0 mx-0 border-0" href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -335,6 +318,8 @@
   <!-- Import Js Files -->
   <script src="<?= asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') ?>"></script>
   <script src="<?= asset('libs/simplebar/dist/simplebar.min.js') ?>"></script>
+  <script src="<?=asset('js/switch.estacion.min.js')?>"></script>
+  <script src="<?=asset('js/loader.min.js')?>"></script>
   <script src="<?= asset('js/theme/app.init.js') ?>"></script>
   <script src="<?= asset('js/theme/theme.js') ?>"></script>
   <script src="<?= asset('js/theme/app.min.js') ?>"></script>
@@ -345,12 +330,13 @@
   <!-- highlight.js (code view) -->
   <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
   <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
-  <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+  <script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script> 
+  <script src="<?= asset('js/core/actions.alpine.js?v=1.7') ?>"></script>
  
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>
         <?php foreach ($scripts as $script): ?>
-            <script src="<?= $script ?>"></script>
+            <script src="<?= asset($script) ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
 

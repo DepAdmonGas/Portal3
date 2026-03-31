@@ -199,6 +199,8 @@ class AditivoController extends BaseController{
         ]);
         exit;
         }
+        
+        Capsule::beginTransaction();
 
         try {
 
@@ -244,11 +246,15 @@ class AditivoController extends BaseController{
 
             $inventario->save();
 
+            Capsule::commit();
+
             echo json_encode(['success' => true,'message' => 'Registro guardado correctamente']);
             exit;
 
 
         } catch (\Exception $e) {
+
+            Capsule::rollBack();
 
             echo json_encode([
                 'success' => false,
@@ -276,7 +282,7 @@ class AditivoController extends BaseController{
             return;
         }
 
-        if (!ModuloService::validaPermiso('bitacora-aditivo', 'editar')) {
+        if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Sin permisos'

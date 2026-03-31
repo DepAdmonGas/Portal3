@@ -1,0 +1,179 @@
+/* ===== RESET ===== */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: #212529;
+    margin: 0;
+}
+
+/* ===== TIPOGRAFÍA ===== */
+h1, h2, h3, h4, h5 {
+    margin: 0 0 10px;
+}
+
+h1 { font-size: 22px; }
+h2 { font-size: 18px; }
+h3 { font-size: 16px; }
+h4 { font-size: 14px; }
+h5 { font-size: 13px; }
+
+p {
+    margin: 0 0 10px;
+    line-height: 1.5;
+}
+
+/* ===== UTILIDADES ===== */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+.text-justify { text-align: justify; }
+
+.text-primary { color: #0d6efd; }
+.text-muted { color: #6c757d; }
+
+.mt-1 { margin-top: 5px; }
+.mt-2 { margin-top: 10px; }
+.mt-3 { margin-top: 15px; }
+.mt-4 { margin-top: 20px; }
+
+.mb-1 { margin-bottom: 5px; }
+.mb-2 { margin-bottom: 10px; }
+.mb-3 { margin-bottom: 15px; }
+
+/* ===== LAYOUT ===== */
+.container {
+    width: 100%;
+}
+
+.row {
+    width: 100%;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.col-6 {
+    width: 48%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.col-4 {
+    width: 32%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+/* ===== CARD ===== */
+.card {
+    border: 1px solid #dee2e6;
+    padding: 15px;
+    margin-top: 10px;
+    border-bottom: 4px solid #0d6efd;
+}
+
+.card-title {
+    font-size: 14px;
+    color: #0d6efd;
+    margin-bottom: 8px;
+}
+
+.card-text {
+    font-size: 12px;
+    text-align: justify;
+}
+
+/* ===== HEADER ===== */
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo {
+    width: 140px;
+    margin-bottom: 10px;
+}
+
+.empresa {
+    font-size: 13px;
+}
+
+/* ===== SECCIONES ===== */
+.section {
+    border: 1px solid #dee2e6;
+    padding: 15px;
+    margin-top: 20px;
+    border-bottom: 4px solid #005993;
+}
+
+.section-title {
+    color: #1A71BD;
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+.section-text {
+    font-size: 13px;
+    text-align: justify;
+}
+
+/* ===== TABLAS ===== */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.table th {
+    border: 1px solid #dee2e6;
+    padding: 6px;
+    background: #f8f9fa;
+    font-size: 12px;
+}
+
+.table td {
+    border: 1px solid #dee2e6;
+    padding: 6px;
+    font-size: 11px;
+}
+
+/* ===== BADGES ===== */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 10px;
+    background: #0d6efd;
+    color: #fff;
+}
+
+/* ===== PAGE ===== */
+.page-break {
+    page-break-after: always;
+}
+
+.text-primary {
+    color: #0074ba;
+}
+
+.text-secondary {
+    color: #49beff;
+}
+
+.text-info {
+    color: #539bff;
+}
+
+
+
+.fs-1 { font-size: 2rem; }   /* ~32px */
+.fs-2 { font-size: 1.75rem; }/* ~28px */
+.fs-3 { font-size: 1.5rem; } /* ~24px */
+.fs-4 { font-size: 1.25rem; }/* ~20px */
+.fs-5 { font-size: 1rem; }   /* ~16px */
+.fs-6 { font-size: 0.875rem;}/* ~14px */

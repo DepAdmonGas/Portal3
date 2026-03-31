@@ -125,6 +125,10 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/datatable-lista-comprobacion', Route::auth(['SasisopaController', 'datatableListaComprobacion']));
         $r->addRoute('GET', '/datatable-lista-asistencia/elemento/{idsasisopa:\d+}', Route::auth(['SasisopaController', 'datatableListaAsistencia']));
 
+        $r->addRoute('POST', '/politica/update', Route::auth(['SasisopaController', 'updatePolitica']));
+        $r->addRoute('GET', '/politica/pdf', Route::auth(['SasisopaController', 'descargarPolitica']));
+
+
         // Elemento 2
         $r->addRoute('GET', '/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales', Route::auth(['SasisopaController', 'identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales']));
         $r->addRoute('GET', '/datatable-lista-analisis-riesgo', Route::auth(['SasisopaController', 'datatableListaAnalisisRiesgo']));
