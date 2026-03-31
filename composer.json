@@ -25,6 +25,7 @@
         "php-di/php-di": "^7.1",
         "guzzlehttp/guzzle": "^7.10",
         "nesbot/carbon": "^3.10",
-        "ramsey/uuid": "^4.9"
+        "ramsey/uuid": "^4.9",
+        "dompdf/dompdf": "^3.1"
     }
 }

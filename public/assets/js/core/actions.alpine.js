@@ -83,87 +83,94 @@ document.addEventListener('alpine:init', () => {
 
         // CREATE
         async createAction({
-        url,
-        data = {},
-        table = null,
-        method = 'POST',
-        headers = {},
-        onSuccess = null,
-        onError = null
-        }) {
+    url,
+    data = {},
+    table = null,
+    method = 'POST',
+    headers = {},
+    onSuccess = null,
+    onError = null
+}) {
 
-        if (this.loading) return;
-        this.loading = true;
+    if (this.loading) return;
+    this.loading = true;
 
-        try {
+    try {
 
-            let config = {
-                method,
-                url,
-                data,
-                headers: { ...headers }
-            };
+        let config = {
+            method,
+            url,
+            data,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...headers
+            }
+        };
 
-            // DETECTAR FORM DATA (ARCHIVOS)
-            if (data instanceof FormData) {
-                config.headers['Content-Type'] = 'multipart/form-data';
+        // FORM DATA
+        if (data instanceof FormData) {
+            config.headers['Content-Type'] = 'multipart/form-data';
+        }
+
+        const response = await axios(config);
+
+        const res = response.data;
+
+        if (!res) {
+            throw new Error('Respuesta vacía del servidor');
+        }
+
+        // MANEJO GLOBAL
+        if (res.success) {
+
+            if (table) {
+                $(table).DataTable().ajax.reload(null, false);
             }
 
-            const response = await axios(config);
-
-            const res = response.data;
-
-            // MANEJO GLOBAL
-            if (res.success) {
-
-                // RECARGAR TABLA SI EXISTE
-                if (table) {
-                    $(table).DataTable().ajax.reload(null, false);
-                }
-
-                // NOTIFICACIÓN (opcional)
-                if (res.message) {
-                    this.notify('success', res.message);
-                }
-
-                // CALLBACK PERSONALIZADO
-                if (typeof onSuccess === 'function') {
-                    onSuccess(res);
-                }
-
-            } else {
-
-                this.notify('error', res.message || 'Error');
-
-                if (typeof onError === 'function') {
-                    onError(res);
-                }
+            if (res.message) {
+                this.notify('success', res.message);
             }
 
-            return res;
+            if (typeof onSuccess === 'function') {
+                onSuccess(res);
+            }
 
-        } catch (err) {
+        } else {
 
-            const mensaje =
-                err.response?.data?.message ||
-                err.message ||
-                'Error en la solicitud';
-
-            this.notify('error', mensaje);
+            this.notify('error', res.message || 'Error');
 
             if (typeof onError === 'function') {
-                onError({ success: false, message: mensaje });
+                onError(res);
             }
-
-            return {
-                success: false,
-                message: mensaje
-            };
-
-        } finally {
-            this.loading = false;
         }
-    },
+
+        return res;
+
+    } catch (err) {
+
+        console.error('ERROR AXIOS:', err);
+
+        const mensaje =
+            err.response?.data?.message ||
+            err.message ||
+            'Error en la solicitud';
+
+        this.notify('error', mensaje);
+
+        if (typeof onError === 'function') {
+            onError({ success: false, message: mensaje });
+        }
+
+        return {
+            success: false,
+            message: mensaje
+        };
+
+    } finally {
+        this.loading = false;
+    }
+},
     download(tipo, archivo) {
 
         if (!archivo) {

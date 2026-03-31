@@ -6,46 +6,75 @@
     <i class="ti ti-dots-vertical fs-4"></i>
   </button>
   <ul class="dropdown-menu animated rubberBand">
-    <li>
-    <a class="dropdown-item" href=""><i class="ti ti-pencil"></i> Editar Politica</a>
-    </li>
-    <li>
-    <a class="dropdown-item" href=""><i class="ti ti-file-download"></i> Descargar Politica</a>
-    </li>
+
+    <?= 
+        !empty($permisos['editar']) ? 
+        '<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editar"><i class="ti ti-pencil"></i> Editar Politica</a></li>' 
+        : '' 
+    ?>
+
+    <?= 
+        !empty($permisos['descargar']) ? 
+        '<li><a class="dropdown-item" href="/sasisopa/politica/pdf" target="_blank"><i class="ti ti-file-download"></i> Descargar Politica</a></li>' 
+        : '' 
+    ?>
+
     </ul>
 </div>
 </div>
 
 <div class="row mt-2">
+
+  <!-- POLITICA -->
   <div class="col-md-4 d-flex align-items-stretch">
     <div class="card w-100">
       <div class="card-body">
-        <h4 class="card-title text-primary">Politica:</h4>
-          <p class="card-text fs-4 fw-normal">
-          <?=$user->estacion->politica; ?>
-          </p>
+
+        <h4 class="card-title text-primary">Política:</h4>
+
+        <p id="politica_text"
+           class="card-text fs-4 fw-normal"
+           data-politica="<?= htmlspecialchars($user->estacion->politica ?? '') ?>">
+           
+           <?= htmlspecialchars($user->estacion->politica ?? '') ?>
+        </p>
+
       </div>
     </div>
   </div>
 
+  <!-- MISION -->
   <div class="col-md-4 d-flex align-items-stretch">
     <div class="card w-100">
       <div class="card-body">
+
         <h4 class="card-title text-primary">Misión:</h4>
-          <p class="card-text fs-4 fw-normal">
-          <?=$user->estacion->mision; ?>
-          </p>
+
+        <p id="mision_text"
+           class="card-text fs-4 fw-normal"
+           data-mision="<?= htmlspecialchars($user->estacion->mision ?? '') ?>">
+           
+           <?= htmlspecialchars($user->estacion->mision ?? '') ?>
+        </p>
+
       </div>
     </div>
   </div>
 
+  <!-- VISION -->
   <div class="col-md-4 d-flex align-items-stretch">
     <div class="card w-100">
       <div class="card-body">
+
         <h4 class="card-title text-primary">Visión:</h4>
-          <p class="card-text fs-4 fw-normal">
-          <?=$user->estacion->vision; ?>
-          </p>
+
+        <p id="vision_text"
+           class="card-text fs-4 fw-normal"
+           data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
+           
+           <?= htmlspecialchars($user->estacion->vision ?? '') ?>
+        </p>
+
       </div>
     </div>
   </div>
@@ -137,9 +166,79 @@
 
 </div>
 
+<!-- -------------------------- -->
+<!-- -------------------------- -->
+
+<div class="modal fade"
+     id="editar"
+     tabindex="-1"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     x-data="{ ...actions(), ...politicaForm() }">
+
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header">
+                <h4 class="modal-title">Editar 1. POLÍTICA</h4>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <!-- Politica -->
+                <label class="form-label">Política:</label>
+                <textarea class="form-control"
+                          rows="6"
+                          x-model="politica"></textarea>
+
+                <!-- Mision -->
+                <label class="form-label mt-3">Misión:</label>
+                <textarea class="form-control"
+                          rows="6"
+                          x-model="mision"></textarea>
+
+                <!-- Vision -->
+                <label class="form-label mt-3">Visión:</label>
+                <textarea class="form-control"
+                          rows="6"
+                          x-model="vision"></textarea>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn bg-danger-subtle text-danger"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        class="btn btn-success"
+                        @click="submit()"
+                        :disabled="loading">
+
+                    <span x-show="!loading">Guardar</span>
+                    <span x-show="loading">Guardando...</span>
+
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <!-- ------------------------- -->
 <!-- inicio offcanvas -------- -->
-  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+  <div class="offcanvas w-30 offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasExampleLabel">
             Bienvenido al elemento 1. POLITICA, del Sistema de Administración
