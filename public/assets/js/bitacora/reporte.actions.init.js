@@ -45,6 +45,28 @@ document.addEventListener('alpine:init', () => {
             this.$refs.documento.value = null;
         }
     },
+    resetModal(){
+
+            const modalEl = document.getElementById('nuevo');
+
+                    // evento al cerrar completamente
+                    modalEl.addEventListener('hidden.bs.modal', () => {
+                        this.resetForm();
+                        document.body.focus(); // opcional (mejora accesibilidad)
+                    }, { once: true });
+
+                    // quitar foco ANTES de cerrar
+                    if (document.activeElement) {
+                        document.activeElement.blur();
+                    }
+
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+
+                    if (modal) {
+                        modal.hide();
+                    }
+
+        },
 
         // SUBMIT
         async submit() {
@@ -64,25 +86,11 @@ document.addEventListener('alpine:init', () => {
 
         if (res && res.success) {
 
-                const modalEl = document.getElementById('nuevo');
+            console.log(res)
 
-                //quitar foco (error aria-hidden)
-                document.activeElement.blur();
+            this.resetModal();
 
-                //IMPORTANTE: esperar a que cierre
-                modalEl.addEventListener('hidden.bs.modal', () => {
-
-                    this.resetForm();
-
-                }, { once: true });
-
-                const modal = bootstrap.Modal.getInstance(modalEl);
-
-                if (modal) {
-                    modal.hide();
-                }
-
-            }
+        }
 
         } catch (error) {
                 this.notify('error', 'Error al guardar');
