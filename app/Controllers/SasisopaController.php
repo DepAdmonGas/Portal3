@@ -4,7 +4,7 @@ use App\Core\View;
 use App\Models\Sasisopa\Sasisopa;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
-use App\Models\Sasisopa\PoliticaListaComprobacion;
+
 use App\Models\Sasisopa\ListaAsistencia;
 use App\Models\Sasisopa\AnalisisRiesgo;
 use App\Models\Sasisopa\SeguimientoObjetivosMetas;
@@ -15,8 +15,7 @@ use App\Models\Sasisopa\QuejasSugerencia;
 use App\Models\Sasisopa\EquipoCritico;
 use App\Services\ModuloService;
 use App\Core\Auth;
-use Dompdf\Dompdf;
-use Dompdf\Options;
+
 
 
 class SasisopaController extends BaseController{
@@ -52,161 +51,7 @@ class SasisopaController extends BaseController{
         View::render('sasisopa/index', $data,'sasisopa');
 
     }
-    //----------------------------------------------------------------
-    //------------ 1 Politica ---------------------------------------
-    public function politica(){
-
-        $title = '1. POLÍTICA';
-        // Buscar permisos de los modulos
-        $permisos = ModuloService::permisosSesion($this->modulo);
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-            'permisos' => $permisos,
-            'modulo' => $this->modulo,
-            'filtro_usuario' => $this->filtro_usuario,
-             'links' =>[
-                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-            ],
-            'scripts' => [
-                '/js/vendor.min.js',
-                '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/sasisopa/politica.datatable.init.js',
-                '/js/sasisopa/listaasistencia.datatable.init.js',
-                '/js/sasisopa/politica.actions.init.js?v=1.6'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/politica', $data,'sasisopa');
-
-    }
-
-    public function updatePolitica(){
-
-        header('Content-Type: application/json; charset=utf-8');
-        $data = json_decode(file_get_contents('php://input'), true);
-        $politica = $data['politica'] ?? null;
-        $mision = $data['mision'] ?? null;
-        $vision = $data['vision'] ?? null;
-
-
-        if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'No tienes permiso para editar'
-            ]);
-            exit;
-        }
-
-        $registro = Estacion::find($this->estacionId());
-
-        if (!$registro) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Registro no encontrado'
-            ]);
-            return;
-        }
-
-        $registro->politica = $politica;
-        $registro->mision = $mision;
-        $registro->vision = $vision;
-        $registro->save();
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Politica actualizada correctamente'
-        ]);
-
-
-    }
-
-
-    public function descargarPolitica()
-    {
-        $registro = Estacion::find($this->estacionId());
-
-        if (!$registro) {
-            echo "No se encontró la información";
-            return;
-        }
-
-    
-        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
-
-        $permisocre   = $registro->permisocre;
-        $razonsocial   = $registro->razonsocial;
-        $direccioncompleta   = $registro->direccioncompleta;
-        
-        $politica = $registro->politica;
-        $mision   = $registro->mision;
-        $vision   = $registro->vision;
-
-        $html = '
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <meta charset="UTF-8">
-        <title>POLÍTICA</title>
-        <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
-        </head>
-
-        <body>
-
-        <div class="text-center">
-            <img src="'.$logo.'" width="150">
-        </div>
-
-        <div class="text-center mt-4">'.$permisocre.'</div>
-        <div class="text-center">'.$razonsocial.'</div>
-        <div class="text-center">'.$direccioncompleta.'</div>
-
-        <h2 class="mt-2 text-primary">Política</h2>
-        <p>'.htmlspecialchars($politica).'</p>
-
-        <h2 class="text-primary">Misión</h2>
-        <p>'.htmlspecialchars($mision).'</p>
-
-        <h2 class="text-primary">Visión</h2>
-        <p>'.htmlspecialchars($vision).'</p>
-        
-        </body>
-        </html>';
-
-        $options = new Options();
-        $options->set('isRemoteEnabled', true);
-        $options->set('defaultFont', 'Arial');
-
-        $dompdf = new Dompdf($options);
-
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        $dompdf->stream("politica.pdf", ["Attachment" => true]);
-    }
-
-    //----------------------------------------------------------------------------------
-    //----------------------------------------------------------------------------------
-
-
-    public function datatableListaComprobacion(){
-        $data = PoliticaListaComprobacion::where('id_estacion', 1)
-        ->groupBy('fecha')
-        ->get();
-
-         echo json_encode([
-            "data" => $data
-        ]);
-        
-        exit;
-    }
-
+  
     public function datatableListaAsistencia($elemento){
         $data = ListaAsistencia::where('punto_sasisopa', $elemento)
         ->where('id_estacion', 1)

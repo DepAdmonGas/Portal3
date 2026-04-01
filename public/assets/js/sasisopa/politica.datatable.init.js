@@ -4,8 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
         processing: true,
         serverSide: false,
         autoWidth: false,
-        stateSave: true, 
-        order: [[0, 'desc']],
+        stateSave: true,
         language: {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
@@ -13,8 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/sasisopa/datatable-lista-comprobacion',
             type: 'GET',
             dataSrc: function (json) {
-                return json.data;
-            }
+            //guardas permisos globalmente
+            permisos = json.permisos;
+            return json.data;
+        }
         },
         columns: [
             { data: 'id', width: '60px', className: 'text-center' },
@@ -51,36 +52,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchable: false,
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
+
+                    const noEdit = permisos.editar;
+                    const noDelete = permisos.eliminar;
+                    const noDownload = permisos.descargar;
                     
 
                     return `
+                    <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                         <div class="dropdown dropstart">
                             <a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit 
-                                    data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}" 
+                                    data-id="${row.id}" 
+                                    @click="$dispatch('open-edit', ${row.id})">
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
+                                    href="/sasisopa/politica/lista-comprobacion/pdf/${row.id}" target="_blank">
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    ${!noDelete ? '' : `
+                                    @click='async () => {
+                                    const res = await deleteAction({
+                                        url: "/sasisopa/politica/lista-comprobacion/delete",
+                                        id: ${row.id},
+                                        name: "${row.id}",
+                                        table: "#table-lista-comprobacion"
+                                    });
+                                    }'
+                                    `}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
                             </ul>
                         </div>
+                    </div>
                     `;
                 }
             }
         ]
     });
 
+      // REINICIALIZAR ALPINE DESPUÉS DE DIBUJAR TABLA
+    $('#table-lista-comprobacion').on('draw.dt', function () {
+        Alpine.initTree(document.querySelector('#table-lista-comprobacion'));
+    });
+
+
 });
+
+

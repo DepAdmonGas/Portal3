@@ -30,4 +30,9 @@ class PoliticaListaComprobacion extends Model
         'id_usuario' => 'integer',
         'fecha' => 'date',
     ];
+
+     public function detalles()
+    {
+        return $this->hasMany(PoliticaListaComprobacionDetalle::class, 'id_lista_comprobacion');
+    }
 }

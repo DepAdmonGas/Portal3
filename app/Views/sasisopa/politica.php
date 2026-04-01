@@ -26,7 +26,7 @@
 <div class="row mt-2">
 
   <!-- POLITICA -->
-  <div class="col-md-4 d-flex align-items-stretch">
+  <div class="col-md-4 align-items-stretch">
     <div class="card w-100">
       <div class="card-body">
 
@@ -44,7 +44,7 @@
   </div>
 
   <!-- MISION -->
-  <div class="col-md-4 d-flex align-items-stretch">
+  <div class="col-md-4 align-items-stretch">
     <div class="card w-100">
       <div class="card-body">
 
@@ -62,7 +62,7 @@
   </div>
 
   <!-- VISION -->
-  <div class="col-md-4 d-flex align-items-stretch">
+  <div class="col-md-4 align-items-stretch">
     <div class="card w-100">
       <div class="card-body">
 
@@ -91,10 +91,13 @@
   <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Fo.ADMONGAS.001 (Lista de comprobación)</h4>
       <div class="ms-auto">
-        <button type="button" class="btn">
+        <?= 
+        !empty($permisos['crear']) ? 
+        '<button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#listaComprobacion" >
         <i class="ti ti-plus fs-7 text-primary"></i>
-        </button>
-      
+        </button>' 
+        : '' 
+        ?>      
       </div>
   </div>
 
@@ -132,9 +135,15 @@
   <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
       <div class="ms-auto">
-      <button type="button" class="btn">
+
+      <?= 
+        !empty($permisos['crear']) ? 
+        '<button type="button" class="btn">
         <i class="ti ti-plus fs-7 text-primary"></i>
-        </button>
+        </button>' 
+        : '' 
+      ?>     
+
       </div>
   </div>
 
@@ -217,6 +226,116 @@
                 <button type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        class="btn btn-success"
+                        @click="submit()"
+                        :disabled="loading">
+
+                    <span x-show="!loading">Guardar</span>
+                    <span x-show="loading">Guardando...</span>
+
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade"
+     id="listaComprobacion"
+     tabindex="-1"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     x-data="{ ...actions(), ...listacomprobacionForm() }"
+     @open-edit.window="getEdit($event.detail)">
+
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header">
+                <h4 class="modal-title"
+                    x-text="mode === 'create' ? 'Lista de comprobación' : 'Editar lista de comprobación'">
+                </h4>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        @click="resetModal()">
+                </button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+                <!-- FECHA -->
+                <label class="form-label">Fecha:</label>
+                <input type="date"
+                       class="form-control"
+                       x-model="fecha"
+                       :class="errors.fecha ? 'is-invalid' : ''">
+
+                <!-- TABLA -->
+                <table class="table table-bordered table-sm mt-3">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Criterio</th>
+                            <th class="text-center">Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- FILAS -->
+                        <template x-for="(label, key) in criterios" :key="key">
+                            <tr>
+                                <td class="align-middle" x-text="label"></td>
+                                <td class="p-0 align-middle">
+                                    <select class="form-control rounded-0 border-0"
+                                            x-model="respuestas[key]"
+                                            :class="errors[key] ? 'is-invalid' : ''">
+                                        <option value="">Selecciona</option>
+                                        <option value="Si">Si</option>
+                                        <option value="En Parte">En Parte</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <!-- ASISTENTES -->
+                        <tr>
+                            <td colspan="2" class="p-2">
+                                <label class="form-label">Asistentes:</label>
+                                <textarea class="form-control"
+                                          x-model="asistentes"></textarea>
+                            </td>
+                        </tr>
+
+                        <!-- COMENTARIOS -->
+                        <tr>
+                            <td colspan="2" class="p-2">
+                                <label class="form-label">Comentarios:</label>
+                                <textarea class="form-control"
+                                          x-model="comentarios"></textarea>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn bg-danger-subtle text-danger"
+                        data-bs-dismiss="modal"
+                        @click="resetModal()">
                     Cancelar
                 </button>
 

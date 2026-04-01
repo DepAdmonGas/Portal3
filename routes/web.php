@@ -121,12 +121,17 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['SasisopaController', 'index']));
 
         // Elemento 1
-        $r->addRoute('GET', '/politica', Route::auth(['SasisopaController', 'politica']));
-        $r->addRoute('GET', '/datatable-lista-comprobacion', Route::auth(['SasisopaController', 'datatableListaComprobacion']));
+        $r->addRoute('GET', '/politica', Route::auth(['PoliticaController', 'politica']));
+        $r->addRoute('GET', '/datatable-lista-comprobacion', Route::auth(['PoliticaController', 'datatableListaComprobacion']));
         $r->addRoute('GET', '/datatable-lista-asistencia/elemento/{idsasisopa:\d+}', Route::auth(['SasisopaController', 'datatableListaAsistencia']));
 
-        $r->addRoute('POST', '/politica/update', Route::auth(['SasisopaController', 'updatePolitica']));
-        $r->addRoute('GET', '/politica/pdf', Route::auth(['SasisopaController', 'descargarPolitica']));
+        $r->addRoute('POST', '/politica/update', Route::auth(['PoliticaController', 'updatePolitica']));
+        $r->addRoute('GET', '/politica/pdf', Route::auth(['PoliticaController', 'descargarPolitica']));
+        $r->addRoute('POST', '/politica/lista-comprobacion/create', Route::auth(['PoliticaController', 'createListaComprobacion']));
+        $r->addRoute('POST', '/politica/lista-comprobacion/update', Route::auth(['PoliticaController', 'updateListaComprobacion']));
+        $r->addRoute('POST', '/politica/lista-comprobacion/delete', Route::auth(['PoliticaController', 'deleteListaComprobacion']));
+        $r->addRoute('GET', '/politica/lista-comprobacion/{id:\d+}', Route::auth(['PoliticaController', 'getListaComprobacion']));
+        $r->addRoute('GET', '/politica/lista-comprobacion/pdf/{id:\d+}', Route::auth(['PoliticaController', 'descargarListaComprobacion']));
 
 
         // Elemento 2
