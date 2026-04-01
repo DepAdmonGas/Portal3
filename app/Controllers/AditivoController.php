@@ -39,7 +39,7 @@ class AditivoController extends BaseController{
             'scripts' => [
                 '/assets/js/vendor.min.js',
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/bitacora/aditivo.datatable.init.js?v=1.1',
+                '/assets/js/bitacora/aditivo.datatable.init.js?v=1.0',
                 '/assets/js/bitacora/actions.init.js?v=1.0'
             ],
             'help' => false
@@ -333,8 +333,8 @@ class AditivoController extends BaseController{
             'scripts' => [
                 '/assets/js/vendor.min.js',
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                 '/assets/js/bitacora/reporte.datatable.init.js?v=1.1',
-                '/assets/js/bitacora/reporte.actions.init.js?v=1.7'
+                 '/assets/js/bitacora/reporte.datatable.init.js?v=1.0',
+                '/assets/js/bitacora/reporte.actions.init.js?v=1.0'
             ]
         ];
         
@@ -535,8 +535,8 @@ class AditivoController extends BaseController{
             'scripts' => [
                 '/assets/js/vendor.min.js',
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/bitacora/inventario.datatable.init.js?v=1.1',
-                '/assets/js/bitacora/inventario.actions.init.js?v=1.2'
+                '/assets/js/bitacora/inventario.datatable.init.js?v=1.0',
+                '/assets/js/bitacora/inventario.actions.init.js?v=1.0'
             ]
         ];
         

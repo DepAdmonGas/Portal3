@@ -62,7 +62,7 @@
                 <button type="button"
                         class="btn-close"
                         data-bs-dismiss="modal"
-                        @click="resetForm()">
+                        @click="resetModal()">
                 </button>
             </div>
 
@@ -89,7 +89,7 @@
                 <button type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
-                        @click="resetForm()">
+                        @click="resetModal()">
                     Cancelar
                 </button>
 

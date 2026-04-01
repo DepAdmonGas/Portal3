@@ -20,6 +20,28 @@ document.addEventListener('alpine:init', () => {
             this.gasolina = '';
             this.diesel = '';
         },
+        resetModal(){
+
+            const modalEl = document.getElementById('nuevo');
+
+                    // evento al cerrar completamente
+                    modalEl.addEventListener('hidden.bs.modal', () => {
+                        this.resetForm();
+                        document.body.focus(); // opcional (mejora accesibilidad)
+                    }, { once: true });
+
+                    // quitar foco ANTES de cerrar
+                    if (document.activeElement) {
+                        document.activeElement.blur();
+                    }
+
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+
+                    if (modal) {
+                        modal.hide();
+                    }
+
+        },
         async submit() {
             if (!this.validate()) return;
 
@@ -40,26 +62,8 @@ document.addEventListener('alpine:init', () => {
 
                 if (res && res.success) {
 
-                const modalEl = document.getElementById('nuevo');
-
-                //quitar foco (error aria-hidden)
-                document.activeElement.blur();
-
-                //IMPORTANTE: esperar a que cierre
-                modalEl.addEventListener('hidden.bs.modal', () => {
-
-                    this.resetForm();
-
-                    // ACTUALIZAR INVENTARIO AQUÍ
-                    this.updateInventario();
-
-                }, { once: true });
-
-                const modal = bootstrap.Modal.getInstance(modalEl);
-
-                if (modal) {
-                    modal.hide();
-                }
+                this.updateInventario();
+                this.resetModal();
 
             }
 
