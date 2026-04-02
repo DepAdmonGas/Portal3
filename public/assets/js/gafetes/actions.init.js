@@ -86,7 +86,7 @@ modal.hide();
  
 setTimeout(() => {
 this.resetForm();
-window.location.href = `/solicitud-gafetes/${idEstacion}/${noReporte}`;
+window.location.href = `/solicitud-gafetes/formulario/${idEstacion}/${noReporte}`;
 }, 300);
 }
 

@@ -6,7 +6,7 @@ const container = document.getElementById('container');
 const idEstacion = container.dataset.estacion;
 const noReporte = container.dataset.reporte;
 
-const table = $('#table-gafetes-formulario').DataTable({
+const table = $('#table-gafetes-detalle').DataTable({
 processing: true,
 serverSide: false,
 autoWidth: false,
@@ -18,7 +18,7 @@ url: '/assets/libs/datatables.net/js/es-ES.json'
 },
   
 ajax: {
-url: `/solicitud-gafetes/datatable-formulario/${idEstacion}/${noReporte}`,
+url: `/solicitud-gafetes/datatable-detalle/${idEstacion}/${noReporte}`,
 type: 'GET',
 dataSrc: function (json) {
 //guardas permisos globalmente
@@ -42,7 +42,6 @@ render: function (data, type, row) {
 
 const disabled = 'disabled opacity-50 pointer-events-none';
 const noDesc = !permisos.descargar;
-const noDelete = !permisos.eliminar;
 
 return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -59,25 +58,6 @@ return `
 class="dropdown-item d-flex align-items-center gap-1 ${noDesc ? disabled : ''}"
 ${noDesc ? '' : ` @click="download('basico','${row.foto}')"`}>
 <i class="ti ti-file-download"></i> Descargar 
-</a>
-</li>
-
-<!-- ELIMINAR -->
-<li>
-<a href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-1 ${noDelete ? disabled : ''}"
-${noDelete ? '' : `
-@click="async () => {
-await deleteAction({
-url: '/solicitud-gafetes/delete-reporte-registro-formulario',
-id: ${row.id},
-name: '${row.id}',
-table: '#table-gafetes-formulario'
-});
-}"
-`}
->
-<i class="fs-4 ti ti-trash"></i> Eliminar  
 </a>
 </li>
 

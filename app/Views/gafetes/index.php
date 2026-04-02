@@ -1,29 +1,22 @@
-<div id="container" class="mt-4">
+<div id="container" class="mb-4">
 
-<?= !empty($permisos['crear']) ? 
-'<div class="row">
+<?php
+//if ($utilitiesUser['idPuestoUser'] == "6") {
+echo !empty($permisos['crear']) ? '
+<div class="row">
 <div class="col-12 mb-4">
-<button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Agregar </button>
+<button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#nuevo">
+<i class="ti ti-plus"></i> Nuevo
+</button>
 </div>
-</div>' : '' 
+</div>
+' : '';
+//}
 ?>
   
 <div class="datatables">
 <div class="table-responsive">
 <table id="table-gafetes" class="table table-bordered mb-0 text-nowrap align-middle">
-<thead>
-
-<tr>
-<th class="text-center align-middle">#</th>
-<th class="text-center align-middle">No. Solicitud</th>
-<th class="text-center align-middle">Fecha</th>
-<th class="text-center align-middle">Solicita</th>
-<th class="text-center align-middle">Estación</th>
-<th class="text-center align-middle">Estatus</th>
-<th class="text-center align-middle"><a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a></th>
-</tr>
-
-</thead>
 <tbody></tbody>
 </table>
 </div>
