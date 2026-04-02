@@ -2,22 +2,31 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Models\SolicitudGafetes;
+use App\Models\SolicitudGafetesSeguimiento;
 use App\Core\Breadcrumb;
 use App\Models\Usuario;
 use App\Services\ModuloService;
 use App\Core\Session;
 use App\Models\Estacion;
+use App\Core\Auth;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class GafetesController extends BaseController{
 protected string $modulo = 'solicitud-gafetes';
 
+//---------------------------------------------------//
+//----------------- PAGINA PRINCIPAL -----------------//
+//---------------------------------------------------//
 public function index(){
 
 $title = 'Solicitud de Gafetes';
 
+$datosUsuario = Auth::user();
+$idPuesto = $datosUsuario->id_puesto;
+
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add($title, '');
+
 // Buscar permisos de los modulos
 $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -25,6 +34,10 @@ $data = [
 'title' => $title,
 'permisos' => $permisos,
 'modulo' => $this->modulo,
+'filtro_usuario' => $this->filtro_usuario,
+'utilitiesUser' =>[
+'idPuestoUser' => $idPuesto
+],
 'links' =>[
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
@@ -42,29 +55,28 @@ View::render('gafetes/index', $data,'main');
 
 public function datatableGafetes()
 {
+    
+$filtro_usuario = Session::get('usuario');
+$idEstacion = $filtro_usuario['id_estacion'] ?? null;
+
 $permisoLeer     = ModuloService::validaPermiso($this->modulo, 'leer');
 $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
 $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
-
-$filtro_usuario = Session::get('usuario');
-$idEstacion = $filtro_usuario['id_estacion'] ?? null;
+$mostrar_fila_estacion = ((int)$idEstacion === 8);
 
 $query = SolicitudGafetes::from('tb_solicitud_gafetes as g')
 ->leftJoin('tb_estaciones as e', 'g.id_estacion', '=', 'e.nombre')
 ->select('g.*', 'e.id as id_estacion_real');
 
-// SOLO filtrar si la estación NO es 8
+// Filtro si la sesion de la estacion no es 8
 if (!empty($idEstacion) && (int)$idEstacion !== 8) {
-
 $estacion = Estacion::find($idEstacion);
 
 if ($estacion) {
 $query->where('g.id_estacion', $estacion->nombre);
 }
-
 }
 
-// ORDENAR para que aparezca el último registro
 $gafetes = $query
 ->orderBy('g.id', 'desc')
 ->get();
@@ -74,7 +86,8 @@ echo json_encode([
 "permisos" => [
 "leer"     => $permisoLeer,
 "editar"   => $permisoEditar,
-"eliminar" => $permisoEliminar
+"eliminar" => $permisoEliminar,
+"mostrar_fila_estacion" => $mostrar_fila_estacion
 ]
 ]);
 
@@ -120,7 +133,7 @@ exit;
 }
 
 // CONFIG RUTA
-$carpeta = __DIR__ . '../../../public/uploads/archivos/';
+$carpeta = __DIR__ . '../../../public/uploads/archivos/solicitud-gafetes/';
 if (!file_exists($carpeta)) {
 mkdir($carpeta, 0777, true);
 }
@@ -259,7 +272,7 @@ exit;
 }
 
 // Ruta base CORREGIDA
-$rutaBase = __DIR__ . '/../../../public/uploads/archivos/';
+$rutaBase = __DIR__ . '/../../../public/uploads/archivos/solicitud-gafetes/';
 
 // TRANSACCIÓN
 Capsule::beginTransaction();
@@ -304,14 +317,18 @@ echo json_encode([
 
 public function formularioReporte($idEstacion, $noReporte){
 
-$title = 'Solicitud de Gafetes (Formulario)';
+$datosUsuario = Auth::user();
+$idPuesto = $datosUsuario->id_puesto;
+
+$datosEstacion = Estacion::find($idEstacion);
+$title = 'Solicitud de Gafetes Formulario (' . $datosEstacion->nombre . ')';
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Solicitud de Gafetes', '/solicitud-gafetes');
 Breadcrumb::add($title, '');
+
 // Buscar permisos de los modulos
 $permisos = ModuloService::permisosSesion($this->modulo);
-
 
 $data = [
 'title' => $title,
@@ -319,6 +336,9 @@ $data = [
 'modulo' => $this->modulo,
 'idEstacion' => $idEstacion,
 'noReporte' => $noReporte,
+'utilitiesUser' =>[
+'idPuestoUser' => $idPuesto
+],
 'links' =>[
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
@@ -335,12 +355,12 @@ View::render('gafetes/formulario-index', $data,'main');
 
 }
 
-public function datatableGafetesFormulario($idEstacion, $noReporte){
-
+public function datatableGafetesFormulario($idEstacion, $noReporte)
+{
+    
 // permisos
-$permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
 $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
-$permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
+$permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
 
 // Obtener la estacion 
 $datosEstacion = Estacion::find($idEstacion);
@@ -355,8 +375,7 @@ echo json_encode([
 "data" => $gafetes,
 "permisos" => [
 "eliminar" => $permisoEliminar,
-"descargar" => $permisoDescargar,
-"editar"   => $permisoEditar
+"descargar" => $permisoDescargar
 ]
 ]);
 
@@ -402,7 +421,7 @@ exit;
 }
 
 // CONFIG RUTA
-$carpeta = __DIR__ . '../../../public/uploads/archivos/';
+$carpeta = __DIR__ . '../../../public/uploads/archivos/solicitud-gafetes/';
 if (!file_exists($carpeta)) {
 mkdir($carpeta, 0777, true);
 }
@@ -484,6 +503,243 @@ echo json_encode([
 }
 
 }
+
+public function deleteReporteFormulario()
+{
+header('Content-Type: application/json; charset=utf-8');
+$data = json_decode(file_get_contents('php://input'), true);
+$id = $data['id'] ?? null;
+
+if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+echo json_encode([
+'success' => false,
+'message' => 'No tienes permiso para eliminar'
+]);
+exit;
+}
+
+if (!$id) {
+echo json_encode(['success' => false,'message' => 'ID requerido']);
+exit;
+}
+
+try {
+ // Buscar registro
+$registro_reporte = SolicitudGafetes::find($id);
+
+if (!$registro_reporte) {
+echo json_encode(['success' => false, 'message' => 'Registro no encontrado']);
+exit;
+}
+
+// Ruta base CORREGIDA
+$rutaBase = __DIR__ . '/../../../public/uploads/archivos/solicitud-gafetes/';
+$rutaArchivo = $rutaBase . $registro_reporte->foto;
+
+// TRANSACCIÓN
+Capsule::beginTransaction();
+
+// Eliminar archivo si existe
+if (!empty($registro_reporte->foto) && file_exists($rutaArchivo)) {
+unlink($rutaArchivo);
+}
+
+// Eliminar registro (puedes usar delete o estado = 0)
+$registro_reporte->delete();
+Capsule::commit();
+
+echo json_encode([
+'success' => true,
+'message' => 'Registro eliminado correctamente'
+]);
+
+} catch (\Throwable $e) {
+Capsule::rollBack();
+
+echo json_encode([
+'success' => false,
+'message' => 'Error al eliminar',
+'error'   => $e->getMessage()
+]);
+}
+
+exit;
+}
+
+//---------------------------------------------------//
+//---------------- PAGINA SEGUIMIENTO ---------------//
+//---------------------------------------------------//
+public function formularioSeguimiento($idEstacion, $noReporte){
+
+$datosUsuario = Auth::user();
+$idPuesto = $datosUsuario->id_puesto;
+
+$datosEstacion = Estacion::find($idEstacion);
+$title = 'Detalle Solicitud de Gafetes (' . $datosEstacion->nombre . ')';
+
+Breadcrumb::add('Home', '/home');
+Breadcrumb::add('Solicitud de Gafetes', '/solicitud-gafetes');
+Breadcrumb::add($title, '');
+// Buscar permisos de los modulos
+$permisos = ModuloService::permisosSesion($this->modulo);
+
+$data = [
+'title' => $title,
+'permisos' => $permisos,
+'modulo' => $this->modulo,
+'idEstacion' => $idEstacion,
+'noReporte' => $noReporte,
+'utilitiesUser' =>[
+'idPuestoUser' => $idPuesto
+],
+'links' =>[
+'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+],
+'scripts' => [
+'/assets/js/vendor.min.js',
+'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+'/assets/js/gafetes/gafetes.detalle.datatable.init.js?v=1.1',
+'/assets/js/gafetes/gafetes.seguimiento.timeline.js?v=1.0',
+'/assets/js/gafetes/actions.detalle.init.js?v=1.0'
+],
+'help' => false
+];
+
+View::render('gafetes/seguimiento-index', $data,'main');
+
+}
+
+public function timelineSeguimiento($idEstacion, $noReporte)
+{
+$seguimientos = SolicitudGafetesSeguimiento::with('usuario')
+->where('id_estacion', $idEstacion)
+->where('no_reporte', $noReporte)
+->orderBy('seguimiento')
+->get();
+ 
+echo json_encode([
+'data' => $seguimientos->map(function($data){
+return [
+'seguimiento' => $data->seguimiento,
+'fecha_hora' => $data->fecha_hora,
+'usuario' => $data->usuario->nombre ?? 'Sin informacion'
+];
+})
+]);
+}
+
+public function updateSeguimientoGafetes()
+{
+
+header('Content-Type: application/json; charset=utf-8');
+$data = json_decode(file_get_contents('php://input'), true);
+
+$idEstacion = $data['idEstacion'] ?? null;
+$no_reporte = $data['no_reporte'] ?? null;
+$idSeguimiento = $data['idSeguimiento'] ?? null;
+
+if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+echo json_encode([
+'success' => false,
+'message' => 'Sin permisos'
+]);
+return;
+}
+
+if (!$idEstacion || !$no_reporte || !$idSeguimiento) {
+echo json_encode([
+'success' => false,
+'message' => 'Datos incompletos'
+]);
+exit;
+}
+
+$datosEstacion = Estacion::find($idEstacion);
+
+try {
+
+$registro_existente = SolicitudGafetesSeguimiento::where('id_estacion', $idEstacion)
+->where('no_reporte', $no_reporte)
+->where('seguimiento', $idSeguimiento)
+->exists();
+
+if ($registro_existente) {
+echo json_encode([
+'success' => false,
+'message' => 'Este seguimiento ya fue registrado'
+]);
+exit;
+}
+
+$ultimo_seguimiento = SolicitudGafetesSeguimiento::where('id_estacion', $idEstacion)
+->where('no_reporte', $no_reporte)
+->max('seguimiento');
+
+$ultimo_seguimiento = $ultimo_seguimiento ?? 0;
+
+if ($idSeguimiento != ($ultimo_seguimiento + 1)) {
+echo json_encode([
+'success' => false,
+'message' => 'El seguimiento no es válido en el orden'
+]);
+exit;
+}
+Capsule::beginTransaction();
+
+try {
+
+SolicitudGafetesSeguimiento::create([
+'id_estacion' => $idEstacion,
+'no_reporte'  => $no_reporte,
+'seguimiento' => $idSeguimiento,
+'id_usuario'     => $this->userId()
+]);
+
+if ($idSeguimiento == 1) {
+SolicitudGafetes::where('id_estacion', $datosEstacion->nombre)
+->where('no_reporte', $no_reporte)
+->update(['estatus' => 1]);
+}else if($idSeguimiento == 2){
+SolicitudGafetes::where('id_estacion', $datosEstacion->nombre)
+->where('no_reporte', $no_reporte)
+->update(['estatus' => 2]);
+}else if($idSeguimiento == 3){
+SolicitudGafetes::where('id_estacion', $datosEstacion->nombre)
+->where('no_reporte', $no_reporte)
+->update(['estatus' => 4]);
+}
+
+Capsule::commit();
+
+echo json_encode([
+'success' => true,
+'message' => 'Seguimiento guardado correctamente'
+]);
+
+} catch (\Throwable $e) {
+
+Capsule::rollBack();
+
+echo json_encode([
+'success' => false,
+'message' => $e->getMessage()
+]);
+}
+
+
+} catch (\Throwable $e) {
+
+Capsule::rollBack();
+
+echo json_encode([
+'success' => false,
+'message' => $e->getMessage()
+]);
+}
+
+
+}
+
 
 
 

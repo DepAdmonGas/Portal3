@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
 
 let permisos = {};
-
+let mostrarFilaEstacion = true;
+ 
 const table = $('#table-gafetes').DataTable({
 processing: true,
 serverSide: false,
@@ -55,9 +56,9 @@ $(row).find('td').css({'background-color': color});
 },
 
 columns: [
-{data: 'id', width: '60px', className: 'text-center align-middle' },
-{data: 'no_reporte', width: '100px', className: 'text-center align-middle'},
-{ data: 'fecha', className: 'text-center align-middle',
+{ title: '#', data: 'id', width: '60px', className: 'text-center align-middle' },
+{ title: 'No. Solicitud', data: 'no_reporte', width: '100px', className: 'text-center align-middle'},
+{ title: 'Fecha', data: 'fecha', className: 'text-center align-middle',
 render: function (data, type) {
 
 if (!data) return '';
@@ -76,9 +77,9 @@ year: 'numeric'
 }
 },
 
-{data: 'usuario', className: 'text-center align-middle'},
-{data: 'id_estacion', className: 'text-center align-middle'},
-{data: 'estatus', width: '140px', className: 'text-center align-middle',
+{ title: 'Solicita', data: 'usuario', className: 'text-center align-middle'},
+{ title: 'Estación', data: 'id_estacion', className: 'text-center align-middle', visible: mostrarFilaEstacion},
+{ title: 'Estatus', data: 'estatus', width: '140px', className: 'text-center align-middle',
 render: function (data) {
 const estatus = Number(data);
 
@@ -93,14 +94,18 @@ texto = 'Sin atender';
 break;
 
 case 1:
-case 2:
-case 3:
 clase = 'warning';
 texto = 'En proceso';
 break;
 
-case 4:
+case 2:
+case 3:
 clase = 'success';
+texto = 'Finalizado';
+break;
+
+case 4:
+clase = 'info';
 texto = 'Entregada';
 break;
 
@@ -116,6 +121,7 @@ return `<span class="badge rounded-pill bg-${clase}">${texto}</span>`;
 },
 
 {
+title: '<a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>',
 data: null,
 width: '1%',
 orderable: false,
@@ -125,18 +131,29 @@ render: function (data, type, row) {
 
 const estatus = Number(row.estatus);
 
+const noEdit = !permisos.editar;
+const noDelete = !permisos.eliminar;
+
+let disableDetail = '';
 let disabledEdit = '';
 let disabledDelete = '';
 
-
+// DETALLE
+if (estatus === 0) {
+disableDetail = 'disabled opacity-50 pointer-events-none';
+}
 
 // EDITAR
-if (estatus === 4) {
+if (noEdit) {
+disabledEdit = 'disabled opacity-50 pointer-events-none';
+}else if (estatus === 1 || estatus === 2 || estatus === 3 || estatus === 4) {
 disabledEdit = 'disabled opacity-50 pointer-events-none';
 }
 
 // ELIMINAR
-if (estatus !== 0) {
+if (noDelete) {
+disabledDelete = 'disabled opacity-50 pointer-events-none';
+} else if (estatus !== 0) {
 disabledDelete = 'disabled opacity-50 pointer-events-none';
 }
 
@@ -152,12 +169,13 @@ data-bs-toggle="dropdown">
 
 <ul class="dropdown-menu">
 
-<!-- DETALLE (siempre activo) -->
+<!-- Detalle (Seguimiento) -->
 <li>
-<a class="dropdown-item d-flex align-items-center gap-2 btn-detail" 
-data-id="${row.id}" data-estacion="${row.id_estacion_real}" data-reporte="${row.no_reporte}">
-<i class="fs-4 ti ti-eye"></i>
-Detalle
+<a 
+href="javascript:void(0)"
+class="dropdown-item d-flex align-items-center gap-2 ${disableDetail ? 'disabled' : ''}"
+${!disableDetail ? `@click="goTo('/solicitud-gafetes/detalle/${row.id_estacion_real}/${row.no_reporte}')"` : ''}>
+<i class="fs-4 ti ti-eye"></i> Detalle
 </a>
 </li>
 
@@ -166,7 +184,7 @@ Detalle
 <a 
 href="javascript:void(0)"
 class="dropdown-item d-flex align-items-center gap-2 ${disabledEdit ? 'disabled' : ''}"
-${!disabledEdit ? `@click="goTo('/solicitud-gafetes/${row.id_estacion_real}/${row.no_reporte}')"` : ''}>
+${!disabledEdit ? `@click="goTo('/solicitud-gafetes/formulario/${row.id_estacion_real}/${row.no_reporte}')"` : ''}>
 <i class="fs-4 ti ti-edit"></i> Editar
 </a>
 </li>
@@ -199,5 +217,16 @@ table: '#table-gafetes'
 ]
 
 });
+
+
+table.on('xhr', function () {
+const json = table.ajax.json();
+
+if (json && json.permisos) {
+table.column(4).visible(json.permisos.mostrar_fila_estacion);
+}
+
+});
+
 
 });

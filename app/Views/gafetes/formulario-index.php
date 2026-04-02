@@ -1,34 +1,34 @@
-<div id="container" class="mt-4" data-estacion="<?= $idEstacion ?>" data-reporte="<?= $noReporte ?>">
+<div class="mb-4" x-data="{ ...actions(), ...seguimientoForm() }"
+x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-reporte="<?= $noReporte ?>" data-puesto="<?= $utilitiesUser['idPuestoUser'] ?>">
+ 
+<div class="row mt-3 mb-3">
+<div class="col-8"> <span class="badge rounded-pill bg-success">No. de Solicitud: <?=$noReporte?></span></div>
 
-<?= !empty($permisos['crear']) ? 
-'<div class="row mb-3">
-<div class="col-12">
-<button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Agregar </button>
-</div>
+<div class="col-4 d-flex justify-content-end align-items-center gap-2">
+
+<div id="botonSeguimiento"></div>
+
+<?= !empty($permisos['editar']) ? 
+'<div>
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
+<i class="ti ti-plus"></i> Nuevo
+</button>
 </div>' : '' 
 ?>
 
+</div>
+</div>
+
 <div class="datatables">
 <div class="table-responsive">
-<table id="table-gafetes-formulario" class="table  table-bordered mb-0 text-nowrap align-middle">
-<thead>
-
-<tr>
-<th class="text-center align-middle" width="96px">#</th>
-<th class="text-center align-middle">Clave</th>
-<th class="text-center align-middle">Nombre Completo</th>
-<th class="text-center align-middle">Estación</th>
-<th class="text-center align-middle" width="48px"><a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a></th>
-</tr>
-
-</thead>
+<table id="table-gafetes-formulario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>
 </div>
-</div> 
+</div>     
 
 </div>
-
+ 
 
 <!---------- MODAL AGREGAR GAFETES ---------->
 <div class="modal fade" id="nuevo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
