@@ -122,6 +122,12 @@ return function(RouteCollector $r) {
         $r->addRoute('PUT','/configuracion-modulos-usuario-permiso/{id:\d+}', Route::auth(['EstructuraUsuarioController', 'updatePermisosModuloUsuario']));
     });
 
+    //----------------- Lista de asistencia ------------
+
+    $r->addRoute('GET', '/datatable-lista-asistencia/elemento/{idsasisopa:\d+}', Route::auth(['ListaAsistenciaController', 'datatableListaAsistencia']));
+    $r->addRoute('POST', '/lista-asistencia/delete', Route::auth(['ListaAsistenciaController', 'deleteListaAsistencia']));
+    $r->addRoute('GET', '/lista-asistencia/pdf/{id:\d+}', Route::auth(['ListaAsistenciaController', 'pdfListaAsistencia']));
+    
     // ---------------- SASISOPA ----------------
     $r->addGroup('/sasisopa', function (RouteCollector $r) {
 
@@ -129,9 +135,8 @@ return function(RouteCollector $r) {
 
         // Elemento 1
         $r->addRoute('GET', '/politica', Route::auth(['PoliticaController', 'politica']));
-        $r->addRoute('GET', '/datatable-lista-comprobacion', Route::auth(['PoliticaController', 'datatableListaComprobacion']));
-        $r->addRoute('GET', '/datatable-lista-asistencia/elemento/{idsasisopa:\d+}', Route::auth(['SasisopaController', 'datatableListaAsistencia']));
 
+        $r->addRoute('GET', '/politica/datatable-lista-comprobacion', Route::auth(['PoliticaController', 'datatableListaComprobacion']));
         $r->addRoute('POST', '/politica/update', Route::auth(['PoliticaController', 'updatePolitica']));
         $r->addRoute('GET', '/politica/pdf', Route::auth(['PoliticaController', 'descargarPolitica']));
         $r->addRoute('POST', '/politica/lista-comprobacion/create', Route::auth(['PoliticaController', 'createListaComprobacion']));

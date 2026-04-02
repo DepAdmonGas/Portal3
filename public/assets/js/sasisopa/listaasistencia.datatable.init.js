@@ -1,22 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const idSasisopa = document
+    const idElemento = document
     .getElementById('container')
-    .dataset.idsasisopa;
+    .dataset.elemento;
 
-    $('#table-lista-asistencia').DataTable({
+    let permisos = {};
+
+    table2 = $('#table-lista-asistencia').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
-        stateSave: true, 
-        order: [[0, 'desc']],
+        stateSave: true,
         language: {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/datatable-lista-asistencia/elemento/' + idSasisopa,
+            url: '/datatable-lista-asistencia/elemento/' + idElemento,
             type: 'GET',
             dataSrc: function (json) {
+                //guardas permisos globalmente
+                permisos = json.permisos;
                 return json.data;
             }
         },
@@ -75,36 +78,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchable: false,
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
-                    
+                                      
+                    const noEdit = permisos.editar;
+                    const noDelete = permisos.eliminar;
+                    const noDownload = permisos.descargar;
 
                     return `
+                    <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                         <div class="dropdown dropstart">
                             <a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit 
-                                    data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}">
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
+                                    href="/lista-asistencia/pdf/${row.id}" target="_blank">
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    ${!noDelete ? '' : `
+                                    @click='async () => {
+                                    const res = await deleteAction({
+                                        url: "/lista-asistencia/delete",
+                                        id: ${row.id},
+                                        name: "${row.id}",
+                                        table: "#table-lista-asistencia"
+                                    });
+                                    }'
+                                    `}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
                             </ul>
                         </div>
+                        </div>
                     `;
                 }
             }
         ]
+    });
+
+    $("#table-lista-asistencia tbody").on("click", "tr", function () {
+    if ($(this).hasClass("selected")) {
+    } else {
+        table2.$("tr.selected").removeClass("selected");
+        $(this).addClass("selected");
+    }
     });
 
 });

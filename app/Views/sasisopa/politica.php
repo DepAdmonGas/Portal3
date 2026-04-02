@@ -1,4 +1,4 @@
-<div id="container" data-idsasisopa="1">
+<div id="container" data-elemento="1">
 
 <div class="text-end mt-2">
 <div class="btn-group">
@@ -88,20 +88,20 @@
 <div class="card">
   <div class="card-body">
 
-  <div class="d-flex align-items-center">
-    <h4 class="card-title mb-0">Fo.ADMONGAS.001 (Lista de comprobación)</h4>
-      <div class="ms-auto">
-        <?= 
+  <div class="float-end">
+      <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#listaComprobacion" >
-        <i class="ti ti-plus fs-7 text-primary"></i>
+        '<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#listaComprobacion" >
+        <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
-        ?>      
-      </div>
-  </div>
+        ?>     
+    </div>
 
-  <div class="datatables">
+    <h4 class="card-title mb-0">Fo.ADMONGAS.001 (Lista de comprobación)</h4>
+
+    
+  <div class="datatables mt-4">
 
     <div class="table-responsive">
       <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
@@ -132,24 +132,20 @@
 <div class="card">
   <div class="card-body">
 
-  <div class="d-flex align-items-center">
-    <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
-      <div class="ms-auto">
-
+  <div class="float-end">
       <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn">
-        <i class="ti ti-plus fs-7 text-primary"></i>
+        '<button type="button" class="btn btn-primary">
+        <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
       ?>     
-
-      </div>
-  </div>
-
-  <div class="datatables mt-3">
+    </div>
+    <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+      
+  <div class="datatables mt-4">
     <div class="table-responsive">
-      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-asistencia" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>
            <th>#</th>
