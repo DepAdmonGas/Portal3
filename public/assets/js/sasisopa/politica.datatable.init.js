@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    $('#table-lista-comprobacion').DataTable({
+    table1 = $('#table-lista-comprobacion').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/datatable-lista-comprobacion',
+            url: '/sasisopa/politica/datatable-lista-comprobacion',
             type: 'GET',
             dataSrc: function (json) {
             //guardas permisos globalmente
@@ -102,9 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     });
 
-      // REINICIALIZAR ALPINE DESPUÉS DE DIBUJAR TABLA
-    $('#table-lista-comprobacion').on('draw.dt', function () {
-        Alpine.initTree(document.querySelector('#table-lista-comprobacion'));
+     $("#table-lista-comprobacion tbody").on("click", "tr", function () {
+    if ($(this).hasClass("selected")) {
+    } else {
+        table1.$("tr.selected").removeClass("selected");
+        $(this).addClass("selected");
+    }
     });
 
 

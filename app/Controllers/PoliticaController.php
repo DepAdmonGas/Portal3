@@ -37,8 +37,8 @@ class PoliticaController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/sasisopa/politica.datatable.init.js?v=1.0',
-                '/js/sasisopa/listaasistencia.datatable.init.js',
+                '/js/sasisopa/politica.datatable.init.js?v=1.3',
+                '/js/sasisopa/listaasistencia.datatable.init.js?v=1.7',
                 '/js/sasisopa/politica.actions.init.js',
                 '/js/sasisopa/listacomprobacion.actions.init.js?v=1.4',
             ],
@@ -438,113 +438,113 @@ class PoliticaController extends BaseController
 
     }
 
-public function descargarListaComprobacion($id)
-{
-    header('Content-Type: application/pdf');
+    public function descargarListaComprobacion($id)
+    {
+        header('Content-Type: application/pdf');
 
-    $estacion = Estacion::find($this->estacionId());
-    $reporte  = PoliticaListaComprobacion::find($id);
+        $estacion = Estacion::find($this->estacionId());
+        $reporte  = PoliticaListaComprobacion::find($id);
 
-    if (!$reporte) {
-        echo "No se encontró la información";
-        return;
+        if (!$reporte) {
+            echo "No se encontró la información";
+            return;
+        }
+
+        $detalle = PoliticaListaComprobacionDetalle::where('id_lista_comprobacion', $id)->get();
+
+        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
+
+        // Sanitizar
+        $asistentes = htmlspecialchars($reporte->asistentes ?? '');
+        $comentarios = htmlspecialchars($reporte->comentarios ?? '');
+        $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+
+        // ================= HTML =================
+
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Lista de comprobación</title>
+            <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
+        </head>
+        <body>
+
+        <table class="table table-bordered">
+            <tr>
+                <td class="text-center">
+                    <img src="'.$logo.'" style="width:150px;">
+                </td>
+                <td colspan="2" class="text-center"><b>Lista de comprobación</b></td>
+                <td class="text-center"><b>Fo.ADMONGAS.001</b></td>
+            </tr>
+            <tr>
+                <td class="text-center">Realizado por:<br> Nelly Estrada Garcia</td>
+                <td class="text-center">Revisado por:<br> Eduardo Galicia Flores</td>
+                <td class="text-center">Autorizado por:<br> '.$apoderado.'</td>
+                <td class="text-center">Fecha de aprobación:<br> 01-oct-18</td>
+            </tr>
+        </table>
+
+        <div class="text-center mt-3 mb-3"><b>Política del SASISOPA</b></div>
+        <div class="mb-3"><b>Fecha:</b> '.formatearFecha($reporte->fecha).'</div>
+
+        <table class="table table-bordered">
+            <tr>
+                <td class="text-center"><b>Política del SASISOPA</b></td>
+                <td class="text-center"><b>Si</b></td>
+                <td class="text-center"><b>En Parte</b></td>
+                <td class="text-center"><b>No</b></td>
+            </tr>
+        ';
+
+        foreach ($detalle as $row) {
+
+            $criterio  = htmlspecialchars($row->criterio);
+            $resultado = $row->resultado;
+
+            $si      = $resultado === "Si" ? "X" : "";
+            $enparte = $resultado === "En Parte" ? "X" : "";
+            $no      = $resultado === "No" ? "X" : "";
+
+            $html .= "
+            <tr>
+                <td class='align-middle'>{$criterio}</td>
+                <td class='text-center'>{$si}</td>
+                <td class='text-center'>{$enparte}</td>
+                <td class='text-center'>{$no}</td>
+            </tr>";
+        }
+
+        $html .= '
+        </table>
+
+        <div class="mt-3 border p-3">
+            <b>Asistentes:</b><br>
+            '.$asistentes.'
+        </div>
+
+        <div class="mt-3 border p-3">
+            <b>Comentarios:</b><br>
+            '.$comentarios.'
+        </div>
+
+        </body>
+        </html>
+        ';
+
+
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
+
+        $dompdf = new Dompdf($options);
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $dompdf->stream("Lista-comprobacion.pdf", ["Attachment" => true]);
     }
-
-    $detalle = PoliticaListaComprobacionDetalle::where('id_lista_comprobacion', $id)->get();
-
-    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
-
-    // Sanitizar
-    $asistentes = htmlspecialchars($reporte->asistentes ?? '');
-    $comentarios = htmlspecialchars($reporte->comentarios ?? '');
-    $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
-
-    // ================= HTML =================
-
-    $html = '
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Lista de comprobación</title>
-        <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
-    </head>
-    <body>
-
-    <table class="table table-bordered">
-        <tr>
-            <td class="text-center">
-                <img src="'.$logo.'" style="width:150px;">
-            </td>
-            <td colspan="2" class="text-center"><b>Lista de comprobación</b></td>
-            <td class="text-center"><b>Fo.ADMONGAS.001</b></td>
-        </tr>
-        <tr>
-            <td class="text-center">Realizado por:<br> Nelly Estrada Garcia</td>
-            <td class="text-center">Revisado por:<br> Eduardo Galicia Flores</td>
-            <td class="text-center">Autorizado por:<br> '.$apoderado.'</td>
-            <td class="text-center">Fecha de aprobación:<br> 01-oct-18</td>
-        </tr>
-    </table>
-
-    <div class="text-center mt-3 mb-3"><b>Política del SASISOPA</b></div>
-    <div class="mb-3"><b>Fecha:</b> '.formatearFecha($reporte->fecha).'</div>
-
-    <table class="table table-bordered">
-        <tr>
-            <td class="text-center"><b>Política del SASISOPA</b></td>
-            <td class="text-center"><b>Si</b></td>
-            <td class="text-center"><b>En Parte</b></td>
-            <td class="text-center"><b>No</b></td>
-        </tr>
-    ';
-
-    foreach ($detalle as $row) {
-
-        $criterio  = htmlspecialchars($row->criterio);
-        $resultado = $row->resultado;
-
-        $si      = $resultado === "Si" ? "X" : "";
-        $enparte = $resultado === "En Parte" ? "X" : "";
-        $no      = $resultado === "No" ? "X" : "";
-
-        $html .= "
-        <tr>
-            <td class='align-middle'>{$criterio}</td>
-            <td class='text-center'>{$si}</td>
-            <td class='text-center'>{$enparte}</td>
-            <td class='text-center'>{$no}</td>
-        </tr>";
     }
-
-    $html .= '
-    </table>
-
-    <div class="mt-3 border p-3">
-        <b>Asistentes:</b><br>
-        '.$asistentes.'
-    </div>
-
-    <div class="mt-3 border p-3">
-        <b>Comentarios:</b><br>
-        '.$comentarios.'
-    </div>
-
-    </body>
-    </html>
-    ';
-
-
-    $options = new Options();
-    $options->set('isRemoteEnabled', true);
-    $options->set('defaultFont', 'Arial');
-
-    $dompdf = new Dompdf($options);
-
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'portrait');
-    $dompdf->render();
-
-    $dompdf->stream("Lista-comprobacion.pdf", ["Attachment" => true]);
-}
-}

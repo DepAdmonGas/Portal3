@@ -314,24 +314,24 @@
   </div>
 
   <div class="dark-transparent sidebartoggler"></div>
-
   <!-- Import Js Files -->
-  <script src="<?= asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') ?>"></script>
-  <script src="<?= asset('libs/simplebar/dist/simplebar.min.js') ?>"></script>
+  <script src="<?=asset('js/home/actions-home.init.js?v=1.1')?>"></script>
   <script src="<?=asset('js/switch.estacion.min.js')?>"></script>
   <script src="<?=asset('js/loader.min.js')?>"></script>
-  <script src="<?= asset('js/theme/app.init.js') ?>"></script>
-  <script src="<?= asset('js/theme/theme.js') ?>"></script>
-  <script src="<?= asset('js/theme/app.min.js') ?>"></script>
-  <script src="<?= asset('js/theme/sidebarmenu.js') ?>"></script>
+  <script src="<?=asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js')?>"></script>
+  <script src="<?=asset('libs/simplebar/dist/simplebar.min.js')?>"></script>
+  <script src="<?=asset('js/theme/app.init.js')?>"></script>
+  <script src="<?=asset('js/theme/theme.js')?>"></script>
+  <script src="<?=asset('js/theme/app.min.js')?>"></script>
+  <script src="<?=asset('js/theme/sidebarmenu.js')?>"></script>
 
   <!-- solar icons -->
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
   <!-- highlight.js (code view) -->
   <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
   <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
-  <script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script> 
-  <script src="<?= asset('js/core/actions.alpine.js?v=1.7') ?>"></script>
+  <script src="<?= asset('js/core/notify.js?v=1.1') ?>"></script> 
+  <script src="<?= asset('js/core/actions.alpine.js?v=1.1') ?>"></script>
  
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>

@@ -5,7 +5,7 @@ use App\Models\Sasisopa\Sasisopa;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 
-use App\Models\Sasisopa\ListaAsistencia;
+
 use App\Models\Sasisopa\AnalisisRiesgo;
 use App\Models\Sasisopa\SeguimientoObjetivosMetas;
 use App\Models\Sasisopa\SeguimientoReporteIndicador;
@@ -15,8 +15,6 @@ use App\Models\Sasisopa\QuejasSugerencia;
 use App\Models\Sasisopa\EquipoCritico;
 use App\Services\ModuloService;
 use App\Core\Auth;
-
-
 
 class SasisopaController extends BaseController{
 
@@ -52,18 +50,6 @@ class SasisopaController extends BaseController{
 
     }
   
-    public function datatableListaAsistencia($elemento){
-        $data = ListaAsistencia::where('punto_sasisopa', $elemento)
-        ->where('id_estacion', 1)
-        ->groupBy('fecha')
-        ->get();
-
-         echo json_encode([
-            "data" => $data
-        ]);
-        
-        exit;
-    }
 
     
 

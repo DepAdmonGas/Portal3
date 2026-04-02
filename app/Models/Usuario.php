@@ -50,4 +50,13 @@ class Usuario extends Model
         return $this->belongsToMany(Menu::class, 'usuarios_menus', 'usuario_id', 'menu_id')
                     ->withPivot('tipo');
     }
+
+    public static function buscarFirma($usuario)
+    {
+        return self::where('nombre', 'LIKE', $usuario)
+            ->where('estatus', 0)
+            ->orderByDesc('id')
+            ->value('firma');
+    }
+
 }
