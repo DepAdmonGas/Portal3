@@ -1,4 +1,5 @@
-<div id="container" data-elemento="1">
+
+<div id="container" data-elemento="1" data-herramienta="1">
 
 <div class="text-end mt-2">
 <div class="btn-group">
@@ -132,15 +133,18 @@
 <div class="card">
   <div class="card-body">
 
-  <div class="float-end">
-      <?= 
-        !empty($permisos['crear']) ? 
-        '<button type="button" class="btn btn-primary">
-        <i class="ti ti-plus"></i> Nuevo
-        </button>' 
-        : '' 
-      ?>     
+    <div class="float-end">
+      <div x-data="{ ...actions(), ...listaasistenciaForm() }">
+        <?= 
+          !empty($permisos['crear']) ? 
+          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+          <i class="ti ti-plus"></i> Nuevo
+          </button>' 
+          : '' 
+        ?>   
+      </div>  
     </div>
+
     <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
       
   <div class="datatables mt-4">
@@ -150,7 +154,7 @@
           <tr>
            <th>#</th>
             <th>Fecha</th>
-            <th>Hora</th>
+            <th>Estatus</th>
           <th class="text-center">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>

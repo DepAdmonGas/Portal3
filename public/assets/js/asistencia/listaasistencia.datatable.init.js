@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/datatable-lista-asistencia/elemento/' + idElemento,
             type: 'GET',
             dataSrc: function (json) {
+
                 //guardas permisos globalmente
                 permisos = json.permisos;
                 return json.data;
@@ -50,26 +51,31 @@ document.addEventListener('DOMContentLoaded', () => {
             orderable: true,
             searchable: true
         },
-            {
-            data: 'hora',
-            render: function (data, type) {
+            {data: 'estado', width: '100px', className: 'text-center align-middle',
+            render: function (data) {
+            const estatus = Number(data);
 
-                if (!data) return '';
+            let clase = '';
+            let texto = '';
 
-                if (type !== 'display') {
-                    return data;
-                }
+            switch (estatus) {
 
-                const hora = new Date('1970-01-01T' + data);
+            case 0:
+            clase = 'danger';
+            texto = 'Pendiente';
+            break;
 
-                return hora.toLocaleTimeString('es-MX', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: true
-                });
+            case 1:
+            clase = 'success';
+            texto = 'Finalizado';
+            break;
+
             }
-        },
+
+            return `<span class="badge rounded-pill bg-${clase}">${texto}</span>`;
+            }
+
+            },
              
             {
                 data: null,
@@ -91,7 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                                    ${!noEdit ? '' : `
+                                    @click='async () => {
+                                    const res = await goTo("/lista-asistencia/${row.id}");
+                                    }'
+                                    `}>
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
