@@ -32,15 +32,19 @@ class PoliticaController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
-                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                '/libs/select2/dist/css/select2.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/sasisopa/politica.datatable.init.js?v=1.3',
-                '/js/sasisopa/listaasistencia.datatable.init.js?v=1.7',
+                '/libs/select2/dist/js/select2.full.min.js',
+                '/libs/select2/dist/js/select2.min.js',
+                '/js/sasisopa/politica.datatable.init.js?v=1.0',
                 '/js/sasisopa/politica.actions.init.js',
-                '/js/sasisopa/listacomprobacion.actions.init.js?v=1.4',
+                '/js/sasisopa/listacomprobacion.actions.init.js?v=1.0',
+                '/js/asistencia/listaasistencia.datatable.init.js?v=1.6',
+                '/js/asistencia/listaasistencia.actions.init.js?v=1.4'
             ],
             'help' => true
         ];
@@ -547,4 +551,5 @@ class PoliticaController extends BaseController
 
         $dompdf->stream("Lista-comprobacion.pdf", ["Attachment" => true]);
     }
+
     }

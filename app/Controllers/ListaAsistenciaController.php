@@ -1,11 +1,16 @@
 <?php
 namespace App\Controllers;
+
+use App\Core\Breadcrumb;
+use App\Core\View;
+
 use App\Models\Estacion;
 use App\Models\Usuario;
 use App\Models\Sasisopa\ListaAsistencia;
 use App\Models\Sasisopa\ListaAsistenciaDetalle;
 use App\Models\Sasisopa\ListaAsistenciaEvidencia;
 use App\Models\Sasisopa\ComunicacionIE;
+use App\Models\Sgm\Autorizado;
 use App\Services\ModuloService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -13,7 +18,112 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 
 class ListaAsistenciaController extends BaseController{
         protected string $modulo = 'sasisopa';
-        public function datatableListaAsistencia($elemento){
+
+        public function indexListaAsistencia($id){
+        
+        $asistencia = ListaAsistencia::where('id', $id)
+        ->where('id_estacion', $this->estacionId())
+        ->first();
+
+        if (!$asistencia) {
+            header("Location: /404");
+            exit;
+        }
+
+        if ($asistencia->realizadopor == 0) {
+        $title = "Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)";
+            $bcModulo = 'SASISOPA';
+            $bcUrl = '/sasisopa';
+
+        if($asistencia->punto_sasisopa == 1 ){
+            $bcSubModulo = '1. POLÍTICA';
+            $bcSubUrl = '/sasisopa/politica';
+        }
+
+        } else {
+        $title = "Fo.SGM.001 Lista de asistencia";
+
+            $bcModulo = 'SGM';
+            $bcUrl = '/sgm';
+
+            if($asistencia->punto_sasisopa == 104 ){
+            $bcSubModulo = '';
+            $bcSubUrl = '';
+            }
+        }
+
+        // Buscar permisos de los modulos
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add($bcModulo, $bcUrl);
+        Breadcrumb::add($bcSubModulo, $bcSubUrl);        
+        Breadcrumb::add($title, '');
+
+        $encargados = Usuario::where('id_gas', $this->estacionId())
+        ->where('id_puesto', 6)
+        ->activo()
+        ->orderBy('nombre')
+        ->get(['nombre']);
+
+        $usuariosAsignados = ListaAsistenciaDetalle::where('id_lista_asistencia', $id)
+        ->pluck('usuario');
+
+        $personal = Usuario::activo()
+        ->where('id_gas', $this->estacionId())
+        ->when(!empty($usuariosAsignados), function ($query) use ($usuariosAsignados) {
+            $query->whereNotIn('nombre', $usuariosAsignados);
+        })->get(['id', 'nombre']);
+
+         $data = [
+            'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'filtro_usuario' => $this->filtro_usuario,
+            'idListaAsistencia' => $id,
+            'asistencia' => $asistencia,
+            'encargados' => $encargados,
+            'personal' => $personal,
+             'links' =>[
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                '/libs/select2/dist/css/select2.min.css'
+            ],
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/libs/select2/dist/js/select2.full.min.js',
+                '/libs/select2/dist/js/select2.min.js',
+                '/js/asistencia/listaasistenciafirma.datatable.init.js?v=1.3',
+                '/js/asistencia/listaasistencia.actions.init.js?v=1.7'
+            ],
+            'help' => true
+        ];
+        
+        View::render('asistencia/asistencia', $data,'sasisopa');
+
+        }
+    
+        public function datatableFirmaListaAsistencia($id){
+
+            // permisos
+        $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
+
+        $data = ListaAsistenciaDetalle::where('id_lista_asistencia', $id)->get();
+        $rutaPublica = $_ENV['APP_URL'] . '/uploads/firma-personal/';
+
+         echo json_encode([
+            "data" => $data,
+            "permisos" => [
+                "eliminar" => $permisoEliminar
+            ],
+            "urlFirma" => $rutaPublica
+
+        ]);
+        
+        exit;
+
+        }
+    public function datatableListaAsistencia($elemento){
          // permisos
         $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
@@ -21,7 +131,7 @@ class ListaAsistenciaController extends BaseController{
 
         $data = ListaAsistencia::where('punto_sasisopa', $elemento)
         ->where('id_estacion', $this->estacionId())
-        ->orderBy('fecha')
+        ->orderBy('id', 'desc')
         ->get();
 
          echo json_encode([
@@ -34,6 +144,81 @@ class ListaAsistenciaController extends BaseController{
         ]);
         
         exit;
+    }
+
+    public function createListaAsistencia(){
+        header('Content-Type: application/json; charset=utf-8');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $punto = $data['punto_sasisopa'] ?? null;
+        $herramienta = $data['herramienta'] ?? null;
+
+         if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para crear'
+            ]);
+            exit;
+        }
+
+        if (!$punto) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Dato requerido'
+            ]);
+            return;
+        }
+
+        Capsule::beginTransaction();
+
+        try {
+
+            $estacion = $this->estacionId();
+            $usuario = $this->userId();
+
+            // buscar autorizado
+            if($herramienta == 2){
+                $realizadopor = Autorizado::join('tb_usuarios', 'sgm_autorizado.id_usuario', '=', 'tb_usuarios.id')
+                ->where('tb_usuarios.id_gas', $estacion)
+                ->where('sgm_autorizado.estado', 1)
+                ->value('sgm_autorizado.id_usuario') ?? 0;
+            }else{
+                $realizadopor = 0; 
+            }
+
+            // crear registro (AUTO INCREMENT, ya no necesitas id manual)
+            $asistencia = ListaAsistencia::create([
+                'id_estacion'     => $estacion,
+                'id_usuario'      => $usuario,
+                'punto_sasisopa'  => $punto,
+                'fecha'           => date('Y-m-d'),
+                'hora'            => date('H:i:s'),
+                'lugar'           => '',
+                'tema'            => '',
+                'finalidad'       => '',
+                'encargado'       => '',
+                'realizadopor'    => $realizadopor,
+                'estado'          => 0
+            ]);
+
+            Capsule::commit();
+
+            echo json_encode([
+                'success' => true,
+                'id' => $asistencia->id,
+                'message' => 'Lista de asistencia guardada correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Capsule::rollBack();
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     public function deleteListaAsistencia(){
@@ -252,6 +437,176 @@ class ListaAsistenciaController extends BaseController{
         $dompdf->render();
 
         $dompdf->stream("Registro-atención-seguimiento-comunicación-interna-externa.pdf", ["Attachment" => true]);
+    }
+
+    public function updateListaAsistencia(){
+
+    header('Content-Type: application/json; charset=utf-8');
+    $data = json_decode(file_get_contents('php://input'), true);
+
+     if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para editar'
+            ]);
+            exit;
+        }
+
+        try {
+
+        $asistencia = ListaAsistencia::find($data['id']);
+
+        if (!$asistencia) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Registro no encontrado'
+            ]);
+            return;
+        }
+
+        $asistencia->update([
+            'fecha' => $data['fecha'],
+            'hora' => $data['hora'],
+            'lugar' => $data['lugar'],
+            'encargado' => $data['encargado'],
+            'tema' => $data['tema'],
+            'finalidad' => $data['finalidad'],
+            'estado' => 1
+        ]);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Actualizado correctamente'
+        ]);
+
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
+    }
+
+    public function createFirmaListaAsistencia()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $id = $data['id_lista_asistencia'] ?? null;
+        $personal = $data['personal'] ?? [];
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para crear'
+            ]);
+            exit;
+        }
+
+        if (!$id || empty($personal)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Datos incompletos'
+            ]);
+            return;
+        }
+
+        try {
+
+            // TRAES TODOS LOS USUARIOS EN UNA SOLA CONSULTA
+            $usuarios = Usuario::with('puesto')
+                ->whereIn('nombre', $personal)
+                ->where('estatus', 0)
+                ->get()
+                ->keyBy('nombre');
+
+            foreach ($personal as $nombre) {
+
+                $usuario = $usuarios[$nombre] ?? null;
+
+                if (!$usuario) continue;
+
+                ListaAsistenciaDetalle::create([
+                    'id_lista_asistencia' => $id,
+                    'usuario' => $usuario->nombre,
+                    'puesto' => $usuario->puesto->tipo_puesto ?? '',
+                    'firma' => $usuario->firma ?? ''
+                ]);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Personal guardado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteFirmaListaAsistencia(){
+
+         header('Content-Type: application/json; charset=utf-8');
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+
+         if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para eliminar'
+            ]);
+            exit;
+        }
+
+         if (!$id) {
+            echo json_encode(['success' => false,'message' => 'ID requerido']);
+            exit;
+        }
+
+         Capsule::beginTransaction();
+         try {
+
+            // Buscar registro
+            $detalle = ListaAsistenciaDetalle::find($id);
+
+            if (!$detalle) {
+                echo json_encode([
+                'success' => false,
+                'message' => 'Registro no encontrado'
+            ]);
+            return;
+            }
+
+            $nombre = $detalle->usuario;
+
+            // Eliminar registro
+            $detalle->delete();           
+
+            Capsule::commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Firma eliminada correctamente',
+                'nombre' => $nombre
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Capsule::rollBack();
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
     }
 
 }
