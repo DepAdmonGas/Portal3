@@ -472,7 +472,7 @@ class AditivoController extends BaseController{
             }
 
             // Ruta archivo
-            $rutaBase = __DIR__ . '../../../public/uploads/archivos/';
+            $rutaBase = __DIR__ . '../../../public/uploads/archivos/bitacora-aditivo/';
             $rutaArchivo = $rutaBase . $reporte->documento;
 
             // TRANSACCIÓN

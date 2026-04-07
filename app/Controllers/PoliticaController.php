@@ -43,8 +43,8 @@ class PoliticaController extends BaseController
                 '/js/sasisopa/politica.datatable.init.js?v=1.0',
                 '/js/sasisopa/politica.actions.init.js',
                 '/js/sasisopa/listacomprobacion.actions.init.js?v=1.0',
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.6',
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.4'
+                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0',
+                '/js/asistencia/listaasistencia.actions.init.js?v=1.0'
             ],
             'help' => true
         ];

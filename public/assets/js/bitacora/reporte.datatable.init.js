@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 href="javascript:void(0)"
                                 class="dropdown-item ${noDesc ? 'disabled' : ''}"
                                 ${noDesc ? '' : `
-                                @click="download('basico','${row.documento}')"
+                                @click="download('bitacora-aditivo','${row.documento}')"
                                 `}
                             >
                                 <i class="ti ti-file-download"></i> Descargar

@@ -10,8 +10,7 @@ class DownloadController{
         $file  = $_GET['file'] ?? null;
 
         if (!$tipo || !$file) {
-            http_response_code(400);
-            echo 'Parámetros inválidos';
+            header("Location: /404");
             exit;
         }
 
@@ -20,7 +19,8 @@ class DownloadController{
 
         // MAPA DE CARPETAS (CONTROLADO)
         $rutas = [
-            'basico' => __DIR__ . '../../../public/uploads/archivos/'
+            'bitacora-aditivo' => __DIR__ . '../../../public/uploads/archivos/bitacora-aditivo/',
+            'analisis-riesgo' => __DIR__ . '../../../public/uploads/archivos/analisis-riesgo/'
         ];
 
         if (!isset($rutas[$tipo])) {
@@ -32,8 +32,7 @@ class DownloadController{
         $ruta = $rutas[$tipo] . $file;
 
         if (!file_exists($ruta)) {
-            http_response_code(404);
-            echo 'Archivo no encontrado';
+            header("Location: /404");
             exit;
         }
 
