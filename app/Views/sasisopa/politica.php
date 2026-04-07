@@ -357,7 +357,7 @@
 
 <!-- ------------------------- -->
 <!-- inicio offcanvas -------- -->
-  <div class="offcanvas w-30 offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasExampleLabel">
             Bienvenido al elemento 1. POLITICA, del Sistema de Administración

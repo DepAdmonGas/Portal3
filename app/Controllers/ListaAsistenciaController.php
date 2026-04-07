@@ -38,6 +38,9 @@ class ListaAsistenciaController extends BaseController{
         if($asistencia->punto_sasisopa == 1 ){
             $bcSubModulo = '1. POLÍTICA';
             $bcSubUrl = '/sasisopa/politica';
+        }else if($asistencia->punto_sasisopa == 2 ){
+            $bcSubModulo = '2. IDENTIFICACIÓN DE PELIGROS Y ASPECTOS AMBIENTALES, ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES';
+            $bcSubUrl = '/sasisopa/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales';
         }
 
         } else {
@@ -103,7 +106,7 @@ class ListaAsistenciaController extends BaseController{
 
         }
     
-        public function datatableFirmaListaAsistencia($id){
+    public function datatableFirmaListaAsistencia($id){
 
             // permisos
         $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
@@ -122,7 +125,7 @@ class ListaAsistenciaController extends BaseController{
         
         exit;
 
-        }
+    }
     public function datatableListaAsistencia($elemento){
          // permisos
         $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');

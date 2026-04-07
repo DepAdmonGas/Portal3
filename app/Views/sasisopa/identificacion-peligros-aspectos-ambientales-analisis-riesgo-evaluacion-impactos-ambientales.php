@@ -1,5 +1,4 @@
-<div id="container" data-idsasisopa="2">
-
+<div id="container" data-elemento="2" data-herramienta="1">
 
 <div class="row mt-4">
   <div class="col-md-4 d-flex align-items-stretch">
@@ -9,10 +8,10 @@
         <h4 class="card-title">Identificación y evaluación de Aspectos e Impactos Ambientales.</h4>
 
         <div class="text-end">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a href="identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales/aspectos-ambientales-pdf" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-download"></i>
             Descargar
-          </button>
+          </a>
         </div>
 
       </div>
@@ -25,10 +24,10 @@
         <h4 class="card-title">Identificación y evaluación de Riesgos y Peligros para registrar el análisis.</h4>
 
         <div class="text-end">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a href="identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales/riesgos-peligros-pdf" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-download"></i>
             Descargar
-          </button>
+          </a>
         </div>
 
       </div>
@@ -55,9 +54,8 @@
           <th>Fecha</th>
           <th>Descripción</th>
           <th class="text-center">
-          <a class="text-muted"><i class="ti ti-file-text fs-6"></i></a>
+          <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
-          <th>Anexos</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -75,23 +73,28 @@
 <div class="card">
   <div class="card-body">
 
-  <div class="d-flex align-items-center">
-    <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
-      <div class="ms-auto">
-      <button type="button" class="btn">
-        <i class="ti ti-plus fs-7 text-primary"></i>
-        </button>
-      </div>
-  </div>
+      <div class="float-end">
+      <div x-data="{ ...actions(), ...listaasistenciaForm() }">
+        <?= 
+          !empty($permisos['crear']) ? 
+          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+          <i class="ti ti-plus"></i> Nuevo
+          </button>' 
+          : '' 
+        ?>   
+      </div>  
+    </div>
 
-  <div class="datatables mt-3">
+  <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+
+    <div class="datatables mt-4">
     <div class="table-responsive">
-      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-asistencia" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>
            <th>#</th>
             <th>Fecha</th>
-            <th>Hora</th>
+            <th>Estatus</th>
           <th class="text-center">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
@@ -110,6 +113,103 @@
 
 </div>
 
+</div>
+
+<div class="modal fade"
+     id="anexos"
+     tabindex="-1"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     x-data="{ ...actions(), ...anexosForm() }"
+     @open-edit.window="getEdit($event.detail)">
+
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="modal-header">
+                <h4 class="modal-title">Análisis de riesgo Anexos</h4>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body">
+
+          <!-- LOADING -->
+          <div x-show="loading" class="text-center py-3">
+              Cargando...
+          </div>
+
+          <!-- CONTENIDO -->
+          <div x-show="!loading">
+
+              <div class="pb-2">
+                  <div style="font-size: 1.2em;">
+                      <b>Fecha:</b> <span x-text="fecha"></span>
+                  </div>
+
+                  <div style="font-size: 1.2em;">
+                      <b>Descripción:</b> <span x-text="descripcion"></span>
+                  </div>
+              </div>
+
+              <table class="table table-bordered table-striped table-hover">
+                  <thead>
+                      <tr>
+                          <th>Descripción</th>
+                          <th width="32"><i class="ti ti-download fs-6 text-muted"></i></th>
+                      </tr>
+                  </thead>
+
+                  <tbody>
+
+                      <!-- SI HAY DATOS -->
+                      <template x-if="anexos.length > 0">
+                          <template x-for="anexo in anexos" :key="anexo.id">
+                              <tr>
+                                  <td x-text="anexo.descripcion"></td>
+                                  <td class="text-center">
+                                      <a @click="download('analisis-riesgo', anexo.documento)">
+                                          <i class="ti ti-download text-danger fs-6"></i>
+                                      </a>
+                                  </td>
+                              </tr>
+                          </template>
+                      </template>
+
+                      <!-- SIN DATOS -->
+                      <template x-if="anexos.length === 0">
+                          <tr>
+                              <td colspan="2" class="text-center text-muted">
+                                  No se encontró información para mostrar.
+                              </td>
+                          </tr>
+                      </template>
+
+                  </tbody>
+              </table>
+
+          </div>
+
+      </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn bg-danger-subtle text-danger"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+            </div>
+
+        </div>
+    </div>
 </div>
 
 <!-- ------------------------- -->

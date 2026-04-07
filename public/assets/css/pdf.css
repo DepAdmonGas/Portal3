@@ -141,6 +141,31 @@ p {
     padding: 6px;
 }
 
+.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+.table-success,
+.table-success > th,
+.table-success > td {
+  background-color: #c3e6cb;
+}
+.table-danger,
+.table-danger > th,
+.table-danger > td {
+  background-color: #f5c6cb;
+}
+.table-secondary,
+.table-secondary > th,
+.table-secondary > td {
+  background-color: #d6d8db;
+}
+.table-warning,
+.table-warning > th,
+.table-warning > td {
+  background-color: #ffeeba;
+}
+
 /* ===== BADGES ===== */
 .badge {
     display: inline-block;
@@ -188,4 +213,8 @@ p {
 
 .p-3 {
   padding: 1rem !important;
+}
+
+.text-white {
+  color: #fff !important;
 }
