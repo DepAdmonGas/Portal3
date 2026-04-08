@@ -38,10 +38,10 @@ break;
 
 case 1:
 case 2:
-case 3:
 color = '#fcfcda'; // amarillo
 break;
 
+case 3:
 case 4:
 color = '#b0f2c2'; // verde
 break;
@@ -99,11 +99,11 @@ texto = 'En proceso';
 break;
 
 case 2:
-case 3:
 clase = 'success';
 texto = 'Finalizado';
 break;
 
+case 3:
 case 4:
 clase = 'info';
 texto = 'Entregada';

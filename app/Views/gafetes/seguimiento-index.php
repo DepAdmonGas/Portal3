@@ -21,7 +21,7 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>"  data-reporte=
 <div class="col-xl-8 col-lg-8 col-md-6 col-sm-12">
 <div class="card">
 <div class="card-header text-bg-primary">
-<h5 class="mb-0 text-white"><i class="fs-4 ti ti-chart-line"></i> Gafetes solicitados</h5>
+<h5 class="mb-0 text-white"><i class="fs-4 ti ti-id-badge"></i> Gafetes solicitados</h5>
 </div>
 <div class="card-body">
 <div class="datatables">

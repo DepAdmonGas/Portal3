@@ -92,14 +92,31 @@ return function(RouteCollector $r) {
         $r->addRoute('GET','/seguimiento/timeline/{idEstacion}/{noReporte}',Route::auth(['GafetesController', 'timelineSeguimiento']));
         $r->addRoute('POST', '/seguimiento/update', Route::auth(['GafetesController', 'updateSeguimientoGafetes']));
         
-
-
     });
 
     // ---------------- TARJETAS ----------------
     $r->addGroup('/solicitud-tarjetas', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['TarjetasController', 'index']));
         $r->addRoute('GET', '/datatable', Route::auth(['TarjetasController', 'datatableTarjetas']));
+        $r->addRoute('POST', '/create-reporte', Route::auth(['TarjetasController', 'createReporte']));
+        $r->addRoute('POST', '/delete-reporte', Route::auth(['TarjetasController', 'deleteReporte']));
+
+        $r->addRoute('GET','/formulario/{idEstacion}/{noSolicitud}',Route::auth(['TarjetasController', 'formularioReporte']));
+        $r->addRoute('GET','/datatable-formulario/{idEstacion}/{noSolicitud}',Route::auth(['TarjetasController', 'datatableTarjetasFormulario']));
+        $r->addRoute('POST', '/create-reporte-formulario', Route::auth(['TarjetasController', 'createReporteFormulario']));
+        $r->addRoute('POST', '/update-reporte-formulario', Route::auth(['TarjetasController', 'updateReporteFormulario']));
+        $r->addRoute('POST', '/delete-reporte-formulario', Route::auth(['TarjetasController', 'deleteReporteFormulario']));
+
+        $r->addRoute('GET','/seguimiento/timeline/{idEstacion}/{noSeguimiento}',Route::auth(['TarjetasController', 'timelineSeguimiento']));
+        $r->addRoute('GET','/archivo/{idEstacion}/{noSeguimiento}',Route::auth(['TarjetasController', 'obtenerArchivoTarjeta']));
+        $r->addRoute('POST', '/seguimiento/update', Route::auth(['TarjetasController', 'updateSeguimientoTarjetas']));
+
+        $r->addRoute('GET','/detalle/{idEstacion}/{noSolicitud}',Route::auth(['TarjetasController', 'formularioSeguimiento']));
+        $r->addRoute('POST', '/comentarios/update', Route::auth(['TarjetasController', 'updateComentarioTarjetas']));
+
+
+
+
     });
 
     // ---------------- CONFIGURACION SISTEMAS ----------------
