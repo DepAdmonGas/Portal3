@@ -1,7 +1,7 @@
 <div id="container" class="mb-4">
 
 <?php
-//if ($utilitiesUser['idPuestoUser'] == "6") {
+if ($utilitiesUser['idPuestoUser'] == "6") {
 echo !empty($permisos['crear']) ? '
 <div class="row">
 <div class="col-12 mb-4">
@@ -11,7 +11,7 @@ echo !empty($permisos['crear']) ? '
 </div>
 </div>
 ' : '';
-//}
+}
 ?>
   
 <div class="datatables">

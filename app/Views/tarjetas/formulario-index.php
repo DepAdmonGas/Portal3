@@ -1,50 +1,51 @@
-<div id="container" class="mb-4">
+<div class="mb-4" x-data="{ ...actions(), ...seguimientoForm() }"
+x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimiento="<?= $noSolicitud ?>" data-puesto="<?= $utilitiesUser['idPuestoUser'] ?>">
+ 
+<div class="row mt-3 mb-3">
+<div class="col-8"> <span class="badge rounded-pill bg-success">No. de Solicitud: <?=$noSolicitud?></span></div>
 
-<?php
-if ($utilitiesUser['idPuestoUser'] == "6") {
-echo !empty($permisos['crear']) ? '
-<div class="row">
-<div class="col-12 mb-4">
-<button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#nuevo">
-<i class="ti ti-plus"></i> Nuevo
+<div class="col-4 d-flex justify-content-end align-items-center gap-2">
+<div class="text-end">
+<div class="btn-group">
+<button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<i class="ti ti-dots-vertical fs-4"></i>
 </button>
+<ul class="dropdown-menu animated rubberBand">
+<?= !empty($permisos['crear']) ? '<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nuevo"> <i class="ti ti-plus"></i> Nuevo </a></li>' : '' ?>
+<div id="botonDescargaFile"></div>
+<div id="botonSeguimiento"></div>
+</ul>
 </div>
 </div>
-' : '';
-}
-?>
+
+</div>
+</div>
 
 <div class="datatables">
 <div class="table-responsive">
-<table id="table-tarjetas" class="table  table-bordered mb-0 text-nowrap align-middle">
+<table id="table-tarjetas-formulario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>
 </div>
-</div> 
+</div>     
 
 </div>
 
 
 <!---------- MODAL AGREGAR TARJETAS ---------->
 <div class="modal fade" id="nuevo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
-x-data="{ ...actions(), ...tarjetasForm() }" @open-edit.window="openEdit($event.detail)">
+x-data="{ ...actions(), ...tarjetasForm() }" @open-edit.window="openEdit($event.detail)" data-estacion-modal="<?= $idEstacion ?>" data-solicitud="<?= $noSolicitud ?>">
 
 <div class="modal-dialog modal-dialog-scrollable modal-lg">
 <div class="modal-content">
 
 <!-- HEADER -->
 <div class="modal-header">
-<h4 class="modal-title">Crear registro</h4>
+<h4 class="modal-title" x-text="mode === 'create' ? 'Crear registro' : 'Editar registro'"></h4>
 <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetForm()"></button>
 </div>
 
 <div class="modal-body">
-
-<!-- ARCHIVO -->
-<label class="form-label">Cargar archivo:</label>
-<input type="file" class="form-control" x-ref="archivo" @change="handleFile($event)" :class="errors.archivo ? 'is-invalid' : ''">
-
-<hr>
 
 <!-- RAZON SOCIAL -->
 <label class="form-label">* Razon social:</label>
@@ -72,7 +73,7 @@ x-data="{ ...actions(), ...tarjetasForm() }" @open-edit.window="openEdit($event.
 
 <!-- TIPO DE TARJETA -->
 <label class="form-label">* Tipo de tarjeta:</label>
-<select class="form-control mb-3" x-model="tipo_tarjeta" @change="errors.tipo_tarjeta = false":class="errors.tipo_tarjeta ? 'is-invalid' : ''">
+<select class="form-select mb-3" x-model="tipo_tarjeta" @change="errors.tipo_tarjeta = false":class="errors.tipo_tarjeta ? 'is-invalid' : ''">
 <option value="">Selecciona una opción...</option>
 <option value="Cliente Nuevo">Cliente Nuevo</option>
 <option value="Tarjeta Adicional">Tarjeta Adicional</option>
@@ -94,5 +95,4 @@ x-data="{ ...actions(), ...tarjetasForm() }" @open-edit.window="openEdit($event.
 </div>
 </div>
 </div>
-
 

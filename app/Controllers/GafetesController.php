@@ -66,7 +66,8 @@ $mostrar_fila_estacion = ((int)$idEstacion === 8);
 
 $query = SolicitudGafetes::from('tb_solicitud_gafetes as g')
 ->leftJoin('tb_estaciones as e', 'g.id_estacion', '=', 'e.nombre')
-->select('g.*', 'e.id as id_estacion_real');
+->select('g.*', 'e.id as id_estacion_real')
+->groupBy('g.no_reporte');
 
 // Filtro si la sesion de la estacion no es 8
 if (!empty($idEstacion) && (int)$idEstacion !== 8) {
@@ -611,18 +612,61 @@ View::render('gafetes/seguimiento-index', $data,'main');
 
 public function timelineSeguimiento($idEstacion, $noReporte)
 {
+
 $seguimientos = SolicitudGafetesSeguimiento::with('usuario')
 ->where('id_estacion', $idEstacion)
 ->where('no_reporte', $noReporte)
 ->orderBy('seguimiento')
 ->get();
- 
+
+if ($seguimientos->isEmpty()) {
+
+$datosEstacion = Estacion::find($idEstacion);
+
+$solicitud = SolicitudGafetes::where('id_estacion', $datosEstacion->nombre)
+->where('no_reporte', $noReporte)
+->first();
+
+if ($solicitud) {
+
+switch ($solicitud->estatus) {
+case 0:
+$pasos = [1];
+break;
+
+case 1:
+case 2:
+$pasos = [1, 2];
+break;
+
+case 3:
+case 4:
+$pasos = [1, 2, 3];
+break;
+
+default:
+$pasos = [];
+break;
+}
+
+$seguimientos = collect($pasos)->map(function ($paso) use ($solicitud) {
+return (object)[
+'seguimiento' => $paso,
+'fecha_hora' => $solicitud->fecha,
+'usuario' => (object)[
+'nombre' => 'Sin información'
+]
+];
+});
+}
+}
+
 echo json_encode([
 'data' => $seguimientos->map(function($data){
 return [
 'seguimiento' => $data->seguimiento,
 'fecha_hora' => $data->fecha_hora,
-'usuario' => $data->usuario->nombre ?? 'Sin informacion'
+'usuario' => $data->usuario->nombre ?? 'Sistema'
 ];
 })
 ]);
@@ -677,6 +721,7 @@ $ultimo_seguimiento = SolicitudGafetesSeguimiento::where('id_estacion', $idEstac
 
 $ultimo_seguimiento = $ultimo_seguimiento ?? 0;
 
+/*
 if ($idSeguimiento != ($ultimo_seguimiento + 1)) {
 echo json_encode([
 'success' => false,
@@ -684,6 +729,8 @@ echo json_encode([
 ]);
 exit;
 }
+*/
+
 Capsule::beginTransaction();
 
 try {

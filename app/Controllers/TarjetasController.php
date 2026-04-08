@@ -2,28 +2,40 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Models\SolicitudTarjetas;
+use App\Models\SolicitudTarjetasImagen;
+use App\Models\SolicitudTarjetasSeguimiento;
 use App\Core\Breadcrumb;
+use App\Models\Usuario;
 use App\Services\ModuloService;
 use App\Core\Session;
 use App\Models\Estacion;
+use App\Core\Auth;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
-class TarjetasController{
+class TarjetasController extends BaseController{
+protected string $modulo = 'solicitud-tarjetas';
  
 public function index(){
 
 $title = 'Solicitud de Tarjetas';
-$modulo = 'solicitud-tarjetas';
+
+$datosUsuario = Auth::user();
+$idPuesto = $datosUsuario->id_puesto;
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add($title, '');
 
 // Buscar permisos de los modulos
-$permisos = ModuloService::permisosSesion($modulo);
+$permisos = ModuloService::permisosSesion($this->modulo);
 
 $data = [
 'title' => $title,
 'permisos' => $permisos,
-'modulo' => $modulo,
+'modulo' => $this->modulo,
+'filtro_usuario' => $this->filtro_usuario,
+'utilitiesUser' =>[
+'idPuestoUser' => $idPuesto
+],
 'links' =>[
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
@@ -31,6 +43,7 @@ $data = [
 '/assets/js/vendor.min.js',
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/js/tarjetas/tarjetas.datatable.init.js',
+'/assets/js/tarjetas/actions.init.js?v=1.0'
 ]
 ];
 
@@ -38,27 +51,816 @@ View::render('tarjetas/index', $data, 'main');
 }
 
 public function datatableTarjetas(){
+
 $filtro_usuario = Session::get('usuario');
 $idEstacion = $filtro_usuario['id_estacion'] ?? null;
-$query = SolicitudTarjetas::query();
 
-if ($idEstacion && $idEstacion != 8) {
+$permisoLeer     = ModuloService::validaPermiso($this->modulo, 'leer');
+$permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
+$permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
+$mostrar_fila_estacion = ((int)$idEstacion === 8);
+
+$query = SolicitudTarjetas::from('tb_solicitud_tarjetas as g')
+->leftJoin('tb_estaciones as e', 'g.id_estacion', '=', 'e.nombre')
+->select('g.*', 'e.id as id_estacion_real')
+->groupBy('g.no_solicitud');
+
+// Filtro si la sesion de la estacion no es 8
+if (!empty($idEstacion) && (int)$idEstacion !== 8) {
 $estacion = Estacion::find($idEstacion);
 
 if ($estacion) {
-$query->where('id_estacion', $estacion->nombre);
+$query->where('g.id_estacion', $estacion->nombre);
 }
 }
 
 $tarjetas = $query
-->groupBy('no_solicitud')
+->orderBy('g.id', 'desc')
 ->get();
 
 echo json_encode([
-"data" => $tarjetas
+"data" => $tarjetas,
+"permisos" => [
+"leer"     => $permisoLeer,
+"editar"   => $permisoEditar,
+"eliminar" => $permisoEliminar,
+"mostrar_fila_estacion" => $mostrar_fila_estacion
+]
 ]);
 
 exit;
+
+}
+
+public function createReporte()
+{
+
+header('Content-Type: application/json; charset=utf-8');
+$data = json_decode(file_get_contents('php://input'), true);
+
+if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+echo json_encode([
+'success' => false,
+'message' => 'No tienes permiso para crear'
+]);
+exit;
+}
+
+// DATA (multipart → usar $_POST)
+$id = $_POST['id'] ?? null;
+$file  = $_FILES['archivo'] ?? null;
+$razon_social = $_POST['razon_social'] ?? null;
+$nombre_usuario = $_POST['nombre_usuario'] ?? null;
+$vehiculo = $_POST['vehiculo'] ?? null;
+$placas = $_POST['placas'] ?? null;
+$no_unidad = $_POST['no_unidad'] ?? null;
+$tarjeta = $_POST['tarjeta'] ?? null;
+$tipo_tarjeta = $_POST['tipo_tarjeta'] ?? null;
+$comentarios = '';
+$status = 0;
+
+if (!$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
+echo json_encode([
+'success' => false,
+'message' => 'Datos incompletos incompletos'
+]);
+exit;
+}
+
+// CONFIG RUTA
+$carpeta = __DIR__ . '../../../public/uploads/archivos/solicitud-tarjetas/';
+if (!file_exists($carpeta)) {
+mkdir($carpeta, 0777, true);
+}
+
+$nombreArchivo = null;
+try {
+
+// SUBIR ARCHIVO (opcional)
+if ($file && $file['error'] === UPLOAD_ERR_OK) {
+// Validar extensión
+$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+// nombre único
+$nombreArchivo = uniqid('rep_') . '.' . $extension;
+$rutaDestino = $carpeta . $nombreArchivo;
+
+if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {
+throw new \Exception('No se pudo guardar el archivo');
+}
+}
+
+// Obtener el usuario
+$idUsuario = $this->userId();
+$datosUsuario = Usuario::find($idUsuario);
+
+// Obtener la estacion 
+$idEstacion = $this->estacionId();
+$datosEstacion = Estacion::find($idEstacion);
+
+// Obtener el max(no_solicitud) por estación
+$maxSolicitud = SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
+->max('no_solicitud');
+
+$id_reporte = $maxSolicitud ? $maxSolicitud + 1 : 1;
+$no_solicitud = ($id == 0) ? $id_reporte : $id;
+
+Capsule::beginTransaction();
+
+try {
+
+// GUARDAR EN BD
+SolicitudTarjetas::create([
+'no_solicitud' => $no_solicitud,
+'id_estacion' => $datosEstacion->nombre,
+'id_usuario' => $datosUsuario->nombre,
+'fecha' => date('Y-m-d'),
+'razon_social' => $razon_social,  
+'no_flotilla' => $nombre_usuario,
+'vehiculo' => $vehiculo,  
+'placas' => $placas,
+'no_unidad' => $no_unidad,  
+'tarjeta' => $tarjeta,
+'tipo_tarjeta' => $tipo_tarjeta,  
+'comentarios' => $comentarios,
+'estatus' => $status,
+]);
+
+// 🔥 GUARDAR IMAGEN SOLO SI EXISTE
+if ($nombreArchivo) {
+SolicitudTarjetasImagen::create([
+'ruta'         => $nombreArchivo,
+'no_solicitud' => $no_solicitud,
+'estacion'     => $datosEstacion->nombre,
+]);
+}
+
+Capsule::commit();
+
+echo json_encode([
+'success' => true,
+'message' => 'Solicitud guardada correctamente',
+'idEstacion' => $idEstacion,
+'no_solicitud' => $no_solicitud
+]);
+
+} catch (\Throwable $e) {
+// Si falla BD, borrar archivo
+if ($nombreArchivo && file_exists($carpeta . $nombreArchivo)) {
+unlink($carpeta . $nombreArchivo);
+}
+
+echo json_encode([
+'success' => false,
+'message' => $e->getMessage(),
+'idEstacion' => 0,
+'no_solicitud' => 0
+]);
+}
+
+} catch (\Exception $e) {
+Capsule::rollBack();
+
+echo json_encode([
+'success' => false,
+'message' => $e->getMessage()
+]);
+
+}
+}
+
+public function deleteReporte(){
+header('Content-Type: application/json; charset=utf-8');
+$data = json_decode(file_get_contents('php://input'), true);
+$id = $data['id'] ?? null;
+
+if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+echo json_encode([
+'success' => false,
+'message' => 'No tienes permiso para eliminar'
+]);
+exit;
+}
+
+if (!$id) {
+echo json_encode(['success' => false,'message' => 'ID requerido']);
+exit;
+}
+
+$solicitud_principal = SolicitudTarjetas::find($id);
+if (!$solicitud_principal) {
+echo json_encode(['success' => false, 'message' => 'No. de solicitud no encontrado']);
+exit;
+}
+
+try {
+
+$solicitudes = SolicitudTarjetas::where('id_estacion', $solicitud_principal->id_estacion)
+->where('no_solicitud', $solicitud_principal->no_solicitud)
+->get();
+
+if ($solicitudes->isEmpty()) {
+echo json_encode([
+'success' => false,
+'message' => 'Registro no encontrado'
+]);
+exit;
+}
+
+$rutaBase = __DIR__ . '/../../../public/uploads/archivos/solicitud-tarjetas/';
+
+Capsule::beginTransaction();
+
+$imagenes = SolicitudTarjetasImagen::where('no_solicitud', $solicitud_principal->no_solicitud)
+->where('estacion', $solicitud_principal->id_estacion)
+->get();
+
+foreach ($imagenes as $img) {
+
+$rutaArchivo = $rutaBase . $img->ruta;
+if (file_exists($rutaArchivo)) {
+unlink($rutaArchivo);
+}
+
+SolicitudTarjetasImagen::where('id', $img->id)->delete();
+}
+
+foreach ($solicitudes as $solicitud) {
+SolicitudTarjetas::where('id', $solicitud->id)->delete();
+}
+
+Capsule::commit();
+
+echo json_encode([
+'success' => true,
+'message' => 'Reporte e imágenes eliminados correctamente'
+]);
+
+} catch (\Throwable $e) {
+
+Capsule::rollBack();
+
+echo json_encode([
+'success' => false,
+'message' => $e->getMessage()
+]);
+}
+
+}
+
+//---------------------------------------------------//
+//---------- FORMULARIO DEL NO. DE REPORTE ----------//
+//---------------------------------------------------//
+public function formularioReporte($idEstacion, $noSolicitud){
+
+$datosUsuario = Auth::user();
+$idPuesto = $datosUsuario->id_puesto;
+
+$datosEstacion = Estacion::find($idEstacion);
+$title = 'Solicitud de Tarjetas Formulario (' . $datosEstacion->nombre . ')';
+
+Breadcrumb::add('Home', '/home');
+Breadcrumb::add('Solicitud de Tarjetas', '/solicitud-tarjetas');
+Breadcrumb::add($title, '');
+
+// Buscar permisos de los modulos
+$permisos = ModuloService::permisosSesion($this->modulo);
+
+$data = [
+'title' => $title,
+'permisos' => $permisos,
+'modulo' => $this->modulo,
+'idEstacion' => $idEstacion,
+'noSolicitud' => $noSolicitud,
+'utilitiesUser' =>[
+'idPuestoUser' => $idPuesto
+],
+'links' =>[
+'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+],
+'scripts' => [
+'/assets/js/vendor.min.js',
+'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+'/assets/js/tarjetas/tarjetas.formulario.datatable.init.js?v=1.1',
+'/assets/js/tarjetas/actions.formulario.init.js?v=1.0'
+],
+'help' => false
+];
+
+View::render('tarjetas/formulario-index', $data,'main');
+
+}
+
+public function datatableTarjetasFormulario($idEstacion, $noSolicitud)
+{
+
+// permisos
+$permisoEditar = ModuloService::validaPermiso($this->modulo, 'editar');
+$permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
+
+// Obtener la estacion 
+$datosEstacion = Estacion::find($idEstacion);
+$query = SolicitudTarjetas::query();
+
+$tarjetas = $query
+->where('id_estacion', $datosEstacion->nombre)
+->where('no_solicitud', $noSolicitud)
+->get();
+
+echo json_encode([
+"data" => $tarjetas,
+"permisos" => [
+"editar" => $permisoEditar,
+"eliminar" => $permisoEliminar
+]
+]);
+
+exit;
+}
+
+public function createReporteFormulario(){
+
+header('Content-Type: application/json; charset=utf-8');
+$data = json_decode(file_get_contents('php://input'), true);
+
+if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+echo json_encode([
+'success' => false,
+'message' => 'No tienes permiso para crear'
+]);
+exit;
+}
+
+// DATA (multipart → usar $_POST)
+$no_solicitud = $data['no_solicitud'] ?? null;
+$idEstacion = $data['idEstacion'] ?? null;
+$razon_social = $data['razon_social'] ?? null;
+$nombre_usuario = $data['nombre_usuario'] ?? null;
+$vehiculo = $data['vehiculo'] ?? null;
+$placas = $data['placas'] ?? null;
+$no_unidad = $data['no_unidad'] ?? null;
+$tarjeta = $data['tarjeta'] ?? null;
+$tipo_tarjeta = $data['tipo_tarjeta'] ?? null;
+$status = 0;
+
+if (!$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
+echo json_encode([
+'success' => false,
+'message' => 'Datos incompletos incompletos'
+]);
+exit;
+}
+
+try {
+
+// Obtener el usuario
+$idUsuario = $this->userId();
+$datosUsuario = Usuario::find($idUsuario);
+
+// Obtener la estacion 
+$datosEstacion = Estacion::find($idEstacion);
+
+Capsule::beginTransaction();
+
+try {
+    
+// GUARDAR EN BD
+SolicitudTarjetas::create([
+'no_solicitud' => $no_solicitud,
+'id_estacion' => $datosEstacion->nombre,
+'id_usuario' => $datosUsuario->nombre,
+'fecha' => date('Y-m-d'),
+'razon_social' => $razon_social,  
+'no_flotilla' => $nombre_usuario,
+'vehiculo' => $vehiculo,  
+'placas' => $placas,
+'no_unidad' => $no_unidad,  
+'tarjeta' => $tarjeta,
+'tipo_tarjeta' => $tipo_tarjeta,  
+//'comentarios' => $comentarios,
+'estatus' => $status,
+]);
+
+Capsule::commit();
+
+echo json_encode([
+'success' => true,
+'message' => 'Solicitud guardada correctamente'
+]);
+
+
+
+} catch (\Throwable $e) {
+
+echo json_encode([
+'success' => false,
+'message' => $e->getMessage()
+]);
+}
+
+} catch (\Exception $e) {
+
+Capsule::rollBack();
+
+echo json_encode([
+'success' => false,
+'message' => $e->getMessage()
+]);
+
+}
+
+}
+
+
+public function updateReporteFormulario(){
+
+header('Content-Type: application/json');
+$data = json_decode(file_get_contents('php://input'), true);
+
+$id = $data['id'] ?? null;
+$razon_social = $data['razon_social'] ?? null;
+$nombre_usuario = $data['nombre_usuario'] ?? null;
+$vehiculo = $data['vehiculo'] ?? null;
+$placas = $data['placas'] ?? null;
+$no_unidad = $data['no_unidad'] ?? null;
+$tarjeta = $data['tarjeta'] ?? null;
+$tipo_tarjeta = $data['tipo_tarjeta'] ?? null;
+
+if (!$id || !$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
+echo json_encode([
+'success' => false,
+'message' => 'Datos incompletos incompletos'
+]);
+exit;
+}
+
+$registro = SolicitudTarjetas::find($id);
+
+if (!$registro) {
+echo json_encode([
+'success' => false,
+'message' => 'Registro no encontrado'
+]);
+return;
+}
+
+$registro->razon_social = $razon_social;
+$registro->no_flotilla = $nombre_usuario;
+$registro->vehiculo = $vehiculo;
+$registro->placas = $placas;
+$registro->no_unidad = $no_unidad;
+$registro->tarjeta = $tarjeta;
+$registro->tipo_tarjeta = $tipo_tarjeta;
+$registro->save();
+
+echo json_encode([
+'success' => true,
+'message' => 'Registro actualizado correctamente'
+]);
+
+}
+
+public function deleteReporteFormulario(){
+header('Content-Type: application/json; charset=utf-8');
+$data = json_decode(file_get_contents('php://input'), true);
+$id = $data['id'] ?? null;
+
+if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+echo json_encode([
+'success' => false,
+'message' => 'No tienes permiso para eliminar'
+]);
+exit;
+}
+
+if (!$id) {
+echo json_encode(['success' => false,'message' => 'ID requerido']);
+exit;
+}
+
+try {
+ // Buscar registro
+$registro_reporte = SolicitudTarjetas::find($id);
+
+if (!$registro_reporte) {
+echo json_encode(['success' => false, 'message' => 'Registro no encontrado']);
+exit;
+}
+
+// TRANSACCIÓN
+Capsule::beginTransaction();
+
+// Eliminar registro (puedes usar delete o estado = 0)
+$registro_reporte->delete();
+Capsule::commit();
+
+echo json_encode([
+'success' => true,
+'message' => 'Registro eliminado correctamente'
+]);
+
+} catch (\Throwable $e) {
+Capsule::rollBack();
+
+echo json_encode([
+'success' => false,
+'message' => 'Error al eliminar',
+'error'   => $e->getMessage()
+]);
+}
+
+exit;
+}
+
+
+//---------- SEGUIMIENTO DE LA SOLICITUD ----------//
+public function timelineSeguimiento($idEstacion, $noReporte)
+{
+
+$seguimientos = SolicitudTarjetasSeguimiento::with('usuario')
+->where('id_estacion', $idEstacion)
+->where('no_reporte', $noReporte)
+->orderBy('seguimiento')
+->get();
+
+if ($seguimientos->isEmpty()) {
+
+$datosEstacion = Estacion::find($idEstacion);
+
+$solicitud = SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
+->where('no_solicitud', $noReporte)
+->first();
+
+if ($solicitud) {
+
+switch ($solicitud->estatus) {
+case 0:
+$pasos = [1];
+break;
+
+case 1:
+case 2:
+$pasos = [1, 2];
+break;
+
+case 3:
+case 4:
+$pasos = [1, 2, 3];
+break;
+
+default:
+$pasos = [];
+break;
+}
+
+$seguimientos = collect($pasos)->map(function ($paso) use ($solicitud) {
+return (object)[
+'seguimiento' => $paso,
+'fecha_hora' => $solicitud->fecha,
+'usuario' => (object)[
+'nombre' => 'Sin información'
+]
+];
+});
+}
+}
+
+echo json_encode([
+'data' => $seguimientos->map(function($data){
+return [
+'seguimiento' => $data->seguimiento,
+'fecha_hora' => $data->fecha_hora,
+'usuario' => $data->usuario->nombre ?? 'Sistema'
+];
+})
+]);
+}
+
+//---------- ACTUALIZAR SEGUIMIENTO DE LA SOLICITUD ----------//
+public function updateSeguimientoTarjetas()
+{
+header('Content-Type: application/json; charset=utf-8');
+$data = json_decode(file_get_contents('php://input'), true);
+
+$idEstacion = $data['idEstacion'] ?? null;
+$no_reporte = $data['no_reporte'] ?? null;
+$idSeguimiento = $data['idSeguimiento'] ?? null;
+
+if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+echo json_encode([
+'success' => false,
+'message' => 'Sin permisos'
+]);
+return;
+}
+
+if (!$idEstacion || !$no_reporte || !$idSeguimiento) {
+echo json_encode([
+'success' => false,
+'message' => 'Datos incompletos'
+]);
+exit;
+}
+
+$datosEstacion = Estacion::find($idEstacion);
+
+try {
+
+$registro_existente = SolicitudTarjetasSeguimiento::where('id_estacion', $idEstacion)
+->where('no_reporte', $no_reporte)
+->where('seguimiento', $idSeguimiento)
+->exists();
+
+if ($registro_existente) {
+echo json_encode([
+'success' => false,
+'message' => 'Este seguimiento ya fue registrado'
+]);
+exit;
+}
+
+$ultimo_seguimiento = SolicitudTarjetasSeguimiento::where('id_estacion', $idEstacion)
+->where('no_reporte', $no_reporte)
+->max('seguimiento');
+
+$ultimo_seguimiento = $ultimo_seguimiento ?? 0;
+
+/*
+if ($idSeguimiento != ($ultimo_seguimiento + 1)) {
+echo json_encode([
+'success' => false,
+'message' => 'El seguimiento no es válido en el orden'
+]);
+exit;
+}
+*/
+
+Capsule::beginTransaction();
+
+try {
+
+SolicitudTarjetasSeguimiento::create([
+'id_estacion' => $idEstacion,
+'no_reporte'  => $no_reporte,
+'seguimiento' => $idSeguimiento,
+'id_usuario'     => $this->userId()
+]);
+
+if ($idSeguimiento == 1) {
+SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
+->where('no_solicitud', $no_reporte)
+->update(['estatus' => 1]);
+}else if($idSeguimiento == 2){
+SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
+->where('no_solicitud', $no_reporte)
+->update(['estatus' => 2]);
+}else if($idSeguimiento == 3){
+SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
+->where('no_solicitud', $no_reporte)
+->update(['estatus' => 4]);
+}
+
+Capsule::commit();
+
+echo json_encode([
+'success' => true,
+'message' => 'Seguimiento guardado correctamente'
+]);
+
+} catch (\Throwable $e) {
+
+Capsule::rollBack();
+
+echo json_encode([
+'success' => false,
+'message' => $e->getMessage()
+]);
+}
+
+} catch (\Throwable $e) {
+
+Capsule::rollBack();
+
+echo json_encode([
+'success' => false,
+'message' => $e->getMessage()
+]);
+}
+
+}
+
+//---------------------------------------------------//
+//----------- FORMULARIO DEL SEGUIMIENTO -----------//
+//-------------------------------------------------//
+public function formularioSeguimiento($idEstacion, $noSolicitud){
+
+$datosUsuario = Auth::user();
+$idPuesto = $datosUsuario->id_puesto;
+
+$datosEstacion = Estacion::find($idEstacion);
+$title = 'Detalle Solicitud de Tarjetas (' . $datosEstacion->nombre . ')';
+
+Breadcrumb::add('Home', '/home');
+Breadcrumb::add('Solicitud de Tarjetas', '/solicitud-tarjetas');
+Breadcrumb::add($title, '');
+// Buscar permisos de los modulos
+$permisos = ModuloService::permisosSesion($this->modulo);
+
+$data = [
+'title' => $title,
+'permisos' => $permisos,
+'modulo' => $this->modulo,
+'idEstacion' => $idEstacion,
+'noSolicitud' => $noSolicitud,
+'utilitiesUser' =>[
+'idPuestoUser' => $idPuesto
+],
+'links' =>[
+'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+],
+'scripts' => [
+'/assets/js/vendor.min.js',
+'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+'/assets/js/tarjetas/tarjetas.detalle.datatable.init.js?v=1.1',
+'/assets/js/tarjetas/tarjetas.seguimiento.timeline.js?v=1.0',
+'/assets/js/tarjetas/actions.detalle.init.js?v=1.0'
+],
+'help' => false
+];
+
+View::render('tarjetas/seguimiento-index', $data,'main');
+}
+
+function updateComentarioTarjetas(){
+
+header('Content-Type: application/json; charset=utf-8');
+$data = json_decode(file_get_contents('php://input'), true);
+
+$idEstacion   = $data['id_estacion'] ?? null;
+$no_solicitud = $data['no_solicitud'] ?? null;
+$comentarios  = $data['comentarios'] ?? null;
+
+if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+echo json_encode([
+'success' => false,
+'message' => 'Sin permisos'
+]);
+return;
+}
+
+if (!$idEstacion || !$no_solicitud) {
+echo json_encode([
+'success' => false,
+'message' => 'Datos incompletos'
+]);
+exit;
+}
+
+$datosEstacion = Estacion::find($idEstacion);
+
+try {
+
+$actualizados = SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
+->where('no_solicitud', $no_solicitud)
+->update([
+'comentarios' => $comentarios
+]);
+
+if ($actualizados === 0) {
+echo json_encode([
+'success' => false,
+'message' => 'No se encontraron registros para actualizar'
+]);
+return;
+}
+
+echo json_encode([
+'success' => true,
+'message' => 'Comentario actualizado correctamente'
+]);
+
+} catch (\Exception $e) {
+
+echo json_encode([
+'success' => false,
+'message' => 'Error al actualizar comentario',
+]);
+}
+}
+
+
+public function obtenerArchivoTarjeta($idEstacion, $noSolicitud)
+{
+header('Content-Type: application/json');
+$datosEstacion = Estacion::find($idEstacion);
+$archivo = SolicitudTarjetasImagen::where('estacion', $datosEstacion->nombre)
+->where('no_solicitud', $noSolicitud)
+->orderBy('id', 'desc')
+->first();
+
+echo json_encode([
+'success' => true,
+'archivo' => $archivo ? $archivo->ruta : null
+]);
 }
 
 
