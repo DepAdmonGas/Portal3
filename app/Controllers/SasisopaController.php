@@ -12,6 +12,7 @@ use App\Models\Sasisopa\RepresentanteTecnico;
 use App\Models\Sasisopa\ComunicacionIE;
 use App\Models\Sasisopa\QuejasSugerencia;
 use App\Models\Sasisopa\EquipoCritico;
+
 use App\Services\ModuloService;
 use App\Core\Auth;
 use Dompdf\Dompdf;
@@ -1050,7 +1051,7 @@ class SasisopaController extends BaseController{
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
 
-        $dompdf->stream("Identificación-evaluación-Riesgos-Peligros-registrar-análisis..pdf", ["Attachment" => true]);
+        $dompdf->stream("Identificación-evaluación-Riesgos-Peligros-registrar-análisis.pdf", ["Attachment" => true]);
 
     }
 
@@ -1084,62 +1085,8 @@ class SasisopaController extends BaseController{
                     'message' => $e->getMessage()
                 ]);
             }
-        }
-
-    //------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------
-
-    //------------------------------------------------------------------------------------
-    //------------ 3 Requisitos legales -------------------    
-
-    public function requisitosLegales(){
-
-        $title = '3. REQUISITOS LEGALES';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js',
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/sasisopa/listaasistencia.datatable.init.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/requisitos-legales', $data,'sasisopa');
-
     }
 
-
-    public function requisitosLegalesConfiguracion(){
-
-        $title = 'REQUISITOS LEGALES CONFIGURACIÓN';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add('3. REQUISITOS LEGALES', '/sasisopa/requisitos-legales');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ]
-        ];
-        
-        View::render('sasisopa/requisitos-legales-configuracion', $data,'sasisopa');
-
-    }
 
      //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------

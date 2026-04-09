@@ -41,6 +41,9 @@ class ListaAsistenciaController extends BaseController{
         }else if($asistencia->punto_sasisopa == 2 ){
             $bcSubModulo = '2. IDENTIFICACIÓN DE PELIGROS Y ASPECTOS AMBIENTALES, ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES';
             $bcSubUrl = '/sasisopa/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales';
+        }else if($asistencia->punto_sasisopa == 3 ){
+            $bcSubModulo = '3. REQUISITOS LEGALES';
+            $bcSubUrl = '/sasisopa/requisitos-legales';
         }
 
         } else {
@@ -234,12 +237,12 @@ class ListaAsistenciaController extends BaseController{
                 'success' => false,
                 'message' => 'No tienes permiso para eliminar'
             ]);
-            exit;
+            return;
         }
 
          if (!$id) {
             echo json_encode(['success' => false,'message' => 'ID requerido']);
-            exit;
+            return;
         }
 
          Capsule::beginTransaction();
@@ -452,7 +455,7 @@ class ListaAsistenciaController extends BaseController{
                 'success' => false,
                 'message' => 'No tienes permiso para editar'
             ]);
-            exit;
+            return;
         }
 
         try {
@@ -506,7 +509,7 @@ class ListaAsistenciaController extends BaseController{
                 'success' => false,
                 'message' => 'No tienes permiso para crear'
             ]);
-            exit;
+            return;
         }
 
         if (!$id || empty($personal)) {
@@ -565,12 +568,12 @@ class ListaAsistenciaController extends BaseController{
                 'success' => false,
                 'message' => 'No tienes permiso para eliminar'
             ]);
-            exit;
+           return;
         }
 
          if (!$id) {
             echo json_encode(['success' => false,'message' => 'ID requerido']);
-            exit;
+            return;
         }
 
          Capsule::beginTransaction();

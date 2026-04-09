@@ -67,7 +67,7 @@ class PoliticaController extends BaseController
                 'success' => false,
                 'message' => 'No tienes permiso para editar'
             ]);
-            exit;
+            return;
         }
 
         $registro = Estacion::find($this->estacionId());
@@ -191,7 +191,7 @@ class PoliticaController extends BaseController
                 'success' => false,
                 'message' => 'No tienes permiso para crear'
             ]);
-            exit;
+            return;
         }
 
          if ($fecha == "") {
@@ -199,7 +199,7 @@ class PoliticaController extends BaseController
             'success' => false,
             'message' => 'Campos obligatorios faltantes'
         ]);
-        exit;
+        return;
         }
 
         Capsule::beginTransaction();
@@ -267,7 +267,7 @@ class PoliticaController extends BaseController
                 'success' => false,
                 'message' => 'No tienes permiso para editar'
             ]);
-            exit;
+            return;
         }
 
          if ($fecha == "") {
@@ -275,7 +275,7 @@ class PoliticaController extends BaseController
             'success' => false,
             'message' => 'Campos obligatorios faltantes'
         ]);
-        exit;
+        return;
         }
 
         try {
@@ -395,12 +395,12 @@ class PoliticaController extends BaseController
                 'success' => false,
                 'message' => 'No tienes permiso para eliminar'
             ]);
-            exit;
+            return;
         }
 
          if (!$id) {
             echo json_encode(['success' => false,'message' => 'ID requerido']);
-            exit;
+            return;
         }
 
          Capsule::beginTransaction();

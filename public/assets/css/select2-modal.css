@@ -1,0 +1,55 @@
+.select2-modal-field {
+  position: relative;
+  width: 100%;
+}
+
+.select2-modal-field.is-select2-pending {
+  visibility: hidden;
+}
+
+.select2-modal-field .select2-container {
+  width: 100% !important;
+  display: block;
+}
+
+.select2-modal-field .select2-selection--single {
+  height: calc(1.5em + 0.75rem + 2px);
+  border: 1px solid #dfe5ef;
+  border-radius: 0.375rem;
+  display: block;
+  padding-top: 0;
+  padding-bottom: 0;
+  background-color: #fff;
+}
+
+.select2-modal-field.is-invalid .select2-selection--single {
+  border-color: var(--bs-form-invalid-border-color, #dc3545);
+}
+
+.select2-modal-field.is-invalid .select2-selection--single:focus,
+.select2-modal-field.is-invalid .select2-selection--single:focus-visible {
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+.select2-modal-field .select2-selection__rendered {
+  line-height: calc(1.5em + 0.75rem);
+  padding-left: 0.75rem;
+  padding-right: 2rem;
+  width: 100%;
+  margin-top: 0;
+  color: inherit;
+}
+
+.select2-modal-field .select2-selection__placeholder {
+  color: #6c757d;
+}
+
+.select2-modal-field .select2-selection__arrow {
+  height: 100% !important;
+  right: 0.75rem !important;
+  top: 0 !important;
+}
+
+.modal .select2-dropdown {
+  z-index: 1060;
+}

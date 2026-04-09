@@ -104,13 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const res = await goTo("/lista-asistencia/${row.id}");
                                     }'
                                     `}>
-                                        <i class="fs-4 ti ti-edit"></i>Editar
+                                        <i class="ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                  <li>
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
                                     href="/lista-asistencia/pdf/${row.id}" target="_blank">
-                                        <i class="fs-4 ti ti-download"></i>Descargar
+                                        <i class="ti ti-download"></i>Descargar
                                     </a>
                                 </li>
                                 <li>
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     });
                                     }'
                                     `}>
-                                        <i class="fs-4 ti ti-trash"></i>Eliminar
+                                        <i class="ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
                             </ul>

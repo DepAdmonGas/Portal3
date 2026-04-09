@@ -36,10 +36,10 @@ p {
 .text-primary { color: #0d6efd; }
 .text-muted { color: #6c757d; }
 
-.mt-1 { margin-top: 5px; }
-.mt-2 { margin-top: 10px; }
-.mt-3 { margin-top: 15px; }
-.mt-4 { margin-top: 20px; }
+.mt-1 { margin-top: 0.25rem !important; }
+.mt-2 { margin-top: 0.50rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.mt-4 { margin-top: 1.5rem !important; }
 
 .mb-1 { margin-bottom: 5px; }
 .mb-2 { margin-bottom: 10px; }
@@ -164,6 +164,18 @@ p {
 .table-warning > th,
 .table-warning > td {
   background-color: #ffeeba;
+}
+
+.table-info,
+.table-info > th,
+.table-info > td {
+  background-color: #bee5eb;
+}
+
+.table-active,
+.table-active > th,
+.table-active > td {
+  background-color: rgba(0, 0, 0, 0.075);
 }
 
 /* ===== BADGES ===== */

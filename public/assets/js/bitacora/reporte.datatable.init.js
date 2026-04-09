@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }'
                                     `}
                                 >
-                                    <i class="ti ti-trash"></i> Eliminar
+                                    <i class="ti ti-trash fs-6"></i> Eliminar
                                 </a>
                             </li>
 

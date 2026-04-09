@@ -3,6 +3,8 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('actions', () => ({
 
         loading: false,
+        _modalSelect2Bound: {},
+        _modalSelect2Watched: {},
 
         // ALERTA
         showAlert(icon, title, text) {
@@ -171,7 +173,7 @@ document.addEventListener('alpine:init', () => {
         this.loading = false;
     }
 },
-    download(tipo, archivo) {
+        download(tipo, archivo) {
 
         if (!archivo) {
             this.notify('error', 'Archivo no disponible');
@@ -181,6 +183,207 @@ document.addEventListener('alpine:init', () => {
         const url = `/download?tipo=${tipo}&file=${encodeURIComponent(archivo)}`;
 
         window.open(url, '_blank');
+    },
+
+    getModalSelect2Elements({
+        selectRef,
+        wrapperRef = null,
+        modalRef = null
+    }) {
+        const selectEl = this.$refs?.[selectRef] || null;
+        const wrapperEl = wrapperRef
+            ? (this.$refs?.[wrapperRef] || null)
+            : (selectEl?.parentElement || null);
+        const modalEl = modalRef
+            ? (this.$refs?.[modalRef] || document.getElementById(modalRef))
+            : null;
+
+        return {
+            selectEl,
+            wrapperEl,
+            modalEl
+        };
+    },
+
+    destroyModalSelect2({
+        selectRef,
+        wrapperRef = null,
+        namespace = 'modalSelect2'
+    }) {
+        const { selectEl, wrapperEl } = this.getModalSelect2Elements({
+            selectRef,
+            wrapperRef
+        });
+
+        if (wrapperEl) {
+            wrapperEl.classList.add('is-select2-pending');
+        }
+
+        if (!selectEl) {
+            return;
+        }
+
+        const $select = $(selectEl);
+
+        if ($select.hasClass('select2-hidden-accessible')) {
+            $select.off(`.${namespace}`);
+            $select.select2('destroy');
+        }
+    },
+
+    watchModalSelect2({
+        selectRef,
+        model
+    }) {
+        const watchKey = `${selectRef}:${model}`;
+
+        if (this._modalSelect2Watched[watchKey]) {
+            return;
+        }
+
+        this.$watch(model, value => {
+            const { selectEl } = this.getModalSelect2Elements({ selectRef });
+
+            if (!selectEl) {
+                return;
+            }
+
+            const $select = $(selectEl);
+
+            if (!$select.hasClass('select2-hidden-accessible')) {
+                return;
+            }
+
+            const nextValue = value || '';
+            if (($select.val() || '') !== nextValue) {
+                $select.val(nextValue).trigger('change.select2');
+            }
+        });
+
+        this._modalSelect2Watched[watchKey] = true;
+    },
+
+    initModalSelect2({
+        selectRef,
+        wrapperRef = null,
+        modalRef = null,
+        model,
+        options = {},
+        namespace = 'modalSelect2'
+    }) {
+        const { selectEl, wrapperEl, modalEl } = this.getModalSelect2Elements({
+            selectRef,
+            wrapperRef,
+            modalRef
+        });
+
+        if (!selectEl) {
+            return;
+        }
+
+        const $select = $(selectEl);
+        const $dropdownParent = wrapperEl ? $(wrapperEl) : $(modalEl || selectEl.parentElement);
+
+        this.destroyModalSelect2({
+            selectRef,
+            wrapperRef,
+            namespace
+        });
+
+        $select.select2({
+            dropdownParent: $dropdownParent,
+            width: '100%',
+            ...options
+        });
+
+        const $container = $select.next('.select2-container');
+        $container.css('width', '100%');
+
+        $select.off(`change.${namespace}`).on(`change.${namespace}`, event => {
+            this[model] = $(event.target).val() || '';
+        });
+
+        $select.off(`select2:open.${namespace}`).on(`select2:open.${namespace}`, () => {
+            window.dispatchEvent(new Event('resize'));
+        });
+
+        $select.val(this[model] || '').trigger('change.select2');
+
+        if (wrapperEl) {
+            requestAnimationFrame(() => {
+                wrapperEl.classList.remove('is-select2-pending');
+            });
+        }
+    },
+
+    bindModalSelect2({
+        modalRef,
+        selectRef,
+        wrapperRef = null,
+        model,
+        options = {},
+        namespace = 'modalSelect2',
+        onShown = null
+    }) {
+        const bindKey = `${modalRef}:${selectRef}:${namespace}`;
+
+        if (this._modalSelect2Bound[bindKey]) {
+            return;
+        }
+
+        const { modalEl } = this.getModalSelect2Elements({
+            selectRef,
+            wrapperRef,
+            modalRef
+        });
+
+        if (!modalEl) {
+            return;
+        }
+
+        this.watchModalSelect2({
+            selectRef,
+            model
+        });
+
+        modalEl.addEventListener('shown.bs.modal', () => {
+            if (typeof onShown === 'function') {
+                const shouldContinue = onShown.call(this);
+
+                if (shouldContinue === false) {
+                    return;
+                }
+            }
+
+            this.$nextTick(() => {
+                this.initModalSelect2({
+                    selectRef,
+                    wrapperRef,
+                    modalRef,
+                    model,
+                    options,
+                    namespace
+                });
+            });
+        });
+
+        modalEl.addEventListener('hide.bs.modal', () => {
+            const activeElement = document.activeElement;
+
+            if (activeElement && modalEl.contains(activeElement) && typeof activeElement.blur === 'function') {
+                activeElement.blur();
+            }
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            this.destroyModalSelect2({
+                selectRef,
+                wrapperRef,
+                namespace
+            });
+        });
+
+        this._modalSelect2Bound[bindKey] = true;
     }
 
     }));
