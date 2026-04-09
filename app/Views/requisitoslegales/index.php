@@ -1,4 +1,4 @@
-<div id="container" data-idsasisopa="3">
+<div id="container" data-elemento="3" data-herramienta="1">
 
     <div class="text-end mt-2">
         <div class="btn-group">
@@ -9,6 +9,9 @@
                 <li>
                     <a class="dropdown-item" href="requisitos-legales/configuracion"><i class="ti ti-list-check"></i> Requisitos</a>
                 </li>
+                 <li>
+                    <a class="dropdown-item" href="/sasisopa/requisitos-legales/calendario-pdf"><i class="ti ti-calendar"></i> Calendario</a>
+                </li>
             </ul>
         </div>
     </div>
@@ -16,43 +19,78 @@
 <div class="row mt-2">
   <div class="col-md-3 d-flex align-items-stretch">
     <div class="card w-100">
+      <a href="/sasisopa/requisitos-legales/Municipal">
       <div class="card-body">
         <h4 class="card-title text-center">Municipal</h4>
-         
+        
+        <div class="text-center fs-8 mt-4 mb-4 text-primary"><?= $requisitos['Municipal']['Cumplimiento'].'%' ?></div>
+        <div class="text-end"><small><?= $requisitos['Municipal']['ToReFin'].' de '.$requisitos['Municipal']['ToRe'].' Requisitos' ?></small></div>
+
+
       </div>
+      </a>
     </div>
   </div>
 
   <div class="col-md-3 d-flex align-items-stretch">
     <div class="card w-100">
+      <a href="/sasisopa/requisitos-legales/Estatal">
       <div class="card-body">
         <h4 class="card-title text-center">Estatal</h4>
+
+        <div class="text-center fs-8 mt-4 mb-4 text-primary"><?= $requisitos['Estatal']['Cumplimiento'].'%' ?></div>
+        <div class="text-end"><small><?= $requisitos['Estatal']['ToReFin'].' de '.$requisitos['Estatal']['ToRe'].' Requisitos' ?></small></div>
           
       </div>
+      </a>
     </div>
   </div>
 
   <div class="col-md-3 d-flex align-items-stretch">
     <div class="card w-100">
+      <a href="/sasisopa/requisitos-legales/Federal">
       <div class="card-body">
         <h4 class="card-title text-center">Federal</h4>
+
+        <div class="text-center fs-8 mt-4 mb-4 text-primary"><?= $requisitos['Federal']['Cumplimiento'].'%' ?></div>
+        <div class="text-end"><small><?= $requisitos['Federal']['ToReFin'].' de '.$requisitos['Federal']['ToRe'].' Requisitos' ?></small></div>
+
       </div>
+      </a>
     </div>
   </div>
 
   <div class="col-md-3 d-flex align-items-stretch">
     <div class="card w-100">
+      <a href="/sasisopa/requisitos-legales/Varios">
       <div class="card-body">
         <h4 class="card-title text-center">Varios</h4>
+
+        <div class="text-center fs-8 mt-4 mb-4 text-primary"><?= $requisitos['Varios']['Cumplimiento'].'%' ?></div>
+        <div class="text-end"><small><?= $requisitos['Varios']['ToReFin'].' de '.$requisitos['Varios']['ToRe'].' Requisitos' ?></small></div>
+
       </div>
+      </a>
     </div>
   </div>
 
 </div>
 
-<div class="progress">
-    <div class="progress-bar progress-bar-striped text-bg-success progress-bar-animated" role="progressbar" aria-valuenow="52" aria-valuemin="0" aria-valuemax="100" style="width: 52%;">
-  </div>
+<div class="mb-2"><small>Porcentaje de cumplimiento general</small></div>
+<div class="progress" style="height: 20px;">
+  <?php $cumplimiento = round(($requisitos['Municipal']['Cumplimiento'] + $requisitos['Estatal']['Cumplimiento'] + $requisitos['Federal']['Cumplimiento'] + $requisitos['Varios']['Cumplimiento']) / 4, 0); ?>
+    <div 
+        class="progress-bar progress-bar-striped progress-bar-animated 
+        <?= $cumplimiento == 100 ? 'text-bg-success' : ($cumplimiento >= 50 ? 'text-bg-warning' : 'text-bg-danger') ?>"
+        role="progressbar"
+        aria-valuenow="<?= $cumplimiento ?>"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        style="width: <?= $cumplimiento ?>%;">
+        
+        Cumple <?= $cumplimiento ?>%
+
+    </div>
 </div>
 
 <div class="row mt-4">
@@ -61,33 +99,28 @@
 <div class="card">
   <div class="card-body">
 
-  <div class="d-flex align-items-center">
-    <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
-      <div class="ms-auto">
-         <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li>
-                <a class="dropdown-item" href="javascript:void(0)"><i class="ti ti-plus"></i> Agregar</a>
-              </li>
-              <li>
-                <a class="dropdown-item" href="javascript:void(0)"><i class="ti ti-download"></i> Descargar</a>
-              </li>
-            </ul>
-          </div>       
-      </div>
-  </div>
+  <div class="float-end">
+      <div x-data="{ ...actions(), ...listaasistenciaForm() }">
+        <?= 
+          !empty($permisos['crear']) ? 
+          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+          <i class="ti ti-plus"></i> Nuevo
+          </button>' 
+          : '' 
+        ?>   
+      </div>  
+    </div>
 
-  <div class="datatables mt-3">
+  <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+
+  <div class="datatables mt-4">
     <div class="table-responsive">
-      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-asistencia" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-          <th>#</th>
-          <th>Fecha</th>
-          <th>Hora</th>
+           <th>#</th>
+            <th>Fecha</th>
+            <th>Estatus</th>
           <th class="text-center">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>

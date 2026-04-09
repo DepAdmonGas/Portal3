@@ -20,7 +20,6 @@ if (!function_exists('formatearFecha')) {
 
         if (empty($fecha)) return '';
 
-        // 👉 Si es objeto (Carbon de Eloquent)
         if (is_object($fecha)) {
             $fecha = $fecha->format('Y-m-d');
         }
@@ -41,5 +40,29 @@ if (!function_exists('formatearFecha')) {
         $anio = date('Y', $timestamp);
 
         return "$dia de $mes del $anio";
+    }
+}
+
+if (!function_exists('formatearFechaCorta')) {
+
+    function formatearFechaCorta($fecha)
+    {
+        if (empty($fecha)) return '';
+
+        if (is_object($fecha)) {
+            return $fecha->format('d-m-Y');
+        }
+
+        $date = \DateTime::createFromFormat('d/m/Y H:i', $fecha);
+        if ($date) {
+            return $date->format('d-m-Y');
+        }
+
+        $timestamp = strtotime($fecha);
+        if ($timestamp) {
+            return date('d-m-Y', $timestamp);
+        }
+
+        return '';
     }
 }
