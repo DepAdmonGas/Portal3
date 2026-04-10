@@ -6,10 +6,12 @@ use App\Models\Estacion;
 use App\Models\Sasisopa\RequisitosLegalesCalendario;
 use App\Models\Sasisopa\RequisitosLegalesLista;
 use App\Models\Sasisopa\RequisitosLegalesDependencia;
+use App\Models\Sasisopa\RequisitosLegalesMatriz;
 use App\Services\ModuloService;
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class RequisitosLegalesController extends BaseController{
 
@@ -164,10 +166,10 @@ class RequisitosLegalesController extends BaseController{
             $html .= '
             <tr>
                 <td>'.$row['dependencia'].'</td>
-                <td><b>'.$row['requisito'].'</b></td>
+                <td><b>'.$row['permiso'].'</b></td>
                 <td>'.$row['vigencia'].'</td>
-                <td>'.$row['fecha_emision'].'</td>
-                <td>'.$row['fecha_vencimiento'].'</td>
+                <td>'.formatearFechaCorta($row['fecha_emision']).'</td>
+                <td>'.formatearFechaCorta($row['fecha_vencimiento']).'</td>
                 <td>'.$row['renovacion'].'</td>
             </tr>';
         }
@@ -378,6 +380,172 @@ class RequisitosLegalesController extends BaseController{
             ]);
     }
 
-    
+    public function requisitosLegalesDetalle($nGobierno){
+
+        $title = $nGobierno;
+         // Buscar permisos de los modulos
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('3. REQUISITOS LEGALES', '/sasisopa/requisitos-legales');
+        Breadcrumb::add($title, '');
+
+        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId());
+
+         $data = [
+            'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'filtro_usuario' => $this->filtro_usuario,
+            'requisitos' => $requisitos,
+             'links' =>[
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                '/libs/select2/dist/css/select2.min.css',
+                '/css/select2-modal.css?v=1.0'
+            ],
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/libs/select2/dist/js/select2.full.min.js',
+                '/libs/select2/dist/js/select2.min.js',
+                '/js/requisitoslegales/detalle.datatable.init.js?v=1.6',
+                '/js/requisitoslegales/detalle.actions.init.js?v=1.4'
+            ]
+        ];
+        
+        View::render('requisitoslegales/detalle', $data,'sasisopa');
+
+    }
+
+    public function datatableDetalle($nGobierno){
+
+        $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
+        $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
+        $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
+
+        $data = RequisitosLegalesCalendario::NivelGobierno(
+        $nGobierno,
+        $this->estacionId()
+        );
+
+         echo json_encode([
+            "data" => $data,
+            "permisos" => [
+                "eliminar" => $permisoEliminar,
+                "editar"   => $permisoEditar,
+                "descargar" => $permisoDescargar
+            ]
+        ]);
+        
+        exit;
+
+    }
+
+    public function deleteDetalle(){
+
+        header('Content-Type: application/json; charset=utf-8');
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+
+         if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para eliminar'
+            ]);
+            return;
+        }
+
+         if (!$id) {
+            echo json_encode(['success' => false,'message' => 'ID requerido']);
+            return;
+        }
+
+         Capsule::beginTransaction();
+         try {
+
+            // Buscar registro
+            $matriz = RequisitosLegalesMatriz::where('idcalendario', $id);
+            $calendario = RequisitosLegalesCalendario::find($id);
+
+            if (!$calendario) {
+                throw new \Exception('Registro no encontrado');
+            }
+
+            // Eliminar registro
+            $matriz->delete();
+            $calendario->delete();
+           
+            Capsule::commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Requisito legal eliminado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Capsule::rollBack();
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
+    }
+
+    public function getPermisos($nGobierno,$sgm){
+
+        header('Content-Type: application/json');
+        
+        $idEstacion = $this->estacionId();
+        $estacion = Estacion::find($idEstacion);
+        
+
+        $estado = $estacion->di_estado;
+        $municipio = $estacion->di_municipio;
+
+        $data = RequisitosLegalesLista::whereIn('id_estacion', [$idEstacion, 0])
+        ->where('nivel_gobierno', $nGobierno)
+        ->where(function ($query) use ($municipio, $estado) {
+
+            // Municipal
+            $query->where(function ($q) use ($municipio) {
+                $q->where('nivel_gobierno', 'Municipal')
+                ->where('mun_alc_est', $municipio);
+            });
+
+            // Estatal
+            $query->orWhere(function ($q) use ($estado) {
+                $q->where('nivel_gobierno', 'Estatal')
+                ->where('mun_alc_est', $estado);
+            });
+
+            // Federal y Varios
+            $query->orWhereIn('nivel_gobierno', ['Federal', 'Varios']);
+        })
+        ->where('sgm', $sgm)
+        ->where('estado', 1)
+        ->whereDoesntHave('calendario', function ($query) use ($idEstacion) {
+            $query->where('id_estacion', $idEstacion);
+        })
+         ->selectRaw("
+                id,
+                CONCAT_WS(', ',
+                    nivel_gobierno,
+                    mun_alc_est,
+                    dependencia,
+                    permiso
+                ) as permiso
+            ")
+        ->orderBy('permiso', 'asc')
+        ->get();
+
+        echo json_encode($data);
+
+        exit;
+
+    }
 
 }
