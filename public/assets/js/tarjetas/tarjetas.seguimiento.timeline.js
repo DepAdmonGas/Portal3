@@ -19,7 +19,7 @@ function cargarTimeline(idEstacion, noSolicitud, idPuesto) {
 fetch(`/solicitud-tarjetas/seguimiento/timeline/${idEstacion}/${noSolicitud}`)
 .then(r => r.json())
 .then(({ data, comentarios }) => {
-
+ 
 const map = Object.fromEntries(data.map(i => [i.seguimiento, i]));
 
 renderTimeline(map);
@@ -53,7 +53,7 @@ Descargar archivo:
 
 <a href="javascript:void(0)" 
 class="hstack gap-3 file-chat-hover justify-content-between text-nowrap mb-2"
-@click="download('basico','${archivo}')">
+@click="download('solicitud-tarjetas','${archivo}')">
 
 <div class="d-flex align-items-center gap-3">
 <div class="rounded-1 text-bg-light p-2">

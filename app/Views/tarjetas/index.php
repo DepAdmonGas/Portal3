@@ -4,7 +4,7 @@
 if ($utilitiesUser['idPuestoUser'] == "6") {
 echo !empty($permisos['crear']) ? '
 <div class="row">
-<div class="col-12 mb-4">
+<div class="col-12 mt-4">
 <button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#nuevo">
 <i class="ti ti-plus"></i> Nuevo
 </button>
@@ -14,9 +14,9 @@ echo !empty($permisos['crear']) ? '
 }
 ?>
 
-<div class="datatables">
+<div class="datatables mt-4">
 <div class="table-responsive">
-<table id="table-tarjetas" class="table  table-bordered mb-0 text-nowrap align-middle">
+<table id="table-tarjetas" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>
 </div>

@@ -5,18 +5,19 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-reporte="
 <div class="col-8"> <span class="badge rounded-pill bg-success">No. de Solicitud: <?=$noReporte?></span></div>
 
 <div class="col-4 d-flex justify-content-end align-items-center gap-2">
-
-<div id="botonSeguimiento"></div>
-
-<?= !empty($permisos['editar']) ? 
-'<div>
-<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
-<i class="ti ti-plus"></i> Nuevo
+<div class="text-end">
+<div class="btn-group">
+<button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<i class="ti ti-dots-vertical fs-4"></i>
 </button>
-</div>' : '' 
-?>
-
+<ul class="dropdown-menu animated rubberBand">
+<?= !empty($permisos['crear']) ? '<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nuevo"> <i class="ti ti-plus"></i> Nuevo </a></li>' : '' ?>
+<div id="botonSeguimiento"></div>
+</ul>
 </div>
+</div>
+</div>
+
 </div>
 
 <div class="datatables">

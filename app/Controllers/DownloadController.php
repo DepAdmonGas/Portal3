@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 class DownloadController{
-
+ 
     public function download(){
 
         $tipo  = $_GET['tipo'] ?? null;
@@ -20,7 +20,13 @@ class DownloadController{
         // MAPA DE CARPETAS (CONTROLADO)
         $rutas = [
             'bitacora-aditivo' => __DIR__ . '../../../public/uploads/archivos/bitacora-aditivo/',
-            'analisis-riesgo' => __DIR__ . '../../../public/uploads/archivos/analisis-riesgo/'
+            'analisis-riesgo' => __DIR__ . '../../../public/uploads/archivos/analisis-riesgo/',
+            'solicitud-gafetes' => __DIR__ . '../../../public/uploads/archivos/solicitud-gafetes/',
+            'solicitud-tarjetas' => __DIR__ . '../../../public/uploads/archivos/solicitud-tarjetas/',
+            'procedimientos-actividades-tecnicas' => __DIR__ . '../../../public/uploads/archivos/actividades-tecnicas/',
+            'procedimientos-visita-estacion' => __DIR__ . '../../../public/uploads/archivos/visita-estacion/',
+            'empresa' => __DIR__ . '../../../public/uploads/archivos/empresa/',
+            'poliza-seguro' => __DIR__ . '../../../public/uploads/archivos/poliza-seguro/'
         ];
 
         if (!isset($rutas[$tipo])) {
@@ -31,6 +37,7 @@ class DownloadController{
 
         $ruta = $rutas[$tipo] . $file;
 
+        //------ ERROR (configuracion) ----------//
         if (!file_exists($ruta)) {
             header("Location: /404");
             exit;

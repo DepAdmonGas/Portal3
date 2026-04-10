@@ -16,7 +16,7 @@ echo !empty($permisos['crear']) ? '
   
 <div class="datatables">
 <div class="table-responsive">
-<table id="table-gafetes" class="table table-bordered mb-0 text-nowrap align-middle">
+<table id="table-gafetes" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>
 </div>
