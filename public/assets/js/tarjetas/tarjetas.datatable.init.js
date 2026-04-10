@@ -22,6 +22,7 @@ return json.data;
 }
 },
 
+/*
 rowCallback: function (row, data) {
 
 // Configuracion del color de las filas
@@ -52,6 +53,7 @@ $(row).find('td').css({'background-color': color});
 }
 
 },
+*/
 
 columns: [
 { title: '#', data: 'id', width: '60px', className: 'text-center align-middle' },

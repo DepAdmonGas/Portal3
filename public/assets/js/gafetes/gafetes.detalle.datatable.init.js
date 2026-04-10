@@ -56,7 +56,7 @@ return `
 <li>
 <a href="javascript:void(0)" 
 class="dropdown-item d-flex align-items-center gap-1 ${noDesc ? disabled : ''}"
-${noDesc ? '' : ` @click="download('basico','${row.foto}')"`}>
+${noDesc ? '' : ` @click="download('solicitud-gafetes','${row.foto}')"`}>
 <i class="ti ti-file-download"></i> Descargar 
 </a>
 </li>

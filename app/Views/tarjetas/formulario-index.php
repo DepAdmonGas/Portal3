@@ -1,6 +1,6 @@
 <div class="mb-4" x-data="{ ...actions(), ...seguimientoForm() }"
 x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimiento="<?= $noSolicitud ?>" data-puesto="<?= $utilitiesUser['idPuestoUser'] ?>">
- 
+  
 <div class="row mt-3 mb-3">
 <div class="col-8"> <span class="badge rounded-pill bg-success">No. de Solicitud: <?=$noSolicitud?></span></div>
 
@@ -17,8 +17,8 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimien
 </ul>
 </div>
 </div>
-
 </div>
+
 </div>
 
 <div class="datatables">

@@ -69,7 +69,7 @@ const noDesc = !archivo;
 
 contenedor.innerHTML = `
 <li>
-<a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-1 ${noDesc ? 'disabled' : ''}" ${noDesc ? '' : `@click="download('basico','${archivo}')"`}>
+<a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-1 ${noDesc ? 'disabled' : ''}" ${noDesc ? '' : `@click="download('solicitud-tarjetas','${archivo}')"`}>
 <i class="ti ti-file-download"></i> Descargar archivo
 </a>
 </li>`;

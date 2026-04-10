@@ -1,5 +1,5 @@
 document.addEventListener('alpine:init', () => {
-
+ 
 const container = document.getElementById('container');
 
 if (container) {
@@ -38,21 +38,8 @@ const contenedor = document.getElementById('botonSeguimiento');
 
 if (!contenedor) return;
 
-/*
-================================
-PROCESO COMPLETADO
-================================
-*/
-
 if (ultimoPaso >= 3) {
-
-contenedor.innerHTML = `
-<div class="text-success text-end fw-bold">
-<i class="ti ti-circle-check"></i>
-Proceso completado
-</div>
-`;
-
+contenedor.innerHTML = `<li><a class="dropdown-item"> <i class="ti ti-circle-check"></i> Proceso completado</a></li>`;
 return;
 }
 
@@ -63,14 +50,11 @@ ocultarBoton = "";
 }
 
 contenedor.innerHTML = `
-<button
-class="btn btn-success float-end ${ocultarBoton}"
+<li class="${ocultarBoton}"
 :disabled="loadingSeguimiento"
-@click="submitSeguimiento(${siguiente})"
->
-<i class="ti ti-check"></i>
-Finalizar
-</button>
+@click="submitSeguimiento(${siguiente})">
+<a class="dropdown-item"> <i class="ti ti-check"></i> Finalizar</a>
+</li>
 `;
 }
 

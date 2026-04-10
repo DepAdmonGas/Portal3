@@ -16,7 +16,7 @@ class TarjetasController extends BaseController{
 protected string $modulo = 'solicitud-tarjetas';
  
 public function index(){
-
+ 
 $title = 'Solicitud de Tarjetas';
 
 $datosUsuario = Auth::user();
@@ -594,17 +594,17 @@ if ($solicitud) {
 
 switch ($solicitud->estatus) {
 case 0:
-$pasos = [1];
+$pasos = [0];
 break;
 
 case 1:
 case 2:
-$pasos = [1, 2];
+$pasos = [0, 1];
 break;
 
 case 3:
 case 4:
-$pasos = [1, 2, 3];
+$pasos = [0, 1, 2];
 break;
 
 default:

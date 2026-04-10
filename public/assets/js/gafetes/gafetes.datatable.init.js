@@ -24,6 +24,7 @@ return json.data;
 }
 },
 
+/*
 rowCallback: function (row, data) {
 
 // Configuracion del color de las filas
@@ -54,6 +55,7 @@ $(row).find('td').css({'background-color': color});
 }
 
 },
+*/
 
 columns: [
 { title: '#', data: 'id', width: '60px', className: 'text-center align-middle' },
@@ -163,7 +165,8 @@ return `
 
 <a href="javascript:void(0)"
 class="text-muted"
-data-bs-toggle="dropdown">
+data-bs-toggle="dropdown"
+data-bs-display="static">
 <i class="ti ti-dots-vertical fs-6"></i>
 </a>
 
@@ -218,15 +221,31 @@ table: '#table-gafetes'
 
 });
 
+// 🔥 Alpine + Dropdown FIX en cada render
+table.on('draw', function () {
 
-table.on('xhr', function () {
-const json = table.ajax.json();
-
-if (json && json.permisos) {
-table.column(4).visible(json.permisos.mostrar_fila_estacion);
+if (window.Alpine) {
+Alpine.initTree(document.querySelector('#table-gafetes'));
 }
+
+// 🔥 Dropdown fuera del contexto del TR (clave)
+document.querySelectorAll('#table-gafetes [data-bs-toggle="dropdown"]').forEach(el => {
+new bootstrap.Dropdown(el, {
+popperConfig: {
+strategy: 'fixed'
+}
+});
+});
 
 });
 
+
+// 🔥 Control columna
+table.on('xhr', function () {
+const json = table.ajax.json();
+if (json && json.permisos) {
+table.column(4).visible(json.permisos.mostrar_fila_estacion);
+}
+});
 
 });

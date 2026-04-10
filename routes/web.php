@@ -21,6 +21,35 @@ return function(RouteCollector $r) {
 
     $r->addRoute('GET', '/menu', Route::auth(['MenuController', 'index']));
 
+    // ---------------- PROCEDIMIENTOS ----------------
+    $r->addGroup('/procedimientos', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['ProcedimientosController', 'index']));
+        $r->addRoute('GET', '/actividades-tecnicas/datatable', Route::auth(['ProcedimientosController', 'datatableActividadesTec']));
+        $r->addRoute('GET', '/visita-estacion/datatable', Route::auth(['ProcedimientosController', 'datatableVisitaES']));
+    });
+
+    // ---------------- EMPRESA ----------------
+        $r->addGroup('/empresa', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['EmpresaController', 'index']));
+        $r->addRoute('GET', '/datatable', Route::auth(['EmpresaController', 'datatableEmpresa']));
+
+    });
+
+    // ---------------- SEGURO ----------------
+        $r->addGroup('/seguro', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['SeguroController', 'index']));
+        $r->addRoute('GET', '/poliza-seguro/datatable', Route::auth(['SeguroController', 'datatablePolizaSeguro']));
+        $r->addRoute('GET', '/poliza-seguro-cobertura/datatable', Route::auth(['SeguroController', 'datatablePolizaSeguroCobertura']));
+
+        $r->addRoute('POST', '/create-poliza-seguro', Route::auth(['SeguroController', 'createPolizaSeguro']));
+        $r->addRoute('POST', '/create-cobertura-poliza-seguro', Route::auth(['SeguroController', 'createPolizaSeguroCobertura']));
+
+        $r->addRoute('POST', '/delete-poliza-seguro', Route::auth(['SeguroController', 'deletePolizaSeguro']));
+        $r->addRoute('POST', '/delete-poliza-seguro-cobertura', Route::auth(['SeguroController', 'deletePolizaSeguroCobertura']));
+
+    });
+
+
     // ---------------- GRUPOS ----------------
     $r->addGroup('/grupos', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['GrupoController', 'index']));
@@ -113,11 +142,16 @@ return function(RouteCollector $r) {
 
         $r->addRoute('GET','/detalle/{idEstacion}/{noSolicitud}',Route::auth(['TarjetasController', 'formularioSeguimiento']));
         $r->addRoute('POST', '/comentarios/update', Route::auth(['TarjetasController', 'updateComentarioTarjetas']));
+    });
 
 
+    // ---------------- DEPARTAMENTO OPERATIVO ----------------
+    $r->addGroup('/departamento-operativo', function (RouteCollector $r) {
+    $r->addRoute('GET', '', Route::auth(['DptoOperativoController', 'index']));
 
 
     });
+
 
     // ---------------- CONFIGURACION SISTEMAS ----------------
     $r->addGroup('/configuracion-sistemas', function (RouteCollector $r) {
