@@ -32,4 +32,13 @@ class RequisitosLegalesLista extends Model
         'estado' => 'integer',
     ];
 
+    public function calendario()
+    {
+        return $this->hasMany(
+            RequisitosLegalesCalendario::class,
+            'id_requisito_legal',
+            'id'
+        );
+    }
+
 }

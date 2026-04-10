@@ -6,12 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?= $title ?? 'Portal3' ?></title>
 
-     <!-- Favicon icon-->
+       <!-- Favicon icon-->
     <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/favicon.png') ?>" />
     <!-- Core Css -->
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     
     <!-- Scripts por vista -->
     <?php if (!empty($links)): ?>
@@ -57,8 +56,8 @@
         <!-- ---------------------------------- -->
         <div class="brand-logo d-flex align-items-center justify-content-between">
           <a href="/main/index.html" class="text-nowrap logo-img">
-            <img src="<?= asset('images/logos/dark-logo.svg') ?>" class="dark-logo" alt="Logo-Dark" />
-            <img src="<?= asset('images/logos/light-logo.svg') ?>" class="light-logo" alt="Logo-light" />
+            <img src="<?= asset('images/logos/Logo.png') ?>" class="dark-logo" alt="Logo-Dark" />
+            <img src="<?= asset('images/logos/Logo-dark.png') ?>" class="light-logo" alt="Logo-light" />
           </a>
           <a href="javascript:void(0)" class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none">
             <i class="ti ti-x"></i>
@@ -290,19 +289,23 @@
   <div class="dark-transparent sidebartoggler"></div>
 
   <!-- Import Js Files -->
-  <script src="<?= asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') ?>"></script>
-  <script src="<?= asset('libs/simplebar/dist/simplebar.min.js') ?>"></script>
-  <script src="<?= asset('js/theme/app.init.js') ?>"></script>
-  <script src="<?= asset('js/theme/theme.js') ?>"></script>
-  <script src="<?= asset('js/theme/app.min.js') ?>"></script>
-  <script src="<?= asset('js/theme/sidebarmenu.js') ?>"></script>
+  <script src="<?=asset('js/home/actions-home.init.js?v=1.1')?>"></script>
+  <script src="<?=asset('js/switch.estacion.min.js')?>"></script>
+  <script src="<?=asset('js/loader.min.js')?>"></script>
+  <script src="<?=asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js')?>"></script>
+  <script src="<?=asset('libs/simplebar/dist/simplebar.min.js')?>"></script>
+  <script src="<?=asset('js/theme/app.init.js')?>"></script>
+  <script src="<?=asset('js/theme/theme.js')?>"></script>
+  <script src="<?=asset('js/theme/app.min.js')?>"></script>
+  <script src="<?=asset('js/theme/sidebarmenu.js')?>"></script>
 
   <!-- solar icons -->
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
   <!-- highlight.js (code view) -->
   <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
   <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
-  <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+  <script src="<?= asset('js/core/notify.js?v=1.1') ?>"></script> 
+  <script src="<?= asset('js/core/actions.alpine.js?v=1.2') ?>"></script>
  
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>

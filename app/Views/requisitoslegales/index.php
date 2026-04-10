@@ -77,8 +77,25 @@
 </div>
 
 <div class="mb-2"><small>Porcentaje de cumplimiento general</small></div>
+
+  <?php 
+  $totalRequisitos = 
+    $requisitos['Municipal']['ToRe'] +
+    $requisitos['Estatal']['ToRe'] +
+    $requisitos['Federal']['ToRe'] +
+    $requisitos['Varios']['ToRe'];
+
+    $totalCumplimiento = 
+    ($requisitos['Municipal']['Cumplimiento'] * $requisitos['Municipal']['ToRe']) +
+    ($requisitos['Estatal']['Cumplimiento'] * $requisitos['Estatal']['ToRe']) +
+    ($requisitos['Federal']['Cumplimiento'] * $requisitos['Federal']['ToRe']) +
+    ($requisitos['Varios']['Cumplimiento'] * $requisitos['Varios']['ToRe']);
+
+$cumplimiento = $totalRequisitos > 0 
+    ? round($totalCumplimiento / $totalRequisitos, 0) 
+    : 0;
+  ?>
 <div class="progress" style="height: 20px;">
-  <?php $cumplimiento = round(($requisitos['Municipal']['Cumplimiento'] + $requisitos['Estatal']['Cumplimiento'] + $requisitos['Federal']['Cumplimiento'] + $requisitos['Varios']['Cumplimiento']) / 4, 0); ?>
     <div 
         class="progress-bar progress-bar-striped progress-bar-animated 
         <?= $cumplimiento == 100 ? 'text-bg-success' : ($cumplimiento >= 50 ? 'text-bg-warning' : 'text-bg-danger') ?>"

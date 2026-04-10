@@ -50,6 +50,11 @@ class RequisitosLegalesCalendario extends Model
         'estado' => 'integer',
     ];
 
+    public function requisito()
+    {
+        return $this->belongsTo(RequisitosLegalesLista::class, 'id_requisito_legal');
+    }
+
     public function matriz()
     {
         return $this->hasMany(RequisitosLegalesMatriz::class, 'idcalendario', 'id');
@@ -60,12 +65,7 @@ class RequisitosLegalesCalendario extends Model
         return $this->hasOne(RequisitosLegalesMatriz::class, 'idcalendario', 'id')
             ->latestOfMany('fecha_emision');
     }
-
-    public function detalle()
-    {
-        return $this->belongsTo(RequisitosLegalesLista::class, 'id_requisito_legal', 'id');
-    }
-    
+  
 
     public static function ToRequisitosTodos($id)
     {
@@ -86,29 +86,26 @@ class RequisitosLegalesCalendario extends Model
         $TotalCmp = 0;
 
         $calendarios = self::with('matrizReciente')
-        ->where('id_estacion', $id)
-        ->where('nivel_gobierno', $NGobierno)
-        ->get();
+            ->where('id_estacion', $id)
+            ->where('nivel_gobierno', $NGobierno)
+            ->whereHas('matrizReciente')
+            ->get();
 
         foreach ($calendarios as $calendario) {
 
             $matriz = $calendario->matrizReciente;
 
-            if (!$matriz) {
-                continue;
-            }
-
-            $acuse = trim($matriz->acusepdf);
-            $requisito = trim($matriz->requisitolegalpdf);
+            $acuse = trim($matriz->acusepdf ?? '');
+            $requisito = trim($matriz->requisitolegalpdf ?? '');
 
             $cumplimiento = 0;
             $finalizado = 0;
 
-            if ($acuse != "") {
+            if ($acuse !== '') {
                 $cumplimiento += 50;
             }
 
-            if ($requisito != "") {
+            if ($requisito !== '') {
                 $cumplimiento = 100;
                 $finalizado = 1;
             }
@@ -117,11 +114,13 @@ class RequisitosLegalesCalendario extends Model
             $TotalCmp += $cumplimiento;
         }
 
+        $total = $calendarios->count();
+
         return [
             "ToReFin" => $ToReFin,
-            "ToRe" => $calendarios->count(),
-            "Cumplimiento" => $calendarios->count() > 0
-                ? round($TotalCmp / $calendarios->count(), 0)
+            "ToRe" => $total,
+            "Cumplimiento" => $total > 0
+                ? round($TotalCmp / $total, 0)
                 : 0
         ];
     }
@@ -130,7 +129,7 @@ class RequisitosLegalesCalendario extends Model
 
     public static function NivelGobierno($NGobierno, $IDEstacion)
     {
-        $calendarios = self::with(['detalle', 'matrizReciente'])
+        $calendarios = self::with(['requisito', 'matrizReciente'])
             ->where('id_estacion', $IDEstacion)
             ->where('nivel_gobierno', $NGobierno)
             ->where('estado', 1)
@@ -138,39 +137,35 @@ class RequisitosLegalesCalendario extends Model
 
         return $calendarios->map(function ($item) {
 
-            // dependencia y requisito
             if ($item->id_requisito_legal == 0) {
                 $dependencia = 'S/I';
                 $requisito = $item->requisito_legal;
             } else {
-                $dependencia = optional($item->detalle)->dependencia ?? 'S/I';
-                $requisito = optional($item->detalle)->permiso ?? 'S/I';
+                $dependencia = optional($item->requisito)->dependencia ?? 'S/I';
+                $requisito = optional($item->requisito)->permiso ?? 'S/I';
             }
 
-            // matriz reciente
             $matriz = $item->matrizReciente;
 
-            $fechaEmision = ($matriz && $matriz->fecha_emision != '0000-00-00')
-            ? formatearFechaCorta($matriz->fecha_emision)
-            : 'S/I';
+            $fechaEmision = $matriz?->fecha_emision
+            ? $matriz->fecha_emision->format('Y-m-d')
+            : null;
 
-            $fechaVencimiento = ($matriz && $matriz->fecha_vencimiento != '0000-00-00')
-            ? formatearFechaCorta($matriz->fecha_vencimiento)
-            : 'S/I';
+                $fechaVencimiento = $matriz?->fecha_vencimiento
+                ? $matriz->fecha_vencimiento->format('Y-m-d')
+                : null;
 
-            // cumplimiento
-            $acuse = trim(optional($matriz)->acusepdf ?? '');
-            $req = trim(optional($matriz)->requisitolegalpdf ?? '');
+            $acuse = trim($matriz->acusepdf ?? '');
+            $req = trim($matriz->requisitolegalpdf ?? '');
 
-            if ($acuse == "" && $req == "") {
+            if ($acuse === '' && $req === '') {
                 $cumplimiento = 0;
-            } elseif ($acuse != "" && $req == "") {
+            } elseif ($acuse !== '' && $req === '') {
                 $cumplimiento = 50;
             } else {
                 $cumplimiento = 100;
             }
 
-            // meses
             $meses = [
                 'enero' => 'Enero',
                 'febrero' => 'Febrero',
@@ -192,11 +187,14 @@ class RequisitosLegalesCalendario extends Model
                 ->implode(', ');
 
             return [
+                'id' => $item->id,
                 'dependencia' => $dependencia,
-                'requisito' => $requisito,
+                'permiso' => $requisito,
                 'vigencia' => $item->vigencia,
                 'fecha_emision' => $fechaEmision,
                 'fecha_vencimiento' => $fechaVencimiento,
+                'acuse_file' => $acuse,
+                'requisito_file' => $req,
                 'renovacion' => $renovacion,
                 'cumplimiento' => $cumplimiento
             ];
