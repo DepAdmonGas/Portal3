@@ -409,8 +409,8 @@ class RequisitosLegalesController extends BaseController{
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/requisitoslegales/detalle.datatable.init.js?v=1.6',
-                '/js/requisitoslegales/detalle.actions.init.js?v=1.4'
+                '/js/requisitoslegales/detalle.datatable.init.js?v=3.9',
+                '/js/requisitoslegales/detalle.actions.init.js?v=4.9'
             ]
         ];
         
@@ -442,13 +442,214 @@ class RequisitosLegalesController extends BaseController{
 
     }
 
+    public function getPermisos($nGobierno, $sgm, $idActual = null)
+    {
+        header('Content-Type: application/json');
+
+        $idEstacion = $this->estacionId();
+        $estacion = Estacion::find($idEstacion);
+
+        $estado = $estacion->di_estado;
+        $municipio = $estacion->di_municipio;
+
+        $query = RequisitosLegalesLista::whereIn('id_estacion', [$idEstacion, 0])
+            ->where('nivel_gobierno', $nGobierno)
+            ->where(function ($query) use ($municipio, $estado) {
+
+                $query->where(function ($q) use ($municipio) {
+                    $q->where('nivel_gobierno', 'Municipal')
+                    ->where('mun_alc_est', $municipio);
+                });
+
+                $query->orWhere(function ($q) use ($estado) {
+                    $q->where('nivel_gobierno', 'Estatal')
+                    ->where('mun_alc_est', $estado);
+                });
+
+                $query->orWhereIn('nivel_gobierno', ['Federal', 'Varios']);
+            })
+            ->where('sgm', $sgm)
+            ->where('estado', 1);
+
+    
+        if (!$idActual) {
+            $query->whereDoesntHave('calendario', function ($query) use ($idEstacion) {
+                $query->where('id_estacion', $idEstacion);
+            });
+        }
+
+        $data = $query->selectRaw("
+                id,
+                CONCAT_WS(', ',
+                    nivel_gobierno,
+                    mun_alc_est,
+                    dependencia,
+                    permiso
+                ) as permiso
+            ")
+            ->orderBy('permiso', 'asc')
+            ->get();
+
+        echo json_encode($data);
+        exit;
+    }
+
+    public function createPermisoDetalle()
+        {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para crear'
+            ]);
+            return;
+        }
+
+        $nivelGobierno = $_POST['nivel_gobierno'] ?? null;
+        $permisoId = $_POST['permiso'] ?? null;
+        $vigencia = $_POST['vigencia'] ?? null;
+        $fechaEmision = $_POST['fecha_emision'] ?? null;
+        $fechaVencimiento = $_POST['fecha_vencimiento'] ?? null;
+
+        if (!$nivelGobierno || !$permisoId || !$vigencia || !$fechaEmision) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa todos los campos obligatorios'
+            ]);
+            return;
+        }
+
+        $permiso = RequisitosLegalesLista::find($permisoId);
+
+        if (!$permiso) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'El permiso seleccionado no existe'
+            ]);
+            return;
+        }
+
+        $meses = [
+            'enero' => (int) ($_POST['enero'] ?? 0),
+            'febrero' => (int) ($_POST['febrero'] ?? 0),
+            'marzo' => (int) ($_POST['marzo'] ?? 0),
+            'abril' => (int) ($_POST['abril'] ?? 0),
+            'mayo' => (int) ($_POST['mayo'] ?? 0),
+            'junio' => (int) ($_POST['junio'] ?? 0),
+            'julio' => (int) ($_POST['julio'] ?? 0),
+            'agosto' => (int) ($_POST['agosto'] ?? 0),
+            'septiembre' => (int) ($_POST['septiembre'] ?? 0),
+            'octubre' => (int) ($_POST['octubre'] ?? 0),
+            'noviembre' => (int) ($_POST['noviembre'] ?? 0),
+            'diciembre' => (int) ($_POST['diciembre'] ?? 0),
+        ];
+
+        $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
+
+        if (!file_exists($carpeta)) {
+            mkdir($carpeta, 0777, true);
+        }
+
+        $acusePath = null;
+        $requisitoPath = null;
+        $transactionStarted = false;
+
+        try {
+            if (!empty($_FILES['acuse_pdf']) && $_FILES['acuse_pdf']['error'] === UPLOAD_ERR_OK) {
+                $acusePath = $this->guardarArchivoRequisitoLegal($_FILES['acuse_pdf'], $carpeta, 'acuse_');
+            }
+
+            if (!empty($_FILES['requisito_pdf']) && $_FILES['requisito_pdf']['error'] === UPLOAD_ERR_OK) {
+                $requisitoPath = $this->guardarArchivoRequisitoLegal($_FILES['requisito_pdf'], $carpeta, 'requisito_');
+            }
+
+            Capsule::beginTransaction();
+            $transactionStarted = true;
+
+            $calendario = RequisitosLegalesCalendario::create([
+                'id_estacion' => $this->estacionId(),
+                'id_requisito_legal' => $permiso->id,
+                'nivel_gobierno' => $nivelGobierno,
+                'requisito_legal' => $permiso->permiso,
+                'vigencia' => $vigencia,
+                'enero' => $meses['enero'],
+                'febrero' => $meses['febrero'],
+                'marzo' => $meses['marzo'],
+                'abril' => $meses['abril'],
+                'mayo' => $meses['mayo'],
+                'junio' => $meses['junio'],
+                'julio' => $meses['julio'],
+                'agosto' => $meses['agosto'],
+                'septiembre' => $meses['septiembre'],
+                'octubre' => $meses['octubre'],
+                'noviembre' => $meses['noviembre'],
+                'diciembre' => $meses['diciembre'],
+                'estado' => 1
+            ]);
+
+            RequisitosLegalesMatriz::create([
+                'idcalendario' => $calendario->id,
+                'fecha_emision' => $fechaEmision,
+                'fecha_vencimiento' => $fechaVencimiento ?: '',
+                'acusepdf' => $acusePath ?: '',
+                'requisitolegalpdf' => $requisitoPath ?: '',
+                'estado' => 1
+            ]);
+
+            Capsule::commit();
+
+            $cumplimiento = round(
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno)['Cumplimiento'] ?? 0
+            );
+
+            echo json_encode([
+                'success' => true,
+                'id' => $calendario->id,
+                'cumplimiento' => $cumplimiento,
+                'message' => 'Requisito legal guardado correctamente'
+            ]);
+        } catch (\Throwable $e) {
+            if ($transactionStarted) {
+                Capsule::rollBack();
+            }
+
+            if ($acusePath && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($acusePath, '/'))) {
+                unlink(__DIR__ . '../../../public/uploads/' . ltrim($acusePath, '/'));
+            }
+
+            if ($requisitoPath && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($requisitoPath, '/'))) {
+                unlink(__DIR__ . '../../../public/uploads/' . ltrim($requisitoPath, '/'));
+            }
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    private function guardarArchivoRequisitoLegal(array $file, string $carpeta, string $prefijo): string
+    {
+        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+        $nombreArchivo = uniqid($prefijo, true) . '.' . $extension;
+        $rutaDestino = $carpeta . $nombreArchivo;
+
+        if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {
+            throw new \Exception('No se pudo guardar el archivo');
+        }
+
+        return 'archivos/reuisitos-legales/' . $nombreArchivo;
+    }
+
     public function deleteDetalle(){
 
         header('Content-Type: application/json; charset=utf-8');
         $data = json_decode(file_get_contents('php://input'), true);
         $id = $data['id'] ?? null;
 
-         if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+        if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
             echo json_encode([
                 'success' => false,
                 'message' => 'No tienes permiso para eliminar'
@@ -456,32 +657,58 @@ class RequisitosLegalesController extends BaseController{
             return;
         }
 
-         if (!$id) {
+        if (!$id) {
             echo json_encode(['success' => false,'message' => 'ID requerido']);
             return;
         }
 
-         Capsule::beginTransaction();
-         try {
+        Capsule::beginTransaction();
 
-            // Buscar registro
-            $matriz = RequisitosLegalesMatriz::where('idcalendario', $id);
+        try {
+
             $calendario = RequisitosLegalesCalendario::find($id);
 
             if (!$calendario) {
                 throw new \Exception('Registro no encontrado');
             }
 
-            // Eliminar registro
-            $matriz->delete();
+            $nivelGobierno = $calendario->nivel_gobierno;
+            $matrices = RequisitosLegalesMatriz::where('idcalendario', $id)->get();
+
+            foreach ($matrices as $m) {
+
+                if (!empty($m->acusepdf)) {
+                    $file = __DIR__ . '../../../public/uploads/' . ltrim($m->acusepdf, '/');
+                    if (file_exists($file)) {
+                        unlink($file);
+                    }
+                }
+
+                if (!empty($m->requisitolegalpdf)) {
+                    $file = __DIR__ . '../../../public/uploads/' . ltrim($m->requisitolegalpdf, '/');
+                    if (file_exists($file)) {
+                        unlink($file);
+                    }
+                }
+
+                $m->delete();
+            }
+
+            // eliminar calendario
             $calendario->delete();
-           
+
             Capsule::commit();
+
+            $cumplimiento = round(
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno)['Cumplimiento'] ?? 0
+            );
 
             echo json_encode([
                 'success' => true,
+                'cumplimiento' => $cumplimiento,
                 'message' => 'Requisito legal eliminado correctamente'
             ]);
+            exit;
 
         } catch (\Throwable $e) {
 
@@ -491,61 +718,449 @@ class RequisitosLegalesController extends BaseController{
                 'success' => false,
                 'message' => $e->getMessage()
             ]);
+            exit;
+        }
+    }
+
+    public function getDetalle($id)
+        {
+            header('Content-Type: application/json');
+
+            $calendario = RequisitosLegalesCalendario::with([
+                'requisito',
+                'matriz'
+            ])->find($id);
+
+            if (!$calendario) {
+                echo json_encode(['success' => false]);
+                exit;
+            }
+
+            if ($calendario->id_requisito_legal == 0) {
+
+                $detalle = [
+                    'nivel_gobierno' => $calendario->nivel_gobierno,
+                    'permiso'        => $calendario->requisito_legal,
+                    'vigencia'       => $calendario->vigencia,
+                    'dependencia'    => null,
+                    'fundamento'     => null,
+                    'mun_alc_est'    => null
+                ];
+
+            } else {
+
+                $detalleRL = $calendario->requisito;
+
+                $detalle = [
+                    'nivel_gobierno' => optional($detalleRL)->nivel_gobierno,
+                    'permiso'        => optional($detalleRL)->permiso,
+                    'vigencia'       => $calendario->vigencia,
+                    'dependencia'    => optional($detalleRL)->dependencia,
+                    'fundamento'     => optional($detalleRL)->fundamento,
+                    'mun_alc_est'    => optional($detalleRL)->mun_alc_est
+                ];
+            }
+
+            $matriz = $calendario->matriz->map(function ($m) {
+
+                return [
+                    'fecha_emision' => ($m->fecha_emision && $m->fecha_emision != '0000-00-00')
+                        ? formatearFecha($m->fecha_emision)
+                        : 'S/I',
+
+                    'fecha_vencimiento' => ($m->fecha_vencimiento && $m->fecha_vencimiento != '0000-00-00')
+                        ? formatearFecha($m->fecha_vencimiento)
+                        : 'S/I',
+
+                    'acuse' => $m->acusepdf ? basename($m->acusepdf) : '',
+                    'requisito' => $m->requisitolegalpdf ? basename($m->requisitolegalpdf) : ''
+                ];
+            });
+
+    
+            $meses = [
+                'enero'      => $calendario->enero,
+                'febrero'    => $calendario->febrero,
+                'marzo'      => $calendario->marzo,
+                'abril'      => $calendario->abril,
+                'mayo'       => $calendario->mayo,
+                'junio'      => $calendario->junio,
+                'julio'      => $calendario->julio,
+                'agosto'     => $calendario->agosto,
+                'septiembre' => $calendario->septiembre,
+                'octubre'    => $calendario->octubre,
+                'noviembre'  => $calendario->noviembre,
+                'diciembre'  => $calendario->diciembre,
+            ];
+
+            echo json_encode([
+                'success' => true,
+                'detalle' => $detalle,
+                'matriz'  => $matriz,
+                'renovacion'   => $meses,
+                'id_requisito_legal' => $calendario->id_requisito_legal
+            ]);
+
+            exit;
+    }
+
+    public function getHistorialDetalle($id)
+    {
+        header('Content-Type: application/json');
+
+        $calendario = RequisitosLegalesCalendario::where('id', $id)
+            ->where('id_estacion', $this->estacionId())
+            ->first();
+
+        if (!$calendario) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Registro no encontrado'
+            ]);
+            exit;
         }
 
-    }
-
-    public function getPermisos($nGobierno,$sgm){
-
-        header('Content-Type: application/json');
-        
-        $idEstacion = $this->estacionId();
-        $estacion = Estacion::find($idEstacion);
-        
-
-        $estado = $estacion->di_estado;
-        $municipio = $estacion->di_municipio;
-
-        $data = RequisitosLegalesLista::whereIn('id_estacion', [$idEstacion, 0])
-        ->where('nivel_gobierno', $nGobierno)
-        ->where(function ($query) use ($municipio, $estado) {
-
-            // Municipal
-            $query->where(function ($q) use ($municipio) {
-                $q->where('nivel_gobierno', 'Municipal')
-                ->where('mun_alc_est', $municipio);
-            });
-
-            // Estatal
-            $query->orWhere(function ($q) use ($estado) {
-                $q->where('nivel_gobierno', 'Estatal')
-                ->where('mun_alc_est', $estado);
-            });
-
-            // Federal y Varios
-            $query->orWhereIn('nivel_gobierno', ['Federal', 'Varios']);
-        })
-        ->where('sgm', $sgm)
-        ->where('estado', 1)
-        ->whereDoesntHave('calendario', function ($query) use ($idEstacion) {
-            $query->where('id_estacion', $idEstacion);
-        })
-         ->selectRaw("
-                id,
-                CONCAT_WS(', ',
-                    nivel_gobierno,
-                    mun_alc_est,
-                    dependencia,
-                    permiso
-                ) as permiso
-            ")
-        ->orderBy('permiso', 'asc')
-        ->get();
-
-        echo json_encode($data);
-
+        echo json_encode([
+            'success' => true,
+            'rows' => $this->formatHistorialRows($calendario->id)
+        ]);
         exit;
-
     }
 
+    public function createHistorialDetalle($id)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para crear'
+            ]);
+            exit;
+        }
+
+        $calendario = RequisitosLegalesCalendario::where('id', $id)
+            ->where('id_estacion', $this->estacionId())
+            ->first();
+
+        if (!$calendario) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Registro no encontrado'
+            ]);
+            exit;
+        }
+
+        $fechaEmision = $_POST['fecha_emision'] ?? null;
+        $fechaVencimiento = $_POST['fecha_vencimiento'] ?? '';
+
+        if (!$fechaEmision) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'La fecha de emisión es obligatoria'
+            ]);
+            exit;
+        }
+
+        $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
+
+        if (!file_exists($carpeta)) {
+            mkdir($carpeta, 0777, true);
+        }
+
+        $acusePath = '';
+        $requisitoPath = '';
+
+        try {
+            if (!empty($_FILES['acuse_pdf']) && $_FILES['acuse_pdf']['error'] === UPLOAD_ERR_OK) {
+                $acusePath = $this->guardarArchivoRequisitoLegal($_FILES['acuse_pdf'], $carpeta, 'acuse_hist_');
+            }
+
+            if (!empty($_FILES['requisito_pdf']) && $_FILES['requisito_pdf']['error'] === UPLOAD_ERR_OK) {
+                $requisitoPath = $this->guardarArchivoRequisitoLegal($_FILES['requisito_pdf'], $carpeta, 'requisito_hist_');
+            }
+
+            RequisitosLegalesMatriz::create([
+                'idcalendario' => $calendario->id,
+                'fecha_emision' => $fechaEmision,
+                'fecha_vencimiento' => $fechaVencimiento ?: '',
+                'acusepdf' => $acusePath,
+                'requisitolegalpdf' => $requisitoPath,
+                'estado' => 1
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'rows' => $this->formatHistorialRows($calendario->id),
+                'cumplimiento' => $this->getCumplimientoPorCalendario($calendario),
+                'message' => 'Historial guardado correctamente'
+            ]);
+            exit;
+        } catch (\Throwable $e) {
+            if ($acusePath && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($acusePath, '/'))) {
+                unlink(__DIR__ . '../../../public/uploads/' . ltrim($acusePath, '/'));
+            }
+
+            if ($requisitoPath && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($requisitoPath, '/'))) {
+                unlink(__DIR__ . '../../../public/uploads/' . ltrim($requisitoPath, '/'));
+            }
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+    public function updateHistorialDetalle($id)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para editar'
+            ]);
+            exit;
+        }
+
+        $matriz = RequisitosLegalesMatriz::find($id);
+
+        if (!$matriz) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Registro no encontrado'
+            ]);
+            exit;
+        }
+
+        $calendario = RequisitosLegalesCalendario::where('id', $matriz->idcalendario)
+            ->where('id_estacion', $this->estacionId())
+            ->first();
+
+        if (!$calendario) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Calendario no encontrado'
+            ]);
+            exit;
+        }
+
+        $fechaEmision = $_POST['fecha_emision'] ?? null;
+        $fechaVencimiento = $_POST['fecha_vencimiento'] ?? '';
+
+        if (!$fechaEmision) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'La fecha de emisión es obligatoria'
+            ]);
+            exit;
+        }
+
+        $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
+
+        if (!file_exists($carpeta)) {
+            mkdir($carpeta, 0777, true);
+        }
+
+        try {
+            $matriz->fecha_emision = $fechaEmision;
+            $matriz->fecha_vencimiento = $fechaVencimiento ?: '';
+
+            if (!empty($_FILES['acuse_pdf']) && $_FILES['acuse_pdf']['error'] === UPLOAD_ERR_OK) {
+                if (!empty($matriz->acusepdf) && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($matriz->acusepdf, '/'))) {
+                    unlink(__DIR__ . '../../../public/uploads/' . ltrim($matriz->acusepdf, '/'));
+                }
+
+                $matriz->acusepdf = $this->guardarArchivoRequisitoLegal($_FILES['acuse_pdf'], $carpeta, 'acuse_hist_');
+            }
+
+            if (!empty($_FILES['requisito_pdf']) && $_FILES['requisito_pdf']['error'] === UPLOAD_ERR_OK) {
+                if (!empty($matriz->requisitolegalpdf) && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($matriz->requisitolegalpdf, '/'))) {
+                    unlink(__DIR__ . '../../../public/uploads/' . ltrim($matriz->requisitolegalpdf, '/'));
+                }
+
+                $matriz->requisitolegalpdf = $this->guardarArchivoRequisitoLegal($_FILES['requisito_pdf'], $carpeta, 'requisito_hist_');
+            }
+
+            $matriz->save();
+
+            echo json_encode([
+                'success' => true,
+                'rows' => $this->formatHistorialRows($calendario->id),
+                'cumplimiento' => $this->getCumplimientoPorCalendario($calendario),
+                'message' => 'Historial actualizado correctamente'
+            ]);
+            exit;
+        } catch (\Throwable $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+    public function deleteHistorialDetalle()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+
+        if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para eliminar'
+            ]);
+            exit;
+        }
+
+        $matriz = RequisitosLegalesMatriz::find($id);
+
+        if (!$matriz) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Registro no encontrado'
+            ]);
+            exit;
+        }
+
+        $calendario = RequisitosLegalesCalendario::where('id', $matriz->idcalendario)
+            ->where('id_estacion', $this->estacionId())
+            ->first();
+
+        if (!$calendario) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Calendario no encontrado'
+            ]);
+            exit;
+        }
+
+        if (!empty($matriz->acusepdf) && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($matriz->acusepdf, '/'))) {
+            unlink(__DIR__ . '../../../public/uploads/' . ltrim($matriz->acusepdf, '/'));
+        }
+
+        if (!empty($matriz->requisitolegalpdf) && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($matriz->requisitolegalpdf, '/'))) {
+            unlink(__DIR__ . '../../../public/uploads/' . ltrim($matriz->requisitolegalpdf, '/'));
+        }
+
+        $matriz->delete();
+
+        echo json_encode([
+            'success' => true,
+            'rows' => $this->formatHistorialRows($calendario->id),
+            'cumplimiento' => $this->getCumplimientoPorCalendario($calendario),
+            'message' => 'Historial eliminado correctamente'
+        ]);
+        exit;
+    }
+
+    private function formatHistorialRows($calendarioId)
+    {
+        return RequisitosLegalesMatriz::where('idcalendario', $calendarioId)
+            ->orderBy('fecha_emision', 'desc')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'id' => $row->id,
+                    'fecha_emision' => $row->fecha_emision ? formatearFecha($row->fecha_emision) : 'S/I',
+                    'fecha_vencimiento' => $row->fecha_vencimiento ? formatearFecha($row->fecha_vencimiento) : 'S/I',
+                    'fecha_emision_raw' => $row->fecha_emision ? $row->fecha_emision->format('Y-m-d') : '',
+                    'fecha_vencimiento_raw' => $row->fecha_vencimiento ? $row->fecha_vencimiento->format('Y-m-d') : '',
+                    'acusepdf' => $row->acusepdf ? basename($row->acusepdf) : '',
+                    'requisitolegalpdf' => $row->requisitolegalpdf ? basename($row->requisitolegalpdf) : ''
+                ];
+            })->values();
+    }
+
+    private function getCumplimientoPorCalendario(RequisitosLegalesCalendario $calendario)
+    {
+        return round(
+            RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $calendario->nivel_gobierno)['Cumplimiento'] ?? 0
+        );
+    }
+
+    public function updatePermisoDetalle($id)
+    {
+            header('Content-Type: application/json');
+
+             if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para editar'
+            ]);
+            return;
+        }
+
+            try {
+
+                $idEstacion = $this->estacionId();
+
+                $registro = RequisitosLegalesCalendario::where('id', $id)
+                    ->where('id_estacion', $idEstacion)
+                    ->first();
+
+                if (!$registro) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Registro no encontrado'
+                    ]);
+                    exit;
+                }
+
+                $permiso = $_POST['permiso'] ?? null;
+                $vigencia = $_POST['vigencia'] ?? null;
+
+                if (!$permiso || !$vigencia) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Datos incompletos'
+                    ]);
+                    exit;
+                }
+
+     
+                $registro->id_requisito_legal = $permiso;
+                $registro->vigencia = $vigencia;
+
+   
+                $registro->enero = $_POST['enero'] ?? 0;
+                $registro->febrero = $_POST['febrero'] ?? 0;
+                $registro->marzo = $_POST['marzo'] ?? 0;
+                $registro->abril = $_POST['abril'] ?? 0;
+                $registro->mayo = $_POST['mayo'] ?? 0;
+                $registro->junio = $_POST['junio'] ?? 0;
+                $registro->julio = $_POST['julio'] ?? 0;
+                $registro->agosto = $_POST['agosto'] ?? 0;
+                $registro->septiembre = $_POST['septiembre'] ?? 0;
+                $registro->octubre = $_POST['octubre'] ?? 0;
+                $registro->noviembre = $_POST['noviembre'] ?? 0;
+                $registro->diciembre = $_POST['diciembre'] ?? 0;
+
+                $registro->save();
+
+                $cumplimiento = round(
+                    RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $registro->nivel_gobierno)['Cumplimiento'] ?? 0
+                );
+
+                echo json_encode([
+                    'success' => true,
+                    'cumplimiento' => $cumplimiento,
+                    'message' => 'Registro actualizado correctamente'
+                ]);
+
+            } catch (\Throwable $e) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Error al actualizar',
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            exit;
+    }
+    
 }

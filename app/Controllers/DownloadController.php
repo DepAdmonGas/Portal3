@@ -26,7 +26,9 @@ class DownloadController{
             'procedimientos-actividades-tecnicas' => __DIR__ . '../../../public/uploads/archivos/actividades-tecnicas/',
             'procedimientos-visita-estacion' => __DIR__ . '../../../public/uploads/archivos/visita-estacion/',
             'empresa' => __DIR__ . '../../../public/uploads/archivos/empresa/',
-            'poliza-seguro' => __DIR__ . '../../../public/uploads/archivos/poliza-seguro/'
+            'poliza-seguro' => __DIR__ . '../../../public/uploads/archivos/poliza-seguro/',
+            'requisitos-legales' => __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/'
+
         ];
 
         if (!isset($rutas[$tipo])) {

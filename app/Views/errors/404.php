@@ -1,58 +1,52 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Blue_Theme" data-layout="vertical">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Error 404 | Página no encontrada</title>
+  <!-- Required meta tags -->
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Favicon icon-->
+  <link rel="shortcut icon" type="image/png" href="../assets/images/logos/favicon.png" />
 
-   <link rel="stylesheet" href="/build/assets/app.css">
-    <script src="/build/assets/flowbite.min.js"></script>
+  <!-- Core Css -->
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+
+  <title>4004</title>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900">
 
-<div class="flex flex-col items-center justify-center min-h-screen px-4 text-center">
-    
-    <!-- Icono -->
-    <svg class="w-20 h-20 text-blue-600 dark:text-blue-500 mb-6"
-         fill="none" stroke="currentColor" stroke-width="1.5"
-         viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-              d="M12 9v3.75m0 3.75h.007M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-
-    <!-- Título -->
-    <h1 class="text-5xl font-extrabold text-gray-900 dark:text-white mb-4">
-        404
-    </h1>
-
-    <!-- Mensaje -->
-    <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
-        Lo sentimos, la página que buscas no existe o fue movida.
-    </p>
-
-    <!-- Botones -->
-    <div class="flex flex-col sm:flex-row gap-4">
-        <a href="/"
-           class="inline-flex items-center justify-center px-5 py-2.5
-                  text-sm font-medium text-white bg-blue-600 rounded-lg
-                  hover:bg-blue-700 focus:ring-4 focus:ring-blue-300
-                  dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">
-            Volver al inicio
-        </a>
-
-        <button onclick="history.back()"
-                class="inline-flex items-center justify-center px-5 py-2.5
-                       text-sm font-medium text-gray-900 bg-white border border-gray-300
-                       rounded-lg hover:bg-gray-100 focus:ring-4 focus:ring-gray-200
-                       dark:bg-gray-800 dark:text-white dark:border-gray-700
-                       dark:hover:bg-gray-700 dark:focus:ring-gray-700">
-            Regresar
-        </button>
+<body>
+  <!-- Preloader -->
+  <div class="preloader">
+    <img src="../assets/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
+  </div>
+  <div id="main-wrapper">
+    <div class="position-relative overflow-hidden min-vh-100 w-100 d-flex align-items-center justify-content-center">
+      <div class="d-flex align-items-center justify-content-center w-100">
+        <div class="row justify-content-center w-100">
+          <div class="col-lg-4">
+            <div class="text-center">
+              <img src="../assets/images/logos/Logo.png" alt="modernize-img" class="img-fluid" width="300">
+              <h1 class="fw-semibold mb-7 fs-9">Opps!!!</h1>
+              <h4 class="fw-semibold mb-7">La pagina a la que esta intentando ingresar no funciona</h4>
+              <a class="btn btn-primary" href="/home" role="button">Regresar al Home</a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+  <div class="dark-transparent sidebartoggler"></div>
+  <!-- Import Js Files -->
+  <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
+  <script src="../assets/js/theme/app.init.js"></script>
+  <script src="../assets/js/theme/theme.js"></script>
+  <script src="../assets/js/theme/app.min.js"></script>
 
-</div>
-
-<!-- Flowbite JS -->
-<script src="/node_modules/flowbite/dist/flowbite.min.js"></script>
+  <!-- solar icons -->
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 </body>
+
 </html>
