@@ -44,9 +44,9 @@
 <body class="link-sidebar">
 
   <!-- Preloader -->
-  <div class="preloader">
-    <img src="<?= asset('images/logos/favicon.png') ?>" alt="loader" class="lds-ripple img-fluid" />
-  </div>
+<div class="loader-admongas">
+<img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
+</div>
 
     <div id="main-wrapper">
     <!-- Sidebar Start -->
@@ -55,13 +55,13 @@
         <!-- Start Vertical Layout Sidebar -->
         <!-- ---------------------------------- -->
         <div class="brand-logo d-flex align-items-center justify-content-between">
-          <a href="/main/index.html" class="text-nowrap logo-img">
-            <img src="<?= asset('images/logos/Logo.png') ?>" class="dark-logo" alt="Logo-Dark" />
-            <img src="<?= asset('images/logos/Logo-dark.png') ?>" class="light-logo" alt="Logo-light" />
-          </a>
-          <a href="javascript:void(0)" class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none">
-            <i class="ti ti-x"></i>
-          </a>
+        <a href="/home" class="text-nowrap logo-img mt-3 mb-1">
+        <img src="<?=asset('images/logos/Logo.png')?>" class="dark-logo w-100" alt="Logo Admongas" />
+        <img src="<?=asset('images/logos/Logo-dark.png')?>" class="light-logo w-100" alt="Logo Admongas Dark" />
+        </a>
+        <a href="javascript:void(0)" class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none">
+        <i class="ti ti-x"></i>
+        </a>
         </div>
 
         <nav class="sidebar-nav scroll-sidebar" data-simplebar>

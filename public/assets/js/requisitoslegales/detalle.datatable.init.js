@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/sasisopa/requisitos-legales/datatable-detalle/' + ngobierno,
             type: 'GET',
             dataSrc: function (json) {
+
             //guardas permisos globalmente
             permisos = json.permisos;
             return json.data;
@@ -41,7 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!data) return '';
 
-                const fecha = new Date(data);
+                const partes = data.split('-');
+                const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
 
                 const fechaFormateada = fecha.toLocaleDateString('es-MX', {
                     day: 'numeric',
@@ -49,12 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     year: 'numeric'
                 });
 
-                // Para búsqueda y display usar el texto formateado
                 if (type === 'display' || type === 'filter') {
                     return fechaFormateada;
                 }
 
-                // Para ordenamiento usar la fecha real
                 return data;
             },
             orderable: true,
@@ -65,7 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!data) return '';
 
-                const fecha = new Date(data);
+                const partes = data.split('-');
+                const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
 
                 const fechaFormateada = fecha.toLocaleDateString('es-MX', {
                     day: 'numeric',
@@ -73,12 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     year: 'numeric'
                 });
 
-                // Para búsqueda y display usar el texto formateado
                 if (type === 'display' || type === 'filter') {
                     return fechaFormateada;
                 }
 
-                // Para ordenamiento usar la fecha real
                 return data;
             },
             orderable: true,
@@ -96,16 +95,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const noDescargar = permisos.descargar;
                 const tieneArchivo = row.acuse_file && row.acuse_file.trim() !== '';
 
+                const archivo = row.acuse_file.split('/').pop();
+
                
                 if (!tieneArchivo) {
-                    return `<i class="ti ti-x text-danger fs-5"></i>`;
+                    return `<i class="ti ti-x text-danger fs-6"></i>`;
                 }
 
                 return `
-                    <a class="${!noDescargar ? 'disabled' : ''}"
-                    ${!noDescargar ? '' : `href="${row.acuse_file}" target="_blank"`}>
-                        <i class="ti ti-download fs-5 text-success"></i>
+                <div x-data="actions()" class="d-flex gap-1 justify-content-center">
+                    <a class="${!noDescargar ? 'disabled' : ''}" href="javascript:void(0)"
+                    ${!noDescargar ? '' : `
+                        @click="download('requisitos-legales','${archivo}')"
+                        `}>
+                        <i class="ti ti-download fs-6 text-success"></i>
                     </a>
+                </div>
                 `;
             }
         },
@@ -120,17 +125,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const noDescargar = permisos.descargar;
                 const tieneArchivo = row.requisito_file && row.requisito_file.trim() !== '';
+                const archivo = row.requisito_file.split('/').pop();
 
                
                 if (!tieneArchivo) {
-                    return `<i class="ti ti-x text-danger fs-5"></i>`;
+                    return `<i class="ti ti-x text-danger fs-6"></i>`;
                 }
                 
                 return `
-                    <a class="${!noDescargar ? 'disabled' : ''}"
-                    ${!noDescargar ? '' : `href="${row.requisito_file}" target="_blank"`}>
-                        <i class="ti ti-download fs-5 text-success"></i>
+                    <div x-data="actions()">
+                    <a class="${!noDescargar ? 'disabled' : ''}" href="javascript:void(0)"
+                     ${!noDescargar ? '' : `
+                        @click="download('requisitos-legales','${archivo}')"
+                        `}>
+                        <i class="ti ti-download fs-6 text-success"></i>
                     </a>
+                    </div>
                 `;
             }
         },
@@ -159,6 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const noEdit = permisos.editar;
                     const noDelete = permisos.eliminar;
                     const noDownload = permisos.descargar;
+                    const permisoNombre = JSON.stringify(row.permiso ?? '');
+                    const vigencia = JSON.stringify(row.vigencia ?? '');
 
                     return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -169,7 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
 
                                 <li>                            
-                                    <a class="dropdown-item d-flex align-items-center gap-3" data-bs-toggle="modal" data-bs-target="#modalDetalle">
+                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                     @click="window.requisitosInstance.openDetalle(${row.id})">
                                         <i class="ti ti-eye"></i>Detalle
                                     </a>
                                 </li>
@@ -177,18 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <li>
                             
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
-                                    ${!noEdit ? '' : `
-                                    @click='async () => {
-                                    const res = await goTo("/lista-asistencia/${row.id}");
-                                    }'
-                                    `}>
+                                    @click="window.requisitosInstance.openEditar(${row.id})">
                                         <i class="ti ti-edit"></i>Editar
                                     </a>
                                 </li>
 
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
-                                    href="/lista-asistencia/pdf/${row.id}" target="_blank">
+                                    @click='window.requisitosInstance.openHistorial(${row.id}, ${permisoNombre}, ${vigencia})'>
                                         <i class="ti ti-history"></i>Historial
                                     </a>
                                 </li>
@@ -196,14 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
                                     ${!noDelete ? '' : `
-                                    @click='async () => {
-                                    const res = await deleteAction({
-                                        url: "/sasisopa/requisitos-legales/delete-detalle",
-                                        id: ${row.id},
-                                        name: "${row.permiso}",
-                                        table: "#table-lista-requisitos-legales-detalle"
-                                    });
-                                    }'
+                                    @click='window.requisitosInstance.handleDelete(${row.id}, ${permisoNombre})'
                                     `}>
                                         <i class="ti ti-trash"></i>Eliminar
                                     </a>
@@ -218,13 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     });
 
-     $("#table-lista-requisitos-legales-detalle tbody").on("click", "tr", function () {
-    if ($(this).hasClass("selected")) {
-    } else {
-        table1.$("tr.selected").removeClass("selected");
-        $(this).addClass("selected");
-    }
-    });
+
 
 
 });

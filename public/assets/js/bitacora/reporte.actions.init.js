@@ -86,8 +86,6 @@ document.addEventListener('alpine:init', () => {
 
         if (res && res.success) {
 
-            console.log(res)
-
             this.resetModal();
 
         }

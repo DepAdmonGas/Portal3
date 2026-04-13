@@ -1,7 +1,7 @@
 <div class="mt-4 pb-4" id="container" data-id="<?= $idListaAsistencia ?>"
 x-data="{ ...actions(), ...listaasistenciaForm() }"
 x-init="
-        fecha='<?= date('Y-m-d', strtotime($asistencia->fecha)) ?>';
+        fecha='<?= $asistencia->fecha->format('Y-m-d') ?>';
         hora='<?= $asistencia->hora ? $asistencia->hora->format('H:i:s') : '' ?>';
         lugar='<?= htmlspecialchars($asistencia->lugar) ?>';
         encargado='<?= htmlspecialchars($asistencia->encargado) ?>';

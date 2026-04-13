@@ -63,6 +63,7 @@ class RequisitosLegalesCalendario extends Model
     public function matrizReciente()
     {
         return $this->hasOne(RequisitosLegalesMatriz::class, 'idcalendario', 'id')
+            ->where('estado', 1)
             ->latestOfMany('fecha_emision');
     }
   
@@ -88,15 +89,20 @@ class RequisitosLegalesCalendario extends Model
         $calendarios = self::with('matrizReciente')
             ->where('id_estacion', $id)
             ->where('nivel_gobierno', $NGobierno)
-            ->whereHas('matrizReciente')
+            ->where('estado', 1)
             ->get();
 
         foreach ($calendarios as $calendario) {
 
             $matriz = $calendario->matrizReciente;
 
-            $acuse = trim($matriz->acusepdf ?? '');
-            $requisito = trim($matriz->requisitolegalpdf ?? '');
+            $acuse = '';
+            $requisito = '';
+
+            if ($matriz) {
+                $acuse = trim($matriz->acusepdf ?? '');
+                $requisito = trim($matriz->requisitolegalpdf ?? '');
+            }
 
             $cumplimiento = 0;
             $finalizado = 0;
