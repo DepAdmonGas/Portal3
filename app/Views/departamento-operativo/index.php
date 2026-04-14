@@ -4,17 +4,30 @@
 $i = 1; 
 foreach($elementos as $elemento): ?>
 
-<div class="col-md-4 d-flex align-items-stretch">
-<a href="<?= $elemento['ruta'] ?>" class="card w-100 card-hover">
-<div class="card-body">
-<div class="d-flex align-items-center">
-<i class="<?= $elemento['icono'] ?> text-primary display-6"></i>
-<div class="ms-auto">
-<i class="ti ti-arrow-right text-primary fs-7"></i>
+<div class="col-lg-4 col-md-6 col-12">
+<a href="<?= $elemento['ruta'] ?>" class="text-decoration-none">
+<div class="card body-container-do overflow-hidden card-hover shadow-sm">
+
+<div class="d-flex flex-row align-items-center">
+
+<div class="icon-container-do">
+<h3 class="text-white mb-0">
+<i class="ti <?= $elemento['icono'] ?> fs-9"></i>
+</h3>
 </div>
+ 
+<div class="p-4 flex-grow-1">
+<h5 class="text-white mb-0">
+<?= $i . '. ' . $elemento['nombre'] ?>
+</h5>
 </div>
-<div class="mt-4">
-<h4 class="card-title mb-1 opacity-80"><?= $i . '. ' . $elemento['nombre'] ?></h4>
+
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0">
+<i class="ti ti-arrow-right fs-8"></i>
+</h4>
+</div>
+
 </div>
 </div>
 </a>

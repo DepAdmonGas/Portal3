@@ -12,7 +12,6 @@
 <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
 <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
 
-
 <!-- Scripts por vista -->
 <?php if (!empty($links)): ?>
 <?php foreach ($links as $link): ?>
@@ -27,37 +26,33 @@
 
 <body class="link-sidebar">
 
-<!-- Pantalla de carga -->
+<!-- Pantalla de carga (Loader) -->
 <div class="loader-admongas">
-<img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
+    <img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
 </div>
 
 <div id="main-wrapper">
-<!-- Sidebar Start -->
+
+<!-- Sidebar Inicio -->
 <aside class="left-sidebar with-vertical">
-<div>
-<!-- ---------------------------------- -->
-<!-- Start Vertical Layout Sidebar -->
-<!-- ---------------------------------- -->
+
+<!-- Logo Sidebar -->
 <div class="brand-logo d-flex align-items-center justify-content-between">
-<a href="/home" class="text-nowrap logo-img mt-3 mb-1">
+<a href="/home" class="text-nowrap logo-img mt-3 mb-3">
 <img src="<?=asset('images/logos/Logo.png')?>" class="dark-logo w-100" alt="Logo Admongas" />
 <img src="<?=asset('images/logos/Logo-dark.png')?>" class="light-logo w-100" alt="Logo Admongas Dark" />
 </a>
-<a href="javascript:void(0)" class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none">
-<i class="ti ti-x"></i>
-</a>
+<a href="javascript:void(0)" class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none"><i class="ti ti-x"></i></a>
 </div>
+
 <nav class="sidebar-nav scroll-sidebar" data-modulo="<?= $modulo ?? '' ?>" data-simplebar x-data="menuApp()" x-init="init()">
 
-<ul id="sidebarnav">
+<ul id="sidebarnav" class="mt-3" >
+
 <!-- HOME -->
 <li class="sidebar-item">
 <a class="sidebar-link" href="/">
-<span>
-<i class="ti ti-home"></i>
-</span>
-<span class="hide-menu">Home</span>
+<span><i class="ti ti-home"></i></span><span class="hide-menu">Home</span>
 </a>
 </li>
 
@@ -73,22 +68,16 @@
 
 <!-- ITEMS -->
 <template x-for="item in grupo.items" :key="item.id">
-
 <li class="sidebar-item">
 
-<a class="sidebar-link"
-:class="{'has-arrow': item.children.length > 0}"
-:href="item.children.length ? '#' : item.ruta"
+<a class="sidebar-link" :class="{'has-arrow': item.children.length > 0}" :href="item.children.length ? '#' : item.ruta" 
 @click="if(item.children.length){ $event.preventDefault(); toggle(item); }">
-<span class="d-flex">
-<i :class="item.icono"></i>
-</span>
+<span class="d-flex"><i :class="item.icono"></i></span>
 <span class="hide-menu" x-text="item.nombre"></span>
 </a>
 
 <!-- SUBMENÚ -->
-<ul class="collapse first-level"
-:class="{'show': item.open}">
+<ul class="collapse first-level" :class="{'show': item.open}">
 <template x-for="child in item.children" :key="child.id">
 <li class="sidebar-item">
 <a :href="child.ruta" class="sidebar-link">
@@ -101,7 +90,6 @@
 </template>
 </ul>
 </li>
-
 </template>
 </div>
 
@@ -109,34 +97,32 @@
 </ul>
 </nav>
 
-<div class="fixed-profile p-2 mx-2 mb-5 bg-secondary-subtle rounded mt-0">
+<div class="bg-footer-do">
+<div class="fixed-profile p-2 mx-2 mb-5 bg-secondary-subtle-do rounded mt-0">
 <div class="hstack gap-2">
 <div class="john-img">
 <img src="<?= asset('images/profile/user-1.jpg') ?>" class="rounded-circle" width="40" height="40" alt="modernize-img" />
 </div>
 <div class="john-title">
-<h6 class="mb-0 fs-5 fw-semibold"><?=implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2));?></h6>
+<h6 class="mb-0 fs-5 fw-normal text-white"><?=implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2));?></h6>
 <span class="fs-2"><?=$user->puesto->tipo_puesto?></span>
 </div>
 <a href="/logout" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
-<i class="ti ti-power fs-6"></i>
+<i class="ti ti-power text-danger fs-6"></i>
 </a>
 </div>
 </div>
-
-<!-- ---------------------------------- -->
-<!-- Start Vertical Layout Sidebar -->
-<!-- ---------------------------------- -->
 </div>
+
 </aside>
+
 
 <!--  Sidebar End -->
 <div class="page-wrapper">
-<!--  Header Start -->
+
 <header class="topbar">
-<div class="with-vertical"><!-- ---------------------------------- -->
-<!-- Start Vertical Layout Header -->
-<!-- ---------------------------------- -->
+<div class="with-vertical">
+
 <nav class="navbar navbar-expand-lg p-0">
 <ul class="navbar-nav">
 <li class="nav-item nav-icon-hover-bg rounded-circle ms-n2">
@@ -145,8 +131,6 @@
 </a>
 </li>
 </ul>
-
-
 
 <div class="d-block d-lg-none py-2 text-center">
 <a href="/home" class="d-flex justify-content-center align-items-center logo-navbar">
@@ -158,6 +142,7 @@
 <a class="navbar-toggler nav-icon-hover-bg rounded-circle p-0 mx-0 border-0" href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
 <i class="ti ti-dots fs-7"></i>
 </a>
+
 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
 <div class="d-flex align-items-center justify-content-between">
 
@@ -167,15 +152,15 @@
 <a class="nav-link moon dark-layout" href="javascript:void(0)" style="display: flex;">
 <i class="ti ti-moon moon" style="display: flex;"></i>
 </a>
+
 <a class="nav-link sun light-layout" href="javascript:void(0)" style="display: none;">
 <i class="ti ti-sun sun" style="display: none;"></i>
 </a>
 </li>
 
-<!-- ------------------------------- -->
-<!-- start profile Dropdown -->
-<!-- ------------------------------- -->
+<!-- INICIO DROPDOWN PERFIL -->
 <li class="nav-item dropdown">
+
 <a class="nav-link pe-0" href="javascript:void(0)" id="drop1" aria-expanded="false">
 <div class="d-flex align-items-center">
 <div class="user-profile-img">
@@ -183,52 +168,52 @@
 </div>
 </div>
 </a>
+
 <div class="dropdown-menu content-dd dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop1">
 <div class="profile-dropdown position-relative" data-simplebar>
-<div class="py-3 px-7 pb-0">
-<h5 class="mb-0 fs-5 fw-semibold">Perfil de Usuario</h5>
-</div>
+<div class="py-3 px-7 pb-0"><h5 class="mb-0 fs-5 fw-semibold">Perfil de Usuario</h5></div>
+
 <div class="d-flex align-items-center py-9 mx-7 border-bottom">
 <img src="<?= asset('images/profile/user-1.jpg') ?>" class="rounded-circle" width="80" height="80" alt="modernize-img" />
-<div class="ms-3">
+
+<div class="ms-3 user-info">
 <h5 class="mb-1 fs-3"><?= $user->nombre ?></h5>
-<span class="mb-1 d-block"><?=$user->puesto->tipo_puesto?></span>
-<p class="mb-0 d-flex align-items-center gap-2">
-<i class="ti ti-mail fs-4"></i> <?= $user->email ?>
-</p>
+<span class="mb-1 d-block"><?= $user->puesto->tipo_puesto ?></span>
+<span class="mb-1 d-block mt-3"><i class="ti ti-mail fs-4"></i> Correo electronico:</span>
+<p class="mb-0 d-flex align-items-center gap-2"><span><?= $user->email ?></span></p>
 </div>
 </div>
+
 <div class="message-body">
 <a href="" class="py-8 px-7 mt-8 d-flex align-items-center">
 <span class="d-flex align-items-center justify-content-center text-bg-light rounded-1 p-6">
 <img src="<?= asset('images/svgs/icon-account.svg') ?>" alt="modernize-img" width="24" height="24" />
 </span>
+
 <div class="w-100 ps-3">
 <h6 class="mb-1 fs-3 fw-semibold lh-base">Mi Perfil</h6>
 <span class="fs-2 d-block text-body-secondary">Configuración</span>
 </div>
 </a>
 </div>
+
 <div class="d-grid py-4 px-7 pt-8">
 <a href="/logout" class="btn btn-outline-primary">Salir</a>
 </div>
 </div>
 </div>
 </li>
-<!-- ------------------------------- -->
-<!-- end profile Dropdown -->
-<!-- ------------------------------- -->
+<!-- FIN DROPDOWN PERFIL -->
+ 
 </ul>
 </div>
 </div>
 </nav>
-<!-- ---------------------------------- -->
-<!-- End Vertical Layout Header -->
-<!-- ---------------------------------- -->
 
 </div>      
 </header>
-<!--  Header End -->
+
+
 <div class="body-wrapper">
 <div class="container-fluid">
 
@@ -241,16 +226,14 @@ $esTodas       = (int)$idEstacion === 8;
 
 // Obtener razón social según tipo
 $razonsocial = $multiestacion
-    ? ($filtro_usuario['razonsocial'] ?? '')
-    : ($user->estacion->razonsocial ?? '');
+? ($filtro_usuario['razonsocial'] ?? '')
+: ($user->estacion->razonsocial ?? '');
 
 $razonsocial = trim($razonsocial);
 ?>
 
 <?php if (!$esTodas && $razonsocial !== ''): ?>
-    <span class="mb-1 badge rounded-pill text-bg-info">
-        <?= $razonsocial ?>
-    </span>
+<span class="mb-1 badge rounded-pill text-bg-info"><?= $razonsocial ?></span>
 <?php endif; ?>
 
 <!-- DERECHA -->
@@ -270,9 +253,7 @@ $razonsocial = trim($razonsocial);
 
 <h4 class="fw-semibold mt-3"><?=$title;?></h4>
 <?php \App\Core\Breadcrumb::render(); ?>
-
 <?= $content ?>
-
 </div>
 </div>
 
