@@ -14738,6 +14738,34 @@ background: #202936 !important;
 background: var(--bs-primary-bg-subtle);
 }
 
+
+/* estilos base (se comparten) */
+.icon-container-do {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+
+/* LIGHT */
+[data-bs-theme="light"] .body-container-do {
+  background: linear-gradient(135deg, #3aa0d8 25%, #1f5f9b 100%);
+}
+
+[data-bs-theme="light"] .icon-container-do {
+  background: #1f5f9b;
+}
+
+/* DARK */
+[data-bs-theme="dark"] .body-container-do {
+  background: linear-gradient(135deg, #2a3547 25%, #202936 100%);
+}
+
+[data-bs-theme="dark"] .icon-container-do {
+  background: #333f55;
+}
+
 /*!
 * Bootstrap  v5.3.2 (https://getbootstrap.com/)
 * Copyright 2011-2023 The Bootstrap Authors
@@ -44409,17 +44437,4 @@ height: auto;
 max-height: 28px;
 width: auto;
 object-fit: contain;
-}
-
-.body-container-do {
-background: linear-gradient(135deg, #3aa0d8 25%, #1f5f9b 100%);
-}
-
-.icon-container-do {
-background: #1f5f9b;
-padding: 1.5rem;
-display: flex;
-align-items: center;
-justify-content: center;
-align-self: stretch;
 }
