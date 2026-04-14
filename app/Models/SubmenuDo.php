@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Models;
+use App\Models\Usuario;
+use App\Models\Puesto;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -23,4 +25,27 @@ class SubmenuDo extends Model
         'id_submenu_do' => 'int',
         'id_menu_do' => 'int'
     ];
+
+    public function roles()
+    {
+        return $this->belongsToMany(
+            Puestos::class,
+            'tb_submenu_puestos',
+            'id_submenu_do',
+            'id_puesto'
+        );
+    }
+
+        public function usuarios()
+    {
+        return $this->belongsToMany(
+            Usuario::class,
+            'tb_submenu_usuarios',
+            'id_submenu_do',
+            'id_usuario'
+        );
+    }
+
+
+
 }

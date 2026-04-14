@@ -2,20 +2,26 @@
 
 <?php 
 $i = 1; 
-foreach($elementos as $elemento): ?>
+foreach ($submenus as $submenu): ?>
 
 <div class="col-md-4 d-flex align-items-stretch">
-<a href="<?= $elemento['ruta'] ?>" class="card w-100 card-hover">
+<a href="<?= $submenu['ruta'] ?>" class="card w-100 card-hover">
 <div class="card-body">
+
 <div class="d-flex align-items-center">
-<i class="<?= $elemento['icono'] ?> text-primary display-6"></i>
+<i class="<?= $submenu['icono'] ?> text-primary display-6"></i>
+
 <div class="ms-auto">
 <i class="ti ti-arrow-right text-primary fs-7"></i>
 </div>
 </div>
+
 <div class="mt-4">
-<h4 class="card-title mb-1 opacity-80"><?= $i . '. ' . $elemento['nombre'] ?></h4>
+<h4 class="card-title mb-1 opacity-80">
+<?= $i . '. ' . $submenu['nombre'] ?>
+</h4>
 </div>
+
 </div>
 </a>
 </div>
@@ -24,8 +30,5 @@ foreach($elementos as $elemento): ?>
 $i++; 
 endforeach; 
 ?>
+
 </div>
-
-
-
-
