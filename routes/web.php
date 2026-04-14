@@ -149,7 +149,20 @@ return function(RouteCollector $r) {
     $r->addGroup('/departamento-operativo', function (RouteCollector $r) {
     $r->addRoute('GET', '', Route::auth(['DptoOperativoController', 'index']));
 
+    //----- 1. Corporativo
+    $r->addRoute('GET','/corporativo',Route::auth(['DptoOperativoController', 'corporativoIndex']));
 
+    //----- 2. Recursos Humanos
+    $r->addRoute('GET','/recursos-humanos',Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
+
+    //----- 3. Importacion
+    $r->addRoute('GET','/importacion',Route::auth(['DptoOperativoController', 'importacionIndex']));
+
+    //----- 4. Almacen
+    $r->addRoute('GET','/almacen',Route::auth(['DptoOperativoController', 'almacenIndex']));
+
+    //----- 5. Comercializadora
+    $r->addRoute('GET','/comercializadora',Route::auth(['DptoOperativoController', 'comercializadoraIndex']));
     });
 
 
