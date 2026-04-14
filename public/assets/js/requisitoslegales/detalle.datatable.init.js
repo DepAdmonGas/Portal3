@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/sasisopa/requisitos-legales/datatable-detalle/' + ngobierno,
             type: 'GET',
             dataSrc: function (json) {
-
+            
+                console.log(json)
             //guardas permisos globalmente
             permisos = json.permisos;
             return json.data;
@@ -40,9 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
             data: 'fecha_emision',
             render: function (data, type) {
 
-                if (!data) return '';
+                if (!data || data === 'S/I') return 'S/I';
 
                 const partes = data.split('-');
+
+                if (partes.length !== 3) return 'S/I';
+
                 const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
 
                 const fechaFormateada = fecha.toLocaleDateString('es-MX', {
@@ -63,9 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
             data: 'fecha_vencimiento',
             render: function (data, type) {
 
-                if (!data) return '';
+                if (!data || data === 'S/I') return 'S/I';
 
                 const partes = data.split('-');
+
+                if (partes.length !== 3) return 'S/I';
+
                 const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
 
                 const fechaFormateada = fecha.toLocaleDateString('es-MX', {
@@ -158,6 +165,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
          },
 
+         {
+            data: 'estatus',
+            className: 'text-center align-middle',
+            render: function (data, type) {
+
+                if (!data || !data.titulo) return '';
+
+                return `
+                    <span class="badge rounded-pill ${data.color_css}">
+                        ${data.titulo}
+                    </span>
+                `;
+            }
+        },
+
         {
                 data: null,
                 width: '1%',
@@ -220,8 +242,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     });
 
-
-
+    $("#table-lista-requisitos-legales-detalle tbody").on("click", "tr", function () {
+    if ($(this).hasClass("selected")) {
+    } else {
+        table1.$("tr.selected").removeClass("selected");
+        $(this).addClass("selected");
+    }
+    });
 
 });
 
