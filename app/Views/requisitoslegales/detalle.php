@@ -24,6 +24,7 @@
             <th>Requisito Legal</th>
             <th>% Cumplimiento</th>
             <th>Renovacion</th>
+            <th>Estatus</th>
           <th class="text-center">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
