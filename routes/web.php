@@ -271,6 +271,36 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/objetivos-metas-indicadores/experiencia-cliente', Route::auth(['SasisopaController', 'objetivosMetasIndicadoresExperienciaCliente']));
         $r->addRoute('GET', '/objetivos-metas-indicadores/indicador-ventas', Route::auth(['SasisopaController', 'objetivosMetasIndicadoresIndicadorVentas']));
 
+        // Elemento 5
+        $r->addRoute('GET', '/funciones-responsabilidades-autoridad', Route::auth(['SasisopaController', 'funcionesResponsabilidadesAutoridad']));
+        // Elemento 6
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento', Route::auth(['SasisopaController', 'competenciaPersonalCapacitacionEntrenamiento']));
+        // Elemento 7
+        $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['SasisopaController', 'comunicacionParticipacionConsulta']));
+        // Elemento 8
+        $r->addRoute('GET', '/control-documentos-registros', Route::auth(['SasisopaController', 'controlDocumentosRegistros']));
+        // Elemento 9
+        $r->addRoute('GET', '/mejores-practicas-estandares', Route::auth(['SasisopaController', 'mejoresPracticasEstandares']));
+        // Elemento 10
+        $r->addRoute('GET', '/control-actividades-procesos', Route::auth(['SasisopaController', 'controlActividadesProcesos']));
+        // Elemento 11
+        $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['SasisopaController', 'integridadMecanicaAseguramiento']));
+        // Elemento 12
+        $r->addRoute('GET', '/seguridad-contratistas', Route::auth(['SasisopaController', 'seguridadContratistas']));
+        // Elemento 13
+        $r->addRoute('GET', '/preparacion-emergencias', Route::auth(['SasisopaController', 'preparacionEmergencias']));
+        // Elemento 14
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion', Route::auth(['SasisopaController', 'monitoreoVerificacionEvaluacion']));
+        // Elemento 15
+        $r->addRoute('GET', '/auditorias', Route::auth(['SasisopaController', 'auditorias']));
+        // Elemento 16
+        $r->addRoute('GET', '/investigacion-incidentes-accidentes', Route::auth(['SasisopaController', 'investigacionIncidentesAccidentes']));
+        // Elemento 17
+        $r->addRoute('GET', '/revision-resultados', Route::auth(['SasisopaController', 'revisionResultados']));
+        // Elemento 18
+        $r->addRoute('GET', '/informes-desempeno', Route::auth(['SasisopaController', 'informesDesempeno']));
+
+
         // Otros
         $r->addRoute('GET', '/calendario', Route::auth(['SasisopaController', 'calendario']));
         $r->addRoute('GET', '/cursos', Route::auth(['SasisopaController', 'cursos']));
