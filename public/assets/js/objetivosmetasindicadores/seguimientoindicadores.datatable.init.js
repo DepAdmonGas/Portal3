@@ -17,7 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/sasisopa/datatable-seguimiento-indicadores',
             type: 'GET',
             dataSrc: function (json) {
-                return json.data;
+                //guardas permisos globalmente
+            permisos = json.permisos;
+            return json.data;
             }
         },
         columns: [
@@ -55,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
                     
+                    const noEdit = permisos.editar;
+                    const noDelete = permisos.eliminar;
+                    const noDownload = permisos.descargar;
 
                     return `
                         <div class="dropdown dropstart">
@@ -62,19 +67,23 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
+                             <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                     @click="openViewReporteIndicadores(${row.id})">
+                                        <i class="fs-4 ti ti-eye"></i>Detalle
+                                    </a>
+                                </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit 
-                                    data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                                    @click="openEditarReporteIndicadores(${row.id})">
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
-                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
-                                        <i class="fs-4 ti ti-download"></i>Descargar
-                                    </a>
-                                </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                     ${!noDelete ? '' : `
+                                    @click='deleteReporteIndicadores(${row.id})'
+                                    `}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
