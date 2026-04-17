@@ -163,7 +163,6 @@ document.addEventListener('alpine:init', () => {
 
             const nombre = res.nombre;
 
-            // 👇 AGREGAR DE NUEVO AL SELECT
             $('#selectPersonal').append(
                 new Option(nombre, nombre, false, false)
             );

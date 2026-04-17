@@ -35,9 +35,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/objetivosmetasindicadores/seguimientoindicadores.datatable.init.js?v=1.0',
-                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.datatable.init.js?v=1.4',
-                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.actions.init.js?v=1.4'
+                '/js/objetivosmetasindicadores/seguimientoindicadores.datatable.init.js?v=1.2',
+                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.datatable.init.js?v=1.5',
+                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.actions.init.js?v=1.9'
             ],
             'help' => true
         ];
@@ -457,105 +457,418 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
     }
 
-public function pdfObjetivosMetas(){
+    public function pdfObjetivosMetas(){
 
-    $estacion = Estacion::find($this->estacionId());
-    $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+        $estacion = Estacion::find($this->estacionId());
+        $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
-    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
+        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-    $detalles = SeguimientoObjetivosMetasDetalle::whereHas('seguimiento', function($q){
-        $q->where('id_estacion', $this->estacionId());
-    })
-    ->orderBy('id_seguimiento', 'desc')
-    ->get();
+        $detalles = SeguimientoObjetivosMetasDetalle::whereHas('seguimiento', function($q){
+            $q->where('id_estacion', $this->estacionId());
+        })
+        ->orderBy('id_seguimiento', 'desc')
+        ->get();
 
-    $detallesAgrupados = $detalles->groupBy('id_seguimiento');
-    $rows = '';
+        $detallesAgrupados = $detalles->groupBy('id_seguimiento');
+        $rows = '';
 
-    foreach ($detallesAgrupados as $idSeguimiento => $items) {
-
-    $rows .= '
-    <tr>
-        <td colspan="5" style="background:#d9d9d9; font-weight:bold;">
-            Seguimiento de objetivos y metas No.'.$idSeguimiento.'
-        </td>
-    </tr>';
-
-    foreach ($items as $row) {
+        foreach ($detallesAgrupados as $idSeguimiento => $items) {
 
         $rows .= '
         <tr>
-            <td class="text-center">'.formatearFecha($row->fecha).'</td>
-            <td class="text-center">'.$row->objetivo_meta.'</td>
-            <td class="text-center">'.$row->nivel_cumplimiento.'</td>
-            <td class="text-center">'.$row->medidas.'</td>
-            <td class="text-center">'.formatearFecha($row->fecha_aplicacion).'</td>
+            <td colspan="5" style="background:#d9d9d9; font-weight:bold;">
+                Seguimiento de objetivos y metas No.'.$idSeguimiento.'
+            </td>
         </tr>';
+
+        foreach ($items as $row) {
+
+            $rows .= '
+            <tr>
+                <td class="text-center">'.formatearFecha($row->fecha).'</td>
+                <td class="text-center">'.$row->objetivo_meta.'</td>
+                <td class="text-center">'.$row->nivel_cumplimiento.'</td>
+                <td class="text-center">'.$row->medidas.'</td>
+                <td class="text-center">'.formatearFecha($row->fecha_aplicacion).'</td>
+            </tr>';
+        }
+
     }
 
-}
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Seguimiento de objetivos y metas</title>
+            <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
+        </head>
+        <body>
 
-    $html = '
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Seguimiento de objetivos y metas</title>
-         <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
-    </head>
-    <body>
-
-    <table class="table table-bordered table-sm">
-        <tr>
-            <td class="text-center align-middle">
-                <img src="'.$logo.'" style="width:120px;">
-            </td>
-            <td class="text-center align-middle" colspan="2">
-                <b>Seguimiento de objetivos y metas</b>
-            </td>
-            <td class="text-center align-middle">
-                <b>Fo.ADMONGAS.006</b>
-            </td>
-        </tr>
-        <tr>
-            <td class="text-center">Realizado por:<br> Nelly Estrada Garcia</td>
-            <td class="text-center">Revisado por:<br> Eduardo Galicia Flores</td>
-            <td class="text-center">Autorizado por:<br> '.$apoderado.'</td>
-            <td class="text-center">Fecha de aprobación:<br> 01/10/2018</td>
-        </tr>
-    </table>
-
-    <br>
-
-    <table class="table table-bordered table-sm fs-6">
-        <thead>
+        <table class="table table-bordered table-sm fs-6">
             <tr>
-                <th class="text-center">Fecha</th>
-                <th class="text-center">Objetivo o meta</th>
-                <th class="text-center">Nivel de cumplimiento</th>
-                <th class="text-center">Medidas</th>
-                <th class="text-center">Fecha aplicación</th>
+                <td class="text-center align-middle">
+                    <img src="'.$logo.'" style="width:120px;">
+                </td>
+                <td class="text-center align-middle" colspan="2">
+                    <b>Seguimiento de objetivos y metas</b>
+                </td>
+                <td class="text-center align-middle">
+                    <b>Fo.ADMONGAS.006</b>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            '.$rows.'
-        </tbody>
-    </table>
+            <tr>
+                <td class="text-center">Realizado por:<br> Nelly Estrada Garcia</td>
+                <td class="text-center">Revisado por:<br> Eduardo Galicia Flores</td>
+                <td class="text-center">Autorizado por:<br> '.$apoderado.'</td>
+                <td class="text-center">Fecha de aprobación:<br> 01/10/2018</td>
+            </tr>
+        </table>
 
-    </body>
-    </html>
-    ';
+        <table class="table table-bordered table-sm fs-6">
+            <thead>
+                <tr>
+                    <th class="text-center">Fecha</th>
+                    <th class="text-center">Objetivo o meta</th>
+                    <th class="text-center">Nivel de cumplimiento</th>
+                    <th class="text-center">Medidas</th>
+                    <th class="text-center">Fecha aplicación</th>
+                </tr>
+            </thead>
+            <tbody>
+                '.$rows.'
+            </tbody>
+        </table>
 
-    $options = new Options();
-    $options->set('isRemoteEnabled', true);
+        </body>
+        </html>
+        ';
 
-    $dompdf = new Dompdf($options);
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
 
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'portrait');
-    $dompdf->render();
+        $dompdf = new Dompdf($options);
 
-    $dompdf->stream("Seguimiento-objetivos-metas.pdf", ["Attachment" => true]);
-}
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $dompdf->stream("Seguimiento-objetivos-metas.pdf", ["Attachment" => true]);
+    }
+
+    public function createReporteIndicadores(){
+
+        header('Content-Type: application/json; charset=utf-8');
+        $json = json_decode(file_get_contents('php://input'), true);
+        $data = $json['data'] ?? null;
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para crear'
+            ]);
+            return;
+        }
+
+         if (!$data['fecha'] && !$data['capacitacion'] && !$data['experiencia']
+                && !$data['ventas'] && !$data['medidas'] && !$data['fecha_aplicacion']) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Faltan campos obligatorios'
+            ]);
+            exit;
+        }
+
+        try {
+
+            Capsule::beginTransaction();
+
+            SeguimientoReporteIndicador::create([
+                'id_estacion' => $this->estacionId(),
+                'id_usuario'  => $this->userId(),
+                'fecha'       => $data['fecha'],
+                'capacitacion'=> $data['capacitacion'],
+                'exp_cliente' => $data['experiencia'],
+                'ventas'      => $data['ventas'],
+                'medidas_correctivas'     => $data['medidas'],
+                'fecha_aplicacion' => $data['fecha_aplicacion']
+            ]);
+
+            Capsule::commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro guardado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Capsule::rollBack();
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function updateReporteIndicadores($id){
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para editar'
+            ]);
+            return;
+        }
+
+        try {
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            $payload = $data['data'] ?? null;
+
+            if (!$payload) {
+                throw new \Exception('Payload vacío');
+            }
+
+            if (
+                empty($payload['fecha']) ||
+                empty($payload['capacitacion']) ||
+                empty($payload['experiencia']) ||
+                empty($payload['ventas']) ||
+                empty($payload['medidas']) ||
+                empty($payload['fecha_aplicacion'])
+            ) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Faltan campos obligatorios'
+                ]);
+                return;
+            }
+
+            Capsule::beginTransaction();
+
+            $registro = SeguimientoReporteIndicador::find($id);
+
+            if (!$registro) {
+                throw new \Exception('Registro no encontrado');
+            }
+
+            $registro->update([
+                'fecha' => $payload['fecha'] ?: null,
+                'capacitacion' => $payload['capacitacion'],
+                'exp_cliente' => $payload['experiencia'],
+                'ventas' => $payload['ventas'],
+                'medidas_correctivas' => $payload['medidas'],
+                'fecha_aplicacion' => $payload['fecha_aplicacion'] ?: null
+            ]);
+
+            Capsule::commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro actualizado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Capsule::rollBack();
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getReporteIndicadores($id){
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+
+            $row = SeguimientoReporteIndicador::find($id);
+
+            if (!$row) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No se encontró información'
+                ]);
+                return;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'fecha' => formatDate($row->fecha),
+                    'fecha_format' => formatearFecha($row->fecha),
+                    'capacitacion' => $row->capacitacion ?? '',
+                    'experiencia' => $row->exp_cliente ?? '',
+                    'ventas' => $row->ventas ?? '',
+                    'medidas' => $row->medidas_correctivas ?? '',
+                    'fecha_aplicacion' => formatDate($row->fecha_aplicacion),
+                    'fecha_aplicacion_format' => formatearFecha($row->fecha_aplicacion)
+                ]
+            ]);
+
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteReporteIndicadores(){
+
+        header('Content-Type: application/json; charset=utf-8');
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+
+         if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para eliminar'
+            ]);
+            return;
+        }
+
+         if (!$id) {
+            echo json_encode(['success' => false,'message' => 'ID requerido']);
+            return;
+        }
+
+            try {
+
+            Capsule::beginTransaction();
+ 
+            $deleted = SeguimientoReporteIndicador::where('id', $id)->delete();
+
+            if (!$deleted) {
+                throw new \Exception('No se encontró el registro');
+            }
+
+            Capsule::commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro eliminado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Capsule::rollBack();
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
+    }
+
+    public function pdfReporteIndicadores(){
+
+        $estacion = Estacion::find($this->estacionId());
+        $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+
+        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
+
+        // Obtener datos
+        $data = SeguimientoReporteIndicador::where('id_estacion', $this->estacionId())
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Seguimiento y reporte de indicadores</title>
+            <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
+        </head>
+        <body>
+
+        <table class="table table-bordered fs-6">
+            <tbody>
+                <tr>
+                    <td class="align-middle text-center">
+                        <img src="'.$logo.'" style="width:130px;">
+                    </td>
+                    <td colspan="2" class="align-middle text-center">
+                        <b>Seguimiento y reporte de indicadores</b>
+                    </td>
+                    <td class="align-middle text-center">
+                        <b>Fo.ADMONGAS.007</b>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="align-middle text-center">
+                        Realizado por:<br> Nelly Estrada Garcia
+                    </td>
+                    <td class="align-middle text-center">
+                        Revisado por:<br> Eduardo Galicia Flores
+                    </td>
+                    <td class="align-middle text-center">
+                        Autorizado por:<br> '.$apoderado.'
+                    </td>
+                    <td class="align-middle text-center">
+                        Fecha de aprobación:<br> 01/10/2018
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="table table-bordered table-sm fs-6">
+            <thead>
+                <tr>
+                    <th class="align-middle">Fecha</th>
+                    <th class="align-middle">Capacitación</th>
+                    <th class="align-middle">Experiencia del cliente</th>
+                    <th class="align-middle">Ventas</th>
+                    <th class="align-middle">Medidas correctivas</th>
+                    <th class="align-middle">Fecha de aplicación</th>
+                </tr>
+            </thead>
+            <tbody>
+        ';
+
+        foreach ($data as $row) {
+
+            $html .= '
+            <tr>
+                <td class="align-middle">'.formatearFecha($row->fecha).'</td>
+                <td class="align-middle">'.htmlspecialchars($row->capacitacion).'</td>
+                <td class="align-middle">'.htmlspecialchars($row->exp_cliente).'</td>
+                <td class="align-middle">'.htmlspecialchars($row->ventas).'</td>
+                <td class="align-middle">'.htmlspecialchars($row->medidas_correctivas).'</td>
+                <td class="align-middle">'.formatearFecha($row->fecha_aplicacion).'</td>
+            </tr>';
+        }
+
+        $html .= '
+            </tbody>
+        </table>
+
+        </body>
+        </html>
+        ';
+
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
+
+        $dompdf = new Dompdf($options);
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $dompdf->stream("Seguimiento-reporte-indicadores.pdf", ["Attachment" => true]);
+    }
 }

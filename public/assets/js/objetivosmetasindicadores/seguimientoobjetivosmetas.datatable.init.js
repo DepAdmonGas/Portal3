@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/sasisopa/datatable-seguimiento-objetivosmetas',
             type: 'GET',
             dataSrc: function (json) {
-            console.log(json.data)
             //guardas permisos globalmente
             permisos = json.permisos;
             return json.data;

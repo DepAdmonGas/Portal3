@@ -36,8 +36,9 @@
     
     <div class="card w-100">
       <a href="objetivos-metas-indicadores/capacitacion-personal">
-      <div class="card-body">        
-        <div class="fs-6 text-center">
+      <div class="card-body text-center">     
+        <i class="ti ti-chart-infographic fs-13"></i>   
+        <div class="fs-7 mt-3">
         Capacitación del personal
         </div>
       </div>
@@ -49,8 +50,9 @@
   <div class="col-md-4 d-flex align-items-stretch">
     <div class="card w-100">
       <a href="objetivos-metas-indicadores/experiencia-cliente">
-      <div class="card-body">
-        <div class="fs-6 text-center">
+      <div class="card-body text-center">
+        <i class="ti ti-chart-infographic fs-13"></i>   
+        <div class="fs-7 mt-3">
           Experiencia del cliente
         </div>
       </div>
@@ -61,8 +63,9 @@
    <div class="col-md-4 d-flex align-items-stretch">
     <div class="card w-100">
       <a href="objetivos-metas-indicadores/indicador-ventas">
-      <div class="card-body">
-        <div class="fs-6 text-center">
+      <div class="card-body text-center">
+        <i class="ti ti-chart-infographic fs-13"></i>   
+        <div class="fs-7 mt-3">
           Ventas
         </div>
       </div>
@@ -156,7 +159,7 @@
               <?=
                 !empty($permisos['descargar']) ? 
                 '<li>
-                  <a class="dropdown-item" href="javascript:void(0)"><i class="ti ti-download"></i> Descargar</a>
+                  <a class="dropdown-item" href="/sasisopa/objetivos-metas-indicadores/pdf-reporte-indicadores"><i class="ti ti-download"></i> Descargar</a>
                 </li>' 
                 : '' 
               ?>   
@@ -390,7 +393,7 @@
 
                     <button type="button"
                             class="btn btn-success"
-                            @click="submitObjetivosMetas()"
+                            @click="$event.target.blur(); submitObjetivosMetas()"
                             :disabled="loading">
 
                         <span x-show="!loading">Guardar</span>
@@ -415,34 +418,107 @@
 
                 <!-- HEADER -->
                 <div class="modal-header">
-                    <h4 class="modal-title" x-text="mode === 'edit' ? 'Editar Seguimiento y reporte de indicadores' : 'Seguimiento y reporte de indicadores'"></h4>
+                    <h4 class="modal-title" 
+                    x-text="mode === 'edit' ? 'Editar Seguimiento y reporte de indicadores' : 
+                    mode === 'view' ? 'Detalle Seguimiento y reporte de indicadores' :
+                    'Seguimiento y reporte de indicadores'"
+                    
+                    ></h4>
                     <button type="button"
                             class="btn-close"
                             data-bs-dismiss="modal"
-                            @click="resetModal()">
+                            @click="$event.target.blur(); resetReporteIndicadores()">
                     </button>
                 </div>
 
                 <!-- BODY -->
                 <div class="modal-body">
 
-                  
+                <template x-if="mode !== 'view'">
+                <div>
+                <label class="form-label">* Fecha:</label>
+                <input type="date" class="form-control" 
+                x-model="reporteIndicadores.fecha"
+                :class="errors.reporteIndicadores.fecha ? 'is-invalid' : ''"
+                @input="errors.reporteIndicadores.fecha = false">
 
+                <label class="form-label mt-3">* Capacitación:</label>
+                <textarea class="form-control" 
+                x-model="reporteIndicadores.capacitacion"
+                :class="errors.reporteIndicadores.capacitacion ? 'is-invalid' : ''"
+                @input="errors.reporteIndicadores.capacitacion = false"></textarea>
+
+                <label class="form-label mt-3">* Experiencia del cliente:</label>
+                <textarea class="form-control" 
+                x-model="reporteIndicadores.experiencia"
+                :class="errors.reporteIndicadores.experiencia ? 'is-invalid' : ''"
+                @input="errors.reporteIndicadores.experiencia = false"></textarea>
+
+                <label class="form-label mt-3">* Ventas:</label>
+                <textarea class="form-control" 
+                x-model="reporteIndicadores.ventas"
+                :class="errors.reporteIndicadores.ventas ? 'is-invalid' : ''"
+                @input="errors.reporteIndicadores.ventas = false"></textarea>
+
+                <label class="form-label mt-3">* Medidas correctivas:</label>
+                <textarea class="form-control" 
+                x-model="reporteIndicadores.medidas"
+                :class="errors.reporteIndicadores.medidas ? 'is-invalid' : ''"
+                @input="errors.reporteIndicadores.medidas = false"></textarea>
+
+                <label class="form-label mt-3">* Fecha de aplicación:</label>
+                <input type="date" class="form-control" 
+                x-model="reporteIndicadores.fecha_aplicacion"
+                :class="errors.reporteIndicadores.fecha_aplicacion ? 'is-invalid' : ''"
+                @input="errors.reporteIndicadores.fecha_aplicacion = false">
+                </div>
+                </template>
+
+                <template x-if="mode === 'view'">
+                      <div>
+
+                          <label class="form-label">Fecha:</label>
+                          <div class="border rounded p-2 bg-light"
+                            x-text="reporteIndicadores.fecha_format || 'S/I'"></div>
+
+                          <label class="form-label mt-3">Capacitación:</label>
+                          <div class="border rounded p-2 bg-light" 
+                            x-text="reporteIndicadores.capacitacion || 'S/I'"></div>
+
+                          <label class="form-label mt-3">Experiencia del cliente:</label>
+                          <div class="border rounded p-2 bg-light" 
+                            x-text="reporteIndicadores.experiencia || 'S/I'"></div>
+
+                          <label class="form-label mt-3">Ventas:</label>
+                          <div class="border rounded p-2 bg-light" 
+                            x-text="reporteIndicadores.ventas || 'S/I'"></div>
+
+                          <label class="form-label mt-3">Medidas correctivas:</label>
+                          <div class="border rounded p-2 bg-light" 
+                            x-text="reporteIndicadores.medidas || 'S/I'"></div>
+
+                          <label class="form-label mt-3">Fecha de aplicación:</label>
+                          <div class="border rounded p-2 bg-light" 
+                            x-text="reporteIndicadores.fecha_aplicacion_format || 'S/I'"></div>
+
+                      </div>
+                </template>
+   
                 </div>
 
                 <!-- FOOTER -->
-                <div class="modal-footer">
+                <div class="modal-footer" x-show="mode !== 'view'">
 
                     <button type="button"
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
-                            @click="resetModal()">
+                            @click="$event.target.blur(); resetReporteIndicadores()">
                         Cancelar
                     </button>
 
                     <button type="button"
                             class="btn btn-success"
-                            @click="submitObjetivosMetas()"
+                            @click="submitReporteIndicadores()"
                             :disabled="loading">
 
                         <span x-show="!loading">Guardar</span>
