@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .getElementById('container')
     .dataset.idsasisopa;
 
-    $('#table-lista-seguimiento-indicadores').DataTable({
+    table1 = $('#table-seguimiento-indicadores').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/datatable-lista-seguimiento-indicadores',
+            url: '/sasisopa/datatable-seguimiento-indicadores',
             type: 'GET',
             dataSrc: function (json) {
                 return json.data;
@@ -84,6 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ]
+    });
+
+     $("#table-seguimiento-indicadores tbody").on("click", "tr", function () {
+    if ($(this).hasClass("selected")) {
+    } else {
+        table1.$("tr.selected").removeClass("selected");
+        $(this).addClass("selected");
+    }
     });
 
 });

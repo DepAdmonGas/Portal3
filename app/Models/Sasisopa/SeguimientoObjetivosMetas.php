@@ -24,4 +24,6 @@ class SeguimientoObjetivosMetas extends Model
         'id_usuario' => 'int',
         'fecha' => 'datetime'
     ];
+
+    
 }
