@@ -27,4 +27,8 @@ class SeguimientoObjetivosMetasDetalle extends Model
         'fecha' => 'date',
         'fecha_aplicacion' => 'date'
     ];
+
+    public function seguimiento(){
+        return $this->belongsTo(SeguimientoObjetivosMetas::class, 'id_seguimiento');
+    }
 }

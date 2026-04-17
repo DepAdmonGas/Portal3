@@ -14,33 +14,20 @@ if (!function_exists('asset')) {
     }
 }
 
-if (!function_exists('formatearFecha')) {
+function formatearFecha($fecha)
+{
+    if (empty($fecha)) return '';
 
-    function formatearFecha($fecha) {
+    $date = \Carbon\Carbon::parse($fecha);
 
-        if (empty($fecha)) return '';
+    $meses = [
+        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',
+        4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
+        7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre',
+        10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+    ];
 
-        if (is_object($fecha)) {
-            $fecha = $fecha->format('Y-m-d');
-        }
-
-        $timestamp = strtotime($fecha);
-
-        if (!$timestamp) return '';
-
-        $meses = [
-            '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo',
-            '04' => 'Abril', '05' => 'Mayo', '06' => 'Junio',
-            '07' => 'Julio', '08' => 'Agosto', '09' => 'Septiembre',
-            '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre'
-        ];
-
-        $dia = date('d', $timestamp);
-        $mes = $meses[date('m', $timestamp)];
-        $anio = date('Y', $timestamp);
-
-        return "$dia de $mes del $anio";
-    }
+    return $date->format('d') . ' de ' . $meses[(int)$date->format('m')] . ' del ' . $date->format('Y');
 }
 
 if (!function_exists('formatearFechaCorta')) {
@@ -49,20 +36,32 @@ if (!function_exists('formatearFechaCorta')) {
     {
         if (empty($fecha)) return '';
 
-        if (is_object($fecha)) {
+        // Si es objeto (Carbon o DateTime)
+        if ($fecha instanceof \DateTimeInterface) {
             return $fecha->format('d-m-Y');
         }
 
-        $date = \DateTime::createFromFormat('d/m/Y H:i', $fecha);
-        if ($date) {
-            return $date->format('d-m-Y');
+        $fecha = (string) $fecha;
+
+        // Fechas inválidas comunes
+        if (
+            $fecha === '0000-00-00' ||
+            str_contains($fecha, '-0001')
+        ) {
+            return '';
         }
 
-        $timestamp = strtotime($fecha);
-        if ($timestamp) {
-            return date('d-m-Y', $timestamp);
+        try {
+            return \Carbon\Carbon::parse($fecha)->format('d-m-Y');
+        } catch (\Exception $e) {
+            return '';
         }
-
-        return '';
     }
+}
+
+function formatDate($fecha)
+{
+    if (empty($fecha)) return '';
+
+    return \Carbon\Carbon::parse($fecha)->format('Y-m-d');
 }

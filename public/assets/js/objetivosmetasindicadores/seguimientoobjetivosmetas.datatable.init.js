@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .getElementById('container')
     .dataset.idsasisopa;
 
-    $('#table-lista-seguimiento-objetivosmetas').DataTable({
+    table2 = $('#table-seguimiento-objetivosmetas').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -14,11 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/datatable-lista-seguimiento-objetivosmetas',
+            url: '/sasisopa/datatable-seguimiento-objetivosmetas',
             type: 'GET',
             dataSrc: function (json) {
-                return json.data;
-            }
+            console.log(json.data)
+            //guardas permisos globalmente
+            permisos = json.permisos;
+            return json.data;
+        }
         },
         columns: [
             { data: 'id', width: '60px', className: 'text-center' },
@@ -47,6 +50,20 @@ document.addEventListener('DOMContentLoaded', () => {
             orderable: true,
             searchable: true
         },
+        {
+            data: 'estatus',
+            className: 'text-center align-middle',
+            render: function (data, type) {
+
+                if (!data || !data.titulo) return '';
+
+                return `
+                    <span class="badge rounded-pill ${data.color_css}">
+                        ${data.titulo}
+                    </span>
+                `;
+            }
+        },
            {
                 data: null,
                 width: '1%',
@@ -54,6 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchable: false,
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
+
+                    const noEdit = permisos.editar;
+                    const noDelete = permisos.eliminar;
+                    const noDownload = permisos.descargar;
                     
 
                     return `
@@ -63,18 +84,22 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit 
-                                    data-id="${row.id}">
-                                        <i class="fs-4 ti ti-edit"></i>Editar
-                                    </a>
-                                </li>
-                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
-                                        <i class="fs-4 ti ti-download"></i>Descargar
+                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                    @click="openViewObjetivoMetas(${row.id})">
+                                        <i class="fs-4 ti ti-eye"></i>Detalle
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                                    @click="openEditarObjetivoMetas(${row.id})">
+                                        <i class="fs-4 ti ti-edit"></i>Editar
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    ${!noDelete ? '' : `
+                                    @click='deleteObjetivoMetas(${row.id})'
+                                    `}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
@@ -84,6 +109,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ]
+    });
+
+     $("#table-seguimiento-objetivosmetas tbody").on("click", "tr", function () {
+    if ($(this).hasClass("selected")) {
+    } else {
+        table2.$("tr.selected").removeClass("selected");
+        $(this).addClass("selected");
+    }
     });
 
 });

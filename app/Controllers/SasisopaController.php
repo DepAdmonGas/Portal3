@@ -6,8 +6,8 @@ use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Models\Sasisopa\AnalisisRiesgo;
 use App\Models\Sasisopa\AnalisisRiesgoAnexo;
-use App\Models\Sasisopa\SeguimientoObjetivosMetas;
-use App\Models\Sasisopa\SeguimientoReporteIndicador;
+
+
 use App\Models\Sasisopa\RepresentanteTecnico;
 use App\Models\Sasisopa\ComunicacionIE;
 use App\Models\Sasisopa\QuejasSugerencia;
@@ -1094,55 +1094,11 @@ class SasisopaController extends BaseController{
     //------------------------------------------------------------------------------------
     //---------------- 4 Objetivos, metas e indicadores ----------------------------------
 
-    public function objetivosMetasIndicadores(){
+    
 
-        $title = '4. OBJETIVOS, METAS E INDICADORES';
+   
 
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js',
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/sasisopa/listaseguimientoindicadores.datatable.init.js',
-                '/assets/js/sasisopa/listaseguimientoobjetivosmetas.datatable.init.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/objetivos-metas-indicadores', $data,'sasisopa');
-
-    }
-
-    public function datatableListaSeguimientoIndicadores(){
-        $data = SeguimientoReporteIndicador::where('id_estacion',2)
-        ->groupBy('fecha')
-        ->get();
-
-         echo json_encode([
-            "data" => $data
-        ]);
-        
-        exit;
-    }
-
-    public function datatableListaSeguimientoObjetivosMetas(){
-        $data = SeguimientoObjetivosMetas::where('id_estacion',2)
-        ->groupBy('fecha')
-        ->get();
-
-         echo json_encode([
-            "data" => $data
-        ]);
-        
-        exit;
-    }
+    
 
     public function objetivosMetasIndicadoresCapacitacionPersonal(){
 

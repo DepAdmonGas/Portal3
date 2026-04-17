@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
             type: 'GET',
             dataSrc: function (json) {
             
-                console.log(json)
             //guardas permisos globalmente
             permisos = json.permisos;
             return json.data;
