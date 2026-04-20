@@ -40,4 +40,12 @@ columns: [
 
 });
 
+$("#table-tarjetas-detalle tbody").on("click", "tr", function () {
+if ($(this).hasClass("selected")) {
+} else {
+table.$("tr.selected").removeClass("selected");
+$(this).addClass("selected");
+}
+});
+
 });   

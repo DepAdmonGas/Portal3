@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-let permisos = {};
+let filas_mostrar = {};
 let mostrarFilaEstacion = true;
 
 const table = $('#table-tarjetas').DataTable({
@@ -17,106 +17,65 @@ url: '/solicitud-tarjetas/datatable',
 type: 'GET',
 dataSrc: function (json) {
 //guardas permisos globalmente
-permisos = json.permisos;
+filas_mostrar = json.filas_mostrar;
 return json.data;
 }
 },
 
-/*
-rowCallback: function (row, data) {
-
-// Configuracion del color de las filas
-const estatus = Number(data.estatus);
-let color = '';
-
-switch (estatus) {
-
-case 0:
-color = '#ffb6af'; // rojo
-break;
-
-case 1:
-case 2:
-color = '#fcfcda'; // amarillo
-break;
-
-case 3:
-case 4:
-color = '#b0f2c2'; // verde
-break;
-
-}
-
-// Aqui se aplica el color a cada celda 
-if (color) {
-$(row).find('td').css({'background-color': color});
-}
-
-},
-*/
-
 columns: [
-{ title: '#', data: 'id', width: '60px', className: 'text-center align-middle' },
+{ title: '#', data: 'idSolicitud', width: '60px', className: 'text-center align-middle' },
 { title: 'No. Solicitud', data: 'no_solicitud', width: '100px', className: 'text-center align-middle'},
-{ title: 'Fecha', data: 'fecha', className: 'text-center align-middle',
+{ title: 'Fecha', data: 'fecha_solicitud', className: 'text-center align-middle',
 render: function (data, type) {
 
-if (!data) return '';
+if (!data || data === 'S/I') return 'S/I';
 
-if (type !== 'display') {
-return data;
-}
+const partes = data.split('-');
+if (partes.length !== 3) return 'S/I';
 
-const fecha = new Date(data);
+const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
 
-return fecha.toLocaleDateString('es-MX', {
+const fechaFormateada = fecha.toLocaleDateString('es-MX', {
 day: 'numeric',
 month: 'long',
 year: 'numeric'
 });
+
+
+if (type === 'display' || type === 'filter') {
+return fechaFormateada;
 }
+
+return data;
+},
+orderable: true,
+searchable: true
 },
 
-{ title: 'Solicita', data: 'id_usuario', className: 'text-center align-middle'},            
-{ title: 'Estación', data: 'id_estacion', className: 'text-center align-middle', visible: mostrarFilaEstacion},   
+{ title: 'Solicita', data: 'nombre_usuario', className: 'text-center align-middle',
+render: function (data, type) {
+if (!data) return 'S/I';  
+return data;
+}
+},            
+{ title: 'Estación', data: 'nombre_estacion', className: 'text-center align-middle', visible: mostrarFilaEstacion,
+render: function (data, type) {
+if (!data) return 'S/I';  
+return data;
+}
+},   
 { title: 'Estatus', data: 'estatus', width: '140px', className: 'text-center align-middle',
 render: function (data) {
 const estatus = Number(data);
 
-let clase = '';
-let texto = '';
-
-switch (estatus) {
-
-case 0:
-clase = 'danger';
-texto = 'Sin atender';
-break;
-
-case 1:
-clase = 'warning';
-texto = 'En proceso';
-break;
-
-case 2:
-clase = 'success';
-texto = 'Finalizado';
-break;
-
-case 3:
-case 4:
-clase = 'info';
-texto = 'Entregada';
-break;
-
-default:
-clase = 'secondary';
-texto = 'Desconocido';
-
+if (!data || !data.titulo) return '';
+return `
+<span class="badge rounded-pill ${data.color_badge}">
+${data.titulo}
+</span>
+`;
 }
 
-return `<span class="badge rounded-pill bg-${clase}">${texto}</span>`;
-}
 },
 
 {
@@ -128,32 +87,11 @@ searchable: false,
 className: 'text-center align-middle td-small',
 render: function (data, type, row) {
 
-const estatus = Number(row.estatus);
-const noEdit = !permisos.editar;
-const noDelete = !permisos.eliminar;
+const permisos = row.permisos;
 
-let disableDetail = '';
-let disabledEdit = '';
-let disabledDelete = '';
-
-// DETALLE
-if (estatus === 0) {
-disableDetail = 'disabled opacity-50 pointer-events-none';
-}
-
-// EDITAR
-if (noEdit) {
-disabledEdit = 'disabled opacity-50 pointer-events-none';
-}else if (estatus === 1 || estatus === 2 || estatus === 3 || estatus === 4) {
-disabledEdit = 'disabled opacity-50 pointer-events-none';
-}
-
-// ELIMINAR
-if (noDelete) {
-disabledDelete = 'disabled opacity-50 pointer-events-none';
-} else if (estatus !== 0) {
-disabledDelete = 'disabled opacity-50 pointer-events-none';
-}
+let disableDetail = permisos.disableDetail ? 'opacity-50 pointer-events-none' : '';
+let disabledEdit = permisos.disabledEdit ? 'opacity-50 pointer-events-none' : '';
+let disabledDelete = permisos.disabledDelete ? 'opacity-50 pointer-events-none' : '';
 
 return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -167,12 +105,14 @@ data-bs-toggle="dropdown">
 
 <ul class="dropdown-menu">
 
-<!-- Detalle (Seguimiento) -->
+<!-- DETALLE -->
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disableDetail ? 'disabled' : ''}"
-${!disableDetail ? `@click="goTo('/solicitud-tarjetas/detalle/${row.id_estacion_real}/${row.no_solicitud}')"` : ''}>
+class="dropdown-item d-flex align-items-center gap-2 ${disableDetail}"
+${!permisos.disableDetail ? `
+@click="goTo('/solicitud-tarjetas/detalle/${row.idEstacionReal}/${row.no_solicitud}')"
+` : ''}>
 <i class="fs-4 ti ti-eye"></i> Detalle
 </a>
 </li>
@@ -181,27 +121,29 @@ ${!disableDetail ? `@click="goTo('/solicitud-tarjetas/detalle/${row.id_estacion_
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledEdit ? 'disabled' : ''}"
-${!disabledEdit ? `@click="goTo('/solicitud-tarjetas/formulario/${row.id_estacion_real}/${row.no_solicitud}')"` : ''}>
+class="dropdown-item d-flex align-items-center gap-2 ${disabledEdit}"
+${!permisos.disabledEdit ? `
+@click="goTo('/solicitud-tarjetas/formulario/${row.idEstacionReal}/${row.no_solicitud}')"
+` : ''}>
 <i class="fs-4 ti ti-edit"></i> Editar
 </a>
 </li>
 
 <!-- ELIMINAR -->
 <li>
-<a href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledDelete ? 'disabled' : ''}"
-${disabledDelete ? '' : `
+<a 
+href="javascript:void(0)"
+class="dropdown-item d-flex align-items-center gap-2 ${disabledDelete}"
+${!permisos.disabledDelete ? `
 @click="async () => {
 await deleteAction({
 url: '/solicitud-tarjetas/delete-reporte',
-id: ${row.id},
-name: '${row.id}',
+id: ${row.idSolicitud},
+name: '${row.idSolicitud}',
 table: '#table-tarjetas'
 });
 }"
-`}
->
+` : ''}>
 <i class="fs-4 ti ti-trash"></i> Eliminar  
 </a>
 </li>
@@ -209,7 +151,6 @@ table: '#table-tarjetas'
 </ul>
 </div>
 </div>`;
-
 }
 }
 ]
@@ -218,10 +159,19 @@ table: '#table-tarjetas'
 table.on('xhr', function () {
 const json = table.ajax.json();
 
-if (json && json.permisos) {
-table.column(4).visible(json.permisos.mostrar_fila_estacion);
+if (json && json.filas_mostrar) {
+table.column(4).visible(json.filas_mostrar.mostrar_fila_estacion);
 }
 
+});
+
+
+$("#table-tarjetas tbody").on("click", "tr", function () {
+if ($(this).hasClass("selected")) {
+} else {
+table.$("tr.selected").removeClass("selected");
+$(this).addClass("selected");
+}
 });
 
 

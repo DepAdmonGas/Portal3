@@ -10,7 +10,7 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimien
 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 <i class="ti ti-dots-vertical fs-4"></i>
 </button>
-<ul class="dropdown-menu animated rubberBand">
+<ul class="dropdown-menu animated rubberBand pointer">
 <?= !empty($permisos['crear']) ? '<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nuevo"> <i class="ti ti-plus"></i> Nuevo </a></li>' : '' ?>
 <div id="botonDescargaFile"></div>
 <div id="botonSeguimiento"></div>

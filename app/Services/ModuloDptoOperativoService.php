@@ -8,11 +8,8 @@ use App\Models\ModuloDptoOperativo;
 class ModuloDptoOperativoService
 {
 
-/**
- * Obtener MENÚS del departamento operativo
- * PRIORIDAD: usuario > puesto (EXCLUSIVO)
- */
-public static function getMenusUsuario($usuario_id)
+/* ---------- VOBTENER TODOS LOS MODULOS O UNO EN ESPECIFICO ----------*/
+public static function getPermisos($usuario_id, $clave = null)
 {
 $usuario = Usuario::find($usuario_id);
 
@@ -20,11 +17,15 @@ if (!$usuario) {
 return [];
 }
 
-$tienePermisosUsuario = ModuloDptoOperativo::whereHas('usuarios', function ($q) use ($usuario_id) {
+/* ---------- VERIFICAR PRIORIDAD: USUARIO > PUESTO ----------*/
+$tienePermisosUsuario = ModuloDptoOperativo::whereHas(
+'usuarios',
+function ($q) use ($usuario_id) {
 $q->where('id_usuario', $usuario_id);
-})->exists();
+}
+)->exists();
 
-$moduloDptoOperativo = ModuloDptoOperativo::with([
+$query = ModuloDptoOperativo::with([
 
 'roles' => function ($q) use ($usuario) {
 $q->where('id_puesto', $usuario->id_puesto);
@@ -45,34 +46,44 @@ $q->where('id_usuario', $usuario_id);
 ]);
 
 
+/* ---------- FILTRAR POR MODULO SI VIENE LA "CLAVE" ----------*/
+if ($clave) {
+$query->where('clave', $clave);
+}
+
+/* ---------- APLICAR LA PRIORIDAD ----------*/
 if ($tienePermisosUsuario) {
-$moduloDptoOperativo->whereHas('usuarios', function ($q) use ($usuario_id) {
+
+$query->whereHas(
+'usuarios',
+function ($q) use ($usuario_id) {
 $q->where('id_usuario', $usuario_id);
-});
+}
+);
 
 } else {
 
-$moduloDptoOperativo->whereHas('roles', function ($q) use ($usuario) {
+$query->whereHas(
+'roles',
+function ($q) use ($usuario) {
 $q->where('id_puesto', $usuario->id_puesto);
-});
+}
+);
+
 }
 
-$menus = $moduloDptoOperativo->orderBy('id', 'asc')->get();
-
+$modulos = $query->orderBy('id', 'asc')->get();
 $resultado = [];
 
-foreach ($menus as $menu) {
+foreach ($modulos as $modulo) {
 
-$permisoMenu = $tienePermisosUsuario ? $menu->usuarios->isNotEmpty()
-: $menu->roles->isNotEmpty();
+$rol  = $modulo->roles->first();
+$user = $modulo->usuarios->first();
 
-if (!$permisoMenu) {
-continue;
-}
+/* ---------- SUBMENUS ----------*/
+$submenus = [];
 
-$subMenuModulo = [];
-
-foreach ($menu->submenus as $submenu) {
+foreach ($modulo->submenus as $submenu) {
 
 $permisoSub = $tienePermisosUsuario
 ? $submenu->usuarios->isNotEmpty()
@@ -82,89 +93,88 @@ if (!$permisoSub) {
 continue;
 }
 
-$subMenuModulo[] = [
+$submenus[] = [
+
 'id_sub_modulo' => $submenu->id,
 'nombre' => $submenu->nombre,
 'clave' => $submenu->clave,
 'ruta' => $submenu->ruta,
 'icono' => $submenu->icono ?: 'ti ti-layout-grid'
+
 ];
 }
 
-$resultado[] = [
-'id_modulo' => $menu->id,
-'nombre' => $menu->nombre,
-'clave' => $menu->clave,
-'ruta' => $menu->ruta,
-'icono' => $menu->icono ?: 'ti ti-layout-grid',
-'submenus' => $subMenuModulo
+/* ---------- RESULTADO DEL MENU ----------*/
+$resultado[$modulo->clave] = [
+
+'id_modulo' => $modulo->id,
+'nombre' => $modulo->nombre ?? 'Modulo',
+'ruta'   => $modulo->ruta ?? '#',
+'icono'  => $modulo->icono ?: 'ti ti-layout-grid',
+
+
+/* ---------- 🔒 Permisos (usuario > puesto > 0) ----------*/
+'leer' => $user && $user->pivot ? $user->pivot->leer
+: ($rol && $rol->pivot ? $rol->pivot->leer : 0),
+
+'crear' => $user && $user->pivot? $user->pivot->crear
+: ($rol && $rol->pivot? $rol->pivot->crear : 0),
+
+'editar' => $user && $user->pivot? $user->pivot->editar
+: ($rol && $rol->pivot ? $rol->pivot->editar : 0),
+
+'eliminar' => $user && $user->pivot? $user->pivot->eliminar
+: ($rol && $rol->pivot ? $rol->pivot->eliminar : 0),
+
+'descargar' => $user && $user->pivot? $user->pivot->descargar
+: ($rol && $rol->pivot ? $rol->pivot->descargar : 0),
+
+'submenus' => $submenus
 ];
 }
 
 return $resultado;
 }
 
-
-/**
-* Obtener SUBMENÚS por módulo específico
-* PRIORIDAD: usuario > puesto (EXCLUSIVO)
-*/
-public static function getSubmenusPorModulo($usuario_id, $clave)
+/* ---------- OBTENER SOLO UN MODULO ----------*/
+public static function getPermiso($usuario_id, $clave)
 {
-$usuario = Usuario::find($usuario_id);
-
-if (!$usuario) {
-return [];
+$data = self::getPermisos($usuario_id, $clave);
+return $data[$clave] ?? [];
 }
 
-$tienePermisosUsuario = ModuloDptoOperativo::whereHas('usuarios', function ($q) use ($usuario_id) {
-$q->where('id_usuario', $usuario_id);
-})->exists();
 
-$menu = ModuloDptoOperativo::with([
-
-'submenus' => function ($q) {
-$q->orderBy('id', 'asc');
-},
-
-'submenus.roles' => function ($q) use ($usuario) {
-$q->where('id_puesto', $usuario->id_puesto);
-},
-
-'submenus.usuarios' => function ($q) use ($usuario_id) {
-$q->where('id_usuario', $usuario_id);
+/* ---------- GUARDAR PERMISOS EN SESION ----------*/
+public static function guardarEnSesion($usuario_id)
+{
+$_SESSION['permisos_do'] = self::getPermisos($usuario_id);
 }
 
-])
-->where('clave', $clave)
-->first();
+/* ---------- OBTENER PERMISOS DESDE SESION ----------*/
+public static function permisosSesion($clave = null)
+{
+$permisos = $_SESSION['permisos_do'] ?? [];
 
-if (!$menu) {
-return [];
+if ($clave) {
+return $permisos[$clave] ?? [];
 }
 
-$resultado = [];
-
-foreach ($menu->submenus as $submenu) {
-
-$permisoSub = $tienePermisosUsuario
-? $submenu->usuarios->isNotEmpty()
-: $submenu->roles->isNotEmpty();
-
-if (!$permisoSub) {
-continue;
+return $permisos;
 }
 
-$resultado[] = [
-'id_sub_modulo' => $submenu->id,
-'nombre' => $submenu->nombre,
-'clave' => $submenu->clave,
-'ruta' => $submenu->ruta,
-'icono' => $submenu->icono ?: 'ti ti-layout-grid'
-];
+/* ---------- HELPERS ----------*/
+public static function can($clave, $accion)
+{
+$permisos = $_SESSION['permisos_do'][$clave] ?? [];
+return !empty($permisos[$accion]);
 }
 
-return $resultado;
+
+/* ---------- VALIDAR LOS PERMISOS ----------*/
+public static function validaPermiso($modulo, $accion)
+{
+$permisos = self::permisosSesion($modulo);
+return !empty($permisos[$accion]);
 }
 
 }

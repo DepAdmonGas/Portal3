@@ -145,6 +145,88 @@ return function(RouteCollector $r) {
     });
 
 
+    // ---------------- CONFIGURACION ----------------
+    $r->addGroup('/configuracion', function (RouteCollector $r) {
+    $r->addRoute('GET','',Route::auth(['ConfiguracionController', 'index']));
+
+    //----- Modulos 
+    $r->addRoute('GET','/modulos',Route::auth(['ConfiguracionController', 'modulosIndex']));
+    $r->addRoute('GET', '/datatable-modulos', Route::auth(['ConfiguracionController', 'datatableModulos']));
+    $r->addRoute('POST', '/create-modulos', Route::auth(['ConfiguracionController', 'createModulos']));
+    $r->addRoute('POST', '/update-modulos', Route::auth(['ConfiguracionController', 'updateModulos']));
+    $r->addRoute('POST', '/delete-modulos', Route::auth(['ConfiguracionController', 'deleteModulos']));
+
+    //----- Modulos puestos (Portal)
+    $r->addRoute('GET','/modulos-puestos',Route::auth(['ConfiguracionController', 'modulosPuestosIndex']));
+    $r->addRoute('GET', '/modulos-puestos/{id:\d+}', Route::auth(['ConfiguracionController', 'modulosPuestosFormulario']));
+    $r->addRoute('GET', '/datatable-modulos-puestos/idPuesto/{id:\d+}', Route::auth(['ConfiguracionController', 'datatableModulosPuestos']));
+    $r->addRoute('POST', '/modulos-puestos/create', Route::auth(['ConfiguracionController', 'createModulosPuestos']));
+    $r->addRoute('POST', '/modulos-puestos/update/{id}', Route::auth(['ConfiguracionController', 'updateModulosPuestos']));
+    $r->addRoute('POST', '/modulos-puestos/delete', Route::auth(['ConfiguracionController', 'deleteModulosPuestos']));
+    $r->addRoute('GET', '/modulos-puestos/modulo/{id:\d+}', Route::auth(['ConfiguracionController', 'getModulosPuestos']));
+    $r->addRoute('GET','/modulos-puestos/modulo/{id:\d+}/{idActual:\d+}',Route::auth(['ConfiguracionController', 'getModulosPuestos']));
+    $r->addRoute('GET', '/modulos-puestos/detalle/{id:\d+}', Route::auth(['ConfiguracionController', 'getModulosPuestosDetalle']));
+    
+    //----- Modulos usuarios (Portal)
+    $r->addRoute('GET','/modulos-usuarios',Route::auth(['ConfiguracionController', 'modulosUsuariosIndex']));
+    $r->addRoute('GET', '/modulos-usuarios/{id:\d+}', Route::auth(['ConfiguracionController', 'modulosUsuariosFormulario']));
+    $r->addRoute('GET', '/datatable-modulos-usuarios/idUsuario/{id:\d+}', Route::auth(['ConfiguracionController', 'datatableModulosUsuarios']));
+    $r->addRoute('POST', '/modulos-usuarios/create', Route::auth(['ConfiguracionController', 'createModulosUsuarios']));
+    $r->addRoute('POST', '/modulos-usuarios/update/{id}', Route::auth(['ConfiguracionController', 'updateModulosUsuarios']));
+    $r->addRoute('POST', '/modulos-usuarios/delete', Route::auth(['ConfiguracionController', 'deleteModulosUsuarios']));
+    $r->addRoute('GET', '/modulos-usuarios/modulo/{id:\d+}', Route::auth(['ConfiguracionController', 'getModulosUsuarios']));
+    $r->addRoute('GET','/modulos-usuarios/modulo/{id:\d+}/{idActual:\d+}',Route::auth(['ConfiguracionController', 'getModulosUsuarios']));
+    $r->addRoute('GET', '/modulos-usuarios/detalle/{id:\d+}', Route::auth(['ConfiguracionController', 'getModulosUsuariosDetalle']));
+
+    //----- Modulos (Dpto. Operativo)
+    $r->addRoute('GET','/modulos-operativo',Route::auth(['ConfiguracionController', 'modulosDptoOperativoIndex']));
+    $r->addRoute('GET', '/datatable-modulos-operativo', Route::auth(['ConfiguracionController', 'datatableModulosDptoOperativo']));
+    $r->addRoute('POST', '/create-modulos-operativo', Route::auth(['ConfiguracionController', 'createModulosDptoOperativo']));
+    $r->addRoute('POST', '/update-modulos-operativo', Route::auth(['ConfiguracionController', 'updateModulosDptoOperativo']));
+    $r->addRoute('POST', '/delete-modulos-operativo', Route::auth(['ConfiguracionController', 'deleteModulosDptoOperativo']));
+    
+    //----- Submodulos (Dpto. Operativo)  
+    $r->addRoute('GET', '/modulos-operativo/{id:\d+}', Route::auth(['ConfiguracionController', 'submodulosDptoOperativoIndex']));
+    $r->addRoute('GET', '/datatable-submodulos-operativo/idModulo/{id:\d+}', Route::auth(['ConfiguracionController', 'datatableSubmodulosDptoOperativo']));
+    $r->addRoute('POST', '/create-submodulos-operativo', Route::auth(['ConfiguracionController', 'createSubmodulosDptoOperativo']));
+    $r->addRoute('POST', '/update-submodulos-operativo', Route::auth(['ConfiguracionController', 'updateSubmodulosDptoOperativo']));
+    $r->addRoute('POST', '/delete-submodulos-operativo', Route::auth(['ConfiguracionController', 'deleteSubmodulosDptoOperativo']));
+
+    //----- Modulos puestos (Dpto. Operativo)
+    $r->addRoute('GET','/modulos-operativo-puestos',Route::auth(['ConfiguracionController', 'modulosPuestosDptoOperativoIndex']));
+    $r->addRoute('GET', '/modulos-operativo-puestos/{id:\d+}', Route::auth(['ConfiguracionController', 'modulosPuestosDptoOperativoFormulario']));
+    $r->addRoute('GET', '/datatable-modulos-operativo-puestos/idPuesto/{id:\d+}', Route::auth(['ConfiguracionController', 'datatableModulosPuestosDptoOperativo']));
+    $r->addRoute('GET', '/modulos-operativo-puestos/modulo/{id:\d+}', Route::auth(['ConfiguracionController', 'getModulosDptoOperativoPuestos']));
+    $r->addRoute('GET','/modulos-operativo-puestos/modulo/{id:\d+}/{idActual:\d+}',Route::auth(['ConfiguracionController', 'getModulosDptoOperativoPuestos']));
+    $r->addRoute('GET','/submodulos-operativo-puestos/modulo/{idModulo:\d+}/puesto/{idPuesto:\d+}',Route::auth(['ConfiguracionController', 'getSubmodulosDptoOperativoPuestos']));
+    $r->addRoute('GET', '/modulos-operativo-puestos/detalle/{id:\d+}', Route::auth(['ConfiguracionController', 'getModulosDptoOperativoPuestosDetalle']));
+    $r->addRoute('POST', '/modulos-operativo-puestos/create', Route::auth(['ConfiguracionController', 'createModulosDptoOperativoPuestos']));
+    $r->addRoute('POST', '/modulos-operativo-puestos/update/{id}', Route::auth(['ConfiguracionController', 'updateModulosDptoOperativoPuestos']));
+    $r->addRoute('POST', '/modulos-operativo-puestos/delete', Route::auth(['ConfiguracionController', 'deleteModulosDptoOperativoPuestos']));
+
+    //----- Modulos usuario (Dpto. Operativo)
+    $r->addRoute('GET','/modulos-operativo-usuarios',Route::auth(['ConfiguracionController', 'modulosUsuariosDptoOperativoIndex']));
+    $r->addRoute('GET', '/modulos-operativo-usuarios/{id:\d+}', Route::auth(['ConfiguracionController', 'modulosUsuariosDptoOperativoFormulario']));
+    $r->addRoute('GET', '/datatable-modulos-operativo-usuarios/idUsuario/{id:\d+}', Route::auth(['ConfiguracionController', 'datatableModulosUsuariosDptoOperativo']));
+    $r->addRoute('GET', '/modulos-operativo-usuarios/modulo/{id:\d+}', Route::auth(['ConfiguracionController', 'getModulosDptoOperativoUsuarios']));
+    $r->addRoute('GET','/modulos-operativo-usuarios/modulo/{id:\d+}/{idActual:\d+}',Route::auth(['ConfiguracionController', 'getModulosDptoOperativoUsuarios']));
+    $r->addRoute('GET','/submodulos-operativo-usuarios/modulo/{idModulo:\d+}/usuario/{idUsuario:\d+}',Route::auth(['ConfiguracionController', 'getSubmodulosDptoOperativoUsuarios']));
+    $r->addRoute('GET', '/modulos-operativo-usuarios/detalle/{id:\d+}', Route::auth(['ConfiguracionController', 'getModulosDptoOperativoUsuariosDetalle']));
+    $r->addRoute('POST', '/modulos-operativo-usuarios/create', Route::auth(['ConfiguracionController', 'createModulosDptoOperativoUsuarios']));
+    $r->addRoute('POST', '/modulos-operativo-usuarios/update/{id}', Route::auth(['ConfiguracionController', 'updateModulosDptoOperativoUsuarios']));
+    $r->addRoute('POST', '/modulos-operativo-usuarios/delete', Route::auth(['ConfiguracionController', 'deleteModulosDptoOperativUsuarios']));
+
+    });
+
+
+    // ---------------- DEPARTAMENTO DE SISTEMAS ----------------
+    $r->addGroup('/departamento-sistemas', function (RouteCollector $r) {
+
+   
+    });
+
+
+    
     // ---------------- DEPARTAMENTO OPERATIVO ----------------
     $r->addGroup('/departamento-operativo', function (RouteCollector $r) {
     $r->addRoute('GET', '', Route::auth(['DptoOperativoController', 'index']));

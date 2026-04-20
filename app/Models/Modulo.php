@@ -7,6 +7,8 @@ class Modulo extends Model
 {
     protected $table = 'modulos';
 
+    public $timestamps = false; 
+
     protected $fillable = [
         'nombre',
         'clave',
@@ -30,7 +32,7 @@ class Modulo extends Model
             'roles_modulos',
             'modulo_id',
             'puesto_id'
-        )->withPivot(['leer','crear','editar','eliminar','descargar']);
+        )->withPivot(['id','leer','crear','editar','eliminar','descargar']);
     }
 
     public function usuarios()
@@ -40,10 +42,9 @@ class Modulo extends Model
             'usuarios_modulos',
             'modulo_id',
             'usuario_id'
-        )->withPivot(['leer','crear','editar','eliminar','descargar']);
+        )->withPivot(['id','leer','crear','editar','eliminar','descargar']);
     }
 
-    // 🔥 RELACIÓN CORRECTA
     public function menus()
     {
         return $this->belongsToMany(
