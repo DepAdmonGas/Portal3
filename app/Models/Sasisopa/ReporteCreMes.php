@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -31,5 +31,10 @@ class ReporteCreMes extends Model
         'mes' => 'integer',
         'year' => 'integer',
     ];
+
+    public function productos()
+    {
+        return $this->hasMany(ReporteCreProducto::class, 'id_re_mes');
+    }
 
 }

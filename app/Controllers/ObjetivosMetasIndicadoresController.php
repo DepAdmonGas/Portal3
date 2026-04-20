@@ -7,6 +7,7 @@ use App\Models\Estacion;
 use App\Models\Sasisopa\SeguimientoReporteIndicador;
 use App\Models\Sasisopa\SeguimientoObjetivosMetas;
 use App\Models\Sasisopa\SeguimientoObjetivosMetasDetalle;
+use App\Models\Sasisopa\ReporteCreMes;
 use App\Services\CapacitacionService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Dompdf\Dompdf;
@@ -875,7 +876,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
     //-----------------------------------------------------------------
 
-    public function objetivosMetasIndicadoresCapacitacionPersonal(){
+    public function capacitacionPersonal(){
 
         $title = 'Capacitación del personal';
          // Buscar permisos de los modulos
@@ -896,7 +897,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/objetivosmetasindicadores/capacitacion-personal.actions.init.js?v=1.1'
+                '/js/objetivosmetasindicadores/capacitacion-personal.actions.init.js?v=1.0'
             ],
             'help' => false
         ];
@@ -919,6 +920,138 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             echo json_encode($data);
 
     }
-    
+
+    //------------------------------------------------------------------
+
+    public function indicadorVentas(){
+        $title = 'Indicadores de Ventas';
+         // Buscar permisos de los modulos
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
+        Breadcrumb::add($title, '');
+
+         $data = [
+            'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'filtro_usuario' => $this->filtro_usuario,
+             'links' =>[
+                
+            ],
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/libs/apexcharts/dist/apexcharts.min.js',
+                '/js/objetivosmetasindicadores/indicador-ventas.actions.init.js?v=1.0'
+                
+            ],
+            'help' => true
+        ];
+        
+        View::render('objetivosmetasindicadores/indicador-ventas', $data,'sasisopa');
+    }
+
+    public function getIndicadorVentas(){
+        header('Content-Type: application/json');
+
+        $year = $_GET['year'] ?? date('Y');
+
+        $estacion = Estacion::find($this->estacionId());
+        $estacionId = $this->estacionId();
+
+        $producto1 = $estacion->producto_uno;
+        $producto2 = $estacion->producto_dos;
+        $producto3 = $estacion->producto_tres;
+
+        // Traer todo en una sola consulta
+        $meses = ReporteCreMes::with('productos')
+            ->where('id_estacion', $estacionId)
+            ->where('year', $year)
+            ->get();
+
+        // Inicializar meses
+        $data = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $data[$i] = [
+                'mes' => $i,
+                'nombre_mes' => nombremes($i),
+                'producto1' => 0,
+                'producto2' => 0,
+                'producto3' => 0,
+            ];
+        }
+
+        // Procesar
+        foreach ($meses as $mes) {
+
+            foreach ($mes->productos as $producto) {
+
+                if ($producto->producto === $producto1) {
+                    $data[$mes->mes]['producto1'] += $producto->volumen_venta;
+                }
+
+                if ($producto->producto === $producto2) {
+                    $data[$mes->mes]['producto2'] += $producto->volumen_venta;
+                }
+
+                if ($producto3 && $producto->producto === $producto3) {
+                    $data[$mes->mes]['producto3'] += $producto->volumen_venta;
+                }
+            }
+        }
+
+        $data = array_values($data);
+
+        // Totales
+        $totales = [
+            'producto1' => array_sum(array_column($data, 'producto1')),
+            'producto2' => array_sum(array_column($data, 'producto2')),
+            'producto3' => array_sum(array_column($data, 'producto3')),
+        ];
+
+        // Construir gráfica
+        $categories = array_column($data, 'nombre_mes');
+
+        $series = [];
+
+        if ($producto1) {
+            $series[] = [
+                'name' => $producto1,
+                'data' => array_map(fn($d) => round($d['producto1'], 2), $data)
+            ];
+        }
+
+        if ($producto2) {
+            $series[] = [
+                'name' => $producto2,
+                'data' => array_map(fn($d) => round($d['producto2'], 2), $data)
+            ];
+        }
+
+        if ($producto3) {
+            $series[] = [
+                'name' => $producto3,
+                'data' => array_map(fn($d) => round($d['producto3'], 2), $data)
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'data' => $data,
+            'totales' => $totales,
+            'productos' => [
+                'p1' => $producto1,
+                'p2' => $producto2,
+                'p3' => $producto3
+            ],
+            'chart' => [
+                'categories' => $categories,
+                'series' => $series
+            ]
+        ]);
+    }
 
 }
