@@ -7,6 +7,7 @@ use App\Models\Estacion;
 use App\Models\Sasisopa\SeguimientoReporteIndicador;
 use App\Models\Sasisopa\SeguimientoObjetivosMetas;
 use App\Models\Sasisopa\SeguimientoObjetivosMetasDetalle;
+use App\Services\CapacitacionService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -35,14 +36,14 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/objetivosmetasindicadores/seguimientoindicadores.datatable.init.js?v=1.2',
-                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.datatable.init.js?v=1.5',
-                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.actions.init.js?v=1.9'
+                '/js/objetivosmetasindicadores/seguimientoindicadores.datatable.init.js?v=1.0',
+                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.datatable.init.js?v=1.0',
+                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.actions.init.js?v=1.0'
             ],
             'help' => true
         ];
         
-        View::render('sasisopa/objetivos-metas-indicadores', $data,'sasisopa');
+        View::render('objetivosmetasindicadores/index', $data,'sasisopa');
 
     }
 
@@ -871,4 +872,53 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
         $dompdf->stream("Seguimiento-reporte-indicadores.pdf", ["Attachment" => true]);
     }
+
+    //-----------------------------------------------------------------
+
+    public function objetivosMetasIndicadoresCapacitacionPersonal(){
+
+        $title = 'Capacitación del personal';
+         // Buscar permisos de los modulos
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
+        Breadcrumb::add($title, '');
+
+         $data = [
+            'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'filtro_usuario' => $this->filtro_usuario,
+             'links' =>[
+                
+            ],
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/js/objetivosmetasindicadores/capacitacion-personal.actions.init.js?v=1.1'
+            ],
+            'help' => false
+        ];
+        
+        View::render('objetivosmetasindicadores/capacitacion-personal', $data,'sasisopa');
+
+    }
+
+    public function resumenCapacitacionPermosal(){
+
+          header('Content-Type: application/json');
+
+            $year = $_GET['year'] ?? date('Y');
+
+            $data = CapacitacionService::getResumen(
+                $this->estacionId(),
+                $year
+            );
+
+            echo json_encode($data);
+
+    }
+    
+
 }

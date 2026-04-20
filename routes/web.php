@@ -281,7 +281,9 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/objetivos-metas-indicadores/get-reporte-indicadores/{id:\d+}', Route::auth(['objetivosMetasIndicadoresController', 'getReporteIndicadores']));
         $r->addRoute('POST', '/objetivos-metas-indicadores/delete-reporte-indicadores', Route::auth(['objetivosMetasIndicadoresController', 'deleteReporteIndicadores']));
         
-        $r->addRoute('GET', '/objetivos-metas-indicadores/capacitacion-personal', Route::auth(['SasisopaController', 'objetivosMetasIndicadoresCapacitacionPersonal']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/capacitacion-personal', Route::auth(['objetivosMetasIndicadoresController', 'objetivosMetasIndicadoresCapacitacionPersonal']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/resumen-capacitacion-personal', Route::auth(['objetivosMetasIndicadoresController', 'resumenCapacitacionPermosal']));
+        
         $r->addRoute('GET', '/objetivos-metas-indicadores/experiencia-cliente', Route::auth(['SasisopaController', 'objetivosMetasIndicadoresExperienciaCliente']));
         $r->addRoute('GET', '/objetivos-metas-indicadores/indicador-ventas', Route::auth(['SasisopaController', 'objetivosMetasIndicadoresIndicadorVentas']));
 
