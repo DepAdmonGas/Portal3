@@ -28,9 +28,9 @@ return json.data;
 },
 
 columns: [
-{title: '#', data: 'id', width: '60px', className: 'text-center align-middle' },
+{title: '#', data: 'idGafete', width: '60px', className: 'text-center align-middle' },
 {title: 'Clave', data: 'clave', width: '100px', className: 'text-center align-middle'},
-{title: 'Nombre Completo', data: 'nombre', className: 'text-center align-middle'},
+{title: 'Nombre Completo', data: 'nombre_completo', className: 'text-center align-middle'},
 {
 title: '<i class="ti ti-dots-vertical fs-6"></i>',
 data: null,
@@ -56,7 +56,7 @@ return `
 <li>
 <a href="javascript:void(0)" 
 class="dropdown-item d-flex align-items-center gap-1 ${noDesc ? disabled : ''}"
-${noDesc ? '' : ` @click="download('solicitud-gafetes','${row.foto}')"`}>
+${noDesc ? '' : ` @click="download('solicitud-gafetes','${row.foto_gafete}')"`}>
 <i class="ti ti-file-download"></i> Descargar 
 </a>
 </li>
@@ -71,6 +71,14 @@ ${noDesc ? '' : ` @click="download('solicitud-gafetes','${row.foto}')"`}>
 
 ]
 
+});
+
+$("#table-gafetes-detalle tbody").on("click", "tr", function () {
+if ($(this).hasClass("selected")) {
+} else {
+table.$("tr.selected").removeClass("selected");
+$(this).addClass("selected");
+}
 });
 
 });

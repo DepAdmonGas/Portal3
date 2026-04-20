@@ -267,7 +267,7 @@ sessionStorage.setItem(key, window.scrollY);
 
 <div class="body-wrapper">
 <div class="container-fluid">
-<span class="mb-1 badge rounded-pill text-bg-primary"><?=$user->estacion->razonsocial??'Sistema de Gestión de Medición'?></span>  
+<span class="mb-1 badge rounded-pill text-bg-primary"><?=$user->estacion->nombre??'Sistema de Gestión de Medición'?></span>  
 <h4 class="fw-semibold mt-3"><?=$title;?></h4>  
 <?php \App\Core\Breadcrumb::render(); ?>
 

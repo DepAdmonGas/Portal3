@@ -22,7 +22,7 @@ $usuario = Auth::user();
 $permisos = ModuloService::getPermisos($usuario->id);
 
 // Buscar menu / modulo del departamento
-$elementos = ModuloDptoOperativoService::getMenusUsuario($usuario->id);
+$elementos = ModuloDptoOperativoService::getPermisos($usuario->id);
 
 $data = [
 'title' => $title,
@@ -47,11 +47,8 @@ Breadcrumb::add($title, '');
 $usuario = Auth::user();
 
 $permisos = ModuloService::permisosSesion($this->modulo);
-
-$submenus = ModuloDptoOperativoService::getSubmenusPorModulo(
-$usuario->id,
-$slug
-);
+$modulo = ModuloDptoOperativoService::getPermiso($usuario->id,$slug);
+$submenus = $modulo['submenus'] ?? [];
 
 $data = [
 'title' => $title,

@@ -59,56 +59,54 @@
 </li>
 
 <!---------- DIRECCION DE OPERACIONES ---------->
-<li class="nav-small-cap"><i class="ti ti-dots nav-small-cap-icon fs-4"></i><span class="hide-menu">DIRECCIÓN DE OPERACIONES</span></li>
+<li class="nav-small-cap"><i class="ti ti-dots nav-small-cap-icon fs-4"></i><span class="hide-menu">General</span></li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/departamento-operativo/corte-diario" aria-expanded="false">
-<span><i class="ti ti-report-money"></i></span>
-<span class="hide-menu">Corte Diario</span>
+<a class="sidebar-link" href="/configuracion/modulos" aria-expanded="false">
+<span><i class="ti ti-box"></i></span>
+<span class="hide-menu">Módulos</span>
 </a>
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/departamento-operativo/solicitud-cheques" aria-expanded="false">
-<span><i class="ti ti-file-check"></i></span>
-<span class="hide-menu">Solicitud de Cheques</span>
+<a class="sidebar-link" href="/configuracion/modulos-puestos" aria-expanded="false">
+<span><i class="ti ti-users"></i></span>
+<span class="hide-menu">Módulos (Puestos)</span>
+</a>
+</li>
+
+
+<li class="sidebar-item">
+<a class="sidebar-link" href="/configuracion/modulos-usuarios" aria-expanded="false">
+<span><i class="ti ti-user"></i></span>
+<span class="hide-menu">Módulos (Usuarios)</span>
+</a>
+</li>
+
+<li class="nav-small-cap"><i class="ti ti-dots nav-small-cap-icon fs-4"></i><span class="hide-menu">Departamento Operativo</span></li>
+
+<li class="sidebar-item">
+<a class="sidebar-link" href="/configuracion/modulos-operativo" aria-expanded="false">
+<span><i class="ti ti-box"></i></span>
+<span class="hide-menu">Módulos</span>
 </a>
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/departamento-operativo/recursos-humanos/recibos-nomina" aria-expanded="false">
-<span><i class="ti ti-receipt"></i></span>
-<span class="hide-menu">Recibos de Nomina</span>
+<a class="sidebar-link" href="/configuracion/modulos-operativo-puestos" aria-expanded="false">
+<span><i class="ti ti-users"></i></span>
+<span class="hide-menu">Módulos (Puestos)</span>
 </a>
 </li>
 
+
 <li class="sidebar-item">
-<a class="sidebar-link" href="/departamento-operativo/importacion/descarga-merma" aria-expanded="false">
-<span><i class="ti ti-trash"></i></span>
-<span class="hide-menu">Descarga de merma</span>
+<a class="sidebar-link" href="/configuracion/modulos-operativo-usuarios" aria-expanded="false">
+<span><i class="ti ti-user"></i></span>
+<span class="hide-menu">Módulos (Usuarios)</span>
 </a>
 </li>
 
-<li class="sidebar-item">
-<a class="sidebar-link" href="/departamento-operativo/importacion/precios-combustible" aria-expanded="false">
-<span><i class="ti ti-gas-station"></i></span>
-<span class="hide-menu">Precios diarios combustible</span>
-</a>
-</li>
-
-<li class="sidebar-item">
-<a class="sidebar-link" href="/departamento-operativo/importacion/cuenta-litros" aria-expanded="false">
-<span><i class="ti ti-droplet"></i></span>
-<span class="hide-menu">Cuenta Litros</span>
-</a>
-</li>
-
-<li class="sidebar-item">
-<a class="sidebar-link" href="/departamento-operativo/almacen/orden-mantenimiento" aria-expanded="false">
-<span><i class="ti ti-tool"></i></span>
-<span class="hide-menu">Orden de Mantenimiento</span>
-</a>
-</li>
 
 </ul>
 </nav>

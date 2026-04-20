@@ -94,9 +94,17 @@ table: '#table-tarjetas-formulario'
 
 }
 
-
 ]
 
 });
+
+$("#table-tarjetas-formulario tbody").on("click", "tr", function () {
+if ($(this).hasClass("selected")) {
+} else {
+table.$("tr.selected").removeClass("selected");
+$(this).addClass("selected");
+}
+});
+
 
 });   

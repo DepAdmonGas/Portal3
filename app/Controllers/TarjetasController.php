@@ -1,5 +1,5 @@
 <?php
-namespace App\Controllers;
+namespace App\Controllers;  
 use App\Core\View;
 use App\Models\SolicitudTarjetas;
 use App\Models\SolicitudTarjetasImagen;
@@ -11,7 +11,7 @@ use App\Core\Session;
 use App\Models\Estacion;
 use App\Core\Auth;
 use Illuminate\Database\Capsule\Manager as Capsule;
-
+ 
 class TarjetasController extends BaseController{
 protected string $modulo = 'solicitud-tarjetas';
  
@@ -55,7 +55,6 @@ public function datatableTarjetas(){
 $filtro_usuario = Session::get('usuario');
 $idEstacion = $filtro_usuario['id_estacion'] ?? null;
 
-$permisoLeer     = ModuloService::validaPermiso($this->modulo, 'leer');
 $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
 $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
 $mostrar_fila_estacion = ((int)$idEstacion === 8);
@@ -74,22 +73,108 @@ $query->where('g.id_estacion', $estacion->nombre);
 }
 }
 
-$tarjetas = $query
-->orderBy('g.id', 'desc')
-->get();
+$rows = $query->orderBy('g.id', 'desc')->get()->toArray();
+$data = [];
+
+$estatus = [
+"titulo" => '',
+"color_badge" => '',
+"color_css" => '',
+"color_hexa" => ''
+];
+
+foreach ($rows as $row) {
+$idSolicitud = $row['id'];
+$idEstacionReal = $row['id_estacion_real'];
+$no_solicitud = $row['no_solicitud'];
+$fecha_solicitud = $row['fecha'];
+$nombre_usuario = $row['id_usuario'];
+$nombre_estacion = $row['id_estacion'];
+$estatus_solicitud = $row['estatus'];
+
+$disableDetail = false;
+$disabledEdit = false;
+$disabledDelete = false;
+
+if (empty($row['fecha']) || $row['fecha'] === '0000-00-00' || $row['fecha'] === '-0001-11-30') {
+$fecha_solicitud = 'S/I';
+} else {
+$fecha_solicitud = date('Y-m-d', strtotime($row['fecha']));
+}
+
+if ($estatus_solicitud == 0) {
+$estatus = [
+"titulo" => 'Sin atender',
+"color_badge" => 'bg-danger',
+"color_css" => 'text-bg-danger',
+"color_hexa" => '#ffb6af'
+];
+
+}else if ($estatus_solicitud == 1) {
+$estatus = [
+"titulo" => 'En proceso',
+"color_badge" => 'bg-warning',
+"color_css" => 'text-bg-warning',
+"color_hexa" => '#fcfcda'
+];
+
+}else if ($estatus_solicitud == 2) {
+$estatus = [
+"titulo" => 'Finalizado',
+"color_badge" => 'bg-success',
+"color_css" => 'text-bg-warning',
+"color_hexa" => '#fcfcda'
+];
+
+}else if ($estatus_solicitud == 3 || $estatus_solicitud == 4) {
+$estatus = [
+"titulo" => 'Entregada',
+"color_badge" => 'bg-info',
+"color_css" => 'text-bg-success',
+"color_hexa" => '#b0f2c2'
+];
+
+}
+
+//---------- PERMISOS ----------
+$disableDetail = ($estatus_solicitud == 0);
+$disabledEdit = (!$permisoEditar || in_array($estatus_solicitud, [1,2,3,4]));
+$disabledDelete = (!$permisoEliminar || $estatus_solicitud != 0);
+
+if (empty($nombre_estacion) || $nombre_estacion == "Administrador") {
+$disableDetail = true;
+$disabledEdit = true;
+$disabledDelete = true;
+}
+
+$data[] = [
+"idSolicitud" => $idSolicitud,
+"idEstacionReal" => $idEstacionReal,
+"no_solicitud" => $no_solicitud,
+"fecha_solicitud" => $fecha_solicitud,
+"nombre_usuario" => $nombre_usuario,
+"nombre_estacion" => $nombre_estacion,
+"estatus_solicitud" => $estatus_solicitud,
+"estatus" =>$estatus,
+
+"permisos" => [
+"disableDetail" => $disableDetail,
+"disabledEdit" => $disabledEdit,
+"disabledDelete" => $disabledDelete
+]
+
+];
+
+}
 
 echo json_encode([
-"data" => $tarjetas,
-"permisos" => [
-"leer"     => $permisoLeer,
-"editar"   => $permisoEditar,
-"eliminar" => $permisoEliminar,
+"data" => $data,
+"filas_mostrar" => [
 "mostrar_fila_estacion" => $mostrar_fila_estacion
 ]
 ]);
 
 exit;
-
 }
 
 public function createReporte()

@@ -1,4 +1,5 @@
-<div class="row mt-4">
+<div id="container" class="mt-4">
+<div class="row">
 
 <?php 
 $i = 1; 
@@ -37,6 +38,7 @@ foreach($elementos as $elemento): ?>
 $i++; 
 endforeach; 
 ?>
+</div>
 </div>
 
 

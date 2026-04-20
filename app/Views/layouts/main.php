@@ -226,8 +226,8 @@ $esTodas       = (int)$idEstacion === 8;
 
 // Obtener razón social según tipo
 $razonsocial = $multiestacion
-? ($filtro_usuario['razonsocial'] ?? '')
-: ($user->estacion->razonsocial ?? '');
+? ($filtro_usuario['nombre'] ?? '')
+: ($user->estacion->nombre ?? '');
 
 $razonsocial = trim($razonsocial);
 ?>

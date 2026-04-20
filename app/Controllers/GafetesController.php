@@ -49,7 +49,7 @@ $data = [
 ],
 'help' => false
 ];
-
+  
 View::render('gafetes/index', $data,'main');
 }
 
@@ -59,7 +59,6 @@ public function datatableGafetes()
 $filtro_usuario = Session::get('usuario');
 $idEstacion = $filtro_usuario['id_estacion'] ?? null;
 
-$permisoLeer     = ModuloService::validaPermiso($this->modulo, 'leer');
 $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
 $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
 $mostrar_fila_estacion = ((int)$idEstacion === 8);
@@ -78,16 +77,103 @@ $query->where('g.id_estacion', $estacion->nombre);
 }
 }
 
-$gafetes = $query
-->orderBy('g.id', 'desc')
-->get();
+$rows = $query->orderBy('g.id', 'desc')->get()->toArray();
+$data = [];
+
+$estatus = [
+"titulo" => '',
+"color_badge" => '',
+"color_css" => '',
+"color_hexa" => ''
+];
+
+foreach ($rows as $row) {
+$idReporte = $row['id'];
+$idEstacionReal = $row['id_estacion_real'];
+$no_reporte = $row['no_reporte'];
+$fecha_reporte = $row['fecha'];
+$nombre_usuario = $row['usuario'];
+$nombre_estacion = $row['id_estacion'];
+$estatus_reporte = $row['estatus'];
+
+$disableDetail = false;
+$disabledEdit = false;
+$disabledDelete = false;
+
+if (empty($row['fecha']) ||$row['fecha'] === '0000-00-00' ||$row['fecha'] === '-0001-11-30') {
+$fecha_reporte = 'S/I';
+} else {
+$fecha_reporte = date('Y-m-d', strtotime($row['fecha']));
+}
+
+if ($estatus_reporte == 0) {
+$estatus = [
+"titulo" => 'Sin atender',
+"color_badge" => 'bg-danger',
+"color_css" => 'text-bg-danger',
+"color_hexa" => '#ffb6af'
+];
+
+}else if ($estatus_reporte == 1) {
+$estatus = [
+"titulo" => 'En proceso',
+"color_badge" => 'bg-warning',
+"color_css" => 'text-bg-warning',
+"color_hexa" => '#fcfcda'
+];
+
+}else if ($estatus_reporte == 2) {
+$estatus = [
+"titulo" => 'Finalizado',
+"color_badge" => 'bg-success',
+"color_css" => 'text-bg-warning',
+"color_hexa" => '#fcfcda'
+];
+
+}else if ($estatus_reporte == 3 || $estatus_reporte == 4) {
+$estatus = [
+"titulo" => 'Entregada',
+"color_badge" => 'bg-info',
+"color_css" => 'text-bg-success',
+"color_hexa" => '#b0f2c2'
+];
+
+}
+
+//---------- PERMISOS ----------
+$disableDetail = ($estatus_reporte == 0);
+$disabledEdit = (!$permisoEditar || in_array($estatus_reporte, [1,2,3,4]));
+$disabledDelete = (!$permisoEliminar || $estatus_reporte != 0);
+
+if (empty($nombre_estacion)) {
+$disableDetail = true;
+$disabledEdit = true;
+$disabledDelete = true;
+}
+
+$data[] = [
+"idReporte" => $idReporte,
+"idEstacionReal" => $idEstacionReal,
+"no_reporte" => $no_reporte,
+"fecha_reporte" => $fecha_reporte,
+"nombre_usuario" => $nombre_usuario,
+"nombre_estacion" => $nombre_estacion,
+"estatus_reporte" => $estatus_reporte,
+"estatus" =>$estatus,
+
+"permisos" => [
+"disableDetail" => $disableDetail,
+"disabledEdit" => $disabledEdit,
+"disabledDelete" => $disabledDelete
+]
+
+];
+
+}
 
 echo json_encode([
-"data" => $gafetes,
-"permisos" => [
-"leer"     => $permisoLeer,
-"editar"   => $permisoEditar,
-"eliminar" => $permisoEliminar,
+"data" => $data,
+"filas_mostrar" => [
 "mostrar_fila_estacion" => $mostrar_fila_estacion
 ]
 ]);
@@ -359,21 +445,43 @@ View::render('gafetes/formulario-index', $data,'main');
 public function datatableGafetesFormulario($idEstacion, $noReporte)
 {
     
-// permisos
 $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
 
-// Obtener la estacion 
 $datosEstacion = Estacion::find($idEstacion);
 $query = SolicitudGafetes::query();
 
-$gafetes = $query
-->where('id_estacion', $datosEstacion->nombre)
+$rows = $query->where('id_estacion', $datosEstacion->nombre)
 ->where('no_reporte', $noReporte)
-->get();
+->get()
+->toArray();
+
+$data = [];
+
+$estatus = [
+"titulo" => '',
+"color_css" => '',
+"color_hexa" => ''
+];
+
+foreach ($rows as $row) {
+$idGafete = $row['id'];
+$clave = $row['clave'];
+$nombre_completo = $row['nombre'];
+$foto_gafete = $row['foto'];
+
+$data[] = [
+"idGafete" => $idGafete,
+"clave" => $clave,
+"nombre_completo" => $nombre_completo,
+"foto_gafete" => $foto_gafete,
+"estatus" =>$estatus
+];
+
+}
 
 echo json_encode([
-"data" => $gafetes,
+"data" => $data,
 "permisos" => [
 "eliminar" => $permisoEliminar,
 "descargar" => $permisoDescargar
@@ -682,7 +790,7 @@ $idEstacion = $data['idEstacion'] ?? null;
 $no_reporte = $data['no_reporte'] ?? null;
 $idSeguimiento = $data['idSeguimiento'] ?? null;
 
-if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
 echo json_encode([
 'success' => false,
 'message' => 'Sin permisos'
@@ -721,7 +829,6 @@ $ultimo_seguimiento = SolicitudGafetesSeguimiento::where('id_estacion', $idEstac
 
 $ultimo_seguimiento = $ultimo_seguimiento ?? 0;
 
-/*
 if ($idSeguimiento != ($ultimo_seguimiento + 1)) {
 echo json_encode([
 'success' => false,
@@ -729,7 +836,6 @@ echo json_encode([
 ]);
 exit;
 }
-*/
 
 Capsule::beginTransaction();
 

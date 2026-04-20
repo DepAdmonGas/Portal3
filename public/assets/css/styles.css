@@ -44438,3 +44438,7 @@ max-height: 28px;
 width: auto;
 object-fit: contain;
 }
+
+.pointer {
+  cursor: pointer;
+}
