@@ -1125,28 +1125,6 @@ class SasisopaController extends BaseController{
 
     }
 
-    public function objetivosMetasIndicadoresIndicadorVentas(){
-
-        $title = 'Indicadores de Ventas';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ]
-        ];
-        
-        View::render('sasisopa/indicador-ventas', $data,'sasisopa');
-
-    }
 
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
