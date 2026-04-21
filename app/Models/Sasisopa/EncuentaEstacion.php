@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,4 +32,10 @@ class EncuentaEstacion extends Model
         'fechacreacion' => 'datetime',
         'estado' => 'integer',
     ];
+
+      public function clientes()
+      {
+        return $this->hasMany(EncuentasEstacionCliente::class, 'id_cuentas_estacion');
+      }
+
 }

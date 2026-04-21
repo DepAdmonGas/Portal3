@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
-class EncuentasEstacionClienteComentarios extends Model
+class EncuentasEstacionClientePreguntas extends Model
 {
-    protected $table = 'tb_encuentas_estacion_cliente_comentarios';
+    protected $table = 'tb_encuentas_estacion_cliente_preguntas';
 
     protected $primaryKey = 'id';
 
@@ -18,11 +18,14 @@ class EncuentasEstacionClienteComentarios extends Model
 
     protected $fillable = [
         'id_cliente',
-        'comentario',
+        'id_pregunta',
+        'resultado',
     ];
 
     protected $casts = [
         'id' => 'integer',
         'id_cliente' => 'integer',
+        'id_pregunta' => 'integer',
+        'resultado' => 'integer',
     ];
 }

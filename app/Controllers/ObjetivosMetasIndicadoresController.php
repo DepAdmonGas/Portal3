@@ -8,6 +8,7 @@ use App\Models\Sasisopa\SeguimientoReporteIndicador;
 use App\Models\Sasisopa\SeguimientoObjetivosMetas;
 use App\Models\Sasisopa\SeguimientoObjetivosMetasDetalle;
 use App\Models\Sasisopa\ReporteCreMes;
+use App\Models\Sasisopa\EncuentaEstacion;
 use App\Services\CapacitacionService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Dompdf\Dompdf;
@@ -897,7 +898,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/objetivosmetasindicadores/capacitacion-personal.actions.init.js?v=1.0'
+                '/js/objetivosmetasindicadores/capacitacionpersonal.actions.init.js?v=1.0'
             ],
             'help' => false
         ];
@@ -944,7 +945,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/apexcharts/dist/apexcharts.min.js',
-                '/js/objetivosmetasindicadores/indicador-ventas.actions.init.js?v=1.0'
+                '/js/objetivosmetasindicadores/indicadorventas.actions.init.js?v=1.0'
                 
             ],
             'help' => true
@@ -1052,6 +1053,111 @@ class ObjetivosMetasIndicadoresController extends BaseController{
                 'series' => $series
             ]
         ]);
+    }
+
+    public function ExperienciaCliente(){
+
+        $title = 'Experiencia del cliente';
+         // Buscar permisos de los modulos
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
+        Breadcrumb::add($title, '');
+
+         $data = [
+            'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'filtro_usuario' => $this->filtro_usuario,
+             'links' =>[
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+                
+            ],
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/objetivosmetasindicadores/experienciacliente.datatable.init.js?v=1.0'
+            ],
+            'help' => true
+        ];
+        
+        View::render('objetivosmetasindicadores/experiencia-cliente', $data,'sasisopa');
+
+    }
+
+    public function datatableExperienciaCliente(){
+
+        header('Content-Type: application/json');
+
+        $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
+        $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
+        $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
+
+        $encuestas = EncuentaEstacion::withCount('clientes')
+            ->where('id_estacion', $this->estacionId())
+            ->where('estado', 1)
+            ->orderBy('id')
+            ->get();
+
+        // Traer resultados agrupados en UNA SOLA QUERY
+        $resultados = Capsule::table('tb_encuentas_estacion_cliente as c')
+            ->join('tb_encuentas_estacion_cliente_preguntas as p', 'p.id_cliente', '=', 'c.id')
+            ->selectRaw('
+                c.id_cuentas_estacion as encuesta_id,
+                SUM(CASE WHEN p.resultado = 4 THEN 1 ELSE 0 END) as r4,
+                SUM(CASE WHEN p.resultado = 3 THEN 1 ELSE 0 END) as r3,
+                SUM(CASE WHEN p.resultado = 2 THEN 1 ELSE 0 END) as r2,
+                SUM(CASE WHEN p.resultado = 1 THEN 1 ELSE 0 END) as r1
+            ')
+            ->groupBy('c.id_cuentas_estacion')
+            ->get()
+            ->keyBy('encuesta_id');
+
+        $data = [];
+
+        foreach ($encuestas as $i => $encuesta) {
+
+            $tot = $resultados[$encuesta->id] ?? null;
+
+            $r4 = $tot->r4 ?? 0;
+            $r3 = $tot->r3 ?? 0;
+            $r2 = $tot->r2 ?? 0;
+            $r1 = $tot->r1 ?? 0;
+
+            $total = $r4 + $r3 + $r2 + $r1;
+
+            $data[] = [
+                'id' => $encuesta->id,
+                'num' => $i + 1,
+                'fecha' => $encuesta->fechacreacion,
+                'encuestados' => $encuesta->clientes_count,
+
+                'excelente_total' => $r4,
+                'excelente_porcentaje' => $total ? round(($r4 / $total) * 100, 2) : 0,
+
+                'bueno_total' => $r3,
+                'bueno_porcentaje' => $total ? round(($r3 / $total) * 100, 2) : 0,
+
+                'regular_total' => $r2,
+                'regular_porcentaje' => $total ? round(($r2 / $total) * 100, 2) : 0,
+
+                'malo_total' => $r1,
+                'malo_porcentaje' => $total ? round(($r1 / $total) * 100, 2) : 0,
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'data' => $data,
+            "permisos" => [
+                "eliminar" => $permisoEliminar,
+                "editar"   => $permisoEditar,
+                "descargar" => $permisoDescargar
+            ]
+        ]);
+
     }
 
 }
