@@ -10,13 +10,14 @@ class EncuentasEstacionCliente extends Model
 
     protected $primaryKey = 'id';
 
-    public $incrementing = true;
+    public $incrementing = false;
 
     protected $keyType = 'int';
 
     public $timestamps = false;
 
     protected $fillable = [
+        'id',
         'id_cuentas_estacion',
         'nombre',
         'fecha',

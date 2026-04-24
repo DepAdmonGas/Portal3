@@ -21,7 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         },
         columns: [
-            { data: 'id' },
+            {
+                data: null,
+                width: '60px',
+                className: 'text-center',
+                render: function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            },
 
             {
                 data: 'fecha',

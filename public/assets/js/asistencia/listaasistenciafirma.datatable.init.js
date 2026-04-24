@@ -26,7 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         columns: [
-            { data: 'id', width: '60px', className: 'text-center' },
+           {
+                data: null,
+                width: '60px',
+                className: 'text-center',
+                render: function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            },
             { data: 'usuario', className: 'text-center' },
             { data: 'puesto', className: 'text-center' },
             {

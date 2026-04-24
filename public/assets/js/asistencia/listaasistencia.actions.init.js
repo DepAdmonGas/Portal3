@@ -95,7 +95,10 @@ document.addEventListener('alpine:init', () => {
 
         async actualizar(id){
 
-            if (!this.validate()) return;
+            if (!this.validate()) {
+                this.notify('error', 'Completa todos los campos');
+                return;
+            }
 
             try {
              const res = await this.createAction({

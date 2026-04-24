@@ -98,7 +98,6 @@ return `
 <div class="dropdown dropstart">
 
 <a href="javascript:void(0)"
-class="text-muted"
 data-bs-toggle="dropdown">
 <i class="ti ti-dots-vertical fs-6"></i>
 </a>

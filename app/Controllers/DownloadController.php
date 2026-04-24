@@ -27,7 +27,8 @@ class DownloadController{
             'procedimientos-visita-estacion' => __DIR__ . '../../../public/uploads/archivos/visita-estacion/',
             'empresa' => __DIR__ . '../../../public/uploads/archivos/empresa/',
             'poliza-seguro' => __DIR__ . '../../../public/uploads/archivos/poliza-seguro/',
-            'requisitos-legales' => __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/'
+            'requisitos-legales' => __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/',
+            'encuestas' => __DIR__ . '../../../public/uploads/archivos/encuestas/'
 
         ];
 

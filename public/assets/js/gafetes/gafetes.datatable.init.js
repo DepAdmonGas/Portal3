@@ -157,14 +157,14 @@ table: '#table-gafetes'
 
 });
 
-// 🔥 Alpine + Dropdown FIX en cada render
+// Alpine + Dropdown FIX en cada render
 table.on('draw', function () {
 
 if (window.Alpine) {
 Alpine.initTree(document.querySelector('#table-gafetes'));
 }
 
-// 🔥 Dropdown fuera del contexto del TR (clave)
+// Dropdown fuera del contexto del TR (clave)
 document.querySelectorAll('#table-gafetes [data-bs-toggle="dropdown"]').forEach(el => {
 new bootstrap.Dropdown(el, {
 popperConfig: {
@@ -176,7 +176,7 @@ strategy: 'fixed'
 });
 
 
-// 🔥 Control columna
+// Control columna
 table.on('xhr', function () {
 const json = table.ajax.json();
 if (json && json.filas_mostrar) {

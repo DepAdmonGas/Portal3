@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     return `
                         <div class="dropdown dropstart">
-                            <a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown">
+                            <a href="javascript:void(0)" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">

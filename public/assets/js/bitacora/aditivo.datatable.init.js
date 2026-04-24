@@ -1,33 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    /*
-
-                        <!--BOTÓN EDIT -->
-                        <button 
-                            class="btn btn-warning btn-sm ${disabled ? 'disabled' : ''}"
-                            @click="editAction({
-                                url: '/bitacora-aditivo',
-                                id: ${row.id},
-                                table: '#table-aditivo'
-                            })"
-                        >
-                            <i class="ti ti-edit"></i>
-                        </button>
-
-                        <!--BOTÓN DELETE -->
-                        <button 
-                            class="btn btn-danger btn-sm ${disabled ? 'disabled' : ''}"
-                            @click="deleteAction({
-                                url: '/bitacora-aditivo/delete',
-                                id: ${row.id},
-                                name: '${row.folio}',
-                                table: '#table-aditivo'
-                            })"
-                        >
-                            <i class="ti ti-trash"></i>
-                        </button>
-
-    */
     let permisos = {};
 
     const table = $('#table-aditivo').DataTable({
