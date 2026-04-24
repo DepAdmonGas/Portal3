@@ -5,7 +5,7 @@ function menuApp() {
         loading: false,
 
         init() {
-            // 🔥 obtener módulo desde el HTML
+            // obtener módulo desde el HTML
             this.modulo = this.$el.dataset.modulo || '';
 
             this.cargarMenus();
@@ -18,7 +18,7 @@ function menuApp() {
                 const res = await fetch(`/menu?modulo=${encodeURIComponent(this.modulo)}`);
                 const json = await res.json();
 
-                // 🔥 SOPORTA {success, data} o array directo
+                // SOPORTA {success, data} o array directo
                 let data = json.data ?? json;
 
                 if (!Array.isArray(data)) {
@@ -40,7 +40,7 @@ function menuApp() {
 
             return data.map(grupo => {
 
-                // 🔥 VALIDACIÓN CRÍTICA
+                //VALIDACIÓN CRÍTICA
                 if (!grupo.items || !Array.isArray(grupo.items)) {
                     grupo.items = [];
                 }
@@ -75,7 +75,7 @@ function menuApp() {
             }
         },
 
-        // 🔥 detectar ruta activa (mejorado)
+        //detectar ruta activa (mejorado)
         isActive(ruta) {
             if (!ruta) return false;
 

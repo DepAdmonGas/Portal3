@@ -1,58 +1,68 @@
-<div id="container" class="mb-3" x-data="{ ...actions()}">
-<div class="text-end mt-2">
-    <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
+<div id="container" class="mb-3" x-data="{ ...actions(), ...experienciaCliente() }">
+  <div class="text-end mt-2">
+      <div class="btn-group">
+          <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+             <i class="ti ti-dots-vertical fs-4"></i>
+          </button>
             <ul class="dropdown-menu animated rubberBand">
-                <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-search"></i> Buscar</a></li>
+              <li><a class="dropdown-item"  @click="nuevo()"><i class="ti ti-plus"></i> Agregar</a></li>
+              <?= 
+                !empty($permisos['descargar']) 
+                ? '<li>
+                    <a class="dropdown-item" 
+                      @click="download(\'encuestas\', \'Formato encuestas.pdf\')">
+                        <i class="ti ti-download"></i> Descargar
+                    </a>
+                  </li>' 
+                : '' 
+                ?>
             </ul>
-        </div>
-</div>
-
-<div class="row mt-3">
-
-  <div class="col-md-8 col-sm-12">
-
-    <div class="datatables mt-3">
-      <div class="table-responsive">
-        <table id="table-experiencia-cliente" class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
-          <thead>
-            <tr>
-                <th colspan="2"></th>
-                <th colspan="2">Excelente</th>
-                <th colspan="2">Bueno</th>
-                <th colspan="2">Regular</th>
-                <th colspan="2">Malo</th>
-                <th colspan="2"></th>
-            </tr>
-            <tr>
-            <th>#</th>
-            <th>Fecha</th>            
-            <th>Encuestados</th>
-            <th>Resultado</th>
-            <th>%</th>
-            <th>Resultado</th>
-            <th>%</th>
-            <th>Resultado</th>
-            <th>%</th>
-            <th>Resultado</th>
-            <th>%</th>
-            <th class="text-center">
-            <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
-            </th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
       </div>
-    </div> 
-
   </div>
-   <div class="col-md-4 col-sm-12">
 
+  <div class="row mt-3">
+
+    <div class="col-md-8 col-sm-12">
+
+      <div class="datatables mt-3">
+        <div class="table-responsive">
+          <table id="table-experiencia-cliente" class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
+            <thead>
+              <tr>
+                  <th colspan="3"></th>
+                  <th colspan="2" class="text-center text-primary">Excelente</th>
+                  <th colspan="2" class="text-center text-success">Bueno</th>
+                  <th colspan="2" class="text-center text-warning">Regular</th>
+                  <th colspan="2" class="text-center text-danger">Malo</th>
+                  <th colspan="2"></th>
+              </tr>
+              <tr>
+              <th>#</th>
+              <th>Fecha</th>            
+              <th>Encuestados</th>
+              <th>Resultado</th>
+              <th>%</th>
+              <th>Resultado</th>
+              <th>%</th>
+              <th>Resultado</th>
+              <th>%</th>
+              <th>Resultado</th>
+              <th>%</th>
+              <th class="text-center">
+              <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
+              </th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div> 
+
+    </div>
+    <div class="col-md-4 col-sm-12">
+          <div id="chart"></div>
+    </div>
   </div>
-</div>
 
 </div>
 

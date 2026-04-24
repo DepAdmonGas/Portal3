@@ -8,7 +8,12 @@ use App\Models\Sasisopa\SeguimientoReporteIndicador;
 use App\Models\Sasisopa\SeguimientoObjetivosMetas;
 use App\Models\Sasisopa\SeguimientoObjetivosMetasDetalle;
 use App\Models\Sasisopa\ReporteCreMes;
+use App\Models\Sasisopa\Encuestas;
+use App\Models\Sasisopa\EncuentaCuestionario;
 use App\Models\Sasisopa\EncuentaEstacion;
+use App\Models\Sasisopa\EncuentasEstacionCliente;
+use App\Models\Sasisopa\EncuentasEstacionClienteComentarios;
+use App\Models\Sasisopa\EncuentasEstacionClientePreguntas;
 use App\Services\CapacitacionService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Dompdf\Dompdf;
@@ -38,9 +43,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/objetivosmetasindicadores/seguimientoindicadores.datatable.init.js?v=1.0',
-                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.datatable.init.js?v=1.0',
-                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.actions.init.js?v=1.0'
+                '/js/objetivosmetasindicadores/seguimientoindicadores.datatable.init.js?v=1.1',
+                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.datatable.init.js?v=1.1',
+                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.actions.init.js?v=1.1'
             ],
             'help' => true
         ];
@@ -1077,8 +1082,10 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                 '/libs/apexcharts/dist/apexcharts.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/objetivosmetasindicadores/experienciacliente.datatable.init.js?v=1.0'
+                '/js/objetivosmetasindicadores/experienciacliente.datatable.init.js?v=1.3',
+                '/js/objetivosmetasindicadores/experienciacliente.actions.init.js?v=1.3'
             ],
             'help' => true
         ];
@@ -1118,8 +1125,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         $data = [];
 
         foreach ($encuestas as $i => $encuesta) {
-
-            $tot = $resultados[$encuesta->id] ?? null;
+             $tot = $resultados[$encuesta->id] ?? null;
 
             $r4 = $tot->r4 ?? 0;
             $r3 = $tot->r3 ?? 0;
@@ -1158,6 +1164,436 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             ]
         ]);
 
+    }
+
+    public function chartExperienciaCliente()
+    {
+        header('Content-Type: application/json');
+
+        $idEncuesta = $_GET['id'] ?? null;
+
+        $query = Capsule::table('tb_encuentas_estacion_cliente as c')
+            ->join('tb_encuentas_estacion_cliente_preguntas as p', 'p.id_cliente', '=', 'c.id');
+
+        if ($idEncuesta) {
+            // 👉 SOLO UNA encuesta
+            $query->where('c.id_cuentas_estacion', $idEncuesta);
+        } else {
+    
+            $encuestas = EncuentaEstacion::where('id_estacion', $this->estacionId())
+                ->where('estado', 1)
+                ->pluck('id');
+
+            $query->whereIn('c.id_cuentas_estacion', $encuestas);
+        }
+
+        $totales = $query->selectRaw('
+            SUM(CASE WHEN p.resultado = 4 THEN 1 ELSE 0 END) as excelente,
+            SUM(CASE WHEN p.resultado = 3 THEN 1 ELSE 0 END) as bueno,
+            SUM(CASE WHEN p.resultado = 2 THEN 1 ELSE 0 END) as regular,
+            SUM(CASE WHEN p.resultado = 1 THEN 1 ELSE 0 END) as malo
+        ')->first();
+
+        $excelente = (int) ($totales->excelente ?? 0);
+        $bueno     = (int) ($totales->bueno ?? 0);
+        $regular   = (int) ($totales->regular ?? 0);
+        $malo      = (int) ($totales->malo ?? 0);
+
+        $total = $excelente + $bueno + $regular + $malo;
+
+        echo json_encode([
+            'success' => true,
+            'data' => [
+                'labels' => ['Excelente', 'Bueno', 'Regular', 'Malo'],
+                'series' => $total > 0 ? [
+                    round(($excelente / $total) * 100, 1),
+                    round(($bueno / $total) * 100, 1),
+                    round(($regular / $total) * 100, 1),
+                    round(($malo / $total) * 100, 1)
+                ] : [0, 0, 0, 0]
+            ]
+        ]);
+    }
+
+    public function createExperienciaCliente()
+    {
+
+     header('Content-Type: application/json; charset=utf-8');
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No tienes permiso para crear'
+                ]);
+                return;
+            }
+
+            $encuesta = EncuentaEstacion::create([
+                'id_estacion'   => $this->estacionId(),
+                'id_usuario'    => $this->userId(), // o auth()->id()
+                'id_encuesta'   => 1,
+                'estado'        => 1
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'id' => $encuesta->id
+            ]);
+    }
+
+    public function editarExperienciaCliente($id){
+
+         $title = 'Agregar Experiencia del cliente';
+         // Buscar permisos de los modulos
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
+        Breadcrumb::add('Experiencia del cliente', '/sasisopa/objetivos-metas-indicadores/experiencia-cliente');
+        Breadcrumb::add('Agregar', '');
+
+        $encuestaEstacion = EncuentaEstacion::find($id);
+        $cuestionario = EncuentaCuestionario::all();
+
+         $data = [
+            'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'filtro_usuario' => $this->filtro_usuario,
+            'id' => $id,
+            'fecha' => formatDate($encuestaEstacion->fechacreacion),
+            'cuestionario' => $cuestionario,
+             'links' =>[
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+                
+            ],
+            'scripts' => [
+                '/js/vendor.min.js',
+                 '/libs/apexcharts/dist/apexcharts.min.js',
+                 '/js/objetivosmetasindicadores/experienciaclienteeditar.actions.init.js?v=1.0'
+            ],
+            'help' => true
+        ];
+        
+        View::render('objetivosmetasindicadores/experiencia-cliente-editar', $data,'sasisopa');
+                
+
+    }
+
+    public function deleteExperienciaCliente(){
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+
+        if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para eliminar'
+            ]);
+            return;
+        }
+
+        if (!$id) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'ID requerido'
+            ]);
+            return;
+        }
+
+        try {
+
+            Capsule::connection()->transaction(function () use ($id) {
+
+                $encuesta = EncuentaEstacion::findOrFail($id);
+
+                $clientesIds = EncuentasEstacionCliente::where('id_cuentas_estacion', $id)
+                    ->pluck('id');
+
+                if ($clientesIds->isNotEmpty()) {
+                    EncuentasEstacionClienteComentarios::whereIn('id_cliente', $clientesIds)->delete();
+                    EncuentasEstacionClientePreguntas::whereIn('id_cliente', $clientesIds)->delete();
+                }
+
+                EncuentasEstacionCliente::where('id_cuentas_estacion', $id)->delete();
+
+                $encuesta->delete();
+            });
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Experiencia cliente eliminado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            error_log($e->getMessage());
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al eliminar registro'
+            ]);
+        }
+    }
+
+    public function detalleExperienciaCliente($id){
+
+     $title = 'Detalle Experiencia del cliente';
+         // Buscar permisos de los modulos
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
+        Breadcrumb::add('Experiencia del cliente', '/sasisopa/objetivos-metas-indicadores/experiencia-cliente');
+        Breadcrumb::add('Detalle', '');
+
+        $encuestaEstacion = EncuentaEstacion::find($id);
+        $cuestionario = EncuentaCuestionario::all();
+
+         $data = [
+            'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'filtro_usuario' => $this->filtro_usuario,
+            'id' => $id,
+            'fecha' => formatearFecha($encuestaEstacion->fechacreacion),
+            'cuestionario' => $cuestionario,
+             'links' =>[
+                             
+            ],
+            'scripts' => [
+                '/js/vendor.min.js',
+                 '/libs/apexcharts/dist/apexcharts.min.js',
+                 '/js/objetivosmetasindicadores/experienciaclientedetalle.actions.init.js?v=1.1'
+            ],
+            'help' => true
+        ];
+        
+        View::render('objetivosmetasindicadores/experiencia-cliente-detalle', $data,'sasisopa');
+    }
+
+    public function agregarEncuestaCliente()
+    {
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $idReporte = $data['id'];
+        $nombre = $data['nombre'];
+        $comentario = $data['comentario'];
+        $preguntas = $data['preguntas'];
+
+        $hoy = date('Y-m-d h:i:s');
+        $idEncuestaCliente = strtotime($hoy);        
+        
+
+         if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No tienes permiso para crear'
+                ]);
+                return;
+            }
+
+        try {
+
+            Capsule::connection()->transaction(function () use ($idReporte, $nombre, $comentario, $preguntas, $idEncuestaCliente) {
+
+                               
+                EncuentasEstacionCliente::create([
+                    'id' => $idEncuestaCliente,
+                    'id_cuentas_estacion' => $idReporte,
+                    'nombre' => $nombre
+                ]);
+
+            $insertPreguntas = [];
+
+                foreach ($preguntas as $p) {
+                    if ($p['respuesta'] > 0) {
+                        $insertPreguntas[] = [
+                            'id_cliente' => $idEncuestaCliente,
+                            'id_pregunta' => $p['id_pregunta'],
+                            'resultado' => $p['respuesta']
+                        ];
+                    }
+                }
+
+                if (!empty($insertPreguntas)) {
+                    EncuentasEstacionClientePreguntas::insert($insertPreguntas);
+                }
+
+                // Comentario
+                if (!empty($comentario)) {
+                    EncuentasEstacionClienteComentarios::create([
+                        'id_cliente' => $idEncuestaCliente,
+                        'comentario' => $comentario
+                    ]);
+                }
+            });
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Encuesta creada correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al guardar encuesta'
+            ]);
+        }
+    }
+
+    public function getListaClientes()
+    {
+        header('Content-Type: application/json');
+
+        $id = $_GET['id'] ?? null;
+
+        $clientes = EncuentasEstacionCliente::where('id_cuentas_estacion', $id)
+            ->select('id', 'nombre')
+            ->get();
+
+        echo json_encode([
+            'success' => true,
+            'data' => $clientes
+        ]);
+    }
+
+    public function detalleEncuestaCliente()
+    {
+        header('Content-Type: application/json');
+
+        $id = $_GET['id'] ?? null;
+
+        $cliente = EncuentasEstacionCliente::find($id);
+
+        $comentario = EncuentasEstacionClienteComentarios::where('id_cliente', $id)
+            ->value('comentario');
+
+        $preguntas = Capsule::table('tb_encuentas_estacion_cliente_preguntas as p')
+            ->join('tb_encuentas_cuestionario as c', 'c.id', '=', 'p.id_pregunta')
+            ->where('p.id_cliente', $id)
+            ->orderBy('c.num_pregunta')
+            ->select(
+                'c.num_pregunta',
+                'c.pregunta',
+                'p.resultado'
+            )
+            ->get();
+
+        echo json_encode([
+            'success' => true,
+            'data' => [
+                'nombre' => $cliente->nombre,
+                'comentario' => $comentario,
+                'preguntas' => $preguntas
+            ]
+        ]);
+    }
+
+    public function finalizarEncuesta()
+    {
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $id = $data['id'] ?? null;
+        $fecha = $data['fecha'] ?? null;
+
+        if (!$id || !$fecha) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Datos incompletos'
+            ]);
+            return;
+        }
+
+        if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso'
+            ]);
+            return;
+        }
+
+        try {
+
+            $encuesta = EncuentaEstacion::findOrFail($id);
+
+            $encuesta->fechacreacion = $fecha; // formato: Y-m-d H:i:s
+            $encuesta->estado = 1;
+            $encuesta->save();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Encuesta finalizada correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function chartExperienciaClientePreguntas()
+    {
+        header('Content-Type: application/json');
+
+        $idReporte = $_GET['id'] ?? null;
+
+        if (!$idReporte) {
+            echo json_encode(['success' => false]);
+            return;
+        }
+
+                $data = Capsule::table('tb_encuentas_cuestionario as c')
+            ->leftJoin('tb_encuentas_estacion_cliente_preguntas as p', function ($join) use ($idReporte) {
+                $join->on('p.id_pregunta', '=', 'c.id')
+                    ->whereIn('p.id_cliente', function ($q) use ($idReporte) {
+                        $q->select('id')
+                        ->from('tb_encuentas_estacion_cliente')
+                        ->where('id_cuentas_estacion', $idReporte);
+                    });
+            })
+            ->selectRaw('
+                c.id,
+                c.num_pregunta,
+                c.pregunta,
+                COALESCE(SUM(CASE WHEN p.resultado = 4 THEN 1 END),0) as excelente,
+                COALESCE(SUM(CASE WHEN p.resultado = 3 THEN 1 END),0) as bueno,
+                COALESCE(SUM(CASE WHEN p.resultado = 2 THEN 1 END),0) as regular,
+                COALESCE(SUM(CASE WHEN p.resultado = 1 THEN 1 END),0) as malo
+            ')
+            ->groupBy('c.id', 'c.num_pregunta', 'c.pregunta')
+            ->orderBy('c.num_pregunta')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => (int) $item->id,
+                    'num_pregunta' => (int) $item->num_pregunta,
+                    'pregunta' => $item->pregunta,
+                    'excelente' => (int) $item->excelente,
+                    'bueno' => (int) $item->bueno,
+                    'regular' => (int) $item->regular,
+                    'malo' => (int) $item->malo,
+                ];
+            });
+
+        echo json_encode([
+            'success' => true,
+            'data' => $data
+        ]);
     }
 
 }
