@@ -4,24 +4,34 @@ document.addEventListener('DOMContentLoaded', () => {
     .getElementById('container')
     .dataset.idsasisopa;
 
-    $('#table-lista-representante-tecnico').DataTable({
+    table1 = $('#table-lista-representante-tecnico').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
         stateSave: true, 
-        order: [[0, 'desc']],
+        order: [[2, 'desc']],
         language: {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/datatable-lista-representante-tecnico',
+            url: '/sasisopa/funciones-responsabilidades-autoridad/datatable-lista-representante-tecnico',
             type: 'GET',
             dataSrc: function (json) {
-                return json.data;
+            //guardas permisos globalmente
+            permisos = json.permisos;
+            return json.data;
             }
         },
         columns: [
-            { data: 'id', width: '60px', className: 'text-center' },
+           {
+                data: null,
+                width: '60px',
+                className: 'text-center',
+                render: function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            },
+            { data: 'nom_representante' },
             {
             data: 'fecha',
             render: function (data, type) {
@@ -55,26 +65,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
                     
+                    const disabled = row.estado === 0;
+                    const noEdit = !permisos.editar || disabled;
+                    const noDelete = !permisos.eliminar || disabled;
+                    const noDownload = !permisos.descargar || disabled;
 
+                    const archivo = row.archivo.split('/').pop();
+
+                    
                     return `
                         <div class="dropdown dropstart">
                             <a href="javascript:void(0)" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit 
-                                    data-id="${row.id}">
-                                        <i class="fs-4 ti ti-edit"></i>Editar
-                                    </a>
-                                </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${noDownload ? 'disabled' : ''}"
+                                    ${noDownload ? '' : `
+                                    @click="download('representante-tecnico','${archivo}')"
+                                    `}>
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3  ${noDelete ? 'disabled' : ''}"
+                                    ${noDelete ? '' : `
+                                    @click='window.representanteTecnico.eliminar(${row.id})'
+                                    `}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
@@ -84,6 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ]
+    });
+
+    $("#table-lista-representante-tecnico tbody").on("click", "tr", function () {
+    if ($(this).hasClass("selected")) {
+    } else {
+        table1.$("tr.selected").removeClass("selected");
+        $(this).addClass("selected");
+    }
     });
 
 });

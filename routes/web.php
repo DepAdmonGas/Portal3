@@ -385,6 +385,11 @@ return function(RouteCollector $r) {
 
         // Elemento 5
         $r->addRoute('GET', '/funciones-responsabilidades-autoridad', Route::auth(['SasisopaController', 'funcionesResponsabilidadesAutoridad']));
+        $r->addRoute('GET', '/funciones-responsabilidades-autoridad/datatable-lista-representante-tecnico', Route::auth(['SasisopaController', 'datatableListaRepresentanteTecnico']));
+        $r->addRoute('POST', '/funciones-responsabilidades-autoridad/create-representante-tecnico', Route::auth(['SasisopaController', 'createRepresentanteTecnico']));
+        $r->addRoute('POST', '/funciones-responsabilidades-autoridad/delete-representante-tecnico', Route::auth(['SasisopaController', 'deleteRepresentanteTecnico']));
+
+        
         // Elemento 6
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento', Route::auth(['SasisopaController', 'competenciaPersonalCapacitacionEntrenamiento']));
         // Elemento 7

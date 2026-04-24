@@ -44,6 +44,9 @@ class ListaAsistenciaController extends BaseController{
         }else if($asistencia->punto_sasisopa == 3 ){
             $bcSubModulo = '3. REQUISITOS LEGALES';
             $bcSubUrl = '/sasisopa/requisitos-legales';
+        }else if($asistencia->punto_sasisopa == 5 ){
+            $bcSubModulo = '5. FUNCIONES, RESPONSABILIDADES Y AUTORIDAD';
+            $bcSubUrl = '/sasisopa/funciones-responsabilidades-autoridad';
         }
 
         } else {
@@ -137,7 +140,7 @@ class ListaAsistenciaController extends BaseController{
 
         $data = ListaAsistencia::where('punto_sasisopa', $elemento)
         ->where('id_estacion', $this->estacionId())
-        ->orderBy('id', 'desc')
+        ->orderBy('fecha', 'desc')
         ->get();
 
          echo json_encode([

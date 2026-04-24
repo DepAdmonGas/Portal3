@@ -18,6 +18,8 @@ use App\Core\Auth;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
+use Illuminate\Database\Capsule\Manager as Capsule;
+
 class SasisopaController extends BaseController{
 
     protected string $modulo = 'sasisopa';
@@ -1056,7 +1058,7 @@ class SasisopaController extends BaseController{
     }
 
     public function anexosAnalisisRiesgo($id)
-        {
+    {
             header('Content-Type: application/json; charset=utf-8');
 
             try {
@@ -1097,21 +1099,34 @@ class SasisopaController extends BaseController{
     public function funcionesResponsabilidadesAutoridad(){
 
         $title = '5. FUNCIONES, RESPONSABILIDADES Y AUTORIDAD';
+        // Buscar permisos de los modulos
+        $permisos = ModuloService::permisosSesion($this->modulo);
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
+        $estacion = Estacion::find($this->estacionId());
+        
          $data = [
             'title' => $title,
+             'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'filtro_usuario' => $this->filtro_usuario,
+            'organigrama' => asset('/images/organigramas/' . $estacion->organigrama),
              'links' =>[
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                '/libs/select2/dist/css/select2.min.css'
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js',
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/sasisopa/listaasistencia.datatable.init.js',
-                '/assets/js/sasisopa/listarepresentantetecnico.datatable.init.js'
+                '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/libs/select2/dist/js/select2.full.min.js',
+                '/libs/select2/dist/js/select2.min.js',
+                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0',
+                '/js/asistencia/listaasistencia.actions.init.js?v=1.0',
+                '/js/sasisopa/listarepresentantetecnico.datatable.init.js?v=1.5',
+                '/js/sasisopa/representantetecnico.action.init.js?v=1.1'
             ],
             'help' => true
         ];
@@ -1121,14 +1136,168 @@ class SasisopaController extends BaseController{
     }
 
     public function datatableListaRepresentanteTecnico(){
-        $data = RepresentanteTecnico::where('id_estacion',5)
-        ->groupBy('fecha')
+
+        $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
+        $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
+        $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
+
+        $data = RepresentanteTecnico::where('id_estacion',$this->estacionId())
+        ->orderBy('fecha')
         ->get();
 
          echo json_encode([
-            "data" => $data
+            "data" => $data,
+             "permisos" => [
+                "eliminar" => $permisoEliminar,
+                "editar"   => $permisoEditar,
+                "descargar" => $permisoDescargar
+            ]
         ]);
         
+        exit;
+    }
+
+    public function createRepresentanteTecnico(){
+
+        header('Content-Type: application/json; charset=utf-8');
+
+         if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para crear'
+            ]);
+            exit;
+        }
+
+        $nombre = $_POST['nombre'] ?? '';
+        $fecha = $_POST['fecha'] ?? '';
+        $file  = $_FILES['pdf'] ?? null;
+
+        if (!$nombre || !$fecha) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Campos obligatorios'
+        ]);
+        exit;
+        }
+
+        // CONFIG RUTA
+        $carpeta = __DIR__ . '../../../public/uploads/';
+
+         if (!file_exists($carpeta)) {
+            mkdir($carpeta, 0777, true);
+        }
+
+        $nombreArchivo = null;
+
+        try {
+
+            // SUBIR ARCHIVO (opcional)
+            if ($file && $file['error'] === UPLOAD_ERR_OK) {
+
+                // Validar extensión
+                $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+                // nombre único
+                $nombreArchivo = 'archivos/representante-tecnico/' . uniqid('Formato_') . '.' . $extension;
+
+                $rutaDestino = $carpeta . $nombreArchivo;
+
+                if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {
+                    throw new \Exception('No se pudo guardar el archivo');
+                }
+            }
+
+            // GUARDAR EN BD
+            RepresentanteTecnico::create([
+                'id_estacion' => $this->estacionId(),
+                'nom_representante'  => $nombre,
+                'fecha'       => $fecha,
+                'archivo'   => $nombreArchivo
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Representante técnico almacenado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            // Si falla BD, borrar archivo
+            if ($nombreArchivo && file_exists($carpeta . $nombreArchivo)) {
+                unlink($carpeta . $nombreArchivo);
+            }
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
+        exit;   
+
+    }
+
+    public function deleteRepresentanteTecnico(){
+        header('Content-Type: application/json; charset=utf-8');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+
+        if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para eliminar'
+            ]);
+            exit;
+        }
+
+        if (!$id) {
+            echo json_encode(['success' => false,'message' => 'ID requerido']);
+            exit;
+        }
+
+            try {
+
+            // Buscar registro
+            $reporte = RepresentanteTecnico::find($id);
+
+            if (!$reporte) {
+                throw new \Exception('Registro no encontrado');
+            }
+
+            // Ruta archivo
+            $rutaBase = __DIR__ . '../../../public/uploads/';
+            $rutaArchivo = $rutaBase . $reporte->archivo;
+
+            // TRANSACCIÓN
+            Capsule::beginTransaction();
+
+            // Eliminar archivo si existe
+            if ($reporte->archivo && file_exists($rutaArchivo)) {
+                unlink($rutaArchivo);
+            }
+
+            // Eliminar registro (puedes usar delete o estado = 0)
+            $reporte->delete();
+
+            Capsule::commit();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Representante técnico eliminado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Capsule::rollBack();
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
         exit;
     }
 
