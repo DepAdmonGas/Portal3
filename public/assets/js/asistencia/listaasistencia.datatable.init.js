@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         serverSide: false,
         autoWidth: false,
         stateSave: true,
-        order: [[0, 'desc']],
+        order: [[1, 'desc']],
         language: {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },

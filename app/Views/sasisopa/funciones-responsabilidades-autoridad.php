@@ -1,85 +1,161 @@
-<div id="container" data-idsasisopa="5">
+<div id="container" data-elemento="5" data-herramienta="1">
+
 
 <div class="row mt-3">
-  <div class="col-md-9"></div>
-  <div class="col-md-3 d-flex align-items-stretch">
-    <div class="card w-100">
+  <div class="col-md-9 col-12">
+    <img src="<?= $organigrama ?>" class="w-100" alt="">
+  </div>
+  <div class="col-md-3 col-12">
+    <div class="card">
       <div class="card-body">
         <h4 class="card-title text-center">Responsabilidades</h4>
 
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2">Representante Técnico</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2">Gerente</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2">Jefe de Piso</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2">Facturista</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2">Despachador</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2">Auxiliar administrativo</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2">Mantenimiento</button>
+        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalReTe">Representante Técnico</button>
+        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalGerente">Gerente</button>
+        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalJefePiso">Jefe de Piso</button>
+        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalFacturista">Facturista</button>
+        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalDespachador">Despachador</button>
+        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalAuxiliar">Auxiliar administrativo</button>
+        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalMantenimiento">Mantenimiento</button>
          
       </div>
     </div>
   </div>
 </div>
 
-<div class="row">
+<div class="row mt-3">
+
 <div class="col-md-6">
+  <div x-data="{ ...actions(), ...representanteTecnicoForm() }">
 
-<div class="card">
-  <div class="card-body">
+    <div class="card">
+      <div class="card-body">
 
-  <div class="d-flex align-items-center">
-    <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
-      <div class="ms-auto">
-        <button type="button" class="btn">
-        <i class="ti ti-plus fs-7 text-primary"></i>
-        </button>
-      
+      <div class="d-flex align-items-center">
+        <h4 class="card-title mb-0">Formato de asignación de representante técnico</h4>
+          <div class="ms-auto">
+        <?= 
+              !empty($permisos['crear']) ? 
+              '<button type="button" class="btn btn-primary" href="javascript:void(0)" @click="openNuevo()">
+              <i class="ti ti-plus"></i> Nuevo
+              </button>' 
+              : '' 
+            ?>   
+          </div>
       </div>
-  </div>
 
-  <div class="datatables mt-3">
-    <div class="table-responsive">
-      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
-        <thead>
-          <tr>
-          <th>#</th>
-          <th>Fecha</th>
-          <th>Hora</th>
-          <th class="text-center">
-          <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
-          </th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="datatables mt-3">
+        <div class="table-responsive">
+          <table id="table-lista-representante-tecnico" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+            <thead>
+              <tr>
+              <th>#</th>
+              <th>Nombre del representante técnico</th>
+              <th>Fecha</th>
+              <th class="text-center">
+              <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
+              </th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+                        
+      </div>
     </div>
-  </div>
-                    
-  </div>
-</div>
 
-</div>
+      <!-- MODAL -->
+      <div class="modal fade" id="openNuevoModal">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+
+            <div class="modal-header">
+              <h4>Agregar representante técnico</h4>
+              <button class="btn-close"
+              data-bs-dismiss="modal"
+              @click="resetModal()"></button>
+            </div>
+
+            <div class="modal-body">
+
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="form-label">* Nombre:</label>
+                  <input type="text"
+                        class="form-control"
+                        x-model="form.nombre"
+                        :class="{'is-invalid': errors.nombre}"
+                        @input="errors.nombre = false">
+
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">* Fecha:</label>
+                  <input type="date"
+                        class="form-control"
+                        x-model="form.fecha"
+                        :class="{'is-invalid': errors.fecha}"
+                        @input="errors.fecha = false">
+
+                </div>
+              </div>
+
+              <label class="form-label mt-3">* Archivo:</label>
+              <input type="file"
+                class="form-control"
+                x-ref="pdfInput"
+                @change="handleFile($event)"
+                :class="{'is-invalid': errors.pdf}">
+
+            </div>
+
+            <div class="modal-footer">
+             <button class="btn bg-danger-subtle text-danger"
+              data-bs-dismiss="modal"
+              @click="resetModal()">Cancelar</button>
+
+              <button class="btn btn-success" @click="submit()" :disabled="loading">
+                <span x-show="!loading">Guardar</span>
+                <span x-show="loading">Guardando...</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+  </div>
+  </div>
+
 
 <div class="col-md-6">
 
 <div class="card">
   <div class="card-body">
 
-  <div class="d-flex align-items-center">
-    <h4 class="card-title mb-0">Formato de asignación de representante técnico</h4>
-      <div class="ms-auto">
-      <button type="button" class="btn">
-        <i class="ti ti-plus fs-7 text-primary"></i>
-        </button>
-      </div>
-  </div>
+    <div class="float-end">
+      <div x-data="{ ...actions(), ...listaasistenciaForm() }">
+        <?= 
+          !empty($permisos['crear']) ? 
+          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+          <i class="ti ti-plus"></i> Nuevo
+          </button>' 
+          : '' 
+        ?>   
+      </div>  
+    </div>
 
-  <div class="datatables mt-3">
+    <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+      
+  <div class="datatables mt-4">
     <div class="table-responsive">
-      <table id="table-lista-representante-tecnico" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-lista-asistencia" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>
            <th>#</th>
             <th>Fecha</th>
+            <th>Estatus</th>
           <th class="text-center">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
@@ -92,11 +168,12 @@
                     
   </div>
 </div>
- 
 
 </div>
 
 </div>
+
+
 </div>
 
 <!-- ------------------------- -->
@@ -130,3 +207,328 @@
   </div>
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->
+
+<div id="ModalReTe" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+              <div class="modal-header d-flex align-items-center">
+                    <h4 class="modal-title" id="myModalLabel">
+                        Representante Técnico
+                    </h4>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+
+              <table class="table table-bordered table-striped table-sm">
+            <thead style="font-size: 1.2em">
+              <tr>
+                <th colspan="3" class="text-center table-warning" >Funciones Responsabilidades y autoridad del RT</th>
+              </tr>              
+              <tr class="table-primary">
+                <th class="text-center">Autoridad</th>
+                <th class="text-center">Funciones</th>
+                <th class="text-center">Responsabilidades</th>
+              </tr>
+            </thead>
+            <tbody style="font-size: 1.1em">
+              <tr>
+                <td rowspan="5" class="text-center align-middle">Alta</td>
+                <td class="text-center">Asegurar que el SA es conforme con los requisitos establecidos en los lineamientos y demás normativa aplicable.</td>
+                <td rowspan="5" class="text-center align-middle">Organizar y
+                coordinar las
+                actividades que se
+                desprendan de
+                asuntos
+                relacionados con el
+                SA</td>
+              </tr>
+              <tr>
+                <td class="text-center">Informar a la alta dirección del Regulado acerca del desempeño del SA.</td>
+              </tr>
+              <tr>
+                <td class="text-center">Proponer la adopción de medidas para aplicar las mejores prácticas nacionales e internacionales en la implementación del SA.</td>
+              </tr>
+              <tr>
+                <td class="text-center">Coordinar y apoyar al resto de las áreas en la definición e implementación de las acciones necesarias para subsanar los incumplimientos de los requisitos del SA.
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">Informar a la Agencia de cualquier situación crítica relativa al proyecto que pudiera poner en riesgo la SISOPA.</td>
+              </tr>
+            </tbody>
+          </table>
+
+                      
+              </div>
+                   
+        </div>
+        </div>
+    </div>
+</div>
+
+<!-- ------------------------- -->
+
+<div id="ModalGerente" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+              <div class="modal-header d-flex align-items-center">
+                    <h4 class="modal-title" id="myModalLabel">
+                        Gerente
+                    </h4>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+
+              <table class="table table-bordered table-striped table-sm">
+            <thead style="font-size: 1.2em">
+              <tr>
+                <th colspan="3" class="text-center table-warning" >Funciones y responsabilidades del personal</th>
+              </tr>              
+              <tr class="table-primary">
+                <th class="text-center">Autoridad</th>
+                <th class="text-center">Funciones</th>
+                <th class="text-center">Responsabilidades</th>
+              </tr>
+            </thead>
+            <tbody style="font-size: 1.1em">
+              <tr>
+                <td class="text-center align-middle">Media-Alta</td>
+                <td class="text-center">Revisar y opinar sobre el SA a
+                implementar, Informar y compartir puntos
+                de vista sobre el desempeño del SA,
+                colaborar activamente para el éxito de la
+                implementación del SA, proponer
+                opciones para el seguimiento al
+                cumplimiento al SA, Coordina las acciones
+                necesarias para el cumplimiento de
+                hallazgos </td>
+                                <td class="text-center align-middle">Organizar y
+                                Informar al RT
+                cualquier situación
+                referente al SA</td>
+                              </tr>              
+                            </tbody>
+                          </table>
+
+                      
+              </div>
+                   
+        </div>
+        </div>
+    </div>
+</div>
+<!-- ------------------------- -->
+ <div id="ModalJefePiso" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+              <div class="modal-header d-flex align-items-center">
+                    <h4 class="modal-title" id="myModalLabel">
+                        Jefe de Piso
+                    </h4>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+
+              <table class="table table-bordered table-striped table-sm">
+            <thead style="font-size: 1.2em">
+              <tr>
+                <th colspan="3" class="text-center table-warning" >Funciones y responsabilidades del personal</th>
+              </tr>              
+              <tr class="table-primary">
+                <th class="text-center">Autoridad</th>
+                <th class="text-center">Funciones</th>
+                <th class="text-center">Responsabilidades</th>
+              </tr>
+            </thead>
+            <tbody style="font-size: 1.1em">
+              <tr>
+                <td class="text-center align-middle">Media</td>
+                <td class="text-center">Revisar el SA, integrarse activamente a la
+implementación del SA, transmitir
+información a área de despacho</td>
+                <td class="text-center align-middle">Informar al gerente
+cualquier situación
+referente al SA</td>
+              </tr>              
+            </tbody>
+          </table>
+                      
+              </div>
+                   
+        </div>
+        </div>
+    </div>
+</div>
+
+<!-- ------------------------- -->
+ <div id="ModalFacturista" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+              <div class="modal-header d-flex align-items-center">
+                    <h4 class="modal-title" id="myModalLabel">
+                        Facturista
+                    </h4>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+
+              <table class="table table-bordered table-striped table-sm">
+            <thead style="font-size: 1.2em">
+              <tr>
+                <th colspan="3" class="text-center table-warning" >Funciones y responsabilidades del personal</th>
+              </tr>              
+              <tr class="table-primary">
+                <th class="text-center">Autoridad</th>
+                <th class="text-center">Funciones</th>
+                <th class="text-center">Responsabilidades</th>
+              </tr>
+            </thead>
+            <tbody style="font-size: 1.1em">
+              <tr>
+                <td class="text-center align-middle">Media</td>
+                <td class="text-center">Revisar el SA, integrarse activamente a la
+implementación del SA, transmitir
+información a área de despacho</td>
+                <td class="text-center align-middle">Informar al gerente
+cualquier situación
+referente al SA</td>
+              </tr>              
+            </tbody>
+          </table>
+                      
+              </div>
+                   
+        </div>
+        </div>
+    </div>
+</div>
+<!-- ------------------------- -->
+ <div id="ModalDespachador" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+              <div class="modal-header d-flex align-items-center">
+                    <h4 class="modal-title" id="myModalLabel">
+                        Despachador
+                    </h4>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+
+            <table class="table table-bordered table-striped table-sm">
+            <thead style="font-size: 1.2em">
+              <tr>
+                <th colspan="3" class="text-center table-warning" >Funciones y responsabilidades del personal</th>
+              </tr>              
+              <tr class="table-primary">
+                <th class="text-center">Autoridad</th>
+                <th class="text-center">Funciones</th>
+                <th class="text-center">Responsabilidades</th>
+              </tr>
+            </thead>
+            <tbody style="font-size: 1.1em">
+              <tr>
+                <td class="text-center align-middle">Baja</td>
+                <td class="text-center">Estar informado sobre el SA, participar
+activamente el capacitaciones
+</td>
+                <td class="text-center align-middle">Informar al gerente
+cualquier situación
+referente al SA</td>
+              </tr>              
+            </tbody>
+          </table>
+                      
+              </div>
+                   
+        </div>
+        </div>
+    </div>
+</div>
+
+<!-- ------------------------- -->
+ <div id="ModalAuxiliar" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+              <div class="modal-header d-flex align-items-center">
+                    <h4 class="modal-title" id="myModalLabel">
+                        Auxiliar administrativo
+                    </h4>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+
+            <table class="table table-bordered table-striped table-sm">
+            <thead style="font-size: 1.2em">
+              <tr>
+                <th colspan="3" class="text-center table-warning" >Funciones y responsabilidades del personal</th>
+              </tr>              
+              <tr class="table-primary">
+                <th class="text-center">Autoridad</th>
+                <th class="text-center">Funciones</th>
+                <th class="text-center">Responsabilidades</th>
+              </tr>
+            </thead>
+            <tbody style="font-size: 1.1em">
+              <tr>
+                <td class="text-center align-middle">Baja</td>
+                <td class="text-center">Estar informado sobre el SA, participar
+activamente las capacitaciones
+</td>
+                <td class="text-center align-middle">Informar al gerente
+cualquier situación
+referente al SA</td>
+              </tr>              
+            </tbody>
+          </table>
+                      
+              </div>
+                   
+        </div>
+        </div>
+    </div>
+</div>
+<!-- ------------------------- -->
+ <div id="ModalMantenimiento" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+              <div class="modal-header d-flex align-items-center">
+                    <h4 class="modal-title" id="myModalLabel">
+                        Mantenimiento
+                    </h4>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+
+           <table class="table table-bordered table-striped table-sm">
+            <thead style="font-size: 1.2em">
+              <tr>
+                <th colspan="3" class="text-center table-warning" >Funciones y responsabilidades del personal</th>
+              </tr>              
+              <tr class="table-primary">
+                <th class="text-center">Autoridad</th>
+                <th class="text-center">Funciones</th>
+                <th class="text-center">Responsabilidades</th>
+              </tr>
+            </thead>
+            <tbody style="font-size: 1.1em">
+              <tr>
+                <td class="text-center align-middle">Media</td>
+                <td class="text-center">Participar de manera activa en la
+implementación del SA, opinar y compartir
+puntos de vista, proponer opciones de
+cumplimiento de hallazgos
+</td>
+                <td class="text-center align-middle">Informar al gerente
+y al RT cualquier
+situación referente
+al SA</td>
+              </tr>              
+            </tbody>
+          </table>
+                      
+              </div>
+                   
+        </div>
+        </div>
+    </div>
+</div>

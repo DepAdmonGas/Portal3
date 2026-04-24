@@ -28,7 +28,8 @@ class DownloadController{
             'empresa' => __DIR__ . '../../../public/uploads/archivos/empresa/',
             'poliza-seguro' => __DIR__ . '../../../public/uploads/archivos/poliza-seguro/',
             'requisitos-legales' => __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/',
-            'encuestas' => __DIR__ . '../../../public/uploads/archivos/encuestas/'
+            'encuestas' => __DIR__ . '../../../public/uploads/archivos/encuestas/',
+            'representante-tecnico' => __DIR__ . '../../../public/uploads/archivos/representante-tecnico/',
 
         ];
 
