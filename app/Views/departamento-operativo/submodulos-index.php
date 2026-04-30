@@ -2,10 +2,17 @@
 
 <?php 
 $i = 1; 
-foreach ($submenus as $submenu): ?>
+foreach ($submenus as $submenu): 
+$ruta = $submenu['ruta'];
+
+if ($submenu['clave'] === 'corte-diario') {
+$ruta .= "/{$idYear}/{$idMes}";
+}
+
+?>
 
 <div class="col-lg-4 col-md-6 col-12">
-<a href="<?= $submenu['ruta'] ?>" class="text-decoration-none">
+<a href="<?=$ruta?>" class="text-decoration-none">
 <div class="card body-container-do overflow-hidden card-hover shadow-sm">
 
 <div class="d-flex flex-row align-items-center">

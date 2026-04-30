@@ -69,6 +69,7 @@ class SwitchEstacionController extends BaseController
 
         $usuario['id_estacion'] = (int) $idEstacion;
         $usuario['razonsocial'] = $estacion->razonsocial;
+        $usuario['nombre_estacion'] = $estacion->nombre;
 
         Session::set(
         'usuario',
