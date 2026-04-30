@@ -1,6 +1,7 @@
 <?php
 namespace App\Controllers;
 use App\Models\Usuario;
+use App\Models\Estacion;
 use App\Core\JWTService;
 use App\Core\View;
 use App\Services\ModuloService;
@@ -56,10 +57,14 @@ class LoginController{
             'nombre' => $user->nombre
         ]);
 
+        $estacion = Estacion::find($user->id_gas);
+        $nombreEstacion = $estacion->nombre ?? '';
+
         // Guardar sesión
         Session::set('usuario', [
             'id' => $user->id,
             'nombre' => $user->nombre,
+            'nombre_estacion' => $nombreEstacion,   
             'id_estacion' => $user->id_gas,
             'razonsocial' => 'Todas las estaciones',
             'multiestacion' => $multiestacion

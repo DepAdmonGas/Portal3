@@ -37,7 +37,7 @@ $data = [
 
 View::render('departamento-operativo/index', $data,'departamento-operativo');
 }
-
+ 
 private function renderModulo($slug, $title)
 {
 Breadcrumb::add('Home', '/home');
@@ -50,11 +50,16 @@ $permisos = ModuloService::permisosSesion($this->modulo);
 $modulo = ModuloDptoOperativoService::getPermiso($usuario->id,$slug);
 $submenus = $modulo['submenus'] ?? [];
 
+$idYear = date('Y');
+$idMes  = date('n');
+
 $data = [
 'title' => $title,
 'permisos' => $permisos,
 'submenus' => $submenus,
 'modulo' => $this->modulo,
+'idYear' => $idYear,
+'idMes' => $idMes,
 'links' => [],
 'scripts' => [],
 'help' => false

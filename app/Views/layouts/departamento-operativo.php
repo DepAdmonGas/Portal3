@@ -235,7 +235,7 @@
 </header>
 <!--  Header End -->
 <div class="body-wrapper">
-<div class="container-fluid">
+<div class="container-fluid" x-data="yearMesComponent()">
 
 <div class="d-flex align-items-center">
 <!-- IZQUIERDA -->
@@ -246,7 +246,7 @@ $esTodas       = (int)$idEstacion === 8;
 
 // Obtener razón social según tipo
 $razonsocial = $multiestacion
-? ($filtro_usuario['nombre'] ?? '')
+? ($filtro_usuario['nombre_estacion'] ?? '')
 : ($user->estacion->nombre ?? '');
 
 $razonsocial = trim($razonsocial);

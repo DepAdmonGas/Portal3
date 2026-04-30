@@ -234,6 +234,11 @@ return function(RouteCollector $r) {
     //----- 1. Corporativo
     $r->addRoute('GET','/corporativo',Route::auth(['DptoOperativoController', 'corporativoIndex']));
 
+    //----- Corte Diario
+    $r->addRoute('GET','/corporativo/corte-diario/{idYear:\d+}/{idMes:\d+}',Route::auth(['CorporativoController', 'corteDiarioIndex']));
+    $r->addRoute('GET','/corporativo/corte-diario-datatable/{idYear:\d+}/{idMes:\d+}',Route::auth(['CorporativoController', 'corteDiarioDatatable']));
+
+
     //----- 2. Recursos Humanos
     $r->addRoute('GET','/recursos-humanos',Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
 
