@@ -5,10 +5,10 @@
         <h4 class="card-title text-center">Perfiles de puesto de trabajo</h4>
 
          <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a type="button" href="competencia-personal-capacitacion-entrenamiento/perfiles-puesto-trabajo" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-eye"></i>
             Ver detalle
-          </button>
+          </a>
         </div>
 
       </div>
@@ -21,10 +21,10 @@
         <h4 class="card-title text-center">Perfil del personal</h4>
           
           <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a href="competencia-personal-capacitacion-entrenamiento/perfiles-personal" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-eye"></i>
             Ver detalle
-          </button>
+          </a>
         </div>
 
       </div>
@@ -37,10 +37,10 @@
         <h4 class="card-title text-center">Programa de capacitación interna</h4>
 
            <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a href="competencia-personal-capacitacion-entrenamiento/capacitacion-interna" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-eye"></i>
             Ver detalle
-          </button>
+          </a>
         </div>
 
       </div>
@@ -53,10 +53,10 @@
         <h4 class="card-title text-center">Programa de capacitación externa</h4>
 
            <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a href="competencia-personal-capacitacion-entrenamiento/capacitacion-externa" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-eye"></i>
             Ver detalle
-          </button>
+          </a>
         </div>
 
       </div>

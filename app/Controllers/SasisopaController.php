@@ -31,9 +31,8 @@ class SasisopaController extends BaseController{
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add($title, '');
 
-        $usuario = Auth::user();
         // Buscar permisos de los modulos
-        $permisos = ModuloService::getPermisos($usuario->id);
+        $permisos = ModuloService::getPermisos($this->userId());
 
         $sasisopa = Sasisopa::all();
 
@@ -85,10 +84,10 @@ class SasisopaController extends BaseController{
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/sasisopa/analisisriesgo.datatable.init.js?v=1.4',
+                '/js/sasisopa/analisisriesgo.datatable.init.js?v=1.0',
                 '/js/asistencia/listaasistencia.datatable.init.js?v=1.0',
                 '/js/asistencia/listaasistencia.actions.init.js?v=1.0',
-                '/js/sasisopa/analisisriesgo.actions.init.js?v=1.1'
+                '/js/sasisopa/analisisriesgo.actions.init.js?v=1.0'
             ],
             'help' => true
         ];
@@ -1230,7 +1229,7 @@ class SasisopaController extends BaseController{
 
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Error al guardar representante técnico'
             ]);
         }
 
@@ -1303,33 +1302,6 @@ class SasisopaController extends BaseController{
 
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
-
-    //------------------------------------------------------------------------------------
-    //------------- 6 ---------------------------
-
-    public function competenciaPersonalCapacitacionEntrenamiento(){
-
-        $title = '6. COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/competencia-personal-capacitacion-entrenamiento', $data,'sasisopa');
-
-    }
-
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
