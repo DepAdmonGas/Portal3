@@ -206,6 +206,22 @@ p {
     color: #539bff;
 }
 
+.text-success {
+    color: #13DEB9;
+}
+
+.text-warning {
+    color: #FFAE1F;
+}
+
+.text-danger {
+    color: #FA896B;
+}
+
+.text-white {
+    color: #ffffff;
+}
+
 .border {
   border: 1px solid #ebf1f6 !important;
 }
@@ -221,6 +237,10 @@ p {
 .fs-5 { font-size: 1rem; }   /* ~16px */
 .fs-6 { font-size: 0.875rem;}/* ~14px */
 
+.mt-2 {
+  margin-top: 0.5rem !important;
+}
+
 .mt-3 {
   margin-top: 1rem !important;
 }
@@ -232,10 +252,18 @@ p {
   padding: 0.25rem !important;
 }
 
+.p-2 {
+  padding: 0.5rem !important;
+}
+
 .p-3 {
   padding: 1rem !important;
 }
 
-.text-white {
-  color: #fff !important;
+.bg-light{
+    background: #F6F9FC;
+}
+
+.bg-info{
+    background: #539bff;
 }

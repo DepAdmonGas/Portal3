@@ -2,6 +2,7 @@
 
 namespace App\Models\Sasisopa;
 
+use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Model;
 
 class CursoCalendario extends Model
@@ -38,4 +39,20 @@ class CursoCalendario extends Model
         'observaciones' => 'string',
         'estado' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'id_personal');
+    }
+
+    public function tema()
+    {
+        return $this->belongsTo(CursoTema::class, 'id_tema');
+    }
+
+    public function modulo()
+    {
+        return $this->belongsTo(CursoModulo::class, 'id_modulo');
+    }
+
 }

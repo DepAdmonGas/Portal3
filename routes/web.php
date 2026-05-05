@@ -294,6 +294,8 @@ return function(RouteCollector $r) {
     $r->addRoute('POST', '/lista-asistencia-firma/create', Route::auth(['ListaAsistenciaController', 'createFirmaListaAsistencia']));
     $r->addRoute('POST', '/lista-asistencia-firma/delete', Route::auth(['ListaAsistenciaController', 'deleteFirmaListaAsistencia']));
 
+    $r->addRoute('GET', '/cursos/descargar/{id:\d+}', Route::auth(['CursosController', 'descargar']));
+    $r->addRoute('GET', '/cursos/descargar/{year:\d+}/{idModulo:\d+}', Route::auth(['CursosController', 'descargarAll']));
     
     // ---------------- SASISOPA ----------------
     $r->addGroup('/sasisopa', function (RouteCollector $r) {
@@ -398,28 +400,37 @@ return function(RouteCollector $r) {
         // Elemento 6
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento', Route::auth(['CompetenciaPersonalCapacitacionController', 'index']));
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/perfiles-puesto-trabajo', Route::auth(['CompetenciaPersonalCapacitacionController', 'perfilesPuestoTrabajo']));
-        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/perfiles-personal', Route::auth(['CompetenciaPersonalCapacitacionController', 'perfilesPersonal']));
-        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/datatable-perfiles-personal', Route::auth(['CompetenciaPersonalCapacitacionController', 'datatablePerfilesPersonal']));
-        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/ficha-personal/{id:\d+}', Route::auth(['CompetenciaPersonalCapacitacionController', 'fichaPersonal']));
-        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf', Route::auth(['CompetenciaPersonalCapacitacionController', 'fichaPersonalPdf']));
-        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf/{id:\d+}', Route::auth(['CompetenciaPersonalCapacitacionController', 'fichaPersonalIndividualPdf']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/update-ficha-personal', Route::auth(['CompetenciaPersonalCapacitacionController', 'updateFichaPersonal']));
-        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-falimiares/{id:\d+}', Route::auth(['CompetenciaPersonalCapacitacionController', 'getFamiliares']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-dato-familiar', Route::auth(['CompetenciaPersonalCapacitacionController', 'deleteDatoFamiliar']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-dato-familiar', Route::auth(['CompetenciaPersonalCapacitacionController', 'createDatoFamiliar']));
-        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-formacion-academica/{id:\d+}', Route::auth(['CompetenciaPersonalCapacitacionController', 'getFormacionAcademica']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-formacion', Route::auth(['CompetenciaPersonalCapacitacionController', 'createFormacion']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-formacion', Route::auth(['CompetenciaPersonalCapacitacionController', 'deleteFormacion']));
-        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-experiencia/{id:\d+}', Route::auth(['CompetenciaPersonalCapacitacionController', 'getExperiencia']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-experiencia', Route::auth(['CompetenciaPersonalCapacitacionController', 'createExperiencia']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-experiencia', Route::auth(['CompetenciaPersonalCapacitacionController', 'deleteExperiencia']));
-        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-experiencia-empresa/{id:\d+}', Route::auth(['CompetenciaPersonalCapacitacionController', 'getExperienciaEmpresa']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-experiencia-empresa', Route::auth(['CompetenciaPersonalCapacitacionController', 'createExperienciaEmpresa']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-experiencia-empresa', Route::auth(['CompetenciaPersonalCapacitacionController', 'deleteExperienciaEmpresa']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/update-experiencia-empresa', Route::auth(['CompetenciaPersonalCapacitacionController', 'updateExperienciaEmpresa']));
-        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/update-firma', Route::auth(['CompetenciaPersonalCapacitacionController', 'updateFirma']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/perfiles-personal', Route::auth(['PerfilPersonalController', 'perfilesPersonal']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/datatable-perfiles-personal', Route::auth(['PerfilPersonalController', 'datatablePerfilesPersonal']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/ficha-personal/{id:\d+}', Route::auth(['PerfilPersonalController', 'fichaPersonal']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf', Route::auth(['PerfilPersonalController', 'fichaPersonalPdf']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf/{id:\d+}', Route::auth(['PerfilPersonalController', 'fichaPersonalIndividualPdf']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/update-ficha-personal', Route::auth(['PerfilPersonalController', 'updateFichaPersonal']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-falimiares/{id:\d+}', Route::auth(['PerfilPersonalController', 'getFamiliares']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-dato-familiar', Route::auth(['PerfilPersonalController', 'deleteDatoFamiliar']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-dato-familiar', Route::auth(['PerfilPersonalController', 'createDatoFamiliar']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-formacion-academica/{id:\d+}', Route::auth(['PerfilPersonalController', 'getFormacionAcademica']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-formacion', Route::auth(['PerfilPersonalController', 'createFormacion']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-formacion', Route::auth(['PerfilPersonalController', 'deleteFormacion']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-experiencia/{id:\d+}', Route::auth(['PerfilPersonalController', 'getExperiencia']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-experiencia', Route::auth(['PerfilPersonalController', 'createExperiencia']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-experiencia', Route::auth(['PerfilPersonalController', 'deleteExperiencia']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-experiencia-empresa/{id:\d+}', Route::auth(['PerfilPersonalController', 'getExperienciaEmpresa']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-experiencia-empresa', Route::auth(['PerfilPersonalController', 'createExperienciaEmpresa']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-experiencia-empresa', Route::auth(['PerfilPersonalController', 'deleteExperienciaEmpresa']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/update-experiencia-empresa', Route::auth(['PerfilPersonalController', 'updateExperienciaEmpresa']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/update-firma', Route::auth(['PerfilPersonalController', 'updateFirma']));
 
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/capacitacion-interna', Route::auth(['CapacitacionInternaController', 'index']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/datatable-capacitacion-interna/{idTema:\d+}', Route::auth(['CapacitacionInternaController', 'datatableCapacitacionInterna']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/capacitacion-interna/{idModulo:\d+}/{idTema:\d+}', Route::auth(['CapacitacionInternaController', 'capacitacionInterna']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-programacion-interna', Route::auth(['CapacitacionInternaController', 'createProgramacionInterna']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-cursos-internos/{idUsuario:\d+}/{idTema:\d+}', Route::auth(['CapacitacionInternaController', 'getCursosInternos']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-curso-interno', Route::auth(['CapacitacionInternaController', 'deleteCursosInterno']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/buscar-capacitacion-interna/{year:\d+}', Route::auth(['CapacitacionInternaController', 'buscarCapacitacionInterna']));
+         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/descargar-capacitacion-interna/{year:\d+}/{idModulo:\d+}', Route::auth(['CapacitacionInternaController', 'descargarCapacitacionInterna']));
 
+        
         // Elemento 7
         $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['SasisopaController', 'comunicacionParticipacionConsulta']));
         // Elemento 8
