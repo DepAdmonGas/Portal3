@@ -1,6 +1,8 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Sasisopa\CursoCalendario;
+
 
 class Usuario extends Model
 {
@@ -59,7 +61,7 @@ class Usuario extends Model
                     ->withPivot('tipo');
     }
 
-    public static function buscarFirma($usuario)
+    public static function buscarFirma(string $usuario)
     {
         return self::where('nombre', 'LIKE', $usuario)
             ->where('estatus', 0)
@@ -106,6 +108,11 @@ class Usuario extends Model
         if ($this->experiencias()->exists()) $total++;
 
         return round(($total / $totalCampos) * 100, 2);
+    }
+
+    public function capacitaciones()
+    {
+        return $this->hasMany(CursoCalendario::class, 'id_personal');
     }
 
 }

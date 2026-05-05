@@ -14,6 +14,11 @@ x-init="
             : '' ?>';
 ">
 
+<div class="text-end">
+    <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf/<?= $usuario->id ?? '' ?>" type="button" class="btn btn-light">
+          <i class="ti ti-download"></i> Descargar</a>
+</div>
+
     <!-- 1. Datos del personal -->
     <div class="row mt-4">
         <div class="col-xl-8 col-lg-8 col-md-8 col-sm-12">

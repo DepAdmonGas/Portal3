@@ -26,4 +26,10 @@ class CursoModulo extends Model
         'num_modulo' => 'integer',
         'titulo' => 'string',
     ];
+
+    public function temas()
+    {
+        return $this->hasMany(CursoTema::class, 'id_modulo');
+    }
+    
 }

@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-
     table1 = $('#table-personal-estacion').DataTable({
         processing: true,
         serverSide: false,

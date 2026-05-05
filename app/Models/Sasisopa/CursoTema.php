@@ -38,4 +38,20 @@ class CursoTema extends Model
         'categoria' => 'string',
         'estado' => 'integer',
     ];
+
+    public function calendario()
+    {
+        return $this->hasMany(CursoCalendario::class, 'id_tema');
+    }
+
+    public function modulo()
+    {
+        return $this->belongsTo(CursoModulo::class, 'id_modulo');
+    }
+
+    public function calendarios()
+    {
+        return $this->hasMany(CursoCalendario::class, 'id_tema');
+    }
+    
 }
