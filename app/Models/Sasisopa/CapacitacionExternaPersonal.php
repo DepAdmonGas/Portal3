@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\Sasisopa;
+use App\Models\Usuario;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,4 +27,9 @@ class CapacitacionExternaPersonal extends Model
         'id_capacitacion' => 'integer',
         'id_empleado' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'id_empleado');
+    }
 }

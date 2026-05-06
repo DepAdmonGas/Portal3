@@ -40,4 +40,9 @@ class CapacitacionExterna extends Model
         'instructor' => 'string',
         'fecha_real' => 'date',
     ];
+
+    public function personal()
+    {
+        return $this->hasMany(CapacitacionExternaPersonal::class, 'id_capacitacion');
+    }
 }
