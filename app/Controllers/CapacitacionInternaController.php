@@ -17,7 +17,7 @@ class CapacitacionInternaController extends BaseController
     protected string $modulo = 'sasisopa';
     public function index(){
 
-        $title = 'Capacitación Interna';
+        $title = 'Programa de capacitación interna';
          // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
 

@@ -389,7 +389,6 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/objetivos-metas-indicadores/indicador-ventas', Route::auth(['objetivosMetasIndicadoresController', 'indicadorVentas']));
         $r->addRoute('GET', '/objetivos-metas-indicadores/get-indicador-ventas', Route::auth(['objetivosMetasIndicadoresController', 'getIndicadorVentas']));
         
-
         // Elemento 5
         $r->addRoute('GET', '/funciones-responsabilidades-autoridad', Route::auth(['SasisopaController', 'funcionesResponsabilidadesAutoridad']));
         $r->addRoute('GET', '/funciones-responsabilidades-autoridad/datatable-lista-representante-tecnico', Route::auth(['SasisopaController', 'datatableListaRepresentanteTecnico']));
@@ -428,9 +427,18 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-cursos-internos/{idUsuario:\d+}/{idTema:\d+}', Route::auth(['CapacitacionInternaController', 'getCursosInternos']));
         $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-curso-interno', Route::auth(['CapacitacionInternaController', 'deleteCursosInterno']));
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/buscar-capacitacion-interna/{year:\d+}', Route::auth(['CapacitacionInternaController', 'buscarCapacitacionInterna']));
-         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/descargar-capacitacion-interna/{year:\d+}/{idModulo:\d+}', Route::auth(['CapacitacionInternaController', 'descargarCapacitacionInterna']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/descargar-capacitacion-interna/{year:\d+}/{idModulo:\d+}', Route::auth(['CapacitacionInternaController', 'descargarCapacitacionInterna']));
 
-        
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/capacitacion-externa', Route::auth(['CapacitacionExternaController', 'index']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/datatable-capacitacion-externa', Route::auth(['CapacitacionExternaController', 'datatableCapacitacionExterna']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-capacitacion-externa', Route::auth(['CapacitacionExternaController', 'createCapacitacionExterna']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/update-capacitacion-externa/{id:\d+}', Route::auth(['CapacitacionExternaController', 'updateCapacitacionExterna']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-capacitacion-externa', Route::auth(['CapacitacionExternaController', 'deleteCapacitacionExterna']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/get-personal/{id:\d+}', Route::auth(['CapacitacionExternaController', 'getPersonal']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-personal', Route::auth(['CapacitacionExternaController', 'createPersonal']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-personal', Route::auth(['CapacitacionExternaController', 'deletePersonal']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa/{id:\d+}', Route::auth(['CapacitacionExternaController', 'pdfCapacitacionExterna']));
+
         // Elemento 7
         $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['SasisopaController', 'comunicacionParticipacionConsulta']));
         // Elemento 8

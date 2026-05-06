@@ -3,7 +3,7 @@
 
 <div class="row mt-3">
   <div class="col-md-9 col-12">
-    <img src="<?= $organigrama ?>" class="w-100" alt="">
+    <img src="<?= $organigrama ?? '' ?>" class="w-100" alt="">
   </div>
   <div class="col-md-3 col-12">
     <div class="card">
