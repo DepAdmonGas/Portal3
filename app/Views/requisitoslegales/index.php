@@ -1,5 +1,7 @@
 <div id="container" data-elemento="3" data-herramienta="1">
-
+    <?php
+    /** @var array<string, array<string, int|float|string>> $requisitos */
+    ?>
     <div class="text-end mt-2">
         <div class="btn-group">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

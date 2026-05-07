@@ -68,7 +68,7 @@ class RequisitosLegalesCalendario extends Model
     }
   
 
-    public static function ToRequisitosTodos($id)
+    public static function ToRequisitosTodos($id): array
     {
         $niveles = ['Municipal', 'Estatal', 'Federal', 'Varios'];
 
@@ -81,7 +81,7 @@ class RequisitosLegalesCalendario extends Model
         return $result;
     }
 
-    public static function ToRequisitos($id, $NGobierno)
+    public static function ToRequisitos($id, $NGobierno): array
     {
         $ToReFin = 0;
         $TotalCmp = 0;

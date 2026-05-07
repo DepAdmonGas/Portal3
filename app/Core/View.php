@@ -30,18 +30,23 @@ protected static function globals(): array
 
     }
 
-    public static function render(string $view,array $data = [],string $layout = 'main') {
+    public static function render(string $view,array $data = [],string $layout = 'main'): void {
 
         // Variables globales + datos de la vista
-        extract(array_merge(self::globals(), $data), EXTR_SKIP);
+
+        $viewData = array_merge(self::globals(), $data);
+        extract($viewData, EXTR_SKIP);
 
         $viewPath   = __DIR__ . "/../Views/{$view}.php";
         $layoutPath = __DIR__ . "/../Views/layouts/{$layout}.php";
 
         ob_start();
+
         require $viewPath;
+
         $content = ob_get_clean();
 
         require $layoutPath;
+
     }
 }
