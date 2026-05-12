@@ -461,7 +461,13 @@ return function(RouteCollector $r) {
 
 
         // Elemento 8
-        $r->addRoute('GET', '/control-documentos-registros', Route::auth(['SasisopaController', 'controlDocumentosRegistros']));
+        $r->addRoute('GET', '/control-documentos-registros', Route::auth(['DocumentosRegistrosController', 'index']));
+        $r->addRoute('GET', '/control-documentos-registros/requisitos-legales', Route::auth(['DocumentosRegistrosController', 'requisitosLegales']));
+        $r->addRoute('GET', '/control-documentos-registros/pdf-requisitos-legales', Route::auth(['DocumentosRegistrosController', 'pdfRequisitosLegales']));
+        $r->addRoute('GET', '/control-documentos-registros/sistema-administracion', Route::auth(['DocumentosRegistrosController', 'sistemaAdministracion']));
+         $r->addRoute('GET', '/control-documentos-registros/pdf-sistema-administracion', Route::auth(['DocumentosRegistrosController', 'pdfSistemaAdministracion']));
+
+
         // Elemento 9
         $r->addRoute('GET', '/mejores-practicas-estandares', Route::auth(['SasisopaController', 'mejoresPracticasEstandares']));
         // Elemento 10

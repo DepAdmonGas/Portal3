@@ -9,7 +9,6 @@ use App\Models\Sasisopa\AnalisisRiesgoAnexo;
 use App\Models\Sasisopa\RepresentanteTecnico;
 use App\Models\Sasisopa\EquipoCritico;
 use App\Services\ModuloService;
-use App\Core\Auth;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -1299,29 +1298,6 @@ class SasisopaController extends BaseController{
     //------------------------------------------------------------------------------------
 
     
-
-    public function controlDocumentosRegistros(){
-
-        $title = '8. CONTROL DE DOCUMENTOS Y REGISTROS';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/control-documentos-registros', $data,'sasisopa');
-
-    }
 
     public function mejoresPracticasEstandares(){
 
