@@ -6,13 +6,8 @@ use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Models\Sasisopa\AnalisisRiesgo;
 use App\Models\Sasisopa\AnalisisRiesgoAnexo;
-
-
 use App\Models\Sasisopa\RepresentanteTecnico;
-use App\Models\Sasisopa\ComunicacionIE;
-use App\Models\Sasisopa\QuejasSugerencia;
 use App\Models\Sasisopa\EquipoCritico;
-
 use App\Services\ModuloService;
 use App\Core\Auth;
 use Dompdf\Dompdf;
@@ -40,7 +35,7 @@ class SasisopaController extends BaseController{
             'title' => $title,
             'elementos' => $sasisopa,
             'permisos' => $permisos,
-            'modulo' => 'sasisopa',
+            'modulo' => $this->modulo,
             'links' =>[],
             'scripts' => [
                 '/assets/js/vendor.min.js'
@@ -1299,66 +1294,6 @@ class SasisopaController extends BaseController{
 
         exit;
     }
-
-    //------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------
-
-    //------------------------------------------------------------------------------------
-    //------------- 7 Comunicacion, participacion y consulta ---------------------------
-
-    public function comunicacionParticipacionConsulta(){
-
-        $title = '7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js',
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/sasisopa/listaregistrocomunicacion.datatable.init.js',
-                '/assets/js/sasisopa/listaquejassugerencias.datatable.init.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/comunicacion-participacion-consulta', $data,'sasisopa');
-
-    }
-
-    public function datatableListaRegistroComunicacion(){
-        $data = ComunicacionIE::where('id_estacion',5)
-        ->groupBy('fecha')
-        ->get();
-
-         echo json_encode([
-            "data" => $data
-        ]);
-        
-        exit;
-    }
-
-    public function datatableListaQuejasSugerencias(){
-        $data = QuejasSugerencia::where('id_estacion',5)
-        ->groupBy('fecha')
-        ->get();
-
-         echo json_encode([
-            "data" => $data
-        ]);
-        
-        exit;
-    }
-
-    
 
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------

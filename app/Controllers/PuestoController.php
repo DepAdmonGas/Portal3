@@ -36,5 +36,17 @@ class PuestoController extends BaseController{
         ]);
     }
 
+    public function getPuestos()
+    {
+        echo json_encode(
+
+            Puestos::where('estatus', 0)
+                ->select('id', 'tipo_puesto')
+                ->orderBy('tipo_puesto')
+                ->get()
+
+        );
+    }
+
 
 }

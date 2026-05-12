@@ -3,6 +3,7 @@
 namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class ComunicacionIE extends Model
 {
@@ -46,4 +47,22 @@ class ComunicacionIE extends Model
         'url' => 'string',
         'asistencia' => 'integer',
     ];
+
+     public function encargado()
+        {
+            return $this->belongsTo(
+                Usuario::class,
+                'encargado_comunicacion',
+                'id'
+            );
+        }
+
+    public function evidencias()
+    {
+       return $this->hasMany(
+       ComunicacionEvidencia::class,
+       'id_comunicacion'
+       );
+    }
+
 }

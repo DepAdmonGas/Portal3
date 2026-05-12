@@ -71,6 +71,8 @@ return function(RouteCollector $r) {
     $r->addGroup('/puestos', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['PuestoController', 'index']));
         $r->addRoute('GET', '/datatable', Route::auth(['PuestoController', 'datatablePuestos']));
+        $r->addRoute('GET', '/get-puestos', Route::auth(['PuestoController', 'getPuestos']));
+        
     });
 
     // ---------------- USUARIOS ----------------
@@ -440,7 +442,24 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa/{id:\d+}', Route::auth(['CapacitacionExternaController', 'pdfCapacitacionExterna']));
 
         // Elemento 7
-        $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['SasisopaController', 'comunicacionParticipacionConsulta']));
+        $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['ComunicacionParticipacionConsultaController', 'index']));
+        $r->addRoute('GET', '/comunicacion-participacion-consulta/datatable-registro-comunicacion', Route::auth(['ComunicacionParticipacionConsultaController', 'datatableRegistroComunicacion']));
+        $r->addRoute('POST', '/comunicacion-participacion-consulta/create-registro-comunicacion', Route::auth(['ComunicacionParticipacionConsultaController', 'createRegistroComunicacion']));
+        $r->addRoute('POST', '/comunicacion-participacion-consulta/delete-registro-comunicacion', Route::auth(['ComunicacionParticipacionConsultaController', 'deleteRegistroComunicacion']));
+        $r->addRoute('POST','/comunicacion-participacion-consulta/update-registro-comunicacion',Route::auth(['ComunicacionParticipacionConsultaController','updateRegistroComunicacion']));
+
+        $r->addRoute('POST','/comunicacion-participacion-consulta/create-evidencia',Route::auth(['ComunicacionParticipacionConsultaController','createEvidencia']));
+        $r->addRoute('GET','/comunicacion-participacion-consulta/get-evidencias/{id}',Route::auth(['ComunicacionParticipacionConsultaController','getEvidencias']));
+        $r->addRoute('POST','/comunicacion-participacion-consulta/delete-evidencia',Route::auth(['ComunicacionParticipacionConsultaController','deleteEvidencia']));
+        $r->addRoute('GET','/comunicacion-participacion-consulta/get-detalle-comunicacion/{id}',Route::auth(['ComunicacionParticipacionConsultaController','getDetalleComunicacion']));
+        $r->addRoute('GET','/comunicacion-participacion-consulta/pdf-registro-comunicacion',Route::auth(['ComunicacionParticipacionConsultaController','pdfRegistroComunicacion']));
+
+        $r->addRoute('GET', '/comunicacion-participacion-consulta/datatable-quejas-sugerencias', Route::auth(['ComunicacionParticipacionConsultaController', 'datatableQuejasSugerencias']));
+        $r->addRoute('POST', '/comunicacion-participacion-consulta/create-quejas-sugerencias', Route::auth(['ComunicacionParticipacionConsultaController', 'createQuejaSugerencia']));
+        $r->addRoute('POST', '/comunicacion-participacion-consulta/delete-quejas-sugerencias', Route::auth(['ComunicacionParticipacionConsultaController', 'deleteQuejaSugerencia']));
+        $r->addRoute('GET', '/comunicacion-participacion-consulta/pdf-quejas-sugerencias/{id:\d+}', Route::auth(['ComunicacionParticipacionConsultaController', 'pdfQuejaSugerencia']));
+
+
         // Elemento 8
         $r->addRoute('GET', '/control-documentos-registros', Route::auth(['SasisopaController', 'controlDocumentosRegistros']));
         // Elemento 9

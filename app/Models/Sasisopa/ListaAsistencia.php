@@ -40,4 +40,12 @@ class ListaAsistencia extends Model
         'fecha' => 'date',
         'hora' => 'datetime:H:i:s',
     ];
+
+    public function detalles()
+    {
+        return $this->hasMany(
+            ListaAsistenciaDetalle::class,
+            'id_lista_asistencia'
+        );
+    }
 }

@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    $('#table-lista-quejas-sugerencia').DataTable({
+    table2 = $('#table-quejas-sugerencia').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -10,9 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/datatable-lista-quejas-sugerencias',
+            url: '/sasisopa/comunicacion-participacion-consulta/datatable-quejas-sugerencias',
             type: 'GET',
             dataSrc: function (json) {
+                permisos = json.permisos;
                 return json.data;
             },
             error: function (xhr) {
@@ -52,6 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchable: false,
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
+
+                    const noDelete = permisos.eliminar;
+                    const noDownload = permisos.descargar;
                     
 
                     return `
@@ -60,19 +64,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit 
-                                    data-id="${row.id}">
-                                        <i class="fs-4 ti ti-edit"></i>Editar
-                                    </a>
-                                </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
+                                    href="/sasisopa/comunicacion-participacion-consulta/pdf-quejas-sugerencias/${row.id}">
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    ${!noDelete ? '' : `
+                                    @click='window.comunicacionParticipacionConsulta.eliminarQS(${row.id}, ${row.id})'
+                                    `}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
@@ -84,6 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             
         ]
+    });
+
+      $("#table-quejas-sugerencia tbody").on("click", "tr", function () {
+    if ($(this).hasClass("selected")) {
+    } else {
+        table2.$("tr.selected").removeClass("selected");
+        $(this).addClass("selected");
+    }
     });
 
 });

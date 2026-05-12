@@ -13,9 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/sasisopa/competencia-personal-capacitacion-entrenamiento/datatable-capacitacion-externa',
             type: 'GET',
             dataSrc: function (json) {
-
-                console.log(json.data)
-          
+         
             //guardas permisos globalmente
             permisos = json.permisos;
             return json.data;
@@ -41,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!data) return 'S/I';
 
             if (type === 'sort' || type === 'type') {
-                return data; // 👈 usa la fecha original (YYYY-MM-DD)
+                return data;
             }
 
             const fecha = new Date(data);

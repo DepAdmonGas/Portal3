@@ -81,3 +81,5 @@ function formatDate($fecha)
     if ($mes=="12") $mes="Diciembre";
     return $mes;
     }
+
+    
