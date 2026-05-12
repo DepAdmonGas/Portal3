@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,4 +26,12 @@ class ComunicacionEvidencia extends Model
         'id_comunicacion' => 'integer',
         'archivo' => 'string',
     ];
+
+     public function comunicacion()
+        {
+            return $this->belongsTo(
+                ComunicacionIE::class,
+                'id_comunicacion'
+            );
+        }
 }
