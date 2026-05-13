@@ -1297,30 +1297,7 @@ class SasisopaController extends BaseController{
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
-    
 
-    public function mejoresPracticasEstandares(){
-
-        $title = '9. MEJORES PRÁCTICAS Y ESTÁNDARES';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/mejores-practicas-estandares', $data,'sasisopa');
-
-    }
 
     public function controlActividadesProcesos(){
 

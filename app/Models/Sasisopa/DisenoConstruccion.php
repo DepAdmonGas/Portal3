@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
-class OperacionMantenimiento extends Model
+class DisenoConstruccion extends Model
 {
-    protected $table = 'tb_operacion_mantenimiento';
+    protected $table = 'tb_diseno_construccion';
 
     protected $primaryKey = 'id';
 
@@ -17,15 +17,15 @@ class OperacionMantenimiento extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'fecha',
-        'norma',
-        'nombre',
-        'link',
+        'valor1',
+        'valor2',
         'estado',
     ];
 
     protected $casts = [
         'id' => 'integer',
+        'valor1' => 'string',
+        'valor2' => 'string',
         'estado' => 'integer',
     ];
 }

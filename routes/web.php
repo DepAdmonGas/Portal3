@@ -465,11 +465,22 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/control-documentos-registros/requisitos-legales', Route::auth(['DocumentosRegistrosController', 'requisitosLegales']));
         $r->addRoute('GET', '/control-documentos-registros/pdf-requisitos-legales', Route::auth(['DocumentosRegistrosController', 'pdfRequisitosLegales']));
         $r->addRoute('GET', '/control-documentos-registros/sistema-administracion', Route::auth(['DocumentosRegistrosController', 'sistemaAdministracion']));
-         $r->addRoute('GET', '/control-documentos-registros/pdf-sistema-administracion', Route::auth(['DocumentosRegistrosController', 'pdfSistemaAdministracion']));
+        $r->addRoute('GET', '/control-documentos-registros/pdf-sistema-administracion', Route::auth(['DocumentosRegistrosController', 'pdfSistemaAdministracion']));
 
 
         // Elemento 9
-        $r->addRoute('GET', '/mejores-practicas-estandares', Route::auth(['SasisopaController', 'mejoresPracticasEstandares']));
+        $r->addRoute('GET', '/mejores-practicas-estandares', Route::auth(['MejoresPracticasEstandaresController', 'index']));
+        $r->addRoute('GET', '/mejores-practicas-estandares/datatable-diseno-construccion', Route::auth(['MejoresPracticasEstandaresController', 'datatableDisenoConstruccion']));
+        $r->addRoute('POST', '/mejores-practicas-estandares/create-diseno-construccion', Route::auth(['MejoresPracticasEstandaresController', 'createDisenoConstruccion']));
+        $r->addRoute('POST', '/mejores-practicas-estandares/delete-diseno-construccion', Route::auth(['MejoresPracticasEstandaresController', 'deleteDisenoConstruccion']));
+        $r->addRoute('GET', '/mejores-practicas-estandares/pdf-diseno-construccion', Route::auth(['MejoresPracticasEstandaresController', 'pdfDisenoConstruccion']));
+
+        $r->addRoute('GET', '/mejores-practicas-estandares/datatable-operacion-mantenimiento', Route::auth(['MejoresPracticasEstandaresController', 'datatableOperacionMantenimiento']));
+        $r->addRoute('POST', '/mejores-practicas-estandares/create-operacion-mantenimiento', Route::auth(['MejoresPracticasEstandaresController', 'createOperacionMantenimiento']));
+        $r->addRoute('POST', '/mejores-practicas-estandares/delete-operacion-mantenimiento', Route::auth(['MejoresPracticasEstandaresController', 'deleteOperacionMantenimiento']));
+        $r->addRoute('GET', '/mejores-practicas-estandares/pdf-operacion-mantenimiento', Route::auth(['MejoresPracticasEstandaresController', 'pdfOperacionMantenimiento']));
+
+
         // Elemento 10
         $r->addRoute('GET', '/control-actividades-procesos', Route::auth(['SasisopaController', 'controlActividadesProcesos']));
         // Elemento 11
