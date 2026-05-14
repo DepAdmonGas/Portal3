@@ -30,6 +30,7 @@ class DownloadController{
             'requisitos-legales' => __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/',
             'encuestas' => __DIR__ . '../../../public/uploads/archivos/encuestas/',
             'representante-tecnico' => __DIR__ . '../../../public/uploads/archivos/representante-tecnico/',
+            'manual' => __DIR__ . '../../../public/uploads/archivos/manuales/',
 
         ];
 

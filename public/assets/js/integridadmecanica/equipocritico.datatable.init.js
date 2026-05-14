@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-     $('#table-lista-equipo-critico').DataTable({
+     $('#table-equipo-critico').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -10,14 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/datatable-lista-equipo-critico',
+            url: '/sasisopa/integridad-mecanica-aseguramiento/datatable-equipo-critico',
             type: 'GET',
             dataSrc: function (json) {
+                permisos = json.permisos;
                 return json.data;
             }
         },
         columns: [
-            { data: 'id', width: '60px', className: 'text-center' },
+            { data: 'id_equipo', width: '60px', className: 'text-center' },
             { data: 'nombre_equipo' },
             { data: 'marca_modelo' },
             { data: 'funciones' },
@@ -56,6 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchable: false,
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
+
+                    const archivo = row.manual.split('/').pop();
+                    const noDelete = permisos.eliminar;
+                    const nomEquipo = JSON.stringify(row.nombre_equipo ?? '');
                     
 
                     return `
@@ -64,19 +69,27 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit 
-                                    data-id="${row.id}">
-                                        <i class="fs-4 ti ti-edit"></i>Editar
-                                    </a>
-                                </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3" href="javascript:void(0)" 
+                                    @click="download('manual','${archivo}')">
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>
+
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    ${!noDelete ? '' : `
+                                    @click='window.equipoCritico.baja(${row.id}, ${nomEquipo})'
+                                    `}>
+                                        <i class="fs-4 ti ti-archive-off"></i>Baja
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    ${!noDelete ? '' : `
+                                    @click='window.equipoCritico.eliminar(${row.id}, ${nomEquipo})'
+                                    `}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
