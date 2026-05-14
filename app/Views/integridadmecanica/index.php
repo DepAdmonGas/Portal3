@@ -1,18 +1,4 @@
-<div class="text-end mt-2">
-  <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
-            <ul class="dropdown-menu animated rubberBand">
-                <li>
-                    <a class="dropdown-item" href=""><i class="ti ti-pencil"></i> Editar Politica</a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href=""><i class="ti ti-file-download"></i> Descargar Politica</a>
-                </li>
-            </ul>
-        </div>
-</div>
+<div id="container" x-data="{ ...actions(), ...equipoCritico()}">
 
 <div class="row mt-2">
 
@@ -22,10 +8,11 @@
         <h4 class="card-title">Programa anual de mantenimiento</h4>
 
          <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info"
+          href="/sasisopa/control-actividades-procesos/programa-anual-mantenimiento">
             <i class="ti ti-eye"></i>
             Ver programa 
-          </button>
+          </a>
         </div>
 
       </div>
@@ -38,10 +25,11 @@
         <h4 class="card-title">Procedimientos de Operación, Seguridad y Mantenimiento</h4>
           
           <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info"
+          target="_blabk" href="/uploads/archivos/procedimientos/DLES.ADMONGAS.001.pdf">
             <i class="ti ti-eye"></i>
             Ver procedimientos
-          </button>
+          </a>
         </div>
 
       </div>
@@ -54,10 +42,10 @@
         <h4 class="card-title">Bitácoras</h4>
           
           <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a type="button" href="/sasisopa/integridad-mecanica-aseguramiento/bitacoras" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-eye"></i>
             Ver detalle
-          </button>
+          </a>
         </div>
 
       </div>
@@ -77,11 +65,15 @@
               <i class="ti ti-dots fs-7"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+             <?= 
+              !empty($permisos['crear']) ? 
+              '<li>
+                    <a class="dropdown-item" href="javascript:void(0)" @click="openModal()"><i class="ti ti-plus"></i> Agregar</a>
+                </li>' 
+              : '' 
+              ?>   
               <li>
-                <a class="dropdown-item" href="javascript:void(0)"><i class="ti ti-plus"></i> Agregar</a>
-              </li>
-              <li>
-                <a class="dropdown-item" href="javascript:void(0)"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item" href="/sasisopa/integridad-mecanica-aseguramiento/pdf-equipo-critico"><i class="ti ti-download"></i> Descargar</a>
               </li>
             </ul>
           </div>   
@@ -90,7 +82,7 @@
 
   <div class="datatables mt-3">
     <div class="table-responsive">
-      <table id="table-lista-equipo-critico" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-equipo-critico" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
            <th>#</th>
@@ -110,6 +102,65 @@
   </div>
                     
   </div>
+</div>
+
+
+    <div class="modal fade" id="modalEquipo" tabindex="-1">
+    <div class="modal-dialog">
+    <div class="modal-content">
+
+    <div class="modal-header rounded-0 head-modal">
+        <h4 class="modal-title">Agregar equipo critico</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" @click="closeModal()"></button>
+    </div>
+
+    <div class="modal-body">
+
+
+        <label class="form-label">* Nombre:</label>
+        <textarea class="form-control mb-2" x-model="equipo.nombre"
+                :class="errors.nombre ? 'is-invalid' : ''"
+                @input="errors.nombre = false"></textarea>
+
+        <label class="form-label">* Marca y Modelo:</label>
+        <textarea class="form-control mb-2" x-model="equipo.marca_modelo"
+                :class="errors.marca_modelo ? 'is-invalid' : ''"
+                @input="errors.marca_modelo = false"></textarea>
+
+        <label class="form-label">* Función:</label>
+        <textarea class="form-control mb-2" x-model="equipo.funciones"
+                :class="errors.funciones ? 'is-invalid' : ''"
+                @input="errors.funciones = false"></textarea>
+
+        <label class="form-label">* Fecha Instalación <small>(Aproximado)</small>:</label>
+        <input class="form-control mb-2" type="date" x-model="equipo.fecha_instalacion"
+                :class="errors.fecha_instalacion ? 'is-invalid' : ''"
+                @input="errors.fecha_instalacion = false">  
+
+        <label class="form-label">* Tiempo de vida <small>(Años)</small>:</label>
+        <input class="form-control mb-2" type="number" x-model="equipo.tiempo_vida"
+                :class="errors.tiempo_vida ? 'is-invalid' : ''"
+                @input="errors.tiempo_vida = false">  
+
+        <label class="form-label">* Manual:</label>
+        <input class="form-control" type="file" x-model="equipo.manual"
+                x-ref="fileManual"
+                :class="errors.manual ? 'is-invalid' : ''"
+                @input="errors.manual = false">  
+
+
+    </div>
+
+    <div class="modal-footer">
+        <button class="btn bg-danger-subtle text-danger" @click="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" @click="guardar()">Guardar
+        </button>
+    </div>
+
+    </div>
+    </div>
+    </div>
+
 </div>
 
 <!-- ------------------------- -->

@@ -78,6 +78,46 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        // BAJA GLOBAL
+
+        async bajaAction({ url, id, name, table }) {
+
+            if (this.loading) return;
+
+            const result = await Swal.fire({
+                title: '¿Dar de Baja Registro?',
+                text: `El registro: ${name} será dado de baja`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, baja',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#d33'
+            });
+
+            if (!result.isConfirmed) return;
+
+            this.loading = true;
+
+            try {
+                const response = await axios.post(url, { id });
+                this.handleResponse(response, table);
+
+                return response.data;
+
+            } catch (err) {
+
+                const mensaje =
+                    err.response?.data?.message ||
+                    'Error al dar de baja';
+
+                this.showAlert('error', 'Error', mensaje);
+                this.notify('error', mensaje);
+
+            } finally {
+                this.loading = false;
+            }
+        },
+
         // EDIT
         goTo(url) {
             window.location.href = url;

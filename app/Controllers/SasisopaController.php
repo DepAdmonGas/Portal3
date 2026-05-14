@@ -1322,44 +1322,8 @@ class SasisopaController extends BaseController{
 
     }
 
-    //------------------------------------------------------------------------------------
-    //------------- 11 integridad mecanica y aseguramiento de la calidad ---------------------------
-    public function integridadMecanicaAseguramiento(){
 
-        $title = '11. INTEGRIDAD MECÁNICA Y ASEGURAMIENTO DE LA CALIDAD';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js',
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/sasisopa/listaequipocritico.datatable.init.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/integridad-mecanica-aseguramiento', $data,'sasisopa');
-
-    }
-
-    public function datatableListaEquipoCritico(){
-        $data = EquipoCritico::where('id_estacion',1)
-        ->groupBy('fecha_instalacion')
-        ->get();
-
-         echo json_encode([
-            "data" => $data
-        ]);
-        
-        exit;
-    }
+    
 
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------

@@ -484,7 +484,14 @@ return function(RouteCollector $r) {
         // Elemento 10
         $r->addRoute('GET', '/control-actividades-procesos', Route::auth(['SasisopaController', 'controlActividadesProcesos']));
         // Elemento 11
-        $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['SasisopaController', 'integridadMecanicaAseguramiento']));
+        $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));
+        $r->addRoute('GET', '/integridad-mecanica-aseguramiento/datatable-equipo-critico', Route::auth(['IntegridadMecanicaController', 'datatableEquipoCritico']));
+        $r->addRoute('POST', '/integridad-mecanica-aseguramiento/delete-equipo-critico', Route::auth(['IntegridadMecanicaController', 'deleteEquipoCritico']));
+        $r->addRoute('POST', '/integridad-mecanica-aseguramiento/baja-equipo-critico', Route::auth(['IntegridadMecanicaController', 'bajaEquipoCritico']));
+        $r->addRoute('POST', '/integridad-mecanica-aseguramiento/create-equipo-critico', Route::auth(['IntegridadMecanicaController', 'createEquipoCritico']));
+        $r->addRoute('GET', '/integridad-mecanica-aseguramiento/pdf-equipo-critico', Route::auth(['IntegridadMecanicaController', 'pdfEquipoCritico']));
+        $r->addRoute('GET', '/integridad-mecanica-aseguramiento/bitacoras', Route::auth(['IntegridadMecanicaController', 'bitacoras']));
+
         // Elemento 12
         $r->addRoute('GET', '/seguridad-contratistas', Route::auth(['SasisopaController', 'seguridadContratistas']));
         // Elemento 13
