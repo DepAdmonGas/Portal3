@@ -83,7 +83,7 @@ $status = 0;
 // CONFIG RUTA
 $carpeta = __DIR__ . '../../../public/uploads/archivos/poliza-seguro/';
 if (!file_exists($carpeta)) {
-mkdir($carpeta, 0777, true);
+ mkdir_safe($carpeta, true);
 }
 
 $nombreArchivo = null;
@@ -229,7 +229,7 @@ $status = 0;
 // CONFIG RUTA
 $carpeta = __DIR__ . '../../../public/uploads/archivos/poliza-seguro/';
 if (!file_exists($carpeta)) {
-mkdir($carpeta, 0777, true);
+ mkdir_safe($carpeta, true);
 }
 
 $nombreArchivo = null;

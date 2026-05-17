@@ -222,7 +222,7 @@ exit;
 // CONFIG RUTA
 $carpeta = __DIR__ . '../../../public/uploads/archivos/solicitud-gafetes/';
 if (!file_exists($carpeta)) {
-mkdir($carpeta, 0777, true);
+ mkdir_safe($carpeta, true);
 }
 
 $nombreArchivo = null;
@@ -532,7 +532,7 @@ exit;
 // CONFIG RUTA
 $carpeta = __DIR__ . '../../../public/uploads/archivos/solicitud-gafetes/';
 if (!file_exists($carpeta)) {
-mkdir($carpeta, 0777, true);
+ mkdir_safe($carpeta, true);
 }
 
 $nombreArchivo = null;

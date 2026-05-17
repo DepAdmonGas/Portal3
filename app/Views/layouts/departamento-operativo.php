@@ -124,7 +124,8 @@
 <h6 class="mb-0 fs-5 fw-normal text-white"><?=implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2));?></h6>
 <span class="fs-2"><?=$user->puesto->tipo_puesto?></span>
 </div>
-<a href="/logout" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
+<!-- SECURITY: BAJO #34 - Logout via POST -->
+<a href="javascript:void(0)" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir" onclick="performLogout()">
 <i class="ti ti-power text-danger fs-6"></i>
 </a>
 </div>
@@ -214,8 +215,9 @@
 </a>
 </div>
 
+<!-- SECURITY: BAJO #34 - Logout via POST -->
 <div class="d-grid py-4 px-7 pt-8">
-<a href="/logout" class="btn btn-outline-primary">Salir</a>
+<a href="javascript:void(0)" class="btn btn-outline-primary" onclick="performLogout()">Salir</a>
 </div>
 </div>
 </div>
@@ -287,7 +289,7 @@ $razonsocial = trim($razonsocial);
 
 <div class="dark-transparent sidebartoggler"></div>
 <!-- Import Js Files -->
-<script src="<?=asset('js/home/actions-home.init.js?v=1.1')?>"></script>
+<script src="<?=asset('js/home/actions-home.init.js?v=1.2')?>"></script>
 <script src="<?=asset('js/switch.estacion.min.js')?>"></script>
 <script src="<?=asset('js/loader.min.js')?>"></script>
 <script src="<?=asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js')?>"></script>

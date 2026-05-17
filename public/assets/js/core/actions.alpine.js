@@ -1,3 +1,71 @@
+// ============================================================
+// SECURITY: BAJO #34 - Función global de logout
+// Función pura de JavaScript que funciona sin依赖 del contexto Alpine
+// ============================================================
+window.performLogout = async function() {
+    const result = await Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: 'Su sesión será cerrada y los tokens serán invalidados.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cerrar sesión',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const response = await axios.post('/logout', {}, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        const { type, message } = response.data;
+
+        if (type === 'success') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Sesión cerrada',
+                text: message,
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1500);
+        } else {
+            throw new Error(message || 'Error al cerrar sesión');
+        }
+
+    } catch (err) {
+        const mensaje = err.response?.data?.message || err.message || 'Error al cerrar sesión';
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: mensaje
+        });
+
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 2000);
+    }
+};
+
+// ============================================================
+// SECURITY: BAJO #34 - Event listener para logout via Alpine
+// ============================================================
+document.addEventListener('logout-trigger', () => {
+    if (typeof window.performLogout === 'function') {
+        window.performLogout();
+    }
+});
+
 document.addEventListener('alpine:init', () => {
 
     Alpine.data('actions', () => ({
@@ -424,8 +492,81 @@ document.addEventListener('alpine:init', () => {
         });
 
         this._modalSelect2Bound[bindKey] = true;
+    },
+
+    // ============================================================
+    // SECURITY: Logout (BAJO #34)
+    // Función para cerrar sesión efectivamente
+    // ============================================================
+    async logout() {
+        const result = await Swal.fire({
+            title: '¿Cerrar sesión?',
+            text: 'Su sesión será cerrada y los tokens invalidated.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cerrar sesión',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#d33',
+            reverseButtons: true
+        });
+
+        if (!result.isConfirmed) return;
+
+        this.loading = true;
+
+        try {
+            const response = await axios.post('/logout', {}, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            const { type, message } = response.data;
+
+            if (type === 'success') {
+                // Mostrar mensaje
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sesión cerrada',
+                    text: message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                // Redireccionar al login después de un breve delay
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1500);
+            } else {
+                throw new Error(message || 'Error al cerrar sesión');
+            }
+
+        } catch (err) {
+            const mensaje = err.response?.data?.message || err.message || 'Error al cerrar sesión';
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: mensaje
+            });
+
+            // Forzar redirección aunque haya error
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    // Función de utilidad para verificar si hay token
+    hasToken() {
+        return document.cookie.includes('token=');
     }
 
-    }));
 
+
+    }));
 });

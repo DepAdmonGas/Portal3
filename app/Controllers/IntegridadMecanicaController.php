@@ -128,8 +128,9 @@ protected string $modulo = 'sasisopa';
             $ruta = __DIR__ . '../../../public/uploads/archivos/manuales/';
             $nombreArchivo = 'MANUAL-EQUIPO-' .uniqid() . '.pdf';
 
+            // SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
             if (!is_dir($ruta)) {
-                mkdir($ruta, 0777, true);
+                mkdir_safe($ruta, true);
             }
 
             move_uploaded_file(

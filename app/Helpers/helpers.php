@@ -82,4 +82,56 @@ function formatDate($fecha)
     return $mes;
     }
 
+// ============================================================
+// SECURITY: BAJO #35 - Función segura para crear directorios
+// Uso: mkdir_safe('/path/to/directory')
+// Permiso 0755: propietario rw, otros r-x
+// ============================================================
+if (!function_exists('mkdir_safe')) {
+    /**
+     * Crea un directorio con permisos seguros (0755)
+     * 
+     * SECURITY: BAJO #35 - Reemplaza mkdir con 0777 inseguro
+     * 
+     * @param string $path Ruta del directorio a crear
+     * @param bool $recursive Crear directorios padres si no existen
+     * @return bool True si se creó o ya existe
+     * @throws \Exception Si no se puede crear el directorio
+     */
+    function mkdir_safe(string $path, bool $recursive = true): bool
+    {
+        // Si ya existe, retornar true
+        if (is_dir($path)) {
+            return true;
+        }
+        
+        // Crear directorio con permisos seguros (0755)
+        // propietario: leer, escribir, ejecutar
+        // grupo: leer, ejecutar
+        // otros: leer, ejecutar
+        $result = mkdir($path, 0755, $recursive);
+        
+        if (!$result) {
+            // Loggear el error
+            $error = error_get_last();
+            \App\Core\Logger::getLogger()->error('Error al crear directorio', [
+                'path' => $path,
+                'error' => $error['message'] ?? 'Error al crear'
+            ]);
+            
+            throw new \Exception("No se pudo crear el directorio: {$path}");
+        }
+        
+        // Loggear creación exitosa (solo en desarrollo)
+        if ($_ENV['APP_ENV'] ?? 'dev' === 'dev') {
+            \App\Core\Logger::getLogger()->debug('Directorio creado con permisos seguros', [
+                'path' => $path,
+                'permissions' => '0755'
+            ]);
+        }
+        
+        return true;
+    }
+}
+
     
