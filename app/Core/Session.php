@@ -67,6 +67,16 @@ class Session
     }
 
     /**
+     * Remove - Elimina una clave específica de la sesión
+     */
+    public static function remove($key)
+    {
+        if (isset($_SESSION[$key])) {
+            unset($_SESSION[$key]);
+        }
+    }
+
+    /**
      * Destroy
      */
     public static function destroy()

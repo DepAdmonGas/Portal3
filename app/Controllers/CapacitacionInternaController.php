@@ -171,7 +171,12 @@ class CapacitacionInternaController extends BaseController
             return;
         }    
 
-         if (!$data['fecha_programada']) {
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $fecha_programada = sanitize_input($data['fecha_programada'] ?? null, 'string');
+        $id_usuario = sanitize_input($data['id_usuario'] ?? null, 'int');
+        $id_tema = sanitize_input($data['id_tema'] ?? null, 'int');
+
+         if (!$fecha_programada) {
         echo json_encode([
             'success' => false,
             'message' => 'Campos obligatorios'
@@ -180,11 +185,11 @@ class CapacitacionInternaController extends BaseController
         }
 
     CursoCalendario::create([
-        'fecha_programada' => $data['fecha_programada'],
+        'fecha_programada' => $fecha_programada,
         'fecha_real' => '',
         'id_estacion' => $this->estacionId(),
-        'id_personal' => $data['id_usuario'],
-        'id_tema' => $data['id_tema'],
+        'id_personal' => $id_usuario,
+        'id_tema' => $id_tema,
         'resultado' => 0,
         'estado' => 0,
     ]);

@@ -19,9 +19,59 @@
 <?php endforeach; ?>
 <?php endif; ?>
 
+<!-- SECURITY: DOMPurify para prevenir XSS en x-html-->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <!-- Alpine + Axios -->
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<!-- SECURITY: Meta tag CSRF para proteger formularios -->
+<meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
+
+<!-- SECURITY: Auto-inyectar token CSRF en todas las solicitudes Axios -->
+<script>
+(function() {
+    // Función para obtener el token actual del meta tag
+    function getCsrfToken() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : null;
+    }
+    
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+        // Agregar token a todas las solicitudes Axios
+        axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+        
+        // Interceptar solicitudes para asegurar token fresco
+        axios.interceptors.request.use(
+            function(config) {
+                // Actualizar token antes de cada request
+                config.headers['X-CSRF-TOKEN'] = getCsrfToken();
+                return config;
+            },
+            function(error) {
+                return Promise.reject(error);
+            }
+        );
+        
+        // Interceptar respuestas para detectar CSRF expirado
+        axios.interceptors.response.use(
+            function(response) {
+                return response;
+            },
+            function(error) {
+                if (error.response && error.response.status === 419) {
+                    alert('Su sesión ha expirado. Por favor actualice la página.');
+                    window.location.reload();
+                }
+                return Promise.reject(error);
+            }
+        );
+    }
+})();
+</script>
+
+
 </head>
 
 <body class="link-sidebar">
@@ -290,6 +340,32 @@ $razonsocial = trim($razonsocial);
 <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
 <script src="<?= asset('js/core/notify.js?v=1.1') ?>"></script> 
 <script src="<?= asset('js/core/actions.alpine.js?v=1.2') ?>"></script>
+
+<!-- SECURITY: Auto-inyectar token CSRF en todas las solicitudes Axios -->
+<script>
+(function() {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+        // Agregar token a todas las solicitudes Axios
+        axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+        
+        // Interceptar respuestas para detectar CSRF expirado
+        axios.interceptors.response.use(
+            function(response) {
+                return response;
+            },
+            function(error) {
+                if (error.response && error.response.status === 419) {
+                    // Token CSRF expirado, recargar página
+                    this.notify('error', 'Su sesión ha expirado. Por favor actualice la página.');
+                    window.location.reload();
+                }
+                return Promise.reject(error);
+            }
+        );
+    }
+})();
+</script>
 
 <!-- Scripts por vista -->
 <?php if (!empty($scripts)): ?>

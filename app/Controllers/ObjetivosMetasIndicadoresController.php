@@ -183,6 +183,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             exit;
         }
 
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
         $idEstacion = $this->estacionId();
         $idUsuario  = $this->userId();
 
@@ -209,8 +210,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
             if (!$item) continue;
 
-            $fecha = !empty($item['fecha']) ? $item['fecha'] : null;
-            $fechaAplicacion = !empty($item['fecha_aplicacion']) ? $item['fecha_aplicacion'] : null;
+            // Sanitizar datos del item
+            $fecha = sanitize_input($item['fecha'] ?? null, 'string');
+            $fechaAplicacion = sanitize_input($item['fecha_aplicacion'] ?? null, 'string');
 
             $insert[] = [
                 'id_seguimiento'       => $idSeguimiento,
@@ -641,6 +643,14 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             if (!$payload) {
                 throw new \Exception('Payload vacío');
             }
+
+            // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+            $payload['fecha'] = sanitize_input($payload['fecha'] ?? null, 'string');
+            $payload['capacitacion'] = sanitize_input($payload['capacitacion'] ?? null, 'string');
+            $payload['experiencia'] = sanitize_input($payload['experiencia'] ?? null, 'string');
+            $payload['ventas'] = sanitize_input($payload['ventas'] ?? null, 'string');
+            $payload['medidas'] = sanitize_input($payload['medidas'] ?? null, 'string');
+            $payload['fecha_aplicacion'] = sanitize_input($payload['fecha_aplicacion'] ?? null, 'string');
 
             if (
                 empty($payload['fecha']) ||

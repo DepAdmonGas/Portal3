@@ -134,4 +134,120 @@ if (!function_exists('mkdir_safe')) {
     }
 }
 
+// ============================================================
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+// ============================================================
+
+/**
+ * Sanitización de entrada de usuario
+ * Previene XSS e inyección de datos maliciosos
+ * 
+ * @param mixed $value Valor a sanitizar
+ * @param string $type Tipo de sanitización: string, int, email, url, alphanumeric, uuid
+ * @return mixed Valor sanitizado
+ */
+if (!function_exists('sanitize_input')) {
+    function sanitize_input(mixed $value, string $type = 'string'): mixed
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        
+        switch ($type) {
+            case 'string':
+                // Eliminar espacios extra y escapar HTML
+                $value = trim($value ?? '');
+                return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+                
+            case 'int':
+            case 'integer':
+                return (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                
+            case 'float':
+            case 'decimal':
+                return (float) filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT);
+                
+            case 'email':
+                return filter_var($value, FILTER_SANITIZE_EMAIL);
+                
+            case 'url':
+                return filter_var($value, FILTER_SANITIZE_URL);
+                
+            case 'alphanumeric':
+                return preg_replace('/[^a-zA-Z0-9]/', '', $value);
+                
+            case 'uuid':
+                // Validar formato UUID
+                if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $value)) {
+                    return $value;
+                }
+                return null;
+                
+            default:
+                return $value;
+        }
+    }
+}
+
+/**
+ * Validador de entrada con reglas
+ * 
+ * @param array $data Datos a validar
+ * @param array $rules Reglas de validación: 'campo' => 'required|email|numeric|min:1|max:255'
+ * @return array Array de errores (vacío si todo ok)
+ */
+if (!function_exists('validate_input')) {
+    function validate_input(array $data, array $rules): array
+    {
+        $errors = [];
+        
+        foreach ($rules as $field => $ruleSet) {
+            $value = $data[$field] ?? null;
+            $rulesArray = explode('|', $ruleSet);
+            
+            foreach ($rulesArray as $rule) {
+                // Extraer parámetro si existe (ej: min:1)
+                $param = null;
+                if (strpos($rule, ':') !== false) {
+                    [$rule, $param] = explode(':', $rule, 2);
+                }
+                
+                switch ($rule) {
+                    case 'required':
+                        if (empty($value) && $value !== '0') {
+                            $errors[$field] = "El campo {$field} es requerido";
+                        }
+                        break;
+                        
+                    case 'email':
+                        if ($value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                            $errors[$field] = "El campo {$field} debe ser un email válido";
+                        }
+                        break;
+                        
+                    case 'numeric':
+                        if ($value && !is_numeric($value)) {
+                            $errors[$field] = "El campo {$field} debe ser numérico";
+                        }
+                        break;
+                        
+                    case 'min':
+                        if ($value && (int)$value < (int)$param) {
+                            $errors[$field] = "El campo {$field} debe ser mayor a {$param}";
+                        }
+                        break;
+                        
+                    case 'max':
+                        if ($value && strlen($value) > (int)$param) {
+                            $errors[$field] = "El campo {$field} excede el límite de {$param} caracteres";
+                        }
+                        break;
+                }
+            }
+        }
+        
+        return $errors;
+    }
+}
+
     

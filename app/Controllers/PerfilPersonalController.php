@@ -142,7 +142,14 @@ public function perfilesPersonal(){
             return;
         }
 
-        if (!$data['nombre'] || !$data['domicilio']) {
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $id = sanitize_input($data['id'] ?? null, 'int');
+        $nombre = sanitize_input($data['nombre'] ?? null, 'string');
+        $domicilio = sanitize_input($data['domicilio'] ?? null, 'string');
+        $telefono = sanitize_input($data['telefono'] ?? null, 'string');
+        $email = sanitize_input($data['email'] ?? null, 'email');
+
+        if (!$nombre || !$domicilio) {
         echo json_encode([
             'success' => false,
             'message' => 'Campos obligatorios'
@@ -152,7 +159,7 @@ public function perfilesPersonal(){
 
         try {
 
-            $usuario = Usuario::find($data['id']);
+            $usuario = Usuario::find($id);
 
             if (!$usuario) {
                 echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
@@ -160,13 +167,13 @@ public function perfilesPersonal(){
             }
 
             $usuario->update([
-                'nombre'            => $data['nombre'],
-                'domicilio'         => $data['domicilio'],
+                'nombre'            => $nombre,
+                'domicilio'         => $domicilio,
                 'fecha_nacimiento'  => $data['fecha_nacimiento'],
                 'estado_civil'      => $data['estado_civil'],
                 'seguro_social'     => $data['seguro_social'],
-                'telefono'          => $data['telefono'],
-                'email'             => $data['email']
+                'telefono'          => $telefono,
+                'email'             => $email
             ]);
 
             echo json_encode([
@@ -241,7 +248,13 @@ public function perfilesPersonal(){
             return;
         }
 
-        if (!$data['nombrecompleto'] || !$data['parentesco']) {
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $nombrecompleto = sanitize_input($data['nombrecompleto'] ?? null, 'string');
+        $parentesco = sanitize_input($data['parentesco'] ?? null, 'string');
+        $domicilio = sanitize_input($data['domicilio'] ?? null, 'string');
+        $telefono = sanitize_input($data['telefono'] ?? null, 'string');
+
+        if (!$nombrecompleto || !$parentesco) {
         echo json_encode([
             'success' => false,
             'message' => 'Campos obligatorios'
@@ -252,11 +265,11 @@ public function perfilesPersonal(){
         try {
 
             $familiar = UsuariosFamiliares::create([
-                'id_usuario' => $data['id_usuario'],
-                'nombrecompleto' => $data['nombrecompleto'],
-                'parentesco' => $data['parentesco'],
-                'domicilio' => $data['domicilio'] ?? '',
-                'telefono' => $data['telefono'] ?? ''
+                'id_usuario' => sanitize_input($data['id_usuario'] ?? null, 'int'),
+                'nombrecompleto' => $nombrecompleto,
+                'parentesco' => $parentesco,
+                'domicilio' => $domicilio,
+                'telefono' => $telefono
             ]);
 
             echo json_encode([

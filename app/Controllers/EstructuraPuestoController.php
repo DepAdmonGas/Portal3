@@ -222,9 +222,9 @@ echo json_encode(['message' => 'Datos inválidos']);
 return;
 }
 
-
-$idPuesto = isset($data['id_puesto']) ? (int)$data['id_puesto'] : 0;
-$id_modulo_principal = isset($data['id_modulo_principal']) ? (int)$data['id_modulo_principal'] : 0;
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$idPuesto = sanitize_input($data['id_puesto'] ?? null, 'int');
+$id_modulo_principal = sanitize_input($data['id_modulo_principal'] ?? null, 'int');
 
 if ($idPuesto <= 0 || $id_modulo_principal <= 0) {
 http_response_code(422);
@@ -283,9 +283,10 @@ header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-$idPuesto          = (int) ($data['id_puesto'] ?? 0);
-$idModulo          = (int) ($data['id_modulo'] ?? 0);
-$idModuloPrincipal = (int) ($data['id_modulo_principal'] ?? 0); // ← ID ESTRUCTURA
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$idPuesto          = sanitize_input($data['id_puesto'] ?? 0, 'int');
+$idModulo          = sanitize_input($data['id_modulo'] ?? 0, 'int');
+$idModuloPrincipal = sanitize_input($data['id_modulo_principal'] ?? 0, 'int');
 
 if ($idPuesto <= 0 || $idModulo <= 0 || $idModuloPrincipal <= 0) {
 http_response_code(422);
@@ -453,13 +454,14 @@ echo json_encode(['message' => 'Datos inválidos']);
 return;
 }
 
-$id = (int)$id;
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$id = sanitize_input($id, 'int');
 
-$ver        = isset($data['ver']) ? (int)$data['ver'] : 0;
-$descargar  = isset($data['descargar']) ? (int)$data['descargar'] : 0;
-$agregar    = isset($data['agregar']) ? (int)$data['agregar'] : 0;
-$editar     = isset($data['editar']) ? (int)$data['editar'] : 0;
-$eliminar   = isset($data['eliminar']) ? (int)$data['eliminar'] : 0;
+$ver        = sanitize_input($data['ver'] ?? 0, 'int');
+$descargar  = sanitize_input($data['descargar'] ?? 0, 'int');
+$agregar    = sanitize_input($data['agregar'] ?? 0, 'int');
+$editar     = sanitize_input($data['editar'] ?? 0, 'int');
+$eliminar   = sanitize_input($data['eliminar'] ?? 0, 'int');
 
 try {
 

@@ -8,6 +8,8 @@
 <link rel="shortcut icon" type="image/png" href="<?=asset('images/logos/icono-web.png')?>" />
 <!-- Core Css -->
 <link rel="stylesheet" href="<?=asset('css/styles.css')?>"/>
+<!-- SECURITY: DOMPurify para prevenir XSS en x-html-->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <!-- Alpine + Axios -->
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
