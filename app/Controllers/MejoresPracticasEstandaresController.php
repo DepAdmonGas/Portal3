@@ -70,6 +70,10 @@ class MejoresPracticasEstandaresController extends BaseController{
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'),true);
 
+    // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+    $codigo = sanitize_input($data['codigo'] ?? null, 'string');
+    $area = sanitize_input($data['area'] ?? null, 'string');
+
      if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
                 'success' => false,
@@ -78,7 +82,7 @@ class MejoresPracticasEstandaresController extends BaseController{
             return;
         }
 
-         if (empty($data['codigo']) || empty($data['area'])) {
+         if (empty($codigo) || empty($area)) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Completa todos los campos obligatorios'
@@ -89,8 +93,8 @@ class MejoresPracticasEstandaresController extends BaseController{
     try{
 
         DisenoConstruccion::create([
-            'valor1' => $data['codigo'],
-            'valor2' => $data['area'],
+            'valor1' => $codigo,
+            'valor2' => $area,
             'estado' => $this->estacionId()
         ]);
 
@@ -270,6 +274,12 @@ class MejoresPracticasEstandaresController extends BaseController{
      header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'),true);
 
+    // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+    $fecha = sanitize_input($data['fecha'] ?? null, 'string');
+    $norma = sanitize_input($data['norma'] ?? null, 'string');
+    $nombre = sanitize_input($data['nombre'] ?? null, 'string');
+    $link = sanitize_input($data['link'] ?? null, 'url');
+
      if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
                 'success' => false,
@@ -278,7 +288,7 @@ class MejoresPracticasEstandaresController extends BaseController{
             return;
         }
 
-         if (empty($data['fecha']) || empty($data['norma']) || empty($data['nombre']) || empty($data['link']) ) {
+         if (empty($fecha) || empty($norma) || empty($nombre) || empty($link) ) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Completa todos los campos obligatorios'
@@ -289,10 +299,10 @@ class MejoresPracticasEstandaresController extends BaseController{
     try{
 
         OperacionMantenimiento::create([
-        'fecha' => $data['fecha'],
-        'norma' => $data['norma'],
-        'nombre' => $data['nombre'],
-        'link' => $data['link'],
+        'fecha' => $fecha,
+        'norma' => $norma,
+        'nombre' => $nombre,
+        'link' => $link,
         'estado'=> $this->estacionId()
         ]);
 

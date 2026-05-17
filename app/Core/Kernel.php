@@ -13,6 +13,8 @@ class Kernel
     protected static array $routeMiddleware = [
         'auth'  => \App\Middleware\AuthMiddleware::class,
         'guest' => \App\Middleware\GuestMiddleware::class,
+        // SECURITY: Protección CSRF
+        'csrf'  => \App\Middleware\CsrfMiddleware::class,
     ];
 
     public static function handle(array $middlewares): void

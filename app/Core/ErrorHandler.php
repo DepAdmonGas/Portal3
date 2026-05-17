@@ -10,13 +10,16 @@ class ErrorHandler
 {
     public static function register()
     {
-        if ($_ENV['APP_ENV'] === 'dev') {
+        // SECURITY: Usar valor por defecto 'prod' si no existe APP_ENV (Vulnerabilidad #10)
+        $appEnv = $_ENV['APP_ENV'] ?? 'prod';
+        
+        if ($appEnv === 'dev') {
             // --- Modo desarrollo: página bonita de error ---
             $whoops = new Run;
 
             // Handler visual (HTML)
             $pageHandler = new PrettyPageHandler();
-            $pageHandler->setPageTitle("🚧 Error en {$_ENV['APP_NAME']}");
+            $pageHandler->setPageTitle("🚧 Error en " . ($_ENV['APP_NAME'] ?? 'Portal3'));
 
             // Si es API (acepta JSON), usa el handler JSON automáticamente
             if (self::isJsonRequest()) {
@@ -27,7 +30,7 @@ class ErrorHandler
 
             $whoops->register();
         } else {
-            // --- Modo producción: logs + mensaje genérico ---
+            // --- Modo producción: solo logs, nunca exponer detalles ---
             set_error_handler([self::class, 'handleError']);
             set_exception_handler([self::class, 'handleException']);
             register_shutdown_function([self::class, 'handleShutdown']);
@@ -52,13 +55,27 @@ class ErrorHandler
     public static function handleException(Throwable $exception)
     {
         $logger = Logger::getLogger();
-        $logger->critical(
-            "Excepción: " . $exception->getMessage() .
-            " en " . $exception->getFile() . ":" . $exception->getLine()
-        );
+        
+        // SECURITY: Loguear detalles completos pero nunca exponer al usuario (Vulnerabilidad #10)
+        $logger->critical("Excepción no controlada", [
+            'message' => $exception->getMessage(),
+            'file' => $exception->getFile(),
+            'line' => $exception->getLine(),
+            'trace' => $exception->getTraceAsString()
+        ]);
 
         http_response_code(500);
-        echo "<h1>Error interno del servidor</h1>";
+        
+        // Si es solicitud JSON, responder con formato consistente
+        if (self::isJsonRequest()) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Ha ocurrido un error. Contacte al administrador.'
+            ]);
+        } else {
+            echo "<h1>Error interno del servidor</h1>";
+        }
     }
 
     public static function handleShutdown()

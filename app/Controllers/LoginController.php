@@ -9,6 +9,7 @@ use App\Core\Session;
 use App\Core\PasswordValidator;
 use App\Core\Logger;
 use App\Core\TwoFactorAuth;
+use App\Middleware\RateLimitMiddleware;
 
 class LoginController{
 
@@ -27,6 +28,11 @@ class LoginController{
     public function login(){
         header('Content-Type: application/json');
 
+        // Rate limiting para prevenir ataques de fuerza bruta
+        if (!RateLimitMiddleware::check('login')) {
+            return; // Ya responde con código 429
+        }
+
         $data = json_decode(file_get_contents('php://input'), true);
 
         $usuario  = $data['usuario'] ?? '';
@@ -44,6 +50,9 @@ class LoginController{
             return;
         }
 
+        // Buscar usuario con Eloquent PRIMERO (necesario para el log de contraseña débil)
+        $user = Usuario::activo()->where('usuario', $usuario)->first();
+
         // ============================================================
         // SECURITY: Validación de fortaleza de contraseña (BAJO)
         // Loggear contraseñas débiles para auditoría sin bloquear login
@@ -53,15 +62,12 @@ class LoginController{
         
         if (!$passwordValidation['valid']) {
             Logger::getLogger()->warning('Intento de login con contraseña débil', [
-                'usuario' => $usuario,
-                'password_score' => $passwordValidation['score'],
-                'password_issues' => count($passwordValidation['errors']),
-                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                'user_id' => $user->id ?? null,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                'timestamp' => date('Y-m-d H:i:s')
+                // ELIMINADO: usuario, password_score, password_issues (seguridad)
             ]);
         }
-
-        // Buscar usuario con Eloquent
-        $user = Usuario::activo()->where('usuario', $usuario)->first();
 
         // ============================================================
         // SECURITY: Verificación de contraseña
@@ -84,8 +90,9 @@ class LoginController{
                 if ($isValidPassword) {
                     Logger::getLogger()->warning('Usuario con contraseña no hasheada detectado', [
                         'user_id' => $user->id,
-                        'usuario' => $usuario,
-                        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                        'timestamp' => date('Y-m-d H:i:s')
+                        // ELIMINADO: usuario (seguridad)
                     ]);
                 }
             }
@@ -94,8 +101,10 @@ class LoginController{
         if (!$user || !$isValidPassword) {
             // Loggear intento de login fallido
             Logger::getLogger()->info('Login fallido - credenciales inválidas', [
-                'usuario' => $usuario,
-                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                'user_agent' => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 100),
+                'timestamp' => date('Y-m-d H:i:s')
+                // ELIMINADO: usuario (previene enumeration de usuarios)
             ]);
             
             echo json_encode([
@@ -114,8 +123,8 @@ class LoginController{
             if (!$twoFactorCode) {
                 Logger::getLogger()->info('Login requiere 2FA', [
                     'user_id' => $user->id,
-                    'usuario' => $usuario,
                     'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                    // ELIMINADO: usuario (seguridad)
                 ]);
                 
                 echo json_encode([
@@ -128,12 +137,12 @@ class LoginController{
             
             // Verificar código TOTP
             if (!$user->verifyTwoFactorCode($twoFactorCode)) {
-                // Loggear intento de 2FA fallido
-                Logger::getLogger()->warning('Intento de login 2FA fallido', [
-                    'user_id' => $user->id,
-                    'usuario' => $usuario,
-                    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-                ]);
+// Loggear intento de 2FA fallido
+            Logger::getLogger()->warning('Intento de login 2FA fallido', [
+                'user_id' => $user->id,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                // ELIMINADO: usuario (seguridad)
+            ]);
                 
                 echo json_encode([
                     'type' => 'error',
@@ -145,8 +154,8 @@ class LoginController{
             // Loggear autenticación 2FA exitosa
             Logger::getLogger()->info('Login 2FA exitoso', [
                 'user_id' => $user->id,
-                'usuario' => $usuario,
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                // ELIMINADO: usuario (seguridad)
             ]);
         }
 
@@ -180,27 +189,30 @@ class LoginController{
         // Control de tiempo
         Session::set('LAST_ACTIVITY', time());
 
-        // SECURITY: BAJO #33 - Access token cookie (1 hora de duración)
+        // SECURITY: Cookie con secure flag solo si está en HTTPS+Y producción (Vulnerabilidad #4)
+        $isSecure = ($_ENV['APP_ENV'] ?? 'dev') === 'prod' && isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        
+        // Access token cookie (1 hora de duración)
         setcookie(
             'token',
             $token,
             [
                 'expires'  => time() + $accessTokenTTL,
                 'path'     => '/',
-                'secure'   => false,
+                'secure'   => $isSecure,  // Solo true en prod HTTPS
                 'httponly' => true,
-                'samesite' => 'Lax'
+                'samesite' => 'Strict'          // Mayor protección CSRF
             ]
         );
 
-        // SECURITY: BAJO #33 - Refresh token cookie (7 días de duración)
+        // Refresh token cookie (7 días de duración)
         setcookie(
             'refresh_token',
             $refreshToken,
             [
                 'expires'  => time() + JWTService::REFRESH_TOKEN_TTL,
                 'path'     => '/',
-                'secure'   => false,
+                'secure'   => $isSecure,
                 'httponly' => true,
                 'samesite' => 'Strict'
             ]
@@ -211,9 +223,10 @@ class LoginController{
         // Loggear login exitoso
         Logger::getLogger()->info('Login exitoso', [
             'user_id' => $user->id,
-            'usuario' => $usuario,
             'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            'two_factor_used' => $user->hasTwoFactorEnabled()
+            'two_factor_used' => $user->hasTwoFactorEnabled(),
+            'timestamp' => date('Y-m-d H:i:s')
+            // ELIMINADO: usuario (seguridad)
         ]);
 
         // Login correcto
@@ -276,6 +289,9 @@ class LoginController{
                 'nombre' => $user->nombre
             ]);
             
+            // SECURITY: Cookie con secure flag solo si está en HTTPS+Y producción
+            $isSecure = ($_ENV['APP_ENV'] ?? 'dev') === 'prod' && isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+            
             // Actualizar cookie del access token
             setcookie(
                 'token',
@@ -283,9 +299,9 @@ class LoginController{
                 [
                     'expires'  => time() + JWTService::ACCESS_TOKEN_TTL,
                     'path'     => '/',
-                    'secure'   => false,
+                    'secure'   => $isSecure,
                     'httponly' => true,
-                    'samesite' => 'Lax'
+                    'samesite' => 'Strict'
                 ]
             );
             
@@ -303,7 +319,8 @@ class LoginController{
         } catch (\Exception $e) {
             Logger::getLogger()->warning('Refresh token expirado o inválido', [
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-                'error' => $e->getMessage()
+                'timestamp' => date('Y-m-d H:i:s')
+                // ELIMINADO: $e->getMessage() (nunca exponer excepciones en producción)
             ]);
             
             echo json_encode([

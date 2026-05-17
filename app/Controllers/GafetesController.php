@@ -14,6 +14,88 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 class GafetesController extends BaseController{
 protected string $modulo = 'solicitud-gafetes';
 
+// ============================================================
+// SECURITY: Validación segura de uploads (Vulnerabilidad #11)
+// ============================================================
+
+/**
+ * Valida uploads de archivos de forma segura
+ * 
+ * @param array $file Array $_FILES
+ * @return array ['valid' => bool, 'error' => string|null, 'filename' => string|null]
+ */
+private function validateFileUpload(array $file): array
+{
+    $response = ['valid' => false, 'error' => null, 'filename' => null];
+    
+    // 1. Verificar que hay archivo
+    if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
+        $response['error'] = 'No se recibió archivo';
+        return $response;
+    }
+    
+    // 2. Verificar error de upload
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        $response['error'] = 'Error al subir archivo: código ' . $file['error'];
+        return $response;
+    }
+    
+    // 3. Validar tamaño (ej: máximo 5MB)
+    $maxSize = 5 * 1024 * 1024;
+    if ($file['size'] > $maxSize) {
+        $response['error'] = 'El archivo excede el tamaño máximo de 5MB';
+        return $response;
+    }
+    
+    // 4. Validar MIME type real (no solo extensión)
+    $finfo = new \finfo(FILEINFO_MIME_TYPE);
+    if (!$finfo) {
+        $response['error'] = 'Error al validar tipo de archivo';
+        return $response;
+    }
+    $mimeType = $finfo->file($file['tmp_name']);
+    if (!$mimeType) {
+        $response['error'] = 'No se pudo determinar el tipo de archivo';
+        return $response;
+    }
+    
+    $allowedMimes = [
+        'image/jpeg',
+        'image/png', 
+        'image/gif',
+        'application/pdf',
+    ];
+    
+    if (!in_array($mimeType, $allowedMimes)) {
+        $response['error'] = 'Tipo de archivo no permitido: ' . $mimeType;
+        return $response;
+    }
+    
+    // 5. Validar extensión coincide con MIME type
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $mimeToExt = [
+        'image/jpeg' => ['jpg', 'jpeg'],
+        'image/png' => ['png'],
+        'image/gif' => ['gif'],
+        'application/pdf' => ['pdf']
+    ];
+    
+    if (!isset($mimeToExt[$mimeType]) || !in_array($extension, $mimeToExt[$mimeType])) {
+        $response['error'] = 'La extensión no corresponde con el tipo de archivo';
+        return $response;
+    }
+    
+    // 6. Generar nombre seguro
+    $safeFilename = preg_replace('/[^a-zA-Z0-9_-]/', '', $file['name']);
+    $filename = uniqid('gafete_') . '_' . substr($safeFilename, 0, 50) . '.' . $extension;
+    
+    $response['valid'] = true;
+    $response['filename'] = $filename;
+    $response['mime'] = $mimeType;
+    
+    return $response;
+}
+
 //---------------------------------------------------//
 //----------------- PAGINA PRINCIPAL -----------------//
 //---------------------------------------------------//
@@ -196,12 +278,24 @@ exit;
 }
 
 // DATA (multipart → usar $_POST)
-$id = $_POST['id'] ?? null;
-$clave = $_POST['clave'] ?? null;
-$nombre_g = $_POST['nombre_g'] ?? null;
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$id = sanitize_input($_POST['id'] ?? null, 'int');
+$clave = sanitize_input($_POST['clave'] ?? null, 'string');
+$nombre_g = sanitize_input($_POST['nombre_g'] ?? null, 'string');
 $file  = $_FILES['foto'] ?? null;
 $comentarios = '';
 $status = 0;
+
+// Validar campos obligatorios
+$errors = validate_input($_POST, [
+    'clave' => 'required|max:50',
+    'nombre_g' => 'required|max:255'
+]);
+
+if (!empty($errors)) {
+    echo json_encode(['success' => false, 'errors' => $errors]);
+    exit;
+}
 
 if (!$clave) {
 echo json_encode([
@@ -231,12 +325,18 @@ try {
 // SUBIR ARCHIVO (opcional)
 if ($file && $file['error'] === UPLOAD_ERR_OK) {
 
-// Validar extensión
-$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+// SECURITY: Validar archivo de forma segura (Vulnerabilidad #11)
+$validation = $this->validateFileUpload($file);
 
-// nombre único
-$nombreArchivo = uniqid('rep_') . '.' . $extension;
+if (!$validation['valid']) {
+echo json_encode([
+'success' => false,
+'message' => $validation['error']
+]);
+exit;
+}
 
+$nombreArchivo = $validation['filename'];
 $rutaDestino = $carpeta . $nombreArchivo;
 
 if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {
@@ -505,13 +605,25 @@ exit;
 }
 
 // DATA (multipart → usar $_POST)
-$no_reporte = $_POST['no_reporte'] ?? null;
-$idEstacion = $_POST['idEstacion'] ?? null;
-$clave = $_POST['clave'] ?? null;
-$nombre_g = $_POST['nombre_g'] ?? null;
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$no_reporte = sanitize_input($_POST['no_reporte'] ?? null, 'int');
+$idEstacion = sanitize_input($_POST['idEstacion'] ?? null, 'int');
+$clave = sanitize_input($_POST['clave'] ?? null, 'string');
+$nombre_g = sanitize_input($_POST['nombre_g'] ?? null, 'string');
 $file  = $_FILES['foto'] ?? null;
 $comentarios = '';
 $status = 0;
+
+// Validar campos obligatorios
+$errors = validate_input($_POST, [
+    'clave' => 'required|max:50',
+    'nombre_g' => 'required|max:255'
+]);
+
+if (!empty($errors)) {
+    echo json_encode(['success' => false, 'errors' => $errors]);
+    exit;
+}
 
 if (!$clave) {
 echo json_encode([
@@ -541,12 +653,18 @@ try {
 // SUBIR ARCHIVO (opcional)
 if ($file && $file['error'] === UPLOAD_ERR_OK) {
 
-// Validar extensión
-$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+// SECURITY: Validar archivo de forma segura (Vulnerabilidad #11)
+$validation = $this->validateFileUpload($file);
 
-// nombre único
-$nombreArchivo = uniqid('rep_') . '.' . $extension;
+if (!$validation['valid']) {
+echo json_encode([
+'success' => false,
+'message' => $validation['error']
+]);
+exit;
+}
 
+$nombreArchivo = $validation['filename'];
 $rutaDestino = $carpeta . $nombreArchivo;
 
 if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {

@@ -17,37 +17,72 @@ class Usuario extends Model
 
     public $timestamps = false;
 
+    // ============================================================
+    // SECURITY: Mass Assignment Protection (Vulnerabilidad #12)
+    // Solo campos legítimos de perfil pueden ser asignados masivamente
+    // ============================================================
     protected $fillable = [
-        'id',
         'nombre',
         'email',
         'telefono',
-        'id_gas',
         'id_puesto',
         'usuario',
-        'password',
         'fecha_nacimiento',
         'estado_civil',
         'seguro_social',
         'domicilio',
-        'firma',
-        'bitacora_app',
         'fecha_ingreso',
         'responsabilidad_sgm',
-        'estatus',
-        // ============================================================
-        // SECURITY: Campos para 2FA (BAJO #32)
-        // ============================================================
-        'two_factor_secret',
-        'two_factor_enabled',
-        'two_factor_backup_codes'
     ];
 
+    // Campos que nunca se exponen en serialización JSON
     protected $hidden = [
         'password',
         'two_factor_secret',
-        'two_factor_backup_codes'
+        'two_factor_backup_codes',
+        'bitacora_app',
     ];
+
+    // Campos que NO pueden ser asignados masivamente
+    protected $guarded = [
+        'id',
+        'id_gas',
+        'estatus',
+        'two_factor_enabled',
+        'created_at',
+        'updated_at',
+        'firma',
+    ];
+
+    // ============================================================
+    // SECURITY: Boot method para protección Mass Assignment
+    // ============================================================
+    protected static function boot()
+    {
+        parent::boot();
+        
+        // Al crear: establecer valores por defecto seguros
+        static::creating(function ($model) {
+            if (empty($model->estatus)) {
+                $model->estatus = 0; // Activo por defecto
+            }
+            if (empty($model->id_gas)) {
+                $model->id_gas = 1; // Estación por defecto
+            }
+            // Por defecto, 2FA deshabilitado
+            if (!isset($model->two_factor_enabled)) {
+                $model->two_factor_enabled = false;
+            }
+        });
+        
+        // Al actualizar: prevenir cambios a campos sensibles
+        static::updating(function ($model) {
+            // Verificar cambios en campos críticos
+            if ($model->isDirty(['estatus', 'id_gas', 'two_factor_enabled'])) {
+                throw new \Exception('No puede modificar campos sensibles (estatus, id_gas, two_factor_enabled) directamente. Use métodos específicos.');
+            }
+        });
+    }
 
     // ============================================================
     // SECURITY: Casts para 2FA (BAJO #32)

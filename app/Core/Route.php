@@ -30,7 +30,8 @@ class Route
 
     public static function auth(array $handler)
     {
-        return self::middleware(['auth'], $handler);
+        // SECURITY: Agregar middleware CSRF a rutas autenticadas 
+        return self::middleware(['auth', 'csrf'], $handler);
     }
 
     public static function guest(array $handler)

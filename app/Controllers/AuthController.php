@@ -44,16 +44,19 @@ class AuthController
         // 3. Destruir sesión PHP
         Session::destroy();
         
-        // 4. Invalidate access token cookie
+        // SECURITY: Cookie con secure flag solo si está en HTTPS+Y producción (Vulnerabilidad #4)
+        $isSecure = ($_ENV['APP_ENV'] ?? 'dev') === 'prod' && isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        
+        // 4. Invalidar access token cookie
         setcookie(
             'token',
             '',
             [
                 'expires'  => time() - 3600,
                 'path'     => '/',
-                'secure'   => false,
+                'secure'   => $isSecure,
                 'httponly' => true,
-                'samesite' => 'Lax'
+                'samesite' => 'Strict'
             ]
         );
         
@@ -64,7 +67,7 @@ class AuthController
             [
                 'expires'  => time() - 3600,
                 'path'     => '/',
-                'secure'   => false,
+                'secure'   => $isSecure,
                 'httponly' => true,
                 'samesite' => 'Strict'
             ]

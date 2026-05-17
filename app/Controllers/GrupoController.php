@@ -45,14 +45,17 @@ public function createGrupo(){
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (empty($data['nombre'])) {
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$nombre = sanitize_input($data['nombre'] ?? null, 'string');
+
+if (empty($nombre)) {
 http_response_code(422);
 echo json_encode(['message' => 'Nombre requerido']);
 exit;
 }
 
 Grupo::create([
-'nombre' => $data['nombre'],
+'nombre' => $nombre,
 'estatus' => 1
 ]);
 
@@ -65,19 +68,23 @@ public function updateGrupo()
 {
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (empty($data['id']) || empty($data['nombre'])) {
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$id = sanitize_input($data['id'] ?? null, 'int');
+$nombre = sanitize_input($data['nombre'] ?? null, 'string');
+
+if (empty($id) || empty($nombre)) {
 echo json_encode(['message' => 'Datos incompletos']);
 exit;
 }
 
-$grupo = Grupo::find($data['id']);
+$grupo = Grupo::find($id);
 
 if (!$grupo) {
 echo json_encode(['message' => 'Grupo no encontrado']);
 exit;
 }
 
-$grupo->nombre = $data['nombre'];
+$grupo->nombre = $nombre;
 $grupo->save();
 
 header('Content-Type: application/json');
@@ -90,7 +97,8 @@ public function deleteGrupo()
 {
 // Leer JSON enviado por Axios
 $data = json_decode(file_get_contents('php://input'), true);
-$id = $data['id'] ?? null;
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$id = sanitize_input($data['id'] ?? null, 'int');
 
 if (!$id) {
 echo json_encode(['message' => 'ID requerido']);
