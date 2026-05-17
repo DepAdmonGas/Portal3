@@ -676,7 +676,7 @@ class RequisitosLegalesController extends BaseController{
         $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
-            mkdir($carpeta, 0777, true);
+             mkdir_safe($carpeta, true);
         }
 
         $acusePath = null;
@@ -996,7 +996,7 @@ class RequisitosLegalesController extends BaseController{
         $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
-            mkdir($carpeta, 0777, true);
+             mkdir_safe($carpeta, true);
         }
 
         $acusePath = '';
@@ -1092,7 +1092,7 @@ class RequisitosLegalesController extends BaseController{
         $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
-            mkdir($carpeta, 0777, true);
+             mkdir_safe($carpeta, true);
         }
 
         try {

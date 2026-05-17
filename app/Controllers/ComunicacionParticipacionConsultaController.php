@@ -409,8 +409,7 @@ protected string $modulo = 'sasisopa';
         $carpeta = __DIR__ . '../../../public/uploads/archivos/evidencias/';
 
         if (!file_exists($carpeta)) {
-
-            mkdir($carpeta, 0777, true);
+             mkdir_safe($carpeta, true);
         }
 
         $path = null;
