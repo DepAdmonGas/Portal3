@@ -7,7 +7,6 @@ use App\Models\Estacion;
 use App\Models\Sasisopa\AnalisisRiesgo;
 use App\Models\Sasisopa\AnalisisRiesgoAnexo;
 use App\Models\Sasisopa\RepresentanteTecnico;
-use App\Models\Sasisopa\EquipoCritico;
 use App\Services\ModuloService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -1295,37 +1294,6 @@ class SasisopaController extends BaseController{
 
         exit;
     }
-
-    //------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------
-
-
-
-    public function controlActividadesProcesos(){
-
-        $title = '10. CONTROL DE ACTIVIDADES Y PROCESOS';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/control-actividades-procesos', $data,'sasisopa');
-
-    }
-
-
-    
 
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
