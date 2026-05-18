@@ -480,9 +480,12 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/mejores-practicas-estandares/delete-operacion-mantenimiento', Route::auth(['MejoresPracticasEstandaresController', 'deleteOperacionMantenimiento']));
         $r->addRoute('GET', '/mejores-practicas-estandares/pdf-operacion-mantenimiento', Route::auth(['MejoresPracticasEstandaresController', 'pdfOperacionMantenimiento']));
 
-
         // Elemento 10
-        $r->addRoute('GET', '/control-actividades-procesos', Route::auth(['SasisopaController', 'controlActividadesProcesos']));
+        $r->addRoute('GET', '/control-actividades-procesos', Route::auth(['ControlActividadesProcesosController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/programa-anual-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'programaAnual']));
+        $r->addRoute('GET', '/control-actividades-procesos/programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'detalleProgramaAnual']));
+        $r->addRoute('GET', '/control-actividades-procesos/datatable-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'datatableProgramaMantenimiento']));
+
         // Elemento 11
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento/datatable-equipo-critico', Route::auth(['IntegridadMecanicaController', 'datatableEquipoCritico']));

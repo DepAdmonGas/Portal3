@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -48,5 +48,13 @@ class ProgramaAnualMantenimientoDetalle extends Model
         'diciembre' => 'date',
         'estado' => 'integer',
     ];
+
+    public function mantenimiento()
+    {
+        return $this->belongsTo(
+            MantenimientoLista::class,
+            'id_mantenimiento'
+        );
+    }
 
 }

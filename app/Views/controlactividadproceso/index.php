@@ -1,18 +1,3 @@
-<div class="text-end mt-2">
-  <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
-            <ul class="dropdown-menu animated rubberBand">
-                <li>
-                    <a class="dropdown-item" href=""><i class="ti ti-pencil"></i> Editar Politica</a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href=""><i class="ti ti-file-download"></i> Descargar Politica</a>
-                </li>
-            </ul>
-        </div>
-</div>
 
 <div class="row mt-2">
 
@@ -22,10 +7,11 @@
         <h4 class="card-title">Procedimientos de Operación, Seguridad y Mantenimiento</h4>
 
          <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info"
+          target="_blabk" href="/uploads/archivos/procedimientos/DLES.ADMONGAS.001.pdf">
             <i class="ti ti-eye"></i>
             Ver procedimientos
-          </button>
+          </a>
         </div>
 
       </div>
@@ -38,10 +24,11 @@
         <h4 class="card-title">Programa anual de mantenimiento</h4>
           
           <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info"
+          href="/sasisopa/control-actividades-procesos/programa-anual-mantenimiento">
             <i class="ti ti-eye"></i>
             Ver programa
-          </button>
+          </a>
         </div>
 
       </div>
