@@ -1543,14 +1543,27 @@ exit;
 }
 
 $idSubmodulo = $data['idSubmodulo'] ?? null;
-$idModulo = $data['idModulo'] ?? null;
-$nombre_submodulo = $data['nombre_submodulo'] ?? null;
-$clave = $data['clave'] ?? null;
-$ruta = $data['ruta'] ?? null;
-$icono = $data['icono'] ?? null;
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$idModulo = sanitize_input($data['idModulo'] ?? null, 'int');
+$nombre_modulo = sanitize_input($data['nombre_modulo'] ?? null, 'string');
+$clave = sanitize_input($data['clave'] ?? null, 'string');
+$ruta = sanitize_input($data['ruta'] ?? null, 'string');
+$icono = sanitize_input($data['icono'] ?? null, 'string');
 $estatus = 1;
 
-if (!$idModulo || !$nombre_submodulo || !$clave || !$ruta) {
+// Validar campos obligatorios
+$errors = validate_input($data, [
+    'nombre_modulo' => 'required|max:100',
+    'clave' => 'required|max:50',
+    'ruta' => 'required|max:255'
+]);
+
+if (!empty($errors)) {
+    echo json_encode(['success' => false, 'errors' => $errors]);
+    exit;
+}
+
+if (!$nombre_modulo || !$clave || !$ruta) {
 echo json_encode([
 'success' => false,
 'message' => 'Completa todos los campos obligatorios'

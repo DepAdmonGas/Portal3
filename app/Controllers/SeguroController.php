@@ -83,7 +83,7 @@ $status = 0;
 // CONFIG RUTA
 $carpeta = __DIR__ . '../../../public/uploads/archivos/poliza-seguro/';
 if (!file_exists($carpeta)) {
-mkdir($carpeta, 0777, true);
+ mkdir_safe($carpeta, true);
 }
 
 $nombreArchivo = null;
@@ -137,7 +137,8 @@ public function deletePolizaSeguro(){
 
 header('Content-Type: application/json; charset=utf-8');
 $data = json_decode(file_get_contents('php://input'), true);
-$id = $data['id'] ?? null;
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$id = sanitize_input($data['id'] ?? null, 'int');
 
 /*
 if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
@@ -229,7 +230,7 @@ $status = 0;
 // CONFIG RUTA
 $carpeta = __DIR__ . '../../../public/uploads/archivos/poliza-seguro/';
 if (!file_exists($carpeta)) {
-mkdir($carpeta, 0777, true);
+ mkdir_safe($carpeta, true);
 }
 
 $nombreArchivo = null;

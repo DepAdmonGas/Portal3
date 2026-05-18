@@ -16,7 +16,8 @@ x-data="{ ...actions(), ...capacitacionInterna() }">
     </button>
     
 
-    <div class="mt-4" x-html="htmlReporte"></div>
+    <!-- SECURITY: Sanitizar con DOMPurify para prevenir XSS -->
+    <div class="mt-4" x-html="DOMPurify.sanitize(htmlReporte)"></div>
 
     </div>
 

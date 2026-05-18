@@ -8,7 +8,10 @@ return function(RouteCollector $r) {
     $r->addRoute('GET', '/', Route::guest(['LoginController', 'index']));
     $r->addRoute('GET', '/login', Route::guest(['LoginController', 'index']));
     $r->addRoute('POST', '/login', ['LoginController', 'login']);
-    $r->addRoute('GET', '/logout', Route::auth(['AuthController', 'logout']));
+    // SECURITY: BAJO #33 - Endpoint para refrescar access token
+    $r->addRoute('POST', '/refresh-token', Route::auth(['LoginController', 'refreshToken']));
+    // SECURITY: BAJO #34 - Logout via POST (más seguro que GET)
+    $r->addRoute('POST', '/logout', Route::auth(['AuthController', 'logout']));
 
     $r->addRoute('GET', '/download', Route::auth(['DownloadController', 'download']));
 

@@ -77,13 +77,14 @@ class CapacitacionExternaController extends BaseController{
 
     try {
 
-        $data = json_decode(file_get_contents('php://input'), true);
+$data = json_decode(file_get_contents('php://input'), true);
 
-        $curso = $data['curso'] ?? null;
-        $fecha_programada = $data['fecha_programada'] ?? null;
-        $duracion = $data['duracion'] ?? null;
-        $duraciondetalle = $data['duraciondetalle'] ?? null;
-        $instructor = $data['instructor'] ?? null;
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $curso = sanitize_input($data['curso'] ?? null, 'string');
+        $fecha_programada = sanitize_input($data['fecha_programada'] ?? null, 'string');
+        $duracion = sanitize_input($data['duracion'] ?? null, 'string');
+        $duraciondetalle = sanitize_input($data['duraciondetalle'] ?? null, 'string');
+        $instructor = sanitize_input($data['instructor'] ?? null, 'string');
 
         if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
@@ -93,6 +94,32 @@ class CapacitacionExternaController extends BaseController{
             return;
         }
 
+        if (empty($curso) || empty($fecha_programada)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa todos los campos obligatorios'
+            ]);
+            return;
+        }
+
+        $id_estacion = $this->estacionId();
+        $id_usuario = $this->userId();
+
+
+        Capsule::beginTransaction();
+
+        $capacitacion = CapacitacionExterna::create([
+            'id_estacion'       => $id_estacion,
+            'id_usuario'        => $id_usuario,
+            'curso'             => $curso,
+            'fecha_programada'  => $fecha_programada,
+            'duracion'          => $duracion,
+            'duraciondetalle'   => $duraciondetalle,
+            'instructor'        => $instructor,
+            'fecha_real'        => ''
+        ]);
+      
+        
         if (empty($curso) || empty($fecha_programada)) {
             echo json_encode([
                 'success' => false,
@@ -153,7 +180,8 @@ class CapacitacionExternaController extends BaseController{
             'message' => 'Error al guardar la capacitación'
         ]);
     }
-}
+    }
+
 
     public function deleteCapacitacionExterna(){
 

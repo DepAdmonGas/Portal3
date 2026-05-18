@@ -160,8 +160,9 @@ class ListaAsistenciaController extends BaseController{
 
         $data = json_decode(file_get_contents('php://input'), true);
 
-        $punto = $data['punto_sasisopa'] ?? null;
-        $herramienta = $data['herramienta'] ?? null;
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $punto = sanitize_input($data['punto_sasisopa'] ?? null, 'string');
+        $herramienta = sanitize_input($data['herramienta'] ?? null, 'int');
 
          if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([

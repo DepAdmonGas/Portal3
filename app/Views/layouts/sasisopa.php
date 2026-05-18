@@ -19,6 +19,8 @@
 <?php endforeach; ?>
 <?php endif; ?>
 
+<!-- SECURITY: DOMPurify para prevenir XSS en x-html-->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <!-- Alpine + Axios -->
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -180,7 +182,8 @@
 <h6 class="mb-0 fs-5 fw-normal text-white"><?=implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2));?></h6>
 <span class="fs-2"><?=$user->puesto->tipo_puesto?></span>
 </div>
-<a href="/logout" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
+<!-- SECURITY: BAJO #34 - Logout via POST -->
+<a href="javascript:void(0)" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir" onclick="performLogout()">
 <i class="ti ti-power text-danger fs-6"></i>
 </a>
 </div>
@@ -275,8 +278,9 @@
 </a>
 </div>
 
+<!-- SECURITY: BAJO #34 - Logout via POST -->
 <div class="d-grid py-4 px-7 pt-8">
-<a href="/logout" class="btn btn-outline-primary">Salir</a>
+<a href="javascript:void(0)" class="btn btn-outline-primary" onclick="performLogout()">Salir</a>
 </div>
 </div>
 </div>

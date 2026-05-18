@@ -13,6 +13,36 @@ use App\Core\Database;
 use App\Core\Router;
 use App\Core\Session;
 
+// ============================================================
+// SECURITY: Headers HTTP esenciales (Vulnerabilidad #3)
+// ============================================================
+
+// Prevenir clickjacking
+header('X-Frame-Options: DENY');
+
+// Prevenir MIME sniffing
+header('X-Content-Type-Options: nosniff');
+
+// Protección XSS del navegador
+header('X-XSS-Protection: 1; mode=block');
+
+// Content Security Policy - Más permisiva para desarrollo
+header("Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com; frame-ancestors 'self';");
+
+// HSTS (solo si HTTPS está configurado)
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
+}
+
+// Prevenir Referer leak
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
+// Control de permisos del navegador
+header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+
+// ============================================================
+// INICIALIZACIÓN DE SESIÓN
+// ============================================================
 Session::init();
 
 // --------------------------------------------------------

@@ -192,17 +192,34 @@ exit;
 }
 
 // DATA (multipart → usar $_POST)
-$id = $_POST['id'] ?? null;
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$id = sanitize_input($_POST['id'] ?? null, 'int');
 $file  = $_FILES['archivo'] ?? null;
-$razon_social = $_POST['razon_social'] ?? null;
-$nombre_usuario = $_POST['nombre_usuario'] ?? null;
-$vehiculo = $_POST['vehiculo'] ?? null;
-$placas = $_POST['placas'] ?? null;
-$no_unidad = $_POST['no_unidad'] ?? null;
-$tarjeta = $_POST['tarjeta'] ?? null;
-$tipo_tarjeta = $_POST['tipo_tarjeta'] ?? null;
+$razon_social = sanitize_input($_POST['razon_social'] ?? null, 'string');
+$nombre_usuario = sanitize_input($_POST['nombre_usuario'] ?? null, 'string');
+$vehiculo = sanitize_input($_POST['vehiculo'] ?? null, 'string');
+$placas = sanitize_input($_POST['placas'] ?? null, 'string');
+$no_unidad = sanitize_input($_POST['no_unidad'] ?? null, 'string');
+$tarjeta = sanitize_input($_POST['tarjeta'] ?? null, 'string');
+$tipo_tarjeta = sanitize_input($_POST['tipo_tarjeta'] ?? null, 'string');
 $comentarios = '';
 $status = 0;
+
+// Validar campos obligatorios
+$errors = validate_input($_POST, [
+    'razon_social' => 'required|max:255',
+    'nombre_usuario' => 'required|max:255',
+    'vehiculo' => 'required|max:255',
+    'placas' => 'required|max:20',
+    'no_unidad' => 'required|max:20',
+    'tarjeta' => 'required|max:50',
+    'tipo_tarjeta' => 'required|max:50'
+]);
+
+if (!empty($errors)) {
+    echo json_encode(['success' => false, 'errors' => $errors]);
+    exit;
+}
 
 if (!$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
 echo json_encode([
@@ -214,8 +231,9 @@ exit;
 
 // CONFIG RUTA
 $carpeta = __DIR__ . '../../../public/uploads/archivos/solicitud-tarjetas/';
+// SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
 if (!file_exists($carpeta)) {
-mkdir($carpeta, 0777, true);
+mkdir_safe($carpeta, true);
 }
 
 $nombreArchivo = null;
@@ -476,16 +494,33 @@ exit;
 }
 
 // DATA (multipart → usar $_POST)
-$no_solicitud = $data['no_solicitud'] ?? null;
-$idEstacion = $data['idEstacion'] ?? null;
-$razon_social = $data['razon_social'] ?? null;
-$nombre_usuario = $data['nombre_usuario'] ?? null;
-$vehiculo = $data['vehiculo'] ?? null;
-$placas = $data['placas'] ?? null;
-$no_unidad = $data['no_unidad'] ?? null;
-$tarjeta = $data['tarjeta'] ?? null;
-$tipo_tarjeta = $data['tipo_tarjeta'] ?? null;
+// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+$no_solicitud = sanitize_input($data['no_solicitud'] ?? null, 'int');
+$idEstacion = sanitize_input($data['idEstacion'] ?? null, 'int');
+$razon_social = sanitize_input($data['razon_social'] ?? null, 'string');
+$nombre_usuario = sanitize_input($data['nombre_usuario'] ?? null, 'string');
+$vehiculo = sanitize_input($data['vehiculo'] ?? null, 'string');
+$placas = sanitize_input($data['placas'] ?? null, 'string');
+$no_unidad = sanitize_input($data['no_unidad'] ?? null, 'string');
+$tarjeta = sanitize_input($data['tarjeta'] ?? null, 'string');
+$tipo_tarjeta = sanitize_input($data['tipo_tarjeta'] ?? null, 'string');
 $status = 0;
+
+// Validar campos obligatorios
+$errors = validate_input($data, [
+    'razon_social' => 'required|max:255',
+    'nombre_usuario' => 'required|max:255',
+    'vehiculo' => 'required|max:255',
+    'placas' => 'required|max:20',
+    'no_unidad' => 'required|max:20',
+    'tarjeta' => 'required|max:50',
+    'tipo_tarjeta' => 'required|max:50'
+]);
+
+if (!empty($errors)) {
+    echo json_encode(['success' => false, 'errors' => $errors]);
+    exit;
+}
 
 if (!$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
 echo json_encode([

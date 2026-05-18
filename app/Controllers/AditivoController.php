@@ -186,11 +186,24 @@ class AditivoController extends BaseController{
             exit;
         }
 
-        $litros     = $data['litros'] ?? null;
-        $producto   = $data['producto'] ?? null;
-        $galones    = $data['galones'] ?? 0;
-        $fecha      = $data['fecha'] ?? null;
-        $factura    = $data['no_factura'] ?? null;
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $litros     = sanitize_input($data['litros'] ?? null, 'float');
+        $producto   = sanitize_input($data['producto'] ?? null, 'string');
+        $galones    = sanitize_input($data['galones'] ?? 0, 'float');
+        $fecha      = sanitize_input($data['fecha'] ?? null, 'string');
+        $factura    = sanitize_input($data['no_factura'] ?? null, 'string');
+
+        // Validar campos obligatorios
+        $errors = validate_input($data, [
+            'litros' => 'required|numeric',
+            'producto' => 'required|max:100',
+            'fecha' => 'required|max:20'
+        ]);
+
+        if (!empty($errors)) {
+            echo json_encode(['success' => false, 'errors' => $errors]);
+            exit;
+        }
 
         if (!$litros || !$producto || !$fecha) {
         echo json_encode([
@@ -271,8 +284,9 @@ class AditivoController extends BaseController{
 
         $data = json_decode(file_get_contents('php://input'), true);
 
-        $id = $data['id'] ?? null;
-        $noFactura = $data['no_factura'] ?? null;
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $id = sanitize_input($data['id'] ?? null, 'int');
+        $noFactura = sanitize_input($data['no_factura'] ?? null, 'string');
 
         if (!$id || !$noFactura) {
             echo json_encode([
@@ -375,8 +389,19 @@ class AditivoController extends BaseController{
         }
 
         // DATA (multipart → usar $_POST)
-        $fecha = $_POST['fecha'] ?? null;
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $fecha = sanitize_input($_POST['fecha'] ?? null, 'string');
         $file  = $_FILES['documento'] ?? null;
+
+        // Validar campos obligatorios
+        $errors = validate_input($_POST, [
+            'fecha' => 'required|max:20'
+        ]);
+
+        if (!empty($errors)) {
+            echo json_encode(['success' => false, 'errors' => $errors]);
+            exit;
+        }
 
         if (!$fecha) {
             echo json_encode([
@@ -389,8 +414,9 @@ class AditivoController extends BaseController{
         // CONFIG RUTA
         $carpeta = __DIR__ . '../../../public/uploads/archivos/';
 
+        // SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
         if (!file_exists($carpeta)) {
-            mkdir($carpeta, 0777, true);
+            mkdir_safe($carpeta, true);
         }
 
         $nombreArchivo = null;
@@ -575,11 +601,12 @@ class AditivoController extends BaseController{
             exit;
         }
 
-        $gasolina = $data['gasolina'] ?? 0;
-        $diesel   = $data['diesel'] ?? 0;
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $gasolina = sanitize_input($data['gasolina'] ?? 0, 'float');
+        $diesel   = sanitize_input($data['diesel'] ?? 0, 'float');
 
         if ($gasolina === 0 && $diesel === 0) {
-        echo json_encode(['success' => false, 'message' => 'No se ingresó ningún aditivo']);
+        echo json_encode(['success' => false, 'message' => 'No se ingresado ningun aditivo']);
         exit;
         }
 

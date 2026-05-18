@@ -137,12 +137,13 @@ protected string $modulo = 'sasisopa';
                 true
             );
 
-            $tema = $data['tema'] ?? null;
-            $detalle = $data['detalle'] ?? null;
-            $tipo_comunicacion = $data['tipo_comunicacion'] ?? null;
-            $material = $data['material'] ?? null;
+            // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+            $tema = sanitize_input($data['tema'] ?? null, 'string');
+            $detalle = sanitize_input($data['detalle'] ?? null, 'string');
+            $tipo_comunicacion = sanitize_input($data['tipo_comunicacion'] ?? null, 'string');
+            $material = sanitize_input($data['material'] ?? null, 'string');
             $dirigidoa = $data['dirigidoa'] ?? [];
-            $seguimiento = $data['seguimiento'] ?? '';
+            $seguimiento = sanitize_input($data['seguimiento'] ?? null, 'string');
 
             if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
 
@@ -232,7 +233,14 @@ protected string $modulo = 'sasisopa';
                 true
             );
 
-            $id = $data['id'] ?? null;
+            // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+            $id = sanitize_input($data['id'] ?? null, 'int');
+            $tema = sanitize_input($data['tema'] ?? null, 'string');
+            $detalle = sanitize_input($data['detalle'] ?? null, 'string');
+            $tipo_comunicacion = sanitize_input($data['tipo_comunicacion'] ?? null, 'string');
+            $material = sanitize_input($data['material'] ?? null, 'string');
+            $seguimiento = sanitize_input($data['seguimiento'] ?? null, 'string');
+            $dirigidoa = !empty($data['dirigidoa']) ? implode(',', $data['dirigidoa']) : '';
 
             if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
 
@@ -260,14 +268,12 @@ protected string $modulo = 'sasisopa';
             }
 
             $registro->update([
-                'tema' => $data['tema'],
-                'detalle' => $data['detalle'],
-                'tipo_comunicacion' => $data['tipo_comunicacion'],
-                'material' => $data['material'],
-                'seguimiento' => $data['seguimiento'] ?? '',
-                'dirigidoa' => !empty($data['dirigidoa'])
-                    ? implode(',', $data['dirigidoa'])
-                    : '',
+                'tema' => $tema,
+                'detalle' => $detalle,
+                'tipo_comunicacion' => $tipo_comunicacion,
+                'material' => $material,
+                'seguimiento' => $seguimiento,
+                'dirigidoa' => $dirigidoa,
             ]);
 
             echo json_encode([
@@ -409,8 +415,7 @@ protected string $modulo = 'sasisopa';
         $carpeta = __DIR__ . '../../../public/uploads/archivos/evidencias/';
 
         if (!file_exists($carpeta)) {
-
-            mkdir($carpeta, 0777, true);
+             mkdir_safe($carpeta, true);
         }
 
         $path = null;

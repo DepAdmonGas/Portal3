@@ -71,13 +71,14 @@ protected string $modulo = 'sasisopa';
             return;
         }
 
-         try {
-           
-            $nombre = trim($_POST['nombre_equipo'] ?? '');
-            $marca = trim($_POST['marca_modelo'] ?? '');
-            $funciones = trim($_POST['funciones'] ?? '');
-            $fecha = trim($_POST['fecha_instalacion'] ?? '');
-            $vida = trim($_POST['tiempo_vida'] ?? '');
+try {
+            
+            // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+            $nombre = sanitize_input($_POST['nombre_equipo'] ?? null, 'string');
+            $marca = sanitize_input($_POST['marca_modelo'] ?? null, 'string');
+            $funciones = sanitize_input($_POST['funciones'] ?? null, 'string');
+            $fecha = sanitize_input($_POST['fecha_instalacion'] ?? null, 'string');
+            $vida = sanitize_input($_POST['tiempo_vida'] ?? null, 'string');
 
             if (
                 empty($nombre) ||
@@ -128,8 +129,9 @@ protected string $modulo = 'sasisopa';
             $ruta = __DIR__ . '../../../public/uploads/archivos/manuales/';
             $nombreArchivo = 'MANUAL-EQUIPO-' .uniqid() . '.pdf';
 
+            // SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
             if (!is_dir($ruta)) {
-                mkdir($ruta, 0777, true);
+                mkdir_safe($ruta, true);
             }
 
             move_uploaded_file(

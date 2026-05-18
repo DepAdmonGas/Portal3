@@ -1161,8 +1161,9 @@ class SasisopaController extends BaseController{
             exit;
         }
 
-        $nombre = $_POST['nombre'] ?? '';
-        $fecha = $_POST['fecha'] ?? '';
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $nombre = sanitize_input($_POST['nombre'] ?? null, 'string');
+        $fecha = sanitize_input($_POST['fecha'] ?? null, 'string');
         $file  = $_FILES['pdf'] ?? null;
 
         if (!$nombre || !$fecha) {
@@ -1174,10 +1175,11 @@ class SasisopaController extends BaseController{
         }
 
         // CONFIG RUTA
-        $carpeta = __DIR__ . '../../../public/uploads/';
+        $carpeta = __DIR__ . '../../../public/uploads/archivos/representante-tecnico/';
 
-         if (!file_exists($carpeta)) {
-            mkdir($carpeta, 0777, true);
+        // SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
+        if (!file_exists($carpeta)) {
+            mkdir_safe($carpeta, true);
         }
 
         $nombreArchivo = null;
@@ -1191,7 +1193,7 @@ class SasisopaController extends BaseController{
                 $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
                 // nombre único
-                $nombreArchivo = 'archivos/representante-tecnico/' . uniqid('Formato_') . '.' . $extension;
+                $nombreArchivo = uniqid('Formato_') . '.' . $extension;
 
                 $rutaDestino = $carpeta . $nombreArchivo;
 
@@ -1205,7 +1207,7 @@ class SasisopaController extends BaseController{
                 'id_estacion' => $this->estacionId(),
                 'nom_representante'  => $nombre,
                 'fecha'       => $fecha,
-                'archivo'   => $nombreArchivo
+                'archivo'   => 'archivos/representante-tecnico/' . $nombreArchivo
             ]);
 
             echo json_encode([

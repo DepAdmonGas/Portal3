@@ -326,10 +326,11 @@ class RequisitosLegalesController extends BaseController{
         header('Content-Type: application/json; charset=utf-8');
         $data = json_decode(file_get_contents('php://input'), true);
 
-        $gobierno = $data['gobierno'] ?? null;
-        $dependencia = $data['dependencia'] ?? null;
-        $permiso = $data['permiso'] ?? null;
-        $fundamento = $data['fundamento'] ?? null;
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $gobierno = sanitize_input($data['gobierno'] ?? null, 'string');
+        $dependencia = sanitize_input($data['dependencia'] ?? null, 'string');
+        $permiso = sanitize_input($data['permiso'] ?? null, 'string');
+        $fundamento = sanitize_input($data['fundamento'] ?? null, 'string');
 
 
         if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
@@ -634,11 +635,12 @@ class RequisitosLegalesController extends BaseController{
             return;
         }
 
-        $nivelGobierno = $_POST['nivel_gobierno'] ?? null;
-        $permisoId = $_POST['permiso'] ?? null;
-        $vigencia = $_POST['vigencia'] ?? null;
-        $fechaEmision = $_POST['fecha_emision'] ?? null;
-        $fechaVencimiento = $_POST['fecha_vencimiento'] ?? null;
+        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        $nivelGobierno = sanitize_input($_POST['nivel_gobierno'] ?? null, 'string');
+        $permisoId = sanitize_input($_POST['permiso'] ?? null, 'int');
+        $vigencia = sanitize_input($_POST['vigencia'] ?? null, 'string');
+        $fechaEmision = sanitize_input($_POST['fecha_emision'] ?? null, 'string');
+        $fechaVencimiento = sanitize_input($_POST['fecha_vencimiento'] ?? null, 'string');
 
         if (!$nivelGobierno || !$permisoId || !$vigencia || !$fechaEmision) {
             echo json_encode([
@@ -676,7 +678,7 @@ class RequisitosLegalesController extends BaseController{
         $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
-            mkdir($carpeta, 0777, true);
+             mkdir_safe($carpeta, true);
         }
 
         $acusePath = null;
@@ -996,7 +998,7 @@ class RequisitosLegalesController extends BaseController{
         $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
-            mkdir($carpeta, 0777, true);
+             mkdir_safe($carpeta, true);
         }
 
         $acusePath = '';
@@ -1092,7 +1094,7 @@ class RequisitosLegalesController extends BaseController{
         $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
-            mkdir($carpeta, 0777, true);
+             mkdir_safe($carpeta, true);
         }
 
         try {
