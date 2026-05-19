@@ -486,8 +486,16 @@ return function(RouteCollector $r) {
         // Elemento 10
         $r->addRoute('GET', '/control-actividades-procesos', Route::auth(['ControlActividadesProcesosController', 'index']));
         $r->addRoute('GET', '/control-actividades-procesos/programa-anual-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'programaAnual']));
+        $r->addRoute('POST', '/control-actividades-procesos/create-programa-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'createProgramaAnualMantenimiento']));
+
         $r->addRoute('GET', '/control-actividades-procesos/programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'detalleProgramaAnual']));
         $r->addRoute('GET', '/control-actividades-procesos/datatable-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'datatableProgramaMantenimiento']));
+        $r->addRoute('GET', '/control-actividades-procesos/equipos-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'equipoProgramaMantenimiento']));
+        $r->addRoute('POST', '/control-actividades-procesos/create-programa-anual-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'createProgramaMantenimiento']));
+        $r->addRoute('POST', '/control-actividades-procesos/delete-programa-anual-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'deleteProgramaMantenimiento']));
+        $r->addRoute('GET', '/control-actividades-procesos/get-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'getProgramaMantenimiento']));
+        $r->addRoute('POST', '/control-actividades-procesos/update-programa-anual-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'updateProgramaMantenimiento']));
+        $r->addRoute('GET', '/control-actividades-procesos/pdf-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'pdfProgramaMantenimiento']));
 
         // Elemento 11
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));

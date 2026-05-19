@@ -51,17 +51,16 @@ class AditivoController extends BaseController{
     public function datatableAditivo(){
 
         // permisos
-        $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
-        $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
+        $permisos = [
+        'eliminar' => ModuloService::validaPermiso($this->modulo, 'eliminar'),
+        'editar' => ModuloService::validaPermiso($this->modulo, 'editar')
+        ];
 
          $aditivo = BitacoraAditivo::where('id_estacion', $this->estacionId())->get();
 
          echo json_encode([
             "data" => $aditivo,
-            "permisos" => [
-                "eliminar" => $permisoEliminar,
-                "editar"   => $permisoEditar
-            ]
+            "permisos" => $permisos
         ]);
         
         exit;

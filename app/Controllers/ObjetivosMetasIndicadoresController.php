@@ -1241,7 +1241,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
             $encuesta = EncuentaEstacion::create([
                 'id_estacion'   => $this->estacionId(),
-                'id_usuario'    => $this->userId(), // o auth()->id()
+                'id_usuario'    => $this->userId(),
                 'id_encuesta'   => 1,
                 'estado'        => 1
             ]);

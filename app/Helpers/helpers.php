@@ -82,6 +82,36 @@ function formatDate($fecha)
     return $mes;
     }
 
+function normalizarFecha($fecha): ?string
+{
+    if (empty($fecha)) {
+        return null;
+    }
+
+    $fecha = trim((string)$fecha);
+
+    $invalidas = [
+        '0000-00-00',
+        '0000-00-00 00:00:00',
+        '-0001-11-30',
+        '-0001-11-30 00:00:00'
+    ];
+
+    if (in_array($fecha, $invalidas)) {
+        return null;
+    }
+
+    try {
+
+        return \Carbon\Carbon::parse($fecha)
+            ->format('Y-m-d');
+
+    } catch (\Throwable $e) {
+
+        return null;
+    }
+}
+
 // ============================================================
 // SECURITY: BAJO #35 - Función segura para crear directorios
 // Uso: mkdir_safe('/path/to/directory')
