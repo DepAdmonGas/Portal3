@@ -89,7 +89,6 @@ document.addEventListener('alpine:init', () => {
         },
 
          openModal(){
-            console.log('ok')
             this.limpiar();
             this.modalEquipo.show();
         },

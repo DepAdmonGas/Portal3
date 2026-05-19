@@ -1,9 +1,19 @@
 <?php 
 /** @var \Illuminate\Database\Eloquent\Collection $programas */
 ?>
-<div id="container" class="pb-4">
+<div id="container" class="pb-4" x-data="{ ...actions(), ...programaMantenimiento() }">
 
-<div class="row mt-4">
+  <div class="text-end">
+      <?= 
+        !empty($permisos['crear']) ? 
+        '<button type="button" class="btn btn-primary" @click="nuevo()">
+        <i class="ti ti-plus"></i> Nuevo
+        </button>' 
+        : '' 
+        ?>     
+    </div>
+
+<div class="row mt-3">
 <?php
 foreach($programas as $program):?>
 

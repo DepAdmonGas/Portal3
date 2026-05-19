@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const noDelete = permisos.eliminar;
                     const disableEdit = (row.periodicidad == 'Semanal' || !permisos.editar);
+                    const nomEquipo = JSON.stringify(row.equipo ?? '');
 
                         return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -94,13 +95,13 @@ document.addEventListener('DOMContentLoaded', () => {
                               
                                 <li>
                                 <a class="dropdown-item d-flex align-items-center gap-3 ${disableEdit ? 'disabled' : ''}"
-                                ${disableEdit ? '' : `@click='window.programaMantenimiento.editar(${row.id})'`}>
+                                ${disableEdit ? '' : `@click='window.programaMantenimiento.openModalEditar(${row.id})'`}>
                                 <i class="ti ti-edit"></i>Editar
                                 </a>    
                                </li>  
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
-                                    ${!noDelete ? '' : `@click='window.programaMantenimiento.eliminar(${row.id})'`}>
+                                    ${!noDelete ? '' : `@click='window.programaMantenimiento.eliminar(${row.id},${nomEquipo})'`}>
                                         <i class="ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
@@ -114,11 +115,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     });
 
-         $("#table-programa-anual tbody").on("click", "tr", function () {
+    $("#table-programa-anual tbody").on("click", "tr", function () {
     if ($(this).hasClass("selected")) {
     } else {
-        table1.$("tr.selected").removeClass("selected");
-        $(this).addClass("selected");
+    table1.$("tr.selected").removeClass("selected");
+    $(this).addClass("selected");
     }
     });
 
