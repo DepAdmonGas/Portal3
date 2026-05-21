@@ -485,6 +485,7 @@ return function(RouteCollector $r) {
 
         // Elemento 10
         $r->addRoute('GET', '/control-actividades-procesos', Route::auth(['ControlActividadesProcesosController', 'index']));
+        //------ Programa Anual Mantenimiento
         $r->addRoute('GET', '/control-actividades-procesos/programa-anual-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'programaAnual']));
         $r->addRoute('POST', '/control-actividades-procesos/create-programa-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'createProgramaAnualMantenimiento']));
 
@@ -496,6 +497,14 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/control-actividades-procesos/get-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'getProgramaMantenimiento']));
         $r->addRoute('POST', '/control-actividades-procesos/update-programa-anual-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'updateProgramaMantenimiento']));
         $r->addRoute('GET', '/control-actividades-procesos/pdf-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'pdfProgramaMantenimiento']));
+        
+        //--- Configuracion Bitacoras
+        $r->addRoute('GET', '/control-actividades-procesos/configuracion-bitacora', Route::auth(['ConfiguracionBitacoraController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/datatable-configuracion-bitacora', Route::auth(['ConfiguracionBitacoraController', 'datatableConfiguracionBitacora']));
+        $r->addRoute('GET', '/control-actividades-procesos/get-trabajador-autorizado', Route::auth(['ConfiguracionBitacoraController', 'getTrabajadorAutorizado']));
+        $r->addRoute('POST', '/control-actividades-procesos/create-trabajador-autorizado', Route::auth(['ConfiguracionBitacoraController', 'createTrabajadorAutorizado']));
+        $r->addRoute('POST', '/control-actividades-procesos/delete-trabajador-autorizado', Route::auth(['ConfiguracionBitacoraController', 'deleteTrabajadorAutorizado']));
+
 
         // Elemento 11
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));

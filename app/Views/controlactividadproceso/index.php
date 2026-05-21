@@ -35,16 +35,16 @@
     </div>
   </div>
 
-
    <div class="col-md-4 align-items-stretch">
     <div class="card w-100">
       <div class="card-body">
         <h4 class="card-title">Bitacoras</h4>
           
-          <button type="button" class="btn mt-3 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
-            <i class="ti ti-eye"></i>
+          <a type="button" class="btn mt-3 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100"
+          href="/sasisopa/control-actividades-procesos/configuracion-bitacora">
+            <i class="ti ti-user-cog"></i>
             Configuración Bitácora
-          </button>
+          </a>
 
           <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
             <i class="ti ti-eye"></i>
