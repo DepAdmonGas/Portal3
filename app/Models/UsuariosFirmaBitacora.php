@@ -30,4 +30,8 @@ class UsuariosFirmaBitacora extends Model
         'fechainicio' => 'datetime',
         'fechatermino' => 'datetime'
     ];
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'id_usuario');
+    }
 }

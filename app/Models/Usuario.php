@@ -167,6 +167,14 @@ public function capacitaciones()
         return $this->hasMany(CursoCalendario::class, 'id_personal');
     }
 
+    public function firmasBitacora()
+    {
+        return $this->hasMany(
+            UsuariosFirmaBitacora::class,
+            'id_usuario'
+        );
+    }
+
     // ============================================================
     // SECURITY: Métodos para 2FA (BAJO #32)
     // ============================================================
