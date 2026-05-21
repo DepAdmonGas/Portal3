@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,4 +22,9 @@ class TarjetasCB extends Model
         'idreporte_dia'  => 'integer',
         'baucher'        => 'double',
     ];
+
+    public function corteDia()
+    {
+        return $this->belongsTo(CorteDia::class, 'idreporte_dia', 'id');
+    }
 }

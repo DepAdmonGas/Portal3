@@ -3,6 +3,7 @@
 namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Operativo\Observacione;
 
 class CorteDia extends Model
 {
@@ -28,4 +29,9 @@ class CorteDia extends Model
         'tpv' => 'integer',
         'monedero' => 'integer',
     ];
+
+    public function observaciones()
+    {
+        return $this->hasOne(Observacione::class, 'idreporte_dia', 'id');
+    }
 }

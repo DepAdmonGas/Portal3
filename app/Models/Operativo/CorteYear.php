@@ -24,13 +24,18 @@ protected $casts = [
 ];
 
 
-public static function yearsByEstacion($idEstacion)
-{
-return self::where('id_estacion', $idEstacion)
-->select('year')
-->groupBy('year')
-->orderBy('year', 'desc')
-->pluck('year');
-}
+    public function meses()
+    {
+        return $this->hasMany(CorteMes::class, 'id_year', 'id');
+    }
+
+    public static function yearsByEstacion($idEstacion)
+    {
+        return self::where('id_estacion', $idEstacion)
+            ->select('year')
+            ->groupBy('year')
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+    }
 
 }
