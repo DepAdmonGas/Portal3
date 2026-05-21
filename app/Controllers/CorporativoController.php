@@ -3,148 +3,349 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\DropdownYearMesService;
+use App\Services\CorteDiarioService;
 use App\Models\Operativo\CorteYear;
 use App\Models\Operativo\CorteMes;
 use App\Models\Operativo\CorteDia;
-use App\Services\ModuloDptoOperativoService;
+use App\Models\Operativo\CorteDiaHist;
 use App\Core\Session;
 use App\Core\Auth;
 
 class CorporativoController extends BaseController{
 protected string $modulo = 'corporativo';
 
+public function corteDiarioRedirect()
+{
+$year = date('Y');
+$mes = date('n');
+header('Location: /departamento-operativo/corporativo/corte-diario/' . $year . '/' . $mes);
+exit;
+}
+
 public function corteDiarioIndex($idYear, $idMes)
 {
+$validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
+$idYear = $validados['idYear'];
+$idMes = $validados['idMes'];
 
-$datosUsuario = Auth::user();
+$permisos = CorteDiarioService::getPermisos();
+$title = 'Corte Diario, ' . nombremes($idMes) . ' ' . $idYear;
 
-/* ========== VALIDAR EL AÑO Y MES ========== */
-['idYear' => $idYear, 'idMes' => $idMes] = DropdownYearMesService::validarYearMes($idYear,$idMes);
-
-$title = 'Corte Diario, '. nombremes($idMes) . ' ' . $idYear;
 Breadcrumb::add('Home', '/home');
-Breadcrumb::add('Dirección de Operaciones','/departamento-operativo');
-Breadcrumb::add('Corporativo','/departamento-operativo/corporativo');
-Breadcrumb::add('<span class="breadcrumb-item active">Corte Diario</span>','');
-/* ========== DROPDOWNS DEL MES Y DE LA FECHA ========== */
-Breadcrumb::add(DropdownYearMesService::dropdownmES($idYear,$idMes),'');
-Breadcrumb::add(DropdownYearMesService::dropdownYear($idYear,$idMes),'');
+Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
+Breadcrumb::add('<span class="breadcrumb-item active">Corte Diario</span>', '');
+Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $data = [
-'title'  => $title,
-'idYear' => $idYear,
-'idMes'  => $idMes,
-'links' =>[
+'title'    => $title,
+'idYear'   => $idYear,
+'idMes'    => $idMes,
+'multiestacion' => $permisos['multiestacion'],
+'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
+'estacionId' => $this->estacionId(),
+'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
 '/assets/js/vendor.min.js',
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/js/departamento-operativo/1-corporativo/corte.diario.datatable.init.js',
-'/assets/js/departamento-operativo/1-corporativo/actions.corte.diario.init.js?v=1.0'
+'/assets/js/departamento-operativo/1-corporativo/actions.corte.diario.init.js'
 ],
 'help' => false
 ];
 
-View::render('departamento-operativo/1-corporativo/corte-diario-index',$data,'departamento-operativo');
+View::render('departamento-operativo/1-corporativo/corte-diario-index', $data, 'departamento-operativo');
 }
 
 public function corteDiarioDatatable($idYear, $idMes)
 {
+header('Content-Type: application/json; charset=utf-8');
 
-$datosUsuario = Session::get('usuario');
-$idEstacion = $datosUsuario['id_estacion'] ?? null;
+$idEstacion = $this->estacionId();
+$multiEstacion = $this->isMultiEs();
 
-// Obtener días con joins (igual que tu SQL)
-$rows = CorteDia::from('op_corte_dia as d')
-->join('op_corte_mes as m', 'd.id_mes', '=', 'm.id')
-->join('op_corte_year as y', 'm.id_year', '=', 'y.id')
-->where('y.id_estacion', $idEstacion)
-->where('y.year', $idYear)
-->where('m.mes', $idMes)
-->orderBy('d.fecha', 'asc')
-->select(
-'d.id as idDia',
-'d.fecha',
-'d.ventas',
-'d.tpv',
-'d.monedero'
-)
-->get();
+if ($multiEstacion && isset($_GET['estacion'])) {
+$idEstacion = (int) $_GET['estacion'];
+}
 
-$data = [];
+if (!$idEstacion) {
+echo json_encode([
+'data' => [],
+'multiestacion' => $multiEstacion
+]);
+exit;
+}
+
+CorteDiarioService::asegurarDiasDelMes($idYear, $idMes, $idEstacion);
+
+$rows = CorteDiarioService::getDiasCorte($idYear, $idMes, $idEstacion);
+$permisos = CorteDiarioService::getPermisos();
+
+$idMesDb = CorteMes::whereHas('year', function ($q) use ($idEstacion, $idYear) {
+$q->where('id_estacion', $idEstacion)
+->where('year', $idYear);
+})->where('mes', $idMes)->value('id');
+
+$resumen = $idMesDb
+? CorteDiarioService::getResumenMensual($idMesDb)
+: [];
+
 $hoy = date('Y-m-d');
 
+$data = [];
+
 foreach ($rows as $row) {
+
 $idDia = $row->idDia;
 $fecha = $row->fecha;
 
-// lógica de habilitado/deshabilitado
-$esPasado = $hoy >= formatDate($fecha);
-$textClass = $esPasado ? '' : 'opacity-25';
-
-
-if (empty(formatDate($row->fecha)) ||formatDate($row->fecha) === '0000-00-00' ||formatDate($row->fecha) === '-0001-11-30') {
-$fechaFormateada = 'S/I';
-} else {
+$esPasado = $hoy >= $fecha;
+$textClass = $esPasado? '': 'opacity-25';
 $fechaFormateada = formatearFecha($row->fecha);
-}
+
+$btnEditar = $this->renderBotonEditar($esPasado,$multiEstacion,$textClass,$idDia,$fecha);
 
 $data[] = [
-"fecha" => "<span class='{$textClass}'>{$fechaFormateada}</span>",
 
-"ventas" => "
-<a href='" . ($esPasado ? "/departamento-operativo/ventas/{$idYear}/{$idMes}/{$idDia}" : "javascript:void(0)") . "'
-class='d-flex justify-content-center align-items-center {$textClass} " . (!$esPasado ? "disabled opacity-25" : "") . "'>
-<i class='ti ti-currency-dollar fs-8'></i>
-</a>
-",
+"fecha" =>
+"<span class='{$textClass}'>{$fechaFormateada}</span>",
 
-"tpv" => "
-<a href='" . ($esPasado ? "/departamento-operativo/cierrelote/{$idYear}/{$idMes}/{$idDia}" : "javascript:void(0)") . "'
-class='d-flex justify-content-center align-items-center {$textClass} " . (!$esPasado ? "disabled opacity-25" : "") . "'>
-<i class='ti ti-receipt fs-8'></i>
-</a>
-",
+"ventas" =>
+$this->renderIconoLink(
+$esPasado,
+$textClass,
+"/departamento-operativo/ventas/{$idYear}/{$idMes}/{$idDia}",
+"ti ti-currency-dollar"
+),
 
-"impuestos" => "
-<a href='" . ($esPasado ? "/departamento-operativo/impuestos/{$idYear}/{$idMes}/{$idDia}" : "javascript:void(0)") . "'
-class='d-flex justify-content-center align-items-center {$textClass} " . (!$esPasado ? "disabled opacity-25" : "") . "'>
-<i class='ti ti-receipt-tax fs-8'></i>
-</a>
-",
+"tpv" =>
+$this->renderIconoLink(
+$esPasado,
+$textClass,
+"/departamento-operativo/cierrelote/{$idYear}/{$idMes}/{$idDia}",
+"ti ti-receipt"
+),
 
-"monedero" => "
-<a href='" . ($esPasado ? "/departamento-operativo/monedero/{$idYear}/{$idMes}/{$idDia}" : "javascript:void(0)") . "'
-class='d-flex justify-content-center align-items-center {$textClass} " . (!$esPasado ? "disabled opacity-25" : "") . "'>
-<i class='ti ti-wallet fs-8'></i>
-</a>
-",
+"impuestos" =>
+$this->renderIconoLink(
+$esPasado,
+$textClass,
+"/departamento-operativo/impuestos/{$idYear}/{$idMes}/{$idDia}",
+"ti ti-receipt-tax"
+),
 
-"clientes" => "
-<a href='" . ($esPasado ? "/departamento-operativo/clientes/{$idYear}/{$idMes}/{$idDia}" : "javascript:void(0)") . "'
-class='d-flex justify-content-center align-items-center {$textClass} " . (!$esPasado ? "disabled opacity-25" : "") . "'>
-<i class='ti ti-users fs-8'></i>
-</a>
-",
+"monedero" =>
+$this->renderIconoLink(
+$esPasado,
+$textClass,
+"/departamento-operativo/monedero/{$idYear}/{$idMes}/{$idDia}",
+"ti ti-wallet"
+),
 
-"editar" => "<i class='ti ti-edit fs-8 {$textClass} " . (!$esPasado ? "disabled opacity-25" : "") . "'></i>"
+"clientes" =>
+$this->renderIconoLink(
+$esPasado,
+$textClass,
+"/departamento-operativo/clientes/{$idYear}/{$idMes}/{$idDia}",
+"ti ti-users"
+),
+
+"editar" => $btnEditar
 ];
 }
 
 echo json_encode([
 "data" => $data,
-
+"multiestacion" => $multiEstacion,
+"resumen" => $resumen
 ]);
 
+exit;
 }
 
+public function corteDiarioEditar()
+{
+header('Content-Type: application/json; charset=utf-8');
 
+if (!$this->isMultiEs()) {
+http_response_code(403);
+echo json_encode(['success' => false, 'message' => 'No tienes permiso para editar']);
+exit;
+}
 
+$input = json_decode(file_get_contents('php://input'), true);
+$idCorteDia = $input['id'] ?? null;
+$ventas = $input['ventas'] ?? null;
+$tpv = $input['tpv'] ?? null;
+$monedero = $input['monedero'] ?? null;
+$observaciones = $input['observaciones'] ?? null;
 
+if (!$idCorteDia) {
+echo json_encode(['success' => false, 'message' => 'ID requerido']);
+exit;
+}
 
+$corte = CorteDia::find($idCorteDia);
+if (!$corte) {
+echo json_encode(['success' => false, 'message' => 'Registro no encontrado']);
+exit;
+}
 
+$corte->ventas = $ventas !== null ? (int) $ventas : $corte->ventas;
+$corte->tpv = $tpv !== null ? (int) $tpv : $corte->tpv;
+$corte->monedero = $monedero !== null ? (int) $monedero : $corte->monedero;
+$corte->save();
 
+if ($observaciones !== null) {
+$corte->observaciones()->updateOrCreate(
+['idreporte_dia' => $idCorteDia],
+['observaciones' => $observaciones]
+);
+}
 
+$usuario = Session::get('usuario');
+CorteDiaHist::create([
+'id_corte' => $idCorteDia,
+'id_usuario' => $usuario['id'] ?? null,
+'fecha' => date('Y-m-d H:i:s'),
+'detalle' => 'Actualización por: ' . ($usuario['nombre'] ?? '')
+]);
+
+echo json_encode(['success' => true, 'message' => 'Corte actualizado correctamente']);
+exit;
+}
+
+public function corteDiarioGetDetalle()
+{
+header('Content-Type: application/json; charset=utf-8');
+
+$id = (int) ($_GET['id'] ?? 0);
+if (!$id) {
+echo json_encode(['success' => false, 'message' => 'ID requerido']);
+exit;
+}
+
+$corte = CorteDia::with('observaciones')->find($id);
+if (!$corte) {
+echo json_encode(['success' => false, 'message' => 'No encontrado']);
+exit;
+}
+
+echo json_encode([
+'success' => true,
+'data' => [
+'id' => $corte->id,
+'fecha' => $corte->fecha,
+'ventas' => $corte->ventas,
+'tpv' => $corte->tpv,
+'monedero' => $corte->monedero,
+'observaciones' => $corte->observaciones->observaciones ?? '',
+]
+]);
+exit;
+}
+
+public function corteDiarioGetHistorial()
+{
+header('Content-Type: application/json; charset=utf-8');
+
+if (!$this->isMultiEs()) {
+http_response_code(403);
+echo json_encode(['success' => false, 'message' => 'No tienes permisos']);
+exit;
+}
+
+$id = (int) ($_GET['id'] ?? 0);
+if (!$id) {
+echo json_encode(['success' => false, 'data' => []]);
+exit;
+}
+
+$historial = CorteDiarioService::getHistorial($id);
+
+echo json_encode(['success' => true, 'data' => $historial]);
+exit;
+}
+
+public function corteDiarioActivar()
+{
+header('Content-Type: application/json; charset=utf-8');
+
+if (!$this->isMultiEs()) {
+http_response_code(403);
+echo json_encode(['success' => false, 'message' => 'No tienes permiso']);
+exit;
+}
+
+$input = json_decode(file_get_contents('php://input'), true);
+$idCorteDia = (int) ($input['id'] ?? 0);
+$detalle = trim($input['detalle'] ?? '');
+
+if (!$idCorteDia) {
+echo json_encode(['success' => false, 'message' => 'ID requerido']);
+exit;
+}
+
+if ($detalle === '') {
+echo json_encode(['success' => false, 'message' => 'El motivo es obligatorio']);
+exit;
+}
+
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? null;
+
+if (!$idUsuario) {
+echo json_encode(['success' => false, 'message' => 'Sesión inválida']);
+exit;
+}
+
+CorteDiarioService::activarCorte($idCorteDia, $idUsuario, $detalle);
+
+echo json_encode(['success' => true, 'message' => 'Corte activado exitosamente']);
+exit;
+}
+
+private function renderIconoLink($esPasado, $textClass, $url, $icono)
+{
+if ($esPasado) {
+return "<a href='{$url}' class='d-flex justify-content-center align-items-center {$textClass}'><i class='{$icono} fs-8'></i></a>";
+}
+return "<span class='d-flex justify-content-center align-items-center {$textClass}'><i class='{$icono} fs-8 text-muted'></i></span>";
+}
+
+private function renderBotonEditar($esPasado, $multiEstacion, $textClass, $idDia, $fecha)
+{
+if (!$multiEstacion) {
+return '';
+}
+
+$histCount = CorteDiarioService::getHistCount($idDia);
+
+$badgeHist = '';
+
+if ($histCount > 0) {
+
+$badgeHist = '
+<span class="badge-historico">
+' . $histCount . '
+</span>';
+}
+
+if ($esPasado) {
+
+return '
+<a href="" class="btn-edit-corte btn-badge-historico d-flex justify-content-center align-items-center ' . $textClass . '" data-id="' . $idDia . '" data-fecha="' . $fecha . '">
+<i class="ti ti-edit fs-8"></i> ' . $badgeHist . '
+</a>';
+}
+
+return '
+<span class="d-flex justify-content-center align-items-center position-relative ' . $textClass . '">
+<i class="ti ti-edit fs-8 text-muted"></i> ' . $badgeHist . '
+</span>';
+}
 
 }

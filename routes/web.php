@@ -240,8 +240,14 @@ return function(RouteCollector $r) {
     $r->addRoute('GET','/corporativo',Route::auth(['DptoOperativoController', 'corporativoIndex']));
 
     //----- Corte Diario
+    $r->addRoute('GET','/corporativo/corte-diario',Route::auth(['CorporativoController', 'corteDiarioRedirect']));
     $r->addRoute('GET','/corporativo/corte-diario/{idYear:\d+}/{idMes:\d+}',Route::auth(['CorporativoController', 'corteDiarioIndex']));
     $r->addRoute('GET','/corporativo/corte-diario-datatable/{idYear:\d+}/{idMes:\d+}',Route::auth(['CorporativoController', 'corteDiarioDatatable']));
+    $r->addRoute('PUT','/corporativo/corte-diario/editar',Route::auth(['CorporativoController', 'corteDiarioEditar']));
+    $r->addRoute('GET','/corporativo/corte-diario/resumen',Route::auth(['CorporativoController', 'corteDiarioGetResumen']));
+    $r->addRoute('GET','/corporativo/corte-diario/detalle',Route::auth(['CorporativoController', 'corteDiarioGetDetalle']));
+    $r->addRoute('GET','/corporativo/corte-diario/historial',Route::auth(['CorporativoController', 'corteDiarioGetHistorial']));
+    $r->addRoute('POST','/corporativo/corte-diario/activar',Route::auth(['CorporativoController', 'corteDiarioActivar']));
 
 
     //----- 2. Recursos Humanos

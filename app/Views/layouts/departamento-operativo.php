@@ -62,7 +62,7 @@
 <li class="nav-small-cap"><i class="ti ti-dots nav-small-cap-icon fs-4"></i><span class="hide-menu">DIRECCIÓN DE OPERACIONES</span></li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/departamento-operativo/corte-diario" aria-expanded="false">
+<a class="sidebar-link" href="/departamento-operativo/corporativo/corte-diario" aria-expanded="false">
 <span><i class="ti ti-report-money"></i></span>
 <span class="hide-menu">Corte Diario</span>
 </a>
