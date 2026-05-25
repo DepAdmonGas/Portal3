@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
-class RecepcionDescargarFirma extends Model
+class RecepcionDescargarSellos extends Model
 {
-    protected $table = 'tb_recepcion_descargar_firma';
+    protected $table = 'tb_recepcion_descargar_sellos';
 
     protected $primaryKey = 'id';
 
@@ -18,14 +18,12 @@ class RecepcionDescargarFirma extends Model
 
     protected $fillable = [
         'id_recepcion_descarga',
-        'id_usuario',
-        'tipo_firma',
-        'imagen_firma',
+        'verificar',
+        'resultado',
     ];
 
     protected $casts = [
         'id' => 'integer',
         'id_recepcion_descarga' => 'integer',
-        'id_usuario' => 'integer',
     ];
 }

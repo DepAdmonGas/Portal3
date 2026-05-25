@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\TanqueAlmacenamiento;
 
 class RecepcionDescargarTanque extends Model
 {
@@ -33,4 +34,20 @@ class RecepcionDescargarTanque extends Model
         'inventario_inicial' => 'double',
         'inventario_final' => 'double',
     ];
+
+    public function tanque()
+    {
+        return $this->belongsTo(
+            TanqueAlmacenamiento::class,
+            'id_tanque'
+        );
+    }
+
+    public function recepcion()
+    {
+        return $this->belongsTo(
+            RecepcionDescargar::class,
+            'id_recepcion_descarga'
+        );
+    }
 }

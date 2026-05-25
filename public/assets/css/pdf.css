@@ -1,5 +1,5 @@
 /* ===== RESET ===== */
-@page {margin: 0.5cm 1cm; font-family: Arial, Helvetica, sans-serif;}
+@page {margin: 0.5cm 0.5cm; font-family: Arial, Helvetica, sans-serif;}
 * {
     box-sizing: border-box;
 }
@@ -179,6 +179,10 @@ p {
   background-color: rgba(0, 0, 0, 0.075);
 }
 
+.table-sm {
+  padding: 0.25rem 0.25rem;
+}
+
 /* ===== BADGES ===== */
 .badge {
     display: inline-block;
@@ -230,12 +234,16 @@ p {
   border-top: 2px solid #ebf1f6 !important;
 }
 
-.fs-1 { font-size: 2rem; }   /* ~32px */
-.fs-2 { font-size: 1.75rem; }/* ~28px */
-.fs-3 { font-size: 1.5rem; } /* ~24px */
-.fs-4 { font-size: 1.25rem; }/* ~20px */
-.fs-5 { font-size: 1rem; }   /* ~16px */
-.fs-6 { font-size: 0.875rem;}/* ~14px */
+.fs-1 { font-size: 2rem; }
+.fs-2 { font-size: 1.75rem; }
+.fs-3 { font-size: 1.5rem; }
+.fs-4 { font-size: 1.25rem; }
+.fs-5 { font-size: 1rem; }
+.fs-6 { font-size: 0.875rem !important;}
+.fs-7 { font-size: 0.625rem !important;}
+.fs-8 { font-size: 0.75rem !important;}
+.fs-9 { font-size: 0.55rem !important;}
+.fs-10 { font-size: 0.45rem !important;}
 
 .mt-2 {
   margin-top: 0.5rem !important;
@@ -266,4 +274,14 @@ p {
 
 .bg-info{
     background: #539bff;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+.m-0 {
+  margin: 0 !important;
+}
+.border-0 {
+  border: 0 !important;
 }

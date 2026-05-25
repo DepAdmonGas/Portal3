@@ -238,6 +238,8 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
         <li>Cuenta con buscador para facilitar la consulta de registros</li>
         </ul>
 
+
+
         </div>
     </div>
 
