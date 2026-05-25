@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -41,3 +41,4 @@ class AceiteLubricanteReporte extends Model
         'factura_venta_mostrador' => 'double',
     ];
 }
+

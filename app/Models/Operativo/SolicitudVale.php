@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -44,3 +44,4 @@ class SolicitudVale extends Model
         'status' => 'integer'
     ];
 }
+

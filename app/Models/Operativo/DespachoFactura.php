@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,3 +33,4 @@ class DespachoFactura extends Model
         'pesos_producto_tres' => 'integer',
     ];
 }
+

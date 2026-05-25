@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -35,3 +35,4 @@ class Cliente extends Model
         'estado'      => 'integer',
     ];
 }
+

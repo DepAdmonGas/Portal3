@@ -121,6 +121,15 @@ return $historial;
 
 public static function activarCorte($idCorteDia, $idUsuario, $detalle)
 {
+$corte = CorteDia::find($idCorteDia);
+if (!$corte) return false;
+
+$corte->update([
+'ventas'   => 0,
+'tpv'      => 0,
+'monedero' => 0,
+]);
+
 return CorteDiaHist::create([
 'id_corte'   => $idCorteDia,
 'id_usuario' => $idUsuario,

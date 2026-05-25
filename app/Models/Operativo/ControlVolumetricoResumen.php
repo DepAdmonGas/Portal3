@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -53,3 +53,4 @@ class ControlVolumetricoResumen extends Model
         'comentario' => 'string',
     ];
 }
+

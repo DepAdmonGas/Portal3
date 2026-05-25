@@ -249,6 +249,24 @@ return function(RouteCollector $r) {
     $r->addRoute('GET','/corporativo/corte-diario/historial',Route::auth(['CorporativoController', 'corteDiarioGetHistorial']));
     $r->addRoute('POST','/corporativo/corte-diario/activar',Route::auth(['CorporativoController', 'corteDiarioActivar']));
 
+    //----- Ventas (dentro del grupo /departamento-operativo)
+    $r->addRoute('GET','/ventas/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['VentasController', 'index']));
+    $r->addRoute('GET','/ventas/data/{idDia:\d+}',Route::auth(['VentasController', 'getData']));
+    $r->addRoute('POST','/ventas/{idDia:\d+}/nueva-venta',Route::auth(['VentasController', 'newVenta']));
+    $r->addRoute('PUT','/ventas/editar-venta',Route::auth(['VentasController', 'editVenta']));
+    $r->addRoute('PUT','/ventas/editar-venta-otros',Route::auth(['VentasController', 'editVentaOtros']));
+    $r->addRoute('PUT','/ventas/editar-prosegur',Route::auth(['VentasController', 'editProsegur']));
+    $r->addRoute('PUT','/ventas/editar-tarjeta',Route::auth(['VentasController', 'editTarjeta']));
+    $r->addRoute('PUT','/ventas/editar-controlgas',Route::auth(['VentasController', 'editControlgas']));
+    $r->addRoute('PUT','/ventas/editar-pago-cliente',Route::auth(['VentasController', 'editPagoCliente']));
+    $r->addRoute('PUT','/ventas/editar-aceite',Route::auth(['VentasController', 'editAceite']));
+    $r->addRoute('PUT','/ventas/editar-observaciones',Route::auth(['VentasController', 'editObservaciones']));
+    $r->addRoute('POST','/ventas/{idDia:\d+}/subir-documento',Route::auth(['VentasController', 'uploadDocumento']));
+    $r->addRoute('POST','/ventas/eliminar-documento',Route::auth(['VentasController', 'deleteDocumento']));
+    $r->addRoute('POST','/ventas/firmar',Route::auth(['VentasController', 'firmar']));
+    $r->addRoute('POST','/ventas/crear-token',Route::auth(['VentasController', 'crearToken']));
+    $r->addRoute('POST','/ventas/firmar-token',Route::auth(['VentasController', 'firmarConToken']));
+    $r->addRoute('GET','/ventas/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}/pdf',Route::auth(['VentasController', 'downloadPdf']));
 
     //----- 2. Recursos Humanos
     $r->addRoute('GET','/recursos-humanos',Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
@@ -551,6 +569,13 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos', Route::auth(['SgmController', 'auditoriasInternasExternasAtencionHallazgos']));
         $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion', Route::auth(['SgmController', 'evaluacionCumplimientoObjetivosRevisionDireccion']));
     });
+
+    // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
+    $r->addRoute('POST', '/telegram/webhook', ['Api\TelegramWebhookController', 'handle']);
+    $r->addRoute('POST', '/token-telegram/status', Route::auth(['Api\TokenTelegramController', 'status']));
+    $r->addRoute('POST', '/token-telegram/generate', Route::auth(['Api\TokenTelegramController', 'generate']));
+    $r->addRoute('POST', '/token-telegram/revoke', Route::auth(['Api\TokenTelegramController', 'revoke']));
+    $r->addRoute('POST', '/token-telegram/test-notification', Route::auth(['Api\TokenTelegramController', 'testNotification']));
 
     // ---------------- RUTA FINAL ----------------
     //$r->addRoute('GET', '/{url:.+}', Route::auth(['ModuloController', 'RutasModulos']));

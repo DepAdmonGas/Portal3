@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -27,7 +27,7 @@ class Contrato extends Model
         'categoria',
     ];
 
-    // Casts para convertir automáticamente los tipos de datos
+    // Casts para convertir automÃ¡ticamente los tipos de datos
     protected $casts = [
         'id_contratos' => 'integer',
         'id_estacion' => 'integer',
@@ -42,3 +42,4 @@ class Contrato extends Model
         'categoria' => 'string',
     ];
 }
+

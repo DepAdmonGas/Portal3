@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,3 +21,4 @@ class SolicitudValeDocumento extends Model
         'id_solicitud' => 'integer'
     ];
 }
+

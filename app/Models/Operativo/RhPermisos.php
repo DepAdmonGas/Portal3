@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -37,3 +37,4 @@ class RhPermisos extends Model
         'estacion_cubre' => 'integer'
     ];
 }
+

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -42,3 +42,4 @@ class ReciboNominaV2 extends Model
     ];
 
 }
+

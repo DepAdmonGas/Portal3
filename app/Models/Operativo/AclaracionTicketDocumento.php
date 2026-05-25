@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,7 +12,7 @@ class AclaracionTicketDocumento extends Model
     public $incrementing = true;
     protected $keyType = 'int';
 
-    public $timestamps = false; // No usa created_at ni updated_at estándar
+    public $timestamps = false; // No usa created_at ni updated_at estÃ¡ndar
 
     protected $fillable = [
         'id_aclaracion',
@@ -28,3 +28,4 @@ class AclaracionTicketDocumento extends Model
     ];
 
 }
+
