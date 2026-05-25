@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -50,4 +50,37 @@ class RecepcionDescargar extends Model
         'litros_compra' => 'double',
         'estado' => 'integer',
     ];
+
+    public function tanques()
+    {
+        return $this->hasMany(
+            RecepcionDescargarTanque::class,
+            'id_recepcion_descarga'
+        );
+    }
+
+    public function sellos()
+    {
+        return $this->hasMany(
+            RecepcionDescargarSellos::class,
+            'id_recepcion_descarga'
+        );
+    }
+
+    public function evidencias()
+    {
+        return $this->hasMany(
+            RecepcionDescargarEvidencia::class,
+            'id_recepcion_descarga'
+        );
+    }
+
+    public function firmas()
+    {
+        return $this->hasMany(
+            RecepcionDescargarFirma::class,
+            'id_recepcion_descarga'
+        );
+    }
+    
 }

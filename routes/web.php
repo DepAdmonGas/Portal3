@@ -505,6 +505,11 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/control-actividades-procesos/create-trabajador-autorizado', Route::auth(['ConfiguracionBitacoraController', 'createTrabajadorAutorizado']));
         $r->addRoute('POST', '/control-actividades-procesos/delete-trabajador-autorizado', Route::auth(['ConfiguracionBitacoraController', 'deleteTrabajadorAutorizado']));
 
+        //---- Recepción y Descarga del Producto
+
+        $r->addRoute('GET', '/control-actividades-procesos/recepcion-descarga-producto', Route::auth(['RecepcionDescargaProductoController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/recepcion-descarga-producto/datatable', Route::auth(['RecepcionDescargaProductoController', 'datatable']));
+        $r->addRoute('GET', '/control-actividades-procesos/recepcion-descarga-producto/pdf', Route::auth(['RecepcionDescargaProductoController', 'pdf']));
 
         // Elemento 11
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));
