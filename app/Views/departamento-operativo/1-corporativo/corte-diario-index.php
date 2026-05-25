@@ -1,9 +1,11 @@
-<div id="container" class="mt-4" data-mes="<?= $idMes ?>" data-year="<?= $idYear ?>" data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>">
+<div id="container" class="mt-4 mb-4" data-mes="<?= $idMes ?>" data-year="<?= $idYear ?>" data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>">
 
-<div class="d-flex align-items-center mb-4">
-
+<div class="row">
+<div class="col-12">
+<div class="d-flex align-items-center ">
 <div class="ms-auto">
 
+<?php if (!$multiestacion || $estacionId != 8): ?>
 <div class="dropdown">
 <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
 <i class="ti ti-tools"></i> Herramientas
@@ -108,9 +110,10 @@
 
 </div>
 </div>
+<?php endif; ?>
+</div>
 </div>
 
-<div class="row">
 <div class="col-12">
 <div class="datatables">
 <div class="table-responsive">

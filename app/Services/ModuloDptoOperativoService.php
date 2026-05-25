@@ -174,6 +174,15 @@ return !empty($permisos[$accion]);
 public static function validaPermiso($modulo, $accion)
 {
 $permisos = self::permisosSesion($modulo);
+
+if (empty($permisos)) {
+$usuario_id = ($_SESSION['usuario']['id'] ?? 0);
+if ($usuario_id) {
+self::guardarEnSesion($usuario_id);
+$permisos = self::permisosSesion($modulo);
+}
+}
+
 return !empty($permisos[$accion]);
 }
 

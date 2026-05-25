@@ -5,6 +5,17 @@ const idYear = container.dataset.year;
 const idMes = container.dataset.mes;
 const multiestacion = container.dataset.multiestacion === 'true';
 
+const selectEl = document.getElementById('selectEstacion');
+const estacionActual = selectEl ? parseInt(selectEl.value) : 0;
+const esPredeterminada = multiestacion && estacionActual === 8;
+
+const tableBody = document.querySelector('#table-corte-diario tbody');
+
+if (esPredeterminada) {
+tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Debes de seleccionar una estación del menú superior para poder visualizar la información del Corte Diario.</td></tr>';
+return;
+}
+
 const columns = [
 { title: 'Fecha', data: 'fecha', className: 'text-center align-middle' },
 { title: 'Ventas', data: 'ventas', width: '60px', className: 'text-center align-middle' },

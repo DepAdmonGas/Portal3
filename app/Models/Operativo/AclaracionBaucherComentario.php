@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,7 +12,7 @@ class AclaracionBaucherComentario extends Model
     public $incrementing = true;
     protected $keyType = 'int';
 
-    public $timestamps = false; // La tabla no maneja created_at ni updated_at estándar
+    public $timestamps = false; // La tabla no maneja created_at ni updated_at estÃ¡ndar
 
     protected $fillable = [
         'id_aclaracion',
@@ -27,3 +27,4 @@ class AclaracionBaucherComentario extends Model
         'id_usuario' => 'integer'
     ];
 }
+

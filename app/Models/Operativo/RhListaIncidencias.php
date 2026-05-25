@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,3 +24,4 @@ class RhListaIncidencias extends Model
         'puntos' => 'float'
     ];
 }
+

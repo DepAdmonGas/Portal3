@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -61,3 +61,4 @@ class FormatoPreciosDetalleC extends Model
         'p10' => 'integer',
     ];
 }
+

@@ -93,7 +93,7 @@ $resumen = $idMesDb
 ? CorteDiarioService::getResumenMensual($idMesDb)
 : [];
 
-$hoy = date('Y-m-d');
+$hoy = \Carbon\Carbon::today();
 
 $data = [];
 
@@ -102,9 +102,9 @@ foreach ($rows as $row) {
 $idDia = $row->idDia;
 $fecha = $row->fecha;
 
-$esPasado = $hoy >= $fecha;
+$esPasado = $hoy->greaterThanOrEqualTo($fecha);
 $textClass = $esPasado? '': 'opacity-25';
-$fechaFormateada = formatearFecha($row->fecha);
+$fechaFormateada = formatearFecha($row->fecha->format('Y-m-d'));
 
 $btnEditar = $this->renderBotonEditar($esPasado,$multiEstacion,$textClass,$idDia,$fecha);
 
@@ -302,9 +302,13 @@ echo json_encode(['success' => false, 'message' => 'Sesión inválida']);
 exit;
 }
 
-CorteDiarioService::activarCorte($idCorteDia, $idUsuario, $detalle);
+$result = CorteDiarioService::activarCorte($idCorteDia, $idUsuario, $detalle);
 
+if ($result) {
 echo json_encode(['success' => true, 'message' => 'Corte activado exitosamente']);
+} else {
+echo json_encode(['success' => false, 'message' => 'No se encontró el registro de corte']);
+}
 exit;
 }
 

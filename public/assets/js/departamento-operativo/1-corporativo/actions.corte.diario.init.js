@@ -124,7 +124,11 @@ this.loading = false;
 },
 
 notify(type, message) {
-if (window.Notify && window.Notify[type]) {
+if (typeof Swal !== 'undefined' && type === 'success') {
+Swal.fire({ icon: 'success', title: 'Corte Diario', text: message, timer: 2000, showConfirmButton: false });
+} else if (typeof Swal !== 'undefined' && type === 'error') {
+Swal.fire({ icon: 'error', title: 'Error', text: message });
+} else if (window.Notify && window.Notify[type]) {
 window.Notify[type](message);
 }
 }

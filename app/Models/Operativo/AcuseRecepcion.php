@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,7 +12,7 @@ class AcuseRecepcion extends Model
     public $incrementing = true;
     protected $keyType = 'int';
 
-    public $timestamps = false; // La tabla no usa created_at/updated_at estándar
+    public $timestamps = false; // La tabla no usa created_at/updated_at estÃ¡ndar
 
     protected $fillable = [
         'id_personal',
@@ -33,3 +33,4 @@ class AcuseRecepcion extends Model
     ];
 
 }
+
