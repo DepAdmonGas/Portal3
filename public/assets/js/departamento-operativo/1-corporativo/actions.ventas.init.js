@@ -352,33 +352,49 @@ if (window.Notify && window.Notify.error) window.Notify.error('Falta firma');
 window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 return;
 }
-new bootstrap.Modal(document.getElementById('modalFirmaConfirmacion')).show();
+if (typeof Swal !== 'undefined') {
+Swal.fire({
+title: '¿Finalizar ventas?',
+text: 'Se registrará tu firma y no podrás realizar cambios posteriores.',
+icon: 'question',
+showCancelButton: true,
+confirmButtonText: 'Sí, finalizar',
+cancelButtonText: 'Cancelar',
+confirmButtonColor: '#d33',
+reverseButtons: true
+}).then(result => {
+if (result.isConfirmed) this.finalizarVentas();
+});
+}
 },
 
 finalizarVentas() {
 this.firmando = true;
+Swal.fire({
+title: 'Finalizando...',
+text: 'Procesando la solicitud, por favor espera.',
+allowOutsideClick: false,
+allowEscapeKey: false,
+showConfirmButton: false,
+didOpen: () => Swal.showLoading()
+});
 const cv = document.getElementById('canvas');
 axios.post('/departamento-operativo/ventas/firmar', { id: this.idDia, base64: cv ? cv.toDataURL() : '' }, {
 headers: { 'Content-Type': 'application/json' }
 }).then(r => {
 this.firmando = false;
+Swal.close();
 if (r.data.success) {
-bootstrap.Modal.getInstance(document.getElementById('modalFirmaConfirmacion')).hide();
-if (typeof Swal !== 'undefined') {
 Swal.fire({ icon: 'success', title: 'Venta finalizada', text: 'Venta finalizada correctamente', timer: 1500, showConfirmButton: false });
-} else if (window.Notify && window.Notify.success) {
-window.Notify.success('Venta finalizada correctamente');
-}
 setTimeout(() => location.reload(), 1200);
 } else {
-if (typeof Swal !== 'undefined') {
 Swal.fire({ icon: 'error', title: 'Error', text: 'Error al firmar el Corte Diario' });
-} else if (window.Notify && window.Notify.error) {
-window.Notify.error('Error al firmar el Corte Diario');
 }
-}
-}).catch(() => { this.firmando = false; if (window.Notify && window.Notify.error) window.Notify.error('Error al firmar el Corte Diario'); })
-.finally(() => { if (this.firmando) this.firmando = false; });
+}).catch(() => {
+this.firmando = false;
+Swal.close();
+Swal.fire({ icon: 'error', title: 'Error', text: 'Error al firmar el Corte Diario' });
+});
 },
 
 limpiarFirma() {

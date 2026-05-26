@@ -46,7 +46,7 @@ x-data="ventasComponent()">
 <!-- CONCENTRADO DE VENTAS -->
 <div class="col-12" id="divConcentradoVentas">
 <div class="table-responsive">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
 <thead> 
 <tr>
@@ -81,7 +81,7 @@ x-data="ventasComponent()">
 
 <td class="p-0 align-middle" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
 <template x-if="estado == 0 && !multiestacion">
-<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100"
+<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent"
 x-model="v.litros"
 @keyup.debounce="editVenta(v.id, 'litros', v.litros)">
 </template>
@@ -92,7 +92,7 @@ x-model="v.litros"
 
 <td class="p-0 align-middle" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
 <template x-if="estado == 0 && !multiestacion">
-<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100"
+<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent"
 x-model="v.jarras"
 @keyup.debounce="editVenta(v.id, 'jarras', v.jarras)">
 </template>
@@ -108,7 +108,7 @@ x-model="v.jarras"
 <template x-if="estado == 0 && !multiestacion">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100" style="padding-left: 25px !important;" x-model="v.precio_litro" @keyup.debounce="editVenta(v.id, 'precio_litro', v.precio_litro)">
+<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" x-model="v.precio_litro" @keyup.debounce="editVenta(v.id, 'precio_litro', v.precio_litro)">
 </div>
 </template>
 
@@ -148,7 +148,7 @@ x-model="v.jarras"
 <template x-if="estado == 0 && !multiestacion">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100" style="padding-left: 25px !important;" x-model="o.importe"
+<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" x-model="o.importe"
 @keyup.debounce="editVentaOtros(o.id, o.importe)">
 </div>
 </template>
@@ -190,7 +190,7 @@ x-model="v.jarras"
 <div class="row">
 <div class="col-12" id="divAceitesLubricantes">
 <div class="table-responsive">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="align-middle text-center">#</th>
@@ -232,7 +232,7 @@ x-model="a.cantidad"
 </template>
 <template x-if="aceites.length === 0">
 <tr>
-<th colspan="5" class="text-center p-3 ">
+<th colspan="5" class="text-center text-secondary p-3 ">
 <small>No se encontró información, verifica que el inventario del mes pasado este finalizado.</small>
 </th>
 </tr>
@@ -267,7 +267,7 @@ x-model="a.cantidad"
 <div class="row">
 <div class="col-12" id="divDocumentos">
 <div class="table-responsive">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center align-middle">Descripción</th>
@@ -329,7 +329,7 @@ x-model="a.cantidad"
 <div class="row">
 <div class="col-12" id="divProsegur">
 <div class="table-responsive">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center">Denominación</th>
@@ -343,7 +343,7 @@ x-model="a.cantidad"
 <td class="text-center align-middle p-3" x-text="p.denominacion"></td>
 <td class="p-0 align-middle" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
 <template x-if="estado == 0 && !multiestacion">
-<input type="text" class="border-0 p-3 w-100 text-center"
+<input type="text" class="border-0 p-3 w-100 text-center bg-transparent"
 x-model="p.recibo"
 @keyup.debounce="editProsegur(p.id, 'recibo', p.recibo)">
 </template>
@@ -355,7 +355,7 @@ x-model="p.recibo"
 <template x-if="estado == 0 && !multiestacion">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-<input type="number" min="0" step="any" class="border-0 p-3 w-100 text-end" style="padding-left: 25px !important;" x-model="p.importe"
+<input type="number" min="0" step="any" class="border-0 p-3 w-100 text-end bg-transparent" style="padding-left: 25px !important;" x-model="p.importe"
 @keyup.debounce="editProsegur(p.id, 'importe', p.importe)">
 </div>
 </template>
@@ -390,7 +390,7 @@ x-model="p.recibo"
 <div class="row">
 <div class="col-12" id="divTarjetasBancarias">
 <div class="table-responsive">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center" colspan="2">Concepto / Banco</th>
@@ -410,7 +410,7 @@ x-model="p.recibo"
 <template x-if="estado == 0 && !multiestacion">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
-<input type="number" min="0" step="any" class="border-0 p-2 text-end w-100" style="padding-left: 20px !important;" x-model="t.baucher"
+<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 20px !important;" x-model="t.baucher"
 @keyup.debounce="editTarjeta(t.id, t.baucher)">
 </div>
 </template>
@@ -447,7 +447,7 @@ x-model="p.recibo"
 <div class="row">
 <div class="col-12" id="divControlgas">
 <div class="table-responsive">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center align-middle">Concepto</th>
@@ -463,7 +463,7 @@ x-model="p.recibo"
 <template x-if="estado == 0 && !multiestacion">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100" style="padding-left: 25px !important;" x-model="c.pago"
+<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" x-model="c.pago"
 @keyup.debounce="editControlgas(c.id, 'pago', c.pago)">
 </div>
 </template>
@@ -476,7 +476,7 @@ x-model="p.recibo"
 <template x-if="estado == 0 && !multiestacion">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100" style="padding-left: 25px !important;" x-model="c.consumo"
+<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" x-model="c.consumo"
 @keyup.debounce="editControlgas(c.id, 'consumo', c.consumo)">
 </div>
 </template>
@@ -507,7 +507,7 @@ x-model="p.recibo"
 <div class="card">
 <div class="card-body">
 <div class="table-responsive">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tr>
 <th>C TOTAL (1+2+3)</th>
 <td class="align-middle pointer  text-end"><strong x-text="'$ ' + formatNum(totales1234.cTotal)"></strong></td>
@@ -536,7 +536,7 @@ x-model="p.recibo"
 <div class="row">
 <div class="col-12" id="divPagoClientes">
 <div class="table-responsive">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center align-middle">Concepto</th>
@@ -553,7 +553,7 @@ x-model="p.recibo"
 <div class="position-relative">
 <span
 class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100" style="padding-left: 25px !important;" x-model="pc.importe"
+<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" x-model="pc.importe"
 @keyup.debounce="editPagoCliente(pc.id, 'importe', pc.importe)">
 </div>
 </template>
@@ -562,7 +562,7 @@ class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
 </td>
 <td class="align-middle p-0" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
 <template x-if="estado == 0 && !multiestacion">
-<input type="text" class="border-0 p-3 w-100 text-center"
+<input type="text" class="border-0 p-3 w-100 text-center bg-transparent"
 x-model="pc.nota"
 @keyup.debounce="editPagoCliente(pc.id, 'nota', pc.nota)">
 </template>
@@ -591,7 +591,7 @@ x-model="pc.nota"
 <div class="card">
 <div class="card-body">
 <div class="table-responsive">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tr>
 <td class="align-middle text-center">DIF PAGO DE CLIENTES</td>
 <td class="align-middle text-center">
@@ -856,26 +856,5 @@ x-model="pc.nota"
 </div>
 </div>
 
-<div class="modal fade" id="modalFirmaConfirmacion" tabindex="-1" data-bs-backdrop="static">
-<div class="modal-dialog">
-<div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Finalizar Ventas</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-</div>
-<div class="modal-body">
-<p>¿Estás seguro de finalizar las ventas del día? Se registrará tu firma y no podrás realizar cambios posteriores.</p>
-</div>
-<div class="modal-footer">
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-<button type="button" class="btn btn-success" @click="finalizarVentas" :disabled="firmando">
-<span x-show="firmando" class="spinner-border spinner-border-sm me-1"></span>
-<span x-text="firmando ? 'Finalizando...' : 'Firmar y Finalizar'"></span>
-</button>
-</div>
-</div>
-</div>
-</div>
 
-</div>
 

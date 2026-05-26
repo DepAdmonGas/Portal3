@@ -268,6 +268,22 @@ return function(RouteCollector $r) {
     $r->addRoute('POST','/ventas/firmar-token',Route::auth(['VentasController', 'firmarConToken']));
     $r->addRoute('GET','/ventas/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}/pdf',Route::auth(['VentasController', 'downloadPdf']));
 
+    //----- TPV / Cierre Lote
+    $r->addRoute('GET','/cierrelote/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['TpvController', 'index']));
+    $r->addRoute('GET','/cierrelote/data/{idDia:\d+}',Route::auth(['TpvController', 'getData']));
+    $r->addRoute('POST','/cierrelote/crear',Route::auth(['TpvController', 'crear']));
+    $r->addRoute('POST','/cierrelote/editar',Route::auth(['TpvController', 'editar']));
+    $r->addRoute('POST','/cierrelote/pendiente',Route::auth(['TpvController', 'pendiente']));
+    $r->addRoute('GET','/cierrelote/totales/{idDia:\d+}',Route::auth(['TpvController', 'getTotales']));
+
+    //----- Impuestos
+    $r->addRoute('GET','/impuestos/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['ImpuestoController', 'index']));
+    $r->addRoute('GET','/impuestos/data/{idDia:\d+}',Route::auth(['ImpuestoController', 'getData']));
+
+    //----- Monedero
+    $r->addRoute('GET','/monedero/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['MonederoController', 'index']));
+    $r->addRoute('GET','/monedero/data/{idDia:\d+}',Route::auth(['MonederoController', 'getData']));
+
     //----- 2. Recursos Humanos
     $r->addRoute('GET','/recursos-humanos',Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
 
