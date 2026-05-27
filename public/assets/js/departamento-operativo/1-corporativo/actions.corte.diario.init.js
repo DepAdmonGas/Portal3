@@ -6,8 +6,8 @@ mes: null,
 init() {
 const container = document.getElementById('container');
 if (container) {
-this.year = container.dataset.year || null;
-this.mes = container.dataset.mes || null;
+this.year = container.dataset.year || container.dataset.idYear || null;
+this.mes = container.dataset.mes || container.dataset.idMes || null;
 }
 },
 cambiarYearMes(year, mes) {
@@ -133,8 +133,5 @@ window.Notify[type](message);
 }
 }
 }));
-
 });
-
-
 

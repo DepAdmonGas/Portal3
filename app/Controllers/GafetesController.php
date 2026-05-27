@@ -26,81 +26,81 @@ protected string $modulo = 'solicitud-gafetes';
  */
 private function validateFileUpload(array $file): array
 {
-    $response = ['valid' => false, 'error' => null, 'filename' => null];
-    
-    // 1. Verificar que hay archivo
-    if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
-        $response['error'] = 'No se recibió archivo';
-        return $response;
-    }
-    
-    // 2. Verificar error de upload
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        $response['error'] = 'Error al subir archivo: código ' . $file['error'];
-        return $response;
-    }
-    
-    // 3. Validar tamaño (ej: máximo 5MB)
-    $maxSize = 5 * 1024 * 1024;
-    if ($file['size'] > $maxSize) {
-        $response['error'] = 'El archivo excede el tamaño máximo de 5MB';
-        return $response;
-    }
-    
-    // 4. Validar MIME type real (no solo extensión)
-    $finfo = new \finfo(FILEINFO_MIME_TYPE);
-    if (!$finfo) {
-        $response['error'] = 'Error al validar tipo de archivo';
-        return $response;
-    }
-    $mimeType = $finfo->file($file['tmp_name']);
-    if (!$mimeType) {
-        $response['error'] = 'No se pudo determinar el tipo de archivo';
-        return $response;
-    }
-    
-    $allowedMimes = [
-        'image/jpeg',
-        'image/png', 
-        'image/gif',
-        'application/pdf',
-    ];
-    
-    if (!in_array($mimeType, $allowedMimes)) {
-        $response['error'] = 'Tipo de archivo no permitido: ' . $mimeType;
-        return $response;
-    }
-    
-    // 5. Validar extensión coincide con MIME type
-    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $mimeToExt = [
-        'image/jpeg' => ['jpg', 'jpeg'],
-        'image/png' => ['png'],
-        'image/gif' => ['gif'],
-        'application/pdf' => ['pdf']
-    ];
-    
-    if (!isset($mimeToExt[$mimeType]) || !in_array($extension, $mimeToExt[$mimeType])) {
-        $response['error'] = 'La extensión no corresponde con el tipo de archivo';
-        return $response;
-    }
-    
-    // 6. Generar nombre seguro
-    $safeFilename = preg_replace('/[^a-zA-Z0-9_-]/', '', $file['name']);
-    $filename = uniqid('gafete_') . '_' . substr($safeFilename, 0, 50) . '.' . $extension;
-    
-    $response['valid'] = true;
-    $response['filename'] = $filename;
-    $response['mime'] = $mimeType;
-    
-    return $response;
+$response = ['valid' => false, 'error' => null, 'filename' => null];
+
+// 1. Verificar que hay archivo
+if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
+$response['error'] = 'No se recibió archivo';
+return $response;
+}
+
+// 2. Verificar error de upload
+if ($file['error'] !== UPLOAD_ERR_OK) {
+$response['error'] = 'Error al subir archivo: código ' . $file['error'];
+return $response;
+}
+
+// 3. Validar tamaño (ej: máximo 5MB)
+$maxSize = 5 * 1024 * 1024;
+if ($file['size'] > $maxSize) {
+$response['error'] = 'El archivo excede el tamaño máximo de 5MB';
+return $response;
+}
+
+// 4. Validar MIME type real (no solo extensión)
+$finfo = new \finfo(FILEINFO_MIME_TYPE);
+if (!$finfo) {
+$response['error'] = 'Error al validar tipo de archivo';
+return $response;
+}
+$mimeType = $finfo->file($file['tmp_name']);
+if (!$mimeType) {
+$response['error'] = 'No se pudo determinar el tipo de archivo';
+return $response;
+}
+
+$allowedMimes = [
+'image/jpeg',
+'image/png', 
+'image/gif',
+'application/pdf',
+];
+
+if (!in_array($mimeType, $allowedMimes)) {
+$response['error'] = 'Tipo de archivo no permitido: ' . $mimeType;
+return $response;
+}
+
+// 5. Validar extensión coincide con MIME type
+$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+$mimeToExt = [
+'image/jpeg' => ['jpg', 'jpeg'],
+'image/png' => ['png'],
+'image/gif' => ['gif'],
+'application/pdf' => ['pdf']
+];
+
+if (!isset($mimeToExt[$mimeType]) || !in_array($extension, $mimeToExt[$mimeType])) {
+$response['error'] = 'La extensión no corresponde con el tipo de archivo';
+return $response;
+}
+
+// 6. Generar nombre seguro
+$safeFilename = preg_replace('/[^a-zA-Z0-9_-]/', '', $file['name']);
+$filename = uniqid('gafete_') . '_' . substr($safeFilename, 0, 50) . '.' . $extension;
+
+$response['valid'] = true;
+$response['filename'] = $filename;
+$response['mime'] = $mimeType;
+
+return $response;
 }
 
 //---------------------------------------------------//
 //----------------- PAGINA PRINCIPAL -----------------//
 //---------------------------------------------------//
 public function index(){
- 
+
 $title = 'Solicitud de Gafetes';
 
 $datosUsuario = Auth::user();
@@ -124,20 +124,20 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/gafetes/gafetes.datatable.init.js?v=1.1',
-'/assets/js/gafetes/actions.init.js?v=1.0'
+'/assets/js/gafetes/gafetes.datatable.init.js?v=' . time(),
+'/assets/js/gafetes/actions.init.js?v=' . time()
 ],
 'help' => false
 ];
-  
+
 View::render('gafetes/index', $data,'main');
 }
 
 public function datatableGafetes()
 {
-    
+
 $filtro_usuario = Session::get('usuario');
 $idEstacion = $filtro_usuario['id_estacion'] ?? null;
 
@@ -288,13 +288,13 @@ $status = 0;
 
 // Validar campos obligatorios
 $errors = validate_input($_POST, [
-    'clave' => 'required|max:50',
-    'nombre_g' => 'required|max:255'
+'clave' => 'required|max:50',
+'nombre_g' => 'required|max:255'
 ]);
 
 if (!empty($errors)) {
-    echo json_encode(['success' => false, 'errors' => $errors]);
-    exit;
+echo json_encode(['success' => false, 'errors' => $errors]);
+exit;
 }
 
 if (!$clave) {
@@ -316,7 +316,7 @@ exit;
 // CONFIG RUTA
 $carpeta = __DIR__ . '../../../public/uploads/archivos/solicitud-gafetes/';
 if (!file_exists($carpeta)) {
- mkdir_safe($carpeta, true);
+mkdir_safe($carpeta, true);
 }
 
 $nombreArchivo = null;
@@ -530,10 +530,10 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/gafetes/gafetes.formulario.datatable.init.js?v=1.1',
-'/assets/js/gafetes/actions.formulario.init.js?v=1.0'
+'/assets/js/gafetes/gafetes.formulario.datatable.init.js?v=' . time(),
+'/assets/js/gafetes/actions.formulario.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -544,7 +544,7 @@ View::render('gafetes/formulario-index', $data,'main');
 
 public function datatableGafetesFormulario($idEstacion, $noReporte)
 {
-    
+
 $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
 
@@ -616,13 +616,13 @@ $status = 0;
 
 // Validar campos obligatorios
 $errors = validate_input($_POST, [
-    'clave' => 'required|max:50',
-    'nombre_g' => 'required|max:255'
+'clave' => 'required|max:50',
+'nombre_g' => 'required|max:255'
 ]);
 
 if (!empty($errors)) {
-    echo json_encode(['success' => false, 'errors' => $errors]);
-    exit;
+echo json_encode(['success' => false, 'errors' => $errors]);
+exit;
 }
 
 if (!$clave) {
@@ -644,7 +644,7 @@ exit;
 // CONFIG RUTA
 $carpeta = __DIR__ . '../../../public/uploads/archivos/solicitud-gafetes/';
 if (!file_exists($carpeta)) {
- mkdir_safe($carpeta, true);
+mkdir_safe($carpeta, true);
 }
 
 $nombreArchivo = null;
@@ -751,7 +751,7 @@ exit;
 }
 
 try {
- // Buscar registro
+// Buscar registro
 $registro_reporte = SolicitudGafetes::find($id);
 
 if (!$registro_reporte) {
@@ -825,9 +825,9 @@ $data = [
 'scripts' => [
 '/assets/js/vendor.min.js',
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/gafetes/gafetes.detalle.datatable.init.js?v=1.1',
-'/assets/js/gafetes/gafetes.seguimiento.timeline.js?v=1.0',
-'/assets/js/gafetes/actions.detalle.init.js?v=1.0'
+'/assets/js/gafetes/gafetes.detalle.datatable.init.js?v=' . time(),
+'/assets/js/gafetes/gafetes.seguimiento.timeline.js?v=' . time(),
+'/assets/js/gafetes/actions.detalle.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -1010,9 +1010,5 @@ echo json_encode([
 
 
 }
-
-
-
-
 
 }

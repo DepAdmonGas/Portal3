@@ -270,24 +270,7 @@ if (window.Notify && window.Notify.success) window.Notify.success('Documento agr
 }).catch(() => { this.subiendoDocumento = false; if (window.Notify && window.Notify.error) window.Notify.error('Error al subir el documento'); });
 },
 
-eliminarDocumento(id) {
-(typeof Swal !== 'undefined' ? Swal.fire({
-title: '¿Eliminar documento?', text: 'Esta acción no se puede deshacer', icon: 'warning',
-showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#6c757d',
-confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
-}).then(r => r.isConfirmed && this._ejecutarEliminarDocumento(id))
-: confirm('¿Desea eliminar el documento seleccionado?') && this._ejecutarEliminarDocumento(id));
-},
-
-_ejecutarEliminarDocumento(id) {
-axios.post('/departamento-operativo/ventas/eliminar-documento', { id }, {
-headers: { 'Content-Type': 'application/json' }
-}).then(r => {
-if (r.data.success) { this.loadData(); if (window.Notify && window.Notify.success) window.Notify.success('Documento eliminado exitosamente'); }
-}).catch(() => {});
-},
-
-/* ---------- TOKEN / FIRMA ADMIN ---------- */
+    /* ---------- TOKEN / FIRMA ADMIN ---------- */
 crearToken(method) {
 this.tokenError = '';
 this.enviandoToken = true;
@@ -402,9 +385,14 @@ if (this.signaturePad) this.signaturePad.clear();
 this._resizeCanvas();
 },
 
+download(file) {
+    if (!file) return;
+    window.open('/download?tipo=documentos-ventas&file=' + encodeURIComponent(file), '_blank', 'noopener');
+},
+
 downloadPdf() {
-window.location = '/departamento-operativo/ventas/' + this.idYear + '/' + this.idMes + '/' + this.idDia + '/pdf';
+    window.location = '/departamento-operativo/ventas/' + this.idYear + '/' + this.idMes + '/' + this.idDia + '/pdf';
 }
 }));
-
 });
+

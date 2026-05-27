@@ -37,7 +37,7 @@ $data = [
 'modulo' => $this->modulo,
 'links' =>[],
 'scripts' => [
-'/assets/js/vendor.min.js'
+'/assets/js/vendor.min.js?v=' . time()
 ],
 'help' => false
 
@@ -75,10 +75,10 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/configuracion/modulos.datatable.init.js?v=1.1',
-'/assets/js/configuracion/actions.modulos.datatable.init.js?v=1.1'
+'/assets/js/configuracion/modulos.datatable.init.js?v=' . time(),
+'/assets/js/configuracion/actions.modulos.datatable.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -346,9 +346,9 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/configuracion/modulos.puestos.datatable.init.js?v=1.1'
+'/assets/js/configuracion/modulos.puestos.datatable.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -379,12 +379,12 @@ $data = [
 '/assets/libs/select2/dist/css/select2.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/libs/select2/dist/js/select2.full.min.js',
 '/assets/libs/select2/dist/js/select2.min.js',
-'/assets/js/configuracion/modulos.puestos.configuracion.datatable.init.js?v=1.1',
-'/assets/js/configuracion/actions.modulos.puestos.configuracion.init.js?v=1.1'
+'/assets/js/configuracion/modulos.puestos.configuracion.datatable.init.js?v=' . time(),
+'/assets/js/configuracion/actions.modulos.puestos.configuracion.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -751,9 +751,9 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/configuracion/modulos.usuarios.datatable.init.js?v=1.1'
+'/assets/js/configuracion/modulos.usuarios.datatable.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -784,12 +784,12 @@ $data = [
 '/assets/libs/select2/dist/css/select2.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/libs/select2/dist/js/select2.full.min.js',
 '/assets/libs/select2/dist/js/select2.min.js',
-'/assets/js/configuracion/modulos.usuarios.configuracion.datatable.init.js?v=1.1',
-'/assets/js/configuracion/actions.modulos.usuarios.configuracion.init.js?v=1.1'
+'/assets/js/configuracion/modulos.usuarios.configuracion.datatable.init.js?v=' . time(),
+'/assets/js/configuracion/actions.modulos.usuarios.configuracion.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -1155,10 +1155,10 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/configuracion/modulos.operativo.datatable.init.js?v=1.1',
-'/assets/js/configuracion/actions.modulos.operativo.init.js?v=1.1'
+'/assets/js/configuracion/modulos.operativo.datatable.init.js?v=' . time(),
+'/assets/js/configuracion/actions.modulos.operativo.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -1447,8 +1447,8 @@ $data = [
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/libs/select2/dist/js/select2.full.min.js',
 '/assets/libs/select2/dist/js/select2.min.js',
-'/assets/js/configuracion/submodulos.operativo.datatable.init.js?v=1.1',
-'/assets/js/configuracion/actions.submodulos.operativo.init.js?v=1.1'
+'/assets/js/configuracion/submodulos.operativo.datatable.init.js?v=' . time(),
+'/assets/js/configuracion/actions.submodulos.operativo.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -1553,14 +1553,14 @@ $estatus = 1;
 
 // Validar campos obligatorios
 $errors = validate_input($data, [
-    'nombre_modulo' => 'required|max:100',
-    'clave' => 'required|max:50',
-    'ruta' => 'required|max:255'
+'nombre_modulo' => 'required|max:100',
+'clave' => 'required|max:50',
+'ruta' => 'required|max:255'
 ]);
 
 if (!empty($errors)) {
-    echo json_encode(['success' => false, 'errors' => $errors]);
-    exit;
+echo json_encode(['success' => false, 'errors' => $errors]);
+exit;
 }
 
 if (!$nombre_modulo || !$clave || !$ruta) {
@@ -1579,7 +1579,7 @@ try {
 // GUARDAR EN BD
 ModuloSubDptoOperativo::create([
 'id_modulo' => $idModulo,
-'nombre' => $nombre_submodulo,
+'nombre' => $nombre_modulo,
 'clave' => $clave,
 'ruta' => $ruta,
 'icono' => $icono,  
@@ -1734,9 +1734,9 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/configuracion/modulos.operativo.puestos.datatable.init.js?v=1.1'
+'/assets/js/configuracion/modulos.operativo.puestos.datatable.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -1767,12 +1767,12 @@ $data = [
 '/assets/libs/select2/dist/css/select2.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/libs/select2/dist/js/select2.full.min.js',
 '/assets/libs/select2/dist/js/select2.min.js',
-'/assets/js/configuracion/modulos.operativo.puestos.configuracion.datatable.init.js?v=1.1',
-'/assets/js/configuracion/actions.modulos.operativo.puestos.configuracion.init.js?v=1.1'
+'/assets/js/configuracion/modulos.operativo.puestos.configuracion.datatable.init.js?v=' . time(),
+'/assets/js/configuracion/actions.modulos.operativo.puestos.configuracion.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -2229,9 +2229,9 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/configuracion/modulos.operativo.usuarios.datatable.init.js?v=1.1'
+'/assets/js/configuracion/modulos.operativo.usuarios.datatable.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -2262,12 +2262,12 @@ $data = [
 '/assets/libs/select2/dist/css/select2.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/libs/select2/dist/js/select2.full.min.js',
 '/assets/libs/select2/dist/js/select2.min.js',
-'/assets/js/configuracion/modulos.operativo.usuarios.configuracion.datatable.init.js?v=1.1',
-'/assets/js/configuracion/actions.modulos.operativo.usuarios.configuracion.init.js?v=1.1'
+'/assets/js/configuracion/modulos.operativo.usuarios.configuracion.datatable.init.js?v=' . time(),
+'/assets/js/configuracion/actions.modulos.operativo.usuarios.configuracion.init.js?v=' . time()
 ],
 'help' => false
 ];

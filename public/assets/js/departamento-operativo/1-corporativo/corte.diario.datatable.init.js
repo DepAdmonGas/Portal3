@@ -30,6 +30,7 @@ const table = $('#table-corte-diario').DataTable({
 processing: true,
 serverSide: false,
 autoWidth: false,
+pageLength: 10,
 order: [[0, 'asc']],
 language: {
 url: '/assets/libs/datatables.net/js/es-ES.json'

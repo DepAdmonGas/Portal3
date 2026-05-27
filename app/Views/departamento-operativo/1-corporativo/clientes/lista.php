@@ -1,0 +1,220 @@
+<div id="container" class="mt-4 mb-4"
+data-id-estacion="<?= $idEstacion ?>"
+data-id-year="<?= $idYear ?>"
+data-id-mes="<?= $idMes ?>"
+data-id-dia="<?= $idDia ?>"
+data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>"
+data-puede-crear="<?= ($puedeCrear ?? false) ? 'true' : 'false' ?>"
+data-puede-editar="<?= ($puedeEditar ?? false) ? 'true' : 'false' ?>"
+data-puede-eliminar="<?= ($puedeEliminar ?? false) ? 'true' : 'false' ?>"
+data-es-direccion-operaciones="<?= ($esDireccionOperaciones ?? false) ? 'true' : 'false' ?>"
+x-data="clientesListaComponent()">
+
+<div class="text-center py-5" x-show="loading">
+<div class="spinner-border text-primary" role="status"></div>
+<p class="mt-2 text-muted">Cargando lista de clientes...</p>
+</div>
+
+<div class="row" x-show="!loading">
+<div class="col-12 mb-4">
+<button type="button" class="btn btn-primary float-end" @click="abrirModalCrear()">
+<i class="ti ti-plus"></i> Agregar
+</button>
+</div>
+
+<div class="col-12">
+<div class="alert alert-success py-2 px-3 mb-4" role="alert">
+<div class="row text-center">
+<div class="col"><b>CC:</b> Carta de Crédito</div>
+<div class="col"><b>AC:</b> Acta Constitutiva</div>
+<div class="col"><b>CD:</b> Comprobante de Domicilio</div>
+<div class="col"><b>ID:</b> Identificación</div>
+<div class="col"><b>OC:</b> Opinión de Cumplimiento</div>
+<div class="col"><b>NP:</b> Poder Notarial</div>
+</div>
+</div>
+</div>
+
+<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-4">
+<div class="datatables">
+<div class="table-responsive" style="overflow-x: auto; overflow-y: hidden;">
+<table id="tablaCredito" class="table table-striped table-bordered mb-0 text-nowrap align-middle" style="min-width: 900px;">
+<thead>
+<tr><th class="text-center" colspan="13">Crédito</th></tr>
+<tr>
+<th class="text-center align-middle">#</th>
+<th class="text-center align-middle">Cuenta</th>
+<th class="text-start align-middle">Cliente</th>
+<th class="text-center align-middle">RFC</th>
+<th class="text-center align-middle">CC</th>
+<th class="text-center align-middle">AC</th>
+<th class="text-center align-middle">CD</th>
+<th class="text-center align-middle">ID</th>
+<th class="text-center align-middle">OC</th>
+<th class="text-center align-middle">NP</th>
+<th class="text-center align-middle">Estatus</th>
+<th class="text-center align-middle" colspan="2"><i class="ti ti-dots-vertical fs-6"></i></th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-4">
+<div class="datatables">
+<div class="table-responsive" style="overflow-x: auto; overflow-y: hidden;">
+<table id="tablaDebito" class="table table-striped table-bordered mb-0 text-nowrap align-middle" style="min-width: 500px;">
+<thead>
+<tr><th class="text-center" colspan="9">Débito</th></tr>
+<tr>
+<th class="text-center align-middle">#</th>
+<th class="text-center align-middle">Cuenta</th>
+<th class="text-start align-middle">Cliente</th>
+<th class="text-center align-middle">CD</th>
+<th class="text-center align-middle">ID</th>
+<th class="text-center align-middle">RFC</th>
+<th class="text-center align-middle">Estatus</th>
+<th class="text-center align-middle" colspan="2"><i class="ti ti-dots-vertical fs-6"></i></th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal fade" id="Modal" tabindex="-1" x-ref="modalCrear">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Crear Cliente</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<h6>* Cuenta</h6> 
+<textarea class="form-control rounded-0 mt-1 mb-4" id="Cuenta" x-model="formCuenta"></textarea>
+
+<h6>* Cliente</h6> 
+<textarea class="form-control rounded-0 mt-1 mb-4" id="Cliente" x-model="formCliente"></textarea>
+
+<h6>* Tipo</h6> 
+<select class="form-select rounded-0 mt-1 mb-4" id="Tipo" x-model="formTipo">
+<option value="">Selecciona una opción...</option>
+<option value="Crédito">Crédito</option>
+<option value="Débito">Débito</option>
+</select>
+
+<div id="SelCredito" x-cloak x-show="formTipo === 'Crédito'">
+<hr>
+<h6>RFC:</h6> 
+<input type="text" class="form-control rounded-0 mt-1 mb-4" id="RFC" x-model="formRfc">
+<input type="file" class="form-control mb-4" id="ConstanciaRFC" @change="files[4] = $event.target.files[0] || null">
+
+<h6>Carta de crédito:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="CartaCredito" @change="files[0] = $event.target.files[0] || null">
+
+<h6>Acta constitutiva:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="ActaConstitutiva" @change="files[1] = $event.target.files[0] || null">
+
+<h6>Comprobante de domicilio:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="ComprobanteDom" @change="files[2] = $event.target.files[0] || null">
+
+<h6>Identificación:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="Identificacion" @change="files[3] = $event.target.files[0] || null">
+
+<h6>Poder Notarial:</h6> 
+<input type="file" class="form-control mt-1 mb-4 id="PoderNotarial" @change="files[5] = $event.target.files[0] || null">
+
+<h6>Opinión de Cumplimiento:</h6>
+<input type="file" class="form-control mt-1 mb-4" id="OpinionCumplimiento" @change="files[6] = $event.target.files[0] || null">
+</div>
+
+<div id="SelDebito" x-cloak x-show="formTipo === 'Débito'">
+<hr>
+<h6>RFC:</h6> 
+<input type="text" class="form-control rounded-0 mt-1 mb-4" id="RFC" x-model="formRfc">
+<input type="file" class="form-control mb-4" id="ConstanciaRFC" @change="files[4] = $event.target.files[0] || null">
+
+<h6>Comprobante de domicilio:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="ComprobanteDom" @change="files[2] = $event.target.files[0] || null">
+
+<h6>Identificación:</h6> 
+<input type="file" class="form-control mt-1" id="Identificacion" @change="files[3] = $event.target.files[0] || null">
+</div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-labeled2 btn-success" @click="guardarCrear()">
+<span class="btn-label2"><i class="fa fa-check"></i></span>Guardar</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal fade" id="ModalEditar" tabindex="-1" x-ref="modalEditar">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Editar Cliente</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<h6>* Cuenta</h6> 
+<textarea class="form-control rounded-0 mb-2" id="EditCuenta" x-model="editCuenta"></textarea>
+
+<h6>* Cliente</h6> 
+<textarea class="form-control rounded-0 mb-2" id="EditCliente" x-model="editCliente"></textarea>
+
+<h6>* Tipo</h6> 
+<select class="form-select rounded-0 mb-2" id="EditTipo" x-model="editTipo" disabled>
+<option value="Crédito">Crédito</option>
+<option value="Débito">Débito</option>
+</select>
+
+<div x-cloak x-show="editTipo === 'Crédito'">
+<hr>
+<h6>RFC</h6> 
+<input type="text" class="form-control rounded-0" id="EditRFC_Credito" x-model="editRfcCredito">
+<input type="file" class="form-control mt-1 mb-4" id="EditRFCDoc_Credito" @change="editFiles[4] = $event.target.files[0] || null">
+
+<h6>Carta de crédito:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="EditCartaCredito" @change="editFiles[0] = $event.target.files[0] || null">
+
+<h6>Acta constitutiva:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="EditActaConstitutiva" @change="editFiles[1] = $event.target.files[0] || null">
+
+<h6>Comprobante de domicilio:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="EditComprobanteDom_Credito" @change="editFiles[2] = $event.target.files[0] || null">
+
+<h6>Identificación:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="EditIdentificacion_Credito" @change="editFiles[3] = $event.target.files[0] || null">
+
+<h6>Opinión de Cumplimiento:</h6>
+<input type="file" class="form-control mt-1 mb-4" id="EditOpinion" @change="editFiles[5] = $event.target.files[0] || null">
+
+<h6>Poder Notarial:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="EditPoder" @change="editFiles[6] = $event.target.files[0] || null">
+</div>
+
+<div x-cloak x-show="editTipo === 'Débito'">
+<hr>
+<h6>RFC:</h6> 
+<input type="text" class="form-control mt-1 mb-4" id="EditRFC_Debito" x-model="editRfcDebito">
+<input type="file" class="form-control mt-1 mb-4" id="EditRFCDoc_Debito" @change="editFiles[4] = $event.target.files[0] || null">
+
+<h6>Comprobante de domicilio:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="EditComprobanteDom_Debito" @change="editFiles[2] = $event.target.files[0] || null">
+
+<h6>Identificación:</h6> 
+<input type="file" class="form-control mt-1 mb-4" id="EditIdentificacion_Debito" @change="editFiles[3] = $event.target.files[0] || null">
+</div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-labeled2 btn-success" @click="guardarEditar()">Guardar</button>
+</div>
+</div>
+</div>
+</div>
+</div>

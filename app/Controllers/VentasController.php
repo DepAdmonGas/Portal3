@@ -77,9 +77,9 @@ $data = [
 'esSuperviso' => $permisos['es_superviso'],
 'esVoBo' => $permisos['es_vobo'],
 'scripts' => [
-'/assets/js/vendor.min.js',
-'/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js',
-'/assets/js/departamento-operativo/1-corporativo/actions.ventas.init.js',
+'/assets/js/vendor.min.js?v=' . time(),
+'/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js?v=' . time(),
+'/assets/js/departamento-operativo/1-corporativo/actions.ventas.init.js?v=' . time(),
 ],
 'help' => false
 ];
@@ -461,7 +461,7 @@ if ($ruta && file_exists($ruta)) unlink($ruta);
 $doc->delete();
 }
 
-echo json_encode(['success' => true]);
+echo json_encode(['success' => true, 'message' => 'Documento eliminado exitosamente']);
 exit;
 }
 
