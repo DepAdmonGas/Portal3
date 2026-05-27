@@ -27,9 +27,9 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/empresa/empresa.datatable.init.js'
+'/assets/js/empresa/empresa.datatable.init.js?v=' . time()
 ],
 'help' => false
 ];

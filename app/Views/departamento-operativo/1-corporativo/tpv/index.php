@@ -48,12 +48,12 @@ x-data="tpvComponent()">
 <tr>
 <td class="text-center align-middle p-0">
 <template x-if="!multiestacion && puedeEditar && !finalizado">
-<input type="text"
-class="border-0 p-3 text-center w-100 bg-transparent"
-style="min-width: 60px;"
-:value="item.no_cierre_lote"
-@change="editarCierre(item.id, 'no_cierre_lote', $event.target.value)">
-</template>
+                    <input type="text"
+                        class="border-0 p-3 text-center w-100 bg-transparent"
+                        style="min-width: 60px;"
+                        x-model="item.no_cierre_lote"
+                        @change="editarCierre(item.id, 'no_cierre_lote', $event.target.value)">
+                        </template>
 
 <template x-if="!puedeEditar || multiestacion || finalizado">
 <span x-text="item.no_cierre_lote || ''"></span>
@@ -63,13 +63,13 @@ style="min-width: 60px;"
 <template x-if="!multiestacion && puedeEditar && !finalizado">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
-<input type="number"
-min="0"
-step="any"
-class="border-0 p-3 text-end w-100 bg-transparent"
-style="padding-left: 20px !important; min-width: 80px;"
-:value="item.importe"
-@change="editarCierre(item.id, 'importe', $event.target.value)">
+                    <input type="number"
+                        min="0"
+                        step="any"
+                        class="border-0 p-3 text-end w-100 bg-transparent"
+                        style="padding-left: 20px !important; min-width: 80px;"
+                        x-model="item.importe"
+                        @change="editarCierre(item.id, 'importe', $event.target.value)">
 </div>
 </template>
 
@@ -79,12 +79,12 @@ style="padding-left: 20px !important; min-width: 80px;"
 </td>
 <td class="align-middle text-center p-0">
 <template x-if="!multiestacion && puedeEditar && !finalizado">
-<input type="number"
-min="0"
-class="border-0 p-3 text-center w-100 bg-transparent"
-style="min-width: 60px;"
-:value="item.ticktes"
-@change="editarCierre(item.id, 'ticktes', $event.target.value)">
+                    <input type="number"
+                        min="0"
+                        class="border-0 p-3 text-center w-100 bg-transparent"
+                        style="min-width: 60px;"
+                        x-model="item.ticktes"
+                        @change="editarCierre(item.id, 'ticktes', $event.target.value)">
 </template>
 
 <template x-if="!puedeEditar || multiestacion || finalizado">

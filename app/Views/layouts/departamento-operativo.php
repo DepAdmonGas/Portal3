@@ -20,16 +20,59 @@
 <?php endforeach; ?>
 <?php endif; ?>
 
+<!-- SECURITY: DOMPurify para prevenir XSS en x-html-->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <!-- Alpine + Axios -->
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<!-- SECURITY: Meta tag CSRF para proteger formularios -->
+<meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
+
+<!-- SECURITY: Auto-inyectar token CSRF en todas las solicitudes Axios -->
+<script>
+(function() {
+function getCsrfToken() {
+const meta = document.querySelector('meta[name="csrf-token"]');
+return meta ? meta.getAttribute('content') : null;
+}
+
+const csrfToken = getCsrfToken();
+if (csrfToken) {
+axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+
+axios.interceptors.request.use(
+function(config) {
+config.headers['X-CSRF-TOKEN'] = getCsrfToken();
+return config;
+},
+function(error) {
+return Promise.reject(error);
+}
+);
+
+axios.interceptors.response.use(
+function(response) {
+return response;
+},
+function(error) {
+if (error.response && error.response.status === 419) {
+alert('Su sesión ha expirado. Por favor actualice la página.');
+window.location.reload();
+}
+return Promise.reject(error);
+}
+);
+}
+})();
+</script>
 </head>
 
 <body class="link-sidebar">
 
 <!-- Pantalla de carga (Loader) -->
 <div class="loader-admongas">
-    <img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
+<img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
 </div>
 
 
@@ -305,7 +348,7 @@ $razonsocial = trim($razonsocial);
 <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
 <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
 <script src="<?= asset('js/core/notify.js?v=1.1') ?>"></script> 
-<script src="<?= asset('js/core/actions.alpine.js?v=1.1') ?>"></script>
+<script src="<?= asset('js/core/actions.alpine.js?v=1.3') ?>"></script>
 
 <!-- Scripts por vista -->
 <?php if (!empty($scripts)): ?>

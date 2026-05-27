@@ -40,10 +40,10 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/tarjetas/tarjetas.datatable.init.js',
-'/assets/js/tarjetas/actions.init.js?v=1.0'
+'/assets/js/tarjetas/tarjetas.datatable.init.js?v=' . time(),
+'/assets/js/tarjetas/actions.init.js?v=' . time()
 ]
 ];
 
@@ -441,10 +441,10 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/tarjetas/tarjetas.formulario.datatable.init.js?v=1.1',
-'/assets/js/tarjetas/actions.formulario.init.js?v=1.0'
+'/assets/js/tarjetas/tarjetas.formulario.datatable.init.js?v=' . time(),
+'/assets/js/tarjetas/actions.formulario.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -898,11 +898,11 @@ $data = [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/tarjetas/tarjetas.detalle.datatable.init.js?v=1.1',
-'/assets/js/tarjetas/tarjetas.seguimiento.timeline.js?v=1.0',
-'/assets/js/tarjetas/actions.detalle.init.js?v=1.0'
+'/assets/js/tarjetas/tarjetas.detalle.datatable.init.js',
+'/assets/js/tarjetas/tarjetas.seguimiento.timeline.js?v=' . time(),
+'/assets/js/tarjetas/actions.detalle.init.js?v=' . time()
 ],
 'help' => false
 ];

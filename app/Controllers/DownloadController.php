@@ -31,7 +31,8 @@ class DownloadController{
             'encuestas' => __DIR__ . '../../../public/uploads/archivos/encuestas/',
             'representante-tecnico' => __DIR__ . '../../../public/uploads/archivos/representante-tecnico/',
             'manual' => __DIR__ . '../../../public/uploads/archivos/manuales/',
-
+            'comprobantes-clientes' => __DIR__ . '../../../public/archivos/',
+            'documentos-ventas'              => __DIR__ . '../../../public/uploads/archivos/',
         ];
 
         if (!isset($rutas[$tipo])) {
@@ -59,8 +60,8 @@ class DownloadController{
             exit;
         }
 
-        // Validar que el archivo está dentro de public/uploads (seguridad adicional)
-        $publicPath = realpath(__DIR__ . '../../../public/uploads/');
+        // Validar que el archivo está dentro de public/ (seguridad adicional)
+        $publicPath = realpath(__DIR__ . '../../../public/');
         if (!$publicPath || strpos($realPath, $publicPath) !== 0) {
             http_response_code(403);
             echo 'Ubicación no permitida';

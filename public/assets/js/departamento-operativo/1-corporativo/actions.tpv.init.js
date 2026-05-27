@@ -35,7 +35,7 @@ this.cargarDatos();
 async cargarDatos(showLoader = true) {
 if (showLoader) this.loading = true;
 try {
-const resp = await fetch('/departamento-operativo/cierrelote/data/' + this.idDia);
+const resp = await fetch('/departamento-operativo/cierre-lote/data/' + this.idDia);
 const json = await resp.json();
 if (json.success) {
 this.estado = json.estado;
@@ -89,7 +89,7 @@ async agregarCierre(empresa) {
 if (this.saving) return;
 this.saving = true;
 try {
-const resp = await fetch('/departamento-operativo/cierrelote/crear', {
+const resp = await fetch('/departamento-operativo/cierre-lote/crear', {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({ id: this.idDia, empresa: empresa })
@@ -110,15 +110,13 @@ this.saving = false;
 
 async editarCierre(id, field, value) {
 try {
-const resp = await fetch('/departamento-operativo/cierrelote/editar', {
+const resp = await fetch('/departamento-operativo/cierre-lote/editar', {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({ id: id, field: field, value: value })
 });
 const json = await resp.json();
-if (json.success) {
-await this.cargarDatos(false);
-} else {
+if (!json.success) {
 this.notify(json.message || 'Error al guardar', 'error');
 }
 } catch (e) {
@@ -143,7 +141,7 @@ if (!confirm('¿Desea cambiar el estado a ' + label + ' del cierre de lote selec
 }
 
 try {
-const resp = await fetch('/departamento-operativo/cierrelote/pendiente', {
+const resp = await fetch('/departamento-operativo/cierre-lote/pendiente', {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({ id: id, estado: estado })

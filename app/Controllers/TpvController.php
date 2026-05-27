@@ -54,8 +54,8 @@ $data = [
 'puedeDescargar' => $puedeDescargar,
 'empresas' => TpvService::getEmpresasPorEstacion($idEstacion),
 'scripts' => [
-'/assets/js/vendor.min.js',
-'/assets/js/departamento-operativo/1-corporativo/actions.tpv.init.js',
+'/assets/js/vendor.min.js?v=' . time(),
+'/assets/js/departamento-operativo/1-corporativo/actions.tpv.init.js?v=' . time(),
 ],
 'help' => false
 ];

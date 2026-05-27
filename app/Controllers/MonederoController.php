@@ -41,8 +41,8 @@ $data = [
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'idEstacion' => $idEstacion,
 'scripts' => [
-'/assets/js/vendor.min.js',
-'/assets/js/departamento-operativo/1-corporativo/actions.monedero.init.js',
+'/assets/js/vendor.min.js?v=' . time(),
+'/assets/js/departamento-operativo/1-corporativo/actions.monedero.init.js?v=' . time(),
 ],
 'help' => false
 ];

@@ -269,12 +269,12 @@ return function(RouteCollector $r) {
     $r->addRoute('GET','/ventas/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}/pdf',Route::auth(['VentasController', 'downloadPdf']));
 
     //----- TPV / Cierre Lote
-    $r->addRoute('GET','/cierrelote/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['TpvController', 'index']));
-    $r->addRoute('GET','/cierrelote/data/{idDia:\d+}',Route::auth(['TpvController', 'getData']));
-    $r->addRoute('POST','/cierrelote/crear',Route::auth(['TpvController', 'crear']));
-    $r->addRoute('POST','/cierrelote/editar',Route::auth(['TpvController', 'editar']));
-    $r->addRoute('POST','/cierrelote/pendiente',Route::auth(['TpvController', 'pendiente']));
-    $r->addRoute('GET','/cierrelote/totales/{idDia:\d+}',Route::auth(['TpvController', 'getTotales']));
+    $r->addRoute('GET','/cierre-lote/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['TpvController', 'index']));
+    $r->addRoute('GET','/cierre-lote/data/{idDia:\d+}',Route::auth(['TpvController', 'getData']));
+    $r->addRoute('POST','/cierre-lote/crear',Route::auth(['TpvController', 'crear']));
+    $r->addRoute('POST','/cierre-lote/editar',Route::auth(['TpvController', 'editar']));
+    $r->addRoute('POST','/cierre-lote/pendiente',Route::auth(['TpvController', 'pendiente']));
+    $r->addRoute('GET','/cierre-lote/totales/{idDia:\d+}',Route::auth(['TpvController', 'getTotales']));
 
     //----- Impuestos
     $r->addRoute('GET','/impuestos/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['ImpuestoController', 'index']));
@@ -283,6 +283,22 @@ return function(RouteCollector $r) {
     //----- Monedero
     $r->addRoute('GET','/monedero/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['MonederoController', 'index']));
     $r->addRoute('GET','/monedero/data/{idDia:\d+}',Route::auth(['MonederoController', 'getData']));
+
+    //----- Clientes
+    $r->addRoute('GET','/clientes/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['ClienteController', 'index']));
+    $r->addRoute('GET','/clientes/data/{idDia:\d+}',Route::auth(['ClienteController', 'getData']));
+    $r->addRoute('GET','/clientes/lista',Route::auth(['ClienteController', 'getClientes']));
+    $r->addRoute('POST','/clientes/agregar/pago',Route::auth(['ClienteController', 'agregarPago']));
+    $r->addRoute('POST','/clientes/agregar/consumo',Route::auth(['ClienteController', 'agregarConsumo']));
+    $r->addRoute('POST','/clientes/eliminar',Route::auth(['ClienteController', 'eliminar']));
+
+    //----- Clientes Lista
+    $r->addRoute('GET','/clientes-lista/{idEstacion:\d+}',Route::auth(['ClientesListaController', 'index']));
+    $r->addRoute('GET','/clientes-lista/{idEstacion:\d+}/data',Route::auth(['ClientesListaController', 'getLista']));
+    $r->addRoute('POST','/clientes-lista/guardar-contexto',Route::auth(['ClientesListaController', 'guardarContexto']));
+    $r->addRoute('POST','/clientes-lista/crear',Route::auth(['ClientesListaController', 'crear']));
+    $r->addRoute('POST','/clientes-lista/editar',Route::auth(['ClientesListaController', 'editar']));
+    $r->addRoute('POST','/clientes-lista/toggle',Route::auth(['ClientesListaController', 'toggle']));
 
     //----- 2. Recursos Humanos
     $r->addRoute('GET','/recursos-humanos',Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));

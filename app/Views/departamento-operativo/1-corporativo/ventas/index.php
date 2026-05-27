@@ -63,7 +63,7 @@ x-data="ventasComponent()">
 
 <template x-for="v in ventas_dia" :key="v.id">
 <tr>
-    
+
 <td class="p-0" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
 <template x-if="estado == 0 && !multiestacion">
 <select class="form-select border-0" x-model="v.producto"
@@ -287,15 +287,17 @@ x-model="a.cantidad"
 <tr>
 <th class="align-middle" x-text="d.detalle"></th>
 <td class=" text-center" width="40px">
-<a :href="'/uploads/archivos/' + d.documento" download class="text-secondary">
+<a href="javascript:void(0)" @click="download(d.documento)" class="text-secondary">
 <i class="ti ti-download fs-5"></i>
 </a>
 </td>
 <template x-if="!multiestacion && estado == 0">
 <td class=" text-center" width="40px">
-<a href="#" @click.prevent="eliminarDocumento(d.id)" class="text-danger">
+<span x-data="actions()">
+<a href="#" @click.prevent="async () => { const r = await deleteAction({url: '/departamento-operativo/ventas/eliminar-documento', id: d.id, name: d.detalle}); if (r && r.success) loadData(); }" class="text-danger">
 <i class="ti ti-trash fs-5"></i>
 </a>
+</span>
 </td>
 </template>
 </tr>
@@ -657,7 +659,7 @@ x-model="pc.nota"
 </div>
 </div>
 
- 
+
 <!---------- FIRMAS DEL PERSONAL ---------->
 <template x-if="estado == 1">
 <div class="col-12">
@@ -807,7 +809,7 @@ x-model="pc.nota"
 
 </div>
 </template>
-                    
+
 <template x-if="!firmasVoBo && !esVoBo">
 <div class="text-muted"><strong>¡Falta la firma de Vo.Bo!</strong></div>
 </template>

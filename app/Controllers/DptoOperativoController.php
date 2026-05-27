@@ -30,7 +30,7 @@ $data = [
 'elementos' => $elementos,
 'links' =>[],
 'scripts' => [
-'/assets/js/vendor.min.js'
+'/assets/js/vendor.min.js?v=' . time()
 ],
 'help' => false
 ];  
