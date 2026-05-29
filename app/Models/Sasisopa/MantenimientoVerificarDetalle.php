@@ -1,13 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
 class MantenimientoVerificarDetalle extends Model
 {
     protected $table = 'po_mantenimiento_verificar_detalle';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -23,5 +25,12 @@ class MantenimientoVerificarDetalle extends Model
         'resultado' => 'string',
     ];
 
-
+    public function catalogo()
+    {
+        return $this->belongsTo(
+            MantenimientoDetalle::class,
+            'id_detalle',
+            'id'
+        );
+    }
 }

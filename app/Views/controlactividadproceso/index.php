@@ -48,14 +48,21 @@
 
           <a type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100"
           href="/sasisopa/control-actividades-procesos/recepcion-descarga-producto">
-            <i class="ti ti-eye"></i>
+            <i class="ti ti-gas-station"></i>
             Recepción y Descarga del Producto
           </a>
 
-          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
-            <i class="ti ti-eye"></i>
-            Mantenimiento
-          </button>
+          <a type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100"
+          href="/sasisopa/control-actividades-procesos/mantenimiento-preventivo">
+            <i class="ti ti-tool"></i>
+            Mantenimiento Preventivo
+          </a>
+
+          <a type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100"
+          href="/sasisopa/control-actividades-procesos/mantenimiento-correctivo">
+            <i class="ti ti-tool"></i>
+            Mantenimiento Correctivo
+          </a>
 
           <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
             <i class="ti ti-eye"></i>

@@ -183,7 +183,6 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             exit;
         }
 
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
         $idEstacion = $this->estacionId();
         $idUsuario  = $this->userId();
 
@@ -644,7 +643,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
                 throw new \Exception('Payload vacío');
             }
 
-            // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+            
             $payload['fecha'] = sanitize_input($payload['fecha'] ?? null, 'string');
             $payload['capacitacion'] = sanitize_input($payload['capacitacion'] ?? null, 'string');
             $payload['experiencia'] = sanitize_input($payload['experiencia'] ?? null, 'string');

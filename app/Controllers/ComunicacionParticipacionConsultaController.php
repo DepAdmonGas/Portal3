@@ -137,7 +137,7 @@ protected string $modulo = 'sasisopa';
                 true
             );
 
-            // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+            
             $tema = sanitize_input($data['tema'] ?? null, 'string');
             $detalle = sanitize_input($data['detalle'] ?? null, 'string');
             $tipo_comunicacion = sanitize_input($data['tipo_comunicacion'] ?? null, 'string');
@@ -233,7 +233,7 @@ protected string $modulo = 'sasisopa';
                 true
             );
 
-            // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+            
             $id = sanitize_input($data['id'] ?? null, 'int');
             $tema = sanitize_input($data['tema'] ?? null, 'string');
             $detalle = sanitize_input($data['detalle'] ?? null, 'string');

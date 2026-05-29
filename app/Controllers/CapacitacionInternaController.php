@@ -171,7 +171,7 @@ class CapacitacionInternaController extends BaseController
             return;
         }    
 
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+       
         $fecha_programada = sanitize_input($data['fecha_programada'] ?? null, 'string');
         $id_usuario = sanitize_input($data['id_usuario'] ?? null, 'int');
         $id_tema = sanitize_input($data['id_tema'] ?? null, 'int');

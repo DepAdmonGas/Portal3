@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,5 +30,23 @@ class MantenimientoCorrectivo extends Model
         'fechacreacion' => 'date',
         'horacreacion' => 'datetime:H:i:s',
     ];
+
+    public function evidencias()
+    {
+        return $this->hasMany(
+            MantenimientoCorrectivoEvidencia::class,
+            'id_mantenimiento',
+            'id'
+        );
+    }
+
+    public function firmas()
+    {
+        return $this->hasMany(
+            MantenimientoCorrectivoFirma::class,
+            'id_mantenimiento',
+            'id'
+        );
+    }
 
 }

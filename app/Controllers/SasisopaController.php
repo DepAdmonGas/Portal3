@@ -1161,7 +1161,7 @@ class SasisopaController extends BaseController{
             exit;
         }
 
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        
         $nombre = sanitize_input($_POST['nombre'] ?? null, 'string');
         $fecha = sanitize_input($_POST['fecha'] ?? null, 'string');
         $file  = $_FILES['pdf'] ?? null;

@@ -164,9 +164,6 @@ if (!function_exists('mkdir_safe')) {
     }
 }
 
-// ============================================================
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
-// ============================================================
 
 /**
  * Sanitización de entrada de usuario

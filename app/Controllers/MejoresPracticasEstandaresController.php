@@ -70,7 +70,6 @@ class MejoresPracticasEstandaresController extends BaseController{
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'),true);
 
-    // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
     $codigo = sanitize_input($data['codigo'] ?? null, 'string');
     $area = sanitize_input($data['area'] ?? null, 'string');
 
@@ -274,7 +273,6 @@ class MejoresPracticasEstandaresController extends BaseController{
      header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'),true);
 
-    // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
     $fecha = sanitize_input($data['fecha'] ?? null, 'string');
     $norma = sanitize_input($data['norma'] ?? null, 'string');
     $nombre = sanitize_input($data['nombre'] ?? null, 'string');

@@ -142,7 +142,7 @@ public function perfilesPersonal(){
             return;
         }
 
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+       
         $id = sanitize_input($data['id'] ?? null, 'int');
         $nombre = sanitize_input($data['nombre'] ?? null, 'string');
         $domicilio = sanitize_input($data['domicilio'] ?? null, 'string');
@@ -247,8 +247,7 @@ public function perfilesPersonal(){
             ]);
             return;
         }
-
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        
         $nombrecompleto = sanitize_input($data['nombrecompleto'] ?? null, 'string');
         $parentesco = sanitize_input($data['parentesco'] ?? null, 'string');
         $domicilio = sanitize_input($data['domicilio'] ?? null, 'string');

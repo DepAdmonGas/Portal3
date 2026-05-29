@@ -79,7 +79,7 @@ class CapacitacionExternaController extends BaseController{
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        
         $curso = sanitize_input($data['curso'] ?? null, 'string');
         $fecha_programada = sanitize_input($data['fecha_programada'] ?? null, 'string');
         $duracion = sanitize_input($data['duracion'] ?? null, 'string');
