@@ -191,8 +191,6 @@ echo json_encode([
 exit;
 }
 
-// DATA (multipart → usar $_POST)
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
 $id = sanitize_input($_POST['id'] ?? null, 'int');
 $file  = $_FILES['archivo'] ?? null;
 $razon_social = sanitize_input($_POST['razon_social'] ?? null, 'string');
@@ -493,8 +491,6 @@ echo json_encode([
 exit;
 }
 
-// DATA (multipart → usar $_POST)
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
 $no_solicitud = sanitize_input($data['no_solicitud'] ?? null, 'int');
 $idEstacion = sanitize_input($data['idEstacion'] ?? null, 'int');
 $razon_social = sanitize_input($data['razon_social'] ?? null, 'string');

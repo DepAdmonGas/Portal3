@@ -45,7 +45,7 @@ public function createGrupo(){
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+
 $nombre = sanitize_input($data['nombre'] ?? null, 'string');
 
 if (empty($nombre)) {
@@ -68,7 +68,7 @@ public function updateGrupo()
 {
 $data = json_decode(file_get_contents('php://input'), true);
 
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+
 $id = sanitize_input($data['id'] ?? null, 'int');
 $nombre = sanitize_input($data['nombre'] ?? null, 'string');
 
@@ -97,7 +97,7 @@ public function deleteGrupo()
 {
 // Leer JSON enviado por Axios
 $data = json_decode(file_get_contents('php://input'), true);
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+
 $id = sanitize_input($data['id'] ?? null, 'int');
 
 if (!$id) {

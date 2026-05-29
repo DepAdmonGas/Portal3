@@ -575,10 +575,41 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/control-actividades-procesos/delete-trabajador-autorizado', Route::auth(['ConfiguracionBitacoraController', 'deleteTrabajadorAutorizado']));
 
         //---- Recepción y Descarga del Producto
-
         $r->addRoute('GET', '/control-actividades-procesos/recepcion-descarga-producto', Route::auth(['RecepcionDescargaProductoController', 'index']));
         $r->addRoute('GET', '/control-actividades-procesos/recepcion-descarga-producto/datatable', Route::auth(['RecepcionDescargaProductoController', 'datatable']));
         $r->addRoute('GET', '/control-actividades-procesos/recepcion-descarga-producto/pdf', Route::auth(['RecepcionDescargaProductoController', 'pdf']));
+        
+
+        //Mantenimiento Preventivo
+        $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo', Route::auth(['MantenimientoPreventivoController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo/datatable', Route::auth(['MantenimientoPreventivoController', 'datatable']));
+        $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo/pdf', Route::auth(['MantenimientoPreventivoController', 'pdf']));
+        $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo/get', Route::auth(['MantenimientoPreventivoController', 'get']));
+        $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo/evidencias/{id:\d+}', Route::auth(['MantenimientoPreventivoController', 'evidencias']));
+        $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-preventivo/evidencias/create', Route::auth(['MantenimientoPreventivoController', 'createEvidencia']));
+        $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-preventivo/evidencias/delete', Route::auth(['MantenimientoPreventivoController', 'deleteEvidencia']));
+
+        //-------- Detector de Humo
+        $r->addRoute('GET', '/control-actividades-procesos/detector-humo', Route::auth(['DetectorHumoController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/detector-humo/datatable', Route::auth(['DetectorHumoController', 'datatable']));
+        $r->addRoute('POST', '/control-actividades-procesos/detector-humo/create', Route::auth(['DetectorHumoController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/detector-humo/delete', Route::auth(['DetectorHumoController', 'delete']));
+
+        //--------- Extintores
+        $r->addRoute('GET', '/control-actividades-procesos/extintores', Route::auth(['ExtintoresController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/extintores/datatable', Route::auth(['ExtintoresController', 'datatable']));
+        $r->addRoute('POST', '/control-actividades-procesos/extintores/create', Route::auth(['ExtintoresController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/extintores/update/{id:\d+}', Route::auth(['ExtintoresController', 'update']));
+        $r->addRoute('POST', '/control-actividades-procesos/extintores/delete', Route::auth(['ExtintoresController', 'delete']));
+
+        //------------Mantenimiento Correctivo
+        $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-correctivo', Route::auth(['MantenimientoCorrectivoController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-correctivo/datatable', Route::auth(['MantenimientoCorrectivoController', 'datatable']));
+        $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-correctivo/update', Route::auth(['MantenimientoCorrectivoController', 'update']));
+        $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-correctivo/pdf', Route::auth(['MantenimientoCorrectivoController', 'pdf']));
+        $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-correctivo/evidencias/{id:\d+}', Route::auth(['MantenimientoCorrectivoController', 'evidencias']));
+        $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-correctivo/evidencias/create', Route::auth(['MantenimientoCorrectivoController', 'createEvidencia']));
+        $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-correctivo/evidencias/delete', Route::auth(['MantenimientoCorrectivoController', 'deleteEvidencia']));
 
         // Elemento 11
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));

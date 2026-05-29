@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class MantenimientoCorrectivoFirma extends Model
 {
@@ -23,5 +24,14 @@ class MantenimientoCorrectivoFirma extends Model
         'id_mantenimiento' => 'integer',
         'id_usuario' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario',
+            'id'
+        );
+    }
 
 }

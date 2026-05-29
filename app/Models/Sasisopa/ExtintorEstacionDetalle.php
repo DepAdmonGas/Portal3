@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,4 +28,8 @@ class ExtintorEstacionDetalle extends Model
         'ultima_recarga' => 'date',
     ];
 
+    public function extintor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(ExtintorEstacion::class, 'id_extintor', 'id');
+    }
 }

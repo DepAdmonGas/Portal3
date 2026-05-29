@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,4 +22,8 @@ class MantenimientoDetalle extends Model
         'id_sublista' => 'integer',
     ];
 
+    public function sublista(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(MantenimientoSubLista::class, 'id_sublista', 'id');
+    }
 }

@@ -137,7 +137,6 @@ public function deletePolizaSeguro(){
 
 header('Content-Type: application/json; charset=utf-8');
 $data = json_decode(file_get_contents('php://input'), true);
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
 $id = sanitize_input($data['id'] ?? null, 'int');
 
 /*

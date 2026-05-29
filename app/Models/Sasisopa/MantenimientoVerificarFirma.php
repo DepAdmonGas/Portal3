@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class MantenimientoVerificarFirma extends Model
 {
@@ -26,5 +27,14 @@ class MantenimientoVerificarFirma extends Model
         'tipo_firma' => 'string',
         'imagen_firma' => 'string',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario',
+            'id'
+        );
+    }
 
 }

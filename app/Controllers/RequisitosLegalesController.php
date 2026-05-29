@@ -326,7 +326,7 @@ class RequisitosLegalesController extends BaseController{
         header('Content-Type: application/json; charset=utf-8');
         $data = json_decode(file_get_contents('php://input'), true);
 
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        
         $gobierno = sanitize_input($data['gobierno'] ?? null, 'string');
         $dependencia = sanitize_input($data['dependencia'] ?? null, 'string');
         $permiso = sanitize_input($data['permiso'] ?? null, 'string');
@@ -635,7 +635,6 @@ class RequisitosLegalesController extends BaseController{
             return;
         }
 
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
         $nivelGobierno = sanitize_input($_POST['nivel_gobierno'] ?? null, 'string');
         $permisoId = sanitize_input($_POST['permiso'] ?? null, 'int');
         $vigencia = sanitize_input($_POST['vigencia'] ?? null, 'string');

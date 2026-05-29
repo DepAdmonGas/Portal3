@@ -1543,7 +1543,7 @@ exit;
 }
 
 $idSubmodulo = $data['idSubmodulo'] ?? null;
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+
 $idModulo = sanitize_input($data['idModulo'] ?? null, 'int');
 $nombre_modulo = sanitize_input($data['nombre_modulo'] ?? null, 'string');
 $clave = sanitize_input($data['clave'] ?? null, 'string');

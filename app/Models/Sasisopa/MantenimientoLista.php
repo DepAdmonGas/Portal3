@@ -23,4 +23,13 @@ class MantenimientoLista extends Model
         'estado' => 'integer',
     ];
 
+    public function verificaciones()
+    {
+        return $this->hasMany(
+            MantenimientoVerificar::class,
+            'id_equipo',
+            'id'
+        );
+    }
+
 }

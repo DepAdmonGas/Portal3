@@ -277,8 +277,6 @@ echo json_encode([
 exit;
 }
 
-// DATA (multipart → usar $_POST)
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
 $id = sanitize_input($_POST['id'] ?? null, 'int');
 $clave = sanitize_input($_POST['clave'] ?? null, 'string');
 $nombre_g = sanitize_input($_POST['nombre_g'] ?? null, 'string');
@@ -604,8 +602,6 @@ echo json_encode([
 exit;
 }
 
-// DATA (multipart → usar $_POST)
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
 $no_reporte = sanitize_input($_POST['no_reporte'] ?? null, 'int');
 $idEstacion = sanitize_input($_POST['idEstacion'] ?? null, 'int');
 $clave = sanitize_input($_POST['clave'] ?? null, 'string');

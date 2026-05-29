@@ -185,7 +185,7 @@ class AditivoController extends BaseController{
             exit;
         }
 
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        
         $litros     = sanitize_input($data['litros'] ?? null, 'float');
         $producto   = sanitize_input($data['producto'] ?? null, 'string');
         $galones    = sanitize_input($data['galones'] ?? 0, 'float');
@@ -282,8 +282,7 @@ class AditivoController extends BaseController{
         header('Content-Type: application/json');
 
         $data = json_decode(file_get_contents('php://input'), true);
-
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        
         $id = sanitize_input($data['id'] ?? null, 'int');
         $noFactura = sanitize_input($data['no_factura'] ?? null, 'string');
 
@@ -387,8 +386,7 @@ class AditivoController extends BaseController{
             exit;
         }
 
-        // DATA (multipart → usar $_POST)
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        
         $fecha = sanitize_input($_POST['fecha'] ?? null, 'string');
         $file  = $_FILES['documento'] ?? null;
 
@@ -599,8 +597,7 @@ class AditivoController extends BaseController{
             ]);
             exit;
         }
-
-        // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+ 
         $gasolina = sanitize_input($data['gasolina'] ?? 0, 'float');
         $diesel   = sanitize_input($data['diesel'] ?? 0, 'float');
 

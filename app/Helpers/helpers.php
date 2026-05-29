@@ -182,9 +182,6 @@ return $_ENV['TELEGRAM_BOT_TOKEN'] ?? '';
 }
 }
 
-// ============================================================
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
-// ============================================================
 
 /**
 * Sanitización de entrada de usuario

@@ -73,7 +73,7 @@ protected string $modulo = 'sasisopa';
 
 try {
             
-            // SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+        
             $nombre = sanitize_input($_POST['nombre_equipo'] ?? null, 'string');
             $marca = sanitize_input($_POST['marca_modelo'] ?? null, 'string');
             $funciones = sanitize_input($_POST['funciones'] ?? null, 'string');

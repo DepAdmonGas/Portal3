@@ -222,7 +222,6 @@ echo json_encode(['message' => 'Datos inválidos']);
 return;
 }
 
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
 $idPuesto = sanitize_input($data['id_puesto'] ?? null, 'int');
 $id_modulo_principal = sanitize_input($data['id_modulo_principal'] ?? null, 'int');
 
@@ -283,7 +282,7 @@ header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
+
 $idPuesto          = sanitize_input($data['id_puesto'] ?? 0, 'int');
 $idModulo          = sanitize_input($data['id_modulo'] ?? 0, 'int');
 $idModuloPrincipal = sanitize_input($data['id_modulo_principal'] ?? 0, 'int');
@@ -454,7 +453,6 @@ echo json_encode(['message' => 'Datos inválidos']);
 return;
 }
 
-// SECURITY: Sanitización de inputs (Vulnerabilidad #5)
 $id = sanitize_input($id, 'int');
 
 $ver        = sanitize_input($data['ver'] ?? 0, 'int');
