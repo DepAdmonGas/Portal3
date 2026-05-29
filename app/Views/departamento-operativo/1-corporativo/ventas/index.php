@@ -287,9 +287,11 @@ x-model="a.cantidad"
 <tr>
 <th class="align-middle" x-text="d.detalle"></th>
 <td class=" text-center" width="40px">
-<a href="javascript:void(0)" @click="download(d.documento)" class="text-secondary">
+<span x-data="actions()">
+<a href="javascript:void(0)" @click="download('documentos-ventas', d.documento)" class="text-secondary">
 <i class="ti ti-download fs-5"></i>
 </a>
+</span>
 </td>
 <template x-if="!multiestacion && estado == 0">
 <td class=" text-center" width="40px">

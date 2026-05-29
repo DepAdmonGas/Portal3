@@ -300,6 +300,19 @@ return function(RouteCollector $r) {
     $r->addRoute('POST','/clientes-lista/editar',Route::auth(['ClientesListaController', 'editar']));
     $r->addRoute('POST','/clientes-lista/toggle',Route::auth(['ClientesListaController', 'toggle']));
 
+    //----- Control Volumétrico
+    $r->addRoute('GET','/control-volumetrico/{idEstacion:\d+}/{idYear:\d+}/{idMes:\d+}',Route::auth(['ControlVolumetricoController', 'index']));
+    $r->addRoute('GET','/control-volumetrico/data',Route::auth(['ControlVolumetricoController', 'getData']));
+    $r->addRoute('POST','/control-volumetrico/editar-resumen',Route::auth(['ControlVolumetricoController', 'editarResumen']));
+    $r->addRoute('POST','/control-volumetrico/editar-comentario-resumen',Route::auth(['ControlVolumetricoController', 'editarComentarioResumen']));
+    $r->addRoute('POST','/control-volumetrico/editar-aceite',Route::auth(['ControlVolumetricoController', 'editarAceite']));
+    $r->addRoute('POST','/control-volumetrico/editar-prefijo',Route::auth(['ControlVolumetricoController', 'editarPrefijo']));
+    $r->addRoute('POST','/control-volumetrico/agregar-comentario',Route::auth(['ControlVolumetricoController', 'agregarComentario']));
+    $r->addRoute('POST','/control-volumetrico/subir-documento',Route::auth(['ControlVolumetricoController', 'uploadDocumento']));
+    $r->addRoute('POST','/control-volumetrico/eliminar-documento',Route::auth(['ControlVolumetricoController', 'eliminarDocumento']));
+    $r->addRoute('GET','/control-volumetrico/documentos-list',Route::auth(['ControlVolumetricoController', 'getDocumentosList']));
+    $r->addRoute('GET','/control-volumetrico/comentarios-list',Route::auth(['ControlVolumetricoController', 'getComentariosList']));
+
     //----- 2. Recursos Humanos
     $r->addRoute('GET','/recursos-humanos',Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
 

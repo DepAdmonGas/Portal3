@@ -50,7 +50,7 @@ this.formRfc = '';
 
 _renderDocIcon(val) {
 return val
-? '<a href="javascript:void(0)" class="btn-download-doc" data-doc="' + val + '"><i class="ti ti-file-check text-success fs-6"></i></a>'
+? '<div x-data="actions()"><a href="javascript:void(0)" @click="download(\'comprobantes-clientes\', \'' + val + '\')"><i class="ti ti-file-check text-success fs-6"></i></a></div>'
 : '<i class="ti ti-file-off text-muted fs-6"></i>';
 },
 
@@ -118,15 +118,19 @@ Object.keys(cols).forEach(function(id) {
 $(id).DataTable({
 data: data[id],
 columns: cols[id],
-processing: true,
 autoWidth: false,
-stateSave: true,
+stateSave: false,
 language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
 pageLength: 10,
 order: [[1, 'asc']],
 destroy: true,
 createdRow: function (row, rowData) {
 if (rowData.estado == 0) $(row).css('background-color', '#ffb6af');
+},
+drawCallback: function () {
+if (window.Alpine) {
+Alpine.initTree(this);
+}
 },
 });
 });
@@ -139,10 +143,6 @@ self.abrirModalEditar(parseInt($(this).data('id')));
 .off('click', '.btn-toggle-cliente')
 .on('click', '.btn-toggle-cliente', function () {
 self.toggleEstado(parseInt($(this).data('id')), parseInt($(this).data('idtipo')));
-})
-.off('click', '.btn-download-doc')
-.on('click', '.btn-download-doc', function () {
-self.download($(this).data('doc'));
 });
 },
 
@@ -152,9 +152,6 @@ axios.get('/departamento-operativo/clientes-lista/' + this.idEstacion + '/data')
 .then(function (r) {
 self.credito = r.data.credito || [];
 self.debito = r.data.debito || [];
-self.$nextTick(function () {
-self._initDataTables();
-});
 })
 .catch(function (e) {
 const msg = (e.response && e.response.data && e.response.data.message) ? e.response.data.message : (e.message || 'Error al cargar la lista de clientes');
@@ -163,6 +160,9 @@ console.error('[ERROR] cargarDatos:', e);
 })
 .finally(function () {
 self.loading = false;
+self.$nextTick(function () {
+self._initDataTables();
+});
 });
 },
 
@@ -314,7 +314,7 @@ const self = this;
 const accion = idTipo == 1 ? 'deshabilitar' : 'habilitar';
 
 Swal.fire({
-title: (accion.charAt(0).toUpperCase() + accion.slice(1)) + ' cliente?',
+title: (accion.charAt(0).toUpperCase() + accion.slice(1)) + ' cliente',
 text: '¿Desea ' + accion + ' el cliente seleccionado?',
 icon: 'warning',
 showCancelButton: true,
@@ -344,10 +344,6 @@ console.error('[ERROR] toggle:', e);
 });
 },
 
-download(file) {
-if (!file) return;
-window.open('/download?tipo=comprobantes-clientes&file=' + encodeURIComponent(file), '_blank', 'noopener');
-},
 }));
 });
 

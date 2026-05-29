@@ -33,6 +33,7 @@ class DownloadController{
             'manual' => __DIR__ . '../../../public/uploads/archivos/manuales/',
             'comprobantes-clientes' => __DIR__ . '../../../public/archivos/',
             'documentos-ventas'              => __DIR__ . '../../../public/uploads/archivos/',
+            'control-volumetrico'          => __DIR__ . '../../../public/uploads/archivos/',
         ];
 
         if (!isset($rutas[$tipo])) {

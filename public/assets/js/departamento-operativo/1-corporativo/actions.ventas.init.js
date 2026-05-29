@@ -270,7 +270,7 @@ if (window.Notify && window.Notify.success) window.Notify.success('Documento agr
 }).catch(() => { this.subiendoDocumento = false; if (window.Notify && window.Notify.error) window.Notify.error('Error al subir el documento'); });
 },
 
-    /* ---------- TOKEN / FIRMA ADMIN ---------- */
+/* ---------- TOKEN / FIRMA ADMIN ---------- */
 crearToken(method) {
 this.tokenError = '';
 this.enviandoToken = true;
@@ -385,13 +385,8 @@ if (this.signaturePad) this.signaturePad.clear();
 this._resizeCanvas();
 },
 
-download(file) {
-    if (!file) return;
-    window.open('/download?tipo=documentos-ventas&file=' + encodeURIComponent(file), '_blank', 'noopener');
-},
-
 downloadPdf() {
-    window.location = '/departamento-operativo/ventas/' + this.idYear + '/' + this.idMes + '/' + this.idDia + '/pdf';
+window.location = '/departamento-operativo/ventas/' + this.idYear + '/' + this.idMes + '/' + this.idDia + '/pdf';
 }
 }));
 });

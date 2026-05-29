@@ -42,12 +42,7 @@ this.cargarDatos();
 this.cargarClientes();
 },
 
-download(file) {
-if (!file) return;
-window.open('/download?tipo=comprobantes-clientes&file=' + encodeURIComponent(file), '_blank', 'noopener');
-},
-
-get puedeAgregar() {
+    get puedeAgregar() {
 return !this.multiestacion && this.puedeCrear;
 },
 
@@ -91,14 +86,14 @@ return d || '<span class="text-muted">N/A</span>';
 }
 },
 {
-data: 'comprobante',
-className: 'align-middle text-center',
-orderable: false,
-searchable: false,
-render: function (d) {
-return d ? '<a href="javascript:void(0)" class="btn-download-comprobante" data-file="' + d + '"><i class="ti ti-file-text text-success fs-6"></i></a>' : '<span class="text-muted">N/A</span>';
-}
-},
+            data: 'comprobante',
+            className: 'align-middle text-center',
+            orderable: false,
+            searchable: false,
+            render: function (d) {
+                return d ? '<div x-data="actions()"><a href="javascript:void(0)" @click="download(\'comprobantes-clientes\', \'' + d + '\')"><i class="ti ti-file-text text-success fs-6"></i></a></div>' : '<span class="text-muted">N/A</span>';
+            }
+        },
 {
 data: 'total',
 className: 'align-middle text-end',
@@ -138,10 +133,7 @@ Alpine.initTree(document.querySelector('#tablaClientes'));
 }
 });
 
-$('#tablaClientes tbody').off('click', '.btn-download-comprobante').on('click', '.btn-download-comprobante', function () {
-self.download($(this).data('file'));
-});
-},
+    },
 
 async cargarDatos() {
 try {
