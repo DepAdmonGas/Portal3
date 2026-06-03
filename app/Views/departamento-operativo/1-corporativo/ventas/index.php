@@ -707,7 +707,7 @@ x-model="pc.nota"
 <div>
 <div class="alert alert-success py-2">
 <div class="text-success">El formato se firmó por un medio electrónico.<br>
-<b>Fecha: <span x-text="formatearFecha(firmasSuperviso.fecha)"></span></b>
+<b>Fecha: <span x-text="firmasSuperviso.fecha_formateada"></span></b>
 </div>
 </div>
 
@@ -771,7 +771,7 @@ x-model="pc.nota"
 <div>
 <div class="alert alert-success py-2">
 <div class="text-success">El formato se firmó por un medio electrónico.<br>
-<b>Fecha: <span x-text="formatearFecha(firmasVoBo.fecha)"></span></b>
+<b>Fecha: <span x-text="firmasVoBo.fecha_formateada"></span></b>
 </div>
 </div>
 

@@ -240,6 +240,7 @@ $firmas = CorteDiaFirmas::where('id_reportedia', $idReporte)
 return $firmas->map(function ($f) {
 $usuario = \App\Models\Usuario::find($f->id_usuario);
 $f->nombre_usuario = $usuario ? $usuario->nombre : 'Desconocido';
+$f->fecha_formateada = $f->fecha ? formatearFecha($f->fecha->format('Y-m-d')) : '';
 return $f;
 });
 }

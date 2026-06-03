@@ -54,7 +54,7 @@ this.cierres[emp] = [];
 }
 } catch (e) {
 console.error('Error cargando datos TPV:', e);
-this.notify('Error al cargar datos', 'error');
+Notify['error']('Error al cargar datos');
 } finally {
 this.loading = false;
 }
@@ -81,9 +81,7 @@ tt += parseInt(item.ticktes) || 0;
 return { total_importe: ti, total_ticket: tt };
 },
 
-formatNumber(v) {
-return parseFloat(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-},
+
 
 async agregarCierre(empresa) {
 if (this.saving) return;
@@ -99,10 +97,10 @@ if (json.success && json.data) {
 const items = this.cierres[empresa] || [];
 this.cierres[empresa] = [...items, json.data];
 } else {
-this.notify(json.message || 'Error al agregar', 'error');
+ Notify['error'](json.message || 'Error al agregar');
 }
 } catch (e) {
-this.notify('Error de conexión', 'error');
+Notify['error']('Error de conexión');
 } finally {
 this.saving = false;
 }
@@ -117,10 +115,10 @@ body: JSON.stringify({ id: id, field: field, value: value })
 });
 const json = await resp.json();
 if (!json.success) {
-this.notify(json.message || 'Error al guardar', 'error');
+Notify['error'](json.message || 'Error al guardar');
 }
 } catch (e) {
-this.notify('Error de conexión', 'error');
+Notify['error']('Error de conexión');
 }
 },
 
@@ -156,21 +154,13 @@ items[idx].estado = estado;
 if (typeof Swal !== 'undefined') {
 Swal.fire({ icon: 'success', title: label, text: 'Estado actualizado', timer: 1500, showConfirmButton: false });
 } else {
-this.notify('Estado actualizado a ' + label, 'success');
+Notify['success']('Estado actualizado a ' + label);
 }
 } else {
-this.notify(json.message || 'Error al actualizar', 'error');
+Notify['error'](json.message || 'Error al actualizar');
 }
 } catch (e) {
-this.notify('Error de conexión', 'error');
-}
-},
-
-notify(msg, type) {
-if (typeof Swal !== 'undefined') {
-Swal.fire({ icon: type === 'error' ? 'error' : 'success', title: msg, timer: 2000, showConfirmButton: false });
-} else if (window.Notify) {
-window.Notify(msg, type === 'error' ? 'error' : 'success');
+Notify['error']('Error de conexión');
 }
 },
 

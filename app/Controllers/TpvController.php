@@ -53,6 +53,7 @@ $data = [
 'puedeEliminar' => $puedeEliminar,
 'puedeDescargar' => $puedeDescargar,
 'empresas' => TpvService::getEmpresasPorEstacion($idEstacion),
+'ocultarSelectorEstacion' => true,
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.tpv.init.js?v=' . time(),

@@ -12,13 +12,30 @@ class ControlVolumetricoController extends BaseController
 {
 protected string $modulo = 'corporativo';
 
-public function index($idEstacion, $idYear, $idMes)
+public function index($idYear, $idMes)
 {
 $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
 
-$idMesDb = ControlVolumetricoService::getMesId((int) $idEstacion, $idYear, $idMes);
+$idEstacion = $this->estacionId();
+$multiEstacion = $this->isMultiEs();
+
+if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+$data = [
+'title' => 'Control Volumétrico (' . nombremes($idMes) . ' ' . $idYear . ')',
+'idYear' => $idYear,
+'idMes' => $idMes,
+'idEstacion' => 0,
+'multiestacion' => $multiEstacion,
+'esDireccionOperaciones' => false,
+'help' => false,
+];
+View::render('departamento-operativo/1-corporativo/control-volumetrico/index', $data, 'departamento-operativo');
+return;
+}
+
+$idMesDb = ControlVolumetricoService::getMesId($idEstacion, $idYear, $idMes);
 if (!$idMesDb) {
 View::render('errors/404', [], 'departamento-operativo');
 return;
@@ -30,7 +47,7 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
-ControlVolumetricoService::asegurarRegistros($idMesDb, (int) $idEstacion, $idYear, $idMes);
+ControlVolumetricoService::asegurarRegistros($idMesDb, $idEstacion, $idYear, $idMes);
 
 $usuario = \App\Core\Auth::user();
 $tipoPuesto = $usuario && $usuario->puesto ? $usuario->puesto->tipo_puesto : '';
@@ -51,7 +68,7 @@ $data = [
 'idYear' => $idYear,
 'idMes' => $idMes,
 'idMesDb' => $idMesDb,
-'idEstacion' => (int) $idEstacion,
+'idEstacion' => $idEstacion,
 'estado' => $estado,
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],

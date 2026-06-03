@@ -5,7 +5,7 @@ use App\Core\Breadcrumb;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\ModuloService;
 use App\Core\Auth;
- 
+
 class DptoOperativoController extends BaseController{
 protected string $modulo = 'departamento-operativo';
 
@@ -15,7 +15,7 @@ $title = 'Dirección de Operaciones';
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add($title, '');
-  
+
 $usuario = Auth::user();
 
 // Buscar permisos de los modulos
@@ -32,12 +32,13 @@ $data = [
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time()
 ],
-'help' => false
+'help' => false,
+'ocultarSelectorEstacion' => true,
 ];  
 
 View::render('departamento-operativo/index', $data,'departamento-operativo');
 }
- 
+
 private function renderModulo($slug, $title)
 {
 Breadcrumb::add('Home', '/home');
@@ -62,7 +63,8 @@ $data = [
 'idMes' => $idMes,
 'links' => [],
 'scripts' => [],
-'help' => false
+'help' => false,
+'ocultarSelectorEstacion' => true,
 ];
 
 View::render("departamento-operativo/submodulos-index", $data, 'departamento-operativo');

@@ -1,3 +1,13 @@
+<?php if (!$idEstacion): ?>
+<div class="row mt-4 mb-5">
+<div class="col-12">
+<div class="alert alert-info text-center">
+    <i class="ti ti-info-circle fs-4"></i>
+    Debes de seleccionar una estación del menú superior para poder visualizar la información de la Lista de Clientes.
+</div>
+</div>
+</div>
+<?php else: ?>
 <div id="container" class="mt-4 mb-4"
 data-id-estacion="<?= $idEstacion ?>"
 data-id-year="<?= $idYear ?>"
@@ -218,3 +228,4 @@ x-data="clientesListaComponent()">
 </div>
 </div>
 </div>
+<?php endif; ?>

@@ -10,11 +10,11 @@ class ClientesListaController extends BaseController
 {
 protected string $modulo = 'corporativo';
 
-public function index($idEstacion)
+public function index()
 {
 $permisos = ClienteService::getPermisos();
 
-$idEstacion = (int) $idEstacion;
+$idEstacion = $this->estacionId();
 
 $contexto = Session::get('clientes_lista_contexto');
 
@@ -60,6 +60,7 @@ $data = [
 'puedeCrear' => true,
 'puedeEditar' => true,
 'puedeEliminar' => true,
+'ocultarSelectorEstacion' => true,
 'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
 '/assets/libs/select2/dist/css/select2.min.css',
@@ -83,10 +84,10 @@ $data,
 );
 }
 
-public function getLista($idEstacion)
+public function getLista()
 {
 header('Content-Type: application/json; charset=utf-8');
-$data = ClienteService::getClientesLista((int) $idEstacion);
+$data = ClienteService::getClientesLista($this->estacionId());
 
 echo json_encode([
 'success' => true,

@@ -74,7 +74,7 @@ x-data="tpvComponent()">
 </template>
 
 <template x-if="!puedeEditar || multiestacion || finalizado">
-<span x-text="'$ ' + formatNumber(item.importe)"></span>
+<span x-text="'$ ' + formatNum(item.importe)"></span>
 </template>
 </td>
 <td class="align-middle text-center p-0">
@@ -88,7 +88,7 @@ x-data="tpvComponent()">
 </template>
 
 <template x-if="!puedeEditar || multiestacion || finalizado">
-<span x-text="formatNumber(item.ticktes)"></span>
+<span x-text="formatNum(item.ticktes)"></span>
 </template>
 </td>
 <td class="align-middle text-center" style="width: 40px;">
@@ -109,7 +109,7 @@ class="ti ti-circle-x text-danger fs-6" title="Pendiente"></i>
 </template>
 <tr>
 <th class="align-middle text-center">TOTAL</th>
-<td class="align-middle text-end"><strong x-text="'$ ' + formatNumber(totalesEmpresa(empresa).total_importe)"></strong></td>
+<td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totalesEmpresa(empresa).total_importe)"></strong></td>
 <td class="align-middle text-center"><strong x-text="totalesEmpresa(empresa).total_ticket"></strong></td>
 <td></td>
 </tr>

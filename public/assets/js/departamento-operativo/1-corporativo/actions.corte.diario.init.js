@@ -1,22 +1,5 @@
 document.addEventListener('alpine:init', () => {
 
-Alpine.data('yearMesComponent', () => ({
-year: null,
-mes: null,
-init() {
-const container = document.getElementById('container');
-if (container) {
-this.year = container.dataset.year || container.dataset.idYear || null;
-this.mes = container.dataset.mes || container.dataset.idMes || null;
-}
-},
-cambiarYearMes(year, mes) {
-const url = '/departamento-operativo/corporativo/corte-diario/' + year + '/' + mes;
-history.replaceState({ year, mes }, '', url);
-location.reload();
-}
-}));
-
 Alpine.data('editarCorteComponent', () => ({
 idCorteDia: null,
 fecha: '',
@@ -74,7 +57,7 @@ this.loading = false;
 
 submitActivacion() {
 if (!this.motivo.trim()) {
-this.notify('error', 'El motivo es obligatorio');
+Notify['error']('El motivo es obligatorio');
 return;
 }
 
@@ -88,17 +71,17 @@ headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
 })
 .then(response => {
 if (response.data.success) {
-this.notify('success', response.data.message);
+Notify['success'](response.data.message);
 this.step = 'history';
 this.motivo = '';
 this.reloadHistorial();
 $('#table-corte-diario').DataTable().ajax.reload();
 } else {
-this.notify('error', response.data.message);
+Notify['error'](response.data.message);
 }
 })
 .catch(() => {
-this.notify('error', 'Error al activar el corte');
+Notify['error']('Error al activar el corte');
 })
 .finally(() => this.saving = false);
 },

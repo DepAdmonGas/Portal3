@@ -42,7 +42,7 @@ this.cargarDatos();
 this.cargarClientes();
 },
 
-    get puedeAgregar() {
+get puedeAgregar() {
 return !this.multiestacion && this.puedeCrear;
 },
 
@@ -86,14 +86,14 @@ return d || '<span class="text-muted">N/A</span>';
 }
 },
 {
-            data: 'comprobante',
-            className: 'align-middle text-center',
-            orderable: false,
-            searchable: false,
-            render: function (d) {
-                return d ? '<div x-data="actions()"><a href="javascript:void(0)" @click="download(\'comprobantes-clientes\', \'' + d + '\')"><i class="ti ti-file-text text-success fs-6"></i></a></div>' : '<span class="text-muted">N/A</span>';
-            }
-        },
+data: 'comprobante',
+className: 'align-middle text-center',
+orderable: false,
+searchable: false,
+render: function (d) {
+return d ? '<div x-data="actions()"><a href="javascript:void(0)" @click="download(\'comprobantes-clientes\', \'' + d + '\')"><i class="ti ti-file-text text-success fs-6"></i></a></div>' : '<span class="text-muted">N/A</span>';
+}
+},
 {
 data: 'total',
 className: 'align-middle text-end',
@@ -133,7 +133,7 @@ Alpine.initTree(document.querySelector('#tablaClientes'));
 }
 });
 
-    },
+},
 
 async cargarDatos() {
 try {
@@ -229,7 +229,7 @@ headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 body: 'idYear=' + idYear + '&idMes=' + idMes + '&idDia=' + idDia
 });
 } catch (e) { console.error(e); }
-window.location.href = '/departamento-operativo/clientes-lista/' + idEstacion;
+    window.location.href = '/departamento-operativo/clientes-lista';
 },
 
 async guardar() {
@@ -295,9 +295,7 @@ Swal.fire({ icon: 'error', title: 'Error', text: 'Error al agregar el consumo' }
 }
 },
 
-formatNum(v) {
-return parseFloat(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-},
+
 }));
 
 });

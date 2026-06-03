@@ -147,8 +147,8 @@ self.toggleEstado(parseInt($(this).data('id')), parseInt($(this).data('idtipo'))
 },
 
 cargarDatos() {
-const self = this;
-axios.get('/departamento-operativo/clientes-lista/' + this.idEstacion + '/data')
+    const self = this;
+    axios.get('/departamento-operativo/clientes-lista/data')
 .then(function (r) {
 self.credito = r.data.credito || [];
 self.debito = r.data.debito || [];

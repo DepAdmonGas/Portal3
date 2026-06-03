@@ -280,7 +280,7 @@ return Promise.reject(error);
 </header>
 <!--  Header End -->
 <div class="body-wrapper">
-<div class="container-fluid" x-data="yearMesComponent()">
+<div class="container-fluid" x-data="yearMesComponent()" data-year-mes-template="<?= htmlspecialchars($yearMesTemplate ?? '', ENT_QUOTES, 'UTF-8') ?>">
 
 <div class="d-flex align-items-center">
 <!-- IZQUIERDA -->
@@ -304,7 +304,7 @@ $razonsocial = trim($razonsocial);
 <?php endif; ?>
 
 <!-- DERECHA -->
-<?php if ($multiestacion) : ?>
+<?php if ($multiestacion && empty($ocultarSelectorEstacion)) : ?>
 <select id="selectEstacion" class="form-select form-select-sm w-auto ms-auto">
 <option value="8" <?= $esTodas ? 'selected' : '' ?>>Todas las estaciones</option>
 

@@ -39,9 +39,6 @@ this.loading = false;
 }
 },
 
-formatNum(v) {
-return parseFloat(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-},
 }));
 
 });

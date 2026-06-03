@@ -1,3 +1,8 @@
+<?php if (!$idEstacion): ?>
+<div class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+Debes de seleccionar una estación del menú superior para poder visualizar la información del Control Volumétrico.
+</div>
+<?php else: ?>
 <div id="container" class="mt-4 mb-4"
 data-id-mes-db="<?= $idMesDb ?>"
 data-id-year="<?= $idYear ?>"
@@ -642,3 +647,4 @@ type="button" @click="agregarComentario()" :disabled="guardandoComentario || !nu
 </div>
 
 </div>
+<?php endif; ?>

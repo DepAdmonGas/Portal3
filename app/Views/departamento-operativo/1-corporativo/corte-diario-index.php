@@ -2,81 +2,27 @@
 
 <div class="row">
 <div class="col-12">
-<div class="d-flex align-items-center ">
+<div class="d-flex align-items-center">
 <div class="ms-auto">
 
 <?php if (!$multiestacion || $estacionId != 8): ?>
-<div class="dropdown">
-<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+<div class="dropdown mb-3">
+<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
 <i class="ti ti-tools"></i> Herramientas
 </button>
 
-<?php if ($multiestacion): ?>
-<!-- Admin -->
 <ul class="dropdown-menu dropdown-menu-end">
 
+<!-- VISIBLES PARA TODOS -->
 <li>
-<a class="dropdown-item" href="/departamento-operativo/control-volumetrico/<?= $estacionId ?>/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item" href="/departamento-operativo/control-volumetrico/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-bottle"></i> Control Volumétrico
 </a>
 </li>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/resumen-monedero/<?= $estacionId ?>/<?= $idYear ?>/<?= $idMes ?>">
-<i class="ti ti-wallet"></i> Resumen Monedero
-</a>
-</li>
-
-<li>
-<a class="dropdown-item" href="/departamento-operativo/clientes-mes/<?= $estacionId ?>/<?= $idYear ?>/<?= $idMes ?>">
-<i class="ti ti-users"></i> Resumen Clientes
-</a>
-</li>
-
-<li>
-<a class="dropdown-item" href="/departamento-operativo/concentrado-ventas/<?= $estacionId ?>/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item" href="/departamento-operativo/concentrado-ventas/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-cash-register"></i> Concentrado de Ventas
-</a>
-</li>
-
-<li>
-<a class="dropdown-item" href="/departamento-operativo/aceites-mes/<?= $estacionId ?>/<?= $idYear ?>/<?= $idMes ?>">
-<i class="ti ti-droplet-filled"></i> Resumen Aceites
-</a>
-</li>
-
-<?php if ($esDireccionOperaciones): ?>
-
-<li><hr class="dropdown-divider"></li>
-
-<li>
-<a class="dropdown-item" href="/departamento-operativo/corte-diario-evaluacion/<?= $idYear ?>/<?= $idMes ?>/<?= $estacionId ?>">
-<i class="ti ti-chart-bar"></i> Apertura de Cortes Diarios (KPI's)
-</a>
-</li>
-
-<?php endif; ?>
-</ul>
-
-<?php else: ?>
-<!-- ENCARGADOS -->
-<ul class="dropdown-menu dropdown-menu-end">
-
-<li>
-<a class="dropdown-item" href="/departamento-operativo/control-volumetrico/<?= $estacionId ?>/<?= $idYear ?>/<?= $idMes ?>">
-<i class="ti ti-bottle"></i> Control Volumétrico
-</a>
-</li>
-
-<li>
-<a class="dropdown-item" href="/departamento-operativo/concentrado-ventas/<?= $estacionId ?>/<?= $idYear ?>/<?= $idMes ?>">
-<i class="ti ti-cash-register"></i> Concentrado de Ventas
-</a>
-</li>
-
-<li>
-<a class="dropdown-item" href="/departamento-operativo/resumen-impuestos/<?= $idYear ?>/<?= $idMes ?>">
-<i class="ti ti-receipt-tax"></i> Resumen Impuestos
 </a>
 </li>
 
@@ -88,7 +34,7 @@
 
 <li>
 <a class="dropdown-item" href="/departamento-operativo/aceites-mes/<?= $idYear ?>/<?= $idMes ?>">
-<i class="ti ti-droplet-filled"></i> Resumen Aceites
+<i class="ti ti-droplet"></i> Resumen Aceites
 </a>
 </li>
 
@@ -98,19 +44,40 @@
 </a>
 </li>
 
+<?php if (!$multiestacion): ?>
+
+<li>
+<a class="dropdown-item" href="/departamento-operativo/resumen-impuestos/<?= $idYear ?>/<?= $idMes ?>">
+<i class="ti ti-receipt-tax"></i> Resumen Impuestos
+</a>
+</li>
+
 <li>
 <a class="dropdown-item" href="/departamento-operativo/embarques/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-truck"></i> Resumen Embarques
 </a>
 </li>
 
+<?php endif; ?>
+
+
+<?php if ($esDireccionOperaciones): ?>
+
+<li><hr class="dropdown-divider"></li>
+
+<li>
+<a class="dropdown-item" href="/departamento-operativo/corte-diario-evaluacion/<?= $idYear ?>/<?= $idMes ?>">
+<i class="ti ti-chart-bar"></i> Apertura de Cortes Diarios (KPI's)
+</a>
+</li>
+
+<?php endif; ?>
+
 </ul>
-
+</div>
 <?php endif; ?>
 
 </div>
-</div>
-<?php endif; ?>
 </div>
 </div>
 
