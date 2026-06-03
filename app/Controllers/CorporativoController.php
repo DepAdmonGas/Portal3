@@ -42,6 +42,7 @@ $data = [
 'title'    => $title,
 'idYear'   => $idYear,
 'idMes'    => $idMes,
+'yearMesTemplate' => '/departamento-operativo/corporativo/corte-diario/{year}/{mes}',
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'estacionId' => $this->estacionId(),
@@ -66,10 +67,6 @@ header('Content-Type: application/json; charset=utf-8');
 
 $idEstacion = $this->estacionId();
 $multiEstacion = $this->isMultiEs();
-
-if ($multiEstacion && isset($_GET['estacion'])) {
-$idEstacion = (int) $_GET['estacion'];
-}
 
 if (!$idEstacion) {
 echo json_encode([

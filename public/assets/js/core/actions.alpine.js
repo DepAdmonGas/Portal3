@@ -57,6 +57,14 @@ window.performLogout = async function() {
     }
 };
 
+window.formatNum = function(val, decimales = 2) {
+    return parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
+};
+
+window.formatInt = function(val) {
+    return window.formatNum(val, 0);
+};
+
 // ============================================================
 // SECURITY: BAJO #34 - Event listener para logout via Alpine
 // ============================================================
@@ -67,6 +75,27 @@ document.addEventListener('logout-trigger', () => {
 });
 
 document.addEventListener('alpine:init', () => {
+
+    Alpine.data('yearMesComponent', () => ({
+        year: null,
+        mes: null,
+        yearMesTemplate: '',
+        init() {
+            this.yearMesTemplate = this.$el.getAttribute('data-year-mes-template') || '';
+            const container = document.getElementById('container');
+            if (container) {
+                this.year = container.dataset.year || container.dataset.idYear || null;
+                this.mes = container.dataset.mes || container.dataset.idMes || null;
+            }
+        },
+        cambiarYearMes(year, mes) {
+            const tmpl = this.yearMesTemplate;
+            if (!tmpl) return;
+            const url = tmpl.replace(/\{year\}/g, year).replace(/\{mes\}/g, mes);
+            history.replaceState({ year, mes }, '', url);
+            location.reload();
+        }
+    }));
 
     Alpine.data('actions', () => ({
 

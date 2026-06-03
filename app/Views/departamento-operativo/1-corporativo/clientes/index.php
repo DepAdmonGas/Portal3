@@ -10,7 +10,7 @@ x-data="clientesComponent()">
 
 <div class="text-center py-5" x-show="loading">
 <div class="spinner-border text-primary" role="status"></div>
-<p class="mt-4 text-muted">Cargando clientes...</p>
+<p class="text-muted">Cargando clientes...</p>
 </div>
 
 <div class="row" x-show="!loading">

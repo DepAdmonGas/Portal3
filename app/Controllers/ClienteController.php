@@ -42,6 +42,7 @@ $data = [
 'idEstacion' => $idEstacion,
 'puedeCrear' => $permisos['puedeCrear'],
 'puedeEliminar' => $permisos['puedeEliminar'],
+'ocultarSelectorEstacion' => true,
 'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
 '/assets/libs/select2/dist/css/select2.min.css',

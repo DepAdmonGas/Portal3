@@ -40,6 +40,7 @@ $data = [
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'idEstacion' => $idEstacion,
+'ocultarSelectorEstacion' => true,
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.monedero.init.js?v=' . time(),

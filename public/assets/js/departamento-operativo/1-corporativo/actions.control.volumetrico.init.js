@@ -118,17 +118,11 @@ paramColor(val) {
 return (typeof val === 'number' && val >= 1.5) ? 'text-danger' : '';
 },
 
-formatNum(n) {
-return parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-},
-
 formatDisplay(n) {
-return this.formatNum(n);
+return formatNum(n);
 },
 
-formatInt(n) {
-return parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-},
+
 
 get anexosOpciones() {
 const base = [

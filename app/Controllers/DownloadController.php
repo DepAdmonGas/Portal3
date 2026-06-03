@@ -34,6 +34,9 @@ class DownloadController{
             'comprobantes-clientes' => __DIR__ . '../../../public/archivos/',
             'documentos-ventas'              => __DIR__ . '../../../public/uploads/archivos/',
             'control-volumetrico'          => __DIR__ . '../../../public/uploads/archivos/',
+            'aceites-documentos'           => __DIR__ . '../../../public/uploads/archivos/aceites-documentos/',
+            'aceites-facturas'             => __DIR__ . '../../../public/uploads/archivos/aceites-facturas/',
+            'aceites-diferencias'          => __DIR__ . '../../../public/uploads/archivos/aceites-diferencias/',
         ];
 
         if (!isset($rutas[$tipo])) {

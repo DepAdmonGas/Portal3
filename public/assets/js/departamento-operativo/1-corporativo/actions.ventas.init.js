@@ -150,11 +150,7 @@ this.estado = r.data.estado;
 }).catch(() => {});
 },
 
-/* ---------- HELPERS ---------- */
-formatNum(n) {
-n = parseFloat(n) || 0;
-return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-},
+
 
 calcTotalLitros(v) {
 return (parseFloat(v.litros) || 0) - (parseFloat(v.jarras) || 0);
@@ -169,21 +165,7 @@ calcAceiteImporte(a) {
 return (parseInt(a.cantidad) || 0) * (parseFloat(a.precio_unitario) || 0);
 },
 
-formatearFecha(f) {
-if (!f) return '';
-try {
-let d;
-const match = f.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s|$)/);
-if (match) {
-d = new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
-} else {
-d = new Date(f);
-}
-if (isNaN(d.getTime())) return f;
-const ms = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-return d.getDate() + ' de ' + ms[d.getMonth()] + ' del ' + d.getFullYear();
-} catch(e) { return f; }
-},
+
 
 /* ---------- INLINE EDIT - guardado silencioso sin loadData ---------- */
 _edit(url, data) {

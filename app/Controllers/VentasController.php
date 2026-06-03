@@ -76,6 +76,7 @@ $data = [
 'puedeDescargar' => $permisoDescargar,
 'esSuperviso' => $permisos['es_superviso'],
 'esVoBo' => $permisos['es_vobo'],
+'ocultarSelectorEstacion' => true,
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js?v=' . time(),
@@ -83,7 +84,7 @@ $data = [
 ],
 'help' => false
 ];
- 
+
 View::render('departamento-operativo/1-corporativo/ventas/index', $data, 'departamento-operativo');
 }
 
@@ -426,7 +427,7 @@ $aleatorio = uniqid();
 $archivo = basename($file['name']);
 $pdfNombre = $aleatorio . '-' . $archivo;
 $uploadFolder = __DIR__ . '/../../public/uploads/archivos/' . $pdfNombre;
-  
+
 $dir = dirname($uploadFolder);
 if (!is_dir($dir)) {
 mkdir($dir, 0755, true);
@@ -609,7 +610,7 @@ $tokenRecord = CorteDiaToken::where('id_reportedia', $idReporte)
 ->where('id_usuario', $idUsuario)
 ->where('token', $tokenIngresado)
 ->first();
- 
+
 if (!$tokenRecord) {
 echo json_encode(['success' => false, 'message' => 'Token inválido']);
 exit;

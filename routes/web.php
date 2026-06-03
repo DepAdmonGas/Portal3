@@ -293,15 +293,15 @@ return function(RouteCollector $r) {
     $r->addRoute('POST','/clientes/eliminar',Route::auth(['ClienteController', 'eliminar']));
 
     //----- Clientes Lista
-    $r->addRoute('GET','/clientes-lista/{idEstacion:\d+}',Route::auth(['ClientesListaController', 'index']));
-    $r->addRoute('GET','/clientes-lista/{idEstacion:\d+}/data',Route::auth(['ClientesListaController', 'getLista']));
+    $r->addRoute('GET','/clientes-lista',Route::auth(['ClientesListaController', 'index']));
+    $r->addRoute('GET','/clientes-lista/data',Route::auth(['ClientesListaController', 'getLista']));
     $r->addRoute('POST','/clientes-lista/guardar-contexto',Route::auth(['ClientesListaController', 'guardarContexto']));
     $r->addRoute('POST','/clientes-lista/crear',Route::auth(['ClientesListaController', 'crear']));
     $r->addRoute('POST','/clientes-lista/editar',Route::auth(['ClientesListaController', 'editar']));
     $r->addRoute('POST','/clientes-lista/toggle',Route::auth(['ClientesListaController', 'toggle']));
 
     //----- Control Volumétrico
-    $r->addRoute('GET','/control-volumetrico/{idEstacion:\d+}/{idYear:\d+}/{idMes:\d+}',Route::auth(['ControlVolumetricoController', 'index']));
+    $r->addRoute('GET','/control-volumetrico/{idYear:\d+}/{idMes:\d+}',Route::auth(['ControlVolumetricoController', 'index']));
     $r->addRoute('GET','/control-volumetrico/data',Route::auth(['ControlVolumetricoController', 'getData']));
     $r->addRoute('POST','/control-volumetrico/editar-resumen',Route::auth(['ControlVolumetricoController', 'editarResumen']));
     $r->addRoute('POST','/control-volumetrico/editar-comentario-resumen',Route::auth(['ControlVolumetricoController', 'editarComentarioResumen']));
@@ -312,6 +312,35 @@ return function(RouteCollector $r) {
     $r->addRoute('POST','/control-volumetrico/eliminar-documento',Route::auth(['ControlVolumetricoController', 'eliminarDocumento']));
     $r->addRoute('GET','/control-volumetrico/documentos-list',Route::auth(['ControlVolumetricoController', 'getDocumentosList']));
     $r->addRoute('GET','/control-volumetrico/comentarios-list',Route::auth(['ControlVolumetricoController', 'getComentariosList']));
+
+    //----- Aceites / Resumen Aceites
+    $r->addRoute('GET','/aceites-mes/{idYear:\d+}/{idMes:\d+}',Route::auth(['AceitesController', 'index']));
+    $r->addRoute('GET','/aceites-mes/data',Route::auth(['AceitesController', 'data']));
+    $r->addRoute('POST','/aceites-mes/editar-campo',Route::auth(['AceitesController', 'editarCampo']));
+    $r->addRoute('GET','/aceites-mes/documentos',Route::auth(['AceitesController', 'getDocumentos']));
+    $r->addRoute('POST','/aceites-mes/upload-documento',Route::auth(['AceitesController', 'uploadDocumento']));
+    $r->addRoute('POST','/aceites-mes/actualizar-documento',Route::auth(['AceitesController', 'actualizarDocumento']));
+    $r->addRoute('POST','/aceites-mes/eliminar-documento',Route::auth(['AceitesController', 'eliminarDocumento']));
+    $r->addRoute('POST','/aceites-mes/evaluar-documento',Route::auth(['AceitesController', 'evaluarDocumento']));
+    $r->addRoute('GET','/aceites-mes/facturas',Route::auth(['AceitesController', 'getFacturas']));
+    $r->addRoute('POST','/aceites-mes/upload-factura',Route::auth(['AceitesController', 'uploadFactura']));
+    $r->addRoute('POST','/aceites-mes/eliminar-factura',Route::auth(['AceitesController', 'eliminarFactura']));
+    $r->addRoute('POST','/aceites-mes/evaluar-factura',Route::auth(['AceitesController', 'evaluarFactura']));
+    $r->addRoute('GET','/aceites-mes/diferencias',Route::auth(['AceitesController', 'getDiferencias']));
+    $r->addRoute('POST','/aceites-mes/agregar-diferencia',Route::auth(['AceitesController', 'agregarDiferencia']));
+    $r->addRoute('POST','/aceites-mes/actualizar-documento-diferencia',Route::auth(['AceitesController', 'actualizarDocumentoDiferencia']));
+    $r->addRoute('POST','/aceites-mes/finalizar',Route::auth(['AceitesController', 'finalizar']));
+    $r->addRoute('GET','/aceites-mes/resumen-puntajes',Route::auth(['AceitesController', 'getResumenPuntajes']));
+    $r->addRoute('POST','/aceites-mes/importar-facturas',Route::auth(['AceitesController', 'importarFacturas']));
+    $r->addRoute('GET','/aceites-mes/{idYear:\d+}/{idMes:\d+}/excel',Route::auth(['AceitesController', 'descargarExcel']));
+    $r->addRoute('GET','/resumen-aceites-mes/{idYear:\d+}/{idMes:\d+}',Route::auth(['AceitesController', 'resumenImpuestos']));
+    $r->addRoute('GET','/resumen-kpi-aceites/{idYear:\d+}',Route::auth(['AceitesController', 'kpiAceites']));
+    $r->addRoute('GET','/resumen-kpi-aceites/data/{idYear:\d+}/{tipo:\d+}',Route::auth(['AceitesController', 'kpiAceitesData']));
+    $r->addRoute('GET','/corporativo/lista-aceites',Route::auth(['AceitesController', 'listaAceites']));
+    $r->addRoute('POST','/corporativo/lista-aceites/guardar',Route::auth(['AceitesController', 'listaAceitesGuardar']));
+    $r->addRoute('POST','/corporativo/lista-aceites/nuevo',Route::auth(['AceitesController', 'listaAceitesNuevo']));
+    $r->addRoute('POST','/corporativo/lista-aceites/eliminar',Route::auth(['AceitesController', 'listaAceitesEliminar']));
+    $r->addRoute('POST','/corporativo/lista-aceites/guardar-contexto',Route::auth(['AceitesController', 'guardarContextoListaAceites']));
 
     //----- 2. Recursos Humanos
     $r->addRoute('GET','/recursos-humanos',Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
