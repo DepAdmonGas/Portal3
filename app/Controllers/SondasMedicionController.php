@@ -4,31 +4,25 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
-use App\Models\Sasisopa\ExtintorEstacion;
+use App\Models\Sasisopa\SondasMedicion;
 
-class ExtintoresController extends BaseController
+class SondasMedicionController extends BaseController
 {
 
  protected string $modulo = 'sasisopa';
 
-
     public function index()
     {
 
-        $title = 'Configuración de Extintores';
+        $title = 'Configuración de Sondas de Medición';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add(
-            '10. CONTROL DE ACTIVIDADES Y PROCESOS',
-            '/sasisopa/control-actividades-procesos'
-        );
-
+        Breadcrumb::add('10. CONTROL DE ACTIVIDADES Y PROCESOS','/sasisopa/control-actividades-procesos');
+        Breadcrumb::add('Calibración de Equipos','/sasisopa/control-actividades-procesos/calibracion-equipos');
         Breadcrumb::add($title, '');
 
-        $permisos = ModuloService::permisosSesion(
-            $this->modulo
-        );
+        $permisos = ModuloService::permisosSesion($this->modulo);
 
         $data = [
             'title' => $title,
@@ -41,36 +35,36 @@ class ExtintoresController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/extintores.datatable.init.js?v=1.3',
-                '/js/controlactividadproceso/extintores.action.init.js?v=1.1',
+                '/js/controlactividadproceso/sondasmedicion.datatable.init.js?v=1.1',
+                '/js/controlactividadproceso/sondasmedicion.action.init.js?v=1.1'
+
             ],
 
             'help' => false
         ];
 
-        View::render('controlactividadproceso/extintores',$data,'sasisopa');
+        View::render('controlactividadproceso/sondas-medicion',$data,'sasisopa');
        
     }
 
     public function datatable(){
 
-      $data = ExtintorEstacion::where(
+      $data = SondasMedicion::where(
         'id_estacion',
         $this->estacionId()
         )
         ->where('estado', 1)
-        ->orderByDesc('no_extintor')
+        ->orderByDesc('no_sonda')
         ->get()
 
         ->map(function ($item) {
 
             return [
                 'id' => $item->id,
-                'no_extintor' => $item->no_extintor,
+                'no_sonda' => $item->no_sonda,
+                'marca' => $item->marca,
+                'modelo' => $item->modelo,
                 'ubicacion' => $item->ubicacion,
-                'ultima_recarga' => formatDate($item->ultima_recarga),
-                'tipo_extintor' => $item->tipo_extintor,
-                'peso_kg' => $item->peso_kg,
                 'estado' => $item->estado,
             ];
         });
@@ -97,11 +91,11 @@ class ExtintoresController extends BaseController
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'),true);
 
-    $no_extintor = sanitize_input($data['no_extintor'] ?? null, 'string');
-    $fecha_recarga = sanitize_input($data['fecha_recarga'] ?? null, 'string');
-    $tipo_extintor = sanitize_input($data['tipo_extintor'] ?? null, 'string');
-    $peso_kg = sanitize_input($data['peso_kg'] ?? null, 'string');
+    $no_sonda = sanitize_input($data['no_sonda'] ?? null, 'int');
+    $marca = sanitize_input($data['marca'] ?? null, 'string');
+    $modelo = sanitize_input($data['modelo'] ?? null, 'string');
     $ubicacion = sanitize_input($data['ubicacion'] ?? null, 'string');
+
 
      if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
@@ -111,7 +105,7 @@ class ExtintoresController extends BaseController
             return;
         }
 
-         if (empty($no_extintor) || empty($fecha_recarga) || empty($tipo_extintor) || empty($peso_kg) || empty($ubicacion)) {
+         if (empty($no_sonda) || empty($marca) || empty($modelo) || empty($ubicacion)) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Completa todos los campos obligatorios'
@@ -121,55 +115,48 @@ class ExtintoresController extends BaseController
 
     try{
 
-        ExtintorEstacion::create([
+        SondasMedicion::create([
             'id_estacion' => $this->estacionId(),
-            'no_extintor' => $no_extintor,
+            'no_sonda' => $no_sonda,
+            'marca' => $marca,
+            'modelo' => $modelo,
             'ubicacion' => $ubicacion,
-            'ultima_recarga' => $fecha_recarga,
-            'tipo_extintor' => $tipo_extintor,
-            'peso_kg' => $peso_kg,            
             'estado' => 1
         ]);
 
         echo json_encode([
             'success' => true,
-            'message' => 'Extintor creado correctamente'
+            'message' => 'Sonda de Medición creada correctamente'
         ]);
 
     }catch(\Throwable $e){
 
         echo json_encode([
             'success' => false,
-            'message' => 'Error al crear Extintor'
+            'message' => 'Error al crear Sonda de Medición'
         ]);
     }
 
     }
 
-    public function update(int $id){
+    public function update(){
 
     header('Content-Type: application/json');
 
-    $data = json_decode(
-        file_get_contents('php://input'),
-        true
-    );
+    $data = json_decode(file_get_contents('php://input'),true);
 
     if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
-
         echo json_encode([
             'success' => false,
             'message' => 'No tienes permiso para editar'
         ]);
-
         return;
     }
 
-
-    $registro = ExtintorEstacion::where(
+    $registro = SondasMedicion::where(
         'id_estacion',
         $this->estacionId()
-    )->find($id);
+    )->find($data['id_sonda']);
 
     if (!$registro) {
 
@@ -185,42 +172,37 @@ class ExtintoresController extends BaseController
 
         $registro->update([
 
-            'no_extintor' => sanitize_input(
-                $data['no_extintor'] ?? null,
+            'no_sonda' => sanitize_input(
+                $data['no_sonda'] ?? null,
+                'int'
+            ),
+
+            'marca' => sanitize_input(
+                $data['marca'] ?? null,
+                'string'
+            ),
+
+            'modelo' => sanitize_input(
+                $data['modelo'] ?? null,
                 'string'
             ),
 
             'ubicacion' => sanitize_input(
                 $data['ubicacion'] ?? null,
                 'string'
-            ),
-
-            'ultima_recarga' => sanitize_input(
-                $data['fecha_recarga'] ?? null,
-                'string'
-            ),
-
-            'tipo_extintor' => sanitize_input(
-                $data['tipo_extintor'] ?? null,
-                'string'
-            ),
-
-            'peso_kg' => sanitize_input(
-                $data['peso_kg'] ?? null,
-                'string'
-            ),
+            )
         ]);
 
         echo json_encode([
             'success' => true,
-            'message' => 'Extintor actualizado correctamente'
+            'message' => 'Sonda de Medición actualizada correctamente'
         ]);
 
     }catch(\Throwable $e){
 
         echo json_encode([
             'success' => false,
-            'message' => 'Error al actualizar Extintor'
+            'message' => 'Error al actualizar Sonda de Medición'
         ]);
     }
 
@@ -234,7 +216,7 @@ class ExtintoresController extends BaseController
 
         $data = json_decode(file_get_contents('php://input'),true);
 
-        $registro = ExtintorEstacion::find($data['id']);
+        $registro = SondasMedicion::find($data['id']);
 
         if(!$registro){
 
@@ -252,7 +234,7 @@ class ExtintoresController extends BaseController
 
         echo json_encode([
             'success' => true,
-            'message' => 'Extintor eliminado correctamente'
+            'message' => 'Sonda de Medición eliminada correctamente'
         ]);
 
     }catch(\Throwable $e){
@@ -264,5 +246,6 @@ class ExtintoresController extends BaseController
     }
 
     }
+
 
 }

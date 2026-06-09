@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Sasisopa\Dispensario;
 
 class CalibracionEquipoDispensario extends Model
 {
@@ -34,4 +35,13 @@ class CalibracionEquipoDispensario extends Model
         'resultado3' => 'string',
         'resultado4' => 'string',
     ];
+
+     public function dispensario()
+    {
+        return $this->belongsTo(
+            Dispensario::class,
+            'id_dispensario',
+            'id'
+        );
+    }
 }

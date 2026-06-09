@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Models;
-
+namespace App\Models\Sgm;
+use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Model;
 
 class CalibracionEquipo extends Model
@@ -48,4 +48,53 @@ class CalibracionEquipo extends Model
         'categoria' => 'integer',
         'estado' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario',
+            'id'
+        );
+    }
+
+    public function detalles()
+    {
+        return $this->hasMany(
+            CalibracionEquipoDetalle::class,
+            'id_calibracion'
+        );
+    }
+
+    public function dispensarios()
+    {
+        return $this->hasMany(
+            CalibracionEquipoDispensario::class,
+            'id_calibracion'
+        );
+    }
+
+     public function jarras()
+    {
+        return $this->hasMany(
+            CalibracionEquipoJarra::class,
+            'id_calibracion'
+        );
+    }
+
+    public function sondas()
+    {
+        return $this->hasMany(
+            CalibracionEquipoSonda::class,
+            'id_calibracion'
+        );
+    }
+
+    public function tanques()
+    {
+        return $this->hasMany(
+            CalibracionEquipoTanque::class,
+            'id_calibracion'
+        );
+    }
 }

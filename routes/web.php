@@ -611,6 +611,60 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-correctivo/evidencias/create', Route::auth(['MantenimientoCorrectivoController', 'createEvidencia']));
         $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-correctivo/evidencias/delete', Route::auth(['MantenimientoCorrectivoController', 'deleteEvidencia']));
 
+        // ------------ Calibracion de Equipos
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos', Route::auth(['CalibracionEquiposController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/configuracion-tanques', Route::auth(['TanqueAlmacenamientoController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/configuracion-tanques/datatable', Route::auth(['TanqueAlmacenamientoController', 'datatable']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-tanques/create', Route::auth(['TanqueAlmacenamientoController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-tanques/update', Route::auth(['TanqueAlmacenamientoController', 'update']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-tanques/delete', Route::auth(['TanqueAlmacenamientoController', 'delete']));
+
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/configuracion-dispensario', Route::auth(['DispensarioController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/configuracion-dispensario/datatable', Route::auth(['DispensarioController', 'datatable']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-dispensario/create', Route::auth(['DispensarioController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-dispensario/delete', Route::auth(['DispensarioController', 'delete']));
+
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/configuracion-sondas-medicion', Route::auth(['SondasMedicionController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/configuracion-sondas-medicion/datatable', Route::auth(['SondasMedicionController', 'datatable']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-sondas-medicion/create', Route::auth(['SondasMedicionController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-sondas-medicion/update', Route::auth(['SondasMedicionController', 'update']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-sondas-medicion/delete', Route::auth(['SondasMedicionController', 'delete']));
+
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/configuracion-jarra-patron', Route::auth(['JarraPatronController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/configuracion-jarra-patron/datatable', Route::auth(['JarraPatronController', 'datatable']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-jarra-patron/create', Route::auth(['JarraPatronController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-jarra-patron/update', Route::auth(['JarraPatronController', 'update']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/configuracion-jarra-patron/delete', Route::auth(['JarraPatronController', 'delete']));
+
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos', Route::auth(['BitacoraCalibracionEquiposController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/datatable', Route::auth(['BitacoraCalibracionEquiposController', 'datatable']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/create', Route::auth(['BitacoraCalibracionEquiposController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/upload-resultado', Route::auth(['BitacoraCalibracionEquiposController', 'uploadResultado']));
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/detalle/{id:\d+}', Route::auth(['BitacoraCalibracionEquiposController', 'detalle']));
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/pdf', Route::auth(['BitacoraCalibracionEquiposController', 'pdf']));
+
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-dispensario/{id:\d+}', Route::auth(['CalibracionDispensarioController', 'index']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-dispensario/update', Route::auth(['CalibracionDispensarioController', 'update']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-dispensario/delete', Route::auth(['CalibracionDispensarioController', 'delete']));
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-dispensario/get-dispensarios', Route::auth(['CalibracionDispensarioController', 'getDispensarios']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-dispensario/create', Route::auth(['CalibracionDispensarioController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-dispensario/finalizar', Route::auth(['CalibracionDispensarioController', 'finalizar']));
+
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/{id:\d+}', Route::auth(['CalibracionSondaController', 'index']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/update', Route::auth(['CalibracionSondaController', 'update']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos//bitacora-calibracion-equipos-sonda/finalizar', Route::auth(['CalibracionSondaController', 'finalizar']));
+
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/{id:\d+}', Route::auth(['CalibracionJarraPatronController', 'index']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/update', Route::auth(['CalibracionJarraPatronController', 'update']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/finalizar', Route::auth(['CalibracionJarraPatronController', 'finalizar']));
+
+        $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/{id:\d+}', Route::auth(['CalibracionTanquesController', 'index']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/update', Route::auth(['CalibracionTanquesController', 'update']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/upload-resultado', Route::auth(['CalibracionTanquesController', 'uploadResultado']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/finalizar', Route::auth(['CalibracionTanquesController', 'finalizar']));
+
+
+
         // Elemento 11
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento/datatable-equipo-critico', Route::auth(['IntegridadMecanicaController', 'datatableEquipoCritico']));
