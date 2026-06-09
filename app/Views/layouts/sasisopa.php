@@ -335,7 +335,7 @@
 <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
 <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
 <script src="<?= asset('js/core/notify.js?v=1.0.1') ?>"></script> 
-<script src="<?= asset('js/core/actions.alpine.js?v=1.0.1') ?>"></script>
+<script src="<?= asset('js/core/actions.alpine.js?v=1.0.2') ?>"></script>
 
 <!-- Scripts por vista -->
 <?php if (!empty($scripts)): ?>

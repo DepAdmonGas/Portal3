@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models;
-
+namespace App\Models\Sgm;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Sasisopa\JarraPatron;
 
 class CalibracionEquipoJarra extends Model
 {
@@ -28,4 +28,12 @@ class CalibracionEquipoJarra extends Model
         'id_jarra' => 'integer',
         'resultado1' => 'string',
     ];
+
+    public function jarra()
+    {
+        return $this->belongsTo(
+            JarraPatron::class,
+            'id_jarra'
+        );
+    }
 }

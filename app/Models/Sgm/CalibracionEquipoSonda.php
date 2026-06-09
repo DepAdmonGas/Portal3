@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Sasisopa\SondasMedicion;
 
 class CalibracionEquipoSonda extends Model
 {
@@ -28,4 +29,13 @@ class CalibracionEquipoSonda extends Model
         'id_sonda' => 'integer',
         'resultado1' => 'string',
     ];
+
+    public function sonda()
+    {
+        return $this->belongsTo(
+            SondasMedicion::class,
+            'id_sonda',
+            'id'
+        );
+    }
 }

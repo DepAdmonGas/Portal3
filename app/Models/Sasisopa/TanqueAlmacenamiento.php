@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,7 +16,8 @@ class TanqueAlmacenamiento extends Model
         'id_estacion',
         'no_tanque',
         'capacidad',
-        'producto'
+        'producto',
+        'estado'
     ];
 
     protected $casts = [

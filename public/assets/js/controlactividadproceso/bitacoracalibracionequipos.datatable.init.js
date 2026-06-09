@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    table1 = $('#table-extintores').DataTable({
+    table1 = $('#table-bitacora-calibracion-equipos').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         ajax: {
             url:
-            '/sasisopa/control-actividades-procesos/extintores/datatable',
+            '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/datatable',
             type: 'GET',
             dataSrc: function (json) {
             permisos = json.permisos;
@@ -21,15 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
 
             {
-                data: 'no_extintor'
+                data: 'folio'
             },
 
-            {
-                data: 'ubicacion'
-            },
-
-             {
-            data: 'ultima_recarga',
+           {
+            data: 'fecha',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -57,12 +53,20 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
             {
-                data: 'tipo_extintor'
+                data: 'equipo'
             },
 
             {
-                data: 'peso_kg'
+                data: 'resultado_estado',
+                className: 'text-center align-middle',
             },
+
+             {
+                data: 'estado',
+                className: 'text-center align-middle',
+            },
+
+           
             
             {
                 data: null,
@@ -72,32 +76,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     'text-center align-middle',
                 render: function(data,type,row){
 
-                    const noDelete = permisos.eliminar;
                     const noEditar = permisos.editar;
-                    const nomEquipo = JSON.stringify(row.equipo ?? '');
+                    const noDetalle = row.detalle;
 
-                        return `
+                return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                         <div class="dropdown dropstart">
                             <a href="javascript:void(0)" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
-                              
-                                <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3 ${!noEditar ? 'disabled' : ''}" 
+
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-3  ${!noDetalle ? 'text-muted' : ''}"
+                                ${!noDetalle ? '' : ` 
                                 href="javascript:void(0)"
-                                ${!noEditar ? '' : `@click='window.extintores.openModalEditar(${JSON.stringify(row)})'`}>
-                                <i class="ti ti-edit"></i>Editar
+                                @click='window.bitacoraCalibracionEquipos.abrirDetalle(${row.id})'`}>
+                                <i class="ti ti-eye"></i>Detalle
                                 </a>    
                                </li>  
+                              
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}" 
-                                    href="javascript:void(0)"
-                                    ${!noDelete ? '' : `@click='window.extintores.eliminar(${row.id},${nomEquipo})'`}>
-                                        <i class="ti ti-trash"></i>Eliminar
+                                <a class="dropdown-item d-flex align-items-center gap-3" ${!noEditar ? 'disabled' : ''} 
+                                href="${row.location}">
+                                <i class="ti ti-edit"></i>Editar
+                                </a>    
+                               </li> 
+                               
+                                <li>
+                                    <a
+                                        class="dropdown-item d-flex align-items-center gap-3"
+                                        href="javascript:void(0)"
+                                        ${`@click='window.bitacoraCalibracionEquipos.abrirModalResultados(${JSON.stringify(row)})'`}>
+
+                                        <i class="ti ti-folder-up"></i>
+                                        Resultados
+
                                     </a>
                                 </li>
+                               
                             </ul>
                         </div>
                         </div>
@@ -108,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     });
 
-    $("#table-extintores tbody").on("click", "tr", function () {
+    $("#table-bitacora-calibracion-equipos tbody").on("click", "tr", function () {
     if ($(this).hasClass("selected")) {
     } else {
     table1.$("tr.selected").removeClass("selected");

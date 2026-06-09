@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
+use App\Models\Sasisopa\TanqueAlmacenamiento;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,4 +33,12 @@ class CalibracionEquipoTanque extends Model
         'resultado2' => 'string',
         'resultados' => 'string',
     ];
+
+    public function tanque()
+    {
+        return $this->belongsTo(
+            TanqueAlmacenamiento::class,
+            'id_tanque'
+        );
+    }
 }

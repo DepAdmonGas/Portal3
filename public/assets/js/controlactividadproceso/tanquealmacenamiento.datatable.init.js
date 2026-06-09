@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    table1 = $('#table-extintores').DataTable({
+    table1 = $('#table-tanque-almacenamiento').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         ajax: {
             url:
-            '/sasisopa/control-actividades-procesos/extintores/datatable',
+            '/sasisopa/control-actividades-procesos/calibracion-equipos/configuracion-tanques/datatable',
             type: 'GET',
             dataSrc: function (json) {
             permisos = json.permisos;
@@ -21,47 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
 
             {
-                data: 'no_extintor'
+                data: 'no_tanque'
             },
 
             {
-                data: 'ubicacion'
-            },
-
-             {
-            data: 'ultima_recarga',
-            render: function (data, type) {
-
-                if (!data || data === 'S/I') return 'S/I';
-
-                const partes = data.split('-');
-
-                if (partes.length !== 3) return 'S/I';
-
-                const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
-
-                const fechaFormateada = fecha.toLocaleDateString('es-MX', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
-
-                if (type === 'display' || type === 'filter') {
-                    return fechaFormateada;
-                }
-
-                return data;
-            },
-            orderable: true,
-            searchable: true
-        },
-
-            {
-                data: 'tipo_extintor'
+                data: 'capacidad'
             },
 
             {
-                data: 'peso_kg'
+                data: 'producto'
             },
             
             {
@@ -74,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const noDelete = permisos.eliminar;
                     const noEditar = permisos.editar;
-                    const nomEquipo = JSON.stringify(row.equipo ?? '');
+                    const nomTanque = JSON.stringify(row.no_tanque ?? '');
 
                         return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -87,14 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <li>
                                 <a class="dropdown-item d-flex align-items-center gap-3 ${!noEditar ? 'disabled' : ''}" 
                                 href="javascript:void(0)"
-                                ${!noEditar ? '' : `@click='window.extintores.openModalEditar(${JSON.stringify(row)})'`}>
+                                ${!noEditar ? '' : `@click='window.tanqueAlmacenamiento.openModalEditar(${JSON.stringify(row)})'`}>
                                 <i class="ti ti-edit"></i>Editar
                                 </a>    
                                </li>  
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}" 
                                     href="javascript:void(0)"
-                                    ${!noDelete ? '' : `@click='window.extintores.eliminar(${row.id},${nomEquipo})'`}>
+                                    ${!noDelete ? '' : `@click='window.tanqueAlmacenamiento.eliminar(${row.id},${nomTanque})'`}>
                                         <i class="ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
@@ -108,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     });
 
-    $("#table-extintores tbody").on("click", "tr", function () {
+    $("#table-tanque-almacenamiento tbody").on("click", "tr", function () {
     if ($(this).hasClass("selected")) {
     } else {
     table1.$("tr.selected").removeClass("selected");

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,7 +17,8 @@ class SondasMedicion extends Model
         'no_sonda',
         'marca',
         'modelo',
-        'ubicacion'
+        'ubicacion',
+        'estado'
     ];
 
     protected $casts = [

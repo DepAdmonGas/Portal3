@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,10 +22,12 @@ class JarraPatron extends Model
         'no_serie',
         'capacidad',
         'material',
+        'estado',
     ];
 
     protected $casts = [
         'id' => 'integer',
         'id_estacion' => 'integer',
+        'estado' => 'integer',
     ];
 }

@@ -227,6 +227,7 @@ document.addEventListener('alpine:init', () => {
     table = null,
     method = 'POST',
     headers = {},
+    notify = true, 
     onSuccess = null,
     onError = null
 }) {
@@ -267,7 +268,7 @@ document.addEventListener('alpine:init', () => {
                 $(table).DataTable().ajax.reload(null, false);
             }
 
-            if (res.message) {
+            if (notify && res.message) {
                 this.notify('success', res.message);
             }
 
@@ -277,7 +278,12 @@ document.addEventListener('alpine:init', () => {
 
         } else {
 
-            this.notify('error', res.message || 'Error');
+            if (notify) {
+                this.notify(
+                    'error',
+                    res.message || 'Error'
+                );
+            }
 
             if (typeof onError === 'function') {
                 onError(res);

@@ -4,31 +4,25 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
-use App\Models\Sasisopa\ExtintorEstacion;
+use App\Models\Sasisopa\JarraPatron;
 
-class ExtintoresController extends BaseController
+class JarraPatronController extends BaseController
 {
 
  protected string $modulo = 'sasisopa';
 
-
     public function index()
     {
 
-        $title = 'Configuración de Extintores';
+        $title = 'Configuración de Jarra de Patrón';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add(
-            '10. CONTROL DE ACTIVIDADES Y PROCESOS',
-            '/sasisopa/control-actividades-procesos'
-        );
-
+        Breadcrumb::add('10. CONTROL DE ACTIVIDADES Y PROCESOS','/sasisopa/control-actividades-procesos');
+        Breadcrumb::add('Calibración de Equipos','/sasisopa/control-actividades-procesos/calibracion-equipos');
         Breadcrumb::add($title, '');
 
-        $permisos = ModuloService::permisosSesion(
-            $this->modulo
-        );
+        $permisos = ModuloService::permisosSesion($this->modulo);
 
         $data = [
             'title' => $title,
@@ -41,36 +35,36 @@ class ExtintoresController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/extintores.datatable.init.js?v=1.3',
-                '/js/controlactividadproceso/extintores.action.init.js?v=1.1',
+                '/js/controlactividadproceso/jarrapatron.datatable.init.js?v=1.1',
+                '/js/controlactividadproceso/jarrapatron.action.init.js?v=1.1'
+
             ],
 
             'help' => false
         ];
 
-        View::render('controlactividadproceso/extintores',$data,'sasisopa');
+        View::render('controlactividadproceso/jarra-patron',$data,'sasisopa');
        
     }
 
     public function datatable(){
 
-      $data = ExtintorEstacion::where(
+      $data = JarraPatron::where(
         'id_estacion',
         $this->estacionId()
         )
         ->where('estado', 1)
-        ->orderByDesc('no_extintor')
+        ->orderByDesc('id')
         ->get()
 
         ->map(function ($item) {
 
             return [
                 'id' => $item->id,
-                'no_extintor' => $item->no_extintor,
-                'ubicacion' => $item->ubicacion,
-                'ultima_recarga' => formatDate($item->ultima_recarga),
-                'tipo_extintor' => $item->tipo_extintor,
-                'peso_kg' => $item->peso_kg,
+                'marca' => $item->marca,
+                'no_serie' => $item->no_serie,
+                'capacidad' => $item->capacidad,
+                'material' => $item->material,
                 'estado' => $item->estado,
             ];
         });
@@ -97,11 +91,11 @@ class ExtintoresController extends BaseController
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'),true);
 
-    $no_extintor = sanitize_input($data['no_extintor'] ?? null, 'string');
-    $fecha_recarga = sanitize_input($data['fecha_recarga'] ?? null, 'string');
-    $tipo_extintor = sanitize_input($data['tipo_extintor'] ?? null, 'string');
-    $peso_kg = sanitize_input($data['peso_kg'] ?? null, 'string');
-    $ubicacion = sanitize_input($data['ubicacion'] ?? null, 'string');
+    $marca = sanitize_input($data['marca'] ?? null, 'string');
+    $no_serie = sanitize_input($data['no_serie'] ?? null, 'string');
+    $capacidad = sanitize_input($data['capacidad'] ?? null, 'string');
+    $material = sanitize_input($data['material'] ?? null, 'string');
+
 
      if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
@@ -111,7 +105,7 @@ class ExtintoresController extends BaseController
             return;
         }
 
-         if (empty($no_extintor) || empty($fecha_recarga) || empty($tipo_extintor) || empty($peso_kg) || empty($ubicacion)) {
+         if (empty($no_serie) || empty($marca) || empty($capacidad) || empty($material)) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Completa todos los campos obligatorios'
@@ -121,55 +115,48 @@ class ExtintoresController extends BaseController
 
     try{
 
-        ExtintorEstacion::create([
-            'id_estacion' => $this->estacionId(),
-            'no_extintor' => $no_extintor,
-            'ubicacion' => $ubicacion,
-            'ultima_recarga' => $fecha_recarga,
-            'tipo_extintor' => $tipo_extintor,
-            'peso_kg' => $peso_kg,            
+        JarraPatron::create([
+            'id_estacion' => $this->estacionId(),            
+            'marca' => $marca,
+            'no_serie' => $no_serie,
+            'capacidad' => $capacidad,
+            'material' => $material,
             'estado' => 1
         ]);
 
         echo json_encode([
             'success' => true,
-            'message' => 'Extintor creado correctamente'
+            'message' => 'Jarra de Patrón creada correctamente'
         ]);
 
     }catch(\Throwable $e){
 
         echo json_encode([
             'success' => false,
-            'message' => 'Error al crear Extintor'
+            'message' => 'Error al crear Jarra de Patrón'
         ]);
     }
 
     }
 
-    public function update(int $id){
+    public function update(){
 
     header('Content-Type: application/json');
 
-    $data = json_decode(
-        file_get_contents('php://input'),
-        true
-    );
+    $data = json_decode(file_get_contents('php://input'),true);
 
     if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
-
         echo json_encode([
             'success' => false,
             'message' => 'No tienes permiso para editar'
         ]);
-
         return;
     }
 
-
-    $registro = ExtintorEstacion::where(
+    $registro = JarraPatron::where(
         'id_estacion',
         $this->estacionId()
-    )->find($id);
+    )->find($data['id_jarra']);
 
     if (!$registro) {
 
@@ -185,42 +172,37 @@ class ExtintoresController extends BaseController
 
         $registro->update([
 
-            'no_extintor' => sanitize_input(
-                $data['no_extintor'] ?? null,
+            'marca' => sanitize_input(
+                $data['marca'] ?? null,
                 'string'
             ),
 
-            'ubicacion' => sanitize_input(
-                $data['ubicacion'] ?? null,
+            'no_serie' => sanitize_input(
+                $data['no_serie'] ?? null,
                 'string'
             ),
 
-            'ultima_recarga' => sanitize_input(
-                $data['fecha_recarga'] ?? null,
+            'capacidad' => sanitize_input(
+                $data['capacidad'] ?? null,
                 'string'
             ),
 
-            'tipo_extintor' => sanitize_input(
-                $data['tipo_extintor'] ?? null,
+            'material' => sanitize_input(
+                $data['material'] ?? null,
                 'string'
-            ),
-
-            'peso_kg' => sanitize_input(
-                $data['peso_kg'] ?? null,
-                'string'
-            ),
+            )
         ]);
 
         echo json_encode([
             'success' => true,
-            'message' => 'Extintor actualizado correctamente'
+            'message' => 'Jarra de Patrón actualizada correctamente'
         ]);
 
     }catch(\Throwable $e){
 
         echo json_encode([
             'success' => false,
-            'message' => 'Error al actualizar Extintor'
+            'message' => 'Error al actualizar Jarra de Patrón'
         ]);
     }
 
@@ -234,7 +216,7 @@ class ExtintoresController extends BaseController
 
         $data = json_decode(file_get_contents('php://input'),true);
 
-        $registro = ExtintorEstacion::find($data['id']);
+        $registro = JarraPatron::find($data['id']);
 
         if(!$registro){
 
@@ -252,17 +234,18 @@ class ExtintoresController extends BaseController
 
         echo json_encode([
             'success' => true,
-            'message' => 'Extintor eliminado correctamente'
+            'message' => 'Jarra de Patrón eliminada correctamente'
         ]);
 
     }catch(\Throwable $e){
 
         echo json_encode([
             'success' => false,
-            'message' => 'Error al eliminar Extintor'
+            'message' => 'Error al eliminar Jarra de Patrón'
         ]);
     }
 
     }
+
 
 }
