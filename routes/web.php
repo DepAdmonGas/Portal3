@@ -692,7 +692,12 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/upload-resultado', Route::auth(['CalibracionTanquesController', 'uploadResultado']));
         $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/finalizar', Route::auth(['CalibracionTanquesController', 'finalizar']));
 
-
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-dispensario', Route::auth(['BitacoraDispensarioController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-dispensario/datatable', Route::auth(['BitacoraDispensarioController', 'datatable']));
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-dispensario/catalogos', Route::auth(['BitacoraDispensarioController', 'catalogos']));
+        $r->addRoute('POST', '/control-actividades-procesos/bitacora-dispensario/create', Route::auth(['BitacoraDispensarioController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/bitacora-dispensario/delete', Route::auth(['BitacoraDispensarioController', 'delete']));
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-dispensario/excel', Route::auth(['BitacoraDispensarioController', 'excel']));
 
         // Elemento 11
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));

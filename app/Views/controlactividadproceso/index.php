@@ -69,16 +69,11 @@
             <i class="ti ti-eye"></i>
             Calibración de equipos
           </a>
-
-          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+          <a type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100"
+          href="/sasisopa/control-actividades-procesos/bitacora-dispensario">
             <i class="ti ti-eye"></i>
             Bitácora PROFECO
-          </button>
-
-          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
-            <i class="ti ti-eye"></i>
-            Bitácora PROFECO
-          </button>
+          </a>
 
           <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
             <i class="ti ti-eye"></i>

@@ -3,6 +3,7 @@
 namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class DispensarioAperturaBitacora extends Model
 {
@@ -42,4 +43,20 @@ class DispensarioAperturaBitacora extends Model
         'responsable' => 'integer',
         'detalle' => 'string',
     ];
+
+    public function dispensario()
+    {
+        return $this->belongsTo(
+            Dispensario::class,
+            'id_dispensario'
+        );
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'responsable'
+        );
+    }
 }
