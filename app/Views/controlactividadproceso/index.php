@@ -75,15 +75,16 @@
             Bitácora PROFECO
           </a>
 
-          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+          <a type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
             <i class="ti ti-eye"></i>
             Mantenimiento V.1.2
-          </button>
+          </a>
 
-          <button type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+          <a type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100"
+          href="/sasisopa/control-actividades-procesos/bitacora-residuos-peligrosos">
             <i class="ti ti-eye"></i>
             Bitácora de Residuos Peligrosos
-          </button>
+          </a>
 
       </div>
     </div>

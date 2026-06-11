@@ -923,339 +923,339 @@ td{
         ];
     }
 
-private function detalleGeneralPdf(
-    CalibracionEquipo $item
-): string {
+    private function detalleGeneralPdf(
+        CalibracionEquipo $item
+    ): string {
 
-    $categoriaDetalle =
-        $item->categoria == 1
-            ? 'Ordinaria'
-            : 'Extraordinaria';
+        $categoriaDetalle =
+            $item->categoria == 1
+                ? 'Ordinaria'
+                : 'Extraordinaria';
 
-    $unidadVerificacion = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'Unidad de verificación'
-        )
-    )->resultado ?? '';
+        $unidadVerificacion = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'Unidad de verificación'
+            )
+        )->resultado ?? '';
 
-    $numeroAcreditacion = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'No. de acreditación'
-        )
-    )->resultado ?? '';
+        $numeroAcreditacion = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'No. de acreditación'
+            )
+        )->resultado ?? '';
 
-    $metodoUsadoCalibracion = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'Método usado para la calibración'
-        )
-    )->resultado ?? '';
+        $metodoUsadoCalibracion = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'Método usado para la calibración'
+            )
+        )->resultado ?? '';
 
-    $temperaturaAmbiente = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'Temperatura ambiente'
-        )
-    )->resultado ?? '';
+        $temperaturaAmbiente = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'Temperatura ambiente'
+            )
+        )->resultado ?? '';
 
-    $presionAtmosferica = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'Presión atmosférica'
-        )
-    )->resultado ?? '';
+        $presionAtmosferica = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'Presión atmosférica'
+            )
+        )->resultado ?? '';
 
-    $humedad = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'Humedad'
-        )
-    )->resultado ?? '';
+        $humedad = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'Humedad'
+            )
+        )->resultado ?? '';
 
-    $liquidoCalibracion = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'Liquido usado en la calibración'
-        )
-    )->resultado ?? '';
+        $liquidoCalibracion = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'Liquido usado en la calibración'
+            )
+        )->resultado ?? '';
 
-    $temperaturaLiquido = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'Temperatura del líquido'
-        )
-    )->resultado ?? '';
+        $temperaturaLiquido = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'Temperatura del líquido'
+            )
+        )->resultado ?? '';
 
-    $laboratorioCalibracion = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'Laboratorio de calibración'
-        )
-    )->resultado ?? '';
+        $laboratorioCalibracion = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'Laboratorio de calibración'
+            )
+        )->resultado ?? '';
 
-    $metodoCalibracion = optional(
-        $item->detalles->firstWhere(
-            'categoria',
-            'Método de calibración'
-        )
-    )->resultado ?? '';
+        $metodoCalibracion = optional(
+            $item->detalles->firstWhere(
+                'categoria',
+                'Método de calibración'
+            )
+        )->resultado ?? '';
 
-    switch ($item->equipo) {
+        switch ($item->equipo) {
 
-        case 'Dispensario':
+            case 'Dispensario':
 
-            return '
-            <div class="mt-2">
-            <b>Unidad de verificación:</b> '.$unidadVerificacion.'<br>
-            <b>No. acreditación:</b> '.$numeroAcreditacion.'<br>
-            <b>Tipo calibración:</b> '.$categoriaDetalle.'<br>
-            </div>';
+                return '
+                <div class="mt-2">
+                <b>Unidad de verificación:</b> '.$unidadVerificacion.'<br>
+                <b>No. acreditación:</b> '.$numeroAcreditacion.'<br>
+                <b>Tipo calibración:</b> '.$categoriaDetalle.'<br>
+                </div>';
 
-        case 'Sondas de medición':
+            case 'Sondas de medición':
 
-            return '
-            <div class="mt-2">
-            <b>Unidad de verificación:</b> '.$unidadVerificacion.'<br>
-            <b>No. acreditación:</b> '.$numeroAcreditacion.'<br>
-            <b>Método usado para la calibración:</b> '.$metodoUsadoCalibracion.'
-            </div>';
+                return '
+                <div class="mt-2">
+                <b>Unidad de verificación:</b> '.$unidadVerificacion.'<br>
+                <b>No. acreditación:</b> '.$numeroAcreditacion.'<br>
+                <b>Método usado para la calibración:</b> '.$metodoUsadoCalibracion.'
+                </div>';
 
-        case 'Tanques de almacenamiento':
+            case 'Tanques de almacenamiento':
 
-            return '
-            <div class="mt-2">
-            <b>Unidad de verificación:</b> '.$unidadVerificacion.'<br>
-            <b>No. acreditación:</b> '.$numeroAcreditacion.'<br>
-            <b>Método usado:</b> '.$metodoUsadoCalibracion.'
-            </div>
-            ';
+                return '
+                <div class="mt-2">
+                <b>Unidad de verificación:</b> '.$unidadVerificacion.'<br>
+                <b>No. acreditación:</b> '.$numeroAcreditacion.'<br>
+                <b>Método usado:</b> '.$metodoUsadoCalibracion.'
+                </div>
+                ';
 
-        case 'Jarra patron':
+            case 'Jarra patron':
 
-            return '
+                return '
 
-            <table width="100%" style="margin-bottom:5px;">
+                <table width="100%" style="margin-bottom:5px;">
 
-                <tr>
-                    <td><b>Temperatura ambiente:</b></td>
-                    <td>'.$temperaturaAmbiente.'</td>
+                    <tr>
+                        <td><b>Temperatura ambiente:</b></td>
+                        <td>'.$temperaturaAmbiente.'</td>
 
-                    <td><b>Presión atmosférica:</b></td>
-                    <td>'.$presionAtmosferica.'</td>
-                </tr>
+                        <td><b>Presión atmosférica:</b></td>
+                        <td>'.$presionAtmosferica.'</td>
+                    </tr>
 
-                <tr>
-                    <td><b>Humedad:</b></td>
-                    <td>'.$humedad.'</td>
+                    <tr>
+                        <td><b>Humedad:</b></td>
+                        <td>'.$humedad.'</td>
 
-                    <td><b>Liquido calibración:</b></td>
-                    <td>'.$liquidoCalibracion.'</td>
-                </tr>
+                        <td><b>Liquido calibración:</b></td>
+                        <td>'.$liquidoCalibracion.'</td>
+                    </tr>
 
-                <tr>
-                    <td><b>Temperatura líquido:</b></td>
-                    <td>'.$temperaturaLiquido.'</td>
+                    <tr>
+                        <td><b>Temperatura líquido:</b></td>
+                        <td>'.$temperaturaLiquido.'</td>
 
-                    <td><b>Laboratorio:</b></td>
-                    <td>'.$laboratorioCalibracion.'</td>
-                </tr>
+                        <td><b>Laboratorio:</b></td>
+                        <td>'.$laboratorioCalibracion.'</td>
+                    </tr>
 
-                <tr>
-                    <td><b>No. acreditación:</b></td>
-                    <td>'.$numeroAcreditacion.'</td>
+                    <tr>
+                        <td><b>No. acreditación:</b></td>
+                        <td>'.$numeroAcreditacion.'</td>
 
-                    <td><b>Método calibración:</b></td>
-                    <td>'.$metodoCalibracion.'</td>
-                </tr>
+                        <td><b>Método calibración:</b></td>
+                        <td>'.$metodoCalibracion.'</td>
+                    </tr>
 
-            </table>';
+                </table>';
+        }
+
+        return '';
     }
 
-    return '';
-}
+    private function detalleEquipoPdf(
+        CalibracionEquipo $item
+    ): string {
 
-private function detalleEquipoPdf(
-    CalibracionEquipo $item
-): string {
+        switch ($item->equipo) {
 
-    switch ($item->equipo) {
-
-        case 'Dispensario':
+            case 'Dispensario':
 
 
-            $html = '
-            <table width="100%" border="1" cellpadding="2">
-                <tr style="background:#F2F2F2;">
-                    <th>No.</th>
-                    <th>Dispensario</th>
-                    <th>¿Cumple con el error maximo tolerado?</th>
-                    <th>¿Cumple con la repetibilidad?</th>
-                    <th>Folio del holograma</th>
-                    <th>Distintivo empresarial</th>
-                </tr>';
+                $html = '
+                <table width="100%" border="1" cellpadding="2">
+                    <tr style="background:#F2F2F2;">
+                        <th>No.</th>
+                        <th>Dispensario</th>
+                        <th>¿Cumple con el error maximo tolerado?</th>
+                        <th>¿Cumple con la repetibilidad?</th>
+                        <th>Folio del holograma</th>
+                        <th>Distintivo empresarial</th>
+                    </tr>';
 
-            foreach ($item->dispensarios as $d) {
+                foreach ($item->dispensarios as $d) {
 
-                $html .= '
+                    $html .= '
 
-                <tr>
-                    <td align="center">
-                        '.$d->dispensario?->no_dispensario.'
-                    </td>
-                    <td>
-                        '.$d->dispensario?->marca.' , '.$d->dispensario?->modelo.'
-                    </td>
-                    <td align="center">
-                        '.$d->resultado1.'
-                    </td>
-                    <td align="center">
-                        '.$d->resultado2.'
-                    </td>
-                    <td align="center">
-                        '.$d->resultado3.'
-                    </td>
-                    <td align="center">
-                        '.$d->resultado4.'
-                    </td>
-                </tr>';
-            }
+                    <tr>
+                        <td align="center">
+                            '.$d->dispensario?->no_dispensario.'
+                        </td>
+                        <td>
+                            '.$d->dispensario?->marca.' , '.$d->dispensario?->modelo.'
+                        </td>
+                        <td align="center">
+                            '.$d->resultado1.'
+                        </td>
+                        <td align="center">
+                            '.$d->resultado2.'
+                        </td>
+                        <td align="center">
+                            '.$d->resultado3.'
+                        </td>
+                        <td align="center">
+                            '.$d->resultado4.'
+                        </td>
+                    </tr>';
+                }
 
-            $html .= '</table>';
-            $html .= $this->detalleGeneralPdf($item);
-            return $html;
+                $html .= '</table>';
+                $html .= $this->detalleGeneralPdf($item);
+                return $html;
 
-        case 'Tanques de almacenamiento':
+            case 'Tanques de almacenamiento':
 
-            $html = '
+                $html = '
 
-            <table width="100%" border="1" cellpadding="2">
+                <table width="100%" border="1" cellpadding="2">
 
-                <tr style="background:#F2F2F2;">
-                    <th>Tanque</th>
-                    <th>Capacidad</th>
-                    <th>Producto</th>
-                    <th>Incertidumbre de calibración</th>
-                    <th>Cumple con los límites establecidos</th>
-                </tr>';
+                    <tr style="background:#F2F2F2;">
+                        <th>Tanque</th>
+                        <th>Capacidad</th>
+                        <th>Producto</th>
+                        <th>Incertidumbre de calibración</th>
+                        <th>Cumple con los límites establecidos</th>
+                    </tr>';
 
-            foreach ($item->tanques as $t) {
+                foreach ($item->tanques as $t) {
 
-                $html .= '
+                    $html .= '
 
-                <tr>
+                    <tr>
 
-                    <td align="center">
-                        '.$t->tanque?->no_tanque.'
-                    </td>
+                        <td align="center">
+                            '.$t->tanque?->no_tanque.'
+                        </td>
 
-                    <td align="center">
-                        '.$t->tanque?->capacidad.'
-                    </td>
+                        <td align="center">
+                            '.$t->tanque?->capacidad.'
+                        </td>
 
-                    <td>
-                        '.$t->tanque?->producto.'
-                    </td>
+                        <td>
+                            '.$t->tanque?->producto.'
+                        </td>
 
-                    <td align="center">
-                        '.$t->resultado1.'
-                    </td>
+                        <td align="center">
+                            '.$t->resultado1.'
+                        </td>
 
-                    <td align="center">
-                        '.$t->resultado2.'
-                    </td>
+                        <td align="center">
+                            '.$t->resultado2.'
+                        </td>
 
-                </tr>';
-            }
+                    </tr>';
+                }
 
-            $html .= '</table>';
-            $html .= $this->detalleGeneralPdf($item);
+                $html .= '</table>';
+                $html .= $this->detalleGeneralPdf($item);
 
-            return $html;
+                return $html;
 
-        case 'Sondas de medición':
+            case 'Sondas de medición':
 
-            $html = '
+                $html = '
 
-            <table width="100%" border="1" cellpadding="2">
+                <table width="100%" border="1" cellpadding="2">
 
-                <tr style="background:#F2F2F2;">
-                    <th>No. Sonda</th>
-                    <th>Marca</th>
-                    <th>Modelo</th>
-                    <th>Incertidumbre de calibracion</th>
-                </tr>';
+                    <tr style="background:#F2F2F2;">
+                        <th>No. Sonda</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Incertidumbre de calibracion</th>
+                    </tr>';
 
-            foreach ($item->sondas as $s) {
+                foreach ($item->sondas as $s) {
 
-                $html .= '
-                <tr>
-                    <td align="center">
-                        '.$s->sonda?->no_sonda.'
-                    </td>
-                    <td>
-                        '.$s->sonda?->marca.'
-                    </td>
-                    <td>
-                        '.$s->sonda?->modelo.'
-                    </td>
-                    <td align="center">
-                        '.$s->resultado1.'
-                    </td>
-                </tr>';
-            }
+                    $html .= '
+                    <tr>
+                        <td align="center">
+                            '.$s->sonda?->no_sonda.'
+                        </td>
+                        <td>
+                            '.$s->sonda?->marca.'
+                        </td>
+                        <td>
+                            '.$s->sonda?->modelo.'
+                        </td>
+                        <td align="center">
+                            '.$s->resultado1.'
+                        </td>
+                    </tr>';
+                }
 
-            $html .= '</table>';
-            $html .= $this->detalleGeneralPdf($item);
+                $html .= '</table>';
+                $html .= $this->detalleGeneralPdf($item);
 
-            return $html;
+                return $html;
 
-        case 'Jarra patron':
+            case 'Jarra patron':
 
-            $html = '
+                $html = '
 
-            <table width="100%" border="1" cellpadding="2">
+                <table width="100%" border="1" cellpadding="2">
 
-                <tr style="background:#F2F2F2;">
-                    <th>Marca</th>
-                    <th>Serie</th>
-                    <th>Capacidad</th>
-                    <th>Incertidumbre</th>
-                </tr>';
+                    <tr style="background:#F2F2F2;">
+                        <th>Marca</th>
+                        <th>Serie</th>
+                        <th>Capacidad</th>
+                        <th>Incertidumbre</th>
+                    </tr>';
 
-            foreach ($item->jarras as $j) {
+                foreach ($item->jarras as $j) {
 
-                $html .= '
+                    $html .= '
 
-                <tr>
+                    <tr>
 
-                    <td>
-                        '.$j->jarra?->marca.'
-                    </td>
+                        <td>
+                            '.$j->jarra?->marca.'
+                        </td>
 
-                    <td>
-                        '.$j->jarra?->no_serie.'
-                    </td>
+                        <td>
+                            '.$j->jarra?->no_serie.'
+                        </td>
 
-                    <td align="center">
-                        '.$j->jarra?->capacidad.'
-                    </td>
+                        <td align="center">
+                            '.$j->jarra?->capacidad.'
+                        </td>
 
-                    <td align="center">
-                        '.$j->resultado1.'
-                    </td>
+                        <td align="center">
+                            '.$j->resultado1.'
+                        </td>
 
-                </tr>';
-            }
+                    </tr>';
+                }
 
-            $html .= '</table>';
-            $html .= $this->detalleGeneralPdf($item);
+                $html .= '</table>';
+                $html .= $this->detalleGeneralPdf($item);
 
-            return $html;
+                return $html;
+        }
+
+        return '';
     }
-
-    return '';
-}
 
 }

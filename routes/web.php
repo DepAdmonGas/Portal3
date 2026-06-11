@@ -699,6 +699,11 @@ return function(RouteCollector $r) {
         $r->addRoute('POST', '/control-actividades-procesos/bitacora-dispensario/delete', Route::auth(['BitacoraDispensarioController', 'delete']));
         $r->addRoute('GET', '/control-actividades-procesos/bitacora-dispensario/excel', Route::auth(['BitacoraDispensarioController', 'excel']));
 
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-residuos-peligrosos', Route::auth(['BitacoraResiduosController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-residuos-peligrosos/datatable', Route::auth(['BitacoraResiduosController', 'datatable']));
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-residuos-peligrosos/pdf', Route::auth(['BitacoraResiduosController', 'pdf']));
+
+
         // Elemento 11
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento/datatable-equipo-critico', Route::auth(['IntegridadMecanicaController', 'datatableEquipoCritico']));

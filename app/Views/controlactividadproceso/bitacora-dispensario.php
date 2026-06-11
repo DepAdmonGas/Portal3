@@ -11,7 +11,7 @@
         <li><a class="dropdown-item"  href="javascript:void(0)" @click="openNuevoModal()"><i class="ti ti-plus"></i> Nuevo </a></li>
          <li><a class="dropdown-item"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
           <li>
-              <a class="dropdown-item" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+              <a class="dropdown-item" :href="excelUrl"><i class="ti ti-download"></i> Descargar</a>
           </li>
 
           <li>

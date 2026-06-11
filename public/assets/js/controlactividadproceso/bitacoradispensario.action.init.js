@@ -1,7 +1,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('bitacoraDispensario', () => ({
 
-        pdfUrl: '',
+        excelUrl: '',
         modalNuevo: null,
         modalBuscar: null,
         modalDetalle: null,
@@ -45,7 +45,7 @@ document.addEventListener('alpine:init', () => {
         this.modalBuscar = new bootstrap.Modal(document.getElementById('ModalBuscar'));
         this.modalDetalle = new bootstrap.Modal(document.getElementById('ModalDetalle'));
 
-        this.pdfUrl = '/sasisopa/control-actividades-procesos/bitacora-dispensario/excel?year=' + currentYear;
+        this.excelUrl = '/sasisopa/control-actividades-procesos/bitacora-dispensario/excel?year=' + currentYear;
 
          for(let i = 2020; i <= currentYear; i++){
         this.years.push(i);
@@ -175,7 +175,7 @@ document.addEventListener('alpine:init', () => {
             '/sasisopa/control-actividades-procesos/bitacora-dispensario/datatable'
         ).load();
 
-        this.pdfUrl =
+        this.excelUrl =
             '/sasisopa/control-actividades-procesos/bitacora-dispensario/excel';
 
         this.modalBuscar.hide();
@@ -221,7 +221,7 @@ document.addEventListener('alpine:init', () => {
             .getInstance(document.getElementById('ModalBuscar'))
             .hide();
 
-            this.pdfUrl = '/sasisopa/control-actividades-procesos/bitacora-dispensario/pdf?year=' + this.filtro.year + '&mes=' + this.filtro.mes;
+            this.excelUrl = '/sasisopa/control-actividades-procesos/bitacora-dispensario/excel?year=' + this.filtro.year + '&mes=' + this.filtro.mes;
 
     },
 
