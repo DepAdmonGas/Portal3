@@ -151,12 +151,7 @@ public function create()
 {
     header('Content-Type: application/json');
 
-    if (
-        !ModuloService::validaPermiso(
-            $this->modulo,
-            'editar'
-        )
-    ) {
+    if (!ModuloService::validaPermiso($this->modulo,'editar')) {
 
         echo json_encode([
             'success' => false,
@@ -168,25 +163,17 @@ public function create()
 
     try {
 
-        $fecha = trim(
-            $_POST['Fecha'] ?? ''
-        );
+        $fecha = trim($_POST['Fecha'] ?? '');
 
         if (empty($fecha)) {
-
             throw new \Exception(
                 'La fecha es obligatoria'
             );
         }
 
-        $folio = $this->folioMantenimientoQuincenal(
-            $this->estacionId(),
-            $fecha
-        );
+        $folio = $this->folioMantenimientoQuincenal($this->estacionId(),$fecha);
 
-        $carpetaFisica =
-            __DIR__ .
-            '../../../public/uploads/archivos/mantenimiento-quincenal/';
+        $carpetaFisica = __DIR__ . '../../../public/uploads/archivos/mantenimiento-quincenal/';
 
         if (!file_exists($carpetaFisica)) {
 
@@ -202,7 +189,6 @@ public function create()
             'id_empleado'   => $this->userId(),
             'fechacreacion' => $fecha,
             'folio'         => $folio,
-
             'formato1' => '',
             'formato2' => '',
             'formato3' => '',
@@ -326,9 +312,9 @@ public function update()
     try {
 
         $id = (int) ($_POST['id'] ?? 0);
-
         $registro = MantenimientoQuincenal::findOrFail($id);
         $fecha = trim($_POST['Fecha'] ?? '');
+
         if (!$fecha) {
 
             throw new \Exception(
@@ -337,9 +323,7 @@ public function update()
         }
 
         $registro->fechacreacion = $fecha;
-
-        $carpetaFisica = __DIR__ .
-            '../../../public/uploads/archivos/mantenimiento-quincenal/';
+        $carpetaFisica = __DIR__ . '../../../public/uploads/archivos/mantenimiento-quincenal/';
 
         if (!file_exists($carpetaFisica)) {
 
@@ -363,8 +347,7 @@ public function update()
                 continue;
             }
 
-            $archivo =
-                $_FILES[$campo];
+            $archivo = $_FILES[$campo];
 
             $extension =
                 strtolower(
