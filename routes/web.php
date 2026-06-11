@@ -703,6 +703,12 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/control-actividades-procesos/bitacora-residuos-peligrosos/datatable', Route::auth(['BitacoraResiduosController', 'datatable']));
         $r->addRoute('GET', '/control-actividades-procesos/bitacora-residuos-peligrosos/pdf', Route::auth(['BitacoraResiduosController', 'pdf']));
 
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-mantenimiento', Route::auth(['BitacoraMantenimientoController', 'index']));
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-mantenimiento-quincenal', Route::auth(['BitacoraMantenimientoController', 'mantenimientoQuincenal']));
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-mantenimiento-quincenal/datatable', Route::auth(['BitacoraMantenimientoController', 'datatable']));
+        $r->addRoute('POST', '/control-actividades-procesos/bitacora-mantenimiento-quincenal/create', Route::auth(['BitacoraMantenimientoController', 'create']));
+        $r->addRoute('POST', '/control-actividades-procesos/bitacora-mantenimiento-quincenal/delete', Route::auth(['BitacoraMantenimientoController', 'delete']));
+        $r->addRoute('POST', '/control-actividades-procesos/bitacora-mantenimiento-quincenal/update', Route::auth(['BitacoraMantenimientoController', 'update']));
 
         // Elemento 11
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento', Route::auth(['IntegridadMecanicaController', 'index']));

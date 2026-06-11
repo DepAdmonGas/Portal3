@@ -75,7 +75,8 @@
             Bitácora PROFECO
           </a>
 
-          <a type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100">
+          <a type="button" class="btn mt-2 waves-effect waves-light btn-rounded bg-info-subtle text-info w-100"
+          href="/sasisopa/control-actividades-procesos/bitacora-mantenimiento">
             <i class="ti ti-eye"></i>
             Mantenimiento V.1.2
           </a>
