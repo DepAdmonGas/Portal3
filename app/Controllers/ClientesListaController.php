@@ -22,14 +22,7 @@ $idYear = (int) ($contexto['idYear'] ?? date('Y'));
 $idMes = (int) ($contexto['idMes'] ?? date('n'));
 $idDia = (int) ($contexto['idDia'] ?? 0);
 
-// Obtener fecha real del registro
-$fecha = ClienteService::getFecha($idDia);
-
-// Parsear correctamente la fecha
-$fechaObj = \Carbon\Carbon::parse($fecha);
-
 $mesNombre = nombremes(str_pad($idMes, 2, '0', STR_PAD_LEFT));
-$fechaFormateada = formatearFecha($fechaObj);
 
 $title = 'Lista de Clientes';
 
@@ -42,10 +35,20 @@ Breadcrumb::add(
 '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes
 );
 
+if ($idDia > 0) {
+$fecha = ClienteService::getFecha($idDia);
+$fechaObj = \Carbon\Carbon::parse($fecha);
+$fechaFormateada = formatearFecha($fechaObj);
 Breadcrumb::add(
 'Clientes (' . $fechaFormateada . ')',
 '/departamento-operativo/clientes/' . $idYear . '/' . $idMes . '/' . $idDia
 );
+} else {
+Breadcrumb::add(
+'Resumen Clientes ' . $mesNombre . ' ' . $idYear,
+'/departamento-operativo/clientes-mes/' . $idYear . '/' . $idMes
+);
+}
 
 Breadcrumb::add('Lista de Clientes', '');
 
@@ -104,7 +107,7 @@ $idYear = (int) ($_POST['idYear'] ?? 0);
 $idMes = (int) ($_POST['idMes'] ?? 0);
 $idDia = (int) ($_POST['idDia'] ?? 0);
 
-if ($idYear > 0 && $idMes > 0 && $idDia > 0) {
+if ($idYear > 0 && $idMes > 0 && $idDia >= 0) {
 Session::set('clientes_lista_contexto', [
 'idYear' => $idYear,
 'idMes' => $idMes,

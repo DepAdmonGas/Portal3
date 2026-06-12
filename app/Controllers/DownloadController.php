@@ -37,6 +37,8 @@ class DownloadController{
             'aceites-documentos'           => __DIR__ . '../../../public/uploads/archivos/aceites-documentos/',
             'aceites-facturas'             => __DIR__ . '../../../public/uploads/archivos/aceites-facturas/',
             'aceites-diferencias'          => __DIR__ . '../../../public/uploads/archivos/aceites-diferencias/',
+            'monedero-documentos'          => __DIR__ . '../../../public/uploads/archivos/',
+            'monedero-lista-documentos'    => __DIR__ . '../../../public/uploads/archivos/resumen-monederos-documentos/',
         ];
 
         if (!isset($rutas[$tipo])) {

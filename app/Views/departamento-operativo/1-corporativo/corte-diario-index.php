@@ -6,9 +6,9 @@
 <div class="ms-auto">
 
 <?php if (!$multiestacion || $estacionId != 8): ?>
-<div class="dropdown mb-3">
+<div class="dropdown mb-4">
 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-tools"></i> Herramientas
+<i class="ti ti-tools me-1"></i>
 </button>
 
 <ul class="dropdown-menu dropdown-menu-end">

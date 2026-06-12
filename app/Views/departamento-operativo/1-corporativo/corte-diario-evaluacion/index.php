@@ -2,60 +2,19 @@
 <div class="row mt-4">
 <div class="col-12">
 <div class="alert alert-secondary border-0 text-center text-muted py-4">
-Debes de seleccionar una estación del menú superior para poder visualizar la información de los KPI's de Aceites.
+Debes de seleccionar una estación del menú superior para poder visualizar la información de los KPI's de Apertura de Cortes Diarios.
 </div>
 </div>
 </div>
 <?php else: ?>
-<div id="kpi-aceites-container"
+<div id="kpi-corte-diario-container"
 data-id-estacion="<?= $idEstacion ?>"
 data-id-year="<?= $idYear ?>"
+data-id-mes="<?= $idMes ?>"
 style="display: none;"></div>
 
-<div class="row" x-data="kpiAceitesComponent()">
+<div class="row" x-data="kpiCorteDiarioComponent()">
 <div class="col-12">
-
-<div x-show="!tipoCargado">
-
-<div class="row mt-3">
-<template x-for="opcion in opciones" :key="opcion.id">
-<div class="col-xl-4 col-lg-4 col-md-6 col-12 mb-3">
-<div class="card body-container-do overflow-hidden card-hover shadow-sm h-100 pointer" @click="cargarTipo(opcion.id)">
-<div class="d-flex flex-row align-items-center h-100">
-
-<div class="icon-container-do">
-<h3 class="text-white mb-0"><i :class="opcion.icono"></i></h3>
-</div>
-
-<div class="p-4 flex-grow-1">
-<h5 class="text-white mb-1" x-text="opcion.titulo"></h5>
-</div>
-
-<div class="align-self-center me-4">
-<h4 class="text-white mb-0"><i class="ti ti-eye"></i></h4>
-</div>
-
-</div>
-</div>
-</div>
-</template>
-</div>
-
-</div>
-
-<template x-if="tipoCargado">
-<div>
-
-<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
-
-<button class="btn btn-danger" @click="volverOpciones()">
-<i class="ti ti-arrow-left me-1"></i>Cambiar evaluación
-</button>
-
-<button type="button" class="btn btn-primary" @click="abrirInfoEvaluacion()">
-<i class="ti ti-info-circle me-1"></i>Forma de evaluación
-</button>
-</div>
 
 <div x-show="cargando" class="text-center py-5">
 <div class="spinner-border text-primary" role="status">
@@ -65,8 +24,15 @@ style="display: none;"></div>
 </div>
 
 <div x-show="!cargando" x-cloak>
+<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+<div></div>
+<button type="button" class="btn btn-primary" @click="abrirInfoEvaluacion()">
+<i class="ti ti-info-circle me-1"></i>Forma de evaluación
+</button>
+</div>
+
 <div class="row">
-    
+
 <div class="col-12">
 <div class="card">
 
@@ -76,7 +42,7 @@ style="display: none;"></div>
 <div>
 <h5 class="mb-1 text-white">
 <i class="ti ti-chart-line me-2"></i>
-<span x-text="'Cumplimiento ' + (data?.titulo ?? '') + ' (' + (data?.estacion_nombre ?? '') + ')'"></span>
+<span x-text="'Apertura de Cortes (' + (data?.estacion_nombre ?? '') + ')'"></span>
 </h5>
 </div>
 
@@ -100,7 +66,7 @@ style="display: none;"></div>
 
 <h5 class="mb-0 text-white">
 <i class="ti ti-chart-bar me-2"></i>
-<span x-text="'Cumplimiento ' + (data?.titulo ?? '') + ' (Estaciones)'"></span>
+<span x-text="'Apertura de Cortes (Estaciones)'"></span>
 </h5>
 
 <span class="badge bg-light text-primary px-3 py-2"><i class="ti ti-calendar-month me-1"></i>Anual</span>
@@ -109,10 +75,9 @@ style="display: none;"></div>
 
 <div class="card-body">
 <div id="chartAnual" class="mb-3" style="width: 100%; height: 400px;"></div>
-<template x-if="data?.mejor_estacion">
-<span class="badge bg-dark text-white fw-semibold float-end" x-text="'Mejor: ' + data.mejor_estacion"></span>
+<template x-if="data?.peor_estacion">
+<span class="badge bg-dark text-white fw-semibold float-end" x-text="'Menor: ' + data.peor_estacion"></span>
 </template>
-
 </div>
 
 </div>
@@ -120,15 +85,13 @@ style="display: none;"></div>
 
 </div>
 </div>
-</div>
-</template>
 
 <template x-if="data">
 <div class="modal fade" id="modalInfoEvaluacion" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
-<h5 class="modal-title" x-text="'Forma de Evaluación (' + data.titulo + ')'"></h5>
+<h5 class="modal-title">Forma de Evaluación (Apertura de Cortes Diarios)</h5>
 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body" x-html="data.info"></div>

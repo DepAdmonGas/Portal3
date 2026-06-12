@@ -66,10 +66,11 @@ $('#tablaClientes').DataTable().destroy();
 }
 
 const cols = [
-{ data: 'id', className: 'text-center align-middle fw-normal' },
-{ data: 'cuenta', className: 'align-middle text-center' },
-{ data: 'cliente', className: 'align-middle' },
+{ title: "#", data: 'id', className: 'text-center align-middle fw-normal' },
+{ title: "Cuenta", data: 'cuenta', className: 'align-middle text-center' },
+{ title: "Cliente", data: 'cliente', className: 'align-middle' },
 {
+title: "Tipo",
 data: 'tipo',
 className: 'align-middle text-center',
 render: function (d) {
@@ -77,8 +78,9 @@ const cls = d === 'Crédito' ? 'text-primary' : 'text-success';
 return '<span class="' + cls + '">' + d + '</span>';
 }
 },
-{ data: 'consumo_tipo', className: 'align-middle text-center' },
+{ title: "Consumo/Pago", data: 'consumo_tipo', className: 'align-middle text-center' },
 {
+title: "Forma Pago",
 data: 'pago',
 className: 'align-middle text-center',
 render: function (d) {
@@ -86,6 +88,7 @@ return d || '<span class="text-muted">N/A</span>';
 }
 },
 {
+title: "Comprobante",
 data: 'comprobante',
 className: 'align-middle text-center',
 orderable: false,
@@ -95,6 +98,7 @@ return d ? '<div x-data="actions()"><a href="javascript:void(0)" @click="downloa
 }
 },
 {
+title: "Total",
 data: 'total',
 className: 'align-middle text-end',
 render: function (d) {
@@ -103,6 +107,7 @@ return '<strong>$ ' + v + '</strong>';
 }
 },
 {
+title: "<i class='ti ti-trash fs-6 text-danger'></i>",
 data: 'id',
 width: '1%',
 className: 'text-center align-middle td-small',

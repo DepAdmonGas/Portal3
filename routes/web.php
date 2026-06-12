@@ -249,6 +249,14 @@ return function(RouteCollector $r) {
     $r->addRoute('GET','/corporativo/corte-diario/historial',Route::auth(['CorporativoController', 'corteDiarioGetHistorial']));
     $r->addRoute('POST','/corporativo/corte-diario/activar',Route::auth(['CorporativoController', 'corteDiarioActivar']));
 
+    //----- Corte Diario Evaluación (KPI's)
+    $r->addRoute('GET','/corte-diario-evaluacion/{idYear:\d+}/{idMes:\d+}',Route::auth(['CorteDiarioEvaluacionController', 'index']));
+    $r->addRoute('GET','/corte-diario-evaluacion/data/{idYear:\d+}/{idMes:\d+}',Route::auth(['CorteDiarioEvaluacionController', 'getData']));
+
+    //----- Concentrado de Ventas
+    $r->addRoute('GET','/concentrado-ventas/{idYear:\d+}/{idMes:\d+}',Route::auth(['ConcentradoVentasController', 'index']));
+    $r->addRoute('GET','/concentrado-ventas/data/{idYear:\d+}/{idMes:\d+}',Route::auth(['ConcentradoVentasController', 'getData']));
+
     //----- Ventas (dentro del grupo /departamento-operativo)
     $r->addRoute('GET','/ventas/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['VentasController', 'index']));
     $r->addRoute('GET','/ventas/data/{idDia:\d+}',Route::auth(['VentasController', 'getData']));
@@ -280,6 +288,12 @@ return function(RouteCollector $r) {
     $r->addRoute('GET','/impuestos/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['ImpuestoController', 'index']));
     $r->addRoute('GET','/impuestos/data/{idDia:\d+}',Route::auth(['ImpuestoController', 'getData']));
 
+    //----- Resumen Impuestos
+    $r->addRoute('GET','/resumen-impuestos/{idYear:\d+}/{idMes:\d+}',Route::auth(['ResumenImpuestosController', 'index']));
+    $r->addRoute('GET','/resumen-impuestos/dias/{idYear:\d+}/{idMes:\d+}',Route::auth(['ResumenImpuestosController', 'getDias']));
+    $r->addRoute('GET','/resumen-impuestos/detalle-dia/{idDia:\d+}',Route::auth(['ResumenImpuestosController', 'getDetalleDia']));
+    $r->addRoute('GET','/resumen-impuestos/totales/{idYear:\d+}/{idMes:\d+}',Route::auth(['ResumenImpuestosController', 'getTotales']));
+
     //----- Monedero
     $r->addRoute('GET','/monedero/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['MonederoController', 'index']));
     $r->addRoute('GET','/monedero/data/{idDia:\d+}',Route::auth(['MonederoController', 'getData']));
@@ -299,6 +313,33 @@ return function(RouteCollector $r) {
     $r->addRoute('POST','/clientes-lista/crear',Route::auth(['ClientesListaController', 'crear']));
     $r->addRoute('POST','/clientes-lista/editar',Route::auth(['ClientesListaController', 'editar']));
     $r->addRoute('POST','/clientes-lista/toggle',Route::auth(['ClientesListaController', 'toggle']));
+
+    //----- Clientes Mes (Resumen Mensual)
+    $r->addRoute('GET','/clientes-mes/{idYear:\d+}/{idMes:\d+}',Route::auth(['ClienteMesController', 'index']));
+    $r->addRoute('GET','/clientes-mes/data/{idYear:\d+}/{idMes:\d+}',Route::auth(['ClienteMesController', 'getData']));
+    $r->addRoute('POST','/clientes-mes/actualizar',Route::auth(['ClienteMesController', 'actualizar']));
+    $r->addRoute('POST','/clientes-mes/finalizar',Route::auth(['ClienteMesController', 'finalizar']));
+    $r->addRoute('POST','/clientes-mes/editar-saldo-inicial',Route::auth(['ClienteMesController', 'editarSaldoInicial']));
+$r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['ClienteMesController', 'descargarExcel']));
+
+    //----- Resumen Monedero
+    $r->addRoute('GET','/resumen-monedero/{idYear:\d+}/{idMes:\d+}',Route::auth(['ResumenMonederoController', 'index']));
+    $r->addRoute('GET','/resumen-monedero/periodo/{idYear:\d+}/{idMes:\d+}',Route::auth(['ResumenMonederoController', 'resumenPeriodo']));
+    $r->addRoute('GET','/resumen-monedero/periodo-data/{idYear:\d+}/{idMes:\d+}',Route::auth(['ResumenMonederoController', 'resumenPeriodoData']));
+    $r->addRoute('GET','/resumen-monedero/data',Route::auth(['ResumenMonederoController', 'getData']));
+    $r->addRoute('GET','/resumen-monedero/documentos',Route::auth(['ResumenMonederoController', 'getDocumentos']));
+    $r->addRoute('GET','/resumen-monedero/edi',Route::auth(['ResumenMonederoController', 'getEdi']));
+    $r->addRoute('GET','/resumen-monedero/lista-documentos',Route::auth(['ResumenMonederoController', 'getListaDocumentos']));
+    $r->addRoute('POST','/resumen-monedero/crear-documento',Route::auth(['ResumenMonederoController', 'createDocumento']));
+    $r->addRoute('POST','/resumen-monedero/editar-documento',Route::auth(['ResumenMonederoController', 'updateDocumento']));
+    $r->addRoute('POST','/resumen-monedero/eliminar-documento',Route::auth(['ResumenMonederoController', 'deleteDocumento']));
+    $r->addRoute('POST','/resumen-monedero/crear-edi',Route::auth(['ResumenMonederoController', 'createEdi']));
+    $r->addRoute('POST','/resumen-monedero/eliminar-edi',Route::auth(['ResumenMonederoController', 'deleteEdi']));
+    $r->addRoute('POST','/resumen-monedero/crear-lista-documento',Route::auth(['ResumenMonederoController', 'createListaDocumento']));
+    $r->addRoute('POST','/resumen-monedero/eliminar-lista-documento',Route::auth(['ResumenMonederoController', 'deleteListaDocumento']));
+    $r->addRoute('GET','/resumen-monedero/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['ResumenMonederoController', 'descargarExcel']));
+    $r->addRoute('GET','/resumen-monedero/kpi-evaluacion/{idYear:\d+}',Route::auth(['ResumenMonederoController', 'kpiEvaluacion']));
+    $r->addRoute('GET','/resumen-monedero/kpi-evaluacion/data/{idYear:\d+}',Route::auth(['ResumenMonederoController', 'kpiEvaluacionData']));
 
     //----- Control Volumétrico
     $r->addRoute('GET','/control-volumetrico/{idYear:\d+}/{idMes:\d+}',Route::auth(['ControlVolumetricoController', 'index']));
@@ -334,9 +375,11 @@ return function(RouteCollector $r) {
     $r->addRoute('POST','/aceites-mes/importar-facturas',Route::auth(['AceitesController', 'importarFacturas']));
     $r->addRoute('GET','/aceites-mes/{idYear:\d+}/{idMes:\d+}/excel',Route::auth(['AceitesController', 'descargarExcel']));
     $r->addRoute('GET','/resumen-aceites-mes/{idYear:\d+}/{idMes:\d+}',Route::auth(['AceitesController', 'resumenImpuestos']));
+    $r->addRoute('GET','/resumen-aceites-mes/data/{idYear:\d+}/{idMes:\d+}',Route::auth(['AceitesController', 'resumenImpuestosData']));
     $r->addRoute('GET','/resumen-kpi-aceites/{idYear:\d+}',Route::auth(['AceitesController', 'kpiAceites']));
     $r->addRoute('GET','/resumen-kpi-aceites/data/{idYear:\d+}/{tipo:\d+}',Route::auth(['AceitesController', 'kpiAceitesData']));
     $r->addRoute('GET','/corporativo/lista-aceites',Route::auth(['AceitesController', 'listaAceites']));
+    $r->addRoute('GET','/corporativo/lista-aceites/data',Route::auth(['AceitesController', 'listaAceitesData']));
     $r->addRoute('POST','/corporativo/lista-aceites/guardar',Route::auth(['AceitesController', 'listaAceitesGuardar']));
     $r->addRoute('POST','/corporativo/lista-aceites/nuevo',Route::auth(['AceitesController', 'listaAceitesNuevo']));
     $r->addRoute('POST','/corporativo/lista-aceites/eliminar',Route::auth(['AceitesController', 'listaAceitesEliminar']));

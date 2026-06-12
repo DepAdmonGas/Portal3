@@ -40,7 +40,7 @@ x-data="ventasComponent()">
 </div>
 </div>
 
-<div class="card-body">
+<div class="card-body p-0">
 <div class="row">
 
 <!-- CONCENTRADO DE VENTAS -->
@@ -186,7 +186,7 @@ x-model="v.jarras"
 <h5 class="mb-0 text-white"><i class="ti ti-engine me-2"></i>RELACION DE VENTA DE ACEITES Y LUBRICANTES</h5>
 </div>
 </div>
-<div class="card-body">
+<div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divAceitesLubricantes">
 <div class="table-responsive">
@@ -263,7 +263,7 @@ x-model="a.cantidad"
 </template>
 </div>
 </div>
-<div class="card-body">
+<div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divDocumentos">
 <div class="table-responsive">
@@ -329,7 +329,7 @@ x-model="a.cantidad"
 <h5 class="mb-0 text-white"><i class="ti ti-shield-lock me-2"></i>PROSEGUR</h5>
 </div>
 </div>
-<div class="card-body">
+<div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divProsegur">
 <div class="table-responsive">
@@ -390,7 +390,7 @@ x-model="p.recibo"
 <h5 class="mb-0 text-white"><i class="ti ti-wallet me-2"></i>MONEDEROS Y BANCOS</h5>
 </div>
 </div>
-<div class="card-body">
+<div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divTarjetasBancarias">
 <div class="table-responsive">
@@ -447,7 +447,7 @@ x-model="p.recibo"
 <h5 class="mb-0 text-white"><i class="ti ti-users me-2"></i>CLIENTES (ATIO)</h5>
 </div>
 </div>
-<div class="card-body">
+<div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divControlgas">
 <div class="table-responsive">
@@ -509,7 +509,7 @@ x-model="p.recibo"
 <!---------- DIFERENCIAS ---------->
 <div class="col-12">
 <div class="card">
-<div class="card-body">
+<div class="card-body p-0">
 <div class="table-responsive">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tr>
@@ -536,7 +536,7 @@ x-model="p.recibo"
 <h5 class="mb-0 text-white"><i class="ti ti-cash me-2"></i>PAGO CLIENTES</h5>
 </div>
 </div>
-<div class="card-body">
+<div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divPagoClientes">
 <div class="table-responsive">
@@ -593,7 +593,7 @@ x-model="pc.nota"
 <!---------- DIFERENCIAS PAGO CLIENTES ---------->
 <div class="col-12">
 <div class="card">
-<div class="card-body">
+<div class="card-body p-0">
 <div class="table-responsive">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tr>
@@ -846,6 +846,7 @@ x-model="pc.nota"
 <option value="Cierres de lote">Cierres de lote</option>
 <option value="Corte">Corte</option>
 <option value="Documento/archivo adicional">Documento/archivo adicional</option>
+<option value="Ficha BBVA">Ficha BBVA</option>
 </select>
 <h6 class="mb-2 mt-3">* Documento</h6>
 <input class="form-control" type="file" id="inputDocumento" @change="nuevoDocumento.file = $event.target.files[0]">

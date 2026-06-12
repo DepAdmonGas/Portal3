@@ -447,27 +447,63 @@ $data = ResumenImpuestosService::getData($idMesDb);
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
+Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
 Breadcrumb::add('Resumen Aceites ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/aceites-mes/' . $idYear . '/' . $idMes);
 Breadcrumb::add('<span class="breadcrumb-item active">Resumen Impuestos, ' . nombremes($idMes) . ' ' . $idYear . '</span>', '');
 
-View::render('departamento-operativo/1-corporativo/aceites-mes/resumen-impuestos', [
-'title' => 'Resumen Impuestos, ' . nombremes($idMes) . ' ' . $idYear,
-'idEstacion' => $idEstacion,
-'idYear' => $idYear,
-'idMes' => $idMes,
-'nombreEstacion' => $nombreEstacion,
-'data' => $data,
-'items' => $data['items'],
-'combustibles' => $data['subtotal_combustibles'],
-'aceites_total' => $data['aceites_total'],
-'aceites_sin_iva' => $data['aceites_sin_iva'],
-'aceites_iva' => $data['aceites_iva'],
-'total_dia' => $data['total_dia'],
-'m' => $data['monederos'],
-'multiestacion' => $permisos['multiestacion'],
-'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
-'help' => false,
-], 'departamento-operativo');
+    View::render('departamento-operativo/1-corporativo/aceites-mes/resumen-impuestos', [
+        'title' => 'Resumen Impuestos, ' . nombremes($idMes) . ' ' . $idYear,
+        'idEstacion' => $idEstacion,
+        'idYear' => $idYear,
+        'idMes' => $idMes,
+        'multiestacion' => $permisos['multiestacion'],
+        'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
+        'help' => false,
+        'scripts' => [
+            '/assets/js/departamento-operativo/1-corporativo/resumen-impuestos.datatable.init.js?v=' . time(),
+        ],
+    ], 'departamento-operativo');
+}
+
+public function resumenImpuestosData($idYear, $idMes)
+{
+    header('Content-Type: application/json');
+
+    $idEstacion = $this->estacionId();
+    if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+        echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
+        exit;
+    }
+
+    $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
+    if (!$puedeLeer) {
+        echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+        exit;
+    }
+
+    $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
+    $idYear = $validados['idYear'];
+    $idMes = $validados['idMes'];
+
+    $idMesDb = AceiteService::getMesId($idEstacion, $idYear, $idMes);
+    if (!$idMesDb) {
+        echo json_encode(['success' => false, 'message' => 'Sin datos']);
+        exit;
+    }
+
+    $data = ResumenImpuestosService::getData($idMesDb);
+
+    echo json_encode([
+        'success' => true,
+        'items' => $data['items'],
+        'combustibles' => $data['subtotal_combustibles'],
+        'aceites_total' => $data['aceites_total'],
+        'aceites_sin_iva' => $data['aceites_sin_iva'],
+        'aceites_iva' => $data['aceites_iva'],
+        'total_dia' => $data['total_dia'],
+        'm' => $data['monederos'],
+    ]);
+    exit;
 }
 
 public function kpiAceites($idYear)
@@ -504,6 +540,7 @@ $opciones = KpiAceitesService::getOpciones();
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
+Breadcrumb::add('Corte Diario enero ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/1');
 Breadcrumb::add('Resumen Aceites ' . $idYear, '/departamento-operativo/aceites-mes/' . $idYear . '/1');
 Breadcrumb::add('<span class="breadcrumb-item active">Evaluación de Aceites (KPI\'s), ' . $idYear . '</span>', '');
 
@@ -582,6 +619,10 @@ $idEstacion = (int) ($contexto['idEstacion'] ?? 0);
 $idYear = (int) ($contexto['idYear'] ?? date('Y'));
 $idMes = (int) ($contexto['idMes'] ?? date('n'));
 Breadcrumb::add(
+'Corte Diario ' . nombremes($idMes) . ' ' . $idYear,
+'/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes
+);
+Breadcrumb::add(
 'Resumen Aceites ' . nombremes($idMes) . ' ' . $idYear,
 '/departamento-operativo/aceites-mes/' . $idYear . '/' . $idMes
 );
@@ -600,6 +641,22 @@ View::render('departamento-operativo/1-corporativo/lista-aceites', [
 '/assets/js/departamento-operativo/1-corporativo/lista-aceites.actions.init.js?v=' . time(),
 ],
 ], 'departamento-operativo');
+}
+
+public function listaAceitesData()
+{
+    header('Content-Type: application/json');
+
+    $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
+    if (!$puedeLeer) {
+        echo json_encode(['success' => false, 'data' => []]);
+        exit;
+    }
+
+    $aceites = AceiteService::getListaAceites();
+
+    echo json_encode(['success' => true, 'data' => $aceites]);
+    exit;
 }
 
 public function listaAceitesGuardar(...$params)

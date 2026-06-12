@@ -42,11 +42,11 @@ x-data="impuestosComponent()">
 </template>
 <template x-for="item in items" :key="item.producto">
 <tr>
-<th class="align-middle" x-text="item.producto"></th>
-<td class="align-middle text-end" x-text="'$ ' + formatNum(item.precio_litro)"></td>
-<td class="align-middle text-end" x-text="'$ ' + formatNum(item.ieps)"></td>
-<td class="align-middle text-end" x-text="'$ ' + formatNum(item.precio_sin_iva)"></td>
-<td class="align-middle text-end" x-text="'$ ' + formatNum(item.iva_unidad)"></td>
+<th class="align-middle text-center" x-text="item.producto"></th>
+<td class="align-middle text-center" x-text="'$ ' + formatNum(item.precio_litro)"></td>
+<td class="align-middle text-center" x-text="'$ ' + formatNum(item.ieps)"></td>
+<td class="align-middle text-center" x-text="'$ ' + formatNum(item.precio_sin_iva)"></td>
+<td class="align-middle text-center" x-text="'$ ' + formatNum(item.iva_unidad)"></td>
 <td class="align-middle text-end" x-text="formatNum(item.volumen_vendido)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.importe_sin_iva)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.iva_total)"></td>
