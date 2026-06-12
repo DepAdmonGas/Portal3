@@ -4,8 +4,8 @@ data-id-year="<?= $idYear ?>"
 data-id-mes="<?= $idMes ?>"
 data-id-estacion="<?= $idEstacion ?>"
 data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>"
-data-puede-crear="<?= ($puedeCrear ?? false) ? 'true' : 'false' ?>"
-data-puede-eliminar="<?= ($puedeEliminar ?? false) ? 'true' : 'false' ?>"
+data-puede-crear="<?= $puedeCrear ? 'true' : 'false' ?>"
+data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
 x-data="clientesComponent()">
 
 <div class="text-center py-5" x-show="loading">
@@ -26,21 +26,8 @@ x-data="clientesComponent()">
 
 <div class="col-12">
 <div class="datatables">
-<div class="table-responsive">
-<table id="tablaClientes" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
-<thead>
-<tr>
-<th class="text-center align-middle">#</th>
-<th class="text-center align-middle">Cuenta</th>
-<th class="text-center align-middle">Cliente</th>
-<th class="text-center align-middle">Tipo</th>
-<th class="text-center align-middle">Consumo/Pago</th>
-<th class="text-center align-middle">Forma Pago</th>
-<th class="text-center align-middle">Comprobante</th>
-<th class="text-end align-middle">Total</th>
-<th class="text-center align-middle"></th>
-</tr>
-</thead>
+<div class="table-responsive" style="overflow-x: auto; overflow-y: hidden;">
+<table id="tablaClientes" class="table table-striped table-bordered mb-0 text-nowrap align-middle" width="100%">
 <tbody></tbody>
 </table>
 </div>

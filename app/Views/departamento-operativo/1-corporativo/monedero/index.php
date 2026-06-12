@@ -61,7 +61,7 @@ x-data="monederoComponent()">
 <td class="align-middle text-end" x-text="'$ ' + formatNum(d.bancarias.amex)"></td>
 <td x-show="!multiestacion" class="align-middle text-end" x-text="'$ ' + formatNum(d.bancarias.inburgas)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(d.bancarias.inbursa)"></td>
-<td class="align-middle text-end"><strong x-text="'$ ' + formatNum(d.bancarias.total)"></strong></td>
+<td class="align-middle text-end"><strong x-text="'$ ' + formatNum(multiestacion ? (d.bancarias.bancomer + d.bancarias.amex + d.bancarias.inbursa) : d.bancarias.total)"></strong></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(d.tarjetas_otros.ticketcard)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(d.tarjetas_otros.efecticard)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(d.tarjetas_otros.sodexo)"></td>

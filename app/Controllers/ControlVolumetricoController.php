@@ -78,9 +78,9 @@ $data = [
 '/assets/css/select2-modal.css',
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
+'/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/select2/dist/js/select2.full.min.js',
-'/assets/js/departamento-operativo/1-corporativo/actions.control.volumetrico.init.js',
+'/assets/js/departamento-operativo/1-corporativo/actions.control.volumetrico.init.js?v=' . time(),
 ],
 'help' => false,
 ];

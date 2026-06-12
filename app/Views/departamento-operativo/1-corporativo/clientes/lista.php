@@ -14,10 +14,10 @@ data-id-year="<?= $idYear ?>"
 data-id-mes="<?= $idMes ?>"
 data-id-dia="<?= $idDia ?>"
 data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>"
-data-puede-crear="<?= ($puedeCrear ?? false) ? 'true' : 'false' ?>"
-data-puede-editar="<?= ($puedeEditar ?? false) ? 'true' : 'false' ?>"
-data-puede-eliminar="<?= ($puedeEliminar ?? false) ? 'true' : 'false' ?>"
-data-es-direccion-operaciones="<?= ($esDireccionOperaciones ?? false) ? 'true' : 'false' ?>"
+data-puede-crear="<?= $puedeCrear ? 'true' : 'false' ?>"
+data-puede-editar="<?= $puedeEditar ? 'true' : 'false' ?>"
+data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
+data-es-direccion-operaciones="<?= $esDireccionOperaciones ? 'true' : 'false' ?>"
 x-data="clientesListaComponent()">
 
 <div class="text-center py-5" x-show="loading">
@@ -48,24 +48,7 @@ x-data="clientesListaComponent()">
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-4">
 <div class="datatables">
 <div class="table-responsive" style="overflow-x: auto; overflow-y: hidden;">
-<table id="tablaCredito" class="table table-striped table-bordered mb-0 text-nowrap align-middle" style="min-width: 900px;">
-<thead>
-<tr><th class="text-center" colspan="13">Crédito</th></tr>
-<tr>
-<th class="text-center align-middle">#</th>
-<th class="text-center align-middle">Cuenta</th>
-<th class="text-start align-middle">Cliente</th>
-<th class="text-center align-middle">RFC</th>
-<th class="text-center align-middle">CC</th>
-<th class="text-center align-middle">AC</th>
-<th class="text-center align-middle">CD</th>
-<th class="text-center align-middle">ID</th>
-<th class="text-center align-middle">OC</th>
-<th class="text-center align-middle">NP</th>
-<th class="text-center align-middle">Estatus</th>
-<th class="text-center align-middle" colspan="2"><i class="ti ti-dots-vertical fs-6"></i></th>
-</tr>
-</thead>
+<table id="tablaCredito" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>
 </div>
@@ -75,20 +58,7 @@ x-data="clientesListaComponent()">
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-4">
 <div class="datatables">
 <div class="table-responsive" style="overflow-x: auto; overflow-y: hidden;">
-<table id="tablaDebito" class="table table-striped table-bordered mb-0 text-nowrap align-middle" style="min-width: 500px;">
-<thead>
-<tr><th class="text-center" colspan="9">Débito</th></tr>
-<tr>
-<th class="text-center align-middle">#</th>
-<th class="text-center align-middle">Cuenta</th>
-<th class="text-start align-middle">Cliente</th>
-<th class="text-center align-middle">CD</th>
-<th class="text-center align-middle">ID</th>
-<th class="text-center align-middle">RFC</th>
-<th class="text-center align-middle">Estatus</th>
-<th class="text-center align-middle" colspan="2"><i class="ti ti-dots-vertical fs-6"></i></th>
-</tr>
-</thead>
+<table id="tablaDebito" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>
 </div>

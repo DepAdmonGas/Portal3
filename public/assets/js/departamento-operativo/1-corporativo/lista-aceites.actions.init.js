@@ -5,9 +5,16 @@ document.addEventListener('alpine:init', () => {
         creando: false,
         editandoConcepto: null,
 
-        init() {
-            const data = window.__ACEITES_DATA__ || [];
-            this.items = data;
+        async init() {
+            try {
+                const res = await fetch('/departamento-operativo/corporativo/lista-aceites/data');
+                const json = await res.json();
+                if (json.success) {
+                    this.items = json.data;
+                }
+            } catch (e) {
+                console.error('Error al cargar aceites:', e);
+            }
             this.items.forEach(item => {
                 this.tempValues[item.id] = {
                     id_aceite: item.id_aceite || '',

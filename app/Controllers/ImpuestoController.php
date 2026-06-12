@@ -44,8 +44,8 @@ $data = [
 'idEstacion' => $idEstacion,
 'ocultarSelectorEstacion' => true,
 'scripts' => [
-'/assets/js/vendor.min.js',
-'/assets/js/departamento-operativo/1-corporativo/actions.impuestos.init.js',
+'/assets/js/vendor.min.js?v=' . time(),
+'/assets/js/departamento-operativo/1-corporativo/actions.impuestos.init.js?v=' . time(),
 ],
 'help' => false
 ];

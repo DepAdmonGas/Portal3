@@ -30,11 +30,14 @@ const table = $('#table-corte-diario').DataTable({
 processing: true,
 serverSide: false,
 autoWidth: false,
-paging: false, // <- desactiva la paginación
+paging: false,
+
 order: [[0, 'asc']],
+
 language: {
 url: '/assets/libs/datatables.net/js/es-ES.json'
 },
+
 ajax: {
 url: '/departamento-operativo/corporativo/corte-diario-datatable/' + idYear + '/' + idMes,
 type: 'GET',
@@ -43,10 +46,25 @@ window._resumen = json.resumen || {};
 return json.data;
 }
 },
+
 columns: columns,
+
 columnDefs: [
-{ visible: multiestacion, targets: 6 }
+{
+targets: [1,2,3,4,5,6],
+orderable: false
+},
+{
+targets: 0,
+orderable: true,
+searchable: true
+},
+{
+visible: multiestacion,
+targets: 6
+}
 ],
+
 drawCallback: function () {
 if (window.Alpine) {
 Alpine.initTree(document.querySelector('#table-corte-diario'));

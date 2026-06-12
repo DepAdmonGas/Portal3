@@ -7,7 +7,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 </div>
 </div>
 <?php else: ?>
-<div class="row"
+<div class="row pb-4"
 id="aceites-mes-container"
 data-year="<?= $idYear ?>"
 data-mes="<?= $idMes ?>"
@@ -40,7 +40,7 @@ x-data="aceitesMesComponent()"
 
 <div class="dropdown">
 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-tools"></i> Herramientas
+<i class="ti ti-tools me-1"></i>
 </button>
 <ul class="dropdown-menu dropdown-menu-end">
 

@@ -82,7 +82,4 @@ No se encontro información
 <div id="finalDePagina"></div>
 </div>
 </div>
-
-<script>
-window.__ACEITES_DATA__ = <?= json_encode($aceites) ?>;
-</script>
+</div>
