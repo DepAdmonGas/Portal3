@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Sasisopa\RequisicionObraFormato12TrabajadorEncargado;
+use App\Models\Usuario;
 class RequisicionObraFormato12 extends Model
 {
     protected $table = 'tb_requisicion_obra_formato_12';
@@ -41,11 +42,30 @@ class RequisicionObraFormato12 extends Model
         'fecha' => 'datetime',
         'dia' => 'int',
         'year' => 'int',
-        'fecha_inicio' => 'date',
-        'fecha_termino' => 'date',
-        'hora_inicio' => 'datetime:H:i',
-        'hora_termino' => 'datetime:H:i',
+        'fecha_inicio' => 'datetime',
+        'fecha_termino' => 'datetime',
+        'hora_inicio' => 'datetime',
+        'hora_termino' => 'datetime',
         'cprtp' => 'int',
         'cteppc' => 'int'
     ];
+
+     public function procedimientos()
+    {
+        return $this->hasMany(
+            RequisicionObraFormato12Procedimiento::class,
+            'id_requisicion',
+            'id'
+        );
+    }
+
+    public function trabajadores()
+    {
+        return $this->hasMany(
+            RequisicionObraFormato12TrabajadorEncargado::class,
+            'id_requisicion',
+            'id'
+        );
+    }
+
 }

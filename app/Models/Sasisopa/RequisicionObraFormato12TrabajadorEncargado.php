@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class RequisicionObraFormato12TrabajadorEncargado extends Model
 {
@@ -27,4 +28,5 @@ class RequisicionObraFormato12TrabajadorEncargado extends Model
         'id_personal' => 'int',
         'categoria' => 'int'
     ];
+
 }

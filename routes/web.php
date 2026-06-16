@@ -720,7 +720,35 @@ return function(RouteCollector $r) {
         $r->addRoute('GET', '/integridad-mecanica-aseguramiento/bitacoras', Route::auth(['IntegridadMecanicaController', 'bitacoras']));
 
         // Elemento 12
-        $r->addRoute('GET', '/seguridad-contratistas', Route::auth(['SasisopaController', 'seguridadContratistas']));
+        $r->addRoute('GET', '/seguridad-contratistas', Route::auth(['SeguridadContratistasController', 'index']));
+        $r->addRoute('GET', '/seguridad-contratistas/datatable', Route::auth(['SeguridadContratistasController', 'datatable']));
+        $r->addRoute('POST', '/seguridad-contratistas/create', Route::auth(['SeguridadContratistasController', 'create']));
+        $r->addRoute('POST', '/seguridad-contratistas/update', Route::auth(['SeguridadContratistasController', 'update']));
+        $r->addRoute('POST', '/seguridad-contratistas/delete', Route::auth(['SeguridadContratistasController', 'delete']));
+
+        $r->addRoute('GET', '/seguridad-contratistas/formato12/{id:\d+}', Route::auth(['SeguridadContratistasController', 'formato12']));
+        $r->addRoute('POST', '/seguridad-contratistas/formato12/update', Route::auth(['SeguridadContratistasController', 'updateFormato12']));
+        $r->addRoute('POST', '/seguridad-contratistas/formato12/trabajador/create', Route::auth(['SeguridadContratistasController', 'createTrabajador']));
+        $r->addRoute('POST', '/seguridad-contratistas/formato12/trabajador/delete', Route::auth(['SeguridadContratistasController', 'deleteTrabajador']));
+        $r->addRoute('POST', '/seguridad-contratistas/formato12/encargado/create', Route::auth(['SeguridadContratistasController', 'createEncargado']));
+        $r->addRoute('POST', '/seguridad-contratistas/formato12/encargado/delete', Route::auth(['SeguridadContratistasController', 'deleteTrabajador']));
+        $r->addRoute('POST', '/seguridad-contratistas/formato12/procedimiento/update', Route::auth(['SeguridadContratistasController', 'updateProcedimiento']));
+        $r->addRoute('GET', '/seguridad-contratistas/formato12/pdf/{id:\d+}', Route::auth(['SeguridadContratistasController', 'pdfFormato12']));
+
+        $r->addRoute('GET', '/seguridad-contratistas/formato13/{id:\d+}', Route::auth(['SeguridadContratistasController', 'formato13']));
+
+        $r->addRoute('GET', '/seguridad-contratistas/formato14/{id:\d+}', Route::auth(['SeguridadContratistasController', 'formato14']));
+        $r->addRoute('POST', '/seguridad-contratistas/formato14/update', Route::auth(['SeguridadContratistasController', 'updateFormato14']));
+
+        $r->addRoute('GET', '/seguridad-contratistas/formato15/{id:\d+}', Route::auth(['SeguridadContratistasController', 'formato15']));
+        $r->addRoute('POST', '/seguridad-contratistas/formato15/update', Route::auth(['SeguridadContratistasController', 'updateFormato15']));
+        $r->addRoute('GET', '/seguridad-contratistas/formato15/pdf/{id:\d+}', Route::auth(['SeguridadContratistasController', 'pdfFormato15']));
+
+        $r->addRoute('GET', '/seguridad-contratistas/carta-responsiva/id/{id:\d+}', Route::auth(['SeguridadContratistasController', 'cartaResponsiva']));
+        $r->addRoute('POST', '/seguridad-contratistas/carta-responsiva/update', Route::auth(['SeguridadContratistasController', 'updateCartaResponsiva']));
+        $r->addRoute('GET', '/seguridad-contratistas/carta-responsiva/pdf/{id:\d+}', Route::auth(['SeguridadContratistasController', 'pdfCartaResponsiva']));
+        
+
         // Elemento 13
         $r->addRoute('GET', '/preparacion-emergencias', Route::auth(['SasisopaController', 'preparacionEmergencias']));
         // Elemento 14

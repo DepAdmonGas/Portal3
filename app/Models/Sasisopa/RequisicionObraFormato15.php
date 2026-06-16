@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class RequisicionObraFormato15 extends Model
 {
@@ -39,4 +40,12 @@ class RequisicionObraFormato15 extends Model
         'fecha_lv' => 'date',
         'hora_lv' => 'datetime:H:i:s'
     ];
+
+     public function supervisor()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario'
+        );
+    }
 }

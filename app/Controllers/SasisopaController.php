@@ -1298,28 +1298,6 @@ class SasisopaController extends BaseController{
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
-    public function seguridadContratistas(){
-
-        $title = '12. SEGURIDAD DE CONTRATISTAS';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/seguridad-contratistas', $data,'sasisopa');
-
-    }
 
     public function preparacionEmergencias(){
 

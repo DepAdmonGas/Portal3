@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
-class RequisicionObraFormato12Procedimiento extends Model
+class RequisicionObraFormato14 extends Model
 {
-    protected $table = 'tb_requisicion_obra_formato_12_procedimiento';
+    protected $table = 'tb_requisicion_obra_formato_14';
 
     protected $primaryKey = 'id';
 
@@ -14,13 +14,13 @@ class RequisicionObraFormato12Procedimiento extends Model
 
     protected $fillable = [
         'id_requisicion',
-        'detalle',
-        'valor'
+        'fecha',
+        'archivo'
     ];
 
     protected $casts = [
         'id' => 'int',
         'id_requisicion' => 'int',
-        'valor' => 'int'
+        'fecha' => 'datetime'
     ];
 }
