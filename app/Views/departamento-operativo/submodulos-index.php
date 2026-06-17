@@ -7,6 +7,8 @@ $ruta = $submenu['ruta'];
 
 if ($submenu['clave'] === 'corte-diario') {
 $ruta .= "/{$idYear}/{$idMes}";
+}else if ($submenu['clave'] === 'embarques') {
+$ruta .= "/{$idYear}/{$idMes}";
 }
 
 ?>
@@ -22,7 +24,7 @@ $ruta .= "/{$idYear}/{$idMes}";
 <i class="ti <?= $submenu['icono'] ?> fs-9"></i>
 </h3>
 </div>
- 
+
 <div class="p-4 flex-grow-1">
 <h5 class="text-white mb-0">
 <?= $i . '. ' . $submenu['nombre'] ?>

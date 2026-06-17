@@ -354,6 +354,22 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addRoute('GET','/control-volumetrico/documentos-list',Route::auth(['ControlVolumetricoController', 'getDocumentosList']));
     $r->addRoute('GET','/control-volumetrico/comentarios-list',Route::auth(['ControlVolumetricoController', 'getComentariosList']));
 
+    //----- Embarques
+    $r->addRoute('GET','/embarques/{idYear:\d+}/{idMes:\d+}',Route::auth(['EmbarquesController', 'index']));
+    $r->addRoute('GET','/embarques/data/{idYear:\d+}/{idMes:\d+}',Route::auth(['EmbarquesController', 'getDatos']));
+    $r->addRoute('POST','/embarques/store',Route::auth(['EmbarquesController', 'store']));
+    $r->addRoute('POST','/embarques/update',Route::auth(['EmbarquesController', 'update']));
+    $r->addRoute('POST','/embarques/delete',Route::auth(['EmbarquesController', 'destroy']));
+    $r->addRoute('GET','/embarques/comentarios',Route::auth(['EmbarquesController', 'getComentarios']));
+    $r->addRoute('POST','/embarques/store-comentario',Route::auth(['EmbarquesController', 'storeComentario']));
+    $r->addRoute('GET','/embarques/catalogos',Route::auth(['EmbarquesController', 'getCatalogos']));
+
+    //----- Analisis de Compras
+    $r->addRoute('GET','/analisis-compra/{idYear:\d+}/{idMes:\d+}',Route::auth(['AnalisisCompraController', 'index']));
+    $r->addRoute('GET','/analisis-compra/{idYear:\d+}/{idMes:\d+}/excel',Route::auth(['AnalisisCompraController', 'descargarExcel']));
+    $r->addRoute('POST','/analisis-compra/notac',Route::auth(['AnalisisCompraController', 'updateNotac']));
+    $r->addRoute('POST','/analisis-compra/status',Route::auth(['AnalisisCompraController', 'updateStatus']));
+
     //----- Aceites / Resumen Aceites
     $r->addRoute('GET','/aceites-mes/{idYear:\d+}/{idMes:\d+}',Route::auth(['AceitesController', 'index']));
     $r->addRoute('GET','/aceites-mes/data',Route::auth(['AceitesController', 'data']));

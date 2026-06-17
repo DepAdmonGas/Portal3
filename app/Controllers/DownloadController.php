@@ -39,6 +39,7 @@ class DownloadController{
             'aceites-diferencias'          => __DIR__ . '../../../public/uploads/archivos/aceites-diferencias/',
             'monedero-documentos'          => __DIR__ . '../../../public/uploads/archivos/',
             'monedero-lista-documentos'    => __DIR__ . '../../../public/uploads/archivos/resumen-monederos-documentos/',
+            'embarques'                    => __DIR__ . '../../../public/uploads/archivos/embarques/',
         ];
 
         if (!isset($rutas[$tipo])) {

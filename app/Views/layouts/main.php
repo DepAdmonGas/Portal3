@@ -31,43 +31,43 @@
 <!-- SECURITY: Auto-inyectar token CSRF en todas las solicitudes Axios -->
 <script>
 (function() {
-    // Función para obtener el token actual del meta tag
-    function getCsrfToken() {
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        return meta ? meta.getAttribute('content') : null;
-    }
-    
-    const csrfToken = getCsrfToken();
-    if (csrfToken) {
-        // Agregar token a todas las solicitudes Axios
-        axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-        
-        // Interceptar solicitudes para asegurar token fresco
-        axios.interceptors.request.use(
-            function(config) {
-                // Actualizar token antes de cada request
-                config.headers['X-CSRF-TOKEN'] = getCsrfToken();
-                return config;
-            },
-            function(error) {
-                return Promise.reject(error);
-            }
-        );
-        
-        // Interceptar respuestas para detectar CSRF expirado
-        axios.interceptors.response.use(
-            function(response) {
-                return response;
-            },
-            function(error) {
-                if (error.response && error.response.status === 419) {
-                    alert('Su sesión ha expirado. Por favor actualice la página.');
-                    window.location.reload();
-                }
-                return Promise.reject(error);
-            }
-        );
-    }
+// Función para obtener el token actual del meta tag
+function getCsrfToken() {
+const meta = document.querySelector('meta[name="csrf-token"]');
+return meta ? meta.getAttribute('content') : null;
+}
+
+const csrfToken = getCsrfToken();
+if (csrfToken) {
+// Agregar token a todas las solicitudes Axios
+axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+
+// Interceptar solicitudes para asegurar token fresco
+axios.interceptors.request.use(
+function(config) {
+// Actualizar token antes de cada request
+config.headers['X-CSRF-TOKEN'] = getCsrfToken();
+return config;
+},
+function(error) {
+return Promise.reject(error);
+}
+);
+
+// Interceptar respuestas para detectar CSRF expirado
+axios.interceptors.response.use(
+function(response) {
+return response;
+},
+function(error) {
+if (error.response && error.response.status === 419) {
+alert('Su sesión ha expirado. Por favor actualice la página.');
+window.location.reload();
+}
+return Promise.reject(error);
+}
+);
+}
 })();
 </script>
 
@@ -78,13 +78,16 @@
 
 <!-- Pantalla de carga (Loader) -->
 <div class="loader-admongas">
-    <img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
+<img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
 </div>
 
 <div id="main-wrapper">
 
 <!-- Sidebar Inicio -->
 <aside class="left-sidebar with-vertical">
+
+<!-- sidebarmenu.js expects #get-url -->
+<a id="get-url" href="./" style="display:none;"></a>
 
 <!-- Logo Sidebar -->
 <div class="brand-logo d-flex align-items-center justify-content-between">
@@ -159,14 +162,14 @@
 </div>
 <!-- SECURITY: BAJO #34 - Logout via POST usando JavaScript -->
 <a href="javascript:void(0)" 
-   class="border-0 bg-transparent text-primary ms-auto" 
-   tabindex="0" 
-   type="button" 
-   aria-label="logout" 
-   data-bs-toggle="tooltip" 
-   data-bs-placement="top" 
-   data-bs-title="Salir"
-   onclick="performLogout()">
+class="border-0 bg-transparent text-primary ms-auto" 
+tabindex="0" 
+type="button" 
+aria-label="logout" 
+data-bs-toggle="tooltip" 
+data-bs-placement="top" 
+data-bs-title="Salir"
+onclick="performLogout()">
 <i class="ti ti-power text-danger fs-6"></i>
 </a>
 </div>
@@ -264,7 +267,7 @@
 </div>
 </li>
 <!-- FIN DROPDOWN PERFIL -->
- 
+
 </ul>
 </div>
 </div>
@@ -344,26 +347,26 @@ $razonsocial = trim($razonsocial);
 <!-- SECURITY: Auto-inyectar token CSRF en todas las solicitudes Axios -->
 <script>
 (function() {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    if (csrfToken) {
-        // Agregar token a todas las solicitudes Axios
-        axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-        
-        // Interceptar respuestas para detectar CSRF expirado
-        axios.interceptors.response.use(
-            function(response) {
-                return response;
-            },
-            function(error) {
-                if (error.response && error.response.status === 419) {
-                    // Token CSRF expirado, recargar página
-                    this.notify('error', 'Su sesión ha expirado. Por favor actualice la página.');
-                    window.location.reload();
-                }
-                return Promise.reject(error);
-            }
-        );
-    }
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+if (csrfToken) {
+// Agregar token a todas las solicitudes Axios
+axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+
+// Interceptar respuestas para detectar CSRF expirado
+axios.interceptors.response.use(
+function(response) {
+return response;
+},
+function(error) {
+if (error.response && error.response.status === 419) {
+// Token CSRF expirado, recargar página
+this.notify('error', 'Su sesión ha expirado. Por favor actualice la página.');
+window.location.reload();
+}
+return Promise.reject(error);
+}
+);
+}
 })();
 </script>
 
