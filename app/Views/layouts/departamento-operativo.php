@@ -80,6 +80,9 @@ return Promise.reject(error);
 <!-- Sidebar Start -->
 <aside class="left-sidebar with-vertical">
 
+<!-- sidebarmenu.js expects #get-url -->
+<a id="get-url" href="./" style="display:none;"></a>
+
 <!-- Logo Sidebar -->
 <div class="brand-logo d-flex align-items-center justify-content-between">
 <a href="/home" class="text-nowrap logo-img mt-3 mb-3">

@@ -26,5 +26,10 @@ class EmbarquesComentario extends Model
         'id_usuario' => 'integer',
         'comentario' => 'string',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(\App\Models\Usuario::class, 'id_usuario', 'id');
+    }
 }
 
