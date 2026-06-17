@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ProtocoloEmergenciasAnexo extends Model
+class ProtocoloEmergencias extends Model
 {
-    protected $table = 'tb_protocolo_emergencias_anexo';
+    protected $table = 'tb_protocolo_emergencias';
 
     protected $primaryKey = 'id';
 
@@ -17,16 +17,14 @@ class ProtocoloEmergenciasAnexo extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id_estacion',
         'fechacreacion',
-        'nombre_anexo',
-        'id_protocolo',
         'archivo',
     ];
 
     protected $casts = [
         'id' => 'integer',
-        'id_protocolo' => 'integer',
-        'fechacreacion' => 'datetime',
+        'id_estacion' => 'integer',
+        'fechacreacion' => 'date',
     ];
-
 }

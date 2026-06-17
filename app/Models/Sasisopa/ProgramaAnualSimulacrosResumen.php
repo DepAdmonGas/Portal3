@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ProgramaAnualSimulacrosEvaluacion extends Model
+class ProgramaAnualSimulacrosResumen extends Model
 {
-    protected $table = 'tb_programa_anual_simulacros_evaluacion';
+    protected $table = 'tb_programa_anual_simulacros_resumen';
 
     protected $primaryKey = 'id';
 
@@ -18,11 +18,12 @@ class ProgramaAnualSimulacrosEvaluacion extends Model
 
     protected $fillable = [
         'id_programa',
-        'archivo',
+        'resumen',
     ];
 
     protected $casts = [
         'id' => 'integer',
         'id_programa' => 'integer',
     ];
+
 }

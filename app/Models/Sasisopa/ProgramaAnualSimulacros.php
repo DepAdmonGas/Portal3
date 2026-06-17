@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,5 +28,23 @@ class ProgramaAnualSimulacros extends Model
         'id_estacion' => 'integer',
         'fecha' => 'date',
     ];
+
+    // ProgramaAnualSimulacros.php
+
+    public function personal()
+    {
+        return $this->hasMany(
+            ProgramaAnualSimulacrosPersonal::class,
+            'id_programa'
+        );
+    }
+
+    public function resumen()
+    {
+        return $this->hasOne(
+            ProgramaAnualSimulacrosResumen::class,
+            'id_programa'
+        );
+    }
 
 }
