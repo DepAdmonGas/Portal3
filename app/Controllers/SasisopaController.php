@@ -1299,28 +1299,6 @@ class SasisopaController extends BaseController{
     //------------------------------------------------------------------------------------
 
 
-    public function preparacionEmergencias(){
-
-        $title = '13. PREPARACIÓN Y RESPUESTA A EMERGENCIAS';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-        $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/preparacion-emergencias', $data,'sasisopa');
-
-    }
 
     public function monitoreoVerificacionEvaluacion(){
 

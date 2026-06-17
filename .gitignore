@@ -1,5 +1,6 @@
 /vendor
 /storage/
+/uploads
 /public/build
 /public/uploads
 /node_modules

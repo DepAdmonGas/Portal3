@@ -789,11 +789,43 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
 
         $r->addRoute('GET', '/seguridad-contratistas/carta-responsiva/id/{id:\d+}', Route::auth(['SeguridadContratistasController', 'cartaResponsiva']));
         $r->addRoute('POST', '/seguridad-contratistas/carta-responsiva/update', Route::auth(['SeguridadContratistasController', 'updateCartaResponsiva']));
-        $r->addRoute('GET', '/seguridad-contratistas/carta-responsiva/pdf/{id:\d+}', Route::auth(['SeguridadContratistasController', 'pdfCartaResponsiva']));
-        
+        $r->addRoute('GET', '/seguridad-contratistas/carta-responsiva/pdf/{id:\d+}', Route::auth(['SeguridadContratistasController', 'pdfCartaResponsiva']));      
 
         // Elemento 13
-        $r->addRoute('GET', '/preparacion-emergencias', Route::auth(['SasisopaController', 'preparacionEmergencias']));
+        $r->addRoute('GET', '/preparacion-emergencias', Route::auth(['PreparacionEmergenciasController', 'index']));
+
+        $r->addRoute('GET', '/preparacion-emergencias/protocolo/get', Route::auth(['PreparacionEmergenciasController', 'protocoloGet']));
+        $r->addRoute('POST', '/preparacion-emergencias/protocolo/create', Route::auth(['PreparacionEmergenciasController', 'protocoloCreate']));
+        $r->addRoute('POST', '/preparacion-emergencias/protocolo/update', Route::auth(['PreparacionEmergenciasController', 'protocoloUpdate']));
+        $r->addRoute('POST', '/preparacion-emergencias/protocolo/delete', Route::auth(['PreparacionEmergenciasController', 'protocoloDelete']));
+
+        $r->addRoute('GET', '/preparacion-emergencias/protocolo/anexos/get/{id:\d+}', Route::auth(['PreparacionEmergenciasController', 'anexosGet']));
+        $r->addRoute('POST', '/preparacion-emergencias/protocolo/anexos/create', Route::auth(['PreparacionEmergenciasController', 'anexoCreate']));
+        $r->addRoute('POST', '/preparacion-emergencias/protocolo/anexos/delete', Route::auth(['PreparacionEmergenciasController', 'anexoDelete']));
+
+
+        $r->addRoute('GET', '/preparacion-emergencias/telefonos/get', Route::auth(['PreparacionEmergenciasController', 'telefonosGet']));
+        $r->addRoute('POST', '/preparacion-emergencias/telefonos/create', Route::auth(['PreparacionEmergenciasController', 'telefonosCreate']));
+        $r->addRoute('POST', '/preparacion-emergencias/telefonos/update', Route::auth(['PreparacionEmergenciasController', 'telefonosUpdate']));
+        $r->addRoute('POST', '/preparacion-emergencias/telefonos/delete', Route::auth(['PreparacionEmergenciasController', 'telefonosDelete']));
+
+        $r->addRoute('GET', '/preparacion-emergencias/simulacro/datatable', Route::auth(['PreparacionEmergenciasController', 'simulacroDatatable']));
+        $r->addRoute('POST', '/preparacion-emergencias/simulacro/create', Route::auth(['PreparacionEmergenciasController', 'simulacroCreate']));
+        $r->addRoute('POST', '/preparacion-emergencias/simulacro/update', Route::auth(['PreparacionEmergenciasController', 'simulacroUpdate']));
+        $r->addRoute('POST', '/preparacion-emergencias/simulacro/delete', Route::auth(['PreparacionEmergenciasController', 'simulacroDelete']));
+        $r->addRoute('GET', '/preparacion-emergencias/simulacro/pdf', Route::auth(['PreparacionEmergenciasController', 'simulacroPdf']));
+
+        $r->addRoute('GET', '/preparacion-emergencias/simulacro/personal/get/{id:\d+}', Route::auth(['PreparacionEmergenciasController', 'personalGet']));
+        $r->addRoute('GET', '/preparacion-emergencias/simulacro/personal/usuarios/{id:\d+}', Route::auth(['PreparacionEmergenciasController', 'personalUsuarios']));
+        $r->addRoute('POST', '/preparacion-emergencias/simulacro/personal/create', Route::auth(['PreparacionEmergenciasController', 'personalCreate']));
+        $r->addRoute('POST', '/preparacion-emergencias/simulacro/personal/delete', Route::auth(['PreparacionEmergenciasController', 'personalDelete']));
+
+        $r->addRoute('GET', '/preparacion-emergencias/simulacro/resumen/get/{id:\d+}', Route::auth(['PreparacionEmergenciasController', 'resumenGet']));
+        $r->addRoute('POST', '/preparacion-emergencias/simulacro/resumen/create', Route::auth(['PreparacionEmergenciasController', 'resumenCreate']));
+
+        $r->addRoute('POST', '/preparacion-emergencias/simulacro/evaluacion/create', Route::auth(['PreparacionEmergenciasController', 'evaluacionCreate']));
+
+        
         // Elemento 14
         $r->addRoute('GET', '/monitoreo-verificacion-evaluacion', Route::auth(['SasisopaController', 'monitoreoVerificacionEvaluacion']));
         // Elemento 15
