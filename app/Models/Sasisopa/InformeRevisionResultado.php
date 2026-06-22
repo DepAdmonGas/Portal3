@@ -4,26 +4,24 @@ namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
-class AtencionHallazgoEvidencia extends Model
+class InformeRevisionResultado extends Model
 {
-    protected $table = 'tb_atencion_hallazgos_evidencia';
+    protected $table = 'tb_informe_revision_resultados';
 
     protected $primaryKey = 'id';
-
-    public $incrementing = true;
-
-    protected $keyType = 'int';
 
     public $timestamps = false;
 
     protected $fillable = [
-        'id_hallazgo',
+        'id_estacion',
+        'fecha',
         'archivo',
     ];
 
     protected $casts = [
         'id' => 'integer',
-        'id_hallazgo' => 'integer',
+        'id_estacion' => 'integer',
+        'fecha' => 'date',
         'archivo' => 'string',
     ];
 }

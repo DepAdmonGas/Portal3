@@ -843,7 +843,50 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
 
         
         // Elemento 14
-        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion', Route::auth(['SasisopaController', 'monitoreoVerificacionEvaluacion']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion', Route::auth(['MonitoreoVerificacionEvaluacionController', 'index']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/buscar-indicadores', Route::auth(['MonitoreoVerificacionEvaluacionController', 'buscarIndicadores']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/descargar-revision-resultados-detalle/{id:\d+}', Route::auth(['MonitoreoVerificacionEvaluacionController', 'revisionResultadoPdf']));
+
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/implementacion-sa', Route::auth(['ImplementacionSAController', 'index']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/implementacion-sa/datatable', Route::auth(['ImplementacionSAController', 'datatable']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/implementacion-sa/create', Route::auth(['ImplementacionSAController', 'create']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/implementacion-sa/update', Route::auth(['ImplementacionSAController', 'update']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/implementacion-sa/get/{id:\d+}', Route::auth(['ImplementacionSAController', 'get']));
+
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/ventas-mes', Route::auth(['MonitoreoVerificacionEvaluacionController', 'indexVentasMes']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/ventas-mes/get', Route::auth(['MonitoreoVerificacionEvaluacionController', 'getVentasMes']));
+
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos', Route::auth(['CalibracionVerificacionMantenimientoController', 'index']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/get-equipos-calibracion', Route::auth(['CalibracionVerificacionMantenimientoController', 'getEquiposCalibracion']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-equipos-calibracion', Route::auth(['CalibracionVerificacionMantenimientoController', 'pdfEquiposCalibracion']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/get-calendario-calibracion', Route::auth(['CalibracionVerificacionMantenimientoController', 'getCalendarioCalibracion']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-calendario-calibracion', Route::auth(['CalibracionVerificacionMantenimientoController', 'pdfCalendarioCalibracion']));
+
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales', Route::auth(['EvaluacionRequisitosLegalesController', 'index']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales/pdf', Route::auth(['EvaluacionRequisitosLegalesController', 'pdf']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales/datatable', Route::auth(['EvaluacionRequisitosLegalesController', 'datatable']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales/create', Route::auth(['EvaluacionRequisitosLegalesController', 'create']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales/delete', Route::auth(['EvaluacionRequisitosLegalesController', 'delete']));
+
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/atencion-hallazgos', Route::auth(['AtencionHallazgoController', 'index']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/datatable', Route::auth(['AtencionHallazgoController', 'datatable']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/create', Route::auth(['AtencionHallazgoController', 'create']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/delete', Route::auth(['AtencionHallazgoController', 'delete']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/pdf/{id:\d+}', Route::auth(['AtencionHallazgoController', 'pdf']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/descargar-programa-implementacion-s-a', Route::auth(['AtencionHallazgoController', 'descargarProgramaImplementacion']));
+
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/nuevo/{id:\d+}', Route::auth(['AtencionHallazgoNuevoController', 'index']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/update-encabezados', Route::auth(['AtencionHallazgoNuevoController', 'updateEncabezados']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/detalle/{id:\d+}', Route::auth(['AtencionHallazgoNuevoController', 'detalle']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/delete-hallazgo', Route::auth(['AtencionHallazgoNuevoController', 'deleteHallazgo']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/sasisopa', Route::auth(['AtencionHallazgoNuevoController', 'sasisopaList']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/create-detalle', Route::auth(['AtencionHallazgoNuevoController', 'createDetalle']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/update-detalle', Route::auth(['AtencionHallazgoNuevoController', 'updateDetalle']));
+
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/evidencias/{id:\d+}', Route::auth(['AtencionHallazgoNuevoController', 'evidencias']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/evidencia/create', Route::auth(['AtencionHallazgoNuevoController', 'createEvidencia']));
+        $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/evidencia/delete', Route::auth(['AtencionHallazgoNuevoController', 'deleteEvidencia']));
+
         // Elemento 15
         $r->addRoute('GET', '/auditorias', Route::auth(['SasisopaController', 'auditorias']));
         // Elemento 16
@@ -852,7 +895,6 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('GET', '/revision-resultados', Route::auth(['SasisopaController', 'revisionResultados']));
         // Elemento 18
         $r->addRoute('GET', '/informes-desempeno', Route::auth(['SasisopaController', 'informesDesempeno']));
-
 
         // Otros
         $r->addRoute('GET', '/calendario', Route::auth(['SasisopaController', 'calendario']));

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,4 +32,22 @@ class AtencionHallazgoDetalle extends Model
         'accion' => 'string',
         'fecha_implementacion' => 'date',
     ];
+
+     public function sasisopa()
+    {
+        return $this->belongsTo(
+            Sasisopa::class,
+            'id_sasisopa',
+            'id'
+        );
+    }
+
+    public function evidencias()
+    {
+        return $this->hasMany(
+            AtencionHallazgoEvidencia::class,
+            'id_hallazgo',
+            'id'
+        );
+    }
 }
