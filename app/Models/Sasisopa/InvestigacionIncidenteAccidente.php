@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -35,4 +35,20 @@ class InvestigacionIncidenteAccidente extends Model
         'tercer_autorizado' => 'integer',
         'fechacreacion' => 'datetime',
     ];
+
+    public function formatos()
+    {
+        return $this->hasMany(
+            InvestigacionIncidenteAccidenteFormato::class,
+            'id_investigacion'
+        );
+    }
+
+    public function grupos()
+    {
+        return $this->hasMany(
+            InvestigacionIncidenteAccidenteGrupo::class,
+            'id_investigacion'
+        );
+    }
 }

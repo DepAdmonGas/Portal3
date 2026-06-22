@@ -1,0 +1,97 @@
+<div id="container" class="pb-4"
+x-data="ventasMes()">
+
+    <div class="row mb-3 mt-3">
+        <div class="col-md-3">
+            <label class="form-label">Año</label>
+            <select
+                class="form-select"
+                x-model.number="year"
+                @change="buscar()">
+                <?php for($i = date('Y'); $i >= 2019; $i--): ?>
+                    <option value="<?= $i ?>">
+                        <?= $i ?>
+                    </option>
+                <?php endfor; ?>
+            </select>
+        </div>
+    </div>
+
+
+<div class="table-responsive mt-4">
+
+    <table class="table table-bordered table-sm">
+
+    <thead>
+        <tr>
+            <th class="bg-primary text-white">Mes</th>
+            <th class="text-end bg-primary text-white">Ventas</th>
+            <th class="bg-primary text-white">Mes anterior</th>
+            <th class="text-end bg-primary text-white">Ventas</th>
+            <th class="text-end bg-primary text-white">Resultado</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        <template x-for="item in ventas" :key="item.mes">
+
+            <tr>
+
+                <td x-text="item.mes"></td>
+
+                <td class="text-end fw-bolder table-primary">
+                    <span x-text="item.ventas_actual"></span>
+                </td>
+
+                <td x-text="item.mes_anterior"></td>
+
+                <td class="text-end fw-bolder table-warning">
+                    <span x-text="item.ventas_anterior"></span>
+                </td>
+
+                <td class="text-end fw-bolder">
+
+                    <span
+                        class="d-inline-flex align-items-center gap-1"
+                        :class="{
+                            'text-success': item.tendencia === 'ALZA',
+                            'text-danger': item.tendencia === 'BAJA',
+                            'text-secondary': item.tendencia === 'IGUAL'
+                        }">
+
+                        <!-- ALZA -->
+                        <i
+                            x-show="item.tendencia === 'ALZA'"
+                            class="ti ti-trending-up">
+                        </i>
+
+                        <!-- BAJA -->
+                        <i
+                            x-show="item.tendencia === 'BAJA'"
+                            class="ti ti-trending-down">
+                        </i>
+
+                        <!-- IGUAL -->
+                        <i
+                            x-show="item.tendencia === 'IGUAL'"
+                            class="ti ti-minus">
+                        </i>
+
+                        <span x-text="item.resultado + '%'"></span>
+
+                    </span>
+
+                </td>
+
+            </tr>
+
+        </template>
+
+    </tbody>
+
+</table>
+
+</div>
+
+</div>

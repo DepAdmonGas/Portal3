@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class Implementacionsa extends Model
 {
@@ -34,4 +35,21 @@ class Implementacionsa extends Model
         'puntos' => 'integer',
         'fecha' => 'datetime',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario',
+            'id'
+        );
+    }
+
+    public function detalles()
+    {
+        return $this->hasMany(
+            ImplementacionSADetalle::class,
+            'id_implementacion'
+        );
+    }
 }

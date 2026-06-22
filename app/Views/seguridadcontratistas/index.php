@@ -17,7 +17,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
         <thead>
           <tr>
            <th>Folio</th>
-            <th>fecha</th>
+            <th>Fecha</th>
             <th>Solicitante</th>
             <th>Proveedor</th>
             <th colspan="2">Fo.ADMONGAS.0012</th>

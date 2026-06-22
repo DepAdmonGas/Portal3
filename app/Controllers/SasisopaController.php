@@ -1300,28 +1300,7 @@ class SasisopaController extends BaseController{
 
 
 
-    public function monitoreoVerificacionEvaluacion(){
 
-        $title = '14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-    $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/monitoreo-verificacion-evaluacion', $data,'sasisopa');
-
-    }
 
     public function auditorias(){
 

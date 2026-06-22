@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
-class InvestigacionIncidenteAccidenteTercerautorizado extends Model
+class InvestigacionIncidenteAccidenteGrupo extends Model
 {
-    protected $table = 'tb_investigacion_incidente_accidente_tercerautorizado';
+    protected $table = 'tb_investigacion_incidente_accidente_grupo';
 
     protected $primaryKey = 'id';
 
@@ -18,16 +18,15 @@ class InvestigacionIncidenteAccidenteTercerautorizado extends Model
 
     protected $fillable = [
         'id_investigacion',
+        'fechacreacion',
         'nombre',
-        'numero',
-        'lider',
-        'fecha',
-        'archivo',
+        'puesto',
+        'especialidad',
     ];
 
     protected $casts = [
         'id' => 'integer',
         'id_investigacion' => 'integer',
-        'fecha' => 'date',
+        'fechacreacion' => 'datetime',
     ];
 }
