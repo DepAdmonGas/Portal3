@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,4 +30,22 @@ class AuditoriaExterna extends Model
         'fechacreacion' => 'datetime',
         'prestador_servicio' => 'string',
     ];
+
+        public function formatos()
+    {
+        return $this->hasMany(
+            AuditoriaExternaFormato::class,
+            'id_auditoria',
+            'id'
+        );
+    }
+
+    public function asea()
+    {
+        return $this->hasMany(
+            AuditoriaExternaAsea::class,
+            'id_auditoria',
+            'id'
+        );
+    }
 }
