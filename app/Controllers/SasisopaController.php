@@ -1298,33 +1298,6 @@ class SasisopaController extends BaseController{
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
-
-
-
-
-    public function auditorias(){
-
-        $title = '15. AUDITORÍAS';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/auditorias', $data,'sasisopa');
-
-    }
-
     public function investigacionIncidentesAccidentes(){
 
         $title = '16. INVESTIGACIÓN DE INCIDENTES Y ACCIDENTES';
@@ -1440,7 +1413,6 @@ class SasisopaController extends BaseController{
         View::render('sasisopa/cursos', $data,'sasisopa');
 
     }
-
-    
+  
 
 }

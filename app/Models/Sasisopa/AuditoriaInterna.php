@@ -1,7 +1,5 @@
 <?php
-
-namespace App\Models;
-
+namespace App\Models\Sasisopa;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditoriaInterna extends Model
@@ -30,4 +28,22 @@ class AuditoriaInterna extends Model
         'fechacreacion' => 'datetime',
         'auditor' => 'string',
     ];
+
+    public function formatos()
+    {
+        return $this->hasMany(
+            AuditoriaInternaFormato::class,
+            'id_auditoria',
+            'id'
+        );
+    }
+
+    public function anexos()
+    {
+        return $this->hasMany(
+            AuditoriaInternaAnexo::class,
+            'id_auditoria',
+            'id'
+        );
+    }
 }

@@ -6,10 +6,10 @@
         <h4 class="card-title">Formato Programa de auditorias (Internas y externas) </h4>
 
          <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a href="/sasisopa/auditorias/programa" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-eye"></i>
             Ver programa de auditorias 
-          </button>
+          </a>
         </div>
 
       </div>
@@ -22,10 +22,10 @@
         <h4 class="card-title">Auditoria interna </h4>
           
           <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a href="/sasisopa/auditorias/interna" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-eye"></i>
             Ver auditoria interna
-          </button>
+          </a>
         </div>
 
       </div>
@@ -38,10 +38,10 @@
         <h4 class="card-title">Auditoria externa</h4>
           
           <div class="text-end mt-4">
-          <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
+          <a href="/sasisopa/auditorias/externa" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
             <i class="ti ti-eye"></i>
             Ver auditoria externa
-          </button>
+          </a>
         </div>
 
       </div>

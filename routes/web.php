@@ -888,7 +888,29 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/monitoreo-verificacion-evaluacion/atencion-hallazgos/evidencia/delete', Route::auth(['AtencionHallazgoNuevoController', 'deleteEvidencia']));
 
         // Elemento 15
-        $r->addRoute('GET', '/auditorias', Route::auth(['SasisopaController', 'auditorias']));
+        $r->addRoute('GET', '/auditorias', Route::auth(['AuditoriasController', 'index']));
+        $r->addRoute('GET', '/auditorias/programa', Route::auth(['AuditoriasController', 'programa']));
+        $r->addRoute('GET', '/auditorias/programa/formato', Route::auth(['AuditoriasController', 'formatoAuditorias']));
+        $r->addRoute('GET', '/auditorias/programa/pdf/{yearInicio:\d+}/{yearFin:\d+}', Route::auth(['AuditoriasController', 'formatpPdfAuditorias']));
+
+        $r->addRoute('GET', '/auditorias/interna', Route::auth(['AuditoriasController', 'interna']));
+        $r->addRoute('GET', '/auditorias/interna/datatable', Route::auth(['AuditoriasController', 'datatable']));
+        $r->addRoute('POST', '/auditorias/interna/create', Route::auth(['AuditoriasController', 'createInterna']));
+        $r->addRoute('POST', '/auditorias/interna/delete', Route::auth(['AuditoriasController', 'deleteInterna']));
+        $r->addRoute('POST', '/auditorias/interna/formato024', Route::auth(['AuditoriasController', 'uploadFormato024']));
+        $r->addRoute('POST', '/auditorias/interna/formato025', Route::auth(['AuditoriasController', 'uploadFormato025']));
+        $r->addRoute('GET', '/auditorias/interna/anexos', Route::auth(['AuditoriasController', 'anexos']));
+        $r->addRoute('POST', '/auditorias/interna/anexos/create', Route::auth(['AuditoriasController', 'createAnexo']));
+
+        $r->addRoute('GET', '/auditorias/externa', Route::auth(['AuditoriasController', 'externa']));
+        $r->addRoute('GET', '/auditorias/externa/datatable', Route::auth(['AuditoriasController', 'datatableExterna']));
+        $r->addRoute('POST', '/auditorias/externa/create', Route::auth(['AuditoriasController', 'createExterna']));
+        $r->addRoute('POST', '/auditorias/externa/delete', Route::auth(['AuditoriasController', 'deleteExterna']));
+        $r->addRoute('POST', '/auditorias/externa/formato024', Route::auth(['AuditoriasController', 'uploadExternaFormato024']));
+        $r->addRoute('POST', '/auditorias/externa/formato025', Route::auth(['AuditoriasController', 'uploadExternaFormato025']));
+        $r->addRoute('GET', '/auditorias/externa/asea', Route::auth(['AuditoriasController', 'asea']));
+        $r->addRoute('POST', '/auditorias/externa/asea/create', Route::auth(['AuditoriasController', 'createAsea']));
+
         // Elemento 16
         $r->addRoute('GET', '/investigacion-incidentes-accidentes', Route::auth(['SasisopaController', 'investigacionIncidentesAccidentes']));
         // Elemento 17
