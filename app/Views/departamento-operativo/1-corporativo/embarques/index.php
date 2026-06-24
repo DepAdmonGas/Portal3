@@ -71,7 +71,7 @@ x-data="{ ...actions(), ...embarquesComponent() }">
 </div>
 
 <?php if ($puedeAgregar): ?>
-<div class="modal fade" id="modalEmbarque" tabindex="-1" x-ref="modalEmbarque">
+<div class="modal fade" id="modalEmbarque" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalEmbarque">
 <div class="modal-dialog modal-xl">
 <div class="modal-content">
 <div class="modal-header">
@@ -399,6 +399,7 @@ type="button"
 </div>
 
 </div>
+
 </div>
 </template>
 

@@ -283,6 +283,7 @@ return function(RouteCollector $r) {
     $r->addRoute('POST','/cierre-lote/editar',Route::auth(['TpvController', 'editar']));
     $r->addRoute('POST','/cierre-lote/pendiente',Route::auth(['TpvController', 'pendiente']));
     $r->addRoute('GET','/cierre-lote/totales/{idDia:\d+}',Route::auth(['TpvController', 'getTotales']));
+    $r->addRoute('GET','/cierre-lote/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['TpvController', 'descargarExcel']));
 
     //----- Impuestos
     $r->addRoute('GET','/impuestos/{idYear:\d+}/{idMes:\d+}/{idDia:\d+}',Route::auth(['ImpuestoController', 'index']));
@@ -879,11 +880,12 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     });
 
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
-    $r->addRoute('POST', '/telegram/webhook', ['Api\TelegramWebhookController', 'handle']);
-    $r->addRoute('POST', '/token-telegram/status', Route::auth(['Api\TokenTelegramController', 'status']));
-    $r->addRoute('POST', '/token-telegram/generate', Route::auth(['Api\TokenTelegramController', 'generate']));
-    $r->addRoute('POST', '/token-telegram/revoke', Route::auth(['Api\TokenTelegramController', 'revoke']));
-    $r->addRoute('POST', '/token-telegram/test-notification', Route::auth(['Api\TokenTelegramController', 'testNotification']));
+    $r->addRoute('POST', '/telegram/webhook', ['TelegramWebhookController', 'handle']);
+    $r->addRoute('GET', '/telegram/poll', Route::auth(['TelegramWebhookController', 'poll']));
+    $r->addRoute('POST', '/token-telegram/status', Route::auth(['TokenTelegramController', 'status']));
+    $r->addRoute('POST', '/token-telegram/generate', Route::auth(['TokenTelegramController', 'generate']));
+    $r->addRoute('POST', '/token-telegram/revoke', Route::auth(['TokenTelegramController', 'revoke']));
+    $r->addRoute('POST', '/token-telegram/test-notification', Route::auth(['TokenTelegramController', 'testNotification']));
 
     // ---------------- RUTA FINAL ----------------
     //$r->addRoute('GET', '/{url:.+}', Route::auth(['ModuloController', 'RutasModulos']));

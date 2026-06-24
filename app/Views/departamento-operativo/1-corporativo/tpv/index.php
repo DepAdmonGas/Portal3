@@ -1,3 +1,35 @@
+<div class="row mb-3">
+<?php if ($puedeDescargar): ?>
+<div class="dropdown mt-2 text-end">
+<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+<i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel
+</button>
+
+<ul class="dropdown-menu dropdown-menu-end">
+
+<li>
+<a class="dropdown-item" href="/departamento-operativo/cierre-lote/excel/99/99/<?= $idEstacion ?>">
+<i class="ti ti-file-spreadsheet"></i> Reporte General
+</a>
+</li>
+
+<li>
+<a class="dropdown-item" href="/departamento-operativo/cierre-lote/excel/<?= $idYear ?>/<?= $idMes ?>/<?= $idEstacion ?>">
+<i class="ti ti-file-spreadsheet"></i> <?= nombremes(sprintf('%02d', $idMes)) ?> <?= $idYear ?>
+</a>
+</li>
+
+<li>
+<a class="dropdown-item" href="/departamento-operativo/cierre-lote/excel/<?= $idYear ?>/99/<?= $idEstacion ?>">
+<i class="ti ti-file-spreadsheet"></i> Periodo <?= $idYear ?>
+</a>
+</li>
+
+</ul>
+</div>
+<?php endif; ?>
+</div>
+
 <div id="container" class="mt-4 mb-4"
 data-id-dia="<?= $idDia ?>"
 data-id-year="<?= $idYear ?>"
@@ -24,7 +56,7 @@ x-data="tpvComponent()">
 <div class="card">
 <div class="card-header text-bg-primary">
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-<h5 class="mb-0 text-white"><i class="ti ti-building me-2"></i><span x-text="empresa"></span></h5>
+<h5 class="mb-0 text-white"><i class="ti ti-building me-2"></i><span x-text="empresa === 'G500 FLETT' ? 'TICKETCARD+' : empresa"></span></h5>
 <template x-if="!multiestacion && puedeEditar && !finalizado">
 <button type="button" class="btn btn-success btn-sm" @click="agregarCierre(empresa)" :disabled="saving">
 <i class="ti ti-plus me-1"></i>Agregar
@@ -48,12 +80,12 @@ x-data="tpvComponent()">
 <tr>
 <td class="text-center align-middle p-0">
 <template x-if="!multiestacion && puedeEditar && !finalizado">
-                    <input type="text"
-                        class="border-0 p-3 text-center w-100 bg-transparent"
-                        style="min-width: 60px;"
-                        x-model="item.no_cierre_lote"
-                        @change="editarCierre(item.id, 'no_cierre_lote', $event.target.value)">
-                        </template>
+<input type="text"
+class="border-0 p-3 text-center w-100 bg-transparent"
+style="min-width: 60px;"
+x-model="item.no_cierre_lote"
+@change="editarCierre(item.id, 'no_cierre_lote', $event.target.value)">
+</template>
 
 <template x-if="!puedeEditar || multiestacion || finalizado">
 <span x-text="item.no_cierre_lote || ''"></span>
@@ -63,13 +95,13 @@ x-data="tpvComponent()">
 <template x-if="!multiestacion && puedeEditar && !finalizado">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
-                    <input type="number"
-                        min="0"
-                        step="any"
-                        class="border-0 p-3 text-end w-100 bg-transparent"
-                        style="padding-left: 20px !important; min-width: 80px;"
-                        x-model="item.importe"
-                        @change="editarCierre(item.id, 'importe', $event.target.value)">
+<input type="number"
+min="0"
+step="any"
+class="border-0 p-3 text-end w-100 bg-transparent"
+style="padding-left: 20px !important; min-width: 80px;"
+x-model="item.importe"
+@change="editarCierre(item.id, 'importe', $event.target.value)">
 </div>
 </template>
 
@@ -79,12 +111,12 @@ x-data="tpvComponent()">
 </td>
 <td class="align-middle text-center p-0">
 <template x-if="!multiestacion && puedeEditar && !finalizado">
-                    <input type="number"
-                        min="0"
-                        class="border-0 p-3 text-center w-100 bg-transparent"
-                        style="min-width: 60px;"
-                        x-model="item.ticktes"
-                        @change="editarCierre(item.id, 'ticktes', $event.target.value)">
+<input type="number"
+min="0"
+class="border-0 p-3 text-center w-100 bg-transparent"
+style="min-width: 60px;"
+x-model="item.ticktes"
+@change="editarCierre(item.id, 'ticktes', $event.target.value)">
 </template>
 
 <template x-if="!puedeEditar || multiestacion || finalizado">

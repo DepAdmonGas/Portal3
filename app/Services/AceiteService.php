@@ -22,7 +22,8 @@ class AceiteService
 {
 public static function getNombreEstacion(int $idEstacion): string
 {
-$estacion = \App\Models\Estacion::find($idEstacion);
+
+$estacion = Estacion::find($idEstacion);
 return $estacion ? $estacion->nombre : '';
 }
 public static function getPermisos(): array
@@ -568,7 +569,14 @@ AceiteLubricanteReporteFinalizar::create([
 'fecha' => date('Y-m-d H:i:s'),
 ]);
 
-self::enviarNotificacionesFinalizacion($corteMes, $idEstacion, $yearNum, $mesNum);
+$usuario = Auth::user();
+$nombreUsuario = $usuario ? ($usuario->nombre . ' ' . $usuario->apellidos) : 'Sistema';
+$sessionUsuario = Session::get('usuario');
+$idUsuario = $sessionUsuario['id'] ?? 0;
+
+register_shutdown_function(function () use ($idEstacion, $idUsuario, $nombreUsuario, $yearNum, $mesNum) {
+self::notificarFinalizarAceite($idEstacion, $idUsuario, $nombreUsuario, $yearNum, $mesNum);
+});
 
 return ['success' => true, 'message' => 'Inventario finalizado correctamente'];
 }
@@ -599,43 +607,19 @@ $diff->save();
 }
 }
 
-private static function enviarNotificacionesFinalizacion($corteMes, int $idEstacion, int $yearNum, int $mesNum): void
+public static function notificarFinalizarAceite(int $idEstacion, int $idUsuario, string $nombreUsuario, int $yearNum, int $mesNum): void
 {
 try {
-$usuario = Auth::user();
-$nombreUsuario = $usuario ? ($usuario->nombre . ' ' . $usuario->apellidos) : 'Sistema';
-$sessionUsuario = Session::get('usuario');
-$idUsuario = $sessionUsuario['id'] ?? 0;
-
 $estacion = Estacion::find($idEstacion);
-$nombreES = $estacion ? $estacion->nombre : '';
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
 
-$mesNombre = nombremes($mesNum);
-$eventoAccion = "Finalizó el Resumen de Aceites correspondiente al mes de {$mesNombre} del {$yearNum} de la estación {$nombreES}";
-$detalleTelegram = "✅ {$nombreUsuario} finalizó el Resumen de Aceites correspondiente al mes de {$mesNombre} del {$yearNum}.\n\n⛽ Estación: {$nombreES}.";
+$mensaje = '✅ Se ha finalizado el apartado de <b>Resumen de Aceites</b>, correspondiente al periodo de <b>' . nombremes($mesNum) . ' ' . $yearNum . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
 
-if ($idUsuario) {
-EventoPortal2025::create([
-'id_usuario' => $idUsuario,
-'fecha_creacion' => date('Y-m-d H:i:s'),
-'accion' => $eventoAccion,
-]);
-}
-
-$telegram = new TelegramService();
-$userIds = $telegram->getUserIdsByStation($idEstacion, $idUsuario);
-
-if (in_array($idEstacion, [6, 7])) {
-$userIds = array_merge($userIds, $telegram->getUserIdsComercializadora($idUsuario));
-}
-if (in_array($idEstacion, [1, 2, 3, 4, 5, 14])) {
-$userIds = array_merge($userIds, $telegram->getUserIdsContabilidad($idUsuario));
-}
-
-$telegram->sendMessageToMultiple($userIds, $detalleTelegram);
-
+self::enviarTelegramAceite($idEstacion, $idUsuario, $mensaje);
 } catch (\Throwable $e) {
-error_log('Error en notificaciones finalización aceites: ' . $e->getMessage());
+error_log('Error en notificarFinalizarAceite: ' . $e->getMessage());
 }
 }
 
@@ -728,5 +712,162 @@ return ['success' => false, 'message' => 'Aceite no encontrado'];
 }
 $aceite->delete();
 return ['success' => true, 'message' => 'Aceite eliminado correctamente'];
+}
+
+public static function notificarSubirFacturaAceite(int $idMes, int $idUsuario, string $nombreUsuario, string $concepto = '', string $fecha = ''): void
+{
+try {
+$corteMes = CorteMes::with('year')->find($idMes);
+if (!$corteMes || !$corteMes->year) return;
+
+$idEstacion = $corteMes->year->id_estacion;
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '📄 Se ha agregado una nueva factura en la sección de <b>Archivos Aceites</b>, correspondiente Resumen de Aceites del periodo de <b>' . nombremes((int) $corteMes->mes) . ' ' . $corteMes->year->year . '</b>:' . PHP_EOL . PHP_EOL
+. '📄 <b>Concepto:</b> ' . ($concepto ?: 'N/A') . PHP_EOL
+. '📅 <b>Fecha de factura:</b> ' . ($fecha ?: 'N/A') . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramAceite($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarSubirFacturaAceite: ' . $e->getMessage());
+}
+}
+
+public static function notificarEliminarFacturaAceite(int $idMes, int $idUsuario, string $nombreUsuario, string $concepto = ''): void
+{
+try {
+$corteMes = CorteMes::with('year')->find($idMes);
+if (!$corteMes || !$corteMes->year) return;
+
+$idEstacion = $corteMes->year->id_estacion;
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '🗑️ Se ha eliminado un archivo del apartado de <b>Archivos Aceites</b>, correspondiente al <b>Resumen de Aceites</b> del periodo de <b>' . nombremes((int) $corteMes->mes) . ' ' . $corteMes->year->year . '</b>:' . PHP_EOL . PHP_EOL
+. '📄 <b>Concepto:</b> ' . ($concepto ?: 'N/A') . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramAceite($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarEliminarFacturaAceite: ' . $e->getMessage());
+}
+}
+
+public static function notificarAgregarDiferenciaAceite(int $idMes, int $idUsuario, string $nombreUsuario, string $concepto = '', int $diferencia = 0, string $comentario = ''): void
+{
+try {
+$corteMes = CorteMes::with('year')->find($idMes);
+if (!$corteMes || !$corteMes->year) return;
+
+$idEstacion = $corteMes->year->id_estacion;
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$fechaHora = date('Y-m-d H:i:s');
+
+$mensaje = '💰 Se ha agregado una diferencia de pago en el apartado de <b>Resumen de Aceites</b>, correspondiente al periodo <b>'
+. nombremes((int) $corteMes->mes) . ' ' . $corteMes->year->year . '</b>:' . PHP_EOL . PHP_EOL
+. '📦 <b>Concepto:</b> ' . ($concepto ?: 'N/A') . PHP_EOL
+. '📊 <b>Diferencia:</b> ' . ($diferencia ? $diferencia . ' pzs' : '0 pzs') . PHP_EOL
+. '📝 <b>Comentario:</b> ' . ($comentario ?: 'S/C') . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramAceite($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarAgregarDiferenciaAceite: ' . $e->getMessage());
+}
+}
+
+private static function enviarTelegramAceite(int $idEstacion, int $excludeUserId, string $mensaje): void
+{
+$telegram = new TelegramService();
+$userIds = $telegram->getUserIdsByStation($idEstacion, $excludeUserId);
+
+if (in_array($idEstacion, [6, 7])) {
+$extraIds = $telegram->getUserIdsComercializadora($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+} elseif (in_array($idEstacion, [1, 2, 3, 4, 5, 14])) {
+$extraIds = $telegram->getUserIdsContabilidad($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+}
+
+$telegram->sendMessageToMultiple($userIds, $mensaje);
+}
+
+public static function notificarSubirDocumentoAceite(int $idMes, int $idUsuario, string $nombreUsuario, array $extra = []): void
+{
+try {
+$corteMes = CorteMes::with('year')->find($idMes);
+if (!$corteMes || !$corteMes->year) return;
+
+$idEstacion = $corteMes->year->id_estacion;
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '📎 Se ha agregado un nuevo documento en la sección de <b>Documentos de Aceites</b>, correspondiente Resumen de Aceites del periodo de <b>'
+. nombremes((int) $corteMes->mes) . ' ' . $corteMes->year->year . '</b>:' . PHP_EOL . PHP_EOL
+
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+
+self::enviarTelegramAceite($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarSubirDocumentoAceite: ' . $e->getMessage());
+}
+}
+
+public static function notificarActualizarDocumentoAceite(int $idMes, int $idUsuario, string $nombreUsuario, array $extra = []): void
+{
+try {
+$corteMes = CorteMes::with('year')->find($idMes);
+if (!$corteMes || !$corteMes->year) return;
+
+$idEstacion = $corteMes->year->id_estacion;
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$fechaHora = date('Y-m-d H:i:s');
+
+$detalle = '';
+if (!empty($extra['archivos'])) $detalle .= PHP_EOL . '📎 Archivos: ' . $extra['archivos'];
+
+$mensaje = '✏️ Se ha actualizado un documento en la sección de <b>Documentos de Aceites</b>, correspondiente al <b>Resumen de Aceites</b> del periodo de <b>'
+. nombremes((int) $corteMes->mes) . ' ' . $corteMes->year->year . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramAceite($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarActualizarDocumentoAceite: ' . $e->getMessage());
+}
+}
+
+public static function notificarEliminarDocumentoAceite(int $idMes, int $idUsuario, string $nombreUsuario, array $extra = []): void
+{
+try {
+$corteMes = CorteMes::with('year')->find($idMes);
+if (!$corteMes || !$corteMes->year) return;
+
+$idEstacion = $corteMes->year->id_estacion;
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$detalle = '';
+if (!empty($extra['fecha'])) $detalle .=  '📅 Fecha: ' . $extra['fecha'] . PHP_EOL;
+
+$mensaje = '🗑️ Se ha registrado la eliminación de un documento en la sección de <b>Documentos de Aceites</b>, correspondiente al <b>Resumen de Aceites</b> del periodo <b>'
+. nombremes((int) $corteMes->mes) . ' ' . $corteMes->year->year . '</b>:' . PHP_EOL . PHP_EOL
+. $detalle
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramAceite($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarEliminarDocumentoAceite: ' . $e->getMessage());
+}
 }
 }

@@ -19,6 +19,7 @@ use App\Models\Operativo\IngresosFacturacionContabilidad;
 use App\Models\Sasisopa\ReporteCreMes;
 use App\Models\Sasisopa\ReporteCreProducto;
 use App\Models\Sasisopa\ReporteCrePipa;
+use App\Services\TelegramService;
 use App\Core\Auth;
 use App\Core\Session;
 use App\Models\Usuario;
@@ -716,5 +717,110 @@ if (file_exists($ruta)) unlink($ruta);
 }
 
 return $row->delete();
+}
+
+private static function getEstacionIdFromMes(int $idMes): int
+{
+return (int) CorteMes::from('op_corte_mes as m')
+->join('op_corte_year as y', 'm.id_year', '=', 'y.id')
+->where('m.id', $idMes)
+->value('y.id_estacion');
+}
+
+private static function getMesYearFromMes(int $idMes): ?\stdClass
+{
+$corteMes = CorteMes::with('year')->find($idMes);
+if (!$corteMes || !$corteMes->year) return null;
+return (object) [
+'mes' => nombremes((int) $corteMes->mes),
+'year' => $corteMes->year->year,
+];
+}
+
+private static function enviarTelegramControl(int $idEstacion, int $excludeUserId, string $mensaje): void
+{
+$telegram = new TelegramService();
+$userIds = $telegram->getUserIdsByStation($idEstacion, $excludeUserId);
+
+if (in_array($idEstacion, [6, 7])) {
+$extraIds = $telegram->getUserIdsComercializadora($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+} elseif (in_array($idEstacion, [1, 2, 3, 4, 5, 14])) {
+$extraIds = $telegram->getUserIdsContabilidad($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+}
+
+$telegram->sendMessageToMultiple($userIds, $mensaje);
+}
+
+public static function notificarAgregarAnexo(int $idMes, int $idUsuario, string $nombreUsuario, string $anexo): void
+{
+try {
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$my = self::getMesYearFromMes($idMes);
+$periodo = $my ? $my->mes . ' ' . $my->year : '';
+
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '📎 Se ha agregado un nuevo anexo al apartado de <b>Control Volumétrico</b>, correspondiente al <b>Corte Diario</b> del periodo <b>' . $periodo . '</b>:' . PHP_EOL . PHP_EOL
+. '📄 <b>Nombre del anexo:</b> ' . $anexo . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+
+self::enviarTelegramControl($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarAgregarAnexo: ' . $e->getMessage());
+}
+}
+
+public static function notificarEliminarAnexo(int $idMes, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$my = self::getMesYearFromMes($idMes);
+$periodo = $my ? $my->mes . ' ' . $my->year : '';
+
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '🗑️ Se ha eliminado un anexo del apartado de <b>Control Volumétrico</b>, correspondiente al <b>Corte Diario</b> del periodo <b>' . $periodo . '</b>:' . PHP_EOL . PHP_EOL
+
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+
+self::enviarTelegramControl($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarEliminarAnexo: ' . $e->getMessage());
+}
+}
+
+public static function notificarEnviarComentario(int $idMes, int $idUsuario, string $nombreUsuario, string $comentario): void
+{
+try {
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$my = self::getMesYearFromMes($idMes);
+$periodo = $my ? $my->mes . ' ' . $my->year : '';
+
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '💬 Se ha agregado un comentario al apartado de <b>Control Volumétrico</b>, correspondiente al <b>Corte Diario</b> del periodo <b>' . $periodo . '</b>:' . PHP_EOL . PHP_EOL
+. '📝 <b>Comentario:</b> ' . $comentario . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramControl($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarEnviarComentario: ' . $e->getMessage());
+}
 }
 }

@@ -1,13 +1,13 @@
 <?php
-
 namespace App\Controllers;
-
 use App\Core\View;
 use App\Core\Breadcrumb;
+use App\Models\Operativo\ConsumosPagosResumen;
 use App\Services\ClienteMesService;
 use App\Services\ClienteMesExcelService;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
+use App\Core\Session;
 
 class ClienteMesController extends BaseController
 {
@@ -71,24 +71,27 @@ Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
 Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
+Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $data = [
-'title' => $title,
-'idYear' => $idYear,
-'idMes' => $idMes,
-'idEstacion' => $idEstacion,
-'idReporte' => $idReporte,
-'finalizado' => $finalizado,
-'multiestacion' => $multiEstacion,
-'esDireccionOperaciones' => $esDireccionOperaciones,
-'puestoExcluido' => $puestoExcluido,
-'puedeFinalizar' => $puedeFinalizar,
-'puedeDescargar' => $puedeDescargar,
-'credito' => $datos['credito'],
-'debito' => $datos['debito'],
-'totals' => $datos['totals'],
-'help' => false,
-'links' => [
+    'title' => $title,
+    'idYear' => $idYear,
+    'idMes' => $idMes,
+    'idEstacion' => $idEstacion,
+    'idReporte' => $idReporte,
+    'finalizado' => $finalizado,
+    'multiestacion' => $multiEstacion,
+    'esDireccionOperaciones' => $esDireccionOperaciones,
+    'puestoExcluido' => $puestoExcluido,
+    'puedeFinalizar' => $puedeFinalizar,
+    'puedeDescargar' => $puedeDescargar,
+    'credito' => $datos['credito'],
+    'debito' => $datos['debito'],
+    'totals' => $datos['totals'],
+    'yearMesTemplate' => '/departamento-operativo/clientes-mes/{year}/{mes}',
+    'help' => false,
+    'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
 ],
 'scripts' => [
@@ -182,7 +185,17 @@ echo json_encode(['success' => false, 'message' => 'ID de reporte inválido']);
 exit;
 }
 
-$success = ClienteMesService::finalizar($idReporte, 0);
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+$success = ClienteMesService::finalizar($idReporte, $idUsuario);
+
+if ($success) {
+register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario) {
+ClienteMesService::notificarFinalizar($idReporte, $idUsuario, $nombreUsuario);
+});
+}
 
 echo json_encode([
 'success' => $success,
@@ -205,6 +218,14 @@ exit;
 }
 
     $result = ClienteMesService::editarSaldoInicial($idResumen, $saldo);
+
+    if ($result['success']) {
+        $resumen = ConsumosPagosResumen::find($idResumen);
+        if ($resumen) {
+            $datos = ClienteMesService::getDatos($resumen->id_mes);
+            $result['totals'] = $datos['totals'];
+        }
+    }
 
     echo json_encode($result);
     exit;

@@ -2,11 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\ListaTransportes;
 use App\Models\Operativo\CorteMes;
 use App\Models\Operativo\Embarque;
 use App\Models\Operativo\EmbarquesComentario;
+use App\Models\PivoteoChofer;
+use App\Models\UnidadesTransporte;
+use App\Models\Estacion;
+use App\Services\TelegramService;
 use App\Core\Auth;
 use App\Core\Session;
+use Illuminate\Support\Carbon;
 
 class EmbarquesService
 {
@@ -292,7 +298,7 @@ return ['success' => false, 'message' => 'El comentario no puede estar vacío'];
 try {
 EmbarquesComentario::create([
 'id_embarques' => $idEmbarque,
-'fecha_hora' => \Carbon\Carbon::now(),
+'fecha_hora' => Carbon::now(),
 'id_usuario' => $usuario->id,
 'comentario' => trim($comentario),
 ]);
@@ -302,18 +308,59 @@ return ['success' => false, 'message' => 'Error al guardar comentario: ' . $e->g
 }
 }
 
+public static function notificarComentarioEmb(int $idEmbarque, int $idUsuario, string $nombreUsuario, string $comentario = ''): void
+{
+try {
+$embarque = Embarque::with('mes.year')->find($idEmbarque);
+if (!$embarque || !$embarque->mes || !$embarque->mes->year) return;
+
+$idEstacion = (int) $embarque->mes->year->id_estacion;
+$corteMes = CorteMes::with('year')->find($embarque->id_mes);
+$mes = $corteMes ? (int) $corteMes->mes : 0;
+$year = $corteMes && $corteMes->year ? (int) $corteMes->year->year : 0;
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$fechaEmb = $embarque->fecha ? $embarque->fecha->format('Y-m-d') : '';
+$fechaHora = date('Y-m-d H:i:s');
+$importef = (float)($embarque->importef ?? 0);
+$precioLitro = (float)($embarque->precio_litro ?? 0);
+$merma = (float)($embarque->merma ?? 0);
+
+$mensaje = '💬 Se ha agregado un comentario en el apartado de <b>Resumen de Embarques</b>, correspondiente al periodo <b>'
+. nombremes($mes) . ' ' . $year . '</b>:' . PHP_EOL
+
+. PHP_EOL . '📝 <b>Comentario:</b> ' . $comentario . PHP_EOL 
+. PHP_EOL . '🚛 <b>Tipo embarque:</b> ' . ($embarque->embarque ?? 'N/A')
+. PHP_EOL . '🛢️ <b>Producto:</b> ' . ($embarque->producto ?? 'N/A')
+. PHP_EOL . '📅 <b>Fecha embarque:</b> ' . ($fechaEmb ?: 'N/A')
+. PHP_EOL . '📏 <b>Litros factura:</b> ' . ($importef ?: '0')
+. PHP_EOL . '💲 <b>Precio por litro:</b> $' . number_format($precioLitro, 2);
+
+if (!empty($merma)) {
+$mensaje .= PHP_EOL . '📉 <b>Merma:</b> ' . $merma;
+}
+$mensaje .=
+PHP_EOL . '🚚 <b>Transportista:</b> ' . ($embarque->nom_transporte ?? 'N/A')
+. PHP_EOL . '👨‍✈️ <b>Chofer:</b> ' . ($embarque->chofer ?? 'N/A')
+. PHP_EOL . '🚛 <b>Unidad:</b> ' . ($embarque->unidad ?? 'N/A')
+
+. PHP_EOL . PHP_EOL . '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES . PHP_EOL;
+
+
+self::enviarTelegramEmb($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarComentarioEmb: ' . $e->getMessage());
+}
+}
+
 public static function getCatalogos(): array
 {
 try {
-$capsule = new \Illuminate\Database\Capsule\Manager;
-$choferes = $capsule::connection()->select("SELECT nombre_chofer FROM tb_pivoteo_chofer WHERE estado = 0 ORDER BY id ASC");
-$unidades = $capsule::connection()->select("SELECT no_unidad FROM tb_unidades_transporte WHERE estado = 0 ORDER BY id ASC");
-$transportes = $capsule::connection()->select("SELECT nombre_transporte FROM tb_lista_transportes WHERE estado = 0 ORDER BY nombre_transporte ASC");
-
 return [
-'choferes' => array_map(fn($r) => $r->nombre_chofer, $choferes),
-'unidades' => array_map(fn($r) => $r->no_unidad, $unidades),
-'transportes' => array_map(fn($r) => $r->nombre_transporte, $transportes),
+'choferes' => PivoteoChofer::where('estado', 0)->orderBy('id')->pluck('nombre_chofer')->toArray(),
+'unidades' => UnidadesTransporte::where('estado', 0)->orderBy('id')->pluck('no_unidad')->toArray(),
+'transportes' => ListaTransportes::where('estado', 0)->orderBy('nombre_transporte')->pluck('nombre_transporte')->toArray(),
 ];
 } catch (\Exception $e) {
 return ['choferes' => [], 'unidades' => [], 'transportes' => []];
@@ -322,27 +369,25 @@ return ['choferes' => [], 'unidades' => [], 'transportes' => []];
 
 public static function persistCatalogos(array $data): void
 {
-$capsule = new \Illuminate\Database\Capsule\Manager;
-
 if (!empty($data['chofer'])) {
-$exists = $capsule::connection()->selectOne("SELECT id FROM tb_pivoteo_chofer WHERE nombre_chofer = ?", [trim($data['chofer'])]);
-if (!$exists) {
-$capsule::connection()->insert("INSERT INTO tb_pivoteo_chofer (nombre_chofer, estado) VALUES (?, 0)", [trim($data['chofer'])]);
-}
+PivoteoChofer::firstOrCreate(
+['nombre_chofer' => trim($data['chofer'])],
+['estado' => 0]
+);
 }
 
 if (!empty($data['unidad'])) {
-$exists = $capsule::connection()->selectOne("SELECT id FROM tb_unidades_transporte WHERE no_unidad = ?", [trim($data['unidad'])]);
-if (!$exists) {
-$capsule::connection()->insert("INSERT INTO tb_unidades_transporte (no_unidad, estado) VALUES (?, 0)", [trim($data['unidad'])]);
-}
+UnidadesTransporte::firstOrCreate(
+['no_unidad' => trim($data['unidad'])],
+['estado' => 0]
+);
 }
 
 if (!empty($data['nom_transporte'])) {
-$exists = $capsule::connection()->selectOne("SELECT id FROM tb_lista_transportes WHERE nombre_transporte = ?", [trim($data['nom_transporte'])]);
-if (!$exists) {
-$capsule::connection()->insert("INSERT INTO tb_lista_transportes (nombre_transporte, estado) VALUES (?, 0)", [trim($data['nom_transporte'])]);
-}
+ListaTransportes::firstOrCreate(
+['nombre_transporte' => trim($data['nom_transporte'])],
+['estado' => 0]
+);
 }
 }
 
@@ -353,5 +398,204 @@ if (!is_dir($dir)) {
 mkdir($dir, 0755, true);
 }
 return realpath($dir);
+}
+
+private static function getEstacionIdFromMesIdEmb(int $idMes): int
+{
+$corteMes = CorteMes::with('year')->find($idMes);
+return $corteMes && $corteMes->year ? (int) $corteMes->year->id_estacion : 0;
+}
+
+private static function enviarTelegramEmb(int $idEstacion, int $excludeUserId, string $mensaje): void
+{
+$telegram = new TelegramService();
+$userIds = $telegram->getUserIdsByStation($idEstacion, $excludeUserId);
+
+if (in_array($idEstacion, [6, 7])) {
+$extraIds = $telegram->getUserIdsComercializadora($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+} elseif (in_array($idEstacion, [1, 2, 3, 4, 5, 14])) {
+$extraIds = $telegram->getUserIdsContabilidad($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+}
+
+$telegram->sendMessageToMultiple($userIds, $mensaje);
+}
+
+public static function getMesYearEmb(int $idMes): string
+{
+$corteMes = CorteMes::with('year')->find($idMes);
+return $corteMes && $corteMes->year ? nombremes((int) $corteMes->mes) . ' ' . $corteMes->year->year : '';
+}
+
+public static function notificarStoreEmb(int $idMes, int $idUsuario, string $nombreUsuario, string $embarque = '', string $documento = '', array $extra = []): void
+{
+try {
+$idEstacion = self::getEstacionIdFromMesIdEmb($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearEmb($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$corteMes = CorteMes::with('year')->find($idMes);
+$mes = $corteMes ? (int) $corteMes->mes : 0;
+$year = $corteMes && $corteMes->year ? (int) $corteMes->year->year : 0;
+
+$detalle = '';
+
+if (!empty($extra['fecha'])) {
+$detalle .= PHP_EOL . '📅 <b>Fecha:</b> ' . $extra['fecha'];
+}
+if (!empty($extra['producto'])) {
+$detalle .= PHP_EOL . '🛢️ <b>Producto:</b> ' . $extra['producto'];
+}
+if (!empty($extra['importef'])) {
+$detalle .= PHP_EOL . '📏 <b>Litros factura:</b> ' . (float) $extra['importef'];
+}
+if (!empty($extra['precio_litro'])) {
+$detalle .= PHP_EOL . '💲 <b>Precio por litro:</b> $' . number_format((float) $extra['precio_litro'], 2);
+}
+if (!empty($extra['merma'])) {
+$detalle .= PHP_EOL . '📉 <b>Merma:</b> ' . (float) $extra['merma'];
+}
+if (!empty($extra['tad'])) {
+$detalle .= PHP_EOL . '📍 <b>TAD:</b> ' . $extra['tad'];
+}
+
+$transporte = '';
+
+if (!empty($extra['nom_transporte'])) {
+$transporte .= PHP_EOL . '🚚 <b>Transportista:</b> ' . $extra['nom_transporte'];
+}
+if (!empty($extra['chofer'])) {
+$transporte .= PHP_EOL . '👨‍✈️ <b>Chofer:</b> ' . $extra['chofer'];
+}
+if (!empty($extra['unidad'])) {
+$transporte .= PHP_EOL . '🚛 <b>Unidad:</b> ' . $extra['unidad'];
+}
+
+$mensaje = '📦 Se ha agregado un nuevo embarque en el apartado de <b>Resumen de Embarques</b>, correspondiente al periodo de <b>'
+. nombremes($mes) . ' ' . $year . '</b>:' . PHP_EOL . PHP_EOL
+. '🚛 <b>Embarque:</b> ' . ($embarque ?: 'N/A')
+. $detalle
+. $transporte . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramEmb($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarStoreEmb: ' . $e->getMessage());
+}
+}
+
+public static function notificarUpdateEmb(int $idMes, int $idUsuario, string $nombreUsuario, string $embarque = '', string $documento = '', array $extra = []): void
+{
+try {
+$idEstacion = self::getEstacionIdFromMesIdEmb($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearEmb($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$corteMes = CorteMes::with('year')->find($idMes);
+$mes = $corteMes ? (int) $corteMes->mes : 0;
+$year = $corteMes && $corteMes->year ? (int) $corteMes->year->year : 0;
+$fechaHora = date('Y-m-d H:i:s');
+
+$detalle = '';
+
+if (!empty($extra['fecha'])) {
+$detalle .= PHP_EOL . '📅 <b>Fecha:</b> ' . $extra['fecha'];
+}
+if (!empty($extra['producto'])) {
+$detalle .= PHP_EOL . '🛢️ <b>Producto:</b> ' . $extra['producto'];
+}
+if (!empty($extra['importef'])) {
+$detalle .= PHP_EOL . '📏 <b>Litros factura:</b> ' . (float) $extra['importef'];
+}
+if (!empty($extra['precio_litro'])) {
+$detalle .= PHP_EOL . '💲 <b>Precio por litro:</b> $' . number_format((float) $extra['precio_litro'], 2);
+}
+if (!empty($extra['merma'])) {
+$detalle .= PHP_EOL . '📉 <b>Merma:</b> ' . (float) $extra['merma'];
+}
+if (!empty($extra['tad'])) {
+$detalle .= PHP_EOL . '📍 <b>TAD:</b> ' . $extra['tad'];
+}
+
+$transporte = '';
+
+if (!empty($extra['nom_transporte'])) {
+$transporte .= PHP_EOL . '🚚 <b>Transportista:</b> ' . $extra['nom_transporte'];
+}
+if (!empty($extra['chofer'])) {
+$transporte .= PHP_EOL . '👨‍✈️ <b>Chofer:</b> ' . $extra['chofer'];
+}
+if (!empty($extra['unidad'])) {
+$transporte .= PHP_EOL . '🚛 <b>Unidad:</b> ' . $extra['unidad'];
+}
+
+$mensaje = '✏️ Se ha actualizado un embarque en el apartado de <b>Resumen de Embarques</b>, correspondiente al periodo de <b>'
+. nombremes($mes) . ' ' . $year . '</b>:' . PHP_EOL . PHP_EOL
+. '🚛 <b>Embarque:</b> ' . ($embarque ?: 'N/A') . PHP_EOL
+. '📄 <b>Documento:</b> ' . ($documento ?: 'N/A')
+. $detalle
+. $transporte . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramEmb($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarUpdateEmb: ' . $e->getMessage());
+}
+}
+
+public static function notificarDestroyEmb(int $idMes, int $idUsuario, string $nombreUsuario, string $embarque = '', array $extra = []): void
+{
+try {
+$idEstacion = self::getEstacionIdFromMesIdEmb($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearEmb($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$corteMes = CorteMes::with('year')->find($idMes);
+$mes = $corteMes ? (int) $corteMes->mes : 0;
+$year = $corteMes && $corteMes->year ? (int) $corteMes->year->year : 0;
+$fechaHora = date('Y-m-d H:i:s');
+
+$detalle = '';
+
+if (!empty($extra['fecha'])) {
+$detalle .= PHP_EOL . '📅 <b>Fecha:</b> ' . $extra['fecha'];
+}
+if (!empty($extra['producto'])) {
+$detalle .= PHP_EOL . '🛢️ <b>Producto:</b> ' . $extra['producto'];
+}
+if (!empty($extra['importef'])) {
+$detalle .= PHP_EOL . '📏 <b>Litros factura:</b> ' . (float) $extra['importef'];
+}
+if (!empty($extra['precio_litro'])) {
+$detalle .= PHP_EOL . '💲 <b>Precio por litro:</b> $' . number_format((float) $extra['precio_litro'], 2);
+}
+if (!empty($extra['nom_transporte'])) {
+$detalle .= PHP_EOL . '🚚 <b>Transportista:</b> ' . $extra['nom_transporte'];
+}
+if (!empty($extra['chofer'])) {
+$detalle .= PHP_EOL . '👨‍✈️ <b>Chofer:</b> ' . $extra['chofer'];
+}
+
+$mensaje = '🗑️ Se ha eliminado un embarque en el apartado de <b>Resumen de Embarques</b>, correspondiente al periodo de <b>'
+. nombremes($mes) . ' ' . $year . '</b>:' . PHP_EOL . PHP_EOL
+. '🚛 <b>Embarque:</b> ' . ($embarque ?: 'N/A')
+. $detalle . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+
+self::enviarTelegramEmb($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarDestroyEmb: ' . $e->getMessage());
+}
 }
 }

@@ -3,6 +3,12 @@
 Debes de seleccionar una estación del menú superior para poder visualizar la información del Resumen Monedero.
 </div>
 <?php else: ?>
+<?php
+$verShell = ($idEstacion == 2 || $idEstacion == 14);
+$colspanMetodos = $verShell ? 19 : 18;
+$colspanTarjetas = $verShell ? 8 : 7;
+$totalCols = $verShell ? 25 : 24;
+?>
 <div id="container" class="mt-4 mb-4"
 data-id-mes-db="<?= $idMesDb ?>"
 data-id-year="<?= $idYear ?>"
@@ -54,44 +60,46 @@ x-data="resumenMonederoComponent()">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
-<th class="text-center align-middle" colspan="18">Monederos</th>
-<th class="text-center align-middle" colspan="2">Crédito</th>
-<th class="text-center align-middle" colspan="2">Débito</th>
-<th class="text-center align-middle">Pagos</th>
-<th class="text-center align-middle">Consumos</th>
-<th class="text-center align-middle" x-show="verProsegur" colspan="10" rowspan="2">PROSEGUR</th>
+<th class="text-center align-middle" colspan="<?= $colspanMetodos ?>">Metodos de pago</th>
+<th class="text-center align-middle" colspan="6">Cartera de Clientes ATIO</th>
+<th class="text-center align-middle" colspan="10" x-show="verProsegur" rowspan="2">PROSEGUR</th>
 </tr>
 <tr>
-<th class="text-center align-middle" rowspan="2">Fecha</th>
-<th class="text-center align-middle fw-semibold" colspan="4">Tarjetas Bancarias</th>
-<th class="text-center align-middle fw-semibold" colspan="8">Tarjetas</th>
+<td></td>
+<th class="text-center align-middle fw-semibold" colspan="5">Tarjetas Bancarias</th>
+<th class="text-center align-middle fw-semibold" colspan="<?= $colspanTarjetas ?>">Tarjetas</th>
 <th class="text-center align-middle fw-semibold" colspan="5">Vales</th>
-<th class="text-center align-middle fw-semibold" colspan="6">Cartera de Clientes ATIO</th>
+<th class="text-center align-middle fw-semibold" colspan="2">Crédito</th>
+<th class="text-center align-middle fw-semibold" colspan="2">Débito</th>
+<th class="text-center align-middle fw-semibold">Pagos</th>
+<th class="text-center align-middle fw-semibold">Consumos</th>
 </tr>
 <tr>
+<th class="text-center align-middle">Fecha</th>
 <th class="text-center align-middle">BANCOMER</th>
 <th class="text-center align-middle">AMEX</th>
-<th class="text-center align-middle">INBURSA</th>
-<th class="text-center align-middle">Total</th>
 <th class="text-center align-middle">INBURGAS</th>
-<th class="text-center align-middle">EDENRED</th>
-<th class="text-center align-middle">EFECTIVALE</th>
+<th class="text-center align-middle">INBURSA</th>
+<th class="text-center align-middle fw-semibold">TOTAL</th>
+<th class="text-center align-middle">TICKETCARD</th>
+<th class="text-center align-middle">TICKETCARD+</th>
+<th class="text-center align-middle">EFECTICARD</th>
 <th class="text-center align-middle">SODEXO</th>
 <th class="text-center align-middle">ULTRAGAS</th>
 <th class="text-center align-middle">ENERGEX</th>
-<th class="text-center align-middle">SHELL</th>
-<th class="text-center align-middle">Total</th>
+<th class="text-center align-middle <?= $verShell ? '' : 'd-none' ?>">SHELL</th>
+<th class="text-center align-middle fw-semibold">TOTAL</th>
 <th class="text-center align-middle">VALE ACCORD</th>
 <th class="text-center align-middle">VALE EFECTIVALE</th>
 <th class="text-center align-middle">VALE SODEXO</th>
 <th class="text-center align-middle">SI VALE</th>
-<th class="text-center align-middle">Total</th>
+<th class="text-center align-middle fw-semibold">TOTAL</th>
 <th class="text-center align-middle">Pagos</th>
 <th class="text-center align-middle">Consumos</th>
 <th class="text-center align-middle">Pagos</th>
 <th class="text-center align-middle">Consumos</th>
-<th class="text-center align-middle">Total</th>
-<th class="text-center align-middle">Total</th>
+<th class="text-center align-middle fw-semibold">TOTAL</th>
+<th class="text-center align-middle fw-semibold">TOTAL</th>
 <th class="text-center align-middle" x-show="verProsegur">Billete Matutino</th>
 <th class="text-center align-middle" x-show="verProsegur">Billete Vespertino</th>
 <th class="text-center align-middle" x-show="verProsegur">Billete Nocturno</th>
@@ -110,15 +118,16 @@ x-data="resumenMonederoComponent()">
 <th class="text-start fw-normal" x-text="row.fecha"></th>
 <td class="text-end" x-text="'$' + formato(row.bancomer)"></td>
 <td class="text-end" x-text="'$' + formato(row.amex)"></td>
-<td class="text-end" x-text="'$' + formato(row.inbursa)"></td>
-<td class="text-end fw-semibold table-primary" x-text="'$' + formato(row.total_tb)"></td>
 <td class="text-end" x-text="'$' + formato(row.inburgas)"></td>
+<td class="text-end" x-text="'$' + formato(row.inbursa)"></td>
+<td class="text-end fw-semibold table-primary" x-text="'$' + formato(row.total_tb_fixed)"></td>
 <td class="text-end" x-text="'$' + formato(row.ticketcard)"></td>
+<td class="text-end" x-text="'$' + formato(row.g500fleet)"></td>
 <td class="text-end" x-text="'$' + formato(row.efecticard)"></td>
 <td class="text-end" x-text="'$' + formato(row.sodexo)"></td>
 <td class="text-end" x-text="'$' + formato(row.ultragas)"></td>
 <td class="text-end" x-text="'$' + formato(row.energex)"></td>
-<td class="text-end" x-text="'$' + formato(row.shell)"></td>
+<td class="text-end<?= $verShell ? '' : ' d-none' ?>" x-text="'$' + formato(row.shell)"></td>
 <td class="text-end fw-semibold table-primary" x-text="'$' + formato(row.total_tarjetas)"></td>
 <td class="text-end" x-text="'$' + formato(row.vale_accord)"></td>
 <td class="text-end" x-text="'$' + formato(row.vale_efectivale)"></td>
@@ -145,7 +154,7 @@ x-data="resumenMonederoComponent()">
 </template>
 <template x-if="rows.length === 0">
 <tr>
-<td :colspan="verProsegur ? 35 : 25" class="text-center text-muted py-3">
+<td :colspan="verProsegur ? <?= $totalCols + 10 ?> : <?= $totalCols ?>" class="text-center text-muted py-3">
 No hay registros para este mes
 </td>
 </tr>
@@ -156,27 +165,28 @@ No hay registros para este mes
 <td class="text-start">Total</td>
 <td class="text-end" x-text="'$' + formato(totales.bancomer)"></td>
 <td class="text-end" x-text="'$' + formato(totales.amex)"></td>
-<td class="text-end" x-text="'$' + formato(totales.inbursa)"></td>
-<td class="text-end fw-semibold" x-text="'$' + formato(totales.total_tb)"></td>
 <td class="text-end" x-text="'$' + formato(totales.inburgas)"></td>
+<td class="text-end" x-text="'$' + formato(totales.inbursa)"></td>
+<td class="text-end" x-text="'$' + formato(totales.total_tb_fixed)"></td>
 <td class="text-end" x-text="'$' + formato(totales.ticketcard)"></td>
+<td class="text-end" x-text="'$' + formato(totales.g500fleet)"></td>
 <td class="text-end" x-text="'$' + formato(totales.efecticard)"></td>
 <td class="text-end" x-text="'$' + formato(totales.sodexo)"></td>
 <td class="text-end" x-text="'$' + formato(totales.ultragas)"></td>
 <td class="text-end" x-text="'$' + formato(totales.energex)"></td>
-<td class="text-end" x-text="'$' + formato(totales.shell)"></td>
-<td class="text-end fw-semibold" x-text="'$' + formato(totales.total_tarjetas)"></td>
+<td class="text-end<?= $verShell ? '' : ' d-none' ?>" x-text="'$' + formato(totales.shell)"></td>
+<td class="text-end" x-text="'$' + formato(totales.total_tarjetas)"></td>
 <td class="text-end" x-text="'$' + formato(totales.vale_accord)"></td>
 <td class="text-end" x-text="'$' + formato(totales.vale_efectivale)"></td>
 <td class="text-end" x-text="'$' + formato(totales.vale_sodexo)"></td>
 <td class="text-end" x-text="'$' + formato(totales.si_vale)"></td>
-<td class="text-end fw-semibold" x-text="'$' + formato(totales.total_vales)"></td>
+<td class="text-end" x-text="'$' + formato(totales.total_vales)"></td>
 <td class="text-end" x-text="'$' + formato(totales.credito_pago)"></td>
 <td class="text-end" x-text="'$' + formato(totales.credito_consumo)"></td>
 <td class="text-end" x-text="'$' + formato(totales.debito_pago)"></td>
 <td class="text-end" x-text="'$' + formato(totales.debito_consumo)"></td>
-<td class="text-end fw-semibold" x-text="'$' + formato(totales.total_pago)"></td>
-<td class="text-end fw-semibold" x-text="'$' + formato(totales.total_consumo)"></td>
+<td class="text-end" x-text="'$' + formato(totales.total_pago)"></td>
+<td class="text-end" x-text="'$' + formato(totales.total_consumo)"></td>
 <td class="text-end" x-show="verProsegur" x-text="'$' + formato(totales.billete_matutino)"></td>
 <td class="text-end" x-show="verProsegur" x-text="'$' + formato(totales.billete_vespertino)"></td>
 <td class="text-end" x-show="verProsegur" x-text="'$' + formato(totales.billete_nocturno)"></td>
@@ -311,7 +321,7 @@ No hay registros para este mes
 <label class="form-label mb-1">* Monedero:</label>
 <template x-if="multiestacion">
 <select class="form-select" x-model="facturaForm.monedero">
-<option value="">Seleccionar</option>
+<option value="">Selecciona una opción...</option>
 <option>Edenred</option>
 <option>Efectivale</option>
 <option>Inburgas</option>

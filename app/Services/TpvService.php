@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Operativo\CierreLote;
 use App\Models\Operativo\CorteDia;
+use App\Models\Estacion;
+use App\Services\TelegramService;
 use App\Core\Auth;
 use App\Core\Session;
 
@@ -153,5 +155,88 @@ $tarjeta->update(['baucher' => $importeTotal]);
 public static function isFinalizado(int $idReporte): bool
 {
 return self::getEstado($idReporte) === 1;
+}
+
+private static function getEstacionIdFromReporte(int $idReporte): int
+{
+return (int) CorteDia::from('op_corte_dia as d')
+->join('op_corte_mes as m', 'd.id_mes', '=', 'm.id')
+->join('op_corte_year as y', 'm.id_year', '=', 'y.id')
+->where('d.id', $idReporte)
+->value('y.id_estacion');
+}
+
+private static function enviarTelegram(int $idEstacion, int $excludeUserId, string $mensaje): void
+{
+$telegram = new TelegramService();
+$userIds = $telegram->getUserIdsByStation($idEstacion, $excludeUserId);
+
+if (in_array($idEstacion, [6, 7])) {
+$extraIds = $telegram->getUserIdsComercializadora($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+} elseif (in_array($idEstacion, [1, 2, 3, 4, 5, 14])) {
+$extraIds = $telegram->getUserIdsContabilidad($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+}
+
+$telegram->sendMessageToMultiple($userIds, $mensaje);
+}
+
+public static function notificarAgregarTpv(int $idReporte, int $idUsuario, string $nombreUsuario, string $empresa): void
+{
+try {
+$idEstacion = self::getEstacionIdFromReporte($idReporte);
+if (!$idEstacion) return;
+
+if ($empresa == "G500 FLETT") {
+$empresa = "TICKETCARD+";
+}
+
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$fecha = self::getFecha($idReporte);
+$fechaFormat = $fecha ? formatearFecha($fecha) : '';
+
+$mensaje = '💳 Se ha agregado una nueva <b>TPV</b> correspondiente al Corte Diario con fecha del día <b>' . $fechaFormat . '</b>:' . PHP_EOL . PHP_EOL
+. '🏢 <b>Empresa:</b> ' . $empresa . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL 
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegram($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarAgregarTpv: ' . $e->getMessage());
+}
+}
+
+public static function notificarCambiarEstatusTpv(int $idCierre, int $idUsuario, string $nombreUsuario, int $estado): void
+{
+try {
+$cierre = CierreLote::find($idCierre);
+if (!$cierre) return;
+
+$idReporte = $cierre->idreporte_dia;
+$idEstacion = self::getEstacionIdFromReporte($idReporte);
+if (!$idEstacion) return;
+
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$fecha = self::getFecha($idReporte);
+$fechaFormat = $fecha ? formatearFecha($fecha) : '';
+$estadoTexto = $estado ? 'Pendiente' : 'Activo';
+
+if ($cierre->empresa == "G500 FLETT") {
+$cierre->empresa = "TICKETCARD+";
+}
+
+$mensaje = '🔄 Se ha actualizado el estatus de una <b>TPV</b> correspondiente al Corte Diario con fecha del día <b>' . $fechaFormat . '</b>:' . PHP_EOL . PHP_EOL
+. '🏢 <b>Empresa:</b> ' . $cierre->empresa . PHP_EOL
+. '📊 <b>Nuevo estatus:</b> ' . $estadoTexto . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegram($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarCambiarEstatusTpv: ' . $e->getMessage());
+}
 }
 }

@@ -56,6 +56,7 @@ this.loading = false;
 },
 
 submitActivacion() {
+if (this.saving) return;
 if (!this.motivo.trim()) {
 Notify['error']('El motivo es obligatorio');
 return;

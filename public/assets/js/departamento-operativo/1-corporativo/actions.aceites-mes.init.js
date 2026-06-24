@@ -405,6 +405,8 @@ this.loading = false;
 },
 
 async finalizarInventario() {
+if (this.loading) return;
+if (this.finalizado) { Notify['error']('El inventario ya fue finalizado'); return; }
 const result = await Swal.fire({
 title: '¿Finalizar inventario?',
 text: 'Una vez finalizado no podrá editar los campos',

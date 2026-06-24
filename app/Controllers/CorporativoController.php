@@ -10,6 +10,7 @@ use App\Models\Operativo\CorteDia;
 use App\Models\Operativo\CorteDiaHist;
 use App\Core\Session;
 use App\Core\Auth;
+use Illuminate\Support\Carbon;
 
 class CorporativoController extends BaseController{
 protected string $modulo = 'corporativo';
@@ -90,7 +91,7 @@ $resumen = $idMesDb
 ? CorteDiarioService::getResumenMensual($idMesDb)
 : [];
 
-$hoy = \Carbon\Carbon::today();
+$hoy = Carbon::today();
 
 $data = [];
 
@@ -204,12 +205,19 @@ $corte->observaciones()->updateOrCreate(
 }
 
 $usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
 CorteDiaHist::create([
 'id_corte' => $idCorteDia,
-'id_usuario' => $usuario['id'] ?? null,
+'id_usuario' => $idUsuario,
 'fecha' => date('Y-m-d H:i:s'),
-'detalle' => 'Actualización por: ' . ($usuario['nombre'] ?? '')
+'detalle' => 'Actualización por: ' . $nombreUsuario
 ]);
+
+register_shutdown_function(function () use ($idCorteDia, $idUsuario, $nombreUsuario) {
+CorteDiarioService::notificarEdicion($idCorteDia, $idUsuario, $nombreUsuario);
+});
 
 echo json_encode(['success' => true, 'message' => 'Corte actualizado correctamente']);
 exit;
@@ -302,6 +310,12 @@ exit;
 $result = CorteDiarioService::activarCorte($idCorteDia, $idUsuario, $detalle);
 
 if ($result) {
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idCorteDia, $idUsuario, $nombreUsuario, $detalle) {
+CorteDiarioService::notificarActivacion($idCorteDia, $idUsuario, $nombreUsuario, $detalle);
+});
+
 echo json_encode(['success' => true, 'message' => 'Corte activado exitosamente']);
 } else {
 echo json_encode(['success' => false, 'message' => 'No se encontró el registro de corte']);

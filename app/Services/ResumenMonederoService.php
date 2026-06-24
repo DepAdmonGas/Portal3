@@ -10,10 +10,11 @@ use App\Models\Operativo\Prosegur;
 use App\Models\Operativo\MonederoDocumento;
 use App\Models\Operativo\MonederoEdi;
 use App\Models\Operativo\MonederoListaDocumento;
+use App\Models\Estacion;
+use App\Services\TelegramService;
 use App\Core\Auth;
 use App\Core\Session;
-
-
+use Illuminate\Support\Carbon;
 
 class ResumenMonederoService
 {
@@ -192,7 +193,7 @@ $rows = [];
 $totales = [];
 
 foreach ($dias as $dia) {
-            $r = self::calcularRow(['id' => $dia->id, 'fecha' => formatearFecha($dia->fecha->format('Y-m-d'))]);
+$r = self::calcularRow(['id' => $dia->id, 'fecha' => formatearFecha($dia->fecha->format('Y-m-d'))]);
 $rows[] = $r;
 
 foreach ($r as $k => $v) {
@@ -256,78 +257,78 @@ return $rows;
 
 public static function getResumenPeriodo(int $idEstacion, int $year, int $mes): array
 {
-    $periodRanges = [
-        ['label' => '1er periodo', 'hasta' => '8',  'startDay' => 1,  'endDay' => 8],
-        ['label' => '2do periodo', 'hasta' => '15', 'startDay' => 9,  'endDay' => 15],
-        ['label' => '3er periodo', 'hasta' => '22', 'startDay' => 16, 'endDay' => 22],
-        ['label' => '4to periodo', 'hasta' => '29', 'startDay' => 23, 'endDay' => 29],
-        ['label' => '5to periodo', 'hasta' => '30/31', 'startDay' => 30, 'endDay' => 31],
-    ];
+$periodRanges = [
+['label' => '1er periodo', 'hasta' => '8',  'startDay' => 1,  'endDay' => 8],
+['label' => '2do periodo', 'hasta' => '15', 'startDay' => 9,  'endDay' => 15],
+['label' => '3er periodo', 'hasta' => '22', 'startDay' => 16, 'endDay' => 22],
+['label' => '4to periodo', 'hasta' => '29', 'startDay' => 23, 'endDay' => 29],
+['label' => '5to periodo', 'hasta' => '30/31', 'startDay' => 30, 'endDay' => 31],
+];
 
-    $conceptKeys = [
-        'Toinburgas' => 'INBURGAS',
-        'Toticketcard' => 'TICKETCARD',
-        'Tog500fleet' => 'G500 FLETT',
-        'Toefecticard' => 'EFECTICARD',
-        'Tosodexo' => 'SODEXO',
-        'Toultragas' => 'ULTRAGAS',
-        'Toenergex' => 'ENERGEX',
-        'Tovalaccord' => 'VALE ACCORD',
-        'Tovalefectivale' => 'VALE EFECTIVALE',
-        'Tovalsodexo' => 'VALE SODEXO',
-        'Tovalvale' => 'SI VALE',
-    ];
+$conceptKeys = [
+'Toinburgas' => 'INBURGAS',
+'Toticketcard' => 'TICKETCARD',
+'Tog500fleet' => 'G500 FLETT',
+'Toefecticard' => 'EFECTICARD',
+'Tosodexo' => 'SODEXO',
+'Toultragas' => 'ULTRAGAS',
+'Toenergex' => 'ENERGEX',
+'Tovalaccord' => 'VALE ACCORD',
+'Tovalefectivale' => 'VALE EFECTIVALE',
+'Tovalsodexo' => 'VALE SODEXO',
+'Tovalvale' => 'SI VALE',
+];
 
-    $mesDb = self::getMesId($idEstacion, $year, $mes);
-    if (!$mesDb) {
-        return ['periodos' => [], 'totales' => []];
-    }
+$mesDb = self::getMesId($idEstacion, $year, $mes);
+if (!$mesDb) {
+return ['periodos' => [], 'totales' => []];
+}
 
-    $resultados = [];
-    $acumulados = array_fill_keys(array_keys($conceptKeys), 0);
+$resultados = [];
+$acumulados = array_fill_keys(array_keys($conceptKeys), 0);
 
-    foreach ($periodRanges as $r) {
-        $fechaInicio = sprintf('%04d-%02d-%02d', $year, $mes, $r['startDay']);
-        $fechaTermino = sprintf('%04d-%02d-%02d', $year, $mes, $r['endDay']);
+foreach ($periodRanges as $r) {
+$fechaInicio = sprintf('%04d-%02d-%02d', $year, $mes, $r['startDay']);
+$fechaTermino = sprintf('%04d-%02d-%02d', $year, $mes, $r['endDay']);
 
-        $dias = CorteDia::where('id_mes', $mesDb)
-            ->whereBetween('fecha', [$fechaInicio, $fechaTermino])
-            ->orderBy('fecha')
-            ->get(['id', 'fecha']);
+$dias = CorteDia::where('id_mes', $mesDb)
+->whereBetween('fecha', [$fechaInicio, $fechaTermino])
+->orderBy('fecha')
+->get(['id', 'fecha']);
 
-        $data = array_fill_keys(array_keys($conceptKeys), 0);
+$data = array_fill_keys(array_keys($conceptKeys), 0);
 
-        foreach ($dias as $dia) {
-            foreach ($conceptKeys as $key => $concepto) {
-                $val = (float) (TarjetasCB::where('idreporte_dia', $dia->id)
-                    ->where('concepto', $concepto)
-                    ->value('baucher') ?? 0);
-                $data[$key] += $val;
-                $acumulados[$key] += $val;
-            }
-        }
+foreach ($dias as $dia) {
+foreach ($conceptKeys as $key => $concepto) {
+$val = (float) (TarjetasCB::where('idreporte_dia', $dia->id)
+->where('concepto', $concepto)
+->value('baucher') ?? 0);
+$data[$key] += $val;
+$acumulados[$key] += $val;
+}
+}
 
-        $primerTotal = $data['Toinburgas'] + $data['Toticketcard'] + $data['Tog500fleet']
-            + $data['Toefecticard'] + $data['Tosodexo'] + $data['Toultragas'] + $data['Toenergex'];
-        $segundoTotal = $data['Tovalaccord'] + $data['Tovalefectivale'] + $data['Tovalsodexo'] + $data['Tovalvale'];
+$primerTotal = $data['Toinburgas'] + $data['Toticketcard'] + $data['Tog500fleet']
++ $data['Toefecticard'] + $data['Tosodexo'] + $data['Toultragas'] + $data['Toenergex'];
+$segundoTotal = $data['Tovalaccord'] + $data['Tovalefectivale'] + $data['Tovalsodexo'] + $data['Tovalvale'];
 
-        $resultados[] = [
-            'label' => $r['label'],
-            'hasta' => $r['hasta'],
-            'data' => $data,
-            'primer_total' => $primerTotal,
-            'segundo_total' => $segundoTotal,
-        ];
-    }
+$resultados[] = [
+'label' => $r['label'],
+'hasta' => $r['hasta'],
+'data' => $data,
+'primer_total' => $primerTotal,
+'segundo_total' => $segundoTotal,
+];
+}
 
-    $totalPrimer = $acumulados['Toinburgas'] + $acumulados['Toticketcard'] + $acumulados['Tog500fleet']
-        + $acumulados['Toefecticard'] + $acumulados['Tosodexo'] + $acumulados['Toultragas'] + $acumulados['Toenergex'];
-    $totalSegundo = $acumulados['Tovalaccord'] + $acumulados['Tovalefectivale'] + $acumulados['Tovalsodexo'] + $acumulados['Tovalvale'];
+$totalPrimer = $acumulados['Toinburgas'] + $acumulados['Toticketcard'] + $acumulados['Tog500fleet']
++ $acumulados['Toefecticard'] + $acumulados['Tosodexo'] + $acumulados['Toultragas'] + $acumulados['Toenergex'];
+$totalSegundo = $acumulados['Tovalaccord'] + $acumulados['Tovalefectivale'] + $acumulados['Tovalsodexo'] + $acumulados['Tovalvale'];
 
-    return [
-        'periodos' => $resultados,
-        'totales' => array_merge($acumulados, ['primer_total' => $totalPrimer, 'segundo_total' => $totalSegundo]),
-    ];
+return [
+'periodos' => $resultados,
+'totales' => array_merge($acumulados, ['primer_total' => $totalPrimer, 'segundo_total' => $totalSegundo]),
+];
 }
 
 public static function getUploadDir(): string
@@ -547,5 +548,201 @@ if (!empty($record->archivo) && file_exists($ruta)) {
 }
 
 return (bool) $record->delete();
+}
+
+private static function getEstacionIdFromMes(int $idMes): int
+{
+return (int) CorteMes::from('op_corte_mes as m')
+->join('op_corte_year as y', 'm.id_year', '=', 'y.id')
+->where('m.id', $idMes)
+->value('y.id_estacion');
+}
+
+private static function getMesYearLabel(int $idMes): string
+{
+$corteMes = CorteMes::with('year')->find($idMes);
+if (!$corteMes || !$corteMes->year) return '';
+return nombremes((int) $corteMes->mes) . ' ' . $corteMes->year->year;
+}
+
+private static function enviarTelegramMonedero(int $idEstacion, int $excludeUserId, string $mensaje): void
+{
+$telegram = new TelegramService();
+$userIds = $telegram->getUserIdsByStation($idEstacion, $excludeUserId);
+
+if (in_array($idEstacion, [6, 7])) {
+$extraIds = $telegram->getUserIdsComercializadora($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+} elseif (in_array($idEstacion, [1, 2, 3, 4, 5, 14])) {
+$extraIds = $telegram->getUserIdsContabilidad($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+}
+
+$telegram->sendMessageToMultiple($userIds, $mensaje);
+}
+
+public static function notificarCreateDocumento(int $idMes, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearLabel($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '📄 Se ha agregado una nueva factura en el apartado de <b>Resumen Monedero</b>, correspondiente al periodo de <b>'. $periodo . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramMonedero($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarCreateDocumento: ' . $e->getMessage());
+}
+}
+
+public static function notificarUpdateDocumento(int $idMes, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearLabel($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '✏️ Se ha actualizado una factura en el apartado de <b>Resumen Monedero</b>, correspondiente al periodo de <b>'
+. $periodo . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+
+self::enviarTelegramMonedero($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarUpdateDocumento: ' . $e->getMessage());
+}
+}
+
+public static function notificarDeleteDocumento(int $idMes, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearLabel($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '🗑️ Se ha eliminado una factura del apartado de <b>Resumen Monedero</b>, correspondiente al periodo de <b>'
+. $periodo . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramMonedero($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarDeleteDocumento: ' . $e->getMessage());
+}
+}
+
+public static function notificarCreateEdi(int $idDocumento, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$doc = MonederoDocumento::find($idDocumento);
+if (!$doc) return;
+$idMes = $doc->id_mes;
+
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearLabel($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '📄 Se ha agregado un complemento EDI en el apartado de <b>Resumen Monedero</b>, correspondiente al periodo de <b>'
+. $periodo . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+
+self::enviarTelegramMonedero($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarCreateEdi: ' . $e->getMessage());
+}
+}
+
+public static function notificarDeleteEdi(int $idDocumento, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$doc = MonederoDocumento::find($idDocumento);
+if (!$doc) return;
+$idMes = $doc->id_mes;
+
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearLabel($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '🗑️ Se ha eliminado un complemento EDI en el apartado de <b>Resumen Monedero</b>, correspondiente al periodo de <b>'
+. $periodo . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramMonedero($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarDeleteEdi: ' . $e->getMessage());
+}
+}
+
+public static function notificarCreateListaDocumento(int $idMonedero, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$doc = MonederoDocumento::find($idMonedero);
+if (!$doc) return;
+$idMes = $doc->id_mes;
+
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearLabel($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '📎 Se ha agregado un nuevo documento en el apartado de <b>Documentación de Monederos</b>, correspondiente al periodo de <b>'
+. $periodo . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+
+self::enviarTelegramMonedero($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarCreateListaDocumento: ' . $e->getMessage());
+}
+}
+
+public static function notificarDeleteListaDocumento(int $idMonedero, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$doc = MonederoDocumento::find($idMonedero);
+if (!$doc) return;
+$idMes = $doc->id_mes;
+
+$idEstacion = self::getEstacionIdFromMes($idMes);
+if (!$idEstacion) return;
+
+$periodo = self::getMesYearLabel($idMes);
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mensaje = '🗑️ Se ha eliminado un documento del apartado de <b>Documentación de Monederos</b>, correspondiente al periodo de <b>'
+. $periodo . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegramMonedero($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarDeleteListaDocumento: ' . $e->getMessage());
+}
 }
 }

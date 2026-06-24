@@ -48,6 +48,8 @@ class ResumenImpuestosController extends BaseController
         Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
         Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
         Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
+Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
         View::render('departamento-operativo/1-corporativo/resumen-impuestos/index', [
             'title' => $title,
@@ -55,6 +57,7 @@ class ResumenImpuestosController extends BaseController
             'idYear' => $idYear,
             'idMes' => $idMes,
             'multiestacion' => false,
+            'yearMesTemplate' => '/departamento-operativo/resumen-impuestos/{year}/{mes}',
             'help' => false,
             'links' => [
                 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',

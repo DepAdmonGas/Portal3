@@ -175,10 +175,13 @@ body: JSON.stringify({ id, saldo: parseFloat(val) })
 .then(r => r.json())
 .then(json => {
 if (!json.success) return;
-const sfEl = document.getElementById('SF' + id);
-if (sfEl) {
-sfEl.textContent = formatMoney(json.saldo_final);
-}
+    const sfEl = document.getElementById('SF' + id);
+    if (sfEl) {
+        sfEl.textContent = formatMoney(json.saldo_final);
+    }
+    if (json.totals) {
+        renderGranTotal(json.totals);
+    }
 });
 });
 

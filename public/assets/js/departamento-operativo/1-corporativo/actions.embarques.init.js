@@ -284,6 +284,7 @@ bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('modalComentario
 },
 
 async agregarComentario() {
+if (this.guardandoComentario) return;
 if (!this.nuevoComentario.trim()) return;
 if (!this.comentarioEmbarqueId) return;
 
@@ -300,21 +301,34 @@ body: fd
 });
 const json = await resp.json();
 
-if (json.success) {
-this.nuevoComentario = '';
-const resp2 = await fetch('/departamento-operativo/embarques/comentarios?id_embarque=' + this.comentarioEmbarqueId);
-const json2 = await resp2.json();
-if (json2.success) {
-this.comentarios = (json2.comentarios || []).map(c => ({
-...c,
-esMio: c.id_usuario === this.idUsuario,
-usuario_nombre: c.usuario?.nombre || 'Sistema',
-fecha_formateada: this.formatearFecha(c.fecha_hora)
-}));
-this.scrollChatToBottom();
-}
-if (window.Notify) Notify.success('Comentario agregado');
-} else {
+                if (json.success) {
+                    this.nuevoComentario = '';
+                    const resp2 = await fetch('/departamento-operativo/embarques/comentarios?id_embarque=' + this.comentarioEmbarqueId);
+                    const json2 = await resp2.json();
+                    if (json2.success) {
+                        this.comentarios = (json2.comentarios || []).map(c => ({
+                            ...c,
+                            esMio: c.id_usuario === this.idUsuario,
+                            usuario_nombre: c.usuario?.nombre || 'Sistema',
+                            fecha_formateada: this.formatearFecha(c.fecha_hora)
+                        }));
+                        this.scrollChatToBottom();
+                    }
+                    const dt = $('#tabla-embarques').DataTable();
+                    if (dt) {
+                        const self = this;
+                        dt.rows().every(function () {
+                            const d = this.data();
+                            if (d.id === self.comentarioEmbarqueId) {
+                                d.num_comentarios = (d.num_comentarios || 0) + 1;
+                                this.invalidate();
+                                dt.draw(false);
+                                return false;
+                            }
+                        });
+                    }
+                    if (window.Notify) Notify.success('Comentario agregado');
+                } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
 }
 } catch (e) {

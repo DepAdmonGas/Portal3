@@ -158,6 +158,35 @@ public function store()
 header('Content-Type: application/json; charset=utf-8');
 
 $result = EmbarquesService::store($_POST, $_FILES);
+
+if ($result['success']) {
+$idMes = (int) ($_POST['id_mes'] ?? 0);
+if ($idMes) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+$embarqueTxt = $_POST['embarque'] ?? '';
+$documentoTxt = $_POST['documento'] ?? '';
+
+$extra = [
+'fecha' => formatearFecha($_POST['fecha']) ?? '',
+'producto' => $_POST['producto'] ?? '',
+'documentocv' => $_POST['documentocv'] ?? '',
+'importef' => $_POST['importef'] ?? 0,
+'precio_litro' => $_POST['precio_litro'] ?? 0,
+'merma' => $_POST['merma'] ?? '',
+'tad' => $_POST['tad'] ?? '',
+'nom_transporte' => $_POST['nom_transporte'] ?? '',
+'chofer' => $_POST['chofer'] ?? '',
+'unidad' => $_POST['unidad'] ?? '',
+];
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $embarqueTxt, $documentoTxt, $extra) {
+EmbarquesService::notificarStoreEmb($idMes, $idUsuario, $nombreUsuario, $embarqueTxt, $documentoTxt, $extra);
+});
+}
+}
+
 echo json_encode($result);
 exit;
 }
@@ -172,7 +201,36 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
+$embarqueRec = \App\Models\Operativo\Embarque::find($id);
+$idMes = $embarqueRec ? $embarqueRec->id_mes : 0;
+$embarqueTxt = $embarqueRec ? $embarqueRec->embarque : '';
+$documentoTxt = $embarqueRec ? $embarqueRec->documento : '';
+
 $result = EmbarquesService::update($id, $_POST, $_FILES);
+
+if ($result['success'] && $idMes) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+$extra = [
+'fecha' => $embarqueRec->fecha ? formatearFecha($embarqueRec->fecha->format('Y-m-d')) : (formatearFecha($_POST['fecha']) ?? ''),
+'producto' => $embarqueRec->producto ?? ($_POST['producto'] ?? ''),
+'documentocv' => $embarqueRec->documentocv ?? ($_POST['documentocv'] ?? ''),
+'importef' => $embarqueRec->importef ?? ($_POST['importef'] ?? 0),
+'precio_litro' => $embarqueRec->precio_litro ?? ($_POST['precio_litro'] ?? 0),
+'merma' => $embarqueRec->merma ?? ($_POST['merma'] ?? ''),
+'tad' => $embarqueRec->tad ?? ($_POST['tad'] ?? ''),
+'nom_transporte' => $embarqueRec->nom_transporte ?? ($_POST['nom_transporte'] ?? ''),
+'chofer' => $embarqueRec->chofer ?? ($_POST['chofer'] ?? ''),
+'unidad' => $embarqueRec->unidad ?? ($_POST['unidad'] ?? ''),
+];
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $embarqueTxt, $documentoTxt, $extra) {
+EmbarquesService::notificarUpdateEmb($idMes, $idUsuario, $nombreUsuario, $embarqueTxt, $documentoTxt, $extra);
+});
+}
+
 echo json_encode($result);
 exit;
 }
@@ -188,7 +246,34 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
+$embarqueRec = \App\Models\Operativo\Embarque::find($id);
+$idMes = $embarqueRec ? $embarqueRec->id_mes : 0;
+$embarqueTxt = $embarqueRec ? $embarqueRec->embarque : '';
+
 $result = EmbarquesService::destroy($id);
+
+if ($result['success'] && $idMes) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+$extra = [
+'fecha' => $embarqueRec->fecha ? formatearFecha($embarqueRec->fecha->format('Y-m-d')) : '',
+'producto' => $embarqueRec->producto ?? '',
+'documento' => $embarqueRec->documento ?? '',
+'documentocv' => $embarqueRec->documentocv ?? '',
+'importef' => $embarqueRec->importef ?? 0,
+'precio_litro' => $embarqueRec->precio_litro ?? 0,
+'nom_transporte' => $embarqueRec->nom_transporte ?? '',
+'chofer' => $embarqueRec->chofer ?? '',
+'unidad' => $embarqueRec->unidad ?? '',
+];
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $embarqueTxt, $extra) {
+EmbarquesService::notificarDestroyEmb($idMes, $idUsuario, $nombreUsuario, $embarqueTxt, $extra);
+});
+}
+
 echo json_encode($result);
 exit;
 }
@@ -223,6 +308,15 @@ $idEmbarque = (int) ($_POST['id_embarque'] ?? 0);
 $comentario = $_POST['comentario'] ?? '';
 
 $result = EmbarquesService::storeComentario($idEmbarque, $comentario);
+
+if ($result['success'] && $idEmbarque) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+EmbarquesService::notificarComentarioEmb($idEmbarque, $idUsuario, $nombreUsuario, $comentario);
+}
+
 echo json_encode($result);
 exit;
 }

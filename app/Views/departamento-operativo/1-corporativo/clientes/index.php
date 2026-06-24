@@ -137,8 +137,10 @@ x-data="clientesComponent()">
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-labeled2 btn-success" @click="guardar()">
-Guardar
+<button type="button" class="btn btn-labeled2 btn-success" @click="guardar()" :disabled="guardando">
+<span x-show="!guardando">Guardar</span>
+<span x-show="guardando"><span class="spinner-border spinner-border-sm me-1"></span> Guardando...</span>
+</button>
 </div>
 </div>
 </div>

@@ -7,6 +7,8 @@ use App\Models\Operativo\CorteMes;
 use App\Models\Operativo\CorteYear;
 use App\Models\Operativo\TarjetasCB;
 use App\Models\Operativo\CorteDiaHist;
+use App\Models\Estacion;
+use App\Services\TelegramService;
 use App\Core\Session;
 use App\Core\Auth;
 
@@ -136,6 +138,89 @@ return CorteDiaHist::create([
 'fecha'      => date('Y-m-d H:i:s'),
 'detalle'    => $detalle,
 ]);
+}
+
+private static function getEstacionIdFromCorte(int $idCorteDia): int
+{
+return (int) CorteDia::from('op_corte_dia as d')
+->join('op_corte_mes as m', 'd.id_mes', '=', 'm.id')
+->join('op_corte_year as y', 'm.id_year', '=', 'y.id')
+->where('d.id', $idCorteDia)
+->value('y.id_estacion');
+}
+
+public static function notificarEdicion(int $idCorteDia, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$idEstacion = self::getEstacionIdFromCorte($idCorteDia);
+if (!$idEstacion) return;
+
+$corte = CorteDia::find($idCorteDia);
+$estacion = Estacion::find($idEstacion);
+$fechaStr = $corte ? formatearFecha($corte->fecha->format('Y-m-d')) : '';
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mes = $corte ? nombremes((int)$corte->mes) : '';
+$year = $corte ? $corte->year : '';
+
+$mensaje = '✏️ Corte Diario editado' . PHP_EOL . PHP_EOL
+. 'ID Corte: ' . $idCorteDia . PHP_EOL
+. 'Fecha: ' . $fechaStr . PHP_EOL
+. 'Periodo: ' . $mes . ' ' . $year . PHP_EOL
+. 'Editó: ' . $nombreUsuario . PHP_EOL . PHP_EOL
+. '⛽ Estación: ' . $nombreES;
+
+$telegram = new TelegramService();
+$userIds = $telegram->getUserIdsByStation($idEstacion, $idUsuario);
+
+if (in_array($idEstacion, [6, 7])) {
+$extraIds = $telegram->getUserIdsComercializadora($idUsuario);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+} elseif (in_array($idEstacion, [1, 2, 3, 4, 5, 14])) {
+$extraIds = $telegram->getUserIdsContabilidad($idUsuario);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+}
+
+$telegram->sendMessageToMultiple($userIds, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarEdicion CorteDiario: ' . $e->getMessage());
+}
+}
+
+public static function notificarActivacion(int $idCorteDia, int $idUsuario, string $nombreUsuario, string $detalle): void
+{
+try {
+$idEstacion = self::getEstacionIdFromCorte($idCorteDia);
+if (!$idEstacion) return;
+
+$corte = CorteDia::find($idCorteDia);
+$estacion = Estacion::find($idEstacion);
+$fechaStr = $corte ? formatearFecha($corte->fecha->format('Y-m-d')) : '';
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$mes = $corte ? nombremes((int)$corte->mes) : '';
+$year = $corte ? $corte->year : '';
+
+$mensaje = '🔓 Se ha reactivado un <b>Corte Diario</b> correspondiente al dia <b>'. $fechaStr . '</b>:' . PHP_EOL . PHP_EOL
+. '📝 <b>Motivo de la reactivación:</b> ' . $detalle . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+$telegram = new TelegramService();
+$userIds = $telegram->getUserIdsByStation($idEstacion, $idUsuario);
+
+if (in_array($idEstacion, [6, 7])) {
+$extraIds = $telegram->getUserIdsComercializadora($idUsuario);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+} elseif (in_array($idEstacion, [1, 2, 3, 4, 5, 14])) {
+$extraIds = $telegram->getUserIdsContabilidad($idUsuario);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+}
+
+$telegram->sendMessageToMultiple($userIds, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarActivacion CorteDiario: ' . $e->getMessage());
+}
 }
 }
 

@@ -1,12 +1,11 @@
 <?php
-
 namespace App\Controllers;
-
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ControlVolumetricoService;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
+use App\Core\Session;
 
 class ControlVolumetricoController extends BaseController
 {
@@ -49,8 +48,8 @@ return;
 
 ControlVolumetricoService::asegurarRegistros($idMesDb, $idEstacion, $idYear, $idMes);
 
-$usuario = \App\Core\Auth::user();
-$tipoPuesto = $usuario && $usuario->puesto ? $usuario->puesto->tipo_puesto : '';
+$usuario = Session::get('usuario');
+$tipoPuesto = (isset($usuario['puesto'])) ? $usuario['puesto'] : '';
 
 $permisos = ControlVolumetricoService::getPermisos();
 $estado = ControlVolumetricoService::getEstado($idMesDb);
@@ -62,14 +61,17 @@ Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear . '', '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes . '');
 Breadcrumb::add('<span class="breadcrumb-item active">Control Volumétrico (' . nombremes($idMes) . ' ' . $idYear . ')</span>', '');
+Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $data = [
-'title' => $title,
-'idYear' => $idYear,
-'idMes' => $idMes,
-'idMesDb' => $idMesDb,
-'idEstacion' => $idEstacion,
-'estado' => $estado,
+    'title' => $title,
+    'idYear' => $idYear,
+    'idMes' => $idMes,
+    'idMesDb' => $idMesDb,
+    'idEstacion' => $idEstacion,
+    'estado' => $estado,
+    'yearMesTemplate' => '/departamento-operativo/control-volumetrico/{year}/{mes}',
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'tipoPuesto' => $tipoPuesto,
@@ -176,6 +178,15 @@ exit;
 }
 
 $result = ControlVolumetricoService::agregarComentario($idMes, $this->userId(), $comentario);
+if ($result) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $comentario) {
+ControlVolumetricoService::notificarEnviarComentario($idMes, $idUsuario, $nombreUsuario, $comentario);
+});
+}
 echo json_encode(['success' => $result]);
 exit;
 }
@@ -219,6 +230,14 @@ exit;
 
 $result = ControlVolumetricoService::subirDocumento($idMes, $_FILES['documento'], $fecha, $anexos);
 if ($result) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $anexos) {
+ControlVolumetricoService::notificarAgregarAnexo($idMes, $idUsuario, $nombreUsuario, $anexos);
+});
+
 echo json_encode(['success' => true, 'message' => 'Registro agregado exitosamente.']);
 } else {
 echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo en el servidor. Verifique los permisos de la carpeta uploads/archivos.']);
@@ -236,7 +255,19 @@ header('Content-Type: application/json; charset=utf-8');
 $input = json_decode(file_get_contents('php://input'), true);
 $id = (int) ($input['id'] ?? 0);
 
+$row = \App\Models\Operativo\ControlVolumetrico::find($id);
+$idMes = $row ? $row->id_mes : 0;
+
 $result = ControlVolumetricoService::eliminarDocumento($id);
+if ($result && $idMes) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario) {
+ControlVolumetricoService::notificarEliminarAnexo($idMes, $idUsuario, $nombreUsuario);
+});
+}
 echo json_encode(['success' => $result, 'message' => 'Documento eliminado exitosamente']);
 exit;
 }

@@ -46,9 +46,15 @@ axios.get('/departamento-operativo/resumen-monedero/data', {
 params: { id_mes: idMesDb }
 }).then(res => {
 if (res.data.success) {
-this.rows = res.data.rows;
-this.totales = res.data.totales;
-this.documentos = res.data.documentos;
+                this.rows = res.data.rows;
+                this.totales = res.data.totales;
+                this.rows.forEach(row => {
+                    row.g500fleet = Number(row.total_tarjetas) - Number(row.ticketcard) - Number(row.efecticard) - Number(row.inburgas) - Number(row.sodexo) - Number(row.ultragas) - Number(row.energex) - Number(row.shell);
+                    row.total_tb_fixed = Number(row.bancomer) + Number(row.amex) + Number(row.inburgas) + Number(row.inbursa);
+                });
+                this.totales.g500fleet = Number(this.totales.total_tarjetas) - Number(this.totales.ticketcard) - Number(this.totales.efecticard) - Number(this.totales.inburgas) - Number(this.totales.sodexo) - Number(this.totales.ultragas) - Number(this.totales.energex) - Number(this.totales.shell);
+                this.totales.total_tb_fixed = Number(this.totales.bancomer) + Number(this.totales.amex) + Number(this.totales.inburgas) + Number(this.totales.inbursa);
+                this.documentos = res.data.documentos;
 this.verProsegur = res.data.ver_prosegur || verProsegur;
 this.puedeEliminarDoc = res.data.puede_eliminar_doc !== undefined ? res.data.puede_eliminar_doc : true;
 this.multiestacion = res.data.multiestacion !== undefined ? res.data.multiestacion : this.multiestacion;
