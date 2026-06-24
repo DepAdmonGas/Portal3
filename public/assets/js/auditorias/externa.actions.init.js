@@ -309,7 +309,7 @@ document.addEventListener('alpine:init', () => {
             }
 
         } catch (error) {
-            this.notify('error', 'Error al guardar anexo');
+            this.notify('error', 'Error al guardar');
         }
     },
 

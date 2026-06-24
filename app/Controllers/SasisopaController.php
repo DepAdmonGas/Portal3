@@ -1298,28 +1298,7 @@ class SasisopaController extends BaseController{
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
-    public function investigacionIncidentesAccidentes(){
-
-        $title = '16. INVESTIGACIÓN DE INCIDENTES Y ACCIDENTES';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/investigacion-incidentes-accidentes', $data,'sasisopa');
-
-    }
+    
 
         public function revisionResultados(){
 
