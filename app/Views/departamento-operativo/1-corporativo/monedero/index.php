@@ -20,12 +20,12 @@ x-data="monederoComponent()">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
-<th class="text-center align-middle" :colspan="multiestacion ? 8 : 14">MÉTODOS DE PAGO</th>
+<th class="text-center align-middle" :colspan="multiestacion ? 9 : 15">MÉTODOS DE PAGO</th>
 <th class="text-center align-middle" colspan="6">CARTERA DE CLIENTES ATIO</th>
 </tr>
 <tr>
 <th class="text-center align-middle" :colspan="multiestacion ? 4 : 5">TARJETAS BANCARIAS</th>
-<th class="text-center align-middle" colspan="4">TARJETAS (OTROS)</th>
+<th class="text-center align-middle" colspan="5">TARJETAS (OTROS)</th>
 <th x-show="!multiestacion" class="text-center align-middle" colspan="5">VALES</th>
 <th class="text-center align-middle" colspan="2">CRÉDITO</th>
 <th class="text-center align-middle" colspan="2">DÉBITO</th>
@@ -39,6 +39,7 @@ x-data="monederoComponent()">
 <th class="text-center align-middle">INBURSA</th>
 <th class="text-center align-middle">TOTAL</th>
 <th class="text-center align-middle">TICKETCARD</th>
+<th class="text-center align-middle">TICKETCARD+</th>
 <th class="text-center align-middle">EFECTICARD</th>
 <th class="text-center align-middle">SODEXO</th>
 <th class="text-center align-middle">TOTAL</th>
@@ -63,6 +64,7 @@ x-data="monederoComponent()">
 <td class="align-middle text-end" x-text="'$ ' + formatNum(d.bancarias.inbursa)"></td>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(multiestacion ? (d.bancarias.bancomer + d.bancarias.amex + d.bancarias.inbursa) : d.bancarias.total)"></strong></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(d.tarjetas_otros.ticketcard)"></td>
+<td class="align-middle text-end" x-text="'$ ' + formatNum(d.tarjetas_otros.g500fleet)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(d.tarjetas_otros.efecticard)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(d.tarjetas_otros.sodexo)"></td>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(d.tarjetas_otros.total)"></strong></td>

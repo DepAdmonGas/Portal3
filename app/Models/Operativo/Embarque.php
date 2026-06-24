@@ -3,6 +3,7 @@
 namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Operativo\CorteMes;
 
 class Embarque extends Model
 {
@@ -38,6 +39,11 @@ class Embarque extends Model
         'precio_litro',
         'tad',
     ];
+
+    public function mes()
+    {
+        return $this->belongsTo(CorteMes::class, 'id_mes', 'id');
+    }
 
     protected $casts = [
         'id' => 'integer',

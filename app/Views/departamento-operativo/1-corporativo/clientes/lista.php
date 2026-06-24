@@ -126,8 +126,10 @@ x-data="clientesListaComponent()">
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-labeled2 btn-success" @click="guardarCrear()">
-<span class="btn-label2"><i class="fa fa-check"></i></span>Guardar</button>
+<button type="button" class="btn btn-labeled2 btn-success" @click="guardarCrear()" :disabled="guardandoCrear">
+<span x-show="!guardandoCrear">Guardar</span>
+<span x-show="guardandoCrear"><span class="spinner-border spinner-border-sm me-1"></span> Guardando...</span>
+</button>
 </div>
 </div>
 </div>
@@ -192,7 +194,10 @@ x-data="clientesListaComponent()">
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-labeled2 btn-success" @click="guardarEditar()">Guardar</button>
+<button type="button" class="btn btn-labeled2 btn-success" @click="guardarEditar()" :disabled="guardandoEditar">
+<span x-show="!guardandoEditar">Guardar</span>
+<span x-show="guardandoEditar"><span class="spinner-border spinner-border-sm me-1"></span> Guardando...</span>
+</button>
 </div>
 </div>
 </div>

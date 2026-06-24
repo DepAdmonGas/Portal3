@@ -221,6 +221,7 @@ console.error('Error al editar prefijo:', e);
 },
 
 async agregarComentario() {
+if (this.guardandoComentario) return;
 if (!this.nuevoComentario.trim()) return;
 this.guardandoComentario = true;
 try {
@@ -314,6 +315,7 @@ console.error('Error recargando comentarios:', e);
 },
 
 async guardarDocumento() {
+if (this.subiendoDocumento) return;
 const fecha = document.getElementById('docFecha').value;
 const $select = $('#docAnexos');
 const anexos = $select.val() || '';
@@ -338,28 +340,10 @@ body: fd
 const json = await resp.json();
 if (json.success) {
 bootstrap.Modal.getInstance(document.getElementById('modalDocumento')).hide();
-if (typeof Swal !== 'undefined') {
-Swal.fire({
-icon: 'success',
-title: 'Control Volumétrico',
-text: 'Registro agregado exitosamente.',
-timer: 2000,
-showConfirmButton: false
-});
-} else if (window.Notify) {
-Notify.success('Registro agregado exitosamente.');
-}
+if (window.Notify) Notify.success('Registro agregado exitosamente.');
 await this.recargarDocumentos();
 } else {
-if (typeof Swal !== 'undefined') {
-Swal.fire({
-icon: 'error',
-title: 'Error',
-text: json.message || 'Error al subir el archivo.'
-});
-} else if (window.Notify) {
-Notify.error(json.message || 'Error al subir el archivo.');
-}
+if (window.Notify) Notify.error(json.message || 'Error al subir el archivo.');
 }
 } catch (e) {
 console.error('Error uploading:', e);

@@ -207,7 +207,7 @@ x-model="v.jarras"
 <td class="align-middle text-center" x-text="a.concepto"></td>
 <td class="p-0 align-middle" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
 <template x-if="estado == 0 && !multiestacion">
-<input type="number" min="0" class="border-0 p-3 text-center w-100"
+<input type="number" min="0" class="border-0 p-3 text-center w-100 bg-transparent"
 x-model="a.cantidad"
 @keyup.debounce="editAceite(a.id, 'cantidad', a.cantidad)">
 </template>
@@ -219,7 +219,7 @@ x-model="a.cantidad"
 <template x-if="estado == 0 && !multiestacion">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-<input type="number" min="0" class="border-0 p-3 text-center w-100" style="padding-left: 25px !important;" x-model="a.precio_unitario" @keyup.debounce="editAceite(a.id, 'precio_unitario', a.precio_unitario)">
+<input type="number" min="0" class="border-0 p-3 text-center w-100 bg-transparent" style="padding-left: 25px !important;" x-model="a.precio_unitario" @keyup.debounce="editAceite(a.id, 'precio_unitario', a.precio_unitario)">
 </div>
 </template>
 
@@ -405,7 +405,7 @@ x-model="p.recibo"
 <template x-for="t in tarjetas_cb" :key="t.id">
 <tr>
 <th class="align-middle text-center "><b x-text="t.num"></b></th>
-<td class="align-middle " x-text="t.concepto"></td>
+<td class="align-middle " x-text="t.concepto === 'G500 FLETT' ? 'TICKETCARD+' : t.concepto"></td>
 <template x-if="['TICKETCARD', 'G500 FLETT', 'EFECTICARD', 'SODEXO', 'AMERICAN EXPRESS', 'BBVA BANCOMER SA', 'INBURGAS', 'ULTRAGAS', 'ENERGEX', 'SHELL FLEET NAVIGATOR', 'SANTANDER', 'INBURSA'].includes(t.concepto)">
 <td class="align-middle text-end " x-text="'$ ' + formatNum(t.baucher)"></td>
 </template>

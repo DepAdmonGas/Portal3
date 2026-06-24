@@ -145,6 +145,15 @@ $_FILES['PoderNotarial_file'] ?? null,
 ];
 
 $result = ClienteService::crearCliente($idEstacion, $cuenta, $cliente, $tipo, $rfc, $files);
+if (($result['success'] ?? false)) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idEstacion, $idUsuario, $nombreUsuario, $cliente, $cuenta, $tipo, $rfc) {
+ClienteService::notificarCrearClienteLista($idEstacion, $idUsuario, $nombreUsuario, $cliente, $cuenta, $tipo, $rfc);
+});
+}
 echo json_encode($result);
 } catch (\Throwable $e) {
 echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
@@ -167,6 +176,14 @@ echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
 exit;
 }
 
+$oldCliente = \App\Models\Operativo\Cliente::find($idCliente);
+$oldData = $oldCliente ? [
+'cuenta' => $oldCliente->cuenta ?? '',
+'cliente' => $oldCliente->cliente ?? '',
+'tipo' => $oldCliente->tipo ?? '',
+'rfc' => $oldCliente->rfc ?? '',
+] : [];
+
 $files = [
 $_FILES['CartaCredito_file'] ?? null,
 $_FILES['ActaConstitutiva_file'] ?? null,
@@ -178,6 +195,17 @@ $_FILES['PoderNotarial_file'] ?? null,
 ];
 
 $result = ClienteService::editarCliente($idCliente, $cuenta, $cliente, $tipo, $rfc, $files);
+if (($result['success'] ?? false)) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+$idEstacion = $this->estacionId();
+$idClienteInt = $idCliente;
+
+register_shutdown_function(function () use ($idEstacion, $idUsuario, $nombreUsuario, $cliente, $cuenta, $tipo, $rfc, $idClienteInt, $oldData) {
+ClienteService::notificarEditarClienteLista($idEstacion, $idUsuario, $nombreUsuario, $cliente, $cuenta, $tipo, $rfc, $idClienteInt, $oldData);
+});
+}
 echo json_encode($result);
 } catch (\Throwable $e) {
 echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
@@ -214,6 +242,22 @@ $result = $cliente->save();
 } catch (\Throwable $e) {
 echo json_encode(['success' => false, 'message' => 'Error al actualizar: ' . $e->getMessage()]);
 exit;
+}
+
+if ($result) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+$idEstacion = $this->estacionId();
+$nombreCliente = $cliente->cliente ?? '';
+$cuentaCliente = $cliente->cuenta ?? '';
+$tipoCliente = $cliente->tipo ?? '';
+$rfcCliente = $cliente->rfc ?? '';
+$nuevoEstado = $cliente->estado == 0 ? 'deshabilitó' : 'habilitó';
+
+register_shutdown_function(function () use ($idEstacion, $idUsuario, $nombreUsuario, $nombreCliente, $nuevoEstado, $cuentaCliente, $tipoCliente, $rfcCliente) {
+ClienteService::notificarToggleClienteLista($idEstacion, $idUsuario, $nombreUsuario, $nombreCliente, $nuevoEstado, $cuentaCliente, $tipoCliente, $rfcCliente);
+});
 }
 
 echo json_encode([

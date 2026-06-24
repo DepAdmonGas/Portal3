@@ -637,7 +637,7 @@ type="button" @click="agregarComentario()" :disabled="guardandoComentario || !nu
 <input class="form-control" type="file" id="docFile">
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
 <button type="button" class="btn btn-success" @click="guardarDocumento()" :disabled="subiendoDocumento">
 <span x-text="subiendoDocumento ? 'Subiendo...' : 'Guardar'"></span>
 </button>

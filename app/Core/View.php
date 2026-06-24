@@ -23,7 +23,8 @@ protected static function globals(): array
 }
 
         return [
-        'user' => Auth::user(),
+        'title'           => 'Portal3',
+        'user'            => Auth::user(),
         'filtro_usuario'  => $filtro_usuario,
         'estaciones'      => $estaciones
         ];

@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Controllers;
-
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ResumenMonederoService;
@@ -9,6 +7,7 @@ use App\Services\ResumenMonederoExcelService;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\KpiResumenMonederoService;
+use App\Core\Session;
 
 class ResumenMonederoController extends BaseController
 {
@@ -54,14 +53,16 @@ Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
 Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
+Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $data = [
-'title' => $title,
-'idYear' => $idYear,
-'idMes' => $idMes,
-'idEstacion' => $idEstacion,
-'idMesDb' => $idMesDb,
-'multiestacion' => $permisos['multiestacion'],
+    'title' => $title,
+    'idYear' => $idYear,
+    'idMes' => $idMes,
+    'idEstacion' => $idEstacion,
+    'idMesDb' => $idMesDb,
+    'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'esCorporativo' => $permisos['es_corporativo'],
 'idPuesto' => $permisos['id_puesto'],
@@ -163,8 +164,19 @@ public function createDocumento()
 {
 header('Content-Type: application/json; charset=utf-8');
 
+$idMes = (int) ($_POST['id_mes'] ?? 0);
 $uploadDir = ResumenMonederoService::getUploadDir();
 $success = ResumenMonederoService::createDocumento($_POST, $_FILES, $uploadDir);
+
+if ($success && $idMes) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario) {
+ResumenMonederoService::notificarCreateDocumento($idMes, $idUsuario, $nombreUsuario);
+});
+}
 
 echo json_encode([
 'success' => $success,
@@ -183,8 +195,21 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
+$doc = \App\Models\Operativo\MonederoDocumento::find($id);
+$idMes = $doc ? $doc->id_mes : 0;
+
 $uploadDir = ResumenMonederoService::getUploadDir();
 $success = ResumenMonederoService::updateDocumento($id, $_POST, $_FILES, $uploadDir);
+
+if ($success && $idMes) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario) {
+ResumenMonederoService::notificarUpdateDocumento($idMes, $idUsuario, $nombreUsuario);
+});
+}
 
 echo json_encode([
 'success' => $success,
@@ -204,7 +229,20 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
+$doc = \App\Models\Operativo\MonederoDocumento::find($id);
+$idMes = $doc ? $doc->id_mes : 0;
+
 $success = ResumenMonederoService::deleteDocumento($id);
+
+if ($success && $idMes) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario) {
+ResumenMonederoService::notificarDeleteDocumento($idMes, $idUsuario, $nombreUsuario);
+});
+}
 
 echo json_encode([
 'success' => $success,
@@ -222,6 +260,16 @@ $complemento = $_POST['complemento'] ?? '';
 $uploadDir = ResumenMonederoService::getUploadDir();
 
 $success = ResumenMonederoService::createEdi($idDocumento, $complemento, $_FILES, $uploadDir);
+
+if ($success && $idDocumento) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idDocumento, $idUsuario, $nombreUsuario) {
+ResumenMonederoService::notificarCreateEdi($idDocumento, $idUsuario, $nombreUsuario);
+});
+}
 
 echo json_encode([
 'success' => $success,
@@ -241,7 +289,20 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
+$edi = \App\Models\Operativo\MonederoEdi::find($id);
+$idDocumento = $edi ? $edi->id_documento : 0;
+
 $success = ResumenMonederoService::deleteEdi($id);
+
+if ($success && $idDocumento) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idDocumento, $idUsuario, $nombreUsuario) {
+ResumenMonederoService::notificarDeleteEdi($idDocumento, $idUsuario, $nombreUsuario);
+});
+}
 
 echo json_encode([
 'success' => $success,
@@ -259,6 +320,16 @@ $descripcion = $_POST['descripcion'] ?? '';
 $uploadDir = ResumenMonederoService::getListaUploadDir();
 
 $success = ResumenMonederoService::createListaDocumento($idMonedero, $descripcion, $_FILES, $uploadDir);
+
+if ($success && $idMonedero) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMonedero, $idUsuario, $nombreUsuario) {
+ResumenMonederoService::notificarCreateListaDocumento($idMonedero, $idUsuario, $nombreUsuario);
+});
+}
 
 echo json_encode([
 'success' => $success,
@@ -278,7 +349,20 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
+$record = \App\Models\Operativo\MonederoListaDocumento::find($id);
+$idMonedero = $record ? $record->id_monedero : 0;
+
 $success = ResumenMonederoService::deleteListaDocumento($id);
+
+if ($success && $idMonedero) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMonedero, $idUsuario, $nombreUsuario) {
+ResumenMonederoService::notificarDeleteListaDocumento($idMonedero, $idUsuario, $nombreUsuario);
+});
+}
 
 echo json_encode([
 'success' => $success,

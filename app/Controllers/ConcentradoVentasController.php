@@ -44,6 +44,8 @@ Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
 Breadcrumb::add('<span class="breadcrumb-item active">'.$title.'</span>', '');
+Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $colores = ['#76bd1d', '#e21683', '#000'];
 

@@ -17,6 +17,8 @@ use App\Models\Operativo\CorteMes;
 use App\Models\Operativo\CorteYear;
 use App\Models\Operativo\Aceite;
 use App\Models\Operativo\InventarioAceite;
+use App\Models\Estacion;
+use App\Services\TelegramService;
 use App\Core\Auth;
 use App\Core\Session;
 
@@ -390,5 +392,129 @@ return PagoCliente::where('idreporte_dia', $idReporte)->sum('importe');
 public static function getPagoTotal(int $idReporte): float
 {
 return ClientesControlgas::where('idreporte_dia', $idReporte)->sum('pago');
+}
+
+public static function notificarFinalizacion(int $idReporte, int $idEstacion, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+
+$dateStr = self::getFecha($idReporte);
+$fechaFormat = $dateStr ? formatearFecha($dateStr) : '';
+
+$corte = CorteDia::find($idReporte);
+$mes = $corte ? nombremes((int)$corte->mes) : '';
+$year = $corte ? $corte->year : '';
+
+$mensaje = '✅ Se ha finalizado el apartado de <b>Ventas</b> correspondiente al Corte Diario con fecha del día <b>' . $fechaFormat . '</b>:' . PHP_EOL . PHP_EOL . 
+'👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL . 
+'⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegram($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarFinalizacion: ' . $e->getMessage());
+}
+}
+
+private static function getEstacionIdFromReporte(int $idReporte): int
+{
+return (int) CorteDia::from('op_corte_dia as d')
+->join('op_corte_mes as m', 'd.id_mes', '=', 'm.id')
+->join('op_corte_year as y', 'm.id_year', '=', 'y.id')
+->where('d.id', $idReporte)
+->value('y.id_estacion');
+}
+
+private static function enviarTelegram(int $idEstacion, int $excludeUserId, string $mensaje): void
+{
+$telegram = new TelegramService();
+$userIds = $telegram->getUserIdsByStation($idEstacion, $excludeUserId);
+
+if (in_array($idEstacion, [6, 7])) {
+$extraIds = $telegram->getUserIdsComercializadora($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+} elseif (in_array($idEstacion, [1, 2, 3, 4, 5, 14])) {
+$extraIds = $telegram->getUserIdsContabilidad($excludeUserId);
+$userIds = array_values(array_unique(array_merge($userIds, $extraIds)));
+}
+
+$telegram->sendMessageToMultiple($userIds, $mensaje);
+}
+
+public static function notificarAgregarProducto(int $idReporte, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$idEstacion = self::getEstacionIdFromReporte($idReporte);
+if (!$idEstacion) return;
+
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$fechaStr = self::getFecha($idReporte);
+$fechaFormat = $fechaStr ? formatearFecha($fechaStr) : '';
+
+$corte = CorteDia::find($idReporte);
+$mes = $corte ? nombremes((int)$corte->mes) : '';
+$year = $corte ? $corte->year : '';
+
+$mensaje = '📄 Se ha registrado un nuevo producto en el <b>Concentrado de Ventas</b> correspondiente al Corte Diario con fecha del día <b>' . $fechaFormat . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable</b>: ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación</b>: ' . $nombreES;
+
+self::enviarTelegram($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarAgregarProducto: ' . $e->getMessage());
+}
+}
+
+public static function notificarSubirDocumento(int $idReporte, int $idUsuario, string $nombreUsuario, string $detalle): void
+{
+try {
+$idEstacion = self::getEstacionIdFromReporte($idReporte);
+if (!$idEstacion) return;
+
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$fechaStr = self::getFecha($idReporte);
+$fechaFormat = $fechaStr ? formatearFecha($fechaStr) : '';
+
+$corte = CorteDia::find($idReporte);
+$mes = $corte ? nombremes((int)$corte->mes) : '';
+$year = $corte ? $corte->year : '';
+
+$mensaje = '📎 Se ha agregado un nuevo documento en el apartado de <b>Ventas</b> correspondiente al Corte Diario con fecha del día <b>' . $fechaFormat . '</b>:' . PHP_EOL . PHP_EOL
+. '📄 <b>Descripción del documento:</b> ' . $detalle . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegram($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarSubirDocumento: ' . $e->getMessage());
+}
+}
+
+public static function notificarEliminarDocumento(int $idReporte, int $idUsuario, string $nombreUsuario): void
+{
+try {
+$idEstacion = self::getEstacionIdFromReporte($idReporte);
+if (!$idEstacion) return;
+
+$estacion = Estacion::find($idEstacion);
+$nombreES = $estacion ? $estacion->nombre : 'Desconocida';
+$fechaStr = self::getFecha($idReporte);
+$fechaFormat = $fechaStr ? formatearFecha($fechaStr) : '';
+
+$corte = CorteDia::find($idReporte);
+$mes = $corte ? nombremes((int)$corte->mes) : '';
+$year = $corte ? $corte->year : '';
+
+$mensaje = '🗑️ Se ha eliminado un documento del apartado de <b>Ventas</b> correspondiente al Corte Diario con fecha del día <b>' . $fechaFormat . '</b>:' . PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL 
+. '⛽ <b>Estación:</b> ' . $nombreES;
+
+self::enviarTelegram($idEstacion, $idUsuario, $mensaje);
+} catch (\Throwable $e) {
+error_log('Error en notificarEliminarDocumento: ' . $e->getMessage());
+}
 }
 }

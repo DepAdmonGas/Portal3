@@ -23,6 +23,7 @@ firmas: [],
 signaturePad: null,
 aceptoTerminos: false,
 firmando: false,
+agregandoVenta: false,
 
 nuevoDocumento: { nombre: '', file: null },
 subiendoDocumento: false,
@@ -219,13 +220,16 @@ id: this.idDia, observaciones: this.observaciones
 
 /* ---------- NUEVA VENTA ---------- */
 newVenta() {
+if (this.agregandoVenta) return;
+this.agregandoVenta = true;
 axios.post('/departamento-operativo/ventas/' + this.idDia + '/nueva-venta', {}, {
 headers: { 'Content-Type': 'application/json' }
 }).then(r => {
 if (r.data.success) {
 this.ventas_dia.push(r.data.data);
 }
-}).catch(() => {});
+}).catch(() => {})
+.finally(() => { this.agregandoVenta = false; });
 },
 
 /* ---------- DOCUMENTOS ---------- */
@@ -236,6 +240,7 @@ new bootstrap.Modal(document.getElementById('modalDocumento')).show();
 },
 
 guardarDocumento() {
+if (this.subiendoDocumento) return;
 if (!this.nuevoDocumento.nombre) { if (window.Notify && window.Notify.error) window.Notify.error('Selecciona un tipo de documento'); return; }
 if (!this.nuevoDocumento.file) { if (window.Notify && window.Notify.error) window.Notify.error('Selecciona un archivo'); return; }
 this.subiendoDocumento = true;

@@ -22,6 +22,7 @@ use App\Models\Operativo\CorteDiaArchivo;
 use App\Models\Operativo\CorteDiaFirmas;
 use App\Models\Operativo\CorteDiaToken;
 use App\Models\Operativo\Observacione;
+use App\Models\Estacion;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -145,6 +146,14 @@ $venta = VentasDia::create([
 'precio_litro' => 0,
 'ieps' => 0,
 ]);
+
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario) {
+VentasService::notificarAgregarProducto($idReporte, $idUsuario, $nombreUsuario);
+});
 
 echo json_encode(['success' => true, 'data' => $venta]);
 exit;
@@ -441,6 +450,14 @@ CorteDiaArchivo::create([
 'documento' => $pdfNombre,
 ]);
 
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario, $nombreDocumento) {
+VentasService::notificarSubirDocumento($idReporte, $idUsuario, $nombreUsuario, $nombreDocumento);
+});
+
 echo json_encode(['success' => true]);
 exit;
 }
@@ -457,9 +474,19 @@ $id = (int) ($input['id'] ?? 0);
 
 $doc = CorteDiaArchivo::find($id);
 if ($doc) {
+$idReporte = $doc->id_reportedia;
+$nombreDoc = $doc->nombre_documento ?? '';
 $ruta = realpath(__DIR__ . '/../../public/uploads/archivos/' . $doc->documento);
 if ($ruta && file_exists($ruta)) unlink($ruta);
 $doc->delete();
+
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario) {
+VentasService::notificarEliminarDocumento($idReporte, $idUsuario, $nombreUsuario);
+});
 }
 
 echo json_encode(['success' => true, 'message' => 'Documento eliminado exitosamente']);
@@ -490,6 +517,13 @@ $fileName = VentasService::agregarFirma($idReporte, $idUsuario, $base64);
 if ($fileName) {
 $idEstacion = $this->estacionId();
 VentasService::finalizarVentas($idReporte, $idUsuario, $idEstacion);
+
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idReporte, $idEstacion, $idUsuario, $nombreUsuario) {
+VentasService::notificarFinalizacion($idReporte, $idEstacion, $idUsuario, $nombreUsuario);
+});
+
 echo json_encode(['success' => true]);
 } else {
 echo json_encode(['success' => false, 'message' => 'Error al guardar la firma']);
@@ -534,7 +568,7 @@ if ($method === 'telegram') {
 try {
 $telegram = new TelegramService();
 $idEstacion = $this->estacionId();
-$estacion = \App\Models\Estacion::find($idEstacion);
+$estacion = Estacion::find($idEstacion);
 $nombreES = $estacion ? $estacion->nombre : 'Desconocida';
 
 $dateStr = VentasService::getFecha($idReporte);
@@ -556,8 +590,8 @@ exit;
 }
 } elseif ($method === 'email') {
 try {
-$userModel = \App\Models\Usuario::find($idUsuario);
-$email = $userModel ? $userModel->email : '';
+$user = Auth::user();
+$email = $user ? $user->email : '';
 
 if (empty($email)) {
 echo json_encode(['success' => false, 'message' => 'El usuario no tiene correo electrónico registrado.']);

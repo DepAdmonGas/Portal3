@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers\Api;
+namespace App\Controllers;
 
 use App\Models\Operativo\TokenTelegram;
 use App\Services\TelegramService;

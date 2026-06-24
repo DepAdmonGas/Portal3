@@ -6,6 +6,7 @@ use App\Core\Breadcrumb;
 use App\Services\ClienteService;
 use App\Services\DropdownYearMesService;
 use App\Models\Operativo\ConsumosPago;
+use App\Core\Session;
 
 class ClienteController extends BaseController
 {
@@ -104,12 +105,28 @@ echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
 exit;
 }
 
+try {
 $result = ClienteService::agregarPago($idReporte, $idCliente, $total, $formaPago, $file);
 if ($result) {
 ClienteService::sincronizarControlgas($idReporte);
+
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+$clienteModel = \App\Models\Operativo\Cliente::find($idCliente);
+$nombreCliente = $clienteModel ? ($clienteModel->cliente ?? '') : '';
+
+register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario, $nombreCliente, $total, $idCliente) {
+ClienteService::notificarAgregarCliente($idReporte, $idUsuario, $nombreUsuario, 'pago', $nombreCliente, $total, $idCliente);
+});
+} else {
+error_log('agregarPago: save returned false for idReporte=' . $idReporte . ' idCliente=' . $idCliente . ' total=' . $total);
 }
 
-echo json_encode(['success' => $result]);
+echo json_encode(['success' => $result, 'message' => $result ? null : 'Error al guardar el pago']);
+} catch (\Throwable $e) {
+echo json_encode(['success' => false, 'message' => 'Error al guardar: ' . $e->getMessage()]);
+}
 exit;
 }
 
@@ -125,12 +142,28 @@ echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
 exit;
 }
 
+try {
 $result = ClienteService::agregarConsumo($idReporte, $idCliente, $total);
 if ($result) {
 ClienteService::sincronizarControlgas($idReporte);
+
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+$clienteModel = \App\Models\Operativo\Cliente::find($idCliente);
+$nombreCliente = $clienteModel ? ($clienteModel->cliente ?? '') : '';
+
+register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario, $nombreCliente, $total, $idCliente) {
+ClienteService::notificarAgregarCliente($idReporte, $idUsuario, $nombreUsuario, 'consumo', $nombreCliente, $total, $idCliente);
+});
+} else {
+error_log('agregarConsumo: save returned false for idReporte=' . $idReporte . ' idCliente=' . $idCliente . ' total=' . $total);
 }
 
-echo json_encode(['success' => $result]);
+echo json_encode(['success' => $result, 'message' => $result ? null : 'Error al guardar el consumo']);
+} catch (\Throwable $e) {
+echo json_encode(['success' => false, 'message' => 'Error al guardar: ' . $e->getMessage()]);
+}
 exit;
 }
 
@@ -147,10 +180,29 @@ exit;
 
 $record = ConsumosPago::find($id);
 $idReporte = $record ? (int) $record->id_reportedia : 0;
+$clienteModel = $record ? \App\Models\Operativo\Cliente::find($record->id_cliente) : null;
+$deleteInfo = $record ? [
+'id' => $record->id,
+'cliente' => ($clienteModel ? $clienteModel->cliente : null) ?? 'ID:' . $record->id_cliente,
+'cuenta' => $clienteModel ? ($clienteModel->cuenta ?? '') : '',
+'tipo_cliente' => $clienteModel ? ($clienteModel->tipo ?? '') : '',
+'rfc' => $clienteModel ? ($clienteModel->rfc ?? '') : '',
+'total' => $record->total,
+'tipo' => $record->tipo,
+'fecha' => optional(\App\Models\Operativo\CorteDia::find($record->id_reportedia))->fecha ?? '',
+] : [];
 
 $result = ClienteService::eliminarConsumoPago($id);
 if ($result && $idReporte > 0) {
 ClienteService::sincronizarControlgas($idReporte);
+
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario, $deleteInfo) {
+ClienteService::notificarEliminarCliente($idReporte, $idUsuario, $nombreUsuario, $deleteInfo);
+});
 }
 
 echo json_encode([

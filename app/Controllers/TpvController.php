@@ -1,10 +1,10 @@
 <?php
 namespace App\Controllers;
-
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Core\Session;
 use App\Services\TpvService;
+use App\Services\TpvExcelService;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
 
@@ -104,6 +104,14 @@ exit;
 
 $cierre = TpvService::crearCierre($idReporte, $empresa);
 
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario, $empresa) {
+TpvService::notificarAgregarTpv($idReporte, $idUsuario, $nombreUsuario, $empresa);
+});
+
 echo json_encode(['success' => true, 'data' => $cierre]);
 exit;
 }
@@ -149,23 +157,37 @@ exit;
 }
 
 $ok = TpvService::togglePendiente($id, $estado);
+if ($ok) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($id, $idUsuario, $nombreUsuario, $estado) {
+TpvService::notificarCambiarEstatusTpv($id, $idUsuario, $nombreUsuario, $estado);
+});
+}
 echo json_encode(['success' => $ok]);
 exit;
 }
 
-public function getTotales($idDia)
-{
-header('Content-Type: application/json; charset=utf-8');
-$idReporte = (int) $idDia;
-$empresa = $_GET['empresa'] ?? '';
+    public function getTotales($idDia)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $idReporte = (int) $idDia;
+        $empresa = $_GET['empresa'] ?? '';
 
-if (empty($empresa)) {
-echo json_encode(['success' => false, 'message' => 'Empresa requerida']);
-exit;
-}
+        if (empty($empresa)) {
+            echo json_encode(['success' => false, 'message' => 'Empresa requerida']);
+            exit;
+        }
 
-$totales = TpvService::getTotalesPorEmpresa($idReporte, $empresa);
-echo json_encode(['success' => true, 'data' => $totales]);
-exit;
-}
+        $totales = TpvService::getTotalesPorEmpresa($idReporte, $empresa);
+        echo json_encode(['success' => true, 'data' => $totales]);
+        exit;
+    }
+
+    public function descargarExcel($idYear, $idMes, $idEstacion)
+    {
+        TpvExcelService::generarYDescargar((int) $idEstacion, (int) $idYear, (int) $idMes);
+    }
 }

@@ -165,7 +165,7 @@ x-data="aceitesMesComponent()"
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control p-3 border-0 form-control text-end" type="number" step="any" style="width:100%;text-align:right;"
+<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
 x-model="tempValues[row.id].pedido" @change="guardarCampo(row, 'pedido')">
 </template>
 <template x-if="finalizado || !puedeEditar">
@@ -181,8 +181,7 @@ x-model="tempValues[row.id].pedido" @change="guardarCampo(row, 'pedido')">
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control text-end" type="number" step="any"
-style="width:100%;text-align:right;"
+<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
 x-model="tempValues[row.id].inventario_bodega"
 @change="guardarCampo(row, 'inventario_bodega')">
 </template>
@@ -197,8 +196,7 @@ x-model="tempValues[row.id].inventario_bodega"
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control text-end" type="number" step="any"
-style="width:100%;text-align:right;"
+<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
 x-model="tempValues[row.id].inventario_exibidores"
 @change="guardarCampo(row, 'inventario_exibidores')">
 </template>
@@ -232,8 +230,7 @@ title="Agregar diferencia de pago"></i>
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control text-end" type="number" step="any"
-style="width:100%;text-align:right;"
+<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
 x-model="tempValues[row.id].producto_facturado"
 @change="guardarCampo(row, 'producto_facturado')">
 </template>
@@ -248,8 +245,7 @@ x-model="tempValues[row.id].producto_facturado"
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control text-end" type="number" step="any"
-style="width:100%;text-align:right;"
+<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
 x-model="tempValues[row.id].factura_venta_mostrador"
 @change="guardarCampo(row, 'factura_venta_mostrador')">
 </template>
@@ -301,7 +297,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </div>
 
 <!-- Modal Documentos -->
-<div class="modal fade" id="modalDocumentos" tabindex="-1" x-ref="modalDocumentos">
+<div class="modal fade" id="modalDocumentos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalDocumentos">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
@@ -342,7 +338,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <span x-data="actions()">
 <a href="" @click.prevent="download('aceites-documentos', documentoEdit.factura_venta)" class="text-primary">
 <i class="ti ti-download"></i> <span x-text="documentoEdit.factura_venta">
-    
+
 </span>
 </a>
 </span>
@@ -426,19 +422,20 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 
 </div>
 <div class="modal-footer">
+<button class="btn btn-secondary" x-show="documentoEditId" @click="cancelarEdicionDocumento()">Regresar</button>
+<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
 <button class="btn btn-success float-end" @click="subirDocumento" :disabled="subiendoDocumento" x-show="documentoEditId">
 <span x-show="subiendoDocumento" class="spinner-border spinner-border-sm me-1"></span>
 <i x-show="!subiendoDocumento"></i>
 <span x-text="documentoEditId ? 'Actualizar' : 'Guardar'"></span>
 </button>
-<button class="btn btn-danger" x-show="documentoEditId" @click="cancelarEdicionDocumento()">Cancelar</button>
 </div>
 </div>
 </div>
 </div>
 
 <!-- Modal Facturas / Archivos Aceites -->
-<div class="modal fade" id="modalFacturas" tabindex="-1" x-ref="modalFacturas">
+<div class="modal fade" id="modalFacturas" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalFacturas">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
@@ -506,7 +503,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <td class="text-center align-middle">
 <template x-if="puedeEliminar">
 <span x-data="actions()">
-<a href="" @click="deleteAction({url: '/departamento-operativo/aceites-mes/eliminar-factura', id: fac.id, name: fac.nombre_anexo, table: null}).then(r => r?.success && $dispatch('refresh-facturas'))" class="text-primary">
+<a href="" @click.prevent="deleteAction({url: '/departamento-operativo/aceites-mes/eliminar-factura', id: fac.id, name: fac.nombre_anexo, table: null}).then(r => r?.success && $dispatch('refresh-facturas'))" class="text-primary">
 <i class="ti ti-trash text-danger fs-5"></i>
 </a>
 </span>
@@ -522,12 +519,15 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </div>
 
 </div>
+<div class="modal-footer">
+<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+</div>
 </div>
 </div>
 </div>
 
 <!-- Modal Diferencias de Pago (Lista) -->
-<div class="modal fade" id="modalDiferencias" tabindex="-1" x-ref="modalDiferencias">
+<div class="modal fade" id="modalDiferencias" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalDiferencias">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
@@ -576,12 +576,15 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </table>
 </div>
 </div>
+<div class="modal-footer">
+<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+</div>
 </div>
 </div>
 </div>
 
 <!-- Modal Pago de Diferencia -->
-<div class="modal fade" id="modalPagoDiferencia" tabindex="-1" x-ref="modalPagoDiferencia">
+<div class="modal fade" id="modalPagoDiferencia" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalPagoDiferencia">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
@@ -599,9 +602,10 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <textarea class="form-control mt-1" x-model="diferenciaForm.comentario" rows="4"></textarea>
 </div>
 <div class="modal-footer">
+<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
 <button type="button" class="btn btn-success" @click="pagarDiferencia()" :disabled="loading">
 <span x-show="loading" class="spinner-border spinner-border-sm me-1"></span>
-<i x-show="!loading" class="ti ti-check me-1"></i>Guardar
+<i x-show="!loading"></i>Guardar
 </button>
 </div>
 </div>
@@ -609,7 +613,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </div>
 
 <!-- Modal Detalle Pago de Diferencia -->
-<div class="modal fade" id="modalDetalleDiferencia" tabindex="-1" x-ref="modalDetalleDiferencia">
+<div class="modal fade" id="modalDetalleDiferencia" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalDetalleDiferencia">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header">
@@ -641,12 +645,15 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <div class="mt-2 mb-1"><small>Comentario</small></div>
 <div class="p-2 border rounded" x-text="detalleDiferencia.comentario || 'S/C'"></div>
 </div>
+<div class="modal-footer">
+<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+</div>
 </div>
 </div>
 </div>
 
 <!-- Modal Importar Facturas (CSV) -->
-<div class="modal fade" id="modalImportar" tabindex="-1" x-ref="modalImportar">
+<div class="modal fade" id="modalImportar" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalImportar">
 <div class="modal-dialog modal-dialog-centered">
 <div class="modal-content">
 <div class="modal-header">
@@ -659,6 +666,9 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <input type="file" class="form-control" accept=".csv" @change="csvFile = $event.target.files[0]">
 </div>
 <p class="small text-muted">Formato: fecha, concepto, archivo (nombre del archivo)</p>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
 <button class="btn btn-primary" @click="importarFacturas" :disabled="importando">
 <span x-show="importando" class="spinner-border spinner-border-sm me-1"></span>
 <i x-show="!importando" class="ti ti-upload"></i> Importar
@@ -669,7 +679,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </div>
 
 <!-- Modal Evaluaciòn de Aceites (KPI's) -->
-<div class="modal fade" id="modalPuntajes" tabindex="-1" x-ref="modalPuntajes">
+<div class="modal fade" id="modalPuntajes" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalPuntajes">
 <div class="modal-dialog modal-dialog-centered">
 <div class="modal-content">
 <div class="modal-header">
@@ -701,6 +711,9 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </tbody>
 </table>
 </div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
 </div>
 </div>
 </div>

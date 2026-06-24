@@ -66,6 +66,8 @@ Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
 Breadcrumb::add('<span class="breadcrumb-item active">Resumen Aceites (' . nombremes($idMes) . ' ' . $idYear . ')</span>', '');
+Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $data = [
 'title' => $title,
@@ -85,6 +87,7 @@ $data = [
 '/assets/js/departamento-operativo/1-corporativo/actions.corte.diario.init.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.aceites-mes.init.js?v=' . time(),
 ],
+'yearMesTemplate' => '/departamento-operativo/aceites-mes/{year}/{mes}',
 'help' => false
 ];
 
@@ -185,6 +188,25 @@ exit;
 }
 
 $result = AceiteService::actualizarDocumento($id, $idMes, $_FILES);
+
+if ($result['success']) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+$archivos = [];
+foreach (['ficha_deposito', 'imagen_bodega', 'factura_venta'] as $campo) {
+if (!empty($_FILES[$campo]) && $_FILES[$campo]['error'] === UPLOAD_ERR_OK) {
+$archivos[] = $campo . ': ' . $_FILES[$campo]['name'];
+}
+}
+$extra = ['archivos' => implode(', ', $archivos)];
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $extra) {
+AceiteService::notificarActualizarDocumentoAceite($idMes, $idUsuario, $nombreUsuario, $extra);
+});
+}
+
 echo json_encode($result);
 exit;
 }
@@ -200,6 +222,25 @@ exit;
 }
 
 $result = AceiteService::subirDocumento($idMes, $_FILES);
+
+if ($result['success']) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+$archivos = [];
+foreach (['ficha_deposito', 'imagen_bodega', 'factura_venta'] as $campo) {
+if (!empty($_FILES[$campo]) && $_FILES[$campo]['error'] === UPLOAD_ERR_OK) {
+$archivos[] = $campo . ': ' . $_FILES[$campo]['name'];
+}
+}
+$extra = ['archivos' => implode(', ', $archivos)];
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $extra) {
+AceiteService::notificarSubirDocumentoAceite($idMes, $idUsuario, $nombreUsuario, $extra);
+});
+}
+
 echo json_encode($result);
 exit;
 }
@@ -211,7 +252,32 @@ header('Content-Type: application/json; charset=utf-8');
 $input = json_decode(file_get_contents('php://input'), true);
 $id = (int) ($input['id'] ?? 0);
 
+$doc = \App\Models\Operativo\AceiteDocumento::find($id);
+$idMes = $doc ? $doc->id_mes : 0;
+
 $result = AceiteService::eliminarDocumento($id);
+
+if ($result['success'] && $idMes) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+$archivos = [];
+foreach (['ficha_deposito', 'imagen_bodega', 'factura_venta'] as $campo) {
+if ($doc && $doc->$campo) {
+$archivos[] = $campo;
+}
+}
+$extra = [
+'fecha' => formatearFecha($doc->fecha) ?? '',
+'archivos' => implode(', ', $archivos),
+];
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $extra) {
+AceiteService::notificarEliminarDocumentoAceite($idMes, $idUsuario, $nombreUsuario, $extra);
+});
+}
+
 echo json_encode($result);
 exit;
 }
@@ -267,6 +333,17 @@ exit;
 }
 
 $result = AceiteService::subirFactura($idMes, $fecha, $concepto, $_FILES['archivo'] ?? []);
+
+if ($result['success']) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $concepto, $fecha) {
+AceiteService::notificarSubirFacturaAceite($idMes, $idUsuario, $nombreUsuario, $concepto, $fecha);
+});
+}
+
 echo json_encode($result);
 exit;
 }
@@ -278,7 +355,21 @@ header('Content-Type: application/json; charset=utf-8');
 $input = json_decode(file_get_contents('php://input'), true);
 $id = (int) ($input['id'] ?? 0);
 
+$factura = \App\Models\Operativo\AceiteFactura::find($id);
+$idMes = $factura ? $factura->id_mes : 0;
+
 $result = AceiteService::eliminarFactura($id);
+
+if ($result['success'] && $idMes) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $factura) {
+AceiteService::notificarEliminarFacturaAceite($idMes, $idUsuario, $nombreUsuario, $factura->nombre_anexo ?? '');
+});
+}
+
 echo json_encode($result);
 exit;
 }
@@ -335,6 +426,17 @@ exit;
 }
 
 $result = AceiteService::agregarDiferenciaPago($idAceite, $idMes, $nombreAceite, $diferencia, $comentario, $_FILES['documento'] ?? []);
+
+if ($result['success']) {
+$usuario = Session::get('usuario');
+$idUsuario = $usuario['id'] ?? 0;
+$nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
+
+register_shutdown_function(function () use ($idMes, $idUsuario, $nombreUsuario, $nombreAceite, $diferencia, $comentario) {
+AceiteService::notificarAgregarDiferenciaAceite($idMes, $idUsuario, $nombreUsuario, $nombreAceite, $diferencia, $comentario);
+});
+}
+
 echo json_encode($result);
 exit;
 }
@@ -451,59 +553,59 @@ Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departame
 Breadcrumb::add('Resumen Aceites ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/aceites-mes/' . $idYear . '/' . $idMes);
 Breadcrumb::add('<span class="breadcrumb-item active">Resumen Impuestos, ' . nombremes($idMes) . ' ' . $idYear . '</span>', '');
 
-    View::render('departamento-operativo/1-corporativo/aceites-mes/resumen-impuestos', [
-        'title' => 'Resumen Impuestos, ' . nombremes($idMes) . ' ' . $idYear,
-        'idEstacion' => $idEstacion,
-        'idYear' => $idYear,
-        'idMes' => $idMes,
-        'multiestacion' => $permisos['multiestacion'],
-        'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
-        'help' => false,
-        'scripts' => [
-            '/assets/js/departamento-operativo/1-corporativo/resumen-impuestos.datatable.init.js?v=' . time(),
-        ],
-    ], 'departamento-operativo');
+View::render('departamento-operativo/1-corporativo/aceites-mes/resumen-impuestos', [
+'title' => 'Resumen Impuestos, ' . nombremes($idMes) . ' ' . $idYear,
+'idEstacion' => $idEstacion,
+'idYear' => $idYear,
+'idMes' => $idMes,
+'multiestacion' => $permisos['multiestacion'],
+'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
+'help' => false,
+'scripts' => [
+'/assets/js/departamento-operativo/1-corporativo/resumen-impuestos.datatable.init.js?v=' . time(),
+],
+], 'departamento-operativo');
 }
 
 public function resumenImpuestosData($idYear, $idMes)
 {
-    header('Content-Type: application/json');
+header('Content-Type: application/json');
 
-    $idEstacion = $this->estacionId();
-    if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
-        echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
-        exit;
-    }
+$idEstacion = $this->estacionId();
+if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
+exit;
+}
 
-    $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
-    if (!$puedeLeer) {
-        echo json_encode(['success' => false, 'message' => 'Sin permisos']);
-        exit;
-    }
+$puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
+if (!$puedeLeer) {
+echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+exit;
+}
 
-    $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
-    $idYear = $validados['idYear'];
-    $idMes = $validados['idMes'];
+$validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
+$idYear = $validados['idYear'];
+$idMes = $validados['idMes'];
 
-    $idMesDb = AceiteService::getMesId($idEstacion, $idYear, $idMes);
-    if (!$idMesDb) {
-        echo json_encode(['success' => false, 'message' => 'Sin datos']);
-        exit;
-    }
+$idMesDb = AceiteService::getMesId($idEstacion, $idYear, $idMes);
+if (!$idMesDb) {
+echo json_encode(['success' => false, 'message' => 'Sin datos']);
+exit;
+}
 
-    $data = ResumenImpuestosService::getData($idMesDb);
+$data = ResumenImpuestosService::getData($idMesDb);
 
-    echo json_encode([
-        'success' => true,
-        'items' => $data['items'],
-        'combustibles' => $data['subtotal_combustibles'],
-        'aceites_total' => $data['aceites_total'],
-        'aceites_sin_iva' => $data['aceites_sin_iva'],
-        'aceites_iva' => $data['aceites_iva'],
-        'total_dia' => $data['total_dia'],
-        'm' => $data['monederos'],
-    ]);
-    exit;
+echo json_encode([
+'success' => true,
+'items' => $data['items'],
+'combustibles' => $data['subtotal_combustibles'],
+'aceites_total' => $data['aceites_total'],
+'aceites_sin_iva' => $data['aceites_sin_iva'],
+'aceites_iva' => $data['aceites_iva'],
+'total_dia' => $data['total_dia'],
+'m' => $data['monederos'],
+]);
+exit;
 }
 
 public function kpiAceites($idYear)
@@ -645,18 +747,18 @@ View::render('departamento-operativo/1-corporativo/lista-aceites', [
 
 public function listaAceitesData()
 {
-    header('Content-Type: application/json');
+header('Content-Type: application/json');
 
-    $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
-    if (!$puedeLeer) {
-        echo json_encode(['success' => false, 'data' => []]);
-        exit;
-    }
+$puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
+if (!$puedeLeer) {
+echo json_encode(['success' => false, 'data' => []]);
+exit;
+}
 
-    $aceites = AceiteService::getListaAceites();
+$aceites = AceiteService::getListaAceites();
 
-    echo json_encode(['success' => true, 'data' => $aceites]);
-    exit;
+echo json_encode(['success' => true, 'data' => $aceites]);
+exit;
 }
 
 public function listaAceitesGuardar(...$params)
