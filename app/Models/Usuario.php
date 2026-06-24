@@ -3,6 +3,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Sasisopa\CursoCalendario;
 use App\Core\TwoFactorAuth;
+use App\Models\Sasisopa\InvestigacionIncidenteAccidenteNo;
 
 
 class Usuario extends Model
@@ -171,6 +172,14 @@ public function capacitaciones()
     {
         return $this->hasMany(
             UsuariosFirmaBitacora::class,
+            'id_usuario'
+        );
+    }
+
+    public function investigaciones()
+    {
+        return $this->hasMany(
+            InvestigacionIncidenteAccidenteNo::class,
             'id_usuario'
         );
     }

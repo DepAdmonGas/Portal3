@@ -1,8 +1,7 @@
 <?php
-
 namespace App\Models\Sasisopa;
-
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class InvestigacionIncidenteAccidente extends Model
 {
@@ -48,6 +47,22 @@ class InvestigacionIncidenteAccidente extends Model
     {
         return $this->hasMany(
             InvestigacionIncidenteAccidenteGrupo::class,
+            'id_investigacion'
+        );
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario'
+        );
+    }
+
+    public function terceroAutorizado()
+    {
+        return $this->hasOne(
+            InvestigacionIncidenteAccidenteTercerautorizado::class,
             'id_investigacion'
         );
     }

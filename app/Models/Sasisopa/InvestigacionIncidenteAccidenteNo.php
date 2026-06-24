@@ -1,8 +1,8 @@
 <?php
-
 namespace App\Models\Sasisopa;
-
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
+use App\Models\Estacion;
 
 class InvestigacionIncidenteAccidenteNo extends Model
 {
@@ -30,4 +30,22 @@ class InvestigacionIncidenteAccidenteNo extends Model
         'estatus' => 'integer',
         'fecha' => 'date',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario',
+            'id'
+        );
+    }
+
+    public function estacion()
+    {
+        return $this->belongsTo(
+            Estacion::class,
+            'id_estacion',
+            'id'
+        );
+    }
 }

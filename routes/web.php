@@ -912,7 +912,25 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/auditorias/externa/asea/create', Route::auth(['AuditoriasController', 'createAsea']));
 
         // Elemento 16
-        $r->addRoute('GET', '/investigacion-incidentes-accidentes', Route::auth(['SasisopaController', 'investigacionIncidentesAccidentes']));
+        $r->addRoute('GET', '/investigacion-incidentes-accidentes', Route::auth(['IncidentesAccidentesController', 'index']));
+        $r->addRoute('GET', '/investigacion-incidentes-accidentes/datatable', Route::auth(['IncidentesAccidentesController', 'datatableInvestigaciones']));
+        $r->addRoute('POST', '/investigacion-incidentes-accidentes/create', Route::auth(['IncidentesAccidentesController', 'createInvestigacion']));
+        $r->addRoute('POST', '/investigacion-incidentes-accidentes/delete', Route::auth(['IncidentesAccidentesController', 'deleteInvestigacion']));
+
+        $r->addRoute('GET', '/investigacion-incidentes-accidentes/grupo', Route::auth(['IncidentesAccidentesController', 'grupoInterdiciplinario']));
+        $r->addRoute('POST', '/investigacion-incidentes-accidentes/grupo/create', Route::auth(['IncidentesAccidentesController', 'createGrupoInterdiciplinario']));
+
+        $r->addRoute('POST', '/investigacion-incidentes-accidentes/formato026', Route::auth(['IncidentesAccidentesController', 'uploadFormato026']));
+        $r->addRoute('POST', '/investigacion-incidentes-accidentes/formatoTercer', Route::auth(['IncidentesAccidentesController', 'uploadFormatoTercer']));
+        $r->addRoute('GET', '/investigacion-incidentes-accidentes/pdf', Route::auth(['IncidentesAccidentesController', 'pdfInvestigacion']));
+
+
+        $r->addRoute('GET', '/investigacion-incidentes-accidentes/no/datatableNoAccidentes', Route::auth(['IncidentesAccidentesController', 'datatableNoAccidentes']));
+        $r->addRoute('POST', '/investigacion-incidentes-accidentes/no/create', Route::auth(['IncidentesAccidentesController', 'createNoAccidente']));
+        $r->addRoute('POST', '/investigacion-incidentes-accidentes/no/update', Route::auth(['IncidentesAccidentesController', 'updateNoAccidente']));
+        $r->addRoute('POST', '/investigacion-incidentes-accidentes/no/delete', Route::auth(['IncidentesAccidentesController', 'deleteNoAccidentes']));
+        $r->addRoute('GET', '/investigacion-incidentes-accidentes/no/pdf', Route::auth(['IncidentesAccidentesController', 'pdfNoAccidentes']));
+
         // Elemento 17
         $r->addRoute('GET', '/revision-resultados', Route::auth(['SasisopaController', 'revisionResultados']));
         // Elemento 18
