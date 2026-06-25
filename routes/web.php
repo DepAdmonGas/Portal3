@@ -933,7 +933,12 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('GET', '/investigacion-incidentes-accidentes/no/pdf', Route::auth(['IncidentesAccidentesController', 'pdfNoAccidentes']));
 
         // Elemento 17
-        $r->addRoute('GET', '/revision-resultados', Route::auth(['SasisopaController', 'revisionResultados']));
+        $r->addRoute('GET', '/revision-resultados', Route::auth(['RevisionResultadosController', 'index']));
+        $r->addRoute('GET', '/revision-resultados/datatable', Route::auth(['RevisionResultadosController', 'datatable']));
+        $r->addRoute('POST', '/revision-resultados/create', Route::auth(['RevisionResultadosController', 'create']));
+        $r->addRoute('POST', '/revision-resultados/update', Route::auth(['RevisionResultadosController', 'update']));
+        $r->addRoute('POST', '/revision-resultados/delete', Route::auth(['RevisionResultadosController', 'delete']));
+
         // Elemento 18
         $r->addRoute('GET', '/informes-desempeno', Route::auth(['SasisopaController', 'informesDesempeno']));
 
