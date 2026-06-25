@@ -1298,31 +1298,6 @@ class SasisopaController extends BaseController{
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
-    
-
-        public function revisionResultados(){
-
-        $title = '17. REVISIÓN DE RESULTADOS';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sasisopa/revision-resultados', $data,'sasisopa');
-
-    }
-
     public function informesDesempeno(){
 
         $title = '18. INFORMES DE DESEMPEÑO';
