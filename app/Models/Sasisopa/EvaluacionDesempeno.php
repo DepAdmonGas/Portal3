@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class EvaluacionDesempeno extends Model
 {
@@ -29,4 +30,12 @@ class EvaluacionDesempeno extends Model
         'id_usuario' => 'integer',
         'fecha_hora' => 'datetime',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario'
+        );
+    }
 }

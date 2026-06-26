@@ -940,7 +940,27 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/revision-resultados/delete', Route::auth(['RevisionResultadosController', 'delete']));
 
         // Elemento 18
-        $r->addRoute('GET', '/informes-desempeno', Route::auth(['SasisopaController', 'informesDesempeno']));
+        $r->addRoute('GET', '/informes-desempeno', Route::auth(['InformeDesempenoController', 'index']));
+        $r->addRoute('GET', '/informes-desempeno/evaluacion/datatable', Route::auth(['InformeDesempenoController', 'datatableEvaluacion']));
+        $r->addRoute('POST', '/informes-desempeno/evaluacion/create', Route::auth(['InformeDesempenoController', 'createEvaluacion']));
+        $r->addRoute('POST', '/informes-desempeno/evaluacion/update', Route::auth(['InformeDesempenoController', 'updateEvaluacion']));
+        $r->addRoute('POST', '/informes-desempeno/evaluacion/delete', Route::auth(['InformeDesempenoController', 'deleteEvaluacion']));
+
+        $r->addRoute('GET', '/informes-desempeno/implementacion/datatable', Route::auth(['InformeDesempenoController', 'datatableImplementacion']));
+        $r->addRoute('POST', '/informes-desempeno/implementacion/create', Route::auth(['InformeDesempenoController', 'createImplementacion']));
+        $r->addRoute('POST', '/informes-desempeno/implementacion/delete', Route::auth(['InformeDesempenoController', 'deleteImplementacion']));
+        $r->addRoute('GET', '/informes-desempeno/implementacion/pdf/{id:\d+}', Route::auth(['InformeDesempenoController', 'pdfImplementacion']));
+
+        $r->addRoute('GET', '/informes-desempeno/implementacion/editar/{id:\d+}', Route::auth(['InformeDesempenoController', 'indexEditar']));
+        $r->addRoute('GET', '/informes-desempeno/implementacion/editar/datatable/{id:\d+}', Route::auth(['InformeDesempenoController', 'editarImplementacionDatatable']));
+        
+        $r->addRoute('POST', '/informes-desempeno/implementacion/editar/fecha-reporte', Route::auth(['InformeDesempenoController', 'updateFechaReporte']));
+        $r->addRoute('POST', '/informes-desempeno/implementacion/editar/fecha-implementacion', Route::auth(['InformeDesempenoController', 'updateFechaImplementacion']));
+        $r->addRoute('POST', '/informes-desempeno/implementacion/editar/descripcion', Route::auth(['InformeDesempenoController', 'updateDescripcionImplementacion']));
+        $r->addRoute('POST', '/informes-desempeno/implementacion/editar/observacion', Route::auth(['InformeDesempenoController', 'updateObservacionImplementacion']));
+        $r->addRoute('POST', '/informes-desempeno/implementacion/editar/informacion', Route::auth(['InformeDesempenoController', 'updateInformacionImplementacion']));
+        $r->addRoute('POST', '/informes-desempeno/implementacion/create/puesto', Route::auth(['InformeDesempenoController', 'createPuestoImplementacion']));
+        $r->addRoute('POST', '/informes-desempeno/implementacion/delete/puesto', Route::auth(['InformeDesempenoController', 'deletePuestoImplementacion']));
 
         // Otros
         $r->addRoute('GET', '/calendario', Route::auth(['SasisopaController', 'calendario']));
