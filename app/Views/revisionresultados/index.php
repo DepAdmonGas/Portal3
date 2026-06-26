@@ -485,7 +485,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
                 <a class="dropdown-item" href="javascript:void(0)" @click="openModalRevisionResultado()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
               <li>
-                <a class="dropdown-item" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.027.docx" download><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.027.docx" download><i class="ti ti-file-word"></i> Descargar</a>
               </li>
             </ul>
           </div>   
@@ -531,7 +531,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
                 :key="item.id">
                 <tr>
                     <td
-                        class="text-center fw-bold"
+                        class="text-center fw-bolder"
                         x-text="item.id">
                     </td>
                     <td

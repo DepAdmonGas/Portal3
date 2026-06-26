@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -31,4 +31,13 @@ class ImplementacionSasisopaProcedimientos extends Model
         'fecha_implementacion' => 'date',
         'informacion' => 'string',
     ];
+
+        public function puestos()
+    {
+        return $this->hasMany(
+            ImplementacionSasisopaProcedimientosPuesto::class,
+            'id_reporte'
+        );
+    }
+
 }
