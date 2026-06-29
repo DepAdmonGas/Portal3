@@ -87,7 +87,7 @@
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/comunicados" aria-expanded="false">
+<a class="sidebar-link" href="/sasisopa/comunicados" aria-expanded="false">
 <span>
 <i class="ti ti-speakerphone"></i>
 </span>

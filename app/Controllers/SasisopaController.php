@@ -46,7 +46,6 @@ class SasisopaController extends BaseController{
 
     }
   
-
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
@@ -1299,8 +1298,7 @@ class SasisopaController extends BaseController{
     //------------------------------------------------------------------------------------
     //--------------------------------------------------------------
 
-
-        public function calendario(){
+    public function calendario(){
 
         $title = 'Calendario';
 
@@ -1308,13 +1306,18 @@ class SasisopaController extends BaseController{
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
          $data = [
             'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/js/vendor.min.js'
             ]
         ];
         
