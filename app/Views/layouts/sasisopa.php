@@ -96,7 +96,7 @@
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" aria-expanded="false">
+<a class="sidebar-link" href="/sasisopa/consulta" aria-expanded="false">
 <span>
 <i class="ti ti-clipboard-check"></i>
 </span>
@@ -105,7 +105,7 @@
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/programa-implementacion" aria-expanded="false">
+<a class="sidebar-link" href="/sasisopa/programa-implementacion" aria-expanded="false">
 <span>
 <i class="ti ti-list-check"></i>
 </span>
@@ -123,7 +123,7 @@
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/programa-anual-mantenimiento" aria-expanded="false">
+<a class="sidebar-link" href="/sasisopa/control-actividades-procesos/programa-anual-mantenimiento" aria-expanded="false">
 <span>
 <i class="ti ti-tool"></i>
 </span>
@@ -155,15 +155,6 @@
 <i class="ti ti-arrows-exchange"></i>
 </span>
 <span class="hide-menu">Cambio de Precio</span>
-</a>
-</li>
-
-<li class="sidebar-item">
-<a class="sidebar-link" href="/" aria-expanded="false">
-<span>
-<i class="ti ti-clipboard-check"></i>
-</span>
-<span class="hide-menu">NOM-035</span>
 </a>
 </li>
 
