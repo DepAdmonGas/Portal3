@@ -36,7 +36,7 @@ class SasisopaController extends BaseController{
             'modulo' => $this->modulo,
             'links' =>[],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/js/vendor.min.js'
             ],
             'help' => false
 
@@ -1345,6 +1345,37 @@ class SasisopaController extends BaseController{
         
         View::render('sasisopa/cursos', $data,'sasisopa');
 
+    }
+
+    //----------------------------------
+
+    public function  programaImplementacion(){
+        
+        $title = 'PROGRAMA DE IMPLEMENTACION';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
+        // Buscar permisos de los modulos
+        $permisos = ModuloService::getPermisos($this->userId());
+
+        $sasisopa = Sasisopa::all();
+
+         $data = [
+            'title' => $title,
+            'elementos' => $sasisopa,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'links' =>[],
+            'scripts' => [
+                '/js/vendor.min.js'
+            ],
+            'help' => false
+
+        ];
+        
+        View::render('sasisopa/programa-implementacion', $data,'sasisopa');
     }
   
 

@@ -966,7 +966,7 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('GET', '/calendario', Route::auth(['SasisopaController', 'calendario']));
         $r->addRoute('GET', '/cursos', Route::auth(['SasisopaController', 'cursos']));
         $r->addRoute('GET', '/consulta', Route::auth(['SasisopaController', 'consulta']));
-        $r->addRoute('GET', '/programa-implementacion', Route::auth(['SasisopaController', 'consulta']));
+        $r->addRoute('GET', '/programa-implementacion', Route::auth(['SasisopaController', 'programaImplementacion']));
         $r->addRoute('GET', '/reporte-diario', Route::auth(['SasisopaController', 'consulta']));
         $r->addRoute('GET', '/cambio-precio', Route::auth(['SasisopaController', 'consulta']));
 
@@ -974,6 +974,7 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('GET', '/comunicados/datatable', Route::auth(['ComunicadosController', 'datatable']));
         $r->addRoute('POST', '/comunicados/create', Route::auth(['ComunicadosController', 'create']));
         $r->addRoute('POST', '/comunicados/delete', Route::auth(['ComunicadosController', 'delete']));
+
 
     });
 
