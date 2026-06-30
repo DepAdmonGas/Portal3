@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Models\Sasisopa;
-
 use Illuminate\Database\Eloquent\Model;
+
 
 class Sasisopa extends Model
 {
@@ -19,4 +19,5 @@ class Sasisopa extends Model
         'id' => 'integer',
         'numero_sasisopa' => 'integer',
     ];
+
 }
