@@ -7,6 +7,7 @@ use App\Models\Estacion;
 use App\Models\Sasisopa\AnalisisRiesgo;
 use App\Models\Sasisopa\AnalisisRiesgoAnexo;
 use App\Models\Sasisopa\RepresentanteTecnico;
+use App\Models\Sasisopa\SasisopaConsulta;
 use App\Services\ModuloService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -1377,6 +1378,73 @@ class SasisopaController extends BaseController{
         
         View::render('sasisopa/programa-implementacion', $data,'sasisopa');
     }
+
+    //---------------------------------------
+    //---------------- CONSULTA TU SASISOPA
+
+    public function consultaSasisopa(){
+
+    $title = 'CONSULTA TU SASISOPA';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add($title, '');
+
+        // Buscar permisos de los modulos
+        $permisos = ModuloService::getPermisos($this->userId());
+
+        $sasisopa = Sasisopa::all();
+
+         $data = [
+            'title' => $title,
+            'elementos' => $sasisopa,
+            'permisos' => $permisos,
+            'modulo' => $this->modulo,
+            'links' =>[],
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/js/sasisopa/consultasasisopa.actions.init.js?v=1.0'
+            ],
+            'help' => false
+
+        ];
+        
+        View::render('sasisopa/consulta-sasisopa', $data,'sasisopa');
+
+    }
+
+    public function datatableConsulta(){
+        header('Content-Type: application/json');
+
+        $estacion = Estacion::find($this->estacionId());
+
+        $data = SasisopaConsulta::where(
+        'id_estacion',
+        $this->estacionId()
+        )
+        ->orderByDesc('id')
+        ->get()
+
+        ->map(function ($item) {
+
+            return [
+                'id' => $item->id,
+                'permisocre' => $item->estacion->permisocre,
+                'razonsocial' => $item->estacion->razonsocial,
+                'version' => $item->version,
+                'documento' => '/uploads/' . $item->documento
+            ];
+        });
+
+    echo json_encode([
+        'success' => true,
+        'data' => $data,
+    ]);
+
+    
+    }
+    //---------------------------------------
+    //---------------- CONSULTA TU SASISOPA
   
 
 }
