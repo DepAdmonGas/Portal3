@@ -37,4 +37,13 @@ class ReporteCreMes extends Model
         return $this->hasMany(ReporteCreProducto::class, 'id_re_mes');
     }
 
+    public function mensajes()
+    {
+        return $this->hasMany(
+            ReporteCreMensaje::class,
+            'id_reporte'
+        );
+    }
+
+
 }

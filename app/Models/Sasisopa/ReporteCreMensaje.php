@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class ReporteCreMensaje extends Model
 {
@@ -27,5 +28,10 @@ class ReporteCreMensaje extends Model
         'fecha' => 'datetime',
         'tipo' => 'integer',
     ];
+
+public function usuario()
+{
+    return $this->belongsTo(Usuario::class, 'id_usuario');
+}
 
 }

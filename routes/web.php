@@ -967,7 +967,6 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('GET', '/cursos', Route::auth(['SasisopaController', 'cursos']));
         
         $r->addRoute('GET', '/programa-implementacion', Route::auth(['SasisopaController', 'programaImplementacion']));
-        $r->addRoute('GET', '/reporte-diario', Route::auth(['SasisopaController', 'consulta']));
         $r->addRoute('GET', '/cambio-precio', Route::auth(['SasisopaController', 'consulta']));
 
         //--------- Comunicados
@@ -977,8 +976,32 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/comunicados/delete', Route::auth(['ComunicadosController', 'delete']));
         //------------------------------------------------
 
+        //----------- CONSULTA TU SASISOPA
         $r->addRoute('GET', '/consulta', Route::auth(['SasisopaController', 'consultaSasisopa']));
         $r->addRoute('GET', '/consulta/datatable', Route::auth(['SasisopaController', 'datatableConsulta']));
+        //------------------------------------------------
+
+        $r->addRoute('GET', '/reporte-diario', Route::auth(['ReporteDiarioController', 'index']));
+        $r->addRoute('GET', '/reporte-diario/meses', Route::auth(['ReporteDiarioController', 'meses']));
+        $r->addRoute('GET', '/reporte-diario/{mes:\d+}/{year:\d+}', Route::auth(['ReporteDiarioController', 'reporteMes']));
+        $r->addRoute('GET', '/reporte-diario/pdf', Route::auth(['ReporteDiarioController', 'reportePdf']));
+        $r->addRoute('GET', '/reporte-diario/mes/datatable', Route::auth(['ReporteDiarioController', 'datatableMes']));
+
+        $r->addRoute('GET', '/reporte-diario/facturas/{year:\d+}', Route::auth(['ReporteDiarioController', 'facturas']));
+        $r->addRoute('GET', '/reporte-diario/facturas/get/{year:\d+}', Route::auth(['ReporteDiarioController', 'getFacturas']));
+        $r->addRoute('POST', '/reporte-diario/facturas/guardar', Route::auth(['ReporteDiarioController', 'guardarFacturas']));
+
+        $r->addRoute('GET', '/reporte-diario/mensajes/{id:\d+}/{fecha:\d+}', Route::auth(['ReporteDiarioController', 'getMensajes']));
+        $r->addRoute('POST', '/reporte-diario/mensajes/create', Route::auth(['ReporteDiarioController', 'guardarMensaje']));
+        
+        $r->addRoute('GET', '/reporte-diario/nuevo/{mes:\d+}/{year:\d+}', Route::auth(['ReporteDiarioController', 'reporteMesNuevo']));
+        $r->addRoute('GET', '/reporte-diario/editar/{idmes:\d+}/{idfecha:\d+}', Route::auth(['ReporteDiarioController', 'reporteMesEditar']));
+
+        $r->addRoute('GET','/reporte-diario/nuevo/base-reporte-diario',Route::auth(['ReporteDiarioController','baseReporteDiario']));
+        $r->addRoute('GET','/reporte-diario/editar/base/{idmes:\d+}/{fecha}',Route::auth(['ReporteDiarioController','baseReporteDiarioEditar']));
+
+        $r->addRoute('POST','/reporte-diario/nuevo/create',Route::auth(['ReporteDiarioController','createReporteDiario']));
+        $r->addRoute('POST','/reporte-diario/editar/update',Route::auth(['ReporteDiarioController','updateReporteDiario']));
 
 
     });

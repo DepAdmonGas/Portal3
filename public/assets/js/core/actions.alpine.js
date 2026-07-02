@@ -599,7 +599,15 @@ document.addEventListener('alpine:init', () => {
     // Función de utilidad para verificar si hay token
     hasToken() {
         return document.cookie.includes('token=');
-    }
+    },
+
+    async back() {
+
+    this.loading = true;
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    window.history.back();
+
+    },
 
 
 
