@@ -321,7 +321,7 @@ $razonsocial = trim($razonsocial);
 <?php endif; ?>
 </div>
 
-<?php if (empty($ocultarSelectorEstacion) && ((isset($estacionesFiltradas) && $multiestacion && !empty($estacionesFiltradas)) || ($esGestoria ?? false))): ?>
+<?php if (isset($estacionesFiltradas) && ((!empty($estacionesFiltradas) && $multiestacion) || ($esGestoria ?? false))): ?>
 <div class="d-flex align-items-center justify-content-between flex-wrap w-100">
 <span id="sc-badge" class="badge rounded-pill text-bg-info">
 <?= htmlspecialchars($nombreFiltro ?? ($esGestoria ? 'Gestoría' : '')) ?>
