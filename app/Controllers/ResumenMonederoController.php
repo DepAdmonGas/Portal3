@@ -7,6 +7,9 @@ use App\Services\ResumenMonederoExcelService;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\KpiResumenMonederoService;
+use App\Models\Operativo\MonederoDocumento;
+use App\Models\Operativo\MonederoEdi;
+use App\Models\Operativo\MonederoListaDocumento;
 use App\Core\Session;
 
 class ResumenMonederoController extends BaseController
@@ -57,12 +60,12 @@ Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $data = [
-    'title' => $title,
-    'idYear' => $idYear,
-    'idMes' => $idMes,
-    'idEstacion' => $idEstacion,
-    'idMesDb' => $idMesDb,
-    'multiestacion' => $permisos['multiestacion'],
+'title' => $title,
+'idYear' => $idYear,
+'idMes' => $idMes,
+'idEstacion' => $idEstacion,
+'idMesDb' => $idMesDb,
+'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'esCorporativo' => $permisos['es_corporativo'],
 'idPuesto' => $permisos['id_puesto'],
@@ -195,7 +198,7 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
-$doc = \App\Models\Operativo\MonederoDocumento::find($id);
+$doc = MonederoDocumento::find($id);
 $idMes = $doc ? $doc->id_mes : 0;
 
 $uploadDir = ResumenMonederoService::getUploadDir();
@@ -229,7 +232,7 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
-$doc = \App\Models\Operativo\MonederoDocumento::find($id);
+$doc = MonederoDocumento::find($id);
 $idMes = $doc ? $doc->id_mes : 0;
 
 $success = ResumenMonederoService::deleteDocumento($id);
@@ -289,7 +292,7 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
-$edi = \App\Models\Operativo\MonederoEdi::find($id);
+$edi = MonederoEdi::find($id);
 $idDocumento = $edi ? $edi->id_documento : 0;
 
 $success = ResumenMonederoService::deleteEdi($id);
@@ -349,7 +352,7 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
-$record = \App\Models\Operativo\MonederoListaDocumento::find($id);
+$record = MonederoListaDocumento::find($id);
 $idMonedero = $record ? $record->id_monedero : 0;
 
 $success = ResumenMonederoService::deleteListaDocumento($id);
@@ -411,51 +414,51 @@ Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departame
 Breadcrumb::add('Resumen Monedero', '/departamento-operativo/resumen-monedero/' . $idYear . '/' . $idMes);
 Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
 
-    $data = [
-        'title' => $title,
-        'idYear' => $idYear,
-        'idMes' => $idMes,
-        'idEstacion' => $idEstacion,
-        'multiestacion' => $permisos['multiestacion'],
-        'periodos' => $resultado['periodos'],
-        'totales' => $resultado['totales'],
-        'help' => false,
-        'scripts' => [
-            '/assets/js/departamento-operativo/1-corporativo/resumen-monedero-periodo.datatable.init.js?v=' . time(),
-        ],
-    ];
+$data = [
+'title' => $title,
+'idYear' => $idYear,
+'idMes' => $idMes,
+'idEstacion' => $idEstacion,
+'multiestacion' => $permisos['multiestacion'],
+'periodos' => $resultado['periodos'],
+'totales' => $resultado['totales'],
+'help' => false,
+'scripts' => [
+'/assets/js/departamento-operativo/1-corporativo/resumen-monedero-periodo.datatable.init.js?v=' . time(),
+],
+];
 
-    View::render('departamento-operativo/1-corporativo/resumen-monedero/resumen-periodo', $data, 'departamento-operativo');
+View::render('departamento-operativo/1-corporativo/resumen-monedero/resumen-periodo', $data, 'departamento-operativo');
 }
 
 public function resumenPeriodoData($idYear, $idMes)
 {
-    header('Content-Type: application/json');
+header('Content-Type: application/json');
 
-    $idEstacion = $this->estacionId();
-    if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
-        echo json_encode(['success' => false, 'periodos' => [], 'totales' => []]);
-        exit;
-    }
+$idEstacion = $this->estacionId();
+if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+echo json_encode(['success' => false, 'periodos' => [], 'totales' => []]);
+exit;
+}
 
-    $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer') || ModuloDptoOperativoService::validaPermiso('personal-general', 'leer');
-    if (!$puedeLeer) {
-        echo json_encode(['success' => false, 'periodos' => [], 'totales' => []]);
-        exit;
-    }
+$puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer') || ModuloDptoOperativoService::validaPermiso('personal-general', 'leer');
+if (!$puedeLeer) {
+echo json_encode(['success' => false, 'periodos' => [], 'totales' => []]);
+exit;
+}
 
-    $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
-    $idYear = $validados['idYear'];
-    $idMes = $validados['idMes'];
+$validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
+$idYear = $validados['idYear'];
+$idMes = $validados['idMes'];
 
-    $resultado = ResumenMonederoService::getResumenPeriodo($idEstacion, $idYear, $idMes);
+$resultado = ResumenMonederoService::getResumenPeriodo($idEstacion, $idYear, $idMes);
 
-    echo json_encode([
-        'success' => true,
-        'periodos' => $resultado['periodos'],
-        'totales' => $resultado['totales'],
-    ]);
-    exit;
+echo json_encode([
+'success' => true,
+'periodos' => $resultado['periodos'],
+'totales' => $resultado['totales'],
+]);
+exit;
 }
 
 public function descargarExcel($idYear, $idMes, $idEstacion)
@@ -501,12 +504,12 @@ $multiEstacion = $this->isMultiEs();
 
 if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
 View::render('departamento-operativo/1-corporativo/resumen-monedero/kpi-evaluacion', [
-    'title' => 'Evaluación Facturas de Monederos (KPI\'s), ' . $idYear,
-    'idEstacion' => 0,
-    'idYear' => $idYear,
-    'multiestacion' => $multiEstacion,
-    'help' => false,
-    'scripts' => [],
+'title' => 'Evaluación Facturas de Monederos (KPI\'s), ' . $idYear,
+'idEstacion' => 0,
+'idYear' => $idYear,
+'multiestacion' => $multiEstacion,
+'help' => false,
+'scripts' => [],
 ], 'departamento-operativo');
 return;
 }
@@ -524,15 +527,15 @@ Breadcrumb::add('Resumen Monedero ' . $idYear, '/departamento-operativo/resumen-
 Breadcrumb::add('<span class="breadcrumb-item active">Evaluación Facturas de Monederos (KPI\'s), ' . $idYear . '</span>', '');
 
 View::render('departamento-operativo/1-corporativo/resumen-monedero/kpi-evaluacion', [
-    'title' => 'Evaluación Facturas de Monederos (KPI\'s), ' . $idYear,
-    'idEstacion' => $idEstacion,
-    'idYear' => $idYear,
-    'multiestacion' => $permisos['multiestacion'],
-    'help' => false,
-    'scripts' => [
-        '/assets/libs/apexcharts/dist/apexcharts.min.js',
-        '/assets/js/departamento-operativo/1-corporativo/kpi-resumen-monedero.actions.init.js?v=' . time(),
-    ],
+'title' => 'Evaluación Facturas de Monederos (KPI\'s), ' . $idYear,
+'idEstacion' => $idEstacion,
+'idYear' => $idYear,
+'multiestacion' => $permisos['multiestacion'],
+'help' => false,
+'scripts' => [
+'/assets/libs/apexcharts/dist/apexcharts.min.js',
+'/assets/js/departamento-operativo/1-corporativo/kpi-resumen-monedero.actions.init.js?v=' . time(),
+],
 ], 'departamento-operativo');
 }
 

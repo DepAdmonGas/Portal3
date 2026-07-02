@@ -151,7 +151,7 @@ orderable: false,
 render: (d) => (isPemexDelivery(d) || isSipci(d)) ? prohibido() : docLink(d.comXML, 'Complemento XML', 'ti ti-file-type-xml text-primary')
 },
 {
-title: '<i class="ti ti-message fs-5"></i>',
+title: '<i class="ti ti-message fs-7"></i>',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
@@ -163,7 +163,7 @@ const badge = d.num_comentarios > 0
 : '';
 
 return '<a href="" class="btn-comentarios btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center" data-id="' + d.id + '" title="Comentarios">'
-+ '<i class="ti ti-message fs-5"></i>'
++ '<i class="ti ti-message fs-7"></i>'
 + badge
 + '</a>';
 }

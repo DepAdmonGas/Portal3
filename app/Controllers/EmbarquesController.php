@@ -8,6 +8,7 @@ use App\Core\Session;
 use App\Services\DropdownYearMesService;
 use App\Services\EmbarquesService;
 use App\Services\ModuloDptoOperativoService;
+use App\Models\Operativo\Embarque;
 
 class EmbarquesController extends BaseController
 {
@@ -201,7 +202,7 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
-$embarqueRec = \App\Models\Operativo\Embarque::find($id);
+$embarqueRec = Embarque::find($id);
 $idMes = $embarqueRec ? $embarqueRec->id_mes : 0;
 $embarqueTxt = $embarqueRec ? $embarqueRec->embarque : '';
 $documentoTxt = $embarqueRec ? $embarqueRec->documento : '';
@@ -246,7 +247,7 @@ echo json_encode(['success' => false, 'message' => 'ID no válido']);
 exit;
 }
 
-$embarqueRec = \App\Models\Operativo\Embarque::find($id);
+$embarqueRec = Embarque::find($id);
 $idMes = $embarqueRec ? $embarqueRec->id_mes : 0;
 $embarqueTxt = $embarqueRec ? $embarqueRec->embarque : '';
 

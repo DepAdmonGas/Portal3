@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services;
-
+use App\Models\Operativo\TarjetasCB;
 use App\Models\Operativo\CierreLote;
 use App\Models\Operativo\CorteDia;
 use App\Models\Estacion;
@@ -143,7 +143,7 @@ $importeTotal = CierreLote::where('idreporte_dia', $idReporte)
 ->where('empresa', $empresa)
 ->sum('importe');
 
-$tarjeta = \App\Models\Operativo\TarjetasCB::where('idreporte_dia', $idReporte)
+$tarjeta = TarjetasCB::where('idreporte_dia', $idReporte)
 ->where('concepto', $empresa)
 ->first();
 

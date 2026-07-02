@@ -9,6 +9,8 @@ if ($submenu['clave'] === 'corte-diario') {
 $ruta .= "/{$idYear}/{$idMes}";
 }else if ($submenu['clave'] === 'embarques') {
 $ruta .= "/{$idYear}/{$idMes}";
+}else if ($submenu['clave'] === 'solicitud-cheque') {
+$ruta .= "/{$idYear}/{$idMes}";
 }
 
 ?>

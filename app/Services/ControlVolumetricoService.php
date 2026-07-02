@@ -16,6 +16,7 @@ use App\Models\Operativo\DespachoFactura;
 use App\Models\Operativo\AceiteLubricante;
 use App\Models\Operativo\AceiteLubricanteReporte;
 use App\Models\Operativo\IngresosFacturacionContabilidad;
+use App\Models\Operativo\CorteYear;
 use App\Models\Sasisopa\ReporteCreMes;
 use App\Models\Sasisopa\ReporteCreProducto;
 use App\Models\Sasisopa\ReporteCrePipa;
@@ -358,7 +359,7 @@ ControlVolumetricoResumenAceite::create([
 
 private static function asegurarIngresosFacturacion(int $idMes, int $idEstacion, int $idYear, int $idMesNum): void
 {
-$idYearRecord = \App\Models\Operativo\CorteYear::where('id_estacion', $idEstacion)
+$idYearRecord = CorteYear::where('id_estacion', $idEstacion)
 ->where('year', $idYear)
 ->value('id');
 

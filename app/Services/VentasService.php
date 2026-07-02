@@ -18,6 +18,7 @@ use App\Models\Operativo\CorteYear;
 use App\Models\Operativo\Aceite;
 use App\Models\Operativo\InventarioAceite;
 use App\Models\Estacion;
+use App\Models\Usuario;
 use App\Services\TelegramService;
 use App\Core\Auth;
 use App\Core\Session;
@@ -240,7 +241,7 @@ $firmas = CorteDiaFirmas::where('id_reportedia', $idReporte)
 ->get();
 
 return $firmas->map(function ($f) {
-$usuario = \App\Models\Usuario::find($f->id_usuario);
+$usuario = Usuario::find($f->id_usuario);
 $f->nombre_usuario = $usuario ? $usuario->nombre : 'Desconocido';
 $f->fecha_formateada = $f->fecha ? formatearFecha($f->fecha->format('Y-m-d')) : '';
 return $f;
@@ -255,7 +256,7 @@ $firma = CorteDiaFirmas::where('id_reportedia', $idReporte)
 ->first();
 
 if ($firma) {
-$usuario = \App\Models\Usuario::find($firma->id_usuario);
+$usuario = Usuario::find($firma->id_usuario);
 $firma->nombre_usuario = $usuario ? $usuario->nombre : 'Desconocido';
 }
 
