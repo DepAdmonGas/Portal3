@@ -31,6 +31,8 @@ class AuthMiddleware
 
     private function redirectLogin(): void
     {
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
         Session::destroy();
 
         setcookie('token', '', [
@@ -39,6 +41,17 @@ class AuthMiddleware
             'httponly' => true,
             'samesite' => 'Lax'
         ]);
+
+        // Para requests AJAX/API (POST, PUT, DELETE, PATCH), responder JSON en vez de HTML
+        if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+            header('Content-Type: application/json');
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Sesión no válida. Por favor inicie sesión nuevamente.'
+            ]);
+            exit;
+        }
 
         header('Location: /login');
         exit;

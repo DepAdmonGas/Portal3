@@ -5,6 +5,7 @@ use App\Core\Breadcrumb;
 use App\Services\ControlVolumetricoService;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
+use App\Models\Operativo\ControlVolumetrico;
 use App\Core\Session;
 
 class ControlVolumetricoController extends BaseController
@@ -65,13 +66,13 @@ Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $data = [
-    'title' => $title,
-    'idYear' => $idYear,
-    'idMes' => $idMes,
-    'idMesDb' => $idMesDb,
-    'idEstacion' => $idEstacion,
-    'estado' => $estado,
-    'yearMesTemplate' => '/departamento-operativo/control-volumetrico/{year}/{mes}',
+'title' => $title,
+'idYear' => $idYear,
+'idMes' => $idMes,
+'idMesDb' => $idMesDb,
+'idEstacion' => $idEstacion,
+'estado' => $estado,
+'yearMesTemplate' => '/departamento-operativo/control-volumetrico/{year}/{mes}',
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'tipoPuesto' => $tipoPuesto,
@@ -255,7 +256,7 @@ header('Content-Type: application/json; charset=utf-8');
 $input = json_decode(file_get_contents('php://input'), true);
 $id = (int) ($input['id'] ?? 0);
 
-$row = \App\Models\Operativo\ControlVolumetrico::find($id);
+$row = ControlVolumetrico::find($id);
 $idMes = $row ? $row->id_mes : 0;
 
 $result = ControlVolumetricoService::eliminarDocumento($id);

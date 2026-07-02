@@ -39,6 +39,11 @@ class ErrorHandler
 
     private static function isJsonRequest(): bool
     {
+        // Si es POST/PUT/DELETE/PATCH, asumir API (fetch/axios)
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+            return true;
+        }
         return (
             isset($_SERVER['HTTP_ACCEPT']) &&
             str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')

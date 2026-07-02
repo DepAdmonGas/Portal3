@@ -365,6 +365,56 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addRoute('POST','/embarques/store-comentario',Route::auth(['EmbarquesController', 'storeComentario']));
     $r->addRoute('GET','/embarques/catalogos',Route::auth(['EmbarquesController', 'getCatalogos']));
 
+
+    //----- Solicitud de Cheque
+    $r->addRoute('GET','/solicitud-cheques',Route::auth(['SolicitudChequeController', 'redirectToPeriod']));
+    $r->addRoute('GET','/solicitud-cheque',Route::auth(['SolicitudChequeController', 'redirectToPeriod']));
+    $r->addRoute('GET','/solicitud-cheque/{idYear:\d+}/{idMes:\d+}',Route::auth(['SolicitudChequeController', 'index']));
+    $r->addRoute('GET','/solicitud-cheque-crear/{idYear:\d+}/{idMes:\d+}',Route::auth(['SolicitudChequeController', 'crear']));
+    $r->addRoute('GET','/solicitud-cheque-crear/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['SolicitudChequeController', 'crear']));
+    $r->addRoute('GET','/solicitud-cheque-crear/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}/{idDepto:\d+}',Route::auth(['SolicitudChequeController', 'crear']));
+    $r->addRoute('GET','/solicitud-cheque-editar/{id}',Route::auth(['SolicitudChequeController', 'editar']));
+    $r->addRoute('GET','/solicitud-cheque-firmar/{id}',Route::auth(['SolicitudChequeController', 'firmarPage']));
+    $r->addRoute('GET','/solicitud-cheque/factura-status/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}/{idDepto:\d+}',Route::auth(['SolicitudChequeController', 'getFacturaStatusEndpoint']));
+    $r->addRoute('GET','/solicitud-cheque/pending-counts/{idYear:\d+}/{idMes:\d+}',Route::auth(['SolicitudChequeController', 'getPendingCountsEndpoint']));
+    $r->addRoute('GET','/solicitud-cheque/data/{idYear:\d+}/{idMes:\d+}',Route::auth(['SolicitudChequeController', 'getData']));
+    $r->addRoute('POST','/solicitud-cheque/data/{idYear:\d+}/{idMes:\d+}',Route::auth(['SolicitudChequeController', 'getData']));
+    $r->addRoute('POST','/solicitud-cheque/store',Route::auth(['SolicitudChequeController', 'store']));
+    $r->addRoute('POST','/solicitud-cheque/update',Route::auth(['SolicitudChequeController', 'update']));
+    $r->addRoute('POST','/solicitud-cheque/delete',Route::auth(['SolicitudChequeController', 'destroy']));
+    $r->addRoute('GET','/solicitud-cheque/detalle',Route::auth(['SolicitudChequeController', 'getDetalle']));
+    $r->addRoute('GET','/solicitud-cheque/documentos',Route::auth(['SolicitudChequeController', 'getDocumentos']));
+    $r->addRoute('POST','/solicitud-cheque/store-documento',Route::auth(['SolicitudChequeController', 'storeDocumento']));
+    $r->addRoute('POST','/solicitud-cheque/delete-documento',Route::auth(['SolicitudChequeController', 'deleteDocumento']));
+    $r->addRoute('GET','/solicitud-cheque/comentarios',Route::auth(['SolicitudChequeController', 'getComentarios']));
+    $r->addRoute('POST','/solicitud-cheque/store-comentario',Route::auth(['SolicitudChequeController', 'storeComentario']));
+    $r->addRoute('POST','/solicitud-cheque/crear-token',Route::auth(['SolicitudChequeController', 'crearToken']));
+    $r->addRoute('POST','/solicitud-cheque/firmar',Route::auth(['SolicitudChequeController', 'firmar']));
+    $r->addRoute('GET','/solicitud-cheque/firmas',Route::auth(['SolicitudChequeController', 'getFirmas']));
+    $r->addRoute('GET','/solicitud-cheque/telcel',Route::auth(['SolicitudChequeController', 'getTelcel']));
+    $r->addRoute('POST','/solicitud-cheque/store-telcel',Route::auth(['SolicitudChequeController', 'storeTelcel']));
+    $r->addRoute('POST','/solicitud-cheque/delete-telcel',Route::auth(['SolicitudChequeController', 'deleteTelcel']));
+    $r->addRoute('POST','/solicitud-cheque/update-pago-telcel',Route::auth(['SolicitudChequeController', 'updatePagoTelcel']));
+    $r->addRoute('GET','/solicitud-cheque/telcel-global',Route::auth(['SolicitudChequeController', 'getTelcelGlobal']));
+    $r->addRoute('POST','/solicitud-cheque/store-telcel-global',Route::auth(['SolicitudChequeController', 'storeTelcelGlobal']));
+    $r->addRoute('POST','/solicitud-cheque/delete-comprobante-telcel',Route::auth(['SolicitudChequeController', 'deleteComprobanteTelcel']));
+    $r->addRoute('GET','/solicitud-cheque/pagos',Route::auth(['SolicitudChequeController', 'getPagos']));
+    $r->addRoute('POST','/solicitud-cheque/store-pago',Route::auth(['SolicitudChequeController', 'storePago']));
+    $r->addRoute('POST','/solicitud-cheque/delete-pago',Route::auth(['SolicitudChequeController', 'deletePago']));
+    $r->addRoute('GET','/solicitud-cheque/selector-opciones',Route::auth(['SolicitudChequeController', 'getSelectorOpciones']));
+    $r->addRoute('GET','/solicitud-cheque-pdf/{idSolicitud:\d+}',Route::auth(['SolicitudChequeController', 'downloadPdf']));
+    $r->addRoute('GET','/solicitud-cheque/excel/{idYear:\d+}/{idMes:\d+}',Route::auth(['SolicitudChequeController', 'downloadExcel']));
+    $r->addRoute('GET','/solicitud-cheque-telcel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['SolicitudChequeController', 'facturaTelcel']));
+    $r->addRoute('GET','/solicitud-cheque-telcel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}/{idDepto:\d+}',Route::auth(['SolicitudChequeController', 'facturaTelcel']));
+    $r->addRoute('GET','/solicitud-cheque/factura-telcel/directorio/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['SolicitudChequeController', 'getDirectorioData']));
+    $r->addRoute('POST','/solicitud-cheque/factura-telcel/store-directorio',Route::auth(['SolicitudChequeController', 'storeDirectorio']));
+    $r->addRoute('POST','/solicitud-cheque/factura-telcel/update-directorio',Route::auth(['SolicitudChequeController', 'updateDirectorio']));
+    $r->addRoute('POST','/solicitud-cheque/factura-telcel/delete-directorio',Route::auth(['SolicitudChequeController', 'deleteDirectorio']));
+    $r->addRoute('GET','/solicitud-cheque/factura-telcel/list/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['SolicitudChequeController', 'getFacturasTelcelList']));
+    $r->addRoute('POST','/solicitud-cheque/factura-telcel/store',Route::auth(['SolicitudChequeController', 'storeFacturaTelcel']));
+    $r->addRoute('POST','/solicitud-cheque/factura-telcel/delete',Route::auth(['SolicitudChequeController', 'deleteFacturaTelcel']));
+    $r->addRoute('POST','/solicitud-cheque/factura-telcel/store-comentario',Route::auth(['SolicitudChequeController', 'storeFacturaTelcelComentario']));
+
     //----- Analisis de Compras
     $r->addRoute('GET','/analisis-compra/{idYear:\d+}/{idMes:\d+}',Route::auth(['AnalisisCompraController', 'index']));
     $r->addRoute('GET','/analisis-compra/{idYear:\d+}/{idMes:\d+}/excel',Route::auth(['AnalisisCompraController', 'descargarExcel']));

@@ -8,6 +8,7 @@ use App\Models\Operativo\CorteYear;
 use App\Models\Operativo\TarjetasCB;
 use App\Models\Operativo\CorteDiaHist;
 use App\Models\Estacion;
+use App\Models\Usuario;
 use App\Services\TelegramService;
 use App\Core\Session;
 use App\Core\Auth;
@@ -104,7 +105,7 @@ $rows = CorteDiaHist::where('id_corte', $idCorteDia)
 
 $historial = [];
 foreach ($rows as $row) {
-$usuario = \App\Models\Usuario::find($row->id_usuario);
+$usuario = Usuario::find($row->id_usuario);
 $fechaExplode = explode(' ', $row->fecha);
 $fecha = $fechaExplode[0] ?? '';
 $hora = isset($fechaExplode[1]) ? date('g:i a', strtotime($fechaExplode[1])) : '';

@@ -5,6 +5,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Core\Session;
 use App\Services\ClienteService;
+use App\Models\Operativo\Cliente;
 
 class ClientesListaController extends BaseController
 {
@@ -176,7 +177,7 @@ echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
 exit;
 }
 
-$oldCliente = \App\Models\Operativo\Cliente::find($idCliente);
+$oldCliente = Cliente::find($idCliente);
 $oldData = $oldCliente ? [
 'cuenta' => $oldCliente->cuenta ?? '',
 'cliente' => $oldCliente->cliente ?? '',
@@ -225,7 +226,7 @@ echo json_encode(['success' => false, 'message' => 'ID inválido']);
 exit;
 }
 
-$cliente = \App\Models\Operativo\Cliente::find($idCliente);
+$cliente = Cliente::find($idCliente);
 if (!$cliente) {
 echo json_encode(['success' => false, 'message' => 'Cliente no encontrado']);
 exit;

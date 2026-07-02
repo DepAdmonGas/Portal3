@@ -7,6 +7,8 @@ use App\Services\ClienteService;
 use App\Services\DropdownYearMesService;
 use App\Models\Operativo\ConsumosPago;
 use App\Core\Session;
+use App\Models\Operativo\Cliente;
+use App\Models\Operativo\CorteDia;
 
 class ClienteController extends BaseController
 {
@@ -113,7 +115,7 @@ ClienteService::sincronizarControlgas($idReporte);
 $usuario = Session::get('usuario');
 $idUsuario = $usuario['id'] ?? 0;
 $nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
-$clienteModel = \App\Models\Operativo\Cliente::find($idCliente);
+$clienteModel = Cliente::find($idCliente);
 $nombreCliente = $clienteModel ? ($clienteModel->cliente ?? '') : '';
 
 register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario, $nombreCliente, $total, $idCliente) {
@@ -150,7 +152,7 @@ ClienteService::sincronizarControlgas($idReporte);
 $usuario = Session::get('usuario');
 $idUsuario = $usuario['id'] ?? 0;
 $nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
-$clienteModel = \App\Models\Operativo\Cliente::find($idCliente);
+$clienteModel = Cliente::find($idCliente);
 $nombreCliente = $clienteModel ? ($clienteModel->cliente ?? '') : '';
 
 register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuario, $nombreCliente, $total, $idCliente) {
@@ -180,7 +182,7 @@ exit;
 
 $record = ConsumosPago::find($id);
 $idReporte = $record ? (int) $record->id_reportedia : 0;
-$clienteModel = $record ? \App\Models\Operativo\Cliente::find($record->id_cliente) : null;
+$clienteModel = $record ? Cliente::find($record->id_cliente) : null;
 $deleteInfo = $record ? [
 'id' => $record->id,
 'cliente' => ($clienteModel ? $clienteModel->cliente : null) ?? 'ID:' . $record->id_cliente,
@@ -189,7 +191,7 @@ $deleteInfo = $record ? [
 'rfc' => $clienteModel ? ($clienteModel->rfc ?? '') : '',
 'total' => $record->total,
 'tipo' => $record->tipo,
-'fecha' => optional(\App\Models\Operativo\CorteDia::find($record->id_reportedia))->fecha ?? '',
+'fecha' => optional(CorteDia::find($record->id_reportedia))->fecha ?? '',
 ] : [];
 
 $result = ClienteService::eliminarConsumoPago($id);

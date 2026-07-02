@@ -1,11 +1,12 @@
 <?php
 
 namespace App\Services;
-
+use App\Models\Estacion;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class AnalisisCompraExcelService
@@ -14,7 +15,7 @@ public static function generar(int $idEstacion, int $idYear, int $idMes): Spread
 {
 $rows = AnalisisCompraService::getDatos($idEstacion, $idYear, $idMes);
 
-$estacion = \App\Models\Estacion::find($idEstacion)?->nombre ?? '';
+$estacion = Estacion::find($idEstacion)?->nombre ?? '';
 
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
@@ -33,11 +34,11 @@ $headers = [
 $fila = 1;
 
 foreach ($headers as $col => $header) {
-$cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1) . $fila;
+$cell = Coordinate::stringFromColumnIndex($col + 1) . $fila;
 $sheet->setCellValue($cell, $header);
 }
 
-$headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
+$headerRange = 'A1:' . Coordinate::stringFromColumnIndex(count($headers)) . '1';
 $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID);
 $sheet->getStyle($headerRange)->getFill()->getStartColor()->setRGB('749ABF');
 $sheet->getStyle($headerRange)->getFont()->getColor()->setRGB('FFFFFF');
@@ -94,7 +95,7 @@ $pemex,
 ];
 
 foreach ($vals as $col => $val) {
-$cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1) . $fila;
+$cell = Coordinate::stringFromColumnIndex($col + 1) . $fila;
 $sheet->setCellValue($cell, $val);
 }
 
@@ -120,11 +121,11 @@ $totalPemex,
 ];
 
 foreach ($totalVals as $col => $val) {
-$cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1) . $fila;
+$cell = Coordinate::stringFromColumnIndex($col + 1) . $fila;
 $sheet->setCellValue($cell, $val);
 }
 
-$totalRange = 'A' . $fila . ':' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . $fila;
+$totalRange = 'A' . $fila . ':' . Coordinate::stringFromColumnIndex(count($headers)) . $fila;
 $sheet->getStyle($totalRange)->getFont()->setBold(true);
 
 $ultimaFila = $fila;
@@ -136,19 +137,19 @@ $monetaryCols = [12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 25, 27, 28];
 $numericCols = [4, 5, 6, 7, 19];
 
 foreach ($monetaryCols as $colIdx) {
-$colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+$colLetter = Coordinate::stringFromColumnIndex($colIdx);
 $range = $colLetter . '2:' . $colLetter . $ultimaFila;
 $sheet->getStyle($range)->getNumberFormat()->setFormatCode($monetaryFormat);
 }
 
 foreach ($numericCols as $colIdx) {
-$colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+$colLetter = Coordinate::stringFromColumnIndex($colIdx);
 $range = $colLetter . '2:' . $colLetter . $ultimaFila;
 $sheet->getStyle($range)->getNumberFormat()->setFormatCode($numberFormat);
 }
 
 foreach (range(1, count($headers)) as $col) {
-$sheet->getColumnDimension(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col))->setAutoSize(true);
+$sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setAutoSize(true);
 }
 
 return $spreadsheet;
@@ -158,7 +159,7 @@ public static function generarYDescargar(int $idEstacion, int $idYear, int $idMe
 {
 $spreadsheet = self::generar($idEstacion, $idYear, $idMes);
 
-$estacion = \App\Models\Estacion::find($idEstacion)?->nombre ?? '';
+$estacion = Estacion::find($idEstacion)?->nombre ?? '';
 $mesNombre = nombremes(str_pad($idMes, 2, '0', STR_PAD_LEFT));
 
 $writer = new Xlsx($spreadsheet);

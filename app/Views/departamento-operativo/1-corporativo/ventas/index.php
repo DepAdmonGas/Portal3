@@ -296,7 +296,7 @@ x-model="a.cantidad"
 <template x-if="!multiestacion && estado == 0">
 <td class=" text-center" width="40px">
 <span x-data="actions()">
-<a href="#" @click.prevent="async () => { const r = await deleteAction({url: '/departamento-operativo/ventas/eliminar-documento', id: d.id, name: d.detalle}); if (r && r.success) loadData(); }" class="text-danger">
+<a @click.prevent="async () => { const r = await deleteAction({url: '/departamento-operativo/ventas/eliminar-documento', id: d.id, name: d.detalle}); if (r && r.success) loadData(); }" class="text-danger">
 <i class="ti ti-trash fs-5"></i>
 </a>
 </span>
@@ -668,158 +668,220 @@ x-model="pc.nota"
 <div class="row g-3 mt-1 align-items-stretch">
 
 <!-- CARD DE QUIEN ELABORÓ -->
-<div class="col-xl-4 col-lg-4 col-md-6 col-12 d-flex">
-<div class="card h-100 w-100 d-flex flex-column">
-<div class="card-header text-bg-primary">
-<h5 class="mb-0 text-white text-center"><i class="ti ti-signature me-2"></i>ELABORÓ</h5>
+<div class="col-xl-4 col-lg-4 col-md-6">
+<div class="card h-100">
+
+<div class="card-header bg-primary text-white py-3 border-0">
+<div class="d-flex align-items-center">
+<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+<i class="ti ti-signature fs-6"></i>
+</div>
+<div class="ms-3"><h6 class="mb-0 text-white">ELABORÓ</h6></div>
+</div>
 </div>
 
-<div class="card-body text-center d-flex flex-column justify-content-center">
+<div class="card-body flex-fill d-flex justify-content-center align-items-center text-center p-4">
+
+<!-- YA FIRMÓ -->
 <template x-if="firmasElaboro">
-<div>
-<img :src="'/assets/img/firmas/' + firmasElaboro.firma" width="150" height="70" class="img-fluid mb-3">
-<div class="mt-4 mb-0">
-<h5 class="text-muted"><strong x-text="firmasElaboro.nombre_usuario"></strong></h5>
-</div>
+<div class="w-100 h-100 d-flex justify-content-center align-items-center">
+<img :src="'/assets/img/firmas/' + firmasElaboro.firma" class="img-fluid" style="max-height:120px;object-fit:contain;">
 </div>
 </template>
 
+<!-- NO HA FIRMADO -->
 <template x-if="!firmasElaboro">
-<div class="text-muted">
-<strong>¡Falta la firma de quien elaboró!</strong>
+<div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<div class="text-muted">¡Falta la firma de quien elaboró!</div>
 </div>
 </template>
+
+</div>
+
+<!-- Footer -->
+<div class="card-footer bg-light text-center">
+<template x-if="firmasElaboro"><h6 class="mb-0 fw-semibold" x-text="firmasElaboro.nombre_usuario"></h6></template>
+<template x-if="!firmasElaboro"><small class="text-muted">Sin firmar</small></template>
 </div>
 
 </div>
 </div>
 
 <!-- CARD DE QUIEN SUPERVISÓ -->
-<div class="col-xl-4 col-lg-4 col-md-6 col-12 d-flex">
-<div class="card h-100 w-100 d-flex flex-column">
+<div class="col-xl-4 col-lg-4 col-md-6">
+<div class="card h-100">
 
-<div class="card-header text-bg-primary">
-<h5 class="mb-0 text-white text-center"><i class="ti ti-shield-check me-2"></i>SUPERVISÓ</h5>
+<div class="card-header bg-primary text-white py-3 border-0">
+<div class="d-flex align-items-center">
+
+<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+<i class="ti ti-shield-check fs-6"></i>
 </div>
 
-<div class="card-body text-center d-flex flex-column justify-content-center">
+<div class="ms-3">
+<h6 class="mb-0 text-white">SUPERVISÓ</h6>
+</div>
+
+</div>
+</div>
+
+<!-- Body -->
+<div class="card-body d-flex justify-content-center align-items-center text-center">
+
+<!-- YA FIRMÓ -->
 <template x-if="firmasSuperviso">
-<div>
-<div class="alert alert-success py-2">
-<div class="text-success">El formato se firmó por un medio electrónico.<br>
-<b>Fecha: <span x-text="firmasSuperviso.fecha_formateada"></span></b>
-</div>
-</div>
-
-<div class="mt-4 mb-0">
-<h5 class="text-muted"><strong x-text="firmasSuperviso.nombre_usuario"></strong></h5>
-</div>
+<div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+<i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
+<h6 class="text-dark mb-2">El formato se firmó por un medio electrónico.</h6>
+<h6 class="text-dark mb-0"><strong x-text="firmasSuperviso.fecha_formateada"></strong></h6>
 </div>
 </template>
 
+<!-- PUEDE FIRMAR -->
 <template x-if="!firmasSuperviso && esSuperviso">
-<div>
-<h4 class="text-primary"><i class="ti ti-key me-2"></i>Token móvil</h4>
-<small class="text-secondary d-block mb-3">Solicite el envío del token a su Telegram o correo electrónico:</small>
+<div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
 
-<div class="d-grid gap-2 mb-3">
-<button class="btn btn-success btn-sm" @click="crearToken('telegram')" :disabled="enviandoToken">
+<h4 class="text-primary">Recepción de Token</h4>
+<small class="text-secondary mb-3">Ingrese el token de seguridad que recibió por Telegram o correo electrónico. Si aún no lo ha generado, haga clic en alguno de los siguientes botones para solicitarlo:</small>
+
+<div class="row">
+
+<div class="col-md-6 mb-3">
+<button class="btn btn-success" @click="crearToken('telegram')" :disabled="enviandoToken">
 <span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>
-<i class="ti ti-brand-telegram me-1" x-show="!enviandoToken"></i>Enviar token por Telegram
-</button>
-<button class="btn btn-info btn-sm" @click="crearToken('email')" :disabled="enviandoToken">
-<span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>
-<i class="ti ti-mail me-1" x-show="!enviandoToken"></i>Enviar token por Email
+<i class="ti ti-brand-telegram me-1" x-show="!enviandoToken"></i>Generar token Via Telegram
 </button>
 </div>
 
-<div class="input-group input-group-sm">
+<div class="col-md-6 mb-3">
+<button class="btn btn-info text-white" @click="crearToken('email')" :disabled="enviandoToken">
+<span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>
+<i class="ti ti-mail me-1" x-show="!enviandoToken"></i>
+Generar token Via Email
+</button>
+</div>
+
+<div class="col-12">
+<div class="input-group">
 <input type="text" class="form-control" placeholder="Token de seguridad" x-model="tokenInput">
 <button class="btn btn-outline-success" type="button" @click="firmarConToken('Superviso')" :disabled="enviandoToken">
-<span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>Firmar
+<span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span> Firmar
 </button>
 </div>
+</div>
 
-<template x-if="tokenError">
-<small class="text-danger d-block mt-2" x-text="tokenError"></small>
-</template>
+</div>
+
+<template x-if="tokenError"><small class="text-danger mt-2"x-text="tokenError"></small></template>
+
 </div>
 </template>
 
+<!-- NO PUEDE FIRMAR -->
 <template x-if="!firmasSuperviso && !esSuperviso">
-<div class="text-muted">
-<strong>¡Falta la firma de quien supervisó!</strong>
+<div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<h6 class="text-muted mb-0">¡Falta la firma de quien supervisó!</h6>
 </div>
 </template>
+</div>
 
+<!-- Footer -->
+<div class="card-footer bg-light text-center">
+<template x-if="firmasSuperviso">
+<h6 class="mb-1 fw-semibold"x-text="firmasSuperviso.nombre_usuario"></h6>
+</template>
+
+<template x-if="!firmasSuperviso">
+<small class="text-muted">Pendiente de firma</small>
+</template>
 </div>
 
 </div>
 </div>
 
 <!-- CARD DEL VO.BO -->
-<div class="col-xl-4 col-lg-4 col-md-12 col-12 d-flex">
+<div class="col-xl-4 col-lg-4 col-md-6">
+<div class="card h-100">
 
-<div class="card h-100 w-100 d-flex flex-column">
-
-<div class="card-header text-bg-primary">
-<h5 class="mb-0 text-white text-center"><i class="ti ti-circle-check me-2"></i>VO.BO.</h5>
+<div class="card-header bg-primary text-white py-3 border-0">
+<div class="d-flex align-items-center">
+<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-circle-check fs-6"></i></div>
+<div class="ms-3"><h6 class="mb-0 text-white">VO.BO.</h6></div>
+</div>
 </div>
 
-<div class="card-body text-center d-flex flex-column justify-content-center">
+<!-- YA FIRMÓ -->
 <template x-if="firmasVoBo">
-<div>
-<div class="alert alert-success py-2">
-<div class="text-success">El formato se firmó por un medio electrónico.<br>
-<b>Fecha: <span x-text="firmasVoBo.fecha_formateada"></span></b>
-</div>
-</div>
+<div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
 
-<div class="mt-4 mb-0">
-<h5 class="text-muted"><strong x-text="firmasVoBo.nombre_usuario"></strong></h5>
-</div>
+<i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
+<h6 class="text-dark mb-2">El formato se firmó por un medio electrónico.</h6>
+<h6 class="text-dark mb-0"><strong x-text="firmasVoBo.fecha_formateada"></strong></h6>
+
 </div>
 </template>
 
+<!-- PUEDE FIRMAR -->
 <template x-if="!firmasVoBo && esVoBo">
-<div>
+<div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
 
-<h4 class="text-primary"><i class="ti ti-key me-2"></i>Token móvil</h4>
-<small class="text-secondary d-block mb-3">Solicite el envío del token a su Telegram o correo electrónico:</small>
+<h4 class="text-primary">Recepción de Token</h4>
+<small class="text-secondary mb-3">
+Ingrese el token de seguridad que recibió por Telegram o correo electrónico.
+Si aún no lo ha generado, haga clic en alguno de los siguientes botones para solicitarlo.
+</small>
 
-<div class="d-grid gap-2 mb-3">
-<button class="btn btn-success btn-sm" @click="crearToken('telegram')" :disabled="enviandoToken">
+<div class="row w-100">
+
+<div class="col-md-6 mb-3">
+<button class="btn btn-success w-100" @click="crearToken('telegram')" :disabled="enviandoToken">
 <span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>
-<i class="ti ti-brand-telegram me-1" x-show="!enviandoToken"></i>Enviar token por Telegram
-</button>
-<button class="btn btn-info btn-sm" @click="crearToken('email')" :disabled="enviandoToken">
-<span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>
-<i class="ti ti-mail me-1" x-show="!enviandoToken"></i>Enviar token por Email
+<i class="ti ti-brand-telegram me-1" x-show="!enviandoToken"></i> Generar token vía Telegram
 </button>
 </div>
 
-<div class="input-group input-group-sm">
+<div class="col-md-6 mb-3">
+<button class="btn btn-info text-white w-100" @click="crearToken('email')" :disabled="enviandoToken">
+<span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>
+<i class="ti ti-mail me-1" x-show="!enviandoToken"></i> Generar token vía Email
+</button>
+</div>
+
+<div class="col-12">
+<div class="input-group">
 <input type="text" class="form-control" placeholder="Token de seguridad" x-model="tokenInput">
 <button class="btn btn-outline-success" type="button" @click="firmarConToken('VoBo')" :disabled="enviandoToken">
-<span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>Firmar
+<span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span> Firmar
 </button>
 </div>
+</div>
 
-<template x-if="tokenError">
-<small class="text-danger d-block mt-2" x-text="tokenError"></small>
-</template>
+</div>
+
+<template x-if="tokenError"><small class="text-danger mt-2" x-text="tokenError"></small></template>
 
 </div>
 </template>
 
+<!-- NO PUEDE FIRMAR -->
 <template x-if="!firmasVoBo && !esVoBo">
-<div class="text-muted"><strong>¡Falta la firma de Vo.Bo!</strong></div>
+<div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<h6 class="text-muted mb-0">¡Falta la firma de Vo.Bo.!</h6>
+</div>
 </template>
+
+<!-- Footer -->
+<div class="card-footer bg-light text-center">
+<template x-if="firmasVoBo"><h6 class="mb-1 fw-semibold" x-text="firmasVoBo.nombre_usuario"></h6></template>
+<template x-if="!firmasVoBo"><small class="text-muted"> Pendiente de firma </small></template>
 </div>
 
 </div>
-
 </div>
+
 </div>
 </div>
 </template>

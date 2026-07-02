@@ -479,7 +479,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <tr>
 <th class="text-start align-middle">Fecha</th>
 <th class="text-center align-middle">Concepto</th>
-<th class="text-center align-middle" width="60px"><i class="ti ti-file text-info fs-5"></i></th>
+<th class="text-center align-middle" width="60px"> text-info fs-5"></i></th>
 <th class="text-center align-middle" width="60px"><i class="ti ti-trash text-danger fs-5"></i></th>
 </tr>
 </thead>
@@ -492,7 +492,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <template x-if="fac.archivo">
 <span x-data="actions()">
 <a href="" @click.prevent="download('aceites-facturas', fac.archivo)" class="text-primary">
-<i class="ti ti-file fs-5"></i>
+ fs-5"></i>
 </a>
 </span>
 </template>

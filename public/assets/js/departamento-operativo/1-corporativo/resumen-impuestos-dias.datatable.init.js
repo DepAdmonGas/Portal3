@@ -50,7 +50,7 @@ searchable: false,
 render: function (data, type) {
 if (type !== 'display') return '';
 
-return '<a href="#" class="btn-detalle" data-id-dia="' + 
+return '<a class="btn-detalle" data-id-dia="' + 
 data.id_dia + 
 '" data-fecha="' + 
 $('<span>').text(data.fecha_formateada).html() + 

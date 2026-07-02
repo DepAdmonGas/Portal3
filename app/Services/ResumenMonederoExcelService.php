@@ -1,18 +1,19 @@
 <?php
 
 namespace App\Services;
-
 use App\Core\Auth;
+use App\Models\Operativo\CorteYear;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use App\Core\Session;
 
 class ResumenMonederoExcelService
 {
 public static function generarYDescargar(int $idEstacion, int $idYear, int $idMes): void
 {
 $usuario = Auth::user();
-$sessionUsuario = \App\Core\Session::get('usuario');
+$sessionUsuario = Session::get('usuario');
 $esDireccionOperaciones = $usuario && $usuario->puesto && $usuario->puesto->tipo_puesto === 'Dirección de operaciones';
 $verProsegur = in_array($sessionUsuario['id'] ?? 0, [19, 318]) || $esDireccionOperaciones;
 
@@ -25,7 +26,7 @@ $data = ResumenMonederoService::getData($idMesDb);
 $rows = $data['rows'];
 $totales = $data['totales'];
 
-$estacion = \App\Models\Operativo\CorteYear::where('id_estacion', $idEstacion)
+$estacion = CorteYear::where('id_estacion', $idEstacion)
 ->where('year', $idYear)->first()?->estacion?->nombre ?? 'Estacion' . $idEstacion;
 
 $spreadsheet = new Spreadsheet();

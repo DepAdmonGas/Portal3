@@ -40,6 +40,7 @@ class DownloadController{
             'monedero-documentos'          => __DIR__ . '../../../public/uploads/archivos/',
             'monedero-lista-documentos'    => __DIR__ . '../../../public/uploads/archivos/resumen-monederos-documentos/',
             'embarques'                    => __DIR__ . '../../../public/uploads/archivos/embarques/',
+            'solicitud-cheque'             => __DIR__ . '../../../public/uploads/archivos/solicitud-cheque/',
         ];
 
         if (!isset($rutas[$tipo])) {

@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Core\Session;
+use App\Models\Operativo\AceiteDocumento;
+use App\Models\Operativo\AceiteFactura;
 use App\Services\AceiteService;
 use App\Services\AceiteExcelService;
 use App\Services\DropdownYearMesService;
@@ -252,7 +254,7 @@ header('Content-Type: application/json; charset=utf-8');
 $input = json_decode(file_get_contents('php://input'), true);
 $id = (int) ($input['id'] ?? 0);
 
-$doc = \App\Models\Operativo\AceiteDocumento::find($id);
+$doc = AceiteDocumento::find($id);
 $idMes = $doc ? $doc->id_mes : 0;
 
 $result = AceiteService::eliminarDocumento($id);
@@ -355,7 +357,7 @@ header('Content-Type: application/json; charset=utf-8');
 $input = json_decode(file_get_contents('php://input'), true);
 $id = (int) ($input['id'] ?? 0);
 
-$factura = \App\Models\Operativo\AceiteFactura::find($id);
+$factura = AceiteFactura::find($id);
 $idMes = $factura ? $factura->id_mes : 0;
 
 $result = AceiteService::eliminarFactura($id);
