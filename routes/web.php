@@ -964,8 +964,7 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
 
         // Otros
         $r->addRoute('GET', '/calendario', Route::auth(['SasisopaController', 'calendario']));
-        $r->addRoute('GET', '/cursos', Route::auth(['SasisopaController', 'cursos']));
-        
+                
         $r->addRoute('GET', '/programa-implementacion', Route::auth(['SasisopaController', 'programaImplementacion']));
         $r->addRoute('GET', '/cambio-precio', Route::auth(['SasisopaController', 'consulta']));
 
@@ -1002,6 +1001,19 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
 
         $r->addRoute('POST','/reporte-diario/nuevo/create',Route::auth(['ReporteDiarioController','createReporteDiario']));
         $r->addRoute('POST','/reporte-diario/editar/update',Route::auth(['ReporteDiarioController','updateReporteDiario']));
+
+        //------------------- CURSOS
+        $r->addRoute('GET', '/cursos', Route::auth(['CursosController', 'cursosIndex']));
+        $r->addRoute('GET', '/cursos/modulos/get', Route::auth(['CursosController', 'getModulos']));
+        $r->addRoute('GET', '/cursos/pendientes/get', Route::auth(['CursosController', 'getCursosPendientes']));
+        $r->addRoute('GET', '/cursos/iniciar/{id:\d+}', Route::auth(['CursosController', 'cursosIniciar']));
+        $r->addRoute('GET', '/cursos/evaluacion/{id:\d+}', Route::auth(['CursosController', 'cursosEvaluacion']));
+        $r->addRoute('GET','/cursos/evaluacion/get/{id:\d+}',Route::auth(['CursosController', 'getEvaluacion']));
+        $r->addRoute('POST','/cursos/evaluacion/respuesta',Route::auth(['CursosController','guardarRespuesta']));
+        $r->addRoute('POST','/cursos/evaluacion/finalizar',Route::auth(['CursosController','finalizarEvaluacion']));
+
+        $r->addRoute('GET', '/cursos/modulos/{id:\d+}', Route::auth(['CursosController', 'cursosModulos']));
+        $r->addRoute('GET', '/cursos/modulos/temas/{idModulo:\d+}', Route::auth(['CursosController', 'detalleTema']));
 
 
     });
