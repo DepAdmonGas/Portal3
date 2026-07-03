@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,4 +28,14 @@ class CursoTemaPregunta extends Model
         'num_pregunta' => 'integer',
         'titulo' => 'string',
     ];
+
+     public function respuestas()
+    {
+        return $this->hasMany(
+            CursoTemaPreguntaRespuesta::class,
+            'id_pregunta',
+            'id'
+        )
+        ->orderBy('num_respuesta');
+    }
 }

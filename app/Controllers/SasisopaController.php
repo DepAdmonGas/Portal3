@@ -1326,28 +1326,6 @@ class SasisopaController extends BaseController{
 
     }
 
-     public function cursos(){
-
-        $title = 'Cursos';
-
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ]
-        ];
-        
-        View::render('sasisopa/cursos', $data,'sasisopa');
-
-    }
-
     //----------------------------------
 
     public function  programaImplementacion(){
