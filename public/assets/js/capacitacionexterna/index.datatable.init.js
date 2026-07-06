@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <ul class="dropdown-menu">
 
                     <li>                            
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                             ${!noEdit ? '' : `
                                 onclick='window.capacitacionExterna.openModalEditar(${JSON.stringify(row)})'
                             `}>
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </li>
 
                          <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                             ${!noDelete ? '' : `
                                     @click='window.capacitacionExterna.delete(${row.id}, ${cursoTitulo})'
                                     `}>

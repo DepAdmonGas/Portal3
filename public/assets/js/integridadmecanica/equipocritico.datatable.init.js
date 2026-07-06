@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.equipoCritico.baja(${row.id}, ${nomEquipo})'
                                     `}>
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.equipoCritico.eliminar(${row.id}, ${nomEquipo})'
                                     `}>

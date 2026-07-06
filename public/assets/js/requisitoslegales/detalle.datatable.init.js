@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 <li>
                             
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     @click="window.requisitosInstance.openEditar(${row.id})">
                                         <i class="ti ti-edit"></i>Editar
                                     </a>
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.requisitosInstance.handleDelete(${row.id}, ${permisoNombre})'
                                     `}>

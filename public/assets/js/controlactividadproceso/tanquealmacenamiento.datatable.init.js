@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </a>    
                                </li>  
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}" 
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}" 
                                     href="javascript:void(0)"
                                     ${!noDelete ? '' : `@click='window.tanqueAlmacenamiento.eliminar(${row.id},${nomTanque})'`}>
                                         <i class="ti ti-trash"></i>Eliminar

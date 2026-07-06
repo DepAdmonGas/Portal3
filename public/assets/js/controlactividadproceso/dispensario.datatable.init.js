@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const noDelete = permisos.eliminar;
         
-            return `<a href="javascript:void(0)" class="${!noDelete ? 'disabled' : ''}"
+            return `<a href="javascript:void(0)" class="${!noDelete ? 'disabled text-muted' : ''}"
             ${!noDelete ? '' : `
             @click='window.dispensario.eliminar(${row.id}, ${row.no_dispensario})'
             `}

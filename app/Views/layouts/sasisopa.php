@@ -141,7 +141,7 @@
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/personal" aria-expanded="false">
+<a class="sidebar-link" href="/personal/SASISOPA" aria-expanded="false">
 <span>
 <i class="ti ti-users"></i>
 </span>

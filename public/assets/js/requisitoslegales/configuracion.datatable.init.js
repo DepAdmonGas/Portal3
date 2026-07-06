@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const noDelete = permisos.eliminar;                    
 
                     return `
-                    <a class="${!noDelete ? 'disabled' : ''}"
+                    <a class="${!noDelete ? 'disabled text-muted' : ''}"
                     ${!noDelete ? '' : `
                     @click='async () => {
                     const res = await deleteAction({
