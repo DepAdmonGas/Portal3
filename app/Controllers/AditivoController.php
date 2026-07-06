@@ -411,7 +411,7 @@ class AditivoController extends BaseController{
         // CONFIG RUTA
         $carpeta = __DIR__ . '../../../public/uploads/archivos/';
 
-        // SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
+        // Usar mkdir_safe con permisos 0755
         if (!file_exists($carpeta)) {
             mkdir_safe($carpeta, true);
         }

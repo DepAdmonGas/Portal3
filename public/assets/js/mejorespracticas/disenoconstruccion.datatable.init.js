@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const noDelete = permisos.eliminar;
             const detalle = JSON.stringify(row.valor1 ?? '');
         
-            return `<a href="javascript:void(0)" class="${!noDelete ? 'disabled' : ''}"
+            return `<a href="javascript:void(0)" class="${!noDelete ? 'disabled text-muted' : ''}"
             ${!noDelete ? '' : `
             @click='window.mejoresPracticasEstandares.eliminarDC(${row.id}, ${detalle})'
             `}

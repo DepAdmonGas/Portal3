@@ -8,9 +8,9 @@ return function(RouteCollector $r) {
     $r->addRoute('GET', '/', Route::guest(['LoginController', 'index']));
     $r->addRoute('GET', '/login', Route::guest(['LoginController', 'index']));
     $r->addRoute('POST', '/login', ['LoginController', 'login']);
-    // SECURITY: BAJO #33 - Endpoint para refrescar access token
+    // Endpoint para refrescar access token
     $r->addRoute('POST', '/refresh-token', Route::auth(['LoginController', 'refreshToken']));
-    // SECURITY: BAJO #34 - Logout via POST (más seguro que GET)
+    // Logout via POST (más seguro que GET)
     $r->addRoute('POST', '/logout', Route::auth(['AuthController', 'logout']));
 
     $r->addRoute('GET', '/download', Route::auth(['DownloadController', 'download']));
@@ -23,6 +23,17 @@ return function(RouteCollector $r) {
 
 
     $r->addRoute('GET', '/menu', Route::auth(['MenuController', 'index']));
+
+    // ---------------- PERSONAL ----------------
+    $r->addGroup('/personal', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['PersonalController', 'index']));
+        $r->addRoute('GET', '/datatable', Route::auth(['PersonalController', 'datatablePersonal']));
+        $r->addRoute('POST', '/delete', Route::auth(['PersonalController', 'deletePersonal']));
+        $r->addRoute('POST', '/create', Route::auth(['PersonalController', 'createPersonal']));
+        $r->addRoute('POST', '/update', Route::auth(['PersonalController', 'updatePersonal']));
+        $r->addRoute('GET', '/{modulo}', Route::auth(['PersonalController', 'index']));
+        
+    });
 
     // ---------------- PROCEDIMIENTOS ----------------
     $r->addGroup('/procedimientos', function (RouteCollector $r) {

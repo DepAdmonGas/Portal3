@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const noDelete = permisos.eliminar;
                                       
                   return `
-                <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                     ${!noDelete ? '' : `
                     @click="eliminarPersonal(${row.id}, '${row.usuario}')"
                     `}>

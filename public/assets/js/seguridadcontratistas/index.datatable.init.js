@@ -257,14 +257,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         <li>
                     
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                             @click='window.seguridadContratistas.openModalEditar(${JSON.stringify(row)})'>
                                 <i class="ti ti-edit"></i>Editar
                             </a>
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                             ${!noDelete ? '' : `
                             @click='window.seguridadContratistas.eliminar(${row.id}, ${row.folio})'
                             `}>

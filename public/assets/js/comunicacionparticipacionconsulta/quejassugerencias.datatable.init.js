@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.comunicacionParticipacionConsulta.eliminarQS(${row.id}, ${row.id})'
                                     `}>
