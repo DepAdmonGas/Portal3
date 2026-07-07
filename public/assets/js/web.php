@@ -35,6 +35,10 @@ return function(RouteCollector $r) {
         
     });
 
+    //----------------- CAMBIO DE PRECIO --------------
+
+
+
     // ---------------- PROCEDIMIENTOS ----------------
     $r->addGroup('/procedimientos', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['ProcedimientosController', 'index']));
@@ -1027,7 +1031,8 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('GET', '/calendario', Route::auth(['SasisopaController', 'calendario']));
                 
         $r->addRoute('GET', '/programa-implementacion', Route::auth(['SasisopaController', 'programaImplementacion']));
-       
+        $r->addRoute('GET', '/cambio-precio', Route::auth(['SasisopaController', 'consulta']));
+
         //--------- Comunicados
         $r->addRoute('GET', '/comunicados', Route::auth(['ComunicadosController', 'index']));
         $r->addRoute('GET', '/comunicados/datatable', Route::auth(['ComunicadosController', 'datatable']));
@@ -1074,12 +1079,6 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
 
         $r->addRoute('GET', '/cursos/modulos/{id:\d+}', Route::auth(['CursosController', 'cursosModulos']));
         $r->addRoute('GET', '/cursos/modulos/temas/{idModulo:\d+}', Route::auth(['CursosController', 'detalleTema']));
-
-         //----------------- CAMBIO DE PRECIO --------------
-        $r->addRoute('GET', '/cambio-precio', Route::auth(['CambioPrecioController', 'index']));
-        $r->addRoute('GET', '/cambio-precio/datetable', Route::auth(['CambioPrecioController', 'datetable']));
-        $r->addRoute('POST', '/cambio-precio/create', Route::auth(['CambioPrecioController', 'create']));
-        $r->addRoute('POST', '/cambio-precio/delete', Route::auth(['CambioPrecioController', 'delete']));
 
 
     });

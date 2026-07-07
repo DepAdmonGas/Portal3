@@ -150,7 +150,7 @@
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/" aria-expanded="false">
+<a class="sidebar-link" href="/sasisopa/cambio-precio" aria-expanded="false">
 <span>
 <i class="ti ti-arrows-exchange"></i>
 </span>
