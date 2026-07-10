@@ -128,12 +128,12 @@
 
 
     <div class="modal fade" id="modalDC" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
-    <div class="modal-header rounded-0 head-modal">
-        <h4 class="modal-title">Diseño y construcción</h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" @click="closeModalDC()"></button>
+    <div class="modal-header modal-colored-header bg-primary text-white">
+        <h4 class="modal-title text-white">Diseño y construcción</h4>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModalDC()"></button>
     </div>
 
     <div class="modal-body">
@@ -152,8 +152,8 @@
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModalDC()">Cancelar</button>
-        <button class="btn btn-primary" @click="guardarDC()">Guardar
+        <button class="btn bg-danger-subtle text-danger" @click="closeModalDC()"><i class="ti ti-x"></i> Cancelar</button>
+        <button class="btn btn-primary" @click="guardarDC()"><i class="ti ti-check"></i> Guardar
         </button>
     </div>
 
@@ -164,12 +164,12 @@
     <!--- Modal OM -->
 
     <div class="modal fade" id="modalOM" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
-    <div class="modal-header rounded-0 head-modal">
-        <h4 class="modal-title">Operación y Mantenimiento</h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" @click="closeModalOM()"></button>
+    <div class="modal-header modal-colored-header bg-primary text-white">
+        <h4 class="modal-title text-white">Operación y Mantenimiento</h4>
+        <button type="button"class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModalOM()"></button>
     </div>
 
     <div class="modal-body">
@@ -197,8 +197,8 @@
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModalOM()">Cancelar</button>
-        <button class="btn btn-primary" @click="guardarOM()">Guardar
+        <button class="btn bg-danger-subtle text-danger" @click="closeModalOM()"><i class="ti ti-x"></i> Cancelar</button>
+        <button class="btn btn-primary" @click="guardarOM()"><i class="ti ti-check"></i> Guardar
         </button>
     </div>
 

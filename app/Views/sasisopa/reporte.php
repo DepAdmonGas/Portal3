@@ -2452,16 +2452,16 @@ tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-            <h5 class="modal-title">
+            <h4 class="modal-title text-white">
 
             Ingresos a la ASEA
 
-            </h5>
+            </h4>
 
             <button
-            class="btn-close"
+            class="btn-close btn-close-white"
             data-bs-dismiss="modal">
             </button>
 
@@ -2533,15 +2533,15 @@ tabindex="-1">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h4 class="modal-title text-white">
                     Grupo interdisciplinario
-                </h5>
+                </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -2651,9 +2651,9 @@ tabindex="-1">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h5 class="modal-title text-white">
 
                     Tercer autorizado
 
@@ -2661,7 +2661,7 @@ tabindex="-1">
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 

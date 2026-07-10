@@ -33,14 +33,14 @@ x-data="{ ...actions(), ...sondasMedicion()}">
     <!--- Modal nuevo -->
 
     <div class="modal fade" id="modalNuevo" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
-    <div class="modal-header rounded-0 head-modal">
-        <h4 class="modal-title"
+    <div class="modal-header modal-colored-header bg-primary text-white">
+        <h4 class="modal-title text-white"
             x-text="mode === 'create' ? 'Agregar Sondas de medición' : 'Editar Sonda de medición'">
         </h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" @click="closeModal()"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModal()"></button>
     </div>
 
     <div class="modal-body">
@@ -70,8 +70,9 @@ x-data="{ ...actions(), ...sondasMedicion()}">
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModal()">Cancelar</button>
+        <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
         <button class="btn btn-primary" @click="guardar()">
+          <i class="ti ti-check"></i>
              <span x-text="mode === 'create' ? 'Guardar' : 'Actualizar'"></span>
         </button>
     </div>

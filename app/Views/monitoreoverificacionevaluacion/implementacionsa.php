@@ -42,17 +42,17 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
             <div class="modal-content">
 
-                <div class="modal-header">
-                    <h5 class="modal-title"
+                <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white"
                         x-text="mode === 'create'
                         ? 'Crear Implementación del SA'
                         : mode === 'edit'
                         ? 'Editar Implementación del SA'
                         : 'Detalle Implementación del SA'">
-                    </h5>
+                    </h4>
 
                     <button type="button"
-                            class="btn-close"
+                            class="btn-close btn-close-white"
                             data-bs-dismiss="modal">
                     </button>
                 </div>
@@ -141,14 +141,14 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
                     <button class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
-                        Cancelar
+                        <i class="ti ti-x"></i> Cancelar
                     </button>
 
                     <button x-show="mode !== 'view'"
                             class="btn btn-success"
                             @click="guardar()">
 
-                        Guardar
+                        <i class="ti ti-check"></i> Guardar
 
                     </button>
 
@@ -165,18 +165,18 @@ x-data="{ ...actions(), ...implementacionSA()}">
      id="modalDetalleImplementacion"
      tabindex="-1">
 
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h4 class="modal-title text-white">
                     Detalle Implementación del SA
-                </h5>
+                </h4>
 
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                 </button>
 
@@ -239,7 +239,7 @@ x-data="{ ...actions(), ...implementacionSA()}">
                 <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
 
-                    Cerrar
+                    <i class="ti ti-x"></i> Cerrar
 
                 </button>
 

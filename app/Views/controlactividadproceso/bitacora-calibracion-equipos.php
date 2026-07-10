@@ -39,12 +39,12 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
     <!--- Modal nuevo -->
 
     <div class="modal fade" id="modalNuevo" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
-    <div class="modal-header rounded-0 head-modal">
-        <h4 class="modal-title">Agregar calibración de equipos</h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" @click="closeModalNuevo()"></button>
+    <div class="modal-header modal-colored-header bg-primary text-white">
+        <h4 class="modal-title text-white">Agregar calibración de equipos</h4>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModalNuevo()"></button>
     </div>
 
     <div class="modal-body">
@@ -64,8 +64,8 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModalNuevo()">Cancelar</button>
-        <button class="btn btn-primary" @click="guardarNuevo()">Guardar
+        <button class="btn bg-danger-subtle text-danger" @click="closeModalNuevo()"><i class="ti ti-x"></i> Cancelar</button>
+        <button class="btn btn-primary" @click="guardarNuevo()"><i class="ti ti-check"></i> Guardar
         </button>
     </div>
 
@@ -76,17 +76,17 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
   <!-- Modal Resultados -->
 
   <div class="modal fade" id="modalResultados" tabindex="-1">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
 
-              <div class="modal-header">
-                  <h5 class="modal-title">
+              <div class="modal-header modal-colored-header bg-primary text-white">
+                  <h5 class="modal-title text-white">
                       Adjuntar resultados
                   </h5>
 
                   <button
                       type="button"
-                      class="btn-close"
+                      class="btn-close btn-close-white"
                       data-bs-dismiss="modal">
                   </button>
               </div>
@@ -149,7 +149,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                       class="btn bg-danger-subtle text-danger"
                       data-bs-dismiss="modal">
 
-                      Cancelar
+                      <i class="ti ti-x"></i> Cancelar
 
                   </button>
 
@@ -157,7 +157,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                       class="btn btn-primary"
                       @click="guardarResultado()">
 
-                      Guardar
+                      <i class="ti ti-check"></i> Guardar
 
                   </button>
 
@@ -175,19 +175,19 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
       id="modalDetalle"
       tabindex="-1">
 
-      <div class="modal-dialog modal-xl">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
 
           <div class="modal-content">
 
-              <div class="modal-header">
+              <div class="modal-header modal-colored-header bg-primary text-white">
 
-                  <h5 class="modal-title">
+                  <h4 class="modal-title text-white">
                       Detalle calibración de equipos
-                  </h5>
+                  </h4>
 
                   <button
                       type="button"
-                      class="btn-close"
+                      class="btn-close btn-close-white"
                       data-bs-dismiss="modal">
                   </button>
 
@@ -299,15 +299,15 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
     <div class="modal-dialog modal-lg modal-dialog-centered">
 
         <div class="modal-content">
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Buscar
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal"
                     @click="limpiarBuscar()">
                 </button>
@@ -377,13 +377,13 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                 class="btn bg-danger-subtle text-danger"
                 data-bs-dismiss="modal"
                 @click="limpiarBuscar()">
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
                 <button
                 class="btn btn-primary"
                 @click="buscar()">
-                    Buscar
+                    <i class="ti ti-search"></i> Buscar
                 </button>
             </div>
 

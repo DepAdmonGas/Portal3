@@ -53,15 +53,15 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
     <div class="modal-dialog modal-lg modal-dialog-centered">
 
         <div class="modal-content">
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Buscar
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal"
                     @click="limpiar()">
                 </button>
@@ -131,13 +131,13 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
                 class="btn bg-danger-subtle text-danger"
                 data-bs-dismiss="modal"
                 @click="limpiar()">
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
                 <button
                 class="btn btn-primary"
                 @click="buscar()">
-                    Buscar
+                    <i class="ti ti-search"></i> Buscar
                 </button>
             </div>
 
@@ -154,18 +154,18 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
     id="modalDetalle"
     tabindex="-1">
 
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header d-flex align-items-center">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                    <h4 class="modal-title mb-0">
+                    <h4 class="modal-title text-white">
                         Folio:
                         <span x-text="detalle.folio"></span>
                     </h4>
            
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -258,10 +258,6 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
                         </div>
                     </div>
             </div>
-
-
-
-            
 
                 <!-- ===================================================== -->
                 <!-- TANQUES -->

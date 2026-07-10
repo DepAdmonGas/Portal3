@@ -55,15 +55,15 @@
 </div>
 
 <div class="modal fade" id="modalDia" tabindex="-1" aria-labelledby="modalDiaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalDiaLabel" x-text="fechaSeleccionada"></h5>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white" id="modalDiaLabel" x-text="fechaSeleccionada"></h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal"
                     aria-label="Cerrar">
                 </button>
@@ -178,7 +178,7 @@
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cerrar
+                    <i class="ti ti-x"></i> Cerrar
 
                 </button>
 
@@ -189,22 +189,22 @@
 </div>
 
 <div class="modal fade" id="modalDetalle" tabindex="-1" aria-labelledby="modalDetalleLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalDetalleLabel">
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white" id="modalDetalleLabel">
 
                     <span x-text="detalle.tipo == 'actividad'
                         ? 'Detalle de la actividad'
                         : 'Detalle del curso'">
                     </span>
 
-                </h5>
+                </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
             </div>
@@ -377,7 +377,7 @@
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cerrar
+                    <i class="ti ti-x"></i> Cerrar
 
                 </button>
 
@@ -395,20 +395,20 @@
      tabindex="-1"
      aria-hidden="true">
 
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h4 class="modal-title text-white">
 
                     Agregar actividad al calendario
 
-                </h5>
+                </h4>
 
                 <button
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -422,7 +422,7 @@
 
                         <label class="form-label">
 
-                            Actividad
+                            * Actividad
 
                         </label>
 
@@ -466,7 +466,7 @@
 
                         <label class="form-label">
 
-                            Fecha
+                            * Fecha
 
                         </label>
 
@@ -486,7 +486,7 @@
                 <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
+                    <i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
@@ -494,7 +494,7 @@
                 <button
                     class="btn btn-success"
                     @click="guardarActividad()">
-
+                    <i class="ti ti-check"></i>
                     Agregar actividad
 
                 </button>

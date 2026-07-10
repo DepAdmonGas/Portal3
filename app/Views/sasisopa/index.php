@@ -37,7 +37,6 @@ x-data="sasisopa()">
 <?php endforeach; ?>
 </div>
 
-
 <div
     class="modal fade"
     id="modalBuscar"
@@ -49,19 +48,17 @@ x-data="sasisopa()">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5
-                    class="modal-title"
+                <h4
+                    class="modal-title text-white"
                     id="modalBuscarLabel">
-
                     Buscar
-
-                </h5>
+                </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -72,7 +69,7 @@ x-data="sasisopa()">
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Fecha inicio
+                        * Fecha inicio
                     </label>
 
                     <input
@@ -89,7 +86,7 @@ x-data="sasisopa()">
                 <div>
 
                     <label class="form-label">
-                        Fecha término
+                        * Fecha término
                     </label>
 
                     <input
@@ -107,11 +104,15 @@ x-data="sasisopa()">
 
             <div class="modal-footer">
 
+            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+            <i class="ti ti-x"></i> Cancelar
+            </button>
+
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="buscarRegistros()">
-
+                    <i class="ti ti-search"></i> 
                     Buscar
 
                 </button>

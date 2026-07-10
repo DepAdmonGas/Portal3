@@ -39,14 +39,14 @@
      x-init="getDependencias()"
      tabindex="-1">
 
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
 
             <!-- HEADER -->
-            <div class="modal-header">
-                <h4 class="modal-title">Agregar requisito legal</h4>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">Agregar requisito legal</h4>
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                 </button>
             </div>
@@ -108,13 +108,15 @@
                 <button type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
                 <button type="button"
                         class="btn btn-success"
                         @click="submit()"
                         :disabled="loading">
+
+                        <i class="ti ti-check"></i>
 
                     <span x-show="!loading">Guardar</span>
                     <span x-show="loading">Guardando...</span>

@@ -590,10 +590,10 @@ x-data="{ ...actions(), ...revisionResultados()}">
     id="modalRevisionResultado"
     tabindex="-1">
 
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">
 
                     <span
                         x-text="
@@ -607,7 +607,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
 
                <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -680,13 +680,15 @@ x-data="{ ...actions(), ...revisionResultados()}">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
 
                 </button>
 
                 <button
                     class="btn btn-success"
                     @click="guardarRevisionResultado()">
+
+                    <i class="ti ti-check"></i>
 
                     <span
                         x-text="

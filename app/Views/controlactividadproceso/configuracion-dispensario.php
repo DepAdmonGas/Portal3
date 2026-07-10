@@ -36,12 +36,12 @@ x-data="{ ...actions(), ...dispensario()}">
   <!--- Modal nuevo -->
 
     <div class="modal fade" id="modalNuevo" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
     <div class="modal-content">
 
-    <div class="modal-header rounded-0 head-modal">
-        <h4 class="modal-title">Agregar Dispensario</h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" @click="closeModal()"></button>
+    <div class="modal-header modal-colored-header bg-primary text-white">
+        <h4 class="modal-title text-white">Agregar Dispensario</h4>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModal()"></button>
     </div>
 
     <div class="modal-body">
@@ -94,8 +94,8 @@ x-data="{ ...actions(), ...dispensario()}">
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModal()">Cancelar</button>
-        <button class="btn btn-primary" @click="guardar()">Guardar
+        <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
+        <button class="btn btn-primary" @click="guardar()"><i class="ti ti-check"></i> Guardar
         </button>
     </div>
 

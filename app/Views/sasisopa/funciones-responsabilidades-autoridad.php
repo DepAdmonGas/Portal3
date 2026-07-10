@@ -67,12 +67,12 @@
 
       <!-- MODAL -->
       <div class="modal fade" id="openNuevoModal">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
           <div class="modal-content">
 
-            <div class="modal-header">
-              <h4>Agregar representante técnico</h4>
-              <button class="btn-close"
+            <div class="modal-header modal-colored-header bg-primary text-white">
+              <h4 class="modal-title text-white">Agregar representante técnico</h4>
+              <button class="btn-close btn-close-white"
               data-bs-dismiss="modal"
               @click="resetModal()"></button>
             </div>
@@ -113,9 +113,10 @@
             <div class="modal-footer">
              <button class="btn bg-danger-subtle text-danger"
               data-bs-dismiss="modal"
-              @click="resetModal()">Cancelar</button>
+              @click="resetModal()"><i class="ti ti-x"></i> Cancelar</button>
 
               <button class="btn btn-success" @click="submit()" :disabled="loading">
+                <i class="ti ti-check"></i>
                 <span x-show="!loading">Guardar</span>
                 <span x-show="loading">Guardando...</span>
               </button>
@@ -209,13 +210,13 @@
 <!-- fin offcanvas -------- -->
 
 <div id="ModalReTe" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
-              <div class="modal-header d-flex align-items-center">
-                    <h4 class="modal-title" id="myModalLabel">
+              <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" id="myModalLabel">
                         Representante Técnico
                     </h4>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
 
@@ -269,13 +270,13 @@
 <!-- ------------------------- -->
 
 <div id="ModalGerente" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
-              <div class="modal-header d-flex align-items-center">
-                    <h4 class="modal-title" id="myModalLabel">
+              <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" id="myModalLabel">
                         Gerente
                     </h4>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
 
@@ -319,13 +320,13 @@
 </div>
 <!-- ------------------------- -->
  <div id="ModalJefePiso" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
-              <div class="modal-header d-flex align-items-center">
-                    <h4 class="modal-title" id="myModalLabel">
+              <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" id="myModalLabel">
                         Jefe de Piso
                     </h4>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
 
@@ -362,13 +363,13 @@ referente al SA</td>
 
 <!-- ------------------------- -->
  <div id="ModalFacturista" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
-              <div class="modal-header d-flex align-items-center">
-                    <h4 class="modal-title" id="myModalLabel">
+              <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" id="myModalLabel">
                         Facturista
                     </h4>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
 
@@ -404,13 +405,13 @@ referente al SA</td>
 </div>
 <!-- ------------------------- -->
  <div id="ModalDespachador" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
-              <div class="modal-header d-flex align-items-center">
-                    <h4 class="modal-title" id="myModalLabel">
+              <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" id="myModalLabel">
                         Despachador
                     </h4>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
 
@@ -447,13 +448,13 @@ referente al SA</td>
 
 <!-- ------------------------- -->
  <div id="ModalAuxiliar" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
-              <div class="modal-header d-flex align-items-center">
-                    <h4 class="modal-title" id="myModalLabel">
+              <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" id="myModalLabel">
                         Auxiliar administrativo
                     </h4>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
 
@@ -489,13 +490,13 @@ referente al SA</td>
 </div>
 <!-- ------------------------- -->
  <div id="ModalMantenimiento" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
-              <div class="modal-header d-flex align-items-center">
-                    <h4 class="modal-title" id="myModalLabel">
+              <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" id="myModalLabel">
                         Mantenimiento
                     </h4>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
 

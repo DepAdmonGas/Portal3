@@ -54,9 +54,9 @@ x-data="{ ...actions(), ...capacitacionInterna() }">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content">
 
-                <div class="modal-header">
-                    <h5 class="modal-title">Buscar</h5>
-                    <button class="btn-close" @click="closeModal('buscar')"></button>
+                <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white">Buscar</h4>
+                    <button class="btn-close btn-close-white" @click="closeModal('buscar')"></button>
                 </div>
 
                 <div class="modal-body">
@@ -66,8 +66,8 @@ x-data="{ ...actions(), ...capacitacionInterna() }">
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn bg-danger-subtle text-danger" @click="closeModal('buscar')">Cancelar</button>
-                    <button class="btn btn-primary" @click="buscar()">Buscar</button>
+                    <button class="btn bg-danger-subtle text-danger" @click="closeModal('buscar')"><i class="ti ti-x"></i> Cancelar</button>
+                    <button class="btn btn-primary" @click="buscar()"><i class="ti ti-check"></i> Buscar</button>
                 </div>
 
             </div>

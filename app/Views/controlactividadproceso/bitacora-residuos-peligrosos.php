@@ -47,12 +47,12 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
       <div class="modal-dialog modal-lg modal-dialog-centered">
           <div class="modal-content">
-              <div class="modal-header rounded-0 head-modal">
-                  <h4 class="modal-title">Buscar</h4>
+              <div class="modal-header modal-colored-header bg-primary text-white">
+                  <h4 class="modal-title text-white">Buscar</h4>
 
                   <button
                       type="button"
-                      class="btn-close"
+                      class="btn-close btn-close-white"
                       data-bs-dismiss="modal"
                       @click="limpiarBuscar()">
                   </button>
@@ -119,13 +119,13 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                   class="btn bg-danger-subtle text-danger"
                   data-bs-dismiss="modal"
                   @click="limpiarBuscar()">
-                      Cancelar
+                      <i class="ti ti-x"></i> Cancelar
                   </button>
 
                   <button
                   class="btn btn-primary"
                   @click="buscar()">
-                      Buscar
+                      <i class="ti ti-check"></i> Buscar
                   </button>
               </div>
 
@@ -146,9 +146,9 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
         <div class="modal-content">
 
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Detalle del Registro
                     <span
                         x-text="detalleRegistro.folio">
@@ -157,7 +157,7 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
