@@ -3,7 +3,6 @@
 namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\TanqueAlmacenamiento;
 
 class RecepcionDescargarTanque extends Model
 {

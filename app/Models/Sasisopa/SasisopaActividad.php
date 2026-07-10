@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,4 +21,13 @@ class SasisopaActividad extends Model
         'id' => 'integer',
         'id_sasisopa' => 'integer',
     ];
+
+    public function sasisopa()
+{
+    return $this->belongsTo(
+        Sasisopa::class,
+        'id_sasisopa',
+        'numero_sasisopa'
+    );
+}
 }

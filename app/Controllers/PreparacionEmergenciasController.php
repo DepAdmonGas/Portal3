@@ -778,13 +778,15 @@ public function simulacroDatatable(){
     exit;
 }
 
-    private function filtros(): array
-    {
-        return [
-            'year' => sanitize_input($_GET['year'] ?? null,'int'),
-            'mes' => sanitize_input($_GET['mes'] ?? null,'int')
-        ];
-    }
+private function filtros(): array
+{
+    return [
+        'year'   => sanitize_input($_GET['year'] ?? null, 'int'),
+        'mes'    => sanitize_input($_GET['mes'] ?? null, 'int'),
+        'inicio' => sanitize_input($_GET['inicio'] ?? null),
+        'fin'    => sanitize_input($_GET['fin'] ?? null),
+    ];
+}
 
 public function simulacroCreate()
 {
@@ -1346,46 +1348,43 @@ public function evaluacionCreate()
 public function simulacroPdf(){
 
     [
-    'year' => $year,
-    'mes'  => $mes
+    'year'   => $year,
+    'mes'    => $mes,
+    'inicio' => $inicio,
+    'fin'    => $fin
     ] = $this->filtros();
 
     $estacion = Estacion::find($this->estacionId());
     $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-    $simulacros =
-    ProgramaAnualSimulacros::with([
+    $simulacros = ProgramaAnualSimulacros::with([
         'personal',
         'resumen'
     ])
-
     ->where(
         'id_estacion',
         $this->estacionId()
     )
 
     ->when(
-        $year,
-        fn ($q) =>
-            $q->whereYear(
-                'fecha',
-                $year
-            )
+        !empty($inicio) && !empty($fin),
+        fn ($q) => $q->whereBetween('fecha', [$inicio, $fin])
     )
 
     ->when(
-        !empty($mes)
-        && $mes != 13,
-        fn ($q) =>
-            $q->whereMonth(
-                'fecha',
-                $mes
-            )
+        empty($inicio) && empty($fin) && $year,
+        fn ($q) => $q->whereYear('fecha', $year)
     )
 
-    ->orderBy(
-        'fecha'
+    ->when(
+        empty($inicio) &&
+        empty($fin) &&
+        !empty($mes) &&
+        $mes != 13,
+        fn ($q) => $q->whereMonth('fecha', $mes)
     )
+
+    ->orderBy('fecha')
 
     ->get();
 

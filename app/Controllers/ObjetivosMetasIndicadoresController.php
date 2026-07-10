@@ -468,14 +468,23 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
     public function pdfObjetivosMetas(){
 
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
+
         $estacion = Estacion::find($this->estacionId());
         $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-        $detalles = SeguimientoObjetivosMetasDetalle::whereHas('seguimiento', function($q){
-            $q->where('id_estacion', $this->estacionId());
-        })
+        $query = SeguimientoObjetivosMetasDetalle::whereHas('seguimiento', function ($q) {
+        $q->where('id_estacion', $this->estacionId());
+        });
+
+        if (!empty($inicio) && !empty($fin)) {
+            $query->whereBetween('fecha', [$inicio, $fin]);
+        }
+
+        $detalles = $query
         ->orderBy('id_seguimiento', 'desc')
         ->get();
 
@@ -790,13 +799,27 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
     public function pdfReporteIndicadores(){
 
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
+
         $estacion = Estacion::find($this->estacionId());
         $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-        // Obtener datos
-        $data = SeguimientoReporteIndicador::where('id_estacion', $this->estacionId())
+        $query = SeguimientoReporteIndicador::where(
+            'id_estacion',
+            $this->estacionId()
+        );
+
+        if (!empty($inicio) && !empty($fin)) {
+            $query->whereBetween('fecha', [
+                $inicio,
+                $fin
+            ]);
+        }
+
+        $data = $query
             ->orderBy('fecha', 'desc')
             ->get();
 
