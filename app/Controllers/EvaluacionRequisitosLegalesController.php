@@ -7,6 +7,7 @@ use App\Models\Estacion;
 use App\Models\Sasisopa\RequisitosLegalesCalendario;
 use App\Models\Sasisopa\RequisitosLegalesMatriz;
 use App\Models\Sasisopa\InformeRevisionResultado;
+use App\Services\ReporteRequisitosLegalesService;
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -45,8 +46,13 @@ protected string $modulo = 'sasisopa';
 
     public function pdf(){
 
-     $matriz = self::getMatrizCumplimiento(
-        $this->estacionId()
+    $inicio = $_GET['inicio'] ?? null;
+    $fin    = $_GET['fin'] ?? null;
+
+    $matriz = $this->getMatrizCumplimiento(
+        $this->estacionId(),
+        $inicio,
+        $fin
     );
 
     $grupos = collect($matriz)
@@ -271,57 +277,90 @@ protected string $modulo = 'sasisopa';
     exit;
     }
 
-    private static function porcentajeGrupo(
-    array $items
-    ): int {
-
-        if (empty($items)) {
-            return 0;
-        }
-
-        return (int) round(collect($items)->avg('cumplimiento'));
+private static function porcentajeGrupo(array $items): int
+{
+    if (empty($items)) {
+        return 0;
     }
 
-    public static function getMatrizCumplimiento(
-    int $estacionId
-    ): array {
-        
-        $requisitos = RequisitosLegalesCalendario::query()
-            ->where('id_estacion', $estacionId)
-            ->where('estado', 1)
-            ->orderBy('nivel_gobierno')
-            ->get();
+    return (int) round(
+        collect($items)->avg('cumplimiento')
+    );
+}
 
-        $data = [];
+public function getMatrizCumplimiento(
+    int $estacionId,
+    ?string $inicio = null,
+    ?string $fin = null
+): array {
 
-        foreach ($requisitos as $requisito) {
+$service = new ReporteRequisitosLegalesService();
 
-            $ultima = RequisitosLegalesMatriz::query()
+    $requisitos = RequisitosLegalesCalendario::query()
+        ->where('id_estacion', $estacionId)
+        ->where('estado', 1)
+        ->orderBy('nivel_gobierno')
+        ->orderBy('id_requisito_legal')
+        ->get();
+
+    $data = [];
+
+    foreach ($requisitos as $requisito) {
+
+        if (!empty($inicio) && !empty($fin)) {
+
+            // Utiliza exactamente la misma lógica del reporte principal
+            $ultima = $service->ultimaActualizacion(
+                $requisito->id,
+                $requisito->vigencia,
+                $inicio,
+                $fin
+            );
+
+            $acuse = !empty($ultima['acusepdf']);
+            $legal = !empty($ultima['requisitolegalpdf']);
+
+        } else {
+
+            // Comportamiento anterior cuando no se envía rango
+            $registro = RequisitosLegalesMatriz::query()
                 ->where('idcalendario', $requisito->id)
                 ->latest('id')
                 ->first();
 
-            $acuse = !empty($ultima?->acusepdf);
-            $legal = !empty($ultima?->requisitolegalpdf);
-
-            $cumplimiento = match (true) {
-                !$acuse && !$legal => 0,
-                $acuse && !$legal => 50,
-                default => 100
-            };
-
-            $data[] = [
-                'nivel_gobierno' => $requisito->nivel_gobierno,
-                'requisito_legal' => $requisito->requisito_legal,
-                'vigencia' => $requisito->vigencia,
-                'acuse' => $acuse,
-                'requisito' => $legal,
-                'cumplimiento' => $cumplimiento
-            ];
+            $acuse = !empty($registro?->acusepdf);
+            $legal = !empty($registro?->requisitolegalpdf);
         }
 
-        return $data;
+        $cumplimiento = match (true) {
+
+            !$acuse && !$legal => 0,
+
+            $acuse && !$legal => 50,
+
+            default => 100
+
+        };
+
+        $data[] = [
+
+            'nivel_gobierno' => $requisito->nivel_gobierno,
+
+            'requisito_legal' => $requisito->requisito_legal,
+
+            'vigencia' => $requisito->vigencia,
+
+            'acuse' => $acuse,
+
+            'requisito' => $legal,
+
+            'cumplimiento' => $cumplimiento
+
+        ];
     }
+
+    return $data;
+}
 
     private static function renderFilasNivel(
     string $nivel,

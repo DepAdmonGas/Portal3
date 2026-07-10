@@ -525,6 +525,26 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addGroup('/sasisopa', function (RouteCollector $r) {
 
         $r->addRoute('GET', '', Route::auth(['SasisopaController', 'index']));
+        
+        $r->addRoute('GET', '/reporte/elemento1', Route::auth(['SasisopaController', 'elemento1']));
+        $r->addRoute('GET', '/reporte/elemento2', Route::auth(['SasisopaController', 'elemento2']));
+        $r->addRoute('GET', '/reporte/elemento3', Route::auth(['SasisopaController', 'elemento3']));
+        $r->addRoute('GET', '/reporte/elemento3/pdf', Route::auth(['SasisopaController', 'calendarioRequisitosLegales']));
+        $r->addRoute('GET', '/reporte/elemento5', Route::auth(['SasisopaController', 'elemento5']));
+        $r->addRoute('GET', '/reporte/elemento6', Route::auth(['SasisopaController', 'elemento6']));
+        $r->addRoute('GET', '/reporte/elemento7', Route::auth(['SasisopaController', 'elemento7']));
+        $r->addRoute('GET', '/reporte/elemento10', Route::auth(['SasisopaController', 'elemento10']));
+        $r->addRoute('GET', '/reporte/elemento12', Route::auth(['SasisopaController', 'elemento12']));
+        $r->addRoute('GET', '/reporte/elemento13', Route::auth(['SasisopaController', 'elemento13']));
+        $r->addRoute('GET', '/reporte/elemento14', Route::auth(['SasisopaController', 'elemento14']));
+        $r->addRoute('GET', '/reporte/elemento15', Route::auth(['SasisopaController', 'elemento15']));
+        $r->addRoute('GET', '/reporte/elemento16', Route::auth(['SasisopaController', 'elemento16']));
+        $r->addRoute('GET', '/reporte/elemento16/grupo/{id:\d+}', Route::auth(['SasisopaController', 'grupoInterdisciplinario']));
+        $r->addRoute('GET', '/reporte/elemento16/tercer/{id:\d+}', Route::auth(['SasisopaController', 'tercerAutorizado']));
+        $r->addRoute('GET', '/reporte/elemento17', Route::auth(['SasisopaController', 'elemento17']));
+        $r->addRoute('GET', '/reporte/elemento18', Route::auth(['SasisopaController', 'elemento18']));
+     
+        $r->addRoute('GET', '/reporte/{fechainicio}/{fechatermino}', Route::auth(['SasisopaController', 'reporte']));
 
         // Elemento 1
         $r->addRoute('GET', '/politica', Route::auth(['PoliticaController', 'politica']));
@@ -662,6 +682,7 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-personal', Route::auth(['CapacitacionExternaController', 'createPersonal']));
         $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-personal', Route::auth(['CapacitacionExternaController', 'deletePersonal']));
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa/{id:\d+}', Route::auth(['CapacitacionExternaController', 'pdfCapacitacionExterna']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa', Route::auth(['CapacitacionExternaController', 'pdfCapacitacionExternaCompleto']));
 
         // Elemento 7
         $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['ComunicacionParticipacionConsultaController', 'index']));
@@ -1024,7 +1045,14 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/informes-desempeno/implementacion/delete/puesto', Route::auth(['InformeDesempenoController', 'deletePuestoImplementacion']));
 
         // Otros
-        $r->addRoute('GET', '/calendario', Route::auth(['SasisopaController', 'calendario']));
+        $r->addRoute('GET', '/calendario', Route::auth(['CalendarioController', 'index']));
+        $r->addRoute('GET', '/calendario/eventos', Route::auth(['CalendarioController', 'eventos']));
+        $r->addRoute('GET', '/calendario/dia', Route::auth(['CalendarioController', 'dia']));
+        $r->addRoute('GET', '/calendario/detalle', Route::auth(['CalendarioController', 'detalle']));
+        $r->addRoute('POST', '/calendario/actividad/abrir', Route::auth(['CalendarioController', 'abrirActividad']));
+        $r->addRoute('POST', '/calendario/curso/reagendar', Route::auth(['CalendarioController', 'reagendar']));
+        $r->addRoute('GET', '/calendario/actividades', Route::auth(['CalendarioController', 'actividadesDisponibles']));
+        $r->addRoute('POST', '/calendario/actividad/create', Route::auth(['CalendarioController', 'createActividad']));
                 
         $r->addRoute('GET', '/programa-implementacion', Route::auth(['SasisopaController', 'programaImplementacion']));
        

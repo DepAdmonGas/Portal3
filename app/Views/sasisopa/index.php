@@ -1,3 +1,20 @@
+<div id="container" class="pb-4"
+x-data="sasisopa()">
+
+<div class="text-end mt-2">
+   <div class="btn-group">
+            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="ti ti-dots-vertical fs-4"></i>
+            </button>
+            <ul class="dropdown-menu animated rubberBand">
+                 <li>
+                    <a class="dropdown-item" @click="abrirModalBuscar()"><i class="ti ti-search"></i> Buscar</a>
+                </li>
+            </ul>
+        </div>
+</div>
+
+
 <div class="row mt-4">
 <?php foreach($elementos as $elemento): ?>
 
@@ -18,5 +35,94 @@
 </div>
 
 <?php endforeach; ?>
+</div>
+
+
+<div
+    class="modal fade"
+    id="modalBuscar"
+    tabindex="-1"
+    aria-labelledby="modalBuscarLabel"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-md modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5
+                    class="modal-title"
+                    id="modalBuscarLabel">
+
+                    Buscar
+
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Fecha inicio
+                    </label>
+
+                    <input
+                        type="date"
+                        class="form-control"
+                        x-model="filtro.fechaInicio"
+                        :class="{
+                            'border border-danger':
+                            errors.fechaInicio
+                        }">
+
+                </div>
+
+                <div>
+
+                    <label class="form-label">
+                        Fecha término
+                    </label>
+
+                    <input
+                        type="date"
+                        class="form-control"
+                        x-model="filtro.fechaTermino"
+                        :class="{
+                            'border border-danger':
+                            errors.fechaTermino
+                        }">
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    @click="buscarRegistros()">
+
+                    Buscar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 </div>
 

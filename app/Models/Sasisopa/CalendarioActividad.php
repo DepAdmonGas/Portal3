@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -34,4 +34,13 @@ class CalendarioActividad extends Model
         'fecha_termino' => 'date',
         'estado' => 'integer',
     ];
+
+
+    public function actividad()
+    {
+        return $this->belongsTo(
+            SasisopaActividad::class,
+            'id_actividad'
+        );
+    }
 }

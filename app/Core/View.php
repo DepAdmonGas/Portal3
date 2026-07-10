@@ -5,6 +5,7 @@ use App\Core\Auth;
 use App\Controllers\BaseController;
 use App\Models\Estacion;
 use App\Core\Session;
+use App\Services\CalendarioService;
 
 class View
 {
@@ -20,13 +21,14 @@ protected static function globals(): array
     $estaciones = Estacion::where('numlista', '<=', 8)
         ->orderBy('numlista', 'ASC')
         ->get();
-}
+    }
 
         return [
         'title'           => 'Portal3',
         'user'            => Auth::user(),
         'filtro_usuario'  => $filtro_usuario,
-        'estaciones'      => $estaciones
+        'estaciones'      => $estaciones,
+        'pendientes'     => CalendarioService::pendientes()
         ];
 
     }

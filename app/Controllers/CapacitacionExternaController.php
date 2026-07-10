@@ -394,130 +394,318 @@ $data = json_decode(file_get_contents('php://input'), true);
             'message' => 'Trabajador eliminado correctamente']);
     }
 
-public function pdfCapacitacionExterna(int $id)
-{
-    $idEstacion = $this->estacionId();
+    public function pdfCapacitacionExterna(int $id)
+    {
+        $idEstacion = $this->estacionId();
 
-    $registro = Estacion::find($idEstacion);
+        $registro = Estacion::find($idEstacion);
 
-    if (!$registro) {
-        return "No se encontró la información";
-    }
+        if (!$registro) {
+            return "No se encontró la información";
+        }
 
-    $capacitacion = CapacitacionExterna::with(['personal.usuario'])
-        ->where('id_estacion', $idEstacion)
-        ->find($id);
+        $capacitacion = CapacitacionExterna::with(['personal.usuario'])
+            ->where('id_estacion', $idEstacion)
+            ->find($id);
 
-    if (!$capacitacion) {
-        return "Capacitación no encontrada";
-    }
+        if (!$capacitacion) {
+            return "Capacitación no encontrada";
+        }
 
-    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
-    $apoderadolegal = $registro->apoderado_legal;
+        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
+        $apoderadolegal = $registro->apoderado_legal;
 
-    $rows = '';
-    $i = 1;
+        $rows = '';
+        $i = 1;
 
-    foreach ($capacitacion->personal as $p) {
+        foreach ($capacitacion->personal as $p) {
 
-        $nombre = $p->usuario->nombre ?? 'S/I';
+            $nombre = $p->usuario->nombre ?? 'S/I';
 
-        $rows .= '
-        <tr>
-            <td class="text-center">'.$i.'</td>
-            <td>'.$nombre.'</td>
-            <td>'.$capacitacion->curso.'</td>
-            <td>'.formatearFecha($capacitacion->fecha_programada).'</td>
-            <td>'.$capacitacion->duracion.' '.$capacitacion->duraciondetalle.'</td>
-            <td>'.$capacitacion->instructor.'</td>
-            <td></td>
-            <td class="text-center">X</td>
-        </tr>
+            $rows .= '
+            <tr>
+                <td class="text-center">'.$i.'</td>
+                <td>'.$nombre.'</td>
+                <td>'.$capacitacion->curso.'</td>
+                <td>'.formatearFecha($capacitacion->fecha_programada).'</td>
+                <td>'.$capacitacion->duracion.' '.$capacitacion->duraciondetalle.'</td>
+                <td>'.$capacitacion->instructor.'</td>
+                <td></td>
+                <td class="text-center">X</td>
+            </tr>
+            ';
+
+            $i++;
+        }
+
+        if ($rows === '') {
+            $rows = '
+            <tr>
+                <td colspan="8" class="text-center">No hay trabajadores asignados</td>
+            </tr>';
+        }
+
+        // ======================
+        // HTML
+        // ======================
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="UTF-8">
+        <title>Capacitación externa</title>
+        <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
+        </head>
+        <body>
+
+        <table class="table">
+            <tr>
+                <td class="text-center">
+                    <img src="'.$logo.'" style="width:130px">
+                </td>
+                <td colspan="2" class="text-center">
+                    <b>Programa de Capacitación y adiestramiento</b>
+                </td>
+                <td class="text-center"><b>Fo.ADMONGAS.009</b></td>
+            </tr>
+            <tr>
+                <td class="text-center">Realizado por:<br>Nelly Estrada Garcia</td>
+                <td class="text-center">Revisado por:<br>Eduardo Galicia Flores</td>
+                <td class="text-center">Autorizado por:<br>'.$apoderadolegal.'</td>
+                <td class="text-center">Fecha de aprobación:<br>01/10/2018</td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered" style="font-size:12px;">
+            <thead>
+                <tr>
+                    <th rowspan="2">No.</th>
+                    <th rowspan="2">Nombre del trabajador</th>
+                    <th rowspan="2">Nombre del Curso</th>
+                    <th rowspan="2">Fecha Programada</th>
+                    <th rowspan="2">Duración</th>
+                    <th rowspan="2">Nombre del instructor</th>
+                    <th colspan="2">Tipo de instructor</th>
+                </tr>
+                <tr>
+                    <th>Interno</th>
+                    <th>Externo</th>
+                </tr>
+            </thead>
+            <tbody>
+                '.$rows.'
+            </tbody>
+        </table>
+
+        </body>
+        </html>
         ';
 
-        $i++;
+        // ======================
+        // PDF
+        // ======================
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape'); 
+        $dompdf->render();
+
+        return $dompdf->stream(
+            "Capacitacion-externa.pdf",
+            ["Attachment" => true]
+        );
     }
 
-    if ($rows === '') {
-        $rows = '
-        <tr>
-            <td colspan="8" class="text-center">No hay trabajadores asignados</td>
-        </tr>';
+        public function pdfCapacitacionExternaCompleto()
+    {
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
+
+        $idEstacion = $this->estacionId();
+
+        $estacion = Estacion::find($idEstacion);
+
+        if (!$estacion) {
+            exit('No se encontró la estación.');
+        }
+
+        $query = CapacitacionExterna::with(['personal.usuario'])
+            ->where('id_estacion', $idEstacion);
+
+        if (!empty($inicio) && !empty($fin)) {
+            $query->whereBetween('fecha_programada', [
+                $inicio,
+                $fin
+            ]);
+        }
+
+        $capacitaciones = $query
+            ->orderBy('fecha_programada')
+            ->get();
+
+        $logo = $_ENV['APP_URL'].'/assets/images/logos/Logo.png';
+
+        $rows = '';
+
+        foreach ($capacitaciones as $capacitacion) {
+
+            $rows .= '
+            <tr>
+                <td colspan="8"
+                    style="background:#e9ecef;font-weight:bold;">
+                    '.$capacitacion->curso.'
+                </td>
+            </tr>';
+
+            $i = 1;
+
+            foreach ($capacitacion->personal as $p) {
+
+                $rows .= '
+                <tr>
+                    <td class="text-center">'.$i.'</td>
+                    <td>'.($p->usuario->nombre ?? 'S/I').'</td>
+                    <td>'.$capacitacion->curso.'</td>
+                    <td>'.formatearFecha($capacitacion->fecha_programada).'</td>
+                    <td>'.$capacitacion->duracion.' '.$capacitacion->duraciondetalle.'</td>
+                    <td>'.$capacitacion->instructor.'</td>
+                    <td></td>
+                    <td class="text-center">X</td>
+                </tr>';
+
+                $i++;
+            }
+
+            if ($capacitacion->personal->isEmpty()) {
+
+                $rows .= '
+                <tr>
+                    <td colspan="8" class="text-center">
+                        No hay trabajadores asignados
+                    </td>
+                </tr>';
+
+            }
+
+        }
+
+        if ($rows === '') {
+
+            $rows = '
+            <tr>
+                <td colspan="8" class="text-center">
+                    No se encontró información para mostrar
+                </td>
+            </tr>';
+
+        }
+
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="UTF-8">
+        <title>Programa de Capacitación y adiestramiento</title>
+        <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
+        </head>
+        <body>
+
+        <table class="table">
+            <tr>
+                <td class="text-center">
+                    <img src="'.$logo.'" style="width:130px">
+                </td>
+                <td colspan="2" class="text-center">
+                    <b>Programa de Capacitación y adiestramiento</b>
+                </td>
+                <td class="text-center">
+                    <b>Fo.ADMONGAS.009</b>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="text-center">
+                    Realizado por:<br>Nelly Estrada Garcia
+                </td>
+
+                <td class="text-center">
+                    Revisado por:<br>Eduardo Galicia Flores
+                </td>
+
+                <td class="text-center">
+                    Autorizado por:<br>'.$estacion->apoderado_legal.'
+                </td>
+
+                <td class="text-center">
+                    Fecha de aprobación:<br>01/10/2018
+                </td>
+            </tr>
+
+        </table>
+
+        <table class="table table-bordered" style="font-size:12px;">
+
+            <thead>
+
+                <tr>
+
+                    <th rowspan="2">No.</th>
+
+                    <th rowspan="2">Nombre del trabajador</th>
+
+                    <th rowspan="2">Nombre del Curso</th>
+
+                    <th rowspan="2">Fecha Programada</th>
+
+                    <th rowspan="2">Duración</th>
+
+                    <th rowspan="2">Nombre del instructor</th>
+
+                    <th colspan="2">Tipo de instructor</th>
+
+                </tr>
+
+                <tr>
+
+                    <th>Interno</th>
+
+                    <th>Externo</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                '.$rows.'
+
+            </tbody>
+
+        </table>
+
+        </body>
+        </html>';
+
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
+
+        $dompdf = new Dompdf($options);
+
+        $dompdf->loadHtml($html);
+
+        $dompdf->setPaper('A4', 'landscape');
+
+        $dompdf->render();
+
+        $dompdf->stream(
+            'Programa-Capacitacion-Adiestramiento.pdf',
+            ['Attachment' => true]
+        );
     }
-
-    // ======================
-    // HTML
-    // ======================
-    $html = '
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="UTF-8">
-    <title>Capacitación externa</title>
-    <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
-    </head>
-    <body>
-
-    <table class="table">
-        <tr>
-            <td class="text-center">
-                <img src="'.$logo.'" style="width:130px">
-            </td>
-            <td colspan="2" class="text-center">
-                <b>Programa de Capacitación y adiestramiento</b>
-            </td>
-            <td class="text-center"><b>Fo.ADMONGAS.009</b></td>
-        </tr>
-        <tr>
-            <td class="text-center">Realizado por:<br>Nelly Estrada Garcia</td>
-            <td class="text-center">Revisado por:<br>Eduardo Galicia Flores</td>
-            <td class="text-center">Autorizado por:<br>'.$apoderadolegal.'</td>
-            <td class="text-center">Fecha de aprobación:<br>01/10/2018</td>
-        </tr>
-    </table>
-
-    <table class="table table-bordered" style="font-size:12px;">
-        <thead>
-            <tr>
-                <th rowspan="2">No.</th>
-                <th rowspan="2">Nombre del trabajador</th>
-                <th rowspan="2">Nombre del Curso</th>
-                <th rowspan="2">Fecha Programada</th>
-                <th rowspan="2">Duración</th>
-                <th rowspan="2">Nombre del instructor</th>
-                <th colspan="2">Tipo de instructor</th>
-            </tr>
-            <tr>
-                <th>Interno</th>
-                <th>Externo</th>
-            </tr>
-        </thead>
-        <tbody>
-            '.$rows.'
-        </tbody>
-    </table>
-
-    </body>
-    </html>
-    ';
-
-    // ======================
-    // PDF
-    // ======================
-    $options = new Options();
-    $options->set('isRemoteEnabled', true);
-    $options->set('defaultFont', 'Arial');
-
-    $dompdf = new Dompdf($options);
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'landscape'); 
-    $dompdf->render();
-
-    return $dompdf->stream(
-        "Capacitacion-externa.pdf",
-        ["Attachment" => true]
-    );
-}
 
 
 }
