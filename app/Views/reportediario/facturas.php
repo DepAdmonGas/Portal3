@@ -142,20 +142,16 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
 
         <div class="modal-content border-0 shadow">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <div>
-
-                    <h5 class="mb-0">
+                     <h4 class="modal-title text-white">
 
                         Agregar facturas
 
-                    </h5>
-
-                </div>
+                    </h4>
 
                 <button
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -215,7 +211,7 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
 
                 </button>
 
@@ -225,6 +221,8 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
                     @click="guardarFacturas()"
 
                     :disabled="guardando">
+
+                    <i class="ti ti-check"></i>
 
                     <span
                         x-show="!guardando">

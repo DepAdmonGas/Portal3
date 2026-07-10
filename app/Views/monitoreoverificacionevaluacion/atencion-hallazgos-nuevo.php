@@ -181,13 +181,13 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
      id="modalHallazgo"
      tabindex="-1">
 
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h5 class="modal-title text-white">
 
                     <span x-show="modoHallazgo == 'create'">
                         Agregar Hallazgos
@@ -201,7 +201,7 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -265,13 +265,15 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
 
                 </button>
 
                 <button
                     class="btn btn-success"
                     @click="guardar()">
+
+                    <i class="ti ti-check"></i>
 
                     <span x-show="modoHallazgo == 'create'">
                         Guardar
@@ -297,19 +299,19 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
      id="modalEvidencia"
      tabindex="-1">
 
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h4 class="modal-title text-white">
                     Agregar evidencia
-                </h5>
+                </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 

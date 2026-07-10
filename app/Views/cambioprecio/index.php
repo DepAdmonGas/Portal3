@@ -51,17 +51,17 @@
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h4 class="modal-title text-white">
 
                     Cambio de Precio
 
-                </h5>
+                </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -169,7 +169,7 @@
 
                     data-bs-dismiss="modal">
 
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
 
                 </button>
 
@@ -184,6 +184,8 @@
                         x-show="loading"
                         class="spinner-border spinner-border-sm me-2">
                     </span>
+
+                    <i class="ti ti-check"></i>
 
                     Guardar
 

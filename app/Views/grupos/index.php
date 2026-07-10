@@ -34,11 +34,11 @@
      x-data="grupoForm()"
      @editar-grupo.window="abrirEditar($event.detail)">
 
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" x-text="modo === 'create' ? 'Crear Nuevo Grupo' : 'Editar Grupo'"></h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetForm()"></button>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white" x-text="modo === 'create' ? 'Crear Nuevo Grupo' : 'Editar Grupo'"></h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="resetForm()"></button>
             </div>
 
             <div class="modal-body">
@@ -62,12 +62,13 @@
                         data-bs-dismiss="modal"
                         :disabled="enviando"
                         @click="resetForm()">
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
                 <button class="btn btn-success"
                 @click="modo === 'create' ? guardarGrupo() : actualizarGrupo()"
                 :disabled="enviando">
+                  <i class="ti ti-check"></i>
                   <span x-show="!enviando">Guardar</span>
                   <span x-show="enviando">Enviando...</span>
               </button>

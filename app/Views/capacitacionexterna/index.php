@@ -50,12 +50,12 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
 
     <!-- MODAL AGREGAR -->
     <div class="modal fade" id="modal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
-    <div class="modal-header rounded-0 head-modal">
-        <h4 class="modal-title">CAPACITACIÓN EXTERNA</h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" @click="closeModal()"></button>
+    <div class="modal-header modal-colored-header bg-primary text-white">
+        <h4 class="modal-title text-white">CAPACITACIÓN EXTERNA</h4>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModal()"></button>
     </div>
 
     <div class="modal-body">
@@ -102,8 +102,9 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModal()">Cancelar</button>
-        <button class="btn btn-primary" @click="guardar()">
+        <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
+        <button class="btn btn-success" @click="guardar()">
+            <i class="ti ti-check"></i>
             <span x-text="mode === 'edit' ? 'Actualizar' : 'Agregar'"></span>
         </button>
     </div>

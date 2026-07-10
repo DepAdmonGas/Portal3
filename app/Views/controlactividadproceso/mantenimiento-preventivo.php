@@ -215,19 +215,19 @@ x-data="{ ...actions(), ...mantenimientoPreventivo()}">
     tabindex="-1"
     aria-hidden="true">
 
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Detalle de Mantenimiento Preventivo
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -359,7 +359,7 @@ x-data="{ ...actions(), ...mantenimientoPreventivo()}">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cerrar
+                    <i class="ti ti-x"></i> Cerrar
                 </button>
 
             </div>
@@ -377,19 +377,19 @@ x-data="{ ...actions(), ...mantenimientoPreventivo()}">
         tabindex="-1"
         aria-hidden="true">
 
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
 
             <div class="modal-content">
 
-                <div class="modal-header rounded-0 head-modal">
+                <div class="modal-header modal-colored-header bg-primary text-white">
 
-                    <h4 class="modal-title">
+                    <h4 class="modal-title text-white">
                         Evidencias
                     </h4>
 
                     <button
                         type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                     </button>
 
@@ -517,14 +517,14 @@ x-data="{ ...actions(), ...mantenimientoPreventivo()}">
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
 
-                        Cerrar
+                        <i class="ti ti-x"></i> Cerrar
                     </button>
 
                     <button
                         class="btn btn-primary"
                         @click="guardarEvidencias()">
 
-                        Guardar
+                        <i class="ti ti-check"></i> Guardar
                     </button>
 
                 </div>

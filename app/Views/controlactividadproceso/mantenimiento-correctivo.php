@@ -46,15 +46,15 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
     <div class="modal-dialog modal-lg modal-dialog-centered">
 
         <div class="modal-content">
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Buscar
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal"
                     @click="limpiarBuscar()">
                 </button>
@@ -124,13 +124,13 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                 class="btn bg-danger-subtle text-danger"
                 data-bs-dismiss="modal"
                 @click="limpiarBuscar()">
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
                 <button
                 class="btn btn-primary"
                 @click="buscar()">
-                    Buscar
+                    <i class="ti ti-check"></i> Buscar
                 </button>
             </div>
 
@@ -147,19 +147,19 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
     tabindex="-1"
     aria-hidden="true">
 
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Detalle de Mantenimiento Correctivo
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -334,7 +334,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cerrar
+                    <i class="ti ti-x"></i> Cerrar
                 </button>
 
             </div>
@@ -352,19 +352,19 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
     tabindex="-1"
     aria-hidden="true">
 
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Editar Mantenimiento Correctivo
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -419,14 +419,14 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
                 <button
                     class="btn btn-primary"
                     @click="guardarEditar()">
 
-                    Guardar
+                    <i class="ti ti-check"></i> Guardar
                 </button>
 
             </div>
@@ -444,19 +444,19 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
     tabindex="-1"
     aria-hidden="true">
 
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Evidencias
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -584,14 +584,14 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cerrar
+                    <i class="ti ti-x"></i> Cerrar
                 </button>
 
                 <button
                     class="btn btn-primary"
                     @click="guardarEvidencias()">
 
-                    Guardar
+                    <i class="ti ti-check"></i> Guardar
                 </button>
 
             </div>

@@ -199,12 +199,12 @@
         x-ref="modalObjetivosMetas"
         tabindex="-1">
 
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
             <div class="modal-content">
 
                 <!-- HEADER -->
-                <div class="modal-header">
-                    <h4 class="modal-title"
+                <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white"
                         x-text="
                             mode === 'edit' ? 'Editar Seguimiento de objetivos y metas' :
                             mode === 'view' ? 'Detalle de objetivos y metas' :
@@ -212,7 +212,7 @@
                         ">
                     </h4>
                     <button type="button"
-                            class="btn-close"
+                            class="btn-close btn-close-white"
                             data-bs-dismiss="modal"
                             @click="$event.target.blur(); resetObjetivosMetas()">
                     </button>
@@ -388,13 +388,15 @@
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
                             @click="resetObjetivosMetas()">
-                        Cancelar
+                        <i class="ti ti-x"></i> Cancelar
                     </button>
 
                     <button type="button"
                             class="btn btn-success"
                             @click="$event.target.blur(); submitObjetivosMetas()"
                             :disabled="loading">
+
+                            <i class="ti ti-check"></i>
 
                         <span x-show="!loading">Guardar</span>
                         <span x-show="loading">Guardando...</span>
@@ -413,19 +415,19 @@
         x-ref="modalReporteIndicadores"
         tabindex="-1">
 
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
             <div class="modal-content">
 
                 <!-- HEADER -->
-                <div class="modal-header">
-                    <h4 class="modal-title" 
+                <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" 
                     x-text="mode === 'edit' ? 'Editar Seguimiento y reporte de indicadores' : 
                     mode === 'view' ? 'Detalle Seguimiento y reporte de indicadores' :
                     'Seguimiento y reporte de indicadores'"
                     
                     ></h4>
                     <button type="button"
-                            class="btn-close"
+                            class="btn-close btn-close-white"
                             data-bs-dismiss="modal"
                             @click="$event.target.blur(); resetReporteIndicadores()">
                     </button>
@@ -513,13 +515,15 @@
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
                             @click="$event.target.blur(); resetReporteIndicadores()">
-                        Cancelar
+                        <i class="ti ti-x"></i> Cancelar
                     </button>
 
                     <button type="button"
                             class="btn btn-success"
                             @click="submitReporteIndicadores()"
                             :disabled="loading">
+
+                            <i class="ti ti-check"></i>
 
                         <span x-show="!loading">Guardar</span>
                         <span x-show="loading">Guardando...</span>

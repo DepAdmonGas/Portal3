@@ -112,15 +112,15 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 
 <div class="modal fade" id="modalComunicacion" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 rounded-0">
+        <div class="modal-content">
 
-            <div class="modal-header rounded-0 head-modal">
-                <h4 class="modal-title">
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">
                     Registro de la atención y el seguimiento a la comunicación interna y externa.
                 </h4>
 
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal"
                         aria-label="Close"
                         @click="limpiarModalComunicacion()">
@@ -268,14 +268,14 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
                 <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         @click="limpiarModalComunicacion()">
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
-                <button class="btn btn-primary"
+                <button class="btn btn-success"
                 @click="mode === 'edit'
                     ? updateComunicacion()
                     : guardarComunicacion()">
-
+                    <i class="ti ti-check"></i>
                  <span x-text="mode === 'edit' ? 'Actualizar' : 'Crear'"></span>
 
                 </button>
@@ -292,16 +292,16 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 
     <div class="modal-dialog modal-lg modal-dialog-centered">
 
-        <div class="modal-content border-0 rounded-0">
+        <div class="modal-content">
 
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Evidencias
                 </h4>
 
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                 </button>
 
@@ -376,16 +376,16 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 
     <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
 
-        <div class="modal-content border-0 rounded-0">
+        <div class="modal-content">
 
-            <div class="modal-header rounded-0 head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title"
+                <h4 class="modal-title text-white"
                     x-text="detalle.tema || 'Detalle comunicación'">
                 </h4>
 
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal"
                         aria-label="Close"
                         @click="limpiarDetalle()">
@@ -600,12 +600,12 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 <!-- Modal Buscar -->
 
 <div class="modal fade" id="modalBuscar" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
-    <div class="modal-header head-modal">
-        <h4 class="modal-title">Buscar</h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="limpiarBusqueda()"></button>
+    <div class="modal-header modal-colored-header bg-primary text-white">
+        <h4 class="modal-title text-white">Buscar</h4>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" @click="limpiarBusqueda()"></button>
     </div>
 
     <div class="modal-body">
@@ -623,11 +623,13 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
             class="btn bg-danger-subtle text-danger"
             data-bs-dismiss="modal"
             aria-label="Close"
-            @click="year ? resetBusqueda() : limpiarBusqueda()"
-            x-text="year ? 'Cancelar búsqueda' : 'Cancelar'">
+            @click="year ? resetBusqueda() : limpiarBusqueda()">
+            <i class="ti ti-x"></i>
+            <span x-text="year ? 'Cancelar búsqueda' : 'Cancelar'"></span>
+            
         </button>
-        <button class="btn btn-primary" @click="buscarYear()">
-            Buscar
+        <button class="btn btn-success" @click="buscarYear()">
+            <i class="ti ti-search"></i> Buscar
         </button>
     </div>
 
@@ -645,13 +647,13 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 
         <div class="modal-content">
 
-            <div class="modal-header rounded-0 head-modal">
-                <h4 class="modal-title">
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">
                     Quejas y sugerencias
                 </h4>
 
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal"
                         aria-label="Close"
                         @click="limpiarQS()">
@@ -815,13 +817,13 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
                         aria-label="Close"
                         @click="limpiarQS()">
 
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
-                <button class="btn btn-primary"
+                <button class="btn btn-success"
                         @click="guardarQS()">
 
-                    Crear
+                    <i class="ti ti-check"></i> Crear
                 </button>
 
             </div>

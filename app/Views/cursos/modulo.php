@@ -99,16 +99,16 @@ window.temas = <?= json_encode($temas->values()) ?>;
      tabindex="-1"
      data-bs-backdrop="static">
 
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+             <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 x-text="detalle.modulo"></h5>
+                <h4 class="modal-title text-white" x-text="detalle.modulo"></h4>
 
                 <button
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 

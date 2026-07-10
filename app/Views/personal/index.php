@@ -53,14 +53,14 @@
      data-bs-backdrop="static"
      data-bs-keyboard="false">
 
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
 
         <div class="modal-content">
 
             <!-- HEADER -->
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
 
                     <span class="ms-2"
                           x-text="mode === 'create'
@@ -70,7 +70,7 @@
 
                 </h4>
 
-                <button class="btn-close"
+                <button class="btn-close btn-close-white"
                         data-bs-dismiss="modal"
                         @click="resetModal()">
                 </button>
@@ -279,7 +279,7 @@
                         data-bs-dismiss="modal"
                         @click="resetModal()">
 
-                    Cancelar
+                   <i class="ti ti-x"></i> Cancelar
 
                 </button>
 
@@ -288,8 +288,8 @@
                         :disabled="loading">
 
                     <span x-show="!loading">
-
-                        Guardar
+                        
+                        <i class="ti ti-check"></i> Guardar
 
                     </span>
 

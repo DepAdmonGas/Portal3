@@ -123,15 +123,15 @@
      x-data="{ ...actions(), ...anexosForm() }"
      @open-edit.window="getEdit($event.detail)">
 
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
 
             <!-- HEADER -->
-            <div class="modal-header">
-                <h4 class="modal-title">Análisis de riesgo Anexos</h4>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">Análisis de riesgo Anexos</h4>
 
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                 </button>
             </div>
@@ -203,7 +203,7 @@
                 <button type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
             </div>

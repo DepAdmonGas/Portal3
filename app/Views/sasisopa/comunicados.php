@@ -143,16 +143,16 @@ class="modal fade"
 id="modalComunicado"
 tabindex="-1">
 
-<div class="modal-dialog modal-lg">
+<div class="modal-dialog modal-lg modal-dialog-centered">
 
 <div class="modal-content">
 
-<div class="modal-header">
+<div class="modal-header modal-colored-header bg-primary text-white">
 
-<h5>Crear comunicado</h5>
+<h4 class="modal-title text-white">Crear comunicado</h4>
 
 <button
-class="btn-close"
+class="btn-close btn-close-white"
 data-bs-dismiss="modal">
 </button>
 
@@ -234,7 +234,7 @@ $event.target.files[0]
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
 
                 </button>
 
@@ -242,7 +242,7 @@ $event.target.files[0]
                 class="btn btn-success"
                 @click="guardarComunicado()">
 
-                Crear comunicado
+                <i class="ti ti-check"></i> Crear comunicado
 
                 </button>
 
@@ -258,18 +258,18 @@ $event.target.files[0]
      id="modalDetalleComunicado"
      tabindex="-1">
 
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h5 class="modal-title text-white">
                     Detalle del comunicado
                 </h5>
 
                 <button
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
