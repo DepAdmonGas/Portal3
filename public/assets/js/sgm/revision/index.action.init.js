@@ -1,8 +1,8 @@
 document.addEventListener('alpine:init', () => {
-    Alpine.data('estructuraSm', () => ({
+    Alpine.data('revision', () => ({
 
         init(){
-            window.estructuraSm = this;
+            window.revision = this;
         },
 
        async crearRevision(){
@@ -12,12 +12,12 @@ document.addEventListener('alpine:init', () => {
                 .dataset.elemento;
 
          const res = await this.createAction({
-                url: '/sgm/estructura-sistema-medicion/create-revision',
+                url: '/sgm/revision/create',
                 data: {
                     puntosgm: punto
                 },
                 onSuccess: (res) => {
-                    window.location.href = "/sgm/estructura-sistema-medicion/revision-sgm-procedimiento-registro/" + res.id;
+                    window.location.href = "/sgm/revision/editar/" + res.id;
                 }
         });
 
@@ -26,7 +26,7 @@ document.addEventListener('alpine:init', () => {
         async eliminar(id){
 
             const res = await this.deleteAction({
-                url: "/sgm/estructura-sistema-medicion/delete-revision",
+                url: "/sgm/revision/delete",
                 id: id,
                 name: id,
                 table: "#table-revision-sgm"

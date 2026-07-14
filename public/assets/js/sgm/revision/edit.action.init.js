@@ -1,6 +1,5 @@
 document.addEventListener('alpine:init', () => {
-
-Alpine.data('revision', (id) => ({
+Alpine.data('editRevision', (id) => ({
 
     id,
     revision:{
@@ -16,7 +15,7 @@ Alpine.data('revision', (id) => ({
     async cargar(){
 
         const {data}=await axios.get(
-            `/sgm/estructura-sistema-medicion/revision-sgm-procedimiento-registro/detalle/${this.id}`
+            `/sgm/revision/detalle/${this.id}`
         );
 
         this.revision=data;
@@ -26,7 +25,7 @@ Alpine.data('revision', (id) => ({
     async actualizar(campo, valor) {
 
     const res = await this.createAction({
-        url: '/sgm/estructura-sistema-medicion/revision-sgm-procedimiento-registro/update',
+        url: '/sgm/revision/update',
         data: {
             id: this.id,
             campo,
@@ -40,7 +39,7 @@ Alpine.data('revision', (id) => ({
 async actualizarDetalle(item) {
 
     const res = await this.createAction({
-        url: '/sgm/estructura-sistema-medicion/revision-sgm-procedimiento-registro/update-detalle',
+        url: '/sgm/revision/update-detalle',
         data: {
             id: item.id,
             respuesta: item.respuesta
@@ -53,7 +52,7 @@ async actualizarDetalle(item) {
     async finalizar(){
 
         const res = await this.createAction({
-        url: '/sgm/estructura-sistema-medicion/revision-sgm-procedimiento-registro/finalizar',
+        url: '/sgm/revision/finalizar',
         data: {
             id: this.id
         }

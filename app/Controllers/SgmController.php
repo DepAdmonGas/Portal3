@@ -35,30 +35,7 @@ class SgmController{
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
-    public function controlDocumentalSistemaGestionMedicion(){
 
-        $title = '2. Control del documental del Sistema de Gestion de medición';
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SGM', '/sgm');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js',
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/sasisopa/listaasistencia.datatable.init.js',
-                '/assets/js/sgm/listarevisionsgm.datatable.init.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sgm/control-documental-sistema-gestion-medicion', $data,'sgm');
-
-    }
 
     public function responsabilidadesDireccion(){
 

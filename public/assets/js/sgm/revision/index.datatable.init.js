@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sgm/estructura-sistema-medicion/datatable-revision',
+            url: '/sgm/revision/datatable',
             type: 'GET',
             dataSrc: function (json) {
                 permisos = json.permisos;
@@ -118,18 +118,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3" href="/sgm/estructura-sistema-medicion/revision-sgm-procedimiento-registro/${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3" href="/sgm/revision/editar/${row.id}">
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete" href="/sgm/estructura-sistema-medicion/pdf/${row.id}" download>
+                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete" href="/sgm/revision/pdf/${row.id}" download>
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}" 
-                                    ${!noDelete ? '' : `@click='estructuraSm.eliminar(${row.id})'`}>
+                                    ${!noDelete ? '' : `@click='revision.eliminar(${row.id})'`}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>

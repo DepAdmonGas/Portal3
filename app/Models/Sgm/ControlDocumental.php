@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,4 +30,9 @@ class ControlDocumental extends Model
         'fecha' => 'date',
         'archivo' => 'string',
     ];
+
+    public function documento()
+    {
+        return $this->belongsTo(Documento::class, 'id_documento');
+    }
 }

@@ -1,4 +1,4 @@
-<div id="container" class="pb-4" x-data="{ ...actions(), ...revision(<?= $id ?>)}">
+<div id="container" class="pb-4" x-data="{ ...actions(), ...editRevision(<?= $id ?>)}">
 
 
     <div class="row mt-3">

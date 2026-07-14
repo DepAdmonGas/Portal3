@@ -1120,18 +1120,28 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addGroup('/sgm', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['SgmController', 'index']));
 
+        //-------------- Resision ----------
+        $r->addRoute('GET', '/revision/datatable', Route::auth(['SgmRevisionController', 'datatable']));
+        $r->addRoute('POST', '/revision/create', Route::auth(['SgmRevisionController', 'createRevision']));
+        $r->addRoute('POST', '/revision/delete', Route::auth(['SgmRevisionController', 'deleteRevision']));
+        $r->addRoute('GET', '/revision/pdf/{id:\d+}', Route::auth(['SgmRevisionController', 'pdfRevision']));
+        $r->addRoute('GET', '/revision/editar/{id:\d+}', Route::auth(['SgmRevisionController', 'revisionIndex']));
+        $r->addRoute('GET', '/revision/detalle/{id:\d+}', Route::auth(['SgmRevisionController', 'detalleRevision']));
+        $r->addRoute('POST', '/revision/update', Route::auth(['SgmRevisionController', 'updateRevision']));
+        $r->addRoute('POST', '/revision/update-detalle', Route::auth(['SgmRevisionController', 'updateRevisionDetalle']));
+        $r->addRoute('POST', '/revision/finalizar', Route::auth(['SgmRevisionController', 'finalizarRevision']));
+        //-------------- Resision ----------
+
+        //---------- 1. Estructura del sistema de Medicion --------------------------------------
         $r->addRoute('GET', '/estructura-sistema-medicion', Route::auth(['SgmEstructuraController', 'index']));
-        $r->addRoute('GET', '/estructura-sistema-medicion/datatable-revision', Route::auth(['SgmEstructuraController', 'datatableRevision']));
-        $r->addRoute('POST', '/estructura-sistema-medicion/create-revision', Route::auth(['SgmEstructuraController', 'createRevision']));
-        $r->addRoute('POST', '/estructura-sistema-medicion/delete-revision', Route::auth(['SgmEstructuraController', 'deleteRevision']));
-        $r->addRoute('GET', '/estructura-sistema-medicion/pdf/{id:\d+}', Route::auth(['SgmEstructuraController', 'pdfRevision']));
-        $r->addRoute('GET', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/{id:\d+}', Route::auth(['SgmEstructuraController', 'revisionIndex']));
-        $r->addRoute('GET', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/detalle/{id:\d+}', Route::auth(['SgmEstructuraController', 'detalleRevision']));
-        $r->addRoute('POST', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/update', Route::auth(['SgmEstructuraController', 'updateRevision']));
-        $r->addRoute('POST', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/update-detalle', Route::auth(['SgmEstructuraController', 'updateRevisionDetalle']));
-        $r->addRoute('POST', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/finalizar', Route::auth(['SgmEstructuraController', 'finalizarRevision']));
+        //---------- 1. Estructura del sistema de Medicion --------------------------------------
         
-        $r->addRoute('GET', '/control-documental-sistema-gestion-medicion', Route::auth(['SgmController', 'controlDocumentalSistemaGestionMedicion']));
+        //---------- 2. CONTROL DEL DOCUMENTAL DEL SISTEMA DE GESTION DE MEDICIÓN --------------------
+        $r->addRoute('GET', '/control-documental-sistema-gestion-medicion', Route::auth(['SgmControlDocumentalController', 'index']));
+        $r->addRoute('GET', '/control-documental-sistema-gestion-medicion/documentos', Route::auth(['SgmControlDocumentalController', 'documentos']));
+        $r->addRoute('GET', '/control-documental-sistema-gestion-medicion/pdf', Route::auth(['SgmControlDocumentalController', 'pdf']));
+        //---------- 2. CONTROL DEL DOCUMENTAL DEL SISTEMA DE GESTION DE MEDICIÓN --------------------
+
         $r->addRoute('GET', '/responsabilidades-direccion', Route::auth(['SgmController', 'responsabilidadesDireccion']));
         $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente', Route::auth(['SgmController', 'establecimientoObjetivosEnfocadosCliente']));
         $r->addRoute('GET', '/normatividad-aplicable-mediciones', Route::auth(['SgmController', 'normatividadAplicableMediciones']));
