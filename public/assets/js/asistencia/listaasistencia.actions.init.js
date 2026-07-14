@@ -9,6 +9,14 @@ document.addEventListener('alpine:init', () => {
             select.on('change', (e) => {
                 this.personal = $(e.target).val() || [];
             });
+
+            const id = document
+            .getElementById('container')
+            .dataset.id;
+            
+            if(id != 0){
+            this.listar();
+            }
         },
 
         id: null,
@@ -29,6 +37,11 @@ document.addEventListener('alpine:init', () => {
         tema: false,
         finalidad: false
         },
+
+        lista:[],
+        archivo:null,
+        error:'',
+        errorArchivo: false,
 
         validate() {
 
@@ -172,7 +185,78 @@ document.addEventListener('alpine:init', () => {
 
             $('#selectPersonal').trigger('change');
         }
+    },
+
+    async listar(){
+
+    const id = document
+    .getElementById('container')
+    .dataset.id;
+
+            const {data}=await axios.get(
+                `/lista-asistencia-evidencia/datatble/${id}`
+            );
+
+            this.lista=data;
+
+    },
+
+async subir() {
+
+    this.error = '';
+    this.errorArchivo = false;
+
+    if (!this.archivo) {
+        this.error = 'Seleccione una imagen.';
+        this.errorArchivo = true;
+        return;
     }
+
+    const permitidos = ['image/jpeg', 'image/png'];
+
+    if (!permitidos.includes(this.archivo.type)) {
+        this.error = 'Solo se aceptan imágenes JPG y PNG.';
+        this.errorArchivo = true;
+        return;
+    }
+
+    const payload = new FormData();
+
+        const id = document
+    .getElementById('container')
+    .dataset.id;
+
+    payload.append('id', id);
+    payload.append('evidencia', this.archivo);
+
+    const res = await this.createAction({
+        url: `/lista-asistencia-evidencia/create`,
+        data: payload
+    });
+
+    if (res.success) {
+
+        this.archivo = null;
+        this.$refs.file.value = '';
+
+        await this.listar();
+    }
+
+},
+
+async eliminar(id) {
+
+    const res = await this.deleteAction({
+        url: '/lista-asistencia-evidencia/delete',
+        id,
+        name: id
+    });
+
+    if (res && res.success) {
+        await this.listar();
+    }
+
+},
 
         
 

@@ -518,6 +518,10 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addRoute('POST', '/lista-asistencia-firma/create', Route::auth(['ListaAsistenciaController', 'createFirmaListaAsistencia']));
     $r->addRoute('POST', '/lista-asistencia-firma/delete', Route::auth(['ListaAsistenciaController', 'deleteFirmaListaAsistencia']));
 
+    $r->addRoute('GET', '/lista-asistencia-evidencia/datatble/{id:\d+}', Route::auth(['ListaAsistenciaController', 'evidencias']));
+    $r->addRoute('POST', '/lista-asistencia-evidencia/create', Route::auth(['ListaAsistenciaController', 'createEvidencia']));
+    $r->addRoute('POST', '/lista-asistencia-evidencia/delete', Route::auth(['ListaAsistenciaController', 'deleteEvidencia']));
+
     $r->addRoute('GET', '/cursos/descargar/{id:\d+}', Route::auth(['CursosController', 'descargar']));
     $r->addRoute('GET', '/cursos/descargar/{year:\d+}/{idModulo:\d+}', Route::auth(['CursosController', 'descargarAll']));
     
@@ -1116,8 +1120,16 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addGroup('/sgm', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['SgmController', 'index']));
 
-        $r->addRoute('GET', '/estructura-sistema-medicion', Route::auth(['SgmController', 'estructuraSistemaMedicion']));
-        $r->addRoute('GET', '/datatable-lista-revision-sgm', Route::auth(['SgmController', 'datatableListaRevisionSgm']));
+        $r->addRoute('GET', '/estructura-sistema-medicion', Route::auth(['SgmEstructuraController', 'index']));
+        $r->addRoute('GET', '/estructura-sistema-medicion/datatable-revision', Route::auth(['SgmEstructuraController', 'datatableRevision']));
+        $r->addRoute('POST', '/estructura-sistema-medicion/create-revision', Route::auth(['SgmEstructuraController', 'createRevision']));
+        $r->addRoute('POST', '/estructura-sistema-medicion/delete-revision', Route::auth(['SgmEstructuraController', 'deleteRevision']));
+        $r->addRoute('GET', '/estructura-sistema-medicion/pdf/{id:\d+}', Route::auth(['SgmEstructuraController', 'pdfRevision']));
+        $r->addRoute('GET', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/{id:\d+}', Route::auth(['SgmEstructuraController', 'revisionIndex']));
+        $r->addRoute('GET', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/detalle/{id:\d+}', Route::auth(['SgmEstructuraController', 'detalleRevision']));
+        $r->addRoute('POST', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/update', Route::auth(['SgmEstructuraController', 'updateRevision']));
+        $r->addRoute('POST', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/update-detalle', Route::auth(['SgmEstructuraController', 'updateRevisionDetalle']));
+        $r->addRoute('POST', '/estructura-sistema-medicion/revision-sgm-procedimiento-registro/finalizar', Route::auth(['SgmEstructuraController', 'finalizarRevision']));
         
         $r->addRoute('GET', '/control-documental-sistema-gestion-medicion', Route::auth(['SgmController', 'controlDocumentalSistemaGestionMedicion']));
         $r->addRoute('GET', '/responsabilidades-direccion', Route::auth(['SgmController', 'responsabilidadesDireccion']));
