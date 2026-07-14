@@ -45,7 +45,7 @@
 <div class="col-md-6">
 
 <div class="card">
-  <div x-data="{ ...actions(), ...estructuraSm() }">
+  <div x-data="{ ...actions(), ...revision() }">
   <div class="card-body">
 
   <div class="float-end">
