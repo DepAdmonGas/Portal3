@@ -50,9 +50,9 @@ x-init="
 
                 </select>
             </div>
-        </div>
+          </div>
 
-        <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
+          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
             <div class="form-group">
               <label class="form-label">Tema a comunicar:</label>
               <textarea class="form-control" x-model="tema" :class="errors.tema ? 'is-invalid' : ''"></textarea>
@@ -69,24 +69,120 @@ x-init="
 
         </div>
 
-        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-            <div class="row">
+        <div class="mt-4">
             <?php
-            if ($asistencia->realizadopor != 0) {
-                echo '<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-3">';
-                echo '<h5>Evidencia</h5>';
-                echo '<small class="text-secondary">Agrega la evidencia del elemento lista de asistencia, un máximo de 3 imágenes</small>';
-                echo '<hr>';
-                echo '<div class="mt-0"><input type="file" id="evidencia"></div>';
-                echo '<div class="text-center p-2" id="result"></div>';
-                echo '<div class="mt-2 text-end"><button type="button" class="btn btn-info" onclick="agregarEvidencia(' . $idListaAsistencia . ')">Agregar evidencia</button></div>';
-                echo '<div id="ListaEvidencia"></div>';
-                echo '</div>';
-            }
+            if ($asistencia->realizadopor != 0) { ?>
+                <h5>Evidencia</h5>
 
-            ?>
+                <small class="text-muted">Agrega la evidencia del elemento lista de asistencia, un máximo de 3 imágenes</small>
+                <hr>
 
-            </div>
+               <input
+                type="file"
+                class="form-control"
+                :class="{ 'border-danger': errorArchivo }"
+                x-ref="file"
+                @change="
+                    archivo = $event.target.files[0];
+                    errorArchivo = false;
+                    error = '';
+                "
+            >
+
+            <small
+                class="text-danger"
+                x-show="error"
+                x-text="error"
+            ></small>
+
+              <div class="mt-2 text-end">
+
+                  <button
+                      class="btn bg-info-subtle text-info"
+                      @click="subir()"
+                  >
+                      <i class="ti ti-upload"></i>
+                      Agregar evidencia
+                  </button>
+
+              </div>
+
+
+    <table class="table table-sm table-bordered mt-3">
+
+        <thead>
+
+        <tr>
+
+            <th class="text-center align-middle">Fecha</th>
+
+            <th class="text-center align-middle">Evidencia</th>
+
+            <th class="text-center" width="40">
+              <i class="ti ti-trash fs-7 text-muted"></i>
+            </th>
+
+        </tr>
+
+        </thead>
+
+        <tbody>
+
+        <template x-if="lista.length==0">
+
+            <tr>
+
+                <td colspan="3" class="text-center text-muted">
+
+                    No hay evidencias
+
+                </td>
+
+            </tr>
+
+        </template>
+
+        <template
+            x-for="item in lista"
+            :key="item.id"
+        >
+
+            <tr>
+
+                <td class="text-center align-middle" x-text="item.fecha"></td>
+
+                <td class="text-center">
+
+                    <img
+                        :src="'/uploads' + item.url"
+                        width="80"
+                    >
+
+                </td>
+
+                <td class="text-center align-middle">
+
+                    <button
+                        class="btn btn-sm btn-danger"
+                        @click="eliminar(item.id)"
+                    >
+
+                        <i class="ti ti-trash"></i>
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+        </template>
+
+        </tbody>
+
+    </table>
+
+
+            <?php } ?>
         </div>
 
         <hr>
@@ -97,7 +193,7 @@ x-init="
           '<button class="btn btn-success"
                     @click="actualizar('.$idListaAsistencia.')"
                     :disabled="loading">
-
+                <i class="ti ti-check"></i> 
                 <span x-show="!loading">Finalizar Registro</span>
                 <span x-show="loading">Guardando...</span>
 

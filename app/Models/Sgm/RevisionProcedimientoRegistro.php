@@ -38,4 +38,14 @@ class RevisionProcedimientoRegistro extends Model
         'realizadopor' => 'integer',
         'estado' => 'integer',
     ];
+
+    public function detalles()
+    {
+        return $this->hasMany(
+            RevisionProcedimientoRegistroDetalle::class,
+            'id_revision'
+        );
+    }
+
+    
 }

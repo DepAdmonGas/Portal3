@@ -3,7 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Models\Sgm\Elemento;
 use App\Core\Breadcrumb;
-use App\Models\Sgm\RevisionProcedimientoRegistro;
+
 class SgmController{
 
     public function index(){
@@ -17,13 +17,13 @@ class SgmController{
 
          $data = [
             'title' => $title,
+            'elementos' => $sgm,
              'links' =>[
                 
             ],
             'scripts' => [
-                '/assets/js/vendor.min.js'
+                '/js/vendor.min.js'
             ],
-            'elementos' => $sgm,
             'help' => false
         ];
         
@@ -31,45 +31,7 @@ class SgmController{
 
     }
 
-    //----------------------------------------------------------------
-    //------------ 1. Estructura del sistema de Medicion -------------
-    public function estructuraSistemaMedicion(){
 
-        $title = '1. Estructura del sistema de Medicion';
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SGM', '/sgm');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js',
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/sasisopa/listaasistencia.datatable.init.js',
-                '/assets/js/sgm/listarevisionsgm.datatable.init.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sgm/estructura-sistema-medicion', $data,'sgm');
-
-    }
-
-    public function datatableListaRevisionSgm(){
-        $data = RevisionProcedimientoRegistro::where('id_estacion', 1)
-        ->groupBy('fecha')
-        ->get();
-
-         echo json_encode([
-            "data" => $data
-        ]);
-        
-        exit;
-    }
- 
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
