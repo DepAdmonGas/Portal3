@@ -1142,7 +1142,15 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('GET', '/control-documental-sistema-gestion-medicion/pdf', Route::auth(['SgmControlDocumentalController', 'pdf']));
         //---------- 2. CONTROL DEL DOCUMENTAL DEL SISTEMA DE GESTION DE MEDICIÓN --------------------
 
-        $r->addRoute('GET', '/responsabilidades-direccion', Route::auth(['SgmController', 'responsabilidadesDireccion']));
+        //---------- 3. RESPONSABILIDADES DE LA DIRECCION ---------------------------------------------
+        $r->addRoute('GET', '/responsabilidades-direccion', Route::auth(['SgmResponsabilidadDireccionController', 'index']));
+        $r->addRoute('GET', '/responsabilidades-direccion/datatable-politica', Route::auth(['SgmResponsabilidadDireccionController', 'politicas']));
+        $r->addRoute('POST', '/responsabilidades-direccion/delete-politica', Route::auth(['SgmResponsabilidadDireccionController', 'deletePolitica']));
+        $r->addRoute('GET', '/responsabilidades-direccion/politica-sgm', Route::auth(['SgmResponsabilidadDireccionController', 'politicaIndex']));
+        $r->addRoute('GET', '/responsabilidades-direccion/politica-sgm/detalle', Route::auth(['SgmResponsabilidadDireccionController', 'detallePolitica']));
+        $r->addRoute('POST', '/responsabilidades-direccion/politica-sgm/create', Route::auth(['SgmResponsabilidadDireccionController', 'guardarPolitica']));
+        //---------- 3. RESPONSABILIDADES DE LA DIRECCION ---------------------------------------------
+
         $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente', Route::auth(['SgmController', 'establecimientoObjetivosEnfocadosCliente']));
         $r->addRoute('GET', '/normatividad-aplicable-mediciones', Route::auth(['SgmController', 'normatividadAplicableMediciones']));
         $r->addRoute('GET', '/gestion-recursos', Route::auth(['SgmController', 'gestionRecursos']));
