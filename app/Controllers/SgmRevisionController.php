@@ -158,6 +158,9 @@ class SgmRevisionController extends BaseController{
     }else if($revision->elemento == 102){
         $subTitle = '2. Control del documental del Sistema de Gestion de medición';
         $subUrl = '/sgm/control-documental-sistema-gestion-medicion';
+    }else if($revision->elemento == 103){
+        $subTitle = '3. Responsabilidades de la direccion';
+        $subUrl = '/sgm/responsabilidades-direccion';
     }
 
     $title = 'Revisión del SGM, procedimientos y registros';
