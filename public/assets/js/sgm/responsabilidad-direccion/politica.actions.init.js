@@ -3,11 +3,14 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('politicaForm', () => ({
 
         fecha: '',
+
         quill: null,
 
         async init() {
 
-            this.quill = new Quill('#editor', {
+            await this.$nextTick();
+
+            this.quill = new Quill(this.$refs.editor, {
                 theme: 'snow',
                 modules: {
                     toolbar: true
@@ -24,9 +27,13 @@ document.addEventListener('alpine:init', () => {
                 '/sgm/responsabilidades-direccion/politica-sgm/detalle'
             );
 
-            this.fecha = data.fecha;
+            this.fecha = data.fecha ?? '';
 
-            this.quill.root.innerHTML = data.contenido ?? '';
+            if (!data.contenido) {
+                return;
+            }
+
+            this.quill.root.innerHTML = data.contenido;
 
         },
 
@@ -35,15 +42,24 @@ document.addEventListener('alpine:init', () => {
             const contenido = this.quill.root.innerHTML;
 
             if (!this.fecha) {
-                this.notify('error', 'Seleccione la fecha');
+
+                this.notify(
+                    'error',
+                    'Seleccione la fecha.'
+                );
+
                 return;
             }
 
             if (
-                contenido === '<p><br></p>' ||
-                contenido.trim() === ''
+                this.quill.getText().trim() === ''
             ) {
-                this.notify('error', 'Capture la política');
+
+                this.notify(
+                    'error',
+                    'Capture la política.'
+                );
+
                 return;
             }
 
@@ -57,7 +73,9 @@ document.addEventListener('alpine:init', () => {
                 },
 
                 onSuccess: () => {
+
                     history.back();
+
                 }
 
             });

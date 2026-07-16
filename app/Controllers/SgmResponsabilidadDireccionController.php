@@ -117,7 +117,7 @@ protected string $modulo = 'sgm';
             ],
             'scripts' => [
                 '/js/vendor.min.js',  
-                '/libs/quill/dist/quill.min.js',  
+                '/libs/quill/dist/quill.js',  
                 '/js/sgm/responsabilidad-direccion/politica.actions.init.js?v=1.0.1',            
             ],
             'help' => false

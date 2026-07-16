@@ -166,10 +166,17 @@ class ListaAsistenciaController extends BaseController{
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $data = ListaAsistencia::where('punto_sasisopa', $elemento)
+        $asistencia = ListaAsistencia::where('punto_sasisopa', $elemento)
         ->where('id_estacion', $this->estacionId())
         ->orderBy('fecha')
         ->get();
+
+        $data = $asistencia->map(fn ($item) => [
+            'id' => $item->id,
+            'fecha' => $item->fecha?->format('Y-m-d'),
+            'hora' => $item->fecha?->format('h:m:s'),
+            'estado' => $item->estado,
+        ]);
 
          echo json_encode([
             "data" => $data,
