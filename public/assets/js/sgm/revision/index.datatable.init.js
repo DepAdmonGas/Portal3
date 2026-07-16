@@ -30,9 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
             data: 'fecha',
             render: function (data, type) {
 
-                if (!data) return '';
+                if (!data || data === 'S/I') return 'S/I';
 
-                const fecha = new Date(data);
+                const partes = data.split('-');
+
+                if (partes.length !== 3) return 'S/I';
+
+                const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
 
                 const fechaFormateada = fecha.toLocaleDateString('es-MX', {
                     day: 'numeric',
@@ -40,12 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     year: 'numeric'
                 });
 
-                // Para búsqueda y display usar el texto formateado
                 if (type === 'display' || type === 'filter') {
                     return fechaFormateada;
                 }
 
-                // Para ordenamiento usar la fecha real
                 return data;
             },
             orderable: true,

@@ -36,51 +36,6 @@ class SgmController{
     //------------------------------------------------------------------------------------
 
 
-
-    public function responsabilidadesDireccion(){
-
-        $title = '3. Responsabilidades de la direccion';
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SGM', '/sgm');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sgm/responsabilidades-direccion', $data,'sgm');
-
-    }
-
-    public function establecimientoObjetivosEnfocadosCliente(){
-
-        $title = '4. Establecimiento de objetivos enfocados al cliente';
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SGM', '/sgm');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sgm/establecimiento-objetivos-enfocados-cliente', $data,'sgm');
-
-    }
-
     public function normatividadAplicableMediciones(){
 
         $title = '5. Normatividad aplicable a mediciones';

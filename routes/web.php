@@ -1151,7 +1151,27 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/responsabilidades-direccion/politica-sgm/create', Route::auth(['SgmResponsabilidadDireccionController', 'guardarPolitica']));
         //---------- 3. RESPONSABILIDADES DE LA DIRECCION ---------------------------------------------
 
-        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente', Route::auth(['SgmController', 'establecimientoObjetivosEnfocadosCliente']));
+        //---------- 4. ESTABLECIMIENTO DE OBJETIVOS ENFOCADOS AL CLIENTE -----------------------------
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente', Route::auth(['SgmEstablecimientoController', 'index']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/datatable-objetivos', Route::auth(['SgmEstablecimientoController', 'tableObjetivos']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/objetivo-cliente', Route::auth(['SgmEstablecimientoController', 'objetivoIndex']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/objetivo-cliente/detalle', Route::auth(['SgmEstablecimientoController', 'detalleObjetivo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/objetivo-cliente/create', Route::auth(['SgmEstablecimientoController', 'createObjetivo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/objetivo-cliente/delete', Route::auth(['SgmEstablecimientoController', 'deleteObjetivo']));
+
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/datatable', Route::auth(['SgmEstablecimientoController', 'datatableSeguimientoObjetivo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/create', Route::auth(['SgmEstablecimientoController', 'createSeguimientoObjetivo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/delete', Route::auth(['SgmEstablecimientoController', 'deleteSeguimientoObjetivo']));
+
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/{id:\d+}', Route::auth(['SgmEstablecimientoController', 'SeguimientoObjetivoIndex']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/{id:\d+}/detalle', Route::auth(['SgmEstablecimientoController', 'detalle']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/asistente/create', Route::auth(['SgmEstablecimientoController', 'agregarAsistentes']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/asistente/delete', Route::auth(['SgmEstablecimientoController', 'eliminarAsistente']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/update', Route::auth(['SgmEstablecimientoController', 'actualizarCampo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/finalizar', Route::auth(['SgmEstablecimientoController', 'finalizar']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/pdf/{id:\d+}', Route::auth(['SgmEstablecimientoController', 'pdf']));
+        //---------- 4. ESTABLECIMIENTO DE OBJETIVOS ENFOCADOS AL CLIENTE -----------------------------
+
         $r->addRoute('GET', '/normatividad-aplicable-mediciones', Route::auth(['SgmController', 'normatividadAplicableMediciones']));
         $r->addRoute('GET', '/gestion-recursos', Route::auth(['SgmController', 'gestionRecursos']));
         $r->addRoute('GET', '/procesos-medicion', Route::auth(['SgmController', 'procesosMedicion']));

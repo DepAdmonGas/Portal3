@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class SeguimientoAsistente extends Model
 {
@@ -26,4 +27,13 @@ class SeguimientoAsistente extends Model
         'id_seguimiento' => 'integer',
         'id_usuario' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario',
+            'id'
+        );
+    }
 }

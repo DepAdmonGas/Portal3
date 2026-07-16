@@ -1,12 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const idElemento = document
-    .getElementById('container')
-    .dataset.elemento;
-
     let permisos = {};
 
-    table2 = $('#table-lista-asistencia').DataTable({
+    table1 = $('#table-seguimiento-objetivos').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -16,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/datatable-lista-asistencia/elemento/' + idElemento,
+            url: '/sgm/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/datatable',
             type: 'GET',
             dataSrc: function (json) {
 
@@ -60,6 +56,26 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             orderable: true,
             searchable: true
+        },
+         {
+            data: 'hora',
+            render: function (data, type) {
+
+                if (!data) return '';
+
+                if (type !== 'display') {
+                    return data;
+                }
+
+                const hora = new Date('1970-01-01T' + data);
+
+                return hora.toLocaleTimeString('es-MX', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
+            }
         },
             {data: 'estado', width: '100px', className: 'text-center align-middle',
             render: function (data) {
@@ -110,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     ${!noEdit ? '' : `
                                     @click='async () => {
-                                    const res = await goTo("/lista-asistencia/${row.id}");
+                                    const res = await goTo("/sgm/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/${row.id}");
                                     }'
                                     `}>
                                         <i class="ti ti-edit"></i>Editar
@@ -118,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </li>
                                  <li>
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
-                                    href="/lista-asistencia/pdf/${row.id}" target="_blank">
+                                    href="/sgm/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/pdf/${row.id}" target="_blank">
                                         <i class="ti ti-download"></i>Descargar
                                     </a>
                                 </li>
@@ -127,10 +143,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ${!noDelete ? '' : `
                                     @click='async () => {
                                     const res = await deleteAction({
-                                        url: "/lista-asistencia/delete",
+                                        url: "/sgm/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/delete",
                                         id: ${row.id},
                                         name: "${row.id}",
-                                        table: "#table-lista-asistencia"
+                                        table: "#table-seguimiento-objetivos"
                                     });
                                     }'
                                     `}>
@@ -146,10 +162,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     });
 
-    $("#table-lista-asistencia tbody").on("click", "tr", function () {
+    $("#table-seguimiento-objetivos tbody").on("click", "tr", function () {
     if ($(this).hasClass("selected")) {
     } else {
-        table2.$("tr.selected").removeClass("selected");
+        table1.$("tr.selected").removeClass("selected");
         $(this).addClass("selected");
     }
     });
