@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     .getElementById('container')
     .dataset.ngobierno;
 
+     const modulo = document
+    .getElementById('container')
+    .dataset.modulo;
+
     table1 = $('#table-lista-requisitos-legales-detalle').DataTable({
         processing: true,
         serverSide: false,
@@ -14,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/requisitos-legales/datatable-detalle/' + ngobierno,
+            url: '/sasisopa/requisitos-legales/datatable-detalle/' + ngobierno + '/' + modulo,
             type: 'GET',
             dataSrc: function (json) {
             

@@ -68,28 +68,31 @@ class RequisitosLegalesCalendario extends Model
     }
   
 
-    public static function ToRequisitosTodos($id): array
+    public static function ToRequisitosTodos($id,$modulo): array
     {
         $niveles = ['Municipal', 'Estatal', 'Federal', 'Varios'];
 
         $result = [];
 
         foreach ($niveles as $nivel) {
-            $result[$nivel] = self::ToRequisitos($id, $nivel);
+            $result[$nivel] = self::ToRequisitos($id, $nivel,$modulo);
         }
 
         return $result;
     }
 
-    public static function ToRequisitos($id, $NGobierno): array
+    public static function ToRequisitos($id, $NGobierno,$modulo): array
     {
         $ToReFin = 0;
         $TotalCmp = 0;
 
-        $calendarios = self::with('matrizReciente')
+        $calendarios = self::with(['requisito', 'matrizReciente'])
             ->where('id_estacion', $id)
             ->where('nivel_gobierno', $NGobierno)
             ->where('estado', 1)
+            ->whereHas('requisito', function ($q) use ($modulo) {
+                $q->where('sgm', $modulo);
+            })
             ->get();
 
         foreach ($calendarios as $calendario) {
@@ -133,12 +136,15 @@ class RequisitosLegalesCalendario extends Model
 
     //--------------------------------------------------------------------
 
-    public static function NivelGobierno($NGobierno, $IDEstacion)
+    public static function NivelGobierno($NGobierno, $IDEstacion, $modulo)
     {
         $calendarios = self::with(['requisito', 'matrizReciente'])
             ->where('id_estacion', $IDEstacion)
             ->where('nivel_gobierno', $NGobierno)
             ->where('estado', 1)
+            ->whereHas('requisito', function ($q) use ($modulo) {
+                $q->where('sgm', $modulo);
+            })
             ->get();
 
         return $calendarios->map(function ($item) {
