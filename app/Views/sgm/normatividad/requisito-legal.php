@@ -1,4 +1,4 @@
-<div id="container" class="pb-4" x-data="{ ...actions(), ...requisitosLegalesForm()}" data-ngobierno="<?= $title ?>" data-modulo="0">
+<div id="container" class="pb-4" x-data="{ ...actions(), ...requisitosLegalesForm()}" data-ngobierno="<?= $title ?>" data-modulo="1">
 
     <div class="text-end mt-2">
           <?= 

@@ -4,13 +4,9 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
-use App\Models\Sgm\Documento;
-use App\Models\Estacion;
-use App\Models\Usuario;
+
 use App\Models\Sgm\Politica;
 
-use Dompdf\Dompdf;
-use Dompdf\Options;
 
 class SgmResponsabilidadDireccionController extends BaseController{
 

@@ -585,7 +585,7 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/requisitos-legales/create-configuracion', Route::auth(['RequisitosLegalesController', 'createConfiguracion']));
 
         $r->addRoute('GET', '/requisitos-legales/{nGobierno:[a-zA-Z0-9\-]+}', Route::auth(['RequisitosLegalesController', 'requisitosLegalesDetalle']));
-        $r->addRoute('GET', '/requisitos-legales/datatable-detalle/{nGobierno:[a-zA-Z0-9\-]+}', Route::auth(['RequisitosLegalesController', 'datatableDetalle']));
+        $r->addRoute('GET', '/requisitos-legales/datatable-detalle/{nGobierno:[a-zA-Z0-9\-]+}/{modulo:\d+}', Route::auth(['RequisitosLegalesController', 'datatableDetalle']));
         $r->addRoute('POST', '/requisitos-legales/delete-detalle', Route::auth(['RequisitosLegalesController', 'deleteDetalle']));
 
         $r->addRoute('GET', '/requisitos-legales/permisos/{nGobierno:[a-zA-Z0-9\-]+}/{sgm:\d+}', Route::auth(['RequisitosLegalesController', 'getPermisos']));
@@ -1172,7 +1172,19 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/pdf/{id:\d+}', Route::auth(['SgmEstablecimientoController', 'pdf']));
         //---------- 4. ESTABLECIMIENTO DE OBJETIVOS ENFOCADOS AL CLIENTE -----------------------------
 
-        $r->addRoute('GET', '/normatividad-aplicable-mediciones', Route::auth(['SgmController', 'normatividadAplicableMediciones']));
+        //---------- 5. NORMATIVIDAD APLICABLE A MEDICIONES ----------------------------------------------
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones', Route::auth(['SgmNormatividadController', 'index']));
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/datatable-inventario', Route::auth(['SgmNormatividadController', 'datatableInventario']));
+        $r->addRoute('POST', '/normatividad-aplicable-mediciones/create-inventario', Route::auth(['SgmNormatividadController', 'createInventario']));
+        $r->addRoute('POST', '/normatividad-aplicable-mediciones/delete-inventario', Route::auth(['SgmNormatividadController', 'deleteInventario']));
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/inventario-normatividad/pdf', Route::auth(['SgmNormatividadController', 'pdfInventario']));
+
+        
+
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/pdf-requisito-legal', Route::auth(['SgmNormatividadController', 'pdfRequisitoLegal']));
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/requisito-legal-sgm', Route::auth(['SgmNormatividadController', 'requisitoLegal']));
+        //---------- 5. NORMATIVIDAD APLICABLE A MEDICIONES ----------------------------------------------
+
         $r->addRoute('GET', '/gestion-recursos', Route::auth(['SgmController', 'gestionRecursos']));
         $r->addRoute('GET', '/procesos-medicion', Route::auth(['SgmController', 'procesosMedicion']));
         $r->addRoute('GET', '/gestion-riesgos-impactan-medicion', Route::auth(['SgmController', 'gestionRiesgosImpactanMedicion']));

@@ -36,27 +36,7 @@ class SgmController{
     //------------------------------------------------------------------------------------
 
 
-    public function normatividadAplicableMediciones(){
 
-        $title = '5. Normatividad aplicable a mediciones';
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SGM', '/sgm');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sgm/normatividad-aplicable-mediciones', $data,'sgm');
-
-    }
 
     public function gestionRecursos(){
 

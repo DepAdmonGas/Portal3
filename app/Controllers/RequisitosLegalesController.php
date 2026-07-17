@@ -26,7 +26,7 @@ class RequisitosLegalesController extends BaseController{
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
-        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId());
+        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(),0);
 
          $data = [
             'title' => $title,
@@ -63,10 +63,10 @@ class RequisitosLegalesController extends BaseController{
             exit;
         }
 
-        $municipal = RequisitosLegalesCalendario::NivelGobierno('Municipal', $this->estacionId());
-        $estatal   = RequisitosLegalesCalendario::NivelGobierno('Estatal', $this->estacionId());
-        $federal   = RequisitosLegalesCalendario::NivelGobierno('Federal', $this->estacionId());
-        $varios    = RequisitosLegalesCalendario::NivelGobierno('Varios', $this->estacionId());
+        $municipal = RequisitosLegalesCalendario::NivelGobierno('Municipal', $this->estacionId(),0);
+        $estatal   = RequisitosLegalesCalendario::NivelGobierno('Estatal', $this->estacionId(),0);
+        $federal   = RequisitosLegalesCalendario::NivelGobierno('Federal', $this->estacionId(),0);
+        $varios    = RequisitosLegalesCalendario::NivelGobierno('Varios', $this->estacionId(),0);
 
         $html = '';
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
@@ -391,7 +391,7 @@ class RequisitosLegalesController extends BaseController{
         Breadcrumb::add('3. REQUISITOS LEGALES', '/sasisopa/requisitos-legales');
         Breadcrumb::add($title, '');
 
-        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId());
+        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(),0);
 
          $data = [
             'title' => $title,
@@ -418,7 +418,7 @@ class RequisitosLegalesController extends BaseController{
 
     }
 
-    public function datatableDetalle($nGobierno){
+    public function datatableDetalle($nGobierno, $modulo){
 
     $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
     $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
@@ -426,7 +426,8 @@ class RequisitosLegalesController extends BaseController{
 
     $rows = RequisitosLegalesCalendario::NivelGobierno(
         $nGobierno,
-        $this->estacionId()
+        $this->estacionId(),
+        $modulo
     );
 
     $data = [];
@@ -608,16 +609,16 @@ class RequisitosLegalesController extends BaseController{
         }
 
         $data = $query->selectRaw("
-                id,
-                CONCAT_WS(', ',
-                    nivel_gobierno,
-                    mun_alc_est,
-                    dependencia,
-                    permiso
-                ) as permiso
-            ")
-            ->orderBy('permiso', 'asc')
-            ->get();
+    id,
+    CONCAT_WS(', ',
+        NULLIF(nivel_gobierno,''),
+        NULLIF(mun_alc_est,''),
+        NULLIF(dependencia,''),
+        NULLIF(permiso,'')
+    ) AS permiso
+")
+->orderBy('permiso')
+->get();
 
         echo json_encode($data);
         exit;
@@ -729,7 +730,7 @@ class RequisitosLegalesController extends BaseController{
             Capsule::commit();
 
             $cumplimiento = round(
-                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno)['Cumplimiento'] ?? 0
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno,0)['Cumplimiento'] ?? 0
             );
 
             echo json_encode([
@@ -832,7 +833,7 @@ class RequisitosLegalesController extends BaseController{
             Capsule::commit();
 
             $cumplimiento = round(
-                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno)['Cumplimiento'] ?? 0
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno,0)['Cumplimiento'] ?? 0
             );
 
             echo json_encode([
@@ -1210,7 +1211,7 @@ class RequisitosLegalesController extends BaseController{
     private function getCumplimientoPorCalendario(RequisitosLegalesCalendario $calendario)
     {
         return round(
-            RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $calendario->nivel_gobierno)['Cumplimiento'] ?? 0
+            RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $calendario->nivel_gobierno,0)['Cumplimiento'] ?? 0
         );
     }
 
@@ -1274,7 +1275,7 @@ class RequisitosLegalesController extends BaseController{
                 $registro->save();
 
                 $cumplimiento = round(
-                    RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $registro->nivel_gobierno)['Cumplimiento'] ?? 0
+                    RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $registro->nivel_gobierno,0)['Cumplimiento'] ?? 0
                 );
 
                 echo json_encode([

@@ -371,7 +371,11 @@ document.addEventListener('alpine:init', () => {
                 .getElementById('container')
                 .dataset.ngobierno;
 
-            let url = `/sasisopa/requisitos-legales/permisos/${ngobierno}/0`;
+            const modulo = document
+                .getElementById('container')
+                .dataset.modulo;
+
+            let url = `/sasisopa/requisitos-legales/permisos/${ngobierno}/${modulo}`;
 
             if (currentId) {
                 url += `/${currentId}`;
