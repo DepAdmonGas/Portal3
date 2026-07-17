@@ -1,9 +1,21 @@
+<?php if (!$idEstacion): ?>
+<div id="impuestos-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+Debes de seleccionar una estación del menú superior para poder visualizar la información de Impuestos.
+</div>
+<div id="impuestos-content" style="display:none">
+<?php else: ?>
+<div id="impuestos-empty-message" style="display:none" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+Debes de seleccionar una estación del menú superior para poder visualizar la información de Impuestos.
+</div>
+<div id="impuestos-content">
+<?php endif; ?>
 <div id="container" class="mt-4 mb-4"
 data-id-dia="<?= $idDia ?>"
 data-id-year="<?= $idYear ?>"
 data-id-mes="<?= $idMes ?>"
 data-estado="<?= $estado ?>"
 data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>"
+data-module-station-key="corte-diario"
 x-data="impuestosComponent()">
 
 <template x-if="loading">
@@ -81,6 +93,10 @@ x-data="impuestosComponent()">
 
 </div>
 </div>
+
+</div>
+</div>
 </template>
 
+</div>
 </div>

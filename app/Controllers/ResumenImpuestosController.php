@@ -8,134 +8,142 @@ use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\ResumenImpuestosService;
 use App\Services\ImpuestoService;
+use App\Services\ModuleStationService;
 
 class ResumenImpuestosController extends BaseController
 {
-    protected string $modulo = 'corporativo';
+protected string $modulo = 'corporativo';
 
-    public function index($idYear, $idMes)
-    {
-        $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
-        if (!$puedeLeer) {
-            View::render('errors/403', [], 'departamento-operativo');
-            return;
-        }
+public function index($idYear, $idMes)
+{
+$puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
+if (!$puedeLeer) {
+View::render('errors/403', [], 'departamento-operativo');
+return;
+}
 
-        $idEstacion = $this->estacionId();
-        $multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-        if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
-            View::render('departamento-operativo/1-corporativo/resumen-impuestos/index', [
-                'title' => 'Resumen Impuestos (' . nombremes($idMes) . ' ' . $idYear . ')',
-                'idEstacion' => 0,
-                'idYear' => $idYear,
-                'idMes' => $idMes,
-                'multiestacion' => $multiEstacion,
-                'help' => false,
-                'scripts' => [],
-            ], 'departamento-operativo');
-            return;
-        }
+if (!$idEstacion) {
+View::render('departamento-operativo/1-corporativo/resumen-impuestos/index', [
+'title' => 'Resumen Impuestos (' . nombremes($idMes) . ' ' . $idYear . ')',
+'idEstacion' => 0,
+'idYear' => $idYear,
+'idMes' => $idMes,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
+'help' => false,
+'scripts' => [],
+], 'departamento-operativo');
+return;
+}
 
-        $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
-        $idYear = $validados['idYear'];
-        $idMes = $validados['idMes'];
+$validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
+$idYear = $validados['idYear'];
+$idMes = $validados['idMes'];
 
-        $title = 'Resumen Impuestos (' . nombremes($idMes) . ' ' . $idYear . ')';
+$title = 'Resumen Impuestos (' . nombremes($idMes) . ' ' . $idYear . ')';
 
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
-        Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
-        Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
-        Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
+Breadcrumb::add('Home', '/home');
+Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
+Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
+Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
-        View::render('departamento-operativo/1-corporativo/resumen-impuestos/index', [
-            'title' => $title,
-            'idEstacion' => $idEstacion,
-            'idYear' => $idYear,
-            'idMes' => $idMes,
-            'multiestacion' => false,
-            'yearMesTemplate' => '/departamento-operativo/resumen-impuestos/{year}/{mes}',
-            'help' => false,
-            'links' => [
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js?v=' . time(),
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/departamento-operativo/1-corporativo/actions.resumen-impuestos.init.js?v=' . time(),
-                '/assets/js/departamento-operativo/1-corporativo/resumen-impuestos-dias.datatable.init.js?v=' . time(),
-            ],
-        ], 'departamento-operativo');
-    }
+View::render('departamento-operativo/1-corporativo/resumen-impuestos/index', [
+'title' => $title,
+'idEstacion' => $idEstacion,
+'idYear' => $idYear,
+'idMes' => $idMes,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
+'yearMesTemplate' => '/departamento-operativo/resumen-impuestos/{year}/{mes}',
+'help' => false,
+'links' => [
+'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+],
+'scripts' => [
+'/assets/js/core/module-station-selector.js?v=' . time(),
+'/assets/js/vendor.min.js?v=' . time(),
+'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+'/assets/js/departamento-operativo/1-corporativo/actions.resumen-impuestos.init.js?v=' . time(),
+'/assets/js/departamento-operativo/1-corporativo/resumen-impuestos-dias.datatable.init.js?v=' . time(),
+],
+], 'departamento-operativo');
+}
 
-    public function getDias($idYear, $idMes)
-    {
-        header('Content-Type: application/json');
+public function getDias($idYear, $idMes)
+{
+header('Content-Type: application/json');
 
-        $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
-        if (!$puedeLeer) {
-            echo json_encode(['success' => false, 'message' => 'Sin permisos']);
-            exit;
-        }
+$puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
+if (!$puedeLeer) {
+echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+exit;
+}
 
-        $idEstacion = $this->estacionId();
-        if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
-            echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
-            exit;
-        }
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
+if (!$idEstacion) {
+echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
+exit;
+}
 
-        $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
-        $idYear = $validados['idYear'];
-        $idMes = $validados['idMes'];
+$validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
+$idYear = $validados['idYear'];
+$idMes = $validados['idMes'];
 
-        $dias = ResumenImpuestosService::getDias($idEstacion, $idYear, $idMes);
+$dias = ResumenImpuestosService::getDias($idEstacion, $idYear, $idMes);
 
-        echo json_encode(['success' => true, 'dias' => $dias]);
-        exit;
-    }
+echo json_encode(['success' => true, 'dias' => $dias]);
+exit;
+}
 
-    public function getDetalleDia($idDia)
-    {
-        header('Content-Type: application/json');
+public function getDetalleDia($idDia)
+{
+header('Content-Type: application/json');
 
-        $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
-        if (!$puedeLeer) {
-            echo json_encode(['success' => false, 'message' => 'Sin permisos']);
-            exit;
-        }
+$puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
+if (!$puedeLeer) {
+echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+exit;
+}
 
-        $data = ImpuestoService::getData((int) $idDia);
+$data = ImpuestoService::getData((int) $idDia);
 
-        echo json_encode(['success' => true, 'data' => $data]);
-        exit;
-    }
+echo json_encode(['success' => true, 'data' => $data]);
+exit;
+}
 
-    public function getTotales($idYear, $idMes)
-    {
-        header('Content-Type: application/json');
+public function getTotales($idYear, $idMes)
+{
+header('Content-Type: application/json');
 
-        $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
-        if (!$puedeLeer) {
-            echo json_encode(['success' => false, 'message' => 'Sin permisos']);
-            exit;
-        }
+$puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
+if (!$puedeLeer) {
+echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+exit;
+}
 
-        $idEstacion = $this->estacionId();
-        if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
-            echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
-            exit;
-        }
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
+if (!$idEstacion) {
+echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
+exit;
+}
 
-        $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
-        $idYear = $validados['idYear'];
-        $idMes = $validados['idMes'];
+$validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
+$idYear = $validados['idYear'];
+$idMes = $validados['idMes'];
 
-        $totales = ResumenImpuestosService::getTotales($idEstacion, $idYear, $idMes);
+$totales = ResumenImpuestosService::getTotales($idEstacion, $idYear, $idMes);
 
-        echo json_encode(['success' => true, 'totales' => $totales]);
-        exit;
-    }
+echo json_encode(['success' => true, 'totales' => $totales]);
+exit;
+}
 }

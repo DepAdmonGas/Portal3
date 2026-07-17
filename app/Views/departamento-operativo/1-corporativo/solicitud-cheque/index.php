@@ -13,6 +13,7 @@ data-id-depto="<?= $idDepto ?>"
 data-id-puesto="<?= $idPuesto ?>"
 data-nombre-puesto="<?= $nombrePuesto ?>"
 data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>"
+data-module-station-key="solicitud-cheques"
 data-es-gestoria="<?= $esGestoria ? 'true' : 'false' ?>"
 data-puede-crear="<?= $puedeCrear ? 'true' : 'false' ?>"
 data-puede-editar="<?= $puedeEditar ? 'true' : 'false' ?>"
@@ -40,14 +41,13 @@ x-data="{ ...actions(), ...solicitudChequeComponent() }">
 <template id="sc-tools-tmpl">
 <div id="sc-tools-wrapper" class="d-flex justify-content-end">
 <div class="dropdown d-inline-block" id="sc-tools-dropdown">
-
-<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-tools me-1"></i>
+    
+<button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<i class="ti ti-dots-vertical fs-4"></i>
 </button>
 
-
 <ul class="dropdown-menu">
-<li id="sc-tool-agregar" class="sc-tool-item"><a class="dropdown-item pointer" onclick="irACrearSolicitud()"><i class="ti ti-plus me-1"></i> Agregar</a></li>
+<li id="sc-tool-agregar" class="sc-tool-item"><a class="dropdown-item pointer" onclick="irACrearSolicitud()"><i class="ti ti-plus me-1"></i> Nueva solicitud</a></li>
 <li id="sc-tool-telcel" class="sc-tool-item"><a class="dropdown-item pointer" onclick="abrirFacturasTelcelGlobal()"><i class="ti ti-device-mobile me-1"></i> Facturas Telcel</a></li>
 <li id="sc-tool-comprobante" class="sc-tool-item"><a class="dropdown-item pointer" onclick="abrirComprobantePago()"><i class="ti ti-file-invoice me-1"></i> Comprobante Pago</a></li>
 <li id="sc-tool-excel" class="sc-tool-item"><a class="dropdown-item pointer" onclick="descargarExcel()"><i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel</a></li>

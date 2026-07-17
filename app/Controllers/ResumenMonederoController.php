@@ -11,6 +11,7 @@ use App\Models\Operativo\MonederoDocumento;
 use App\Models\Operativo\MonederoEdi;
 use App\Models\Operativo\MonederoListaDocumento;
 use App\Core\Session;
+use App\Services\ModuleStationService;
 
 class ResumenMonederoController extends BaseController
 {
@@ -22,16 +23,18 @@ $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 $data = [
 'title' => 'Resumen Monedero (' . nombremes($idMes) . ' ' . $idYear . ')',
 'idYear' => $idYear,
 'idMes' => $idMes,
 'idEstacion' => 0,
-'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
 'help' => false,
 ];
 
@@ -59,11 +62,15 @@ Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', ''
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
+$verShell = ($idEstacion == 2 || $idEstacion == 14);
+
 $data = [
 'title' => $title,
 'idYear' => $idYear,
 'idMes' => $idMes,
 'idEstacion' => $idEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
 'idMesDb' => $idMesDb,
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
@@ -78,6 +85,10 @@ $data = [
 'puedeDescargar' => $permisos['puede_descargar'],
 'puedeEliminarDoc' => $permisos['puede_eliminar_doc'],
 'yearMesTemplate' => '/departamento-operativo/resumen-monedero/{year}/{mes}',
+'verShell' => $verShell,
+'colspanMetodos' => $verShell ? 19 : 18,
+'colspanTarjetas' => $verShell ? 8 : 7,
+'totalCols' => $verShell ? 25 : 24,
 'help' => false,
 'scripts' => [
 '/assets/js/departamento-operativo/1-corporativo/actions.resumen-monedero.init.js?v=' . time(),
@@ -380,16 +391,18 @@ $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 $data = [
 'title' => 'Resumen por Periodo (' . nombremes($idMes) . ' ' . $idYear . ')',
 'idYear' => $idYear,
 'idMes' => $idMes,
 'idEstacion' => 0,
-'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
 'help' => false,
 ];
 View::render('departamento-operativo/1-corporativo/resumen-monedero/periodo', $data, 'departamento-operativo');
@@ -419,6 +432,8 @@ $data = [
 'idYear' => $idYear,
 'idMes' => $idMes,
 'idEstacion' => $idEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
 'multiestacion' => $permisos['multiestacion'],
 'periodos' => $resultado['periodos'],
 'totales' => $resultado['totales'],
@@ -435,8 +450,9 @@ public function resumenPeriodoData($idYear, $idMes)
 {
 header('Content-Type: application/json');
 
-$idEstacion = $this->estacionId();
-if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
+if (!$idEstacion) {
 echo json_encode(['success' => false, 'periodos' => [], 'totales' => []]);
 exit;
 }
@@ -499,15 +515,17 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 View::render('departamento-operativo/1-corporativo/resumen-monedero/kpi-evaluacion', [
 'title' => 'Evaluación Facturas de Monederos (KPI\'s), ' . $idYear,
 'idEstacion' => 0,
 'idYear' => $idYear,
-'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
 'help' => false,
 'scripts' => [],
 ], 'departamento-operativo');
@@ -530,6 +548,8 @@ View::render('departamento-operativo/1-corporativo/resumen-monedero/kpi-evaluaci
 'title' => 'Evaluación Facturas de Monederos (KPI\'s), ' . $idYear,
 'idEstacion' => $idEstacion,
 'idYear' => $idYear,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
 'multiestacion' => $permisos['multiestacion'],
 'help' => false,
 'scripts' => [
@@ -549,8 +569,9 @@ echo json_encode(['success' => false, 'message' => 'Sin permisos']);
 exit;
 }
 
-$idEstacion = $this->estacionId();
-if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
+if (!$idEstacion) {
 echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
 exit;
 }

@@ -71,8 +71,8 @@ return '<span class="badge rounded-pill ' + cls + '">' + (window.__statusLabels 
 const columns = [
 { title: '#', data: 'id', className: 'align-middle text-center fw-normal' },
 { title: 'Fecha', data: 'fecha', className: 'align-middle text-center' },
-{ title: 'Raz\u00f3n Social', data: 'razonsocial', className: 'align-middle', visible: showRazonSocial },
-{ title: 'Estaci\u00f3n / Departamento', data: 'estacion_nombre', className: 'align-middle text-center fw-semibold', visible: showEstacionColumna,
+{ title: 'Razón Social', data: 'razonsocial', className: 'align-middle', visible: showRazonSocial },
+{ title: 'Estación / Departamento', data: 'estacion_nombre', className: 'align-middle text-center fw-semibold', visible: showEstacionColumna,
 render: (v) => v ? '<div style="white-space:normal;word-break:break-word;">' + v + '</div>' : ''
 },
 { title: 'Beneficiario', data: 'beneficiario', className: 'align-middle',
@@ -280,5 +280,25 @@ const id = parseInt(this.dataset.id);
 const event = new CustomEvent('ver-pagos', { detail: { id } });
 document.dispatchEvent(event);
 });
+
+var moduleStationKey = c.dataset.moduleStationKey || '';
+if (moduleStationKey) {
+ModuleStationSelector.init(moduleStationKey, {
+customReload: function (ms) {
+var v = ms.getValue();
+if (v.id_estacion) {
+sessionStorage.setItem('sc_estacion', String(v.id_estacion));
+sessionStorage.removeItem('sc_depto');
+} else if (v.id_depto) {
+sessionStorage.setItem('sc_depto', String(v.id_depto));
+sessionStorage.removeItem('sc_estacion');
+} else {
+sessionStorage.removeItem('sc_estacion');
+sessionStorage.removeItem('sc_depto');
+}
+window.location.reload();
+}
+});
+}
 
 });

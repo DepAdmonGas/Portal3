@@ -7,6 +7,7 @@ use App\Models\SolicitudTarjetasSeguimiento;
 use App\Core\Breadcrumb;
 use App\Models\Usuario;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Session;
 use App\Models\Estacion;
 use App\Core\Auth;
@@ -25,13 +26,30 @@ $idPuesto = $datosUsuario->id_puesto;
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add($title, '');
 
-// Buscar permisos de los modulos
 $permisos = ModuloService::permisosSesion($this->modulo);
+
+// Compute pending counts per station for the selector
+$pendingStations = SolicitudTarjetas::selectRaw('COUNT(*) as total, id_estacion')
+->where('estatus', 0)
+->groupBy('id_estacion')
+->get()
+->keyBy('id_estacion');
+
+$allStationIds = ModuleStationService::getAvailableStations('solicitud-tarjetas');
+$pendientesMap = [];
+foreach ($allStationIds as $s) {
+$count = isset($pendingStations[$s['id']]) ? (int)$pendingStations[$s['id']]->total : 0;
+$pendientesMap['estacion_' . $s['id']] = $count;
+}
+$pendientesMap['total'] = array_sum($pendientesMap);
+$pendientesData = $pendientesMap;
 
 $data = [
 'title' => $title,
 'permisos' => $permisos,
 'modulo' => $this->modulo,
+'moduleStationKey' => 'solicitud-tarjetas',
+'pendientesData' => $pendientesData,
 'filtro_usuario' => $this->filtro_usuario,
 'utilitiesUser' =>[
 'idPuestoUser' => $idPuesto
@@ -42,6 +60,7 @@ $data = [
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+'/assets/js/core/module-station-selector.js',
 '/assets/js/tarjetas/tarjetas.datatable.init.js?v=' . time(),
 '/assets/js/tarjetas/actions.init.js?v=' . time()
 ]
@@ -52,8 +71,8 @@ View::render('tarjetas/index', $data, 'main');
 
 public function datatableTarjetas(){
 
-$filtro_usuario = Session::get('usuario');
-$idEstacion = $filtro_usuario['id_estacion'] ?? null;
+$ctx = ModuleStationService::getContext('solicitud-tarjetas');
+$idEstacion = $ctx['id_estacion'];
 
 $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
 $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
@@ -254,8 +273,9 @@ throw new \Exception('No se pudo guardar el archivo');
 $idUsuario = $this->userId();
 $datosUsuario = Usuario::find($idUsuario);
 
-// Obtener la estacion 
-$idEstacion = $this->estacionId();
+// Obtener la estacion desde el contexto del módulo
+$ctx = ModuleStationService::getContext('solicitud-tarjetas');
+$idEstacion = $ctx['id_estacion'];
 $datosEstacion = Estacion::find($idEstacion);
 
 // Obtener el max(no_solicitud) por estación

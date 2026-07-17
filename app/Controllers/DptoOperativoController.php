@@ -5,11 +5,14 @@ use App\Core\Breadcrumb;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\ModuloService;
 use App\Core\Auth;
+use App\Services\ModuleStationService;
 
 class DptoOperativoController extends BaseController{
 protected string $modulo = 'departamento-operativo';
 
 public function index(){
+// Resetear contextos de estaciones al salir de módulos
+ModuleStationService::resetAllContexts();
 
 $title = 'Dirección de Operaciones';
 
@@ -53,6 +56,23 @@ $submenus = $modulo['submenus'] ?? [];
 
 $idYear = date('Y');
 $idMes  = date('n');
+
+$routeSuffix = [
+'corte-diario'      => "/{$idYear}/{$idMes}",
+'embarques'         => "/{$idYear}/{$idMes}",
+'solicitud-cheque'  => "/{$idYear}/{$idMes}",
+'ingresos-facturacion' => "/{$idYear}",
+'despacho-ventas'   => "/{$idYear}/{$idMes}",
+'comparativo-xml'   => "/{$idYear}",
+'aclaracion-voucher'   => "/{$idYear}/{$idMes}",
+'solicitud-vales'   => "/{$idYear}/{$idMes}",
+];
+
+foreach ($submenus as &$submenu) {
+$suffix = $routeSuffix[$submenu['clave']] ?? '';
+$submenu['ruta'] .= $suffix;
+}
+unset($submenu);
 
 $data = [
 'title' => $title,

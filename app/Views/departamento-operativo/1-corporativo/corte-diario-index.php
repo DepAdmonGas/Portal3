@@ -1,19 +1,31 @@
-<div id="container" class="mt-4 mb-4" data-mes="<?= $idMes ?>" data-year="<?= $idYear ?>" data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>">
+<div id="container" class="mt-4 mb-4" data-mes="<?= $idMes ?>" data-year="<?= $idYear ?>" data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>" data-module-station-key="corte-diario">
+
+<?php if (!$estacionId): ?>
+<div id="corte-diario-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+Debes de seleccionar una estación del menú superior para poder visualizar la información del Corte Diario.
+</div>
+<div id="corte-diario-content" style="display:none">
+<?php else: ?>
+<div id="corte-diario-empty-message" style="display:none" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+Debes de seleccionar una estación del menú superior para poder visualizar la información del Corte Diario.
+</div>
+<div id="corte-diario-content">
+<?php endif; ?>
 
 <div class="row">
 <div class="col-12">
 <div class="d-flex align-items-center">
 <div class="ms-auto">
 
-<?php if (!$multiestacion || $estacionId != 8): ?>
+<div id="corte-diario-actions-wrapper"<?php if (!$estacionId): ?> style="display:none"<?php endif; ?>>
 <div class="dropdown mb-4">
-<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-tools me-1"></i>
+
+<button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<i class="ti ti-dots-vertical fs-4"></i>
 </button>
 
 <ul class="dropdown-menu dropdown-menu-end">
 
-<!-- VISIBLES PARA TODOS -->
 <li>
 <a class="dropdown-item" href="/departamento-operativo/control-volumetrico/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-bottle"></i> Control Volumétrico
@@ -44,7 +56,7 @@
 </a>
 </li>
 
-<?php if (!$multiestacion): ?>
+<?php if ($estacionId): ?>
 
 <li>
 <a class="dropdown-item" href="/departamento-operativo/resumen-impuestos/<?= $idYear ?>/<?= $idMes ?>">
@@ -75,13 +87,13 @@
 
 </ul>
 </div>
-<?php endif; ?>
-
-</div>
-</div>
 </div>
 
-<div class="col-12">
+</div>
+</div>
+</div>
+</div>
+
 <div class="datatables">
 <div class="table-responsive">
 <table id="table-corte-diario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
@@ -89,7 +101,7 @@
 </table>
 </div>
 </div>
-</div>
+
 </div>
 
 <?php if ($multiestacion): ?>
@@ -101,7 +113,6 @@
 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
 
-<!-- Step: loading -->
 <template x-if="loading">
 <div class="modal-body">
 <div class="text-center py-4">
@@ -111,7 +122,6 @@
 </div>
 </template>
 
-<!-- Step: history (shows history table + activar button) -->
 <template x-if="!loading && step === 'history'">
 <div>
 <div class="modal-body">
@@ -153,7 +163,6 @@
 </div>
 </template>
 
-<!-- Step: activate (show motivo form) -->
 <template x-if="!loading && step === 'activate'">
 <div>
 <div class="modal-body">
@@ -176,3 +185,5 @@ Activar
 </div>
 </div>
 <?php endif; ?>
+
+</div>

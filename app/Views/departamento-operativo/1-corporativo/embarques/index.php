@@ -1,16 +1,10 @@
-<?php if (!$idEstacion): ?>
-<div class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+<div id="embarques-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4"<?= $idEstacion ? ' style="display:none"' : '' ?>>
 Debes de seleccionar una estación del menú superior para poder visualizar la información de los Embarques.
 </div>
-<?php else: ?>
 
-<?php if ($multiestacion && $idEstacion === 8): ?>
-<div class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
-Debes de seleccionar una estación del menú superior para poder visualizar la información de los Embarques.
-</div>
-<?php else: ?>
+<?php $mostrarDataTable = $idEstacion && !($multiestacion && $idEstacion === 8); ?>
 
-<div id="container" class="mt-3 mb-4"
+<div id="embarques-content" class="mt-3 mb-4"<?= $mostrarDataTable ? '' : ' style="display:none"' ?>
 data-id-year="<?= $idYear ?>"
 data-id-mes="<?= $idMes ?>"
 data-id-estacion="<?= $idEstacion ?>"
@@ -27,16 +21,16 @@ x-data="{ ...actions(), ...embarquesComponent() }">
 <div class="d-flex gap-2">
 
 <?php if ($esEncargadoAsistente): ?>
-<button type="button" class="btn btn-success" @click="abrirModalAgregar()">
-<i class="ti ti-plus me-1"></i> Agregar
+<button type="button" class="btn btn-primary" @click="abrirModalAgregar()">
+<i class="ti ti-plus"></i> Nuevo
 </button>
 <?php endif; ?>
 
 <?php if ($puedeAnalisisCompras && !$esEncargadoAsistente): ?>
 <?php if ($esDireccionOperaciones): ?>
 <div class="dropdown d-inline">
-<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-<i class="ti ti-tools me-1"></i>
+<button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<i class="ti ti-dots-vertical fs-4"></i>
 </button>
 <ul class="dropdown-menu dropdown-menu-end">
 <?php if ($puedeAgregar): ?>
@@ -87,6 +81,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 </h5>
 </div>
 
+<div class="table-responsive">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mt-3">
 <tbody>
 <tr><td class="text-start"><h6 class="fw-semibold ">La estación de servicio debe recabar la siguiente documentación:</h6></td></tr>
@@ -99,6 +94,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 <tr><td class="text-start"><span class="badge bg-primary me-2">7</span>Firmas autógrafas de ambas partes.</td></tr>
 </tbody>
 </table>
+</div>
 
 <hr>
 
@@ -169,7 +165,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 
 <div x-show="form.embarque === 'Pick Up'">
 <div class="table-responsive">
-<table class="table table-sm table-bordered" style="font-size:12.5px;">
+<table class="table table-sm table-bordered">
 <thead class="table-secondary">
 <tr>
 <th class="align-middle text-center">DESCRIPCION</th>
@@ -302,7 +298,7 @@ x-ref="chatContainer">
 <template x-if="comentarios.length === 0">
 <div class="d-flex flex-column align-items-center justify-content-center text-center"
 style="min-height: 380px;">
-<i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
+<i class="ti ti-message-off text-muted mb-2"></i>
 <p class="text-muted mb-0 fs-5">Sin comentarios</p>
 </div>
 </template>
@@ -404,5 +400,3 @@ type="button"
 </template>
 
 </div>
-<?php endif; ?>
-<?php endif; ?>

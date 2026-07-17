@@ -3,12 +3,6 @@
 Debes de seleccionar una estación del menú superior para poder visualizar la información del Resumen Monedero.
 </div>
 <?php else: ?>
-<?php
-$verShell = ($idEstacion == 2 || $idEstacion == 14);
-$colspanMetodos = $verShell ? 19 : 18;
-$colspanTarjetas = $verShell ? 8 : 7;
-$totalCols = $verShell ? 25 : 24;
-?>
 <div id="container" class="mt-4 mb-4"
 data-id-mes-db="<?= $idMesDb ?>"
 data-id-year="<?= $idYear ?>"
@@ -19,6 +13,7 @@ data-ver-prosegur="<?= $verProsegur ? 'true' : 'false' ?>"
 data-tipo-puesto="<?= $tipoPuesto ?>"
 data-es-corporativo="<?= $esCorporativo ? 'true' : 'false' ?>"
 data-id-puesto="<?= $idPuesto ?>"
+data-module-station-key="corte-diario"
 x-data="resumenMonederoComponent()">
 
 <template x-if="loading">
@@ -41,8 +36,8 @@ x-data="resumenMonederoComponent()">
 
 <div class="d-flex justify-content-end mb-3">
 <div class="dropdown d-inline ms-2">
-<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-tools me-1"></i>
+<button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<i class="ti ti-dots-vertical fs-4"></i>
 </button>
 <ul class="dropdown-menu dropdown-menu-end">
 <li><a class="dropdown-item pointer" @click.prevent="abrirModalFacturas()"><i class="ti ti-file-text me-2"></i>Facturas</a></li>
@@ -452,7 +447,7 @@ No hay registros para este mes
 </div>
 
 <div class="table-responsive">
-<table class="table table-striped table-bordered mt-2" style="font-size: 14px;">
+<table class="table table-striped table-bordered mt-2">
 <thead>
 <tr>
 <th class="align-middle text-center" width="96px">No.</th>
@@ -497,7 +492,7 @@ No hay registros para este mes
 <div x-show="multiestacion">
 <template  x-if="modalFacturaVista === 'lista'">
 <button type="button" class="btn btn-primary" @click="nuevaFactura()">
-<i class="ti ti-plus me-1"></i>Agregar factura
+<i class="ti ti-plus"></i> Nueva factura
 </button>
 </template>
 </div>

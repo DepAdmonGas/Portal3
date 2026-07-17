@@ -59,7 +59,7 @@ x-data="tpvComponent()">
 <h5 class="mb-0 text-white"><i class="ti ti-building me-2"></i><span x-text="empresa === 'G500 FLETT' ? 'TICKETCARD+' : empresa"></span></h5>
 <template x-if="!multiestacion && puedeEditar && !finalizado">
 <button type="button" class="btn btn-success btn-sm" @click="agregarCierre(empresa)" :disabled="saving">
-<i class="ti ti-plus me-1"></i>Agregar
+<i class="ti ti-plus"></i> Nuevo
 </button>
 </template>
 </div>

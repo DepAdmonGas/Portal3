@@ -25,6 +25,7 @@ use App\Models\Operativo\Observacione;
 use App\Models\Estacion;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use App\Services\ModuleStationService;
 
 class VentasController extends BaseController
 {
@@ -39,7 +40,8 @@ $idMes = $validados['idMes'];
 $permisos = VentasService::getPermisos();
 $estado = VentasService::getEstado((int) $idDia);
 $fecha = VentasService::getFecha((int) $idDia);
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'] ?? $this->estacionId();
 
 $multiEstacion = $permisos['multiestacion'];
 
@@ -77,8 +79,9 @@ $data = [
 'puedeDescargar' => $permisoDescargar,
 'esSuperviso' => $permisos['es_superviso'],
 'esVoBo' => $permisos['es_vobo'],
+'moduleStationKey' => 'corte-diario',
 'ocultarSelectorEstacion' => true,
-'scripts' => [
+        'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.ventas.init.js?v=' . time(),

@@ -4,8 +4,8 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 </div>
 <?php else: ?>
 <div id="resumenPeriodoContainer"
-     data-id-year="<?= $idYear ?>"
-     data-id-mes="<?= $idMes ?>"
-     data-id-estacion="<?= $idEstacion ?>">
+data-id-year="<?= $idYear ?>"
+data-id-mes="<?= $idMes ?>"
+data-id-estacion="<?= $idEstacion ?>">
 </div>
 <?php endif; ?>

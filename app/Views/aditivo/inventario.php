@@ -1,4 +1,16 @@
-<div id="container" class="mb-4">
+<div id="container" class="mb-4" data-module-station-key="bitacora-aditivo">
+
+<?php if (!$estacionId): ?>
+<div id="aditivo-inventario-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+Debes de seleccionar una estación del menú superior para poder visualizar el inventario de aditivo.
+</div>
+<div id="aditivo-inventario-content" style="display:none">
+<?php else: ?>
+<div id="aditivo-inventario-empty-message" style="display:none" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+Debes de seleccionar una estación del menú superior para poder visualizar el inventario de aditivo.
+</div>
+<div id="aditivo-inventario-content">
+<?php endif; ?>
 
 <div class="row mt-4 mb-4">
     <div class="col-md-6 order-2 order-md-1">
@@ -38,11 +50,13 @@
           </thead>
           <tbody></tbody>
         </table>
-        </div>
+        </div> <!-- end table-responsive -->
 
-  </div>
+  </div> <!-- end datatables -->
 
-</div>
+</div> <!-- end aditivo-inventario-content -->
+
+</div> <!-- end container -->
 
 <div class="modal fade"
      id="nuevo"

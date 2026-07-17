@@ -27,7 +27,7 @@ header('X-Content-Type-Options: nosniff');
 header('X-XSS-Protection: 1; mode=block');
 
 // Content Security Policy - Más permisiva para desarrollo
-header("Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com; frame-ancestors 'self';");
+header("Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.ckeditor.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.ckeditor.com; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net data: https://cdn.ckeditor.com; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdn.ckeditor.com; frame-ancestors 'self';");
 
 // HSTS (solo si HTTPS está configurado)
 if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {

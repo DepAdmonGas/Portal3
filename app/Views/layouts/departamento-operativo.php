@@ -286,28 +286,10 @@ return Promise.reject(error);
 <div class="container-fluid" x-data="yearMesComponent()" data-year-mes-template="<?= htmlspecialchars($yearMesTemplate ?? '', ENT_QUOTES, 'UTF-8') ?>">
 
 <div class="d-flex align-items-center">
-<!-- IZQUIERDA -->
-<?php
-$idEstacion    = $filtro_usuario['id_estacion'] ?? null;
-$multiestacion = !empty($filtro_usuario['multiestacion']);
-$esTodas       = (int)$idEstacion === 8;
-
-// Obtener razón social según tipo
-$razonsocial = $multiestacion
-? ($filtro_usuario['nombre_estacion'] ?? '')
-: ($user->estacion->nombre ?? '');
-
-$razonsocial = trim($razonsocial);
-?>
-
-<?php if (!$esTodas && $razonsocial !== ''): ?>
-<span class="mb-1 badge rounded-pill text-bg-info">
-<?= $razonsocial ?>
-</span>
-<?php endif; ?>
+<?php include __DIR__ . '/../partials/_global-badge.php'; ?>
 
 <!-- DERECHA -->
-<?php if ($multiestacion && empty($ocultarSelectorEstacion)) : ?>
+<?php if (false && $multiestacion && empty($ocultarSelectorEstacion) && empty($moduleStationKey)) : ?>
 <select id="selectEstacion" class="form-select form-select-sm w-auto ms-auto">
 <option value="8" <?= $esTodas ? 'selected' : '' ?>>Todas las estaciones</option>
 
@@ -321,7 +303,9 @@ $razonsocial = trim($razonsocial);
 <?php endif; ?>
 </div>
 
-<?php if (isset($estacionesFiltradas) && ((!empty($estacionesFiltradas) && $multiestacion) || ($esGestoria ?? false))): ?>
+<?php if (!empty($moduleStationKey) && \App\Services\ModuleStationService::hasSelector($moduleStationKey)): ?>
+<?= \App\Services\ModuleStationService::render($moduleStationKey, $pendientesData ?? [], empty($ocultarSelectorEstacion)) ?>
+<?php elseif (isset($estacionesFiltradas) && ((!empty($estacionesFiltradas) && $multiestacion) || ($esGestoria ?? false))): ?>
 <div class="d-flex align-items-center justify-content-between flex-wrap w-100">
 <span id="sc-badge" class="badge rounded-pill text-bg-info">
 <?= htmlspecialchars($nombreFiltro ?? ($esGestoria ? 'Gestoría' : '')) ?>
@@ -333,7 +317,7 @@ id="sc-selector-estacion"
 onchange="cambiarEstacion(this)"
 style="min-width:260px;">
 <option value="all"<?= (!$idEstacion && !$idDepto) ? ' selected' : '' ?>>
-Todas las estaciones y departamentos (<?= $totalPendientes ?>)
+<?= htmlspecialchars($nombreFiltro ?? 'Todas las estaciones y departamentos') ?> (<?= $totalPendientes ?>)
 </option>
 <optgroup label="Estaciones">
 <?php foreach ($estacionesFiltradas as $s):
@@ -398,7 +382,7 @@ $badgeText = $detalle['estacion_nombre'];
 <!-- highlight.js (code view) -->
 <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
 <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
-<script src="<?= asset('js/core/notify.js?v=1.1') ?>"></script> 
+<script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script> 
 <script src="<?= asset('js/core/actions.alpine.js?v=1.3') ?>"></script>
 
 <!-- Scripts por vista -->

@@ -11,6 +11,7 @@ data-id-estacion="<?= $idEstacion ?>"
 data-estado="<?= $estado ?>"
 data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>"
 data-tipo-puesto="<?= $tipoPuesto ?>"
+data-module-station-key="corte-diario"
 x-data="controlVolumetricoComponent()">
 
 <template x-if="loading">
@@ -351,7 +352,9 @@ x-model="p.comentario"
 <div class="card-header text-bg-primary">
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
 <h5 class="mb-0 text-white"><i class="ti ti-file me-2"></i>ANEXOS</h5>
-<button type="button" class="btn btn-success" @click="abrirModalDocumento()"><i class="ti ti-plus"></i> Agregar Anexo</button>
+<button type="button" class="btn btn-success" @click="abrirModalDocumento()">
+<i class="ti ti-plus"></i> Nuevo Anexo
+</button>
 </div>
 </div>
 <div class="card-body p-0">

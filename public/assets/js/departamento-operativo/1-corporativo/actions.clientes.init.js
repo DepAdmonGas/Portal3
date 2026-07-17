@@ -1,3 +1,7 @@
+document.addEventListener('DOMContentLoaded', () => {
+ModuleStationSelector.init('corte-diario');
+});
+
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('clientesComponent', () => ({
@@ -19,15 +23,15 @@ total_consumo: 0, total_pago: 0,
 
 clientes: [],
 
-    modalCliente: '',
-    modalTotal: '',
-    modalTipo: '',
-    modalFormaPago: '',
-    modalComprobante: null,
-    guardando: false,
+modalCliente: '',
+modalTotal: '',
+modalTipo: '',
+modalFormaPago: '',
+modalComprobante: null,
+guardando: false,
 
-    listaLoading: false,
-    listaClientes: [],
+listaLoading: false,
+listaClientes: [],
 
 init() {
 const c = document.getElementById('container');
@@ -235,89 +239,89 @@ headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 body: 'idYear=' + idYear + '&idMes=' + idMes + '&idDia=' + idDia
 });
 } catch (e) { console.error(e); }
-    window.location.href = '/departamento-operativo/clientes-lista';
+window.location.href = '/departamento-operativo/clientes-lista';
 },
 
-    async guardar() {
-        if (this.guardando) return;
-        if (!this.modalCliente) {
-            if (window.Notify) Notify.error('Selecciona un cliente');
-            return;
-        }
-        if (!this.modalTotal || parseFloat(this.modalTotal) <= 0) {
-            if (window.Notify) Notify.error('Ingresa un total válido');
-            return;
-        }
-        if (!this.modalTipo) {
-            if (window.Notify) Notify.error('Selecciona Consumo o Pago');
-            return;
-        }
+async guardar() {
+if (this.guardando) return;
+if (!this.modalCliente) {
+if (window.Notify) Notify.error('Selecciona un cliente');
+return;
+}
+if (!this.modalTotal || parseFloat(this.modalTotal) <= 0) {
+if (window.Notify) Notify.error('Ingresa un total válido');
+return;
+}
+if (!this.modalTipo) {
+if (window.Notify) Notify.error('Selecciona Consumo o Pago');
+return;
+}
 
-        this.guardando = true;
+this.guardando = true;
 
-        if (this.modalTipo === 'Pago') {
-            if (!this.modalFormaPago) {
-                if (window.Notify) Notify.error('Selecciona una forma de pago');
-                this.guardando = false;
-                return;
-            }
-            const fd = new FormData();
-            fd.append('idReporte', this.idDia);
-            fd.append('Cliente', this.modalCliente);
-            fd.append('Total', this.modalTotal);
-            fd.append('FormaPago', this.modalFormaPago);
-            fd.append('Tipo', this.modalTipo);
-            if (this.modalComprobante) {
-                fd.append('Comprobante_file', this.modalComprobante);
-            }
+if (this.modalTipo === 'Pago') {
+if (!this.modalFormaPago) {
+if (window.Notify) Notify.error('Selecciona una forma de pago');
+this.guardando = false;
+return;
+}
+const fd = new FormData();
+fd.append('idReporte', this.idDia);
+fd.append('Cliente', this.modalCliente);
+fd.append('Total', this.modalTotal);
+fd.append('FormaPago', this.modalFormaPago);
+fd.append('Tipo', this.modalTipo);
+if (this.modalComprobante) {
+fd.append('Comprobante_file', this.modalComprobante);
+}
 
-            try {
-                const resp = await fetch('/departamento-operativo/clientes/agregar/pago', {
-                    method: 'POST',
-                    body: fd,
-                });
-                const json = await resp.json();
-                if (json.success) {
-                    const m = bootstrap.Modal.getInstance(document.getElementById('modalAgregar'));
-                    if (m) m.hide();
-                    await this.cargarDatos();
-                    if (window.Notify) Notify.success('Pago agregado correctamente');
-                } else {
-                    if (window.Notify) Notify.error(json.message || 'Error al agregar el pago');
-                }
-            } catch (e) {
-                console.error('Error:', e);
-                if (window.Notify) Notify.error('Error al agregar el pago');
-            }
-        } else {
-            const fd = new FormData();
-            fd.append('idReporte', this.idDia);
-            fd.append('Cliente', this.modalCliente);
-            fd.append('Total', this.modalTotal);
-            fd.append('Tipo', this.modalTipo);
+try {
+const resp = await fetch('/departamento-operativo/clientes/agregar/pago', {
+method: 'POST',
+body: fd,
+});
+const json = await resp.json();
+if (json.success) {
+const m = bootstrap.Modal.getInstance(document.getElementById('modalAgregar'));
+if (m) m.hide();
+await this.cargarDatos();
+if (window.Notify) Notify.success('Pago agregado correctamente');
+} else {
+if (window.Notify) Notify.error(json.message || 'Error al agregar el pago');
+}
+} catch (e) {
+console.error('Error:', e);
+if (window.Notify) Notify.error('Error al agregar el pago');
+}
+} else {
+const fd = new FormData();
+fd.append('idReporte', this.idDia);
+fd.append('Cliente', this.modalCliente);
+fd.append('Total', this.modalTotal);
+fd.append('Tipo', this.modalTipo);
 
-            try {
-                const resp = await fetch('/departamento-operativo/clientes/agregar/consumo', {
-                    method: 'POST',
-                    body: fd,
-                });
-                const json = await resp.json();
-                if (json.success) {
-                    const m = bootstrap.Modal.getInstance(document.getElementById('modalAgregar'));
-                    if (m) m.hide();
-                    await this.cargarDatos();
-                    if (window.Notify) Notify.success('Consumo agregado correctamente');
-                } else {
-                    if (window.Notify) Notify.error(json.message || 'Error al agregar el consumo');
-                }
-            } catch (e) {
-                console.error('Error:', e);
-                if (window.Notify) Notify.error('Error al agregar el consumo');
-            }
-        }
+try {
+const resp = await fetch('/departamento-operativo/clientes/agregar/consumo', {
+method: 'POST',
+body: fd,
+});
+const json = await resp.json();
+if (json.success) {
+const m = bootstrap.Modal.getInstance(document.getElementById('modalAgregar'));
+if (m) m.hide();
+await this.cargarDatos();
+if (window.Notify) Notify.success('Consumo agregado correctamente');
+} else {
+if (window.Notify) Notify.error(json.message || 'Error al agregar el consumo');
+}
+} catch (e) {
+console.error('Error:', e);
+if (window.Notify) Notify.error('Error al agregar el consumo');
+}
+}
 
-        this.guardando = false;
-    },
+this.guardando = false;
+},
 
 
 }));

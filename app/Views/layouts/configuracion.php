@@ -29,7 +29,7 @@
 
 <!-- Pantalla de carga (Loader) -->
 <div class="loader-admongas">
-    <img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
+<img src="<?=asset('images/logos/logo-empresaMov.gif')?>" alt="Cargando..." class="logo-loader-admongas" />
 </div>
 
 
@@ -237,28 +237,10 @@
 <div class="container-fluid">
 
 <div class="d-flex align-items-center">
-<!-- IZQUIERDA -->
-<?php
-$idEstacion    = $filtro_usuario['id_estacion'] ?? null;
-$multiestacion = !empty($filtro_usuario['multiestacion']);
-$esTodas       = (int)$idEstacion === 8;
-
-// Obtener razón social según tipo
-$razonsocial = $multiestacion
-? ($filtro_usuario['nombre_estacion'] ?? '')
-: ($user->estacion->nombre ?? '');
-
-$razonsocial = trim($razonsocial);
-?>
-
-<?php if (!$esTodas && $razonsocial !== ''): ?>
-<span class="mb-1 badge rounded-pill text-bg-info">
-<?= $razonsocial ?>
-</span>
-<?php endif; ?>
+<?php include __DIR__ . '/../partials/_global-badge.php'; ?>
 
 <!-- DERECHA -->
-<?php if ($multiestacion) : ?>
+<?php if (false && $multiestacion) : ?>
 <select id="selectEstacion" class="form-select form-select-sm w-auto ms-auto">
 <option value="8" <?= $esTodas ? 'selected' : '' ?>>Todas las estaciones</option>
 
@@ -301,7 +283,7 @@ $razonsocial = trim($razonsocial);
 <!-- highlight.js (code view) -->
 <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
 <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
-<script src="<?= asset('js/core/notify.js?v=1.1') ?>"></script> 
+<script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script> 
 <script src="<?= asset('js/core/actions.alpine.js?v=1.1') ?>"></script>
 
 <!-- Scripts por vista -->

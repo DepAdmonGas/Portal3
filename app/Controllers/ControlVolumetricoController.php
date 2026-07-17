@@ -4,6 +4,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ControlVolumetricoService;
 use App\Services\DropdownYearMesService;
+use App\Services\ModuleStationService;
 use App\Services\ModuloDptoOperativoService;
 use App\Models\Operativo\ControlVolumetrico;
 use App\Core\Session;
@@ -18,16 +19,18 @@ $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 $data = [
 'title' => 'Control Volumétrico (' . nombremes($idMes) . ' ' . $idYear . ')',
 'idYear' => $idYear,
 'idMes' => $idMes,
 'idEstacion' => 0,
-'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
 'esDireccionOperaciones' => false,
 'help' => false,
 ];
@@ -71,6 +74,8 @@ $data = [
 'idMes' => $idMes,
 'idMesDb' => $idMesDb,
 'idEstacion' => $idEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
 'estado' => $estado,
 'yearMesTemplate' => '/departamento-operativo/control-volumetrico/{year}/{mes}',
 'multiestacion' => $permisos['multiestacion'],

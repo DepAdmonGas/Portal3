@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\KpiCorteDiarioService;
+use App\Services\ModuleStationService;
 
 class CorteDiarioEvaluacionController extends BaseController
 {
@@ -20,16 +21,18 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 $multiEstacion = $this->isMultiEs();
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 View::render('departamento-operativo/1-corporativo/corte-diario-evaluacion/index', [
 'title' => 'Apertura de Cortes Diarios (KPI\'s), ' . $idYear,
 'idEstacion' => 0,
 'idYear' => $idYear,
 'idMes' => $idMes,
 'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
 'help' => false,
 'scripts' => [],
 ], 'departamento-operativo');
@@ -54,9 +57,11 @@ View::render('departamento-operativo/1-corporativo/corte-diario-evaluacion/index
 'idYear' => $idYear,
 'idMes' => $idMes,
 'multiestacion' => false,
+'moduleStationKey' => 'corte-diario',
 'help' => false,
 'scripts' => [
 '/assets/libs/apexcharts/dist/apexcharts.min.js',
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/kpi-corte-diario.actions.init.js?v=' . time(),
 ],
 ], 'departamento-operativo');
@@ -72,8 +77,9 @@ echo json_encode(['success' => false, 'message' => 'Sin permisos']);
 exit;
 }
 
-$idEstacion = $this->estacionId();
-if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
+if (!$idEstacion) {
 echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
 exit;
 }

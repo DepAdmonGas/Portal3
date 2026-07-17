@@ -1,4 +1,16 @@
-<div id="container" class="mb-4">
+<div id="container" class="mb-4" data-module-station-key="bitacora-aditivo">
+
+<?php if (!$estacionId): ?>
+<div id="aditivo-reporte-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+    Debes de seleccionar una estación del menú superior para poder visualizar el reporte de aditivo.
+</div>
+<div id="aditivo-reporte-content" style="display:none">
+<?php else: ?>
+<div id="aditivo-reporte-empty-message" style="display:none" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+    Debes de seleccionar una estación del menú superior para poder visualizar el reporte de aditivo.
+</div>
+<div id="aditivo-reporte-content">
+<?php endif; ?>
 
     <div class="text-end mb-4">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Agregar </button>
@@ -24,9 +36,9 @@
         </table>
         </div>
 
-  </div>
+  </div> <!-- end aditivo-reporte-content -->
 
-</div>
+</div> <!-- end container -->
 
 <div class="modal fade"
      id="nuevo"

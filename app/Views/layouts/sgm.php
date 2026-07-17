@@ -269,7 +269,7 @@ sessionStorage.setItem(key, window.scrollY);
 
 <div class="body-wrapper">
 <div class="container-fluid">
-<span class="mb-1 badge rounded-pill text-bg-primary"><?=$user->estacion->nombre??'Sistema de Gestión de Medición'?></span>  
+<?php include __DIR__ . '/../partials/_global-badge.php'; ?>  
 <h4 class="fw-semibold mt-3"><?=$title;?></h4>  
 <?php \App\Core\Breadcrumb::render(); ?>
 
@@ -300,6 +300,7 @@ sessionStorage.setItem(key, window.scrollY);
 <!-- highlight.js (code view) -->
 <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
 <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
+
 <script src="<?= asset('js/core/notify.js?v=1.0.1') ?>"></script> 
 <script src="<?= asset('js/core/actions.alpine.js?v=1.0.4') ?>"></script>
 

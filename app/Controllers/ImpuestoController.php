@@ -6,6 +6,7 @@ use App\Core\Breadcrumb;
 use App\Services\ImpuestoService;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
+use App\Services\ModuleStationService;
 
 class ImpuestoController extends BaseController
 {
@@ -20,7 +21,8 @@ $idMes = $validados['idMes'];
 $permisos = ImpuestoService::getPermisos();
 $estado = ImpuestoService::getEstado((int) $idDia);
 $fecha = ImpuestoService::getFecha((int) $idDia);
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'] ?? $this->estacionId();
 
 $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
 
@@ -42,9 +44,11 @@ $data = [
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'idEstacion' => $idEstacion,
+'moduleStationKey' => 'corte-diario',
 'ocultarSelectorEstacion' => true,
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.impuestos.init.js?v=' . time(),
 ],
 'help' => false

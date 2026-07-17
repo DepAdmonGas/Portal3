@@ -1,3 +1,15 @@
+document.addEventListener('DOMContentLoaded', () => {
+ModuleStationSelector.init('corte-diario', {
+customReload: function (ms) {
+var v = ms.getValue();
+if (v.id_estacion === null && v.id_depto === null) {
+ms.hideBadge();
+}
+window.location.reload();
+}
+});
+});
+
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('monederoComponent', () => ({

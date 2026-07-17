@@ -35,7 +35,7 @@ x-data="ventasComponent()">
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
 <h5 class="mb-0 text-white"><i class="ti ti-report-money me-2"></i>CONCENTRADO DE VENTAS</h5>
 <template x-if="!multiestacion && estado == 0">
-<button type="button"class="btn btn-success" @click="newVenta"><i class="ti ti-plus me-1"></i>Agregar producto</button>
+<button type="button"class="btn btn-success" @click="newVenta"><i class="ti ti-plus me-1"></i>Nuevo producto</button>
 </template>
 </div>
 </div>
@@ -259,7 +259,7 @@ x-model="a.cantidad"
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
 <h5 class="mb-0 text-white"><i class="ti ti-file me-2"></i>DOCUMENTACIÓN</h5>
 <template x-if="!multiestacion && estado == 0">
-<button type="button" class="btn btn-success" @click="abrirModalDocumento"><i class="ti ti-plus"></i> Agregar documento</button>
+<button type="button" class="btn btn-success" @click="abrirModalDocumento"><i class="ti ti-plus"></i> Nuevo documento</button>
 </template>
 </div>
 </div>

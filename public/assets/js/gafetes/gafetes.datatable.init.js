@@ -192,4 +192,6 @@ $(this).addClass("selected");
 }
 });
 
+ModuleStationSelector.init('solicitud-gafetes');
+
 });

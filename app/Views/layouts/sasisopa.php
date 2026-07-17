@@ -306,7 +306,7 @@
 <div class="body-wrapper">
 <div class="container-fluid">
 
-<span class="mb-1 badge rounded-pill text-bg-primary"><?=$user->estacion->nombre??'SASISOPA'?></span>   
+<?php include __DIR__ . '/../partials/_global-badge.php'; ?>   
 <h4 class="fw-semibold mt-3"><?=$title;?></h4>  
 <?php \App\Core\Breadcrumb::render(); ?>     
 <?= $content ?>   

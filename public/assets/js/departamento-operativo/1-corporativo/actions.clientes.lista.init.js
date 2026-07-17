@@ -1,3 +1,23 @@
+document.addEventListener('DOMContentLoaded', () => {
+var messageEl = document.getElementById('clientes-lista-empty-message');
+var contentEl = document.getElementById('clientes-lista-content');
+
+function showEmptyMessage() {
+if (contentEl) contentEl.style.display = 'none';
+if (messageEl) messageEl.style.display = '';
+}
+
+function showContent() {
+if (contentEl) contentEl.style.display = '';
+if (messageEl) messageEl.style.display = 'none';
+}
+
+if (messageEl && messageEl.style.display !== 'none') {
+showEmptyMessage();
+} else {
+showContent();
+}
+});
 
 document.addEventListener('alpine:init', () => {
 
@@ -21,16 +41,16 @@ formTipo: '',
 formRfc: '',
 files: [null, null, null, null, null, null, null],
 
-    guardandoCrear: false,
-    guardandoEditar: false,
+guardandoCrear: false,
+guardandoEditar: false,
 
-    editId: 0,
-    editCuenta: '',
-    editCliente: '',
-    editTipo: '',
-    editRfcCredito: '',
-    editRfcDebito: '',
-    editFiles: [null, null, null, null, null, null, null],
+editId: 0,
+editCuenta: '',
+editCliente: '',
+editTipo: '',
+editRfcCredito: '',
+editRfcDebito: '',
+editFiles: [null, null, null, null, null, null, null],
 
 init() {
 const c = document.getElementById('container');
@@ -44,7 +64,10 @@ this.puedeCrear = c.dataset.puedeCrear === 'true';
 this.puedeEditar = c.dataset.puedeEditar === 'true';
 this.puedeEliminar = c.dataset.puedeEliminar === 'true';
 this.esDireccionOperaciones = c.dataset.esDireccionOperaciones === 'true';
+
+if (this.idEstacion) {
 this.cargarDatos();
+}
 
 this.$watch('formTipo', () => {
 this.formRfc = '';
@@ -197,23 +220,22 @@ const modal = new bootstrap.Modal(document.getElementById('Modal'));
 modal.show();
 },
 
-    guardarCrear() {
-    this._limpiarErrores();
-    let valido = true;
+guardarCrear() {
+this._limpiarErrores();
+let valido = true;
 
-    const Cuenta = this.formCuenta.trim();
-    const Cliente = this.formCliente.trim();
-    const Tipo = this.formTipo;
+const Cuenta = this.formCuenta.trim();
+const Cliente = this.formCliente.trim();
+const Tipo = this.formTipo;
 
-    if (!Cuenta) { this._marcarError('Cuenta'); valido = false; }
-    if (!Cliente) { this._marcarError('Cliente'); valido = false; }
-    if (!Tipo) { this._marcarError('Tipo'); valido = false; }
-    if (!valido) return;
-    this.guardandoCrear = true;
+if (!Cuenta) { this._marcarError('Cuenta'); valido = false; }
+if (!Cliente) { this._marcarError('Cliente'); valido = false; }
+if (!Tipo) { this._marcarError('Tipo'); valido = false; }
+if (!valido) return;
+this.guardandoCrear = true;
 
-    const self = this;
-    const form = new FormData();
-form.append('idEstacion', this.idEstacion);
+const self = this;
+const form = new FormData();
 form.append('Cuenta', this.formCuenta);
 form.append('Cliente', this.formCliente);
 form.append('Tipo', this.formTipo);
