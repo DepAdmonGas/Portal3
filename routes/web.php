@@ -1281,16 +1281,18 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/normatividad-aplicable-mediciones/create-inventario', Route::auth(['SgmNormatividadController', 'createInventario']));
         $r->addRoute('POST', '/normatividad-aplicable-mediciones/delete-inventario', Route::auth(['SgmNormatividadController', 'deleteInventario']));
         $r->addRoute('GET', '/normatividad-aplicable-mediciones/inventario-normatividad/pdf', Route::auth(['SgmNormatividadController', 'pdfInventario']));
-
-        
-
+       
         $r->addRoute('GET', '/normatividad-aplicable-mediciones/pdf-requisito-legal', Route::auth(['SgmNormatividadController', 'pdfRequisitoLegal']));
         $r->addRoute('GET', '/normatividad-aplicable-mediciones/requisito-legal-sgm', Route::auth(['SgmNormatividadController', 'requisitoLegal']));
         //---------- 5. NORMATIVIDAD APLICABLE A MEDICIONES ----------------------------------------------
 
         $r->addRoute('GET', '/gestion-recursos', Route::auth(['SgmController', 'gestionRecursos']));
         $r->addRoute('GET', '/procesos-medicion', Route::auth(['SgmController', 'procesosMedicion']));
+
+        //--------- 8. GESTIÓN DE RIESGOS QUE IMPACTAN EN LA MEDICIÓN ------------------------------------
         $r->addRoute('GET', '/gestion-riesgos-impactan-medicion', Route::auth(['SgmController', 'gestionRiesgosImpactanMedicion']));
+        //--------- 8. GESTIÓN DE RIESGOS QUE IMPACTAN EN LA MEDICIÓN ------------------------------------
+
         $r->addRoute('GET', '/establecimiento-seguimiento-confirmacion-metrologica', Route::auth(['SgmController', 'establecimientoSeguimientoConfirmacionMetrologica']));
         $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos', Route::auth(['SgmController', 'auditoriasInternasExternasAtencionHallazgos']));
         $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion', Route::auth(['SgmController', 'evaluacionCumplimientoObjetivosRevisionDireccion']));
