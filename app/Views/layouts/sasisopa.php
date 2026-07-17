@@ -71,10 +71,21 @@
 <!-- ---------------------------------- -->
 <li class="sidebar-item">
 <a class="sidebar-link" href="/sasisopa/calendario" aria-expanded="false">
-<span>
-<i class="ti ti-calendar-event"></i>
-</span>
-<span class="hide-menu">Calendario</span>
+
+    <div class="d-flex align-items-center gap-3">
+    <span class="d-flex">
+    <i class="ti ti-calendar-event"></i>
+    </span>
+    <span class="hide-menu">Calendario</span>
+    </div>
+   
+    <?= ($pendientes ?? 0) > 0
+    ? '<div class="hide-menu">
+        <span class="badge rounded bg-primary text-black d-flex align-items-center justify-content-center rounded-pill fs-1 fw-bolder">'.$pendientes.'</span>
+       </div>'
+    : ''
+    ?>
+
 </a>
 </li>
 <li class="sidebar-item">
@@ -141,7 +152,7 @@
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/personal" aria-expanded="false">
+<a class="sidebar-link" href="/personal/SASISOPA" aria-expanded="false">
 <span>
 <i class="ti ti-users"></i>
 </span>
@@ -150,7 +161,7 @@
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/" aria-expanded="false">
+<a class="sidebar-link" href="/sasisopa/cambio-precio" aria-expanded="false">
 <span>
 <i class="ti ti-arrows-exchange"></i>
 </span>

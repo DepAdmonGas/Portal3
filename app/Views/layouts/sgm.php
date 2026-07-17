@@ -15,10 +15,12 @@
 <!-- Scripts por vista -->
 <?php if (!empty($links)): ?>
 <?php foreach ($links as $link): ?>
-<link rel="stylesheet" href="<?= $link ?>" />
+<link rel="stylesheet" href="<?= asset($link) ?>" />
 <?php endforeach; ?>
 <?php endif; ?>
 
+<!-- SECURITY: DOMPurify para prevenir XSS en x-html-->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <!-- Alpine + Axios -->
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -178,8 +180,8 @@ sessionStorage.setItem(key, window.scrollY);
 
 <div class="d-block d-lg-none py-4">
 <a href="../main/index.html" class="text-nowrap logo-img">
-<img src="<?= asset('images/logos/dark-logo.svg') ?>" class="dark-logo" alt="Logo-Dark" />
-<img src="<?= asset('images/logos/light-logo.svg') ?>" class="light-logo" alt="Logo-light" />
+<img src="<?= asset('images/logos/Logo.png') ?>" class="dark-logo" alt="Logo-Dark" />
+<img src="<?= asset('images/logos/Logo-dark.png') ?>" class="light-logo" alt="Logo-light" />
 </a>
 </div>
 <a class="navbar-toggler nav-icon-hover-bg rounded-circle p-0 mx-0 border-0" href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -245,7 +247,7 @@ sessionStorage.setItem(key, window.scrollY);
 </a>
 </div>
 <div class="d-grid py-4 px-7 pt-8">
-<a href="/logout" class="btn btn-outline-primary">Salir</a>
+<a href="javascript:void(0)" class="btn btn-outline-primary" onclick="performLogout()">Salir</a>
 </div>
 </div>
 </div>
@@ -270,7 +272,6 @@ sessionStorage.setItem(key, window.scrollY);
 <?php include __DIR__ . '/../partials/_global-badge.php'; ?>  
 <h4 class="fw-semibold mt-3"><?=$title;?></h4>  
 <?php \App\Core\Breadcrumb::render(); ?>
-
 
 <?= $content ?>
 
@@ -299,13 +300,14 @@ sessionStorage.setItem(key, window.scrollY);
 <!-- highlight.js (code view) -->
 <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
 <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
-<script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script> 
-<script src="<?= asset('js/core/actions.alpine.js?v=1.2') ?>"></script>
+
+<script src="<?= asset('js/core/notify.js?v=1.0.1') ?>"></script> 
+<script src="<?= asset('js/core/actions.alpine.js?v=1.0.4') ?>"></script>
 
 <!-- Scripts por vista -->
 <?php if (!empty($scripts)): ?>
 <?php foreach ($scripts as $script): ?>
-<script src="<?= $script ?>"></script>
+<script src="<?= asset($script) ?>"></script>
 <?php endforeach; ?>
 <?php endif; ?>
 

@@ -110,19 +110,19 @@ x-data="programaAuditoria()">
     id="modalBuscar"
     tabindex="-1">
 
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h5 class="modal-title text-white">
                     Buscar
                 </h5>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -156,14 +156,14 @@ x-data="programaAuditoria()">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
 
                 </button>
 
                 <button
                     class="btn btn-primary"
                     @click="buscar()">
-
+                    <i class="ti ti-check"></i>
                     Buscar
 
                 </button>

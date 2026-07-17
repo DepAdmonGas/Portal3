@@ -406,7 +406,8 @@ public static function calendarioCalibracion(
 }
 
 public static function calendarioCalibracionPdf(
-    int $estacionId
+    int $estacionId,
+    ?int $year = null
 ): array {
 
     $equiposFisicos = self::getEquipos($estacionId);
@@ -414,6 +415,12 @@ public static function calendarioCalibracionPdf(
     $calibraciones = CalibracionEquipo::query()
         ->where('id_estacion', $estacionId)
         ->where('categoria', 1)
+
+        ->when(
+            $year,
+            fn ($q) => $q->whereYear('fecha', $year)
+        )
+
         ->orderByDesc('fecha')
         ->get();
 
@@ -421,7 +428,7 @@ public static function calendarioCalibracionPdf(
 
     foreach ($calibraciones as $calibracion) {
 
-        $year = $calibracion->fecha->year;
+        $anio = $calibracion->fecha->year;
         $mes  = $calibracion->fecha->month;
 
         foreach ($equiposFisicos as $equipo) {
@@ -430,12 +437,16 @@ public static function calendarioCalibracionPdf(
 
                 'Dispensario'
                     => $equipo['descripcion'] === 'Dispensario',
+
                 'Jarra patron'
                     => $equipo['descripcion'] === 'Jarra patrón',
+
                 'Sondas de medición'
                     => $equipo['descripcion'] === 'Sonda de medición',
+
                 'Tanques de almacenamiento'
                     => $equipo['descripcion'] === 'Tanque de almacenamiento',
+
                 default => false
             };
 
@@ -449,29 +460,34 @@ public static function calendarioCalibracionPdf(
 
                 $meses[] = [
 
-                    'year' => $mes === $i
-                        ? $year
+                    'year' => $mes == $i
+                        ? $anio
                         : '',
 
-                    'color' => $mes === $i
+                    'color' => $mes == $i
                         ? (
                             $calibracion->estado == 1
                                 ? 'table-success'
                                 : 'table-warning'
                         )
                         : ''
+
                 ];
             }
 
             $resultado[] = [
 
                 'identificacion' => $equipo['identificacion'],
+
                 'nombre' => $equipo['descripcion']
-                    . ' ('
-                    . $equipo['nombre']
-                    . ')',
+                    .' ('
+                    .$equipo['nombre']
+                    .')',
+
                 'frecuencia' => $equipo['frecuencia'],
+
                 'meses' => $meses
+
             ];
         }
     }
@@ -481,7 +497,15 @@ public static function calendarioCalibracionPdf(
 
 public function pdfCalendarioCalibracion(): void
 {
-    $calendario = self::calendarioCalibracionPdf($this->estacionId());
+
+$year = isset($_GET['year'])
+    ? (int) $_GET['year']
+    : null;
+
+    $calendario = self::calendarioCalibracionPdf(
+    $this->estacionId(),
+    $year
+    );
     $estacion = Estacion::find($this->estacionId());
     $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 

@@ -65,16 +65,16 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
      data-bs-keyboard="false"
      x-data="{ ...actions(), ...inventarioForm() }">
 
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
 
         <div class="modal-content">
 
             <!-- HEADER -->
-            <div class="modal-header">
-                <h4 class="modal-title">Agregar aditivo al inventario</h4>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">Agregar aditivo al inventario</h4>
 
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal"
                         @click="resetModal()">
                 </button>
@@ -104,7 +104,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         @click="resetModal()">
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
                 </button>
 
                 <button type="button"
@@ -112,6 +112,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
                         @click="submit()"
                         :disabled="loading">
 
+                    <i class="ti ti-check"></i>
                     <span x-show="!loading">Guardar</span>
                     <span x-show="loading">Guardando...</span>
 

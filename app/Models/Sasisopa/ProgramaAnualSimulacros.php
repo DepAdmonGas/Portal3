@@ -47,4 +47,12 @@ class ProgramaAnualSimulacros extends Model
         );
     }
 
+    public function ultimaEvaluacion()
+    {
+        return $this->hasOne(
+            ProgramaAnualSimulacrosEvaluacion::class,
+            'id_programa'
+        )->latestOfMany('fechacreacion');
+    }
+
 }

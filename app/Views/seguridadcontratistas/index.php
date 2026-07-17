@@ -161,18 +161,18 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
      id="ModalFormato12"
      tabindex="-1">
 
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
 
         <div class="modal-content">
 
             <!-- HEADER IGUAL -->
-            <div class="modal-header">
-                <h5 class="modal-title">
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">
                     Autorizacion para realizar trabajos peligrosos
-                </h5>
+                </h4>
 
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal"></button>
         </div>
 
@@ -516,14 +516,14 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                       class="btn bg-danger-subtle text-danger"
                       data-bs-dismiss="modal">
 
-                      Cancelar
+                      <i class="ti ti-x"></i> Cancelar
 
                   </button>
 
                 <button type="button"
                         class="btn btn-primary"
                         @click="guardarFormato12">
-                    Guardar
+                    <i class="ti ti-check"></i> Guardar
                 </button>
 
             </div>
@@ -540,19 +540,19 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     id="modalFormato14"
     tabindex="-1">
 
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h4 class="modal-title text-white">
                     Fo.ADMONGAS.014
-                </h5>
+                </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -769,7 +769,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 
-                    Cancelar
+                    <i class="ti ti-x"></i> Cancelar
 
                 </button>
 
@@ -778,7 +778,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     class="btn btn-primary"
                     @click="guardarFormato14()">
 
-                    Guardar
+                    <i class="ti ti-check"></i> Guardar
 
                 </button>
 
@@ -797,19 +797,19 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     id="modalFormato15"
     tabindex="-1">
 
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
 
     <div class="modal-content">
 
-    <div class="modal-header">
+    <div class="modal-header modal-colored-header bg-primary text-white">
 
-    <h5 class="modal-title">
+    <h4 class="modal-title text-white">
     Lista de Verificación
-    </h5>
+    </h4>
 
     <button
     type="button"
-    class="btn-close"
+    class="btn-close btn-close-white"
     data-bs-dismiss="modal">
     </button>
 
@@ -978,7 +978,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     class="btn bg-danger-subtle text-danger"
     data-bs-dismiss="modal">
 
-    Cancelar
+    <i class="ti ti-x"></i> Cancelar
 
     </button>
 
@@ -987,7 +987,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     class="btn btn-primary"
     @click="guardarFormato15()">
 
-    Guardar
+    <i class="ti ti-check"></i> Guardar
 
     </button>
 
@@ -1007,15 +1007,15 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
                     Carta Responsiva
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -1152,7 +1152,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                       class="btn bg-danger-subtle text-danger"
                       data-bs-dismiss="modal">
 
-                      Cancelar
+                      <i class="ti ti-x"></i> Cancelar
 
                   </button>
 
@@ -1161,7 +1161,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     class="btn btn-primary"
                     @click="guardarCartaResponsiva()">
 
-                    Guardar
+                    <i class="ti ti-check"></i> Guardar
 
                 </button>
 

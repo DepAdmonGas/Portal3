@@ -8,9 +8,9 @@ return function(RouteCollector $r) {
     $r->addRoute('GET', '/', Route::guest(['LoginController', 'index']));
     $r->addRoute('GET', '/login', Route::guest(['LoginController', 'index']));
     $r->addRoute('POST', '/login', ['LoginController', 'login']);
-    // SECURITY: BAJO #33 - Endpoint para refrescar access token
+    // Endpoint para refrescar access token
     $r->addRoute('POST', '/refresh-token', Route::auth(['LoginController', 'refreshToken']));
-    // SECURITY: BAJO #34 - Logout via POST (más seguro que GET)
+    // Logout via POST (más seguro que GET)
     $r->addRoute('POST', '/logout', Route::auth(['AuthController', 'logout']));
 
     $r->addRoute('GET', '/download', Route::auth(['DownloadController', 'download']));
@@ -24,6 +24,17 @@ return function(RouteCollector $r) {
 
 
     $r->addRoute('GET', '/menu', Route::auth(['MenuController', 'index']));
+
+    // ---------------- PERSONAL ----------------
+    $r->addGroup('/personal', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['PersonalController', 'index']));
+        $r->addRoute('GET', '/datatable', Route::auth(['PersonalController', 'datatablePersonal']));
+        $r->addRoute('POST', '/delete', Route::auth(['PersonalController', 'deletePersonal']));
+        $r->addRoute('POST', '/create', Route::auth(['PersonalController', 'createPersonal']));
+        $r->addRoute('POST', '/update', Route::auth(['PersonalController', 'updatePersonal']));
+        $r->addRoute('GET', '/{modulo}', Route::auth(['PersonalController', 'index']));
+        
+    });
 
     // ---------------- PROCEDIMIENTOS ----------------
     $r->addGroup('/procedimientos', function (RouteCollector $r) {
@@ -610,6 +621,10 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addRoute('POST', '/lista-asistencia-firma/create', Route::auth(['ListaAsistenciaController', 'createFirmaListaAsistencia']));
     $r->addRoute('POST', '/lista-asistencia-firma/delete', Route::auth(['ListaAsistenciaController', 'deleteFirmaListaAsistencia']));
 
+    $r->addRoute('GET', '/lista-asistencia-evidencia/datatble/{id:\d+}', Route::auth(['ListaAsistenciaController', 'evidencias']));
+    $r->addRoute('POST', '/lista-asistencia-evidencia/create', Route::auth(['ListaAsistenciaController', 'createEvidencia']));
+    $r->addRoute('POST', '/lista-asistencia-evidencia/delete', Route::auth(['ListaAsistenciaController', 'deleteEvidencia']));
+
     $r->addRoute('GET', '/cursos/descargar/{id:\d+}', Route::auth(['CursosController', 'descargar']));
     $r->addRoute('GET', '/cursos/descargar/{year:\d+}/{idModulo:\d+}', Route::auth(['CursosController', 'descargarAll']));
     
@@ -617,6 +632,26 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addGroup('/sasisopa', function (RouteCollector $r) {
 
         $r->addRoute('GET', '', Route::auth(['SasisopaController', 'index']));
+        
+        $r->addRoute('GET', '/reporte/elemento1', Route::auth(['SasisopaController', 'elemento1']));
+        $r->addRoute('GET', '/reporte/elemento2', Route::auth(['SasisopaController', 'elemento2']));
+        $r->addRoute('GET', '/reporte/elemento3', Route::auth(['SasisopaController', 'elemento3']));
+        $r->addRoute('GET', '/reporte/elemento3/pdf', Route::auth(['SasisopaController', 'calendarioRequisitosLegales']));
+        $r->addRoute('GET', '/reporte/elemento5', Route::auth(['SasisopaController', 'elemento5']));
+        $r->addRoute('GET', '/reporte/elemento6', Route::auth(['SasisopaController', 'elemento6']));
+        $r->addRoute('GET', '/reporte/elemento7', Route::auth(['SasisopaController', 'elemento7']));
+        $r->addRoute('GET', '/reporte/elemento10', Route::auth(['SasisopaController', 'elemento10']));
+        $r->addRoute('GET', '/reporte/elemento12', Route::auth(['SasisopaController', 'elemento12']));
+        $r->addRoute('GET', '/reporte/elemento13', Route::auth(['SasisopaController', 'elemento13']));
+        $r->addRoute('GET', '/reporte/elemento14', Route::auth(['SasisopaController', 'elemento14']));
+        $r->addRoute('GET', '/reporte/elemento15', Route::auth(['SasisopaController', 'elemento15']));
+        $r->addRoute('GET', '/reporte/elemento16', Route::auth(['SasisopaController', 'elemento16']));
+        $r->addRoute('GET', '/reporte/elemento16/grupo/{id:\d+}', Route::auth(['SasisopaController', 'grupoInterdisciplinario']));
+        $r->addRoute('GET', '/reporte/elemento16/tercer/{id:\d+}', Route::auth(['SasisopaController', 'tercerAutorizado']));
+        $r->addRoute('GET', '/reporte/elemento17', Route::auth(['SasisopaController', 'elemento17']));
+        $r->addRoute('GET', '/reporte/elemento18', Route::auth(['SasisopaController', 'elemento18']));
+     
+        $r->addRoute('GET', '/reporte/{fechainicio}/{fechatermino}', Route::auth(['SasisopaController', 'reporte']));
 
         // Elemento 1
         $r->addRoute('GET', '/politica', Route::auth(['PoliticaController', 'politica']));
@@ -653,7 +688,7 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/requisitos-legales/create-configuracion', Route::auth(['RequisitosLegalesController', 'createConfiguracion']));
 
         $r->addRoute('GET', '/requisitos-legales/{nGobierno:[a-zA-Z0-9\-]+}', Route::auth(['RequisitosLegalesController', 'requisitosLegalesDetalle']));
-        $r->addRoute('GET', '/requisitos-legales/datatable-detalle/{nGobierno:[a-zA-Z0-9\-]+}', Route::auth(['RequisitosLegalesController', 'datatableDetalle']));
+        $r->addRoute('GET', '/requisitos-legales/datatable-detalle/{nGobierno:[a-zA-Z0-9\-]+}/{modulo:\d+}', Route::auth(['RequisitosLegalesController', 'datatableDetalle']));
         $r->addRoute('POST', '/requisitos-legales/delete-detalle', Route::auth(['RequisitosLegalesController', 'deleteDetalle']));
 
         $r->addRoute('GET', '/requisitos-legales/permisos/{nGobierno:[a-zA-Z0-9\-]+}/{sgm:\d+}', Route::auth(['RequisitosLegalesController', 'getPermisos']));
@@ -754,6 +789,7 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/create-personal', Route::auth(['CapacitacionExternaController', 'createPersonal']));
         $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-personal', Route::auth(['CapacitacionExternaController', 'deletePersonal']));
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa/{id:\d+}', Route::auth(['CapacitacionExternaController', 'pdfCapacitacionExterna']));
+        $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa', Route::auth(['CapacitacionExternaController', 'pdfCapacitacionExternaCompleto']));
 
         // Elemento 7
         $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['ComunicacionParticipacionConsultaController', 'index']));
@@ -1116,12 +1152,17 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST', '/informes-desempeno/implementacion/delete/puesto', Route::auth(['InformeDesempenoController', 'deletePuestoImplementacion']));
 
         // Otros
-        $r->addRoute('GET', '/calendario', Route::auth(['SasisopaController', 'calendario']));
-        $r->addRoute('GET', '/cursos', Route::auth(['SasisopaController', 'cursos']));
-        
+        $r->addRoute('GET', '/calendario', Route::auth(['CalendarioController', 'index']));
+        $r->addRoute('GET', '/calendario/eventos', Route::auth(['CalendarioController', 'eventos']));
+        $r->addRoute('GET', '/calendario/dia', Route::auth(['CalendarioController', 'dia']));
+        $r->addRoute('GET', '/calendario/detalle', Route::auth(['CalendarioController', 'detalle']));
+        $r->addRoute('POST', '/calendario/actividad/abrir', Route::auth(['CalendarioController', 'abrirActividad']));
+        $r->addRoute('POST', '/calendario/curso/reagendar', Route::auth(['CalendarioController', 'reagendar']));
+        $r->addRoute('GET', '/calendario/actividades', Route::auth(['CalendarioController', 'actividadesDisponibles']));
+        $r->addRoute('POST', '/calendario/actividad/create', Route::auth(['CalendarioController', 'createActividad']));
+                
         $r->addRoute('GET', '/programa-implementacion', Route::auth(['SasisopaController', 'programaImplementacion']));
-        $r->addRoute('GET', '/cambio-precio', Route::auth(['SasisopaController', 'consulta']));
-
+       
         //--------- Comunicados
         $r->addRoute('GET', '/comunicados', Route::auth(['ComunicadosController', 'index']));
         $r->addRoute('GET', '/comunicados/datatable', Route::auth(['ComunicadosController', 'datatable']));
@@ -1156,6 +1197,25 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         $r->addRoute('POST','/reporte-diario/nuevo/create',Route::auth(['ReporteDiarioController','createReporteDiario']));
         $r->addRoute('POST','/reporte-diario/editar/update',Route::auth(['ReporteDiarioController','updateReporteDiario']));
 
+        //------------------- CURSOS
+        $r->addRoute('GET', '/cursos', Route::auth(['CursosController', 'cursosIndex']));
+        $r->addRoute('GET', '/cursos/modulos/get', Route::auth(['CursosController', 'getModulos']));
+        $r->addRoute('GET', '/cursos/pendientes/get', Route::auth(['CursosController', 'getCursosPendientes']));
+        $r->addRoute('GET', '/cursos/iniciar/{id:\d+}', Route::auth(['CursosController', 'cursosIniciar']));
+        $r->addRoute('GET', '/cursos/evaluacion/{id:\d+}', Route::auth(['CursosController', 'cursosEvaluacion']));
+        $r->addRoute('GET','/cursos/evaluacion/get/{id:\d+}',Route::auth(['CursosController', 'getEvaluacion']));
+        $r->addRoute('POST','/cursos/evaluacion/respuesta',Route::auth(['CursosController','guardarRespuesta']));
+        $r->addRoute('POST','/cursos/evaluacion/finalizar',Route::auth(['CursosController','finalizarEvaluacion']));
+
+        $r->addRoute('GET', '/cursos/modulos/{id:\d+}', Route::auth(['CursosController', 'cursosModulos']));
+        $r->addRoute('GET', '/cursos/modulos/temas/{idModulo:\d+}', Route::auth(['CursosController', 'detalleTema']));
+
+         //----------------- CAMBIO DE PRECIO --------------
+        $r->addRoute('GET', '/cambio-precio', Route::auth(['CambioPrecioController', 'index']));
+        $r->addRoute('GET', '/cambio-precio/datetable', Route::auth(['CambioPrecioController', 'datetable']));
+        $r->addRoute('POST', '/cambio-precio/create', Route::auth(['CambioPrecioController', 'create']));
+        $r->addRoute('POST', '/cambio-precio/delete', Route::auth(['CambioPrecioController', 'delete']));
+
 
     });
 
@@ -1163,13 +1223,71 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addGroup('/sgm', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['SgmController', 'index']));
 
-        $r->addRoute('GET', '/estructura-sistema-medicion', Route::auth(['SgmController', 'estructuraSistemaMedicion']));
-        $r->addRoute('GET', '/datatable-lista-revision-sgm', Route::auth(['SgmController', 'datatableListaRevisionSgm']));
+        //-------------- Resision ----------
+        $r->addRoute('GET', '/revision/datatable', Route::auth(['SgmRevisionController', 'datatable']));
+        $r->addRoute('POST', '/revision/create', Route::auth(['SgmRevisionController', 'createRevision']));
+        $r->addRoute('POST', '/revision/delete', Route::auth(['SgmRevisionController', 'deleteRevision']));
+        $r->addRoute('GET', '/revision/pdf/{id:\d+}', Route::auth(['SgmRevisionController', 'pdfRevision']));
+        $r->addRoute('GET', '/revision/editar/{id:\d+}', Route::auth(['SgmRevisionController', 'revisionIndex']));
+        $r->addRoute('GET', '/revision/detalle/{id:\d+}', Route::auth(['SgmRevisionController', 'detalleRevision']));
+        $r->addRoute('POST', '/revision/update', Route::auth(['SgmRevisionController', 'updateRevision']));
+        $r->addRoute('POST', '/revision/update-detalle', Route::auth(['SgmRevisionController', 'updateRevisionDetalle']));
+        $r->addRoute('POST', '/revision/finalizar', Route::auth(['SgmRevisionController', 'finalizarRevision']));
+        //-------------- Resision ----------
+
+        //---------- 1. Estructura del sistema de Medicion --------------------------------------
+        $r->addRoute('GET', '/estructura-sistema-medicion', Route::auth(['SgmEstructuraController', 'index']));
+        //---------- 1. Estructura del sistema de Medicion --------------------------------------
         
-        $r->addRoute('GET', '/control-documental-sistema-gestion-medicion', Route::auth(['SgmController', 'controlDocumentalSistemaGestionMedicion']));
-        $r->addRoute('GET', '/responsabilidades-direccion', Route::auth(['SgmController', 'responsabilidadesDireccion']));
-        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente', Route::auth(['SgmController', 'establecimientoObjetivosEnfocadosCliente']));
-        $r->addRoute('GET', '/normatividad-aplicable-mediciones', Route::auth(['SgmController', 'normatividadAplicableMediciones']));
+        //---------- 2. CONTROL DEL DOCUMENTAL DEL SISTEMA DE GESTION DE MEDICIÓN --------------------
+        $r->addRoute('GET', '/control-documental-sistema-gestion-medicion', Route::auth(['SgmControlDocumentalController', 'index']));
+        $r->addRoute('GET', '/control-documental-sistema-gestion-medicion/documentos', Route::auth(['SgmControlDocumentalController', 'documentos']));
+        $r->addRoute('GET', '/control-documental-sistema-gestion-medicion/pdf', Route::auth(['SgmControlDocumentalController', 'pdf']));
+        //---------- 2. CONTROL DEL DOCUMENTAL DEL SISTEMA DE GESTION DE MEDICIÓN --------------------
+
+        //---------- 3. RESPONSABILIDADES DE LA DIRECCION ---------------------------------------------
+        $r->addRoute('GET', '/responsabilidades-direccion', Route::auth(['SgmResponsabilidadDireccionController', 'index']));
+        $r->addRoute('GET', '/responsabilidades-direccion/datatable-politica', Route::auth(['SgmResponsabilidadDireccionController', 'politicas']));
+        $r->addRoute('POST', '/responsabilidades-direccion/delete-politica', Route::auth(['SgmResponsabilidadDireccionController', 'deletePolitica']));
+        $r->addRoute('GET', '/responsabilidades-direccion/politica-sgm', Route::auth(['SgmResponsabilidadDireccionController', 'politicaIndex']));
+        $r->addRoute('GET', '/responsabilidades-direccion/politica-sgm/detalle', Route::auth(['SgmResponsabilidadDireccionController', 'detallePolitica']));
+        $r->addRoute('POST', '/responsabilidades-direccion/politica-sgm/create', Route::auth(['SgmResponsabilidadDireccionController', 'guardarPolitica']));
+        //---------- 3. RESPONSABILIDADES DE LA DIRECCION ---------------------------------------------
+
+        //---------- 4. ESTABLECIMIENTO DE OBJETIVOS ENFOCADOS AL CLIENTE -----------------------------
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente', Route::auth(['SgmEstablecimientoController', 'index']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/datatable-objetivos', Route::auth(['SgmEstablecimientoController', 'tableObjetivos']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/objetivo-cliente', Route::auth(['SgmEstablecimientoController', 'objetivoIndex']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/objetivo-cliente/detalle', Route::auth(['SgmEstablecimientoController', 'detalleObjetivo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/objetivo-cliente/create', Route::auth(['SgmEstablecimientoController', 'createObjetivo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/objetivo-cliente/delete', Route::auth(['SgmEstablecimientoController', 'deleteObjetivo']));
+
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/datatable', Route::auth(['SgmEstablecimientoController', 'datatableSeguimientoObjetivo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/create', Route::auth(['SgmEstablecimientoController', 'createSeguimientoObjetivo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/delete', Route::auth(['SgmEstablecimientoController', 'deleteSeguimientoObjetivo']));
+
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/{id:\d+}', Route::auth(['SgmEstablecimientoController', 'SeguimientoObjetivoIndex']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/{id:\d+}/detalle', Route::auth(['SgmEstablecimientoController', 'detalle']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/asistente/create', Route::auth(['SgmEstablecimientoController', 'agregarAsistentes']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/asistente/delete', Route::auth(['SgmEstablecimientoController', 'eliminarAsistente']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/update', Route::auth(['SgmEstablecimientoController', 'actualizarCampo']));
+        $r->addRoute('POST', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/finalizar', Route::auth(['SgmEstablecimientoController', 'finalizar']));
+        $r->addRoute('GET', '/establecimiento-objetivos-enfocados-cliente/seguimiento-objetivos-indicadores/pdf/{id:\d+}', Route::auth(['SgmEstablecimientoController', 'pdf']));
+        //---------- 4. ESTABLECIMIENTO DE OBJETIVOS ENFOCADOS AL CLIENTE -----------------------------
+
+        //---------- 5. NORMATIVIDAD APLICABLE A MEDICIONES ----------------------------------------------
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones', Route::auth(['SgmNormatividadController', 'index']));
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/datatable-inventario', Route::auth(['SgmNormatividadController', 'datatableInventario']));
+        $r->addRoute('POST', '/normatividad-aplicable-mediciones/create-inventario', Route::auth(['SgmNormatividadController', 'createInventario']));
+        $r->addRoute('POST', '/normatividad-aplicable-mediciones/delete-inventario', Route::auth(['SgmNormatividadController', 'deleteInventario']));
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/inventario-normatividad/pdf', Route::auth(['SgmNormatividadController', 'pdfInventario']));
+
+        
+
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/pdf-requisito-legal', Route::auth(['SgmNormatividadController', 'pdfRequisitoLegal']));
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/requisito-legal-sgm', Route::auth(['SgmNormatividadController', 'requisitoLegal']));
+        //---------- 5. NORMATIVIDAD APLICABLE A MEDICIONES ----------------------------------------------
+
         $r->addRoute('GET', '/gestion-recursos', Route::auth(['SgmController', 'gestionRecursos']));
         $r->addRoute('GET', '/procesos-medicion', Route::auth(['SgmController', 'procesosMedicion']));
         $r->addRoute('GET', '/gestion-riesgos-impactan-medicion', Route::auth(['SgmController', 'gestionRiesgosImpactanMedicion']));

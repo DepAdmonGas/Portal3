@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -36,4 +36,37 @@ class SeguimientoObjetivoIndicador extends Model
         'realizadopor' => 'integer',
         'estado' => 'integer',
     ];
+
+    public function implementacion()
+    {
+        return $this->hasOne(
+            SeguimientoImplementacionSgm::class,
+            'id_seguimiento'
+        );
+    }
+
+    public function calibracion()
+    {
+        return $this->hasOne(
+            SeguimientoCalibracionEquipo::class,
+            'id_seguimiento'
+        );
+    }
+
+    public function satisfaccion()
+    {
+        return $this->hasOne(
+            SeguimientoSatisfaccionCliente::class,
+            'id_seguimiento'
+        );
+    }
+
+    public function asistentes()
+    {
+        return $this->hasMany(
+            SeguimientoAsistente::class,
+            'id_seguimiento'
+        );
+    }
+    
 }

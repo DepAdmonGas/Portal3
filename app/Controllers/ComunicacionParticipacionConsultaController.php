@@ -752,9 +752,10 @@ protected string $modulo = 'sasisopa';
 
     public function pdfRegistroComunicacion(){
 
-     $idEstacion = $this->estacionId();
-
+    $idEstacion = $this->estacionId();
     $registro = Estacion::find($idEstacion);
+    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png'; 
+    $apoderadolegal = $registro->apoderado_legal;
 
     if (!$registro) {
         return "No se encontró la información";
@@ -762,11 +763,8 @@ protected string $modulo = 'sasisopa';
 
     $id = $_GET['id'] ?? null;
     $year = $_GET['year'] ?? null;
-
-    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
-
-    $apoderadolegal = $registro->apoderado_legal;
-
+    $inicio = $_GET['inicio'] ?? null;
+    $fin = $_GET['fin'] ?? null;
 
     $query = ComunicacionIE::with([
         'encargado',
@@ -774,15 +772,16 @@ protected string $modulo = 'sasisopa';
     ])
     ->where('id_estacion', $idEstacion);
 
-    // Buscar por ID
     if (!empty($id)) {
-
         $query->where('id', (int) $id);
-    }
+    } elseif (!empty($inicio) && !empty($fin)) {
 
-    // Buscar por año
-    if (!empty($year)) {
+        $query->whereBetween('fecha', [
+            $inicio,
+            $fin
+        ]);
 
+    } elseif (!empty($year)) {
         $query->whereYear('fecha', $year);
     }
 

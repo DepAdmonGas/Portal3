@@ -38,9 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
             data: 'fecha',
             render: function (data, type) {
 
-                if (!data) return '';
+                if (!data || data === 'S/I') return 'S/I';
 
-                const fecha = new Date(data);
+                const partes = data.split('-');
+
+                if (partes.length !== 3) return 'S/I';
+
+                const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
 
                 const fechaFormateada = fecha.toLocaleDateString('es-MX', {
                     day: 'numeric',
@@ -48,12 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     year: 'numeric'
                 });
 
-                // Para búsqueda y display usar el texto formateado
                 if (type === 'display' || type === 'filter') {
                     return fechaFormateada;
                 }
 
-                // Para ordenamiento usar la fecha real
                 return data;
             },
             orderable: true,
@@ -105,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     ${!noEdit ? '' : `
                                     @click='async () => {
                                     const res = await goTo("/lista-asistencia/${row.id}");
@@ -121,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='async () => {
                                     const res = await deleteAction({

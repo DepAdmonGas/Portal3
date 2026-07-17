@@ -24,6 +24,7 @@ class Elemento extends Model
     protected $casts = [
         'id' => 'integer',
         'no' => 'string',
+        'numero_sgm' => 'integer',
         'criterio' => 'string',
     ];
 }

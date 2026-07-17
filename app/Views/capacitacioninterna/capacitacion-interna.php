@@ -40,12 +40,12 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
   </div>
 
   <div class="modal fade" id="modalProgramar" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">CAPACITACIÓN INTERNA</h5>
-                <button type="button" class="btn-close"
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">CAPACITACIÓN INTERNA</h4>
+                <button type="button" class="btn-close btn-close-white"
                         @click="closeModal('programar')"></button>
             </div>
 
@@ -63,10 +63,10 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
 
             <div class="modal-footer">
                 <button class="btn bg-danger-subtle text-danger"
-                        @click="closeModal('programar')">Cancelar</button>
+                        @click="closeModal('programar')"><i class="ti ti-x"></i> Cancelar</button>
 
                 <button class="btn btn-success"
-                        @click="guardarProgramacion()">Agregar</button>
+                        @click="guardarProgramacion()"><i class="ti ti-check"></i> Agregar</button>
             </div>
 
         </div>
@@ -74,12 +74,12 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
 </div>
 
 <div class="modal fade" id="modalCursos" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">CAPACITACIÓN INTERNA</h5>
-                <button type="button" class="btn-close"
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">CAPACITACIÓN INTERNA</h4>
+                <button type="button" class="btn-close btn-close-white"
                         @click="closeModal('cursos')"></button>
             </div>
 

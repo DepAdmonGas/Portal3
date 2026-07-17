@@ -180,13 +180,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     @click='window.preparacionEmergencias.editarPrograma(${JSON.stringify(row)})'>
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                      ${!noDelete ? '' : `
                                     @click='window.preparacionEmergencias.eliminarPrograma(${row.id}, ${JSON.stringify(row.nombre_simulacro)})'
                                     `}>

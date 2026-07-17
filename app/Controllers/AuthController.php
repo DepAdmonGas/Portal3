@@ -8,7 +8,7 @@ use App\Core\Session;
 /**
  * AuthController - Controlador de autenticación
  * 
- * SECURITY: BAJO #34 - Logout efectivo con invalidación de tokens
+ * Logout efectivo con invalidación de tokens
  * 
  * @author Security Team
  */
@@ -17,7 +17,7 @@ class AuthController
     /**
      * Cierra la sesión del usuario actual
      * 
-     * SECURITY: BAJO #34 - Implementa logout efectivo:
+     * Implementa logout efectivo:
      * - Destruye sesión PHP
      * - Invalida access token (cookie)
      * - Invalida refresh token (cookie)
@@ -29,7 +29,7 @@ class AuthController
     {
         header('Content-Type: application/json');
         
-        // SECURITY: BAJO #34 - Obtener datos antes de destruir sesión
+        // Obtener datos antes de destruir sesión
         
         // 1. Obtener ID de usuario
         $userId = Auth::id();
@@ -44,7 +44,7 @@ class AuthController
         // 3. Destruir sesión PHP
         Session::destroy();
         
-        // SECURITY: Cookie con secure flag solo si está en HTTPS+Y producción (Vulnerabilidad #4)
+        // Cookie con secure flag solo si está en HTTPS+Y producción (Vulnerabilidad #4)
         $isSecure = ($_ENV['APP_ENV'] ?? 'dev') === 'prod' && isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
         
         // 4. Invalidar access token cookie
@@ -60,7 +60,7 @@ class AuthController
             ]
         );
         
-        // SECURITY: BAJO #34 - Invalidar también el refresh token
+        // Invalidar también el refresh token
         setcookie(
             'refresh_token',
             '',

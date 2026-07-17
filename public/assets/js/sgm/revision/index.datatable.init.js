@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    $('#table-lista-revision-sgm').DataTable({
+   table1 = $('#table-revision-sgm').DataTable({
         processing: true,
         serverSide: false,
         autoWidth: false,
@@ -10,21 +10,33 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sgm/datatable-lista-revision-sgm',
+            url: '/sgm/revision/datatable',
             type: 'GET',
             dataSrc: function (json) {
+                permisos = json.permisos;
                 return json.data;
             }
         },
         columns: [
-            { data: 'id', width: '60px', className: 'text-center' },
+            {
+                data: null,
+                width: '60px',
+                className: 'text-center',
+                render: function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            },
             {
             data: 'fecha',
             render: function (data, type) {
 
-                if (!data) return '';
+                if (!data || data === 'S/I') return 'S/I';
 
-                const fecha = new Date(data);
+                const partes = data.split('-');
+
+                if (partes.length !== 3) return 'S/I';
+
+                const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
 
                 const fechaFormateada = fecha.toLocaleDateString('es-MX', {
                     day: 'numeric',
@@ -32,12 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     year: 'numeric'
                 });
 
-                // Para búsqueda y display usar el texto formateado
                 if (type === 'display' || type === 'filter') {
                     return fechaFormateada;
                 }
 
-                // Para ordenamiento usar la fecha real
                 return data;
             },
             orderable: true,
@@ -63,6 +73,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         },
+
+        {data: 'estado', width: '100px', className: 'text-center align-middle',
+            render: function (data) {
+            const estatus = Number(data);
+
+            let clase = '';
+            let texto = '';
+
+            switch (estatus) {
+
+            case 0:
+            clase = 'danger';
+            texto = 'Pendiente';
+            break;
+
+            case 1:
+            clase = 'success';
+            texto = 'Finalizado';
+            break;
+
+            }
+
+            return `<span class="badge rounded-pill bg-${clase}">${texto}</span>`;
+            }
+
+            },
              
             {
                 data: null,
@@ -71,6 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchable: false,
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
+
+                    const noEdit = permisos.editar;
+                    const noDelete = permisos.eliminar;
+                    const noDownload = permisos.descargar;
                     
 
                     return `
@@ -80,18 +120,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit 
-                                    data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3" href="/sgm/revision/editar/${row.id}">
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete" href="/sgm/revision/pdf/${row.id}" download>
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete data-id="${row.id}">
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}" 
+                                    ${!noDelete ? '' : `@click='revision.eliminar(${row.id})'`}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>
@@ -101,6 +141,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ]
+    });
+
+        $("#table-revision-sgm tbody").on("click", "tr", function () {
+    if ($(this).hasClass("selected")) {
+    } else {
+        table1.$("tr.selected").removeClass("selected");
+        $(this).addClass("selected");
+    }
     });
 
 });

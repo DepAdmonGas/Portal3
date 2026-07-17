@@ -96,13 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     @click="openEditarObjetivoMetas(${row.id})">
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='deleteObjetivoMetas(${row.id})'
                                     `}>

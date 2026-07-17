@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     .getElementById('container')
     .dataset.ngobierno;
 
+     const modulo = document
+    .getElementById('container')
+    .dataset.modulo;
+
     table1 = $('#table-lista-requisitos-legales-detalle').DataTable({
         processing: true,
         serverSide: false,
@@ -14,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/requisitos-legales/datatable-detalle/' + ngobierno,
+            url: '/sasisopa/requisitos-legales/datatable-detalle/' + ngobierno + '/' + modulo,
             type: 'GET',
             dataSrc: function (json) {
             
@@ -210,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 <li>
                             
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     @click="window.requisitosInstance.openEditar(${row.id})">
                                         <i class="ti ti-edit"></i>Editar
                                     </a>
@@ -224,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.requisitosInstance.handleDelete(${row.id}, ${permisoNombre})'
                                     `}>

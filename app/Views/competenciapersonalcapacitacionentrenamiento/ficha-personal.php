@@ -349,12 +349,12 @@ x-init="
     <!-- Modal para agregar familiar -->
 
     <div class="modal fade" id="modalFamiliar" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">Nuevo familiar</h5>
-                <button type="button" class="btn-close" @click="closeModal('familiar')"></button>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h5 class="modal-title text-white">Nuevo familiar</h5>
+                <button type="button" class="btn-close btn-close-white" @click="closeModal('familiar')"></button>
             </div>
 
             <div class="modal-body">
@@ -384,8 +384,8 @@ x-init="
             </div>
 
             <div class="modal-footer">
-                <button class="btn bg-danger-subtle text-danger" @click="closeModal('familiar')">Cancelar</button>
-                <button class="btn btn-success" @click="guardarFamiliar()">Guardar</button>
+                <button class="btn bg-danger-subtle text-danger" @click="closeModal('familiar')"><i class="ti ti-x"></i> Cancelar</button>
+                <button class="btn btn-success" @click="guardarFamiliar()"><i class="ti ti-check"></i> Guardar</button>
             </div>
 
         </div>
@@ -395,12 +395,12 @@ x-init="
 <!-- Modal para agregar formación académica -->
 
 <div class="modal fade" id="modalFormacion" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">Nueva formación académica</h5>
-                <button type="button" class="btn-close" @click="closeModal('formacion')"></button>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h5 class="modal-title text-white">Nueva formación académica</h5>
+                <button type="button" class="btn-close btn-close-white" @click="closeModal('formacion')"></button>
             </div>
 
             <div class="modal-body">
@@ -427,8 +427,8 @@ x-init="
             </div>
 
             <div class="modal-footer">
-                <button class="btn bg-danger-subtle text-danger" @click="closeModal('formacion')">Cancelar</button>
-                <button class="btn btn-success" @click="guardarFormacion()">Guardar</button>
+                <button class="btn bg-danger-subtle text-danger" @click="closeModal('formacion')"><i class="ti ti-x"></i> Cancelar</button>
+                <button class="btn btn-success" @click="guardarFormacion()"><i class="ti ti-check"></i> Guardar</button>
             </div>
 
         </div>
@@ -438,12 +438,12 @@ x-init="
 <!-- Modal para agregar experiencia laboral -->
 
 <div class="modal fade" id="modalExperiencia" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">Nueva experiencia laboral</h5>
-                <button type="button" class="btn-close" @click="closeModal('experiencia')"></button>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h5 class="modal-title text-white">Nueva experiencia laboral</h5>
+                <button type="button" class="btn-close btn-close-white" @click="closeModal('experiencia')"></button>
             </div>
 
             <div class="modal-body">
@@ -458,8 +458,8 @@ x-init="
             </div>
 
             <div class="modal-footer">
-                <button class="btn bg-danger-subtle text-danger" @click="closeModal('experiencia')">Cancelar</button>
-                <button class="btn btn-success" @click="guardarExperiencia()">Guardar</button>
+                <button class="btn bg-danger-subtle text-danger" @click="closeModal('experiencia')"><i class="ti ti-x"></i> Cancelar</button>
+                <button class="btn btn-success" @click="guardarExperiencia()"><i class="ti ti-check"></i> Guardar</button>
             </div>
 
         </div>
@@ -469,12 +469,12 @@ x-init="
 <!-- Modal para agregar experiencia en la empresa -->
 
 <div class="modal fade" id="modalEmpresa" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title" x-text="editandoEmpresa ? 'Editar experiencia' : 'Nueva experiencia en la empresa'"></h5>
-                <button type="button" class="btn-close" @click="closeModalEmpresa()"></button>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h5 class="modal-title text-white" x-text="editandoEmpresa ? 'Editar experiencia' : 'Nueva experiencia en la empresa'"></h5>
+                <button type="button" class="btn-close btn-close-white" @click="closeModalEmpresa()"></button>
             </div>
 
             <div class="modal-body">
@@ -501,8 +501,8 @@ x-init="
             </div>
 
             <div class="modal-footer">
-                <button class="btn bg-danger-subtle text-danger" @click="closeModalEmpresa()">Cancelar</button>
-                <button class="btn btn-success" @click="guardarEmpresa()">Guardar</button>
+                <button class="btn bg-danger-subtle text-danger" @click="closeModalEmpresa()"><i class="ti ti-x"></i> Cancelar</button>
+                <button class="btn btn-success" @click="guardarEmpresa()"><i class="ti ti-check"></i> Guardar</button>
             </div>
 
         </div>

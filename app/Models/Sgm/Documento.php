@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,4 +30,9 @@ class Documento extends Model
         'fecha_aprobacion' => 'date',
         'seccion' => 'integer',
     ];
+
+    public function archivos()
+    {
+        return $this->hasMany(ControlDocumental::class, 'id_documento');
+    }
 }

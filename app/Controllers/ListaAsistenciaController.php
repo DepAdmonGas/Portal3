@@ -50,14 +50,42 @@ class ListaAsistenciaController extends BaseController{
         }
 
         } else {
-        $title = "Fo.SGM.001 Lista de asistencia";
+
+            $title = "Fo.SGM.001 Lista de asistencia";
 
             $bcModulo = 'SGM';
             $bcUrl = '/sgm';
 
-            if($asistencia->punto_sasisopa == 104 ){
-            $bcSubModulo = '';
-            $bcSubUrl = '';
+            if($asistencia->punto_sasisopa == 101 ){
+            $bcSubModulo = '1. Estructura del sistema de Medicion';
+            $bcSubUrl = '/sgm/estructura-sistema-medicion';
+            }else if($asistencia->punto_sasisopa == 102 ){
+            $bcSubModulo = '2. Control del documental del Sistema de Gestion de medición';
+            $bcSubUrl = '/sgm/control-documental-sistema-gestion-medicion';
+            }else if($asistencia->punto_sasisopa == 103 ){
+            $bcSubModulo = '3. Responsabilidades de la direccion';
+            $bcSubUrl = '/sgm/responsabilidades-direccion';
+            }else if($asistencia->punto_sasisopa == 104 ){
+            $bcSubModulo = '4. Establecimiento de objetivos enfocados al cliente';
+            $bcSubUrl = '/sgm/establecimiento-objetivos-enfocados-cliente';
+            }else if($asistencia->punto_sasisopa == 105 ){
+            $bcSubModulo = '5. Normatividad aplicable a mediciones';
+            $bcSubUrl = '/sgm/normatividad-aplicable-mediciones';
+            }else if($asistencia->punto_sasisopa == 106 ){
+            $bcSubModulo = '6. Gestion de los Recursos';
+            $bcSubUrl = '/sgm/gestion-recursos';
+            }else if($asistencia->punto_sasisopa == 107 ){
+            $bcSubModulo = '7. Procesos de medición';
+            $bcSubUrl = '/sgm/procesos-medicion';
+            }else if($asistencia->punto_sasisopa == 108 ){
+            $bcSubModulo = '8. Gestión de Riesgos que impactan en la medición';
+            $bcSubUrl = '/sgm/gestion-riesgos-impactan-medicion';
+            }else if($asistencia->punto_sasisopa == 109 ){
+            $bcSubModulo = '9. Establecimiento y Seguimiento Confirmación Metrológica';
+            $bcSubUrl = '/sgm/establecimiento-seguimiento-confirmacion-metrologica';
+            }else if($asistencia->punto_sasisopa == 110 ){
+            $bcSubModulo = '10. Auditorias, Internas, externas y Atención de hallazgos';
+            $bcSubUrl = '/sgm/auditorias-internas-externas-atencion-hallazgos';
             }
         }
 
@@ -103,7 +131,7 @@ class ListaAsistenciaController extends BaseController{
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
                 '/js/asistencia/listaasistenciafirma.datatable.init.js?v=1.3',
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.7'
+                '/js/asistencia/listaasistencia.actions.init.js?v=1.8'
             ],
             'help' => true
         ];
@@ -138,10 +166,17 @@ class ListaAsistenciaController extends BaseController{
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $data = ListaAsistencia::where('punto_sasisopa', $elemento)
+        $asistencia = ListaAsistencia::where('punto_sasisopa', $elemento)
         ->where('id_estacion', $this->estacionId())
-        ->orderBy('fecha', 'desc')
+        ->orderBy('fecha')
         ->get();
+
+        $data = $asistencia->map(fn ($item) => [
+            'id' => $item->id,
+            'fecha' => $item->fecha?->format('Y-m-d'),
+            'hora' => $item->fecha?->format('h:m:s'),
+            'estado' => $item->estado,
+        ]);
 
          echo json_encode([
             "data" => $data,
@@ -301,13 +336,30 @@ class ListaAsistenciaController extends BaseController{
         $asistencia = ListaAsistencia::find($id);
         $detalle = ListaAsistenciaDetalle::where('id_lista_asistencia',$id)->get();
         $comunicacion = ComunicacionIE::where('asistencia', $id)->first();
+        $evidencias = ListaAsistenciaEvidencia::where('id_lista_asistencia',$id)->get();
+
+        if ($asistencia->realizadopor == 0) {
+
+            $titulo = 'Registro de la atención y el seguimiento a la comunicación interna y externa.';
+            $codigo = 'Fo.ADMONGAS.010';
+            $fechaAprobacion = '28-09-2020';
+            $realizadoPor = 'Nelly Estrada García';
+
+        } else {
+
+            $titulo = 'Lista de Asistencia';
+            $codigo = 'Fo.SGM.001';
+            $fechaAprobacion = '01-01-2024';
+
+            $realizadoPor = Usuario::find($asistencia->realizadopor)?->nombre ?? '';
+        }
         
         $html = '
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>Registro de la atención y el seguimiento a la comunicación interna y externa.</title>
+            <title>'. $titulo .'</title>
             <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
         </head>
         <body>
@@ -319,17 +371,17 @@ class ListaAsistenciaController extends BaseController{
             <img src="'.$logo.'" style="width: 150px;">
             </td>
             <td colspan="2" class="align-middle text-center">
-            <b>Registro de la atención y el seguimiento a la comunicación interna y externa.</b>
+            <b>'.$titulo.'</b>
             </td>
             <td class="align-middle text-center">
-            <b>Fo.ADMONGAS.010</b>
+            <b>'. $codigo .'</b>
             </td>
 
             </tr>
             
             <tr>
             <td class="align-middle text-center">
-            Realizado por:<br> Nelly Estrada Garcia
+            Realizado por:<br> '. $realizadoPor .'
             </td>
             <td class="align-middle text-center">
             Revisado por:<br> Eduardo Galicia Flores
@@ -338,7 +390,7 @@ class ListaAsistenciaController extends BaseController{
             Autorizado por:<br> '.$apoderado.'
             </td>
             <td class="align-middle text-center">
-            Fecha de aprobacion:<br>  28-09-2020
+            Fecha de aprobacion:<br>  '. $fechaAprobacion .'
             </td>
             </tr>  
             </tbody>
@@ -427,9 +479,30 @@ class ListaAsistenciaController extends BaseController{
             </tr>';
         }
 
-        $html .= '
-        </tbody>
-        </table>        
+        $html .= '</tbody>
+        </table> ';
+
+
+        if ($evidencias->isNotEmpty()) {
+
+    $html .= '<div class="text-center" style="margin-top:20px;">
+        <b>Evidencias</b>
+    </div>';
+
+    foreach ($evidencias as $evidencia) {
+
+        $ruta = $_ENV['APP_URL'] . '/uploads/archivos/evidencias/' . $evidencia->evidencia;
+
+              $html .= '
+                <div style="margin-top:10px;text-align:center">
+                    <img
+                        src="'.$ruta.'"
+                        style="width:340px;">
+                </div>';
+    }
+}
+
+        $html .= '       
         </body>
         </html>
         ';
@@ -445,7 +518,7 @@ class ListaAsistenciaController extends BaseController{
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
-        $dompdf->stream("Registro-atención-seguimiento-comunicación-interna-externa.pdf", ["Attachment" => true]);
+        $dompdf->stream($titulo.".pdf", ["Attachment" => true]);
     }
 
     public function updateListaAsistencia(){
@@ -616,6 +689,115 @@ class ListaAsistenciaController extends BaseController{
             ]);
         }
 
+    }
+
+    //--------------------------------------------------
+
+    public function evidencias(int $id)
+    {
+   
+       $data = ListaAsistenciaEvidencia::where('id_lista_asistencia', $id)
+            ->latest('id')
+            ->get()
+            ->map(fn ($e) => [
+                'id' => $e->id,
+                'fecha' => $e->fecha_hora?->format('d-m-Y h:m'),
+                'url' => '/archivos/evidencias/' . $e->evidencia,
+            ]);
+
+        echo json_encode(
+             $data
+        );
+        
+        exit;
+    }
+
+    public function createEvidencia()
+    {
+        if (!isset($_FILES['evidencia'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No agrego la evidencia'
+            ]);
+            return;
+        }
+
+        $archivo = $_FILES['evidencia'];
+
+        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+
+        if (!in_array($extension, ['jpg','jpeg','png'])) {
+             echo json_encode([
+                'success' => false,
+                'message' => 'Formato inválido'
+            ]);
+            return;
+        }
+
+        $nombre = sprintf(
+            'EVIDENCIA-LA-%d-%d.%s',
+            $this->estacionId(),
+            time(),
+            $extension
+        );
+
+        $ruta = __DIR__ . '../../../public/uploads/archivos/evidencias/' . $nombre;
+
+        $this->comprimirImagen(
+            $archivo['tmp_name'],
+            $ruta,
+            60
+        );
+
+        ListaAsistenciaEvidencia::create([
+            'id_lista_asistencia'=> $_POST['id'],
+            'evidencia'=>$nombre,
+            'fecha_hora' => date('Y-m-d H:m:s'),
+        ]);
+
+         echo json_encode([
+                'success' => true,
+                'message' => 'Evidencia agregada'
+            ]);
+    }
+
+    public function deleteEvidencia()
+    {
+         header('Content-Type: application/json; charset=utf-8');
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+
+        $evidencia = ListaAsistenciaEvidencia::findOrFail($id);
+
+        $archivo = __DIR__ . '../../../public/uploads/archivos/evidencias/' . $evidencia->evidencia;
+
+        if (is_file($archivo)) {
+            unlink($archivo);
+        }
+
+        $evidencia->delete();
+
+        echo json_encode([
+                'success' => true,
+                'message' => 'Evidencia eliminada'
+            ]);
+    }
+
+    private function comprimirImagen(
+    string $origen,
+    string $destino,
+    int $calidad = 60
+    ): bool {
+
+        $info = getimagesize($origen);
+
+        $imagen = match($info['mime']) {
+            'image/png' => imagecreatefrompng($origen),
+            'image/gif' => imagecreatefromgif($origen),
+            default => imagecreatefromjpeg($origen),
+        };
+
+        return imagejpeg($imagen, $destino, $calidad);
     }
 
 }

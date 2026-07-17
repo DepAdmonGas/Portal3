@@ -567,15 +567,28 @@ class IncidentesAccidentesController extends BaseController
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
+
         $registros = InvestigacionIncidenteAccidente::with([
-        'usuario.puesto'
-        ])
-        ->where(
-            'id_estacion',
-            $this->estacionId()
-        )
-        ->orderByDesc('id')
-        ->get();
+                'usuario.puesto'
+            ])
+            ->where(
+                'id_estacion',
+                $this->estacionId()
+            )
+            ->when(
+                !empty($inicio) && !empty($fin),
+                fn ($q) => $q->whereBetween(
+                    'fechacreacion',
+                    [
+                        $inicio . ' 00:00:00',
+                        $fin . ' 23:59:59'
+                    ]
+                )
+            )
+            ->orderByDesc('id')
+            ->get();
        
 
         $html = '

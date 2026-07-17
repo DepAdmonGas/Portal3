@@ -173,15 +173,15 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">
+                <h4 class="modal-title text-white">
                     Detalle del Reporte Diario
-                </h5>
+                </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -414,7 +414,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
 
-                    Cerrar
+                    <i class="ti ti-x"></i> Cerrar
 
                 </button>
 
@@ -430,24 +430,20 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
      id="modalMensajes"
      tabindex="-1">
 
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
 
         <div class="modal-content border-0 shadow">
 
             <!-- Header -->
 
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <div>
-
-                    <h5 class="mb-0">
+                    <h4 class="modal-title text-white">
                         <i class="ti ti-message-circle me-2 text-primary"></i>
                         Mensaje
-                    </h5>
+                    </h4>
 
-                </div>
-
-                <button class="btn-close"
+                <button class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                 </button>
 

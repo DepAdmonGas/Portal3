@@ -329,14 +329,14 @@
     id="modalDispensario"
     tabindex="-1">
 
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h5 class="modal-title">Agregar dispensario</h5>
+                <h4 class="modal-title text-white">Agregar dispensario</h4>
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -379,8 +379,8 @@
 
 
         <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn btn-primary" @click="agregarDispensario()">Guardar
+        <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
+        <button class="btn btn-primary" @click="agregarDispensario()"><i class="ti ti-check"></i> Guardar
         </button>
         </div>
 

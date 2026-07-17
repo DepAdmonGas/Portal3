@@ -274,12 +274,12 @@ public function index(){
             if (
                 !empty($revision->archivo) &&
                 file_exists(
-                    $_SERVER['DOCUMENT_ROOT'] . $revision->archivo
+                    __DIR__ . '../../../public/uploads/' . $revision->archivo
                 )
             ) {
 
                 unlink(
-                    $_SERVER['DOCUMENT_ROOT'] . $revision->archivo
+                    __DIR__ . '../../../public/uploads/' . $revision->archivo
                 );
             }
 

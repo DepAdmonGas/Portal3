@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const categoria = JSON.stringify(row.categoria ?? '');               
 
                     return `
-                        <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                        <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                         href="javascript:void(0)"
                             ${!noDelete ? '' : `
                             @click='window.configuracionBitacora.modalEliminarOpen(${row.id_firma},${nombre},${categoria})'

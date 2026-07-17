@@ -1,4 +1,4 @@
-<div id="container" class="pb-4" x-data="{ ...actions(), ...requisitosLegalesForm()}" data-ngobierno="<?= $title ?>">
+<div id="container" class="pb-4" x-data="{ ...actions(), ...requisitosLegalesForm()}" data-ngobierno="<?= $title ?>" data-modulo="0">
 
     <div class="text-end mt-2">
           <?= 
@@ -63,14 +63,14 @@
         x-init="getPermisos()"
         tabindex="-1">
 
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
             <div class="modal-content">
 
                 <!-- HEADER -->
-                <div class="modal-header">
-                    <h4 class="modal-title" x-text="mode === 'edit' ? 'Editar requisito legal' : 'Agregar requisito legal'"></h4>
+                <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" x-text="mode === 'edit' ? 'Editar requisito legal' : 'Agregar requisito legal'"></h4>
                     <button type="button"
-                            class="btn-close"
+                            class="btn-close btn-close-white"
                             data-bs-dismiss="modal"
                             @click="resetModal()">
                     </button>
@@ -185,13 +185,15 @@
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
                             @click="resetModal()">
-                        Cancelar
+                        <i class="ti ti-x"></i> Cancelar
                     </button>
 
                     <button type="button"
                             class="btn btn-success"
                             @click="submit()"
                             :disabled="loading">
+
+                            <i class="ti ti-check"></i>
 
                         <span x-show="!loading">Guardar</span>
                         <span x-show="loading">Guardando...</span>
@@ -211,13 +213,13 @@
         @hidden.bs.modal="detalle = {}; matriz = []; renovacion = []"
         tabindex="-1">
 
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
             <div class="modal-content">
 
                 <!-- HEADER -->
-                <div class="modal-header">
-                    <h4 class="modal-title">Detalle del requisito legal</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetModal()"></button>
+                <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white">Detalle del requisito legal</h4>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="resetModal()"></button>
                 </div>
 
                 <!-- BODY -->
@@ -363,7 +365,7 @@
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
                             @click="resetModal()">
-                        Cerrar
+                        <i class="ti ti-x"></i> Cerrar
                     </button>
                 </div>
 
@@ -378,12 +380,12 @@
         @hidden.bs.modal="resetHistorialModal()"
         tabindex="-1">
 
-        <div class="modal-dialog modal-dialog-scrollable modal-xl">
+        <div class="modal-dialog modal-dialog-scrollable modal-xl modal-dialog-centered">
             <div class="modal-content">
 
-                <div class="modal-header">
-                    <h4 class="modal-title" x-text="historialTitle || 'Historial'"></h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header modal-colored-header bg-primary text-white">
+                    <h4 class="modal-title text-white" x-text="historialTitle || 'Historial'"></h4>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
                 <div class="modal-body">
@@ -486,13 +488,14 @@
                     <button type="button"
                             class="btn bg-danger-subtle text-danger"
                             @click="showHistorialForm = false; resetHistorialForm()">
-                        Cancelar
+                        <i class="ti ti-x"></i> Cancelar
                     </button>
 
                     <button type="button"
                             class="btn btn-success"
                             @click="submitHistorial()"
                             :disabled="loading">
+                            <i class="ti ti-check"></i>
                         <span x-text="historialForm.id ? 'Actualizar' : 'Guardar'"></span>
                     </button>
                 </div>

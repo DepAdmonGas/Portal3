@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
                                 <li>
-                                    <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled' : ''}"
+                                    <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.bitacoraDispensario.eliminar(${row.id}, ${row.no_dispensario})'
                                     `}>
