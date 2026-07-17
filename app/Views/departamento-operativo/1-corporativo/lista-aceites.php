@@ -1,7 +1,7 @@
 <div class="row mb-5" x-data="listaAceitesComponent()">
 <div class="col-12">
 <button type="button" class="btn btn-primary float-end " @click="nuevoAceite()" :disabled="creando">
-<i class="ti ti-plus me-1"></i>Agregar
+<i class="ti ti-plus me-1"></i>Nuevo
 </button>
 </div>
 

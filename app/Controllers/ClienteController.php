@@ -9,6 +9,7 @@ use App\Models\Operativo\ConsumosPago;
 use App\Core\Session;
 use App\Models\Operativo\Cliente;
 use App\Models\Operativo\CorteDia;
+use App\Services\ModuleStationService;
 
 class ClienteController extends BaseController
 {
@@ -23,7 +24,8 @@ $idMes = $validados['idMes'];
 $permisos = ClienteService::getPermisos();
 $estado = ClienteService::getEstado((int) $idDia);
 $fecha = ClienteService::getFecha((int) $idDia);
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'] ?? $this->estacionId();
 
 $title = 'Clientes (' . formatearFecha($fecha) . ')';
 
@@ -46,6 +48,7 @@ $data = [
 'puedeCrear' => $permisos['puedeCrear'],
 'puedeEliminar' => $permisos['puedeEliminar'],
 'ocultarSelectorEstacion' => true,
+'moduleStationKey' => 'corte-diario',
 'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
 '/assets/libs/select2/dist/css/select2.min.css',
@@ -53,6 +56,7 @@ $data = [
 ],
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/libs/select2/dist/js/select2.full.min.js',
 '/assets/libs/select2/dist/js/select2.min.js',
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js?v=' . time(),
@@ -83,7 +87,8 @@ exit;
 public function getClientes()
 {
 header('Content-Type: application/json; charset=utf-8');
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'] ?? $this->estacionId();
 $clientes = ClienteService::getClientes($idEstacion);
 
 echo json_encode([

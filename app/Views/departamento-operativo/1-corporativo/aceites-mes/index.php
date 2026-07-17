@@ -19,6 +19,7 @@ data-puede-editar="<?= $puedeEditar ? 'true' : 'false' ?>"
 data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
 data-dias-en-mes="<?= $diasEnMes ?>"
 data-nombre-estacion="<?= htmlspecialchars($nombreEstacion, ENT_QUOTES, 'UTF-8') ?>"
+data-module-station-key="corte-diario"
 x-data="aceitesMesComponent()"
 @refresh-documentos.window="cargarDocumentos()"
 @refresh-facturas.window="cargarFacturas()">
@@ -39,8 +40,8 @@ x-data="aceitesMesComponent()"
 </template>
 
 <div class="dropdown">
-<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-tools me-1"></i>
+<button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<i class="ti ti-dots-vertical fs-4"></i>
 </button>
 <ul class="dropdown-menu dropdown-menu-end">
 
@@ -452,7 +453,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <div class="col-12 mb-3">
 <h6>* Concepto:</h6>
 <select class="form-select mt-1" x-model="facturaForm.concepto">
-<option value="">Selecciona una opciòn...</option>
+<option value="">Selecciona una opción...</option>
 <option value="Nota de remisión QUAKER STATE">Nota de remisión QUAKER STATE</option>
 <option value="Factura QUAKER STATE">Factura QUAKER STATE</option>
 <option value="Nota de remisión G5">Nota de remisión G5</option>
@@ -678,7 +679,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </div>
 </div>
 
-<!-- Modal Evaluaciòn de Aceites (KPI's) -->
+<!-- Modal Evaluación de Aceites (KPI's) -->
 <div class="modal fade" id="modalPuntajes" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalPuntajes">
 <div class="modal-dialog modal-dialog-centered">
 <div class="modal-content">
@@ -697,15 +698,15 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </thead>
 <tbody>
 <tr>
-<td>Evaluaciòn Ficha Depòsito</td>
+<td>Evaluación Ficha Depòsito</td>
 <td class="text-center"><strong x-text="puntajes.promedio_ficha"></strong></td>
 </tr>
 <tr>
-<td>Evaluaciòn Factura (Documentos)</td>
+<td>Evaluación Factura (Documentos)</td>
 <td class="text-center"><strong x-text="puntajes.promedio_factura_doc"></strong></td>
 </tr>
 <tr>
-<td>Evaluaciòn Factura (Anexos)</td>
+<td>Evaluación Factura (Anexos)</td>
 <td class="text-center"><strong x-text="puntajes.promedio_factura_anexo"></strong></td>
 </tr>
 </tbody>

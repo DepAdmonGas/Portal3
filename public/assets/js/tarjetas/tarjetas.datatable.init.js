@@ -173,5 +173,6 @@ $(this).addClass("selected");
 }
 });
 
+ModuleStationSelector.init('solicitud-tarjetas');
 
 });

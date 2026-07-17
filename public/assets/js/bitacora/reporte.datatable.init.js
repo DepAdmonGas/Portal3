@@ -1,142 +1,141 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    let permisos = {};
+let permisos = {};
+const messageEl = document.getElementById('aditivo-reporte-empty-message');
+const contentEl = document.getElementById('aditivo-reporte-content');
+var table = null;
 
-    const table = $('#table-aditivo-reporte').DataTable({
-        processing: true,
-        serverSide: false,
-        autoWidth: false,
-        stateSave: true,
-        order: [[0, 'desc']],
-        language: {
-            url: '/assets/libs/datatables.net/js/es-ES.json'
-        },
-        ajax: {
-            url: '/bitacora-aditivo/datatable-reporte',
-            type: 'GET',
-            dataSrc: function (json) {
-            //guardas permisos globalmente
-            permisos = json.permisos;
-            return json.data;
-        }
-        },
-        columns: [
-           {
-                data: null,
-                width: '60px',
-                className: 'text-center',
-                render: function (data, type, row, meta) {
-                    return meta.row + 1;
-                }
-            },
+function showEmptyMessage() {
+if (contentEl) contentEl.style.display = 'none';
+if (messageEl) messageEl.style.display = '';
+}
 
-            {
-                data: 'fecha',
-                render: function (data, type) {
-                    if (!data) return '';
+function showTable() {
+if (contentEl) contentEl.style.display = '';
+if (messageEl) messageEl.style.display = 'none';
+}
 
-                    const fecha = new Date(data);
-                    const formateada = fecha.toLocaleDateString('es-MX', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    });
+function initTable() {
+return $('#table-aditivo-reporte').DataTable({
+processing: true,
+serverSide: false,
+autoWidth: false,
+stateSave: true,
+order: [[0, 'desc']],
+language: {
+url: '/assets/libs/datatables.net/js/es-ES.json'
+},
+ajax: {
+url: '/bitacora-aditivo/datatable-reporte',
+type: 'GET',
+dataSrc: function (json) {
+permisos = json.permisos;
+return json.data;
+}
+},
+columns: [
+{
+data: null,
+width: '60px',
+className: 'text-center',
+render: function (data, type, row, meta) {
+return meta.row + 1;
+}
+},
+{
+data: 'fecha',
+render: function (data, type) {
+if (!data) return '';
+const fecha = new Date(data);
+const formateada = fecha.toLocaleDateString('es-MX', {
+day: 'numeric',
+month: 'long',
+year: 'numeric'
+});
+if (type === 'display') return formateada;
+if (type === 'filter') return formateada + ' ' + data;
+return data;
+}
+},
+{
+data: 'hora',
+render: function (data, type) {
+if (!data) return '';
+const fecha = new Date('1970-01-01T' + data);
+if (type === 'display') {
+return fecha.toLocaleTimeString('es-MX', {
+hour: '2-digit',
+minute: '2-digit',
+hour12: true
+});
+}
+return data;
+}
+},
+{
+data: null,
+orderable: false,
+searchable: false,
+className: 'text-center',
+render: function (data, type, row) {
+const disabled = row.estado === 0;
+const noDesc = !permisos.descargar || disabled;
+const noDelete = !permisos.eliminar || disabled;
+return [
+'<div x-data="actions()" class="d-flex gap-1 justify-content-center">',
+'<div class="dropdown dropstart">',
+'<a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>',
+'<ul class="dropdown-menu">',
+'<li><a href="javascript:void(0)" class="dropdown-item ' + (noDesc ? 'disabled' : '') + '"' + (noDesc ? '' : ' @click="download(\'bitacora-aditivo\',\'' + row.documento + '\')"') + '><i class="ti ti-file-download"></i> Descargar</a></li>',
+'<li><a href="javascript:void(0)" class="dropdown-item ' + (noDelete ? 'disabled' : '') + '"' + (noDelete ? '' : ' @click=\'async () => { const res = await deleteAction({ url: "/bitacora-aditivo/delete-reporte", id: ' + row.id + ', name: "' + row.id + '", table: "#table-aditivo-reporte" }); }\'') + '><i class="ti ti-trash fs-6"></i> Eliminar</a></li>',
+'</ul></div></div>'
+].join('');
+}
+}
+]
+});
+}
 
-                    if (type === 'display') return formateada;
-                    if (type === 'filter') return formateada + ' ' + data;
+function destroyTable() {
+if (table) {
+table.destroy();
+table = null;
+}
+}
 
-                    return data;
-                }
-            },
+function getOrCreateTable() {
+if (!table) {
+table = initTable();
+}
+return table;
+}
 
-            {
-            data: 'hora',
-            render: function (data, type) {
+$('#table-aditivo-reporte').on('draw.dt', function () {
+Alpine.initTree(document.querySelector('#table-aditivo-reporte'));
+});
 
-                if (!data) return '';
+if (messageEl && messageEl.style.display !== 'none') {
+showEmptyMessage();
+} else {
+showTable();
+getOrCreateTable();
+}
 
-                const fecha = new Date(`1970-01-01T${data}`);
-
-                if (type === 'display') {
-                    return fecha.toLocaleTimeString('es-MX', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                    });
-                }
-
-                return data; // para ordenamiento
-            }
-        },
-
-            // ACCIONES
-            {
-            data: null,
-            orderable: false,
-            searchable: false,
-            className: 'text-center',
-            render: function (data, type, row) {
-
-            const disabled = row.estado === 0;
-
-            const noDesc = !permisos.descargar || disabled;
-            const noDelete = !permisos.eliminar || disabled;
-
-            return `
-                <div x-data="actions()" class="d-flex gap-1 justify-content-center">
-
-                    <div class="dropdown dropstart">
-                        <a href="javascript:void(0)" data-bs-toggle="dropdown">
-                            <i class="ti ti-dots-vertical fs-6"></i>
-                        </a>
-
-                        <ul class="dropdown-menu">
-
-                            <li>
-                            <a 
-                                href="javascript:void(0)"
-                                class="dropdown-item ${noDesc ? 'disabled' : ''}"
-                                ${noDesc ? '' : `
-                                @click="download('bitacora-aditivo','${row.documento}')"
-                                `}
-                            >
-                                <i class="ti ti-file-download"></i> Descargar
-                            </a>
-                        </li>
-
-                            <li>
-                                <a 
-                                    href="javascript:void(0)"
-                                    class="dropdown-item ${noDelete ? 'disabled' : ''}"
-                                    ${noDelete ? '' : `
-                                    @click='async () => {
-                                    const res = await deleteAction({
-                                        url: "/bitacora-aditivo/delete-reporte",
-                                        id: ${row.id},
-                                        name: "${row.id}",
-                                        table: "#table-aditivo-reporte"
-                                    });
-
-                                }'
-                                    `}
-                                >
-                                    <i class="ti ti-trash fs-6"></i> Eliminar
-                                </a>
-                            </li>
-
-                        </ul>
-                    </div>
-
-                </div>
-            `;
-        }
-        }
-        ]
-    });
-
-    // REINICIALIZAR ALPINE DESPUÉS DE DIBUJAR TABLA
-    $('#table-aditivo-reporte').on('draw.dt', function () {
-        Alpine.initTree(document.querySelector('#table-aditivo-reporte'));
-    });
+ModuleStationSelector.init('bitacora-aditivo', {
+customReload: function (ms) {
+var v = ms.getValue();
+if (v.id_estacion === null && v.id_depto === null) {
+ms.hideBadge();
+showEmptyMessage();
+return;
+}
+showTable();
+if (table) {
+table.ajax.reload(null, false);
+} else {
+getOrCreateTable();
+}
+}
+});
 
 });

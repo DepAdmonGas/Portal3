@@ -9,6 +9,7 @@ data-id-year="<?= $idYear ?>"
 data-id-mes="<?= $idMes ?>"
 data-num-productos="<?= $numProd ?>"
 data-puede-descargar="<?= ($puedeDescargar ?? false) ? 'true' : 'false' ?>"
+data-module-station-key="corte-diario"
 x-data="concentradoVentasComponent()">
 
 <template x-if="loading">

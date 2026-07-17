@@ -5,6 +5,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Core\Session;
 use App\Services\ClienteService;
+use App\Services\ModuleStationService;
 use App\Models\Operativo\Cliente;
 
 class ClientesListaController extends BaseController
@@ -15,7 +16,8 @@ public function index()
 {
 $permisos = ClienteService::getPermisos();
 
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'] ?? $this->estacionId();
 
 $contexto = Session::get('clientes_lista_contexto');
 
@@ -64,6 +66,7 @@ $data = [
 'puedeCrear' => true,
 'puedeEditar' => true,
 'puedeEliminar' => true,
+'moduleStationKey' => 'corte-diario',
 'ocultarSelectorEstacion' => true,
 'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -91,7 +94,9 @@ $data,
 public function getLista()
 {
 header('Content-Type: application/json; charset=utf-8');
-$data = ClienteService::getClientesLista($this->estacionId());
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'] ?? $this->estacionId();
+$data = ClienteService::getClientesLista($idEstacion);
 
 echo json_encode([
 'success' => true,
@@ -124,7 +129,8 @@ public function crear()
 {
 header('Content-Type: application/json; charset=utf-8');
 try {
-$idEstacion = (int) ($_POST['idEstacion'] ?? $this->estacionId());
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = (int) ($_POST['idEstacion'] ?? $moduleCtx['id_estacion'] ?? $this->estacionId());
 $cuenta = $_POST['Cuenta'] ?? '';
 $cliente = $_POST['Cliente'] ?? '';
 $tipo = $_POST['Tipo'] ?? '';
@@ -200,7 +206,8 @@ if (($result['success'] ?? false)) {
 $usuario = Session::get('usuario');
 $idUsuario = $usuario['id'] ?? 0;
 $nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'] ?? $this->estacionId();
 $idClienteInt = $idCliente;
 
 register_shutdown_function(function () use ($idEstacion, $idUsuario, $nombreUsuario, $cliente, $cuenta, $tipo, $rfc, $idClienteInt, $oldData) {
@@ -249,7 +256,8 @@ if ($result) {
 $usuario = Session::get('usuario');
 $idUsuario = $usuario['id'] ?? 0;
 $nombreUsuario = $usuario['nombre'] ?? 'Desconocido';
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'] ?? $this->estacionId();
 $nombreCliente = $cliente->cliente ?? '';
 $cuentaCliente = $cliente->cuenta ?? '';
 $tipoCliente = $cliente->tipo ?? '';

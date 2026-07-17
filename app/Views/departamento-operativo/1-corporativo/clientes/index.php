@@ -17,7 +17,7 @@ x-data="clientesComponent()">
 
 <div class="col-12 mb-4">
 <button x-show="puedeAgregar" type="button" class="btn btn-primary float-end" @click="abrirModalAgregar()">
-<i class="ti ti-plus"></i> Agregar
+<i class="ti ti-plus"></i> Nuevo
 </button>
 <button type="button" class="btn btn-primary float-end me-3" @click="abrirListaClientes()">
 <i class="ti ti-users"></i> Lista de Clientes

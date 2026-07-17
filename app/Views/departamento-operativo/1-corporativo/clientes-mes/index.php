@@ -10,6 +10,7 @@ data-id-estacion="<?= $idEstacion ?>"
 data-id-reporte="<?= $idReporte ?>"
 data-finalizado="<?= $finalizado ? 'true' : 'false' ?>"
 data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>"
+data-module-station-key="corte-diario"
 x-data="clientesMesComponent()">
 
 <div class="row mb-3">
@@ -24,9 +25,9 @@ x-data="clientesMesComponent()">
 </template>
 
 <?php if (!$puestoExcluido): ?>
-<div class="dropdown">
-<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-tools me-1"></i>
+<div class="dropdown mb-2">
+<button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<i class="ti ti-dots-vertical fs-4"></i>
 </button>
 
 <ul class="dropdown-menu dropdown-menu-end">

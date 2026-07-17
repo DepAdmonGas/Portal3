@@ -28,6 +28,9 @@ public static function getPermisos(): array
 {
 $sessionUsuario = Session::get('usuario');
 $multiEstacion = $sessionUsuario['multiestacion'] ?? false;
+if (ModuleStationService::isPuesto6Estacion8()) {
+$multiEstacion = false;
+}
 
 $usuario = Auth::user();
 $esDireccionOperaciones = false;

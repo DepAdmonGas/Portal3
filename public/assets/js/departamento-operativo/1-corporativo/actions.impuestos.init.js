@@ -1,3 +1,29 @@
+document.addEventListener('DOMContentLoaded', () => {
+const moduleStationKey = 'corte-diario';
+const messageEl = document.getElementById('impuestos-empty-message');
+const contentEl = document.getElementById('impuestos-content');
+
+if (messageEl && messageEl.style.display === 'none') {
+} else {
+if (contentEl) contentEl.style.display = 'none';
+}
+
+ModuleStationSelector.init(moduleStationKey, {
+customReload: function (ms) {
+var v = ms.getValue();
+if (v.id_estacion === null && v.id_depto === null) {
+ms.hideBadge();
+if (contentEl) contentEl.style.display = 'none';
+if (messageEl) messageEl.style.display = '';
+return;
+}
+if (contentEl) contentEl.style.display = '';
+if (messageEl) messageEl.style.display = 'none';
+window.location.reload();
+}
+});
+});
+
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('impuestosComponent', () => ({

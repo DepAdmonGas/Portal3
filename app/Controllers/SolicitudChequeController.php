@@ -8,6 +8,8 @@ use App\Core\Session;
 use App\Services\DropdownYearMesService;
 use App\Services\SolicitudChequeService;
 use App\Services\ModuloDptoOperativoService;
+use App\Services\ModuleStationService;
+
 use App\Models\Operativo\SolicitudChequeDocumento;
 use App\Models\Estacion;
 use Carbon\Carbon;
@@ -94,7 +96,8 @@ $departamentosFiltrados[] = $d;
 }
 }
 
-if ($permisos['es_gestoria']) {
+if ($permisos['es_gestoria'] && !ModuleStationService::isPuesto6Estacion8()) {
+ModuleStationService::setContext('solicitud-cheques', 8, 5);
 $idEstacion = 8;
 $idDepto = 5;
 $nombreFiltro = 'Gestoría';
@@ -123,12 +126,13 @@ $data = [
 'esEstacionNormal' => $esEstacionNormal,
 'multiestacion' => $esMultiestacion,
 'yearMesTemplate' => $yearMesTemplate,
-'ocultarSelectorEstacion' => true,
 'ocultarTools' => $ocultarTools,
 'nombreFiltro' => $nombreFiltro,
 'estacionesFiltradas' => $estacionesFiltradas,
 'departamentosFiltrados' => $departamentosFiltrados,
 'totalPendientes' => $totalPendientes,
+'moduleStationKey' => 'solicitud-cheques',
+'pendientesData' => $pendientesMap,
 'esGestoria' => $permisos['es_gestoria'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'esContabilidad' => $permisos['es_contabilidad'],
@@ -158,6 +162,7 @@ $data = [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/libs/select2/dist/js/select2.full.min.js',
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/solicitud-cheque.datatable.init.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.solicitud-cheque.init.js?v=' . time(),
 ],

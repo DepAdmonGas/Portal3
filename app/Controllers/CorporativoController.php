@@ -4,6 +4,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\DropdownYearMesService;
 use App\Services\CorteDiarioService;
+use App\Services\ModuleStationService;
 use App\Models\Operativo\CorteYear;
 use App\Models\Operativo\CorteMes;
 use App\Models\Operativo\CorteDia;
@@ -39,6 +40,7 @@ Breadcrumb::add('<span class="breadcrumb-item active">Corte Diario</span>', '');
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
+$moduleCtx = ModuleStationService::getContext('corte-diario');
 $data = [
 'title'    => $title,
 'idYear'   => $idYear,
@@ -46,13 +48,15 @@ $data = [
 'yearMesTemplate' => '/departamento-operativo/corporativo/corte-diario/{year}/{mes}',
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
-'estacionId' => $this->estacionId(),
+'estacionId' => $moduleCtx['id_estacion'],
+'moduleStationKey' => 'corte-diario',
 'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/corte.diario.datatable.init.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.corte.diario.init.js?v=' . time()
 ],
@@ -66,7 +70,8 @@ public function corteDiarioDatatable($idYear, $idMes)
 {
 header('Content-Type: application/json; charset=utf-8');
 
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 $multiEstacion = $this->isMultiEs();
 
 if (!$idEstacion) {

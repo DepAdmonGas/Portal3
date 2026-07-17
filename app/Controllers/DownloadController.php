@@ -41,6 +41,14 @@ class DownloadController{
             'monedero-lista-documentos'    => __DIR__ . '../../../public/uploads/archivos/resumen-monederos-documentos/',
             'embarques'                    => __DIR__ . '../../../public/uploads/archivos/embarques/',
             'solicitud-cheque'             => __DIR__ . '../../../public/uploads/archivos/solicitud-cheque/',
+            'ingresos-facturacion'         => __DIR__ . '../../../public/uploads/archivos/ingresos-facturacion/',
+'contratos'                    => __DIR__ . '../../../public/uploads/archivos/contratos/',
+            'estimulo-fiscal'                => __DIR__ . '../../../public/uploads/archivos/estimulo-fiscal/',
+            'comparativo-xml'                => __DIR__ . '../../../public/uploads/archivos/comparativo-xml/',
+            'seguros-incidencias'            => __DIR__ . '../../../public/uploads/archivos/incidencias-poliza-es/',
+            'seguros-polizas'                => __DIR__ . '../../../public/uploads/archivos/poliza-estacion/',
+            'aclaracion-voucher'             => __DIR__ . '../../../public/uploads/archivos/aclaracion-voucher/',
+            'solicitud-vales'                => __DIR__ . '../../../public/uploads/archivos/solicitud-vales/',
         ];
 
         if (!isset($rutas[$tipo])) {
@@ -79,12 +87,35 @@ class DownloadController{
         // Sanitizar nombre de archivo para Content-Disposition
         $safeFilename = preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($file));
 
-        // FORZAR DESCARGA
-        header('Content-Description: File Transfer');
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="' . $safeFilename . '"');
+        // ?view=1 para visualización inline (PDF/imágenes en iframe)
+        $viewMode = isset($_GET['view']);
+
+        if ($viewMode) {
+            $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+            $contentTypes = [
+                'pdf' => 'application/pdf',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+            ];
+            if (isset($contentTypes[$ext])) {
+                header('Content-Type: ' . $contentTypes[$ext]);
+                header('Content-Disposition: inline; filename="' . $safeFilename . '"');
+            } else {
+                header('Content-Type: application/octet-stream');
+                header('Content-Disposition: attachment; filename="' . $safeFilename . '"');
+            }
+        } else {
+            // FORZAR DESCARGA
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . $safeFilename . '"');
+            header('Pragma: public');
+        }
+
         header('Content-Length: ' . filesize($realPath));
-        header('Pragma: public');
 
         readfile($realPath);
         exit;

@@ -97,4 +97,47 @@
         }
     };
 
+    window.alerts = {
+        success(msg) {
+            if (window.Notify) window.Notify.success(msg);
+        },
+        error(msg) {
+            if (window.Notify) window.Notify.error(msg);
+        },
+        confirm(title, msg, callback) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: title,
+                    text: msg,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'S\u00ed',
+                    cancelButtonText: 'Cancelar'
+                }).then(result => {
+                    if (result.isConfirmed && typeof callback === 'function') {
+                        callback();
+                    }
+                });
+            }
+        }
+    };
+
+    window.loader = {
+        _el: null,
+        _getEl() {
+            if (!this._el) {
+                this._el = document.querySelector('.loader-admongas');
+            }
+            return this._el;
+        },
+        show() {
+            var el = this._getEl();
+            if (el) el.style.display = 'flex';
+        },
+        hide() {
+            var el = this._getEl();
+            if (el) el.style.display = 'none';
+        }
+    };
+
 })();

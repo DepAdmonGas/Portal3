@@ -1,6 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-const c = document.getElementById('container');
+ModuleStationSelector.init('corte-diario', {
+customReload: function (ms) {
+var v = ms.getValue();
+if (v.id_estacion === null && v.id_depto === null) {
+ms.hideBadge();
+$('#embarques-content').hide();
+$('#embarques-empty-message').show();
+return;
+}
+$('#embarques-empty-message').hide();
+$('#embarques-content').show();
+var dt = $('#tabla-embarques').DataTable();
+if (dt) { dt.ajax.reload(null, false); }
+}
+});
+
+const c = document.getElementById('embarques-content');
 if (!c) return;
 
 const idYear = parseInt(c.dataset.idYear);

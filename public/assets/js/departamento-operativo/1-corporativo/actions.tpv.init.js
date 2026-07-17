@@ -1,3 +1,7 @@
+document.addEventListener('DOMContentLoaded', () => {
+ModuleStationSelector.init('corte-diario');
+});
+
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('tpvComponent', () => ({
@@ -97,7 +101,7 @@ if (json.success && json.data) {
 const items = this.cierres[empresa] || [];
 this.cierres[empresa] = [...items, json.data];
 } else {
- Notify['error'](json.message || 'Error al agregar');
+Notify['error'](json.message || 'Error al agregar');
 }
 } catch (e) {
 Notify['error']('Error de conexión');

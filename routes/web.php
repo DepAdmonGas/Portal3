@@ -20,6 +20,7 @@ return function(RouteCollector $r) {
     
     // ---------------- SWITCHEO DE LA SESION DE LA ESTACION ----------------
     $r->addRoute('POST','/switch-estacion',Route::auth(['SwitchEstacionController', 'switchSessionEstacion']));
+    $r->addRoute('POST','/api/module-context/set',Route::auth(['ModuleContextController', 'setContext']));
 
 
     $r->addRoute('GET', '/menu', Route::auth(['MenuController', 'index']));
@@ -341,6 +342,108 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addRoute('GET','/resumen-monedero/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['ResumenMonederoController', 'descargarExcel']));
     $r->addRoute('GET','/resumen-monedero/kpi-evaluacion/{idYear:\d+}',Route::auth(['ResumenMonederoController', 'kpiEvaluacion']));
     $r->addRoute('GET','/resumen-monedero/kpi-evaluacion/data/{idYear:\d+}',Route::auth(['ResumenMonederoController', 'kpiEvaluacionData']));
+
+    //----- Ingresos vs Facturación
+    $r->addRoute('GET','/corporativo/ingresos-facturacion',Route::auth(['IngresosFacturacionController', 'redirect']));
+    $r->addRoute('GET','/corporativo/ingresos-facturacion/{idYear:\d+}',Route::auth(['IngresosFacturacionController', 'index']));
+    $r->addRoute('GET','/ingresos-facturacion/data',Route::auth(['IngresosFacturacionController', 'getData']));
+    $r->addRoute('POST','/ingresos-facturacion/update-cell',Route::auth(['IngresosFacturacionController', 'updateCell']));
+    $r->addRoute('GET','/ingresos-facturacion/totales',Route::auth(['IngresosFacturacionController', 'getTotales']));
+    $r->addRoute('POST','/ingresos-facturacion/upload-file',Route::auth(['IngresosFacturacionController', 'uploadFile']));
+    $r->addRoute('GET','/ingresos-facturacion/list-files',Route::auth(['IngresosFacturacionController', 'listFiles']));
+    $r->addRoute('POST','/ingresos-facturacion/delete-file',Route::auth(['IngresosFacturacionController', 'deleteFile']));
+
+    //----- Despacho vs Ventas
+    $r->addRoute('GET','/corporativo/despacho-ventas',Route::auth(['DespachoVentasController', 'redirect']));
+    $r->addRoute('GET','/corporativo/despacho-ventas/{idYear:\d+}/{idMes:\d+}',Route::auth(['DespachoVentasController', 'index']));
+    $r->addRoute('GET','/despacho-ventas/data',Route::auth(['DespachoVentasController', 'getData']));
+    $r->addRoute('POST','/despacho-ventas/update-cell',Route::auth(['DespachoVentasController', 'updateCell']));
+
+    //----- Contratos
+    $r->addRoute('GET','/corporativo/contratos',Route::auth(['ContratosController', 'index']));
+    $r->addRoute('GET','/almacen/contratos',Route::auth(['ContratosController', 'index']));
+    $r->addRoute('GET','/contratos/data',Route::auth(['ContratosController', 'getData']));
+    $r->addRoute('GET','/contratos/detalle',Route::auth(['ContratosController', 'getDetalle']));
+    $r->addRoute('POST','/contratos/guardar',Route::auth(['ContratosController', 'guardar']));
+    $r->addRoute('POST','/contratos/editar',Route::auth(['ContratosController', 'editar']));
+    $r->addRoute('POST','/contratos/eliminar',Route::auth(['ContratosController', 'eliminar']));
+
+    //----- Comparativo XML
+    $r->addRoute('GET','/corporativo/comparativo-xml',Route::auth(['ComparativoXmlController', 'redirect']));
+    $r->addRoute('GET','/corporativo/comparativo-xml/{idYear:\d+}',Route::auth(['ComparativoXmlController', 'index']));
+    $r->addRoute('GET','/comparativo-xml/data',Route::auth(['ComparativoXmlController', 'getData']));
+    $r->addRoute('POST','/comparativo-xml/update-cell',Route::auth(['ComparativoXmlController', 'updateCell']));
+    $r->addRoute('POST','/comparativo-xml/update-sat-cell',Route::auth(['ComparativoXmlController', 'updateSatCell']));
+    $r->addRoute('GET','/comparativo-xml/sat-data',Route::auth(['ComparativoXmlController', 'getSatData']));
+    $r->addRoute('POST','/comparativo-xml/add-comment',Route::auth(['ComparativoXmlController', 'addComment']));
+    $r->addRoute('GET','/comparativo-xml/comments',Route::auth(['ComparativoXmlController', 'getComments']));
+    $r->addRoute('GET','/comparativo-xml/documents',Route::auth(['ComparativoXmlController', 'getDocuments']));
+    $r->addRoute('POST','/comparativo-xml/add-document',Route::auth(['ComparativoXmlController', 'addDocument']));
+    $r->addRoute('POST','/comparativo-xml/delete-document',Route::auth(['ComparativoXmlController', 'deleteDocument']));
+    $r->addRoute('POST','/comparativo-xml/save-observations',Route::auth(['ComparativoXmlController', 'saveObservations']));
+    $r->addRoute('GET','/comparativo-xml/logs',Route::auth(['ComparativoXmlController', 'getLogs']));
+    $r->addRoute('GET','/comparativo-xml/excel/{idEstacion:\d+}/{idYear:\d+}',Route::auth(['ComparativoXmlController', 'descargarExcel']));
+
+    //----- Comparativo XML Seguimiento
+    $r->addRoute('GET','/corporativo/comparativo-xml/seguimiento/{idYear:\d+}/{idEstacion:\d+}',Route::auth(['ComparativoXmlController', 'seguimiento']));
+    $r->addRoute('GET','/corporativo/comparativo-xml/seguimiento/{idYear:\d+}',Route::auth(['ComparativoXmlController', 'seguimiento']));
+
+    //----- Aclaracion Voucher
+    $r->addRoute('GET','/corporativo/aclaracion-voucher',Route::auth(['AclaracionVoucherController', 'index']));
+    $r->addRoute('GET','/corporativo/aclaracion-voucher/{idYear:\d+}',Route::auth(['AclaracionVoucherController', 'index']));
+    $r->addRoute('GET','/corporativo/aclaracion-voucher/{idYear:\d+}/{idMes:\d+}',Route::auth(['AclaracionVoucherController', 'index']));
+    $r->addRoute('GET','/corporativo/aclaracion-voucher/get-data',Route::auth(['AclaracionVoucherController', 'getData']));
+    $r->addRoute('POST','/corporativo/aclaracion-voucher/add',Route::auth(['AclaracionVoucherController', 'add']));
+    $r->addRoute('POST','/corporativo/aclaracion-voucher/edit',Route::auth(['AclaracionVoucherController', 'edit']));
+    $r->addRoute('POST','/corporativo/aclaracion-voucher/delete',Route::auth(['AclaracionVoucherController', 'delete']));
+    $r->addRoute('POST','/corporativo/aclaracion-voucher/finalizar',Route::auth(['AclaracionVoucherController', 'finalizar']));
+    $r->addRoute('GET','/corporativo/aclaracion-voucher/get-comentarios',Route::auth(['AclaracionVoucherController', 'getComentarios']));
+    $r->addRoute('POST','/corporativo/aclaracion-voucher/add-comentario',Route::auth(['AclaracionVoucherController', 'addComentario']));
+    $r->addRoute('GET','/corporativo/aclaracion-voucher/get-anexos',Route::auth(['AclaracionVoucherController', 'getAnexos']));
+    $r->addRoute('POST','/corporativo/aclaracion-voucher/add-anexo',Route::auth(['AclaracionVoucherController', 'addAnexo']));
+    $r->addRoute('POST','/corporativo/aclaracion-voucher/delete-anexo',Route::auth(['AclaracionVoucherController', 'deleteAnexo']));
+
+    //----- Solicitud de Vales
+    $r->addRoute('GET','/corporativo/solicitud-vales',Route::auth(['SolicitudValeController', 'redirect']));
+    $r->addRoute('GET','/corporativo/solicitud-vales/{idYear:\d+}',Route::auth(['SolicitudValeController', 'index']));
+    $r->addRoute('GET','/corporativo/solicitud-vales/{idYear:\d+}/{idMes:\d+}',Route::auth(['SolicitudValeController', 'index']));
+    $r->addRoute('GET','/corporativo/solicitud-vales/get-data',Route::auth(['SolicitudValeController', 'getData']));
+    $r->addRoute('POST','/corporativo/solicitud-vales/add',Route::auth(['SolicitudValeController', 'add']));
+    $r->addRoute('POST','/corporativo/solicitud-vales/edit',Route::auth(['SolicitudValeController', 'edit']));
+    $r->addRoute('POST','/corporativo/solicitud-vales/delete',Route::auth(['SolicitudValeController', 'delete']));
+    $r->addRoute('GET','/corporativo/solicitud-vales/get-comentarios',Route::auth(['SolicitudValeController', 'getComentarios']));
+    $r->addRoute('POST','/corporativo/solicitud-vales/add-comentario',Route::auth(['SolicitudValeController', 'addComentario']));
+    $r->addRoute('GET','/corporativo/solicitud-vales/get-documentos',Route::auth(['SolicitudValeController', 'getDocumentos']));
+    $r->addRoute('POST','/corporativo/solicitud-vales/add-documento',Route::auth(['SolicitudValeController', 'addDocumento']));
+    $r->addRoute('POST','/corporativo/solicitud-vales/delete-documento',Route::auth(['SolicitudValeController', 'deleteDocumento']));
+    $r->addRoute('GET','/corporativo/solicitud-vales-nuevo/{idYear:\d+}/{idMes:\d+}',Route::auth(['SolicitudValeController', 'crear']));
+    $r->addRoute('GET','/corporativo/solicitud-vales-nuevo/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['SolicitudValeController', 'crear']));
+    $r->addRoute('GET','/corporativo/solicitud-vales-nuevo/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}/{idDepto:\d+}',Route::auth(['SolicitudValeController', 'crear']));
+    $r->addRoute('GET','/corporativo/solicitud-vales-editar/{id:\d+}',Route::auth(['SolicitudValeController', 'editar']));
+    $r->addRoute('GET','/corporativo/solicitud-vales-editar/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}/{id:\d+}',Route::auth(['SolicitudValeController', 'editar']));
+    $r->addRoute('GET','/corporativo/solicitud-vales-pdf/{id:\d+}',Route::auth(['SolicitudValeController', 'pdf']));
+
+    //----- Seguros
+    $r->addRoute('GET','/corporativo/seguros',Route::auth(['SegurosController', 'index']));
+    $r->addRoute('GET','/seguros/data',Route::auth(['SegurosController', 'getData']));
+    $r->addRoute('GET','/seguros/detalle-incidencia',Route::auth(['SegurosController', 'getDetalleIncidencia']));
+    $r->addRoute('POST','/seguros/guardar-incidencia',Route::auth(['SegurosController', 'guardarIncidencia']));
+    $r->addRoute('POST','/seguros/editar-incidencia',Route::auth(['SegurosController', 'editarIncidencia']));
+    $r->addRoute('POST','/seguros/eliminar-incidencia',Route::auth(['SegurosController', 'eliminarIncidencia']));
+    $r->addRoute('GET','/seguros/polizas',Route::auth(['SegurosController', 'getPolizas']));
+    $r->addRoute('GET','/seguros/detalle-poliza',Route::auth(['SegurosController', 'getDetallePoliza']));
+    $r->addRoute('POST','/seguros/guardar-poliza',Route::auth(['SegurosController', 'guardarPoliza']));
+    $r->addRoute('POST','/seguros/editar-poliza',Route::auth(['SegurosController', 'editarPoliza']));
+    $r->addRoute('POST','/seguros/eliminar-poliza',Route::auth(['SegurosController', 'eliminarPoliza']));
+    $r->addRoute('GET','/seguros/vencimiento',Route::auth(['SegurosController', 'getVencimiento']));
+
+    //----- Estimulo Fiscal
+    $r->addRoute('GET','/corporativo/estimulo-fiscal',Route::auth(['EstimuloFiscalController', 'index']));
+    $r->addRoute('GET','/estimulo-fiscal/data',Route::auth(['EstimuloFiscalController', 'getData']));
+    $r->addRoute('GET','/estimulo-fiscal/detalle',Route::auth(['EstimuloFiscalController', 'getDetalle']));
+    $r->addRoute('POST','/estimulo-fiscal/guardar',Route::auth(['EstimuloFiscalController', 'guardar']));
+    $r->addRoute('POST','/estimulo-fiscal/editar',Route::auth(['EstimuloFiscalController', 'editar']));
+    $r->addRoute('POST','/estimulo-fiscal/eliminar',Route::auth(['EstimuloFiscalController', 'eliminar']));
 
     //----- Control Volumétrico
     $r->addRoute('GET','/control-volumetrico/{idYear:\d+}/{idMes:\d+}',Route::auth(['ControlVolumetricoController', 'index']));

@@ -80,6 +80,9 @@ public static function getPermisos()
 $usuario = Auth::user();
 $sessionUsuario = Session::get('usuario');
 $multiEstacion = $sessionUsuario['multiestacion'] ?? false;
+if (ModuleStationService::isPuesto6Estacion8()) {
+$multiEstacion = false;
+}
 
 $esDireccionOperaciones = false;
 if ($usuario && $usuario->puesto) {

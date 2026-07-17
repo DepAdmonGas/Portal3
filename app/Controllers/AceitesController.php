@@ -13,6 +13,7 @@ use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\ResumenImpuestosService;
 use App\Services\KpiAceitesService;
+use App\Services\ModuleStationService;
 
 class AceitesController extends BaseController
 {
@@ -26,16 +27,18 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 $data = [
 'title' => 'Resumen Aceites, ' . nombremes($idMes) . ' ' . $idYear,
 'idYear' => $idYear,
 'idMes' => $idMes,
 'idEstacion' => 0,
-'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
 'esDireccionOperaciones' => false,
 'help' => false,
 ];
@@ -77,6 +80,8 @@ $data = [
 'idMes' => $idMes,
 'idMesDb' => $idMesDb,
 'idEstacion' => $idEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
 'nombreEstacion' => $nombreEstacion,
 'diasEnMes' => $diasEnMes,
 'multiestacion' => $permisos['multiestacion'],
@@ -518,16 +523,18 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 View::render('departamento-operativo/1-corporativo/aceites-mes/resumen-impuestos', [
 'title' => 'Resumen Impuestos, ' . nombremes($idMes) . ' ' . $idYear,
 'idEstacion' => 0,
 'idYear' => $idYear,
 'idMes' => $idMes,
-'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
 'esDireccionOperaciones' => false,
 'help' => false,
 ], 'departamento-operativo');
@@ -560,6 +567,8 @@ View::render('departamento-operativo/1-corporativo/aceites-mes/resumen-impuestos
 'idEstacion' => $idEstacion,
 'idYear' => $idYear,
 'idMes' => $idMes,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'help' => false,
@@ -573,8 +582,9 @@ public function resumenImpuestosData($idYear, $idMes)
 {
 header('Content-Type: application/json');
 
-$idEstacion = $this->estacionId();
-if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
+if (!$idEstacion) {
 echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
 exit;
 }
@@ -618,15 +628,17 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 View::render('departamento-operativo/1-corporativo/aceites-mes/kpi-aceites', [
 'title' => 'Evaluación de Aceites (KPI\'s), ' . $idYear,
 'idEstacion' => 0,
 'idYear' => $idYear,
-'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
 'esDireccionOperaciones' => false,
 'help' => false,
 'scripts' => [],
@@ -652,6 +664,8 @@ View::render('departamento-operativo/1-corporativo/aceites-mes/kpi-aceites', [
 'title' => 'Evaluación de Aceites (KPI\'s), ' . $idYear,
 'idEstacion' => $idEstacion,
 'idYear' => $idYear,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
 'nombreEstacion' => $nombreEstacion,
 'opciones' => $opciones,
 'multiestacion' => $permisos['multiestacion'],
@@ -674,8 +688,9 @@ echo json_encode(['success' => false, 'message' => 'Sin permisos']);
 exit;
 }
 
-$idEstacion = $this->estacionId();
-if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
+if (!$idEstacion) {
 echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
 exit;
 }
@@ -860,8 +875,9 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
-$idEstacion = $this->estacionId();
-if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
+if (!$idEstacion) {
 header('Content-Type: text/html; charset=utf-8');
 echo '<script>alert("Selecciona una estación antes de descargar."); window.close();</script>';
 exit;

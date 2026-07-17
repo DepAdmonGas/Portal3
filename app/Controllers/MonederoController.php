@@ -6,6 +6,7 @@ use App\Core\Breadcrumb;
 use App\Services\MonederoService;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
+use App\Services\ModuleStationService;
 
 class MonederoController extends BaseController
 {
@@ -20,7 +21,8 @@ $idMes = $validados['idMes'];
 $permisos = MonederoService::getPermisos();
 $estado = MonederoService::getEstado((int) $idDia);
 $fecha = MonederoService::getFecha((int) $idDia);
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'] ?? $this->estacionId();
 
 $title = 'Monedero (' . formatearFecha($fecha) . ')';
 
@@ -41,8 +43,10 @@ $data = [
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'idEstacion' => $idEstacion,
 'ocultarSelectorEstacion' => true,
+'moduleStationKey' => 'corte-diario',
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.monedero.init.js?v=' . time(),
 ],
 'help' => false

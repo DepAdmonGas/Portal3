@@ -1,5 +1,4 @@
-<?php if (!$idEstacion): ?>
-<div class="row mt-4 mb-5">
+<div id="clientes-lista-empty-message" class="row mt-4 mb-5"<?php if ($idEstacion): ?> style="display:none"<?php endif; ?>>
 <div class="col-12">
 <div class="alert alert-info text-center">
     <i class="ti ti-info-circle fs-4"></i>
@@ -7,7 +6,7 @@
 </div>
 </div>
 </div>
-<?php else: ?>
+<div id="clientes-lista-content"<?php if (!$idEstacion): ?> style="display:none"<?php endif; ?>>
 <div id="container" class="mt-4 mb-4"
 data-id-estacion="<?= $idEstacion ?>"
 data-id-year="<?= $idYear ?>"
@@ -18,6 +17,7 @@ data-puede-crear="<?= $puedeCrear ? 'true' : 'false' ?>"
 data-puede-editar="<?= $puedeEditar ? 'true' : 'false' ?>"
 data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
 data-es-direccion-operaciones="<?= $esDireccionOperaciones ? 'true' : 'false' ?>"
+data-module-station-key="corte-diario"
 x-data="clientesListaComponent()">
 
 <div class="text-center py-5" x-show="loading">
@@ -28,7 +28,7 @@ x-data="clientesListaComponent()">
 <div class="row" x-show="!loading">
 <div class="col-12 mb-4">
 <button type="button" class="btn btn-primary float-end" @click="abrirModalCrear()">
-<i class="ti ti-plus"></i> Agregar
+<i class="ti ti-plus"></i> Nuevo
 </button>
 </div>
 
@@ -203,4 +203,4 @@ x-data="clientesListaComponent()">
 </div>
 </div>
 </div>
-<?php endif; ?>
+</div>

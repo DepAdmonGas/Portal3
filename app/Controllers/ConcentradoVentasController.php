@@ -6,6 +6,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\DropdownYearMesService;
 use App\Services\ConcentradoVentasService;
+use App\Services\ModuleStationService;
 
 class ConcentradoVentasController extends BaseController
 {
@@ -17,16 +18,18 @@ $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 $data = [
 'title'    => 'Concentrado de Ventas (' . nombremes($idMes) . ' ' . $idYear . ')',
 'idYear'   => $idYear,
 'idMes'    => $idMes,
 'idEstacion' => 0,
-'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
 'help' => false,
 ];
 View::render('departamento-operativo/1-corporativo/concentrado-ventas/index', $data, 'departamento-operativo');
@@ -54,6 +57,8 @@ $data = [
 'idYear'     => $idYear,
 'idMes'      => $idMes,
 'idEstacion' => $idEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
 'yearMesTemplate' => '/departamento-operativo/concentrado-ventas/{year}/{mes}',
 'multiestacion'   => $permisos['multiestacion'],
 'puedeDescargar'  => $permisos['puedeDescargar'],
@@ -82,10 +87,10 @@ $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 echo json_encode(['daily' => [], 'totales' => [], 'productos' => []]);
 exit;
 }

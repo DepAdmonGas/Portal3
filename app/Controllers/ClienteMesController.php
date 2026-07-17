@@ -8,6 +8,7 @@ use App\Services\ClienteMesExcelService;
 use App\Services\DropdownYearMesService;
 use App\Services\ModuloDptoOperativoService;
 use App\Core\Session;
+use App\Services\ModuleStationService;
 
 class ClienteMesController extends BaseController
 {
@@ -21,19 +22,22 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 $multiEstacion = $this->isMultiEs();
 $permisos = ClienteMesService::getPermisos();
 $esDireccionOperaciones = $permisos['es_direccion_operaciones'];
 $puestoExcluido = $permisos['puesto_excluido'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 View::render('departamento-operativo/1-corporativo/clientes-mes/index', [
 'title' => 'Resumen Clientes, ' . nombremes($idMes) . ' ' . $idYear,
 'idYear' => $idYear,
 'idMes' => $idMes,
 'idEstacion' => 0,
-'multiestacion' => $multiEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'multiestacion' => false,
 'esDireccionOperaciones' => $esDireccionOperaciones,
 'puestoExcluido' => $puestoExcluido,
 'help' => false,
@@ -75,23 +79,25 @@ Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $data = [
-    'title' => $title,
-    'idYear' => $idYear,
-    'idMes' => $idMes,
-    'idEstacion' => $idEstacion,
-    'idReporte' => $idReporte,
-    'finalizado' => $finalizado,
-    'multiestacion' => $multiEstacion,
-    'esDireccionOperaciones' => $esDireccionOperaciones,
-    'puestoExcluido' => $puestoExcluido,
-    'puedeFinalizar' => $puedeFinalizar,
-    'puedeDescargar' => $puedeDescargar,
-    'credito' => $datos['credito'],
-    'debito' => $datos['debito'],
-    'totals' => $datos['totals'],
-    'yearMesTemplate' => '/departamento-operativo/clientes-mes/{year}/{mes}',
-    'help' => false,
-    'links' => [
+'title' => $title,
+'idYear' => $idYear,
+'idMes' => $idMes,
+'idEstacion' => $idEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => true,
+'idReporte' => $idReporte,
+'finalizado' => $finalizado,
+'multiestacion' => $multiEstacion,
+'esDireccionOperaciones' => $esDireccionOperaciones,
+'puestoExcluido' => $puestoExcluido,
+'puedeFinalizar' => $puedeFinalizar,
+'puedeDescargar' => $puedeDescargar,
+'credito' => $datos['credito'],
+'debito' => $datos['debito'],
+'totals' => $datos['totals'],
+'yearMesTemplate' => '/departamento-operativo/clientes-mes/{year}/{mes}',
+'help' => false,
+'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
 ],
 'scripts' => [
@@ -115,8 +121,9 @@ echo json_encode(['success' => false, 'message' => 'Sin permisos']);
 exit;
 }
 
-$idEstacion = $this->estacionId();
-if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
+if (!$idEstacion) {
 echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
 exit;
 }
@@ -158,7 +165,8 @@ echo json_encode(['success' => false, 'message' => 'Parámetros inválidos']);
 exit;
 }
 
-$idEstacion = $this->estacionId();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 if (!$idEstacion) {
 echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
 exit;
@@ -217,22 +225,22 @@ echo json_encode(['success' => false, 'message' => 'ID inválido']);
 exit;
 }
 
-    $result = ClienteMesService::editarSaldoInicial($idResumen, $saldo);
+$result = ClienteMesService::editarSaldoInicial($idResumen, $saldo);
 
-    if ($result['success']) {
-        $resumen = ConsumosPagosResumen::find($idResumen);
-        if ($resumen) {
-            $datos = ClienteMesService::getDatos($resumen->id_mes);
-            $result['totals'] = $datos['totals'];
-        }
-    }
+if ($result['success']) {
+$resumen = ConsumosPagosResumen::find($idResumen);
+if ($resumen) {
+$datos = ClienteMesService::getDatos($resumen->id_mes);
+$result['totals'] = $datos['totals'];
+}
+}
 
-    echo json_encode($result);
-    exit;
+echo json_encode($result);
+exit;
 }
 
 public function descargarExcel($idYear, $idMes, $idEstacion)
 {
-    ClienteMesExcelService::generarYDescargar((int) $idEstacion, (int) $idYear, (int) $idMes);
+ClienteMesExcelService::generarYDescargar((int) $idEstacion, (int) $idYear, (int) $idMes);
 }
 }

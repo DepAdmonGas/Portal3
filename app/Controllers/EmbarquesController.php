@@ -8,6 +8,7 @@ use App\Core\Session;
 use App\Services\DropdownYearMesService;
 use App\Services\EmbarquesService;
 use App\Services\ModuloDptoOperativoService;
+use App\Services\ModuleStationService;
 use App\Models\Operativo\Embarque;
 
 class EmbarquesController extends BaseController
@@ -20,21 +21,8 @@ $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
-
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
-$data = [
-'title' => 'Resumen Embarques (' . nombremes($idMes) . ' ' . $idYear . ')',
-'idYear' => $idYear,
-'idMes' => $idMes,
-'idEstacion' => 0,
-'multiestacion' => $multiEstacion,
-'help' => false,
-];
-View::render('departamento-operativo/1-corporativo/embarques/index', $data, 'departamento-operativo');
-return;
-}
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
 $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer') || ModuloDptoOperativoService::validaPermiso('personal-general', 'leer');
 if (!$puedeLeer) {
@@ -43,16 +31,17 @@ return;
 }
 
 $permisos = EmbarquesService::getPermisos();
+$esEncargadoAsistente = $permisos['es_encargado'] || $permisos['es_asistente'];
 
-$idMesDb = EmbarquesService::getMesId($idEstacion, $idYear, $idMes);
+$idMesDb = $idEstacion ? EmbarquesService::getMesId($idEstacion, $idYear, $idMes) : null;
 
 $title = 'Resumen Embarques (' . nombremes($idMes) . ' ' . $idYear . ')';
-$esEncargadoAsistente = $permisos['es_encargado'] || $permisos['es_asistente'];
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 
 $referer = $_SERVER['HTTP_REFERER'] ?? '';
+$fromCorteDiario = str_contains($referer, '/corte-diario/');
 
 $inEmbarquesChain = str_contains($referer, '/departamento-operativo/embarques/')
 || str_contains($referer, '/departamento-operativo/analisis-compra/');
@@ -81,6 +70,8 @@ $data = [
 'idYear' => $idYear,
 'idMes' => $idMes,
 'idEstacion' => $idEstacion,
+'moduleStationKey' => 'corte-diario',
+'ocultarSelectorEstacion' => $fromCorteDiario,
 'multiestacion' => $permisos['multiestacion'],
 'yearMesTemplate' => $yearMesTemplate,
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
@@ -103,6 +94,7 @@ $data = [
 '/assets/libs/select2/dist/css/select2.min.css',
 ],
 'scripts' => [
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/libs/select2/dist/js/select2.full.min.js',
@@ -122,10 +114,10 @@ $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$moduleCtx = ModuleStationService::getContext('corte-diario');
+$idEstacion = $moduleCtx['id_estacion'];
 
-if (!$idEstacion || ($multiEstacion && $idEstacion === 8)) {
+if (!$idEstacion) {
 echo json_encode(['success' => false, 'data' => []]);
 exit;
 }

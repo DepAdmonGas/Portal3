@@ -19,6 +19,7 @@ use App\Models\Puesto;
 use App\Core\Auth;
 use App\Core\Session;
 use App\Services\TelegramService;
+use App\Services\ModuleStationService;
 use Illuminate\Support\Carbon;
 
 class SolicitudChequeService
@@ -59,12 +60,20 @@ $usuario = Auth::user();
 $sessionUsuario = Session::get('usuario');
 
 $multiEstacion = $sessionUsuario['multiestacion'] ?? false;
+if (ModuleStationService::isPuesto6Estacion8()) {
+$multiEstacion = false;
+}
 $idUsuario = $sessionUsuario['id'] ?? 0;
 $idEstacion = $sessionUsuario['id_estacion'] ?? 0;
 $idPuesto = $usuario->id_puesto ?? 0;
 $tipoPuesto = $usuario->puesto->tipo_puesto ?? '';
 $nombrePuesto = $tipoPuesto;
 $esGestoria = $tipoPuesto === 'Gestoria' || $nombrePuesto === 'Gestoria' || $idPuesto === 5;
+
+// Puesto 6 + Estación 8: never gestoria
+if (ModuleStationService::isPuesto6Estacion8()) {
+$esGestoria = false;
+}
 $esDireccionOperaciones = $tipoPuesto === 'Dirección de operaciones' || $idPuesto === 13;
 $esContabilidad = $tipoPuesto === 'Contabilidad' || $idPuesto === 12;
 $esComercializadora = $tipoPuesto === 'Comercializadora' || $idPuesto === 4;
@@ -119,6 +128,12 @@ return [
 */
 public static function getAllowedStationIds(): array
 {
+// Puesto 6 + Estación 8: OVERRIDE absoluto via regla centralizada
+if (ModuleStationService::isPuesto6Estacion8()) {
+$stations = ModuleStationService::getAvailableStations('solicitud-cheques');
+return array_column($stations, 'id');
+}
+
 $permisos = self::getPermisos();
 $idUsuario = $permisos['id_usuario'];
 $nombrePuesto = $permisos['nombre_puesto'];
@@ -152,6 +167,11 @@ return $allowed;
 */
 public static function getAllowedDeptIds(): array
 {
+// Puesto 6 + Estación 8: OVERRIDE absoluto via regla centralizada - no departments
+if (ModuleStationService::isPuesto6Estacion8()) {
+return [];
+}
+
 $permisos = self::getPermisos();
 $nombrePuesto = $permisos['nombre_puesto'];
 $idUsuario = $permisos['id_usuario'];
@@ -231,7 +251,11 @@ $query = SolicitudCheque::where('id_year', $idYear)
 if ($estacionFilter !== null && $estacionFilter === 0) $estacionFilter = null;
 if ($deptoFilter !== null && $deptoFilter === 0) $deptoFilter = null;
 
-if ($esGestoria) {
+// Puesto 6 + Estación 8: force no filters so the multiestacion guard applies
+if (ModuleStationService::isPuesto6Estacion8()) {
+$estacionFilter = null;
+$deptoFilter = null;
+} elseif ($esGestoria) {
 if ($estacionFilter === null) $estacionFilter = 8;
 if ($deptoFilter === null) $deptoFilter = 5;
 }
@@ -890,33 +914,49 @@ $nombreMes = nombremes($idMes);
 if ($idEstacion == 8) {
 $nombreES = '🏢 Departamento';
 } else {
-$estacion = Estacion::find($idEstacion);
+$estacion = Estacion::find($idEstacion);   
 $nombreES = '⛽ Estación: ' . ($estacion ? $estacion->nombre : 'Desconocida');
 }
 
-$fechaAhora = Carbon::now()->format('d/m/Y g:i a');
 $accionTexto = '';
+$emoji = '';
+
 switch ($accion) {
-case 'agregar_directorio': $accionTexto = 'agregó un registro de directorio en'; break;
-case 'editar_directorio': $accionTexto = 'editó un registro de directorio en'; break;
-case 'eliminar_directorio': $accionTexto = 'eliminó un registro de directorio de'; break;
-case 'agregar_factura': $accionTexto = 'agregó un documento (' . $tipo . ') en'; break;
-case 'eliminar_factura': $accionTexto = 'eliminó un documento (' . $tipo . ') de'; break;
+case 'agregar_directorio':
+$emoji = '📁';
+$accionTexto = 'agregado un registro de directorio';
+break;
+
+case 'editar_directorio':
+$emoji = '🔄';
+$accionTexto = 'editado un registro de directorio';
+break;
+
+case 'eliminar_directorio':
+$emoji = '🗑';
+$accionTexto = 'eliminado un registro de directorio';
+break;
+
+case 'agregar_factura':
+$emoji = '📄';
+$accionTexto = 'agregado un documento (' . $tipo . ')';
+break;
+
+case 'eliminar_factura':
+$emoji = '🗑';
+$accionTexto = 'eliminado un documento (' . $tipo . ')';
+break;
+
+default:
+return;
 }
 
-$emoji = in_array($accion, ['agregar_directorio', 'agregar_factura']) ? '📄' : '🗑';
-$accionTitulo = match ($accion) {
-'agregar_directorio', 'editar_directorio', 'eliminar_directorio' => 'Facturas Telcel — Directorio',
-'agregar_factura', 'eliminar_factura' => 'Facturas Telcel — Documento',
-default => 'Facturas Telcel',
-};
-$detalleTelegram = $emoji . ' ' . $accionTitulo . PHP_EOL .
-'─────────────────────' . PHP_EOL .
-'👤 Usuario: ' . $nombreUsuario . PHP_EOL .
-'🕐 Fecha: ' . $fechaAhora . PHP_EOL .
-$accionTexto . PHP_EOL .
-'📅 Periodo: ' . $nombreMes . ' ' . $idYear . PHP_EOL .
-$nombreES;
+$detalleTelegram = $emoji . ' Se ha ' . $accionTexto
+. ' en el apartado de <b>Facturas Telcel</b>, correspondiente al módulo de <b>Solicitud de Cheques</b> del periodo de <b>'
+. $nombreMes . ' ' . $idYear . '</b>:'
+. PHP_EOL . PHP_EOL
+. '👤 <b>Responsable:</b> ' . $nombreUsuario . PHP_EOL
+. '⛽ <b>Estación:</b> ' . $nombreES;
 
 if ($idEstacion == 8) {
 $telegram->sendToken(30, $detalleTelegram);
@@ -1532,6 +1572,24 @@ return ['success' => false, 'message' => 'Error al eliminar: ' . $e->getMessage(
 
 public static function getOpcionesSelector(): array
 {
+// Puesto 6 + Estación 8: OVERRIDE absoluto - no departments, no estacion 8
+if (ModuleStationService::isPuesto6Estacion8()) {
+$estaciones = Estacion::whereIn('id', [1, 2, 3, 4, 5, 6, 7, 14])
+->orderBy('id')
+->get(['id', 'nombre']);
+$opciones = [];
+foreach ($estaciones as $estacion) {
+$opciones[] = [
+'id' => 'estacion_' . $estacion->id,
+'texto' => $estacion->nombre,
+'tipo' => 'estacion',
+'valor' => $estacion->id,
+'hijos' => [],
+];
+}
+return $opciones;
+}
+
 $sessionUsuario = Session::get('usuario');
 $idUsuario = $sessionUsuario['id'] ?? 0;
 $multiEstacion = $sessionUsuario['multiestacion'] ?? false;
