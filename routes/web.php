@@ -1298,7 +1298,19 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
         //--------- 9. ESTABLECIMIENTO Y SEGUIMIENTO CONFIRMACIÓN METROLÓGICA ----------------------------
         
         $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos', Route::auth(['SgmController', 'auditoriasInternasExternasAtencionHallazgos']));
-        $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion', Route::auth(['SgmController', 'evaluacionCumplimientoObjetivosRevisionDireccion']));
+
+        //--------- 11. EVALUACIÓN DEL CUMPLIMIENTO DE OBJETIVOS Y REVISIÓN POR LA DIRECCIÓN ----------------
+        $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion', Route::auth(['SgmEvaluacionCumplimientoController', 'index']));
+        $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion/datatable', Route::auth(['SgmEvaluacionCumplimientoController', 'datatable']));
+        $r->addRoute('POST', '/evaluacion-cumplimiento-objetivos-revision-direccion/update', Route::auth(['SgmEvaluacionCumplimientoController', 'update']));
+        $r->addRoute('POST', '/evaluacion-cumplimiento-objetivos-revision-direccion/asistentes', Route::auth(['SgmEvaluacionCumplimientoController', 'agregarAsistentes']));
+        $r->addRoute('POST', '/evaluacion-cumplimiento-objetivos-revision-direccion/finalizar', Route::auth(['SgmEvaluacionCumplimientoController', 'finalizar']));
+        $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion/editar/{id:\d+}', Route::auth(['SgmEvaluacionCumplimientoController', 'editarIndex']));
+        $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion/pdf/{id:\d+}', Route::auth(['SgmEvaluacionCumplimientoController', 'pdf']));
+        $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion/editar/detalle/{id:\d+}', Route::auth(['SgmEvaluacionCumplimientoController', 'detalle']));
+        $r->addRoute('POST', '/evaluacion-cumplimiento-objetivos-revision-direccion/asistentes/delete', Route::auth(['SgmEvaluacionCumplimientoController', 'eliminarAsistente']));
+        //--------- 11. EVALUACIÓN DEL CUMPLIMIENTO DE OBJETIVOS Y REVISIÓN POR LA DIRECCIÓN ----------------
+
     });
 
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------

@@ -172,26 +172,4 @@ protected string $modulo = 'sgm';
 
     }
 
-    public function evaluacionCumplimientoObjetivosRevisionDireccion(){
-
-        $title = '11. Evaluación del cumplimiento de Objetivos y revisión por la Dirección';
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SGM', '/sgm');
-        Breadcrumb::add($title, '');
-
-         $data = [
-            'title' => $title,
-             'links' =>[
-                
-            ],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-        
-        View::render('sgm/evaluacion-cumplimiento-objetivos-revision-direccion', $data,'sgm');
-
-    }
-
 }
