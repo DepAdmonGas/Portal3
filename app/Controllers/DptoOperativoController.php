@@ -66,6 +66,7 @@ $routeSuffix = [
 'comparativo-xml'   => "/{$idYear}",
 'aclaracion-voucher'   => "/{$idYear}/{$idMes}",
 'solicitud-vales'   => "/{$idYear}/{$idMes}",
+'factura-monedero'   => "/{$idYear}/{$idMes}",
 ];
 
 foreach ($submenus as &$submenu) {
