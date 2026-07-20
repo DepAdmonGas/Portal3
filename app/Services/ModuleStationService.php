@@ -156,6 +156,27 @@ private static array $configs = [
 'context_group'  => 'seguros',
 ],
 
+'factura-monedero' => [
+'label'          => 'Factura Monedero',
+'use_selector'   => true,
+'type'           => 'stations_only',
+'allow_all'      => true,
+'placeholder'    => 'Todas las estaciones',
+'load_empty'     => true,
+'show_badge'     => true,
+'context_group'  => 'factura-monedero',
+'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
+'station_filter' => [
+'usuarios' => [
+419 => [14],
+],
+'puestos' => [
+'Contabilidad'      => [1, 2, 3, 4, 5, 14],
+'Comercializadora'  => [6, 7],
+],
+],
+],
+
 'despacho-ventas' => [
 'label'          => 'Despacho vs Ventas',
 'use_selector'   => true,

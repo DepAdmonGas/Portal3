@@ -434,6 +434,21 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     $r->addRoute('GET','/corporativo/solicitud-vales-editar/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}/{id:\d+}',Route::auth(['SolicitudValeController', 'editar']));
     $r->addRoute('GET','/corporativo/solicitud-vales-pdf/{id:\d+}',Route::auth(['SolicitudValeController', 'pdf']));
 
+    //----- Factura Monedero
+    $r->addRoute('GET','/corporativo/factura-monedero',Route::auth(['FacturaMonederoController', 'redirect']));
+    $r->addRoute('GET','/corporativo/factura-monedero/{idYear:\d+}',Route::auth(['FacturaMonederoController', 'index']));
+    $r->addRoute('GET','/corporativo/factura-monedero/{idYear:\d+}/{idMes:\d+}',Route::auth(['FacturaMonederoController', 'index']));
+    $r->addRoute('GET','/corporativo/factura-monedero/get-data',Route::auth(['FacturaMonederoController', 'getData']));
+    $r->addRoute('GET','/corporativo/factura-monedero/get-detalle/{id:\d+}',Route::auth(['FacturaMonederoController', 'getDetalle']));
+    $r->addRoute('POST','/corporativo/factura-monedero/add',Route::auth(['FacturaMonederoController', 'add']));
+    $r->addRoute('POST','/corporativo/factura-monedero/edit',Route::auth(['FacturaMonederoController', 'edit']));
+    $r->addRoute('POST','/corporativo/factura-monedero/delete',Route::auth(['FacturaMonederoController', 'delete']));
+    $r->addRoute('GET','/corporativo/factura-monedero/get-pendientes',Route::auth(['FacturaMonederoController', 'getPendientesData']));
+    $r->addRoute('GET','/corporativo/factura-monedero/get-comentarios',Route::auth(['FacturaMonederoController', 'getComentarios']));
+    $r->addRoute('POST','/corporativo/factura-monedero/add-comentario',Route::auth(['FacturaMonederoController', 'addComentario']));
+    $r->addRoute('GET','/corporativo/factura-monedero-excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['FacturaMonederoController', 'descargarExcel']));
+    $r->addRoute('GET','/corporativo/factura-monedero-pdf/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+}',Route::auth(['FacturaMonederoController', 'downloadPdf']));
+
     //----- Seguros
     $r->addRoute('GET','/corporativo/seguros',Route::auth(['SegurosController', 'index']));
     $r->addRoute('GET','/seguros/data',Route::auth(['SegurosController', 'getData']));

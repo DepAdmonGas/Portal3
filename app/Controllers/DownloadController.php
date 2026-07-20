@@ -49,6 +49,7 @@ class DownloadController{
             'seguros-polizas'                => __DIR__ . '../../../public/uploads/archivos/poliza-estacion/',
             'aclaracion-voucher'             => __DIR__ . '../../../public/uploads/archivos/aclaracion-voucher/',
             'solicitud-vales'                => __DIR__ . '../../../public/uploads/archivos/solicitud-vales/',
+            'factura-monedero'               => __DIR__ . '../../../public/uploads/archivos/factura-monedero/',
         ];
 
         if (!isset($rutas[$tipo])) {
