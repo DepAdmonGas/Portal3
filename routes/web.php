@@ -584,6 +584,22 @@ $r->addRoute('GET','/clientes-mes/excel/{idYear:\d+}/{idMes:\d+}/{idEstacion:\d+
     //----- 2. Recursos Humanos
     $r->addRoute('GET','/recursos-humanos',Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
 
+    //----- Organigrama
+    $r->addRoute('GET','/recursos-humanos/organigrama',Route::auth(['OrganigramaController', 'index']));
+    $r->addRoute('GET','/recursos-humanos/organigrama/get-versions',Route::auth(['OrganigramaController', 'getVersions']));
+    $r->addRoute('POST','/recursos-humanos/organigrama/add',Route::auth(['OrganigramaController', 'add']));
+    $r->addRoute('POST','/recursos-humanos/organigrama/delete',Route::auth(['OrganigramaController', 'delete']));
+    $r->addRoute('GET','/recursos-humanos/organigrama/get-plantilla',Route::auth(['OrganigramaController', 'getPlantilla']));
+    $r->addRoute('POST','/recursos-humanos/organigrama/add-plantilla',Route::auth(['OrganigramaController', 'addPlantilla']));
+    $r->addRoute('POST','/recursos-humanos/organigrama/update-plantilla',Route::auth(['OrganigramaController', 'updatePlantilla']));
+    $r->addRoute('POST','/recursos-humanos/organigrama/update-plantilla-usuario',Route::auth(['OrganigramaController', 'updatePlantillaUsuario']));
+    $r->addRoute('POST','/recursos-humanos/organigrama/delete-plantilla',Route::auth(['OrganigramaController', 'deletePlantilla']));
+    $r->addRoute('POST','/recursos-humanos/organigrama/upload-documento',Route::auth(['OrganigramaController', 'uploadDocumento']));
+    $r->addRoute('POST','/recursos-humanos/organigrama/delete-documento',Route::auth(['OrganigramaController', 'deleteDocumento']));
+    $r->addRoute('GET','/recursos-humanos/organigrama/get-station-info',Route::auth(['OrganigramaController', 'getStationInfo']));
+    $r->addRoute('POST','/recursos-humanos/organigrama/update-station-info',Route::auth(['OrganigramaController', 'updateStationInfo']));
+    $r->addRoute('GET','/recursos-humanos/organigrama/search-personal',Route::auth(['OrganigramaController', 'searchPersonal']));
+
     //----- 3. Importacion
     $r->addRoute('GET','/importacion',Route::auth(['DptoOperativoController', 'importacionIndex']));
 

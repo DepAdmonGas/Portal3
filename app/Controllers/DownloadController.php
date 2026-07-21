@@ -50,6 +50,8 @@ class DownloadController{
             'aclaracion-voucher'             => __DIR__ . '../../../public/uploads/archivos/aclaracion-voucher/',
             'solicitud-vales'                => __DIR__ . '../../../public/uploads/archivos/solicitud-vales/',
             'factura-monedero'               => __DIR__ . '../../../public/uploads/archivos/factura-monedero/',
+            'organigrama'                    => __DIR__ . '../../../public/uploads/archivos/organigrama/',
+            'organigrama-documentos'         => __DIR__ . '../../../public/uploads/archivos/organigrama-documentos/',
         ];
 
         if (!isset($rutas[$tipo])) {

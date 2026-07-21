@@ -129,6 +129,13 @@ return Promise.reject(error);
 </li>
 
 <li class="sidebar-item">
+<a class="sidebar-link" href="/departamento-operativo/recursos-humanos/organigrama" aria-expanded="false">
+<span><i class="ti ti-sitemap"></i></span>
+<span class="hide-menu">Organigrama</span>
+</a>
+</li>
+
+<li class="sidebar-item">
 <a class="sidebar-link" href="/departamento-operativo/importacion/descarga-merma" aria-expanded="false">
 <span><i class="ti ti-trash"></i></span>
 <span class="hide-menu">Descarga de merma</span>

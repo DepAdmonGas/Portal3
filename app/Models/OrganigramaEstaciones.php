@@ -6,33 +6,34 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrganigramaEstaciones extends Model
 {
-    protected $table = 'tb_organigrama_estaciones';
+protected $table = 'tb_organigrama_estaciones';
 
-    protected $primaryKey = 'id';
+protected $primaryKey = 'id';
 
-    public $incrementing = true;
+public $incrementing = true;
 
-    protected $keyType = 'int';
+protected $keyType = 'int';
 
-    public $timestamps = false;
+public $timestamps = false;
 
-    protected $fillable = [
-        'id_estacion',
-        'registro_patronal',
-        'calle',
-        'numero_exterior',
-        'numero_interior',
-        'colonia',
-        'codigo_postal',
-        'estado',
-        'municipio',
-        'numero_telefono',
-    ];
+protected $fillable = [
+'id_estacion',
+'razonsocial',
+'registro_patronal',
+'calle',
+'numero_exterior',
+'numero_interior',
+'colonia',
+'codigo_postal',
+'estado',
+'municipio',
+'numero_telefono',
+];
 
-    protected $casts = [
-        'id' => 'integer',
-        'id_estacion' => 'integer',
-        'codigo_postal' => 'integer',
-        'numero_telefono' => 'integer',
-    ];
+protected $casts = [
+'id' => 'integer',
+'id_estacion' => 'integer',
+'codigo_postal' => 'integer',
+'numero_telefono' => 'integer',
+];
 }
