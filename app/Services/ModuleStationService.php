@@ -177,6 +177,18 @@ private static array $configs = [
 ],
 ],
 
+'organigrama' => [
+'label'          => 'Organigrama',
+'use_selector'   => true,
+'type'           => 'stations_and_departments',
+'allow_all'      => false,
+'placeholder'    => 'Selecciona una estación o departamento...',
+'load_empty'     => true,
+'show_badge'     => true,
+'context_group'  => 'organigrama',
+'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
+],
+
 'despacho-ventas' => [
 'label'          => 'Despacho vs Ventas',
 'use_selector'   => true,
@@ -221,7 +233,8 @@ $idDepto = $ctx['id_depto'] ?? null;
 // For non-multiestacion users with no context set, use their session station
 $sessionUsuario = Session::get('usuario');
 $multiestacion = !empty($sessionUsuario['multiestacion']);
-if (!$multiestacion && $idEstacion === null && $idDepto === null) {
+$esStation2Organigrama = $moduleKey === 'organigrama' && !empty($sessionUsuario['id_estacion']) && $sessionUsuario['id_estacion'] == 2;
+if (!$multiestacion && !$esStation2Organigrama && $idEstacion === null && $idDepto === null) {
 $idEstacion = $sessionUsuario['id_estacion'] ?? null;
 }
 
@@ -292,6 +305,12 @@ $restrictedIds = [1, 2, 3, 4, 5, 6, 7, 14];
 return array_values(array_filter($allStations, fn($s) => in_array($s['id'], $restrictedIds)));
 }
 
+// Organigrama + estación 2: solo mostrar Palo Solo
+$sessionUsuario = Session::get('usuario');
+if ($moduleKey === 'organigrama' && !empty($sessionUsuario['id_estacion']) && $sessionUsuario['id_estacion'] == 2) {
+return array_values(array_filter($allStations, fn($s) => $s['id'] == 2));
+}
+
 $filter = $cfg['station_filter'] ?? null;
 if ($filter === null) return $allStations;
 
@@ -318,6 +337,9 @@ if (!$cfg || ($cfg['type'] ?? 'stations_only') !== 'stations_and_departments') r
 
 // Puesto 6 + Est 8: hide departments for all modules
 if (self::isPuesto6Estacion8()) {
+if ($moduleKey === 'organigrama') {
+return [['id' => 9, 'nombre' => 'Autolavado']];
+}
 return [];
 }
 
@@ -326,6 +348,44 @@ $depts = RhLocalidad::whereBetween('numlista', [22, 23])
 ->orderBy('numlista')
 ->get(['id', 'localidad as nombre']);
 return $depts->toArray();
+}
+
+if ($moduleKey === 'organigrama') {
+$sessionUsuario = Session::get('usuario');
+// Estación 2: solo Autolavado como departamento
+if (!empty($sessionUsuario['id_estacion']) && $sessionUsuario['id_estacion'] == 2) {
+return [['id' => 9, 'nombre' => 'Autolavado']];
+}
+
+$gasStationIds = [1, 2, 3, 4, 5, 6, 7, 14];
+$localidades = RhLocalidad::where(function ($q) {
+$q->whereBetween('numlista', [0, 9])
+->orWhere('numlista', 10);
+})
+->where('id', '!=', 8)
+->whereNotIn('id', $gasStationIds)
+->orderBy('numlista')
+->get(['id', 'localidad as nombre']);
+
+$result = [];
+foreach ($localidades as $loc) {
+$result[] = ['id' => $loc->id, 'nombre' => $loc->nombre];
+}
+
+$extras = [
+['id' => 11, 'nombre' => 'Dirección de Operaciones'],
+['id' => 15, 'nombre' => 'Departamento Mantenimiento'],
+['id' => 20, 'nombre' => 'Departamento de Almacén'],
+['id' => 21, 'nombre' => 'Departamento de Importación'],
+];
+$existingIds = array_column($result, 'id');
+foreach ($extras as $extra) {
+if (!in_array($extra['id'], $existingIds)) {
+$result[] = $extra;
+}
+}
+
+return $result;
 }
 
 $deptIds = [4 => 'Comercializadora', 5 => 'Gestoría', 18 => 'Quitarga', 19 => 'Operación servicio y mantenimiento de personal', 23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016'];
@@ -357,11 +417,14 @@ $currentName = $ctx['nombre'];
 $sessionUsuario = Session::get('usuario');
 $multiestacion = !empty($sessionUsuario['multiestacion']);
 
+// Station 2 users need the selector for organigrama (Palo Solo / Autolavado)
+$esStation2Organigrama = $moduleKey === 'organigrama' && !empty($sessionUsuario['id_estacion']) && $sessionUsuario['id_estacion'] == 2;
+
 $stations = self::getAvailableStations($moduleKey);
 $depts = self::getAvailableDepartments($moduleKey);
 
 $hasSelection = $idEstacion !== null || $idDepto !== null;
-$showSelector = $showSelector && $cfg['use_selector'] && $multiestacion && (!empty($stations) || !empty($depts));
+$showSelector = $showSelector && $cfg['use_selector'] && ($multiestacion || $esStation2Organigrama) && (!empty($stations) || !empty($depts));
 
 $html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
 
@@ -421,10 +484,35 @@ return $html;
 private static function resolveName(string $moduleKey, $idEstacion, $idDepto): string
 {
 if ($moduleKey === 'seguros') {
-$id = $idDepto ?: $idEstacion;
+$id = $idEstacion;
 if ($id) {
 $loc = RhLocalidad::find($id);
 return $loc ? $loc->localidad : "#$id";
+}
+return '';
+}
+
+if ($moduleKey === 'organigrama') {
+
+if ($idDepto && !$idEstacion) {
+$deptNames = [
+4 => 'Comercializadora', 5 => 'Gestoría',
+11 => 'Dirección de operaciones', 9 => 'Autolavado',
+15 => 'Departamento Mantenimiento', 18 => 'Quitarga',
+19 => 'Operación servicio y mantenimiento de personal',
+20 => 'Departamento de almacén', 21 => 'Departamento de importación',
+23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
+];
+
+if (isset($deptNames[$idDepto])) return $deptNames[$idDepto];
+$loc = RhLocalidad::find($idDepto);
+if ($loc) return $loc->localidad;
+return 'Depto #' . $idDepto;
+}
+
+if ($idEstacion) {
+$est = Estacion::find($idEstacion);
+return $est ? $est->nombre : 'Estación #' . $idEstacion;
 }
 return '';
 }

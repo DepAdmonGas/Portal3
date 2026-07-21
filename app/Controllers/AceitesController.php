@@ -585,7 +585,7 @@ header('Content-Type: application/json');
 $moduleCtx = ModuleStationService::getContext('corte-diario');
 $idEstacion = $moduleCtx['id_estacion'];
 if (!$idEstacion) {
-echo json_encode(['success' => false, 'message' => 'Selecciona una estación']);
+echo json_encode(['success' => false, 'message' => 'una estación']);
 exit;
 }
 
