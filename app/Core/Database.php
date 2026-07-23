@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Core;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
