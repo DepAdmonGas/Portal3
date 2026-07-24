@@ -3,6 +3,7 @@
 namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class Autorizado extends Model
 {
@@ -28,4 +29,13 @@ class Autorizado extends Model
         'fecha_hora' => 'datetime',
         'estado' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario',
+            'id'
+        );
+    }
 }

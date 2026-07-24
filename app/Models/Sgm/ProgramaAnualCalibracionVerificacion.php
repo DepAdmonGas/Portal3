@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,4 +32,20 @@ class ProgramaAnualCalibracionVerificacion extends Model
         'id_verificar' => 'integer',
         'estado' => 'integer',
     ];
+
+    public function equipo()
+    {
+        return $this->belongsTo(
+            PatronInstrumento::class,
+            'id_equipo'
+        );
+    }
+
+    public function verificar()
+    {
+        return $this->belongsTo(
+            InventarioEquipo::class,
+            'id_verificar'
+        );
+    }
 }

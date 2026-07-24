@@ -54,6 +54,7 @@ final class JsonResponse
 
         self::send(
             array_merge([
+                'success' => true,
                 'type' => self::TYPE_SUCCESS,
                 'message' => $message
             ], $data),
@@ -72,6 +73,7 @@ final class JsonResponse
 
         self::send(
             array_merge([
+                'success' => false,
                 'type' => self::TYPE_ERROR,
                 'message' => $message
             ], $data),
@@ -88,6 +90,7 @@ final class JsonResponse
     ): never {
 
         self::send([
+            'success' => false,
             'type' => self::TYPE_VALIDATION,
             'message' => $message,
             'errors' => $errors

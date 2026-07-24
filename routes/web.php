@@ -1306,7 +1306,37 @@ return function (RouteCollector $r) {
         //---------- 5. NORMATIVIDAD APLICABLE A MEDICIONES ----------------------------------------------
 
         $r->addRoute('GET', '/gestion-recursos', Route::auth(['SgmController', 'gestionRecursos']));
-        $r->addRoute('GET', '/procesos-medicion', Route::auth(['SgmController', 'procesosMedicion']));
+
+        //---------- 7. Procesos de medición -------------------------------------------------------------
+        $r->addRoute('GET', '/procesos-medicion', Route::auth(['SgmProcesosMedicionController', 'index']));
+
+        $r->addRoute('GET', '/procesos-medicion/programa-anual-calibracion-patrones-instrumentos-medida', Route::auth(['SgmProcesosMedicionController', 'programacionAnualCalibracion']));
+        $r->addRoute(
+            'GET',
+            '/procesos-medicion/programa-anual-calibracion-patrones-instrumentos-medida/table-programa-calibracion-patrones',
+            Route::auth(['SgmProgramaCalibracionController', 'tableProgramaCalibracionPatrones'])
+        );
+        $r->addRoute(
+            'GET',
+            '/procesos-medicion/programa-anual-calibracion-patrones-instrumentos-medida/modal-programa-calibracion-patrones',
+            Route::auth(['SgmProgramaCalibracionController', 'modalProgramaCalibracion'])
+        );
+        $r->addRoute(
+            'POST',
+            '/procesos-medicion/programa-anual-calibracion-patrones-instrumentos-medida/create-programa-calibracion-patrones',
+            Route::auth(['SgmProgramaCalibracionController', 'createProgramaCalibracion'])
+        );
+        $r->addRoute(
+            'GET',
+            '/procesos-medicion/programa-anual-calibracion-patrones-instrumentos-medida/pdf/{year:\d+}/{formato:\d+}',
+            Route::auth(['SgmProgramaCalibracionController', 'pdfProgramaCalibracion'])
+        );
+
+
+        $r->addRoute('GET', '/procesos-medicion/bitacora-calibracion-equipos', Route::auth(['SgmProcesosMedicionController', 'bitacoraCalibracionEquipos']));
+        $r->addRoute('GET', '/procesos-medicion/programa-anual-verificacion-equipos', Route::auth(['SgmProcesosMedicionController', 'programacionAnualVerificacion']));
+        $r->addRoute('GET', '/procesos-medicion/bitacora-verificacion-equipo-medicion', Route::auth(['SgmProcesosMedicionController', 'bitacoraVerificacionEquipos']));
+        //---------- 7. Procesos de medición -------------------------------------------------------------
 
         //--------- 8. GESTIÓN DE RIESGOS QUE IMPACTAN EN LA MEDICIÓN ------------------------------------
         $r->addRoute('GET', '/gestion-riesgos-impactan-medicion', Route::auth(['SgmController', 'gestionRiesgosImpactanMedicion']));

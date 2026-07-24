@@ -19,6 +19,7 @@ class Elemento extends Model
     protected $fillable = [
         'no',
         'criterio',
+        'url',
     ];
 
     protected $casts = [
