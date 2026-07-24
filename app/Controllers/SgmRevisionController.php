@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Controllers;
+
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
@@ -13,21 +14,24 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
-class SgmRevisionController extends BaseController{
+
+class SgmRevisionController extends BaseController
+{
 
     protected string $modulo = 'sgm';
 
-        public function datatable(){
+    public function datatable()
+    {
 
         $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
         $data = RevisionProcedimientoRegistro::where('id_estacion', $this->estacionId())
-        ->orderBy('fecha')
-        ->get();
+            ->orderBy('fecha')
+            ->get();
 
-         echo json_encode([
+        echo json_encode([
             "data" => $data,
             "permisos" => [
                 "eliminar" => $permisoEliminar,
@@ -35,39 +39,39 @@ class SgmRevisionController extends BaseController{
                 "descargar" => $permisoDescargar
             ]
         ]);
-        
+
         exit;
     }
 
-    public function createRevision(){
+    public function createRevision()
+    {
 
-    header('Content-Type: application/json; charset=utf-8');
-    $data = json_decode(file_get_contents('php://input'), true);
+        header('Content-Type: application/json; charset=utf-8');
+        $data = json_decode(file_get_contents('php://input'), true);
 
-     $realizadoPor = Autorizado::query()
-        ->join('tb_usuarios', 'sgm_autorizado.id_usuario', '=', 'tb_usuarios.id')
-        ->where('tb_usuarios.id_gas', $this->estacionId())
-        ->where('sgm_autorizado.estado', 1)
-        ->value('id_usuario') ?? 0;
+        $realizadoPor = Autorizado::query()
+            ->join('tb_usuarios', 'sgm_autorizado.id_usuario', '=', 'tb_usuarios.id')
+            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('sgm_autorizado.estado', 1)
+            ->value('id_usuario') ?? 0;
 
-    $revision = RevisionProcedimientoRegistro::create([
-        'id_estacion'   => $this->estacionId(),
-        'id_usuario'    => $this->userId(),
-        'fecha'         => date('Y-m-d'),
-        'hora'          => date('H:m:s'),
-        'lugar'         => '',
-        'elemento'      => $data['puntosgm'],
-        'realizadopor'  => $realizadoPor,
-        'estado'        => 0,
-    ]);
+        $revision = RevisionProcedimientoRegistro::create([
+            'id_estacion'   => $this->estacionId(),
+            'id_usuario'    => $this->userId(),
+            'fecha'         => date('Y-m-d'),
+            'hora'          => date('H:m:s'),
+            'lugar'         => '',
+            'elemento'      => $data['puntosgm'],
+            'realizadopor'  => $realizadoPor,
+            'estado'        => 0,
+        ]);
 
-    $this->crearDetalleRevision($revision->id);
+        $this->crearDetalleRevision($revision->id);
 
-    echo json_encode([
-        'success' => true,
-        'id'      => $revision->id,
-    ]);
-
+        echo json_encode([
+            'success' => true,
+            'id'      => $revision->id,
+        ]);
     }
 
     private function crearDetalleRevision(int $idRevision): void
@@ -112,63 +116,62 @@ class SgmRevisionController extends BaseController{
                     'pregunta'    => $pregunta,
                     'respuesta'   => '',
                 ];
-
             }
         }
 
         RevisionProcedimientoRegistroDetalle::insert($detalle);
     }
 
-    public function deleteRevision(){
+    public function deleteRevision()
+    {
 
-    header('Content-Type: application/json; charset=utf-8');
-    $data = json_decode(file_get_contents('php://input'), true);
+        header('Content-Type: application/json; charset=utf-8');
+        $data = json_decode(file_get_contents('php://input'), true);
 
-    $id = $data['id'];
+        $id = $data['id'];
 
-   Capsule::transaction(function () use ($id) {
+        Capsule::transaction(function () use ($id) {
 
-        $revision = RevisionProcedimientoRegistro::findOrFail($id);
+            $revision = RevisionProcedimientoRegistro::findOrFail($id);
 
-        $revision->detalles()->delete();
+            $revision->detalles()->delete();
 
-        $revision->delete();
+            $revision->delete();
+        });
 
-    });
-
-    echo json_encode([
-        'success' => true,
-        'message' => 'Revisión eliminada correctamente'
-    ]);
-
+        echo json_encode([
+            'success' => true,
+            'message' => 'Revisión eliminada correctamente'
+        ]);
     }
 
     //-----------------------------------------------------------
 
-    public function revisionIndex(int $id){
+    public function revisionIndex(int $id)
+    {
 
-    $revision = RevisionProcedimientoRegistro::find($id);
+        $revision = RevisionProcedimientoRegistro::find($id);
 
-    $subTitle = '';
-    $subUrl = '';
+        $subTitle = '';
+        $subUrl = '';
 
-    if($revision->elemento == 101){
-        $subTitle = '1. Estructura del sistema de Medicion';
-        $subUrl = '/sgm/estructura-sistema-medicion';
-    }else if($revision->elemento == 102){
-        $subTitle = '2. Control del documental del Sistema de Gestion de medición';
-        $subUrl = '/sgm/control-documental-sistema-gestion-medicion';
-    }else if($revision->elemento == 103){
-        $subTitle = '3. Responsabilidades de la direccion';
-        $subUrl = '/sgm/responsabilidades-direccion';
-    }
+        if ($revision->elemento == 101) {
+            $subTitle = '1. Estructura del sistema de Medicion';
+            $subUrl = '/sgm/estructura-sistema-medicion';
+        } else if ($revision->elemento == 102) {
+            $subTitle = '2. Control del documental del Sistema de Gestion de medición';
+            $subUrl = '/sgm/control-documental-sistema-gestion-medicion';
+        } else if ($revision->elemento == 103) {
+            $subTitle = '3. Responsabilidades de la direccion';
+            $subUrl = '/sgm/responsabilidades-direccion';
+        }
 
-    $title = 'Revisión del SGM, procedimientos y registros';
-    Breadcrumb::add('Home', '/home');
-    Breadcrumb::add('SGM', '/sgm');
-    Breadcrumb::add($subTitle, $subUrl);
-    Breadcrumb::add($title, '');
-    $permisos = ModuloService::permisosSesion($this->modulo);
+        $title = 'Revisión del SGM, procedimientos y registros';
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($subTitle, $subUrl);
+        Breadcrumb::add($title, '');
+        $permisos = ModuloService::permisosSesion($this->modulo);
 
         $data = [
             'title' => $title,
@@ -176,17 +179,15 @@ class SgmRevisionController extends BaseController{
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'id' => $id,
-            'links' =>[
-            ],
+            'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/sgm/revision/edit.action.init.js?v=1.0.2',
             ],
             'help' => false
         ];
-        
-        View::render('sgm/revision/index', $data,'sgm');
 
+        View::render('sgm/revision/index', $data, 'sgm');
     }
 
     public function detalleRevision(int $id)
@@ -249,17 +250,17 @@ class SgmRevisionController extends BaseController{
     public function finalizarRevision()
     {
 
-    header('Content-Type: application/json; charset=utf-8');
-    $data = json_decode(file_get_contents('php://input'), true);
+        header('Content-Type: application/json; charset=utf-8');
+        $data = json_decode(file_get_contents('php://input'), true);
 
         RevisionProcedimientoRegistro::findOrFail($data['id'])
             ->update([
-                'estado'=>1
+                'estado' => 1
             ]);
 
         echo json_encode([
-        'success' => true
-    ]);
+            'success' => true
+        ]);
     }
 
     public function pdfRevision(int $id)
@@ -281,6 +282,10 @@ class SgmRevisionController extends BaseController{
 
         $categorias = $revision->detalles->groupBy('categoria');
 
+        $css = file_get_contents(
+            'assets/css/pdf.css'
+        );
+
         $html = '
         <!DOCTYPE html>
         <html>
@@ -292,7 +297,7 @@ class SgmRevisionController extends BaseController{
             <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
 
             <style>
-
+                ' . $css . '
                 h4{
                     font-size: 20px;
                     margin:12px 0 8px;
@@ -324,7 +329,7 @@ class SgmRevisionController extends BaseController{
         <table class="table table-bordered">
             <tr>
                 <td rowspan="2" class="text-center align-middle">
-                    '.$estacion->razonsocial.'
+                    ' . $estacion->razonsocial . '
                 </td>
 
                 <td rowspan="2" class="text-center align-middle">
@@ -344,7 +349,7 @@ class SgmRevisionController extends BaseController{
 
             <tr>
                 <td class="text-center align-middle">
-                    Realizado por:<br>'.$realizadoPor.'
+                    Realizado por:<br>' . $realizadoPor . '
                 </td>
 
                 <td class="text-center align-middle">
@@ -352,7 +357,7 @@ class SgmRevisionController extends BaseController{
                 </td>
 
                 <td class="text-center align-middle">
-                    Autorizado por:<br>'.$estacion->apoderado_legal.'
+                    Autorizado por:<br>' . $estacion->apoderado_legal . '
                 </td>
             </tr>
 
@@ -363,36 +368,35 @@ class SgmRevisionController extends BaseController{
 
                 <td>
                     <strong>Fecha:</strong><br>
-                    '.formatearFecha($revision->fecha).'
+                    ' . formatearFecha($revision->fecha) . '
                 </td>
 
                 <td>
                     <strong>Hora:</strong><br>
-                    '.date('g:i a', strtotime($revision->hora)).'
+                    ' . date('g:i a', strtotime($revision->hora)) . '
                 </td>
 
                 <td>
                     <strong>Lugar:</strong><br>
-                    '.htmlspecialchars($revision->lugar).'
+                    ' . htmlspecialchars($revision->lugar) . '
                 </td>
 
             </tr>
 
         </table>';
-            foreach (['SGM', 'Procedimientos', 'Registros'] as $categoria) {
+        foreach (['SGM', 'Procedimientos', 'Registros'] as $categoria) {
 
             $html .= "<h4>{$categoria}</h4>";
 
             foreach ($categorias->get($categoria, collect()) as $detalle) {
 
                 $html .= '
-                    <h5>'.htmlspecialchars($detalle->pregunta).'</h5>
+                    <h5>' . htmlspecialchars($detalle->pregunta) . '</h5>
 
                     <div class="respuesta">
-                        '.nl2br(htmlspecialchars($detalle->respuesta)).'
+                        ' . nl2br(htmlspecialchars($detalle->respuesta)) . '
                     </div>';
             }
-
         }
 
         $html .= '
@@ -416,5 +420,4 @@ class SgmRevisionController extends BaseController{
 
         exit;
     }
-
 }

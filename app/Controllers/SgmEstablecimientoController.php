@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
@@ -20,10 +22,12 @@ use Dompdf\Options;
 use Carbon\Carbon;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
-class SgmEstablecimientoController extends BaseController{
+class SgmEstablecimientoController extends BaseController
+{
     protected string $modulo = 'sgm';
 
-        public function index(){
+    public function index()
+    {
 
         $title = '4. Establecimiento de objetivos enfocados al cliente';
         Breadcrumb::add('Home', '/home');
@@ -32,12 +36,12 @@ class SgmEstablecimientoController extends BaseController{
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
@@ -48,16 +52,16 @@ class SgmEstablecimientoController extends BaseController{
                 '/libs/select2/dist/js/select2.min.js',
 
                 '/js/asistencia/listaasistencia.actions.init.js?v=1.0.2',
-                '/js/sgm/establecimiento-objetivos/objetivos.actions.init.js?v=1.0.2', 
-                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.action.init.js?v=1.0.1', 
+                '/js/sgm/establecimiento-objetivos/objetivos.actions.init.js?v=1.0.2',
+                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.action.init.js?v=1.0.1',
 
                 '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.2',
                 '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.datatable.init.js?v=1.0.2',
             ],
             'help' => true
         ];
-        
-        View::render('sgm/establecimiento-objetivos/index', $data,'sgm');
+
+        View::render('sgm/establecimiento-objetivos/index', $data, 'sgm');
     }
 
     public function tableObjetivos()
@@ -65,13 +69,13 @@ class SgmEstablecimientoController extends BaseController{
         header('Content-Type: application/json');
 
         $objetivos = ObjetivoCliente::where(
-                'id_estacion',
-                $this->estacionId()
-            )
+            'id_estacion',
+            $this->estacionId()
+        )
             ->orderByDesc('id')
             ->get();
 
-        $data = $objetivos->map(fn ($objetivo) => [
+        $data = $objetivos->map(fn($objetivo) => [
             'id' => $objetivo->id,
             'fecha' => formatearFecha($objetivo->fecha?->format('Y-m-d')),
             'detalle' => $objetivo->detalle,
@@ -80,9 +84,10 @@ class SgmEstablecimientoController extends BaseController{
         echo json_encode($data);
     }
 
-    public function objetivoIndex(){
+    public function objetivoIndex()
+    {
 
-    $title = 'Editar objetivos enfocados al cliente';
+        $title = 'Editar objetivos enfocados al cliente';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SGM', '/sgm');
@@ -90,24 +95,23 @@ class SgmEstablecimientoController extends BaseController{
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-            'links' =>[
+            'links' => [
                 'libs/quill/dist/quill.snow.css'
             ],
             'scripts' => [
-                '/js/vendor.min.js',  
-                '/libs/quill/dist/quill.js',  
-                '/js/sgm/establecimiento-objetivos/objetivoseditar.actions.init.js?v=1.0.2',            
+                '/js/vendor.min.js',
+                '/libs/quill/dist/quill.js',
+                '/js/sgm/establecimiento-objetivos/objetivoseditar.actions.init.js?v=1.0.2',
             ],
             'help' => false
         ];
-        
-        View::render('sgm/establecimiento-objetivos/objetivos', $data,'sgm');
 
+        View::render('sgm/establecimiento-objetivos/objetivos', $data, 'sgm');
     }
 
     public function detalleObjetivo()
@@ -115,9 +119,9 @@ class SgmEstablecimientoController extends BaseController{
         header('Content-Type: application/json');
 
         $objetivo = ObjetivoCliente::where(
-                'id_estacion',
-                $this->estacionId()
-            )
+            'id_estacion',
+            $this->estacionId()
+        )
             ->latest('id')
             ->first();
 
@@ -150,7 +154,7 @@ class SgmEstablecimientoController extends BaseController{
 
         echo json_encode([
             'success' => true
-            
+
         ]);
     }
 
@@ -167,11 +171,11 @@ class SgmEstablecimientoController extends BaseController{
             'id_estacion',
             $this->estacionId()
         )
-        ->findOrFail($data['id'])
-        ->delete();
+            ->findOrFail($data['id'])
+            ->delete();
 
         echo json_encode([
-            'success'=>true,
+            'success' => true,
             'message' => 'Objetivo eliminado'
         ]);
     }
@@ -179,7 +183,8 @@ class SgmEstablecimientoController extends BaseController{
     //----------------------------------------------------------------------------
     //-- Fo.SGM.004 Seguimiento de objetivos e indicadores 
 
-    public function SeguimientoObjetivoIndex(int $id){
+    public function SeguimientoObjetivoIndex(int $id)
+    {
 
         $title = 'Fo.SGM.004 Seguimiento de objetivos e indicadores';
         Breadcrumb::add('Home', '/home');
@@ -189,13 +194,13 @@ class SgmEstablecimientoController extends BaseController{
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'id' => $id,
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
@@ -203,171 +208,167 @@ class SgmEstablecimientoController extends BaseController{
                 '/js/vendor.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
- 
-                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.action.init.js?v=1.0.2', 
+
+                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.action.init.js?v=1.0.2',
             ],
             'help' => true
         ];
-        
-        View::render('sgm/establecimiento-objetivos/seguimiento-objetivos', $data,'sgm');
+
+        View::render('sgm/establecimiento-objetivos/seguimiento-objetivos', $data, 'sgm');
     }
 
-    public function datatableSeguimientoObjetivo(){
-    header('Content-Type: application/json');
+    public function datatableSeguimientoObjetivo()
+    {
+        header('Content-Type: application/json');
 
-    $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
+        $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-    $registros = SeguimientoObjetivoIndicador::query()
-        ->where('id_estacion', $this->estacionId())
-        ->orderBy('fecha')
-        ->get();
+        $registros = SeguimientoObjetivoIndicador::query()
+            ->where('id_estacion', $this->estacionId())
+            ->orderBy('fecha')
+            ->get();
 
-    $data = $registros->values()->map(function ($item, $index) {
+        $data = $registros->values()->map(function ($item, $index) {
 
-        return [
-            'id'     => $item->id,
-            'numero' => $index + 1,
-            'fecha'  => $item->fecha->format('Y-m-d'),
-            'hora'   => $item->hora,
-            'estado' => (int) $item->estado,
-        ];
+            return [
+                'id'     => $item->id,
+                'numero' => $index + 1,
+                'fecha'  => $item->fecha->format('Y-m-d'),
+                'hora'   => $item->hora,
+                'estado' => (int) $item->estado,
+            ];
+        });
 
-    });
-
-    echo json_encode([
-        'data' => $data,
-        "permisos" => [
+        echo json_encode([
+            'data' => $data,
+            "permisos" => [
                 "eliminar" => $permisoEliminar,
                 "editar"   => $permisoEditar,
                 "descargar" => $permisoDescargar
             ]
-    ]);
+        ]);
     }
 
-    public function createSeguimientoObjetivo(){
+    public function createSeguimientoObjetivo()
+    {
 
-    header('Content-Type: application/json');
+        header('Content-Type: application/json');
 
 
-    $seguimiento = Capsule::transaction(function () {
+        $seguimiento = Capsule::transaction(function () {
 
-        $realizadoPor = Autorizado::query()
-            ->join(
-                'tb_usuarios',
-                'tb_usuarios.id',
-                '=',
-                'sgm_autorizado.id_usuario'
-            )
-            ->where('tb_usuarios.id_gas', $this->estacionId())
-            ->where('sgm_autorizado.estado', 1)
-            ->value('sgm_autorizado.id_usuario') ?? 0;
+            $realizadoPor = Autorizado::query()
+                ->join(
+                    'tb_usuarios',
+                    'tb_usuarios.id',
+                    '=',
+                    'sgm_autorizado.id_usuario'
+                )
+                ->where('tb_usuarios.id_gas', $this->estacionId())
+                ->where('sgm_autorizado.estado', 1)
+                ->value('sgm_autorizado.id_usuario') ?? 0;
 
-        $seguimiento = SeguimientoObjetivoIndicador::create([
+            $seguimiento = SeguimientoObjetivoIndicador::create([
 
-            'id_estacion'  => $this->estacionId(),
-            'id_usuario'   => $this->userId(),
-            'fecha'        => date('Y-m-d'),
-            'hora'         => date('H:i:s'),
-            'lugar'        => '',
-            'realizadopor' => $realizadoPor,
-            'estado'       => 0,
+                'id_estacion'  => $this->estacionId(),
+                'id_usuario'   => $this->userId(),
+                'fecha'        => date('Y-m-d'),
+                'hora'         => date('H:i:s'),
+                'lugar'        => '',
+                'realizadopor' => $realizadoPor,
+                'estado'       => 0,
 
+            ]);
+
+            SeguimientoImplementacionSgm::create([
+                'id_seguimiento' => $seguimiento->id,
+                'respuesta_uno' => 0,
+                'respuesta_dos' => 0,
+                'respuesta_tres' => '',
+                'respuesta_cuatro' => '',
+            ]);
+
+            SeguimientoCalibracionEquipo::create([
+                'id_seguimiento' => $seguimiento->id,
+                'respuesta_uno' => 0,
+                'respuesta_dos' => '',
+                'respuesta_tres' => '',
+            ]);
+
+            SeguimientoSatisfaccionCliente::create([
+                'id_seguimiento' => $seguimiento->id,
+                'respuesta_uno' => 0,
+                'respuesta_dos' => 0,
+                'respuesta_tres' => 0,
+                'respuesta_cuatro' => '',
+                'respuesta_cinco' => '',
+            ]);
+
+            return $seguimiento;
+        });
+
+        echo json_encode([
+            'success' => true,
+            'id' => $seguimiento->id
         ]);
-
-        SeguimientoImplementacionSgm::create([
-            'id_seguimiento' => $seguimiento->id,
-            'respuesta_uno' => 0,
-            'respuesta_dos' => 0,
-            'respuesta_tres' => '',
-            'respuesta_cuatro' => '',
-        ]);
-
-        SeguimientoCalibracionEquipo::create([
-            'id_seguimiento' => $seguimiento->id,
-            'respuesta_uno' => 0,
-            'respuesta_dos' => '',
-            'respuesta_tres' => '',
-        ]);
-
-        SeguimientoSatisfaccionCliente::create([
-            'id_seguimiento' => $seguimiento->id,
-            'respuesta_uno' => 0,
-            'respuesta_dos' => 0,
-            'respuesta_tres' => 0,
-            'respuesta_cuatro' => '',
-            'respuesta_cinco' => '',
-        ]);
-
-        return $seguimiento;
-    });
-
-    echo json_encode([
-        'success' => true,
-        'id' => $seguimiento->id
-    ]);
-
     }
 
-    public function deleteSeguimientoObjetivo(){
+    public function deleteSeguimientoObjetivo()
+    {
 
-    header('Content-Type: application/json');
-     $data = json_decode(
+        header('Content-Type: application/json');
+        $data = json_decode(
             file_get_contents('php://input'),
             true
         );
 
         $id = $data['id'];
 
-    try {
+        try {
 
-    
-        Capsule::transaction(function () use ($id) {
 
-       
-            SeguimientoAsistente::where(
-                'id_seguimiento',
-                $id
-            )->delete();
+            Capsule::transaction(function () use ($id) {
 
-            SeguimientoSatisfaccionCliente::where(
-                'id_seguimiento',
-                $id
-            )->delete();
 
-            SeguimientoCalibracionEquipo::where(
-                'id_seguimiento',
-                $id
-            )->delete();
+                SeguimientoAsistente::where(
+                    'id_seguimiento',
+                    $id
+                )->delete();
 
-            SeguimientoImplementacionSgm::where(
-                'id_seguimiento',
-                $id
-            )->delete();
+                SeguimientoSatisfaccionCliente::where(
+                    'id_seguimiento',
+                    $id
+                )->delete();
 
-            SeguimientoObjetivoIndicador::where(
-                'id',
-                $id
-            )->delete();
+                SeguimientoCalibracionEquipo::where(
+                    'id_seguimiento',
+                    $id
+                )->delete();
 
-        });
+                SeguimientoImplementacionSgm::where(
+                    'id_seguimiento',
+                    $id
+                )->delete();
 
-        echo json_encode([
-            'success' => true,
-            'message' => 'Seguimiento Objetivos eliminados'
-        ]);
+                SeguimientoObjetivoIndicador::where(
+                    'id',
+                    $id
+                )->delete();
+            });
 
-    } catch (\Throwable $e) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Seguimiento Objetivos eliminados'
+            ]);
+        } catch (\Throwable $e) {
 
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
-
-    }
-    
-
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     //-----------------------------------------------------------------------------
@@ -398,11 +399,11 @@ class SgmEstablecimientoController extends BaseController{
                 'nombre'
             ]);
 
-            $seguimiento = $seguimiento->toArray();
+        $seguimiento = $seguimiento->toArray();
 
-            $seguimiento['fecha'] = Carbon::parse(
-                $seguimiento['fecha']
-            )->format('Y-m-d');
+        $seguimiento['fecha'] = Carbon::parse(
+            $seguimiento['fecha']
+        )->format('Y-m-d');
 
         echo json_encode([
             'seguimiento' => $seguimiento,
@@ -427,9 +428,7 @@ class SgmEstablecimientoController extends BaseController{
                     'id_seguimiento' => $data['id'],
                     'id_usuario'     => $usuario
                 ]);
-
             }
-
         });
 
         echo json_encode([
@@ -473,7 +472,6 @@ class SgmEstablecimientoController extends BaseController{
             3 => SeguimientoSatisfaccionCliente::class,
 
             default => null
-
         };
 
         if (!$modelo) {
@@ -501,7 +499,6 @@ class SgmEstablecimientoController extends BaseController{
             5 => 'respuesta_cinco',
 
             default => null
-
         };
 
         if (!$campo) {
@@ -526,7 +523,6 @@ class SgmEstablecimientoController extends BaseController{
                 'detalle'     => $data['contenido']
 
             ]);
-
         }
 
         echo json_encode([
@@ -561,9 +557,10 @@ class SgmEstablecimientoController extends BaseController{
         ]);
     }
 
-    public function pdf(int $id){
+    public function pdf(int $id)
+    {
 
-    header('Content-Type: application/pdf');
+        header('Content-Type: application/pdf');
 
         $estacion = Estacion::findOrFail($this->estacionId());
 
@@ -574,8 +571,6 @@ class SgmEstablecimientoController extends BaseController{
             'asistentes.usuario',
         ])->findOrFail($id);
 
-        $estacion = Estacion::findOrFail($this->estacionId());
-
         $realizadoPor = 'S/I';
 
         if ($seguimiento->realizadopor) {
@@ -583,7 +578,11 @@ class SgmEstablecimientoController extends BaseController{
         }
 
         $anio = $seguimiento->fecha?->format('Y') ?? date('Y');
-   
+
+        $css = file_get_contents(
+            'assets/css/pdf.css'
+        );
+
         $html = '
         <!DOCTYPE html>
         <html>
@@ -595,7 +594,7 @@ class SgmEstablecimientoController extends BaseController{
             <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
 
             <style>
-
+                ' . $css . '
                 h4{
                     font-size: 18px;
                     margin:12px 0 8px;
@@ -626,7 +625,7 @@ class SgmEstablecimientoController extends BaseController{
         <table class="table table-bordered">
             <tr>
                 <td rowspan="2" class="text-center align-middle">
-                    '.$estacion->razonsocial.'
+                    ' . $estacion->razonsocial . '
                 </td>
 
                 <td rowspan="2" class="text-center align-middle">
@@ -646,7 +645,7 @@ class SgmEstablecimientoController extends BaseController{
 
             <tr>
                 <td class="text-center align-middle">
-                    Realizado por:<br>'.$realizadoPor.'
+                    Realizado por:<br>' . $realizadoPor . '
                 </td>
 
                 <td class="text-center align-middle">
@@ -654,7 +653,7 @@ class SgmEstablecimientoController extends BaseController{
                 </td>
 
                 <td class="text-center align-middle">
-                    Autorizado por:<br>'.$estacion->apoderado_legal.'
+                    Autorizado por:<br>' . $estacion->apoderado_legal . '
                 </td>
             </tr>
 
@@ -669,9 +668,9 @@ class SgmEstablecimientoController extends BaseController{
             </tr>
 
             <tr>
-                <td class="text-center">'.formatearFecha($seguimiento->fecha?->format('Y-m-d')).'</td>
-                <td class="text-center">'.date('g:i A', strtotime($seguimiento->hora)).'</td>
-                <td class="text-center">'.$seguimiento->lugar.'</td>
+                <td class="text-center">' . formatearFecha($seguimiento->fecha?->format('Y-m-d')) . '</td>
+                <td class="text-center">' . date('g:i A', strtotime($seguimiento->hora)) . '</td>
+                <td class="text-center">' . $seguimiento->lugar . '</td>
             </tr>
         </table>';
 
@@ -682,12 +681,12 @@ class SgmEstablecimientoController extends BaseController{
 
             <tr>
             <td>Porcentaje de procedimientos implementados durante el año inmediato anterior</td>
-            <td>'.$seguimiento->implementacion->respuesta_uno.'</td>
+            <td>' . $seguimiento->implementacion->respuesta_uno . '</td>
             </tr>
 
             <tr>
             <td>Porcentaje de procedimientos documentados durante el año inmediato anterior</td>
-            <td>'.$seguimiento->implementacion->respuesta_dos.'</td>
+            <td>' . $seguimiento->implementacion->respuesta_dos . '</td>
             </tr>
 
             <tr>
@@ -695,7 +694,7 @@ class SgmEstablecimientoController extends BaseController{
             </tr>
 
             <tr>
-            <td colspan="2">'.$seguimiento->implementacion->respuesta_tres.'</td>
+            <td colspan="2">' . $seguimiento->implementacion->respuesta_tres . '</td>
             </tr>
 
             <tr>
@@ -703,7 +702,7 @@ class SgmEstablecimientoController extends BaseController{
             </tr>
 
             <tr>
-            <td colspan="2">'.$seguimiento->implementacion->respuesta_cuatro.'</td>
+            <td colspan="2">' . $seguimiento->implementacion->respuesta_cuatro . '</td>
             </tr>
 
             </table>';
@@ -714,8 +713,8 @@ class SgmEstablecimientoController extends BaseController{
         <table class="table table-bordered table-sm">
 
         <tr>
-        <td>Porcentaje de equipos calibrados durante el año '.$anio.'</td>
-        <td>'.$seguimiento->calibracion->respuesta_uno.'</td>
+        <td>Porcentaje de equipos calibrados durante el año ' . $anio . '</td>
+        <td>' . $seguimiento->calibracion->respuesta_uno . '</td>
         </tr>
 
         <tr>
@@ -723,7 +722,7 @@ class SgmEstablecimientoController extends BaseController{
         </tr>
 
         <tr>
-        <td colspan="2">'.$seguimiento->calibracion->respuesta_dos.'</td>
+        <td colspan="2">' . $seguimiento->calibracion->respuesta_dos . '</td>
         </tr>
 
         <tr>
@@ -731,7 +730,7 @@ class SgmEstablecimientoController extends BaseController{
         </tr>
 
         <tr>
-        <td colspan="2">'.$seguimiento->calibracion->respuesta_tres.'</td>
+        <td colspan="2">' . $seguimiento->calibracion->respuesta_tres . '</td>
         </tr>
 
         </table>';
@@ -743,17 +742,17 @@ class SgmEstablecimientoController extends BaseController{
 
         <tr>
         <td>Número de quejas por parte de los clientes</td>
-        <td>'.$seguimiento->satisfaccion->respuesta_uno.'</td>
+        <td>' . $seguimiento->satisfaccion->respuesta_uno . '</td>
         </tr>
 
         <tr>
         <td>Número de quejas atendidas de manera satisfactoria</td>
-        <td>'.$seguimiento->satisfaccion->respuesta_dos.'</td>
+        <td>' . $seguimiento->satisfaccion->respuesta_dos . '</td>
         </tr>
 
         <tr>
         <td>Porcentaje respecto al año anterior</td>
-        <td>'.$seguimiento->satisfaccion->respuesta_tres.'</td>
+        <td>' . $seguimiento->satisfaccion->respuesta_tres . '</td>
         </tr>
 
         <tr>
@@ -761,7 +760,7 @@ class SgmEstablecimientoController extends BaseController{
         </tr>
 
         <tr>
-        <td colspan="2">'.$seguimiento->satisfaccion->respuesta_cuatro.'</td>
+        <td colspan="2">' . $seguimiento->satisfaccion->respuesta_cuatro . '</td>
         </tr>
 
         <tr>
@@ -769,7 +768,7 @@ class SgmEstablecimientoController extends BaseController{
         </tr>
 
         <tr>
-        <td colspan="2">'.$seguimiento->satisfaccion->respuesta_cinco.'</td>
+        <td colspan="2">' . $seguimiento->satisfaccion->respuesta_cinco . '</td>
         </tr>
 
         </table>';
@@ -795,38 +794,37 @@ class SgmEstablecimientoController extends BaseController{
 
         foreach ($seguimiento->asistentes as $i => $asistente) {
 
-    $firma = '';
+            $firma = '';
 
-    if ($asistente->usuario?->firma) {
+            if ($asistente->usuario?->firma) {
 
-        $archivo = $_ENV['APP_URL'].'/uploads/firma-personal/'.$asistente->usuario->firma;
+                $archivo = $_ENV['APP_URL'] . '/uploads/firma-personal/' . $asistente->usuario->firma;
 
-        if ($archivo) {
-           $firma = '<img src="'.$archivo.'" width="70">';
-        }
-    }
+                if ($archivo) {
+                    $firma = '<img src="' . $archivo . '" width="70">';
+                }
+            }
 
-    $html .= '
+            $html .= '
     <tr>
 
-        <td class="text-center">'.($i + 1).'</td>
+        <td class="text-center">' . ($i + 1) . '</td>
 
-        <td>'.$asistente->usuario->nombre.'</td>
+        <td>' . $asistente->usuario->nombre . '</td>
 
         <td align="center">';
 
-    if ($firma) {
+            if ($firma) {
 
-        $html .= $firma;
+                $html .= $firma;
+            }
 
-    }
-
-    $html .= '
+            $html .= '
         </td>
 
     </tr>';
-}
-                
+        }
+
 
         $html .= '
         </body>
@@ -848,7 +846,5 @@ class SgmEstablecimientoController extends BaseController{
         );
 
         exit;
-
     }
-
 }
