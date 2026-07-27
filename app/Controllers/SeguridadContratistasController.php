@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
@@ -18,9 +20,11 @@ use Dompdf\Options;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Carbon\Carbon;
 
-class SeguridadContratistasController extends BaseController{
+class SeguridadContratistasController extends BaseController
+{
     protected string $modulo = 'sasisopa';
-    public function index(){
+    public function index()
+    {
 
         $title = '12. SEGURIDAD DE CONTRATISTAS';
 
@@ -46,62 +50,61 @@ class SeguridadContratistasController extends BaseController{
             ],
             'help' => true
         ];
-            
-        View::render('seguridadcontratistas/index', $data,'sasisopa');
 
+        View::render('seguridadcontratistas/index', $data, 'sasisopa');
     }
 
     public function datatable()
     {
         $data = RequisicionObra::query()
 
-        ->with(['usuario:id,nombre'])
-        ->withExists([
-            'formato12',
-            'formato14',
-            'formato15',
-            'cartaResponsiva'
-        ])
-        ->where('id_estacion',$this->estacionId())
-        ->orderByDesc('id')
-        ->get()
-        ->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'folio' => '0'.$item->no_folio,
-                'fecha' => optional($item->fecha)->format('Y-m-d'),
-                'solicitante' => $item->usuario?->nombre ?? 'S/I',
-                'descripcion' => $item->descripcion,
-                'justificacion' => $item->justificacion,
-                'proveedor' => $item->proveedor,
-                'formato12' => $item->formato12_exists,
-                'formato14' => $item->formato14_exists,
-                'formato14_url' =>
+            ->with(['usuario:id,nombre'])
+            ->withExists([
+                'formato12',
+                'formato14',
+                'formato15',
+                'cartaResponsiva'
+            ])
+            ->where('id_estacion', $this->estacionId())
+            ->orderByDesc('id')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'folio' => '0' . $item->no_folio,
+                    'fecha' => optional($item->fecha)->format('Y-m-d'),
+                    'solicitante' => $item->usuario?->nombre ?? 'S/I',
+                    'descripcion' => $item->descripcion,
+                    'justificacion' => $item->justificacion,
+                    'proveedor' => $item->proveedor,
+                    'formato12' => $item->formato12_exists,
+                    'formato14' => $item->formato14_exists,
+                    'formato14_url' =>
                     $item->formato14?->archivo
                         ? '/uploads/' .
-                            $item->formato14->archivo
+                        $item->formato14->archivo
                         : '',
-                'formato15' => $item->formato15_exists,
-                'carta_responsiva' => $item->carta_responsiva_exists
-            ];
-        });
+                    'formato15' => $item->formato15_exists,
+                    'carta_responsiva' => $item->carta_responsiva_exists
+                ];
+            });
 
         echo json_encode([
             'data' => $data,
             'permisos' => [
-                'editar' => ModuloService::validaPermiso($this->modulo,'editar'),
-                'eliminar' => ModuloService::validaPermiso($this->modulo,'eliminar')
+                'editar' => ModuloService::validaPermiso($this->modulo, 'editar'),
+                'eliminar' => ModuloService::validaPermiso($this->modulo, 'eliminar')
             ]
         ]);
         exit;
     }
 
-public function create()
-{
-    header('Content-Type: application/json');
-    $data = json_decode(file_get_contents('php://input'),true);
+    public function create()
+    {
+        header('Content-Type: application/json');
+        $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
                 'success' => false,
                 'message' => 'No tienes permiso para crear'
@@ -109,14 +112,322 @@ public function create()
             return;
         }
 
-    try {
+        try {
 
-        $fecha = sanitize_input($data['fecha'] ?? null, 'string');
-        $descripcion = sanitize_input($data['descripcion'] ?? null, 'string');
-        $justificacion = sanitize_input($data['justificacion'] ?? null, 'string');
-        $proveedor = sanitize_input($data['proveedor'] ?? null, 'string');
+            $fecha = sanitize_input($data['fecha'] ?? null, 'string');
+            $descripcion = sanitize_input($data['descripcion'] ?? null, 'string');
+            $justificacion = sanitize_input($data['justificacion'] ?? null, 'string');
+            $proveedor = sanitize_input($data['proveedor'] ?? null, 'string');
 
-         if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No tienes permiso para crear'
+                ]);
+                return;
+            }
+
+            if (empty($fecha) || empty($descripcion) || empty($justificacion)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Completa todos los campos obligatorios'
+                ]);
+                return;
+            }
+
+            SeguridadContratistasService::createRequisicionObra(
+                $this->estacionId(),
+                $this->userId(),
+                $fecha,
+                $descripcion,
+                $justificacion,
+                $proveedor
+            );
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Requisición creada correctamente'
+            ]);
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al guardar'
+            ]);
+        }
+
+        exit;
+    }
+
+    public function update()
+    {
+        header('Content-Type: application/json');
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        try {
+
+            $id = (int) ($data['id'] ?? 0);
+
+            if (!$id) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Registro no valido'
+                ]);
+
+                return;
+            }
+
+            $registro = RequisicionObra::findOrFail($id);
+            $fecha = sanitize_input($data['fecha'] ?? null, 'string');
+            $descripcion = sanitize_input($data['descripcion'] ?? null, 'string');
+            $justificacion = sanitize_input($data['justificacion'] ?? null, 'string');
+            $proveedor = sanitize_input($data['proveedor'] ?? null, 'string');
+
+            if (empty($fecha) || empty($descripcion) || empty($justificacion)) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Todos los datos son obligatorios'
+                ]);
+
+                return;
+            }
+
+            $registro->update([
+                'fecha' => $fecha . ' ' . date('H:i:s'),
+                'descripcion' => $descripcion,
+                'justificacion' => $justificacion,
+                'proveedor' => $proveedor ?: ''
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Requisición actualizada correctamente'
+            ]);
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al actualizar'
+            ]);
+        }
+
+        exit;
+    }
+
+    public function delete()
+    {
+
+        header('Content-Type: application/json');
+
+        try {
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            $registro = RequisicionObra::find($data['id']);
+
+            if (!$registro) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'El Registro no se puede eliminar'
+                ]);
+
+                return;
+            }
+
+            $registro->delete();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro eliminado correctamente'
+            ]);
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al eliminar Registro'
+            ]);
+        }
+    }
+
+    public function formato12(int $id)
+    {
+        header('Content-Type: application/json');
+
+        try {
+
+            $formato = RequisicionObraFormato12::query()
+                ->with(['procedimientos'])
+                ->where('id_requisicion', $id)
+                ->firstOrFail();
+
+            $trabajadoresCat1 = RequisicionObraFormato12TrabajadorEncargado::where('id_requisicion', $formato->id)
+                ->where('categoria', 1)
+                ->get()
+                ->map(function ($t) {
+                    return [
+                        'id' => $t->id,
+                        'nombre' => $t->nombre,
+                        'puesto' => $t->puesto,
+                        'no_seguro' => $t->no_seguro,
+                    ];
+                });
+
+            $trabajadoresCat2 = RequisicionObraFormato12TrabajadorEncargado::query()
+                ->where('id_requisicion', $formato->id)
+                ->where('categoria', 2)
+                ->get()
+                ->map(function ($e) {
+
+                    $usuario = Usuario::with('puesto')
+                        ->find($e->id_personal);
+
+                    return [
+                        'id' => $e->id,
+                        'id_personal' => $e->id_personal,
+                        'nombre' => $usuario->nombre ?? $e->nombre,
+                        'puesto' => $usuario->puesto->tipo_puesto,
+                        'seguro_social' => $usuario->seguro_social,
+                    ];
+                });
+
+            $encargadosList = Usuario::where('id_gas', $this->estacionId())
+                ->where('id_puesto', 6)
+                ->where('estatus', 0)
+                ->get()
+                ->map(function ($u) {
+                    return [
+                        'id' => $u->id,
+                        'nombre' => $u->nombre
+                    ];
+                });
+
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'id' => $formato->id,
+                    'id_requisicion' => $formato->id_requisicion,
+                    'municipio' => $formato->municipio,
+                    'estado' => $formato->estado,
+                    'dia' => $formato->dia,
+                    'mes' => $formato->mes,
+                    'year' => $formato->year,
+                    'trabajo_realizar' => $formato->trabajo_realizar,
+                    'descripcion' => $formato->descripcion,
+                    'area' => $formato->area,
+
+                    'fecha_inicio' => $formato->fecha_inicio?->format('Y-m-d'),
+                    'fecha_termino' => $formato->fecha_termino?->format('Y-m-d'),
+                    'hora_inicio' => $formato->hora_inicio?->format('H:i:s'),
+                    'hora_termino' => $formato->hora_termino?->format('H:i:s'),
+
+                    'prestador_servicio' => $formato->prestador_servicio,
+                    'cprtp' => $formato->cprtp,
+                    'cteppc' => $formato->cteppc,
+                    'nombre_empresa' => $formato->nombre_empresa,
+                    'nombre_responsable' => $formato->nombre_responsable,
+
+                    'procedimientos' => $formato->procedimientos,
+
+
+                    'trabajadores' => $trabajadoresCat1,
+                    'encargados' => $trabajadoresCat2,
+                    'encargadosList' => $encargadosList,
+                ]
+            ]);
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al extraer la información'
+            ]);
+        }
+
+        exit;
+    }
+
+    public function updateFormato12()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            $formato = RequisicionObraFormato12::findOrFail($data['id']);
+
+            $formato->update([
+                'municipio' => sanitize_input($data['municipio'] ?? ''),
+                'estado' => sanitize_input($data['estado'] ?? ''),
+                'dia' => (int)($data['dia'] ?? 0),
+                'mes' => sanitize_input($data['mes'] ?? ''),
+                'year' => (int)($data['year'] ?? 0),
+
+                'trabajo_realizar' => sanitize_input($data['trabajo_realizar'] ?? ''),
+                'descripcion' => sanitize_input($data['descripcion'] ?? ''),
+                'area' => sanitize_input($data['area'] ?? ''),
+
+                'fecha_inicio' => $data['fecha_inicio'] ?? '',
+                'fecha_termino' => $data['fecha_termino'] ?? '',
+                'hora_inicio' => $data['hora_inicio'] ?? '',
+                'hora_termino' => $data['hora_termino'] ?? '',
+
+                'cprtp' => (int)($data['cprtp'] ?? 0),
+                'cteppc' => (int)($data['cteppc'] ?? 0),
+
+                'nombre_empresa' => sanitize_input($data['nombre_empresa'] ?? ''),
+                'nombre_responsable' => sanitize_input($data['nombre_responsable'] ?? '')
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Autorizacion para realizar trabajos peligrosos actualizado'
+            ]);
+        } catch (\Throwable $e) {
+
+            http_response_code(500);
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al actualizar'
+            ]);
+        }
+
+        exit;
+    }
+
+    public function updateProcedimiento()
+    {
+        header('Content-Type: application/json');
+
+        try {
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            RequisicionObraFormato12Procedimiento::where('id', $data['id'])
+                ->update(['valor' => (int)($data['valor'] ?? 0)]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro actualizado'
+            ]);
+        } catch (\Throwable $e) {
+
+            http_response_code(500);
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al actualizar'
+            ]);
+        }
+
+        exit;
+    }
+
+    public function createTrabajador()
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
                 'success' => false,
                 'message' => 'No tienes permiso para crear'
@@ -124,486 +435,168 @@ public function create()
             return;
         }
 
-        if (empty($fecha) || empty($descripcion) || empty($justificacion) ) {
-        echo json_encode([
+        if (empty($data['nombre']) || empty($data['puesto']) || empty($data['no_seguro'])) {
+            echo json_encode([
                 'success' => false,
                 'message' => 'Completa todos los campos obligatorios'
             ]);
             return;
-           
         }
 
-        SeguridadContratistasService::createRequisicionObra(
-            $this->estacionId(),
-            $this->userId(),
-            $fecha,
-            $descripcion,
-            $justificacion,
-            $proveedor
-        );
+        try {
 
-        echo json_encode([
-            'success' => true,
-            'message' => 'Requisición creada correctamente'
-        ]);
+            $trabajador = RequisicionObraFormato12TrabajadorEncargado::create([
+                'id_requisicion' => $data['id_formato'],
+                'categoria' => 1,
+                'nombre' => sanitize_input($data['nombre'], 'string'),
+                'puesto' => sanitize_input($data['puesto'], 'string'),
+                'no_seguro' => sanitize_input($data['no_seguro'], 'string')
+            ]);
 
-    } catch (\Throwable $e) {
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error al guardar'
-        ]);
-    }
-
-    exit;
-}
-
-public function update()
-{
-    header('Content-Type: application/json');
-     $data = json_decode(file_get_contents('php://input'),true);
-
-    try {
-
-        $id = (int) ($data['id'] ?? 0);
-
-        if (!$id) {
+            echo json_encode([
+                'success' => true,
+                'data' => $trabajador
+            ]);
+        } catch (\Throwable $e) {
 
             echo json_encode([
                 'success' => false,
-                'message' => 'Registro no valido'
+                'message' => 'Error al guardar'
             ]);
+        }
 
+        exit;
+    }
+
+    public function createEncargado()
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para crear'
+            ]);
             return;
         }
 
-        $registro = RequisicionObra::findOrFail($id);
-        $fecha = sanitize_input($data['fecha'] ?? null, 'string');
-        $descripcion = sanitize_input($data['descripcion'] ?? null, 'string');
-        $justificacion = sanitize_input($data['justificacion'] ?? null, 'string');
-        $proveedor = sanitize_input($data['proveedor'] ?? null, 'string');
+        if (empty($data['id_personal'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa todos los campos obligatorios'
+            ]);
+            return;
+        }
 
-        if (empty($fecha) || empty($descripcion) || empty($justificacion)) {
+        try {
+
+            $encargado = RequisicionObraFormato12TrabajadorEncargado::create([
+                'id_requisicion' => $data['id_formato'],
+                'id_personal' => $data['id_personal'],
+                'nombre' => '',
+                'puesto' => '',
+                'no_seguro' => '',
+                'categoria' => 2
+            ]);
+
+
+            $usuario = Usuario::with('puesto')
+                ->find($data['id_personal']);
+
+            $response = [
+                'id' => $encargado->id,
+                'id_personal' => $encargado->id_personal,
+                'nombre' => $usuario->nombre ?? '',
+                'puesto' => $usuario->puesto->tipo_puesto ?? '',
+                'seguro_social' => $usuario->seguro_social ?? '',
+            ];
+
+            echo json_encode([
+                'success' => true,
+                'data' => $response
+            ]);
+        } catch (\Throwable $e) {
 
             echo json_encode([
                 'success' => false,
-                'message' => 'Todos los datos son obligatorios'
+                'message' => $e->getMessage()
             ]);
-
-            return;
         }
 
-        $registro->update([
-            'fecha' => $fecha . ' ' . date('H:i:s'),
-            'descripcion' => $descripcion,
-            'justificacion' => $justificacion,
-            'proveedor' => $proveedor ?: ''
-        ]);
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Requisición actualizada correctamente'
-        ]);
-
-    } catch (\Throwable $e) {
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error al actualizar'
-        ]);
+        exit;
     }
 
-    exit;
-}
+    public function deleteTrabajador()
+    {
+        header('Content-Type: application/json');
 
-public function delete(){
+        try {
 
-    header('Content-Type: application/json');
+            $data = json_decode(file_get_contents('php://input'), true);
+            $id = (int) ($data['id'] ?? 0);
+            $registro = RequisicionObraFormato12TrabajadorEncargado::find($id);
 
-    try{
+            if (!$registro) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Registro no encontrado'
+                ]);
+                return;
+            }
 
-        $data = json_decode(file_get_contents('php://input'),true);
-        $registro = RequisicionObra::find($data['id']);
+            $registro->delete();
 
-        if(!$registro){
+            echo json_encode([
+                'success' => true,
+                'message' => 'Trabajador eliminado correctamente'
+            ]);
+        } catch (\Throwable $e) {
 
             echo json_encode([
                 'success' => false,
-                'message' => 'El Registro no se puede eliminar'
+                'message' => 'Error al eliminar'
             ]);
-
-            return;
         }
 
-        $registro->delete();
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Registro eliminado correctamente'
-        ]);
-
-    }catch(\Throwable $e){
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error al eliminar Registro'
-        ]);
+        exit;
     }
 
-}
 
-public function formato12(int $id)
-{
-    header('Content-Type: application/json');
+    public function pdfFormato12(int $id)
+    {
+        header('Content-Type: application/pdf');
 
-    try {
+        $formato = RequisicionObraFormato12::where('id_requisicion', $id)->firstOrFail();
+        $horainicio = $formato->hora_inicio?->format('H:i:s');
 
-        $formato = RequisicionObraFormato12::query()
-            ->with(['procedimientos'])
-            ->where('id_requisicion', $id)
-            ->firstOrFail();
+        $horatermino = $formato->hora_inicio?->format('H:i:s');
 
         $trabajadoresCat1 = RequisicionObraFormato12TrabajadorEncargado::where('id_requisicion', $formato->id)
             ->where('categoria', 1)
+            ->get();
+
+        $encargadosCat2 = RequisicionObraFormato12TrabajadorEncargado::where('id_requisicion', $formato->id)
+            ->where('categoria', 2)
             ->get()
-            ->map(function ($t) {
+            ->map(function ($e) {
+
+                $u = Usuario::with('puesto')->find($e->id_personal);
+
                 return [
-                    'id' => $t->id,
-                    'nombre' => $t->nombre,
-                    'puesto' => $t->puesto,
-                    'no_seguro' => $t->no_seguro,
+                    'nombre' => $u->nombre ?? $e->nombre,
+                    'puesto' => $u->puesto->tipo_puesto ?? $e->puesto,
+                    'segurosocial' => $u->seguro_social ?? $e->no_seguro,
                 ];
             });
 
-        $trabajadoresCat2 = RequisicionObraFormato12TrabajadorEncargado::query()
-        ->where('id_requisicion', $formato->id)
-        ->where('categoria', 2)
-        ->get()
-        ->map(function ($e) {
+        $procedimientos = $formato->procedimientos;
 
-            $usuario = Usuario::with('puesto')
-                ->find($e->id_personal);
+        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
+        $imgX = 'X';
 
-            return [
-                'id' => $e->id,
-                'id_personal' => $e->id_personal,
-                'nombre' => $usuario->nombre ?? $e->nombre,
-                'puesto' => $usuario->puesto->tipo_puesto,
-                'seguro_social' => $usuario->seguro_social,
-            ];
-        });
+        $estacion = Estacion::find($this->estacionId());
 
-        $encargadosList = Usuario::where('id_gas', $this->estacionId())
-            ->where('id_puesto', 6)
-            ->where('estatus', 0)
-            ->get()
-            ->map(function ($u) {
-                return [
-                    'id' => $u->id,
-                    'nombre' => $u->nombre
-                ];
-            });
-
-        echo json_encode([
-            'success' => true,
-            'data' => [
-                'id' => $formato->id,
-                'id_requisicion' => $formato->id_requisicion,
-                'municipio' => $formato->municipio,
-                'estado' => $formato->estado,
-                'dia' => $formato->dia,
-                'mes' => $formato->mes,
-                'year' => $formato->year,
-                'trabajo_realizar' => $formato->trabajo_realizar,
-                'descripcion' => $formato->descripcion,
-                'area' => $formato->area,
-
-                'fecha_inicio' => $formato->fecha_inicio?->format('Y-m-d'),
-                'fecha_termino' => $formato->fecha_termino?->format('Y-m-d'),
-                'hora_inicio' => $formato->hora_inicio?->format('H:i:s'),
-                'hora_termino' => $formato->hora_termino?->format('H:i:s'),
-
-                'prestador_servicio' => $formato->prestador_servicio,
-                'cprtp' => $formato->cprtp,
-                'cteppc' => $formato->cteppc,
-                'nombre_empresa' => $formato->nombre_empresa,
-                'nombre_responsable' => $formato->nombre_responsable,
-
-                'procedimientos' => $formato->procedimientos,
-
-              
-                'trabajadores' => $trabajadoresCat1,
-                'encargados' => $trabajadoresCat2,
-                'encargadosList' => $encargadosList,
-            ]
-        ]);
-
-    } catch (\Throwable $e) {
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error al extraer la información'
-        ]);
-    }
-
-    exit;
-}
-
-public function updateFormato12()
-{
-    header('Content-Type: application/json; charset=utf-8');
-
-    try {
-
-        $data = json_decode(file_get_contents('php://input'), true);
-        $formato = RequisicionObraFormato12::findOrFail($data['id']);
-
-        $formato->update([
-            'municipio' => sanitize_input($data['municipio'] ?? ''),
-            'estado' => sanitize_input($data['estado'] ?? ''),
-            'dia' => (int)($data['dia'] ?? 0),
-            'mes' => sanitize_input($data['mes'] ?? ''),
-            'year' => (int)($data['year'] ?? 0),
-
-            'trabajo_realizar' => sanitize_input($data['trabajo_realizar'] ?? ''),
-            'descripcion' => sanitize_input($data['descripcion'] ?? ''),
-            'area' => sanitize_input($data['area'] ?? ''),
-
-            'fecha_inicio' => $data['fecha_inicio'] ?? '',
-            'fecha_termino' => $data['fecha_termino'] ?? '',
-            'hora_inicio' => $data['hora_inicio'] ?? '',
-            'hora_termino' => $data['hora_termino'] ?? '',
-
-            'cprtp' => (int)($data['cprtp'] ?? 0),
-            'cteppc' => (int)($data['cteppc'] ?? 0),
-
-            'nombre_empresa' => sanitize_input($data['nombre_empresa'] ?? ''),
-            'nombre_responsable' => sanitize_input($data['nombre_responsable'] ?? '')
-        ]);
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Autorizacion para realizar trabajos peligrosos actualizado'
-        ]);
-
-    } catch (\Throwable $e) {
-
-        http_response_code(500);
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error al actualizar'
-        ]);
-    }
-
-    exit;
-}
-
-public function updateProcedimiento()
-{
-    header('Content-Type: application/json');
-
-    try {
-
-        $data = json_decode(file_get_contents('php://input'), true);
-        RequisicionObraFormato12Procedimiento::where('id', $data['id'])
-            ->update(['valor' => (int)($data['valor'] ?? 0)]);
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Registro actualizado'
-        ]);
-
-    } catch (\Throwable $e) {
-
-        http_response_code(500);
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error al actualizar'
-        ]);
-    }
-
-    exit;
-}
-
-public function createTrabajador()
-{
-    $data = json_decode(file_get_contents('php://input'),true);
-
-    if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'No tienes permiso para crear'
-            ]);
-            return;
-        }
-
-         if (empty($data['nombre']) || empty($data['puesto']) || empty($data['no_seguro'])) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Completa todos los campos obligatorios'
-            ]);
-            return;
-        }
-
-    try {
-
-        $trabajador = RequisicionObraFormato12TrabajadorEncargado::create([
-                'id_requisicion' => $data['id_formato'],
-                'categoria' => 1,
-                'nombre' => sanitize_input($data['nombre'],'string'),
-                'puesto' => sanitize_input($data['puesto'],'string'),
-                'no_seguro' => sanitize_input($data['no_seguro'],'string')
-            ]);
-
-        echo json_encode([
-            'success' => true,
-            'data' => $trabajador
-        ]);
-
-    } catch (\Throwable $e) {
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error al guardar'
-        ]);
-    }
-
-    exit;
-}
-
-public function createEncargado()
-{
-    $data = json_decode(file_get_contents('php://input'), true);
-
-     if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'No tienes permiso para crear'
-            ]);
-            return;
-        }
-
-         if (empty($data['id_personal'])) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Completa todos los campos obligatorios'
-            ]);
-            return;
-        }
-
-    try {
-
-        $encargado = RequisicionObraFormato12TrabajadorEncargado::create([
-            'id_requisicion' => $data['id_formato'],
-            'id_personal' => $data['id_personal'],
-            'nombre' => '',
-            'puesto' => '',
-            'no_seguro' => '',
-            'categoria' => 2
-        ]);
-
-   
-        $usuario = Usuario::with('puesto')
-        ->find($data['id_personal']);
-
-        $response = [
-            'id' => $encargado->id,
-            'id_personal' => $encargado->id_personal,
-            'nombre' => $usuario->nombre ?? '',
-            'puesto' => $usuario->puesto->tipo_puesto ?? '',
-            'seguro_social' => $usuario->seguro_social ?? '',
-        ];
-
-        echo json_encode([
-            'success' => true,
-            'data' => $response
-        ]);
-
-    } catch (\Throwable $e) {
-
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
-    }
-
-    exit;
-}
-
-public function deleteTrabajador()
-{
-    header('Content-Type: application/json');
-
-    try {
-
-        $data = json_decode(file_get_contents('php://input'), true);
-        $id = (int) ($data['id'] ?? 0);
-        $registro = RequisicionObraFormato12TrabajadorEncargado::find($id);
-
-        if (!$registro) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Registro no encontrado'
-            ]);
-            return;
-        }
-
-        $registro->delete();
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Trabajador eliminado correctamente'
-        ]);
-
-    } catch (\Throwable $e) {
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error al eliminar'
-        ]);
-    }
-
-    exit;
-}
-
-
-public function pdfFormato12(int $id)
-{
-    header('Content-Type: application/pdf');
-
-    $formato = RequisicionObraFormato12::where('id_requisicion', $id)->firstOrFail();
-    $horainicio = $formato->hora_inicio?->format('H:i:s');
-    
-    $horatermino = $formato->hora_inicio?->format('H:i:s');
-
-    $trabajadoresCat1 = RequisicionObraFormato12TrabajadorEncargado::where('id_requisicion', $formato->id)
-        ->where('categoria', 1)
-        ->get();
-
-    $encargadosCat2 = RequisicionObraFormato12TrabajadorEncargado::where('id_requisicion', $formato->id)
-        ->where('categoria', 2)
-        ->get()
-        ->map(function ($e) {
-
-            $u = Usuario::with('puesto')->find($e->id_personal);
-
-            return [
-                'nombre' => $u->nombre ?? $e->nombre,
-                'puesto' => $u->puesto->tipo_puesto ?? $e->puesto,
-                'segurosocial' => $u->seguro_social ?? $e->no_seguro,
-            ];
-        });
-
-    $procedimientos = $formato->procedimientos;
-
-    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
-    $imgX = 'X';
-
-    $estacion = Estacion::find($this->estacionId());
-
-    $html = '
+        $html = '
     <!DOCTYPE html>
     <html>
     <head>
@@ -785,7 +778,7 @@ public function pdfFormato12(int $id)
 
     <table class="table table-bordered mt-2">
     <tr>
-    <td class="align-middle text-center"><img src="'.$logo.'" style="width:150px;"></td>
+    <td class="align-middle text-center"><img src="' . $logo . '" style="width:150px;"></td>
     <td class="align-middle text-center" colspan="2"><b>Autorizacion para realizar trabajos peligrosos</b></td>
     <td class="align-middle text-center"><b>Fo.ADMONGAS.0012</b></td>
     </tr>
@@ -793,40 +786,40 @@ public function pdfFormato12(int $id)
     <tr>
     <td class="align-middle text-center">Realizado por:<br>Nelly Estrada Garcia</td>
     <td class="align-middle text-center">Revisado por:<br>Eduardo Galicia Flores</td>
-    <td class="align-middle text-center">Autorizado por:<br>'.$estacion->apoderado_legal.'</td>
+    <td class="align-middle text-center">Autorizado por:<br>' . $estacion->apoderado_legal . '</td>
     <td class="align-middle text-center">Fecha de autorizacion 01/10/2018</td>
     </tr>
     </table>
 
     <div class="text-right">
-    '.$formato->municipio.', '.$formato->estado.' a '.$formato->dia.' de '.$formato->mes.' de '.$formato->year.'
+    ' . $formato->municipio . ', ' . $formato->estado . ' a ' . $formato->dia . ' de ' . $formato->mes . ' de ' . $formato->year . '
     </div>
 
     <div class="mt-2"><b>A quien corresponda</b></div>
 
     <div class="mt-2">
     <b>Trabajo a realizar:</b>
-    <div class="mt-2 border p-2">'.$formato->trabajo_realizar.'</div>
+    <div class="mt-2 border p-2">' . $formato->trabajo_realizar . '</div>
     </div>
 
     <div class="mt-2">
     <b>Descripcion:</b>
-    <div class="mt-2 border p-2">'.$formato->descripcion.'</div>
+    <div class="mt-2 border p-2">' . $formato->descripcion . '</div>
     </div>
 
     <div class="mt-2">
     <b>Área:</b>
-    <div class="mt-2 border p-2">'.$formato->area.'</div>
+    <div class="mt-2 border p-2">' . $formato->area . '</div>
     </div>
 
     <table class="mt-3" style="width: 100%;">
     <tr>
-    <td><b>Fecha de inicio:</b></td><td>'.formatearFecha($formato->fecha_inicio).'</td>
-    <td><b>Fecha de término:</b></td><td>'.formatearFecha($formato->fecha_termino).'</td>
+    <td><b>Fecha de inicio:</b></td><td>' . formatearFecha($formato->fecha_inicio) . '</td>
+    <td><b>Fecha de término:</b></td><td>' . formatearFecha($formato->fecha_termino) . '</td>
     </tr>
     <tr>
-    <td><b>Hora de Inicio:</b></td><td>'.date('g:i a', strtotime($horainicio)).'</td>
-    <td><b>Hora de Termino:</b></td><td>'.date("g:i a",strtotime($horatermino)).'</td>
+    <td><b>Hora de Inicio:</b></td><td>' . date('g:i a', strtotime($horainicio)) . '</td>
+    <td><b>Hora de Termino:</b></td><td>' . date("g:i a", strtotime($horatermino)) . '</td>
     </tr>
     </table>
 
@@ -837,40 +830,40 @@ public function pdfFormato12(int $id)
     <table class="table table-bordered table-sm mt-2">
     <tbody>';
 
-    foreach ($procedimientos as $p) {
-        $html .= '
+        foreach ($procedimientos as $p) {
+            $html .= '
         <tr>
-            <td>'.$p->detalle.'</td>
-            <td class="text-center">'.($p->valor == 1 ? $imgX : '').'</td>
+            <td>' . $p->detalle . '</td>
+            <td class="text-center">' . ($p->valor == 1 ? $imgX : '') . '</td>
         </tr>';
-    }
+        }
 
-    $html .= '
+        $html .= '
     </tbody>
     </table>
 
     <div class="mt-2">
     <b>Nombre del prestador de servicios:</b>
-    <div class="mt-2 border p-2">'.$formato->prestador_servicio.'</div>
+    <div class="mt-2 border p-2">' . $formato->prestador_servicio . '</div>
     </div>
 
     <table class="mt-3" style="width: 100%;">
     <tr>
     <td>Cuenta con capacitación para realizar trabajos peligrosos:</td>
-    <td>'.($formato->cprtp == 1 ? 'SI' : 'NO').'</td>
+    <td>' . ($formato->cprtp == 1 ? 'SI' : 'NO') . '</td>
     </tr>
     <tr>
     <td>Cuenta con EPP</td>
-    <td>'.($formato->cteppc == 1 ? 'SI' : 'NO').'</td>
+    <td>' . ($formato->cteppc == 1 ? 'SI' : 'NO') . '</td>
     </tr>
     </table>
 
     <div class="text-center"><small>*De no contar con capacitación, bajo ninguna circunstancia realizara los trabajos</small></div>
     ';
 
-    if ($trabajadoresCat1->count()) {
+        if ($trabajadoresCat1->count()) {
 
-    $html .= '
+            $html .= '
     <div><b>Datos de los trabajadores que acuden al servicio:</b></div>
 
     <table class="table table-bordered table-sm mt-2">
@@ -883,21 +876,21 @@ public function pdfFormato12(int $id)
     </thead>
     <tbody>';
 
-    foreach ($trabajadoresCat1 as $t) {
-        $html .= '
+            foreach ($trabajadoresCat1 as $t) {
+                $html .= '
         <tr>
-            <td>'.$t->nombre.'</td>
-            <td>'.$t->puesto.'</td>
-            <td>'.$t->no_seguro.'</td>
+            <td>' . $t->nombre . '</td>
+            <td>' . $t->puesto . '</td>
+            <td>' . $t->no_seguro . '</td>
         </tr>';
-    }
+            }
 
-    $html .= '</tbody></table>';
-    }
+            $html .= '</tbody></table>';
+        }
 
-    if ($encargadosCat2->count()) {
+        if ($encargadosCat2->count()) {
 
-    $html .= '
+            $html .= '
     <div><b>Encargado de la estación de servicio de darle seguimiento al servicio:</b></div>
 
     <table class="table table-bordered table-sm mt-2">
@@ -910,75 +903,82 @@ public function pdfFormato12(int $id)
     </thead>
     <tbody>';
 
-    foreach ($encargadosCat2 as $e) {
-        $html .= '
+            foreach ($encargadosCat2 as $e) {
+                $html .= '
         <tr>
-            <td>'.$e['nombre'].'</td>
-            <td>'.$e['puesto'].'</td>
-            <td>'.$e['segurosocial'].'</td>
+            <td>' . $e['nombre'] . '</td>
+            <td>' . $e['puesto'] . '</td>
+            <td>' . $e['segurosocial'] . '</td>
         </tr>';
-    }
+            }
 
-    $html .= '</tbody></table>';
-    }
+            $html .= '</tbody></table>';
+        }
 
-    if ($formato->nombre_empresa) {
-        $html .= '
+        if ($formato->nombre_empresa) {
+            $html .= '
         <div class="mt-2">
         <b>Nombre empresa:</b>
-        <div class="mt-2 border p-2">'.$formato->nombre_empresa.'</div>
+        <div class="mt-2 border p-2">' . $formato->nombre_empresa . '</div>
         </div>';
-    }
+        }
 
-    if ($formato->nombre_responsable) {
-        $html .= '
+        if ($formato->nombre_responsable) {
+            $html .= '
         <div class="mt-2">
         <b>Nombre del responsable:</b>
-        <div class="mt-2 border p-2">'.$formato->nombre_responsable.'</div>
+        <div class="mt-2 border p-2">' . $formato->nombre_responsable . '</div>
         </div>
 
         <div class="text-center mt-2">
         <small>Nota: Si el personal es externo deberá presentar su procedimiento para realizar la actividad</small>
         </div>';
-    }
+        }
 
-    $html .= '
+        $html .= '
     </body>
     </html>';
 
-    $options = new Options();
-    $options->set('isRemoteEnabled', true);
-    $options->set('defaultFont', 'Arial');
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
 
-    $dompdf = new Dompdf($options);
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'portrait');
-    $dompdf->render();
-    $dompdf->stream("Autorizacion_trabajos_peligrosos.pdf", ["Attachment" => true]);
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $dompdf->stream("Autorizacion_trabajos_peligrosos.pdf", ["Attachment" => true]);
     }
 
-//----------------------------------------
-//------------ Formato 13
-public function formato13(int $id)
-{
-    header('Content-Type: application/pdf');
+    //----------------------------------------
+    //------------ Formato 13
+    public function formato13(int $id)
+    {
+        header('Content-Type: application/pdf');
 
-    $estacion = Estacion::find($this->estacionId());
+        $estacion = Estacion::find($this->estacionId());
 
-    $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+        $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
-    $requisicion = RequisicionObra::with('usuario')
-        ->findOrFail($id);
+        $requisicion = RequisicionObra::with('usuario')
+            ->findOrFail($id);
 
-    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
+        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-    $html = '
+        $css = file_get_contents(
+            'assets/css/pdf.css'
+        );
+
+        $html = '
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
         <title>Requisición de obra o servicio</title>
         <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
+        <style>
+        ' . $css . '
+        </style>
     </head>
     <body>
 
@@ -1117,318 +1117,313 @@ public function formato13(int $id)
     </body>
     </html>';
 
-    $options = new Options();
+        $options = new Options();
 
-    $options->set('isRemoteEnabled', true);
-    $options->set('defaultFont', 'Arial');
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
 
-    $dompdf = new Dompdf($options);
+        $dompdf = new Dompdf($options);
 
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'portrait');
-    $dompdf->render();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
 
-    $dompdf->stream(
-        'Requisicion-Obra-Servicio.pdf',
-        ['Attachment' => true]
-    );
-}
+        $dompdf->stream(
+            'Requisicion-Obra-Servicio.pdf',
+            ['Attachment' => true]
+        );
+    }
 
-//----------------------------------------
-//------------ Formato 14
+    //----------------------------------------
+    //------------ Formato 14
 
-public function formato14(int $id)
-{
-    header('Content-Type: application/json');
-    try {
+    public function formato14(int $id)
+    {
+        header('Content-Type: application/json');
+        try {
 
-        $requisicion = RequisicionObra::with(
-            'usuario:id,nombre'
-        )->findOrFail($id);
+            $requisicion = RequisicionObra::with(
+                'usuario:id,nombre'
+            )->findOrFail($id);
 
-        $formato = RequisicionObraFormato14::where(
-            'id_requisicion',
-            $id
-        )->first();
+            $formato = RequisicionObraFormato14::where(
+                'id_requisicion',
+                $id
+            )->first();
 
-        $estacion = Estacion::find($this->estacionId());
+            $estacion = Estacion::find($this->estacionId());
 
-        echo json_encode([
-            'success' => true,
-            'formato' => [
-                'id_requisicion' => $id,
-                'folio' => '0' . $requisicion->no_folio,
-                'fecha' => formatearFecha($requisicion->fecha),
-                'nombre_solicitante' => $requisicion->usuario?->nombre ?? '',
-                'empresa' => $estacion?->razonsocial ?? '',
-                'descripcion' => $requisicion->descripcion ?? '',
-                'justificacion' => $requisicion->justificacion ?? '',
-                'archivo' => $formato?->archivo ?? '',
-                'archivo_url' =>
+            echo json_encode([
+                'success' => true,
+                'formato' => [
+                    'id_requisicion' => $id,
+                    'folio' => '0' . $requisicion->no_folio,
+                    'fecha' => formatearFecha($requisicion->fecha),
+                    'nombre_solicitante' => $requisicion->usuario?->nombre ?? '',
+                    'empresa' => $estacion?->razonsocial ?? '',
+                    'descripcion' => $requisicion->descripcion ?? '',
+                    'justificacion' => $requisicion->justificacion ?? '',
+                    'archivo' => $formato?->archivo ?? '',
+                    'archivo_url' =>
                     !empty($formato?->archivo)
-                    ? $_ENV['APP_URL']
+                        ? $_ENV['APP_URL']
                         . '/uploads/'
                         . $formato->archivo
-                    : ''
-            ]
-        ]);
+                        : ''
+                ]
+            ]);
+        } catch (\Throwable $e) {
 
-    } catch (\Throwable $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
 
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
+        exit;
     }
 
-    exit;
-}
+    public function updateFormato14()
+    {
+        header('Content-Type: application/json');
 
-public function updateFormato14()
-{
-    header('Content-Type: application/json');
+        try {
 
-    try {
+            $idRequisicion = (int) ($_POST['id_requisicion'] ?? 0);
 
-        $idRequisicion = (int) ($_POST['id_requisicion'] ?? 0);
+            if (!$idRequisicion) {
 
-        if (!$idRequisicion) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No se encontro registro'
+                ]);
+            }
 
-            echo json_encode([
-            'success' => false,
-            'message' => 'No se encontro registro'
-        ]);
-        }
+            if (empty($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
 
-        if (empty($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Debe seleccionar un archivo PDF'
+                ]);
+            }
 
-            echo json_encode([
-                'success' => false,
-                'message' => 'Debe seleccionar un archivo PDF'
-            ]);
+            $file = $_FILES['archivo'];
 
-        }
-
-        $file = $_FILES['archivo'];
-
-        $extension = strtolower(
-            pathinfo(
-                $file['name'],
-                PATHINFO_EXTENSION
-            )
-        );
-
-        if ($extension !== 'pdf') {
-
-            echo json_encode([
-                'success' => false,
-                'message' => 'Solo se permiten archivos PDF'
-            ]);
-        }
-
-        // Carpeta física
-        $carpetaFisica =
-            __DIR__
-            . '../../../public/uploads/archivos/seguridad-contratistas/';
-
-        if (!file_exists($carpetaFisica)) {
-
-            mkdir_safe(
-                $carpetaFisica,
-                true
+            $extension = strtolower(
+                pathinfo(
+                    $file['name'],
+                    PATHINFO_EXTENSION
+                )
             );
-        }
 
-        $nombreArchivo = 'Fo.ADMONGAS.014-' . time() . '.pdf';
+            if ($extension !== 'pdf') {
 
-        $rutaFisica = $carpetaFisica . $nombreArchivo;
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Solo se permiten archivos PDF'
+                ]);
+            }
 
-        if (!move_uploaded_file($file['tmp_name'],$rutaFisica)) {
+            // Carpeta física
+            $carpetaFisica =
+                __DIR__
+                . '../../../public/uploads/archivos/seguridad-contratistas/';
 
-         echo json_encode([
-                'success' => false,
-                'message' => 'No fue posible guardar el archivo'
-            ]);
-        }
+            if (!file_exists($carpetaFisica)) {
 
-        // Ruta que se guarda en BD
-        $rutaBd =
-            'archivos/seguridad-contratistas/'
-            . $nombreArchivo;
+                mkdir_safe(
+                    $carpetaFisica,
+                    true
+                );
+            }
 
-        RequisicionObraFormato14::where(
-            'id_requisicion',
-            $idRequisicion
-        )->delete();
+            $nombreArchivo = 'Fo.ADMONGAS.014-' . time() . '.pdf';
 
-        RequisicionObraFormato14::create([
+            $rutaFisica = $carpetaFisica . $nombreArchivo;
 
-            'id_requisicion' =>
+            if (!move_uploaded_file($file['tmp_name'], $rutaFisica)) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No fue posible guardar el archivo'
+                ]);
+            }
+
+            // Ruta que se guarda en BD
+            $rutaBd =
+                'archivos/seguridad-contratistas/'
+                . $nombreArchivo;
+
+            RequisicionObraFormato14::where(
+                'id_requisicion',
+                $idRequisicion
+            )->delete();
+
+            RequisicionObraFormato14::create([
+
+                'id_requisicion' =>
                 $idRequisicion,
 
-            'archivo' =>
+                'archivo' =>
                 $rutaBd
-        ]);
+            ]);
 
-        echo json_encode([
-            'success' => true,
-            'message' => 'Archivo guardado correctamente'
-        ]);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Archivo guardado correctamente'
+            ]);
+        } catch (\Throwable $e) {
 
-    } catch (\Throwable $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
 
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
+        exit;
     }
 
-    exit;
-}
+    //----------------------------------------
+    //------------ Formato 15
 
-//----------------------------------------
-//------------ Formato 15
+    public function formato15(int $id)
+    {
+        header('Content-Type: application/json');
 
-public function formato15(int $id)
-{
-    header('Content-Type: application/json');
+        try {
 
-    try {
+            $formato = RequisicionObraFormato15::with(
+                'supervisor:id,nombre,firma'
+            )
+                ->where('id_requisicion', $id)
+                ->first();
 
+            if (!$formato) {
+
+                $formato = [
+                    'id' => null,
+                    'id_requisicion' => $id,
+                    'fecha_lv' => null,
+                    'fecha_uv' => null,
+                    'fecha_rr' => null,
+                    'id_supervisor' => null,
+                    'supervisor' => null,
+                ];
+            }
+
+            $supervisores = Usuario::query()
+                ->select('id', 'nombre')
+                ->where('id_gas', $this->estacionId())
+                ->where('id_puesto', 6)
+                ->where('estatus', 0)
+                ->orderBy('nombre')
+                ->get();
+
+            echo json_encode([
+                'success' => true,
+                'formato' => $formato,
+                'supervisores' => $supervisores
+            ]);
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al mostrar'
+            ]);
+        }
+
+        exit;
+    }
+
+    public function updateFormato15()
+    {
+        header('Content-Type: application/json');
+        $data = json_decode(file_get_contents('php://input'), true);
+        try {
+
+            $formato = RequisicionObraFormato15::updateOrCreate(
+
+                [
+                    'id_requisicion' => (int) $data['id_requisicion']
+                ],
+
+                [
+                    'fecha_lv' => $data['fecha_lv'],
+                    'hora_lv' => $data['hora_lv'],
+                    'pregunta1' => (int) $data['pregunta1'],
+                    'pregunta2' => (int) $data['pregunta2'],
+                    'pregunta3' => (int) $data['pregunta3'],
+                    'pregunta4' => (int) $data['pregunta4'],
+                    'pregunta5' => (int) $data['pregunta5'],
+                    'id_usuario' => (int) $data['id_usuario']
+                ]
+            );
+
+            echo json_encode([
+                'success' => true,
+                'id' => $formato->id
+            ]);
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
+        exit;
+    }
+
+    public function pdfFormato15(int $id)
+    {
         $formato = RequisicionObraFormato15::with(
             'supervisor:id,nombre,firma'
         )
-        ->where('id_requisicion', $id)
-        ->first();
+            ->where('id_requisicion', $id)
+            ->firstOrFail();
 
-        if (!$formato) {
-
-            $formato = [
-                'id' => null,
-                'id_requisicion' => $id,
-                'fecha_lv' => null,
-                'fecha_uv' => null,
-                'fecha_rr' => null,
-                'id_supervisor' => null,
-                'supervisor' => null,
-            ];
-        }
-
-        $supervisores = Usuario::query()
-        ->select('id', 'nombre')
-        ->where('id_gas', $this->estacionId())
-        ->where('id_puesto', 6)
-        ->where('estatus', 0)
-        ->orderBy('nombre')
-        ->get();
-
-        echo json_encode([
-            'success' => true,
-            'formato' => $formato,
-            'supervisores' => $supervisores
-        ]);
-
-    } catch (\Throwable $e) {
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error al mostrar'
-        ]);
-    }
-
-    exit;
-}
-
-public function updateFormato15()
-{
-    header('Content-Type: application/json');
-    $data = json_decode(file_get_contents('php://input'),true);
-    try {
-
-        $formato = RequisicionObraFormato15::updateOrCreate(
-
-            [
-                'id_requisicion' => (int) $data['id_requisicion']
-            ],
-
-            [
-                'fecha_lv' => $data['fecha_lv'],
-                'hora_lv' => $data['hora_lv'],
-                'pregunta1' => (int) $data['pregunta1'],
-                'pregunta2' => (int) $data['pregunta2'],
-                'pregunta3' => (int) $data['pregunta3'],
-                'pregunta4' => (int) $data['pregunta4'],
-                'pregunta5' => (int) $data['pregunta5'],
-                'id_usuario' => (int) $data['id_usuario']
-            ]
+        $estacion = Estacion::find(
+            $this->estacionId()
         );
 
-        echo json_encode([
-            'success' => true,
-            'id' => $formato->id
-        ]);
+        $horaFormateada =
+            !empty($formato->hora_lv)
+            ? Carbon::parse(
+                $formato->hora_lv
+            )->format('g:i a')
+            : '';
 
-    } catch (\Throwable $e) {
+        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
-    }
+        $firma = '';
 
-    exit;
-}
+        if ($formato->supervisor && !empty($formato->supervisor->firma)) {
 
-public function pdfFormato15(int $id)
-{
-    $formato = RequisicionObraFormato15::with(
-    'supervisor:id,nombre,firma'
-    )
-    ->where('id_requisicion', $id)
-    ->firstOrFail();
+            $rutaFirma = realpath(
+                __DIR__ .
+                    '/../../public/uploads/firma-personal/' .
+                    $formato->supervisor->firma
+            );
 
-    $estacion = Estacion::find(
-        $this->estacionId()
-    );
+            if (
+                $rutaFirma &&
+                file_exists($rutaFirma)
+            ) {
 
-    $horaFormateada =
-    !empty($formato->hora_lv)
-        ? Carbon::parse(
-            $formato->hora_lv
-        )->format('g:i a')
-        : '';
-
-    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
-
-    $firma = '';
-
-    if ($formato->supervisor && !empty($formato->supervisor->firma)) {
-
-        $rutaFirma = realpath(
-            __DIR__ .
-            '/../../public/uploads/firma-personal/' .
-            $formato->supervisor->firma
-        );
-
-        if (
-            $rutaFirma &&
-            file_exists($rutaFirma)
-        ) {
-
-            $firma = $_ENV['APP_URL'] .
-                '/uploads/firma-personal/' .
-                $formato->supervisor->firma;
+                $firma = $_ENV['APP_URL'] .
+                    '/uploads/firma-personal/' .
+                    $formato->supervisor->firma;
+            }
         }
-    }
 
-    $siNo = fn (
-        $valor,
-        $esperado
-    ) => $valor == $esperado
-        ? 'X'
-        : '';
+        $siNo = fn(
+            $valor,
+            $esperado
+        ) => $valor == $esperado
+            ? 'X'
+            : '';
 
-    $html = '
+        $html = '
     <!DOCTYPE html>
     <html>
     <head>
@@ -1530,8 +1525,8 @@ public function pdfFormato15(int $id)
 
                 Autorizado por:<br>
                 ' . e(
-                    $estacion->apoderado_legal
-                ) . '
+            $estacion->apoderado_legal
+        ) . '
 
             </td>
 
@@ -1556,8 +1551,8 @@ public function pdfFormato15(int $id)
 
                 <b>Fecha:</b>
                 ' . formatearFecha(
-                    $formato->fecha_lv
-                ) . '
+            $formato->fecha_lv
+        ) . '
 
             </td>
 
@@ -1663,10 +1658,10 @@ public function pdfFormato15(int $id)
         ">
 
         ' . (!empty($firma)
-                ? '<img src="' .
-                    $firma .
-                    '" width="140">'
-                : ''
+            ? '<img src="' .
+            $firma .
+            '" width="140">'
+            : ''
         ) . '
 
         <br>' . e($formato->supervisor?->nombre ?? '') . '
@@ -1685,16 +1680,16 @@ public function pdfFormato15(int $id)
     </body>
     </html>';
 
-    $options = new Options();
-    $options->set('isRemoteEnabled',true);
-    $options->set('defaultFont','Arial');
-    $dompdf = new Dompdf($options);
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4','portrait');
-    $dompdf->render();
-    $dompdf->stream('Listas_de_verificacion.pdf',['Attachment' => true]);
-    exit;
-}
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $dompdf->stream('Listas_de_verificacion.pdf', ['Attachment' => true]);
+        exit;
+    }
 
 
     //--------------------------------------------------------
@@ -1717,7 +1712,7 @@ public function pdfFormato15(int $id)
     public function updateCartaResponsiva()
     {
         header('Content-Type: application/json');
-        $data = json_decode(file_get_contents('php://input'),true);
+        $data = json_decode(file_get_contents('php://input'), true);
 
         try {
 
@@ -1739,7 +1734,6 @@ public function pdfFormato15(int $id)
             echo json_encode([
                 'success' => true
             ]);
-
         } catch (\Throwable $e) {
 
             echo json_encode([
@@ -1782,8 +1776,8 @@ public function pdfFormato15(int $id)
             <meta charset="UTF-8">
             <title>Carta responsiva</title>
             <link rel="stylesheet" href="' .
-                $_ENV['APP_URL'] .
-                '/assets/css/pdf.css">
+            $_ENV['APP_URL'] .
+            '/assets/css/pdf.css">
         </head>
         <body>
 
@@ -1793,10 +1787,10 @@ public function pdfFormato15(int $id)
 
             <div class="text-right mt-3">
                 ' . $carta->municipio . ' ' .
-                $carta->estado . ',
+            $carta->estado . ',
                 a ' . $carta->dia . ' de ' .
-                nombremes($carta->mes) .
-                ' del ' . $carta->year . '
+            nombremes($carta->mes) .
+            ' del ' . $carta->year . '
             </div>
 
             <div class="text-right">
@@ -1884,5 +1878,4 @@ public function pdfFormato15(int $id)
             ['Attachment' => true]
         );
     }
-
 }

@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
@@ -12,11 +14,13 @@ use App\Models\Sgm\InventarioNormatividadAplicable;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-class SgmNormatividadController extends BaseController{
+class SgmNormatividadController extends BaseController
+{
 
     protected string $modulo = 'sgm';
 
-    public function index(){
+    public function index()
+    {
 
         $title = '5. Normatividad aplicable a mediciones';
         Breadcrumb::add('Home', '/home');
@@ -24,12 +28,12 @@ class SgmNormatividadController extends BaseController{
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
@@ -42,72 +46,70 @@ class SgmNormatividadController extends BaseController{
                 '/js/sgm/normatividad/inventario.actions.init.js?v=1.0.1',
                 '/js/asistencia/listaasistencia.actions.init.js?v=1.0.1',
 
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.1', 
-                '/js/sgm/normatividad/inventario.datatable.init.js?v=1.0.1', 
+                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.1',
+                '/js/sgm/normatividad/inventario.datatable.init.js?v=1.0.1',
             ],
             'help' => true
         ];
-        
-        View::render('sgm/normatividad/index', $data,'sgm');
 
+        View::render('sgm/normatividad/index', $data, 'sgm');
     }
 
     //---Fo.SGM.005 Inventario de Normatividad Aplicable ----
 
-    public function datatableInventario(){
+    public function datatableInventario()
+    {
 
-    header('Content-Type: application/json');
+        header('Content-Type: application/json');
 
-    $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
+        $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-    $inventario = InventarioNormatividadAplicable::query()
-        ->whereIn('estado', [
-            $this->estacionId(),
-            0
-        ])
-        ->orderBy('id')
-        ->get();
+        $inventario = InventarioNormatividadAplicable::query()
+            ->whereIn('estado', [
+                $this->estacionId(),
+                0
+            ])
+            ->orderBy('id')
+            ->get();
 
-    $data = $inventario->values()->map(function ($item, $index) {
+        $data = $inventario->values()->map(function ($item, $index) {
 
-        return [
+            return [
 
-            'id' => $item->id,
+                'id' => $item->id,
 
-            'numero' => $index + 1,
+                'numero' => $index + 1,
 
-            'norma' => $item->norma,
+                'norma' => $item->norma,
 
-            'fecha_publicacion' => $item->fecha_publicacion
-                ? $item->fecha_publicacion->format('Y-m-d')
-                : 'S/I',
+                'fecha_publicacion' => $item->fecha_publicacion
+                    ? $item->fecha_publicacion->format('Y-m-d')
+                    : 'S/I',
 
-            'fecha_aplicacion' => (
-                !$item->fecha_aplicacion ||
-                $item->fecha_aplicacion->format('Y-m-d') === '0000-00-00'
-            )
-                ? 'S/I'
-                : $item->fecha_aplicacion->format('d-m-Y'),
+                'fecha_aplicacion' => (
+                    !$item->fecha_aplicacion ||
+                    $item->fecha_aplicacion->format('Y-m-d') === '0000-00-00'
+                )
+                    ? 'S/I'
+                    : $item->fecha_aplicacion->format('d-m-Y'),
 
-            'equipo' => $item->equipo,
+                'equipo' => $item->equipo,
 
-            'link' => $item->link,
+                'link' => $item->link,
 
-        ];
+            ];
+        });
 
-    });
-
-    echo json_encode([
-    "data" => $data,
-    "permisos" => [
-        "eliminar" => $permisoEliminar,
-        "editar"   => $permisoEditar,
-        "descargar" => $permisoDescargar
-    ]
-    ]);
-
+        echo json_encode([
+            "data" => $data,
+            "permisos" => [
+                "eliminar" => $permisoEliminar,
+                "editar"   => $permisoEditar,
+                "descargar" => $permisoDescargar
+            ]
+        ]);
     }
 
     public function createInventario()
@@ -136,75 +138,78 @@ class SgmNormatividadController extends BaseController{
         ]);
     }
 
-    public function deleteInventario(){
+    public function deleteInventario()
+    {
 
-    header('Content-Type: application/json');
+        header('Content-Type: application/json');
 
-    $data = json_decode(
-        file_get_contents('php://input'),
-        true
-    );
+        $data = json_decode(
+            file_get_contents('php://input'),
+            true
+        );
 
-    try {
+        try {
 
-        $registro = InventarioNormatividadAplicable::query()
-            ->where('id', $data['id'])
-            ->where('estado', $this->estacionId())
-            ->first();
+            $registro = InventarioNormatividadAplicable::query()
+                ->where('id', $data['id'])
+                ->where('estado', $this->estacionId())
+                ->first();
 
-        if (!$registro) {
+            if (!$registro) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No se encontró el registro.'
+                ]);
+
+                return;
+            }
+
+            $registro->delete();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro eliminado correctamente.'
+            ]);
+        } catch (\Throwable $e) {
 
             echo json_encode([
                 'success' => false,
-                'message' => 'No se encontró el registro.'
+                'message' => $e->getMessage()
             ]);
-
-            return;
         }
-
-        $registro->delete();
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Registro eliminado correctamente.'
-        ]);
-
-    } catch (\Throwable $e) {
-
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
-
     }
 
-    }
+    public function pdfInventario()
+    {
+        header('Content-Type: application/pdf');
 
-    public function pdfInventario(){
-     header('Content-Type: application/pdf');
+        $estacion = Estacion::findOrFail($this->estacionId());
 
-    $estacion = Estacion::findOrFail($this->estacionId());
+        $realizadoPor = Autorizado::query()
+            ->join(
+                'tb_usuarios',
+                'tb_usuarios.id',
+                '=',
+                'sgm_autorizado.id_usuario'
+            )
+            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('sgm_autorizado.estado', 1)
+            ->value('tb_usuarios.nombre') ?? 'S/I';
 
-    $realizadoPor = Autorizado::query()
-        ->join(
-            'tb_usuarios',
-            'tb_usuarios.id',
-            '=',
-            'sgm_autorizado.id_usuario'
-        )
-        ->where('tb_usuarios.id_gas', $this->estacionId())
-        ->where('sgm_autorizado.estado', 1)
-        ->value('tb_usuarios.nombre') ?? 'S/I';
+        $inventario = InventarioNormatividadAplicable::query()
+            ->whereIn('estado', [
+                $this->estacionId(),
+                0
+            ])
+            ->orderBy('norma')
+            ->get();
 
-    $inventario = InventarioNormatividadAplicable::query()
-        ->whereIn('estado', [
-            $this->estacionId(),
-            0
-        ])
-        ->orderBy('norma')
-        ->get();
+        $css = file_get_contents(
+            'assets/css/pdf.css'
+        );
 
-    $html = '
+        $html = '
     <!DOCTYPE html>
     <html>
     <head>
@@ -215,7 +220,7 @@ class SgmNormatividadController extends BaseController{
         <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
 
         <style>
-
+            ' . $css . '
             body{
                 font-size:12px;
             }
@@ -248,7 +253,7 @@ class SgmNormatividadController extends BaseController{
 
             <td rowspan="2" class="text-center align-middle">
 
-                '.$estacion->razonsocial.'
+                ' . $estacion->razonsocial . '
 
             </td>
 
@@ -281,7 +286,7 @@ class SgmNormatividadController extends BaseController{
             <td class="text-center align-middle">
 
                 Realizado por:<br>
-                '.$realizadoPor.'
+                ' . $realizadoPor . '
 
             </td>
 
@@ -295,7 +300,7 @@ class SgmNormatividadController extends BaseController{
             <td class="text-center align-middle">
 
                 Autorizado por:<br>
-                '.$estacion->apoderado_legal.'
+                ' . $estacion->apoderado_legal . '
 
             </td>
 
@@ -323,9 +328,9 @@ class SgmNormatividadController extends BaseController{
 
         <tbody>';
 
-    if ($inventario->isEmpty()) {
+        if ($inventario->isEmpty()) {
 
-        $html .= '
+            $html .= '
         <tr>
             <td colspan="6" class="text-center">
                 No se encontró información.
@@ -333,52 +338,49 @@ class SgmNormatividadController extends BaseController{
             </td>
 
         </tr>';
+        } else {
 
-    } else {
+            foreach ($inventario as $index => $item) {
 
-        foreach ($inventario as $index => $item) {
+                $fechaPublicacion = $item->fecha_publicacion
+                    ? formatearFecha($item->fecha_publicacion->format('Y-m-d'))
+                    : 'S/I';
 
-           $fechaPublicacion = $item->fecha_publicacion
-            ? formatearFecha($item->fecha_publicacion->format('Y-m-d'))
-            : 'S/I';
+                $fechaOriginal = $item->getRawOriginal('fecha_aplicacion');
 
-$fechaOriginal = $item->getRawOriginal('fecha_aplicacion');
+                $fechaAplicacion = (
+                    empty($fechaOriginal) ||
+                    $fechaOriginal === '0000-00-00'
+                )
+                    ? 'S/I'
+                    : formatearFecha($fechaOriginal);
 
-$fechaAplicacion = (
-    empty($fechaOriginal) ||
-    $fechaOriginal === '0000-00-00'
-)
-    ? 'S/I'
-    : formatearFecha($fechaOriginal);
-
-            $html .= '
+                $html .= '
 
             <tr>
                 <td class="text-center">
-                    '.($index + 1).'
+                    ' . ($index + 1) . '
                 </td>
                 <td>
-                    '.$item->norma.'
+                    ' . $item->norma . '
                 </td>
                 <td class="text-center">
-                    '.$fechaPublicacion.'
+                    ' . $fechaPublicacion . '
                 </td>
                 <td class="text-center">
-                    '.$fechaAplicacion.'
+                    ' . $fechaAplicacion . '
                 </td>
                 <td class="text-center">
-                    '.$item->equipo.'
+                    ' . $item->equipo . '
                 </td>
                 <td class="text-center">
-                    '.$item->link.'
+                    ' . $item->link . '
                 </td>
             </tr>';
-
+            }
         }
 
-    }
-
-    $html .= '
+        $html .= '
 
         </tbody>
 
@@ -388,22 +390,22 @@ $fechaAplicacion = (
 
     </html>';
 
-    $options = new Options();
-    $options->set('isRemoteEnabled', true);
-    $options->set('defaultFont', 'Arial');
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
 
-    $dompdf = new Dompdf($options);
+        $dompdf = new Dompdf($options);
 
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'landscape');
-    $dompdf->render();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
 
-    $dompdf->stream(
-        'Inventario de Normatividad Aplicable.pdf',
-        ['Attachment' => true]
-    );
+        $dompdf->stream(
+            'Inventario de Normatividad Aplicable.pdf',
+            ['Attachment' => true]
+        );
 
-    exit;   
+        exit;
     }
 
 
@@ -412,11 +414,14 @@ $fechaAplicacion = (
     {
         header('Content-Type: application/pdf');
 
-            $estacion = Estacion::findOrFail($this->estacionId());
-            $realizadoPor = $this->realizadoPor();
+        $estacion = Estacion::findOrFail($this->estacionId());
+        $realizadoPor = $this->realizadoPor();
 
+        $css = file_get_contents(
+            'assets/css/pdf.css'
+        );
 
-            $html = '
+        $html = '
             <!DOCTYPE html>
             <html>
             <head>
@@ -424,6 +429,7 @@ $fechaAplicacion = (
                 <title>Requisitos legales del SGM</title>
                 <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
                 <style>
+                ' . $css . '
                 @page {margin: 0.5cm 1cm; font-family: Arial, Helvetica, sans-serif;}
                 *,
                 *::before,
@@ -460,7 +466,7 @@ $fechaAplicacion = (
             <table class="table table-bordered">
                 <tr>
                     <td rowspan="2" class="text-center align-middle">
-                        '.$estacion->razonsocial.'
+                        ' . $estacion->razonsocial . '
                     </td>
 
                     <td rowspan="2" class="text-center align-middle">
@@ -480,7 +486,7 @@ $fechaAplicacion = (
 
                 <tr>
                     <td class="text-center align-middle">
-                        Realizado por:<br>'.$realizadoPor.'
+                        Realizado por:<br>' . $realizadoPor . '
                     </td>
 
                     <td class="text-center align-middle">
@@ -488,13 +494,13 @@ $fechaAplicacion = (
                     </td>
 
                     <td class="text-center align-middle">
-                        Autorizado por:<br>'.$estacion->apoderado_legal.'
+                        Autorizado por:<br>' . $estacion->apoderado_legal . '
                     </td>
                 </tr>
 
             </table>';
 
-            $html .= '
+        $html .= '
 
             <table class="table table-bordered">
                 <thead>
@@ -508,30 +514,30 @@ $fechaAplicacion = (
                     </tr>
                 </thead>
                 <tbody>
-                    '.$this->tablaRequisitosLegales().'
+                    ' . $this->tablaRequisitosLegales() . '
                 </tbody>
             </table>';
 
-            $html .= '
+        $html .= '
             </body>
             </html>';
 
-            $options = new Options();
-            $options->set('isRemoteEnabled', true);
-            $options->set('defaultFont', 'Arial');
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
 
-            $dompdf = new Dompdf($options);
+        $dompdf = new Dompdf($options);
 
-            $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4', 'landscape');
-            $dompdf->render();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
 
-            $dompdf->stream(
-                'Requisitos legales del SGM.pdf',
-                ['Attachment' => true]
-            );
+        $dompdf->stream(
+            'Requisitos legales del SGM.pdf',
+            ['Attachment' => true]
+        );
 
-            exit;
+        exit;
     }
 
     private function realizadoPor(): string
@@ -560,28 +566,27 @@ $fechaAplicacion = (
                 'fecha_emision'      => 'S/I',
                 'fecha_vencimiento'  => 'S/I'
             ];
-
         }
 
         return [
 
             'fecha_emision' =>
 
-                $matriz->fecha_emision &&
+            $matriz->fecha_emision &&
                 $matriz->fecha_emision != '0000-00-00'
 
-                    ? formatearFecha($matriz->fecha_emision->format('Y-m-d'))
+                ? formatearFecha($matriz->fecha_emision->format('Y-m-d'))
 
-                    : 'S/I',
+                : 'S/I',
 
             'fecha_vencimiento' =>
 
-                $matriz->fecha_vencimiento &&
+            $matriz->fecha_vencimiento &&
                 $matriz->fecha_vencimiento != '0000-00-00'
 
-                    ? formatearFecha($matriz->fecha_vencimiento->format('Y-m-d'))
+                ? formatearFecha($matriz->fecha_vencimiento->format('Y-m-d'))
 
-                    : 'S/I'
+                : 'S/I'
 
         ];
     }
@@ -618,20 +623,20 @@ $fechaAplicacion = (
             $ultima = $this->ultimaActualizacion($item->id);
             $html .= '
             <tr>
-                <td>'.$item->numero.'</td>
-                <td>'.$item->permiso.'</td>
-                <td>'.$item->vigencia.'</td>
-                <td>'.$ultima['fecha_emision'].'</td>
-                <td>'.$ultima['fecha_vencimiento'].'</td>
-                <td>'.$item->fundamento.'</td>
+                <td>' . $item->numero . '</td>
+                <td>' . $item->permiso . '</td>
+                <td>' . $item->vigencia . '</td>
+                <td>' . $ultima['fecha_emision'] . '</td>
+                <td>' . $ultima['fecha_vencimiento'] . '</td>
+                <td>' . $item->fundamento . '</td>
             </tr>';
-
         }
 
         return $html;
     }
 
-    public function requisitoLegal(){
+    public function requisitoLegal()
+    {
 
         $title = 'Federal';
         Breadcrumb::add('Home', '/home');
@@ -640,15 +645,15 @@ $fechaAplicacion = (
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(),1);
+        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(), 1);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'requisitos' => $requisitos,
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css',
                 '/css/select2-modal.css?v=1.0'
@@ -664,9 +669,7 @@ $fechaAplicacion = (
             ],
             'help' => true
         ];
-        
-        View::render('sgm/normatividad/requisito-legal', $data,'sgm');
 
+        View::render('sgm/normatividad/requisito-legal', $data, 'sgm');
     }
-
 }

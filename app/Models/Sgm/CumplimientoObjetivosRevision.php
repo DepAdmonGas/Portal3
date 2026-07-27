@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class CumplimientoObjetivosRevision extends Model
 {
@@ -38,4 +39,29 @@ class CumplimientoObjetivosRevision extends Model
         'realizadopor' => 'integer',
         'estado' => 'integer',
     ];
+
+    public function detalles()
+    {
+        return $this->hasMany(
+            CumplimientoObjetivosRevisionDetalle::class,
+            'id_cumplimiento'
+        );
+    }
+
+    public function asistentes()
+    {
+        return $this->hasMany(
+            CumplimientoObjetivosRevisionAsistente::class,
+            'id_cumplimiento'
+        );
+    }
+    
+    public function responsable()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'realizadopor'
+        );
+    }
+
 }
