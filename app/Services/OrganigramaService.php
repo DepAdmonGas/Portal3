@@ -189,7 +189,6 @@ $depts = [
 11 => 'Dirección de operaciones', 9 => 'Autolavado',
 15 => 'Departamento Mantenimiento', 18 => 'Quitarga',
 19 => 'Operación servicio y mantenimiento de personal',
-20 => 'Departamento de almacén', 21 => 'Departamento de importación',
 ];
 $nombreDestino = $depts[$extra['id_depto']] ?? 'Depto #' . $extra['id_depto'];
 } else {

@@ -52,6 +52,22 @@ class DownloadController{
             'factura-monedero'               => __DIR__ . '../../../public/uploads/archivos/factura-monedero/',
             'organigrama'                    => __DIR__ . '../../../public/uploads/archivos/organigrama/',
             'organigrama-documentos'         => __DIR__ . '../../../public/uploads/archivos/organigrama-documentos/',
+            'docs-personal-requisicion'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/requisicion/',
+            'docs-personal-curriculum'      => __DIR__ . '../../../public/uploads/archivos/documentos-personal/curriculum/',
+            'docs-personal-ine'             => __DIR__ . '../../../public/uploads/archivos/documentos-personal/ine/',
+            'docs-personal-acta-nacimiento' => __DIR__ . '../../../public/uploads/archivos/documentos-personal/acta_nacimiento/',
+            'docs-personal-c-domicilio'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/comprobante_domicilio/',
+            'docs-personal-nss'             => __DIR__ . '../../../public/uploads/archivos/documentos-personal/nss/',
+            'docs-personal-c-estudios'      => __DIR__ . '../../../public/uploads/archivos/documentos-personal/comprobante_estudios/',
+            'docs-personal-c-recomendacion' => __DIR__ . '../../../public/uploads/archivos/documentos-personal/cartas_recomendacion/',
+            'docs-personal-curp'            => __DIR__ . '../../../public/uploads/archivos/documentos-personal/curp/',
+            'docs-personal-a-infonavit'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/acta_infonavit/',
+            'docs-personal-rfc'             => __DIR__ . '../../../public/uploads/archivos/documentos-personal/rfc/',
+            'docs-personal-c-antecedentes'  => __DIR__ . '../../../public/uploads/archivos/documentos-personal/carta_antecedentes/',
+            'docs-personal-contrato'        => __DIR__ . '../../../public/uploads/archivos/documentos-personal/contrato/',
+            'docs-personal-documentos'      => __DIR__ . '../../../public/uploads/archivos/documentos-personal/',
+            'docs-personal-baja'            => __DIR__ . '../../../public/uploads/archivos/documentos-personal/solicitud-baja/',
+            'docs-personal-incidencias'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/incidencias/',
         ];
 
         if (!isset($rutas[$tipo])) {

@@ -14,14 +14,10 @@ class RhListaIncidencias extends Model
 
     protected $fillable = [
         'detalle',
-        'documento',
-        'puntos'
+        'puntos',
     ];
 
     protected $casts = [
         'id' => 'integer',
-        'documento' => 'integer',
-        'puntos' => 'float'
     ];
 }
-

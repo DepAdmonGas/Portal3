@@ -443,14 +443,21 @@ document.addEventListener('alpine:init', () => {
         $container.css('width', '100%');
 
         $select.off(`change.${namespace}`).on(`change.${namespace}`, event => {
-            this[model] = $(event.target).val() || '';
+            const val = $(event.target).val() || '';
+            const parts = model.split('.');
+            let obj = this;
+            for (let i = 0; i < parts.length - 1; i++) { obj = obj[parts[i]]; }
+            obj[parts[parts.length - 1]] = val;
         });
 
         $select.off(`select2:open.${namespace}`).on(`select2:open.${namespace}`, () => {
             window.dispatchEvent(new Event('resize'));
         });
 
-        $select.val(this[model] || '').trigger('change.select2');
+        const initParts = model.split('.');
+        let initVal = this;
+        for (let i = 0; i < initParts.length; i++) { initVal = initVal[initParts[i]]; }
+        $select.val(initVal || '').trigger('change.select2');
 
         if (wrapperEl) {
             requestAnimationFrame(() => {
