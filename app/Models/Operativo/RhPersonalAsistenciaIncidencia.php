@@ -18,6 +18,9 @@ class RhPersonalAsistenciaIncidencia extends Model
         'incidencia',
         'comentario',
         'documento',
+        'fecha_inicio',
+        'fecha_fin',
+        'sueldo_dia',
         'estado'
     ];
 
@@ -25,7 +28,7 @@ class RhPersonalAsistenciaIncidencia extends Model
         'id' => 'integer',
         'id_asistencia' => 'integer',
         'estado' => 'integer',
-        'fecha' => 'datetime',
+        'sueldo_dia' => 'float',
     ];
 
 

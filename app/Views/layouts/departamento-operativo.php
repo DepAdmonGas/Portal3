@@ -136,6 +136,13 @@ return Promise.reject(error);
 </li>
 
 <li class="sidebar-item">
+<a class="sidebar-link" href="/departamento-operativo/recursos-humanos/control-documentos-personal" aria-expanded="false">
+<span><i class="ti ti-id"></i></span>
+<span class="hide-menu">Control Documentos Personal</span>
+</a>
+</li>
+
+<li class="sidebar-item">
 <a class="sidebar-link" href="/departamento-operativo/importacion/descarga-merma" aria-expanded="false">
 <span><i class="ti ti-trash"></i></span>
 <span class="hide-menu">Descarga de merma</span>
@@ -390,7 +397,7 @@ $badgeText = $detalle['estacion_nombre'];
 <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
 <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
 <script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script> 
-<script src="<?= asset('js/core/actions.alpine.js?v=1.3') ?>"></script>
+<script src="<?= asset('js/core/actions.alpine.js?v=1.4') ?>"></script>
 
 <!-- Scripts por vista -->
 <?php if (!empty($scripts)): ?>
