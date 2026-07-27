@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\Sasisopa;
+
 use Illuminate\Database\Eloquent\Model;
 
 
@@ -13,11 +14,11 @@ class Sasisopa extends Model
     protected $fillable = [
         'numero_sasisopa',
         'nombre',
+        'url'
     ];
 
     protected $casts = [
         'id' => 'integer',
         'numero_sasisopa' => 'integer',
     ];
-
 }

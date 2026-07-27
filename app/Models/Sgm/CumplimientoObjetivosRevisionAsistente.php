@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class CumplimientoObjetivosRevisionAsistente extends Model
 {
@@ -26,4 +27,12 @@ class CumplimientoObjetivosRevisionAsistente extends Model
         'id_cumplimiento' => 'integer',
         'id_usuario' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario'
+        );
+    }
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 // --------------------------------------------------------
 // AUTOLOAD Y CONFIGURACIÓN INICIAL
@@ -7,11 +8,24 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../app/Helpers/helpers.php';
 
 use Dotenv\Dotenv;
+
 use App\Core\Bootstrap;
 use App\Core\ErrorHandler;
 use App\Core\Database;
 use App\Core\Router;
 use App\Core\Session;
+use App\Core\Container;
+use App\Core\Route;
+
+use App\Repositories\UsuarioRepository;
+use App\Repositories\EstacionRepository;
+
+use App\Services\AuthenticationService;
+use App\Services\TokenService;
+
+use App\Controllers\LoginController;
+
+use App\Core\Kernel;
 
 // ============================================================
 // SECURITY: Headers HTTP esenciales (Vulnerabilidad #3)
@@ -50,7 +64,6 @@ Session::init();
 // --------------------------------------------------------
 $dotenv = Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->safeLoad(); // Usa safeLoad() para evitar error si falta .env
-
 // --------------------------------------------------------
 // CONFIGURAR ZONA HORARIA Y CODIFICACIÓN
 // --------------------------------------------------------
@@ -64,8 +77,83 @@ mb_internal_encoding('UTF-8');
 ErrorHandler::register();
 Database::initialize();
 
-// --------------------------------------------------------
-// DESPACHAR LA RUTA PRINCIPAL
-// --------------------------------------------------------
-$router = new Router();
+
+// ============================================================
+// DEPENDENCY INJECTION
+// ============================================================
+
+$container = new Container();
+
+
+$container->singleton(
+    UsuarioRepository::class,
+    fn() => new UsuarioRepository()
+);
+
+
+$container->singleton(
+    EstacionRepository::class,
+    fn() => new EstacionRepository()
+);
+
+
+$container->singleton(
+    TokenService::class,
+    function ($container) {
+
+        return new TokenService(
+            $container->get(
+                UsuarioRepository::class
+            )
+        );
+    }
+);
+
+
+$container->singleton(
+    AuthenticationService::class,
+    function ($container) {
+
+        return new AuthenticationService(
+            $container->get(
+                UsuarioRepository::class
+            ),
+            $container->get(
+                EstacionRepository::class
+            ),
+            $container->get(
+                TokenService::class
+            )
+        );
+    }
+);
+
+
+$container->singleton(
+    LoginController::class,
+    function ($container) {
+
+        return new LoginController(
+            $container->get(
+                AuthenticationService::class
+            ),
+            $container->get(
+                TokenService::class
+            )
+        );
+    }
+);
+
+
+// Registrar DI en Router y Kernel
+
+Route::setContainer($container);
+
+Kernel::setContainer($container);
+
+
+// Ejecutar aplicación
+
+$router = new Router($container);
+
 $router->dispatch();

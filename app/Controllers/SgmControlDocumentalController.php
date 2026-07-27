@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
@@ -9,11 +11,14 @@ use App\Models\Usuario;
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
-class SgmControlDocumentalController extends BaseController{
 
-protected string $modulo = 'sgm';
+class SgmControlDocumentalController extends BaseController
+{
 
-    public function index(){
+    protected string $modulo = 'sgm';
+
+    public function index()
+    {
 
         $title = '2. Control del documental del Sistema de Gestion de medición';
         Breadcrumb::add('Home', '/home');
@@ -21,12 +26,12 @@ protected string $modulo = 'sgm';
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
@@ -39,17 +44,16 @@ protected string $modulo = 'sgm';
                 '/js/asistencia/listaasistencia.actions.init.js?v=1.0.1',
                 '/js/sgm/revision/index.action.init.js?v=1.0.1',
 
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.1',                
+                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.1',
                 '/js/sgm/revision/index.datatable.init.js?v=1.0.1',
 
-                '/js/sgm/control-documental/index.actions.init.js?v=1.0.1', 
-                
+                '/js/sgm/control-documental/index.actions.init.js?v=1.0.1',
+
             ],
             'help' => true
         ];
-        
-        View::render('sgm/control-documental/index', $data,'sgm');
 
+        View::render('sgm/control-documental/index', $data, 'sgm');
     }
 
     public function documentos()
@@ -59,12 +63,11 @@ protected string $modulo = 'sgm';
 
                 $query->where('id_estacion', $this->estacionId())
                     ->latest('fecha');
-
             }
         ])
-        ->orderBy('seccion')
-        ->orderBy('id')
-        ->get();
+            ->orderBy('seccion')
+            ->orderBy('id')
+            ->get();
 
         echo json_encode(
 
@@ -88,11 +91,9 @@ protected string $modulo = 'sgm';
                         : null
 
                 ];
-
             })
 
         );
-
     }
 
     public function pdf()
@@ -113,6 +114,10 @@ protected string $modulo = 'sgm';
             ->get()
             ->groupBy('seccion');
 
+        $css = file_get_contents(
+            'assets/css/pdf.css'
+        );
+
         $html = '
         <!DOCTYPE html>
         <html>
@@ -121,7 +126,7 @@ protected string $modulo = 'sgm';
             <title>Control documental del SGM</title>
             <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
             <style>
-
+            ' . $css . '
             </style>
 
         </head>
@@ -131,7 +136,7 @@ protected string $modulo = 'sgm';
         <table class="table table-bordered">
             <tr>
                 <td rowspan="2" class="text-center align-middle">
-                    '.$estacion->razonsocial.'
+                    ' . $estacion->razonsocial . '
                 </td>
 
                 <td rowspan="2" class="text-center align-middle">
@@ -151,7 +156,7 @@ protected string $modulo = 'sgm';
 
             <tr>
                 <td class="text-center align-middle">
-                    Realizado por:<br>'.$realizadoPor.'
+                    Realizado por:<br>' . $realizadoPor . '
                 </td>
 
                 <td class="text-center align-middle">
@@ -159,7 +164,7 @@ protected string $modulo = 'sgm';
                 </td>
 
                 <td class="text-center align-middle">
-                    Autorizado por:<br>'.$estacion->apoderado_legal.'
+                    Autorizado por:<br>' . $estacion->apoderado_legal . '
                 </td>
             </tr>
 
@@ -178,24 +183,24 @@ protected string $modulo = 'sgm';
             <td><b>Fecha de aprobación</b></td>
         </tr>';
 
-foreach ($documentos->get(3, collect()) as $documento) {
+        foreach ($documentos->get(3, collect()) as $documento) {
 
-    $codificacion = $documento->codificacion ?: 'SGM.001';
-    $nombre = $documento->nombre ?: 'Sin nombre';
+            $codificacion = $documento->codificacion ?: 'SGM.001';
+            $nombre = $documento->nombre ?: 'Sin nombre';
 
-    $html .= "
+            $html .= "
         <tr>
             <td>{$codificacion}</td>
             <td>{$nombre}</td>
             <td>01/01/2024</td>
         </tr>";
-}
+        }
 
-$html .= '
+        $html .= '
     </tbody>
 </table>';
 
-$html .= '
+        $html .= '
 <table class="table table-sm table-bordered">
     <tbody>
 
@@ -213,19 +218,19 @@ $html .= '
 
         foreach ($documentos->get(1, collect()) as $documento) {
 
-    $html .= '
+            $html .= '
         <tr>
-            <td>'.htmlspecialchars($documento->codificacion).'</td>
-            <td>'.htmlspecialchars($documento->nombre).'</td>
-            <td>'.$documento->fecha_aprobacion->format('d/m/Y').'</td>
+            <td>' . htmlspecialchars($documento->codificacion) . '</td>
+            <td>' . htmlspecialchars($documento->nombre) . '</td>
+            <td>' . $documento->fecha_aprobacion->format('d/m/Y') . '</td>
         </tr>';
-}
+        }
 
-$html .= '
+        $html .= '
     </tbody>
 </table>';
 
-$html .= '
+        $html .= '
 <table class="table table-sm table-bordered">
     <tbody>
 
@@ -243,15 +248,15 @@ $html .= '
 
         foreach ($documentos->get(2, collect()) as $documento) {
 
-    $html .= '
+            $html .= '
         <tr>
-            <td>'.htmlspecialchars($documento->codificacion).'</td>
-            <td>'.htmlspecialchars($documento->nombre).'</td>
-            <td>'.$documento->fecha_aprobacion->format('d/m/Y').'</td>
+            <td>' . htmlspecialchars($documento->codificacion) . '</td>
+            <td>' . htmlspecialchars($documento->nombre) . '</td>
+            <td>' . $documento->fecha_aprobacion->format('d/m/Y') . '</td>
         </tr>';
-}
+        }
 
-$html .= '
+        $html .= '
     </tbody>
 </table>';
 

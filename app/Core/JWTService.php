@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Core;
 
 use Firebase\JWT\JWT;
@@ -21,16 +22,16 @@ class JWTService
     // ============================================================
     // SECURITY: TTLs reducidos (BAJO #33)
     // ============================================================
-    
+
     /** TTL para access token: 1 hora (antes: 24 horas) */
     public const ACCESS_TOKEN_TTL = 3600; // 1 hora en segundos
-    
+
     /** TTL para refresh token: 7 días */
     public const REFRESH_TOKEN_TTL = 604800; // 7 días en segundos
-    
+
     /** Nombre del claim para tipo de token */
     private const CLAIM_TYPE = 'type';
-    
+
     /** Nombre del claim para JWT ID (para blacklist) */
     private const CLAIM_JTI = 'jti';
 
@@ -66,15 +67,13 @@ class JWTService
      */
     public static function createAccessToken(array $user): string
     {
-        $payload = [
-            'iss' => $_ENV['APP_URL'] ?? 'portal3',
-            'iat' => time(),
-            'exp' => time() + self::ACCESS_TOKEN_TTL,
-            'sub' => $user['id'],
-            'nombre' => $user['nombre'] ?? '',
-            self::CLAIM_TYPE => 'access',
-            self::CLAIM_JTI => bin2hex(random_bytes(16)) // Unique ID para blacklist
-        ];
+        $payload = array_merge(
+            self::basePayload($user),
+            [
+                'exp' => time() + self::ACCESS_TOKEN_TTL,
+                self::CLAIM_TYPE => 'access'
+            ]
+        );
 
         return JWT::encode(
             $payload,
@@ -94,15 +93,13 @@ class JWTService
      */
     public static function createRefreshToken(array $user): string
     {
-        $payload = [
-            'iss' => $_ENV['APP_URL'] ?? 'portal3',
-            'iat' => time(),
-            'exp' => time() + self::REFRESH_TOKEN_TTL,
-            'sub' => $user['id'],
-            'nombre' => $user['nombre'] ?? '',
-            self::CLAIM_TYPE => 'refresh',
-            self::CLAIM_JTI => bin2hex(random_bytes(16))
-        ];
+        $payload = array_merge(
+            self::basePayload($user),
+            [
+                'exp' => time() + self::REFRESH_TOKEN_TTL,
+                self::CLAIM_TYPE => 'refresh'
+            ]
+        );
 
         return JWT::encode(
             $payload,
@@ -188,5 +185,73 @@ class JWTService
         } else {
             return round($seconds / 86400, 1) . " días";
         }
+    }
+
+    /**
+     * Crea access token y refresh token
+     *
+     * @param array $user Datos del usuario
+     * @return array
+     */
+    public static function createTokenPair(array $user): array
+    {
+        return [
+            'access_token' => self::createAccessToken($user),
+            'refresh_token' => self::createRefreshToken($user)
+        ];
+    }
+
+    private static function basePayload(array $user): array
+    {
+        $userId = $user['sub']
+            ?? $user['id']
+            ?? null;
+
+        if (!$userId) {
+            throw new \InvalidArgumentException(
+                'JWT requiere id o sub del usuario.'
+            );
+        }
+
+        return [
+            'iss' => $_ENV['APP_URL'] ?? 'portal3',
+            'iat' => time(),
+            'sub' => $userId,
+            'nombre' => $user['nombre'] ?? '',
+            self::CLAIM_JTI => bin2hex(random_bytes(16))
+        ];
+    }
+
+    public static function setCookies(
+        string $accessToken,
+        string $refreshToken
+    ): void {
+
+        self::setAccessCookie($accessToken);
+
+        Cookie::set(
+            'refresh_token',
+            $refreshToken,
+            [
+                'expires' => time() + self::REFRESH_TOKEN_TTL,
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ]
+        );
+    }
+
+    public static function setAccessCookie(
+        string $accessToken
+    ): void {
+
+        Cookie::set(
+            'token',
+            $accessToken,
+            [
+                'expires' => time() + self::ACCESS_TOKEN_TTL,
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ]
+        );
     }
 }
