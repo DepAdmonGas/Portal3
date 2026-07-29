@@ -1334,8 +1334,33 @@ return function (RouteCollector $r) {
 
 
         $r->addRoute('GET', '/procesos-medicion/bitacora-calibracion-equipos', Route::auth(['SgmProcesosMedicionController', 'bitacoraCalibracionEquipos']));
+        $r->addRoute('GET', '/procesos-medicion/bitacora-calibracion-equipos/datatable', Route::auth(['SgmBitacoraCalibracionController', 'datatable']));
+
+        $r->addRoute('POST', '/procesos-medicion/bitacora-calibracion-equipos/update', Route::auth(['SgmBitacoraCalibracionController', 'actualizarCampo']));
+        $r->addRoute('POST', '/procesos-medicion/bitacora-calibracion-equipos/update-resultado', Route::auth(['SgmBitacoraCalibracionController', 'actualizarResultado']));
+        $r->addRoute('POST', '/procesos-medicion/bitacora-calibracion-equipos/finalizar', Route::auth(['SgmBitacoraCalibracionController', 'finalizar']));
+        $r->addRoute('GET', '/procesos-medicion/bitacora-calibracion-equipos/{id:\d+}', Route::auth(['SgmBitacoraCalibracionController', 'editarBitacoraCalibracionEquipos']));
+        $r->addRoute('GET', '/procesos-medicion/bitacora-calibracion-equipos/detalle/{id:\d+}', Route::auth(['SgmBitacoraCalibracionController', 'obtenerBitacora']));
+        $r->addRoute('GET', '/procesos-medicion/bitacora-calibracion-equipos/pdf/{id:\d+}', Route::auth(['SgmBitacoraCalibracionController', 'pdfBitacora']));
+
+
         $r->addRoute('GET', '/procesos-medicion/programa-anual-verificacion-equipos', Route::auth(['SgmProcesosMedicionController', 'programacionAnualVerificacion']));
+        $r->addRoute('POST', '/procesos-medicion/programa-anual-verificacion-equipos/delete', Route::auth(['SgmProgramaVerificacionController', 'deleteProgramacionAnualVerificacion']));
+        $r->addRoute('GET', '/procesos-medicion/programa-anual-verificacion-equipos/pdf/{year:\d+}/{formato:\d+}', Route::auth(['SgmProgramaVerificacionController', 'pdfProgramacionAnualVerificacion']));
+
+
         $r->addRoute('GET', '/procesos-medicion/bitacora-verificacion-equipo-medicion', Route::auth(['SgmProcesosMedicionController', 'bitacoraVerificacionEquipos']));
+        $r->addRoute('GET', '/procesos-medicion/bitacora-verificacion-equipo-medicion/datatable', Route::auth(['SgmBitacoraVerificacionController', 'datatable']));
+        $r->addRoute('POST', '/procesos-medicion/bitacora-verificacion-equipo-medicion/actualizar-campo', Route::auth(['SgmBitacoraVerificacionController', 'actualizarCampo']));
+        $r->addRoute('POST', '/procesos-medicion/bitacora-verificacion-equipo-medicion/actualizar-resultado', Route::auth(['SgmBitacoraVerificacionController', 'actualizarResultado']));
+        $r->addRoute('POST', '/procesos-medicion/bitacora-verificacion-equipo-medicion/finalizar', Route::auth(['SgmBitacoraVerificacionController', 'finalizar']));
+        $r->addRoute('POST', '/procesos-medicion/bitacora-verificacion-equipo-medicion/create-manguera', Route::auth(['SgmBitacoraVerificacionController', 'agregarManguera']));
+        $r->addRoute('POST', '/procesos-medicion/bitacora-verificacion-equipo-medicion/delete-manguera', Route::auth(['SgmBitacoraVerificacionController', 'eliminarManguera']));
+
+        $r->addRoute('GET', '/procesos-medicion/bitacora-verificacion-equipo-medicion/{id:\d+}', Route::auth(['SgmBitacoraVerificacionController', 'editarBitacoraVerificacionEquipos']));
+        $r->addRoute('GET', '/procesos-medicion/bitacora-verificacion-equipo-medicion/detalle/{id:\d+}', Route::auth(['SgmBitacoraVerificacionController', 'obtenerBitacora']));
+        $r->addRoute('GET', '/procesos-medicion/bitacora-verificacion-equipo-medicion/pdf/{id:\d+}', Route::auth(['SgmBitacoraVerificacionController', 'pdfBitacora']));
+
         //---------- 7. Procesos de medición -------------------------------------------------------------
 
         //--------- 8. GESTIÓN DE RIESGOS QUE IMPACTAN EN LA MEDICIÓN ------------------------------------

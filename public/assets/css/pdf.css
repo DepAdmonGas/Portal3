@@ -285,3 +285,7 @@ p {
 .border-0 {
   border: 0 !important;
 }
+
+.bg-muted{
+    background: #48566E;
+}
