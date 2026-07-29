@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,4 +28,12 @@ class BitacoraVerificacionResultado extends Model
         'id_lista' => 'integer',
         'resultado' => 'string',
     ];
+
+    public function lista()
+    {
+        return $this->belongsTo(
+            BitacoraVerificacionLista::class,
+            'id_lista'
+        );
+    }
 }
