@@ -12,12 +12,12 @@ use App\Core\Session;
 use App\Models\Estacion;
 use App\Core\Auth;
 use Illuminate\Database\Capsule\Manager as Capsule;
- 
+
 class TarjetasController extends BaseController{
 protected string $modulo = 'solicitud-tarjetas';
- 
+
 public function index(){
- 
+
 $title = 'Solicitud de Tarjetas';
 
 $datosUsuario = Auth::user();
@@ -25,6 +25,10 @@ $idPuesto = $datosUsuario->id_puesto;
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add($title, '');
+
+if (!$this->guardModuleAccess('solicitud-tarjetas', $title, 'main')) {
+return;
+}
 
 $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -224,18 +228,18 @@ $status = 0;
 
 // Validar campos obligatorios
 $errors = validate_input($_POST, [
-    'razon_social' => 'required|max:255',
-    'nombre_usuario' => 'required|max:255',
-    'vehiculo' => 'required|max:255',
-    'placas' => 'required|max:20',
-    'no_unidad' => 'required|max:20',
-    'tarjeta' => 'required|max:50',
-    'tipo_tarjeta' => 'required|max:50'
+'razon_social' => 'required|max:255',
+'nombre_usuario' => 'required|max:255',
+'vehiculo' => 'required|max:255',
+'placas' => 'required|max:20',
+'no_unidad' => 'required|max:20',
+'tarjeta' => 'required|max:50',
+'tipo_tarjeta' => 'required|max:50'
 ]);
 
 if (!empty($errors)) {
-    echo json_encode(['success' => false, 'errors' => $errors]);
-    exit;
+echo json_encode(['success' => false, 'errors' => $errors]);
+exit;
 }
 
 if (!$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
@@ -524,18 +528,18 @@ $status = 0;
 
 // Validar campos obligatorios
 $errors = validate_input($data, [
-    'razon_social' => 'required|max:255',
-    'nombre_usuario' => 'required|max:255',
-    'vehiculo' => 'required|max:255',
-    'placas' => 'required|max:20',
-    'no_unidad' => 'required|max:20',
-    'tarjeta' => 'required|max:50',
-    'tipo_tarjeta' => 'required|max:50'
+'razon_social' => 'required|max:255',
+'nombre_usuario' => 'required|max:255',
+'vehiculo' => 'required|max:255',
+'placas' => 'required|max:20',
+'no_unidad' => 'required|max:20',
+'tarjeta' => 'required|max:50',
+'tipo_tarjeta' => 'required|max:50'
 ]);
 
 if (!empty($errors)) {
-    echo json_encode(['success' => false, 'errors' => $errors]);
-    exit;
+echo json_encode(['success' => false, 'errors' => $errors]);
+exit;
 }
 
 if (!$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
@@ -558,7 +562,7 @@ $datosEstacion = Estacion::find($idEstacion);
 Capsule::beginTransaction();
 
 try {
-    
+
 // GUARDAR EN BD
 SolicitudTarjetas::create([
 'no_solicitud' => $no_solicitud,
@@ -674,7 +678,7 @@ exit;
 }
 
 try {
- // Buscar registro
+// Buscar registro
 $registro_reporte = SolicitudTarjetas::find($id);
 
 if (!$registro_reporte) {

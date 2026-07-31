@@ -336,7 +336,7 @@ $data[] = [
 'id' => $r->id,
 'usuario_nombre' => $user ? $user->nombre : 'Desconocido',
 'comentario' => $r->comentario,
-'fecha_hora' => $r->fecha_creacion ? formatearFecha($r->fecha_creacion->format('Y-m-d H:i:s')) . ', ' . $r->fecha_creacion->format('g:i a') : '-',
+'fecha_hora' => $r->fecha_hora ? formatearFecha($r->fecha_hora) . ', ' . date('g:i a', strtotime($r->fecha_hora)) : '-',
 'esPropio' => $r->id_usuario === $idUsuarioActual,
 ];
 }

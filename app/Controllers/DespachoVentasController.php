@@ -50,6 +50,10 @@ Breadcrumb::add('<span class="breadcrumb-item active">Despacho vs Ventas</span>'
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
+if (!$this->guardModuleAccess('despacho-ventas', $title, 'departamento-operativo')) {
+return;
+}
+
 View::render('departamento-operativo/1-corporativo/despacho-ventas/index', [
 'title' => $title,
 'idYear' => $idYear,

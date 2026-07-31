@@ -286,24 +286,9 @@
                     <div class="d-flex align-items-center">
                         <?php include __DIR__ . '/../partials/_global-badge.php'; ?>
 
-                        <!-- DERECHA -->
-                        <?php if (false && $multiestacion) : ?>
-                            <select id="selectEstacion" class="form-select form-select-sm w-auto ms-auto">
-                                <option value="8" <?= $esTodas ? 'selected' : '' ?>>Todas las estaciones</option>
-
-                                <?php if (!empty($estaciones)) : ?>
-                                    <?php foreach ($estaciones as $estacion) : ?>
-                                        <option value="<?= $estacion->id ?>" <?= $idEstacion == $estacion->id ? 'selected' : '' ?>><?= $estacion->nombre ?></option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-
-                            </select>
-                        <?php endif; ?>
                     </div>
 
-                    <?php if (!empty($moduleStationKey) && \App\Services\ModuleStationService::hasSelector($moduleStationKey)): ?>
-                        <?= \App\Services\ModuleStationService::render($moduleStationKey, $pendientesData ?? []) ?>
-                    <?php endif; ?>
+                    <?= $moduleStationSelector ?? '' ?>
 
                     <h4 class="fw-semibold mt-3"><?= $title; ?></h4>
                     <?php \App\Core\Breadcrumb::render(); ?>
@@ -318,7 +303,7 @@
     <div class="dark-transparent sidebartoggler"></div>
     <!-- Import Js Files -->
     <script src="<?= asset('js/home/actions-home.init.js?v=1.2') ?>"></script>
-    <script src="<?= asset('js/switch.estacion.min.js') ?>"></script>
+
     <script src="<?= asset('js/loader.min.js') ?>"></script>
     <script src="<?= asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= asset('libs/simplebar/dist/simplebar.min.js') ?>"></script>

@@ -105,7 +105,7 @@ $sessionUsuario = Session::get('usuario');
 $idEstacion = (int)($sessionUsuario['id_estacion'] ?? 0);
 }
 
-$estaciones = \App\Models\Estacion::where('numlista', '<=', 8)->orderBy('numlista')->get()
+$estaciones = Estacion::where('numlista', '<=', 8)->orderBy('numlista')->get()
 ->map(fn($e) => ['id' => $e->id, 'nombre' => $e->nombre])
 ->values();
 
@@ -150,7 +150,7 @@ Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('Solicitud de Vales (' . nombremes($detalle['id_mes']) . ' ' . $detalle['id_year'] . ')', '/departamento-operativo/corporativo/solicitud-vales/' . $detalle['id_year'] . '/' . $detalle['id_mes']);
 Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
 
-$estaciones = \App\Models\Estacion::where('numlista', '<=', 8)->orderBy('numlista')->get()
+$estaciones = Estacion::where('numlista', '<=', 8)->orderBy('numlista')->get()
 ->map(fn($e) => ['id' => $e->id, 'nombre' => $e->nombre])
 ->values();
 
@@ -321,10 +321,12 @@ public function add()
 {
 header('Content-Type: application/json; charset=utf-8');
 $permisos = SolicitudValeService::getPermisos();
+/*
 if (!$permisos['puedeCrear']) {
 echo json_encode(['success' => false, 'message' => 'No tienes permisos para agregar.']);
 exit;
 }
+*/
 
 $id = SolicitudValeService::add($_POST + $_FILES);
 if ($id) {

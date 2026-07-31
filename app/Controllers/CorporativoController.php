@@ -41,6 +41,8 @@ Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $moduleCtx = ModuleStationService::getContext('corte-diario');
+$puestoId = (int) ($permisos['id_puesto'] ?? 0);
+
 $data = [
 'title'    => $title,
 'idYear'   => $idYear,
@@ -49,6 +51,8 @@ $data = [
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
 'estacionId' => $moduleCtx['id_estacion'],
+'puestoId' => $puestoId,
+'puedeEditarCorte' => in_array($puestoId, [3, 13], true),
 'moduleStationKey' => 'corte-diario',
 'links' => [
 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
@@ -86,6 +90,7 @@ CorteDiarioService::asegurarDiasDelMes($idYear, $idMes, $idEstacion);
 
 $rows = CorteDiarioService::getDiasCorte($idYear, $idMes, $idEstacion);
 $permisos = CorteDiarioService::getPermisos();
+$puedeEditarCorte = in_array((int) ($permisos['id_puesto'] ?? 0), [3, 13], true);
 
 $idMesDb = CorteMes::whereHas('year', function ($q) use ($idEstacion, $idYear) {
 $q->where('id_estacion', $idEstacion)
@@ -109,7 +114,7 @@ $esPasado = $hoy->greaterThanOrEqualTo($fecha);
 $textClass = $esPasado? '': 'opacity-25';
 $fechaFormateada = formatearFecha($row->fecha->format('Y-m-d'));
 
-$btnEditar = $this->renderBotonEditar($esPasado,$multiEstacion,$textClass,$idDia,$fecha);
+$btnEditar = $this->renderBotonEditar($esPasado,$puedeEditarCorte,$textClass,$idDia,$fecha);
 
 $data[] = [
 
@@ -336,9 +341,9 @@ return "<a href='{$url}' class='d-flex justify-content-center align-items-center
 return "<span class='d-flex justify-content-center align-items-center {$textClass}'><i class='{$icono} fs-8 text-muted'></i></span>";
 }
 
-private function renderBotonEditar($esPasado, $multiEstacion, $textClass, $idDia, $fecha)
+private function renderBotonEditar($esPasado, $puedeEditarCorte, $textClass, $idDia, $fecha)
 {
-if (!$multiEstacion) {
+if (!$puedeEditarCorte) {
 return '';
 }
 

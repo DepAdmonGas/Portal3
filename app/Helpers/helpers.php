@@ -16,27 +16,57 @@ return base_url() . '/assets/' . ltrim($path, '/');
 
 function formatearFecha($fecha)
 {
-    if (empty($fecha)) return '';
+if (empty($fecha)) return '';
 
-    $fechaStr = (string) $fecha;
-    if ($fechaStr === '0000-00-00' || str_contains($fechaStr, '-0001')) {
-        return '';
-    }
+$fechaStr = (string) $fecha;
+if ($fechaStr === '0000-00-00' || str_contains($fechaStr, '-0001')) {
+return '';
+}
 
-    try {
-        $date = \Carbon\Carbon::parse($fecha);
-    } catch (\Throwable $e) {
-        return '';
-    }
+try {
+$date = \Carbon\Carbon::parse($fecha);
+} catch (\Throwable $e) {
+return '';
+}
 
-    $meses = [
-        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',
-        4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
-        7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre',
-        10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
-    ];
+$meses = [
+1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',
+4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
+7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre',
+10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+];
 
-    return $date->format('d') . ' de ' . $meses[(int)$date->format('m')] . ' del ' . $date->format('Y');
+return $date->format('d') . ' de ' . $meses[(int)$date->format('m')] . ' del ' . $date->format('Y');
+}
+
+function formatearFechaLarga($fecha)
+{
+if (empty($fecha)) return '';
+
+$fechaStr = (string) $fecha;
+if ($fechaStr === '0000-00-00' || str_contains($fechaStr, '-0001')) {
+return '';
+}
+
+try {
+$date = \Carbon\Carbon::parse($fecha);
+} catch (\Throwable $e) {
+return '';
+}
+
+$dias = [
+0 => 'Domingo', 1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles',
+4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado'
+];
+
+$meses = [
+1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',
+4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
+7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre',
+10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+];
+
+return $dias[(int)$date->format('w')] . ' ' . $date->format('d') . ' de ' . $meses[(int)$date->format('m')] . ' del ' . $date->format('Y');
 }
 
 if (!function_exists('formatearFechaCorta')) {

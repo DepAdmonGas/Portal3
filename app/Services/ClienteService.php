@@ -28,9 +28,6 @@ public static function getPermisos(): array
 {
 $sessionUsuario = Session::get('usuario');
 $multiEstacion = $sessionUsuario['multiestacion'] ?? false;
-if (ModuleStationService::isPuesto6Estacion8()) {
-$multiEstacion = false;
-}
 
 $usuario = Auth::user();
 $esDireccionOperaciones = false;
@@ -140,6 +137,25 @@ $cliente->estado = $estado;
 return $cliente->save();
 }
 
+public static function guardarArchivo(?array $file): ?string
+{
+if (!$file || empty($file['name']) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+return null;
+}
+
+$dir = __DIR__ . '/../../public/uploads/archivos/clientes/';
+if (!is_dir($dir)) {
+mkdir($dir, 0755, true);
+}
+
+$nombre = uniqid() . '-' . basename($file['name']);
+if (!move_uploaded_file($file['tmp_name'], $dir . $nombre)) {
+return null;
+}
+
+return $nombre;
+}
+
 public static function crearCliente(int $idEstacion, string $cuenta, string $cliente, string $tipo, string $rfc, array $files): array
 {
 $nuevo = new Cliente();
@@ -169,15 +185,11 @@ $fieldMap = [2 => 'doc_cd', 3 => 'doc_io', 4 => 'doc_rfc'];
 }
 foreach ($fieldMap as $idx => $column) {
 $file = $files[$idx] ?? null;
-if ($file && !empty($file['name']) && $file['error'] === UPLOAD_ERR_OK) {
-$aleatorio = uniqid();
-$nombre = $aleatorio . '-' . basename($file['name']);
-$destino = __DIR__ . '/../../public/archivos/' . $nombre;
-if (move_uploaded_file($file['tmp_name'], $destino)) {
+$nombre = self::guardarArchivo($file);
+if ($nombre) {
 Cliente::where('id', $nuevo->id)
 ->where('id_estacion', $idEstacion)
 ->update([$column => $nombre]);
-}
 }
 }
 } catch (\Throwable $e) {
@@ -218,13 +230,9 @@ $fieldMap = [2 => 'doc_cd', 3 => 'doc_io', 4 => 'doc_rfc'];
 }
 foreach ($fieldMap as $idx => $column) {
 $file = $files[$idx] ?? null;
-if ($file && !empty($file['name']) && $file['error'] === UPLOAD_ERR_OK) {
-$aleatorio = uniqid();
-$nombre = $aleatorio . '-' . basename($file['name']);
-$destino = __DIR__ . '/../../public/archivos/' . $nombre;
-if (move_uploaded_file($file['tmp_name'], $destino)) {
+$nombre = self::guardarArchivo($file);
+if ($nombre) {
 Cliente::where('id', $idCliente)->update([$column => $nombre]);
-}
 }
 }
 } catch (\Throwable $e) {
@@ -238,14 +246,7 @@ return ['success' => false, 'message' => 'No se pudo actualizar el cliente'];
 
 public static function agregarPago(int $idReporte, int $idCliente, float $total, string $formaPago, ?array $file): bool
 {
-$pdfNombre = '';
-
-if ($file && !empty($file['name'])) {
-$aleatorio = uniqid();
-$uploadFolder = __DIR__ . '/../../public/archivos/' . $aleatorio . '-' . $file['name'];
-$pdfNombre = $aleatorio . '-' . $file['name'];
-move_uploaded_file($file['tmp_name'], $uploadFolder);
-}
+$pdfNombre = self::guardarArchivo($file) ?? '';
 
 $consumoPago = new ConsumosPago();
 $consumoPago->id_reportedia = $idReporte;

@@ -5,6 +5,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\OrganigramaService;
 use App\Services\ModuleStationService;
+use App\Core\Session;
 
 class OrganigramaController extends BaseController
 {
@@ -16,7 +17,7 @@ $idEstacion = $esMultiestacion ? 0 : $permisos['id_estacion'];
 
 // Station 2 organigrama exception: force empty initial state so the
 // special selector (Palo Solo / Autolavado) starts without selection
-$sessionUsuario = \App\Core\Session::get('usuario');
+$sessionUsuario = Session::get('usuario');
 if (!$esMultiestacion && !empty($sessionUsuario['id_estacion']) && $sessionUsuario['id_estacion'] == 2) {
 $idEstacion = 0;
 }
@@ -27,6 +28,10 @@ Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
 Breadcrumb::add($title, '');
+
+if (!$this->guardModuleAccess('organigrama', $title, 'departamento-operativo')) {
+return;
+}
 
 View::render('departamento-operativo/2-recursos-humanos/organigrama/index', [
 'title' => $title,

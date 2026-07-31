@@ -51,6 +51,10 @@ Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
 Breadcrumb::add(self::dropdownYear($idYear), '');
 
+if (!$this->guardModuleAccess('comparativo-xml', $title, 'departamento-operativo')) {
+return;
+}
+
 View::render('departamento-operativo/1-corporativo/comparativo-xml/index', [
 'title' => $title,
 'idYear' => $idYear,

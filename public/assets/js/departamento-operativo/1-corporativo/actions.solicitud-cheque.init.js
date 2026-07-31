@@ -719,59 +719,46 @@ sessionStorage.setItem('sc_estacion', '8');
 sessionStorage.setItem('sc_depto', '5');
 }
 var esMultiestacion = c.dataset.multiestacion === 'true';
-var est, dep;
-if (esMultiestacion) {
-est = sessionStorage.getItem('sc_estacion') || '';
-dep = sessionStorage.getItem('sc_depto') || '';
-} else {
+var est = sessionStorage.getItem('sc_estacion') || '';
+var dep = sessionStorage.getItem('sc_depto') || '';
+if (!est && !dep) {
 est = c.dataset.idEstacion || '';
-dep = c.dataset.idPuesto || '';
+dep = c.dataset.idDepto || '';
 }
-var esTodas = !est && !dep;
+var esContextoDepartamento = parseInt(dep) > 0;
 
 actualizarBadgePendientes();
 
 var tools = document.getElementById('sc-tools-wrapper');
-if (esTodas) {
 if (tools) tools.remove();
-return;
-}
-if (!tools) {
-var tmpl = document.getElementById('sc-tools-tmpl');
+
 var anchor = document.getElementById('sc-tools-anchor');
-if (tmpl && anchor) {
+var tmpl = document.getElementById('sc-tools-tmpl');
+if (!anchor || !tmpl) return;
 anchor.innerHTML = '';
 anchor.appendChild(tmpl.content.cloneNode(true));
-}
 tools = document.getElementById('sc-tools-wrapper');
-}
 if (!tools) return;
 
-var esMesActual = c.dataset.esMesActual === 'true';
-
+// "Nueva solicitud" siempre visible
 var agregar = document.getElementById('sc-tool-agregar');
-if (agregar) agregar.style.display = esMesActual ? '' : 'none';
+if (agregar) agregar.style.display = '';
 
-var mostrarTelcel = !esTodas && (est === '6' || est === '7');
+// Contexto de departamento → solo "Nueva solicitud"
+// Contexto de estación multiestación → todas las opciones
+// Contexto de estación (usuario de una estación) → solo si es contabilidad
+var mostrarExtras = !esContextoDepartamento && (esMultiestacion || c.dataset.esContabilidad === 'true');
+
 var telcel = document.getElementById('sc-tool-telcel');
-if (telcel) telcel.style.display = mostrarTelcel ? '' : 'none';
+if (telcel) telcel.style.display = mostrarExtras ? '' : 'none';
 
-var esNormal = !esTodas && (est > 0);
 var comprobante = document.getElementById('sc-tool-comprobante');
-if (comprobante) comprobante.style.display = esNormal ? '' : 'none';
-var excel = document.getElementById('sc-tool-excel');
-if (excel) excel.style.display = esNormal ? '' : 'none';
+if (comprobante) comprobante.style.display = mostrarExtras ? '' : 'none';
 
-var items = document.querySelectorAll('.sc-tool-item');
-var algunVisible = false;
-items.forEach(function(li) {
-if (li.style.display !== 'none') algunVisible = true;
-});
-if (!algunVisible) {
-tools.style.display = 'none';
-} else {
+var excel = document.getElementById('sc-tool-excel');
+if (excel) excel.style.display = mostrarExtras ? '' : 'none';
+
 tools.style.display = '';
-}
 }
 
 function irACrearSolicitud() {

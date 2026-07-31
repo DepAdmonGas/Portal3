@@ -80,9 +80,6 @@ public static function getPermisos()
 $usuario = Auth::user();
 $sessionUsuario = Session::get('usuario');
 $multiEstacion = $sessionUsuario['multiestacion'] ?? false;
-if (ModuleStationService::isPuesto6Estacion8()) {
-$multiEstacion = false;
-}
 
 $esDireccionOperaciones = false;
 if ($usuario && $usuario->puesto) {
@@ -91,6 +88,7 @@ $esDireccionOperaciones = ($usuario->puesto->tipo_puesto ?? '') === 'Dirección 
 
 return [
 'multiestacion'         => $multiEstacion,
+'id_puesto'             => $usuario ? ($usuario->id_puesto ?? 0) : 0,
 'es_direccion_operaciones' => $esDireccionOperaciones,
 ];
 }

@@ -1,21 +1,26 @@
 function fmActualizarToolOpciones() {
-var tmpl = document.getElementById('fm-tools-tmpl');
 var anchor = document.getElementById('fm-tools-anchor');
-if (tmpl && anchor && !anchor.hasChildNodes()) {
-anchor.appendChild(tmpl.content.cloneNode(true));
-}
 var wrapper = document.getElementById('fm-tools-wrapper');
-if (wrapper) {
 var container = document.getElementById('container');
-if (container) {
-var multiestacion = container.dataset.multiestacion === 'true';
-var hasStation = true;
-if (multiestacion) {
-var est = sessionStorage.getItem('fm_estacion');
-hasStation = !!(est && est !== '0');
+var mostrar = false;
+var sel = document.getElementById('module-station-selector-factura-monedero');
+if (sel) {
+mostrar = sel.value.indexOf('estacion_') === 0 || sel.value.indexOf('depto_') === 0;
+} else if (container && container.dataset.multiestacion !== 'true') {
+mostrar = parseInt(container.dataset.idEstacion || '0') > 0;
 }
-wrapper.style.display = hasStation ? '' : 'none';
+
+if (mostrar) {
+if (!wrapper) {
+var tmpl = document.getElementById('fm-tools-tmpl');
+if (tmpl && anchor) {
+anchor.appendChild(tmpl.content.cloneNode(true));
+wrapper = document.getElementById('fm-tools-wrapper');
 }
+}
+if (wrapper) wrapper.style.display = '';
+} else if (wrapper) {
+wrapper.style.display = 'none';
 }
 actualizarBadgePendientes();
 }
@@ -63,10 +68,15 @@ wrapper.classList.remove('d-none');
 }
 
 document.addEventListener('fm-tabla-recargada', function() {
+fmActualizarToolOpciones();
 actualizarBadgePendientes();
 });
 
 document.addEventListener('DOMContentLoaded', function () {
+var selFm = document.getElementById('module-station-selector-factura-monedero');
+if (selFm) {
+selFm.addEventListener('change', fmActualizarToolOpciones);
+}
 fmActualizarToolOpciones();
 actualizarBadgePendientes();
 });

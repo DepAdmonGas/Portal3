@@ -1,4 +1,4 @@
-<div id="container" class="mt-4 mb-4" data-mes="<?= $idMes ?>" data-year="<?= $idYear ?>" data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>" data-module-station-key="corte-diario">
+<div id="container" class="mt-4 mb-4" data-mes="<?= $idMes ?>" data-year="<?= $idYear ?>" data-multiestacion="<?= $multiestacion ? 'true' : 'false' ?>" data-module-station-key="corte-diario" data-puede-editar-corte="<?= ($puedeEditarCorte ?? false) ? 'true' : 'false' ?>">
 
 <?php if (!$estacionId): ?>
 <div id="corte-diario-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
@@ -56,7 +56,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 </a>
 </li>
 
-<?php if ($estacionId): ?>
+<?php if ($estacionId && in_array((int) ($puestoId ?? 0), [6, 7], true)): ?>
 
 <li>
 <a class="dropdown-item" href="/departamento-operativo/resumen-impuestos/<?= $idYear ?>/<?= $idMes ?>">
@@ -104,7 +104,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 
 </div>
 
-<?php if ($multiestacion): ?>
+<?php if ($puedeEditarCorte ?? false): ?>
 <div class="modal fade" id="modalEditarCorte" tabindex="-1" x-data="editarCorteComponent()">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">

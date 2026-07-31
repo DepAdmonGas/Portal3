@@ -55,6 +55,10 @@ Breadcrumb::add(
 
 Breadcrumb::add('Lista de Clientes', '');
 
+if (!$this->guardModuleAccess('corte-diario', $title, 'departamento-operativo')) {
+return;
+}
+
 $data = [
 'title' => $title,
 'idEstacion' => $idEstacion,

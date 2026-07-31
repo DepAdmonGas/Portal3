@@ -286,7 +286,7 @@ sessionStorage.setItem(key, window.scrollY);
 
 <!-- Import Js Files -->
 <script src="<?=asset('js/home/actions-home.init.js?v=1.1')?>"></script>
-<script src="<?=asset('js/switch.estacion.min.js')?>"></script>
+
 <script src="<?=asset('js/loader.min.js')?>"></script>
 <script src="<?=asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js')?>"></script>
 <script src="<?=asset('libs/simplebar/dist/simplebar.min.js')?>"></script>

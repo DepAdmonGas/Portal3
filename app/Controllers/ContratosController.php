@@ -18,69 +18,88 @@ public function index()
 $contexto = $this->detectContext();
 $categoria = $contexto === 'almacen' ? 'almacen' : 'Corporativo';
 
-$moduleCtx = ModuleStationService::getContext('contratos');
-$idEstacion = $moduleCtx['id_estacion'];
+        $moduleCtx = ModuleStationService::getContext('contratos');
+        $idEstacion = $moduleCtx['id_estacion'];
+        $global = !$idEstacion && !$moduleCtx['id_depto'];
 
-if ($idEstacion) {
-$puedeLeer = ModuloDptoOperativoService::validaPermiso($contexto, 'leer') ||
-ModuloDptoOperativoService::validaPermiso('personal-general', 'leer');
-if (!$puedeLeer) {
-View::render('errors/403', [], 'departamento-operativo');
-return;
-}
-}
+        if (!$global) {
+            $puedeLeer = ModuloDptoOperativoService::validaPermiso($contexto, 'leer') ||
+                ModuloDptoOperativoService::validaPermiso('personal-general', 'leer');
+            if (!$puedeLeer) {
+                View::render('errors/403', [], 'departamento-operativo');
+                return;
+            }
+        }
 
-$title = 'Contratos';
-$label = $contexto === 'almacen' ? 'Almacén' : 'Corporativo';
+        $title = 'Contratos';
+        $label = $contexto === 'almacen' ? 'Almacén' : 'Corporativo';
 
-Breadcrumb::add('Home', '/home');
-Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
-Breadcrumb::add($label, '/departamento-operativo/' . $contexto);
-Breadcrumb::add('<span class="breadcrumb-item active">Contratos</span>', '');
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+        Breadcrumb::add($label, '/departamento-operativo/' . $contexto);
+        Breadcrumb::add('<span class="breadcrumb-item active">Contratos</span>', '');
 
-View::render('departamento-operativo/1-corporativo/contratos/index', [
-'title' => $title,
-'categoria' => $categoria,
-'contexto' => $contexto,
-'idEstacion' => $idEstacion ?: 0,
-'moduleStationKey' => 'contratos',
-'help' => false,
-'links' => [
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
-],
-'scripts' => [
-'/assets/js/vendor.min.js?v=' . time(),
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/core/module-station-selector.js?v=' . time(),
-'/assets/js/departamento-operativo/1-corporativo/contratos.actions.init.js?v=' . time(),
-],
-], 'departamento-operativo');
-}
+        if (!$this->guardModuleAccess('contratos', $title, 'departamento-operativo')) {
+            return;
+        }
 
-public function getData()
-{
-header('Content-Type: application/json; charset=utf-8');
+        View::render('departamento-operativo/1-corporativo/contratos/index', [
+            'title' => $title,
+            'categoria' => $categoria,
+            'contexto' => $contexto,
+            'idEstacion' => $idEstacion ?: 0,
+            'global' => $global,
+            'moduleStationKey' => 'contratos',
+            'help' => false,
+            'links' => [
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+            ],
+            'scripts' => [
+                '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/core/module-station-selector.js?v=' . time(),
+                '/assets/js/departamento-operativo/1-corporativo/contratos.actions.init.js?v=' . time(),
+            ],
+        ], 'departamento-operativo');
+    }
 
-$moduleCtx = ModuleStationService::getContext('contratos');
-$idEstacion = $moduleCtx['id_estacion'];
+    public function getData()
+    {
+        header('Content-Type: application/json; charset=utf-8');
 
-if (!$idEstacion) {
-echo json_encode(['success' => false, 'message' => 'Sin estación']);
-exit;
-}
+        $moduleCtx = ModuleStationService::getContext('contratos');
+        $idEstacion = $moduleCtx['id_estacion'];
+        $categoria = $_GET['categoria'] ?? 'Corporativo';
 
-$categoria = $_GET['categoria'] ?? 'Corporativo';
+        if (!$idEstacion) {
+            $ids = array_column(ModuleStationService::getAvailableStations('contratos'), 'id');
+            if (empty($ids)) {
+                echo json_encode(['success' => false, 'message' => 'Sin estación']);
+                exit;
+            }
 
-$data = ContratosService::getData($idEstacion, $categoria);
-$permisos = ContratosService::getPermisos();
+            $data = ContratosService::getData($ids, $categoria);
+            $permisos = ContratosService::getPermisos();
 
-echo json_encode([
-'success' => true,
-'data' => $data,
-'permisos' => $permisos,
-]);
-exit;
-}
+            echo json_encode([
+                'success' => true,
+                'data' => $data,
+                'permisos' => $permisos,
+                'global' => true,
+            ]);
+            exit;
+        }
+
+        $data = ContratosService::getData($idEstacion, $categoria);
+        $permisos = ContratosService::getPermisos();
+
+        echo json_encode([
+            'success' => true,
+            'data' => $data,
+            'permisos' => $permisos,
+        ]);
+        exit;
+    }
 
 public function getDetalle()
 {

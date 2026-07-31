@@ -30,6 +30,10 @@ $inventario = InventarioAditivo::where('id_estacion', $estacionId)->first();
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add($title, '');
 
+if (!$this->guardModuleAccess('bitacora-aditivo', $title, 'main')) {
+return;
+}
+
 $data = [
 'title' => $title,
 'permisos' => $permisos,

@@ -51,6 +51,10 @@ Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
 Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
 
+if (!$this->guardModuleAccess('corte-diario', $title, 'departamento-operativo')) {
+return;
+}
+
 View::render('departamento-operativo/1-corporativo/corte-diario-evaluacion/index', [
 'title' => $title,
 'idEstacion' => $idEstacion,

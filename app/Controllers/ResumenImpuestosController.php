@@ -54,6 +54,10 @@ Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', ''
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
+if (!$this->guardModuleAccess('corte-diario', $title, 'departamento-operativo')) {
+return;
+}
+
 View::render('departamento-operativo/1-corporativo/resumen-impuestos/index', [
 'title' => $title,
 'idEstacion' => $idEstacion,

@@ -47,6 +47,10 @@ Breadcrumb::add($title, '');
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
+if (!$this->guardModuleAccess('factura-monedero', $title, 'departamento-operativo')) {
+return;
+}
+
 $yearMesTemplate = '/departamento-operativo/corporativo/factura-monedero/{year}/{mes}';
 
 View::render('departamento-operativo/1-corporativo/factura-monedero/index', [

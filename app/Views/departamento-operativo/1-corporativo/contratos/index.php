@@ -1,6 +1,6 @@
 <div id="container" data-module-station-key="contratos" data-categoria="<?= $categoria ?>" data-contexto="<?= $contexto ?>">
 
-<?php if (!$idEstacion): ?>
+<?php if (!$idEstacion && !$global): ?>
 <div id="contratos-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
 Debes de seleccionar una estación del menú superior para poder visualizar los contratos.
 </div>
@@ -13,7 +13,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar los 
 <?php endif; ?>
 
 <div class="d-flex justify-content-end mb-2">
-<button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-contrato">
+<button type="button" id="contratos-nuevo-btn" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-contrato" style="display:<?= $global ? 'none' : '' ?>">
 <i class="ti ti-plus"></i> Nuevo
 </button>
 </div>
