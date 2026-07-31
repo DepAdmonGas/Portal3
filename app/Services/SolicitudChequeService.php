@@ -20,6 +20,8 @@ use App\Core\Auth;
 use App\Core\Session;
 use App\Services\TelegramService;
 use App\Services\ModuleStationService;
+use App\Services\MultiestacionService;
+use App\Models\ConfigPuesto;
 use Illuminate\Support\Carbon;
 
 class SolicitudChequeService
@@ -59,22 +61,15 @@ public static function getPermisos(): array
 $usuario = Auth::user();
 $sessionUsuario = Session::get('usuario');
 
-$multiEstacion = $sessionUsuario['multiestacion'] ?? false;
-if (ModuleStationService::isPuesto6Estacion8()) {
-$multiEstacion = false;
-}
-$idUsuario = $sessionUsuario['id'] ?? 0;
-$idEstacion = $sessionUsuario['id_estacion'] ?? 0;
-$idPuesto = $usuario->id_puesto ?? 0;
-$tipoPuesto = $usuario->puesto->tipo_puesto ?? '';
-$nombrePuesto = $tipoPuesto;
-$esGestoria = $tipoPuesto === 'Gestoria' || $nombrePuesto === 'Gestoria' || $idPuesto === 5;
+    $multiEstacion = $sessionUsuario['multiestacion'] ?? false;
+    $idUsuario = $sessionUsuario['id'] ?? 0;
+    $idEstacion = $sessionUsuario['id_estacion'] ?? 0;
+    $idPuesto = $usuario->id_puesto ?? 0;
+    $tipoPuesto = $usuario->puesto->tipo_puesto ?? '';
+    $nombrePuesto = $tipoPuesto;
+    $esGestoria = $tipoPuesto === 'Gestoria' || $nombrePuesto === 'Gestoria' || $idPuesto === 5;
 
-// Puesto 6 + Estación 8: never gestoria
-if (ModuleStationService::isPuesto6Estacion8()) {
-$esGestoria = false;
-}
-$esDireccionOperaciones = $tipoPuesto === 'Dirección de operaciones' || $idPuesto === 13;
+    $esDireccionOperaciones = $tipoPuesto === 'Dirección de operaciones' || $idPuesto === 13;
 $esContabilidad = $tipoPuesto === 'Contabilidad' || $idPuesto === 12;
 $esComercializadora = $tipoPuesto === 'Comercializadora' || $idPuesto === 4;
 $esEncargado = $tipoPuesto === 'Encargado';
@@ -128,13 +123,12 @@ return [
 */
 public static function getAllowedStationIds(): array
 {
-// Puesto 6 + Estación 8: OVERRIDE absoluto via regla centralizada
-if (ModuleStationService::isPuesto6Estacion8()) {
-$stations = ModuleStationService::getAvailableStations('solicitud-cheques');
-return array_column($stations, 'id');
-}
+    if (MultiestacionService::isEnabled()) {
+        $stations = ModuleStationService::getAvailableStations('solicitud-cheques');
+        return array_column($stations, 'id');
+    }
 
-$permisos = self::getPermisos();
+    $permisos = self::getPermisos();
 $idUsuario = $permisos['id_usuario'];
 $nombrePuesto = $permisos['nombre_puesto'];
 
@@ -163,16 +157,16 @@ return $allowed;
 }
 
 /**
-* Department (puesto) IDs the current user is permitted to see.
-*/
+ * Department (puesto) IDs the current user is permitted to see.
+ */
 public static function getAllowedDeptIds(): array
 {
-// Puesto 6 + Estación 8: OVERRIDE absoluto via regla centralizada - no departments
-if (ModuleStationService::isPuesto6Estacion8()) {
-return [];
-}
+    $allowedDepts = MultiestacionService::getAllowedDepartmentsForModule('solicitud-cheques', Auth::user());
+    if ($allowedDepts !== null) {
+        return $allowedDepts;
+    }
 
-$permisos = self::getPermisos();
+    $permisos = self::getPermisos();
 $nombrePuesto = $permisos['nombre_puesto'];
 $idUsuario = $permisos['id_usuario'];
 $deptIds = array_keys(self::DEPARTMENTS);
@@ -251,11 +245,7 @@ $query = SolicitudCheque::where('id_year', $idYear)
 if ($estacionFilter !== null && $estacionFilter === 0) $estacionFilter = null;
 if ($deptoFilter !== null && $deptoFilter === 0) $deptoFilter = null;
 
-// Puesto 6 + Estación 8: force no filters so the multiestacion guard applies
-if (ModuleStationService::isPuesto6Estacion8()) {
-$estacionFilter = null;
-$deptoFilter = null;
-} elseif ($esGestoria) {
+    if ($esGestoria) {
 if ($estacionFilter === null) $estacionFilter = 8;
 if ($deptoFilter === null) $deptoFilter = 5;
 }
@@ -1572,22 +1562,36 @@ return ['success' => false, 'message' => 'Error al eliminar: ' . $e->getMessage(
 
 public static function getOpcionesSelector(): array
 {
-// Puesto 6 + Estación 8: OVERRIDE absoluto - no departments, no estacion 8
-if (ModuleStationService::isPuesto6Estacion8()) {
-$estaciones = Estacion::whereIn('id', [1, 2, 3, 4, 5, 6, 7, 14])
-->orderBy('id')
-->get(['id', 'nombre']);
-$opciones = [];
-foreach ($estaciones as $estacion) {
-$opciones[] = [
-'id' => 'estacion_' . $estacion->id,
-'texto' => $estacion->nombre,
-'tipo' => 'estacion',
-'valor' => $estacion->id,
-'hijos' => [],
-];
-}
-return $opciones;
+    $allowedDepts = MultiestacionService::getAllowedDepartmentsForModule('solicitud-cheques', Auth::user());
+    if ($allowedDepts !== null) {
+        $opciones = [];
+        $estaciones = Estacion::whereIn('id', array_column(ModuleStationService::getAvailableStations('solicitud-cheques'), 'id'))
+            ->orderBy('id')
+            ->get(['id', 'nombre']);
+        foreach ($estaciones as $estacion) {
+            $hijos = [];
+            foreach ($allowedDepts as $deptoId) {
+                $depto = ConfigPuesto::find($deptoId);
+                if ($depto) {
+                    $hijos[] = [
+                        'id' => 'departamento_' . $estacion->id . '_' . $depto->id,
+                        'texto' => $depto->tipo_puesto,
+                        'tipo' => 'departamento',
+                        'valor_estacion' => $estacion->id,
+                        'valor_departamento' => $depto->id,
+                        'hijos' => [],
+                    ];
+                }
+            }
+            $opciones[] = [
+                'id' => 'estacion_' . $estacion->id,
+                'texto' => $estacion->nombre,
+                'tipo' => 'estacion',
+                'valor' => $estacion->id,
+                'hijos' => $hijos,
+            ];
+        }
+        return $opciones;
 }
 
 $sessionUsuario = Session::get('usuario');

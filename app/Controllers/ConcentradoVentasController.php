@@ -50,6 +50,10 @@ Breadcrumb::add('<span class="breadcrumb-item active">'.$title.'</span>', '');
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
+if (!$this->guardModuleAccess('corte-diario', $title, 'departamento-operativo')) {
+return;
+}
+
 $colores = ['#76bd1d', '#e21683', '#000'];
 
 $data = [

@@ -272,14 +272,11 @@ return CorteDiaFirmas::where('id_reportedia', $idReporte)
 
 public static function getPermisos(): array
 {
-$usuario = Auth::user();
-$sessionUsuario = Session::get('usuario');
-	$multiEstacion = $sessionUsuario['multiestacion'] ?? false;
-	if (ModuleStationService::isPuesto6Estacion8()) {
-		$multiEstacion = false;
-	}
+    $usuario = Auth::user();
+    $sessionUsuario = Session::get('usuario');
+    $multiEstacion = $sessionUsuario['multiestacion'] ?? false;
 
-	$esDireccionOperaciones = false;
+    $esDireccionOperaciones = false;
 if ($usuario && $usuario->puesto) {
 $esDireccionOperaciones = ($usuario->puesto->tipo_puesto ?? '') === 'Dirección de operaciones';
 }

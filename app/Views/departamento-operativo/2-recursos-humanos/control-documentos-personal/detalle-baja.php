@@ -107,7 +107,7 @@ x-cloak>
 <i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_docs_archivo"></i>
 </td>
 <td class="align-middle">
-<i class="ti ti-download" title="<?= htmlspecialchars($baja['documentos']['ine']['label']) ?>" x-show="baja.has_ine" @click="download('docs-personal-ine', '<?= htmlspecialchars($baja['documentos']['ine']['archivo']) ?>')"></i>
+<i class="ti ti-download fs-5 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['ine']['label']) ?>" x-show="baja.has_ine" @click="download('docs-personal-ine', '<?= htmlspecialchars($baja['documentos']['ine']['archivo']) ?>')"></i>
 <i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_ine"></i>
 </td>
 <td class="align-middle">
@@ -119,11 +119,11 @@ x-cloak>
 <i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_rfc"></i>
 </td>
 <td class="align-middle">
-<i class="ti ti-download" title="<?= htmlspecialchars($baja['documentos']['nss']['label']) ?>" x-show="baja.has_nss" @click="download('docs-personal-nss', '<?= htmlspecialchars($baja['documentos']['nss']['archivo']) ?>')"></i>
+<i class="ti ti-download fs-5 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['nss']['label']) ?>" x-show="baja.has_nss" @click="download('docs-personal-nss', '<?= htmlspecialchars($baja['documentos']['nss']['archivo']) ?>')"></i>
 <i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_nss"></i>
 </td>
 <td class="align-middle">
-<i class="ti ti-download" title="<?= htmlspecialchars($baja['documentos']['contrato']['label']) ?>" x-show="baja.has_contrato" @click="download('docs-personal-contrato', '<?= htmlspecialchars($baja['documentos']['contrato']['archivo']) ?>')"></i>
+<i class="ti ti-download fs-5 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['contrato']['label']) ?>" x-show="baja.has_contrato" @click="download('docs-personal-contrato', '<?= htmlspecialchars($baja['documentos']['contrato']['archivo']) ?>')"></i>
 <i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_contrato"></i>
 </td>
 </tr>

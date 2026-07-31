@@ -5,230 +5,26 @@ use App\Core\Session;
 use App\Core\Auth;
 use App\Models\Estacion;
 use App\Models\Operativo\RhLocalidad;
+use App\Models\ModuloConfig;
 
 class ModuleStationService
 {
-private static array $configs = [
-
-'corte-diario' => [
-'label' => 'Corte Diario',
-'use_selector' => true,
-'type' => 'stations_only',
-'allow_all' => false,
-'placeholder' => 'Selecciona una estación...',
-'load_empty' => true,
-'show_badge' => true,
-'context_group' => 'corte-diario',
-'station_ids' => [1, 2, 3, 4, 5, 6, 7, 14],
-'station_filter' => [
-'puestos' => [
-'Contabilidad' => [1, 2, 3, 4, 5, 14],
-'Comercializadora' => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-'usuarios' => [
-419 => [14],
-],
-],
-],
-
-'solicitud-cheques' => [
-'label' => 'Solicitud de Cheques',
-'use_selector' => true,
-'type' => 'stations_and_departments',
-'allow_all' => true,
-'placeholder' => 'Todas las estaciones y departamentos',
-'load_empty' => true,
-'show_badge' => true,
-'context_group' => 'solicitud-cheques',
-'station_ids' => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-
-'solicitud-gafetes' => [
-'label' => 'Solicitud de Gafetes',
-'use_selector' => true,
-'type' => 'stations_only',
-'allow_all' => true,
-'placeholder' => 'Todas las estaciones',
-'load_empty' => true,
-'show_badge' => true,
-'context_group' => 'solicitud-gafetes',
-'station_ids' => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-
-'solicitud-tarjetas' => [
-'label' => 'Solicitud de Tarjetas',
-'use_selector' => true,
-'type' => 'stations_only',
-'allow_all' => true,
-'placeholder' => 'Todas las estaciones',
-'load_empty' => true,
-'show_badge' => true,
-'context_group' => 'solicitud-tarjetas',
-'station_ids' => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-
-'bitacora-aditivo' => [
-'label' => 'Bitácora de Aditivo',
-'use_selector' => true,
-'type' => 'stations_only',
-'allow_all' => false,
-'placeholder' => 'Selecciona una estación...',
-'load_empty' => true,
-'show_badge' => true,
-'context_group' => 'bitacora-aditivo',
-'station_ids' => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-
-'comparativo-xml' => [
-'label'          => 'Comparativo XML',
-'use_selector'   => true,
-'type'           => 'stations_only',
-'allow_all'      => false,
-'placeholder'    => 'Selecciona una estación...',
-'load_empty'     => true,
-'show_badge'     => true,
-'context_group'  => 'comparativo-xml',
-'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
-'station_filter' => [
-'puestos' => [
-'Contabilidad'      => [1, 2, 3, 4, 5, 14],
-'Comercializadora'  => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-],
-],
-
-'aclaracion-voucher' => [
-'label'          => 'Aclaración Voucher',
-'use_selector'   => true,
-'type'           => 'stations_only',
-'allow_all'      => true,
-'placeholder'    => 'Todas las estaciones',
-'load_empty'     => true,
-'show_badge'     => true,
-'context_group'  => 'aclaracion-voucher',
-'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
-'station_filter' => [
-'puestos' => [
-'Comercializadora'  => [6, 7],
-'Contabilidad'      => [1, 2, 3, 4, 5, 14],
-],
-],
-],
-
-'ingresos-facturacion' => [
-'label'          => 'Ingresos vs Facturación',
-'use_selector'   => true,
-'type'           => 'stations_only',
-'allow_all'      => false,
-'placeholder'    => 'Selecciona una estación...',
-'load_empty'     => true,
-'show_badge'     => true,
-'context_group'  => 'ingresos-facturacion',
-'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-
-'contratos' => [
-'label'          => 'Contratos',
-'use_selector'   => true,
-'type'           => 'stations_only',
-'allow_all'      => false,
-'placeholder'    => 'Selecciona una estación...',
-'load_empty'     => true,
-'show_badge'     => true,
-'context_group'  => 'contratos',
-'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
-'station_filter' => [
-'puestos' => [
-'Contabilidad'      => [1, 2, 3, 4, 5, 14],
-'Comercializadora'  => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-],
-],
-
-'seguros' => [
-'label'          => 'Seguros',
-'use_selector'   => true,
-'type'           => 'stations_and_departments',
-'allow_all'      => false,
-'placeholder'    => 'Selecciona una opción...',
-'load_empty'     => true,
-'show_badge'     => true,
-'context_group'  => 'seguros',
-],
-
-'factura-monedero' => [
-'label'          => 'Factura Monedero',
-'use_selector'   => true,
-'type'           => 'stations_only',
-'allow_all'      => true,
-'placeholder'    => 'Todas las estaciones',
-'load_empty'     => true,
-'show_badge'     => true,
-'context_group'  => 'factura-monedero',
-'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
-'station_filter' => [
-'usuarios' => [
-419 => [14],
-],
-'puestos' => [
-'Contabilidad'      => [1, 2, 3, 4, 5, 14],
-'Comercializadora'  => [6, 7],
-],
-],
-],
-
-'organigrama' => [
-'label'          => 'Organigrama',
-'use_selector'   => true,
-'type'           => 'stations_and_departments',
-'allow_all'      => false,
-'placeholder'    => 'Selecciona una estación o departamento...',
-'load_empty'     => true,
-'show_badge'     => true,
-'context_group'  => 'organigrama',
-'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-
-'control-documentos-personal' => [
-'label'          => 'Control de Documentos del Personal',
-'use_selector'   => true,
-'type'           => 'stations_and_departments',
-'allow_all'      => true,
-'placeholder'    => 'Todas las estaciones y departamentos',
-'load_empty'     => true,
-'show_badge'     => true,
-'context_group'  => 'control-documentos-personal',
-'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-
-'despacho-ventas' => [
-'label'          => 'Despacho vs Ventas',
-'use_selector'   => true,
-'type'           => 'stations_only',
-'allow_all'      => false,
-'placeholder'    => 'Selecciona una estación...',
-'load_empty'     => true,
-'show_badge'     => true,
-'context_group'  => 'despacho-ventas',
-'station_ids'    => [1, 2, 3, 4, 5, 6, 7, 14],
-'station_filter' => [
-'puestos' => [
-'Contabilidad'      => [1, 2, 3, 4, 5, 14],
-'Comercializadora'  => [1, 2, 3, 4, 5, 6, 7, 14],
-],
-],
-],
-];
-
+public static bool $isBlocked = false;
 public static function getConfig(string $moduleKey): ?array
 {
-return self::$configs[$moduleKey] ?? null;
+$mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
+if (!$mc) return null;
+
+return [
+'type'        => $mc->tipo,
+'allow_all'   => (bool)$mc->allow_all,
+'placeholder' => $mc->placeholder,
+];
 }
 
 public static function hasSelector(string $moduleKey): bool
 {
-$cfg = self::getConfig($moduleKey);
-return $cfg && ($cfg['use_selector'] ?? false);
+return self::getConfig($moduleKey) !== null;
 }
 
 public static function getContext(string $moduleKey): array
@@ -236,18 +32,29 @@ public static function getContext(string $moduleKey): array
 $cfg = self::getConfig($moduleKey);
 if (!$cfg) return ['id_estacion' => null, 'id_depto' => null, 'nombre' => ''];
 
-$group = $cfg['context_group'] ?? $moduleKey;
-$ctx = Session::get('module_context')[$group] ?? [];
+$ctx = Session::get('module_context')[$moduleKey] ?? [];
 
 $idEstacion = $ctx['id_estacion'] ?? null;
 $idDepto = $ctx['id_depto'] ?? null;
 
-// For non-multiestacion users with no context set, use their session station
-$sessionUsuario = Session::get('usuario');
-$multiestacion = !empty($sessionUsuario['multiestacion']);
-$esStation2Modulo = in_array($moduleKey, ['organigrama', 'control-documentos-personal']) && !empty($sessionUsuario['id_estacion']) && $sessionUsuario['id_estacion'] == 2;
-if (!$multiestacion && !$esStation2Modulo && $idEstacion === null && $idDepto === null) {
-$idEstacion = $sessionUsuario['id_estacion'] ?? null;
+if (!$idEstacion && !$idDepto) {
+$multiestacion = MultiestacionService::isEnabled();
+if (!$multiestacion) {
+$idGas = self::getIdGas();
+if ($idGas) {
+$idSpace = MultiestacionService::getIdSpaceForModule($moduleKey);
+if ($idSpace === MultiestacionService::TABLA_ESTACIONES) {
+$idEstacion = $idGas;
+} else {
+$converted = MultiestacionService::convertIds(
+[$idGas],
+MultiestacionService::TABLA_ESTACIONES,
+MultiestacionService::TABLA_RH_LOCALIDADES
+);
+$idEstacion = !empty($converted) ? $converted[0] : null;
+}
+}
+}
 }
 
 return [
@@ -262,9 +69,22 @@ public static function setContext(string $moduleKey, $idEstacion, $idDepto = nul
 $cfg = self::getConfig($moduleKey);
 if (!$cfg) return;
 
-$group = $cfg['context_group'] ?? $moduleKey;
+if ($idEstacion !== null) {
+$available = self::getAvailableStations($moduleKey);
+if (!empty($available) && !in_array((int)$idEstacion, array_column($available, 'id'))) {
+return;
+}
+}
+
+if ($idDepto !== null) {
+$available = self::getAvailableDepartments($moduleKey);
+if (!empty($available) && !in_array((int)$idDepto, array_column($available, 'id'))) {
+return;
+}
+}
+
 $ctx = Session::get('module_context') ?? [];
-$ctx[$group] = [
+$ctx[$moduleKey] = [
 'id_estacion' => $idEstacion !== null ? (int)$idEstacion : null,
 'id_depto' => $idDepto !== null ? (int)$idDepto : null,
 ];
@@ -279,184 +99,163 @@ return $ctx['id_estacion'] !== null || $ctx['id_depto'] !== null;
 
 public static function getAvailableStations(string $moduleKey): array
 {
-$cfg = self::getConfig($moduleKey);
-if (!$cfg) return [];
+$mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
+if (!$mc) return [];
 
-if ($moduleKey === 'seguros') {
-$localidades = RhLocalidad::where(function ($q) {
-$q->whereBetween('numlista', [0, 9])
-->orWhere('numlista', 10);
-})
-->where('id', '!=', 8)
+$supported = $mc->estaciones_soportadas ?? [];
+if (empty($supported)) return [];
+
+$useRhLocalidades = ($moduleKey === 'seguros');
+$user = Auth::user();
+$config = MultiestacionService::getConfig($user);
+
+if ($config !== null) {
+$allowed = $config['estaciones'];
+if ($allowed === null || empty($allowed)) return [];
+
+$ids = array_values(array_intersect($supported, $allowed));
+if (empty($ids)) return [];
+
+if ($useRhLocalidades) {
+$converted = MultiestacionService::convertIds(
+$ids,
+MultiestacionService::TABLA_ESTACIONES,
+MultiestacionService::TABLA_RH_LOCALIDADES
+);
+if (empty($converted)) return [];
+return RhLocalidad::whereIn('id', $converted)
 ->orderBy('numlista')
-->get(['id', 'localidad as nombre']);
-
-$result = [];
-foreach ($localidades as $loc) {
-$result[] = ['id' => $loc->id, 'nombre' => $loc->nombre];
-}
-return $result;
+->get(['id', 'localidad as nombre'])
+->toArray();
 }
 
-if (!empty($cfg['station_ids'])) {
-$allStations = Estacion::whereIn('id', $cfg['station_ids'])
+return Estacion::whereIn('id', $ids)
 ->orderBy('id')
 ->get(['id', 'nombre'])
 ->toArray();
-} else {
-$allStations = Estacion::where('numlista', '<=', 8)
-->where('id', '!=', 8)
+}
+
+$idGas = self::getIdGas();
+if ($idGas === null) return [];
+
+if ($useRhLocalidades) {
+$converted = MultiestacionService::convertIds(
+[$idGas],
+MultiestacionService::TABLA_ESTACIONES,
+MultiestacionService::TABLA_RH_LOCALIDADES
+);
+if (empty($converted)) return [];
+return RhLocalidad::whereIn('id', $converted)
 ->orderBy('numlista')
+->get(['id', 'localidad as nombre'])
+->toArray();
+}
+
+if (in_array($idGas, $supported)) {
+return Estacion::where('id', $idGas)
 ->get(['id', 'nombre'])
 ->toArray();
 }
 
-// Puesto 6 + Estación 8: OVERRIDE absoluto - ignora station_filter
-if (self::isPuesto6Estacion8()) {
-$restrictedIds = [1, 2, 3, 4, 5, 6, 7, 14];
-return array_values(array_filter($allStations, fn($s) => in_array($s['id'], $restrictedIds)));
-}
-
-// Organigrama/ControlDocs + estación 2: solo mostrar Palo Solo
-$sessionUsuario = Session::get('usuario');
-if (in_array($moduleKey, ['organigrama', 'control-documentos-personal']) && !empty($sessionUsuario['id_estacion']) && $sessionUsuario['id_estacion'] == 2) {
-    return array_values(array_filter($allStations, fn($s) => $s['id'] == 2));
-}
-
-$filter = $cfg['station_filter'] ?? null;
-if ($filter === null) return $allStations;
-
-$sessionUsuario = Session::get('usuario');
-$userId = $sessionUsuario['id'] ?? null;
-$usuario = Auth::user();
-$puesto = $usuario && $usuario->puesto ? $usuario->puesto->tipo_puesto : '';
-
-if (isset($filter['usuarios'][$userId])) {
-$allowed = $filter['usuarios'][$userId];
-$allStations = array_values(array_filter($allStations, fn($s) => in_array($s['id'], $allowed)));
-} elseif (isset($filter['puestos'][$puesto])) {
-$allowed = $filter['puestos'][$puesto];
-$allStations = array_values(array_filter($allStations, fn($s) => in_array($s['id'], $allowed)));
-}
-
-return $allStations;
-}
-
-public static function getAvailableDepartments(string $moduleKey): array
-{
-$cfg = self::getConfig($moduleKey);
-if (!$cfg || ($cfg['type'] ?? 'stations_only') !== 'stations_and_departments') return [];
-
-// Puesto 6 + Est 8: hide departments for all modules
-if (self::isPuesto6Estacion8()) {
-if ($moduleKey === 'organigrama') {
-return [['id' => 9, 'nombre' => 'Autolavado']];
-}
 return [];
 }
 
-if ($moduleKey === 'seguros') {
-$depts = RhLocalidad::whereBetween('numlista', [22, 23])
+
+public static function getAvailableDepartments(string $moduleKey): array
+{
+$mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
+if (!$mc || $mc->tipo !== 'stations_and_departments') return [];
+
+$supported = $mc->departamentos_soportados ?? [];
+$tipoDept = $mc->tipo_departamento;
+
+if (empty($supported)) return [];
+
+$user = Auth::user();
+$config = MultiestacionService::getConfig($user);
+
+if ($config !== null) {
+$column = ($tipoDept === 'localidades') ? 'departamentos_localidades' : 'departamentos_puestos';
+$allowed = $config[$column];
+if ($allowed === null || empty($allowed)) return [];
+
+$ids = array_values(array_intersect($supported, $allowed));
+if (empty($ids)) return [];
+
+if ($tipoDept === 'localidades') {
+return RhLocalidad::whereIn('id', $ids)
 ->orderBy('numlista')
-->get(['id', 'localidad as nombre']);
-return $depts->toArray();
+->get(['id', 'localidad as nombre'])
+->toArray();
 }
 
-if ($moduleKey === 'organigrama' || $moduleKey === 'control-documentos-personal') {
-$sessionUsuario = Session::get('usuario');
-// Estación 2: solo Autolavado como departamento
-if (!empty($sessionUsuario['id_estacion']) && $sessionUsuario['id_estacion'] == 2) {
-    return [['id' => 9, 'nombre' => 'Autolavado']];
+return self::buildPuestos($ids);
 }
 
-$gasStationIds = [1, 2, 3, 4, 5, 6, 7, 14];
-$localidades = RhLocalidad::where(function ($q) {
-$q->whereBetween('numlista', [0, 9])
-->orWhereIn('numlista', [10, 12, 14, 15, 16, 17]);
-})
-->where('id', '!=', 8)
-->whereNotIn('id', $gasStationIds)
-->orderBy('numlista')
-->get(['id', 'localidad as nombre']);
-
-$result = [];
-foreach ($localidades as $loc) {
-$result[] = ['id' => $loc->id, 'nombre' => $loc->nombre];
+// Legacy: no multiestacion config
+// Only id_gas=2 shows Autolavado for localidades-based modules
+if (self::getIdGas() === 2 && $tipoDept === 'localidades') {
+$autoLavado = RhLocalidad::where('id', 9)->first(['id', 'localidad as nombre']);
+return $autoLavado ? [$autoLavado->toArray()] : [];
 }
 
-$extras = [
-['id' => 11, 'nombre' => 'Dirección de Operaciones'],
-];
-$existingIds = array_column($result, 'id');
-foreach ($extras as $extra) {
-if (!in_array($extra['id'], $existingIds)) {
-    $result[] = $extra;
-}
+return [];
 }
 
-usort($result, function($a, $b) {
-return $a['id'] <=> $b['id'];
-});
-
-return $result;
+public static function isAvailable(string $moduleKey): bool
+{
+$stations = self::getAvailableStations($moduleKey);
+$depts = self::getAvailableDepartments($moduleKey);
+return !empty($stations) || !empty($depts);
 }
 
-$deptIds = [4 => 'Comercializadora', 5 => 'Gestoría', 18 => 'Quitarga', 19 => 'Operación servicio y mantenimiento de personal', 23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016'];
-
-$depts = [];
-foreach ($deptIds as $id => $nombre) {
-$depts[] = ['id' => $id, 'nombre' => $nombre];
-}
-return $depts;
-}
-
-/**
-* Render the station/department selector for a module.
-*
-* @param string $moduleKey Module identifier
-* @param array $pendientes Optional pendientes data: ['total' => N, 'estacion_X' => N, 'depto_X' => N]
-* @return string HTML output
-*/
 public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true): string
 {
 $cfg = self::getConfig($moduleKey);
-if (!$cfg) return '';
+if (!$cfg) {
+self::$isBlocked = false;
+return '';
+}
 
 $ctx = self::getContext($moduleKey);
 $idEstacion = $ctx['id_estacion'];
 $idDepto = $ctx['id_depto'];
 $currentName = $ctx['nombre'];
 
-$sessionUsuario = Session::get('usuario');
-$multiestacion = !empty($sessionUsuario['multiestacion']);
-
-// Station 2 users need the selector for organigrama/control-documentos-personal (Palo Solo / Autolavado)
-$esStation2Modulo = in_array($moduleKey, ['organigrama', 'control-documentos-personal']) && !empty($sessionUsuario['id_estacion']) && $sessionUsuario['id_estacion'] == 2;
-
+$multiestacion = MultiestacionService::isEnabled();
 $stations = self::getAvailableStations($moduleKey);
 $depts = self::getAvailableDepartments($moduleKey);
 
+if (empty($stations) && empty($depts)) {
+self::$isBlocked = true;
+$label = ucwords(str_replace('-', ' ', $moduleKey));
+return '<div class="alert p-4 alert-warning text-center mt-4" role="alert" id="module-station-wrapper-' . $moduleKey . '">
+
+<div>La estación asignada a tu usuario no está disponible para el módulo <strong>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</strong>. Contacta al administrador para configurar tu acceso.</div>
+</div>';
+}
+
+self::$isBlocked = false;
+
 $hasSelection = $idEstacion !== null || $idDepto !== null;
-$showSelector = $showSelector && $cfg['use_selector'] && ($multiestacion || $esStation2Modulo) && (!empty($stations) || !empty($depts));
+$hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
+$showSelector = $showSelector && ($multiestacion || $hasChoices);
 
 $html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
 
-if ($cfg['show_badge'] ?? false) {
 $badgeHidden = $hasSelection ? '' : ' style="display:none"';
 $badgeText = $hasSelection ? ($currentName ?: "\u{2014}") : '';
 $html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
-}
 
 if ($showSelector) {
 $placeholder = $cfg['placeholder'] ?? 'Selecciona una estación...';
-if (empty($depts) && ($cfg['type'] ?? 'stations_only') === 'stations_and_departments') {
+if (empty($depts) && $cfg['type'] === 'stations_and_departments') {
 $placeholder = $cfg['allow_all'] ? 'Todas las estaciones' : 'Selecciona una estación...';
 }
-$loadEmpty = $cfg['load_empty'] ?? true;
 $allowAll = $cfg['allow_all'] ?? false;
 
 $html .= '<div class="ms-auto">';
-$html .= '<select id="module-station-selector-' . $moduleKey . '" class="form-select form-select-sm" style="min-width:260px;" data-module-key="' . htmlspecialchars($moduleKey, ENT_QUOTES, 'UTF-8') . '" data-load-empty="' . ($loadEmpty ? 'true' : 'false') . '">';
+$html .= '<select id="module-station-selector-' . $moduleKey . '" class="form-select form-select-sm" style="min-width:260px;" data-module-key="' . htmlspecialchars($moduleKey, ENT_QUOTES, 'UTF-8') . '" data-load-empty="true">';
 
 if ($allowAll) {
 $totalPendientes = $pendientes['total'] ?? 0;
@@ -467,7 +266,10 @@ $html .= '<option value="" ' . ((!$idEstacion && !$idDepto) ? 'selected' : '') .
 }
 
 if (!empty($stations)) {
-$html .= '<optgroup label="Estaciones">';
+//$estLabel = ($moduleKey === 'seguros') ? 'Estaciones' : 'Estaciones';
+$estLabel = 'Estaciones';
+
+$html .= '<optgroup label="' . $estLabel . '">';
 foreach ($stations as $s) {
 $sel = ($s['id'] == $idEstacion && !$idDepto) ? ' selected' : '';
 $pend = isset($pendientes['estacion_' . $s['id']]) ? ' (' . $pendientes['estacion_' . $s['id']] . ')' : '';
@@ -477,7 +279,9 @@ $html .= '</optgroup>';
 }
 
 if (!empty($depts)) {
-$html .= '<optgroup label="Departamentos">';
+//$deptLabel = ($moduleKey === 'seguros') ? 'Localidades' : 'Departamentos';
+$deptLabel = 'Departamentos';
+$html .= '<optgroup label="' . $deptLabel . '">';
 foreach ($depts as $d) {
 $sel = ($d['id'] == $idDepto) ? ' selected' : '';
 $pend = isset($pendientes['depto_' . $d['id']]) ? ' (' . $pendientes['depto_' . $d['id']] . ')' : '';
@@ -494,10 +298,44 @@ $html .= '</div>';
 return $html;
 }
 
+public static function resetAllContexts(): void
+{
+Session::set('module_context', []);
+}
+
+private static function getIdGas(): ?int
+{
+$sessionUsuario = Session::get('usuario');
+$idGas = $sessionUsuario['id_estacion'] ?? null;
+if ($idGas === null) {
+$userObj = Auth::user();
+$idGas = $userObj ? (int)$userObj->id_gas : null;
+}
+return $idGas;
+}
+
+private static function buildPuestos(array $ids): array
+{
+$nombres = [
+4 => 'Comercializadora',
+5 => 'Gestoría',
+18 => 'Quitarga',
+19 => 'Operación servicio y mantenimiento de personal',
+23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
+];
+$result = [];
+foreach ($ids as $id) {
+if (isset($nombres[$id])) {
+$result[] = ['id' => $id, 'nombre' => $nombres[$id]];
+}
+}
+return $result;
+}
+
 private static function resolveName(string $moduleKey, $idEstacion, $idDepto): string
 {
 if ($moduleKey === 'seguros') {
-$id = $idEstacion;
+$id = $idEstacion ?? $idDepto;
 if ($id) {
 $loc = RhLocalidad::find($id);
 return $loc ? $loc->localidad : "#$id";
@@ -506,23 +344,10 @@ return '';
 }
 
 if (in_array($moduleKey, ['organigrama', 'control-documentos-personal'])) {
-
 if ($idDepto && !$idEstacion) {
-$deptNames = [
-4 => 'Comercializadora', 5 => 'Gestoría',
-11 => 'Dirección de operaciones', 9 => 'Autolavado',
-15 => 'Departamento Mantenimiento', 18 => 'Quitarga',
-19 => 'Operación servicio y mantenimiento de personal',
-20 => 'Departamento de almacén', 21 => 'Departamento de importación',
-23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
-];
-
-if (isset($deptNames[$idDepto])) return $deptNames[$idDepto];
 $loc = RhLocalidad::find($idDepto);
-if ($loc) return $loc->localidad;
-return 'Depto #' . $idDepto;
+return $loc ? $loc->localidad : 'Depto #' . $idDepto;
 }
-
 if ($idEstacion) {
 $est = Estacion::find($idEstacion);
 return $est ? $est->nombre : 'Estación #' . $idEstacion;
@@ -535,25 +360,15 @@ $est = Estacion::find($idEstacion);
 return $est ? $est->nombre : 'Estación #' . $idEstacion;
 }
 if ($idDepto) {
-$deptNames = [4 => 'Comercializadora', 5 => 'Gestoría', 18 => 'Quitarga', 19 => 'Operación servicio y mantenimiento de personal', 23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016'];
+$deptNames = [
+4 => 'Comercializadora',
+5 => 'Gestoría',
+18 => 'Quitarga',
+19 => 'Operación servicio y mantenimiento de personal',
+23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
+];
 return $deptNames[$idDepto] ?? 'Depto #' . $idDepto;
 }
 return '';
-}
-
-public static function isPuesto6Estacion8(): bool
-{
-$user = Auth::user();
-return $user && (int)$user->id_puesto === 6 && (int)$user->id_gas === 8;
-}
-
-/**
-* Clear all module contexts from the session.
-* Call this when navigating to home or main module pages
-* so that module selectors start at their default state.
-*/
-public static function resetAllContexts(): void
-{
-Session::set('module_context', []);
 }
 }

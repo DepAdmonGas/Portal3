@@ -31,7 +31,7 @@ class DownloadController{
             'encuestas' => __DIR__ . '../../../public/uploads/archivos/encuestas/',
             'representante-tecnico' => __DIR__ . '../../../public/uploads/archivos/representante-tecnico/',
             'manual' => __DIR__ . '../../../public/uploads/archivos/manuales/',
-            'comprobantes-clientes' => __DIR__ . '../../../public/archivos/',
+            'comprobantes-clientes' => __DIR__ . '../../../public/uploads/archivos/clientes/',
             'documentos-ventas'              => __DIR__ . '../../../public/uploads/archivos/',
             'control-volumetrico'          => __DIR__ . '../../../public/uploads/archivos/',
             'aceites-documentos'           => __DIR__ . '../../../public/uploads/archivos/aceites-documentos/',

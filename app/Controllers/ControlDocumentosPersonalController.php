@@ -8,6 +8,7 @@ use App\Services\PersonalExcelService;
 use App\Services\ModuleStationService;
 use App\Services\KpiPersonalService;
 use App\Services\DropdownYearMesService;
+use App\Models\Operativo\RhPuestos;
 
 class ControlDocumentosPersonalController extends BaseController
 {
@@ -28,6 +29,10 @@ Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
 Breadcrumb::add($title, '');
+
+if (!$this->guardModuleAccess('control-documentos-personal', $title, 'departamento-operativo')) {
+return;
+}
 
 View::render('departamento-operativo/2-recursos-humanos/control-documentos-personal/index', [
 'title'            => $title,
@@ -342,7 +347,7 @@ return;
 public function getPuestos()
 {
 header('Content-Type: application/json');
-$puestos = \App\Models\Operativo\RhPuestos::where('status', 1)
+$puestos = RhPuestos::where('status', 1)
 ->orderBy('puesto')
 ->get(['id', 'puesto']);
 echo json_encode(['success' => true, 'data' => $puestos->toArray()]);
@@ -377,6 +382,7 @@ PersonalExcelService::generarYDescargar();
 
 public function kpi($idYear)
 {
+
 /*
 $permisos = ControlDocumentosPersonalService::getPermisos();
 if (!$permisos['puedeLeer']) {
@@ -384,7 +390,6 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 */
-
 
 $validados = DropdownYearMesService::validarYearMes($idYear, 1);
 $idYear = $validados['idYear'];
@@ -395,19 +400,19 @@ Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
 Breadcrumb::add('Control de Documentos del Personal', '/departamento-operativo/recursos-humanos/control-documentos-personal');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, 1), '');
 
-    View::render('departamento-operativo/2-recursos-humanos/control-documentos-personal/kpi-personal', [
-        'title'    => 'Evaluación Personal (KPI\'s), ' . $idYear,
-        'idYear'   => $idYear,
-        'opciones' => KpiPersonalService::getOpciones(),
-        'help'     => false,
-        'moduleStationKey' => 'control-documentos-personal',
-        'yearMesTemplate' => '/departamento-operativo/recursos-humanos/control-documentos-personal-kpi/{year}',
-        'scripts'  => [
-            '/assets/libs/apexcharts/dist/apexcharts.min.js',
-            '/assets/js/core/module-station-selector.js?v=' . time(),
-            '/assets/js/departamento-operativo/2-recursos-humanos/kpi-personal.actions.init.js?v=' . time(),
-        ],
-    ], 'departamento-operativo');
+View::render('departamento-operativo/2-recursos-humanos/control-documentos-personal/kpi-personal', [
+'title'    => 'Evaluación Personal (KPI\'s), ' . $idYear,
+'idYear'   => $idYear,
+'opciones' => KpiPersonalService::getOpciones(),
+'help'     => false,
+'moduleStationKey' => 'control-documentos-personal',
+'yearMesTemplate' => '/departamento-operativo/recursos-humanos/control-documentos-personal-kpi/{year}',
+'scripts'  => [
+'/assets/libs/apexcharts/dist/apexcharts.min.js',
+'/assets/js/core/module-station-selector.js?v=' . time(),
+'/assets/js/departamento-operativo/2-recursos-humanos/kpi-personal.actions.init.js?v=' . time(),
+],
+], 'departamento-operativo');
 }
 
 public function kpiData($idYear, $tipo)

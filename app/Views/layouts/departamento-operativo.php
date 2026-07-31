@@ -302,24 +302,9 @@ return Promise.reject(error);
 <div class="d-flex align-items-center">
 <?php include __DIR__ . '/../partials/_global-badge.php'; ?>
 
-<!-- DERECHA -->
-<?php if (false && $multiestacion && empty($ocultarSelectorEstacion) && empty($moduleStationKey)) : ?>
-<select id="selectEstacion" class="form-select form-select-sm w-auto ms-auto">
-<option value="8" <?= $esTodas ? 'selected' : '' ?>>Todas las estaciones</option>
-
-<?php if (!empty($estaciones)) : ?>
-<?php foreach ($estaciones as $estacion) : ?>
-<option value="<?= $estacion->id ?>"<?= $idEstacion == $estacion->id ? 'selected' : '' ?>><?= $estacion->nombre ?></option>
-<?php endforeach; ?>
-<?php endif; ?>
-
-</select>
-<?php endif; ?>
 </div>
 
-<?php if (!empty($moduleStationKey) && \App\Services\ModuleStationService::hasSelector($moduleStationKey)): ?>
-<?= \App\Services\ModuleStationService::render($moduleStationKey, $pendientesData ?? [], empty($ocultarSelectorEstacion)) ?>
-<?php elseif (isset($estacionesFiltradas) && ((!empty($estacionesFiltradas) && $multiestacion) || ($esGestoria ?? false))): ?>
+<?php if (empty($moduleStationSelector) && isset($estacionesFiltradas) && ((!empty($estacionesFiltradas) && $multiestacion) || ($esGestoria ?? false))): ?>
 <div class="d-flex align-items-center justify-content-between flex-wrap w-100">
 <span id="sc-badge" class="badge rounded-pill text-bg-info">
 <?= htmlspecialchars($nombreFiltro ?? ($esGestoria ? 'Gestoría' : '')) ?>
@@ -358,6 +343,8 @@ $sel = ($d['id_puesto'] == $idDepto) ? ' selected' : '';
 <span id="sc-pendientes-data" style="display:none;"><?= $pendientesJson ?? '{}' ?></span>
 <?php endif; ?>
 
+<?= $moduleStationSelector ?? '' ?>
+
 <?php
 $badgeText = $nombreContexto ?? '';
 if (empty($badgeText) && !empty($detalle['estacion_nombre'])) {
@@ -382,7 +369,7 @@ $badgeText = $detalle['estacion_nombre'];
 <div class="dark-transparent sidebartoggler"></div>
 <!-- Import Js Files -->
 <script src="<?=asset('js/home/actions-home.init.js?v=1.2')?>"></script>
-<script src="<?=asset('js/switch.estacion.min.js')?>"></script>
+
 <script src="<?=asset('js/loader.min.js')?>"></script>
 <script src="<?=asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js')?>"></script>
 <script src="<?=asset('libs/simplebar/dist/simplebar.min.js')?>"></script>

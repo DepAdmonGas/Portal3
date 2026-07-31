@@ -9,6 +9,7 @@ use App\Services\DropdownYearMesService;
 use App\Services\SolicitudChequeService;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\ModuleStationService;
+use App\Services\MultiestacionService;
 
 use App\Models\Operativo\SolicitudChequeDocumento;
 use App\Models\Estacion;
@@ -72,6 +73,10 @@ Breadcrumb::add($titleWithPeriod, '');
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes) . $facturaBadgeHtml, '');
 
+if (!$this->guardModuleAccess('solicitud-cheques', $titleWithPeriod, 'departamento-operativo')) {
+return;
+}
+
 $yearMesTemplate = '/departamento-operativo/solicitud-cheque/{year}/{mes}';
 
 $pendingCounts = SolicitudChequeService::getPendingCounts($idYear, $idMes);
@@ -96,7 +101,7 @@ $departamentosFiltrados[] = $d;
 }
 }
 
-if ($permisos['es_gestoria'] && !ModuleStationService::isPuesto6Estacion8()) {
+if ($permisos['es_gestoria'] && !MultiestacionService::isEnabled()) {
 ModuleStationService::setContext('solicitud-cheques', 8, 5);
 $idEstacion = 8;
 $idDepto = 5;
@@ -900,7 +905,7 @@ $html .= '<div class="text-center mt-2" style="font-size: 1.2em;">' . $h($estaci
 $html .= '<table class="table-sm mb-0 pb-0 mt-2" style="width:100%;">';
 $html .= '<tbody>';
 $html .= '<tr>';
-$html .= '<td colspan="2"><div class="text-secondary"><b>FECHA:</b></div><div class="mt-2 pb-1 border-bottom">' . $h($detalle['fecha_formateada']) . '</div></td>';
+$html .= '<td colspan="2"><div class="text-secondary"><b>FECHA:</b></div><div class="mt-2 pb-1 border-bottom">' . $h(formatearFechaLarga($detalle['fecha'])) . '</div></td>';
 $html .= '<td><div class="text-secondary"><b>NOMBRE DEL BENEFICIARIO:</b></div><div class="mt-2 pb-1 border-bottom">' . $h($detalle['beneficiario']) . '</div></td>';
 $html .= '</tr>';
 
@@ -966,12 +971,10 @@ $html .= '<div style="padding:10px;"><small>¡Falta la Firma!</small></div>';
 }
 $html .= '<div style="margin-top:10px;"><b>NOMBRE Y FIRMA DEL ENCARGADO</b></div>';
 } elseif ($f['tipo_firma'] === 'B') {
-$explode = explode(' ', $f['fecha'] ?? '');
-$html .= '<div class="border-bottom text-center" style="padding:10px;"><small>La solicitud de cheque se firmó por un medio electrónico.<br> <b>Fecha: ' . $h($explode[0] ?? '') . '</b></small></div>';
+$html .= '<div class="border-bottom text-center" style="padding:10px;"><small>La solicitud de cheque se firmó por un medio electrónico.<br> <b>Fecha: ' . $h(formatearFechaLarga(substr($f['fecha'] ?? '', 0, 10))) . '</b></small></div>';
 $html .= '<div style="margin-top:10px;"><b>NOMBRE Y FIRMA DE VOBO</b></div>';
 } elseif ($f['tipo_firma'] === 'C') {
-$explode = explode(' ', $f['fecha'] ?? '');
-$html .= '<div class="border-bottom text-center" style="padding:10px;"><small>La solicitud de cheque se firmó por un medio electrónico.<br> <b>Fecha: ' . $h($explode[0] ?? '') . '</b></small></div>';
+$html .= '<div class="border-bottom text-center" style="padding:10px;"><small>La solicitud de cheque se firmó por un medio electrónico.<br> <b>Fecha: ' . $h(formatearFechaLarga(substr($f['fecha'] ?? '', 0, 10))) . '</b></small></div>';
 $html .= '<div style="margin-top:10px;"><b>NOMBRE Y FIRMA DE AUTORIZACIÓN</b></div>';
 }
 

@@ -26,7 +26,7 @@ x-data="clientesComponent()">
 
 <div class="col-12">
 <div class="datatables">
-<div class="table-responsive" style="overflow-x: auto; overflow-y: hidden;">
+<div class="table-responsive pb-5" style="overflow-x: auto; overflow-y: hidden;">
 <table id="tablaClientes" class="table table-striped table-bordered mb-0 text-nowrap align-middle" width="100%">
 <tbody></tbody>
 </table>

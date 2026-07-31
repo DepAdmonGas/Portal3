@@ -8,13 +8,26 @@ use App\Core\Session;
 
 class ContratosService
 {
-public static function getData(int $idEstacion, string $categoria): array
+public static function getData($idEstacion, string $categoria): array
 {
-$contratos = Contrato::where('id_estacion', $idEstacion)
-->where('categoria', $categoria)
+$query = Contrato::query();
+if (is_array($idEstacion)) {
+$query->whereIn('id_estacion', array_map('intval', $idEstacion));
+} else {
+$query->where('id_estacion', (int) $idEstacion);
+}
+$contratos = $query->where('categoria', $categoria)
 ->orderBy('fecha', 'desc')
 ->get()
 ->toArray();
+
+$estaciones = [];
+if (is_array($idEstacion)) {
+$rows = Estacion::whereIn('id', array_map('intval', $idEstacion))->get(['id', 'nombre']);
+foreach ($rows as $e) {
+$estaciones[(int) $e->id] = $e->nombre;
+}
+}
 
 $data = [];
 $idx = 1;
@@ -26,6 +39,7 @@ $data[] = [
 'fecha_formateada' => formatearFecha($c['fecha']),
 'descripcion' => $c['descripcion'],
 'archivo' => $c['archivo'] ?? '',
+'estacion_nombre' => $estaciones[(int) $c['id_estacion']] ?? '',
 ];
 }
 

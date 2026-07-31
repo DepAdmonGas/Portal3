@@ -1,4 +1,7 @@
 <div class="row mt-4">
+
+<?php if (!empty($submenus)): ?>
+
 <?php $i = 1; foreach ($submenus as $submenu): ?>
 <div class="col-lg-4 col-md-6 col-12">
 <a href="<?= $submenu['ruta'] ?>" class="text-decoration-none">
@@ -19,4 +22,15 @@
 </a>
 </div>
 <?php $i++; endforeach; ?>
+
+<?php else: ?>
+
+<div class="col-12">
+<div class="alert alert-warning text-center py-4" role="alert">
+No cuentas con apartados configurados para este módulo.
+</div>
+</div>
+
+<?php endif; ?>
+
 </div>

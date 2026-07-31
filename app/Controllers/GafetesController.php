@@ -110,6 +110,10 @@ $idPuesto = $datosUsuario->id_puesto;
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add($title, '');
 
+if (!$this->guardModuleAccess('solicitud-gafetes', $title, 'main')) {
+return;
+}
+
 $permisos = ModuloService::permisosSesion($this->modulo);
 
 // Compute pending counts per station for the selector

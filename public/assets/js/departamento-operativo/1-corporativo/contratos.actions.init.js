@@ -16,12 +16,28 @@ if (contentEl) contentEl.style.display = '';
 if (messageEl) messageEl.style.display = 'none';
 }
 
+function esModoGlobal() {
+var sel = document.getElementById('module-station-selector-contratos');
+if (sel) return !sel.value;
+var container = document.getElementById('container');
+return container ? container.dataset.multiestacion === 'true' && !(parseInt(container.dataset.idEstacion || '0') > 0) : false;
+}
+
+function ctActualizarToolOpciones() {
+var global = esModoGlobal();
+var btn = document.getElementById('contratos-nuevo-btn');
+if (btn) btn.style.display = global ? 'none' : '';
+if (table) {
+table.column(1).visible(global);
+}
+}
+
 function escStr(s) {
 return (s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
 }
 
 function initTable() {
-return $('#tabla-contratos').DataTable({
+var dt = $('#tabla-contratos').DataTable({
 processing: true,
 serverSide: false,
 autoWidth: false,
@@ -42,6 +58,7 @@ return json.data || [];
 },
 columns: [
 { title:'#', data: 'num', className: 'text-center', width: '40px' },
+{ title:'Estación', data: 'estacion_nombre', className: 'text-center', visible: esModoGlobal() },
 { title:'Fecha', data: 'fecha_formateada', className: 'text-center' },
 { title:'Descripción del contrato', data: 'descripcion' },
 {
@@ -91,6 +108,14 @@ Alpine.initTree(document.querySelector('#tabla-contratos'));
 }
 }
 });
+
+dt.on('xhr', function (e, settings, json) {
+if (!json || !json.success) return;
+window.__contratosGlobal = !!json.global;
+ctActualizarToolOpciones();
+});
+
+return dt;
 }
 
 function destroyTable() {
@@ -114,10 +139,17 @@ showTable();
 getOrCreateTable();
 }
 
+ctActualizarToolOpciones();
+
+var selContratos = document.getElementById('module-station-selector-contratos');
+if (selContratos) {
+selContratos.addEventListener('change', ctActualizarToolOpciones);
+}
+
 ModuleStationSelector.init('contratos', {
 customReload: function (ms) {
 var v = ms.getValue();
-if (v.id_estacion === null && v.id_depto === null) {
+if (v.id_estacion === null && v.id_depto === null && !esModoGlobal()) {
 ms.hideBadge();
 showEmptyMessage();
 return;
@@ -128,6 +160,7 @@ table.ajax.reload(null, false);
 } else {
 getOrCreateTable();
 }
+ctActualizarToolOpciones();
 }
 });
 

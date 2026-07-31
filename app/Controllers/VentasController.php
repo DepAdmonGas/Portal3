@@ -62,6 +62,10 @@ Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('Corte Diario ' . nombreMes($idMes) . ' ' . $idYear . '', '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes . '');
 Breadcrumb::add('<span class="breadcrumb-item active">Ventas (' . formatearFecha($fecha) . ')</span>', '');
 
+if (!$this->guardModuleAccess('corte-diario', $title, 'departamento-operativo')) {
+return;
+}
+
 $data = [
 'title' => $title,
 'idYear' => $idYear,

@@ -247,6 +247,7 @@ $uploadDir = self::getUploadDir();
 $archivoFactura = $record->archivo_factura;
 $archivoComprobante = $record->archivo_comprobante_pago;
 $archivoXml = $record->archivo_factura_xml;
+$comprobanteNuevo = false;
 
 if (!empty($input['archivo_factura']) && isset($input['archivo_factura']['tmp_name']) && $input['archivo_factura']['error'] === 0) {
 $ext = pathinfo($input['archivo_factura']['name'], PATHINFO_EXTENSION);
@@ -261,6 +262,7 @@ if (!empty($input['archivo_comprobante_pago']) && isset($input['archivo_comproba
 $ext = pathinfo($input['archivo_comprobante_pago']['name'], PATHINFO_EXTENSION);
 $archivoComprobante = $aleatorio . '-comprobante.' . $ext;
 move_uploaded_file($input['archivo_comprobante_pago']['tmp_name'], $uploadDir . $archivoComprobante);
+$comprobanteNuevo = true;
 if ($record->archivo_comprobante_pago && file_exists($uploadDir . $record->archivo_comprobante_pago)) {
 unlink($uploadDir . $record->archivo_comprobante_pago);
 }
@@ -281,6 +283,7 @@ $record->update([
 'archivo_factura' => $archivoFactura,
 'archivo_comprobante_pago' => $archivoComprobante,
 'archivo_factura_xml' => $archivoXml,
+'estado' => $comprobanteNuevo ? 1 : $record->estado,
 ]);
 
 return true;

@@ -5,14 +5,14 @@ x-data="{ ...actions(), ...segurosComponent() }"
 @seguros:editar.window="abrirModalEditar($event.detail.id)"
 @seguros:eliminar.window="eliminarIncidencia($event.detail.id)">
 
-<div id="seguros-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4" style="display:<?= $idEstacion ? 'none' : '' ?>">
+<div id="seguros-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4" style="display:<?= ($idEstacion || $global) ? 'none' : '' ?>">
 Debes de seleccionar una estación del menú superior para poder visualizar los registros de seguros.
 </div>
 
-<div id="seguros-content" style="display:<?= $idEstacion ? '' : 'none' ?>">
+<div id="seguros-content" style="display:<?= ($idEstacion || $global) ? '' : 'none' ?>">
 <div class="text-end mt-3 mb-3">
 <div class="text-end">
-<div class="btn-group">
+<div class="btn-group" id="seguros-acciones" style="display:<?= $global ? 'none' : '' ?>">
 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 <i class="ti ti-dots-vertical fs-4"></i>
 </button>

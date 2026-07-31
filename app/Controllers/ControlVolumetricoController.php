@@ -68,6 +68,10 @@ Breadcrumb::add('<span class="breadcrumb-item active">Control Volumétrico (' . 
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
+if (!$this->guardModuleAccess('corte-diario', $title, 'departamento-operativo')) {
+return;
+}
+
 $data = [
 'title' => $title,
 'idYear' => $idYear,

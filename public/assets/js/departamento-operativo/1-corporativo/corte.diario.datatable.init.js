@@ -5,6 +5,7 @@ const idYear = container.dataset.year;
 const idMes = container.dataset.mes;
 const multiestacion = container.dataset.multiestacion === 'true';
 const moduleStationKey = container.dataset.moduleStationKey || '';
+const puedeEditarCorte = container.dataset.puedeEditarCorte === 'true';
 
 const messageEl = document.getElementById('corte-diario-empty-message');
 const contentEl = document.getElementById('corte-diario-content');
@@ -53,7 +54,7 @@ columns: columns,
 columnDefs: [
 { targets: [1,2,3,4,5,6], orderable: false },
 { targets: 0, orderable: true, searchable: true },
-{ visible: multiestacion, targets: 6 }
+{ visible: puedeEditarCorte, targets: 6 }
 ],
 drawCallback: function () {
 if (window.Alpine) {

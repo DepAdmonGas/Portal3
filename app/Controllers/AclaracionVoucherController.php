@@ -41,6 +41,10 @@ Breadcrumb::add($title, '');
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
+if (!$this->guardModuleAccess('aclaracion-voucher', $title, 'departamento-operativo')) {
+return;
+}
+
 $yearMesTemplate = '/departamento-operativo/corporativo/aclaracion-voucher/{year}/{mes}';
 
 $pendientesData = AclaracionVoucherService::getPendientes($idYear, $idMes);

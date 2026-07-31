@@ -11,30 +11,55 @@ use App\Core\Auth;
 
 class SegurosService
 {
-public static function getIncidencias(int $idEstacion): array
-{
-$rows = PolizaIncidencia::where('id_estacion', $idEstacion)
-->orderBy('id_poliza_incidencia', 'desc')
-->get();
+    public static function getIdsGlobal(): array
+    {
+        $ids = [];
+        foreach (ModuleStationService::getAvailableStations('seguros') as $s) {
+            $ids[] = (int) $s['id'];
+        }
+        foreach (ModuleStationService::getAvailableDepartments('seguros') as $d) {
+            $ids[] = (int) $d['id'];
+        }
+        return array_values(array_unique($ids));
+    }
 
-$data = [];
-$i = 1;
-foreach ($rows as $r) {
-$data[] = [
-'num' => $i++,
-'id' => $r->id_poliza_incidencia,
-'fecha_raw' => $r->fecha instanceof \Carbon\Carbon ? $r->fecha->format('Y-m-d') : (string) $r->fecha,
-'fecha' => formatearFecha($r->fecha),
-'hora' => date('g:i a', strtotime($r->hora)),
-'asunto' => $r->asunto,
-'observaciones' => $r->observaciones,
-'solucion' => $r->solucion,
-'archivo' => $r->archivo ?? '',
-];
-}
+    public static function getIncidencias($idEstacion): array
+    {
+        $query = PolizaIncidencia::query();
+        if (is_array($idEstacion)) {
+            $query->whereIn('id_estacion', array_map('intval', $idEstacion));
+        } else {
+            $query->where('id_estacion', (int) $idEstacion);
+        }
+        $rows = $query->orderBy('id_poliza_incidencia', 'desc')->get();
 
-return $data;
-}
+        $localidades = [];
+        if (is_array($idEstacion)) {
+            $rowsLoc = RhLocalidad::whereIn('id', array_map('intval', $idEstacion))->get(['id', 'localidad']);
+            foreach ($rowsLoc as $l) {
+                $localidades[(int) $l->id] = $l->localidad;
+            }
+        }
+
+        $data = [];
+        $i = 1;
+        foreach ($rows as $r) {
+            $data[] = [
+                'num' => $i++,
+                'id' => $r->id_poliza_incidencia,
+                'fecha_raw' => $r->fecha instanceof \Carbon\Carbon ? $r->fecha->format('Y-m-d') : (string) $r->fecha,
+                'fecha' => formatearFecha($r->fecha),
+                'hora' => date('g:i a', strtotime($r->hora)),
+                'asunto' => $r->asunto,
+                'observaciones' => $r->observaciones,
+                'solucion' => $r->solucion,
+                'archivo' => $r->archivo ?? '',
+                'localidad_nombre' => $localidades[(int) $r->id_estacion] ?? '',
+            ];
+        }
+
+        return $data;
+    }
 
 public static function getDetalleIncidencia(int $id): ?array
 {
@@ -106,11 +131,15 @@ if (file_exists($ruta)) unlink($ruta);
 return $inc->delete();
 }
 
-public static function getPolizas(int $idEstacion): array
-{
-$rows = PolizaEs::where('id_estacion', $idEstacion)
-->orderBy('emision', 'desc')
-->get();
+    public static function getPolizas($idEstacion): array
+    {
+        $query = PolizaEs::query();
+        if (is_array($idEstacion)) {
+            $query->whereIn('id_estacion', array_map('intval', $idEstacion));
+        } else {
+            $query->where('id_estacion', (int) $idEstacion);
+        }
+        $rows = $query->orderBy('emision', 'desc')->get();
 
 $data = [];
 foreach ($rows as $r) {

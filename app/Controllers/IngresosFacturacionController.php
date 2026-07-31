@@ -9,6 +9,7 @@ use App\Services\IngresosFacturacionService;
 use App\Services\ModuleStationService;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\DropdownYearMesService;
+use App\Models\Operativo\IngresosFacturacionArchivo;
 
 class IngresosFacturacionController extends BaseController
 {
@@ -45,6 +46,10 @@ Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
 Breadcrumb::add(self::dropdownYear($idYear), '');
+
+if (!$this->guardModuleAccess('ingresos-facturacion', $title, 'departamento-operativo')) {
+return;
+}
 
 View::render('departamento-operativo/1-corporativo/ingresos-facturacion/index', [
 'title' => $title,
@@ -173,7 +178,7 @@ echo json_encode(['success' => false]);
 exit;
 }
 
-$archivoModel = \App\Models\Operativo\IngresosFacturacionArchivo::find($id);
+$archivoModel = IngresosFacturacionArchivo::find($id);
 $archivoNombre = $archivoModel ? $archivoModel->archivo : '';
 $idReporte = $archivoModel ? $archivoModel->id_year : 0;
 

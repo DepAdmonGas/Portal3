@@ -1,9 +1,12 @@
 <div id="container" class="mt-4">
 <div class="row">
 
+<?php if (!empty($elementos)): ?>
+
 <?php 
 $i = 1; 
-foreach($elementos as $elemento): ?>
+foreach ($elementos as $elemento): 
+?>
 
 <div class="col-lg-4 col-md-6 col-12">
 <a href="<?= $elemento['ruta'] ?>" class="text-decoration-none">
@@ -16,7 +19,7 @@ foreach($elementos as $elemento): ?>
 <i class="ti <?= $elemento['icono'] ?> fs-9"></i>
 </h3>
 </div>
- 
+
 <div class="p-4 flex-grow-1">
 <h5 class="text-white mb-0">
 <?= $i . '. ' . $elemento['nombre'] ?>
@@ -38,9 +41,16 @@ foreach($elementos as $elemento): ?>
 $i++; 
 endforeach; 
 ?>
+
+<?php else: ?>
+
+<div class="col-12">
+<div class="alert alert-warning text-center py-4" role="alert">
+No cuentas con módulos configurados para este apartado.
 </div>
 </div>
 
+<?php endif; ?>
 
-
-
+</div>
+</div>

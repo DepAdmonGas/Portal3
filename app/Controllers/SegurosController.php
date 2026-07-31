@@ -22,6 +22,7 @@ return;
 
 $moduleCtx = ModuleStationService::getContext('seguros');
 $idEstacion = $moduleCtx['id_estacion'] ?? $moduleCtx['id_depto'] ?? 0;
+$global = !$idEstacion;
 $permisos = SegurosService::getPermisos();
 
 Breadcrumb::add('Home', '/home');
@@ -29,9 +30,14 @@ Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('<span class="breadcrumb-item active">Seguros</span>', '');
 
+if (!$this->guardModuleAccess('seguros', 'Incidentes y Accidentes (Seguros)', 'departamento-operativo')) {
+return;
+}
+
 View::render('departamento-operativo/1-corporativo/seguros/index', [
 'title' => 'Incidentes y Accidentes (Seguros)',
 'idEstacion' => $idEstacion ?: 0,
+'global' => $global,
 'permisos' => $permisos,
 'moduleStationKey' => 'seguros',
 'help' => false,
@@ -55,7 +61,16 @@ $moduleCtx = ModuleStationService::getContext('seguros');
 $idEstacion = $moduleCtx['id_estacion'] ?? $moduleCtx['id_depto'] ?? 0;
 
 if (!$idEstacion) {
+$ids = SegurosService::getIdsGlobal();
+if (empty($ids)) {
 echo json_encode(['success' => false, 'data' => []]);
+exit;
+}
+
+$incidencias = SegurosService::getIncidencias($ids);
+$permisos = SegurosService::getPermisos();
+
+echo json_encode(['success' => true, 'data' => $incidencias, 'permisos' => $permisos, 'global' => true]);
 exit;
 }
 
@@ -209,7 +224,14 @@ $moduleCtx = ModuleStationService::getContext('seguros');
 $idEstacion = $moduleCtx['id_estacion'] ?? $moduleCtx['id_depto'] ?? 0;
 
 if (!$idEstacion) {
+$ids = SegurosService::getIdsGlobal();
+if (empty($ids)) {
 echo json_encode(['success' => false, 'data' => []]);
+exit;
+}
+
+$polizas = SegurosService::getPolizas($ids);
+echo json_encode(['success' => true, 'data' => $polizas]);
 exit;
 }
 

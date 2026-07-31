@@ -19,7 +19,7 @@ $usuario = Auth::user();
 $sessionUsuario = Session::get('usuario');
 
 $idPuesto = (int)($usuario->id_puesto ?? 0);
-$idEstacion = (int)($sessionUsuario['id_gas'] ?? 0);
+$idEstacion = (int)($sessionUsuario['id_estacion'] ?? 0);
 $multiestacion = !empty($sessionUsuario['multiestacion']);
 
 $esDireccion = $idPuesto === 13;

@@ -40,6 +40,10 @@ Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 Breadcrumb::add('Corte Diario ' . nombreMes($idMes) . ' ' . $idYear . '', '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes . '');
 Breadcrumb::add('<span class="breadcrumb-item active">Cierre Lote (' . formatearFecha($fecha) . ')</span>', '');
 
+if (!$this->guardModuleAccess('corte-diario', $title, 'departamento-operativo')) {
+return;
+}
+
 $data = [
 'title' => $title,
 'idYear' => $idYear,
@@ -54,10 +58,10 @@ $data = [
 'puedeEditar' => $puedeEditar,
 'puedeEliminar' => $puedeEliminar,
 'puedeDescargar' => $puedeDescargar,
-        'empresas' => TpvService::getEmpresasPorEstacion($idEstacion),
-        'ocultarSelectorEstacion' => true,
-        'moduleStationKey' => 'corte-diario',
-        'scripts' => [
+'empresas' => TpvService::getEmpresasPorEstacion($idEstacion),
+'ocultarSelectorEstacion' => true,
+'moduleStationKey' => 'corte-diario',
+'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.tpv.init.js?v=' . time(),
