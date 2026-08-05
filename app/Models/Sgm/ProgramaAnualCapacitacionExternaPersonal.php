@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class ProgramaAnualCapacitacionExternaPersonal extends Model
 {
@@ -26,4 +27,20 @@ class ProgramaAnualCapacitacionExternaPersonal extends Model
         'id_capacitacion' => 'integer',
         'id_usuario' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario'
+        );
+    }
+
+    public function capacitacion()
+    {
+        return $this->belongsTo(
+            ProgramaAnualCapacitacionExterna::class,
+            'id_capacitacion'
+        );
+    }
 }

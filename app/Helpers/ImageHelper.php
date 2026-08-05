@@ -55,4 +55,9 @@ class ImageHelper
     {
         return base_url() . '/uploads/tirillas/' . $imagen;
     }
+
+    public static function firmaPath(string $firma): string
+    {
+        return PUBLIC_PATH . '/uploads/firma-personal/' . $firma;
+    }
 }

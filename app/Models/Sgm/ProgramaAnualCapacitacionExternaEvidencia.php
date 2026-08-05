@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,4 +26,12 @@ class ProgramaAnualCapacitacionExternaEvidencia extends Model
         'id_capacitacion' => 'integer',
         'archivo' => 'string',
     ];
+
+    public function capacitacion()
+    {
+        return $this->belongsTo(
+            ProgramaAnualCapacitacionExterna::class,
+            'id_capacitacion'
+        );
+    }
 }

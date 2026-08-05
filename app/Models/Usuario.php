@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Sasisopa\CursoCalendario;
 use App\Core\TwoFactorAuth;
@@ -62,7 +64,7 @@ class Usuario extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         // Al crear: establecer valores por defecto seguros
         static::creating(function ($model) {
             if (empty($model->estatus)) {
@@ -76,7 +78,7 @@ class Usuario extends Model
                 $model->two_factor_enabled = false;
             }
         });
-        
+
         // Al actualizar: prevenir cambios a campos sensibles
         static::updating(function ($model) {
             // Verificar cambios en campos críticos
@@ -112,7 +114,7 @@ class Usuario extends Model
     public function menus()
     {
         return $this->belongsToMany(Menu::class, 'usuarios_menus', 'usuario_id', 'menu_id')
-                    ->withPivot('tipo');
+            ->withPivot('tipo');
     }
 
     public static function buscarFirma(string $usuario)
@@ -143,6 +145,12 @@ class Usuario extends Model
         return $this->hasMany(UsuariosExperienciaEmpresaGrupo::class, 'id_usuario');
     }
 
+    public function ultimaExperiencia()
+    {
+        return $this->hasOne(UsuariosExperienciaEmpresaGrupo::class, 'id_usuario')
+            ->latest('periodo_inicio');
+    }
+
     public function getPorcentajeCumplimientoAttribute()
     {
         $total = 0;
@@ -164,7 +172,7 @@ class Usuario extends Model
         return round(($total / $totalCampos) * 100, 2);
     }
 
-public function capacitaciones()
+    public function capacitaciones()
     {
         return $this->hasMany(CursoCalendario::class, 'id_personal');
     }
@@ -210,7 +218,7 @@ public function capacitaciones()
         if (!$this->two_factor_enabled || !$this->two_factor_secret) {
             return false;
         }
-        
+
         return TwoFactorAuth::verifyCode($this->two_factor_secret, $code);
     }
 
@@ -225,19 +233,19 @@ public function capacitaciones()
         if (!$this->two_factor_backup_codes) {
             return false;
         }
-        
+
         $index = TwoFactorAuth::verifyBackupCode($code, $this->two_factor_backup_codes);
-        
+
         if ($index !== null) {
             // Marcar código como usado
             $codes = $this->two_factor_backup_codes;
             $codes[$index]['used'] = true;
             $this->two_factor_backup_codes = $codes;
             $this->save();
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -253,7 +261,7 @@ public function capacitaciones()
         $this->two_factor_enabled = true;
         $this->two_factor_backup_codes = TwoFactorAuth::generateBackupCodes();
         $this->save();
-        
+
         return $this;
     }
 
@@ -268,7 +276,7 @@ public function capacitaciones()
         $this->two_factor_enabled = false;
         $this->two_factor_backup_codes = null;
         $this->save();
-        
+
         return $this;
     }
 
@@ -283,14 +291,11 @@ public function capacitaciones()
         if (!$this->two_factor_secret) {
             return '';
         }
-        
+
         return TwoFactorAuth::getQrCodeUrl(
             $this->two_factor_secret,
             $issuer,
             $this->email ?? $this->usuario
         );
     }
-
 }
-
-

@@ -39,25 +39,6 @@ class SgmController extends BaseController
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
-    public function gestionRecursos()
-    {
-
-        $title = '6. Gestion de los Recursos';
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SGM', '/sgm');
-        Breadcrumb::add($title, '');
-
-        $data = [
-            'title' => $title,
-            'links' => [],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-
-        View::render('sgm/gestion-recursos', $data, 'sgm');
-    }
 
     public function gestionRiesgosImpactanMedicion()
     {

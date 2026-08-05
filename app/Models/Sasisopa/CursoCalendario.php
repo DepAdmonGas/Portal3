@@ -30,8 +30,8 @@ class CursoCalendario extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'fecha_programada' => 'date',
-        'fecha_real' => 'date',
+        'fecha_programada' => 'date:Y-m-d',
+        'fecha_real' => 'date:Y-m-d',
         'id_estacion' => 'integer',
         'id_personal' => 'integer',
         'id_tema' => 'integer',
@@ -54,5 +54,4 @@ class CursoCalendario extends Model
     {
         return $this->belongsTo(CursoModulo::class, 'id_modulo');
     }
-
 }
