@@ -52,7 +52,7 @@ class AuthMiddleware
             time()
         );
 
-        if (($payload->exp - time()) < 600) {
+        if ($payload && ($payload->exp - time()) < 600) {
 
             $user = $this->usuarioRepository->findById(
                 (int) $payload->sub
@@ -63,7 +63,6 @@ class AuthMiddleware
             }
         }
     }
-
 
     private function redirectLogin(): void
     {

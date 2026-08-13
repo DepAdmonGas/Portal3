@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class OrdenServicio extends Model
 {
@@ -38,4 +39,28 @@ class OrdenServicio extends Model
         'realizadopor' => 'integer',
         'folio' => 'integer',
     ];
+
+    public function evaluacion()
+    {
+        return $this->hasOne(
+            EvaluacionProveedor::class,
+            'id_orden_servicio'
+        );
+    }
+
+    public function solicitante()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_solicitante'
+        );
+    }
+
+    public function realizadoPor()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'realizadopor'
+        );
+    }
 }

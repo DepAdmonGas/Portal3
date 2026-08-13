@@ -316,6 +316,87 @@ document.addEventListener('alpine:init', () => {
         this.loading = false;
     }
 },
+
+async getAction({
+
+    url,
+
+    params = {},
+
+    method = 'GET',
+
+    notify = false
+
+}){
+
+    if(this.loading){
+        return;
+    }
+
+    this.loading = true;
+
+    try{
+
+        const response = await axios({
+
+            method,
+
+            url,
+
+            data: method === 'POST' ? params : undefined,
+
+            params: method === 'GET' ? params : undefined,
+
+            headers:{
+                'Accept':'application/json'
+            }
+
+        });
+
+        const res = response.data;
+
+        if(!res.success && notify){
+
+            this.notify(
+                'error',
+                res.message || 'Error'
+            );
+
+        }
+
+        return res;
+
+    }catch(err){
+
+        const mensaje =
+            err.response?.data?.message ||
+            err.message ||
+            'Error en la solicitud';
+
+        if(notify){
+
+            this.notify(
+                'error',
+                mensaje
+            );
+
+        }
+
+        return {
+
+            success:false,
+
+            message:mensaje
+
+        };
+
+    }finally{
+
+        this.loading = false;
+
+    }
+
+},
         download(tipo, archivo) {
 
         if (!archivo) {

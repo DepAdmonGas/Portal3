@@ -32,8 +32,16 @@ class InventarioEquipo extends Model
         'nombre' => 'string',
         'identificacion' => 'string',
         'funcion' => 'string',
-        'fecha_instalacion' => 'date',
+        'fecha_instalacion' => 'date:Y-m-d',
         'realizadopor' => 'integer',
         'estado' => 'integer',
     ];
+
+    public function manuales()
+    {
+        return $this->hasMany(
+            InventarioEquipoManual::class,
+            'id_equipo'
+        );
+    }
 }
