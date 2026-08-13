@@ -20,7 +20,6 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <!-- SECURITY: DOMPurify para prevenir XSS en x-html-->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -89,10 +88,20 @@
                     <!-- ---------------------------------- -->
                     <li class="sidebar-item">
                         <a class="sidebar-link" href="/sgm/calendario" aria-expanded="false">
-                            <span>
-                                <i class="ti ti-calendar-event"></i>
-                            </span>
-                            <span class="hide-menu">Calendario de actividades</span>
+
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="d-flex">
+                                    <i class="ti ti-calendar-event"></i>
+                                </span>
+                                <span class="hide-menu">Calendario</span>
+                            </div>
+
+                            <?= ($pendientes['sgm'] ?? 0) > 0
+                                ? '<div class="hide-menu">
+        <span class="badge rounded bg-primary text-black d-flex align-items-center justify-content-center rounded-pill fs-1 fw-bolder">' . $pendientes['sgm'] . '</span>
+       </div>'
+                                : ''
+                            ?>
                         </a>
                     </li>
                     <li class="sidebar-item">
@@ -157,7 +166,7 @@
                             <h6 class="mb-0 fs-5 fw-normal text-white"><?= implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2)); ?></h6>
                             <span class="fs-2"><?= $user->puesto->tipo_puesto ?></span>
                         </div>
-                        <a href="/logout" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
+                        <a class="border-0 bg-transparent text-primary ms-auto" onclick="performLogout()" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
                             <i class="ti ti-power text-danger fs-6"></i>
                         </a>
                     </div>
@@ -250,7 +259,7 @@
                                                     </a>
                                                 </div>
                                                 <div class="d-grid py-4 px-7 pt-8">
-                                                    <a href="javascript:void(0)" class="btn btn-outline-primary" onclick="performLogout()">Salir</a>
+                                                    <a class="btn btn-outline-primary pointer" onclick="performLogout()">Salir</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -301,11 +310,11 @@
     <!-- solar icons -->
     <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
     <!-- highlight.js (code view) -->
+    <!-- highlight.js (code view) -->
     <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
     <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
-
     <script src="<?= asset('js/core/notify.js?v=1.0.1') ?>"></script>
-    <script src="<?= asset('js/core/actions.alpine.js?v=1.0.4') ?>"></script>
+    <script src="<?= asset('js/core/actions.alpine.js?v=1.0.3') ?>"></script>
 
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>

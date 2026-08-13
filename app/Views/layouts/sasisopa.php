@@ -20,7 +20,6 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <!-- SECURITY: DOMPurify para prevenir XSS en x-html-->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -81,9 +80,9 @@
                                 <span class="hide-menu">Calendario</span>
                             </div>
 
-                            <?= ($pendientes ?? 0) > 0
+                            <?= ($pendientes['sasisopa'] ?? 0) > 0
                                 ? '<div class="hide-menu">
-        <span class="badge rounded bg-primary text-black d-flex align-items-center justify-content-center rounded-pill fs-1 fw-bolder">' . $pendientes . '</span>
+        <span class="badge rounded bg-primary text-black d-flex align-items-center justify-content-center rounded-pill fs-1 fw-bolder">' . $pendientes['sasisopa'] . '</span>
        </div>'
                                 : ''
                             ?>
@@ -186,7 +185,6 @@
                             <h6 class="mb-0 fs-5 fw-normal text-white"><?= implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2)); ?></h6>
                             <span class="fs-2"><?= $user->puesto->tipo_puesto ?></span>
                         </div>
-                        <!-- SECURITY: BAJO #34 - Logout via POST -->
                         <a href="javascript:void(0)" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir" onclick="performLogout()">
                             <i class="ti ti-power text-danger fs-6"></i>
                         </a>
@@ -284,7 +282,6 @@
                                                     </a>
                                                 </div>
 
-                                                <!-- SECURITY: BAJO #34 - Logout via POST -->
                                                 <div class="d-grid py-4 px-7 pt-8">
                                                     <a href="javascript:void(0)" class="btn btn-outline-primary" onclick="performLogout()">Salir</a>
                                                 </div>

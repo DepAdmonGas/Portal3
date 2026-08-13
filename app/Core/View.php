@@ -31,15 +31,21 @@ class View
                 ->get();
         }
 
-        $DOC_SGM = DocumentoController::validaDocumento(
-            'Sistema de Gestion de Medicion',
-            $filtro_usuario['id_estacion']
-        );
+        $DOC_SGM = '';
+        $DOC_MPSGM = '';
 
-        $DOC_MPSGM = DocumentoController::validaDocumento(
-            'Manual de procedimientos del Sistema de Gestión de Medición',
-            $filtro_usuario['id_estacion']
-        );
+        if ($filtro_usuario) {
+
+            $DOC_SGM = DocumentoController::validaDocumento(
+                'Sistema de Gestion de Medicion',
+                $filtro_usuario['id_estacion']
+            );
+
+            $DOC_MPSGM = DocumentoController::validaDocumento(
+                'Manual de procedimientos del Sistema de Gestión de Medición',
+                $filtro_usuario['id_estacion']
+            );
+        }
 
         return [
             'title'           => 'Portal3',
