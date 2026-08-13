@@ -20,16 +20,13 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <!-- SECURITY: DOMPurify para prevenir XSS en x-html-->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-    <!-- SECURITY: Meta tag CSRF para proteger formularios -->
     <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
 
-    <!-- SECURITY: Auto-inyectar token CSRF en todas las solicitudes Axios -->
     <script>
         (function() {
             // Función para obtener el token actual del meta tag
@@ -161,7 +158,6 @@
                             <h6 class="mb-0 fs-5 fw-normal text-white"><?= implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2)); ?></h6>
                             <span class="fs-2"><?= $user->puesto->tipo_puesto ?></span>
                         </div>
-                        <!-- SECURITY: BAJO #34 - Logout via POST usando JavaScript -->
                         <a href="javascript:void(0)"
                             class="border-0 bg-transparent text-primary ms-auto"
                             tabindex="0"
@@ -262,7 +258,6 @@
                                                     </a>
                                                 </div>
 
-                                                <!-- SECURITY: BAJO #34 - Logout via POST usando JavaScript -->
                                                 <div class="d-grid py-4 px-7 pt-8">
                                                     <a href="javascript:void(0)" class="btn btn-outline-primary" onclick="performLogout()">Salir</a>
                                                 </div>
@@ -320,7 +315,6 @@
     <script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script>
     <script src="<?= asset('js/core/actions.alpine.js?v=1.2') ?>"></script>
 
-    <!-- SECURITY: Auto-inyectar token CSRF en todas las solicitudes Axios -->
     <script>
         (function() {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
