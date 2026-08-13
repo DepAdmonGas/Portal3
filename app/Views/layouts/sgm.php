@@ -88,10 +88,20 @@
                     <!-- ---------------------------------- -->
                     <li class="sidebar-item">
                         <a class="sidebar-link" href="/sgm/calendario" aria-expanded="false">
-                            <span>
-                                <i class="ti ti-calendar-event"></i>
-                            </span>
-                            <span class="hide-menu">Calendario de actividades</span>
+
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="d-flex">
+                                    <i class="ti ti-calendar-event"></i>
+                                </span>
+                                <span class="hide-menu">Calendario</span>
+                            </div>
+
+                            <?= ($pendientes['sgm'] ?? 0) > 0
+                                ? '<div class="hide-menu">
+        <span class="badge rounded bg-primary text-black d-flex align-items-center justify-content-center rounded-pill fs-1 fw-bolder">' . $pendientes['sgm'] . '</span>
+       </div>'
+                                : ''
+                            ?>
                         </a>
                     </li>
                     <li class="sidebar-item">

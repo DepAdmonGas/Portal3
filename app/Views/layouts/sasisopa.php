@@ -80,9 +80,9 @@
                                 <span class="hide-menu">Calendario</span>
                             </div>
 
-                            <?= ($pendientes ?? 0) > 0
+                            <?= ($pendientes['sasisopa'] ?? 0) > 0
                                 ? '<div class="hide-menu">
-        <span class="badge rounded bg-primary text-black d-flex align-items-center justify-content-center rounded-pill fs-1 fw-bolder">' . $pendientes . '</span>
+        <span class="badge rounded bg-primary text-black d-flex align-items-center justify-content-center rounded-pill fs-1 fw-bolder">' . $pendientes['sasisopa'] . '</span>
        </div>'
                                 : ''
                             ?>
