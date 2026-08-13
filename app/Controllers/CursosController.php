@@ -34,31 +34,65 @@ class CursosController extends BaseController
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'categoria' => 'SASISOPA',
             'filtro_usuario' => $this->filtro_usuario,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/cursos/index.action.init.js?v=1.2',
+                '/js/cursos/index.action.init.js?v=1.5',
             ]
         ];
 
         View::render('cursos/index', $data, 'sasisopa');
     }
 
+    public function cursosSgmIndex()
+    {
+
+        $title = 'Cursos';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        $data = [
+            'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => 'sgm',
+            'categoria' => 'SGM',
+            'filtro_usuario' => $this->filtro_usuario,
+            'links' => [],
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/js/cursos/index.action.init.js?v=1.5',
+            ]
+        ];
+
+        View::render('cursos/index', $data, 'sgm');
+    }
+
+
+
+
     public function getModulos(): void
     {
         header('Content-Type: application/json; charset=utf-8');
 
+        $categoria = $_GET['categoria'] ?? null;
+
         try {
 
             $modulos = CursoModulo::query()
-                ->withCount('temas')
-                ->orderByRaw("
-                CASE
-                    WHEN num_modulo = 4 THEN 1
-                    ELSE 0
-                END
-            ")
+                ->whereHas('temas', function ($query) use ($categoria) {
+                    $query->where('categoria', $categoria);
+                })
+                ->withCount([
+                    'temas as temas_count' => function ($query) use ($categoria) {
+                        $query->where('categoria', $categoria);
+                    }
+                ])
                 ->orderBy('num_modulo')
                 ->get();
 
@@ -67,23 +101,23 @@ class CursosController extends BaseController
             foreach ($modulos as $index => $modulo) {
 
                 $data[] = [
-                    'id'          => $modulo->id,
-                    'numero'      => $index + 1,
-                    'num_modulo'  => $modulo->num_modulo,
-                    'titulo'      => $modulo->titulo,
-                    'totalTemas'  => $modulo->temas_count
+                    'id'         => $modulo->id,
+                    'numero'     => $index + 1,
+                    'num_modulo' => $modulo->num_modulo,
+                    'titulo'     => $modulo->titulo,
+                    'totalTemas' => $modulo->temas_count,
                 ];
             }
 
             echo json_encode([
                 'success' => true,
-                'data'    => $data
+                'data'    => $data,
             ]);
         } catch (\Throwable $e) {
 
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ]);
         }
     }
@@ -92,7 +126,10 @@ class CursosController extends BaseController
     {
         header('Content-Type: application/json; charset=utf-8');
 
+        $categoria = $_GET['categoria'] ?? null;
+
         try {
+
             $cursos = CursoCalendario::query()
                 ->with([
                     'tema:id,num_tema,titulo,categoria'
@@ -101,6 +138,13 @@ class CursosController extends BaseController
                 ->where('id_personal', $this->userId())
                 ->where('estado', 0)
                 ->whereDate('fecha_programada', '<=', date('Y-m-d'))
+
+                ->when($categoria, function ($query) use ($categoria) {
+                    $query->whereHas('tema', function ($query) use ($categoria) {
+                        $query->where('categoria', $categoria);
+                    });
+                })
+
                 ->orderBy('fecha_programada')
                 ->get();
 
@@ -111,13 +155,19 @@ class CursosController extends BaseController
                 $data[] = [
 
                     'id' => $curso->id,
+
                     'fecha' => formatearFecha(
                         $curso->fecha_programada
                     ),
+
                     'fecha_raw' => $curso->fecha_programada->format('Y-m-d'),
-                    'tema' => $curso->tema->num_tema,
-                    'titulo' => $curso->tema->titulo,
-                    'categoria' => $curso->tema->categoria
+
+                    'tema' => $curso->tema?->num_tema,
+
+                    'titulo' => $curso->tema?->titulo,
+
+                    'categoria' => $curso->tema?->categoria,
+
                 ];
             }
 
@@ -155,9 +205,17 @@ class CursosController extends BaseController
 
         $title = $tema->num_tema . ' - ' . $tema->titulo;
 
+        $layout = 'sasisopa';
+
+        if ($tema->categoria == 'SASISOPA') {
+            $layout = 'sasisopa';
+        } else if ($tema->categoria == 'SGM') {
+            $layout = 'sgm';
+        }
+
         Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add('Cursos', '/sasisopa/cursos');
+        Breadcrumb::add($tema->categoria, '/' . mb_strtolower($tema->categoria));
+        Breadcrumb::add('Cursos', '/' . mb_strtolower($tema->categoria) . '/cursos');
         Breadcrumb::add($title, '');
 
         View::render(
@@ -172,7 +230,7 @@ class CursosController extends BaseController
                 ]
 
             ],
-            'sasisopa'
+            $layout
         );
     }
 
@@ -195,9 +253,17 @@ class CursosController extends BaseController
 
         $title = 'Evaluacion, ' . $tema->num_tema . ' - ' . $tema->titulo;
 
+        $layout = 'sasisopa';
+
+        if ($tema->categoria == 'SASISOPA') {
+            $layout = 'sasisopa';
+        } else if ($tema->categoria == 'SGM') {
+            $layout = 'sgm';
+        }
+
         Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add('Cursos', '/sasisopa/cursos');
+        Breadcrumb::add($tema->categoria, '/' . mb_strtolower($tema->categoria));
+        Breadcrumb::add('Cursos', '/' . mb_strtolower($tema->categoria) . '/cursos');
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
@@ -214,7 +280,7 @@ class CursosController extends BaseController
             ]
         ];
 
-        View::render('cursos/evaluacion', $data, 'sasisopa');
+        View::render('cursos/evaluacion', $data, $layout);
     }
 
     public function getEvaluacion(int $id): void
@@ -432,50 +498,77 @@ class CursosController extends BaseController
 
     public function cursosModulos(int $idModulo): void
     {
-
-        $modulo = CursoModulo::query()->findOrFail($idModulo);
+        $modulo = CursoModulo::query()
+            ->findOrFail($idModulo);
 
         $temas = CursoTema::query()
             ->where('id_modulo', $idModulo)
             ->orderBy('num_tema')
-            ->get()
-            ->map(function ($tema) {
+            ->get();
 
-                $calendarios = CursoCalendario::query()
-                    ->where('id_tema', $tema->id)
-                    ->where('id_personal', $this->userId())
-                    ->get();
+        $categoria = $temas->first()?->categoria;
 
-                return [
-                    'id' => $tema->id,
-                    'numero' => $tema->num_tema,
-                    'titulo' => $tema->titulo,
-                    'total' => $calendarios->count(),
-                    'pendientes' => $calendarios->where('estado', 0)->count()
-                ];
-            });
+        $layout = match ($categoria) {
+            'SASISOPA' => 'sasisopa',
+            'SGM'      => 'sgm',
+            default    => 'sasisopa',
+        };
+
+        $temas = $temas->map(function ($tema) {
+
+            $calendarios = CursoCalendario::query()
+                ->where('id_tema', $tema->id)
+                ->where('id_personal', $this->userId())
+                ->get();
+
+            return [
+                'id'         => $tema->id,
+                'numero'     => $tema->num_tema,
+                'titulo'     => $tema->titulo,
+                'total'      => $calendarios->count(),
+                'pendientes' => $calendarios->where('estado', 0)->count(),
+                'categoria'  => $tema->categoria,
+            ];
+        });
 
 
         $title = "MÓDULO {$modulo->num_modulo} - {$modulo->titulo}";
+
+
         Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('Cursos', '/sasisopa/cursos');
-        Breadcrumb::add($title, '');
+        Breadcrumb::add(
+            $categoria ?? 'Cursos',
+            '/' . mb_strtolower($categoria ?? 'sasisopa', 'UTF-8')
+        );
+        Breadcrumb::add(
+            'Cursos',
+            '/' . mb_strtolower($categoria ?? 'sasisopa', 'UTF-8') . '/cursos'
+        );
+        Breadcrumb::add(
+            $title,
+            ''
+        );
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
         $data = [
-            'title' => $title,
-            'permisos' => $permisos,
+            'title'          => $title,
+            'permisos'       => $permisos,
             'filtro_usuario' => $this->filtro_usuario,
-            'modulo' => $modulo,
-            'temas' => $temas,
-            'scripts' => [
+            'modulo'         => $modulo,
+            'temas'          => $temas,
+            'categoria'      => $categoria,
+            'scripts'        => [
                 '/js/vendor.min.js',
                 '/js/cursos/modulo.action.init.js?v=1.0'
             ]
         ];
 
-        View::render('cursos/modulo', $data, 'sasisopa');
+        View::render(
+            'cursos/modulo',
+            $data,
+            $layout
+        );
     }
 
     public function detalleTema(int $idTema): void

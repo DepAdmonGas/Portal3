@@ -36,6 +36,10 @@ class SgmController extends BaseController
     }
 
 
+
+
+
+
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
 
@@ -106,25 +110,5 @@ class SgmController extends BaseController
         ];
 
         View::render('sgm/establecimiento-seguimiento-confirmacion-metrologica', $data, 'sgm');
-    }
-
-    public function auditoriasInternasExternasAtencionHallazgos()
-    {
-
-        $title = '10. Auditorias, Internas, externas y Atención de hallazgos';
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SGM', '/sgm');
-        Breadcrumb::add($title, '');
-
-        $data = [
-            'title' => $title,
-            'links' => [],
-            'scripts' => [
-                '/assets/js/vendor.min.js'
-            ],
-            'help' => true
-        ];
-
-        View::render('sgm/auditorias-internas-externas-atencion-hallazgos', $data, 'sgm');
     }
 }

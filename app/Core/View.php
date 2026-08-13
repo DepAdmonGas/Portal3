@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Core;
 
 use App\Core\Auth;
@@ -7,85 +8,97 @@ use App\Core\Session;
 use App\Services\CalendarioService;
 use App\Services\MultiestacionService;
 use App\Services\ModuleStationService;
+use App\Controllers\DocumentoController;
 
 class View
 {
-protected static function globals(): array
-{
+    protected static function globals(): array
+    {
 
-$filtro_usuario = Session::get('usuario') ?? null;
+        $filtro_usuario = Session::get('usuario') ?? null;
 
-// Obtener listado de estaciones
-$estaciones = [];
+        // Obtener listado de estaciones
+        $estaciones = [];
 
-$allowedStations = MultiestacionService::getAllowedStations(Auth::user());
-if ($allowedStations !== null) {
-$estaciones = Estacion::whereIn('id', $allowedStations)
-->orderBy('numlista', 'ASC')
-->get();
-} elseif (($filtro_usuario['multiestacion'] ?? false)) {
-$estaciones = Estacion::where('numlista', '<=', 8)
-->orderBy('numlista', 'ASC')
-->get();
-}
+        $allowedStations = MultiestacionService::getAllowedStations(Auth::user());
+        if ($allowedStations !== null) {
+            $estaciones = Estacion::whereIn('id', $allowedStations)
+                ->orderBy('numlista', 'ASC')
+                ->get();
+        } elseif (($filtro_usuario['multiestacion'] ?? false)) {
+            $estaciones = Estacion::where('numlista', '<=', 8)
+                ->orderBy('numlista', 'ASC')
+                ->get();
+        }
 
-return [
-'title'           => 'Portal3',
-'user'            => Auth::user(),
-'filtro_usuario'  => $filtro_usuario,
-'estaciones'      => $estaciones,
-'pendientes'     => CalendarioService::pendientes()
-];
+        $DOC_SGM = DocumentoController::validaDocumento(
+            'Sistema de Gestion de Medicion',
+            $filtro_usuario['id_estacion']
+        );
 
-}
+        $DOC_MPSGM = DocumentoController::validaDocumento(
+            'Manual de procedimientos del Sistema de Gestión de Medición',
+            $filtro_usuario['id_estacion']
+        );
 
-public static function render(string $view,array $data = [],string $layout = 'main'): void {
+        return [
+            'title'           => 'Portal3',
+            'user'            => Auth::user(),
+            'filtro_usuario'  => $filtro_usuario,
+            'estaciones'      => $estaciones,
+            'pendientes'     => CalendarioService::pendientes(),
+            'doc_sgm' => $DOC_SGM,
+            'doc_mpsgm' => $DOC_MPSGM,
+        ];
+    }
 
-// Variables globales + datos de la vista
+    public static function render(string $view, array $data = [], string $layout = 'main'): void
+    {
 
-$viewData = array_merge(self::globals(), $data);
-extract($viewData, EXTR_SKIP);
+        // Variables globales + datos de la vista
 
-$viewPath   = __DIR__ . "/../Views/{$view}.php";
-$layoutPath = __DIR__ . "/../Views/layouts/{$layout}.php";
+        $viewData = array_merge(self::globals(), $data);
+        extract($viewData, EXTR_SKIP);
 
-$moduleStationSelector = '';
+        $viewPath   = __DIR__ . "/../Views/{$view}.php";
+        $layoutPath = __DIR__ . "/../Views/layouts/{$layout}.php";
 
-ob_start();
+        $moduleStationSelector = '';
 
-// Obtiene la clave del módulo enviada por el controlador (si existe).
-$moduleKey = $viewData['moduleStationKey'] ?? null;
+        ob_start();
 
-// Si la vista pertenece a un módulo con selector de estación/departamento.
-if ($moduleKey) {
+        // Obtiene la clave del módulo enviada por el controlador (si existe).
+        $moduleKey = $viewData['moduleStationKey'] ?? null;
 
-// Obtiene la información de pendientes del módulo.
-$pendientesData = $viewData['pendientesData'] ?? [];
+        // Si la vista pertenece a un módulo con selector de estación/departamento.
+        if ($moduleKey) {
 
-// Indica si el selector de estación debe ocultarse.
-$ocultarSelector = !empty($viewData['ocultarSelectorEstacion']);
+            // Obtiene la información de pendientes del módulo.
+            $pendientesData = $viewData['pendientesData'] ?? [];
 
-// Genera el HTML del selector y valida si el módulo está disponible.
-$html = ModuleStationService::render($moduleKey, $pendientesData, !$ocultarSelector);
+            // Indica si el selector de estación debe ocultarse.
+            $ocultarSelector = !empty($viewData['ocultarSelectorEstacion']);
 
-// Si el módulo está bloqueado (Para id_gas = 8), solo muestra el mensaje de bloqueo.
-if (ModuleStationService::$isBlocked) {
-echo $html;
-} else {
+            // Genera el HTML del selector y valida si el módulo está disponible.
+            $html = ModuleStationService::render($moduleKey, $pendientesData, !$ocultarSelector);
 
-// Guarda el selector para mostrarlo en el layout y carga la vista.
-$moduleStationSelector = $html;
-require $viewPath;
-}
-} else {
+            // Si el módulo está bloqueado (Para id_gas = 8), solo muestra el mensaje de bloqueo.
+            if (ModuleStationService::$isBlocked) {
+                echo $html;
+            } else {
 
-// Si la vista no utiliza el sistema de multiestacion, se carga normalmente.
-require $viewPath;
-}
+                // Guarda el selector para mostrarlo en el layout y carga la vista.
+                $moduleStationSelector = $html;
+                require $viewPath;
+            }
+        } else {
 
-$content = ob_get_clean();
+            // Si la vista no utiliza el sistema de multiestacion, se carga normalmente.
+            require $viewPath;
+        }
 
-require $layoutPath;
+        $content = ob_get_clean();
 
-}
+        require $layoutPath;
+    }
 }

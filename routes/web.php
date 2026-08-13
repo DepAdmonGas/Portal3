@@ -1281,6 +1281,10 @@ return function (RouteCollector $r) {
     $r->addGroup('/sgm', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['SgmController', 'index']));
 
+        $r->addRoute('GET', '/calendario', Route::auth(['CalendarioController', 'sgmIndex']));
+        $r->addRoute('GET', '/cursos', Route::auth(['CursosController', 'cursosSgmIndex']));
+
+
         //-------------- Resision ----------
         $r->addRoute('GET', '/revision/datatable', Route::auth(['SgmRevisionController', 'datatable']));
         $r->addRoute('POST', '/revision/create', Route::auth(['SgmRevisionController', 'createRevision']));
@@ -1464,7 +1468,49 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/establecimiento-seguimiento-confirmacion-metrologica', Route::auth(['SgmController', 'establecimientoSeguimientoConfirmacionMetrologica']));
         //--------- 9. ESTABLECIMIENTO Y SEGUIMIENTO CONFIRMACIÓN METROLÓGICA ----------------------------
 
-        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos', Route::auth(['SgmController', 'auditoriasInternasExternasAtencionHallazgos']));
+        //--------- 10. Auditorias, Internas, externas y Atención de hallazgos
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos', Route::auth(['SgmAuditoriaInternaExternaController', 'index']));
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/table', Route::auth(['SgmAuditoriaInternaExternaController', 'table']));
+
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/editar', Route::auth(['SgmPlanAuditoriaController', 'editar']));
+
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/{id:\d+}', Route::auth(['SgmPlanAuditoriaController', 'index']));
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/{id:\d+}/data', Route::auth(['SgmPlanAuditoriaController', 'data']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/responsable/create', Route::auth(['SgmPlanAuditoriaController', 'createResponsable']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/responsable/delete', Route::auth(['SgmPlanAuditoriaController', 'deleteResponsable']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/auditor/create', Route::auth(['SgmPlanAuditoriaController', 'createAuditor']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/auditor/delete', Route::auth(['SgmPlanAuditoriaController', 'deleteAuditor']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/auxiliar/create', Route::auth(['SgmPlanAuditoriaController', 'createAuxiliar']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/auxiliar/delete', Route::auth(['SgmPlanAuditoriaController', 'deleteAuxiliar']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/agenda/create', Route::auth(['SgmPlanAuditoriaController', 'createAgenda']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/agenda/delete', Route::auth(['SgmPlanAuditoriaController', 'deleteAgenda']));
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/plan-auditoria/pdf/{id:\d+}', Route::auth(['SgmPlanAuditoriaController', 'pdf']));
+
+
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/editar', Route::auth(['SgmReporteHallazgoAuditoriaController', 'editar']));
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/{id:\d+}', Route::auth(['SgmReporteHallazgoAuditoriaController', 'index']));
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/{id:\d+}/data', Route::auth(['SgmReporteHallazgoAuditoriaController', 'data']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/responsable/create', Route::auth(['SgmReporteHallazgoAuditoriaController', 'createResponsable']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/responsable/delete', Route::auth(['SgmReporteHallazgoAuditoriaController', 'deleteResponsable']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/entrevistador/create', Route::auth(['SgmReporteHallazgoAuditoriaController', 'agregarEntrevistado']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/entrevistador/delete', Route::auth(['SgmReporteHallazgoAuditoriaController', 'eliminarEntrevistado']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/equipoauditor/create', Route::auth(['SgmReporteHallazgoAuditoriaController', 'agregarEquipoAuditor']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/equipoauditor/delete', Route::auth(['SgmReporteHallazgoAuditoriaController', 'eliminarEquipoAuditor']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/resultado/update', Route::auth(['SgmReporteHallazgoAuditoriaController', 'actualizarResultado']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/conforme/create', Route::auth(['SgmReporteHallazgoAuditoriaController', 'agregarConforme']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/conforme/delete', Route::auth(['SgmReporteHallazgoAuditoriaController', 'eliminarConforme']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/mejora/create', Route::auth(['SgmReporteHallazgoAuditoriaController', 'agregarMejora']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/mejora/delete', Route::auth(['SgmReporteHallazgoAuditoriaController', 'eliminarMejora']));
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/pdf/{id:\d+}', Route::auth(['SgmReporteHallazgoAuditoriaController', 'pdf']));
+
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-atencion-hallazgos/editar', Route::auth(['SgmPlanAtencionHallazgoController', 'editar']));
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/plan-atencion-hallazgos/{id:\d+}', Route::auth(['SgmPlanAtencionHallazgoController', 'index']));
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/plan-atencion-hallazgos/{id:\d+}/data', Route::auth(['SgmPlanAtencionHallazgoController', 'data']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-atencion-hallazgos/responsable/create', Route::auth(['SgmPlanAtencionHallazgoController', 'createResponsable']));
+        $r->addRoute('POST', '/auditorias-internas-externas-atencion-hallazgos/plan-atencion-hallazgos/responsable/delete', Route::auth(['SgmPlanAtencionHallazgoController', 'deleteResponsable']));
+        $r->addRoute('GET', '/auditorias-internas-externas-atencion-hallazgos/plan-atencion-hallazgos/pdf/{id:\d+}', Route::auth(['SgmPlanAtencionHallazgoController', 'pdf']));
+
+        //--------- 10. Auditorias, Internas, externas y Atención de hallazgos
 
         //--------- 11. EVALUACIÓN DEL CUMPLIMIENTO DE OBJETIVOS Y REVISIÓN POR LA DIRECCIÓN ----------------
         $r->addRoute('GET', '/evaluacion-cumplimiento-objetivos-revision-direccion', Route::auth(['SgmEvaluacionCumplimientoController', 'index']));

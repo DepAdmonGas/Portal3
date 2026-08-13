@@ -1,5 +1,7 @@
 document.addEventListener('alpine:init', () => {
-    Alpine.data('cursos', () => ({
+    Alpine.data('cursos', (categoria) => ({
+
+        categoria,
 
         loadingModulos: true,
         loadingPendientes: true,
@@ -24,7 +26,7 @@ document.addEventListener('alpine:init', () => {
             try {
 
                 const { data } = await axios.get(
-                    '/sasisopa/cursos/modulos/get'
+                    '/sasisopa/cursos/modulos/get?categoria=' + this.categoria
                 );
 
                 if (data.success) {
@@ -55,7 +57,7 @@ document.addEventListener('alpine:init', () => {
             try {
 
                 const { data } = await axios.get(
-                    '/sasisopa/cursos/pendientes/get'
+                    '/sasisopa/cursos/pendientes/get?categoria=' + this.categoria
                 );
 
                 if (data.success) {

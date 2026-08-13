@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class PlanAuditoriaResponsable extends Model
 {
@@ -26,4 +27,13 @@ class PlanAuditoriaResponsable extends Model
         'id_plan' => 'integer',
         'id_responsable' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_responsable',
+            'id'
+        );
+    }
 }
