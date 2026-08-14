@@ -143,6 +143,13 @@ return Promise.reject(error);
 </li>
 
 <li class="sidebar-item">
+<a class="sidebar-link" href="/departamento-operativo/recursos-humanos/horario-personal" aria-expanded="false">
+<span><i class="ti ti-calendar-clock"></i></span>
+<span class="hide-menu">Horario Personal</span>
+</a>
+</li>
+
+<li class="sidebar-item">
 <a class="sidebar-link" href="/departamento-operativo/importacion/descarga-merma" aria-expanded="false">
 <span><i class="ti ti-trash"></i></span>
 <span class="hide-menu">Descarga de merma</span>
