@@ -1,74 +1,72 @@
 <!DOCTYPE html>
 <html lang="es" dir="ltr" data-bs-theme="light" data-color-theme="Blue_Theme" data-layout="vertical">
+
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title><?= $title ?? 'Portal3' ?></title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><?= $title ?? 'Portal3' ?></title>
 
-<!-- Favicon icon-->
-<link rel="shortcut icon" type="image/png" href="<?=asset('images/logos/icono-web.png')?>" />
-<!-- Core Css -->
-<link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
-<link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
+    <!-- Favicon icon-->
+    <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/icono-web.png') ?>" />
+    <!-- Core Css -->
+    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
+    <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
 
 
-<!-- Scripts por vista -->
-<?php if (!empty($links)): ?>
-<?php foreach ($links as $link): ?>
-<link rel="stylesheet" href="<?= $link ?>" />
-<?php endforeach; ?>
-<?php endif; ?>
+    <!-- Scripts por vista -->
+    <?php if (!empty($links)): ?>
+        <?php foreach ($links as $link): ?>
+            <link rel="stylesheet" href="<?= $link ?>" />
+        <?php endforeach; ?>
+    <?php endif; ?>
 
-<!-- SECURITY: DOMPurify para prevenir XSS en x-html-->
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-<!-- Alpine + Axios -->
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <!-- Alpine + Axios -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-<!-- SECURITY: Meta tag CSRF para proteger formularios -->
-<meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
+    <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
+    <script>
+        (function() {
+            function getCsrfToken() {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                return meta ? meta.getAttribute('content') : null;
+            }
 
-<!-- SECURITY: Auto-inyectar token CSRF en todas las solicitudes Axios -->
-<script>
-(function() {
-function getCsrfToken() {
-const meta = document.querySelector('meta[name="csrf-token"]');
-return meta ? meta.getAttribute('content') : null;
-}
+            const csrfToken = getCsrfToken();
+            if (csrfToken) {
+                axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
 
-const csrfToken = getCsrfToken();
-if (csrfToken) {
-axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+                axios.interceptors.request.use(
+                    function(config) {
+                        config.headers['X-CSRF-TOKEN'] = getCsrfToken();
+                        return config;
+                    },
+                    function(error) {
+                        return Promise.reject(error);
+                    }
+                );
 
-axios.interceptors.request.use(
-function(config) {
-config.headers['X-CSRF-TOKEN'] = getCsrfToken();
-return config;
-},
-function(error) {
-return Promise.reject(error);
-}
-);
-
-axios.interceptors.response.use(
-function(response) {
-return response;
-},
-function(error) {
-if (error.response && error.response.status === 419) {
-alert('Su sesión ha expirado. Por favor actualice la página.');
-window.location.reload();
-}
-return Promise.reject(error);
-}
-);
-}
-})();
-</script>
+                axios.interceptors.response.use(
+                    function(response) {
+                        return response;
+                    },
+                    function(error) {
+                        if (error.response && error.response.status === 419) {
+                            alert('Su sesión ha expirado. Por favor actualice la página.');
+                            window.location.reload();
+                        }
+                        return Promise.reject(error);
+                    }
+                );
+            }
+        })();
+    </script>
 </head>
 
 <body class="link-sidebar">
+
 
 <!-- Pantalla de carga (Loader) -->
 <div class="loader-admongas">
@@ -400,5 +398,7 @@ $badgeText = $detalle['estacion_nombre'];
 <?php endforeach; ?>
 <?php endif; ?>
 
+
 </body>
+
 </html>

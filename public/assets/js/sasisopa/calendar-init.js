@@ -1,6 +1,8 @@
 document.addEventListener('alpine:init', () => {
 
-    Alpine.data('calendario', () => ({
+    Alpine.data('calendario', (modulo) => ({
+
+        modulo,
 
         modalDetalle: null,
         modalDia: null,
@@ -176,7 +178,8 @@ document.addEventListener('alpine:init', () => {
                             {
 
                             params:{
-
+                                modulo:
+                                    this.modulo,
                                 start:
                                     info.startStr,
 
@@ -271,7 +274,8 @@ document.addEventListener('alpine:init', () => {
                             {
 
                             params:{
-
+                                modulo:
+                                    this.modulo,
                                 fecha:
                                 info.dateStr
 

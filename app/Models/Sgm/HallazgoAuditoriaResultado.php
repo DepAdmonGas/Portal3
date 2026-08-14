@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,4 +28,12 @@ class HallazgoAuditoriaResultado extends Model
         'id_elemento' => 'integer',
         'resultado' => 'string',
     ];
+
+    public function elemento()
+    {
+        return $this->belongsTo(
+            Elemento::class,
+            'id_elemento'
+        );
+    }
 }

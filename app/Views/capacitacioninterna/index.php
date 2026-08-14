@@ -1,44 +1,42 @@
 <div id="container" class="pb-4"
-x-data="{ ...actions(), ...capacitacionInterna() }">
+    x-data="{ ...actions(), ...capacitacionInterna() }">
 
     <div class="text-end">
         <a type="button" class="btn btn-light" @click="openModalBuscar()">
-        <i class="ti ti-search"></i> Buscar</a>
+            <i class="ti ti-search"></i> Buscar</a>
     </div>
 
     <div class="position-relative">
 
-    <button 
-        x-show="htmlReporte"
-        @click="limpiarBusqueda()"
-        class="btn btn-sm btn-danger position-absolute top-0 end-0">
-        <i class="ti ti-x"></i>
-    </button>
-    
+        <button
+            x-show="htmlReporte"
+            @click="limpiarBusqueda()"
+            class="btn btn-sm btn-danger position-absolute top-0 end-0">
+            <i class="ti ti-x"></i>
+        </button>
 
-    <!-- SECURITY: Sanitizar con DOMPurify para prevenir XSS -->
-    <div class="mt-4" x-html="DOMPurify.sanitize(htmlReporte)"></div>
+        <div class="mt-4" x-html="DOMPurify.sanitize(htmlReporte)"></div>
 
     </div>
 
     <div class="row mt-3">
-        <?php foreach($cursos ?? [] as $curso): ?>
+        <?php foreach ($cursos ?? [] as $curso): ?>
             <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 mt-2 mb-2 ">
                 <div class="card">
                     <div class="card-body text-center">
                         <h4><?= $curso->titulo ?></h4>
-                        
+
                         <label class="text-success fs-13 fw-bold"><?= $curso->temas_count ?></label> <small class="text-muted">Temas</small>
 
-                         <select class="form-select mt-2"  @change="irATema($event)">
+                        <select class="form-select mt-2" @change="irATema($event)">
                             <option value="">Selecciona un tema</option>
                             <optgroup label="<?= $curso->titulo ?>">
-                            <?php foreach($curso->temas as $tema): ?>
-                                <option value="<?= $tema->id ?>"
-                                 data-modulo="<?= $curso->id ?>">
-                                    <?= $tema->num_tema ?> - <?= $tema->titulo ?>
-                                </option>
-                            <?php endforeach; ?>
+                                <?php foreach ($curso->temas as $tema): ?>
+                                    <option value="<?= $tema->id ?>"
+                                        data-modulo="<?= $curso->id ?>">
+                                        <?= $tema->num_tema ?> - <?= $tema->titulo ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </optgroup>
                         </select>
 
@@ -46,7 +44,7 @@ x-data="{ ...actions(), ...capacitacionInterna() }">
                 </div>
             </div>
         <?php endforeach; ?>
-        
+
     </div>
 
     <!-- MODAL -->
@@ -62,7 +60,7 @@ x-data="{ ...actions(), ...capacitacionInterna() }">
                 <div class="modal-body">
                     <label class="fw-bold">Agregar Año:</label>
                     <input type="number" class="form-control mt-2"
-                           x-model="year">
+                        x-model="year">
                 </div>
 
                 <div class="modal-footer">

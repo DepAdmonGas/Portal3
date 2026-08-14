@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -50,4 +50,21 @@ class PlanAuditoria extends Model
         'acciones' => 'string',
         'realizadopor' => 'integer',
     ];
+
+    public function auditoria()
+    {
+        return $this->belongsTo(
+            Auditoria::class,
+            'id_auditoria',
+            'id'
+        );
+    }
+
+    public function auditores()
+    {
+        return $this->hasMany(
+            PlanAuditoriaAuditor::class,
+            'id_plan'
+        );
+    }
 }

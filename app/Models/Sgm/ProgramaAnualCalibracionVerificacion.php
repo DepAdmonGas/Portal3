@@ -28,7 +28,7 @@ class ProgramaAnualCalibracionVerificacion extends Model
         'id' => 'integer',
         'id_estacion' => 'integer',
         'id_equipo' => 'integer',
-        'fecha' => 'date',
+        'fecha' => 'date:Y-m-d',
         'id_verificar' => 'integer',
         'estado' => 'integer',
     ];

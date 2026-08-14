@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,7 +33,7 @@ class BitacoraVerificacionSensores extends Model
     protected $casts = [
         'id' => 'integer',
         'id_programa' => 'integer',
-        'fecha' => 'date',
+        'fecha' => 'date:Y-m-d',
         'hora' => 'string',
         'no_tanque' => 'integer',
         'marca' => 'string',

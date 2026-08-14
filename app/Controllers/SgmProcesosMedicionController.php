@@ -89,7 +89,7 @@ class SgmProcesosMedicionController extends BaseController
                 '/js/sgm/procesos-medicion/programaanualcalibracion.actions.init.js?v=1.2',
 
             ],
-            'help' => true
+            'help' => false
         ];
 
         View::render('sgm/procesos-medicion/programacion-anual-calibracion', $data, 'sgm');
@@ -113,12 +113,18 @@ class SgmProcesosMedicionController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-            'links' => [],
+            'links' => [
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+            ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+
+                '/js/sgm/procesos-medicion/bitacoracalibracion.actions.init.js?v=1.1',
+                '/js/sgm/procesos-medicion/bitacoracalibracion.datatable.init.js?v=1.1'
 
             ],
-            'help' => true
+            'help' => false
         ];
 
         View::render('sgm/procesos-medicion/bitacora-calibracion-equipos', $data, 'sgm');
@@ -145,9 +151,10 @@ class SgmProcesosMedicionController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/sgm/procesos-medicion/programaanualverificacion.actions.init.js?v=1.1',
 
             ],
-            'help' => true
+            'help' => false
         ];
 
         View::render('sgm/procesos-medicion/programacion-anual-verificacion', $data, 'sgm');
@@ -169,14 +176,20 @@ class SgmProcesosMedicionController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-            'links' => [],
+            'links' => [
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+            ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+
+                '/js/sgm/procesos-medicion/bitacoraverificacion.actions.init.js?v=1.1',
+                '/js/sgm/procesos-medicion/bitacoraverificacion.datatable.init.js?v=1.1'
 
             ],
-            'help' => true
+            'help' => false
         ];
 
-        View::render('sgm/procesos-medicion/bitacora-calibracion-equipos', $data, 'sgm');
+        View::render('sgm/procesos-medicion/bitacora-verificacion-equipos', $data, 'sgm');
     }
 }
