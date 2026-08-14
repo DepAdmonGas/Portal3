@@ -26,6 +26,7 @@ private static array $moduleIdSpace = [
 ],
 'rh_localidades' => [
 'seguros', 'organigrama', 'control-documentos-personal',
+'horario-personal',
 ],
 ];
 
@@ -40,6 +41,7 @@ private static array $moduleDeptIdSpace = [
 ],
 'rh_localidades' => [
 'seguros', 'organigrama', 'control-documentos-personal',
+'horario-personal',
 ],
 ];
 

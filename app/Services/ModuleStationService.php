@@ -234,142 +234,144 @@ class ModuleStationService
 
 <div>La estación asignada a tu usuario no está disponible para el módulo <strong>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</strong>. Contacta al administrador para configurar tu acceso.</div>
 </div>';
-        }
 
-        self::$isBlocked = false;
+}
 
-        $hasSelection = $idEstacion !== null || $idDepto !== null;
-        $hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
-        $showSelector = $showSelector && ($multiestacion || $hasChoices);
+self::$isBlocked = false;
 
-        $html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
+$hasSelection = $idEstacion !== null || $idDepto !== null;
+$hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
+$showSelector = $showSelector && ($multiestacion || $hasChoices);
 
-        $badgeHidden = $hasSelection ? '' : ' style="display:none"';
-        $badgeText = $hasSelection ? ($currentName ?: "\u{2014}") : '';
-        $html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
+$html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
 
-        if ($showSelector) {
-            $placeholder = $cfg['placeholder'] ?? 'Selecciona una estación...';
-            if (empty($depts) && $cfg['type'] === 'stations_and_departments') {
-                $placeholder = $cfg['allow_all'] ? 'Todas las estaciones' : 'Selecciona una estación...';
-            }
-            $allowAll = $cfg['allow_all'] ?? false;
+$badgeHidden = $hasSelection ? '' : ' style="display:none"';
+$badgeText = $hasSelection ? ($currentName ?: "\u{2014}") : '';
+$html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
 
-            $html .= '<div class="ms-auto">';
-            $html .= '<select id="module-station-selector-' . $moduleKey . '" class="form-select form-select-sm" style="min-width:260px;" data-module-key="' . htmlspecialchars($moduleKey, ENT_QUOTES, 'UTF-8') . '" data-load-empty="true">';
+if ($showSelector) {
+$placeholder = $cfg['placeholder'] ?? 'Selecciona una estación...';
+if (empty($depts) && $cfg['type'] === 'stations_and_departments') {
+$placeholder = $cfg['allow_all'] ? 'Todas las estaciones' : 'Selecciona una estación...';
+}
+$allowAll = $cfg['allow_all'] ?? false;
 
-            if ($allowAll) {
-                $totalPendientes = $pendientes['total'] ?? 0;
-                $allLabel = $totalPendientes > 0 ? $placeholder . ' (' . $totalPendientes . ')' : $placeholder;
-                $html .= '<option value="" ' . ((!$idEstacion && !$idDepto) ? 'selected' : '') . '>' . htmlspecialchars($allLabel, ENT_QUOTES, 'UTF-8') . '</option>';
-            } else {
-                $html .= '<option value="" ' . ((!$idEstacion && !$idDepto) ? 'selected' : '') . '>' . htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8') . '</option>';
-            }
+$html .= '<div class="ms-auto">';
+$html .= '<select id="module-station-selector-' . $moduleKey . '" class="form-select form-select-sm" style="min-width:260px;" data-module-key="' . htmlspecialchars($moduleKey, ENT_QUOTES, 'UTF-8') . '" data-load-empty="true">';
 
-            if (!empty($stations)) {
-                //$estLabel = ($moduleKey === 'seguros') ? 'Estaciones' : 'Estaciones';
-                $estLabel = 'Estaciones';
+if ($allowAll) {
+$totalPendientes = $pendientes['total'] ?? 0;
+$allLabel = $totalPendientes > 0 ? $placeholder . ' (' . $totalPendientes . ')' : $placeholder;
+$html .= '<option value="" ' . ((!$idEstacion && !$idDepto) ? 'selected' : '') . '>' . htmlspecialchars($allLabel, ENT_QUOTES, 'UTF-8') . '</option>';
+} else {
+$html .= '<option value="" ' . ((!$idEstacion && !$idDepto) ? 'selected' : '') . '>' . htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8') . '</option>';
+}
 
-                $html .= '<optgroup label="' . $estLabel . '">';
-                foreach ($stations as $s) {
-                    $sel = ($s['id'] == $idEstacion && !$idDepto) ? ' selected' : '';
-                    $pend = isset($pendientes['estacion_' . $s['id']]) ? ' (' . $pendientes['estacion_' . $s['id']] . ')' : '';
-                    $html .= '<option value="estacion_' . $s['id'] . '"' . $sel . '>' . htmlspecialchars($s['nombre'], ENT_QUOTES, 'UTF-8') . $pend . '</option>';
-                }
-                $html .= '</optgroup>';
-            }
+if (!empty($stations)) {
+//$estLabel = ($moduleKey === 'seguros') ? 'Estaciones' : 'Estaciones';
+$estLabel = 'Estaciones';
 
-            if (!empty($depts)) {
-                //$deptLabel = ($moduleKey === 'seguros') ? 'Localidades' : 'Departamentos';
-                $deptLabel = 'Departamentos';
-                $html .= '<optgroup label="' . $deptLabel . '">';
-                foreach ($depts as $d) {
-                    $sel = ($d['id'] == $idDepto) ? ' selected' : '';
-                    $pend = isset($pendientes['depto_' . $d['id']]) ? ' (' . $pendientes['depto_' . $d['id']] . ')' : '';
-                    $html .= '<option value="depto_' . $d['id'] . '"' . $sel . '>' . htmlspecialchars($d['nombre'], ENT_QUOTES, 'UTF-8') . $pend . '</option>';
-                }
-                $html .= '</optgroup>';
-            }
+$html .= '<optgroup label="' . $estLabel . '">';
+foreach ($stations as $s) {
+$sel = ($s['id'] == $idEstacion && !$idDepto) ? ' selected' : '';
+$pend = isset($pendientes['estacion_' . $s['id']]) ? ' (' . $pendientes['estacion_' . $s['id']] . ')' : '';
+$html .= '<option value="estacion_' . $s['id'] . '"' . $sel . '>' . htmlspecialchars($s['nombre'], ENT_QUOTES, 'UTF-8') . $pend . '</option>';
+}
+$html .= '</optgroup>';
+}
 
-            $html .= '</select></div>';
-        }
+if (!empty($depts)) {
+//$deptLabel = ($moduleKey === 'seguros') ? 'Localidades' : 'Departamentos';
+$deptLabel = 'Departamentos';
+$html .= '<optgroup label="' . $deptLabel . '">';
+foreach ($depts as $d) {
+$sel = ($d['id'] == $idDepto) ? ' selected' : '';
+$pend = isset($pendientes['depto_' . $d['id']]) ? ' (' . $pendientes['depto_' . $d['id']] . ')' : '';
+$html .= '<option value="depto_' . $d['id'] . '"' . $sel . '>' . htmlspecialchars($d['nombre'], ENT_QUOTES, 'UTF-8') . $pend . '</option>';
+}
+$html .= '</optgroup>';
+}
 
-        $html .= '</div>';
+$html .= '</select></div>';
+}
 
-        return $html;
-    }
+$html .= '</div>';
 
-    public static function resetAllContexts(): void
-    {
-        Session::set('module_context', []);
-    }
+return $html;
+}
 
-    private static function getIdGas(): ?int
-    {
-        $sessionUsuario = Session::get('usuario');
-        $idGas = $sessionUsuario['id_estacion'] ?? null;
-        if ($idGas === null) {
-            $userObj = Auth::user();
-            $idGas = $userObj ? (int)$userObj->id_gas : null;
-        }
-        return $idGas;
-    }
+public static function resetAllContexts(): void
+{
+Session::set('module_context', []);
+}
 
-    private static function buildPuestos(array $ids): array
-    {
-        $nombres = [
-            4 => 'Comercializadora',
-            5 => 'Gestoría',
-            18 => 'Quitarga',
-            19 => 'Operación servicio y mantenimiento de personal',
-            23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
-        ];
-        $result = [];
-        foreach ($ids as $id) {
-            if (isset($nombres[$id])) {
-                $result[] = ['id' => $id, 'nombre' => $nombres[$id]];
-            }
-        }
-        return $result;
-    }
+private static function getIdGas(): ?int
+{
+$sessionUsuario = Session::get('usuario');
+$idGas = $sessionUsuario['id_estacion'] ?? null;
+if ($idGas === null) {
+$userObj = Auth::user();
+$idGas = $userObj ? (int)$userObj->id_gas : null;
+}
+return $idGas;
+}
 
-    private static function resolveName(string $moduleKey, $idEstacion, $idDepto): string
-    {
-        if ($moduleKey === 'seguros') {
-            $id = $idEstacion ?? $idDepto;
-            if ($id) {
-                $loc = RhLocalidad::find($id);
-                return $loc ? $loc->localidad : "#$id";
-            }
-            return '';
-        }
+private static function buildPuestos(array $ids): array
+{
+$nombres = [
+4 => 'Comercializadora',
+5 => 'Gestoría',
+18 => 'Quitarga',
+19 => 'Operación servicio y mantenimiento de personal',
+23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
+];
+$result = [];
+foreach ($ids as $id) {
+if (isset($nombres[$id])) {
+$result[] = ['id' => $id, 'nombre' => $nombres[$id]];
+}
+}
+return $result;
+}
 
-        if (in_array($moduleKey, ['organigrama', 'control-documentos-personal'])) {
-            if ($idDepto && !$idEstacion) {
-                $loc = RhLocalidad::find($idDepto);
-                return $loc ? $loc->localidad : 'Depto #' . $idDepto;
-            }
-            if ($idEstacion) {
-                $est = Estacion::find($idEstacion);
-                return $est ? $est->nombre : 'Estación #' . $idEstacion;
-            }
-            return '';
-        }
+private static function resolveName(string $moduleKey, $idEstacion, $idDepto): string
+{
+if ($moduleKey === 'seguros') {
+$id = $idEstacion ?? $idDepto;
+if ($id) {
+$loc = RhLocalidad::find($id);
+return $loc ? $loc->localidad : "#$id";
+}
+return '';
+}
 
-        if ($idEstacion && !$idDepto) {
-            $est = Estacion::find($idEstacion);
-            return $est ? $est->nombre : 'Estación #' . $idEstacion;
-        }
-        if ($idDepto) {
-            $deptNames = [
-                4 => 'Comercializadora',
-                5 => 'Gestoría',
-                18 => 'Quitarga',
-                19 => 'Operación servicio y mantenimiento de personal',
-                23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
-            ];
-            return $deptNames[$idDepto] ?? 'Depto #' . $idDepto;
-        }
-        return '';
-    }
+if (in_array($moduleKey, ['organigrama', 'control-documentos-personal', 'horario-personal'])) {
+if ($idDepto && !$idEstacion) {
+$loc = RhLocalidad::find($idDepto);
+return $loc ? $loc->localidad : 'Depto #' . $idDepto;
+}
+if ($idEstacion) {
+$est = Estacion::find($idEstacion);
+return $est ? $est->nombre : 'Estación #' . $idEstacion;
+}
+return '';
+}
+
+if ($idEstacion && !$idDepto) {
+$est = Estacion::find($idEstacion);
+return $est ? $est->nombre : 'Estación #' . $idEstacion;
+}
+if ($idDepto) {
+$deptNames = [
+4 => 'Comercializadora',
+5 => 'Gestoría',
+18 => 'Quitarga',
+19 => 'Operación servicio y mantenimiento de personal',
+23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
+];
+return $deptNames[$idDepto] ?? 'Depto #' . $idDepto;
+}
+return '';
+}
+
 }
