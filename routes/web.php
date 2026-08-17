@@ -229,10 +229,8 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/modulos-operativo-usuarios/delete', Route::auth(['ConfiguracionController', 'deleteModulosDptoOperativUsuarios']));
     });
 
-
     // ---------------- DEPARTAMENTO DE SISTEMAS ----------------
     $r->addGroup('/departamento-sistemas', function (RouteCollector $r) {});
-
 
 
     // ---------------- DEPARTAMENTO OPERATIVO ----------------
@@ -1534,6 +1532,9 @@ $r->addRoute('GET','/recursos-humanos/horario-personal/pdf',Route::auth(['Horari
 
     });
 
+    $r->addGroup('/gestoria', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['GestoriaController', 'index']));
+    });
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
     $r->addRoute('POST', '/telegram/webhook', ['TelegramWebhookController', 'handle']);
     $r->addRoute('GET', '/telegram/poll', Route::auth(['TelegramWebhookController', 'poll']));
