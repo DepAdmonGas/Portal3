@@ -10,21 +10,27 @@ use App\Models\ModuloConfig;
 class ModuleStationService
 {
 public static bool $isBlocked = false;
+
+/**
+ * Config de módulos memoizada por request (tb_modulos_config es casi estática).
+ */
+private static array $configCache = [];
+
 public static function getConfig(string $moduleKey): ?array
 {
+if (isset(self::$configCache[$moduleKey])) {
+    return self::$configCache[$moduleKey];
+}
+
 $mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
 if (!$mc) return null;
 
-return [
-'type'        => $mc->tipo,
-'allow_all'   => (bool)$mc->allow_all,
-'placeholder' => $mc->placeholder,
+return self::$configCache[$moduleKey] = [
+'type'              => $mc->tipo,
+'allow_all'         => (bool)$mc->allow_all,
+'placeholder'       => $mc->placeholder,
+'tipo_departamento' => $mc->tipo_departamento,
 ];
-}
-
-public static function hasSelector(string $moduleKey): bool
-{
-return self::getConfig($moduleKey) !== null;
 }
 
 public static function getContext(string $moduleKey): array
@@ -32,12 +38,14 @@ public static function getContext(string $moduleKey): array
 $cfg = self::getConfig($moduleKey);
 if (!$cfg) return ['id_estacion' => null, 'id_depto' => null, 'nombre' => ''];
 
-$ctx = Session::get('module_context')[$moduleKey] ?? [];
+$allCtx = Session::get('module_context') ?? [];
+$hasExplicit = array_key_exists($moduleKey, $allCtx);
 
+$ctx = $allCtx[$moduleKey] ?? [];
 $idEstacion = $ctx['id_estacion'] ?? null;
 $idDepto = $ctx['id_depto'] ?? null;
 
-if (!$idEstacion && !$idDepto) {
+if (!$hasExplicit && !$idEstacion && !$idDepto) {
 $multiestacion = MultiestacionService::isEnabled();
 if (!$multiestacion) {
 $idGas = self::getIdGas();
@@ -91,12 +99,6 @@ $ctx[$moduleKey] = [
 Session::set('module_context', $ctx);
 }
 
-public static function hasSelection(string $moduleKey): bool
-{
-$ctx = self::getContext($moduleKey);
-return $ctx['id_estacion'] !== null || $ctx['id_depto'] !== null;
-}
-
 public static function getAvailableStations(string $moduleKey): array
 {
 $mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
@@ -105,7 +107,7 @@ if (!$mc) return [];
 $supported = $mc->estaciones_soportadas ?? [];
 if (empty($supported)) return [];
 
-$useRhLocalidades = ($moduleKey === 'seguros');
+$useRhLocalidades = (MultiestacionService::getIdSpaceForModule($moduleKey) === MultiestacionService::TABLA_RH_LOCALIDADES);
 $user = Auth::user();
 $config = MultiestacionService::getConfig($user);
 
@@ -166,15 +168,15 @@ public static function getAvailableDepartments(string $moduleKey): array
 $mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
 if (!$mc || $mc->tipo !== 'stations_and_departments') return [];
 
-$supported = $mc->departamentos_soportados ?? [];
 $tipoDept = $mc->tipo_departamento;
-
-if (empty($supported)) return [];
 
 $user = Auth::user();
 $config = MultiestacionService::getConfig($user);
 
 if ($config !== null) {
+$supported = $mc->departamentos_soportados ?? [];
+if (empty($supported)) return [];
+
 $column = ($tipoDept === 'localidades') ? 'departamentos_localidades' : 'departamentos_puestos';
 $allowed = $config[$column];
 if ($allowed === null || empty($allowed)) return [];
@@ -193,7 +195,6 @@ return self::buildPuestos($ids);
 }
 
 // Legacy: no multiestacion config
-// Only id_gas=2 shows Autolavado for localidades-based modules
 if (self::getIdGas() === 2 && $tipoDept === 'localidades') {
 $autoLavado = RhLocalidad::where('id', 9)->first(['id', 'localidad as nombre']);
 return $autoLavado ? [$autoLavado->toArray()] : [];
@@ -266,7 +267,6 @@ $html .= '<option value="" ' . ((!$idEstacion && !$idDepto) ? 'selected' : '') .
 }
 
 if (!empty($stations)) {
-//$estLabel = ($moduleKey === 'seguros') ? 'Estaciones' : 'Estaciones';
 $estLabel = 'Estaciones';
 
 $html .= '<optgroup label="' . $estLabel . '">';
@@ -279,7 +279,6 @@ $html .= '</optgroup>';
 }
 
 if (!empty($depts)) {
-//$deptLabel = ($moduleKey === 'seguros') ? 'Localidades' : 'Departamentos';
 $deptLabel = 'Departamentos';
 $html .= '<optgroup label="' . $deptLabel . '">';
 foreach ($depts as $d) {
@@ -334,32 +333,25 @@ return $result;
 
 private static function resolveName(string $moduleKey, $idEstacion, $idDepto): string
 {
-if ($moduleKey === 'seguros') {
+$stationSpace = MultiestacionService::getIdSpaceForModule($moduleKey);
+
+// Módulos localidades (seguros, organigrama, control-documentos-personal):
+// tanto estaciones como departamentos son ids de op_rh_localidades.
+if ($stationSpace === MultiestacionService::TABLA_RH_LOCALIDADES) {
 $id = $idEstacion ?? $idDepto;
 if ($id) {
-$loc = RhLocalidad::find($id);
-return $loc ? $loc->localidad : "#$id";
+    $loc = RhLocalidad::find($id);
+    return $loc ? $loc->localidad : "#$id";
 }
 return '';
 }
 
-if (in_array($moduleKey, ['organigrama', 'control-documentos-personal'])) {
-if ($idDepto && !$idEstacion) {
-$loc = RhLocalidad::find($idDepto);
-return $loc ? $loc->localidad : 'Depto #' . $idDepto;
-}
-if ($idEstacion) {
+// Default: estaciones en tb_estaciones + departamentos tipo puestos.
+if ($idEstacion !== null && $idDepto === null) {
 $est = Estacion::find($idEstacion);
 return $est ? $est->nombre : 'Estación #' . $idEstacion;
 }
-return '';
-}
-
-if ($idEstacion && !$idDepto) {
-$est = Estacion::find($idEstacion);
-return $est ? $est->nombre : 'Estación #' . $idEstacion;
-}
-if ($idDepto) {
+if ($idDepto !== null) {
 $deptNames = [
 4 => 'Comercializadora',
 5 => 'Gestoría',

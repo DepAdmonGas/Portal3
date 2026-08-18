@@ -68,6 +68,8 @@ class DownloadController{
             'docs-personal-documentos'      => __DIR__ . '../../../public/uploads/archivos/documentos-personal/',
             'docs-personal-baja'            => __DIR__ . '../../../public/uploads/archivos/documentos-personal/solicitud-baja/',
             'docs-personal-incidencias'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/incidencias/',
+            'lista-formatos'                => __DIR__ . '../../../public/uploads/archivos/lista-formatos/',
+            'formatos-alta'                 => __DIR__ . '../../../public/uploads/archivos/formatos/alta/',
         ];
 
         if (!isset($rutas[$tipo])) {

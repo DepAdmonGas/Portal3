@@ -626,6 +626,27 @@ $r->addRoute('POST','/recursos-humanos/control-documentos-personal/delete-baja-a
 $r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-comentarios-baja',Route::auth(['ControlDocumentosPersonalController', 'getComentariosBaja']));
 $r->addRoute('POST','/recursos-humanos/control-documentos-personal/add-comentario-baja',Route::auth(['ControlDocumentosPersonalController', 'addComentarioBaja']));
 
+      //----- Formatos
+$r->addRoute('GET','/recursos-humanos/formatos',Route::auth(['FormatosController', 'index']));
+$r->addRoute('GET','/recursos-humanos/formatos/get-data',Route::auth(['FormatosController', 'getData']));
+$r->addRoute('GET','/recursos-humanos/formatos/pendientes',Route::auth(['FormatosController', 'getPendingCountsEndpoint']));
+$r->addRoute('GET','/recursos-humanos/formatos/detalle',Route::auth(['FormatosController', 'getDetalle']));
+$r->addRoute('GET','/recursos-humanos/formatos/comentarios',Route::auth(['FormatosController', 'getComentarios']));
+$r->addRoute('POST','/recursos-humanos/formatos/store-comentario',Route::auth(['FormatosController', 'storeComentario']));
+$r->addRoute('POST','/recursos-humanos/formatos/delete',Route::auth(['FormatosController', 'destroy']));
+$r->addRoute('GET','/recursos-humanos/formatos-formulario/{formato:\d+}',Route::auth(['FormatosController', 'crear']));
+$r->addRoute('GET','/recursos-humanos/formatos-formulario/{formato:\d+}/{idLocalidad:\d+}',Route::auth(['FormatosController', 'crear']));
+$r->addRoute('POST','/recursos-humanos/formatos/agregar-fila',Route::auth(['FormatosController', 'agregarFila']));
+$r->addRoute('POST','/recursos-humanos/formatos/eliminar-fila',Route::auth(['FormatosController', 'eliminarFila']));
+$r->addRoute('GET','/recursos-humanos/formatos-editar/{id:\d+}',Route::auth(['FormatosController', 'editar']));
+$r->addRoute('POST','/recursos-humanos/formatos/update',Route::auth(['FormatosController', 'update']));
+$r->addRoute('GET','/recursos-humanos/formatos/firmar/{id:\d+}',Route::auth(['FormatosController', 'firmarPage']));
+$r->addRoute('POST','/recursos-humanos/formatos/crear-token',Route::auth(['FormatosController', 'crearToken']));
+$r->addRoute('POST','/recursos-humanos/formatos/firmar',Route::auth(['FormatosController', 'firmar']));
+$r->addRoute('POST','/recursos-humanos/formatos/firma-imagen',Route::auth(['FormatosController', 'firmarImagen']));
+$r->addRoute('GET','/recursos-humanos/formatos/firmas',Route::auth(['FormatosController', 'getFirmas']));
+$r->addRoute('GET','/recursos-humanos/formatos/pdf/{id:\d+}',Route::auth(['FormatosController', 'downloadPdf']));
+
       
       
         //----- 3. Importacion
