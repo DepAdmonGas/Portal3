@@ -635,6 +635,37 @@ $r->addRoute('POST','/recursos-humanos/horario-personal/editar',Route::auth(['Ho
 $r->addRoute('POST','/recursos-humanos/horario-personal/eliminar',Route::auth(['HorarioPersonalController', 'eliminar']));
 $r->addRoute('GET','/recursos-humanos/horario-personal/pdf',Route::auth(['HorarioPersonalController', 'pdf']));
 
+      //----- Biometricos
+$r->addRoute('GET','/recursos-humanos/biometricos',Route::auth(['BiometricosController', 'index']));
+$r->addRoute('GET','/recursos-humanos/biometricos/get-data',Route::auth(['BiometricosController', 'getData']));
+$r->addRoute('GET','/recursos-humanos/biometricos/get-incidencias-catalogo',Route::auth(['BiometricosController', 'getIncidenciasCatalogo']));
+$r->addRoute('GET','/recursos-humanos/biometricos/get-incidencia-por-asistencia',Route::auth(['BiometricosController', 'getIncidenciaPorAsistencia']));
+$r->addRoute('POST','/recursos-humanos/biometricos/agregar-incidencia',Route::auth(['BiometricosController', 'agregarIncidencia']));
+$r->addRoute('POST','/recursos-humanos/biometricos/subir-documento-incidencia',Route::auth(['BiometricosController', 'subirDocumentoIncidencia']));
+$r->addRoute('POST','/recursos-humanos/biometricos/editar-sueldo-incidencia',Route::auth(['BiometricosController', 'editarSueldoIncidencia']));
+$r->addRoute('POST','/recursos-humanos/biometricos/eliminar-incidencia',Route::auth(['BiometricosController', 'eliminarIncidencia']));
+$r->addRoute('GET','/recursos-humanos/biometricos/get-reporte',Route::auth(['BiometricosController', 'getReporte']));
+$r->addRoute('GET','/recursos-humanos/biometricos/reporte-pdf',Route::auth(['BiometricosController', 'reportePdf']));
+$r->addRoute('GET','/recursos-humanos/biometricos/reporte-excel',Route::auth(['BiometricosController', 'reporteExcel']));
+$r->addRoute('GET','/recursos-humanos/biometricos/reporte-estaciones-pdf',Route::auth(['BiometricosController', 'reportePdfEstaciones']));
+$r->addRoute('GET','/recursos-humanos/biometricos/configuracion',Route::auth(['BiometricosController', 'configuracion']));
+$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/{modulo:[a-z-]+}',Route::auth(['BiometricosController', 'configuracionModulo']));
+$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/puestos/datatable',Route::auth(['BiometricosController', 'datatablePuestos']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/puestos/create',Route::auth(['BiometricosController', 'createPuesto']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/puestos/update',Route::auth(['BiometricosController', 'updatePuesto']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/puestos/delete',Route::auth(['BiometricosController', 'deletePuesto']));
+$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/perfil/datatable',Route::auth(['BiometricosController', 'datatablePerfil']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/perfil/create',Route::auth(['BiometricosController', 'createPerfil']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/perfil/update',Route::auth(['BiometricosController', 'updatePerfil']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/perfil/delete',Route::auth(['BiometricosController', 'deletePerfil']));
+
+$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/get-retardo-incidencia',Route::auth(['BiometricosController', 'getRetardoIncidencia']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/update-retardo-incidencia',Route::auth(['BiometricosController', 'updateRetardoIncidencia']));
+$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/datatable-horarios',Route::auth(['BiometricosController', 'datatableHorarios']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/create-horario',Route::auth(['BiometricosController', 'createHorario']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/update-horario',Route::auth(['BiometricosController', 'updateHorario']));
+$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/delete-horario',Route::auth(['BiometricosController', 'deleteHorario']));
+
       
 
         //----- 3. Importacion

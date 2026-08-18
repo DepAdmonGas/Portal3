@@ -23,8 +23,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <!-- Alpine + Axios -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script defer src="<?= asset('libs/alpinejs/dist/alpinejs.min.js') ?>" onerror="var s=document.createElement('script');s.defer=true;s.src='https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js';document.head.appendChild(s);"></script>
+    <script src="<?= asset('libs/axios/dist/axios.min.js') ?>" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js';document.head.appendChild(s);"></script>
 
     <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
     <script>
@@ -144,6 +144,13 @@
 <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/horario-personal" aria-expanded="false">
 <span><i class="ti ti-calendar-clock"></i></span>
 <span class="hide-menu">Horario Personal</span>
+</a>
+</li>
+
+<li class="sidebar-item">
+<a class="sidebar-link" href="/departamento-operativo/recursos-humanos/biometricos" aria-expanded="false">
+<span><i class="ti ti-fingerprint"></i></span>
+<span class="hide-menu">Biométricos</span>
 </a>
 </li>
 

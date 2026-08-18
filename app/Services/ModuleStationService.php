@@ -345,7 +345,7 @@ return $loc ? $loc->localidad : "#$id";
 return '';
 }
 
-if (in_array($moduleKey, ['organigrama', 'control-documentos-personal', 'horario-personal'])) {
+if (in_array($moduleKey, ['organigrama', 'control-documentos-personal', 'horario-personal', 'biometricos'])) {
 if ($idDepto && !$idEstacion) {
 $loc = RhLocalidad::find($idDepto);
 return $loc ? $loc->localidad : 'Depto #' . $idDepto;
