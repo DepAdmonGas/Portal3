@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Core\View;
 use App\Services\ModuloService;
 use App\Core\Breadcrumb;
@@ -12,12 +14,14 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
-class ReporteDiarioController extends BaseController{
+class ReporteDiarioController extends BaseController
+{
     protected string $modulo = 'sasisopa';
 
-    public function index(){
+    public function index()
+    {
 
-    $title = 'REPORTE ESTADÍSTICO DE LA CRE';
+        $title = 'REPORTE ESTADÍSTICO DE LA CRE';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
@@ -31,46 +35,43 @@ class ReporteDiarioController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-            'links' =>[ 
-            ],
+            'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/reportediario/index.action.init.js?v=1.4',
             ],
             'help' => false
         ];
-        
-        View::render('reportediario/index', $data,'sasisopa');
-        
+
+        View::render('reportediario/index', $data, 'sasisopa');
     }
 
-public function crearMesesReporteCre(int $idEstacion): void
-{
-    $anio = date('Y');
+    public function crearMesesReporteCre(int $idEstacion): void
+    {
+        $anio = date('Y');
 
-    for ($mes = 1; $mes <= 12; $mes++) {
+        for ($mes = 1; $mes <= 12; $mes++) {
 
-        ReporteCreMes::firstOrCreate(
-            [
-                'id_estacion' => $idEstacion,
-                'mes'         => $mes,
-                'year'        => $anio,
-            ],
-            [
-                'f_producto_uno'  => '',
-                'f_producto_dos'  => '',
-                'f_producto_tres' => '',
-                'fi_producto_uno' => '',
-                'fi_producto_dos' => '',
-                'fi_producto_tres' => '',
-                'ff_producto_uno' => '',
-                'ff_producto_dos' => '',
-                'ff_producto_tres' => '',
-            ]
-        );
-
+            ReporteCreMes::firstOrCreate(
+                [
+                    'id_estacion' => $idEstacion,
+                    'mes'         => $mes,
+                    'year'        => $anio,
+                ],
+                [
+                    'f_producto_uno'  => '',
+                    'f_producto_dos'  => '',
+                    'f_producto_tres' => '',
+                    'fi_producto_uno' => '',
+                    'fi_producto_dos' => '',
+                    'fi_producto_tres' => '',
+                    'ff_producto_uno' => '',
+                    'ff_producto_dos' => '',
+                    'ff_producto_tres' => '',
+                ]
+            );
+        }
     }
-}
 
     public function meses()
     {
@@ -84,9 +85,9 @@ public function crearMesesReporteCre(int $idEstacion): void
             $actualMes  = (int)date('m');
 
             $meses = ReporteCreMes::where(
-                    'id_estacion',
-                    $this->estacionId()
-                )
+                'id_estacion',
+                $this->estacionId()
+            )
                 ->where('year', $year)
                 ->orderBy('mes')
                 ->get()
@@ -101,37 +102,35 @@ public function crearMesesReporteCre(int $idEstacion): void
                         'nombre' => nombremes($item->mes),
                         'habilitado' => $habilitado,
                         'url' => $habilitado
-                            ? '/sasisopa/'.$item->mes.'/'.$item->year
+                            ? '/sasisopa/' . $item->mes . '/' . $item->year
                             : null
 
                     ];
-
                 });
 
             echo json_encode([
                 'success' => true,
                 'data' => $meses
             ]);
-
         } catch (\Throwable $e) {
 
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
             ]);
-
         }
 
         exit;
     }
 
-    public function reporteMes(int $mes, int $year){
+    public function reporteMes(int $mes, int $year)
+    {
 
-    $title = 'REPORTE DIARIO '.strtoupper(nombremes($mes)).' '.$year;
+        $title = 'REPORTE DIARIO ' . strtoupper(nombremes($mes)) . ' ' . $year;
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add('REPORTE ESTADÍSTICO DE LA CRE', '/sasisopa/reporte-diario');        
+        Breadcrumb::add('REPORTE ESTADÍSTICO DE LA CRE', '/sasisopa/reporte-diario');
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
@@ -143,225 +142,226 @@ public function crearMesesReporteCre(int $idEstacion): void
             'filtro_usuario' => $this->filtro_usuario,
             'mes' => $mes,
             'year' => $year,
-            'links' =>[ 
-            ],
+            'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/reportediario/reportemes.action.init.js?v=1.3',
             ],
             'help' => false
         ];
-        
-        View::render('reportediario/reporte-mes', $data,'sasisopa');
+
+        View::render('reportediario/reporte-mes', $data, 'sasisopa');
     }
 
-    public function datatableMes(){
+    public function datatableMes()
+    {
 
-    header('Content-Type: application/json');
+        header('Content-Type: application/json');
 
-    $mes = (int)($_GET['mes'] ?? date('m'));
-    $year = (int)($_GET['year'] ?? date('Y'));
+        $mes = (int)($_GET['mes'] ?? date('m'));
+        $year = (int)($_GET['year'] ?? date('Y'));
 
-    $head = $this->headCorte(
-    Estacion::find($this->estacionId())
-    );  
+        $head = $this->headCorte(
+            Estacion::find($this->estacionId())
+        );
 
-    $productos = collect($head['productos']);
+        $productos = collect($head['productos']);
 
-    $reporte = ReporteCreMes::with([
-        'productos.pipas',
-        'mensajes'
-    ])
-    ->where('id_estacion', $this->estacionId())
-    ->where('mes', $mes)
-    ->where('year', $year)
-    ->firstOrFail();
+        $reporte = ReporteCreMes::with([
+            'productos.pipas',
+            'mensajes'
+        ])
+            ->where('id_estacion', $this->estacionId())
+            ->where('mes', $mes)
+            ->where('year', $year)
+            ->firstOrFail();
 
-    $fechas = $reporte->productos
-        ->groupBy(fn ($producto) => $producto->fecha->format('Y-m-d'))
-        ->sortKeysDesc();
+        $fechas = $reporte->productos
+            ->groupBy(fn($producto) => $producto->fecha->format('Y-m-d'))
+            ->sortKeysDesc();
 
-    $rows = [];
-    $totales = [];
+        $rows = [];
+        $totales = [];
 
-    foreach ($productos as $producto) {
-        $nombre = $producto['nombre'];
+        foreach ($productos as $producto) {
+            $nombre = $producto['nombre'];
 
-        $totales[$nombre] = [
-            'vi' => 0,
-            'vv' => 0,
-            'vf' => 0,
-            'vc' => 0,
-            'merma' => 0
-        ];
-    }
+            $totales[$nombre] = [
+                'vi' => 0,
+                'vv' => 0,
+                'vf' => 0,
+                'vc' => 0,
+                'merma' => 0
+            ];
+        }
 
 
-    $footer = [];
+        $footer = [];
 
-    foreach ($fechas as $fecha => $productosFecha) {
+        foreach ($fechas as $fecha => $productosFecha) {
 
-        $fechaObj = new \DateTime($fecha);
+            $fechaObj = new \DateTime($fecha);
 
-        $row = [
-            'id' => $reporte->id,
-            'id_fecha' => strtotime($fecha),
-            'fecha' => $fecha,
-            'fecha_larga' => $fechaObj->format('d') . ' de ' . nombremes((int)$fechaObj->format('m')),
-            'productos' => []
-        ];
+            $row = [
+                'id' => $reporte->id,
+                'id_fecha' => strtotime($fecha),
+                'fecha' => $fecha,
+                'fecha_larga' => $fechaObj->format('d') . ' de ' . nombremes((int)$fechaObj->format('m')),
+                'productos' => []
+            ];
+
+            foreach ($productos as $producto) {
+
+                $nombre = $producto['nombre'];
+
+                $registro = $productosFecha->firstWhere('producto', $nombre);
+
+                if (!$registro) {
+                    $row['productos'][] = [
+                        'vi' => 0,
+                        'vv' => 0,
+                        'vf' => 0,
+                        'vc' => 0,
+                        'merma' => 0
+                    ];
+                    continue;
+                }
+
+                $compra = $registro->pipas->sum('volumen');
+
+                $merma =
+                    ($registro->volumen_final + $registro->volumen_venta)
+                    - ($registro->volumen_inicial + $compra);
+
+                $row['productos'][] = [
+                    'id' => $registro->id,
+                    'producto' => $registro->producto,
+                    'vi' => $registro->volumen_inicial,
+                    'vv' => $registro->volumen_venta,
+                    'vf' => $registro->volumen_final,
+                    'vc' => $compra,
+                    'merma' => round($merma, 2)
+                ];
+
+                $totales[$nombre]['vi'] += $registro->volumen_inicial;
+                $totales[$nombre]['vv'] += $registro->volumen_venta;
+                $totales[$nombre]['vf'] += $registro->volumen_final;
+                $totales[$nombre]['vc'] += $compra;
+                $totales[$nombre]['merma'] += $merma;
+            }
+
+
+            $timestamp = is_numeric($fecha) ? $fecha : strtotime($fecha);
+
+            $row['mensajes'] = [
+                'total' => $reporte->mensajes
+                    ->where('id_fecha', $timestamp)
+                    ->count()
+            ];
+
+            $row['acciones'] = [
+                'id_reporte' => $reporte->id,
+                'fecha' => $timestamp
+            ];
+
+            $rows[] = $row;
+        }
+
 
         foreach ($productos as $producto) {
 
             $nombre = $producto['nombre'];
 
-            $registro = $productosFecha->firstWhere('producto', $nombre);
-
-            if (!$registro) {
-                $row['productos'][] = [
-                    'vi' => 0,
-                    'vv' => 0,
-                    'vf' => 0,
-                    'vc' => 0,
-                    'merma' => 0
-                ];
-                continue;
-            }
-
-            $compra = $registro->pipas->sum('volumen');
-
-            $merma =
-                ($registro->volumen_final + $registro->volumen_venta)
-                - ($registro->volumen_inicial + $compra);
-
-            $row['productos'][] = [
-                'id' => $registro->id,
-                'producto' => $registro->producto,
-                'vi' => $registro->volumen_inicial,
-                'vv' => $registro->volumen_venta,
-                'vf' => $registro->volumen_final,
-                'vc' => $compra,
-                'merma' => round($merma, 2)
+            $footer[] = [
+                'producto' => $nombre,
+                'vi' => round($totales[$nombre]['vi'], 2),
+                'vv' => round($totales[$nombre]['vv'], 2),
+                'vf' => round($totales[$nombre]['vf'], 2),
+                'vc' => round($totales[$nombre]['vc'], 2),
+                'merma' => round($totales[$nombre]['merma'], 2)
             ];
-
-            $totales[$nombre]['vi'] += $registro->volumen_inicial;
-            $totales[$nombre]['vv'] += $registro->volumen_venta;
-            $totales[$nombre]['vf'] += $registro->volumen_final;
-            $totales[$nombre]['vc'] += $compra;
-            $totales[$nombre]['merma'] += $merma;
         }
 
-
-        $timestamp = is_numeric($fecha) ? $fecha : strtotime($fecha);
-
-        $row['mensajes'] = [
-            'total' => $reporte->mensajes
-                ->where('id_fecha', $timestamp)
-                ->count()
-        ];
-
-        $row['acciones'] = [
-            'id_reporte' => $reporte->id,
-            'fecha' => $timestamp
-        ];
-
-        $rows[] = $row;
+        echo json_encode([
+            'success' => true,
+            'head' => $head,
+            'data' => $rows,
+            'footer' => $footer
+        ]);
     }
 
+    public function headCorte(Estacion $estacion)
+    {
 
-    foreach ($productos as $producto) {
+        $productos = [];
 
-        $nombre = $producto['nombre'];
+        if (!empty($estacion->producto_uno)) {
+            $productos[] = [
+                'nombre' => $estacion->producto_uno,
+                'color'  => 'success'
+            ];
+        }
 
-        $footer[] = [
-            'producto' => $nombre,
-            'vi' => round($totales[$nombre]['vi'], 2),
-            'vv' => round($totales[$nombre]['vv'], 2),
-            'vf' => round($totales[$nombre]['vf'], 2),
-            'vc' => round($totales[$nombre]['vc'], 2),
-            'merma' => round($totales[$nombre]['merma'], 2)
-        ];
-    }
+        if (!empty($estacion->producto_dos)) {
+            $productos[] = [
+                'nombre' => $estacion->producto_dos,
+                'color'  => 'danger'
+            ];
+        }
 
-    echo json_encode([
-        'success' => true,
-        'head' => $head,
-        'data' => $rows,
-        'footer' => $footer
-    ]);
-    }
+        if (!empty($estacion->producto_tres)) {
+            $productos[] = [
+                'nombre' => $estacion->producto_tres,
+                'color'  => 'dark'
+            ];
+        }
 
-    public function headCorte(Estacion $estacion){
-
-    $productos = [];
-
-    if (!empty($estacion->producto_uno)) {
-        $productos[] = [
-            'nombre' => $estacion->producto_uno,
-            'color'  => 'success'
-        ];
-    }
-
-    if (!empty($estacion->producto_dos)) {
-        $productos[] = [
-            'nombre' => $estacion->producto_dos,
-            'color'  => 'danger'
-        ];
-    }
-
-    if (!empty($estacion->producto_tres)) {
-        $productos[] = [
-            'nombre' => $estacion->producto_tres,
-            'color'  => 'dark'
-        ];
-    }
-
-    return $head = [
-        'productos' => $productos,
-        'columnas' => [
-            [
-                'campo' => 'volumen_inicial',
-                'titulo' => 'Vo. (Lt) inicial',
-                'tooltip' => 'Volumen (Lt) Inicial'
-            ],
-            [
-                'campo' => 'volumen_venta',
-                'titulo' => 'Vo. (Lt) venta',
-                'tooltip' => 'Volumen (Lt) Venta'
-            ],
-            [
-                'campo' => 'volumen_final',
-                'titulo' => 'Vo. (Lt) final',
-                'tooltip' => 'Volumen (Lt) Final'
-            ],
-            [
-                'campo' => 'compra',
-                'titulo' => 'Vo. (Lt) compra',
-                'tooltip' => 'Volumen (Lt) Compra'
-            ],
-            [
-                'campo' => 'merma',
-                'titulo' => 'Merma',
-                'tooltip' => 'Merma'
+        return $head = [
+            'productos' => $productos,
+            'columnas' => [
+                [
+                    'campo' => 'volumen_inicial',
+                    'titulo' => 'Vo. (Lt) inicial',
+                    'tooltip' => 'Volumen (Lt) Inicial'
+                ],
+                [
+                    'campo' => 'volumen_venta',
+                    'titulo' => 'Vo. (Lt) venta',
+                    'tooltip' => 'Volumen (Lt) Venta'
+                ],
+                [
+                    'campo' => 'volumen_final',
+                    'titulo' => 'Vo. (Lt) final',
+                    'tooltip' => 'Volumen (Lt) Final'
+                ],
+                [
+                    'campo' => 'compra',
+                    'titulo' => 'Vo. (Lt) compra',
+                    'tooltip' => 'Volumen (Lt) Compra'
+                ],
+                [
+                    'campo' => 'merma',
+                    'titulo' => 'Merma',
+                    'tooltip' => 'Merma'
+                ]
             ]
-        ]
-    ];
-
+        ];
     }
 
-    public function reportePdf(){
-    $estacion = Estacion::find($this->estacionId());    
+    public function reportePdf()
+    {
+        $estacion = Estacion::find($this->estacionId());
 
-    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
+        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-    $reporte = ReporteCreMes::where('id_estacion', $this->estacionId())
-    ->where('mes', (int)$_GET['idMes'])
-    ->where('year', (int)$_GET['idYear'])
-    ->firstOrFail();
+        $reporte = ReporteCreMes::where('id_estacion', $this->estacionId())
+            ->where('mes', (int)$_GET['idMes'])
+            ->where('year', (int)$_GET['idYear'])
+            ->firstOrFail();
 
-    $idReporteCre = $reporte->id;
+        $idReporteCre = $reporte->id;
 
-    $html = '
+        $html = '
     <!DOCTYPE html>
     <html>
     <head>
@@ -537,57 +537,57 @@ table {
         </table>
         ';
 
-    $productosReporte = [];
+        $productosReporte = [];
 
-    $productosSesion = [
-        [
-            'nombre' => $estacion->producto_uno,
-            'color'  => '#74bc1f',
-        ],
-        [
-            'nombre' => $estacion->producto_dos,
-            'color'  => '#e01883',
-        ],
-    ];
-
-    if (!empty($estacion->producto_tres)) {
-        $productosSesion[] = [
-            'nombre' => $estacion->producto_tres,
-            'color'  => '#5c108c',
+        $productosSesion = [
+            [
+                'nombre' => $estacion->producto_uno,
+                'color'  => '#74bc1f',
+            ],
+            [
+                'nombre' => $estacion->producto_dos,
+                'color'  => '#e01883',
+            ],
         ];
-    }
 
-    /*
+        if (!empty($estacion->producto_tres)) {
+            $productosSesion[] = [
+                'nombre' => $estacion->producto_tres,
+                'color'  => '#5c108c',
+            ];
+        }
+
+        /*
     |--------------------------------------------------------------------------
     | Obtener información de cada producto
     |--------------------------------------------------------------------------
     */
 
-    foreach ($productosSesion as &$item) {
+        foreach ($productosSesion as &$item) {
 
-        $detalle = $this->detalleReporteCre($item['nombre'], $idReporteCre);
+            $detalle = $this->detalleReporteCre($item['nombre'], $idReporteCre);
 
-        $item['detalle'] = $detalle;
+            $item['detalle'] = $detalle;
 
-        $item['merma'] =
-            $detalle['VolumenInicial']
-            + $detalle['VolumenCompra']
-            - $detalle['VolumenVenta']
-            - $detalle['VolumenFinal'];
-    }
+            $item['merma'] =
+                $detalle['VolumenInicial']
+                + $detalle['VolumenCompra']
+                - $detalle['VolumenVenta']
+                - $detalle['VolumenFinal'];
+        }
 
-    unset($item);
+        unset($item);
 
-    /*
+        /*
     |--------------------------------------------------------------------------
     | Tabla de Volúmenes
     |--------------------------------------------------------------------------
     */
 
-    $html .= '<table class="table table-bordered" style="font-size:1em;margin-top:50px;">';
-    $html .= '<tbody>';
+        $html .= '<table class="table table-bordered" style="font-size:1em;margin-top:50px;">';
+        $html .= '<tbody>';
 
-    $html .= '
+        $html .= '
     <tr>
         <td class="align-middle text-center"><b>Producto</b></td>
         <td class="align-middle text-center"><b>Volumen (Lt) Inicial</b></td>
@@ -596,11 +596,11 @@ table {
         <td class="align-middle text-center"><b>Volumen (Lt) de Compra</b></td>
     </tr>';
 
-    foreach ($productosSesion as $producto) {
+        foreach ($productosSesion as $producto) {
 
-        $d = $producto['detalle'];
+            $d = $producto['detalle'];
 
-        $html .= '
+            $html .= '
         <tr>
             <td class="align-middle text-center" style="background-color:' . $producto['color'] . ';color:#fff;">
                 <b>' . $producto['nombre'] . '</b>
@@ -614,25 +614,25 @@ table {
 
             <td class="align-middle text-center">' . number_format($d['VolumenCompra'], 2) . '</td>
         </tr>';
-    }
+        }
 
-    $html .= '</tbody>';
-    $html .= '</table>';
+        $html .= '</tbody>';
+        $html .= '</table>';
 
-    /*
+        /*
     |--------------------------------------------------------------------------
     | Tabla de Merma
     |--------------------------------------------------------------------------
     */
 
-    $html .= '<div style="font-size:1.2em;margin-top:30px;">Merma</div>';
+        $html .= '<div style="font-size:1.2em;margin-top:30px;">Merma</div>';
 
-    $html .= '<table class="table table-bordered" style="font-size:1em;margin-top:30px;">';
-    $html .= '<tbody>';
+        $html .= '<table class="table table-bordered" style="font-size:1em;margin-top:30px;">';
+        $html .= '<tbody>';
 
-    foreach ($productosSesion as $producto) {
+        foreach ($productosSesion as $producto) {
 
-        $html .= '
+            $html .= '
         <tr>
             <td class="align-middle text-center" style="background-color:' . $producto['color'] . ';color:#fff;">
                 <b>' . $producto['nombre'] . '</b>
@@ -642,32 +642,32 @@ table {
                 ' . number_format($producto['merma'], 2) . '
             </td>
         </tr>';
-    }
+        }
 
-    $html .= '</tbody>';
-    $html .= '</table>';
+        $html .= '</tbody>';
+        $html .= '</table>';
 
-    $html .= '
+        $html .= '
     </body>
     </html>';
 
-    $options = new Options();
-    $options->set('isRemoteEnabled',true);
-    $options->set('defaultFont','Arial');
-    $dompdf = new Dompdf($options);
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
+        $dompdf = new Dompdf($options);
 
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4','portrait');
-    $dompdf->render();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
 
-    $dompdf->stream(
-        'Reporte Estadistico Diario.pdf',
-        [
-            'Attachment' => true
-        ]
-    );
+        $dompdf->stream(
+            'Reporte Estadistico Diario.pdf',
+            [
+                'Attachment' => true
+            ]
+        );
 
-    exit;
+        exit;
     }
 
     function detalleReporteCre(string $producto, int $idReporteCre): array
@@ -700,20 +700,21 @@ table {
 
     //---------- Facturas
 
-    public function facturas(int $year){
+    public function facturas(int $year)
+    {
 
         $title = 'FACTURAS DE PRODUCTOS ' . $year;
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add('REPORTE ESTADÍSTICO DE LA CRE', '/sasisopa/reporte-diario');        
+        Breadcrumb::add('REPORTE ESTADÍSTICO DE LA CRE', '/sasisopa/reporte-diario');
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $reporte = ReporteCreMes::where('id_estacion',$this->estacionId())
-        ->where('year',$year)
-        ->firstOrFail();
+        $reporte = ReporteCreMes::where('id_estacion', $this->estacionId())
+            ->where('year', $year)
+            ->firstOrFail();
 
         $meses = $this->obtenerMeses($this->estacionId(), $year);
         $productos = $this->obtenerProductos();
@@ -727,59 +728,53 @@ table {
             'idReporteCre' => $reporte->id,
             'meses'     => $meses,
             'productos' => $productos,
-            'links' =>[ 
-            ],
+            'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/reportediario/facturas.action.init.js?v=1.1',
             ],
             'help' => false
         ];
-        
-        View::render('reportediario/facturas', $data,'sasisopa');
 
+        View::render('reportediario/facturas', $data, 'sasisopa');
     }
 
-public function getFacturas(int $year): void
-{
-    header('Content-Type: application/json; charset=utf-8');
+    public function getFacturas(int $year): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
 
-    try {
+        try {
 
-        echo json_encode([
+            echo json_encode([
 
-            'success' => true,
+                'success' => true,
 
-            'meses' => $this->obtenerMeses(
-                $this->estacionId(),
-                $year
-            ),
+                'meses' => $this->obtenerMeses(
+                    $this->estacionId(),
+                    $year
+                ),
 
-            'productos' => $this->obtenerProductos(),
+                'productos' => $this->obtenerProductos(),
 
-            'etapas' => $this->etapas()
+                'etapas' => $this->etapas()
 
-        ]);
+            ]);
+        } catch (\Throwable $e) {
 
-    } catch (\Throwable $e) {
+            echo json_encode([
 
-        echo json_encode([
+                'success' => false,
 
-            'success' => false,
+                'message' => $e->getMessage()
 
-            'message' => $e->getMessage()
-
-        ]);
-
+            ]);
+        }
     }
-
-}
 
     private function obtenerMeses(
         int $idEstacion,
         int $year
-    ): array
-    {
+    ): array {
 
         return ReporteCreMes::query()
 
@@ -816,11 +811,9 @@ public function getFacturas(int $year): void
                     'ff_producto_tres' => $item->ff_producto_tres,
 
                 ];
-
             })
 
             ->toArray();
-
     }
 
     private function obtenerProductos(): array
@@ -884,119 +877,118 @@ public function getFacturas(int $year): void
         ];
     }
 
-public function guardarFacturas(): void
-{
-    header('Content-Type: application/json; charset=utf-8');
+    public function guardarFacturas(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
 
-    try {
+        try {
 
-        $idReporte = (int)($_POST['idReporte'] ?? 0);
-        $tipo      = (int)($_POST['tipo'] ?? 0);
+            $idReporte = (int)($_POST['idReporte'] ?? 0);
+            $tipo      = (int)($_POST['tipo'] ?? 0);
 
-        $reporte = ReporteCreMes::findOrFail($idReporte);
+            $reporte = ReporteCreMes::findOrFail($idReporte);
 
-        $prefijo = match ($tipo) {
-            1 => 'f',
-            2 => 'fi',
-            3 => 'ff',
-            default => throw new \Exception('Periodo inválido.')
-        };
+            $prefijo = match ($tipo) {
+                1 => 'f',
+                2 => 'fi',
+                3 => 'ff',
+                default => throw new \Exception('Periodo inválido.')
+            };
 
-        $productos = $this->obtenerProductos();
+            $productos = $this->obtenerProductos();
 
-        // Todos los archivos son obligatorios
-        foreach ($productos as $index => $producto) {
+            // Todos los archivos son obligatorios
+            foreach ($productos as $index => $producto) {
 
-            $input = 'file' . ($index + 1);
+                $input = 'file' . ($index + 1);
 
-            if (
-                !isset($_FILES[$input]) ||
-                $_FILES[$input]['error'] !== UPLOAD_ERR_OK
-            ) {
-                 echo json_encode([
-                    'success' => false,
-                    'message' => "Debe seleccionar el PDF de {$producto['nombre']}."
-                ]); 
+                if (
+                    !isset($_FILES[$input]) ||
+                    $_FILES[$input]['error'] !== UPLOAD_ERR_OK
+                ) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => "Debe seleccionar el PDF de {$producto['nombre']}."
+                    ]);
+                }
             }
+
+            // mismo timestamp para todos
+            $timestamp = time();
+
+            foreach ($productos as $index => $producto) {
+
+                $input = 'file' . ($index + 1);
+
+                $ruta = $this->subirPdf(
+                    $_FILES[$input],
+                    $producto['id'],
+                    $timestamp
+                );
+
+                $campo = "{$prefijo}_{$producto['campo']}";
+
+                $reporte->$campo = $ruta;
+            }
+
+            $reporte->save();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Facturas guardadas correctamente.'
+            ]);
+        } catch (\Throwable $e) {
+
+            http_response_code(500);
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    private function subirPdf(
+        array $archivo,
+        int $producto,
+        int $timestamp
+    ): string {
+
+        $extension = strtolower(
+            pathinfo($archivo['name'], PATHINFO_EXTENSION)
+        );
+
+        if ($extension !== 'pdf') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Todos los archivos deben ser PDF.'
+            ]);
         }
 
-        // mismo timestamp para todos
-        $timestamp = time();
+        $directorio =   __DIR__ . '/../../public/uploads/archivos/cre/';
 
-        foreach ($productos as $index => $producto) {
-
-            $input = 'file' . ($index + 1);
-
-            $ruta = $this->subirPdf(
-                $_FILES[$input],
-                $producto['id'],
-                $timestamp
-            );
-
-            $campo = "{$prefijo}_{$producto['campo']}";
-
-            $reporte->$campo = $ruta;
+        if (!is_dir($directorio)) {
+            mkdir($directorio, 0777, true);
         }
 
-        $reporte->save();
+        $nombre = sprintf(
+            '%s-P%s-%s.pdf',
+            $this->estacionId(),
+            $producto,
+            $timestamp
+        );
 
-        echo json_encode([
-            'success' => true,
-            'message' => 'Facturas guardadas correctamente.'
-        ]);
+        $destino = $directorio . $nombre;
 
-    } catch (\Throwable $e) {
+        if (!move_uploaded_file($archivo['tmp_name'], $destino)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No fue posible guardar el PDF del producto'
+            ]);
+        }
 
-        http_response_code(500);
-
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
+        return 'archivos/cre/' . $nombre;
     }
-}
-
-private function subirPdf(
-    array $archivo,
-    int $producto,
-    int $timestamp
-): string {
-
-    $extension = strtolower(
-        pathinfo($archivo['name'], PATHINFO_EXTENSION)
-    );
-
-    if ($extension !== 'pdf') {
-        echo json_encode([
-                    'success' => false,
-                    'message' => 'Todos los archivos deben ser PDF.'
-                ]); 
-    }
-
-    $directorio =   __DIR__ . '/../../public/uploads/archivos/cre/';
-
-    if (!is_dir($directorio)) {
-        mkdir($directorio, 0777, true);
-    }
-
-    $nombre = sprintf(
-        '%s-P%s-%s.pdf',
-        $this->estacionId(),
-        $producto,
-        $timestamp
-    );
-
-    $destino = $directorio . $nombre;
-
-    if (!move_uploaded_file($archivo['tmp_name'], $destino)) {
-              echo json_encode([
-                    'success' => false,
-                    'message' => 'No fue posible guardar el PDF del producto'
-                ]);    
-    }
-
-    return 'archivos/cre/' . $nombre;
-}
 
 
     //---------- Facturas
@@ -1004,151 +996,69 @@ private function subirPdf(
     //----------------------------------------------------------------
     //----------------------------------------------------------------
 
-    public function reporteMesNuevo($mes,$year)
-{
-
-    $title='AGREGAR REPORTE ESTADÍSTICO DE LA CRE';
-
-    Breadcrumb::add('Home','/home');
-    Breadcrumb::add('SASISOPA','/sasisopa');
-    Breadcrumb::add(
-        'REPORTE DIARIO '.strtoupper(nombremes($mes)).' '.$year,
-        '/sasisopa/reporte-diario/'.$mes.'/'.$year
-    );
-    Breadcrumb::add($title,'');
-
-    $permisos=ModuloService::permisosSesion($this->modulo);
-
-    $reporte=ReporteCreMes::where('id_estacion',$this->estacionId())
-        ->where('mes',$mes)
-        ->where('year',$year)
-        ->firstOrFail();
-
-    $ultimoDia=date(
-        'd',
-        mktime(
-            0,
-            0,
-            0,
-            $mes+1,
-            0,
-            $year
-        )
-    );
-
-    $mesFormateado=str_pad($mes,2,'0',STR_PAD_LEFT);
-
-    $data=[
-
-        'title'=>$title,
-
-        'permisos'=>$permisos,
-
-        'modulo'=>$this->modulo,
-
-        'filtro_usuario'=>$this->filtro_usuario,
-
-        'mes'=>$mes,
-
-        'year'=>$year,
-
-        'diamin'=>$year.'-'.$mesFormateado.'-01',
-
-        'diamax'=>$year.'-'.$mesFormateado.'-'.$ultimoDia,
-
-        'idReporteCre'=>$reporte->id,
-        'modo' => 'crear',
-
-        'links'=>[],
-
-        'scripts'=>[
-            '/js/vendor.min.js',
-            '/js/reportediario/reportemesnuevo.action.init.js?v=1.1'
-        ],
-
-        'help'=>false
-
-    ];
-
-    View::render(
-        'reportediario/reporte-mes-nuevo',
-        $data,
-        'sasisopa'
-    );
-
-    }
-
-        public function reporteMesEditar($idReporteCre,$fechaUnix)
+    public function reporteMesNuevo($mes, $year)
     {
 
-        $reporte=ReporteCreMes::where(
-                'id_estacion',
-                $this->estacionId()
-            )
-            ->findOrFail($idReporteCre);
+        $title = 'AGREGAR REPORTE ESTADÍSTICO DE LA CRE';
 
-        $fecha=date('Y-m-d',$fechaUnix);
-
-        $mes=$reporte->mes;
-        $year=$reporte->year;
-
-        $title='EDITAR REPORTE ESTADÍSTICO DE LA CRE';
-
-        Breadcrumb::add('Home','/home');
-        Breadcrumb::add('SASISOPA','/sasisopa');
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add(
-            'REPORTE DIARIO '.strtoupper(nombremes($mes)).' '.$year,
-            '/sasisopa/reporte-diario/'.$mes.'/'.$year
+            'REPORTE DIARIO ' . strtoupper(nombremes($mes)) . ' ' . $year,
+            '/sasisopa/reporte-diario/' . $mes . '/' . $year
         );
-        Breadcrumb::add($title,'');
+        Breadcrumb::add($title, '');
 
-        $permisos=ModuloService::permisosSesion($this->modulo);
+        $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $ultimoDia=date(
+        $reporte = ReporteCreMes::where('id_estacion', $this->estacionId())
+            ->where('mes', $mes)
+            ->where('year', $year)
+            ->firstOrFail();
+
+        $ultimoDia = date(
             'd',
             mktime(
                 0,
                 0,
                 0,
-                $mes+1,
+                $mes + 1,
                 0,
                 $year
             )
         );
 
-        $mesFormateado=str_pad($mes,2,'0',STR_PAD_LEFT);
+        $mesFormateado = str_pad($mes, 2, '0', STR_PAD_LEFT);
 
-        $data=[
+        $data = [
 
-            'title'=>$title,
+            'title' => $title,
 
-            'permisos'=>$permisos,
+            'permisos' => $permisos,
 
-            'modulo'=>$this->modulo,
+            'modulo' => $this->modulo,
 
-            'filtro_usuario'=>$this->filtro_usuario,
+            'filtro_usuario' => $this->filtro_usuario,
 
-            'mes'=>$mes,
+            'mes' => $mes,
 
-            'year'=>$year,
+            'year' => $year,
 
-            'fecha'=>$fecha,
+            'diamin' => $year . '-' . $mesFormateado . '-01',
 
-            'diamin'=>$year.'-'.$mesFormateado.'-01',
+            'diamax' => $year . '-' . $mesFormateado . '-' . $ultimoDia,
 
-            'diamax'=>$year.'-'.$mesFormateado.'-'.$ultimoDia,
+            'idReporteCre' => $reporte->id,
+            'modo' => 'crear',
 
-            'idReporteCre'=>$idReporteCre,
-            'modo' => 'editar',
+            'links' => [],
 
-            'links'=>[],
-
-            'scripts'=>[
+            'scripts' => [
                 '/js/vendor.min.js',
-                '/js/reportediario/reportemesnuevo.action.init.js?v=2.0'
+                '/js/reportediario/reportemesnuevo.action.init.js?v=1.1'
             ],
 
-            'help'=>false
+            'help' => false
 
         ];
 
@@ -1157,7 +1067,87 @@ private function subirPdf(
             $data,
             'sasisopa'
         );
+    }
 
+    public function reporteMesEditar($idReporteCre, $fechaUnix)
+    {
+
+        $reporte = ReporteCreMes::where(
+            'id_estacion',
+            $this->estacionId()
+        )
+            ->findOrFail($idReporteCre);
+
+        $fecha = date('Y-m-d', $fechaUnix);
+
+        $mes = $reporte->mes;
+        $year = $reporte->year;
+
+        $title = 'EDITAR REPORTE ESTADÍSTICO DE LA CRE';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SASISOPA', '/sasisopa');
+        Breadcrumb::add(
+            'REPORTE DIARIO ' . strtoupper(nombremes($mes)) . ' ' . $year,
+            '/sasisopa/reporte-diario/' . $mes . '/' . $year
+        );
+        Breadcrumb::add($title, '');
+
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        $ultimoDia = date(
+            'd',
+            mktime(
+                0,
+                0,
+                0,
+                $mes + 1,
+                0,
+                $year
+            )
+        );
+
+        $mesFormateado = str_pad($mes, 2, '0', STR_PAD_LEFT);
+
+        $data = [
+
+            'title' => $title,
+
+            'permisos' => $permisos,
+
+            'modulo' => $this->modulo,
+
+            'filtro_usuario' => $this->filtro_usuario,
+
+            'mes' => $mes,
+
+            'year' => $year,
+
+            'fecha' => $fecha,
+
+            'diamin' => $year . '-' . $mesFormateado . '-01',
+
+            'diamax' => $year . '-' . $mesFormateado . '-' . $ultimoDia,
+
+            'idReporteCre' => $idReporteCre,
+            'modo' => 'editar',
+
+            'links' => [],
+
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/js/reportediario/reportemesnuevo.action.init.js?v=2.0'
+            ],
+
+            'help' => false
+
+        ];
+
+        View::render(
+            'reportediario/reporte-mes-nuevo',
+            $data,
+            'sasisopa'
+        );
     }
 
     public function baseReporteDiario(): void
@@ -1165,93 +1155,91 @@ private function subirPdf(
 
         header('Content-Type: application/json');
 
-        $estacion=Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionId());
 
-        $productos=[];
+        $productos = [];
 
-        $colores=[
+        $colores = [
 
-            'producto_uno'=>'success',
+            'producto_uno' => 'success',
 
-            'producto_dos'=>'danger',
+            'producto_dos' => 'danger',
 
-            'producto_tres'=>'dark'
+            'producto_tres' => 'dark'
 
         ];
 
-        foreach($colores as $campo=>$color){
+        foreach ($colores as $campo => $color) {
 
-            if(blank($estacion->$campo)){
+            if (blank($estacion->$campo)) {
                 continue;
             }
 
-            $productos[]=[
+            $productos[] = [
 
-                'id'=>null,
+                'id' => null,
 
-                'nombre'=>$estacion->$campo,
+                'nombre' => $estacion->$campo,
 
-                'color'=>$color,
+                'color' => $color,
 
-                'volumen'=>[
+                'volumen' => [
 
-                    'inicial'=>null,
+                    'inicial' => null,
 
-                    'venta'=>null,
+                    'venta' => null,
 
-                    'final'=>null
+                    'final' => null
 
                 ],
 
-                'pipas'=>[
+                'pipas' => [
 
                     [
-                        'id'=>null,
-                        'volumen'=>null,
-                        'precio'=>null,
-                        'costo'=>null,
-                        'factura'=>'',
-                        'transportista'=>'',
-                        'importe'=>null,
-                        'eliminar'=>false
+                        'id' => null,
+                        'volumen' => null,
+                        'precio' => null,
+                        'costo' => null,
+                        'factura' => '',
+                        'transportista' => '',
+                        'importe' => null,
+                        'eliminar' => false
                     ],
 
                     [
-                        'id'=>null,
-                        'volumen'=>null,
-                        'precio'=>null,
-                        'costo'=>null,
-                        'factura'=>'',
-                        'transportista'=>'',
-                        'importe'=>null,
-                        'eliminar'=>false
+                        'id' => null,
+                        'volumen' => null,
+                        'precio' => null,
+                        'costo' => null,
+                        'factura' => '',
+                        'transportista' => '',
+                        'importe' => null,
+                        'eliminar' => false
                     ],
 
                     [
-                        'id'=>null,
-                        'volumen'=>null,
-                        'precio'=>null,
-                        'costo'=>null,
-                        'factura'=>'',
-                        'transportista'=>'',
-                        'importe'=>null,
-                        'eliminar'=>false
+                        'id' => null,
+                        'volumen' => null,
+                        'precio' => null,
+                        'costo' => null,
+                        'factura' => '',
+                        'transportista' => '',
+                        'importe' => null,
+                        'eliminar' => false
                     ]
 
                 ]
 
             ];
-
         }
 
         echo json_encode([
 
-            'success'=>true,
+            'success' => true,
 
-            'data'=>$productos
+            'data' => $productos
 
         ]);
-
     }
 
     public function baseReporteDiarioEditar(int $idReporteCre, string $fecha): void
@@ -1328,29 +1316,28 @@ private function subirPdf(
 
                 foreach ($listaPipas as $pipa) {
 
-                $totalCompra += (float)$pipa->volumen;
+                    $totalCompra += (float)$pipa->volumen;
 
-                $pipas[] = [
+                    $pipas[] = [
 
-                    'id' => $pipa->id,
+                        'id' => $pipa->id,
 
-                    'volumen' => $pipa->volumen,
+                        'volumen' => $pipa->volumen,
 
-                    'precio' => $pipa->precio_litro,
+                        'precio' => $pipa->precio_litro,
 
-                    'costo' => $pipa->costo_flete,
+                        'costo' => $pipa->costo_flete,
 
-                    'factura' => $pipa->no_factura,
+                        'factura' => $pipa->no_factura,
 
-                    'transportista' => $pipa->nombre_razonsocial,
+                        'transportista' => $pipa->nombre_razonsocial,
 
-                    'importe' => $pipa->importe_total,
+                        'importe' => $pipa->importe_total,
 
-                    'eliminar' => false
+                        'eliminar' => false
 
-                ];
-
-            }
+                    ];
+                }
 
                 /*
                 |--------------------------------------------------------------
@@ -1358,13 +1345,13 @@ private function subirPdf(
                 |--------------------------------------------------------------
                 */
 
-                        
+
 
                 $merma =
-                (float)$producto->volumen_inicial +
-                $totalCompra -
-                (float)$producto->volumen_venta -
-                (float)$producto->volumen_final;
+                    (float)$producto->volumen_inicial +
+                    $totalCompra -
+                    (float)$producto->volumen_venta -
+                    (float)$producto->volumen_final;
 
                 $productos[] = [
 
@@ -1384,24 +1371,22 @@ private function subirPdf(
 
                     ],
 
-                    'totalCompra' => round($totalCompra,2),
+                    'totalCompra' => round($totalCompra, 2),
 
-                    'merma' => round($merma,2),
+                    'merma' => round($merma, 2),
 
                     'pipas' => $pipas
 
                 ];
-
             }
 
             echo json_encode([
                 'success' => true,
                 'data' => $productos,
                 'fecha_larga' => formatearFecha($fecha),
-                    
-                
-            ]);
 
+
+            ]);
         } catch (\Throwable $e) {
 
             http_response_code(500);
@@ -1467,7 +1452,6 @@ private function subirPdf(
                     ]);
                     return;
                 }
-
             } else {
 
                 if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
@@ -1491,7 +1475,6 @@ private function subirPdf(
                     ]);
                     return;
                 }
-
             }
 
             Capsule::beginTransaction();
@@ -1527,7 +1510,6 @@ private function subirPdf(
                         'volumen_final' => $producto['volumen']['final']
 
                     ]);
-
                 } else {
 
                     /*
@@ -1547,7 +1529,6 @@ private function subirPdf(
                         'volumen_final' => $producto['volumen']['final']
 
                     ]);
-
                 }
 
                 /*
@@ -1576,7 +1557,6 @@ private function subirPdf(
                         if (!empty($pipa['id'])) {
 
                             ReporteCrePipa::where('id', $pipa['id'])->delete();
-
                         }
 
                         continue;
@@ -1619,7 +1599,6 @@ private function subirPdf(
                             'importe_total' => $pipa['importe']
 
                         ]);
-
                     } else {
 
                         /*
@@ -1645,11 +1624,8 @@ private function subirPdf(
                             'importe_total' => $pipa['importe']
 
                         ]);
-
                     }
-
                 }
-
             }
 
             Capsule::commit();
@@ -1660,7 +1636,6 @@ private function subirPdf(
                     ? 'Reporte actualizado correctamente.'
                     : 'Reporte guardado correctamente.'
             ]);
-
         } catch (\Throwable $e) {
 
             Capsule::rollBack();
@@ -1669,7 +1644,6 @@ private function subirPdf(
                 'success' => false,
                 'message' => 'Ocurrió un error al guardar el reporte.'
             ]);
-
         }
     }
 
@@ -1687,159 +1661,150 @@ private function subirPdf(
     //---------------------------------------------------------------------
 
     public function getMensajes(int $idReporte, int $fecha): void
-{
-    header('Content-Type: application/json; charset=utf-8');
+    {
+        header('Content-Type: application/json; charset=utf-8');
 
-    try {
+        try {
 
-        $mensajes = ReporteCreMensaje::with('usuario:id,nombre')
-            ->where('id_reporte', $idReporte)
-            ->where('id_fecha', $fecha)
-            ->orderBy('id')
-            ->get();
+            $mensajes = ReporteCreMensaje::with('usuario:id,nombre')
+                ->where('id_reporte', $idReporte)
+                ->where('id_fecha', $fecha)
+                ->orderBy('id')
+                ->get();
 
-        $data = [];
+            $data = [];
 
-        foreach ($mensajes as $mensaje) {
+            foreach ($mensajes as $mensaje) {
 
-            $nombre = '';
+                $nombre = '';
 
-            if ($mensaje->usuario) {
+                if ($mensaje->usuario) {
 
-                $partes = explode(' ', trim($mensaje->usuario->nombre));
+                    $partes = explode(' ', trim($mensaje->usuario->nombre));
 
-                $nombre = implode(' ', array_slice($partes, 0, 2));
+                    $nombre = implode(' ', array_slice($partes, 0, 2));
+                }
+
+                $data[] = [
+
+                    'id'       => $mensaje->id,
+
+                    'usuario'  => $nombre,
+
+                    'inicial'  => strtoupper(substr($nombre, 0, 1)),
+
+                    'mensaje'  => $mensaje->mensaje,
+
+                    'tipo'     => (int)$mensaje->tipo,
+
+                    'fecha'    => formatearFecha($mensaje->fecha->format('Y-m-d')),
+
+                    'hora' => strtolower($mensaje->fecha->format('h:i A')),
+
+                    'propio'   => $mensaje->id_usuario == $this->userId()
+
+                ];
             }
 
-            $data[] = [
 
-    'id'       => $mensaje->id,
-
-    'usuario'  => $nombre,
-
-    'inicial'  => strtoupper(substr($nombre,0,1)),
-
-    'mensaje'  => $mensaje->mensaje,
-
-    'tipo'     => (int)$mensaje->tipo,
-
-    'fecha'    => formatearFecha($mensaje->fecha->format('Y-m-d')),
-
-    'hora' => strtolower($mensaje->fecha->format('h:i A')),
-
-    'propio'   => $mensaje->id_usuario == $this->userId()
-
-];
-
-        }
-
-
-        echo json_encode([
-            'success' => true,
-            'data' => $data
-        ]);
-
-    } catch (\Throwable $e) {
-
-          echo json_encode([
-            'success' => false,
-            'message' => $e
-        ]);
-
-    }
-
-}
-
-public function guardarMensaje(): void
-{
-    header('Content-Type: application/json; charset=utf-8');
-
-    try {
-
-        if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+            echo json_encode([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (\Throwable $e) {
 
             echo json_encode([
                 'success' => false,
-                'message' => 'No tienes permiso.'
+                'message' => $e
             ]);
-            return;
         }
+    }
 
-        $request = json_decode(file_get_contents('php://input'), true);
+    public function guardarMensaje(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
 
-        $idReporte = sanitize_input(
-            $request['idReporte'] ?? null,
-            'int'
-        );
+        try {
 
-        $fecha = sanitize_input(
-            $request['fecha'] ?? null,
-            'string'
-        );
+            if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
 
-        $mensaje = trim(
-            sanitize_input(
-                $request['mensaje'] ?? '',
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No tienes permiso.'
+                ]);
+                return;
+            }
+
+            $request = json_decode(file_get_contents('php://input'), true);
+
+            $idReporte = sanitize_input(
+                $request['idReporte'] ?? null,
+                'int'
+            );
+
+            $fecha = sanitize_input(
+                $request['fecha'] ?? null,
                 'string'
-            )
-        );
+            );
 
-        $tipo = sanitize_input(
-            $request['tipo'] ?? 0,
-            'int'
-        );
+            $mensaje = trim(
+                sanitize_input(
+                    $request['mensaje'] ?? '',
+                    'string'
+                )
+            );
 
-        if (
-            empty($idReporte) ||
-            empty($fecha) ||
-            $mensaje === ''
-        ) {
+            $tipo = sanitize_input(
+                $request['tipo'] ?? 0,
+                'int'
+            );
+
+            if (
+                empty($idReporte) ||
+                empty($fecha) ||
+                $mensaje === ''
+            ) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Completa la información.'
+                ]);
+                return;
+            }
+
+            ReporteCreMensaje::create([
+
+                'id_reporte' => $idReporte,
+
+                'id_fecha' => $fecha,
+
+                'id_usuario' => $this->userId(),
+
+                'mensaje' => $mensaje,
+
+                'tipo' => $tipo,
+
+                'fecha' => date('Y-m-d H:i:s')
+
+            ]);
+
+            $total = ReporteCreMensaje::where('id_reporte', $idReporte)
+                ->where('id_fecha', $fecha)
+                ->count();
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Mensaje enviado.',
+                'total' => $total
+            ]);
+        } catch (\Throwable $e) {
+
+            http_response_code(500);
 
             echo json_encode([
                 'success' => false,
-                'message' => 'Completa la información.'
+                'message' => 'No fue posible enviar el mensaje.'
             ]);
-            return;
-
         }
-
-        ReporteCreMensaje::create([
-
-            'id_reporte' => $idReporte,
-
-            'id_fecha' => $fecha,
-
-            'id_usuario' => $this->userId(),
-
-            'mensaje' => $mensaje,
-
-            'tipo' => $tipo,
-
-            'fecha' => date('Y-m-d H:i:s')
-
-        ]);
-
-    $total = ReporteCreMensaje::where('id_reporte', $idReporte)
-    ->where('id_fecha', $fecha)
-    ->count();
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Mensaje enviado.',
-            'total' => $total
-        ]);
-
-    } catch (\Throwable $e) {
-
-        http_response_code(500);
-
-        echo json_encode([
-            'success' => false,
-            'message' => 'No fue posible enviar el mensaje.'
-        ]);
-
     }
-
-}
-
 }

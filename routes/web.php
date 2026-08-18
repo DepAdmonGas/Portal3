@@ -9,7 +9,7 @@ return function (RouteCollector $r) {
 
     $r->addRoute('GET', '/', Route::guest(['LoginController', 'index']));
     $r->addRoute('GET', '/login', Route::guest(['LoginController', 'index']));
-    $r->addRoute('POST', '/login', Route::guest(['LoginController', 'login']));
+    $r->addRoute('POST', '/login/acceso', Route::guest(['LoginController', 'login']));
     $r->addRoute('POST', '/refresh-token', Route::auth(['LoginController', 'refreshToken']));
     // Logout via POST
     $r->addRoute('POST', '/logout', Route::auth(['AuthController', 'logout']));
@@ -591,49 +591,49 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/recursos-humanos/organigrama/search-personal', Route::auth(['OrganigramaController', 'searchPersonal']));
 
 
-      //----- Control de Documentos del Personal
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal',Route::auth(['ControlDocumentosPersonalController', 'index']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-data',Route::auth(['ControlDocumentosPersonalController', 'getData']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-data-inactivos',Route::auth(['ControlDocumentosPersonalController', 'getDataInactivos']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/add',Route::auth(['ControlDocumentosPersonalController', 'add']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/edit',Route::auth(['ControlDocumentosPersonalController', 'edit']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/delete',Route::auth(['ControlDocumentosPersonalController', 'delete']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-comentarios',Route::auth(['ControlDocumentosPersonalController', 'getComentarios']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/add-comentario',Route::auth(['ControlDocumentosPersonalController', 'addComentario']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/upload-documento',Route::auth(['ControlDocumentosPersonalController', 'uploadDocumento']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/delete-documento',Route::auth(['ControlDocumentosPersonalController', 'deleteDocumento']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/add-baja',Route::auth(['ControlDocumentosPersonalController', 'addBaja']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-acceso',Route::auth(['ControlDocumentosPersonalController', 'getAcceso']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/editar-pin',Route::auth(['ControlDocumentosPersonalController', 'editarPin']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-puestos',Route::auth(['ControlDocumentosPersonalController', 'getPuestos']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-estaciones',Route::auth(['ControlDocumentosPersonalController', 'getEstaciones']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-personal-by-id',Route::auth(['ControlDocumentosPersonalController', 'getPersonalById']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal-excel',Route::auth(['ControlDocumentosPersonalController', 'excel']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal-kpi/{idYear:\d+}',Route::auth(['ControlDocumentosPersonalController', 'kpi']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal-kpi-data/{idYear:\d+}/{tipo:\d+}',Route::auth(['ControlDocumentosPersonalController', 'kpiData']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/asistencia/{id}',Route::auth(['ControlDocumentosPersonalController', 'asistencia']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-asistencia-data',Route::auth(['ControlDocumentosPersonalController', 'getAsistenciaData']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/crear-incidencia',Route::auth(['ControlDocumentosPersonalController', 'crearIncidencia']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/agregar-incidencia',Route::auth(['ControlDocumentosPersonalController', 'agregarIncidencia']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/subir-documento-incidencia',Route::auth(['ControlDocumentosPersonalController', 'subirDocumentoIncidencia']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-incidencias-catalogo',Route::auth(['ControlDocumentosPersonalController', 'getIncidenciasCatalogo']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-incidencia-por-asistencia',Route::auth(['ControlDocumentosPersonalController', 'getIncidenciaPorAsistencia']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/acceso/{id}',Route::auth(['ControlDocumentosPersonalController', 'acceso']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/detalle-baja/{id}',Route::auth(['ControlDocumentosPersonalController', 'bajaDetalle']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-archivos-baja',Route::auth(['ControlDocumentosPersonalController', 'getArchivosBaja']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/upload-baja-archivo',Route::auth(['ControlDocumentosPersonalController', 'uploadBajaArchivo']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/delete-baja-archivo',Route::auth(['ControlDocumentosPersonalController', 'deleteBajaArchivo']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-comentarios-baja',Route::auth(['ControlDocumentosPersonalController', 'getComentariosBaja']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/add-comentario-baja',Route::auth(['ControlDocumentosPersonalController', 'addComentarioBaja']));
+        //----- Control de Documentos del Personal
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal', Route::auth(['ControlDocumentosPersonalController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-data', Route::auth(['ControlDocumentosPersonalController', 'getData']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-data-inactivos', Route::auth(['ControlDocumentosPersonalController', 'getDataInactivos']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/add', Route::auth(['ControlDocumentosPersonalController', 'add']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/edit', Route::auth(['ControlDocumentosPersonalController', 'edit']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/delete', Route::auth(['ControlDocumentosPersonalController', 'delete']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-comentarios', Route::auth(['ControlDocumentosPersonalController', 'getComentarios']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/add-comentario', Route::auth(['ControlDocumentosPersonalController', 'addComentario']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/upload-documento', Route::auth(['ControlDocumentosPersonalController', 'uploadDocumento']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/delete-documento', Route::auth(['ControlDocumentosPersonalController', 'deleteDocumento']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/add-baja', Route::auth(['ControlDocumentosPersonalController', 'addBaja']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-acceso', Route::auth(['ControlDocumentosPersonalController', 'getAcceso']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/editar-pin', Route::auth(['ControlDocumentosPersonalController', 'editarPin']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-puestos', Route::auth(['ControlDocumentosPersonalController', 'getPuestos']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-estaciones', Route::auth(['ControlDocumentosPersonalController', 'getEstaciones']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-personal-by-id', Route::auth(['ControlDocumentosPersonalController', 'getPersonalById']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal-excel', Route::auth(['ControlDocumentosPersonalController', 'excel']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal-kpi/{idYear:\d+}', Route::auth(['ControlDocumentosPersonalController', 'kpi']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal-kpi-data/{idYear:\d+}/{tipo:\d+}', Route::auth(['ControlDocumentosPersonalController', 'kpiData']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/asistencia/{id}', Route::auth(['ControlDocumentosPersonalController', 'asistencia']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-asistencia-data', Route::auth(['ControlDocumentosPersonalController', 'getAsistenciaData']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/crear-incidencia', Route::auth(['ControlDocumentosPersonalController', 'crearIncidencia']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/agregar-incidencia', Route::auth(['ControlDocumentosPersonalController', 'agregarIncidencia']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/subir-documento-incidencia', Route::auth(['ControlDocumentosPersonalController', 'subirDocumentoIncidencia']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-incidencias-catalogo', Route::auth(['ControlDocumentosPersonalController', 'getIncidenciasCatalogo']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-incidencia-por-asistencia', Route::auth(['ControlDocumentosPersonalController', 'getIncidenciaPorAsistencia']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/acceso/{id}', Route::auth(['ControlDocumentosPersonalController', 'acceso']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/detalle-baja/{id}', Route::auth(['ControlDocumentosPersonalController', 'bajaDetalle']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-archivos-baja', Route::auth(['ControlDocumentosPersonalController', 'getArchivosBaja']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/upload-baja-archivo', Route::auth(['ControlDocumentosPersonalController', 'uploadBajaArchivo']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/delete-baja-archivo', Route::auth(['ControlDocumentosPersonalController', 'deleteBajaArchivo']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-comentarios-baja', Route::auth(['ControlDocumentosPersonalController', 'getComentariosBaja']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/add-comentario-baja', Route::auth(['ControlDocumentosPersonalController', 'addComentarioBaja']));
 
-      //----- Horario Personal
-$r->addRoute('GET','/recursos-humanos/horario-personal',Route::auth(['HorarioPersonalController', 'index']));
-$r->addRoute('GET','/recursos-humanos/horario-personal/get-data',Route::auth(['HorarioPersonalController', 'getData']));
-$r->addRoute('POST','/recursos-humanos/horario-personal/editar',Route::auth(['HorarioPersonalController', 'editar']));
-$r->addRoute('POST','/recursos-humanos/horario-personal/eliminar',Route::auth(['HorarioPersonalController', 'eliminar']));
-$r->addRoute('GET','/recursos-humanos/horario-personal/pdf',Route::auth(['HorarioPersonalController', 'pdf']));
+        //----- Horario Personal
+        $r->addRoute('GET', '/recursos-humanos/horario-personal', Route::auth(['HorarioPersonalController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/horario-personal/get-data', Route::auth(['HorarioPersonalController', 'getData']));
+        $r->addRoute('POST', '/recursos-humanos/horario-personal/editar', Route::auth(['HorarioPersonalController', 'editar']));
+        $r->addRoute('POST', '/recursos-humanos/horario-personal/eliminar', Route::auth(['HorarioPersonalController', 'eliminar']));
+        $r->addRoute('GET', '/recursos-humanos/horario-personal/pdf', Route::auth(['HorarioPersonalController', 'pdf']));
 
-      
+
 
         //----- 3. Importacion
         $r->addRoute('GET', '/importacion', Route::auth(['DptoOperativoController', 'importacionIndex']));
@@ -770,41 +770,41 @@ $r->addRoute('GET','/recursos-humanos/horario-personal/pdf',Route::auth(['Horari
 
 
         // Elemento 4
-        $r->addRoute('GET', '/objetivos-metas-indicadores', Route::auth(['objetivosMetasIndicadoresController', 'index']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores', Route::auth(['ObjetivosMetasIndicadoresController', 'index']));
 
-        $r->addRoute('GET', '/datatable-seguimiento-objetivosmetas', Route::auth(['objetivosMetasIndicadoresController', 'datatableSeguimientoObjetivosMetas']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/create-objetivos-metas', Route::auth(['objetivosMetasIndicadoresController', 'createObjetivosMetas']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/get-objetivos-metas/{id:\d+}', Route::auth(['objetivosMetasIndicadoresController', 'getObjetivosMetas']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/update-objetivos-metas/{id:\d+}', Route::auth(['objetivosMetasIndicadoresController', 'updateObjetivosMetas']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/delete-objetivos-metas', Route::auth(['objetivosMetasIndicadoresController', 'deleteObjetivosMetas']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/pdf-objetivos-metas', Route::auth(['objetivosMetasIndicadoresController', 'pdfObjetivosMetas']));
+        $r->addRoute('GET', '/datatable-seguimiento-objetivosmetas', Route::auth(['ObjetivosMetasIndicadoresController', 'datatableSeguimientoObjetivosMetas']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/create-objetivos-metas', Route::auth(['ObjetivosMetasIndicadoresController', 'createObjetivosMetas']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/get-objetivos-metas/{id:\d+}', Route::auth(['ObjetivosMetasIndicadoresController', 'getObjetivosMetas']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/update-objetivos-metas/{id:\d+}', Route::auth(['ObjetivosMetasIndicadoresController', 'updateObjetivosMetas']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/delete-objetivos-metas', Route::auth(['ObjetivosMetasIndicadoresController', 'deleteObjetivosMetas']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/pdf-objetivos-metas', Route::auth(['ObjetivosMetasIndicadoresController', 'pdfObjetivosMetas']));
 
-        $r->addRoute('GET', '/datatable-seguimiento-indicadores', Route::auth(['objetivosMetasIndicadoresController', 'datatableSeguimientoIndicadores']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/create-reporte-indicadores', Route::auth(['objetivosMetasIndicadoresController', 'createReporteIndicadores']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/update-reporte-indicadores/{id:\d+}', Route::auth(['objetivosMetasIndicadoresController', 'updateReporteIndicadores']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/pdf-reporte-indicadores', Route::auth(['objetivosMetasIndicadoresController', 'pdfReporteIndicadores']));
+        $r->addRoute('GET', '/datatable-seguimiento-indicadores', Route::auth(['ObjetivosMetasIndicadoresController', 'datatableSeguimientoIndicadores']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/create-reporte-indicadores', Route::auth(['ObjetivosMetasIndicadoresController', 'createReporteIndicadores']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/update-reporte-indicadores/{id:\d+}', Route::auth(['ObjetivosMetasIndicadoresController', 'updateReporteIndicadores']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/pdf-reporte-indicadores', Route::auth(['ObjetivosMetasIndicadoresController', 'pdfReporteIndicadores']));
 
-        $r->addRoute('GET', '/objetivos-metas-indicadores/get-reporte-indicadores/{id:\d+}', Route::auth(['objetivosMetasIndicadoresController', 'getReporteIndicadores']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/delete-reporte-indicadores', Route::auth(['objetivosMetasIndicadoresController', 'deleteReporteIndicadores']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/get-reporte-indicadores/{id:\d+}', Route::auth(['ObjetivosMetasIndicadoresController', 'getReporteIndicadores']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/delete-reporte-indicadores', Route::auth(['ObjetivosMetasIndicadoresController', 'deleteReporteIndicadores']));
 
-        $r->addRoute('GET', '/objetivos-metas-indicadores/capacitacion-personal', Route::auth(['objetivosMetasIndicadoresController', 'capacitacionPersonal']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/resumen-capacitacion-personal', Route::auth(['objetivosMetasIndicadoresController', 'resumenCapacitacionPermosal']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/capacitacion-personal', Route::auth(['ObjetivosMetasIndicadoresController', 'capacitacionPersonal']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/resumen-capacitacion-personal', Route::auth(['ObjetivosMetasIndicadoresController', 'resumenCapacitacionPermosal']));
 
-        $r->addRoute('GET', '/objetivos-metas-indicadores/experiencia-cliente', Route::auth(['objetivosMetasIndicadoresController', 'ExperienciaCliente']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/datatable-experiencia-cliente', Route::auth(['objetivosMetasIndicadoresController', 'datatableExperienciaCliente']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/chart-experiencia-cliente', Route::auth(['objetivosMetasIndicadoresController', 'chartExperienciaCliente']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/create-experiencia-cliente', Route::auth(['objetivosMetasIndicadoresController', 'createExperienciaCliente']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/delete-experiencia-cliente', Route::auth(['objetivosMetasIndicadoresController', 'deleteExperienciaCliente']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/editar-experiencia-cliente/{id:\d+}', Route::auth(['objetivosMetasIndicadoresController', 'editarExperienciaCliente']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/detalle-experiencia-cliente/{id:\d+}', Route::auth(['objetivosMetasIndicadoresController', 'detalleExperienciaCliente']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/agregar-encuesta-cliente', Route::auth(['objetivosMetasIndicadoresController', 'agregarEncuestaCliente']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/lista-encuesta-cliente', Route::auth(['objetivosMetasIndicadoresController', 'getListaClientes']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/detalle-encuesta-cliente', Route::auth(['objetivosMetasIndicadoresController', 'detalleEncuestaCliente']));
-        $r->addRoute('POST', '/objetivos-metas-indicadores/finalizar-encuesta', Route::auth(['objetivosMetasIndicadoresController', 'finalizarEncuesta']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/chart-experiencia-cliente-preguntas', Route::auth(['objetivosMetasIndicadoresController', 'chartExperienciaClientePreguntas']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/experiencia-cliente', Route::auth(['ObjetivosMetasIndicadoresController', 'ExperienciaCliente']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/datatable-experiencia-cliente', Route::auth(['ObjetivosMetasIndicadoresController', 'datatableExperienciaCliente']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/chart-experiencia-cliente', Route::auth(['ObjetivosMetasIndicadoresController', 'chartExperienciaCliente']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/create-experiencia-cliente', Route::auth(['ObjetivosMetasIndicadoresController', 'createExperienciaCliente']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/delete-experiencia-cliente', Route::auth(['ObjetivosMetasIndicadoresController', 'deleteExperienciaCliente']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/editar-experiencia-cliente/{id:\d+}', Route::auth(['ObjetivosMetasIndicadoresController', 'editarExperienciaCliente']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/detalle-experiencia-cliente/{id:\d+}', Route::auth(['ObjetivosMetasIndicadoresController', 'detalleExperienciaCliente']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/agregar-encuesta-cliente', Route::auth(['ObjetivosMetasIndicadoresController', 'agregarEncuestaCliente']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/lista-encuesta-cliente', Route::auth(['ObjetivosMetasIndicadoresController', 'getListaClientes']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/detalle-encuesta-cliente', Route::auth(['ObjetivosMetasIndicadoresController', 'detalleEncuestaCliente']));
+        $r->addRoute('POST', '/objetivos-metas-indicadores/finalizar-encuesta', Route::auth(['ObjetivosMetasIndicadoresController', 'finalizarEncuesta']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/chart-experiencia-cliente-preguntas', Route::auth(['ObjetivosMetasIndicadoresController', 'chartExperienciaClientePreguntas']));
 
-        $r->addRoute('GET', '/objetivos-metas-indicadores/indicador-ventas', Route::auth(['objetivosMetasIndicadoresController', 'indicadorVentas']));
-        $r->addRoute('GET', '/objetivos-metas-indicadores/get-indicador-ventas', Route::auth(['objetivosMetasIndicadoresController', 'getIndicadorVentas']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/indicador-ventas', Route::auth(['ObjetivosMetasIndicadoresController', 'indicadorVentas']));
+        $r->addRoute('GET', '/objetivos-metas-indicadores/get-indicador-ventas', Route::auth(['ObjetivosMetasIndicadoresController', 'getIndicadorVentas']));
 
         // Elemento 5
         $r->addRoute('GET', '/funciones-responsabilidades-autoridad', Route::auth(['SasisopaController', 'funcionesResponsabilidadesAutoridad']));
