@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
@@ -12,11 +14,13 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
-class RequisitosLegalesController extends BaseController{
+class RequisitosLegalesController extends BaseController
+{
 
     protected string $modulo = 'sasisopa';
 
-    public function requisitosLegales(){
+    public function requisitosLegales()
+    {
 
         $title = '3. REQUISITOS LEGALES';
         // Buscar permisos de los modulos
@@ -26,15 +30,15 @@ class RequisitosLegalesController extends BaseController{
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
-        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(),0);
+        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(), 0);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'requisitos' => $requisitos,
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
@@ -48,12 +52,12 @@ class RequisitosLegalesController extends BaseController{
             ],
             'help' => true
         ];
-        
-        View::render('requisitoslegales/index', $data,'sasisopa');
 
+        View::render('requisitoslegales/index', $data, 'sasisopa');
     }
 
-    public function calendarioRequisitosLegales(){
+    public function calendarioRequisitosLegales()
+    {
 
         $estacion = Estacion::find($this->estacionId());
         $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
@@ -63,10 +67,10 @@ class RequisitosLegalesController extends BaseController{
             exit;
         }
 
-        $municipal = RequisitosLegalesCalendario::NivelGobierno('Municipal', $this->estacionId(),0);
-        $estatal   = RequisitosLegalesCalendario::NivelGobierno('Estatal', $this->estacionId(),0);
-        $federal   = RequisitosLegalesCalendario::NivelGobierno('Federal', $this->estacionId(),0);
-        $varios    = RequisitosLegalesCalendario::NivelGobierno('Varios', $this->estacionId(),0);
+        $municipal = RequisitosLegalesCalendario::NivelGobierno('Municipal', $this->estacionId(), 0);
+        $estatal   = RequisitosLegalesCalendario::NivelGobierno('Estatal', $this->estacionId(), 0);
+        $federal   = RequisitosLegalesCalendario::NivelGobierno('Federal', $this->estacionId(), 0);
+        $varios    = RequisitosLegalesCalendario::NivelGobierno('Varios', $this->estacionId(), 0);
 
         $html = '';
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
@@ -77,7 +81,7 @@ class RequisitosLegalesController extends BaseController{
         <head>
         <meta charset="UTF-8">
         <title>Calendario anual de renovacion de Requisitos Legales</title>
-        <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
+        <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
         </head>
         <body>
 
@@ -86,7 +90,7 @@ class RequisitosLegalesController extends BaseController{
         <tr>
 
         <td class="align-middle text-center">
-        <img src="'.$logo.'" style="width: 150px;">
+        <img src="' . $logo . '" style="width: 150px;">
         </td>
         <td colspan="2" class="align-middle text-center">
         <b>Calendario anual de renovacion de Requisitos Legales</b>
@@ -105,7 +109,7 @@ class RequisitosLegalesController extends BaseController{
         Revisado por:<br> Eduardo Galicia Flores
         </td>
         <td class="align-middle text-center">
-        Autorizado por:<br> '.$apoderado.'
+        Autorizado por:<br> ' . $apoderado . '
         </td>
         <td class="align-middle text-center">
         Fecha de aprobacion:<br>  01-oct-18
@@ -146,7 +150,6 @@ class RequisitosLegalesController extends BaseController{
         $dompdf->render();
 
         $dompdf->stream("Calendario-anual-renovacion-Requisitos-Legales.pdf", ["Attachment" => true]);
-        
     }
 
     private function renderNivel($titulo, $data)
@@ -156,7 +159,7 @@ class RequisitosLegalesController extends BaseController{
         $html .= '
         <tr>
             <td class="text-center table-info" colspan="6">
-                <b>Nivel de Gobierno '.$titulo.'</b>
+                <b>Nivel de Gobierno ' . $titulo . '</b>
             </td>
         </tr>';
 
@@ -164,22 +167,23 @@ class RequisitosLegalesController extends BaseController{
 
             $html .= '
             <tr>
-                <td>'.$row['dependencia'].'</td>
-                <td><b>'.$row['permiso'].'</b></td>
-                <td>'.$row['vigencia'].'</td>
-                <td>'.formatearFechaCorta($row['fecha_emision']).'</td>
-                <td>'.formatearFechaCorta($row['fecha_vencimiento']).'</td>
-                <td>'.$row['renovacion'].'</td>
+                <td>' . $row['dependencia'] . '</td>
+                <td><b>' . $row['permiso'] . '</b></td>
+                <td>' . $row['vigencia'] . '</td>
+                <td>' . formatearFechaCorta($row['fecha_emision']) . '</td>
+                <td>' . formatearFechaCorta($row['fecha_vencimiento']) . '</td>
+                <td>' . $row['renovacion'] . '</td>
             </tr>';
         }
 
         return $html;
     }
 
-    public function requisitosLegalesConfiguracion(){
+    public function requisitosLegalesConfiguracion()
+    {
 
         $title = 'REQUISITOS LEGALES CONFIGURACIÓN';
-         // Buscar permisos de los modulos
+        // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
 
         Breadcrumb::add('Home', '/home');
@@ -187,12 +191,12 @@ class RequisitosLegalesController extends BaseController{
         Breadcrumb::add('3. REQUISITOS LEGALES', '/sasisopa/requisitos-legales');
         Breadcrumb::add($title, '');
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css',
                 '/css/select2-modal.css?v=1.0.1'
@@ -206,12 +210,12 @@ class RequisitosLegalesController extends BaseController{
                 '/js/requisitoslegales/configuracion.actions.init.js?v=1.1'
             ]
         ];
-        
-        View::render('requisitoslegales/configuracion', $data,'sasisopa');
 
+        View::render('requisitoslegales/configuracion', $data, 'sasisopa');
     }
 
-    public function datatableConfiguracion(){
+    public function datatableConfiguracion()
+    {
 
         $idEstacion = $this->estacionId();
         $estacion = Estacion::find($idEstacion);
@@ -222,37 +226,36 @@ class RequisitosLegalesController extends BaseController{
         $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
 
         $data = RequisitosLegalesLista::select('id', 'nivel_gobierno', 'dependencia', 'permiso', 'fundamento')
-        ->whereIn('id_estacion', [$idEstacion, 0])
-        ->where('estado', 1)
-        ->where(function ($query) use ($municipio, $estado) {
+            ->whereIn('id_estacion', [$idEstacion, 0])
+            ->where('estado', 1)
+            ->where(function ($query) use ($municipio, $estado) {
 
-            // Municipal
-            $query->where(function ($q) use ($municipio) {
-                $q->where('nivel_gobierno', 'Municipal')
-                ->where('mun_alc_est', $municipio);
-            });
+                // Municipal
+                $query->where(function ($q) use ($municipio) {
+                    $q->where('nivel_gobierno', 'Municipal')
+                        ->where('mun_alc_est', $municipio);
+                });
 
-            // Estatal
-            $query->orWhere(function ($q) use ($estado) {
-                $q->where('nivel_gobierno', 'Estatal')
-                ->where('mun_alc_est', $estado);
-            });
+                // Estatal
+                $query->orWhere(function ($q) use ($estado) {
+                    $q->where('nivel_gobierno', 'Estatal')
+                        ->where('mun_alc_est', $estado);
+                });
 
-            // Federal y Varios (sin filtro extra)
-            $query->orWhereIn('nivel_gobierno', ['Federal', 'Varios']);
-        })
-        ->orderBy('dependencia', 'asc')
-        ->get();
+                // Federal y Varios (sin filtro extra)
+                $query->orWhereIn('nivel_gobierno', ['Federal', 'Varios']);
+            })
+            ->orderBy('dependencia', 'asc')
+            ->get();
 
-         echo json_encode([
+        echo json_encode([
             "data" => $data,
             "permisos" => [
                 "eliminar" => $permisoEliminar
             ]
         ]);
-        
-        exit;
 
+        exit;
     }
 
     public function deleteConfiguracion()
@@ -321,12 +324,13 @@ class RequisitosLegalesController extends BaseController{
         exit;
     }
 
-    public function createConfiguracion(){
+    public function createConfiguracion()
+    {
 
         header('Content-Type: application/json; charset=utf-8');
         $data = json_decode(file_get_contents('php://input'), true);
 
-        
+
         $gobierno = sanitize_input($data['gobierno'] ?? null, 'string');
         $dependencia = sanitize_input($data['dependencia'] ?? null, 'string');
         $permiso = sanitize_input($data['permiso'] ?? null, 'string');
@@ -351,39 +355,40 @@ class RequisitosLegalesController extends BaseController{
 
         $estacion = Estacion::find($this->estacionId());
 
-        
-        if($gobierno == "Municipal"){
-        $MA = $estacion->di_municipio;
-        }else if($gobierno == "Estatal"){
-        $MA = $estacion->di_estado;
-        }else if($gobierno == "Federal"){
-        $MA = "";
-        }else if($gobierno == "Varios"){
-        $MA = "";
+
+        if ($gobierno == "Municipal") {
+            $MA = $estacion->di_municipio;
+        } else if ($gobierno == "Estatal") {
+            $MA = $estacion->di_estado;
+        } else if ($gobierno == "Federal") {
+            $MA = "";
+        } else if ($gobierno == "Varios") {
+            $MA = "";
         }
 
-         $asistencia = RequisitosLegalesLista::create([
-                'nivel_gobierno'  => $gobierno,
-                'mun_alc_est'     => $MA,
-                'dependencia'     => $dependencia,
-                'permiso'         => $permiso,
-                'fundamento'      => $fundamento,
-                'id_estacion'     => $this->estacionId(),
-                'disabled'        => 0,
-                'estado'          => 1
-            ]);
+        $asistencia = RequisitosLegalesLista::create([
+            'nivel_gobierno'  => $gobierno,
+            'mun_alc_est'     => $MA,
+            'dependencia'     => $dependencia,
+            'permiso'         => $permiso,
+            'fundamento'      => $fundamento,
+            'id_estacion'     => $this->estacionId(),
+            'disabled'        => 0,
+            'estado'          => 1
+        ]);
 
-         echo json_encode([
-                'success' => true,
-                'id' => $asistencia->id,
-                'message' => 'Lista de asistencia guardada correctamente'
-            ]);
+        echo json_encode([
+            'success' => true,
+            'id' => $asistencia->id,
+            'message' => 'Lista de asistencia guardada correctamente'
+        ]);
     }
 
-    public function requisitosLegalesDetalle($nGobierno){
+    public function requisitosLegalesDetalle($nGobierno)
+    {
 
         $title = $nGobierno;
-         // Buscar permisos de los modulos
+        // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
 
         Breadcrumb::add('Home', '/home');
@@ -391,15 +396,15 @@ class RequisitosLegalesController extends BaseController{
         Breadcrumb::add('3. REQUISITOS LEGALES', '/sasisopa/requisitos-legales');
         Breadcrumb::add($title, '');
 
-        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(),0);
+        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(), 0);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'requisitos' => $requisitos,
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css',
                 '/css/select2-modal.css?v=1.0'
@@ -413,104 +418,60 @@ class RequisitosLegalesController extends BaseController{
                 '/js/requisitoslegales/detalle.actions.init.js?v=1.0'
             ]
         ];
-        
-        View::render('requisitoslegales/detalle', $data,'sasisopa');
 
+        View::render('requisitoslegales/detalle', $data, 'sasisopa');
     }
 
-    public function datatableDetalle($nGobierno, $modulo){
+    public function datatableDetalle($nGobierno, $modulo)
+    {
 
-    $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
-    $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
-    $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
+        $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
+        $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
+        $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-    $rows = RequisitosLegalesCalendario::NivelGobierno(
-        $nGobierno,
-        $this->estacionId(),
-        $modulo
-    );
+        $rows = RequisitosLegalesCalendario::NivelGobierno(
+            $nGobierno,
+            $this->estacionId(),
+            $modulo
+        );
 
-    $data = [];
+        $data = [];
 
         $estatus = [
-        "titulo" => '',
-        "color_css" => '',
-        "color_hexa" => ''
-    ];
+            "titulo" => '',
+            "color_css" => '',
+            "color_hexa" => ''
+        ];
 
-    foreach ($rows as $row) {
-    
-    $fechaEmision = $row['fecha_emision'];
-    $fechaVencimiento = $row['fecha_vencimiento'];
+        foreach ($rows as $row) {
 
-    if (empty($row['fecha_emision']) ||
-    $fechaEmision === '0000-00-00' ||
-    $fechaEmision === '-0001-11-30'
-    ) {
-        $fechaEmision = 'S/I';
-    }
+            $fechaEmision = $row['fecha_emision'];
+            $fechaVencimiento = $row['fecha_vencimiento'];
 
-    if (empty($row['fecha_vencimiento']) ||
-    $fechaVencimiento === '0000-00-00' ||
-    $fechaVencimiento === '-0001-11-30'
-    ) {
-        $fechaVencimiento = 'S/I';
-    }
+            if (
+                empty($row['fecha_emision']) ||
+                $fechaEmision === '0000-00-00' ||
+                $fechaEmision === '-0001-11-30'
+            ) {
+                $fechaEmision = 'S/I';
+            }
 
-    $hoy = date('Y-m-d');
-    $vigencia = $row['vigencia'];
-    $cumplimiento = (int)$row['cumplimiento'];
-    $fechaVenc = $row['fecha_vencimiento'];
+            if (
+                empty($row['fecha_vencimiento']) ||
+                $fechaVencimiento === '0000-00-00' ||
+                $fechaVencimiento === '-0001-11-30'
+            ) {
+                $fechaVencimiento = 'S/I';
+            }
 
-        //CASOS ESPECIALES (sin fechas)
-    if ($vigencia === 'Cuando se realice cambio' || $vigencia === 'Permanente') {
+            $hoy = date('Y-m-d');
+            $vigencia = $row['vigencia'];
+            $cumplimiento = (int)$row['cumplimiento'];
+            $fechaVenc = $row['fecha_vencimiento'];
 
-        if ($cumplimiento === 100) {
-            $estatus = [
-                "titulo" => 'Finalizado',
-                "color_css" => 'text-bg-success',
-                "color_hexa" => '#198754'
-            ];
-        } else {
-            $estatus = [
-                "titulo" => 'Pendiente',
-                "color_css" => 'text-bg-warning',
-                "color_hexa" => '#ffc107'
-            ];
-        }
+            //CASOS ESPECIALES (sin fechas)
+            if ($vigencia === 'Cuando se realice cambio' || $vigencia === 'Permanente') {
 
-    } else {
-
-        //VALIDAR FECHA PRIMERO
-        if (
-            !empty($fechaVenc) &&
-            $fechaVenc !== '0000-00-00' &&
-            $fechaVenc !== '-0001-11-30'
-        ) {
-
-            $fechaNotificacion = date('Y-m-d', strtotime($fechaVenc . ' -30 days'));
-
-            if ($fechaVenc < $hoy) {
-
-                //VENCIDO (PRIORIDAD MÁXIMA)
-                $estatus = [
-                    "titulo" => 'Vencido',
-                    "color_css" => 'text-bg-danger',
-                    "color_hexa" => '#dc3545'
-                ];
-
-            } elseif ($fechaNotificacion <= $hoy) {
-
-                //PRÓXIMO A VENCER
-                $estatus = [
-                    "titulo" => 'Próximo a vencer',
-                    "color_css" => 'text-bg-warning',
-                    "color_hexa" => '#fd7e14'
-                ];
-
-            } else {
-
-                // SOLO SI NO ESTÁ EN RIESGO
                 if ($cumplimiento === 100) {
                     $estatus = [
                         "titulo" => 'Finalizado',
@@ -524,41 +485,83 @@ class RequisitosLegalesController extends BaseController{
                         "color_hexa" => '#ffc107'
                     ];
                 }
-            }
-
-        } else {
-
-            // SIN FECHA → solo cumplimiento
-            if ($cumplimiento === 100) {
-                $estatus = [
-                    "titulo" => 'Finalizado',
-                    "color_css" => 'text-bg-success',
-                    "color_hexa" => '#198754'
-                ];
             } else {
-                $estatus = [
-                    "titulo" => 'Pendiente',
-                    "color_css" => 'text-bg-warning',
-                    "color_hexa" => '#ffc107'
-                ];
-            }
-        }
-    }
 
-        $data[] = [
-            "id" => $row['id'],
-            "dependencia" => $row['dependencia'],
-            "permiso" => $row['permiso'],
-            "vigencia" => $row['vigencia'],
-            "fecha_emision" => $fechaEmision,
-            "fecha_vencimiento" => $fechaVencimiento,
-            "acuse_file" => $row['acuse_file'],
-            "requisito_file" => $row['requisito_file'],
-            "renovacion" => $row['renovacion'],
-            "cumplimiento" => $row['cumplimiento'],
-            "estatus" =>$estatus
-        ];
-    }
+                //VALIDAR FECHA PRIMERO
+                if (
+                    !empty($fechaVenc) &&
+                    $fechaVenc !== '0000-00-00' &&
+                    $fechaVenc !== '-0001-11-30'
+                ) {
+
+                    $fechaNotificacion = date('Y-m-d', strtotime($fechaVenc . ' -30 days'));
+
+                    if ($fechaVenc < $hoy) {
+
+                        //VENCIDO (PRIORIDAD MÁXIMA)
+                        $estatus = [
+                            "titulo" => 'Vencido',
+                            "color_css" => 'text-bg-danger',
+                            "color_hexa" => '#dc3545'
+                        ];
+                    } elseif ($fechaNotificacion <= $hoy) {
+
+                        //PRÓXIMO A VENCER
+                        $estatus = [
+                            "titulo" => 'Próximo a vencer',
+                            "color_css" => 'text-bg-warning',
+                            "color_hexa" => '#fd7e14'
+                        ];
+                    } else {
+
+                        // SOLO SI NO ESTÁ EN RIESGO
+                        if ($cumplimiento === 100) {
+                            $estatus = [
+                                "titulo" => 'Finalizado',
+                                "color_css" => 'text-bg-success',
+                                "color_hexa" => '#198754'
+                            ];
+                        } else {
+                            $estatus = [
+                                "titulo" => 'Pendiente',
+                                "color_css" => 'text-bg-warning',
+                                "color_hexa" => '#ffc107'
+                            ];
+                        }
+                    }
+                } else {
+
+                    // SIN FECHA → solo cumplimiento
+                    if ($cumplimiento === 100) {
+                        $estatus = [
+                            "titulo" => 'Finalizado',
+                            "color_css" => 'text-bg-success',
+                            "color_hexa" => '#198754'
+                        ];
+                    } else {
+                        $estatus = [
+                            "titulo" => 'Pendiente',
+                            "color_css" => 'text-bg-warning',
+                            "color_hexa" => '#ffc107'
+                        ];
+                    }
+                }
+            }
+
+            $data[] = [
+                "id" => $row['id'],
+                "dependencia" => $row['dependencia'],
+                "permiso" => $row['permiso'],
+                "vigencia" => $row['vigencia'],
+                "fecha_emision" => $fechaEmision,
+                "fecha_vencimiento" => $fechaVencimiento,
+                "acuse_file" => $row['acuse_file'],
+                "requisito_file" => $row['requisito_file'],
+                "renovacion" => $row['renovacion'],
+                "cumplimiento" => $row['cumplimiento'],
+                "estatus" => $estatus
+            ];
+        }
 
         echo json_encode([
             "data" => $data,
@@ -588,12 +591,12 @@ class RequisitosLegalesController extends BaseController{
 
                 $query->where(function ($q) use ($municipio) {
                     $q->where('nivel_gobierno', 'Municipal')
-                    ->where('mun_alc_est', $municipio);
+                        ->where('mun_alc_est', $municipio);
                 });
 
                 $query->orWhere(function ($q) use ($estado) {
                     $q->where('nivel_gobierno', 'Estatal')
-                    ->where('mun_alc_est', $estado);
+                        ->where('mun_alc_est', $estado);
                 });
 
                 $query->orWhereIn('nivel_gobierno', ['Federal', 'Varios']);
@@ -601,7 +604,7 @@ class RequisitosLegalesController extends BaseController{
             ->where('sgm', $sgm)
             ->where('estado', 1);
 
-    
+
         if (!$idActual) {
             $query->whereDoesntHave('calendario', function ($query) use ($idEstacion) {
                 $query->where('id_estacion', $idEstacion);
@@ -617,15 +620,15 @@ class RequisitosLegalesController extends BaseController{
         NULLIF(permiso,'')
     ) AS permiso
 ")
-->orderBy('permiso')
-->get();
+            ->orderBy('permiso')
+            ->get();
 
         echo json_encode($data);
         exit;
     }
 
     public function createPermisoDetalle()
-        {
+    {
         header('Content-Type: application/json; charset=utf-8');
 
         if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
@@ -678,7 +681,7 @@ class RequisitosLegalesController extends BaseController{
         $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
-             mkdir_safe($carpeta, true);
+            mkdir_safe($carpeta, true);
         }
 
         $acusePath = null;
@@ -686,6 +689,7 @@ class RequisitosLegalesController extends BaseController{
         $transactionStarted = false;
 
         try {
+
             if (!empty($_FILES['acuse_pdf']) && $_FILES['acuse_pdf']['error'] === UPLOAD_ERR_OK) {
                 $acusePath = $this->guardarArchivoRequisitoLegal($_FILES['acuse_pdf'], $carpeta, 'acuse_');
             }
@@ -730,7 +734,7 @@ class RequisitosLegalesController extends BaseController{
             Capsule::commit();
 
             $cumplimiento = round(
-                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno,0)['Cumplimiento'] ?? 0
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno, 0)['Cumplimiento'] ?? 0
             );
 
             echo json_encode([
@@ -773,7 +777,8 @@ class RequisitosLegalesController extends BaseController{
         return 'archivos/reuisitos-legales/' . $nombreArchivo;
     }
 
-    public function deleteDetalle(){
+    public function deleteDetalle()
+    {
 
         header('Content-Type: application/json; charset=utf-8');
         $data = json_decode(file_get_contents('php://input'), true);
@@ -788,7 +793,7 @@ class RequisitosLegalesController extends BaseController{
         }
 
         if (!$id) {
-            echo json_encode(['success' => false,'message' => 'ID requerido']);
+            echo json_encode(['success' => false, 'message' => 'ID requerido']);
             return;
         }
 
@@ -804,7 +809,7 @@ class RequisitosLegalesController extends BaseController{
 
             $nivelGobierno = $calendario->nivel_gobierno;
             $matrices = RequisitosLegalesMatriz::where('idcalendario', $id)->get();
-            
+
 
             foreach ($matrices as $m) {
 
@@ -822,7 +827,7 @@ class RequisitosLegalesController extends BaseController{
                     }
                 }
 
-                 if ($m instanceof RequisitosLegalesMatriz) {
+                if ($m instanceof RequisitosLegalesMatriz) {
                     $m->delete();
                 }
             }
@@ -833,7 +838,7 @@ class RequisitosLegalesController extends BaseController{
             Capsule::commit();
 
             $cumplimiento = round(
-                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno,0)['Cumplimiento'] ?? 0
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno, 0)['Cumplimiento'] ?? 0
             );
 
             echo json_encode([
@@ -842,7 +847,6 @@ class RequisitosLegalesController extends BaseController{
                 'message' => 'Requisito legal eliminado correctamente'
             ]);
             exit;
-
         } catch (\Throwable $e) {
 
             Capsule::rollBack();
@@ -856,85 +860,84 @@ class RequisitosLegalesController extends BaseController{
     }
 
     public function getDetalle($id)
-        {
-            header('Content-Type: application/json');
+    {
+        header('Content-Type: application/json');
 
-            $calendario = RequisitosLegalesCalendario::with([
-                'requisito',
-                'matriz'
-            ])->find($id);
+        $calendario = RequisitosLegalesCalendario::with([
+            'requisito',
+            'matriz'
+        ])->find($id);
 
-            if (!$calendario) {
-                echo json_encode(['success' => false]);
-                exit;
-            }
-
-            if ($calendario->id_requisito_legal == 0) {
-
-                $detalle = [
-                    'nivel_gobierno' => $calendario->nivel_gobierno,
-                    'permiso'        => $calendario->requisito_legal,
-                    'vigencia'       => $calendario->vigencia,
-                    'dependencia'    => null,
-                    'fundamento'     => null,
-                    'mun_alc_est'    => null
-                ];
-
-            } else {
-
-                $detalleRL = $calendario->requisito;
-
-                $detalle = [
-                    'nivel_gobierno' => optional($detalleRL)->nivel_gobierno,
-                    'permiso'        => optional($detalleRL)->permiso,
-                    'vigencia'       => $calendario->vigencia,
-                    'dependencia'    => optional($detalleRL)->dependencia,
-                    'fundamento'     => optional($detalleRL)->fundamento,
-                    'mun_alc_est'    => optional($detalleRL)->mun_alc_est
-                ];
-            }
-
-            $matriz = $calendario->matriz->map(function ($m) {
-
-                return [
-                    'fecha_emision' => ($m->fecha_emision && $m->fecha_emision != '0000-00-00')
-                        ? formatearFecha($m->fecha_emision)
-                        : 'S/I',
-
-                    'fecha_vencimiento' => ($m->fecha_vencimiento && $m->fecha_vencimiento != '0000-00-00')
-                        ? formatearFecha($m->fecha_vencimiento)
-                        : 'S/I',
-
-                    'acuse' => $m->acusepdf ? basename($m->acusepdf) : '',
-                    'requisito' => $m->requisitolegalpdf ? basename($m->requisitolegalpdf) : ''
-                ];
-            });
-
-    
-            $meses = [
-                'enero'      => $calendario->enero,
-                'febrero'    => $calendario->febrero,
-                'marzo'      => $calendario->marzo,
-                'abril'      => $calendario->abril,
-                'mayo'       => $calendario->mayo,
-                'junio'      => $calendario->junio,
-                'julio'      => $calendario->julio,
-                'agosto'     => $calendario->agosto,
-                'septiembre' => $calendario->septiembre,
-                'octubre'    => $calendario->octubre,
-                'noviembre'  => $calendario->noviembre,
-                'diciembre'  => $calendario->diciembre,
-            ];
-
-            echo json_encode([
-                'success' => true,
-                'detalle' => $detalle,
-                'matriz'  => $matriz,
-                'renovacion'   => $meses,
-                'id_requisito_legal' => $calendario->id_requisito_legal
-            ]);
-
+        if (!$calendario) {
+            echo json_encode(['success' => false]);
             exit;
+        }
+
+        if ($calendario->id_requisito_legal == 0) {
+
+            $detalle = [
+                'nivel_gobierno' => $calendario->nivel_gobierno,
+                'permiso'        => $calendario->requisito_legal,
+                'vigencia'       => $calendario->vigencia,
+                'dependencia'    => null,
+                'fundamento'     => null,
+                'mun_alc_est'    => null
+            ];
+        } else {
+
+            $detalleRL = $calendario->requisito;
+
+            $detalle = [
+                'nivel_gobierno' => optional($detalleRL)->nivel_gobierno,
+                'permiso'        => optional($detalleRL)->permiso,
+                'vigencia'       => $calendario->vigencia,
+                'dependencia'    => optional($detalleRL)->dependencia,
+                'fundamento'     => optional($detalleRL)->fundamento,
+                'mun_alc_est'    => optional($detalleRL)->mun_alc_est
+            ];
+        }
+
+        $matriz = $calendario->matriz->map(function ($m) {
+
+            return [
+                'fecha_emision' => ($m->fecha_emision && $m->fecha_emision != '0000-00-00')
+                    ? formatearFecha($m->fecha_emision)
+                    : 'S/I',
+
+                'fecha_vencimiento' => ($m->fecha_vencimiento && $m->fecha_vencimiento != '0000-00-00')
+                    ? formatearFecha($m->fecha_vencimiento)
+                    : 'S/I',
+
+                'acuse' => $m->acusepdf ? basename($m->acusepdf) : '',
+                'requisito' => $m->requisitolegalpdf ? basename($m->requisitolegalpdf) : ''
+            ];
+        });
+
+
+        $meses = [
+            'enero'      => $calendario->enero,
+            'febrero'    => $calendario->febrero,
+            'marzo'      => $calendario->marzo,
+            'abril'      => $calendario->abril,
+            'mayo'       => $calendario->mayo,
+            'junio'      => $calendario->junio,
+            'julio'      => $calendario->julio,
+            'agosto'     => $calendario->agosto,
+            'septiembre' => $calendario->septiembre,
+            'octubre'    => $calendario->octubre,
+            'noviembre'  => $calendario->noviembre,
+            'diciembre'  => $calendario->diciembre,
+        ];
+
+        echo json_encode([
+            'success' => true,
+            'detalle' => $detalle,
+            'matriz'  => $matriz,
+            'renovacion'   => $meses,
+            'id_requisito_legal' => $calendario->id_requisito_legal
+        ]);
+
+        exit;
     }
 
     public function getHistorialDetalle($id)
@@ -998,7 +1001,7 @@ class RequisitosLegalesController extends BaseController{
         $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
-             mkdir_safe($carpeta, true);
+            mkdir_safe($carpeta, true);
         }
 
         $acusePath = '';
@@ -1094,7 +1097,7 @@ class RequisitosLegalesController extends BaseController{
         $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
-             mkdir_safe($carpeta, true);
+            mkdir_safe($carpeta, true);
         }
 
         try {
@@ -1211,15 +1214,15 @@ class RequisitosLegalesController extends BaseController{
     private function getCumplimientoPorCalendario(RequisitosLegalesCalendario $calendario)
     {
         return round(
-            RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $calendario->nivel_gobierno,0)['Cumplimiento'] ?? 0
+            RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $calendario->nivel_gobierno, 0)['Cumplimiento'] ?? 0
         );
     }
 
     public function updatePermisoDetalle($id)
     {
-            header('Content-Type: application/json');
+        header('Content-Type: application/json');
 
-             if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+        if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
             echo json_encode([
                 'success' => false,
                 'message' => 'No tienes permiso para editar'
@@ -1227,73 +1230,71 @@ class RequisitosLegalesController extends BaseController{
             return;
         }
 
-            try {
+        try {
 
-                $idEstacion = $this->estacionId();
+            $idEstacion = $this->estacionId();
 
-                $registro = RequisitosLegalesCalendario::where('id', $id)
-                    ->where('id_estacion', $idEstacion)
-                    ->first();
+            $registro = RequisitosLegalesCalendario::where('id', $id)
+                ->where('id_estacion', $idEstacion)
+                ->first();
 
-                if (!$registro) {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Registro no encontrado'
-                    ]);
-                    exit;
-                }
-
-                $permiso = $_POST['permiso'] ?? null;
-                $vigencia = $_POST['vigencia'] ?? null;
-
-                if (!$permiso || !$vigencia) {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Datos incompletos'
-                    ]);
-                    exit;
-                }
-
-     
-                $registro->id_requisito_legal = $permiso;
-                $registro->vigencia = $vigencia;
-
-   
-                $registro->enero = $_POST['enero'] ?? 0;
-                $registro->febrero = $_POST['febrero'] ?? 0;
-                $registro->marzo = $_POST['marzo'] ?? 0;
-                $registro->abril = $_POST['abril'] ?? 0;
-                $registro->mayo = $_POST['mayo'] ?? 0;
-                $registro->junio = $_POST['junio'] ?? 0;
-                $registro->julio = $_POST['julio'] ?? 0;
-                $registro->agosto = $_POST['agosto'] ?? 0;
-                $registro->septiembre = $_POST['septiembre'] ?? 0;
-                $registro->octubre = $_POST['octubre'] ?? 0;
-                $registro->noviembre = $_POST['noviembre'] ?? 0;
-                $registro->diciembre = $_POST['diciembre'] ?? 0;
-
-                $registro->save();
-
-                $cumplimiento = round(
-                    RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $registro->nivel_gobierno,0)['Cumplimiento'] ?? 0
-                );
-
-                echo json_encode([
-                    'success' => true,
-                    'cumplimiento' => $cumplimiento,
-                    'message' => 'Registro actualizado correctamente'
-                ]);
-
-            } catch (\Throwable $e) {
-
+            if (!$registro) {
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Error al actualizar',
-                    'error' => $e->getMessage()
+                    'message' => 'Registro no encontrado'
                 ]);
+                exit;
             }
 
-            exit;
+            $permiso = $_POST['permiso'] ?? null;
+            $vigencia = $_POST['vigencia'] ?? null;
+
+            if (!$permiso || !$vigencia) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Datos incompletos'
+                ]);
+                exit;
+            }
+
+
+            $registro->id_requisito_legal = $permiso;
+            $registro->vigencia = $vigencia;
+
+
+            $registro->enero = $_POST['enero'] ?? 0;
+            $registro->febrero = $_POST['febrero'] ?? 0;
+            $registro->marzo = $_POST['marzo'] ?? 0;
+            $registro->abril = $_POST['abril'] ?? 0;
+            $registro->mayo = $_POST['mayo'] ?? 0;
+            $registro->junio = $_POST['junio'] ?? 0;
+            $registro->julio = $_POST['julio'] ?? 0;
+            $registro->agosto = $_POST['agosto'] ?? 0;
+            $registro->septiembre = $_POST['septiembre'] ?? 0;
+            $registro->octubre = $_POST['octubre'] ?? 0;
+            $registro->noviembre = $_POST['noviembre'] ?? 0;
+            $registro->diciembre = $_POST['diciembre'] ?? 0;
+
+            $registro->save();
+
+            $cumplimiento = round(
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $registro->nivel_gobierno, 0)['Cumplimiento'] ?? 0
+            );
+
+            echo json_encode([
+                'success' => true,
+                'cumplimiento' => $cumplimiento,
+                'message' => 'Registro actualizado correctamente'
+            ]);
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al actualizar',
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        exit;
     }
-    
 }
