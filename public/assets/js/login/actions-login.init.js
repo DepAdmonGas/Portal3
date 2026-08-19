@@ -20,7 +20,7 @@ return;
 
 this.loading = true;
 
-axios.post('/login', {
+axios.post('/login/acceso', {
 usuario: this.usuario,
 password: this.password
 })
@@ -36,8 +36,8 @@ window.location.href = '/home';
 this.loading = false;
 }
 })
-.catch(() => {
-this.message = 'Error de servidor';
+.catch((e) => {
+this.message = e;
 this.type = 'error';
 this.loading = false;
 });

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -48,4 +48,13 @@ class HallazgoAuditoria extends Model
         'responsable_sgm' => 'integer',
         'realizadopor' => 'integer',
     ];
+
+    public function auditoria()
+    {
+        return $this->belongsTo(
+            Auditoria::class,
+            'id_auditoria',
+            'id'
+        );
+    }
 }

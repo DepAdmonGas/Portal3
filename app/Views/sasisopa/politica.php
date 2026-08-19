@@ -1,4 +1,3 @@
-
 <div id="container" data-elemento="1" data-herramienta="1">
 
 <div class="text-end mt-2">
@@ -135,8 +134,13 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 </div>
 </div>
 
-</div>
 
+                    <p id="vision_text"
+                        class="card-text fs-4 fw-normal"
+                        data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
+
+                        <?= htmlspecialchars($user->estacion->vision ?? '') ?>
+                    </p>
 
 
 <!-------------------- CARD DE Fo.ADMONGAS.010 ---------------------->
@@ -190,7 +194,8 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 </div>
 </div>
 
-</div>
+
+    </div>
 
 </div>
 
@@ -198,6 +203,7 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 <!-- -------------------------- -->
 
 <div class="modal fade"
+
 id="editar"
 tabindex="-1"
 data-bs-backdrop="static"
@@ -218,8 +224,10 @@ data-bs-dismiss="modal">
 </button>
 </div>
 
+
 <!-- BODY -->
 <div class="modal-body">
+
 
 <!-- Politica -->
 <label class="form-label">Política:</label>
@@ -227,11 +235,13 @@ data-bs-dismiss="modal">
 rows="6"
 x-model="politica"></textarea>
 
+
 <!-- Mision -->
 <label class="form-label mt-3">Misión:</label>
 <textarea class="form-control"
 rows="6"
 x-model="mision"></textarea>
+
 
 <!-- Vision -->
 <label class="form-label mt-3">Visión:</label>
@@ -244,6 +254,7 @@ x-model="vision"></textarea>
 <!-- FOOTER -->
 <div class="modal-footer">
 
+
 <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
@@ -254,6 +265,7 @@ data-bs-dismiss="modal">
 class="btn btn-success"
 @click="submit()"
 :disabled="loading">
+
 
 <i class="ti ti-check"></i>
 <span x-show="!loading">Guardar</span>
@@ -266,6 +278,7 @@ class="btn btn-success"
 </div>
 </div>
 </div>
+
 
 <div class="modal fade"
 id="listaComprobacion"
@@ -381,6 +394,7 @@ class="btn btn-success"
 
 </div>
 </div>
+
 </div>
 
 <!-- ------------------------- -->
@@ -419,6 +433,7 @@ La política debe ser comunicada a todo el personal incluyendo clientes, prestad
 <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label> y <label class="text-danger fw-bold">Jefes de Piso</label>, comunicar la política a todas las partes interesadas.</p>
 
 </div>
+
 </div>
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->

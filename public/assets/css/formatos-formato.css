@@ -1,0 +1,26 @@
+.select2-modal-field .select2-container--default .select2-selection--single {
+border: none !important;
+background-color: transparent !important;
+height: auto !important;
+padding: 0 !important;
+}
+
+.select2-modal-field .select2-container--default.select2-container--focus .select2-selection--single {
+border: none !important;
+background-color: transparent !important;
+outline: none !important;
+box-shadow: none !important;
+}
+
+.select2-modal-field .select2-container--default .select2-selection--single .select2-selection__rendered {
+padding: 0.75rem 1rem !important;
+line-height: normal !important;
+background-color: transparent !important;
+}
+
+table,
+tbody,
+td,
+.table-responsive {
+overflow: visible !important;
+}
