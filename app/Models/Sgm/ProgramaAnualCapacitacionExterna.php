@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -42,4 +42,20 @@ class ProgramaAnualCapacitacionExterna extends Model
         'realizadopor' => 'integer',
         'estado' => 'integer',
     ];
+
+    public function personal()
+    {
+        return $this->hasMany(
+            ProgramaAnualCapacitacionExternaPersonal::class,
+            'id_capacitacion'
+        );
+    }
+
+    public function evidencias()
+    {
+        return $this->hasMany(
+            ProgramaAnualCapacitacionExternaEvidencia::class,
+            'id_capacitacion'
+        );
+    }
 }

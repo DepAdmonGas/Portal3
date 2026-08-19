@@ -1,5 +1,5 @@
-
 <div id="container" data-elemento="1" data-herramienta="1">
+
 
 <div class="text-end mt-2">
 <div class="btn-group">
@@ -130,7 +130,12 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 </table>
 </div>
 
-</div>
+
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
 
 </div>
 </div>
@@ -192,24 +197,29 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 
 </div>
 
+
 </div>
 
 <!-- -------------------------- -->
 <!-- -------------------------- -->
 
 <div class="modal fade"
+
 id="editar"
 tabindex="-1"
 data-bs-backdrop="static"
 data-bs-keyboard="false"
 x-data="{ ...actions(), ...politicaForm() }">
 
+
 <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
 <div class="modal-content">
+
 
 <!-- HEADER -->
 <div class="modal-header modal-colored-header bg-primary text-white">
 <h4 class="modal-title text-white"><i class="ti ti-scale"></i>
+
 
 Editar 1. POLÍTICA</h4>
 <button type="button"
@@ -217,6 +227,7 @@ class="btn-close btn-close-white"
 data-bs-dismiss="modal">
 </button>
 </div>
+
 
 <!-- BODY -->
 <div class="modal-body">
@@ -233,6 +244,7 @@ x-model="politica"></textarea>
 rows="6"
 x-model="mision"></textarea>
 
+
 <!-- Vision -->
 <label class="form-label mt-3">Visión:</label>
 <textarea class="form-control"
@@ -240,6 +252,7 @@ rows="6"
 x-model="vision"></textarea>
 
 </div>
+
 
 <!-- FOOTER -->
 <div class="modal-footer">
@@ -255,6 +268,7 @@ class="btn btn-success"
 @click="submit()"
 :disabled="loading">
 
+
 <i class="ti ti-check"></i>
 <span x-show="!loading">Guardar</span>
 <span x-show="loading">Guardando...</span>
@@ -268,12 +282,14 @@ class="btn btn-success"
 </div>
 
 <div class="modal fade"
+
 id="listaComprobacion"
 tabindex="-1"
 data-bs-backdrop="static"
 data-bs-keyboard="false"
 x-data="{ ...actions(), ...listacomprobacionForm() }"
 @open-edit.window="getEdit($event.detail)">
+
 
 <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
 <div class="modal-content">
@@ -282,11 +298,13 @@ x-data="{ ...actions(), ...listacomprobacionForm() }"
 <div class="modal-header modal-colored-header bg-primary text-white">
 <h4 class="modal-title text-white">
 
+
 <label>
 <i class="ti" :class="mode === 'create' ? 'ti-list-check' : 'ti-edit'"></i>
 <span x-text="mode === 'create' ? 'Lista de comprobación' : 'Editar lista de comprobación'"></span>
 </label>
 </h4>
+
 
 <button type="button"
 class="btn-close btn-close-white"
@@ -295,8 +313,10 @@ data-bs-dismiss="modal"
 </button>
 </div>
 
+
 <!-- BODY -->
 <div class="modal-body">
+
 
 <!-- FECHA -->
 <label class="form-label">Fecha:</label>
@@ -304,6 +324,7 @@ data-bs-dismiss="modal"
 class="form-control"
 x-model="fecha"
 :class="errors.fecha ? 'is-invalid' : ''">
+
 
 <!-- TABLA -->
 <table class="table table-bordered table-sm mt-3">
@@ -341,6 +362,7 @@ x-model="asistentes"></textarea>
 </td>
 </tr>
 
+
 <!-- COMENTARIOS -->
 <tr>
 <td colspan="2" class="p-2">
@@ -370,6 +392,7 @@ class="btn btn-success"
 @click="submit()"
 :disabled="loading">
 
+
 <i class="ti ti-check"></i>
 
 <span x-show="!loading">Guardar</span>
@@ -386,6 +409,7 @@ class="btn btn-success"
 <!-- ------------------------- -->
 <!-- inicio offcanvas -------- -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+
 <div class="offcanvas-header">
 <h5 class="offcanvas-title" id="offcanvasExampleLabel">
 Bienvenido al elemento 1. POLITICA, del Sistema de Administración
@@ -419,6 +443,9 @@ La política debe ser comunicada a todo el personal incluyendo clientes, prestad
 <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label> y <label class="text-danger fw-bold">Jefes de Piso</label>, comunicar la política a todas las partes interesadas.</p>
 
 </div>
+
+
+
 </div>
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->

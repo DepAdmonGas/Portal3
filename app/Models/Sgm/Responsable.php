@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
+use App\Models\Estacion;
 
 class Responsable extends Model
 {
@@ -30,4 +32,31 @@ class Responsable extends Model
         'responsable' => 'integer',
         'auxiliar' => 'integer',
     ];
+
+    public function usuarioResponsable()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'responsable',
+            'id'
+        );
+    }
+
+    public function usuarioAuxiliar()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'auxiliar',
+            'id'
+        );
+    }
+
+    public function estacion()
+    {
+        return $this->belongsTo(
+            Estacion::class,
+            'id_estacion',
+            'id'
+        );
+    }
 }

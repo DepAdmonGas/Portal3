@@ -13,47 +13,6 @@ const TABLA_ESTACIONES = 'estaciones';
 const TABLA_RH_LOCALIDADES = 'localidades';
 const TABLA_PUESTOS = 'puestos';
 
-/**
- * Module groups by ID space for stations.
- */
-private static array $moduleIdSpace = [
-'estaciones' => [
-'corte-diario', 'ventas', 'tpv', 'impuesto', 'clientes',
-'solicitud-cheques', 'solicitud-gafetes', 'solicitud-tarjetas',
-'bitacora-aditivo', 'comparativo-xml', 'aclaracion-voucher',
-'ingresos-facturacion', 'contratos', 'factura-monedero',
-'despacho-ventas',
-],
-'rh_localidades' => [
-'seguros', 'organigrama', 'control-documentos-personal',
-],
-];
-
-/**
-* Module groups by department ID space.
-* puestos = tb_puestos (solicitud-cheques)
-* rh_localidades = op_rh_localidades (seguros, organigrama, control-documentos)
-*/
-private static array $moduleDeptIdSpace = [
-'puestos' => [
-'solicitud-cheques',
-],
-'rh_localidades' => [
-'seguros', 'organigrama', 'control-documentos-personal',
-],
-];
-
-/**
-* Resolve the effective multi-station config for a user.
-* Priority: user config → puesto config → null (no restriction).
-*
-* Returns array with keys:
-*   - estaciones:               array|null  (null = no restriction)
-*   - departamentos_puestos:    array|null  (null = no restriction)
-*   - departamentos_localidades: array|null  (null = no restriction)
-*   - activo:                   bool
-* Or null if no config exists at any level.
-*/
 public static function getConfig(?object $usuario = null): ?array
 {
 $usuario ??= Auth::user();
@@ -93,44 +52,28 @@ return $cfg['estaciones'];
 }
 
 /**
-* Get the allowed station IDs for the user, converted to the ID space
-* required by the given module.
-* Returns null = no restriction (use module defaults).
-*/
-public static function getAllowedStationsForModule(string $moduleKey, ?object $usuario = null): ?array
-{
-$allowed = self::getAllowedStations($usuario);
-if ($allowed === null) return null;
-
-$targetSpace = self::getIdSpaceForModule($moduleKey);
-
-if ($targetSpace === self::TABLA_ESTACIONES) {
-return $allowed;
-}
-
-return self::convertIds($allowed, self::TABLA_ESTACIONES, self::TABLA_RH_LOCALIDADES);
-}
-
-/**
-* Determine which station ID space a module belongs to.
-*/
+ * Determine which station ID space a module belongs to.
+ *
+ * Derived from tb_modulos_config.tipo_departamento: modules configured
+ * with 'localidades' consume op_rh_localidades as their station catalog,
+ * everything else uses tb_estaciones.
+ */
 public static function getIdSpaceForModule(string $moduleKey): string
 {
-if (in_array($moduleKey, self::$moduleIdSpace['rh_localidades'])) {
-return self::TABLA_RH_LOCALIDADES;
-}
-return self::TABLA_ESTACIONES;
+$tipo = ModuleStationService::getConfig($moduleKey)['tipo_departamento'] ?? null;
+return ($tipo === 'localidades') ? self::TABLA_RH_LOCALIDADES : self::TABLA_ESTACIONES;
 }
 
 /**
-* Determine which department ID space a module belongs to.
-*/
+ * Determine which department ID space a module belongs to.
+ *
+ * The department catalog is configured in tb_modulos_config.tipo_departamento
+ * ('localidades' => op_rh_localidades, anything else => tb_puestos).
+ */
 public static function getDepartmentSpaceForModule(string $moduleKey): string
 {
-if (in_array($moduleKey, self::$moduleDeptIdSpace['rh_localidades'])) {
-return self::TABLA_RH_LOCALIDADES;
-}
-return self::TABLA_PUESTOS;
+$tipo = ModuleStationService::getConfig($moduleKey)['tipo_departamento'] ?? null;
+return ($tipo === 'localidades') ? self::TABLA_RH_LOCALIDADES : self::TABLA_PUESTOS;
 }
 
 /**
@@ -165,7 +108,7 @@ $est = Estacion::find((int) $estId);
 if (!$est) continue;
 $loc = RhLocalidad::where('numlista', $est->numlista)->first();
 if ($loc) {
-    $result[] = (int) $loc->id;
+$result[] = (int) $loc->id;
 }
 }
 } elseif ($from === self::TABLA_RH_LOCALIDADES && $to === self::TABLA_ESTACIONES) {
@@ -174,7 +117,7 @@ $loc = RhLocalidad::find((int) $rhId);
 if (!$loc) continue;
 $est = Estacion::where('numlista', $loc->numlista)->first();
 if ($est) {
-    $result[] = (int) $est->id;
+$result[] = (int) $est->id;
 }
 }
 }

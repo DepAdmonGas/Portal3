@@ -1,15 +1,16 @@
-<div id="container" class="pb-4" x-data="{ ...actions(), ...personal()}">
+<div id="container" class="pb-4" x-data="{ ...actions(), ...personal()}" data-layout="<?= $layout ?>">
 
-<script>
-    window.__PUESTOS__ = <?= json_encode($puestos, JSON_UNESCAPED_UNICODE) ?>;
-</script>
+    <script>
+        window.__PUESTOS__ = <?= json_encode($puestos, JSON_UNESCAPED_UNICODE) ?>;
+    </script>
 
-<div class="text-end mt-2">
-   <div class="btn-group">
+    <div class="text-end mt-2">
+        <div class="btn-group">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ti ti-dots-vertical fs-4"></i>
             </button>
             <ul class="dropdown-menu animated rubberBand">
+
                 <?= 
                 !empty($permisos['crear']) ? 
                 '<li>
@@ -18,299 +19,301 @@
                 : '' 
                 ?>   
                  <li>
-                    <a class="dropdown-item" href="/uploads/archivos/renuncia/<?= $renuncia ?>" download><i class="ti ti-download"></i> Descargar</a>
+                    <a class="dropdown-item" href="<?= ($layout == 'sgm') ? '/personal/sgm/pdf' : '/uploads/archivos/renuncia/' . $renuncia; ?>" download><i class="ti ti-download"></i> Descargar</a>
+
                 </li>
             </ul>
         </div>
-</div>
+    </div>
 
     <div class="datatables mt-3">
-      <div class="table-responsive">
-        <table id="table-personal" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
-          <thead>
-            <tr>
-            <th>#</th>
-            <th>Nombre Usuario</th>            
-            <th>Puesto</th>
-            <th>Telefono</th>
-            <th>Email</th>
-            <th>Usuario</th>
-            <th>Estatus</th>
-            <th class="text-center">
-            <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
-            </th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div> 
+        <div class="table-responsive">
+            <table id="table-personal" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nombre Usuario</th>
+                        <th>Puesto</th>
+                        <th>Telefono</th>
+                        <th>Email</th>
+                        <th>Usuario</th>
+                        <?= ($layout == 'sgm') ? '<th>Grado de responsabilidad SGM</th>' : '' ?>
+                        <th>Estatus</th>
+                        <th class="text-center">
+                            <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 
-<!-- Modal -->
-<div class="modal fade"
-     id="modalPersonal"
-     tabindex="-1"
-     data-bs-backdrop="static"
-     data-bs-keyboard="false">
+    <!-- Modal -->
+    <div class="modal fade"
+        id="modalPersonal"
+        tabindex="-1"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false">
 
-    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
 
-        <div class="modal-content">
+            <div class="modal-content">
 
-            <!-- HEADER -->
-            <div class="modal-header modal-colored-header bg-primary text-white">
+                <!-- HEADER -->
+                <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title text-white">
+                    <h4 class="modal-title text-white">
 
-                    <span class="ms-2"
-                          x-text="mode === 'create'
+                        <span class="ms-2"
+                            x-text="mode === 'create'
                                 ? 'Agregar Usuario'
                                 : 'Editar Usuario'">
-                    </span>
+                        </span>
 
-                </h4>
+                    </h4>
 
-                <button class="btn-close btn-close-white"
+                    <button class="btn-close btn-close-white"
                         data-bs-dismiss="modal"
                         @click="resetModal()">
-                </button>
+                    </button>
 
-            </div>
+                </div>
 
-            <!-- BODY -->
-            <div class="modal-body">
+                <!-- BODY -->
+                <div class="modal-body">
 
-                <div class="row g-3">
+                    <div class="row g-3">
 
-                    <!-- Nombre -->
-                    <div class="col-12">
+                        <!-- Nombre -->
+                        <div class="col-12">
 
-                        <label class="form-label fw-semibold">
-                            Nombre completo
-                        </label>
+                            <label class="form-label fw-semibold">
+                                Nombre completo
+                            </label>
 
-                        <input type="text"
-                               class="form-control"
-                               placeholder="Nombre completo"
-                               x-model="nombre"
-                               @input="errors.nombre = false"
-                               :class="errors.nombre ? 'is-invalid' : ''">
+                            <input type="text"
+                                class="form-control"
+                                placeholder="Nombre completo"
+                                x-model="nombre"
+                                @input="errors.nombre = false"
+                                :class="errors.nombre ? 'is-invalid' : ''">
 
-                    </div>
+                        </div>
 
-                    <!-- Telefono -->
-                    <div class="col-md-6">
+                        <!-- Telefono -->
+                        <div class="col-md-6">
 
-                        <label class="form-label fw-semibold">
+                            <label class="form-label fw-semibold">
 
-                            Teléfono
+                                Teléfono
 
-                        </label>
+                            </label>
 
-                        <input type="text"
-                               class="form-control"
-                               placeholder="Teléfono"
-                               x-model="telefono">
+                            <input type="text"
+                                class="form-control"
+                                placeholder="Teléfono"
+                                x-model="telefono">
 
-                    </div>
+                        </div>
 
-                    <!-- Email -->
-                    <div class="col-md-6">
+                        <!-- Email -->
+                        <div class="col-md-6">
 
-                        <label class="form-label fw-semibold">
+                            <label class="form-label fw-semibold">
 
-                            Correo electrónico
+                                Correo electrónico
 
-                        </label>
+                            </label>
 
-                        <input type="email"
-                               class="form-control"
-                               placeholder="Correo electrónico"
-                               x-model="email"
-                               @input="errors.email = false"
-                               :class="errors.email ? 'is-invalid' : ''">
+                            <input type="email"
+                                class="form-control"
+                                placeholder="Correo electrónico"
+                                x-model="email"
+                                @input="errors.email = false"
+                                :class="errors.email ? 'is-invalid' : ''">
 
-                    </div>
+                        </div>
 
-                    <!-- Fecha -->
-                    <div class="col-md-6">
+                        <!-- Fecha -->
+                        <div class="col-md-6">
 
-                        <label class="form-label fw-semibold">
+                            <label class="form-label fw-semibold">
 
-                            Fecha de ingreso
+                                Fecha de ingreso
 
-                        </label>
+                            </label>
 
-                        <input type="date"
-                               class="form-control"
-                               x-model="fecha_ingreso"
-                               @input="errors.fecha_ingreso = false"
-                               :class="errors.fecha_ingreso ? 'is-invalid' : ''">
+                            <input type="date"
+                                class="form-control"
+                                x-model="fecha_ingreso"
+                                @input="errors.fecha_ingreso = false"
+                                :class="errors.fecha_ingreso ? 'is-invalid' : ''">
 
-                    </div>
+                        </div>
 
-                    <!-- Puesto -->
-                    <div class="col-md-6">
+                        <!-- Puesto -->
+                        <div class="col-md-6">
 
-                        <label class="form-label fw-semibold">
+                            <label class="form-label fw-semibold">
 
-                            Puesto
+                                Puesto
 
-                        </label>
+                            </label>
 
-                        <select class="form-select"
-                            x-model="id_puesto"
-                            @change="errors.id_puesto = false"
-                            :class="errors.id_puesto ? 'is-invalid' : ''">
+                            <select class="form-select"
+                                x-model="id_puesto"
+                                @change="errors.id_puesto = false"
+                                :class="errors.id_puesto ? 'is-invalid' : ''">
 
-                        <option value="">
-                            Seleccione...
-                        </option>
+                                <option value="">
+                                    Seleccione...
+                                </option>
 
-                        <?php foreach ($puestos as $puesto): ?>
-                            <option value="<?= $puesto->id ?>">
-                                <?= htmlspecialchars($puesto->tipo_puesto) ?>
-                            </option>
-                        <?php endforeach; ?>
+                                <?php foreach ($puestos as $puesto): ?>
+                                    <option value="<?= $puesto->id ?>">
+                                        <?= htmlspecialchars($puesto->tipo_puesto) ?>
+                                    </option>
+                                <?php endforeach; ?>
 
-                    </select>
+                            </select>
 
-                    </div>
+                        </div>
 
-                    <!-- Usuario -->
-                    <div class="col-md-10">
+                        <!-- Usuario -->
+                        <div class="col-md-10">
 
-                        <label class="form-label fw-semibold">
+                            <label class="form-label fw-semibold">
 
-                            Usuario
+                                Usuario
 
-                        </label>
+                            </label>
 
-                        <input type="text"
-                               class="form-control"
-                               placeholder="Usuario"
-                               x-model="usuario"
-                               @input="errors.usuario = false"
-                               :class="errors.usuario ? 'is-invalid' : ''">
+                            <input type="text"
+                                class="form-control"
+                                placeholder="Usuario"
+                                x-model="usuario"
+                                @input="errors.usuario = false"
+                                :class="errors.usuario ? 'is-invalid' : ''">
 
-                    </div>
+                        </div>
 
-                    <div class="col-md-2">
+                        <div class="col-md-2">
 
-                        <label class="form-label">
+                            <label class="form-label">
 
-                            &nbsp;
+                                &nbsp;
 
-                        </label>
+                            </label>
 
-                        <button class="btn btn-outline-primary w-100"
+                            <button class="btn btn-outline-primary w-100"
                                 type="button"
                                 @click="usuarioAleatorio()">
 
-                            <i class="ti ti-refresh"></i>
+                                <i class="ti ti-refresh"></i>
 
-                        </button>
+                            </button>
 
-                    </div>
+                        </div>
 
-                    <!-- Password -->
-                    <div class="col-md-5">
+                        <!-- Password -->
+                        <div class="col-md-5">
 
-                        <label class="form-label fw-semibold">
+                            <label class="form-label fw-semibold">
 
-                            Contraseña
+                                Contraseña
 
-                        </label>
+                            </label>
 
-                        <input type="text"
-                               class="form-control"
-                               x-model="password">
+                            <input type="text"
+                                class="form-control"
+                                x-model="password">
 
-                    </div>
+                        </div>
 
-                    <div class="col-md-2">
+                        <div class="col-md-2">
 
-                        <label class="form-label">
+                            <label class="form-label">
 
-                            &nbsp;
+                                &nbsp;
 
-                        </label>
+                            </label>
 
-                        <button class="btn btn-outline-primary w-100"
+                            <button class="btn btn-outline-primary w-100"
                                 type="button"
                                 @click="passwordAleatorio()">
 
-                            <i class="ti ti-refresh"></i>
+                                <i class="ti ti-refresh"></i>
 
-                        </button>
+                            </button>
+
+                        </div>
+
+                        <div class="col-md-5">
+
+                            <label class="form-label fw-semibold">
+
+                                Confirmar contraseña
+
+                            </label>
+
+                            <input type="password"
+                                class="form-control"
+                                x-model="password_confirmacion">
+
+                        </div>
 
                     </div>
 
-                    <div class="col-md-5">
+                    <!-- Alertas -->
 
-                        <label class="form-label fw-semibold">
-
-                            Confirmar contraseña
-
-                        </label>
-
-                        <input type="password"
-                               class="form-control"
-                               x-model="password_confirmacion">
-
+                    <div class="alert alert-danger mt-4 mb-0"
+                        x-show="error!=''"
+                        x-text="error">
                     </div>
 
                 </div>
 
-                <!-- Alertas -->
+                <!-- FOOTER -->
 
-                <div class="alert alert-danger mt-4 mb-0"
-                     x-show="error!=''"
-                     x-text="error">
-                </div>
+                <div class="modal-footer">
 
-            </div>
-
-            <!-- FOOTER -->
-
-            <div class="modal-footer">
-
-                <button class="btn bg-danger-subtle text-danger"
+                    <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         @click="resetModal()">
 
-                   <i class="ti ti-x"></i> Cancelar
+                        <i class="ti ti-x"></i> Cancelar
 
-                </button>
+                    </button>
 
-                <button class="btn btn-success"
+                    <button class="btn btn-success"
                         @click="submit()"
                         :disabled="loading">
 
-                    <span x-show="!loading">
-                        
-                        <i class="ti ti-check"></i> Guardar
+                        <span x-show="!loading">
 
-                    </span>
+                            <i class="ti ti-check"></i> Guardar
 
-                    <span x-show="loading">
-
-                        <span class="spinner-border spinner-border-sm me-2">
                         </span>
 
-                        Guardando...
+                        <span x-show="loading">
 
-                    </span>
+                            <span class="spinner-border spinner-border-sm me-2">
+                            </span>
 
-                </button>
+                            Guardando...
+
+                        </span>
+
+                    </button>
+
+                </div>
 
             </div>
 
         </div>
 
     </div>
-
-</div>
 
 
 </div>

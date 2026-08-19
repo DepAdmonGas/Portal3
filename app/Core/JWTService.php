@@ -235,7 +235,7 @@ class JWTService
             [
                 'expires' => time() + self::REFRESH_TOKEN_TTL,
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax'
             ]
         );
     }
@@ -250,7 +250,7 @@ class JWTService
             [
                 'expires' => time() + self::ACCESS_TOKEN_TTL,
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax'
             ]
         );
     }

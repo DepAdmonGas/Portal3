@@ -137,43 +137,47 @@ document.addEventListener('alpine:init', () => {
         },
 
         // DELETE GLOBAL
-        async deleteAction({ url, id, name, table }) {
+async deleteAction({ url, id, name, table, data = {} }) {
 
-            if (this.loading) return;
+    if (this.loading) return;
 
-            const result = await Swal.fire({
-                title: '¿Eliminar Registro?',
-                text: `El registro: ${name} será eliminado`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#d33'
-            });
+    const result = await Swal.fire({
+        title: '¿Eliminar Registro?',
+        text: `El registro: ${name} será eliminado`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33'
+    });
 
-            if (!result.isConfirmed) return;
+    if (!result.isConfirmed) return;
 
-            this.loading = true;
+    this.loading = true;
 
-            try {
-                const response = await axios.post(url, { id });
-                this.handleResponse(response, table);
+    try {
+        const response = await axios.post(url, {
+            id,
+            ...data
+        });
 
-                return response.data;
+        this.handleResponse(response, table);
 
-            } catch (err) {
+        return response.data;
 
-                const mensaje =
-                    err.response?.data?.message ||
-                    'Error al eliminar';
+    } catch (err) {
 
-                this.showAlert('error', 'Error', mensaje);
-                this.notify('error', mensaje);
+        const mensaje =
+            err.response?.data?.message ||
+            'Error al eliminar';
 
-            } finally {
-                this.loading = false;
-            }
-        },
+        this.showAlert('error', 'Error', mensaje);
+        this.notify('error', mensaje);
+
+    } finally {
+        this.loading = false;
+    }
+},
 
         // BAJA GLOBAL
 
@@ -315,6 +319,87 @@ document.addEventListener('alpine:init', () => {
     } finally {
         this.loading = false;
     }
+},
+
+async getAction({
+
+    url,
+
+    params = {},
+
+    method = 'GET',
+
+    notify = false
+
+}){
+
+    if(this.loading){
+        return;
+    }
+
+    this.loading = true;
+
+    try{
+
+        const response = await axios({
+
+            method,
+
+            url,
+
+            data: method === 'POST' ? params : undefined,
+
+            params: method === 'GET' ? params : undefined,
+
+            headers:{
+                'Accept':'application/json'
+            }
+
+        });
+
+        const res = response.data;
+
+        if(!res.success && notify){
+
+            this.notify(
+                'error',
+                res.message || 'Error'
+            );
+
+        }
+
+        return res;
+
+    }catch(err){
+
+        const mensaje =
+            err.response?.data?.message ||
+            err.message ||
+            'Error en la solicitud';
+
+        if(notify){
+
+            this.notify(
+                'error',
+                mensaje
+            );
+
+        }
+
+        return {
+
+            success:false,
+
+            message:mensaje
+
+        };
+
+    }finally{
+
+        this.loading = false;
+
+    }
+
 },
         download(tipo, archivo) {
 

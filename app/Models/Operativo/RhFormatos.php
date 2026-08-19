@@ -14,6 +14,7 @@ class RhFormatos extends Model
 
     protected $fillable = [
         'id_localidad',
+        'id_usuario',
         'formato',
         'fecha',
         'status'
@@ -22,6 +23,7 @@ class RhFormatos extends Model
     protected $casts = [
         'id' => 'integer',
         'id_localidad' => 'integer',
+        'id_usuario' => 'integer',
         'formato' => 'integer',
         'status' => 'integer',
         'fecha' => 'datetime'
