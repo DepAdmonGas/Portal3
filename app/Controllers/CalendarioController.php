@@ -118,7 +118,7 @@ public function index(){
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
-                '/js/sasisopa/calendar-init.js?v=1.7'
+                '/js/sasisopa/calendar-init.js?v=' . time(),
             ]
         ];
         

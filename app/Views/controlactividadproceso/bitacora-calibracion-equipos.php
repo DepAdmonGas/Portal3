@@ -7,17 +7,17 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
           <i class="ti ti-dots-vertical fs-4"></i>
         </button>
         <ul class="dropdown-menu animated rubberBand">
-            <li><a class="dropdown-item"  href="javascript:void(0)" @click="modalNuevoOpen()"><i class="ti ti-plus"></i> Nuevo </a></li>
-          <li><a class="dropdown-item" href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
+            <li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="modalNuevoOpen()"><i class="ti ti-plus"></i> Nuevo </a></li>
+          <li><a class="dropdown-item pointer" href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
           <li>
-              <a class="dropdown-item" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+              <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
           </li>
         </ul>
     </div>
 </div>
 
-  <div class="datatables mt-3">
-    <div class="table-responsive">
+  <div class="datatables">
+        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-bitacora-calibracion-equipos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -43,7 +43,10 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
     <div class="modal-content">
 
     <div class="modal-header modal-colored-header bg-primary text-white">
-        <h4 class="modal-title text-white">Agregar calibración de equipos</h4>
+        <h4 class="modal-title text-white">
+   <i class="ti ti-settings-plus"></i>       
+        Nueva calibración de equipos
+    </h4>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModalNuevo()"></button>
     </div>
 
@@ -51,12 +54,12 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
 
     <label class="form-label">* Equipo:</label>
 
-    <select class="form-control" x-model="equipo"
+    <select class="form-select" x-model="equipo"
         :class="errorNuevo.equipo ? 'is-invalid' : ''"
         @change="errorNuevo.equipo = false">
-    <option>Seleccione</option>
+    <option>Selecciona una opción...</option>
     <option>Tanques de almacenamiento</option>
-    <option>Sondas de medición</option>
+    <option>Sondas de medición</ption>
     <option>Dispensario</option>
     <option>Jarra patron</option>
   </select>
@@ -65,7 +68,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
 
     <div class="modal-footer">
         <button class="btn bg-danger-subtle text-danger" @click="closeModalNuevo()"><i class="ti ti-x"></i> Cancelar</button>
-        <button class="btn btn-primary" @click="guardarNuevo()"><i class="ti ti-check"></i> Guardar
+        <button class="btn btn-success" @click="guardarNuevo()"><i class="ti ti-check"></i> Guardar
         </button>
     </div>
 
@@ -81,6 +84,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
 
               <div class="modal-header modal-colored-header bg-primary text-white">
                   <h5 class="modal-title text-white">
+                    <i class="ti ti-chart-bar ms-2"></i>
                       Adjuntar resultados
                   </h5>
 
@@ -128,7 +132,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                           <hr>
 
                           <a
-                              class="btn btn-secondary"
+                              class="btn bg-primary-subtle text-primary"
                               target="_blank"
                               :href="'/uploads/archivos/calibracion/' + resultadoSeleccionado.resultado">
                             
@@ -154,7 +158,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                   </button>
 
                   <button
-                      class="btn btn-primary"
+                      class="btn btn-success"
                       @click="guardarResultado()">
 
                       <i class="ti ti-check"></i> Guardar
@@ -182,6 +186,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
               <div class="modal-header modal-colored-header bg-primary text-white">
 
                   <h4 class="modal-title text-white">
+                   <i class="ti ti-eye ms-2"></i>
                       Detalle calibración de equipos
                   </h4>
 
@@ -302,6 +307,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-search ms-2"></i>
                     Buscar
                 </h4>
 
@@ -322,13 +328,13 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                     
                     <label class="form-label mt-2">* Año:</label>
                     <select
-                        class="form-control mb-3"
+                        class="form-select mb-3"
                         x-model="filtro.year"
                         :class="errorsBuscar.year ? 'is-invalid' : ''"
                         @input="errorsBuscar.year = false">
 
                         <option value="">
-                            Selecciona
+                            Selecciona una opción...
                         </option>
 
                         <template x-for="year in years">
@@ -346,7 +352,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                     <label class="form-label mt-2">Mes:</label>
 
                     <select
-                        class="form-control"
+                        class="form-select"
                         x-model="filtro.mes">
 
                         <option value="">
@@ -381,7 +387,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                 </button>
 
                 <button
-                class="btn btn-primary"
+                class="btn btn-success"
                 @click="buscar()">
                     <i class="ti ti-search"></i> Buscar
                 </button>

@@ -8,10 +8,10 @@ x-data="programaAuditoria()">
             </button>
             <ul class="dropdown-menu animated rubberBand">
                 <li>
-                    <a class="dropdown-item" @click="abrirModalBuscar()"><i class="ti ti-search"></i> Buscar</a>
+                    <a class="dropdown-item pointer" @click="abrirModalBuscar()"><i class="ti ti-search"></i> Buscar</a>
                 </li>
                  <li>
-                    <a class="dropdown-item" @click="descargarPdf()"><i class="ti ti-download"></i> Descargar</a>
+                    <a class="dropdown-item pointer" @click="descargarPdf()"><i class="ti ti-download"></i> Descargar</a>
                 </li>
             </ul>
         </div>

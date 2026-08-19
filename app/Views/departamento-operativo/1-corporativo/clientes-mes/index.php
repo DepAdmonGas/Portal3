@@ -71,7 +71,7 @@ x-data="clientesMesComponent()">
 </div>
 <div class="card-body">
 <div class="datatables">
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table id="tablaCredito" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody>
 </tbody>
@@ -87,7 +87,7 @@ x-data="clientesMesComponent()">
 </div>
 <div class="card-body">
 <div class="datatables">
-<div class="table-responsive">
+ <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table id="tablaDebito" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody>
 </tbody>

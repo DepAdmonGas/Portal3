@@ -81,8 +81,8 @@ class CapacitacionInternaController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/capacitacioninterna/capacitacioninterna.datatable.init.js?v=1.7',
-                '/js/capacitacioninterna/capacitacioninterna.actions.init.js?v=1.7',
+                '/js/capacitacioninterna/capacitacioninterna.datatable.init.js?v=' . time(),
+                '/js/capacitacioninterna/capacitacioninterna.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];

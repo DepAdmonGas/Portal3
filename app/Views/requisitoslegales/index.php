@@ -9,10 +9,10 @@
             </button>
             <ul class="dropdown-menu animated rubberBand">
                 <li>
-                    <a class="dropdown-item" href="requisitos-legales/configuracion"><i class="ti ti-list-check"></i> Requisitos</a>
+                    <a class="dropdown-item pointer" href="requisitos-legales/configuracion"><i class="ti ti-list-check"></i> Requisitos</a>
                 </li>
                  <li>
-                    <a class="dropdown-item" href="/sasisopa/requisitos-legales/calendario-pdf"><i class="ti ti-calendar"></i> Calendario</a>
+                    <a class="dropdown-item pointer" href="/sasisopa/requisitos-legales/calendario-pdf"><i class="ti ti-calendar"></i> Calendario</a>
                 </li>
             </ul>
         </div>
@@ -116,24 +116,27 @@ $cumplimiento = $totalRequisitos > 0
 <div class="col-md-7">
 
 <div class="card">
-  <div class="card-body">
-
+<div class="card-header">
   <div class="float-end">
       <div x-data="{ ...actions(), ...listaasistenciaForm() }">
         <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+          '<button type="button" class="btn bg-primary-subtle text primary"  @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
         ?>   
       </div>  
     </div>
+    
+<h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
 
-  <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+</div>
 
-  <div class="datatables mt-4">
-    <div class="table-responsive">
+  <div class="card-body">
+
+  <div class="datatables">
+    <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-lista-asistencia" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>

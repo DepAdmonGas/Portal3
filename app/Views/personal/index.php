@@ -13,7 +13,7 @@
                 <?= 
                 !empty($permisos['crear']) ? 
                 '<li>
-                  <a class="dropdown-item" @click="openCreate()"><i class="ti ti-plus"></i> Agregar</a>
+                  <a class="dropdown-item pointer" @click="openCreate()"><i class="ti ti-plus"></i> Agregar</a>
                 </li>' 
                 : '' 
                 ?>   

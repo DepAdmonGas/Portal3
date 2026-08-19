@@ -4,15 +4,15 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 <div class="text-end">
       <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn btn-primary" @click="openModalRequisicion()">
+        '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalRequisicion()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
         ?>     
     </div>
 
-      <div class="datatables mt-3">
-    <div class="table-responsive">
+      <div class="datatables">
+    <div class="table-responsive pb-3 overflow-x-auto overflow-y-hidden">
       <table id="table-seguridad-contratista" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -45,15 +45,17 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
         <div class="modal-content border-0 rounded-0">
 
-            <div class="modal-header head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
 
                 <span x-show="mode === 'create'">
+<i class="ti ti-certificate"></i>
                     Nueva requisición de obra o servicio
                 </span>
 
                 <span x-show="mode === 'edit'">
+                    <i class="ti ti-edit"></i>
                     Editar requisición de obra o servicio
                 </span>
 
@@ -61,7 +63,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal"
                     @click="limpiarRequisicion()">
                 </button>
@@ -131,15 +133,16 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal"
                     @click="limpiarRequisicion()">
-
+                    <i class="ti ti-x"></i> 
                     Cancelar
 
                 </button>
 
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="guardarRequisicion()">
+                    <i class="ti ti-check"></i>
 
                     <span x-text="mode === 'create'
                         ? 'Guardar'
@@ -168,6 +171,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
             <!-- HEADER IGUAL -->
             <div class="modal-header modal-colored-header bg-primary text-white">
                 <h4 class="modal-title text-white">
+                   <i class="ti ti-clipboard-check"></i>
                     Autorizacion para realizar trabajos peligrosos
                 </h4>
 
@@ -380,7 +384,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     <div class="text-end mt-2">
                         <button type="button"
-                                class="btn btn-info text-white"
+                                class="btn bg-primary-subtle text-primary"
                                 @click="agregarTrabajador()">
                             Agregar
                         </button>
@@ -447,7 +451,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     <div class="col-2 text-end">
 
                         <button type="button"
-                                class="btn btn-info text-white"
+                                class="btn bg-primary-subtle text-primary"
                                 @click="agregarEncargado()">
                             Agregar
                         </button>
@@ -521,9 +525,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                   </button>
 
                 <button type="button"
-                        class="btn btn-primary"
+                        class="btn btn-success"
                         @click="guardarFormato12">
-                    <i class="ti ti-check"></i> Guardar
+                    <i class="ti ti-check"></i> Actualizar
                 </button>
 
             </div>
@@ -547,6 +551,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-file"></i>
                     Fo.ADMONGAS.014
                 </h4>
 
@@ -775,10 +780,10 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="guardarFormato14()">
 
-                    <i class="ti ti-check"></i> Guardar
+                    <i class="ti ti-check"></i> Actualizar
 
                 </button>
 
@@ -804,6 +809,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     <div class="modal-header modal-colored-header bg-primary text-white">
 
     <h4 class="modal-title text-white">
+        <i class="ti ti-list-check"></i>
     Lista de Verificación
     </h4>
 
@@ -984,10 +990,10 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
     <button
     type="button"
-    class="btn btn-primary"
+    class="btn btn-success"
     @click="guardarFormato15()">
 
-    <i class="ti ti-check"></i> Guardar
+    <i class="ti ti-check"></i> Actualizar
 
     </button>
 
@@ -1010,6 +1016,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-mail-opened"></i>
                     Carta Responsiva
                 </h4>
 
@@ -1158,10 +1165,10 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="guardarCartaResponsiva()">
 
-                    <i class="ti ti-check"></i> Guardar
+                    <i class="ti ti-check"></i> Actualizar
 
                 </button>
 

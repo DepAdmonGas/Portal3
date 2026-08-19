@@ -7,7 +7,7 @@
 <title><?= $title ?? 'Portal3' ?></title>
 
 <!-- Favicon icon-->
-<link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/favicon.png') ?>" />
+<link rel="shortcut icon" type="image/png" href="<?=asset('images/logos/icono-web.png')?>" />
 <!-- Core Css -->
 <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
 <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">

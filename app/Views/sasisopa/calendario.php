@@ -38,7 +38,7 @@
 
             <?= !empty($permisos['crear']) ? '
                 <li>
-                    <a class="dropdown-item" @click="abrirModalActividad()">
+                    <a class="dropdown-item pointer" @click="abrirModalActividad()">
                         <i class="ti ti-plus"></i> Agregar
                     </a>
                 </li>
@@ -71,7 +71,7 @@
 
             <div class="modal-body">
 
-                <div class="table-responsive">
+                <div class="table-responsive overflow-x-auto overflow-hidden">
 
                     <table class="table table-hover align-middle mb-0">
 

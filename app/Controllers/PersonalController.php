@@ -78,8 +78,8 @@ protected string $modulo = 'sasisopa';
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/personal/index.datatable.init.js?v=1.3',
-                '/js/personal/index.actions.init.js?v=1.3'
+                '/js/personal/index.datatable.init.js?v=' . time(),
+                '/js/personal/index.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];

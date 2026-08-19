@@ -53,7 +53,7 @@ return `
 </a>
 <ul class="dropdown-menu">
 <li>
-<a class="dropdown-item d-flex align-items-center gap-3 btn-edit ${disabled}"
+<a class="dropdown-item pointer d-flex align-items-center gap-3 btn-edit ${disabled}"
 data-id="${row.id}"
 data-nombre="${row.nombre_modulo}"
 data-url="${row.url}"
@@ -62,7 +62,7 @@ data-permiso-editar="${permisoEditar}">
 </a>
 </li>
 <li>
-<a class="dropdown-item d-flex align-items-center gap-3 btn-delete ${disabled}" 
+<a class="dropdown-item pointer d-flex align-items-center gap-3 btn-delete ${disabled}" 
 data-id="${row.id}"
 data-permiso-eliminar="${permisoEliminar}">
 <i class="fs-4 ti ti-trash"></i>Cancelar

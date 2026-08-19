@@ -80,7 +80,7 @@ class CalibracionTanquesController extends BaseController
 
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/controlactividadproceso/calibraciontanques.init.js?v=1.5'
+                '/js/controlactividadproceso/calibraciontanques.init.js?v=' . time(),
             ],
 
             'help' => false

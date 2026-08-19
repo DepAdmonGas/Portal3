@@ -35,8 +35,8 @@ class DispensarioController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/dispensario.datatable.init.js?v=1.0',
-                '/js/controlactividadproceso/dispensario.action.init.js?v=1.0'
+                '/js/controlactividadproceso/dispensario.datatable.init.js?v=' . time(),
+                '/js/controlactividadproceso/dispensario.action.init.js?v=' . time(),
 
             ],
 

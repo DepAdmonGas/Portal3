@@ -91,14 +91,14 @@ const idmodulo = document.getElementById('container').dataset.idmodulo;
                     <ul class="dropdown-menu">
 
                         <li>                            
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noCreate ? 'disabled' : ''}" 
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noCreate ? 'disabled' : ''}" 
                             @click="openModalProgramar(${row.id}, ${idmodulo}, ${idtema})">
                                 <i class="ti ti-eye"></i>Programar Curso
                             </a>
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             onclick="window.dispatchEvent(new CustomEvent('ver-cursos', {
                             detail: { idUsuario: ${row.id}, idTema: ${idtema}, nombre: '${row.nombre.replace(/'/g, "\\'")}' }
                              }))">

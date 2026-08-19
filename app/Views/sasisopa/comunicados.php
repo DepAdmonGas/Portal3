@@ -11,7 +11,7 @@ x-data="{ ...actions(), ...comunicados()}">
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="openModalComunicado()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalComunicado()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
             </ul>
           </div>   
@@ -103,20 +103,20 @@ x-data="{ ...actions(), ...comunicados()}">
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             href="javascript:void(0)"
                             @click="verDetalle(item)">
                             <i class="fs-4 ti ti-eye"></i>Detalle
                             </a>
                             </li>
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             :href="item.archivo" download>
                             <i class="fs-4 ti ti-download"></i>Descargar
                             </a>
                             </li>
                             <li>
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-3"
+                            <a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3"
                             @click="eliminar(item)">
                             <i class="fs-4 ti ti-trash"></i>Eliminar
                             </a>

@@ -45,8 +45,8 @@ class SeguridadContratistasController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/seguridadcontratistas/index.datatable.init.js?v=1.7',
-                '/js/seguridadcontratistas/index.action.init.js?v=1.8'
+                '/js/seguridadcontratistas/index.datatable.init.js?v=' . time(),
+                '/js/seguridadcontratistas/index.action.init.js?v=' . time(),
             ],
             'help' => true
         ];

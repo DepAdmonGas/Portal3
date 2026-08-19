@@ -20,10 +20,10 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="openModalInvestigacion()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalInvestigacion()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
               <li>
-                <a class="dropdown-item" href="/sasisopa/investigacion-incidentes-accidentes/pdf"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/sasisopa/investigacion-incidentes-accidentes/pdf"><i class="ti ti-download"></i> Descargar</a>
               </li>
             </ul>
           </div>   
@@ -31,7 +31,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
   </div>
 
   <div class="datatables mt-3">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-hidden">
       <table class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -324,7 +324,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="openModalNoAccidentes()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalNoAccidentes()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
             </ul>
           </div>   
@@ -332,7 +332,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
   </div>
 
   <div class="datatables mt-3">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-hidden">
 
       <table class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
@@ -389,19 +389,19 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             @click="editarNoAccidentes(item)">
                             <i class="fs-4 ti ti-edit"></i>Editar
                             </a>
                             </li>
                             <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             :href="`/sasisopa/investigacion-incidentes-accidentes/no/pdf?id=${item.id}`">
                             <i class="fs-4 ti ti-download"></i>Descargar
                             </a>
                             </li>
                             <li>
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-3"
+                            <a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3"
                             @click="eliminarNo(item.id)">
                             <i class="fs-4 ti ti-trash"></i>Eliminar
                             </a>

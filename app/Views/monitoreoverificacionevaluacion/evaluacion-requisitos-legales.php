@@ -30,10 +30,10 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <li>
-                    <a class="dropdown-item" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
+                    <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.022.docx"><i class="ti ti-file-type-docx"></i> Descargar</a>
+                    <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.022.docx"><i class="ti ti-file-type-docx"></i> Descargar</a>
                 </li>
                 </ul>
             </div>   

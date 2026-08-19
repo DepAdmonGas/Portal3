@@ -97,7 +97,7 @@ x-data="solicitudValesComponent()">
 
 <h6 class="fw-semibold">Documentación:</h6>
    
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mt-2 mb-0">
 <thead>
 <tr>

@@ -4,7 +4,7 @@ x-data="{ ...actions(), ...implementacionSA()}">
 <div class="text-end">
       <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn btn-primary" @click="openModalNuevo()">
+        '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalNuevo()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
@@ -12,7 +12,7 @@ x-data="{ ...actions(), ...implementacionSA()}">
     </div>
 
       <div class="datatables mt-3">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-hidden">
       <table id="table-implementacionsa" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -43,12 +43,15 @@ x-data="{ ...actions(), ...implementacionSA()}">
             <div class="modal-content">
 
                 <div class="modal-header modal-colored-header bg-primary text-white">
-                    <h4 class="modal-title text-white"
-                        x-text="mode === 'create'
-                        ? 'Crear Implementación del SA'
+                    <h4 class="modal-title text-white">
+                        <i class="ti"
+   :class="mode === 'create' ? 'ti-plus' : 'ti-edit'">
+</i>
+                        <span x-text="mode === 'create'
+                        ? 'Nueva Implementación del SA'
                         : mode === 'edit'
                         ? 'Editar Implementación del SA'
-                        : 'Detalle Implementación del SA'">
+                        : 'Detalle Implementación del SA'"></span>
                     </h4>
 
                     <button type="button"
@@ -172,6 +175,7 @@ x-data="{ ...actions(), ...implementacionSA()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-file-description"></i>
                     Detalle Implementación del SA
                 </h4>
 

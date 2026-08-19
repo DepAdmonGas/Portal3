@@ -83,15 +83,15 @@ var html = '<div x-data="{}">'
 + '<a class="dropdown-item" @click="$dispatch(\'contrato:detalle\', { id: ' + d.id + ' })">'
 + '<i class="ti ti-eye me-1"></i> Detalle</a>';
 if (archivo) {
-html += '<a class="dropdown-item" @click="$dispatch(\'contrato:descargar\', { tipo: \'contratos\', archivo: \'' + escStr(archivo) + '\' })">'
+html += '<a class="dropdown-item pointer" @click="$dispatch(\'contrato:descargar\', { tipo: \'contratos\', archivo: \'' + escStr(archivo) + '\' })">'
 + '<i class="ti ti-download me-1"></i> Descargar</a>';
 }
 if (puedeEditar) {
-html += '<a class="dropdown-item" @click="$dispatch(\'contrato:editar\', { id: ' + d.id + ' })">'
+html += '<a class="dropdown-item pointer" @click="$dispatch(\'contrato:editar\', { id: ' + d.id + ' })">'
 + '<i class="ti ti-pencil me-1"></i> Editar</a>';
 }
 if (puedeEliminar) {
-html += '<a class="dropdown-item" @click="$dispatch(\'contrato:eliminar\', { id: ' + d.id + ', descripcion: \'' + desc + '\' })">'
+html += '<a class="dropdown-item pointer" @click="$dispatch(\'contrato:eliminar\', { id: ' + d.id + ', descripcion: \'' + desc + '\' })">'
 + '<i class="ti ti-trash me-1"></i> Eliminar</a>';
 }
 html += '</div></div></div>';

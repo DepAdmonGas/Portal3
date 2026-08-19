@@ -94,7 +94,7 @@ return `
 <ul class="dropdown-menu">
 <li>
 <a href="javascript:void(0)"
-class="dropdown-item ${noEdit ? 'disabled' : ''}"
+class="dropdown-item pointer ${noEdit ? 'disabled' : ''}"
 ${noEdit ? '' : `
 @click='\$dispatch("open-edit", {
 id: ${row.id},
@@ -111,7 +111,7 @@ no_factura: "${row.no_factura}"
 </li>
 <li>
 <a href="javascript:void(0)"
-class="dropdown-item ${noDelete ? 'disabled' : ''}"
+class="dropdown-item pointer ${noDelete ? 'disabled' : ''}"
 ${noDelete ? '' : `
 @click='async () => {
 const res = await deleteAction({

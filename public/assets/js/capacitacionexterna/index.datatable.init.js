@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <ul class="dropdown-menu">
 
                     <li>                            
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                             ${!noEdit ? '' : `
                                 onclick='window.capacitacionExterna.openModalEditar(${JSON.stringify(row)})'
                             `}>
@@ -129,20 +129,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         </li>
 
                        <li>                            
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                 onclick='window.capacitacionExterna.openModalPersonal(${row.id})'>
                                 <i class="ti ti-users"></i>Trabajadores
                             </a>
                         </li>
 
                         <li>
-                            <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa/${row.id}" class="dropdown-item d-flex align-items-center gap-3">
+                            <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa/${row.id}" class="dropdown-item pointer d-flex align-items-center gap-3">
                                 <i class="ti ti-download"></i>Descargar
                             </a>
                         </li>
 
                          <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                             ${!noDelete ? '' : `
                                     @click='window.capacitacionExterna.delete(${row.id}, ${cursoTitulo})'
                                     `}>

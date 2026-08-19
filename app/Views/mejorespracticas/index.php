@@ -6,20 +6,21 @@
 <div class="col-md-6">
 
 <div class="card">
-  <div class="card-body">
+  <div class="card-header">
 
-  <div class="d-flex align-items-center">
+ <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Diseño y construcción</h4>
       <div class="ms-auto">
+
         <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+            <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" arial-explaned="false">
+              <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
             <?= 
               !empty($permisos['crear']) ? 
               '<li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="openModalDC()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalDC()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
               <li>' 
               : '' 
@@ -28,7 +29,7 @@
               <?= 
               !empty($permisos['descargar']) ? 
               '<li>
-                <a class="dropdown-item" href="/sasisopa/mejores-practicas-estandares/pdf-diseno-construccion"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/sasisopa/mejores-practicas-estandares/pdf-diseno-construccion"><i class="ti ti-download"></i> Descargar</a>
               </li>
               <li>' 
               : '' 
@@ -41,9 +42,13 @@
       
       </div>
   </div>
+  </div>
+  <div class="card-body">
 
-  <div class="datatables mt-3">
-    <div class="table-responsive">
+ 
+
+  <div class="datatables ">
+    <div class="table-responsive pb-4 overflow-x-auto overflow-hidden">
       <table id="table-diseno-construccion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -67,20 +72,20 @@
 <div class="col-md-6">
 
 <div class="card">
-  <div class="card-body">
-
+  <div class="card-header">
   <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Operación y Mantenimiento</h4>
       <div class="ms-auto">
       <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+            <a href="javascript:void(0)" class="link btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+ 
+            <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <?= 
               !empty($permisos['crear']) ? 
               '<li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="openModalOM()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalOM()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
               <li>' 
               : '' 
@@ -89,7 +94,7 @@
               <?= 
               !empty($permisos['descargar']) ? 
               '<li>
-                <a class="dropdown-item" href="/sasisopa/mejores-practicas-estandares/pdf-operacion-mantenimiento"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/sasisopa/mejores-practicas-estandares/pdf-operacion-mantenimiento"><i class="ti ti-download"></i> Descargar</a>
               </li>
               <li>' 
               : '' 
@@ -99,8 +104,12 @@
       </div>
   </div>
 
-  <div class="datatables mt-3">
-    <div class="table-responsive">
+  </div>
+  <div class="card-body">
+
+
+  <div class="datatables">
+    <div class="table-responsive pb-4 overflow-x-auto overflow-hidden">
       <table id="table-operacion-mantenimiento" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -132,7 +141,9 @@
     <div class="modal-content">
 
     <div class="modal-header modal-colored-header bg-primary text-white">
-        <h4 class="modal-title text-white">Diseño y construcción</h4>
+        <h4 class="modal-title text-white">
+        <i class="ti ti-home-plus"></i></i>  
+        Diseño y construcción</h4>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModalDC()"></button>
     </div>
 
@@ -152,8 +163,14 @@
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModalDC()"><i class="ti ti-x"></i> Cancelar</button>
-        <button class="btn btn-primary" @click="guardarDC()"><i class="ti ti-check"></i> Guardar
+        <button class="btn bg-danger-subtle text-danger" @click="closeModalDC()">
+          <i class="ti ti-x"></i> 
+        Cancelar
+      </button>
+        <button class="btn btn-success" @click="guardarDC()">
+          <i class="ti ti-check">
+
+        </i> Guardar
         </button>
     </div>
 
@@ -168,7 +185,9 @@
     <div class="modal-content">
 
     <div class="modal-header modal-colored-header bg-primary text-white">
-        <h4 class="modal-title text-white">Operación y Mantenimiento</h4>
+        <h4 class="modal-title text-white">
+       <i class="ti ti-settings-plus"></i></i>
+        Operación y Mantenimiento</h4>
         <button type="button"class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModalOM()"></button>
     </div>
 
@@ -198,7 +217,7 @@
 
     <div class="modal-footer">
         <button class="btn bg-danger-subtle text-danger" @click="closeModalOM()"><i class="ti ti-x"></i> Cancelar</button>
-        <button class="btn btn-primary" @click="guardarOM()"><i class="ti ti-check"></i> Guardar
+        <button class="btn btn-success" @click="guardarOM()"><i class="ti ti-check"></i> Guardar
         </button>
     </div>
 

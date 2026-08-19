@@ -21,7 +21,7 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-reporte="
 </div>
 
 <div class="datatables">
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-hidden">
 <table id="table-gafetes-formulario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>

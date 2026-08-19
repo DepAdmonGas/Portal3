@@ -139,7 +139,7 @@ class CalibracionJarraPatronController extends BaseController
 
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/controlactividadproceso/calibracionjarrapatron.init.js?v=1.2'
+                '/js/controlactividadproceso/calibracionjarrapatron.init.js?v=' . time(),
             ],
 
             'help' => false

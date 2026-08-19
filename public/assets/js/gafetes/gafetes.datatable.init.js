@@ -112,7 +112,7 @@ data-bs-display="static">
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disableDetail}"
+class="dropdown-item pointer d-flex align-items-center gap-2 ${disableDetail}"
 ${!permisos.disableDetail ? `@click="goTo('/solicitud-gafetes/detalle/${row.idEstacionReal}/${row.no_reporte}')"` : ''}>
 <i class="fs-4 ti ti-eye"></i> Detalle
 </a>
@@ -122,7 +122,7 @@ ${!permisos.disableDetail ? `@click="goTo('/solicitud-gafetes/detalle/${row.idEs
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledEdit}"
+class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledEdit}"
 ${!permisos.disabledEdit ? `@click="goTo('/solicitud-gafetes/formulario/${row.idEstacionReal}/${row.no_reporte}')"` : ''}>
 <i class="fs-4 ti ti-edit"></i> Editar
 </a>
@@ -131,7 +131,7 @@ ${!permisos.disabledEdit ? `@click="goTo('/solicitud-gafetes/formulario/${row.id
 <!-- ELIMINAR -->
 <li>
 <a href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledDelete}"
+class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledDelete}"
 ${permisos.disabledDelete ? '' : `
 @click="async () => {
 await deleteAction({

@@ -9,7 +9,7 @@
 </div>
 <div class="card-body">
 <div class="datatables">
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-hidden">
 <table id="table-actividades-tecnicas" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>
@@ -27,7 +27,7 @@
 </div>
 <div class="card-body">
 <div class="datatables">
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-hidden">
 <table id="table-visitas-estacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>

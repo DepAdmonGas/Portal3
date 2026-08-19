@@ -130,8 +130,8 @@ class ListaAsistenciaController extends BaseController{
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/asistencia/listaasistenciafirma.datatable.init.js?v=1.3',
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.8'
+                '/js/asistencia/listaasistenciafirma.datatable.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];

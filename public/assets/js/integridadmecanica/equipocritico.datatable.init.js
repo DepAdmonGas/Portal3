@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
             { data: 'id_equipo', width: '60px', className: 'text-center' },
             { data: 'nombre_equipo' },
-            { data: 'marca_modelo' },
+            { data: 'marca_modelo', className: 'text-center' },
             { data: 'funciones' },
             {
-            data: 'fecha_instalacion',
+            data: 'fecha_instalacion', className: 'text-center',
             render: function (data, type) {
 
                 if (!data) return '';
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             searchable: true
         },
 
-        { data: 'tiempo_vida' },
+        { data: 'tiempo_vida', className: 'text-center' },
              
             {
                 data: null,
@@ -70,14 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3" href="javascript:void(0)" 
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" href="javascript:void(0)" 
                                     @click="download('manual','${archivo}')">
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.equipoCritico.baja(${row.id}, ${nomEquipo})'
                                     `}>
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.equipoCritico.eliminar(${row.id}, ${nomEquipo})'
                                     `}>

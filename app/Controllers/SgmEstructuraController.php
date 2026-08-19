@@ -31,11 +31,11 @@ class SgmEstructuraController extends BaseController{
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.0.1',
-                '/js/sgm/revision/index.action.init.js?v=1.0.1',
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/sgm/revision/index.action.init.js?v=' . time(),
 
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.1',                
-                '/js/sgm/revision/index.datatable.init.js?v=1.0.1'
+                '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),               
+                '/js/sgm/revision/index.datatable.init.js?v=' . time(),
             ],
             'help' => true
         ];

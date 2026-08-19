@@ -52,8 +52,8 @@ $data = [
 '/assets/js/vendor.min.js',
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/js/core/module-station-selector.js?v=' . time(),
-'/assets/js/bitacora/aditivo.datatable.init.js?v=1.0',
-'/assets/js/bitacora/actions.init.js?v=1.0'
+'/assets/js/bitacora/aditivo.datatable.init.js??v=' . time(),
+'/assets/js/bitacora/actions.init.js??v=' . time(),
 ],
 'help' => false
 ];
@@ -386,8 +386,8 @@ $data = [
 '/assets/js/vendor.min.js',
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/js/core/module-station-selector.js?v=' . time(),
-'/assets/js/bitacora/reporte.datatable.init.js?v=1.0',
-'/assets/js/bitacora/reporte.actions.init.js?v=1.0'
+'/assets/js/bitacora/reporte.datatable.init.js?v=' . time(),
+'/assets/js/bitacora/reporte.actions.init.js?v=' . time(),
 ]
 ];
 
@@ -614,8 +614,8 @@ $data = [
 '/assets/js/vendor.min.js',
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/js/core/module-station-selector.js?v=' . time(),
-'/assets/js/bitacora/inventario.datatable.init.js?v=1.0',
-'/assets/js/bitacora/inventario.actions.init.js?v=1.0'
+'/assets/js/bitacora/inventario.datatable.init.js?v=' . time(),
+'/assets/js/bitacora/inventario.actions.init.js?v=' . time(),
 ]
 ];
 

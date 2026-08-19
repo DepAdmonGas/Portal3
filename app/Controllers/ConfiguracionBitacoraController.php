@@ -32,8 +32,8 @@ class ConfiguracionBitacoraController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/configuracionbitacora/index.datatable.init.js?v=1.5',
-                '/js/configuracionbitacora/index.action.init.js?v=1.5'
+                '/js/configuracionbitacora/index.datatable.init.js?v=' . time(),
+                '/js/configuracionbitacora/index.action.init.js?v=' . time(),
             ],
             'help' => false
         ];

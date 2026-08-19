@@ -128,7 +128,7 @@ class SgmBitacoraVerificacionController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/sgm/procesos-medicion/editarbitacoraverificacion.actions.init.js?v=1.4'
+                '/js/sgm/procesos-medicion/editarbitacoraverificacion.actions.init.js?v=' . time(),
 
             ],
             'help' => false

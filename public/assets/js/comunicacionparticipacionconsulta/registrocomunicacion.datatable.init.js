@@ -86,13 +86,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                            <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3"
+                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                 @click='window.comunicacionParticipacionConsulta.openModalDetalle(${row.id})'>
                                     <i class="fs-4 ti ti-eye"></i>Detalle
                                 </a>
                             </li>
                            <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             @click='window.comunicacionParticipacionConsulta.openModalEvidencia(
                                     ${row.id},
                                     ${JSON.stringify(row.tema)}
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                         </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     ${!noEdit ? '' : `
                                     @click='window.comunicacionParticipacionConsulta.editarComunicacion(${JSON.stringify(row)})'
                                     `}>
@@ -109,12 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </a>
                                 </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3" href="/sasisopa/comunicacion-participacion-consulta/pdf-registro-comunicacion?id=${row.id}">
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" href="/sasisopa/comunicacion-participacion-consulta/pdf-registro-comunicacion?id=${row.id}">
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>
                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                    @click='window.comunicacionParticipacionConsulta.eliminarComunicacion(${row.id}, ${JSON.stringify(row.tema)})'
                                     `}>

@@ -86,8 +86,8 @@ return [
 '<div class="dropdown dropstart">',
 '<a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>',
 '<ul class="dropdown-menu">',
-'<li><a href="javascript:void(0)" class="dropdown-item ' + (noDesc ? 'disabled' : '') + '"' + (noDesc ? '' : ' @click="download(\'bitacora-aditivo\',\'' + row.documento + '\')"') + '><i class="ti ti-file-download"></i> Descargar</a></li>',
-'<li><a href="javascript:void(0)" class="dropdown-item ' + (noDelete ? 'disabled' : '') + '"' + (noDelete ? '' : ' @click=\'async () => { const res = await deleteAction({ url: "/bitacora-aditivo/delete-reporte", id: ' + row.id + ', name: "' + row.id + '", table: "#table-aditivo-reporte" }); }\'') + '><i class="ti ti-trash fs-6"></i> Eliminar</a></li>',
+'<li><a href="javascript:void(0)" class="dropdown-item pointer ' + (noDesc ? 'disabled' : '') + '"' + (noDesc ? '' : ' @click="download(\'bitacora-aditivo\',\'' + row.documento + '\')"') + '><i class="ti ti-file-download"></i> Descargar</a></li>',
+'<li><a href="javascript:void(0)" class="dropdown-item pointer ' + (noDelete ? 'disabled' : '') + '"' + (noDelete ? '' : ' @click=\'async () => { const res = await deleteAction({ url: "/bitacora-aditivo/delete-reporte", id: ' + row.id + ', name: "' + row.id + '", table: "#table-aditivo-reporte" }); }\'') + '><i class="ti ti-trash fs-6"></i> Eliminar</a></li>',
 '</ul></div></div>'
 ].join('');
 }

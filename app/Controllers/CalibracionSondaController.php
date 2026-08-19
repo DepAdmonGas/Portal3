@@ -106,7 +106,7 @@ class CalibracionSondaController extends BaseController
 
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/controlactividadproceso/calibracionsondas.init.js?v=1.0'
+                '/js/controlactividadproceso/calibracionsondas.init.js?v=' . time(),
             ],
 
             'help' => false

@@ -52,14 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
 
                                 <li>                            
-                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                      href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal/${row.id}">
                                         <i class="ti ti-eye"></i>Ficha personal
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
                                     href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf/${row.id}">
                                         <i class="ti ti-download"></i>Descargar
                                     </a>

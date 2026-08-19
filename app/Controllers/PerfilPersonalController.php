@@ -38,7 +38,7 @@ public function perfilesPersonal(){
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/competenciapersonalcapacitacionentrenamiento/perfilpersonal.datatable.init.js?v=1.0'
+                '/js/competenciapersonalcapacitacionentrenamiento/perfilpersonal.datatable.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -119,7 +119,7 @@ public function perfilesPersonal(){
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/signature_pad/docs/js/signature_pad.umd.min.js',
-                '/js/competenciapersonalcapacitacionentrenamiento/fichapersonal.actions.init.js?v=1.8'
+                '/js/competenciapersonalcapacitacionentrenamiento/fichapersonal.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];

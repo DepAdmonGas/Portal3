@@ -6,7 +6,7 @@
   <div class="text-end">
       <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn btn-primary" @click="nuevo()">
+        '<button type="button" class="btn bg-primary-subtle text-primary" @click="nuevo()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 

@@ -108,7 +108,7 @@ class SgmBitacoraCalibracionController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/sgm/procesos-medicion/editarbitacoracalibracion.action.init.js?v=1.2'
+                '/js/sgm/procesos-medicion/editarbitacoracalibracion.action.init.js?v=' . time(),
 
             ],
             'help' => false

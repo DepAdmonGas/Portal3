@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                     href="javascript:void(0)"
                                     @click='window.bitacoraDispensario.detalle(${JSON.stringify(row)})'>
                                         <i class="ti ti-eye"></i>Detalle
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
                                 <li>
-                                    <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                                    <a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.bitacoraDispensario.eliminar(${row.id}, ${row.no_dispensario})'
                                     `}>

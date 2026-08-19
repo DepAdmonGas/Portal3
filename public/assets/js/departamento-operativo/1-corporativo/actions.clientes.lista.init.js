@@ -90,13 +90,13 @@ _renderToggle(row) {
 let s = '<div class="dropdown dropstart">';
 s += '<a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>';
 s += '<ul class="dropdown-menu">';
-s += '<li class="pointer"><a class="dropdown-item d-flex align-items-center gap-3 btn-edit-cliente" data-id="' + row.id + '"><i class="fs-4 ti ti-edit"></i>Editar</a></li>';
+s += '<li class="pointer"><a class="dropdown-item pointer d-flex align-items-center gap-3 btn-edit-cliente" data-id="' + row.id + '"><i class="fs-4 ti ti-edit"></i>Editar</a></li>';
 if (row.estado == 1) {
 s += '<li><hr class="dropdown-divider"></li>';
-s += '<li class="pointer"><a class="dropdown-item d-flex align-items-center gap-3 btn-toggle-cliente" data-id="' + row.id + '" data-idtipo="1"><i class="fs-4 ti ti-toggle-left"></i>Deshabilitar</a></li>';
+s += '<li class="pointer"><a class="dropdown-item pointer d-flex align-items-center gap-3 btn-toggle-cliente" data-id="' + row.id + '" data-idtipo="1"><i class="fs-4 ti ti-toggle-left"></i>Deshabilitar</a></li>';
 } else {
 s += '<li><hr class="dropdown-divider"></li>';
-s += '<li class="pointer"><a class="dropdown-item d-flex align-items-center gap-3 btn-toggle-cliente" data-id="' + row.id + '" data-idtipo="0"><i class="fs-4 ti ti-toggle-right"></i>Habilitar</a></li>';
+s += '<li class="pointer"><a class="dropdown-item pointer d-flex align-items-center gap-3 btn-toggle-cliente" data-id="' + row.id + '" data-idtipo="0"><i class="fs-4 ti ti-toggle-right"></i>Habilitar</a></li>';
 }
 s += '</ul></div>';
 return s;

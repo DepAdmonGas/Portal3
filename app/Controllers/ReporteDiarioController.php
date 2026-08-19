@@ -35,7 +35,7 @@ class ReporteDiarioController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/reportediario/index.action.init.js?v=1.4',
+                '/js/reportediario/index.action.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -147,7 +147,7 @@ public function crearMesesReporteCre(int $idEstacion): void
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/reportediario/reportemes.action.init.js?v=1.3',
+                '/js/reportediario/reportemes.action.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -731,7 +731,7 @@ table {
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/reportediario/facturas.action.init.js?v=1.1',
+                '/js/reportediario/facturas.action.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -1063,7 +1063,7 @@ private function subirPdf(
 
         'scripts'=>[
             '/js/vendor.min.js',
-            '/js/reportediario/reportemesnuevo.action.init.js?v=1.1'
+            '/js/reportediario/reportemesnuevo.action.init.js?v=' . time(),
         ],
 
         'help'=>false
@@ -1145,7 +1145,7 @@ private function subirPdf(
 
             'scripts'=>[
                 '/js/vendor.min.js',
-                '/js/reportediario/reportemesnuevo.action.init.js?v=2.0'
+                '/js/reportediario/reportemesnuevo.action.init.js?v=' . time(),
             ],
 
             'help'=>false

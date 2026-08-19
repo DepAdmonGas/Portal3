@@ -35,14 +35,13 @@ protected string $modulo = 'sgm';
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.0.1',
-                '/js/sgm/revision/index.action.init.js?v=1.0.1',
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/sgm/revision/index.action.init.js?v=' . time(),
 
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.1',                
-                '/js/sgm/revision/index.datatable.init.js?v=1.0.1',
+                '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),               
+                '/js/sgm/revision/index.datatable.init.js?v=' . time(),
 
-                '/js/sgm/responsabilidad-direccion/index.actions.init.js?v=1.0.2', 
-                
+                '/js/sgm/responsabilidad-direccion/index.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -114,7 +113,7 @@ protected string $modulo = 'sgm';
             'scripts' => [
                 '/js/vendor.min.js',  
                 '/libs/quill/dist/quill.js',  
-                '/js/sgm/responsabilidad-direccion/politica.actions.init.js?v=1.0.1',            
+                '/js/sgm/responsabilidad-direccion/politica.actions.init.js?v=' . time(),           
             ],
             'help' => false
         ];

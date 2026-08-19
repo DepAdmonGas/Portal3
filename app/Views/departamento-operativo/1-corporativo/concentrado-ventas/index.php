@@ -32,7 +32,7 @@ x-data="concentradoVentasComponent()">
 <div class="row">
 <div class="col-12 mb-4">
 
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
 <thead>

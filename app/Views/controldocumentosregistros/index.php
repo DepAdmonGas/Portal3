@@ -1,7 +1,7 @@
 <div id="container">
 
 <div class="row mt-4">
-  <div class="col-md-5 d-flex align-items-stretch">
+  <div class="col-md-6 d-flex align-items-stretch">
     <div class="card w-100">
       <div class="card-body">
         <h4 class="card-title text-center">Control y documentos de Requisitos Legales</h4>
@@ -18,7 +18,7 @@
     </div>
   </div>
 
-  <div class="col-md-5 d-flex align-items-stretch">
+  <div class="col-md-6 d-flex align-items-stretch">
     <div class="card w-100">
       <div class="card-body">
         <h4 class="card-title text-center">Control y documentos del Sistema de Administración</h4>

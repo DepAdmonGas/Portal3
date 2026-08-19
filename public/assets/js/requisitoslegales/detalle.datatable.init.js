@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
 
                                 <li>                            
-                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                      @click="window.requisitosInstance.openDetalle(${row.id})">
                                         <i class="ti ti-eye"></i>Detalle
                                     </a>
@@ -214,21 +214,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 <li>
                             
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     @click="window.requisitosInstance.openEditar(${row.id})">
                                         <i class="ti ti-edit"></i>Editar
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
                                     @click='window.requisitosInstance.openHistorial(${row.id}, ${permisoNombre}, ${vigencia})'>
                                         <i class="ti ti-history"></i>Historial
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='window.requisitosInstance.handleDelete(${row.id}, ${permisoNombre})'
                                     `}>

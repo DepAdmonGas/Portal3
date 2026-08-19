@@ -41,8 +41,8 @@ public function index(){
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/preparacionemergencias/index.datatable.init.js?v=1.5',
-                '/js/preparacionemergencias/index.action.init.js?v=1.2'
+                '/js/preparacionemergencias/index.datatable.init.js?v=' . time(),
+                '/js/preparacionemergencias/index.action.init.js?v=' . time(),
             ],
             'help' => true
         ];

@@ -15,7 +15,7 @@ echo !empty($permisos['crear']) ? '
 ?>
 
 <div class="datatables mt-4">
-<div class="table-responsive">
+ <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table id="table-tarjetas" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>

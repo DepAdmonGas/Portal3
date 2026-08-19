@@ -53,14 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
                               
                                 <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3 ${!noEditar ? 'disabled' : ''}" 
+                                <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEditar ? 'disabled' : ''}" 
                                 href="javascript:void(0)"
                                 ${!noEditar ? '' : `@click='window.tanqueAlmacenamiento.openModalEditar(${JSON.stringify(row)})'`}>
                                 <i class="ti ti-edit"></i>Editar
                                 </a>    
                                </li>  
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}" 
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}" 
                                     href="javascript:void(0)"
                                     ${!noDelete ? '' : `@click='window.tanqueAlmacenamiento.eliminar(${row.id},${nomTanque})'`}>
                                         <i class="ti ti-trash"></i>Eliminar

@@ -39,7 +39,7 @@ const contenedor = document.getElementById('botonSeguimiento');
 if (!contenedor) return;
 
 if (ultimoPaso >= 3) {
-contenedor.innerHTML = `<li><a class="dropdown-item"> <i class="ti ti-circle-check"></i> Proceso completado</a></li>`;
+contenedor.innerHTML = `<li><a class="dropdown-item pointer"> <i class="ti ti-circle-check"></i> Proceso completado</a></li>`;
 return;
 }
 
@@ -53,7 +53,7 @@ contenedor.innerHTML = `
 <li class="${ocultarBoton}"
 :disabled="loadingSeguimiento"
 @click="submitSeguimiento(${siguiente})">
-<a class="dropdown-item"> <i class="ti ti-check"></i> Finalizar</a>
+<a class="dropdown-item pointer"> <i class="ti ti-check"></i> Finalizar</a>
 </li>
 `;
 }

@@ -56,7 +56,7 @@
 
 <li>
 <span x-data="actions()">
-<a class="dropdown-item d-flex align-items-center gap-2 pointer" @click="editarDirectorio(d)">
+<a class="dropdown-item pointer d-flex align-items-center gap-2 pointer" @click="editarDirectorio(d)">
 <i class="ti ti-pencil fs-5"></i> Editar
 </a>
 </span>
@@ -64,7 +64,7 @@
 
 <li>
 <span x-data="actions()">
-<a class="dropdown-item d-flex align-items-center gap-2 pointer text-danger" @click="deleteAction({url:'/departamento-operativo/solicitud-cheque/factura-telcel/delete-directorio',id:d.id,name:d.cuenta}).then(r=>r?.success&&$dispatch('refresh-directorio'))">
+<a class="dropdown-item pointer d-flex align-items-center gap-2 pointer text-danger" @click="deleteAction({url:'/departamento-operativo/solicitud-cheque/factura-telcel/delete-directorio',id:d.id,name:d.cuenta}).then(r=>r?.success&&$dispatch('refresh-directorio'))">
 <i class="ti ti-trash fs-5"></i> Eliminar
 </a>
 </span>
@@ -118,14 +118,14 @@
 <ul class="dropdown-menu">  
 <li>
 <span x-data="actions()">
-<a class="dropdown-item d-flex align-items-center gap-2 pointer" @click.prevent="download('solicitud-cheque', f.factura)">
+<a class="dropdown-item pointer d-flex align-items-center gap-2 pointer" @click.prevent="download('solicitud-cheque', f.factura)">
 <i class="ti ti-download fs-5"></i> Descargar
 </a>
 </span>
 </li>
 <li>
 <span x-data="actions()">
-<a class="dropdown-item d-flex align-items-center gap-2 pointer text-danger" @click="deleteAction({url:'/departamento-operativo/solicitud-cheque/factura-telcel/delete',id:f.id,name:'Factura '+f.id}).then(r=>r?.success&&$dispatch('refresh-facturas'))">
+<a class="dropdown-item pointer d-flex align-items-center gap-2 pointer text-danger" @click="deleteAction({url:'/departamento-operativo/solicitud-cheque/factura-telcel/delete',id:f.id,name:'Factura '+f.id}).then(r=>r?.success&&$dispatch('refresh-facturas'))">
 <i class="ti ti-trash fs-5"></i> Eliminar
 </a>
 </span>

@@ -74,7 +74,7 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
                             <ul class="dropdown-menu">
 
                                 <li>                            
-                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                     href="javascript:void(0)"
                                     @click="editar(registro.id)">
                                         <i class="ti ti-edit"></i> Editar
@@ -82,14 +82,14 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
                                 </li>
 
                                 <li>                            
-                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                     :href="`/sasisopa/monitoreo-verificacion-evaluacion/atencion-hallazgos/pdf/${registro.id}`"target="_blank">
                                         <i class="ti ti-download"></i> Descargar
                                     </a>
                                 </li>
 
                                 <li>                            
-                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                     href="javascript:void(0)"
                                     @click="eliminar(registro.id)">
                                         <i class="ti ti-trash"></i> Eliminar

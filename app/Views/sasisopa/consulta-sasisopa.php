@@ -60,7 +60,7 @@ x-data="{ ...actions(), ...consulta()}">
                     </td>
 
                     <td>
-                        <a class="dropdown-item d-flex align-items-center gap-3"
+                        <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             :href="item.documento" download>
                             <i class="fs-4 ti ti-file-type-pdf fs-7 text-danger"></i>
                             </a>

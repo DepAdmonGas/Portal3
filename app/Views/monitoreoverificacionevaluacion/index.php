@@ -11,7 +11,7 @@ x-data="monitoreoEvaluacion()">
             </button>
             <ul class="dropdown-menu animated rubberBand">
                  <li>
-                    <a class="dropdown-item" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
+                    <a class="dropdown-item pointer" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
                 </li>
             </ul>
         </div>

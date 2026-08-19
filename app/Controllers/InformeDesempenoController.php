@@ -36,7 +36,7 @@ class InformeDesempenoController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/informedesempeno/index.actions.init.js?v=1.1'
+                '/js/informedesempeno/index.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];

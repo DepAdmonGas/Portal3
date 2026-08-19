@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${noDownload ? 'disabled' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 pointer ${noDownload ? 'disabled' : ''}"
                                     ${noDownload ? '' : `
                                     @click="download('representante-tecnico','${archivo}')"
                                     `}>
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3  ${noDelete ? 'disabled' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 pointer ${noDelete ? 'disabled' : ''}"
                                     ${noDelete ? '' : `
                                     @click='window.representanteTecnico.eliminar(${row.id})'
                                     `}>

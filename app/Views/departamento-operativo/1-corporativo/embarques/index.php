@@ -81,7 +81,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 </h5>
 </div>
 
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mt-3">
 <tbody>
 <tr><td class="text-start"><h6 class="fw-semibold ">La estación de servicio debe recabar la siguiente documentación:</h6></td></tr>
@@ -164,7 +164,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 <hr>
 
 <div x-show="form.embarque === 'Pick Up'">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-sm table-bordered">
 <thead class="table-secondary">
 <tr>

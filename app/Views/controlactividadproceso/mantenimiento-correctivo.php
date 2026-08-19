@@ -7,16 +7,16 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
           <i class="ti ti-dots-vertical fs-4"></i>
         </button>
         <ul class="dropdown-menu animated rubberBand">
-          <li><a class="dropdown-item"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
+          <li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
           <li>
-              <a class="dropdown-item" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+              <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
           </li>
         </ul>
     </div>
 </div>
 
-  <div class="datatables mt-3">
-    <div class="table-responsive">
+  <div class="datatables">
+        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-mantenimiento-correctivo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -49,7 +49,8 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
-                    Buscar
+                <i class="ti ti-search"></i>   
+                Buscar
                 </h4>
 
                 <button
@@ -69,13 +70,13 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     
                     <label class="form-label mt-2">* Año:</label>
                     <select
-                        class="form-control mb-3"
+                        class="form-select mb-3"
                         x-model="filtro.year"
                         :class="errorsBuscar.year ? 'is-invalid' : ''"
                         @input="errorsBuscar.year = false">
 
                         <option value="">
-                            Selecciona
+                            Selecciona una opción...
                         </option>
 
                         <template x-for="year in years">
@@ -93,7 +94,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     <label class="form-label mt-2">Mes:</label>
 
                     <select
-                        class="form-control"
+                        class="form-select"
                         x-model="filtro.mes">
 
                         <option value="">
@@ -128,9 +129,9 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                 </button>
 
                 <button
-                class="btn btn-primary"
+                class="btn btn-success"
                 @click="buscar()">
-                    <i class="ti ti-check"></i> Buscar
+                    <i class="ti ti-search"></i></i> Buscar
                 </button>
             </div>
 
@@ -154,6 +155,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-eye"></i>
                     Detalle de Mantenimiento Correctivo
                 </h4>
 
@@ -173,11 +175,10 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     <div class="col-md-4 mb-3">
 
                         <label class="form-label fw-bolder">
-                            Folio
+                            Folio:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.folio">
                         </div>
 
@@ -186,11 +187,10 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     <div class="col-md-4 mb-3">
 
                         <label class="form-label fw-bolder">
-                            Fecha
+                            Fecha:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.fechacreacion">
                         </div>
 
@@ -199,11 +199,10 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     <div class="col-md-4 mb-3">
 
                         <label class="form-label fw-bolder">
-                            Hora
+                            Hora:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.horacreacion">
                         </div>
 
@@ -212,11 +211,10 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     <div class="col-md-12 mb-3">
 
                         <label class="form-label fw-bolder">
-                            Equipo o Área
+                            Equipo o Área:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.nombre_equipo">
                         </div>
 
@@ -225,11 +223,10 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     <div class="col-md-12 mb-3">
 
                         <label class="form-label fw-bolder">
-                            Hallazgo Detectado
+                            Hallazgo Detectado:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.descripcion_hallazgo">
                         </div>
 
@@ -238,11 +235,10 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     <div class="col-md-12 mb-3">
 
                         <label class="form-label fw-bolder">
-                            Actividad Realizada
+                            Actividad Realizada:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.descripcion_actividad">
                         </div>
 
@@ -251,11 +247,10 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     <div class="col-md-12 mb-4">
 
                         <label class="form-label fw-bolder">
-                            Herramienta Utilizada
+                            Herramienta Utilizada:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.herramienta">
                         </div>
 
@@ -359,6 +354,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-edit"></i>
                     Editar Mantenimiento Correctivo
                 </h4>
 
@@ -373,7 +369,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
             <div class="modal-body">
 
                 <label class="form-label">
-                    * Nombre del equipo
+                    * Nombre del equipo:
                 </label>
 
                 <input
@@ -382,7 +378,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                     x-model="form.nombre_equipo">
 
                 <label class="form-label">
-                    * Hallazgo detectado
+                    * Hallazgo detectado:
                 </label>
 
                 <textarea
@@ -392,7 +388,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                 </textarea>
 
                 <label class="form-label">
-                    * Actividad realizada
+                    * Actividad realizada:
                 </label>
 
                 <textarea
@@ -402,7 +398,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                 </textarea>
 
                 <label class="form-label">
-                    * Herramienta utilizada
+                    * Herramienta utilizada:
                 </label>
 
                 <textarea
@@ -423,10 +419,10 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                 </button>
 
                 <button
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="guardarEditar()">
 
-                    <i class="ti ti-check"></i> Guardar
+                    <i class="ti ti-check"></i> Actualizar
                 </button>
 
             </div>
@@ -451,6 +447,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-camera"></i>
                     Evidencias
                 </h4>
 
@@ -467,7 +464,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Seleccionar imágenes
+                        Subir imágenes:
                     </label>
 
                     <input
@@ -588,7 +585,7 @@ x-data="{ ...actions(), ...mantenimientoCorrectivo()}">
                 </button>
 
                 <button
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="guardarEvidencias()">
 
                     <i class="ti ti-check"></i> Guardar

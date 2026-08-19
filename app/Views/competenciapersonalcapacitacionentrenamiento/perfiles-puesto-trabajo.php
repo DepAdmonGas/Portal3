@@ -1,9 +1,24 @@
 <div class="bg-white mb-3">
 
-    <div style="overflow-y: hidden;" class="mt-4">
-    <table class="table table-sm table-bordered mb-0 pb-0">
-    <tr><td class="text-center table-primary fw-bold" colspan="4">Gerente</td></tr>
-    <tr class="table-warning text-center fw-bold"><td>Resumen</td><td>Tareas</td><td>Requerimientos</td><td>Otros aspectos</td></tr>
+<div class="card mt-3">
+
+<div class="card-header bg-primary ">
+<h4  class="mb-0 text-white card-title">
+<i class="ti ti-label"></i> Gerente
+</h4>
+</div>
+
+<div class="card-body p-0">
+<div class="table-responsive overflow-x-auto overflow-y-hidden">
+    <table class="table  table-bordered mb-0 align-middle">
+  
+    <tr class="text-center fw-bold">
+      <th>Resumen</th>
+      <th>Tareas</th>
+      <th>Requerimientos</th>
+      <th>Otros aspectos</th>
+    </tr>
+
     <tr>
     <td>Responsable por la
     dirección,
@@ -73,10 +88,27 @@
       </table>
     </div>
 
-    <div class="mt-4" style="overflow-y: hidden;">
-  <table class="table table-sm table-bordered mb-0 pb-0">
-    <tr><td class="text-center table-primary fw-bold" colspan="4">Auxiliar Administrativo</td></tr>
-    <tr class="table-warning text-center fw-bold"><td>Resumen</td><td>Tareas</td><td>Requerimientos</td><td>Otros aspectos</td></tr>
+</div>
+
+
+</div>
+
+
+<div class="card">
+<div class="card-header bg-primary">
+    <h4  class="mb-0 text-white card-title">
+<i class="ti ti-label"></i> Auxiliar Administrativo
+</h4>
+</div>
+<div class="card-body p-0">
+<div class="table-responsive overflow-x-auto overflow-y-hidden">
+  <table class="table table-bordered mb-0 align-middle">
+     <tr class=" text-center fw-bold">
+    <th>Resumen</th>
+    <th>Tareas</th>
+    <th>Requerimientos</th>
+    <th>Otros aspectos</th>
+  </tr>
     <tr>
     <td>Ayuda al gerente al
       cumplimiento de
@@ -123,10 +155,26 @@
         </table>
       </div>
 
-      <div class="mt-4" style="overflow-y: hidden;">
-  <table class="table table-sm table-bordered mb-0 pb-0">
-    <tr><td class="text-center table-primary fw-bold" colspan="4">Jefe de piso</td></tr>
-    <tr class="table-warning text-center fw-bold"><td>Resumen</td><td>Tareas</td><td>Requerimientos</td><td>Otros aspectos</td></tr>
+</div>
+</div>
+
+    
+<div class="card">
+  <div class="card-header bg-primary">
+    <h4  class="mb-0 text-white card-title">
+<i class="ti ti-label"></i> Jefe de piso
+</h4>
+  </div>
+  <div class="card-body p-0">
+
+<div class="table-responsive overflow-x-auto overflow-y-hidden">
+  <table class="table table-bordered mb-0 pb-0">
+    <tr class=" text-center fw-bold">
+      <th>Resumen</th>
+      <th>Tareas</th>
+      <th>Requerimientos</th>
+      <th>Otros aspectos</th>
+    </tr>
     <tr>
     <td>Encargado de
     supervisar y coordinar
@@ -163,10 +211,27 @@
       </table>
     </div>
 
-    <div class="mt-4" style="overflow-y: hidden;">
-  <table class="table table-sm table-bordered mb-0 pb-0">
-    <tr><td class="text-center table-primary fw-bold" colspan="4">Facturista</td></tr>
-    <tr class="table-warning text-center fw-bold"><td>Resumen</td><td>Tareas</td><td>Requerimientos</td><td>Otros aspectos</td></tr>
+  </div>
+
+
+
+</div>
+      
+<div class="card">
+  <div class="card-header bg-primary">
+    <h4  class="mb-0 text-white card-title">
+<i class="ti ti-label"></i> Facturista
+</h4>
+  </div>
+<div class="card-body p-0">
+<div class="table-respónsive overflow-x-auto overflow-y-hidden">
+  <table class="table table-bordered mb-0 pb-0">
+    <tr class="text-center fw-bold">
+      <th>Resumen</th>
+      <th>Tareas</th>
+      <th>Requerimientos</th>
+      <th>Otros aspectos</th>
+    </tr>
     <tr>
     <td>Encargado de realizar
     las facturas de los
@@ -191,11 +256,24 @@
         </tr>
       </table>
     </div>
-
-    <div class="mt-4" style="overflow-y: hidden;">
-  <table class="table table-sm table-bordered mb-0 pb-0">
-    <tr><td class="text-center table-primary fw-bold" colspan="4">Despachador</td></tr>
-    <tr class="table-warning text-center fw-bold"><td>Resumen</td><td>Tareas</td><td>Requerimientos</td><td>Otros aspectos</td></tr>
+</div>
+</div>
+    
+<div class="card">
+  <div class="card-header bg-primary">
+    <h4  class="mb-0 text-white card-title">
+<i class="ti ti-label"></i> Despachador
+  </div>
+  <div class="card-body p-0">
+<div class="table-responsive overflow-x-auto overflow-y-hidden">
+  <table class="table table-bordered mb-0 pb-0">
+  
+    <tr class="text-center fw-bold">
+      <th>Resumen</th>
+      <th>Tareas</th>
+      <th>Requerimientos</th>
+      <th>Otros aspectos</th>
+    </tr>
     <tr>
     <td>Técnico especializado
     en el despacho de
@@ -223,11 +301,24 @@
         </tr>
       </table>
     </div>
+  </div>
 
-    <div class="mt-4" style="overflow-y: hidden;">
-  <table class="table table-sm table-bordered mb-0 pb-0">
-    <tr><td class="text-center table-primary fw-bold" colspan="4">Personal de mantenimiento </td></tr>
-    <tr class="table-warning text-center fw-bold"><td>Resumen</td><td>Tareas</td><td>Requerimientos</td><td>Otros aspectos</td></tr>
+</div>
+    
+<div class="card">
+  <div class="card-header bg-primary">
+   <h4  class="mb-0 text-white card-title">
+<i class="ti ti-label"></i> Personal de mantenimiento
+  </div>
+  <div class="card-body p-0">
+<div class="table-responsive overflow-x-auto overflow-y-auto">
+  <table class="table table-bordered mb-0 pb-0">
+    <tr class="text-center fw-bold">
+      <th>Resumen</th>
+      <th>Tareas</th>
+      <th>Requerimientos</th>
+      <th>Otros aspectos</th>
+    </tr>
     <tr>
     <td>Tecnico encargado de
     realizar el
@@ -260,3 +351,7 @@
     </div>
 
     </div>
+  </div>
+
+</div>
+    

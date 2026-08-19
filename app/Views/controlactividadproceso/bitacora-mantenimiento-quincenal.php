@@ -8,13 +8,13 @@ data-carpeta="<?= htmlspecialchars($carpeta) ?>">
           <i class="ti ti-dots-vertical fs-4"></i>
         </button>
         <ul class="dropdown-menu animated rubberBand">
-         <li><a class="dropdown-item"  href="javascript:void(0)" @click="openNuevoModal()"><i class="ti ti-plus"></i> Nuevo </a></li>
+         <li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openNuevoModal()"><i class="ti ti-plus"></i> Nuevo </a></li>
         </ul>
     </div>
 </div>
 
-<div class="datatables mt-3">
-<div class="table-responsive">
+<div class="datatables">
+<div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
 <table
     id="table-mantenimiento-quincenal"
     class="table table-striped table-bordered">
@@ -46,10 +46,11 @@ data-carpeta="<?= htmlspecialchars($carpeta) ?>">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content rounded-0 border-0">
 
-            <div class="modal-header head-modal">
-                <h4 class="modal-title">
+            <div class="modal-header modal-colored-header bg-primary">
+                <h4 class="text-white">
+                    <i class="ti" :class="mode=== 'create' ? 'ti-report' :'ti-edit'"></i>
                 <span x-show="mode == 'create'">
-                    Crear reporte
+                    Nuevo reporte
                 </span>
 
                 <span x-show="mode == 'edit'">
@@ -59,20 +60,21 @@ data-carpeta="<?= htmlspecialchars($carpeta) ?>">
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
             </div>
 
             <div class="modal-body">
 
-                <div class="pt-1 pb-1 mt-2 fw-bold">
-                    Fecha:
+                <div class="form-label">
+     
+                        Fecha:
                 </div>
 
                 <input
                     type="date"
-                    class="form-control mb-2"
+                    class="form-control "
                     x-model="form.fecha"
                     @change="errors.fecha = false"
                     :class="errors.fecha ? 'is-invalid' : ''">
@@ -85,7 +87,7 @@ data-carpeta="<?= htmlspecialchars($carpeta) ?>">
 
                     <div>
 
-                        <div class="pt-1 pb-1 mt-2 fw-bold">
+                        <div class="pt-1 pb-1 mt-2 form-label">
 
                             <a
                                 :href="formato.template"
@@ -122,16 +124,16 @@ data-carpeta="<?= htmlspecialchars($carpeta) ?>">
              <button
                       class="btn bg-danger-subtle text-danger"
                       data-bs-dismiss="modal">
-
+                        <i class="ti ti-x"></i>
                       Cancelar
 
                   </button>
 
                <button
                 type="button"
-                class="btn btn-primary"
+                class="btn btn-success"
                 @click="submit()">
-
+                <i class="ti ti-check"></i>
                 <span x-show="mode == 'create'">
                     Crear mantenimiento
                 </span>

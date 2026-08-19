@@ -3,15 +3,15 @@
     <div class="text-end mt-2">
           <?= 
           !empty($permisos['crear']) ? 
-          '<a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf" type="button" class="btn btn-light">
+          '<a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf" type="button" class="btn bg-primary-subtle text-primary">
           <i class="ti ti-download"></i> Descargar
           </a>' 
           : '' 
           ?>   
     </div>
 
-      <div class="datatables mt-4">
-    <div class="table-responsive">
+      <div class="datatables">
+        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-personal-estacion" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>

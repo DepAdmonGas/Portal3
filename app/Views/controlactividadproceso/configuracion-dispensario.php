@@ -4,7 +4,7 @@ x-data="{ ...actions(), ...dispensario()}">
 <div class="text-end">
       <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn btn-primary" @click="modalopen()">
+        '<button type="button" class="btn bg-primary-subtle text-primary" @click="modalopen()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
@@ -12,7 +12,7 @@ x-data="{ ...actions(), ...dispensario()}">
     </div>
 
   <div class="datatables mt-3">
-    <div class="table-responsive">
+        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-dispensario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -40,7 +40,9 @@ x-data="{ ...actions(), ...dispensario()}">
     <div class="modal-content">
 
     <div class="modal-header modal-colored-header bg-primary text-white">
-        <h4 class="modal-title text-white">Agregar Dispensario</h4>
+        <h4 class="modal-title text-white">
+        <i class="ti ti-gas-station"></i>
+        Nuevo Dispensario</h4>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModal()"></button>
     </div>
 
@@ -95,7 +97,7 @@ x-data="{ ...actions(), ...dispensario()}">
 
     <div class="modal-footer">
         <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
-        <button class="btn btn-primary" @click="guardar()"><i class="ti ti-check"></i> Guardar
+        <button class="btn btn-success" @click="guardar()"><i class="ti ti-check"></i> Guardar
         </button>
     </div>
 

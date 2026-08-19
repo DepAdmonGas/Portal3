@@ -35,7 +35,7 @@ class CursosController extends BaseController {
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/cursos/index.action.init.js?v=1.2',
+                '/js/cursos/index.action.init.js?v=' . time(),
             ]
         ];
         
@@ -211,7 +211,7 @@ class CursosController extends BaseController {
             'calendario' => $calendario,
                 'scripts' => [
                     '/js/vendor.min.js',
-                    '/js/cursos/evaluacion.action.init.js?v=1.1',
+                    '/js/cursos/evaluacion.action.init.js?v=' . time(),
                 ]
         ];
 
@@ -478,7 +478,7 @@ class CursosController extends BaseController {
             'temas'=>$temas,
             'scripts'=>[
                 '/js/vendor.min.js',
-                '/js/cursos/modulo.action.init.js?v=1.0'
+                '/js/cursos/modulo.action.init.js?v=' . time(),
             ]
         ];
 
