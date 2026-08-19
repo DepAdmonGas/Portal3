@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
 
         {
-            data: 'folio'
+            data: 'folio',
+            className: 'text-center align-middle',
         },
 
          {
@@ -257,14 +258,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         <li>
                     
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                             @click='window.seguridadContratistas.openModalEditar(${JSON.stringify(row)})'>
                                 <i class="ti ti-edit"></i>Editar
                             </a>
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                             ${!noDelete ? '' : `
                             @click='window.seguridadContratistas.eliminar(${row.id}, ${row.folio})'
                             `}>
