@@ -136,14 +136,7 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 </div>
 </div>
 
-
-                    <p id="vision_text"
-                        class="card-text fs-4 fw-normal"
-                        data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
-
-                        <?= htmlspecialchars($user->estacion->vision ?? '') ?>
-                    </p>
-
+</div>
 
 <!-------------------- CARD DE Fo.ADMONGAS.010 ---------------------->
 <div class="col-md-6">
@@ -196,10 +189,8 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 </div>
 </div>
 
-
-
-
 </div>
+
 
 <!-- -------------------------- -->
 <!-- -------------------------- -->
