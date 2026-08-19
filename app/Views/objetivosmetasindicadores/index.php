@@ -255,7 +255,7 @@ tabindex="-1">
     <div class="modal-body">
 
     <div x-show="mode !== 'view'">
-    <h6 class="text-primary fs-5">Satisfacción del cliente</h6>                
+    <h6 class="fs-5">Satisfacción del cliente</h6>                
 
     <div class="row">
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
@@ -277,7 +277,7 @@ tabindex="-1">
 
     <hr>
 
-    <h6 class="text-primary fs-5">Mantenimiento</h6>
+    <h6 class="fs-5">Mantenimiento</h6>
                     
     <div class="row">
       
@@ -300,7 +300,7 @@ tabindex="-1">
     <hr>
 
 
-  <h6 class="text-primary fs-5">Capacitación</h6>
+  <h6 class=" fs-5">Capacitación</h6>
 
   <div class="row">
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
@@ -323,7 +323,7 @@ tabindex="-1">
   <hr>
 
 
-  <h6 class="text-primary fs-5">Quejas y sugerencias</h6>
+  <h6 class=" fs-5">Quejas y sugerencias</h6>
   <div class="row">
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
       <label class="form-label">Fecha:</label>
@@ -344,7 +344,7 @@ tabindex="-1">
   </div>
   <hr>
 
-  <h6 class="text-primary fs-5">Cumplimiento de legislación </h6>
+  <h6 class=" fs-5">Cumplimiento de legislación </h6>
   <div class="row">
     
 
@@ -433,7 +433,13 @@ tabindex="-1">
 
                 <i class="ti ti-check"></i>
 
-            <span x-show="!loading">Guardar</span>
+
+
+            <span x-show="!loading">  
+              <span x-text="
+                mode === 'edit' ? 'Actualizar' : 'Guardar'">
+              </span>
+            </span>
             <span x-show="loading">Guardando...</span>
 
         </button>
