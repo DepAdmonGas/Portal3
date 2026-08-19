@@ -9,7 +9,7 @@
                 <?= 
                 !empty($permisos['crear']) ? 
                 '<li>
-                  <a class="dropdown-item" @click="openCreate()"><i class="ti ti-plus"></i> Agregar</a>
+                  <a class="dropdown-item pointer" @click="openCreate()"><i class="ti ti-plus"></i> Agregar</a>
                 </li>' 
                 : '' 
                 ?>   
@@ -19,7 +19,7 @@
 </div>
 
     <div class="datatables mt-3">
-      <div class="table-responsive">
+          <div class="table-responsive overflow-x-auto overflow-y-hidden">
         <table id="table-cambio-precio" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
           <thead>
             <tr>

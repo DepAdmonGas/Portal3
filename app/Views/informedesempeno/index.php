@@ -12,10 +12,10 @@ x-data="{ ...actions(), ...informesDesempeno()}">
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="openModalEvaluacion()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalEvaluacion()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
               <li>
-                <a class="dropdown-item" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.028.docx"><i class="ti ti-file-word"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.028.docx"><i class="ti ti-file-word"></i> Descargar</a>
               </li>
             </ul>
           </div>   
@@ -81,19 +81,19 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             @click="editarEvaluacion(item)">
                             <i class="fs-4 ti ti-edit"></i>Editar
                             </a>
                             </li>
                             <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             :href="item.archivo" download>
                             <i class="fs-4 ti ti-download"></i>Descargar
                             </a>
                             </li>
                             <li>
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-3"
+                            <a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3"
                             @click="eliminarEvaluacion(item.id)">
                             <i class="fs-4 ti ti-trash"></i>Eliminar
                             </a>
@@ -126,7 +126,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="createImplementacion()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="createImplementacion()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
             </ul>
           </div>   
@@ -183,7 +183,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             href="javascript:void(0)"
                             @click="verImplementacion(item.id)">
                             <i class="fs-4 ti ti-eye"></i>Detalle
@@ -196,14 +196,14 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                             </a>
                             </li>
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3" 
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3" 
                             href="javascript:void(0)"
                             @click="editarImplementacion(item.id)">
                             <i class="fs-4 ti ti-edit"></i>Editar
                             </a>
                             </li>
                             <li>
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-3"
+                            <a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3"
                             @click="eliminarImplementacion(item.id)">
                             <i class="fs-4 ti ti-trash"></i>Eliminar
                             </a>

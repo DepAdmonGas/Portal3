@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
 
                             <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3  ${!noDetalle ? 'text-muted' : ''}"
+                                <a class="dropdown-item pointer d-flex align-items-center gap-3  ${!noDetalle ? 'text-muted' : ''}"
                                 ${!noDetalle ? '' : ` 
                                 href="javascript:void(0)"
                                 @click='window.bitacoraCalibracionEquipos.abrirDetalle(${row.id})'`}>
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                </li>  
                               
                                 <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3" ${!noEditar ? 'disabled' : ''} 
+                                <a class="dropdown-item pointer d-flex align-items-center gap-3" ${!noEditar ? 'disabled' : ''} 
                                 href="${row.location}">
                                 <i class="ti ti-edit"></i>Editar
                                 </a>    
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                
                                 <li>
                                     <a
-                                        class="dropdown-item d-flex align-items-center gap-3"
+                                        class="dropdown-item pointer d-flex align-items-center gap-3"
                                         href="javascript:void(0)"
                                         ${`@click='window.bitacoraCalibracionEquipos.abrirModalResultados(${JSON.stringify(row)})'`}>
 

@@ -47,8 +47,8 @@ class MantenimientoPreventivoController extends BaseController{
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/controlactividadproceso/mantenimientopreventivo.datatable.init.js?v=1.7',
-                '/js/controlactividadproceso/mantenimientopreventivo.action.init.js?v=1.7',
+                '/js/controlactividadproceso/mantenimientopreventivo.datatable.init.js?v=' . time(),
+                '/js/controlactividadproceso/mantenimientopreventivo.action.init.js?v=' . time(),
             ],
 
             'help' => false

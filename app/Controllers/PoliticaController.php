@@ -40,11 +40,11 @@ class PoliticaController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/sasisopa/politica.datatable.init.js?v=1.0',
-                '/js/sasisopa/politica.actions.init.js',
-                '/js/sasisopa/listacomprobacion.actions.init.js?v=1.0',
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0',
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.0'
+                '/js/sasisopa/politica.datatable.init.js?v=' . time(),
+                '/js/sasisopa/politica.actions.init.js?v=' . time(),
+                '/js/sasisopa/listacomprobacion.actions.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];

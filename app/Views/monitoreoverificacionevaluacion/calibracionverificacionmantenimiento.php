@@ -1,9 +1,9 @@
 <div id="container" class="pb-4"
 x-data="calibracionVerificacion()">
 
-    <div class="mt-3">
+
     <div class="row">
-    <div class="col-5">
+    <div class="col-5 mt-3">
       <div class="card">
       <div class="card-body">
       <h5>Bitácora calibración de equipos</h5>
@@ -13,32 +13,33 @@ x-data="calibracionVerificacion()">
       </div>
       </div>
     </div>
-    </div>
-    </div>
-
-<di class="row mt-3">
-    <div class="col-12 col-md-5">
 
 
-<div class="card">
-  <div class="card-body p-3">
+<div class="col-12 mt-3">
 
+<div class="card">  
+
+<div class="card-header">
   <div class="d-flex align-items-center">
       <div class="ms-auto">
       <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+            <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ti ti-dots-vertical fs-6"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-equipos-calibracion"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-equipos-calibracion"><i class="ti ti-download"></i> Descargar</a>
               </li>
             </ul>
           </div>   
       </div>
   </div>
+</div>
 
-  <table class="table table-bordered table-sm mt-2 mb-2">
+<div class="card-body">
+    
+    <div class="table-responsive">
+          <table class="table table-bordered table-sm mt-2 mb-4">
 <tr>
 <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>
 <td colspan="2" class="text-center align-middle"><b>Equipos sometidos a calibración</b></td>
@@ -51,7 +52,9 @@ x-data="calibracionVerificacion()">
 <td class="text-center align-middle">Fecha de autorizacion 01/10/2018</td>
 </tr>
 </table>
+</div>
 
+    <div class="table-responsive">
 <table class="table table-bordered table-sm">
 
         <thead>
@@ -124,34 +127,40 @@ x-data="calibracionVerificacion()">
         </tbody>
 
     </table>
-                    
-  </div>
+    </div>
+</div>
+
+</div>
 </div>
 
 
-    </div>
-    <div class="col-12 col-md-7">
+
+    <div class="col-12 ">
 
 
     <div class="card">
-  <div class="card-body p-3">
-
-  <div class="d-flex align-items-center">
+<div class="card-header">
+      <div class="d-flex align-items-center">
       <div class="ms-auto">
       <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+            <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ti ti-dots-vertical fs-6"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-calendario-calibracion"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-calendario-calibracion"><i class="ti ti-download"></i> Descargar</a>
               </li>
             </ul>
           </div>   
       </div>
   </div>
+</div>
 
-  <table class="table table-bordered table-sm mt-2 mb-2">
+  <div class="card-body p-3">
+
+
+<div class="table-responsive">
+  <table class="table table-bordered table-sm mt-2 mb-2" <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <tr>
 <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>
 <td colspan="2" class="text-center align-middle"><b>Calendario de calibraciones</b></td>
@@ -164,7 +173,9 @@ x-data="calibracionVerificacion()">
 <td class="text-center align-middle">Fecha de autorizacion 01/10/2018</td>
 </tr>
 </table>
+</div>
 
+<div class="table-responsive mt-3">
 <table class="table table-bordered table-sm">
 
     <thead>
@@ -239,7 +250,7 @@ x-data="calibracionVerificacion()">
     </tbody>
 
 </table>
-                    
+</div>
   </div>
 </div>
 

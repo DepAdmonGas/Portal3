@@ -36,9 +36,9 @@ class MejoresPracticasEstandaresController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/mejorespracticas/disenoconstruccion.datatable.init.js?v=1.0.5',
-                '/js/mejorespracticas/operacionmantenimiento.datatable.init.js?v=1.0.2',
-                '/js/mejorespracticas/index.action.init.js?v=1.0.1'
+                '/js/mejorespracticas/disenoconstruccion.datatable.init.js?v=' . time(),
+                '/js/mejorespracticas/operacionmantenimiento.datatable.init.js?v=' . time(),
+                '/js/mejorespracticas/index.action.init.js?v=' . time(),
             ],
             'help' => true
         ];

@@ -36,7 +36,7 @@ protected string $modulo = 'sasisopa';
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/monitoreoverificacionevaluacion/evaluacionrequisitoslegales.actions.init.js?v=1.0'
+                '/js/monitoreoverificacionevaluacion/evaluacionrequisitoslegales.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];

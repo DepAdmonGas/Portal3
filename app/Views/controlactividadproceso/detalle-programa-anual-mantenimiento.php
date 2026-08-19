@@ -11,11 +11,11 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
             </button>
             <ul class="dropdown-menu animated rubberBand">
             <?= !empty($permisos['crear']) ? 
-            '<li><a class="dropdown-item"  href="javascript:void(0)" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo </a></li>' 
+            '<li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo </a></li>' 
             : '' 
             ?>
             <li>
-                <a class="dropdown-item" 
+                <a class="dropdown-item pointer" 
                 href="/sasisopa/control-actividades-procesos/pdf-programa-anual-mantenimiento/<?= $idPrograma ?>">
                     <i class="ti ti-download"></i>
                     Descargar
@@ -40,7 +40,7 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
 </table>
 
     <div class="datatables">
-        <div class="table-responsive">
+            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
         <table id="table-programa-anual" class="table table-bordered mb-0 align-middle">
             <thead>
             <tr>
@@ -74,9 +74,11 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
         <div class="modal-dialog">
         <div class="modal-content">
 
-        <div class="modal-header head-modal">
-            <h4 class="modal-title">Agregar equipo o instalación</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="limpiarNuevo()"></button>
+        <div class="modal-header modal-colored-header bg-primary text-white">
+            <h4 class="modal-title text-white">
+            <i class="ti ti-settings-plus"></i>   
+            Nuevo equipo o instalación</h4>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" @click="limpiarNuevo()"></button>
         </div>
 
         <div class="modal-body">
@@ -92,7 +94,7 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
                 :class="errors.id_mantenimiento ? 'is-invalid' : ''"
                 @input="errors.id_mantenimiento = false">
 
-                    <option value="">Selecciona</option>
+                    <option value="">Selecciona una opción...</option>
 
                     <template
                     x-for="item in equipos"
@@ -143,9 +145,11 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
                 data-bs-dismiss="modal"
                 aria-label="Close"
                 @click="limpiarNuevo()">
+                <i class="ti ti-x"></i>
                 Cancelar
             </button>
-            <button class="btn btn-primary" @click="guardarNuevo()">
+            <button class="btn btn-success" @click="guardarNuevo()">
+                <i class="ti ti-check"></i>
                 Guardar
             </button>
         </div>
@@ -159,13 +163,16 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
-                <h4 class="modal-title"
-                x-text="editarData.detalle">
-                </h4>
+            <div class="modal-header modal-colored-header bg-primary text-white">
+                <h4 class="modal-title text-white">
+                    <i class="ti ti-edit"></i> 
+                <label x-text="editarData.detalle">
+                </label>
+                
+            </h4>
 
                 <button type="button"
-                class="btn-close"
+                class="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 @click="limpiarEditar()">
                 </button>
@@ -173,53 +180,59 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
 
             <div class="modal-body">
 
-                <div class="row">
+                <div class="table-responsive">
 
-                    <template
-                    x-for="(config, mes) in editarData.meses"
-                    :key="mes">
+        <table class="table table-striped table-bordered mb-0 align-middle">
 
-                       <div class="col-xl-4 col-lg-4 col-md-6 col-12">
+<thead>
+    <tr>
+     <th class="text-center align-middle" width="100px">Mes</th>
+     <th class="text-center align-middle">Fecha</th>
+    </tr>
+</thead>
 
-                        <div class="card">
+<tbody>
+<template
+x-for="(config, mes) in editarData.meses"
+:key="mes">
 
-                            <div
-                            class="card-header bg-light text-center fs-5 text-capitalize"
-                            x-text="mes">
-                            </div>
+<tr>
+    <td class="text-center align-middle text-capitalize" x-text="mes"></td>
+    <td class="text-center align-middle p-0">
+        <input
+type="date"
+class="form-control bg-transparent border-0 p-3 text-center align-middle"
+x-model="config.value"
+:min="config.min"
+:max="config.max"
+:disabled="config.disabled">
+</td>
+</tr>
 
-                            <div class="card-body">
 
-                                <input
-                                type="date"
-                                class="form-control"
-                                x-model="config.value"
-                                :min="config.min"
-                                :max="config.max"
-                                :disabled="config.disabled">
 
-                            </div>
+</template>
+</tbody>
+</table>
 
-                        </div>
-
-                    </div>
-
-                    </template>
                 </div>
             </div>
 
             <div class="modal-footer">
 
                 <button
+                
                 class="btn bg-danger-subtle text-danger"
                 data-bs-dismiss="modal"
                 @click="limpiarEditar()">
+                <i class="ti ti-x"></i>
                     Cancelar
                 </button>
 
                 <button
-                class="btn btn-primary"
+                class="btn btn-success"
                 @click="editar()">
+                <i class="ti ti-check"></i>
                     Guardar
                 </button>
 

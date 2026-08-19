@@ -51,7 +51,7 @@ return `
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item ${noDesc ? 'disabled' : ''}"
+class="dropdown-item pointer ${noDesc ? 'disabled' : ''}"
 ${noDesc ? '' : `@click="download('procedimientos-actividades-tecnicas','${row.archivo}')"`}
 >
 <i class="ti ti-file-download"></i> Descargar
@@ -118,7 +118,7 @@ return `
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item ${noDesc ? 'disabled' : ''}"
+class="dropdown-item pointer ${noDesc ? 'disabled' : ''}"
 ${noDesc ? '' : `@click="download('procedimientos-visita-estacion','${row.archivo}')"`}
 >
 <i class="ti ti-file-download"></i> Descargar

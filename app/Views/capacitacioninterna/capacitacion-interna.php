@@ -17,8 +17,8 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
     </select>
 </div>
 
-    <div class="datatables mt-4">
-    <div class="table-responsive">
+    <div class="datatables">
+        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-capacitacion-interna" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -44,14 +44,16 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
         <div class="modal-content">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
-                <h4 class="modal-title text-white">CAPACITACIÓN INTERNA</h4>
+                <h4 class="modal-title text-white">
+                    <i class="ti ti-chalkboard-teacher"></i>
+                CAPACITACIÓN INTERNA</h4>
                 <button type="button" class="btn-close btn-close-white"
                         @click="closeModal('programar')"></button>
             </div>
 
             <div class="modal-body">
 
-                <h5 class="text-center" x-text="programacion.titulo"></h5>
+                <h5 class="text-start" x-text="programacion.titulo"></h5>
 
                 <label class="form-label mt-3">* Fecha programada:</label>
                 <input type="date"
@@ -66,7 +68,7 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
                         @click="closeModal('programar')"><i class="ti ti-x"></i> Cancelar</button>
 
                 <button class="btn btn-success"
-                        @click="guardarProgramacion()"><i class="ti ti-check"></i> Agregar</button>
+                        @click="guardarProgramacion()"><i class="ti ti-check"></i> Guardar</button>
             </div>
 
         </div>
@@ -89,7 +91,7 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
 
                 <h6 class="text-center text-muted mt-2" x-text="nombreUsuarioCursos"></h6>
            
-                <div class="table-responsive">
+                    <div class="table-responsive overflow-x-auto overflow-y-hidden">
                     <table class="table table-bordered table-sm">
                         <thead class="table-primary text-center">
                             <tr>

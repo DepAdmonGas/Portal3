@@ -51,12 +51,12 @@ class SgmEstablecimientoController extends BaseController
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.0.2',
-                '/js/sgm/establecimiento-objetivos/objetivos.actions.init.js?v=1.0.2',
-                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.action.init.js?v=1.0.1',
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/sgm/establecimiento-objetivos/objetivos.actions.init.js?v=' . time(),,
+                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.action.init.js?v=' . time(),
 
                 '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.2',
-                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.datatable.init.js?v=1.0.2',
+                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.datatable.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -106,7 +106,7 @@ class SgmEstablecimientoController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/quill/dist/quill.js',
-                '/js/sgm/establecimiento-objetivos/objetivoseditar.actions.init.js?v=1.0.2',
+                '/js/sgm/establecimiento-objetivos/objetivoseditar.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -209,7 +209,7 @@ class SgmEstablecimientoController extends BaseController
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
-                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.action.init.js?v=1.0.2',
+                '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.action.init.js?v=' . time(),
             ],
             'help' => true
         ];

@@ -4,7 +4,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
   <div class="text-end">
       <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn btn-primary" @click="modalNuevoOpen()">
+        '<button type="button" class="btn bg-primary-subtle texte-primary" @click="modalNuevoOpen()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
@@ -12,7 +12,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
     </div>
 
 <div class="datatables mt-2">
-        <div class="table-responsive">
+            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
         <table id="table-trabajador-autorizado" class="table table-bordered mb-0 align-middle">
             <thead>
             <tr>
@@ -36,25 +36,28 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
     <div class="modal-dialog">
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
-                <h4 class="modal-title">Agregar trabajador autorizado</h4>
+            <div class="modal-header modal-colored-header bg-primary">
+                <h4 class="modal-title text-white">
+                 <i class="ti ti-user-plus ms-2"></i>   
+                Nuevo trabajador autorizado</h4>
 
                 <button type="button"
-                class="btn-close"
+                class="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 @click="limpiarNuevo()">
                 </button>
+            
             </div>
 
         <div class="modal-body">
 
-            <label class="form-label mt-2">* Usuario:</label>
+            <label class="form-label mt-2">* Nombre del trabajador:</label>
             <select
                 class="form-select"
                 x-model="usuarioSeleccionado"
                 @change="changeUsuario">
 
-                <option value="">Seleccione</option>
+                <option value="">Selecciona una opción...</option>
 
                 <template 
                     x-for="usuario in usuarios"
@@ -106,12 +109,14 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
                 class="btn bg-danger-subtle text-danger"
                 data-bs-dismiss="modal"
                 @click="limpiarNuevo()">
+                <i class="ti ti-x"></i>
                     Cancelar
                 </button>
 
                 <button
-                class="btn btn-primary"
+                class="btn btn-success"
                 @click="guardar()">
+                <i class="ti ti-check"></i>
                     Guardar
                 </button>
             </div>
@@ -126,21 +131,25 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
         <div class="modal-dialog">
             <div class="modal-content">
 
-                <div class="modal-header head-modal">
-                    <h4 class="modal-title"
-                    x-text="titulo">
-                    </h4>
+<div class="modal-header modal-colored-header bg-primary text-white d-flex align-items-center justify-content-between">
 
-                    <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                    @click="limpiarEliminar()">
-                    </button>
-                </div>
+    <h4 class="modal-title text-white d-flex align-items-center mb-0">
+        <i class="ti ti-trash fs-6"></i>
+        <span x-text="titulo"></span>
+    </h4>
+
+    <button type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="modal"
+            @click="limpiarEliminar()">
+    </button>
+
+</div>
 
                 <div class="modal-body">
 
-                <h4 class="text-center" x-text="text_usuario"></h4>
+                <label class=" form-label" x-text="text_usuario"></label>
+                <br>
 
                 <label class="form-label mt-2">* Comentario:</label>
                 <textarea class="form-control"
@@ -159,12 +168,15 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal"
                     @click="limpiarEliminar()">
+                    <i class="ti ti-x"></i>
                         Cancelar
                     </button>
 
                     <button
-                    class="btn btn-primary"
+                    type="button"
+                    class="btn btn-success"
                     @click="eliminar()">
+                    <i class="ti ti-check"></i>
                         Eliminar
                     </button>
 
@@ -176,23 +188,31 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
 
 
     <div class="card mt-4">
+        <div class="card-header bg-primary ">
+  <h4 class="mb-0 text-white card-title">
+    <i class="ti ti-label"></i>
+  Características de nueva actualización</h4>
+      
+
+            </div>
+          
         <div class="card-body">
 
-        <h4>Características de nueva actualización</h4>
+        
 
-        <div class="fw-bold text-secondary fs-5">Diseño</div>
+        <h4>Diseño:</h4>
         <ul>
         <li>Se realizaron mejoras en el diseño y visualización de los elementos en pantalla</li>
         </ul>
 
-        <div class="fw-bold text-secondary fs-5">Geolocalización</div>
+        <h4 ">Geolocalización:</h4>
         <ul>
         <li>Se mejoró la precisión en la obtención de coordenadas desde dispositivos móviles</li>
         <li>Se configuró la ubicación inicial utilizando las coordenadas de la Estación de Servicio</li>
         </ul>
 
 
-        <div class="fw-bold text-secondary fs-5">1. Recepción y descarga del producto</div>
+        <h4>1. Recepción y descarga del producto:</h4>
         <ul>
         <li>Se permite editar los registros existentes</li>
         <li>Cuenta con buscador para localizar registros fácilmente</li>
@@ -204,7 +224,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
         </ul>
 
 
-        <div class="fw-bold text-secondary fs-5">2. Mantenimiento Preventivo</div>
+        <h4>2. Mantenimiento Preventivo:</h4>
         <ul>
         <li>Ahora se puede seleccionar si el mantenimiento es realizado por personal interno o externo</li>
         <li>En caso de mantenimiento externo, se debe ingresar el nombre del responsable en la firma</li>
@@ -218,7 +238,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
         <li>Se habilitó la búsqueda filtrada por registros pendientes o finalizados</li>
         </ul>
 
-        <div class="fw-bold text-secondary fs-5">3. Mantenimiento Correctivo</div>
+        <h4>3. Mantenimiento Correctivo:</h4>
         <ul>
         <li>Ahora se puede seleccionar si el mantenimiento es realizado por personal interno o externo</li>
         <li>En caso de mantenimiento externo, se debe ingresar el nombre del responsable en la firma</li>
@@ -231,7 +251,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
 
 
 
-        <div class="fw-bold text-secondary fs-5">4. Bitácora de registros de eventos PROFECO</div>
+        <h4>4. Bitácora de registros de eventos PROFECO:</h4>
         <ul>
         <li>Se permite eliminar registros existentes</li>
         <li>Se pueden agregar nuevos registros con datos como fecha, hora, dispensario, productos involucrados, motivo, responsable y observaciones</li>

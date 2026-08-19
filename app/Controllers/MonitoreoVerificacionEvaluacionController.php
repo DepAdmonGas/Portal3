@@ -40,7 +40,7 @@ class MonitoreoVerificacionEvaluacionController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/monitoreoverificacionevaluacion/index.actions.init.js?v=1.1'
+                '/js/monitoreoverificacionevaluacion/index.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -1020,7 +1020,7 @@ $title = 'VENTAS DEL MES';
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/monitoreoverificacionevaluacion/ventasmes.actions.init.js?v=1.0'
+                '/js/monitoreoverificacionevaluacion/ventasmes.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];

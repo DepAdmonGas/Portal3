@@ -15,7 +15,7 @@ x-init="
 ">
 
 <div class="text-end">
-    <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf/<?= $usuario->id ?? '' ?>" type="button" class="btn btn-light">
+    <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf/<?= $usuario->id ?? '' ?>" type="button" class="btn bg-primary-subtle text-primary">
           <i class="ti ti-download"></i> Descargar</a>
 </div>
 
@@ -23,9 +23,12 @@ x-init="
     <div class="row mt-4">
         <div class="col-xl-8 col-lg-8 col-md-8 col-sm-12">
             <div class="card">
+                <div class="card-header">
+                   <h5>1. Datos del personal</h5> 
+                </div>
                 <div class="card-body">
 
-                    <h5>1. Datos del personal</h5>
+                    
 
                     <label class="form-label">* Nombre completo:</label>
                     <input type="text" class="form-control" x-model="nombre" :class="errors.nombre ? 'is-invalid' : ''">
@@ -67,57 +70,110 @@ x-init="
 
                     </div>
 
-                    <div class="text-end">
-                        <button class="btn btn-success" @click="actualizar()">Actualizar</button>
-                    </div>
+                 
 
                 </div>
+
+                <div class="card-footer">
+   <div class="text-end">
+                        <button class="btn btn-success" @click="actualizar()">
+                        <i class="ti ti-check"></i>    
+                        Actualizar</button>
+                    </div>
+</div>
             </div>
         </div>
-        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
 
-                <div class="card">
-            <div class="card-body">
-                <h5>Agregar firma</h5>
 
-                <div class="text-center">
-                    <canvas 
+
+<div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
+
+    <div class="card">
+
+        <!-- Header -->
+        <div class="card-header text-bg-primary">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+
+                <h5 class="mb-0 text-white">
+                    <i class="ti ti-signature me-2"></i>
+                    FIRMA
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn bg-danger text-white"
+                    @click="limpiarFirma()">
+                    <i class="ti ti-eraser me-1"></i>
+                    Limpiar firma
+                </button>
+
+            </div>
+        </div>
+
+        <!-- Área de firma -->
+        <div class="card-body p-0">
+            <div
+                id="signature-pad"
+                class="signature-pad border-0"
+                style="cursor: crosshair;">
+
+                <div class="signature-pad--body">
+                    <canvas
                         x-ref="canvas"
-                        style="width: 100%; height: 180px; border:1px solid #ccc;">
+                        id="canvas"
+                        style="width: 100%; height: 250px;">
                     </canvas>
                 </div>
 
-               
-                <div class="text-end mt-3">
-                    <button class="btn bg-danger-subtle text-danger" @click="limpiarFirma()">
-                        Limpiar
-                    </button>
-
-                    <button class="btn btn-primary" @click="guardarFirma()">
-                        Guardar
-                    </button>
-                </div>
-
-                 <div class="mt-3 text-center" x-show="firmaPreview && !firmaError">
-                    <img :src="firmaPreview" @error="firmaError = true" style="max-width:200px;">
-                </div>
-
-                <div x-show="!firmaPreview || firmaError" class="text-muted text-center mt-4">
-                    No se ha agregado una firma
-            </div>
-
             </div>
         </div>
 
+        <!-- Acciones y preview -->
+        <div class="card-body border-top">
+
+            <div class="text-end">
+                <button
+                    type="button"
+                    class="btn btn-success"
+                    @click="guardarFirma()">
+                    <i class="ti ti-check"></i>
+                    Guardar
+                </button>
+            </div>
+
+            <!-- Preview de la firma -->
+            <div
+                class="mt-3 text-center"
+                x-show="firmaPreview && !firmaError">
+
+                <img
+                    :src="firmaPreview"
+                    @error="firmaError = true"
+                    style="max-width: 200px;">
+            </div>
+
+            <!-- Sin firma -->
+            <div
+                x-show="!firmaPreview || firmaError"
+                class="text-muted text-center mt-4">
+
+                No se ha agregado una firma
+            </div>
+
         </div>
+
+    </div>
+
+</div>
+
+
     </div>
 
     <!-- 2. Datos de familiares -->
 
     <div class="card">
-        <div class="card-body">
-
-            <div class="d-flex align-items-center">
+        <div class="card-header">
+ <div class="d-flex align-items-center">
                 <h4 class="card-title mb-0">2. Datos de familiares</h4>
                 <div class="ms-auto">
                 <?= 
@@ -129,8 +185,10 @@ x-init="
                     ?>   
                 </div>
             </div>
-            
-            <div class="table-responsive mt-4">
+        </div>
+        <div class="card-body pb-2">
+        
+                <div class="table-responsive overflow-x-auto overflow-y-hidden">
             <table class="table table-bordered table-striped table-sm" >
             <thead>
             <tr class="text-center align-middle">
@@ -174,9 +232,8 @@ x-init="
     <!-- 3. Formación académica -->
 
     <div class="card">
-        <div class="card-body">
-
-            <div class="d-flex align-items-center">
+        <div class="card-header">
+     <div class="d-flex align-items-center">
                 <h4 class="card-title mb-0">3. Formación académica</h4>
                 <div class="ms-auto">
                 <?= 
@@ -185,11 +242,16 @@ x-init="
                     <i class="ti ti-plus"></i> Nuevo
                     </button>' 
                     : '' 
-                    ?>   
+                    ?>
+
                 </div>
             </div>
+        </div>
+        <div class="card-body pb-2">
+
+       
             
-            <div class="table-responsive mt-4">
+                <div class="table-responsive overflow-x-auto overflow-y-hidden">
             <table class="table table-bordered table-striped table-sm">
             <thead class="navbar-bg">
             <tr class="text-center align-middle">
@@ -229,8 +291,8 @@ x-init="
     <!-- 4. Experiencia laboral -->
 
         <div class="card">
-        <div class="card-body">
-
+            <div class="card-header">
+                
             <div class="d-flex align-items-center">
                 <h4 class="card-title mb-0">4. Experiencia laboral</h4>
                 <div class="ms-auto">
@@ -245,8 +307,11 @@ x-init="
             </div>
 
             <h5>4.1 En otras empresas</h5>
+            </div>
+        <div class="card-body pb-2">
 
-            <div class="table-responsive mt-4">
+
+                <div class="table-responsive overflow-x-auto overflow-y-hidden">
             <table class="table table-bordered table-striped table-sm">
                 <tbody>
 
@@ -281,9 +346,8 @@ x-init="
     <!-- 4.2 En la empresa  -->
 
     <div class="card">
-        <div class="card-body">
-
-            <div class="d-flex align-items-center">
+        <div class="card-header">
+ <div class="d-flex align-items-center">
                 <h4 class="card-title mb-0">4.2 En la empresa </h4>
                 <div class="ms-auto">
                 <?= 
@@ -295,8 +359,12 @@ x-init="
                     ?>   
                 </div>
             </div>
+        </div>
+        <div class="card-body pb-2">
 
-            <div class="table-responsive mt-4">
+           
+
+                <div class="table-responsive overflow-x-auto overflow-y-hidden">
             <table class="table table-bordered table-striped table-sm">
                 <thead>
 
@@ -353,7 +421,9 @@ x-init="
         <div class="modal-content">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
-                <h5 class="modal-title text-white">Nuevo familiar</h5>
+                <h5 class="modal-title text-white">
+                <i class="ti ti-user-plus"></i>    
+                Nuevo familiar</h5>
                 <button type="button" class="btn-close btn-close-white" @click="closeModal('familiar')"></button>
             </div>
 
@@ -399,7 +469,9 @@ x-init="
         <div class="modal-content">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
-                <h5 class="modal-title text-white">Nueva formación académica</h5>
+                <h5 class="modal-title text-white">
+                <i class="ti ti-school"></i>    
+                Nueva formación académica</h5>
                 <button type="button" class="btn-close btn-close-white" @click="closeModal('formacion')"></button>
             </div>
 
@@ -411,7 +483,7 @@ x-init="
                 x-model="formacion.nivel" placeholder="Nivel"
                        :class="errorsFormacion.nivel ? 'is-invalid' : ''"
                         @input="errorsFormacion.nivel = false">
-                <option value="">Seleccione</option>
+                <option value="">Selecciona una opción...</option>
                 <option value="Primaria">Primaria</option>
                 <option value="Secundaria">Secundaria</option>
                 <option value="Bachillerato">Bachillerato</option>
@@ -442,7 +514,10 @@ x-init="
         <div class="modal-content">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
-                <h5 class="modal-title text-white">Nueva experiencia laboral</h5>
+                <h5 class="modal-title text-white">
+                 <i class="ti ti-briefcase-2"></i>  
+                Nueva experiencia laboral
+            </h5>
                 <button type="button" class="btn-close btn-close-white" @click="closeModal('experiencia')"></button>
             </div>
 
@@ -473,7 +548,10 @@ x-init="
         <div class="modal-content">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
-                <h5 class="modal-title text-white" x-text="editandoEmpresa ? 'Editar experiencia' : 'Nueva experiencia en la empresa'"></h5>
+                <h5 class="modal-title text-white">
+                 <i class="ti ti-briefcase-2"></i>
+                    <label x-text="editandoEmpresa ? 'Editar experiencia' : 'Nueva experiencia en la empresa'"></label>
+            </h5>
                 <button type="button" class="btn-close btn-close-white" @click="closeModalEmpresa()"></button>
             </div>
 

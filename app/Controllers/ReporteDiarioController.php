@@ -38,7 +38,7 @@ class ReporteDiarioController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/reportediario/index.action.init.js?v=1.4',
+                '/js/reportediario/index.action.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -145,7 +145,7 @@ class ReporteDiarioController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/reportediario/reportemes.action.init.js?v=1.3',
+                '/js/reportediario/reportemes.action.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -731,7 +731,7 @@ table {
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/reportediario/facturas.action.init.js?v=1.1',
+                '/js/reportediario/facturas.action.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -1050,9 +1050,7 @@ table {
 
             'idReporteCre' => $reporte->id,
             'modo' => 'crear',
-
             'links' => [],
-
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/reportediario/reportemesnuevo.action.init.js?v=1.1'
@@ -1136,7 +1134,7 @@ table {
 
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/reportediario/reportemesnuevo.action.init.js?v=2.0'
+                '/js/reportediario/reportemesnuevo.action.init.js?v=' . time(),
             ],
 
             'help' => false

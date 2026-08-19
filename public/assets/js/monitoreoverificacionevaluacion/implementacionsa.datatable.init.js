@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
 
                             <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3"                                 
+                                <a class="dropdown-item pointer d-flex align-items-center gap-3"                                 
                                 href="javascript:void(0)"
                                 @click='window.implementacionsa.abrirDetalle(${row.id})'>
                                 <i class="ti ti-eye"></i>Detalle
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                </li>  
                               
                                 <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3" ${!noEditar ? 'disabled' : ''} 
+                                <a class="dropdown-item pointer d-flex align-items-center gap-3" ${!noEditar ? 'disabled' : ''} 
                                 href="javascript:void(0)"
                                 @click='window.implementacionsa.abrirEditar(${row.id})'>
                                 <i class="ti ti-edit"></i>Editar

@@ -97,7 +97,7 @@ const year = new Date().getFullYear();
                             <ul class="dropdown-menu">
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3"
+                                    <a class=" pointer d-flex align-items-center gap-3"
                                     href="javascript:void(0)"
                                     @click='window.mantenimientoPreventivo.openModalDetalle(${JSON.stringify(row)})'>
                                         <i class="ti ti-eye"></i>Detalle
@@ -105,7 +105,7 @@ const year = new Date().getFullYear();
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3
                                     ${bloqueado ? 'disabled text-muted' : ''}"
                                     href="javascript:void(0)"
                                     ${bloqueado ? '' : `@click='window.mantenimientoPreventivo.evidencia(${JSON.stringify(row)})'`}>
@@ -114,7 +114,7 @@ const year = new Date().getFullYear();
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3
                                     ${bloqueado ? 'disabled text-muted' : ''}"
                                     ${bloqueado ? '' : `href="/sasisopa/control-actividades-procesos/mantenimiento-preventivo/pdf?id=${row.id}"`}>
                                         <i class="ti ti-download"></i>Descargar

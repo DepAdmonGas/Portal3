@@ -86,7 +86,7 @@ class SgmProcesosMedicionController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/sgm/procesos-medicion/programaanualcalibracion.actions.init.js?v=1.2',
+                '/js/sgm/procesos-medicion/programaanualcalibracion.actions.init.js?v=' . time(),
 
             ],
             'help' => false
@@ -120,8 +120,8 @@ class SgmProcesosMedicionController extends BaseController
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
 
-                '/js/sgm/procesos-medicion/bitacoracalibracion.actions.init.js?v=1.1',
-                '/js/sgm/procesos-medicion/bitacoracalibracion.datatable.init.js?v=1.1'
+                '/js/sgm/procesos-medicion/bitacoracalibracion.actions.init.js?v=' . time(),
+                '/js/sgm/procesos-medicion/bitacoracalibracion.datatable.init.js?v=' . time(),
 
             ],
             'help' => false
@@ -151,7 +151,7 @@ class SgmProcesosMedicionController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/sgm/procesos-medicion/programaanualverificacion.actions.init.js?v=1.1',
+                '/js/sgm/procesos-medicion/programaanualverificacion.actions.init.js?v=' . time(),
 
             ],
             'help' => false
@@ -183,8 +183,8 @@ class SgmProcesosMedicionController extends BaseController
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
 
-                '/js/sgm/procesos-medicion/bitacoraverificacion.actions.init.js?v=1.1',
-                '/js/sgm/procesos-medicion/bitacoraverificacion.datatable.init.js?v=1.1'
+                '/js/sgm/procesos-medicion/bitacoraverificacion.actions.init.js?v=' . time(),
+                '/js/sgm/procesos-medicion/bitacoraverificacion.datatable.init.js?v=' . time(),
 
             ],
             'help' => false

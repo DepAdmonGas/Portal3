@@ -83,7 +83,10 @@
 
       <!-- HEADER -->
       <div class="modal-header bg-primary">
-        <h5 class="modal-title text-white" x-text="detalle.nombre"></h5>
+        <h5 class="modal-title text-white"> 
+            <i class="ti ti-user"></i>
+            <label x-text="detalle.nombre"></label>
+            </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
 

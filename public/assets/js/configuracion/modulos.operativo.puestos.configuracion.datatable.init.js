@@ -62,7 +62,7 @@ return `
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${!noEdit ? 'disabled opacity-50 pointer-events-none' : ''}"
+class="dropdown-item pointer d-flex align-items-center gap-2 ${!noEdit ? 'disabled opacity-50 pointer-events-none' : ''}"
 ${!noEdit 
 ? ''
 : `@click="window.modulosPuestoOperativoInstance .openEditar(${row.idModuloPuesto})"'` 
@@ -75,7 +75,7 @@ ${!noEdit
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${!noDelete ? 'disabled opacity-50 pointer-events-none' : ''}"
+class="dropdown-item pointer d-flex align-items-center gap-2 ${!noDelete ? 'disabled opacity-50 pointer-events-none' : ''}"
 ${!noDelete 
 ? '' 
 : `@click="async () => {

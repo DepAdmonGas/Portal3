@@ -45,7 +45,7 @@ x-data="ventasComponent()">
 
 <!-- CONCENTRADO DE VENTAS -->
 <div class="col-12" id="divConcentradoVentas">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
 <thead> 
@@ -189,7 +189,7 @@ x-model="v.jarras"
 <div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divAceitesLubricantes">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -266,7 +266,7 @@ x-model="a.cantidad"
 <div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divDocumentos">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -332,7 +332,7 @@ x-model="a.cantidad"
 <div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divProsegur">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -393,7 +393,7 @@ x-model="p.recibo"
 <div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divTarjetasBancarias">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -450,7 +450,7 @@ x-model="p.recibo"
 <div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divControlgas">
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -510,7 +510,7 @@ x-model="p.recibo"
 <div class="col-12">
 <div class="card">
 <div class="card-body p-0">
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tr>
 <th>C TOTAL (1+2+3)</th>
@@ -539,7 +539,7 @@ x-model="p.recibo"
 <div class="card-body p-0">
 <div class="row">
 <div class="col-12" id="divPagoClientes">
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>

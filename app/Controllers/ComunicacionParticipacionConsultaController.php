@@ -43,9 +43,9 @@ protected string $modulo = 'sasisopa';
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/comunicacionparticipacionconsulta/registrocomunicacion.datatable.init.js?v=1.0.2',
-                '/js/comunicacionparticipacionconsulta/quejassugerencias.datatable.init.js?v=1.0.2',
-                '/js/comunicacionparticipacionconsulta/index.action.init.js?v=1.0.6'
+                '/js/comunicacionparticipacionconsulta/registrocomunicacion.datatable.init.js?v=' . time(),
+                '/js/comunicacionparticipacionconsulta/quejassugerencias.datatable.init.js?v=' . time(),
+                '/js/comunicacionparticipacionconsulta/index.action.init.js?v=' . time(),
             ],
             'help' => true
         ];

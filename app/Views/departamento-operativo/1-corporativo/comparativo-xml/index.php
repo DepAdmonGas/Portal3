@@ -341,7 +341,7 @@ x-init="$el.value = formatInput(item.despacho_monto)"
 </div>
 
 <div class="card-body p-0">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -426,7 +426,7 @@ Guardar Comentario
 </div>
 </template>
 
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <div x-data="actions()">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>

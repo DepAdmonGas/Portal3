@@ -49,7 +49,7 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
 
                                 </div>
 
-                                <div class="table-responsive">
+                                <div class="table-responsive overflow-x-auto overflow-hidden">
 
                                     <table class="table table-sm table-bordered table-hover align-middle mb-0 pb-0">
 

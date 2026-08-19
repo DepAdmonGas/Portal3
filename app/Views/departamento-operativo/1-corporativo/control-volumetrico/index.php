@@ -41,7 +41,7 @@ x-data="controlVolumetricoComponent()">
 </div>
 
 <div class="card-body p-0">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
 <thead>
@@ -284,7 +284,7 @@ x-model="p.comentario"
 <h5 class="mb-0 text-white">GRAN TOTAL</h5>
 </div>
 <div class="card-body p-0">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -358,7 +358,7 @@ x-model="p.comentario"
 </div>
 </div>
 <div class="card-body p-0">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -387,7 +387,7 @@ No se encontro información
 <ul class="dropdown-menu">
 <li>
 <span x-data="actions()">
-<a class="dropdown-item d-flex align-items-center gap-2" href="#"
+<a class="dropdown-item pointer d-flex align-items-center gap-2" href="#"
 @click.prevent="download('control-volumetrico', d.documento)">
 <i class="ti ti-download fs-5"></i> Descargar
 </a>
@@ -395,7 +395,7 @@ No se encontro información
 </li>
 <li>
 <span x-data="actions()">
-<a class="dropdown-item d-flex align-items-center gap-2 text-danger"
+<a class="dropdown-item pointer d-flex align-items-center gap-2 text-danger"
 href="#"
 @click.prevent="async () => { const r = await deleteAction({url: '/departamento-operativo/control-volumetrico/eliminar-documento', id: d.id, name: d.anexos}); if (r && r.success) cargarDatos(); }">
 <i class="ti ti-trash fs-5"></i> Eliminar
@@ -422,7 +422,7 @@ href="#"
 <h5 class="mb-0 text-white">PREFIJOS</h5>
 </div>
 <div class="card-body p-0">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -463,7 +463,7 @@ style="padding-left: 25px !important;" x-init="$el.value = formatDisplay(pf.tota
 
 <!-- GRAN TOTAL -->
 <div class="col-12 mb-4">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody>
 <tr>

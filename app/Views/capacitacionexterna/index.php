@@ -19,7 +19,7 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
          <div class="ms-auto">
             <?= 
               !empty($permisos['crear']) ? 
-              '<button type="button" class="btn btn-primary" href="javascript:void(0)" @click="openModalNuevo()">
+              '<button type="button" class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openModalNuevo()">
               <i class="ti ti-plus"></i> Nuevo
               </button>' 
               : '' 
@@ -28,7 +28,7 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
       </div>
 
     <div class="datatables">
-    <div class="table-responsive">
+    <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
     <table class="table table-bordered table-striped" id="table-capacitacion-externa">
     <thead>	
     <tr class="bg-primary text-white">
@@ -54,7 +54,9 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
     <div class="modal-content">
 
     <div class="modal-header modal-colored-header bg-primary text-white">
-        <h4 class="modal-title text-white">CAPACITACIÓN EXTERNA</h4>
+        <h4 class="modal-title text-white">
+        <i class="ti ti-progress-check ms-2"></i>    
+        CAPACITACIÓN EXTERNA</h4>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModal()"></button>
     </div>
 
@@ -78,7 +80,7 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
             </div>
             <div class="col-4">
                 <select class="form-control" x-model="duraciondetalle">
-                    <option value="">Selecciona</option>
+                    <option value="">Selecciona una opción...</option>
                     <option value="Minutos">Minutos</option>
                     <option value="Horas">Horas</option>
                 </select>
@@ -105,7 +107,7 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
         <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
         <button class="btn btn-success" @click="guardar()">
             <i class="ti ti-check"></i>
-            <span x-text="mode === 'edit' ? 'Actualizar' : 'Agregar'"></span>
+            <span x-text="mode === 'edit' ? 'Actualizar' : 'Guardar'"></span>
         </button>
     </div>
 
@@ -119,17 +121,19 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
     <div class="modal-dialog">
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
-                <h4 class="modal-title">TRABAJADORES</h4>
-                <button type="button" class="btn-close" @click="closeModalPersonal()"></button>
+            <div class="modal-header head-modal card-header bg-primary">
+                <h4 class="modal-title text-white">
+                    <i class="ti ti-users ms-2"> </i> TRABAJADORES
+                </h4>
+                <button type="button" class="btn-close btn-close-white" @click="closeModalPersonal()"></button>
             </div>
 
             <div class="modal-body">
 
-                <label class="form-label">Selecciona trabajador:</label>
+                <label class="form-label">Nombre del trabajador:</label>
 
                 <select class="form-control mb-2" x-model="selectedEmpleado">
-                    <option value="">Selecciona</option>
+                    <option value="">Selecciona una opción...</option>
                     <template x-for="user in usuarios" :key="user.id">
                         <option :value="user.id" x-text="user.nombre"></option>
                     </template>
@@ -138,7 +142,7 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
                 <div class="text-end">
                 <button class="btn btn-success mb-3"
                     @click="addEmpleado()">
-                    Agregar trabajador
+                    Agregar 
                 </button>
                 </div>
 

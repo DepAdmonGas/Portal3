@@ -8,19 +8,19 @@
 <ul class="dropdown-menu dropdown-menu-end">
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/cierre-lote/excel/99/99/<?= $idEstacion ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/cierre-lote/excel/99/99/<?= $idEstacion ?>">
 <i class="ti ti-file-spreadsheet"></i> Reporte General
 </a>
 </li>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/cierre-lote/excel/<?= $idYear ?>/<?= $idMes ?>/<?= $idEstacion ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/cierre-lote/excel/<?= $idYear ?>/<?= $idMes ?>/<?= $idEstacion ?>">
 <i class="ti ti-file-spreadsheet"></i> <?= nombremes(sprintf('%02d', $idMes)) ?> <?= $idYear ?>
 </a>
 </li>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/cierre-lote/excel/<?= $idYear ?>/99/<?= $idEstacion ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/cierre-lote/excel/<?= $idYear ?>/99/<?= $idEstacion ?>">
 <i class="ti ti-file-spreadsheet"></i> Periodo <?= $idYear ?>
 </a>
 </li>
@@ -65,7 +65,7 @@ x-data="tpvComponent()">
 </div>
 </div>
 <div class="card-body p-0">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>

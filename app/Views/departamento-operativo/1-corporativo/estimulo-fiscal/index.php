@@ -10,7 +10,7 @@ x-data="{ ...actions(), ...estimuloFiscalComponent() }"
 </button>
 <ul class="dropdown-menu animated rubberBand pointer">
 <li x-show="permisos && permisos.id_puesto !== 6"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modal-agregar"><i class="ti ti-plus"></i> Nuevo</a></li>
-<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modal-buscar"><i class="ti ti-search"></i> Buscar Reporte</a></li>
+<li><a class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#modal-buscar"><i class="ti ti-search"></i> Buscar Reporte</a></li>
 </ul>
 </div>
 </div>
@@ -51,7 +51,7 @@ Fecha de reporte: <span x-text="resumen.fecha_inicio ? formatearFecha(resumen.fe
 </div>
 
 <div class="col-xl-7 col-lg-6 col-md-12">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 align-middle">
 <thead>
 <tr>
@@ -130,10 +130,10 @@ Fecha de reporte: <span x-text="resumen.fecha_inicio ? formatearFecha(resumen.fe
 <i class="ti ti-dots-vertical fs-5 text-muted"></i>
 </a>
 <div class="dropdown-menu pointer">
-<a class="dropdown-item" @click="$dispatch('estimulo-fiscal:editar', {id: p.id})">
+<a class="dropdown-item pointer" @click="$dispatch('estimulo-fiscal:editar', {id: p.id})">
 <i class="ti ti-pencil me-1"></i> Editar
 </a>
-<a class="dropdown-item" @click="$dispatch('estimulo-fiscal:eliminar', {id: p.id})">
+<a class="dropdown-item pointer" @click="$dispatch('estimulo-fiscal:eliminar', {id: p.id})">
 <i class="ti ti-trash me-1"></i> Eliminar
 </a>
 </div>

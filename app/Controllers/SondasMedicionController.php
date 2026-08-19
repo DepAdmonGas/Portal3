@@ -35,8 +35,8 @@ class SondasMedicionController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/sondasmedicion.datatable.init.js?v=1.1',
-                '/js/controlactividadproceso/sondasmedicion.action.init.js?v=1.1'
+                '/js/controlactividadproceso/sondasmedicion.datatable.init.js?v=' . time(),
+                '/js/controlactividadproceso/sondasmedicion.action.init.js?v=' . time(),
 
             ],
 

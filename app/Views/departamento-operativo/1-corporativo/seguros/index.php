@@ -17,8 +17,8 @@ Debes de seleccionar una estación del menú superior para poder visualizar los 
 <i class="ti ti-dots-vertical fs-4"></i>
 </button>
 <ul class="dropdown-menu animated rubberBand pointer">
-<li x-show="permisos.id_puesto !== 6"><a class="dropdown-item" @click="abrirModalAgregar()"><i class="ti ti-plus"></i> Nuevo</a></li>
-<li><a class="dropdown-item" @click="abrirModalPoliza()"><i class="ti ti-file-text"></i> Póliza de Seguro</a></li>
+<li x-show="permisos.id_puesto !== 6"><a class="dropdown-item pointer" @click="abrirModalAgregar()"><i class="ti ti-plus"></i> Nuevo</a></li>
+<li><a class="dropdown-item pointer" @click="abrirModalPoliza()"><i class="ti ti-file-text"></i> Póliza de Seguro</a></li>
 </ul>
 </div>
 </div>

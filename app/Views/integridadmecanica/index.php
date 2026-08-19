@@ -55,20 +55,19 @@
 </div>
 
 <div class="card">
-  <div class="card-body">
-
+  <div class="card-header">
   <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Lista de equipos críticos</h4>
       <div class="ms-auto">
       <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+            <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ti ti-dots-vertical fs-6"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
              <?= 
               !empty($permisos['crear']) ? 
               '<li>
-                    <a class="dropdown-item" href="javascript:void(0)" @click="openModal()"><i class="ti ti-plus"></i> Agregar</a>
+                    <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModal()"><i class="ti ti-plus"></i> Agregar</a>
                 </li>' 
               : '' 
               ?>   
@@ -79,9 +78,13 @@
           </div>   
       </div>
   </div>
+  </div>
+  <div class="card-body">
 
-  <div class="datatables mt-3">
-    <div class="table-responsive">
+
+
+  <div class="datatables">
+    <div class="table-responsive pb-4 overflow-x-auto overflow-hidden">
       <table id="table-equipo-critico" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -110,7 +113,10 @@
     <div class="modal-content">
 
     <div class="modal-header modal-colored-header bg-primary text-white">
-        <h4 class="modal-title text-white">Agregar equipo critico</h4>
+        <h4 class="modal-title text-white">
+         <i class="ti ti-device-desktop-plus"></i>
+        Agregar equipo critico
+      </h4>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModal()"></button>
     </div>
 
@@ -153,7 +159,7 @@
 
     <div class="modal-footer">
         <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
-        <button class="btn btn-primary" @click="guardar()"><i class="ti ti-check"></i> Guardar
+        <button class="btn btn-success" @click="guardar()"><i class="ti ti-check"></i> Guardar
         </button>
     </div>
 

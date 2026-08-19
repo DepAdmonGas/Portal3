@@ -78,20 +78,20 @@ var html = '<div x-data="{}">'
 + '<a href="javascript:void(0)" data-bs-toggle="dropdown">'
 + '<i class="ti ti-dots-vertical fs-5 text-muted"></i>'
 + '</a>'
-+ '<div class="dropdown-menu pointer">'
-+ '<a class="dropdown-item" @click="$dispatch(\'seguros:detalle\', { id: ' + d.id + ' })">'
++ '<div class="dropdown-menu">'
++ '<a class="dropdown-item pointer" @click="$dispatch(\'seguros:detalle\', { id: ' + d.id + ' })">'
 + '<i class="ti ti-eye me-1"></i> Detalle</a>';
 if (archivo) {
 var escArchivo = (archivo || '').replace(/'/g, "\\'");
-html += '<a class="dropdown-item" @click="download(\'seguros-incidencias\', \'' + escArchivo + '\')">'
+html += '<a class="dropdown-item pointer" @click="download(\'seguros-incidencias\', \'' + escArchivo + '\')">'
 + '<i class="ti ti-download me-1"></i> Descargar archivo</a>';
 } else {
-html += '<a class="dropdown-item grayscale">'
+html += '<a class="dropdown-item pointer grayscale">'
 + '<i class="ti ti-download me-1"></i> Descargar archivo</a>';
 }
 html += '<a class="dropdown-item" @click="$dispatch(\'seguros:editar\', { id: ' + d.id + ' })">'
 + '<i class="ti ti-pencil me-1"></i> Editar</a>'
-+ '<a class="dropdown-item" @click="$dispatch(\'seguros:eliminar\', { id: ' + d.id + ' })">'
++ '<a class="dropdown-item pointer" @click="$dispatch(\'seguros:eliminar\', { id: ' + d.id + ' })">'
 + '<i class="ti ti-trash me-1"></i> Eliminar</a>'
 + '</div></div></div>';
 return html;

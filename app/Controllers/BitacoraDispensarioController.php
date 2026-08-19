@@ -34,8 +34,8 @@ class BitacoraDispensarioController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/bitacoradispensario.datatable.init.js?v=1.2',
-                '/js/controlactividadproceso/bitacoradispensario.action.init.js?v=1.3'
+                '/js/controlactividadproceso/bitacoradispensario.datatable.init.js?v=' . time(),
+                '/js/controlactividadproceso/bitacoradispensario.action.init.js?v=' . time(),
 
             ],
 

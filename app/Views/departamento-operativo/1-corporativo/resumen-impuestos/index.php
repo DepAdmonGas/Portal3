@@ -32,7 +32,7 @@ style="display: none;"></div>
 </div>
 
 <div class="datatables">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table id="tabla-resumen-impuestos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
 <tbody>
@@ -58,7 +58,7 @@ style="display: none;"></div>
 </div>
 </template>
 <template x-if="!detalleCargando && detalleData">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -144,7 +144,7 @@ style="display: none;"></div>
 </div>
 </template>
 <template x-if="!totalesCargando && totalesData">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>

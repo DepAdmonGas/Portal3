@@ -219,14 +219,16 @@ x-init="
             </select>
              <?= 
           !empty($permisos['crear']) ? 
-          '<button class="btn bg-info-subtle text-info" type="button" @click="guardarPersonal('.$idListaAsistencia.')">Agregar</button>' 
+          '<button class="btn bg-info-subtle text-info" type="button" @click="guardarPersonal('.$idListaAsistencia.')">
+          <i class="ti ti-plus"></i> Agregar
+          </button>' 
           : '' 
         ?>   
         
         </div>
 
-        <div class="datatables mt-4">
-            <div class="table-responsive">
+        <div class="datatables">
+            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
                 <table id="table-lista-asistencia-firma" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
                     <thead>
                     <tr>

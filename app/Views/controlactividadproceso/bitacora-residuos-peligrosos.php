@@ -7,21 +7,21 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
           <i class="ti ti-dots-vertical fs-4"></i>
         </button>
         <ul class="dropdown-menu animated rubberBand">
-         <li><a class="dropdown-item"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
+         <li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
           <li>
-              <a class="dropdown-item" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+              <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
           </li>
         
         </ul>
     </div>
 </div>
 
-<div class="datatables mt-3">
-<div class="table-responsive">
+<div class="datatables">
+<div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
 <table
     id="table-residuos-peligrosos"
     class="table table-striped table-bordered">
-    <thead>
+    <thead>  
         <tr>
             <th>Folio</th>
             <th>Nombre del residuo peligroso</th>
@@ -48,7 +48,9 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
       <div class="modal-dialog modal-lg modal-dialog-centered">
           <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
-                  <h4 class="modal-title text-white">Buscar</h4>
+                  <h4 class="modal-title text-white">
+                    <i class="ti ti-search ms-2"></i>
+                    Buscar</h4>
 
                   <button
                       type="button"
@@ -66,12 +68,12 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                       
                       <label class="form-label mt-2">* Año:</label>
                       <select
-                          class="form-control mb-3"
+                          class="form-select mb-3"
                           x-model="filtro.year"
                           :class="errorsBuscar.year ? 'is-invalid' : ''"
                           @input="errorsBuscar.year = false">
 
-                          <option value="">Selecciona</option>
+                          <option value="">Selecciona una opcion...</option>
 
                           <template x-for="year in years">
 
@@ -88,7 +90,7 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                       <label class="form-label mt-2">Mes:</label>
 
                       <select
-                          class="form-control"
+                          class="form-select"
                           x-model="filtro.mes">
 
                           <option value="">
@@ -123,9 +125,9 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                   </button>
 
                   <button
-                  class="btn btn-primary"
+                  class="btn btn-success"
                   @click="buscar()">
-                      <i class="ti ti-check"></i> Buscar
+                      <i class="ti ti-search"></i> Buscar
                   </button>
               </div>
 
@@ -149,6 +151,7 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-eye ms-2"></i>
                     Detalle del Registro
                     <span
                         x-text="detalleRegistro.folio">
@@ -166,40 +169,47 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
             <div class="modal-body">
 
                 <div class="mb-3">
+                    <label class="form-label">
+                        
+                   
                     <strong>
-                        Nombre del residuo peligroso
+                        Nombre del residuo peligroso:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.nombreresiduo || 'S/I'">
                     </div>
+                     
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label">
                     <strong>
-                        Cantidad generada
+                        Cantidad generada:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.cantidadgenerada || 'S/I'">
                     </div>
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label">
                     <strong>
-                        Características de peligrosidad
+                        Características de peligrosidad:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.caracteristica_descripcion || 'S/I'">
                     </div>
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label">
                     <strong>
-                        Área o proceso de generación
+                        Área o proceso de generación:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.areaproceso || 'S/I'">
                     </div>
@@ -208,11 +218,11 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                 <div class="row">
 
                     <div class="col-md-6">
-
+                        <label class="form-label">
                         <strong>
-                            Fecha de ingreso
+                            Fecha de ingreso:
                         </strong>
-
+</label>
                         <div
                             x-text="detalleRegistro.fechaingreso_larga || 'S/I'">
                         </div>
@@ -220,11 +230,11 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                     </div>
 
                     <div class="col-md-6">
-
+<label class="form-label">
                         <strong>
-                            Fecha de salida
+                            Fecha de salida:
                         </strong>
-
+</label>
                         <div
                             x-text="detalleRegistro.fechasalida_larga || 'S/I'">
                         </div>
@@ -235,16 +245,16 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
                 <hr>
 
-                <h5 class="text-primary">
+                <h5 >
                     Recolector
                 </h5>
 
                 <div class="mb-2">
-
+<label class="form-label">
                     <strong>
-                        Nombre o razón social
+                        Nombre o razón social:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.nombrerecolector || 'S/I'">
                     </div>
@@ -252,11 +262,11 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                 </div>
 
                 <div class="mb-3">
-
+<label class="form-label">
                     <strong>
-                        Número de autorización Semarnat
+                        Número de autorización Semarnat:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.numerorecolector || 'S/I'">
                     </div>
@@ -265,16 +275,16 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
                 <hr>
 
-                <h5 class="text-primary">
-                    Transportista
+                <h5>
+                   Transportista
                 </h5>
 
                 <div class="mb-2">
-
+<label class="form-label">
                     <strong>
-                        Nombre o razón social
+                        Nombre o razón social:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.nombretransportista || 'S/I'">
                     </div>
@@ -282,11 +292,11 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                 </div>
 
                 <div class="mb-3">
-
+<label class="form-label">
                     <strong>
-                        Número de autorización Semarnat
+                        Número de autorización Semarnat:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.numerotransportista || 'S/I'">
                     </div>
@@ -295,16 +305,16 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
                 <hr>
 
-                <h5 class="text-primary">
+                <h5>
                     Destinatario
                 </h5>
 
                 <div class="mb-2">
-
+<label class="form-label">
                     <strong>
-                        Nombre o razón social
+                        Nombre o razón social:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.nombredestinatario || 'S/I'">
                     </div>
@@ -312,11 +322,11 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                 </div>
 
                 <div class="mb-2">
-
+<label class="form-label">
                     <strong>
-                        Número de autorización Semarnat
+                        Número de autorización Semarnat:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.numerodestinatario || 'S/I'">
                     </div>
@@ -324,10 +334,11 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                 </div>
 
                 <div class="mb-3">
-
-                    <strong>
-                        Proceso de destino final
+<label class="form-label">
+                        <strong>
+                        Proceso de destino final:
                     </strong>
+</label>
 
                     <div
                         x-text="detalleRegistro.procesodestinatario || 'S/I'">
@@ -338,11 +349,11 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                 <hr>
 
                 <div>
-
+<label class="form-label">
                     <strong>
-                        Responsable Técnico de la Bitácora
+                        Responsable Técnico de la Bitácora:
                     </strong>
-
+</label>
                     <div
                         x-text="detalleRegistro.responsable || 'S/I'">
                     </div>

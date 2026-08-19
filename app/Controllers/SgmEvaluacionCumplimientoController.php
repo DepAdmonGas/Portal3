@@ -43,8 +43,8 @@ class SgmEvaluacionCumplimientoController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/sgm/evaluacion-cumplimiento/index.actions.init.js?v=1.0.0',
-                '/js/sgm/evaluacion-cumplimiento/index.datatable.init.js?v=1.0.0',
+                '/js/sgm/evaluacion-cumplimiento/index.actions.init.js?v=' . time(),
+                '/js/sgm/evaluacion-cumplimiento/index.datatable.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -149,7 +149,7 @@ class SgmEvaluacionCumplimientoController extends BaseController
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
-                '/js/sgm/evaluacion-cumplimiento/editar.actions.init.js?v=1.0.3',
+                '/js/sgm/evaluacion-cumplimiento/editar.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];

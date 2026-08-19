@@ -70,7 +70,7 @@ return `
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledCreate}"
+class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledCreate}"
 ${!permisos.disabledCreate  
 ? ` @click='async () => { 
 const res = await goTo("/configuracion/modulos-operativo/${row.idModulo}"); }' ` : '' }>
@@ -82,7 +82,7 @@ const res = await goTo("/configuracion/modulos-operativo/${row.idModulo}"); }' `
 <li>
 <a 
 href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledEdit}"
+class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledEdit}"
 ${!permisos.disabledEdit 
 ? `@click='$dispatch("open-edit", ${JSON.stringify(row)})'` : ''}>
 <i class="fs-4 ti ti-edit"></i> Editar
@@ -92,7 +92,7 @@ ${!permisos.disabledEdit
 <!-- ELIMINAR -->
 <li>
 <a href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledDelete}"
+class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledDelete}"
 ${permisos.disabledDelete ? '' : `
 @click="async () => {
 await deleteAction({

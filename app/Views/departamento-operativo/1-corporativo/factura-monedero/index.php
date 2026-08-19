@@ -217,7 +217,7 @@ title="Descargar comprobante">
 
 <div class="col-12">
 <label class="form-label pb-0">Documentos:</label>
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>

@@ -75,21 +75,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
                               
                             <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3" 
+                                <a class="dropdown-item pointer d-flex align-items-center gap-3" 
                                 href="javascript:void(0)"
                                 @click='window.mantenimientoCorrectivo.openModalDetalle(${JSON.stringify(row)})'>
                                 <i class="ti ti-eye"></i>Detalle
                                 </a>    
                                </li>  
                                 <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3 ${!noEditar ? 'disabled' : ''}" 
+                                <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEditar ? 'disabled' : ''}" 
                                 href="javascript:void(0)"
                                 ${!noEditar ? '' : `@click='window.mantenimientoCorrectivo.openModalEditar(${JSON.stringify(row)})'`}>
                                 <i class="ti ti-edit"></i>Editar
                                 </a>    
                                </li>  
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3" 
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" 
                                     href="javascript:void(0)"
                                     @click='window.mantenimientoCorrectivo.evidencia(${JSON.stringify(row)})'>
                                         <i class="ti ti-camera"></i>Evidencia

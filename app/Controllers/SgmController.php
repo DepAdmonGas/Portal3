@@ -69,8 +69,8 @@ class SgmController extends BaseController
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.0.2',
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.2',
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -103,8 +103,8 @@ class SgmController extends BaseController
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.0.2',
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.2',
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
             ],
             'help' => true
         ];
