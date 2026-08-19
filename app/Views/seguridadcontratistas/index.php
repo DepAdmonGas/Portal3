@@ -50,7 +50,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 <h4 class="modal-title text-white">
 
                 <span x-show="mode === 'create'">
-<i class="ti ti-certificate"></i>
+<i class="ti ti-briefcase-2"></i>
                     Nueva requisición de obra o servicio
                 </span>
 
@@ -73,7 +73,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
             <div class="modal-body">
 
                     <label class="form-label">
-                        * Fecha
+                        * Fecha:
                     </label>
 
                     <input
@@ -84,7 +84,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     <div class="mt-3">
                     <label class="form-label">
-                        * Descripción detallada del servicio
+                        * Descripción detallada del servicio:
                     </label>
 
                     <textarea
@@ -99,7 +99,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 <div class="mt-3">
 
                     <label class="form-label">
-                        * Justificación del servicio solicitado
+                        * Justificación del servicio solicitado:
                     </label>
 
                     <textarea
@@ -114,7 +114,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 <div class="mt-3">
 
                     <label class="form-label">
-                        Proveedor
+                        Proveedor:
                     </label>
 
                     <input
@@ -228,17 +228,17 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     </tr>
                 </table>
 
-                <div class="mt-1 mb-1"><b>Trabajo a realizar:</b></div>
+                <div class="mt-1 mb-1 form-label"><b>Trabajo a realizar:</b></div>
                 <textarea class="form-control"
                           rows="1"
                           x-model="formato12.trabajo_realizar"></textarea>
 
-                <div class="mt-1 mb-1"><b>Descripcion:</b></div>
+                <div class="mt-1 mb-1 form-label"><b>Descripcion:</b></div>
                 <textarea class="form-control"
                           rows="1"
                           x-model="formato12.descripcion"></textarea>
 
-                <div class="mt-1 mb-1"><b>Área:</b></div>
+                <div class="mt-1 mb-1 form-label"><b>Área:</b></div>
                 <textarea class="form-control"
                           rows="1"
                           x-model="formato12.area"></textarea>
@@ -246,14 +246,14 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 <!-- FECHAS -->
                 <table class="mt-3" style="width: 100%">
                     <tr>
-                        <td><b>Fecha de inicio:</b></td>
+                        <td><b class="form-label">Fecha de inicio:</b></td>
                         <td>
                             <input type="date"
                                    class="form-control"
                                    x-model="formato12.fecha_inicio">
                         </td>
 
-                        <td><b>Fecha de término:</b></td>
+                        <td><b class="form-label p-3">Fecha de término:</b></td>
                         <td>
                             <input type="date"
                                    class="form-control"
@@ -262,14 +262,14 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     </tr>
 
                     <tr>
-                        <td><b>Hora de Inicio:</b></td>
+                        <td><b class="form-label">Hora de Inicio:</b></td>
                         <td>
                             <input type="time"
                                    class="form-control"
                                    x-model="formato12.hora_inicio">
                         </td>
 
-                        <td><b>Hora de Termino:</b></td>
+                        <td><b class="form-label p-3">Hora de Termino:</b></td>
                         <td>
                             <input type="time"
                                    class="form-control"
@@ -280,7 +280,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                 <br>
 
-                <b>El trabajo a realizar contempla alguno de los siguientes procedimientos:</b>
+                <b class="form-label">El trabajo a realizar contempla alguno de los siguientes procedimientos:</b>
 
                 <table class="table table-bordered table-sm mt-2">
                     <tbody>
@@ -292,7 +292,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                                 <td x-text="p.detalle"></td>
 
                                 <td class="text-center">
-                                    <input type="checkbox"
+                                    <input
+                                    class="pointer" 
+                                    type="checkbox"
                                            :checked="p.valor == 1"
                                            @change="toggleProcedimiento(p, $event)">
                                 </td>
@@ -304,7 +306,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 </table>
 
                 <div class="mt-1 mb-1">
-                    <b>Nombre del prestador de servicios:</b>
+                    <b class="form-label">Nombre del prestador de servicios:</b>
                 </div>
 
                 <textarea class="form-control"
@@ -315,30 +317,31 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 <table style="width: 100%" class="mt-2">
 
                     <tr>
-                        <td>Cuenta con capacitación para realizar trabajos peligrosos:</td>
+                        <td class="form-label">Cuenta con capacitación para realizar trabajos peligrosos:</td>
                         <td>
                             Si
-                            <input type="radio"
+                            <input class="pointer" type="radio"
                                    value="1"
                                    x-model="formato12.cprtp">
 
                             No
-                            <input type="radio"
+                            <input class="pointer" type="radio"
                                    value="0"
                                    x-model="formato12.cprtp">
                         </td>
                     </tr>
 
                     <tr>
-                        <td>Cuenta con todo el Equipo de Protección Personal correspondiente (EPP):</td>
+                        <td class="form-label">Cuenta con todo el Equipo de Protección Personal correspondiente (EPP):</td>
                         <td>
                             Si
-                            <input type="radio"
+                            <input class="pointer" type="radio"
                                    value="1"
                                    x-model="formato12.cteppc">
 
                             No
-                            <input type="radio"
+                            <input class="pointer" 
+                            type="radio"
                                    value="0"
                                    x-model="formato12.cteppc">
                         </td>
@@ -347,7 +350,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 </table>
 
                 <div class="text-center">
-                    <small>*De no contar con capacitación, bajo ninguna circunstancia realizara los trabajos</small>
+                    <small class="form-label">*De no contar con capacitación, bajo ninguna circunstancia realizara los trabajos</small>
                 </div>
 
                 <br>
@@ -355,25 +358,25 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 <!-- TRABAJADORES -->
                 <div class="border p-2">
 
-                    <b>Datos de los trabajadores que acuden al servicio:</b>
+                    <b class="form-label">Datos de los trabajadores que acuden al servicio:</b>
 
                     <div class="row mt-2">
 
-                        <div class="col-4">
+                        <div class="col-4 form-label">
                             * Nombre:
                             <input type="text"
                                    class="form-control"
                                    x-model="trabajador.nombre">
                         </div>
 
-                        <div class="col-4">
+                        <div class="col-4 form-label">
                             * Puesto:
                             <input type="text"
                                    class="form-control"
                                    x-model="trabajador.puesto">
                         </div>
 
-                        <div class="col-4">
+                        <div class="col-4 form-label">
                             * No. De Seguro:
                             <input type="text"
                                    class="form-control"
@@ -429,16 +432,16 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 <hr>
 
                 <!-- ENCARGADOS -->
-                <b>* Encargado de la estación de servicio de darle seguimiento al servicio:</b>
+                <b class="form-label">* Encargado de la estación de servicio de darle seguimiento al servicio:</b>
 
                 <div class="row mt-2">
 
                     <div class="col-10">
 
-                      <select class="form-control"
+                      <select class="form-select"
                             x-model="encargado.id_personal">
 
-                        <option value="">Seleccione</option>
+                        <option value="">Seleccione una opcion...</option>
 
                         <template x-for="e in formato12.encargadosList" :key="e.id">
                             <option :value="e.id" x-text="e.nombre"></option>
@@ -494,20 +497,20 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 <!-- EXTERNO -->
                 <div class="border p-2 mt-2">
 
-                    <small>Trabajo realizado por un externo</small>
+                    <small class="form-label">Trabajo realizado por un externo</small>
 
-                    <div class="mt-1"><b>Nombre empresa:</b></div>
+                    <div class="mt-1 form-label"><b>Nombre empresa:</b></div>
                     <textarea class="form-control mt-1"
                               rows="1"
                               x-model="formato12.nombre_empresa"></textarea>
 
-                    <div class="mt-1"><b>Nombre del responsable:</b></div>
+                    <div class="mt-1 form-label"><b>Nombre del responsable:</b></div>
                     <textarea class="form-control mt-1"
                               rows="1"
                               x-model="formato12.nombre_responsable"></textarea>
 
                     <div class="text-center mt-3">
-                        <small>Nota: Si el personal es externo deberá presentar su procedimiento para realizar la actividad</small>
+                        <small class="form-label">Nota: Si el personal es externo deberá presentar su procedimiento para realizar la actividad</small>
                     </div>
 
                 </div>
@@ -569,10 +572,10 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                 <div class="row mt-2">
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
 
-                        <div class="mb-2">
-                            <label class="fw-bolder">
+                        <div class="mb-0">
+                            <label class="form-label">
                                 No. de folio:
                             </label>
                         </div>
@@ -584,10 +587,10 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     </div>
 
-                    <div class="col-md-8">
+                    <div class="col-md-6">
 
-                        <div class="mb-2">
-                            <label class="fw-bolder">
+                        <div class="mb-0">
+                            <label class="form-label">
                                 Fecha:
                             </label>
                         </div>
@@ -605,10 +608,10 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                 <div class="row mt-3">
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
 
-                        <div class="mb-2">
-                            <label class="fw-bolder">
+                        <div class="mb-0">
+                            <label class="form-label">
                                 Nombre del solicitante:
                             </label>
                         </div>
@@ -620,10 +623,10 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     </div>
 
-                    <div class="col-md-8">
+                    <div class="col-md-6">
 
-                        <div class="mb-2">
-                            <label class="fw-bolder">
+                        <div class="mb-0">
+                            <label class="fw-bolder form-label">
                                 Empresa solicitante:
                             </label>
                         </div>
@@ -643,14 +646,14 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     <div class="col-12">
 
-                        <div class="mb-2">
-                            <label class="fw-bolder">
+                        <div class="mb-0">
+                            <label class="form-label">
                                 Descripción detallada del servicio que requiere:
                             </label>
                         </div>
 
                         <div
-                            class="border p-2"
+                            
                             x-html="formato14.descripcion">
                         </div>
 
@@ -664,14 +667,13 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     <div class="col-12">
 
-                        <div class="mb-2">
-                            <label class="fw-bolder">
+                        <div class="mb-0">
+                            <label class="form-label">
                                 Justificación del servicio solicitado:
                             </label>
                         </div>
 
                         <div
-                            class="border p-2"
                             x-html="formato14.justificacion">
                         </div>
 
@@ -682,16 +684,16 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                 <!-- Formato -->
 
                 <div
-                    class="fw-bold border-bottom pb-2 mt-4">
+                    class=" form-label  mt-4">
 
                     Entrega de información al contratista
                     Fo.ADMONGAS.014
 
                 </div>
 
-                <div class="pt-2 pb-2">
+                <div class="pb-2">
 
-                    <small>
+                    <small form-label>
 
                         Descarga el archivo, llena la información
                         solicitada y adjunta el PDF generado.
@@ -827,7 +829,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
     <div class="col-md-6">
 
-    <label class="fw-bolder">Fecha:</label>
+    <label class="form-label">Fecha:</label>
 
     <input
     type="date"
@@ -838,7 +840,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
     <div class="col-md-6">
 
-    <label class="fw-bolder">Hora:</label>
+    <label class="form-label">Hora:</label>
 
     <input
     type="time"
@@ -849,7 +851,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
     </div>
 
-    <table class="table table-bordered mt-4">
+    <table class="table table-bordered mt-4 table-striped">
 
     <thead>
 
@@ -868,6 +870,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
     <td class="text-center">
     <input
+    class="pointer"
     type="radio"
     value="1"
     x-model="formato15.pregunta1">
@@ -875,6 +878,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
     <td class="text-center">
     <input
+    class="pointer"
     type="radio"
     value="0"
     x-model="formato15.pregunta1">
@@ -885,13 +889,17 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     <td>El trabajo se realizó conforme al procedimiento</td>
 
     <td class="text-center">
-    <input type="radio"
+    <input 
+    class="pointer"
+    type="radio"
     value="1"
     x-model="formato15.pregunta2">
     </td>
 
     <td class="text-center">
-    <input type="radio"
+    <input 
+    class="pointer"
+    type="radio"
     value="0"
     x-model="formato15.pregunta2">
     </td>
@@ -901,13 +909,17 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     <td>En todo momento se utilizó el EPP</td>
 
     <td class="text-center">
-    <input type="radio"
+    <input 
+    class="pointer"
+    type="radio"
     value="1"
     x-model="formato15.pregunta3">
     </td>
 
     <td class="text-center">
-    <input type="radio"
+    <input 
+    class="pointer"
+    type="radio"
     value="0"
     x-model="formato15.pregunta3">
     </td>
@@ -917,13 +929,17 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     <td>Los trabajadores tomaron en cuenta los procedimientos de seguridad</td>
 
     <td class="text-center">
-    <input type="radio"
+    <input 
+    class="pointer"
+    type="radio"
     value="1"
     x-model="formato15.pregunta4">
     </td>
 
     <td class="text-center">
-    <input type="radio"
+    <input 
+    class="pointer"
+    type="radio"
     value="0"
     x-model="formato15.pregunta4">
     </td>
@@ -933,13 +949,17 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     <td>Ocurrió algún accidente durante el servicio realizado</td>
 
     <td class="text-center">
-    <input type="radio"
+    <input 
+    class="pointer"
+    type="radio"
     value="1"
     x-model="formato15.pregunta5">
     </td>
 
     <td class="text-center">
-    <input type="radio"
+    <input
+    class="pointer"
+    type="radio"
     value="0"
     x-model="formato15.pregunta5">
     </td>
@@ -951,14 +971,14 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
     <div>
 
-    <label class="fw-bolder">Supervisó:</label>
+    <label class="form-label">Supervisó:</label>
 
 <select
     class="form-select"
     x-model.number="formato15.id_usuario">
 
     <option value="">
-        Seleccione
+        Seleccione una opcion...
     </option>
 
     <template
@@ -1079,13 +1099,11 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     </tr>
                 </table>
 
-                <br><br>
-
-                <h6>
+                <h6 class="mt-4">
                     A QUIEN CORRESPONDA.
                 </h6>
 
-                <p>
+                <p class="mt-1 mb-1">
                     Por este conducto le mando un cordial saludo,
                     a su vez:
                 </p>
@@ -1096,8 +1114,8 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     placeholder="Representante legal"
                     x-model="cartaResponsiva.representante_legal">
 
-                <p class="mt-3">
-                    representante legal de:
+                <p class="mt-3 mb-1">
+                    Representante legal de:
                 </p>
 
                 <input
@@ -1106,7 +1124,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     placeholder="Razón social"
                     x-model="cartaResponsiva.razon_social">
 
-                <p class="mt-3">
+                <p class="mt-3 mb-1">
                     Con domicilio en:
                 </p>
 
@@ -1116,7 +1134,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     placeholder="Domicilio"
                     x-model="cartaResponsiva.domicilio">
 
-                <div class="mt-4">
+                <div class="mt-3">
 
                     Doy mi responsivo total de los daños o
                     perjuicios de riesgos y aspectos ambientales
@@ -1139,15 +1157,14 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                 </div>
 
-                <hr>
 
                 <input
                     type="text"
-                    class="form-control"
+                    class="form-control text-center"
                     placeholder="Apoderado legal"
                     x-model="cartaResponsiva.apoderado_legal">
 
-                <div class="text-center mt-2">
+                <div class="text-center mt-2 form-label">
                     Nombre del apoderado legal
                 </div>
 
