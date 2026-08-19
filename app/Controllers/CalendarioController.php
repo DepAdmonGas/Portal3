@@ -123,7 +123,9 @@ class CalendarioController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
+
                 '/js/sasisopa/calendar-init.js?v=1.0.1'
+
             ]
         ];
 

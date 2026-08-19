@@ -996,7 +996,85 @@ table {
     //----------------------------------------------------------------
     //----------------------------------------------------------------
 
-    public function reporteMesNuevo($mes, $year)
+
+
+    public function reporteMesNuevo($mes,$year)
+{
+
+    $title='AGREGAR REPORTE ESTADÍSTICO DE LA CRE';
+
+    Breadcrumb::add('Home','/home');
+    Breadcrumb::add('SASISOPA','/sasisopa');
+    Breadcrumb::add(
+        'REPORTE DIARIO '.strtoupper(nombremes($mes)).' '.$year,
+        '/sasisopa/reporte-diario/'.$mes.'/'.$year
+    );
+    Breadcrumb::add($title,'');
+
+    $permisos=ModuloService::permisosSesion($this->modulo);
+
+    $reporte=ReporteCreMes::where('id_estacion',$this->estacionId())
+        ->where('mes',$mes)
+        ->where('year',$year)
+        ->firstOrFail();
+
+    $ultimoDia=date(
+        'd',
+        mktime(
+            0,
+            0,
+            0,
+            $mes+1,
+            0,
+            $year
+        )
+    );
+
+    $mesFormateado=str_pad($mes,2,'0',STR_PAD_LEFT);
+
+    $data=[
+
+        'title'=>$title,
+
+        'permisos'=>$permisos,
+
+        'modulo'=>$this->modulo,
+
+        'filtro_usuario'=>$this->filtro_usuario,
+
+        'mes'=>$mes,
+
+        'year'=>$year,
+
+        'diamin'=>$year.'-'.$mesFormateado.'-01',
+
+        'diamax'=>$year.'-'.$mesFormateado.'-'.$ultimoDia,
+
+        'idReporteCre'=>$reporte->id,
+        'modo' => 'crear',
+
+        'links'=>[],
+
+        'scripts'=>[
+            '/js/vendor.min.js',
+            '/js/reportediario/reportemesnuevo.action.init.js?v=' . time(),
+        ],
+
+        'help'=>false
+
+    ];
+
+    View::render(
+        'reportediario/reporte-mes-nuevo',
+        $data,
+        'sasisopa'
+    );
+
+    }
+
+        public function reporteMesEditar($idReporteCre,$fechaUnix)
+
+
     {
 
         $title = 'AGREGAR REPORTE ESTADÍSTICO DE LA CRE';
@@ -1053,7 +1131,9 @@ table {
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+
                 '/js/reportediario/reportemesnuevo.action.init.js?v=1.1'
+
             ],
 
             'help' => false

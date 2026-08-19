@@ -3,8 +3,10 @@
 
     <div class="text-end">
 
+    
         <a type="button" class="btn bg-primary-subtle text-primary" @click="openModalBuscar()">
         <i class="ti ti-search"></i> Buscar</a>
+
 
     </div>
 
