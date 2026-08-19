@@ -186,10 +186,6 @@ document.addEventListener('alpine:init', () => {
 
             this.modo = 'edit';
             await this.openEditar(res.id);
-
-            console.log(res.id)
-
-
         }
 
     }catch(e){

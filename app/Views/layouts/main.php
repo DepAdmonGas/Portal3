@@ -317,20 +317,31 @@
 
     <script>
         (function() {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            function getCsrfToken() {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                return meta ? meta.getAttribute('content') : null;
+            }
+
+            const csrfToken = getCsrfToken();
             if (csrfToken) {
-                // Agregar token a todas las solicitudes Axios
                 axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
 
-                // Interceptar respuestas para detectar CSRF expirado
+                axios.interceptors.request.use(
+                    function(config) {
+                        config.headers['X-CSRF-TOKEN'] = getCsrfToken();
+                        return config;
+                    },
+                    function(error) {
+                        return Promise.reject(error);
+                    }
+                );
+
                 axios.interceptors.response.use(
                     function(response) {
                         return response;
                     },
                     function(error) {
                         if (error.response && error.response.status === 419) {
-                            // Token CSRF expirado, recargar página
-                            this.notify('error', 'Su sesión ha expirado. Por favor actualice la página.');
                             window.location.reload();
                         }
                         return Promise.reject(error);

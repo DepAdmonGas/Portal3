@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Services\MenuService;
@@ -12,7 +13,7 @@ class MenuController
 
         try {
 
-            // 🔥 Usuario autenticado
+            // Usuario autenticado
             $user = Auth::user();
 
             if (!$user || empty($user->id)) {
@@ -24,23 +25,22 @@ class MenuController
                 return;
             }
 
-            // 🔥 Módulo (limpio)
-            $modulo = isset($_GET['modulo']) 
-                ? trim($_GET['modulo']) 
+            // Módulo (limpio)
+            $modulo = isset($_GET['modulo'])
+                ? trim($_GET['modulo'])
                 : null;
 
             if ($modulo === '') {
                 $modulo = null;
             }
 
-            // 🔥 Obtener menú
+            // Obtener menú
             $menus = MenuService::getMenuByUsuario($user->id, $modulo);
 
             echo json_encode([
                 'success' => true,
                 'data' => $menus
             ]);
-
         } catch (\Throwable $e) {
 
             http_response_code(500);
