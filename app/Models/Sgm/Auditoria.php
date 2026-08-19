@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Estacion;
 
 class Auditoria extends Model
 {
@@ -28,4 +29,37 @@ class Auditoria extends Model
         'year' => 'integer',
         'estado' => 'integer',
     ];
+
+    public function estacion()
+    {
+        return $this->belongsTo(
+            Estacion::class,
+            'id_estacion',
+            'id'
+        );
+    }
+
+    public function planAuditoria()
+    {
+        return $this->hasOne(
+            PlanAuditoria::class,
+            'id_auditoria'
+        );
+    }
+
+    public function hallazgos()
+    {
+        return $this->hasOne(
+            HallazgoAuditoria::class,
+            'id_auditoria'
+        );
+    }
+
+    public function planAtencionHallazgos()
+    {
+        return $this->hasOne(
+            PlanAtencionHallazgo::class,
+            'id_auditoria'
+        );
+    }
 }

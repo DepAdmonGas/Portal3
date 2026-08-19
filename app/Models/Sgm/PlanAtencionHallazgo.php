@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -46,4 +46,20 @@ class PlanAtencionHallazgo extends Model
         'responsable_sgm' => 'integer',
         'realizadopor' => 'integer',
     ];
+
+    public function plan()
+    {
+        return $this->belongsTo(
+            PlanAtencionHallazgo::class,
+            'id_plan'
+        );
+    }
+
+    public function auditoria()
+    {
+        return $this->belongsTo(
+            Auditoria::class,
+            'id_auditoria'
+        );
+    }
 }

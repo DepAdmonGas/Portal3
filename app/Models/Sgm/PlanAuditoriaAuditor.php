@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class PlanAuditoriaAuditor extends Model
 {
@@ -18,6 +19,7 @@ class PlanAuditoriaAuditor extends Model
 
     protected $fillable = [
         'id_plan',
+        'id_usuario',
         'nombre',
         'area_actividad',
         'categoria',
@@ -26,8 +28,18 @@ class PlanAuditoriaAuditor extends Model
     protected $casts = [
         'id' => 'integer',
         'id_plan' => 'integer',
+        'id_usuario' => 'integer',
         'nombre' => 'string',
         'area_actividad' => 'string',
         'categoria' => 'string',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_usuario',
+            'id'
+        );
+    }
 }

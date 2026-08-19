@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  const layout = document.getElementById('container').dataset.layout;
+
     table1 = $('#table-personal').DataTable({
         processing: true,
         serverSide: false,
@@ -26,6 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
         { data: 'telefono', className: 'text-center' },
         { data: 'email', className: 'text-center' },
         { data: 'usuario', className: 'text-center' },
+
+        ...(layout === 'sgm'
+        ? [{
+            data: 'responsabilidad_sgm',
+            className: 'text-center'
+        }]
+        : []),
+        
            
         {
             data: 'estatus',

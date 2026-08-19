@@ -13,17 +13,6 @@ const TABLA_ESTACIONES = 'estaciones';
 const TABLA_RH_LOCALIDADES = 'localidades';
 const TABLA_PUESTOS = 'puestos';
 
-/**
-* Resolve the effective multi-station config for a user.
-* Priority: user config → puesto config → null (no restriction).
-*
-* Returns array with keys:
-*   - estaciones:               array|null  (null = no restriction)
-*   - departamentos_puestos:    array|null  (null = no restriction)
-*   - departamentos_localidades: array|null  (null = no restriction)
-*   - activo:                   bool
-* Or null if no config exists at any level.
-*/
 public static function getConfig(?object $usuario = null): ?array
 {
 $usuario ??= Auth::user();

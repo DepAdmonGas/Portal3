@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class BitacoraCalibracionEquipo extends Model
 {
@@ -38,7 +39,7 @@ class BitacoraCalibracionEquipo extends Model
     protected $casts = [
         'id' => 'integer',
         'id_programa' => 'integer',
-        'fecha' => 'date',
+        'fecha' => 'date:Y-m-d',
         'hora' => 'string',
         'nombre_equipo' => 'string',
         'marca' => 'string',
@@ -54,4 +55,29 @@ class BitacoraCalibracionEquipo extends Model
         'vigencia_certificado' => 'string',
         'realizadopor' => 'integer',
     ];
+
+    public function detalles()
+    {
+        return $this->hasMany(
+            BitacoraCalibracionEquipoDetalle::class,
+            'id_programa',
+            'id_programa'
+        );
+    }
+
+    public function programa()
+    {
+        return $this->belongsTo(
+            ProgramaAnualCalibracionVerificacion::class,
+            'id_programa'
+        );
+    }
+
+    public function realizadoPor()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'realizadopor'
+        );
+    }
 }

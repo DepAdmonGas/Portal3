@@ -1,8 +1,11 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Core\View;
 use App\Services\ModuloService;
 use App\Core\Breadcrumb;
+use App\Models\Estacion;
 use App\Models\Sasisopa\CursoCalendario;
 use App\Models\Sasisopa\CursoModulo;
 use App\Models\Sasisopa\CursoTemaPregunta;
@@ -11,11 +14,13 @@ use App\Models\Sasisopa\CursoTema;
 use App\Models\Sasisopa\CursoEvaluacion;
 use FPDF;
 
-class CursosController extends BaseController {
+class CursosController extends BaseController
+{
 
     protected string $modulo = 'sasisopa';
 
-    public function cursosIndex(){
+    public function cursosIndex()
+    {
 
         $title = 'Cursos';
 
@@ -25,72 +30,106 @@ class CursosController extends BaseController {
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'categoria' => 'SASISOPA',
             'filtro_usuario' => $this->filtro_usuario,
-             'links' =>[
-                
-            ],
+            'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/cursos/index.action.init.js?v=1.2',
+                '/js/cursos/index.action.init.js?v=1.5',
             ]
         ];
-        
-        View::render('cursos/index', $data,'sasisopa');
+
+        View::render('cursos/index', $data, 'sasisopa');
     }
+
+    public function cursosSgmIndex()
+    {
+
+        $title = 'Cursos';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('SGM', '/sgm');
+        Breadcrumb::add($title, '');
+
+        $permisos = ModuloService::permisosSesion($this->modulo);
+
+        $data = [
+            'title' => $title,
+            'permisos' => $permisos,
+            'modulo' => 'sgm',
+            'categoria' => 'SGM',
+            'filtro_usuario' => $this->filtro_usuario,
+            'links' => [],
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/js/cursos/index.action.init.js?v=1.5',
+            ]
+        ];
+
+        View::render('cursos/index', $data, 'sgm');
+    }
+
+
+
 
     public function getModulos(): void
     {
-    header('Content-Type: application/json; charset=utf-8');
+        header('Content-Type: application/json; charset=utf-8');
 
-    try {
+        $categoria = $_GET['categoria'] ?? null;
 
-        $modulos = CursoModulo::query()
-            ->withCount('temas')
-            ->orderByRaw("
-                CASE
-                    WHEN num_modulo = 4 THEN 1
-                    ELSE 0
-                END
-            ")
-            ->orderBy('num_modulo')
-            ->get();
+        try {
 
-        $data = [];
+            $modulos = CursoModulo::query()
+                ->whereHas('temas', function ($query) use ($categoria) {
+                    $query->where('categoria', $categoria);
+                })
+                ->withCount([
+                    'temas as temas_count' => function ($query) use ($categoria) {
+                        $query->where('categoria', $categoria);
+                    }
+                ])
+                ->orderBy('num_modulo')
+                ->get();
 
-        foreach ($modulos as $index => $modulo) {
+            $data = [];
 
-            $data[] = [
-                'id'          => $modulo->id,
-                'numero'      => $index + 1,
-                'num_modulo'  => $modulo->num_modulo,
-                'titulo'      => $modulo->titulo,
-                'totalTemas'  => $modulo->temas_count
-            ];
+            foreach ($modulos as $index => $modulo) {
+
+                $data[] = [
+                    'id'         => $modulo->id,
+                    'numero'     => $index + 1,
+                    'num_modulo' => $modulo->num_modulo,
+                    'titulo'     => $modulo->titulo,
+                    'totalTemas' => $modulo->temas_count,
+                ];
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data'    => $data,
+            ]);
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]);
         }
-
-        echo json_encode([
-            'success' => true,
-            'data'    => $data
-        ]);
-
-    } catch (\Throwable $e) {
-
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
-    }
     }
 
     public function getCursosPendientes(): void
     {
         header('Content-Type: application/json; charset=utf-8');
 
+        $categoria = $_GET['categoria'] ?? null;
+
         try {
+
             $cursos = CursoCalendario::query()
                 ->with([
                     'tema:id,num_tema,titulo,categoria'
@@ -99,6 +138,13 @@ class CursosController extends BaseController {
                 ->where('id_personal', $this->userId())
                 ->where('estado', 0)
                 ->whereDate('fecha_programada', '<=', date('Y-m-d'))
+
+                ->when($categoria, function ($query) use ($categoria) {
+                    $query->whereHas('tema', function ($query) use ($categoria) {
+                        $query->where('categoria', $categoria);
+                    });
+                })
+
                 ->orderBy('fecha_programada')
                 ->get();
 
@@ -109,15 +155,20 @@ class CursosController extends BaseController {
                 $data[] = [
 
                     'id' => $curso->id,
+
                     'fecha' => formatearFecha(
                         $curso->fecha_programada
                     ),
-                    'fecha_raw' => $curso->fecha_programada->format('Y-m-d'),
-                    'tema' => $curso->tema->num_tema,
-                    'titulo' => $curso->tema->titulo,
-                    'categoria' => $curso->tema->categoria
-                ];
 
+                    'fecha_raw' => $curso->fecha_programada->format('Y-m-d'),
+
+                    'tema' => $curso->tema?->num_tema,
+
+                    'titulo' => $curso->tema?->titulo,
+
+                    'categoria' => $curso->tema?->categoria,
+
+                ];
             }
 
             echo json_encode([
@@ -125,14 +176,12 @@ class CursosController extends BaseController {
                 'total'   => count($data),
                 'data'    => $data
             ]);
-
         } catch (\Throwable $e) {
 
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
             ]);
-
         }
     }
 
@@ -148,7 +197,7 @@ class CursosController extends BaseController {
 
         if ($calendario->estado == 1) {
             header('Location: /sasisopa/cursos');
-        exit;
+            exit;
         }
 
 
@@ -156,9 +205,17 @@ class CursosController extends BaseController {
 
         $title = $tema->num_tema . ' - ' . $tema->titulo;
 
+        $layout = 'sasisopa';
+
+        if ($tema->categoria == 'SASISOPA') {
+            $layout = 'sasisopa';
+        } else if ($tema->categoria == 'SGM') {
+            $layout = 'sgm';
+        }
+
         Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add('Cursos', '/sasisopa/cursos');
+        Breadcrumb::add($tema->categoria, '/' . mb_strtolower($tema->categoria));
+        Breadcrumb::add('Cursos', '/' . mb_strtolower($tema->categoria) . '/cursos');
         Breadcrumb::add($title, '');
 
         View::render(
@@ -173,7 +230,7 @@ class CursosController extends BaseController {
                 ]
 
             ],
-            'sasisopa'
+            $layout
         );
     }
 
@@ -189,33 +246,41 @@ class CursosController extends BaseController {
 
         if ($calendario->estado == 1) {
             header('Location: /sasisopa/cursos');
-        exit;
+            exit;
         }
 
         $tema = $calendario->tema;
 
         $title = 'Evaluacion, ' . $tema->num_tema . ' - ' . $tema->titulo;
 
+        $layout = 'sasisopa';
+
+        if ($tema->categoria == 'SASISOPA') {
+            $layout = 'sasisopa';
+        } else if ($tema->categoria == 'SGM') {
+            $layout = 'sgm';
+        }
+
         Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add('Cursos', '/sasisopa/cursos');
+        Breadcrumb::add($tema->categoria, '/' . mb_strtolower($tema->categoria));
+        Breadcrumb::add('Cursos', '/' . mb_strtolower($tema->categoria) . '/cursos');
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'tema' => $tema,
             'calendario' => $calendario,
-                'scripts' => [
-                    '/js/vendor.min.js',
-                    '/js/cursos/evaluacion.action.init.js?v=1.1',
-                ]
+            'scripts' => [
+                '/js/vendor.min.js',
+                '/js/cursos/evaluacion.action.init.js?v=1.1',
+            ]
         ];
 
-        View::render('cursos/evaluacion',$data,'sasisopa');
+        View::render('cursos/evaluacion', $data, $layout);
     }
 
     public function getEvaluacion(int $id): void
@@ -259,7 +324,6 @@ class CursosController extends BaseController {
                         ];
                     })->values()
                 ];
-
             })->values();
 
             echo json_encode([
@@ -271,7 +335,6 @@ class CursosController extends BaseController {
                 ],
                 'preguntas' => $data
             ]);
-
         } catch (\Throwable $e) {
 
             echo json_encode([
@@ -321,7 +384,6 @@ class CursosController extends BaseController {
             echo json_encode([
                 'success' => true
             ]);
-
         } catch (\Throwable $e) {
 
             echo json_encode([
@@ -337,7 +399,7 @@ class CursosController extends BaseController {
 
         try {
 
-            $input = json_decode(file_get_contents('php://input'),true);
+            $input = json_decode(file_get_contents('php://input'), true);
             $idCalendario = (int) ($input['calendario'] ?? 0);
             $calendario = CursoCalendario::query()
 
@@ -357,11 +419,10 @@ class CursosController extends BaseController {
             if ($contestadas < $preguntas) {
 
                 echo json_encode([
-                'success' => false,
-                'message' => 'Debes responder todas las preguntas.'
+                    'success' => false,
+                    'message' => 'Debes responder todas las preguntas.'
 
-            ]);
-
+                ]);
             }
 
             $puntos = CursoEvaluacion::query()
@@ -374,7 +435,7 @@ class CursosController extends BaseController {
             $calendario->update([
                 'fecha_real' => date('Y-m-d'),
                 'resultado' => $porcentaje,
-               'estado' => 1
+                'estado' => 1
             ]);
 
             echo json_encode([
@@ -389,7 +450,6 @@ class CursosController extends BaseController {
                 ]
 
             ]);
-
         } catch (\Throwable $e) {
 
             echo json_encode([
@@ -423,7 +483,6 @@ class CursosController extends BaseController {
             $resultado >= 80 => 'primary',
             $resultado >= 60 => 'warning',
             default => 'danger'
-
         };
     }
 
@@ -439,14 +498,23 @@ class CursosController extends BaseController {
 
     public function cursosModulos(int $idModulo): void
     {
+        $modulo = CursoModulo::query()
+            ->findOrFail($idModulo);
 
-    $modulo = CursoModulo::query()->findOrFail($idModulo);
+        $temas = CursoTema::query()
+            ->where('id_modulo', $idModulo)
+            ->orderBy('num_tema')
+            ->get();
 
-    $temas = CursoTema::query()
-        ->where('id_modulo', $idModulo)
-        ->orderBy('num_tema')
-        ->get()
-        ->map(function ($tema) {
+        $categoria = $temas->first()?->categoria;
+
+        $layout = match ($categoria) {
+            'SASISOPA' => 'sasisopa',
+            'SGM'      => 'sgm',
+            default    => 'sasisopa',
+        };
+
+        $temas = $temas->map(function ($tema) {
 
             $calendarios = CursoCalendario::query()
                 ->where('id_tema', $tema->id)
@@ -454,114 +522,124 @@ class CursosController extends BaseController {
                 ->get();
 
             return [
-                'id' => $tema->id,
-                'numero' => $tema->num_tema,
-                'titulo' => $tema->titulo,
-                'total' => $calendarios->count(),
-                'pendientes' => $calendarios->where('estado',0)->count()
+                'id'         => $tema->id,
+                'numero'     => $tema->num_tema,
+                'titulo'     => $tema->titulo,
+                'total'      => $calendarios->count(),
+                'pendientes' => $calendarios->where('estado', 0)->count(),
+                'categoria'  => $tema->categoria,
             ];
         });
 
-        
+
         $title = "MÓDULO {$modulo->num_modulo} - {$modulo->titulo}";
-        Breadcrumb::add('Home', '/home'); 
-        Breadcrumb::add('Cursos', '/sasisopa/cursos'); 
-        Breadcrumb::add($title, '');
+
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add(
+            $categoria ?? 'Cursos',
+            '/' . mb_strtolower($categoria ?? 'sasisopa', 'UTF-8')
+        );
+        Breadcrumb::add(
+            'Cursos',
+            '/' . mb_strtolower($categoria ?? 'sasisopa', 'UTF-8') . '/cursos'
+        );
+        Breadcrumb::add(
+            $title,
+            ''
+        );
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-         $data = [
-            'title' => $title,
-                'permisos' => $permisos,
-                'filtro_usuario' => $this->filtro_usuario,
-            'modulo'=>$modulo,
-            'temas'=>$temas,
-            'scripts'=>[
+        $data = [
+            'title'          => $title,
+            'permisos'       => $permisos,
+            'filtro_usuario' => $this->filtro_usuario,
+            'modulo'         => $modulo,
+            'temas'          => $temas,
+            'categoria'      => $categoria,
+            'scripts'        => [
                 '/js/vendor.min.js',
                 '/js/cursos/modulo.action.init.js?v=1.0'
             ]
         ];
 
-        View::render('cursos/modulo',$data,'sasisopa');
+        View::render(
+            'cursos/modulo',
+            $data,
+            $layout
+        );
     }
 
     public function detalleTema(int $idTema): void
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        try{
+        try {
 
             $tema = CursoTema::query()
                 ->with('modulo')
                 ->findOrFail($idTema);
 
             $calendarios = CursoCalendario::query()
-                ->where('id_personal',$this->userId())
-                ->where('id_tema',$idTema)
+                ->where('id_personal', $this->userId())
+                ->where('id_tema', $idTema)
                 ->orderByDesc('fecha_programada')
                 ->get()
-                ->map(function($c){
+                ->map(function ($c) {
 
-                if ($c->resultado == 0) {
+                    if ($c->resultado == 0) {
 
-                    $titulo = 'Pendiente';
-                    $color = 'text-danger';
-                    $pdf = false;
+                        $titulo = 'Pendiente';
+                        $color = 'text-danger';
+                        $pdf = false;
+                    } elseif ($c->resultado >= 90) {
 
-                } elseif ($c->resultado >= 90) {
+                        $titulo = $c->resultado . ' (Excelente)';
+                        $color = 'text-success';
+                        $pdf = true;
+                    } elseif ($c->resultado >= 80) {
 
-                    $titulo = $c->resultado . ' (Excelente)';
-                    $color = 'text-success';
-                    $pdf = true;
+                        $titulo = $c->resultado . ' (Bueno)';
+                        $color = 'text-primary';
+                        $pdf = true;
+                    } elseif ($c->resultado >= 60) {
 
-                } elseif ($c->resultado >= 80) {
+                        $titulo = $c->resultado . ' (Regular)';
+                        $color = 'text-warning';
+                        $pdf = true;
+                    } else {
 
-                    $titulo = $c->resultado . ' (Bueno)';
-                    $color = 'text-primary';
-                    $pdf = true;
+                        $titulo = $c->resultado . ' (Malo)';
+                        $color = 'text-danger';
+                        $pdf = false;
+                    }
 
-                } elseif ($c->resultado >= 60) {
-
-                    $titulo = $c->resultado . ' (Regular)';
-                    $color = 'text-warning';
-                    $pdf = true;
-
-                } else {
-
-                    $titulo = $c->resultado . ' (Malo)';
-                    $color = 'text-danger';
-                    $pdf = false;
-
-                }
-
-        return [
-            'id' => $c->id,
-            'fecha' => formatearFecha(
-                $c->fecha_programada->format('Y-m-d')
-            ),
-            'resultado' => $c->resultado,
-            'resultado_texto' => $titulo,
-            'resultado_color' => $color,
-            'estado' => $c->estado,
-            'reconocimiento' => $pdf
-        ];
-
+                    return [
+                        'id' => $c->id,
+                        'fecha' => formatearFecha(
+                            $c->fecha_programada->format('Y-m-d')
+                        ),
+                        'resultado' => $c->resultado,
+                        'resultado_texto' => $titulo,
+                        'resultado_color' => $color,
+                        'estado' => $c->estado,
+                        'reconocimiento' => $pdf
+                    ];
                 });
 
             echo json_encode([
-                'success'=>true,
-                'modulo'=>$tema->modulo->num_modulo.'. '.$tema->modulo->titulo,
-                'tema'=>$tema->num_tema.'. '.$tema->titulo,
-                'calendarios'=>$calendarios
+                'success' => true,
+                'modulo' => $tema->modulo->num_modulo . '. ' . $tema->modulo->titulo,
+                'tema' => $tema->num_tema . '. ' . $tema->titulo,
+                'calendarios' => $calendarios
             ]);
-
-        }catch(\Throwable $e){
+        } catch (\Throwable $e) {
 
             echo json_encode([
-                'success'=>false,
-                'message'=>$e->getMessage()
+                'success' => false,
+                'message' => $e->getMessage()
             ]);
-
         }
 
         exit;
@@ -570,92 +648,101 @@ class CursosController extends BaseController {
     //----------------------------------------------------------------------------
     //----------------------------------------------------------------------------
 
-    public function descargar(int $id){
+    public function descargar(int $id)
+    {
 
-    $pdf = new FPDF();
+        $pdf = new FPDF();
 
-    // ======================
-    // OBTENER DATOS
-    // ======================
-    $cal = CursoCalendario::with([
-        'tema.modulo',
-        'usuario'
-    ])->findOrFail($id);
+        // ======================
+        // OBTENER DATOS
+        // ======================
+        $cal = CursoCalendario::with([
+            'tema.modulo',
+            'usuario'
+        ])->findOrFail($id);
 
-    $titulo = $cal->tema->titulo;
-    $modulo = $cal->tema->modulo->titulo ?? '';
-    $fecha = $cal->fecha_programada;
-    $nombre = $cal->usuario->nombre;
+        $titulo = $cal->tema->titulo;
+        $modulo = $cal->tema->modulo->titulo ?? '';
+        $fecha = $cal->fecha_programada;
+        $nombre = $cal->usuario->nombre;
 
-    $observacion = $cal->observaciones 
-        ? ' (' . $cal->observaciones . ')' 
-        : '';
+        $observacion = $cal->observaciones
+            ? ' (' . $cal->observaciones . ')'
+            : '';
 
-    // ======================
-    // PDF
-    // ======================
-    $pdf = new FPDF('L','mm','A4');
-    $pdf->AddPage();
+        // ======================
+        // PDF
+        // ======================
+        $pdf = new FPDF('L', 'mm', 'A4');
+        $pdf->AddPage();
 
-    // Fondo
-    $pdf->Image(
-        asset('images/cursos/fondo-2024.jpg'),
-        0, 0, 300, 210
-    );
+        // Fondo
+        $pdf->Image(
+            asset('images/cursos/fondo-2024.jpg'),
+            0,
+            0,
+            300,
+            210
+        );
 
-    // Helper encoding
-    $txt = fn($t) => mb_convert_encoding($t, 'ISO-8859-1', 'UTF-8');
+        // Helper encoding
+        $txt = fn($t) => mb_convert_encoding($t, 'ISO-8859-1', 'UTF-8');
 
-    // ======================
-    // NOMBRE
-    // ======================
-    $pdf->SetFont('Arial','',30);
-    $pdf->SetY(100);
-    $pdf->Cell(0,10, $txt($nombre),0,0,'C');
+        // ======================
+        // NOMBRE
+        // ======================
+        $pdf->SetFont('Arial', '', 30);
+        $pdf->SetY(100);
+        $pdf->Cell(0, 10, $txt($nombre), 0, 0, 'C');
 
-    // ======================
-// TEMA
-// ======================
-$pdf->SetY(133);
+        // ======================
+        // TEMA
+        // ======================
+        $pdf->SetY(133);
 
-$pdf->SetFont('Arial','',17);
-$pdf->SetX(70);
-$pdf->SetMargins(68,0);
+        $pdf->SetFont('Arial', '', 17);
+        $pdf->SetX(70);
+        $pdf->SetMargins(68, 0);
 
-$pdf->MultiCell(
-    0,
-    6,
-    $txt($titulo . $observacion),
-    0,
-    'C'
-);
+        $pdf->MultiCell(
+            0,
+            6,
+            $txt($titulo . $observacion),
+            0,
+            'C'
+        );
 
-// ======================
-// FECHA
-// ======================
-$pdf->SetY(160);   // Siempre en la misma posición
-$pdf->SetX(77);
+        // ======================
+        // FECHA
+        // ======================
+        $pdf->SetY(160);   // Siempre en la misma posición
+        $pdf->SetX(77);
 
-$pdf->SetFont('Arial','',12);
+        $pdf->SetFont('Arial', '', 12);
 
-$pdf->Cell(
-    0,
-    10,
-    $txt(formatearFecha($fecha)),
-    0,
-    0
-);
+        $pdf->Cell(
+            0,
+            10,
+            $txt(formatearFecha($fecha)),
+            0,
+            0
+        );
 
-    // ======================
-    // OUTPUT
-    // ======================
-    return $pdf->Output('I', 'reconocimiento.pdf');
+        if (isset($estacion->firma)) {
+            $extension = pathinfo($estacion->firma, PATHINFO_EXTENSION);
+            $pdf->Image(PUBLIC_PATH . '/uploads/firma-personal/' . $estacion->firma, '175', '151', '50', '0', $extension);
+        }
 
+        // ======================
+        // OUTPUT
+        // ======================
+        return $pdf->Output('I', 'reconocimiento.pdf');
     }
 
     public function descargarAll(int $year, int $idModulo)
     {
         $idEstacion = $this->estacionId();
+        $estacion = Estacion::findOrFail($idEstacion);
 
         // ======================
         // HELPER TEXTO
@@ -677,14 +764,14 @@ $pdf->Cell(
             'tema.modulo',
             'usuario'
         ])
-        ->whereYear('fecha_programada', $year)
-        ->where('id_estacion', $idEstacion)
-        ->where('resultado', '>=', 60)
-        ->whereHas('tema', function ($q) use ($idModulo) {
-            $q->where('id_modulo', $idModulo);
-        })
-        ->orderBy('fecha_programada', 'desc')
-        ->get();
+            ->whereYear('fecha_programada', $year)
+            ->where('id_estacion', $idEstacion)
+            ->where('resultado', '>=', 60)
+            ->whereHas('tema', function ($q) use ($idModulo) {
+                $q->where('id_modulo', $idModulo);
+            })
+            ->orderBy('fecha_programada', 'desc')
+            ->get();
 
         // ======================
         // PDF
@@ -715,7 +802,10 @@ $pdf->Cell(
 
             $pdf->Image(
                 asset('images/cursos/fondo-2024.jpg'),
-                0, 0, 300, 210
+                0,
+                0,
+                300,
+                210
             );
 
             // ======================
@@ -759,10 +849,14 @@ $pdf->Cell(
             );
         }
 
+        if (isset($estacion->firma)) {
+            $extension = pathinfo($estacion->firma, PATHINFO_EXTENSION);
+            $pdf->Image(PUBLIC_PATH . '/uploads/firma-personal/' . $estacion->firma, '175', '151', '50', '0', $extension);
+        }
+
         return $pdf->Output(
             'I',
             "reconocimientos_modulo_{$idModulo}_{$year}.pdf"
         );
     }
-
 }
