@@ -72,6 +72,7 @@
 
                 <div class="modal-body">
 
+
                     <div class="table-responsive">
 
 
@@ -85,9 +86,10 @@
 
             <div class="modal-body">
 
+
                 <div class="table-responsive overflow-x-auto overflow-hidden">
 
-                    <table class="table table-hover align-middle mb-0">
+
 
                         <thead>
                             <tr>
@@ -103,6 +105,7 @@
                             <template
                                 x-for="(item,index) in actividadesDia"
                                 :key="item.tipo + item.id">
+
 
 
                             <thead>

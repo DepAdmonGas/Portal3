@@ -131,17 +131,18 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 </div>
 
 
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-
+</div>
 
 </div>
 </div>
 
-</div>
 
+                    <p id="vision_text"
+                        class="card-text fs-4 fw-normal"
+                        data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
+
+                        <?= htmlspecialchars($user->estacion->vision ?? '') ?>
+                    </p>
 
 
 <!-------------------- CARD DE Fo.ADMONGAS.010 ---------------------->
@@ -195,7 +196,7 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 </div>
 </div>
 
-</div>
+
 
 
 </div>
@@ -221,6 +222,7 @@ x-data="{ ...actions(), ...politicaForm() }">
 <h4 class="modal-title text-white"><i class="ti ti-scale"></i>
 
 
+
 Editar 1. POLÍTICA</h4>
 <button type="button"
 class="btn-close btn-close-white"
@@ -232,11 +234,13 @@ data-bs-dismiss="modal">
 <!-- BODY -->
 <div class="modal-body">
 
+
 <!-- Politica -->
 <label class="form-label">Política:</label>
 <textarea class="form-control"
 rows="6"
 x-model="politica"></textarea>
+
 
 <!-- Mision -->
 <label class="form-label mt-3">Misión:</label>
@@ -256,6 +260,7 @@ x-model="vision"></textarea>
 
 <!-- FOOTER -->
 <div class="modal-footer">
+
 
 <button type="button"
 class="btn bg-danger-subtle text-danger"
@@ -280,6 +285,7 @@ class="btn btn-success"
 </div>
 </div>
 </div>
+
 
 <div class="modal fade"
 
@@ -316,8 +322,6 @@ data-bs-dismiss="modal"
 
 <!-- BODY -->
 <div class="modal-body">
-
-
 <!-- FECHA -->
 <label class="form-label">Fecha:</label>
 <input type="date"
@@ -404,6 +408,7 @@ class="btn btn-success"
 
 </div>
 </div>
+
 </div>
 
 <!-- ------------------------- -->
@@ -443,9 +448,6 @@ La política debe ser comunicada a todo el personal incluyendo clientes, prestad
 <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label> y <label class="text-danger fw-bold">Jefes de Piso</label>, comunicar la política a todas las partes interesadas.</p>
 
 </div>
-
-
-
 </div>
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->

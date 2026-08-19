@@ -69,6 +69,7 @@ class CursosController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/cursos/index.action.init.js?v=1.5',
+
             ]
         ];
 
@@ -281,6 +282,7 @@ class CursosController extends BaseController
                 '/js/vendor.min.js',
                 '/js/cursos/evaluacion.action.init.js?v=1.1',
             ]
+
         ];
 
         View::render('cursos/evaluacion', $data, $layout);

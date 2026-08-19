@@ -10,7 +10,7 @@
                 <i class="ti ti-dots-vertical fs-4"></i>
             </button>
             <ul class="dropdown-menu animated rubberBand">
-
+s
                 <?= 
                 !empty($permisos['crear']) ? 
                 '<li>
@@ -19,6 +19,7 @@
                 : '' 
                 ?>   
                  <li>
+
                     <a class="dropdown-item" href="<?= ($layout == 'sgm') ? '/personal/sgm/pdf' : '/uploads/archivos/renuncia/' . $renuncia; ?>" download><i class="ti ti-download"></i> Descargar</a>
 
                 </li>

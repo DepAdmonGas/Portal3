@@ -997,6 +997,7 @@ table {
     //----------------------------------------------------------------
 
 
+
     public function reporteMesNuevo($mes,$year)
 {
 
@@ -1073,6 +1074,7 @@ table {
 
         public function reporteMesEditar($idReporteCre,$fechaUnix)
 
+
     {
 
         $title = 'AGREGAR REPORTE ESTADÍSTICO DE LA CRE';
@@ -1126,9 +1128,7 @@ table {
 
             'idReporteCre' => $reporte->id,
             'modo' => 'crear',
-
             'links' => [],
-
             'scripts' => [
                 '/js/vendor.min.js',
 
@@ -1214,7 +1214,7 @@ table {
 
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/reportediario/reportemesnuevo.action.init.js?v=2.0'
+                '/js/reportediario/reportemesnuevo.action.init.js?v=' . time(),
             ],
 
             'help' => false
