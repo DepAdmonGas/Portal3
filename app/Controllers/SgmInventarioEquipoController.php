@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\FileValidatorService;
 
 use App\Models\Estacion;
 use App\Models\Usuario;
@@ -299,6 +300,14 @@ class SgmInventarioEquipoController extends BaseController
                 );
 
                 return;
+            }
+
+            $validator = new FileValidatorService();
+            if (!$validator->isValidMimeType($_FILES['archivo']['tmp_name'], ['application/pdf'])) {
+                JsonResponse::error(
+                    'El tipo de archivo no es válido o está corrupto. Solo se permiten PDF.'
+                );
+                exit;
             }
 
             $equipo = InventarioEquipo::findOrFail(
