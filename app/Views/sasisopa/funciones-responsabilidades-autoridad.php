@@ -47,9 +47,14 @@
     <div class="card">
       <div class="card-header">
 
-      <div class="d-flex align-items-center">
+      <div class="row">
+
+      <div class="col-9">
         <h4 class="card-title mb-0">Formato de asignación de representante técnico</h4>
-          <div class="ms-auto">
+
+      </div>
+
+          <div class="col-3">
         <?= 
               !empty($permisos['crear']) ? 
               '<button type="button"  class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openNuevo()">
@@ -58,6 +63,7 @@
               : '' 
             ?>   
           </div>
+
       </div>
 
       </div>

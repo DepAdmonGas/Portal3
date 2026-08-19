@@ -171,18 +171,18 @@
                     <td class="text-center bg-light text-black">Dic</td>   
                 </tr> 
                 <tr>
-                    <td class="text-center align-middle"><input type="checkbox" id="ene" x-ref="ene" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="feb" x-ref="feb" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="mar" x-ref="mar" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="abr" x-ref="abr" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="may" x-ref="may" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="jun" x-ref="jun" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="jul" x-ref="jul" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="ago" x-ref="ago" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="sep" x-ref="sep" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="oct" x-ref="oct" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="nov" x-ref="nov" style="zoom: 150%;"></td>
-                    <td class="text-center align-middle"><input type="checkbox" id="dic" x-ref="dic" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="ene" x-ref="ene" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="feb" x-ref="feb" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="mar" x-ref="mar" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="abr" x-ref="abr" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="may" x-ref="may" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="jun" x-ref="jun" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="jul" x-ref="jul" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="ago" x-ref="ago" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="sep" x-ref="sep" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="oct" x-ref="oct" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="nov" x-ref="nov" style="zoom: 150%;"></td>
+                    <td class="text-center align-middle"><input class="pointer" type="checkbox" id="dic" x-ref="dic" style="zoom: 150%;"></td>
                 </tr>
                 </tbody>
                 </table>
@@ -241,12 +241,12 @@
                     <!-- DETALLE -->
                     <div class="row">
                         <div class="col-md-6">
-                            <label class="form-label">Nivel de gobierno</label>
+                            <label class="form-label">Nivel de gobierno:</label>
                             <div x-text="detalle.nivel_gobierno || 'S/I'"></div>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Municipio / Estado</label>
+                            <label class="form-label">Municipio / Estado:</label>
                             <div x-text="detalle.mun_alc_est"></div>
                         </div>
                     </div>
@@ -255,12 +255,12 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <label class="form-label">Dependencia</label>
+                            <label class="form-label">Dependencia:</label>
                             <div x-text="detalle.dependencia"></div>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Permiso</label>
+                            <label class="form-label">Permiso:</label>
                             <div x-text="detalle.permiso"></div>
                         </div>
                     </div>
@@ -269,14 +269,14 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <label class="form-label">Vigencia</label>
+                            <label class="form-label">Vigencia:</label>
                             <div x-text="detalle.vigencia"></div>
                         </div>
                     </div>
 
                     <div class="row mt-2" x-show="detalle.fundamento">
                         <div class="col-12">
-                            <label class="form-label">Fundamento</label>
+                            <label class="form-label">Fundamento:</label>
                             <div x-text="detalle.fundamento"></div>
                         </div>
                     </div>
@@ -358,7 +358,7 @@
                         'enero','febrero','marzo','abril','mayo','junio',
                         'julio','agosto','septiembre','octubre','noviembre','diciembre'
                     ]">
-                        <td class="text-center">
+                        <td class="text-center ">
                             <i class="ti"
                             :class="renovacion[mes] == 1 
                                     ? 'ti-check text-success' 
@@ -442,14 +442,14 @@
                                                 </a>
                                             </template>
                                             <template x-if="!row.acusepdf">
-                                                <i class="ti ti-x text-danger fs-6"></i>
+                                                <i class="ti ti-x text-danger pointer fs-6"></i>
                                             </template>
                                         </td>
                                         <td>
                                             <template x-if="row.requisitolegalpdf">
                                                 <a href="javascript:void(0)"
                                                     @click="download('requisitos-legales', row.requisitolegalpdf)">
-                                                    <i class="ti ti-download text-success fs-6"></i>
+                                                    <i class="ti ti-download text-success pointer fs-6"></i>
                                                 </a>
                                             </template>
                                             <template x-if="!row.requisitolegalpdf">
@@ -457,9 +457,9 @@
                                             </template>
                                         </td>
                                         <td>
-                                            <a @click="editHistorialRow(row)"><i class="ti ti-edit fs-6"></i></a>
+                                            <a @click="editHistorialRow(row)"><i class="ti ti-edit pointer fs-6"></i></a>
                                         </td>
-                                        <td><a @click="deleteHistorialRow(row)"><i class="ti ti-trash text-danger fs-6"></i></a></td>
+                                        <td><a @click="deleteHistorialRow(row)"><i class="ti ti-trash pointer text-danger fs-6"></i></a></td>
                                     </tr>
                                 </template>
                                 <tr x-show="historialRows.length === 0">
@@ -477,7 +477,7 @@
 
                     <div class="row">
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label">Fecha de emisión</label>
+                            <label class="form-label">Fecha de emisión:</label>
                             <input type="date"
                                 class="form-control"
                                 x-model="historialForm.fecha_emision"
@@ -485,17 +485,17 @@
                                 :class="historialErrors.fecha_emision ? 'is-invalid' : ''">
                         </div>
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label">Fecha de vencimiento</label>
+                            <label class="form-label">Fecha de vencimiento:</label>
                             <input type="date"
                                 class="form-control"
                                 x-model="historialForm.fecha_vencimiento">
                         </div>
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label mt-3">Acuse PDF</label>
+                            <label class="form-label mt-3">Acuse PDF:</label>
                             <input class="form-control" type="file" x-ref="historialAcusePDF">
                         </div>
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label mt-3">Requisito Legal PDF</label>
+                            <label class="form-label mt-3">Requisito Legal PDF:</label>
                             <input class="form-control" type="file" x-ref="historialRequisitoPDF" >
                         </div>
                     </div>

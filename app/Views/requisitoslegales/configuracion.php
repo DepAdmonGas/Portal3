@@ -12,7 +12,7 @@
 
   <div class="datatables">
     <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-      <table id="table-lista-requisitos-legales-configuracion" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
+      <table id="table-lista-requisitos-legales-configuracion" class="table table-bordered table-striped mb-0  align-middle">
         <thead>
           <tr>
            <th>#</th>
@@ -21,7 +21,7 @@
             <th>Permiso</th>
             <th>Fundamento</th>
           <th class="text-center">
-          <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
+          <a class="text-muted pointer"><i class="ti ti-trash fs-6"></i></a>
           </th>
           </tr>
         </thead>

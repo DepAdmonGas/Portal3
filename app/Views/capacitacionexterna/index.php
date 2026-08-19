@@ -92,11 +92,11 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
 
         <div x-show="mode === 'edit'">
 
-            <div class="mt-3 mb-2 text-primary">
+
+            <label class="form-label mt-3">Fecha real:</label>
+             <div class="mb-1 text-primary">
                 <small>* Agrega la fecha real de cuando se impartió el curso</small>
             </div>
-
-            <label class="form-label">Fecha real:</label>
             <input type="date" class="form-control" x-model="fecha_real">
 
         </div>

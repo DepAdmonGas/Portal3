@@ -36,12 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
              {
             data: 'permiso',
             render: function (data) {
-                return `<div style="max-width:500px; white-space:normal; word-break:break-word;">${data}</div>`;
+                return `<div >${data}</div>`;
                 }
             },
-            { data: 'vigencia' },
+            { data: 'vigencia',
+                className: 'text-center align-middle',
+             },
             {
             data: 'fecha_emision',
+            className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -66,8 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             orderable: true,
             searchable: true
+            
         },{
             data: 'fecha_vencimiento',
+            className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
