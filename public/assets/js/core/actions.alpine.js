@@ -137,43 +137,47 @@ document.addEventListener('alpine:init', () => {
         },
 
         // DELETE GLOBAL
-        async deleteAction({ url, id, name, table }) {
+async deleteAction({ url, id, name, table, data = {} }) {
 
-            if (this.loading) return;
+    if (this.loading) return;
 
-            const result = await Swal.fire({
-                title: '¿Eliminar Registro?',
-                text: `El registro: ${name} será eliminado`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#d33'
-            });
+    const result = await Swal.fire({
+        title: '¿Eliminar Registro?',
+        text: `El registro: ${name} será eliminado`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33'
+    });
 
-            if (!result.isConfirmed) return;
+    if (!result.isConfirmed) return;
 
-            this.loading = true;
+    this.loading = true;
 
-            try {
-                const response = await axios.post(url, { id });
-                this.handleResponse(response, table);
+    try {
+        const response = await axios.post(url, {
+            id,
+            ...data
+        });
 
-                return response.data;
+        this.handleResponse(response, table);
 
-            } catch (err) {
+        return response.data;
 
-                const mensaje =
-                    err.response?.data?.message ||
-                    'Error al eliminar';
+    } catch (err) {
 
-                this.showAlert('error', 'Error', mensaje);
-                this.notify('error', mensaje);
+        const mensaje =
+            err.response?.data?.message ||
+            'Error al eliminar';
 
-            } finally {
-                this.loading = false;
-            }
-        },
+        this.showAlert('error', 'Error', mensaje);
+        this.notify('error', mensaje);
+
+    } finally {
+        this.loading = false;
+    }
+},
 
         // BAJA GLOBAL
 
