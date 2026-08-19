@@ -1565,7 +1565,26 @@ return function (RouteCollector $r) {
 
     $r->addGroup('/gestoria', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['GestoriaController', 'index']));
+
+        $r->addRoute('GET', '/requisitos-legales', Route::auth(['GestoriaController', 'requisitosLegales']));
+        $r->addRoute('GET', '/requisitos-legales/datatable-nivel-gobierno', Route::auth(['GestoriaController', 'datatableNivelGobierno']));
+        $r->addRoute('POST', '/requisitos-legales/create-nivel-gobierno', Route::auth(['GestoriaController', 'createNivelGobierno']));
+        $r->addRoute('POST', '/requisitos-legales/delete-nivel-gobierno', Route::auth(['GestoriaController', 'deleteNivelGobierno']));
+
+        $r->addRoute('GET', '/requisitos-legales/datatable-municipio-alcaldia-estado', Route::auth(['GestoriaController', 'datatableMunicipioAlcaldiaEstado']));
+        $r->addRoute('POST', '/requisitos-legales/create-municipio-alcaldia-estado', Route::auth(['GestoriaController', 'createMunicipioAlcaldiaEstado']));
+        $r->addRoute('POST', '/requisitos-legales/delete-municipio-alcaldia-estado', Route::auth(['GestoriaController', 'deleteMunicipioAlcaldiaEstado']));
+
+        $r->addRoute('GET', '/requisitos-legales/datatable-dependencias', Route::auth(['GestoriaController', 'datatableDependencias']));
+        $r->addRoute('POST', '/requisitos-legales/create-dependencias', Route::auth(['GestoriaController', 'createDependencias']));
+        $r->addRoute('POST', '/requisitos-legales/delete-dependencias', Route::auth(['GestoriaController', 'deleteDependencias']));
+
+        $r->addRoute('GET', '/requisitos-legales/datatable-requisito-legal', Route::auth(['GestoriaController', 'datatableRequisitoLegal']));
+        $r->addRoute('POST', '/requisitos-legales/create-requisito-legal', Route::auth(['GestoriaController', 'createRequisitoLegal']));
+        $r->addRoute('POST', '/requisitos-legales/update-requisito-legal', Route::auth(['GestoriaController', 'updateRequisitosLegales']));
+        $r->addRoute('POST', '/requisitos-legales/delete-requisito-legal', Route::auth(['GestoriaController', 'deleteRequisitoLegal']));
     });
+
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
     $r->addRoute('POST', '/telegram/webhook', ['TelegramWebhookController', 'handle']);
     $r->addRoute('GET', '/telegram/poll', Route::auth(['TelegramWebhookController', 'poll']));

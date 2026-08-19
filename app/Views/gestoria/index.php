@@ -1,6 +1,8 @@
 <div class="pb-4"
     x-data="index()"
-    @click="handleClick($event)">
+    @click="handleClick($event)"
+    data-modelo="Gestoria">
+
 
     <div class="datatables mt-4">
         <div class="table-responsive">

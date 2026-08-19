@@ -40,5 +40,4 @@ class RequisitosLegalesLista extends Model
             'id'
         );
     }
-
 }

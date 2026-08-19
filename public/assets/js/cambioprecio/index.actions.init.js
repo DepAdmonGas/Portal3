@@ -120,8 +120,6 @@ document.addEventListener('alpine:init', () => {
 
         const json = await response.json();
 
-        console.log(json);
-
         if (json.status === 'success') {
 
             this.notify(
