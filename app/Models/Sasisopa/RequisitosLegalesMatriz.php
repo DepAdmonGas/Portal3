@@ -24,7 +24,14 @@ class RequisitosLegalesMatriz extends Model
         'idcalendario' => 'integer',
         'estado' => 'integer',
         'fecha_emision' => 'date',
-        'fecha_vencimiento' => 'date',
+        'fecha_vencimiento' => 'date:Y-m-d',
     ];
 
+    public function calendario()
+    {
+        return $this->belongsTo(
+            RequisitosLegalesCalendario::class,
+            'idcalendario'
+        );
+    }
 }

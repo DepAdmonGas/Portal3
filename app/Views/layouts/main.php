@@ -59,7 +59,6 @@
                     },
                     function(error) {
                         if (error.response && error.response.status === 419) {
-                            alert('Su sesión ha expirado. Por favor actualice la página.');
                             window.location.reload();
                         }
                         return Promise.reject(error);
