@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 return `
                     <a @click='window.preparacionEmergencias.abrirResumen(${row.id})'>
-                        <i class="ti ti-edit text-primary fs-7"></i>
+                        <i class="ti ti-edit text-primary fs-7 pointer"></i>
                     </a>
                 `;
             }
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 return `
                     <a @click='window.preparacionEmergencias.abrirEvaluacion(${row.id})'>
-                        <i class="ti ti-file-upload text-success fs-7"></i>
+                        <i class="ti ti-file-upload text-success fs-7 pointer"></i>
                     </a>
                 `;
             }
@@ -180,13 +180,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
+                                    <a class=" dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     @click='window.preparacionEmergencias.editarPrograma(${JSON.stringify(row)})'>
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class=" dropdown-item pointerd-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                                    <a class=" dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                      ${!noDelete ? '' : `
                                     @click='window.preparacionEmergencias.eliminarPrograma(${row.id}, ${JSON.stringify(row.nombre_simulacro)})'
                                     `}>
