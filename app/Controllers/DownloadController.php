@@ -2,9 +2,11 @@
 
 namespace App\Controllers;
 
-class DownloadController{
- 
-    public function download(){
+class DownloadController
+{
+
+    public function download()
+    {
 
         $tipo  = $_GET['tipo'] ?? null;
         $file  = $_GET['file'] ?? null;
@@ -19,57 +21,57 @@ class DownloadController{
 
         // MAPA DE CARPETAS (CONTROLADO)
         $rutas = [
-            'bitacora-aditivo' => __DIR__ . '../../../public/uploads/archivos/bitacora-aditivo/',
-            'analisis-riesgo' => __DIR__ . '../../../public/uploads/archivos/analisis-riesgo/',
-            'solicitud-gafetes' => __DIR__ . '../../../public/uploads/archivos/solicitud-gafetes/',
-            'solicitud-tarjetas' => __DIR__ . '../../../public/uploads/archivos/solicitud-tarjetas/',
-            'procedimientos-actividades-tecnicas' => __DIR__ . '../../../public/uploads/archivos/actividades-tecnicas/',
-            'procedimientos-visita-estacion' => __DIR__ . '../../../public/uploads/archivos/visita-estacion/',
-            'empresa' => __DIR__ . '../../../public/uploads/archivos/empresa/',
-            'poliza-seguro' => __DIR__ . '../../../public/uploads/archivos/poliza-seguro/',
-            'requisitos-legales' => __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/',
-            'encuestas' => __DIR__ . '../../../public/uploads/archivos/encuestas/',
-            'representante-tecnico' => __DIR__ . '../../../public/uploads/archivos/representante-tecnico/',
-            'manual' => __DIR__ . '../../../public/uploads/archivos/manuales/',
-            'comprobantes-clientes' => __DIR__ . '../../../public/uploads/archivos/clientes/',
-            'documentos-ventas'              => __DIR__ . '../../../public/uploads/archivos/',
-            'control-volumetrico'          => __DIR__ . '../../../public/uploads/archivos/',
-            'aceites-documentos'           => __DIR__ . '../../../public/uploads/archivos/aceites-documentos/',
-            'aceites-facturas'             => __DIR__ . '../../../public/uploads/archivos/aceites-facturas/',
-            'aceites-diferencias'          => __DIR__ . '../../../public/uploads/archivos/aceites-diferencias/',
-            'monedero-documentos'          => __DIR__ . '../../../public/uploads/archivos/',
-            'monedero-lista-documentos'    => __DIR__ . '../../../public/uploads/archivos/resumen-monederos-documentos/',
-            'embarques'                    => __DIR__ . '../../../public/uploads/archivos/embarques/',
-            'solicitud-cheque'             => __DIR__ . '../../../public/uploads/archivos/solicitud-cheque/',
-            'ingresos-facturacion'         => __DIR__ . '../../../public/uploads/archivos/ingresos-facturacion/',
-'contratos'                    => __DIR__ . '../../../public/uploads/archivos/contratos/',
-            'estimulo-fiscal'                => __DIR__ . '../../../public/uploads/archivos/estimulo-fiscal/',
-            'comparativo-xml'                => __DIR__ . '../../../public/uploads/archivos/comparativo-xml/',
-            'seguros-incidencias'            => __DIR__ . '../../../public/uploads/archivos/incidencias-poliza-es/',
-            'seguros-polizas'                => __DIR__ . '../../../public/uploads/archivos/poliza-estacion/',
-            'aclaracion-voucher'             => __DIR__ . '../../../public/uploads/archivos/aclaracion-voucher/',
-            'solicitud-vales'                => __DIR__ . '../../../public/uploads/archivos/solicitud-vales/',
-            'factura-monedero'               => __DIR__ . '../../../public/uploads/archivos/factura-monedero/',
-            'organigrama'                    => __DIR__ . '../../../public/uploads/archivos/organigrama/',
-            'organigrama-documentos'         => __DIR__ . '../../../public/uploads/archivos/organigrama-documentos/',
-            'docs-personal-requisicion'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/requisicion/',
-            'docs-personal-curriculum'      => __DIR__ . '../../../public/uploads/archivos/documentos-personal/curriculum/',
-            'docs-personal-ine'             => __DIR__ . '../../../public/uploads/archivos/documentos-personal/ine/',
-            'docs-personal-acta-nacimiento' => __DIR__ . '../../../public/uploads/archivos/documentos-personal/acta_nacimiento/',
-            'docs-personal-c-domicilio'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/comprobante_domicilio/',
-            'docs-personal-nss'             => __DIR__ . '../../../public/uploads/archivos/documentos-personal/nss/',
-            'docs-personal-c-estudios'      => __DIR__ . '../../../public/uploads/archivos/documentos-personal/comprobante_estudios/',
-            'docs-personal-c-recomendacion' => __DIR__ . '../../../public/uploads/archivos/documentos-personal/cartas_recomendacion/',
-            'docs-personal-curp'            => __DIR__ . '../../../public/uploads/archivos/documentos-personal/curp/',
-            'docs-personal-a-infonavit'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/acta_infonavit/',
-            'docs-personal-rfc'             => __DIR__ . '../../../public/uploads/archivos/documentos-personal/rfc/',
-            'docs-personal-c-antecedentes'  => __DIR__ . '../../../public/uploads/archivos/documentos-personal/carta_antecedentes/',
-            'docs-personal-contrato'        => __DIR__ . '../../../public/uploads/archivos/documentos-personal/contrato/',
-            'docs-personal-documentos'      => __DIR__ . '../../../public/uploads/archivos/documentos-personal/',
-            'docs-personal-baja'            => __DIR__ . '../../../public/uploads/archivos/documentos-personal/solicitud-baja/',
-            'docs-personal-incidencias'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/incidencias/',
-            'lista-formatos'                => __DIR__ . '../../../public/uploads/archivos/lista-formatos/',
-            'formatos-alta'                 => __DIR__ . '../../../public/uploads/archivos/formatos/alta/',
+            'bitacora-aditivo' => dirname(__DIR__, 2) . '/public/uploads/archivos/bitacora-aditivo/',
+            'analisis-riesgo' => dirname(__DIR__, 2) . '/public/uploads/archivos/analisis-riesgo/',
+            'solicitud-gafetes' => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-gafetes/',
+            'solicitud-tarjetas' => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/',
+            'procedimientos-actividades-tecnicas' => dirname(__DIR__, 2) . '/public/uploads/archivos/actividades-tecnicas/',
+            'procedimientos-visita-estacion' => dirname(__DIR__, 2) . '/public/uploads/archivos/visita-estacion/',
+            'empresa' => dirname(__DIR__, 2) . '/public/uploads/archivos/empresa/',
+            'poliza-seguro' => dirname(__DIR__, 2) . '/public/uploads/archivos/poliza-seguro/',
+            'requisitos-legales' => dirname(__DIR__, 2) . '/public/uploads/archivos/reuisitos-legales/',
+            'encuestas' => dirname(__DIR__, 2) . '/public/uploads/archivos/encuestas/',
+            'representante-tecnico' => dirname(__DIR__, 2) . '/public/uploads/archivos/representante-tecnico/',
+            'manual' => dirname(__DIR__, 2) . '/public/uploads/archivos/manuales/',
+            'comprobantes-clientes' => dirname(__DIR__, 2) . '/public/uploads/archivos/clientes/',
+            'documentos-ventas'              => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'control-volumetrico'          => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'aceites-documentos'           => dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-documentos/',
+            'aceites-facturas'             => dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-facturas/',
+            'aceites-diferencias'          => dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-diferencias/',
+            'monedero-documentos'          => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'monedero-lista-documentos'    => dirname(__DIR__, 2) . '/public/uploads/archivos/resumen-monederos-documentos/',
+            'embarques'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/embarques/',
+            'solicitud-cheque'             => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-cheque/',
+            'ingresos-facturacion'         => dirname(__DIR__, 2) . '/public/uploads/archivos/ingresos-facturacion/',
+            'contratos'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/contratos/',
+            'estimulo-fiscal'                => dirname(__DIR__, 2) . '/public/uploads/archivos/estimulo-fiscal/',
+            'comparativo-xml'                => dirname(__DIR__, 2) . '/public/uploads/archivos/comparativo-xml/',
+            'seguros-incidencias'            => dirname(__DIR__, 2) . '/public/uploads/archivos/incidencias-poliza-es/',
+            'seguros-polizas'                => dirname(__DIR__, 2) . '/public/uploads/archivos/poliza-estacion/',
+            'aclaracion-voucher'             => dirname(__DIR__, 2) . '/public/uploads/archivos/aclaracion-voucher/',
+            'solicitud-vales'                => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-vales/',
+            'factura-monedero'               => dirname(__DIR__, 2) . '/public/uploads/archivos/factura-monedero/',
+            'organigrama'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/organigrama/',
+            'organigrama-documentos'         => dirname(__DIR__, 2) . '/public/uploads/archivos/organigrama-documentos/',
+            'docs-personal-requisicion'     => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/requisicion/',
+            'docs-personal-curriculum'      => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/curriculum/',
+            'docs-personal-ine'             => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/ine/',
+            'docs-personal-acta-nacimiento' => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/acta_nacimiento/',
+            'docs-personal-c-domicilio'     => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/comprobante_domicilio/',
+            'docs-personal-nss'             => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/nss/',
+            'docs-personal-c-estudios'      => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/comprobante_estudios/',
+            'docs-personal-c-recomendacion' => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/cartas_recomendacion/',
+            'docs-personal-curp'            => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/curp/',
+            'docs-personal-a-infonavit'     => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/acta_infonavit/',
+            'docs-personal-rfc'             => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/rfc/',
+            'docs-personal-c-antecedentes'  => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/carta_antecedentes/',
+            'docs-personal-contrato'        => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/contrato/',
+            'docs-personal-documentos'      => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/',
+            'docs-personal-baja'            => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/solicitud-baja/',
+            'docs-personal-incidencias'     => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/incidencias/',
+            'lista-formatos'                => dirname(__DIR__, 2) . '/public/uploads/archivos/lista-formatos/',
+            'formatos-alta'                 => dirname(__DIR__, 2) . '/public/uploads/archivos/formatos/alta/',
         ];
 
         if (!isset($rutas[$tipo])) {
@@ -98,7 +100,7 @@ class DownloadController{
         }
 
         // Validar que el archivo está dentro de public/ (seguridad adicional)
-        $publicPath = realpath(__DIR__ . '../../../public/');
+        $publicPath = realpath(dirname(__DIR__, 2) . '/public/');
         if (!$publicPath || strpos($realPath, $publicPath) !== 0) {
             http_response_code(403);
             echo 'Ubicación no permitida';
@@ -140,6 +142,5 @@ class DownloadController{
 
         readfile($realPath);
         exit;
-
     }
 }

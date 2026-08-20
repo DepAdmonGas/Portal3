@@ -3,6 +3,9 @@
 namespace App\Models\Sasisopa;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class RequisitosLegalesCalendario extends Model
 {
@@ -50,38 +53,49 @@ class RequisitosLegalesCalendario extends Model
         'estado' => 'integer',
     ];
 
-    public function requisito()
+    public function requisito(): BelongsTo
     {
-        return $this->belongsTo(RequisitosLegalesLista::class, 'id_requisito_legal');
+        return $this->belongsTo(
+            RequisitosLegalesLista::class,
+            'id_requisito_legal',
+            'id'
+        );
     }
 
-    public function matriz()
+    public function matriz(): HasMany
     {
-        return $this->hasMany(RequisitosLegalesMatriz::class, 'idcalendario', 'id');
+        return $this->hasMany(
+            RequisitosLegalesMatriz::class,
+            'idcalendario',
+            'id'
+        );
     }
 
-    public function matrizReciente()
+    public function matrizReciente(): HasOne
     {
-        return $this->hasOne(RequisitosLegalesMatriz::class, 'idcalendario', 'id')
+        return $this->hasOne(
+            RequisitosLegalesMatriz::class,
+            'idcalendario',
+            'id'
+        )
             ->where('estado', 1)
-            ->latestOfMany('fecha_emision');
+            ->latestOfMany('id');
     }
-  
 
-    public static function ToRequisitosTodos($id,$modulo): array
+    public static function ToRequisitosTodos($id, $modulo): array
     {
         $niveles = ['Municipal', 'Estatal', 'Federal', 'Varios'];
 
         $result = [];
 
         foreach ($niveles as $nivel) {
-            $result[$nivel] = self::ToRequisitos($id, $nivel,$modulo);
+            $result[$nivel] = self::ToRequisitos($id, $nivel, $modulo);
         }
 
         return $result;
     }
 
-    public static function ToRequisitos($id, $NGobierno,$modulo): array
+    public static function ToRequisitos($id, $NGobierno, $modulo): array
     {
         $ToReFin = 0;
         $TotalCmp = 0;
@@ -160,10 +174,10 @@ class RequisitosLegalesCalendario extends Model
             $matriz = $item->matrizReciente;
 
             $fechaEmision = $matriz?->fecha_emision
-            ? $matriz->fecha_emision->format('Y-m-d')
-            : null;
+                ? $matriz->fecha_emision->format('Y-m-d')
+                : null;
 
-                $fechaVencimiento = $matriz?->fecha_vencimiento
+            $fechaVencimiento = $matriz?->fecha_vencimiento
                 ? $matriz->fecha_vencimiento->format('Y-m-d')
                 : null;
 
@@ -212,5 +226,4 @@ class RequisitosLegalesCalendario extends Model
             ];
         });
     }
-
 }

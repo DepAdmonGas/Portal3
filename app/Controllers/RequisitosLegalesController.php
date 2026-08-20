@@ -944,9 +944,17 @@ class RequisitosLegalesController extends BaseController
     {
         header('Content-Type: application/json');
 
-        $calendario = RequisitosLegalesCalendario::where('id', $id)
-            ->where('id_estacion', $this->estacionId())
+        $idEstacion = $_GET['idEstacion'] ?? null;
+
+        $estacionId = !empty($idEstacion)
+            ? (int) $idEstacion
+            : (int) $this->estacionId();
+
+        $calendario = RequisitosLegalesCalendario::query()
+            ->where('id', $id)
+            ->where('id_estacion', $estacionId)
             ->first();
+
 
         if (!$calendario) {
             echo json_encode([
@@ -967,16 +975,19 @@ class RequisitosLegalesController extends BaseController
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'No tienes permiso para crear'
-            ]);
-            exit;
-        }
+        $idEstacion = $_POST['idEstacion'] ?? null;
+        $fechaEmision = $_POST['fecha_emision'] ?? null;
+        $fechaVencimiento = $_POST['fecha_vencimiento'] ?? '';
+
+        $acusePath = '';
+        $requisitoPath = '';
+
+        $estacionId = !empty($idEstacion)
+            ? (int) $idEstacion
+            : $this->estacionId();
 
         $calendario = RequisitosLegalesCalendario::where('id', $id)
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $estacionId)
             ->first();
 
         if (!$calendario) {
@@ -987,9 +998,6 @@ class RequisitosLegalesController extends BaseController
             exit;
         }
 
-        $fechaEmision = $_POST['fecha_emision'] ?? null;
-        $fechaVencimiento = $_POST['fecha_vencimiento'] ?? '';
-
         if (!$fechaEmision) {
             echo json_encode([
                 'success' => false,
@@ -998,14 +1006,17 @@ class RequisitosLegalesController extends BaseController
             exit;
         }
 
-        $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
+        $carpeta = dirname(__DIR__, 2) .
+            '/public/uploads/archivos/reuisitos-legales/';
 
-        if (!file_exists($carpeta)) {
-            mkdir_safe($carpeta, true);
+        if (!is_dir($carpeta)) {
+
+            mkdir(
+                $carpeta,
+                0777,
+                true
+            );
         }
-
-        $acusePath = '';
-        $requisitoPath = '';
 
         try {
             if (!empty($_FILES['acuse_pdf']) && $_FILES['acuse_pdf']['error'] === UPLOAD_ERR_OK) {
@@ -1019,7 +1030,7 @@ class RequisitosLegalesController extends BaseController
             RequisitosLegalesMatriz::create([
                 'idcalendario' => $calendario->id,
                 'fecha_emision' => $fechaEmision,
-                'fecha_vencimiento' => $fechaVencimiento ?: '',
+                'fecha_vencimiento' => $fechaVencimiento ?: null,
                 'acusepdf' => $acusePath,
                 'requisitolegalpdf' => $requisitoPath,
                 'estado' => 1
@@ -1053,13 +1064,10 @@ class RequisitosLegalesController extends BaseController
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'No tienes permiso para editar'
-            ]);
-            exit;
-        }
+        $idEstacion = $_POST['idEstacion'] ?? null;
+        $estacionId = !empty($idEstacion)
+            ? (int) $idEstacion
+            : $this->estacionId();
 
         $matriz = RequisitosLegalesMatriz::find($id);
 
@@ -1072,7 +1080,7 @@ class RequisitosLegalesController extends BaseController
         }
 
         $calendario = RequisitosLegalesCalendario::where('id', $matriz->idcalendario)
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $estacionId)
             ->first();
 
         if (!$calendario) {
@@ -1094,7 +1102,8 @@ class RequisitosLegalesController extends BaseController
             exit;
         }
 
-        $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
+        $carpeta = dirname(__DIR__, 2) .
+            '/public/uploads/archivos/reuisitos-legales/';
 
         if (!file_exists($carpeta)) {
             mkdir_safe($carpeta, true);
@@ -1102,7 +1111,7 @@ class RequisitosLegalesController extends BaseController
 
         try {
             $matriz->fecha_emision = $fechaEmision;
-            $matriz->fecha_vencimiento = $fechaVencimiento ?: '';
+            $matriz->fecha_vencimiento = $fechaVencimiento ?: null;
 
             if (!empty($_FILES['acuse_pdf']) && $_FILES['acuse_pdf']['error'] === UPLOAD_ERR_OK) {
                 if (!empty($matriz->acusepdf) && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($matriz->acusepdf, '/'))) {
@@ -1144,14 +1153,6 @@ class RequisitosLegalesController extends BaseController
         $data = json_decode(file_get_contents('php://input'), true);
         $id = $data['id'] ?? null;
 
-        if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'No tienes permiso para eliminar'
-            ]);
-            exit;
-        }
-
         $matriz = RequisitosLegalesMatriz::find($id);
 
         if (!$matriz) {
@@ -1162,8 +1163,8 @@ class RequisitosLegalesController extends BaseController
             exit;
         }
 
+
         $calendario = RequisitosLegalesCalendario::where('id', $matriz->idcalendario)
-            ->where('id_estacion', $this->estacionId())
             ->first();
 
         if (!$calendario) {
