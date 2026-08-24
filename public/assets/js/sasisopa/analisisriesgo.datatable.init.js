@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                  <li>
                                     <a
                                     href="javascript:void(0)"
-                                    class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
+                                    class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
                                     ${!noDownload ? '' : `
                                     @click="download('analisis-riesgo','${row.documento}')"
                                     `}>
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}" 
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}" 
                                     data-bs-toggle="modal" 
                                     data-bs-target="#anexos"
                                     @click="$dispatch('open-anexos', { id: ${row.id} })">

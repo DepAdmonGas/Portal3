@@ -3,7 +3,7 @@
 const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
 ?>
 <div class="text-end mt-4">
-          <a type="button" class="btn btn-light" 
+          <a type="button" class="btn bg-primary-subtle text-primary" 
           href="/sasisopa/control-documentos-registros/pdf-sistema-administracion">
             <i class="ti ti-download"></i>
             Descargar

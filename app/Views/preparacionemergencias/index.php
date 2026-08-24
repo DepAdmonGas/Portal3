@@ -6,18 +6,26 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
   <div class="col-md-6 align-items-stretch">
     <div class="card">
-  <div class="card-body">
+        <div class="card-header">
 
   <div class="d-flex align-items-center">
-    <h4 class="card-title mb-0"> Protocolo de respuesta a emergencias </h4>
+    <h4 class="card-title mb-0"> 
+        
+        Protocolo de respuesta a emergencias
+    </h4>
       <div class="ms-auto">
-        <button type="button" class="btn btn-primary"
+        <button type="button" class="btn bg-primary-subtle text-primary"
         @click="nuevoProtocolo()">
-        <i class="ti ti-plus"></i> Nuevo
+        <i class="ti ti-plus"></i>
+         Nuevo
         </button>
       
       </div>
   </div>
+
+
+        </div>
+  <div class="card-body">
 
 <div class="table-responsive mt-3">
 
@@ -125,7 +133,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                         href="javascript:void(0)"
                             @click="abrirAnexos(item.id)">
 
-                            <i class="ti ti-paperclip fs-7 text-info"></i>
+                            <i class="ti ti-paperclip fs-6 text-info"></i>
 
                         </a>
 
@@ -169,11 +177,15 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 </div>
   </div>
 
-    <div class="col-md-4 align-items-stretch">
+    <div class="col-md-6 align-items-stretch">
     <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title"> Teléfonos de emergencias </h4>
+        <div class="card-header">
+       <h4 class="card-title"> Teléfonos de emergencias </h4>
 
+
+        </div>
+      <div class="card-body">
+ 
          <div class="text-end mt-4">
           <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info"
           @click="abrirModalTelefonos()">
@@ -197,18 +209,18 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
   <div class="d-flex align-items-center">
       <div class="ms-auto">
       <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+            <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+             <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="nuevoPrograma()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="nuevoPrograma()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar</a>
               </li>
               <li>
-                <a class="dropdown-item" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
               </li>
             </ul>
           </div>   
@@ -229,8 +241,8 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 </tr>
 </table>
 
-  <div class="datatables mt-3">
-    <div class="table-responsive">
+  <div class="datatables">
+    <div class="table-responsive pb-4 overflow-x-auto overflow-hidden">
       <table id="table-programa-simulacro" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -269,10 +281,12 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                 <h4 class="modal-title text-white">
 
                     <span x-show="modoProtocolo == 'create'">
+                        <i class="ti ti-plus"></i>
                         Agregar protocolo de respuesta a emergencias
                     </span>
 
                     <span x-show="modoProtocolo == 'edit'">
+                        <i class="ti ti-edit"></i>
                         Editar protocolo de respuesta a emergencias
                     </span>
 
@@ -360,7 +374,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
-
+                  <i class="ti ti-paperclip"></i>
                     Anexos del protocolo
 
                 </h4>
@@ -518,6 +532,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                 <div class="modal-header modal-colored-header bg-primary text-white">
 
                     <h4 class="modal-title text-white">
+                        <i class="ti ti-phone-call"></i>
                         Teléfonos de emergencias
                     </h4>
 
@@ -534,7 +549,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                     <div class="text-end mb-3">
 
                         <button
-                            class="btn btn-info"
+                            class="btn bg-primary-subtle text-primary"
                             @click="nuevoTelefono()">
 
                             <i class="ti ti-plus"></i>
@@ -550,20 +565,25 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                         class="card border mb-4"
                         x-show="mostrarFormulario"
                         x-transition>
+                          <div class="card-header bg-primary">
 
-                        <div class="card-body">
-
-                            <h5 class="mb-3">
+                          <h5 class="mb-3 text-white">
 
                                 <span x-show="modoTelefono == 'create'">
+                                    <i class="ti ti-phone-plus"></i>
                                     Nuevo teléfono
                                 </span>
 
                                 <span x-show="modoTelefono == 'edit'">
+                                    <i class="ti ti-phone-outgoing"></i>
                                     Editar teléfono
                                 </span>
 
                             </h5>
+                          </div>
+                        <div class="card-body">
+
+                            
 
                             <div class="row">
 
@@ -598,7 +618,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                             <div class="text-end mt-3">
 
                                 <button
-                                    class="btn btn-danger"
+                                    class="btn bg-danger-subtle text-danger"
                                     @click="cancelarTelefono()">
 
                                     <i class="ti ti-x"></i> Cancelar
@@ -606,7 +626,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                                 </button>
 
                                 <button
-                                    class="btn btn-success"
+                                    class="btn bg-success-subtle text-success"
                                     @click="guardarTelefono()">
 
                                     <i class="ti ti-check"></i>
@@ -629,7 +649,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                     <!-- TABLA -->
 
-                    <div class="table-responsive">
+                    <div class="table-responsive pb-4 overflow-x-auto overflow-hidden">
 
                         <table class="table table-bordered table-sm table-hover align-middle">
 
@@ -727,13 +747,12 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4
-                    class="modal-title text-white"
-                    x-text="
-                        modoPrograma === 'create'
-                        ? 'Crear programa anual de simulacros'
-                        : 'Editar programa anual de simulacros'
-                    ">
+                <h4 class="modal-title text-white">
+                    <i class="ti" :class="modoPrograma ==='create' ? 'ti-calendar-plus' : 'ti-edit'"></i>
+                   <span 
+                    x-text="modoPrograma === 'create'
+                        ? 'Nuevo programa anual de simulacros'
+                        : 'Editar programa anual de simulacros'"></span>
                 </h4>
 
                 <button
@@ -804,7 +823,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                   <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
+<i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
@@ -813,7 +832,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                     type="button"
                     class="btn btn-success"
                     @click="guardarPrograma()">
-
+<i class="ti ti-check"></i>
                     Guardar
 
                 </button>
@@ -839,7 +858,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
-
+                   <i class="ti ti-user"></i>
                     Personal que asiste
 
                 </h4>
@@ -876,7 +895,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                     <div class="col-md-2">
 
                         <button
-                            class="btn btn-primary w-100"
+                            class="btn bg-primary-subtle text-primary w-100"
                             @click="agregarPersonal()">
 
                             <i class="ti ti-check"></i> Agregar
@@ -889,7 +908,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                 <hr>
 
-                <div class="table-responsive">
+                <div class="table-responsive overflow-x-auto overflow-hidden">
 
                     <table
                         class="table table-bordered table-hover table-sm">
@@ -989,7 +1008,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
-
+                  <i class="ti ti-file-description"></i>
                     Resumen
 
                 </h4>
@@ -1035,7 +1054,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                     class="btn btn-success"
                     @click="guardarResumen()">
 
-                    <i class="ti ti-check"></i> Guardar
+                    <i class="ti ti-check"></i> Actualizar
 
                 </button>
 
@@ -1145,8 +1164,10 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
       <div class="modal-dialog modal-lg modal-dialog-centered">
           <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
-                  <h4 class="modal-title text-white">Buscar</h4>
-
+                  <h4 class="modal-title text-white">
+                  <i class="ti ti-search"></i>  
+                  Buscar
+                </h4>
                   <button
                       type="button"
                       class="btn-close btn-close-white"
@@ -1168,7 +1189,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                           :class="errorsBuscar.year ? 'is-invalid' : ''"
                           @input="errorsBuscar.year = false">
 
-                          <option value="">Selecciona</option>
+                          <option value="">Selecciona una opción...</option>
 
                           <template x-for="year in years">
 
@@ -1220,9 +1241,9 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                   </button>
 
                   <button
-                  class="btn btn-primary"
+                  class="btn btn-success"
                   @click="buscar()">
-                    <i class="ti ti-check"></i> Buscar
+                    <i class="ti ti-search"></i> Buscar
                   </button>
               </div>
 

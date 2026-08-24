@@ -37,7 +37,7 @@
                                     x-model="preguntas[<?= $index ?>].respuesta"
                                     :class="{'is-invalid': errors.preguntas.includes(<?= $index ?>)}"
                                     @change="errors.preguntas = errors.preguntas.filter(i => i !== <?= $index ?>)">
-                                    <option value="0">SELECCIONA</option>
+                                <option value="0">SELECCIONA UNA OPCIÓN...</option>
                                     <option value="4">Excelente</option>
                                     <option value="3">Bueno</option>
                                     <option value="2">Regular</option>
@@ -53,7 +53,7 @@
                 <textarea class="form-control" x-model="comentario"></textarea>
 
                 <div class="text-end mt-3">
-                    <button class="btn btn-primary"
+                    <button class="btn bg-primary-subtle text-primary"
                             :disabled="loading"
                             @click="guardar()">
                         Agregar encuesta
@@ -117,7 +117,10 @@
 
       <!-- HEADER -->
       <div class="modal-header bg-primary">
-        <h5 class="modal-title text-white" x-text="detalle.nombre"></h5>
+        <h5 class="modal-title text-white">
+           <i class="ti ti-user"></i>
+            <label x-text="detalle.nombre"></label>
+            </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
 

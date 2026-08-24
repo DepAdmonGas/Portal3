@@ -16,7 +16,7 @@
     <!-- Scripts por vista -->
     <?php if (!empty($links)): ?>
         <?php foreach ($links as $link): ?>
-            <link rel="stylesheet" href="<?= $link ?>" />
+            <link rel="stylesheet" href="<?= asset($link) ?>" />
         <?php endforeach; ?>
     <?php endif; ?>
 
@@ -343,7 +343,7 @@
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>
         <?php foreach ($scripts as $script): ?>
-            <script src="<?= $script ?>"></script>
+            <script src="<?= asset($script) ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
 

@@ -35,8 +35,8 @@ class TanqueAlmacenamientoController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/tanquealmacenamiento.datatable.init.js?v=1.0',
-                '/js/controlactividadproceso/tanquealmacenamiento.action.init.js?v=1.0'
+                '/js/controlactividadproceso/tanquealmacenamiento.datatable.init.js?v=' . time(),
+                '/js/controlactividadproceso/tanquealmacenamiento.action.init.js?v=' . time(),
 
             ],
 

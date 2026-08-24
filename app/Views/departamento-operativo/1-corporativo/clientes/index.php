@@ -44,7 +44,7 @@ x-data="clientesComponent()">
 </div>
 </div>
 <div class="card-body p-0">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -193,7 +193,7 @@ x-data="clientesComponent()">
 </div>
 </div>
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>

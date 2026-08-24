@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             texto = 'Finalizado';
             break;
 
+
             }
 
             return `<span class="badge rounded-pill bg-${clase}">${texto}</span>`;
@@ -107,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     ${!noEdit ? '' : `
                                     @click='async () => {
                                     const res = await goTo("/lista-asistencia/${row.id}");
@@ -117,13 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </a>
                                 </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
                                     href="/lista-asistencia/pdf/${row.id}" target="_blank">
                                         <i class="ti ti-download"></i>Descargar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='async () => {
                                     const res = await deleteAction({

@@ -1,33 +1,32 @@
 <div id="container">
 
 <div class="text-end mt-4">
-          <a type="button" class="btn btn-light" 
+          <a type="button" class="btn bg-primary-subtle text-primary" 
           href="/sasisopa/control-documentos-registros/pdf-requisitos-legales">
             <i class="ti ti-download"></i>
             Descargar
           </a>
         </div>
 
-<div class="bg-white mt-3 p-3">
-
 <?php foreach ($niveles as $key => $titulo): ?>
-
-    <div class="p-2 bg-primary text-white mb-2">
+<div class="card mt-3">
+    <div class="card-header bg-primary">
+          <div class="mb-0 card-title text-white">
+            <i class="ti ti-label"></i>
         Nivel de gobierno <b><?= $titulo ?></b>
+    </div> 
     </div>
-
-    <table class="table table-bordered table-sm">
-
-        <thead>
-
-            <tr class="bg-light">
+<div class="card-body p-0">
+<table class="table table-striped table-bordered mb-0  align-middle">
+        
+<thead>
+            <tr>
 
                 <th>Dependencia</th>
                 <th>Permiso</th>
                 <th>Fundamento</th>
             </tr>
-
-        </thead>
+</thead>
 
         <tbody>
 
@@ -74,8 +73,14 @@
 
     </table>
 
+</div>
+
+    
+</div>
+
+ 
 <?php endforeach; ?>
 
-</div>
+
 
 </div>

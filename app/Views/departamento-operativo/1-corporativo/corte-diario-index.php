@@ -27,31 +27,31 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 <ul class="dropdown-menu dropdown-menu-end">
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/control-volumetrico/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/control-volumetrico/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-bottle"></i> Control Volumétrico
 </a>
 </li>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/concentrado-ventas/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/concentrado-ventas/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-cash-register"></i> Concentrado de Ventas
 </a>
 </li>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/resumen-monedero/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/resumen-monedero/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-wallet"></i> Resumen Monedero
 </a>
 </li>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/aceites-mes/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/aceites-mes/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-droplet"></i> Resumen Aceites
 </a>
 </li>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/clientes-mes/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/clientes-mes/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-users"></i> Resumen Clientes
 </a>
 </li>
@@ -59,13 +59,13 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 <?php if ($estacionId && in_array((int) ($puestoId ?? 0), [6, 7], true)): ?>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/resumen-impuestos/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/resumen-impuestos/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-receipt-tax"></i> Resumen Impuestos
 </a>
 </li>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/embarques/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/embarques/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-truck"></i> Resumen Embarques
 </a>
 </li>
@@ -78,7 +78,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 <li><hr class="dropdown-divider"></li>
 
 <li>
-<a class="dropdown-item" href="/departamento-operativo/corte-diario-evaluacion/<?= $idYear ?>/<?= $idMes ?>">
+<a class="dropdown-item pointer" href="/departamento-operativo/corte-diario-evaluacion/<?= $idYear ?>/<?= $idMes ?>">
 <i class="ti ti-chart-bar"></i> Apertura de Cortes Diarios (KPI's)
 </a>
 </li>
@@ -95,7 +95,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 </div>
 
 <div class="datatables">
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-hidden">
 <table id="table-corte-diario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>
@@ -130,7 +130,8 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 <i class="ti ti-lock-open"></i> Activar corte diario
 </button>
 </div>
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-hidden">
+
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>

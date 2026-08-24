@@ -15,7 +15,7 @@
 <ul class="dropdown-menu animated rubberBand">
 <li><a class="dropdown-item" href="javascript:void(0)">Palo Solo</a></li>
 <li>
-<a class="dropdown-item" href="javascript:void(0)">Interlomas</a>
+<a class="dropdown-item pointer" href="javascript:void(0)">Interlomas</a>
 </li>
 </ul>
 </div>

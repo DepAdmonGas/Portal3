@@ -32,13 +32,13 @@ class ComunicadosController extends BaseController{
             'filtro_usuario' => $this->filtro_usuario,
             'links' =>[ 
                  '/libs/select2/dist/css/select2.min.css',
-                 '/css/select2-modal.css?v=1.0.1'
+                 '/css/select2-modal.css?v=' . time(),
             ],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/sasisopa/comunicados.actions.init.js?v=1.3'
+                '/js/sasisopa/comunicados.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];

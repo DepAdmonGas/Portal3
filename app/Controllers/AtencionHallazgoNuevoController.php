@@ -42,7 +42,7 @@ class AtencionHallazgoNuevoController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/monitoreoverificacionevaluacion/atencionhallazgosnuevo.actions.init.js?v=1.4'
+                '/js/monitoreoverificacionevaluacion/atencionhallazgosnuevo.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];

@@ -397,7 +397,7 @@ type="button"
 </div>
 <!-- </template> -->
 
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mt-3">
 <thead>
 <tr>

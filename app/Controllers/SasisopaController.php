@@ -65,7 +65,7 @@ class SasisopaController extends BaseController{
             'links' =>[],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/sasisopa/index.actions.init.js?v=1.0',
+                '/js/sasisopa/index.actions.init.js?v=' . time(),
             ],
             'help' => false
 
@@ -97,7 +97,7 @@ class SasisopaController extends BaseController{
             'links' =>[],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/sasisopa/reporte.actions.init.js?v=1.1',
+                '/js/sasisopa/reporte.actions.init.js?v=' . time(),
             ],
             'help' => false
 
@@ -1261,10 +1261,10 @@ public function elemento18()
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/sasisopa/analisisriesgo.datatable.init.js?v=1.0',
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0',
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.0',
-                '/js/sasisopa/analisisriesgo.actions.init.js?v=1.0'
+                '/js/sasisopa/analisisriesgo.datatable.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/sasisopa/analisisriesgo.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -2299,10 +2299,11 @@ public function elemento18()
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0',
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.0',
-                '/js/sasisopa/listarepresentantetecnico.datatable.init.js?v=1.5',
-                '/js/sasisopa/representantetecnico.action.init.js?v=1.1'
+
+                '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/sasisopa/listarepresentantetecnico.datatable.init.js?v=' . time(),
+                '/js/sasisopa/representantetecnico.action.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -2536,7 +2537,7 @@ public function elemento18()
             'links' =>[],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/sasisopa/consultasasisopa.actions.init.js?v=1.0'
+                '/js/sasisopa/consultasasisopa.actions.init.js?v=' . time(),
             ],
             'help' => false
 

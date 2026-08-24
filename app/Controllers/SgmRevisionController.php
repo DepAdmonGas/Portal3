@@ -182,7 +182,7 @@ class SgmRevisionController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/sgm/revision/edit.action.init.js?v=1.0.2',
+                '/js/sgm/revision/edit.action.init.js?v=' . time(),
             ],
             'help' => false
         ];

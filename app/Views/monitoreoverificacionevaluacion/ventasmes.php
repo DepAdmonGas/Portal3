@@ -18,7 +18,7 @@ x-data="ventasMes()">
     </div>
 
 
-<div class="table-responsive mt-4">
+<div class="table-responsive overflow-x-auto overflow-y-hidden">
 
     <table class="table table-bordered table-sm">
 

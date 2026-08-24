@@ -3,16 +3,16 @@
     <div class="text-end mt-2">
           <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="openNuevo()">
+          '<button type="button" class="btn bg-primary-subtle text-primary" @click="openNuevo()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
           ?>   
     </div>
 
-      <div class="datatables mt-4">
-    <div class="table-responsive">
-      <table id="table-lista-requisitos-legales-detalle" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
+      <div class="datatables">
+     <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+      <table id="table-lista-requisitos-legales-detalle" class="table table-bordered table-striped  text-nowrap align-middle">
         <thead>
           <tr>
            <th>Dependencia</th>
@@ -67,8 +67,19 @@
             <div class="modal-content">
 
                 <!-- HEADER -->
-                <div class="modal-header modal-colored-header bg-primary text-white">
-                    <h4 class="modal-title text-white" x-text="mode === 'edit' ? 'Editar requisito legal' : 'Agregar requisito legal'"></h4>
+                <div class="modal-header modal-colored-header bg-primary text-white"> 
+                    
+                    <h4 class="modal-title text-white">
+                    <label>
+                    
+
+                    
+<i class="ti" :class="mode === 'create' ? 'ti-checklist' : 'ti-edit'"></i>
+                       <span x-text="mode === 'edit' ? 'Editar requisito legal' : 'Nuevo requisito legal'"></span>
+                    </label> 
+
+
+                </h4>
                     <button type="button"
                             class="btn-close btn-close-white"
                             data-bs-dismiss="modal"
@@ -81,7 +92,7 @@
 
                     
 
-                    <!-- Perniso -->
+                    <!-- Permiso -->
                     <label class="form-label mt-3">* Permiso:</label>
                     <div class="select2-modal-field is-select2-pending"
                         x-ref="permisoWrapper"
@@ -90,7 +101,7 @@
                                 x-ref="selectPermiso"
                                 data-width="100%">
                     
-                        <option value="">Seleccione</option>
+                        <option value="">Selecciona una opción...</option>
 
                         <template x-for="e in permisos" :key="e.id">
                             <option :value="e.id" x-text="e.permiso"></option>
@@ -104,7 +115,7 @@
                             x-model="vigencia"
                             @change="errors.vigencia = false"
                             :class="errors.vigencia ? 'is-invalid' : ''">
-                        <option value="">Seleccione</option>
+                        <option value="">Selecciona una opción...</option>
                         <option value="Anual">Anual</option>
                         <option value="Bianual">Bianual</option>
                         <option value="Permanente">Permanente</option>
@@ -145,19 +156,19 @@
 
                 <table class="table table-sm table-bordered">
                 <tbody>
-                    <tr class="font-weight-bold">
-                    <td class="text-center align-middle bg-light text-black">Ene</td>
-                    <td class="text-center align-middle bg-light text-black">Feb</td>
-                    <td class="text-center align-middle bg-light text-black">Mar</td>
-                    <td class="text-center align-middle bg-light text-black">Abr</td>
-                    <td class="text-center align-middle bg-light text-black">May</td>
-                    <td class="text-center align-middle bg-light text-black">Jun</td>
-                    <td class="text-center align-middle bg-light text-black">Jul</td>
-                    <td class="text-center align-middle bg-light text-black">Ago</td>
-                    <td class="text-center align-middle bg-light text-black">Sep</td>
-                    <td class="text-center align-middle bg-light text-black">Oct</td>
-                    <td class="text-center align-middle bg-light text-black">Nov</td>
-                    <td class="text-center align-middle bg-light text-black">Dic</td>   
+                    <tr class="font-weight-bold align-middle">
+                    <td class="text-center bg-light text-black">Ene</td>
+                    <td class="text-center bg-light text-black">Feb</td>
+                    <td class="text-center bg-light text-black">Mar</td>
+                    <td class="text-center bg-light text-black">Abr</td>
+                    <td class="text-center bg-light text-black">May</td>
+                    <td class="text-center bg-light text-black">Jun</td>
+                    <td class="text-center bg-light text-black">Jul</td>
+                    <td class="text-center bg-light text-black">Ago</td>
+                    <td class="text-center bg-light text-black">Sep</td>
+                    <td class="text-center bg-light text-black">Oct</td>
+                    <td class="text-center bg-light text-black">Nov</td>
+                    <td class="text-center bg-light text-black">Dic</td>   
                 </tr> 
                 <tr>
                     <td class="text-center align-middle"><input type="checkbox" id="ene" x-ref="ene" style="zoom: 150%;"></td>
@@ -218,8 +229,10 @@
 
                 <!-- HEADER -->
                 <div class="modal-header modal-colored-header bg-primary text-white">
-                    <h4 class="modal-title text-white">Detalle del requisito legal</h4>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="resetModal()"></button>
+                    <h4 class="modal-title text-white">
+                        <i class="ti ti-eye ms-2">
+                    </i>Detalle del requisito legal</h4>
+                    <button type="button " class="btn-close btn-close-white" data-bs-dismiss="modal" @click="resetModal()"></button>
                 </div>
 
                 <!-- BODY -->
@@ -326,19 +339,19 @@
 
                 <table class="table table-sm table-bordered">
                 <tbody>
-                    <tr class="font-weight-bold">
-                    <td class="text-center align-middle bg-light text-black">Ene</td>
-                    <td class="text-center align-middle bg-light text-black">Feb</td>
-                    <td class="text-center align-middle bg-light text-black">Mar</td>
-                    <td class="text-center align-middle bg-light text-black">Abr</td>
-                    <td class="text-center align-middle bg-light text-black">May</td>
-                    <td class="text-center align-middle bg-light text-black">Jun</td>
-                    <td class="text-center align-middle bg-light text-black">Jul</td>
-                    <td class="text-center align-middle bg-light text-black">Ago</td>
-                    <td class="text-center align-middle bg-light text-black">Sep</td>
-                    <td class="text-center align-middle bg-light text-black">Oct</td>
-                    <td class="text-center align-middle bg-light text-black">Nov</td>
-                    <td class="text-center align-middle bg-light text-black">Dic</td>   
+                    <tr class="font-weight-bold align-middle">
+                    <td class="text-center  bg-light text-black">Ene</td>
+                    <td class="text-center  bg-light text-black">Feb</td>
+                    <td class="text-center  bg-light text-black">Mar</td>
+                    <td class="text-center  bg-light text-black">Abr</td>
+                    <td class="text-center  bg-light text-black">May</td>
+                    <td class="text-center  bg-light text-black">Jun</td>
+                    <td class="text-center  bg-light text-black">Jul</td>
+                    <td class="text-center  bg-light text-black">Ago</td>
+                    <td class="text-center  bg-light text-black">Sep</td>
+                    <td class="text-center  bg-light text-black">Oct</td>
+                    <td class="text-center  bg-light text-black">Nov</td>
+                    <td class="text-center  bg-light text-black">Dic</td>   
                 </tr> 
                 <tr>
                 <template x-for="mes in [
@@ -384,7 +397,11 @@
             <div class="modal-content">
 
                 <div class="modal-header modal-colored-header bg-primary text-white">
-                    <h4 class="modal-title text-white" x-text="historialTitle || 'Historial'"></h4>
+                    <h4 class="modal-title text-white">
+                        <i class="ti ti-history"></i>
+                        <label class="modal-title text-white" x-text="historialTitle || 'Historial'">
+                        </label>
+                </h4>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -394,13 +411,13 @@
                     <div class="table-responsive" x-show="!showHistorialForm" x-transition>
 
                 <div class="d-flex justify-content-end mb-3">
-                <button class="btn btn-primary"
+                <button class="btn bg-primary-subtle text-primary"
                         @click="showHistorialForm = true; resetHistorialForm()">
                     <i class="ti ti-plus"></i> Nuevo
                 </button>
             </div>
                         
-                    <div class="table-responsive">
+                    <div class="table-responsive overflow-x-auto overflow-y-hidden">
                         <table class="table table-bordered align-middle">
                             <thead>
                                 <tr class="text-center">
@@ -456,7 +473,7 @@
 
                 <div x-show="showHistorialForm" x-transition>
 
-                    <h5 class="mb-3" x-text="historialForm.id ? 'Editar registro' : 'Nuevo registro'"></h5>
+                    <h4 class="mb-3" x-text="historialForm.id ? 'Editar registro' : 'Nuevo registro'"></h4>
 
                     <div class="row">
                         <div class="col-lg-6 col-md-12">

@@ -5,11 +5,11 @@
              <i class="ti ti-dots-vertical fs-4"></i>
           </button>
             <ul class="dropdown-menu animated rubberBand">
-              <li><a class="dropdown-item"  @click="nuevo()"><i class="ti ti-plus"></i> Agregar</a></li>
+              <li><a class="dropdown-item pointer"  @click="nuevo()"><i class="ti ti-plus"></i> Agregar</a></li>
               <?= 
                 !empty($permisos['descargar']) 
                 ? '<li>
-                    <a class="dropdown-item" 
+                    <a class="dropdown-item pointer" 
                       @click="download(\'encuestas\', \'Formato encuestas.pdf\')">
                         <i class="ti ti-download"></i> Descargar
                     </a>
@@ -24,8 +24,8 @@
 
     <div class="col-md-8 col-sm-12">
 
-      <div class="datatables mt-3">
-        <div class="table-responsive">
+      <div class="datatables">
+            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
           <table id="table-experiencia-cliente" class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
             <thead>
               <tr>

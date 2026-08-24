@@ -33,8 +33,8 @@ class ImplementacionSAController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/monitoreoverificacionevaluacion/implementacionsa.datatable.init.js?v=1.0',
-                '/js/monitoreoverificacionevaluacion/implementacionsa.actions.init.js?v=1.0'
+                '/js/monitoreoverificacionevaluacion/implementacionsa.datatable.init.js?v=' . time(),
+                '/js/monitoreoverificacionevaluacion/implementacionsa.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];

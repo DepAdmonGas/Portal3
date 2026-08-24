@@ -3,15 +3,15 @@
   <div class="text-end">
         <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
+          '<button type="button" class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
         ?>  
     </div>
 
-  <div class="datatables mt-4">
-    <div class="table-responsive">
+  <div class="datatables">
+    <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-lista-requisitos-legales-configuracion" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -44,7 +44,11 @@
 
             <!-- HEADER -->
             <div class="modal-header modal-colored-header bg-primary text-white">
-                <h4 class="modal-title text-white">Agregar requisito legal</h4>
+                <h4 class="modal-title text-white">
+
+                <i class="ti ti-checklist"></i>
+                Nuevo requisito legal
+              </h4>
                 <button type="button"
                         class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
@@ -65,6 +69,7 @@
                   <option value="Estatal">Estatal</option>
                   <option value="Federal">Federal</option>
                   <option value="Varios">Varios</option>
+
                 </select>
 
                 <!-- Dependencia -->
@@ -76,7 +81,7 @@
                             x-ref="selectDependencia"
                             data-width="100%">
                 
-                    <option value="">Seleccione</option>
+                    <option value="">Selecciona una opción...</option>
 
                     <template x-for="dep in dependencias" :key="dep.id">
                         <option :value="dep.dependencia" x-text="dep.dependencia"></option>

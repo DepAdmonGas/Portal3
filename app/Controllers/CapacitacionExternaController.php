@@ -38,8 +38,8 @@ class CapacitacionExternaController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/capacitacionexterna/index.datatable.init.js?v=1.3',
-                '/js/capacitacionexterna/index.init.js?v=1.1'
+                '/js/capacitacionexterna/index.datatable.init.js?v=' . time(),
+                '/js/capacitacionexterna/index.init.js?v=' . time(),
             ],
             'help' => false
         ];

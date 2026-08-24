@@ -8,18 +8,18 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
         </button>
         <ul class="dropdown-menu animated rubberBand">
           <?= !empty($permisos['crear']) ? 
-          '<li><a class="dropdown-item"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>' 
+          '<li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>' 
           : '' 
           ?>
           <li>
-              <a class="dropdown-item" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+              <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
           </li>
         </ul>
     </div>
 </div>
 
     <div class="datatables">
-        <div class="table-responsive">
+            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
         <table id="table-recepcion-descarga-producto" class="table table-bordered align-middle">
             <thead>
             <tr>
@@ -56,6 +56,7 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-search"></i>
                     Buscar
                 </h4>
 
@@ -76,13 +77,13 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
                     
                     <label class="form-label mt-2">* Año:</label>
                     <select
-                        class="form-control mb-3"
+                        class="form-select mb-3"
                         x-model="filtros.year"
                         :class="errors.year ? 'is-invalid' : ''"
                         @input="errors.year = false">
 
                         <option value="">
-                            Selecciona
+                            Selecciona una opción...
                         </option>
 
                         <template x-for="year in years">
@@ -100,7 +101,7 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
                     <label class="form-label mt-2">Mes:</label>
 
                     <select
-                        class="form-control"
+                        class="form-select"
                         x-model="filtros.mes">
 
                         <option value="">
@@ -135,7 +136,7 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
                 </button>
 
                 <button
-                class="btn btn-primary"
+                class="btn btn-success"
                 @click="buscar()">
                     <i class="ti ti-search"></i> Buscar
                 </button>

@@ -46,17 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                              <li>
-                                    <a href="/usuarios?idEstacion=${row.id}" class="dropdown-item d-flex align-items-center gap-3 btn-edit" data-id="${row.id}">
+                                    <a href="/usuarios?idEstacion=${row.id}" class="dropdown-item pointer d-flex align-items-center gap-3 btn-edit" data-id="${row.id}">
                                         <i class="fs-4 ti ti-users"></i>Usuarios
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-edit" data-id="${row.id}">
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 btn-edit" data-id="${row.id}">
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete" data-id="${row.id}">
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 btn-delete" data-id="${row.id}">
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
                                 </li>

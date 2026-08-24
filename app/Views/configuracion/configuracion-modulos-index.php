@@ -13,7 +13,8 @@ echo !empty($permisos['crear']) ? '
 ?>
 
 <div class="datatables">
-<div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
+        
 <table id="table-modulos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>

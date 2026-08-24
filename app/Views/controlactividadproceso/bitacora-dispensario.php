@@ -8,10 +8,10 @@
           <i class="ti ti-dots-vertical fs-4"></i>
         </button>
         <ul class="dropdown-menu animated rubberBand">
-        <li><a class="dropdown-item"  href="javascript:void(0)" @click="openNuevoModal()"><i class="ti ti-plus"></i> Nuevo </a></li>
-         <li><a class="dropdown-item"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
+        <li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openNuevoModal()"><i class="ti ti-plus"></i> Nuevo </a></li>
+         <li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
           <li>
-              <a class="dropdown-item" :href="excelUrl"><i class="ti ti-download"></i> Descargar</a>
+              <a class="dropdown-item pointer" :href="excelUrl"><i class="ti ti-download"></i> Descargar</a>
           </li>
 
           <li>
@@ -19,15 +19,15 @@
           </li>
 
            <li>
-              <a class="dropdown-item" href="/sasisopa/control-actividades-procesos/calibracion-equipos/configuracion-dispensario"><i class="ti ti-gas-station"></i> Dispensario</a>
+              <a class="dropdown-item pointer" href="/sasisopa/control-actividades-procesos/calibracion-equipos/configuracion-dispensario"><i class="ti ti-gas-station"></i> Dispensario</a>
           </li>
         
         </ul>
     </div>
 </div>
 
-  <div class="datatables mt-3">
-    <div class="table-responsive">
+  <div class="datatables">
+   <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-bitacora-dispensario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -62,7 +62,10 @@
       <div class="modal-dialog modal-xl modal-dialog-centered">
           <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
-                  <h4 class="modal-title text-white">Nuevo registro</h4>
+                  <h4 class="modal-title text-white">
+                <i class="ti ti-clipboard-plus"></i>
+                  Nuevo registro:
+                </h4>
                   <button
                       type="button"
                       class="btn-close btn-close-white"
@@ -76,11 +79,11 @@
 
                   <!-- MOTIVO -->
                   <label class="form-label">
-                      * Motivo
+                      * Motivo:
                   </label>
 
                   <select
-                      class="form-control"
+                      class="form-select"
                       x-model="nuevo.motivo">
 
                       <option value="">
@@ -119,7 +122,7 @@
 
                           <div class="col-md-6">
                               <label class="form-label">
-                                  * Fecha
+                                  * Fecha:
                               </label>
 
                               <input
@@ -132,7 +135,7 @@
 
                           <div class="col-md-6">
                               <label class="form-label">
-                                  * Hora inicio
+                                  * Hora inicio:
                               </label>
 
                               <input
@@ -145,7 +148,7 @@
 
                           <div class="col-md-6 mt-3">
                               <label class="form-label">
-                                  * Hora término
+                                  * Hora término:
                               </label>
 
                               <input
@@ -159,17 +162,17 @@
                               <div class="col-md-6 mt-3">
 
                                   <label class="form-label">
-                                      * Dispensario
+                                      * Dispensario:
                                   </label>
 
                                   <select
-                                      class="form-control"
+                                      class="form-select"
                                       x-model="nuevo.id_dispensario"
                                       :class="errorsNuevo.id_dispensario ? 'is-invalid' : ''"
                                       @input="errorsNuevo.id_dispensario = false">
 
                                       <option value="">
-                                          Selecciona
+                                          Selecciona una opcion...
                                       </option>
 
                                       <template
@@ -194,15 +197,15 @@
                               <div class="col-md-6 mt-3">
 
                                   <label class="form-label">
-                                      * Lado
+                                      * Lado:
                                   </label>
 
                                   <select
-                                      class="form-control"
+                                      class="form-select"
                                       x-model="nuevo.lado">
 
                                       <option value="">
-                                          Selecciona
+                                          Selecciona una opcion...
                                       </option>
 
                                       <option value="1">
@@ -222,15 +225,15 @@
                           <div class="col-md-6 mt-3">
 
                               <label class="form-label">
-                                  Producto
+                                  Producto:
                               </label>
 
                               <select
-                                  class="form-control"
+                                  class="form-select"
                                   x-model="nuevo.producto">
 
                                   <option value="">
-                                      Selecciona
+                                      Selecciona una opcion...
                                   </option>
 
                                   <template
@@ -254,8 +257,8 @@
                                   <span
                                       x-text="
                                       nuevo.motivo == 2
-                                      ? '* Precio'
-                                      : '* Detalle'
+                                      ? '* Precio:'
+                                      : '* Detalle:'
                                       ">
                                   </span>
 
@@ -286,7 +289,7 @@
                   </button>
 
                   <button
-                      class="btn btn-primary"
+                      class="btn btn-success"
                       @click="guardar()">
 
                       <i class="ti ti-check"></i> Guardar
@@ -311,7 +314,10 @@
       <div class="modal-dialog modal-lg modal-dialog-centered">
           <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
-                  <h4 class="modal-title text-white">Buscar</h4>
+                  <h4 class="modal-title text-white">
+                    <i class="ti ti-search"></i>
+                    Buscar
+                   </h4>
 
                   <button
                       type="button"
@@ -329,12 +335,12 @@
                       
                       <label class="form-label mt-2">* Año:</label>
                       <select
-                          class="form-control mb-3"
+                          class="form-select mb-3"
                           x-model="filtro.year"
                           :class="errorsBuscar.year ? 'is-invalid' : ''"
                           @input="errorsBuscar.year = false">
 
-                          <option value="">Selecciona</option>
+                          <option value="">Selecciona una opcion...</option>
 
                           <template x-for="year in years">
 
@@ -351,7 +357,7 @@
                       <label class="form-label mt-2">Mes:</label>
 
                       <select
-                          class="form-control"
+                          class="form-select"
                           x-model="filtro.mes">
 
                           <option value="">
@@ -394,7 +400,7 @@
                   </button>
 
                   <button
-                  class="btn btn-primary"
+                  class="btn btn-success"
                   @click="buscar()">
                       <i class="ti ti-search"></i> Buscar
                   </button>

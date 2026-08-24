@@ -69,7 +69,11 @@ class DownloadController{
             'docs-personal-baja'            => __DIR__ . '../../../public/uploads/archivos/documentos-personal/solicitud-baja/',
             'docs-personal-incidencias'     => __DIR__ . '../../../public/uploads/archivos/documentos-personal/incidencias/',
             'dia-doble-firma'               => __DIR__ . '/../../public/uploads/archivos/dia-doble-firma/',
-        ];
+            'lista-formatos'                => __DIR__ . '../../../public/uploads/archivos/lista-formatos/',
+            'formatos-alta'                 => __DIR__ . '../../../public/uploads/archivos/formatos/alta/',
+
+
+            ];
 
         if (!isset($rutas[$tipo])) {
             http_response_code(403);

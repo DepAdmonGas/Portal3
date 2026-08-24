@@ -27,7 +27,7 @@ public function index(){
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/revisionresultados/index.actions.init.js?v=1.0'
+                '/js/revisionresultados/index.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];

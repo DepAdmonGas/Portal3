@@ -8,7 +8,7 @@ x-data="{ ...actions(), ...corteDiario() }">
             </button>
             <ul class="dropdown-menu animated rubberBand">
                 <li>
-                    <a class="dropdown-item" :href="url"><i class="ti ti-file-dollar"></i> Facturas</a>
+                    <a class="dropdown-item pointer" :href="url"><i class="ti ti-file-dollar"></i> Facturas</a>
                 </li>
             </ul>
         </div>

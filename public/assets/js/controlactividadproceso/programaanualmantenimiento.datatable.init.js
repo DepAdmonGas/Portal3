@@ -94,13 +94,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
                               
                                 <li>
-                                <a class="dropdown-item d-flex align-items-center gap-3 ${disableEdit ? 'disabled' : ''}"
+                                <a class="dropdown-item pointer d-flex align-items-center gap-3 ${disableEdit ? 'disabled' : ''}"
                                 ${disableEdit ? '' : `@click='window.programaMantenimiento.openModalEditar(${row.id})'`}>
                                 <i class="ti ti-edit"></i>Editar
                                 </a>    
                                </li>  
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `@click='window.programaMantenimiento.eliminar(${row.id},${nomEquipo})'`}>
                                         <i class="ti ti-trash"></i>Eliminar
                                     </a>

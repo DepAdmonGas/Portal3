@@ -4,15 +4,15 @@ x-data="{ ...actions(), ...jarraPatron()}">
 <div class="text-end">
       <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn btn-primary" @click="modalopen()">
+        '<button type="button" class="btn bg-primary-subtle text-primary" @click="modalopen()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
         ?>     
     </div>
 
-  <div class="datatables mt-3">
-    <div class="table-responsive">
+  <div class="datatables">
+        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-jarra-patron" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -37,8 +37,11 @@ x-data="{ ...actions(), ...jarraPatron()}">
     <div class="modal-content">
 
     <div class="modal-header modal-colored-header bg-primary text-white">
-        <h4 class="modal-title text-white"
-            x-text="mode === 'create' ? 'Agregar Jarra de Patrón' : 'Editar Jarra de Patrón'">
+        <h4 class="modal-title text-white">
+           <label> 
+           <i class="ti" :class= "mode === 'create' ? 'ti-flask-2' :'ti-edit'"></i>
+           <span x-text="mode === 'create' ? 'Nueva Jarra de Patrón' : 'Editar Jarra de Patrón'"></span>
+           </label>
         </h4>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModal()"></button>
     </div>
@@ -71,7 +74,7 @@ x-data="{ ...actions(), ...jarraPatron()}">
 
     <div class="modal-footer">
         <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
-        <button class="btn btn-primary" @click="guardar()">
+        <button class="btn btn-success" @click="guardar()">
           <i class="ti ti-check"></i>
              <span x-text="mode === 'create' ? 'Guardar' : 'Actualizar'"></span>
         </button>

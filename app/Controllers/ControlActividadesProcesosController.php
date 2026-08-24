@@ -81,7 +81,7 @@ class ControlActividadesProcesosController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/controlactividadproceso/programamantenimiento.action.init.js?v=1.0'
+                '/js/controlactividadproceso/programamantenimiento.action.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -415,8 +415,8 @@ class ControlActividadesProcesosController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/programaanualmantenimiento.datatable.init.js?v=1.2',
-                '/js/controlactividadproceso/programaanualmantenimiento.action.init.js?v=1.3'
+                '/js/controlactividadproceso/programaanualmantenimiento.datatable.init.js?v=' . time(),
+                '/js/controlactividadproceso/programaanualmantenimiento.action.init.js?v=' . time(),
             ],
             'help' => false
         ];

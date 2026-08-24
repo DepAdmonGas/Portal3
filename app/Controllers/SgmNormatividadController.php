@@ -43,11 +43,11 @@ class SgmNormatividadController extends BaseController
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
-                '/js/sgm/normatividad/inventario.actions.init.js?v=1.0.1',
-                '/js/asistencia/listaasistencia.actions.init.js?v=1.0.1',
+                '/js/sgm/normatividad/inventario.actions.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
 
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.1',
-                '/js/sgm/normatividad/inventario.datatable.init.js?v=1.0.1',
+                '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
+                '/js/sgm/normatividad/inventario.datatable.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -656,15 +656,15 @@ class SgmNormatividadController extends BaseController
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css',
-                '/css/select2-modal.css?v=1.0'
+                '/css/select2-modal.css?v=' . time(),
             ],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/requisitoslegales/detalle.datatable.init.js?v=1.1',
-                '/js/requisitoslegales/detalle.actions.init.js?v=1.1'
+                '/js/requisitoslegales/detalle.datatable.init.js?v=' . time(),
+                '/js/requisitoslegales/detalle.actions.init.js?v=' . time(),
 
             ],
             'help' => true

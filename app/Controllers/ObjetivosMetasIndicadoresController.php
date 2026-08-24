@@ -43,9 +43,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/objetivosmetasindicadores/seguimientoindicadores.datatable.init.js?v=1.1',
-                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.datatable.init.js?v=1.1',
-                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.actions.init.js?v=1.1'
+                '/js/objetivosmetasindicadores/seguimientoindicadores.datatable.init.js?v=' . time(),
+                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.datatable.init.js?v=' . time(),
+                '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -935,7 +935,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/objetivosmetasindicadores/capacitacionpersonal.actions.init.js?v=1.0'
+                '/js/objetivosmetasindicadores/capacitacionpersonal.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -982,7 +982,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/apexcharts/dist/apexcharts.min.js',
-                '/js/objetivosmetasindicadores/indicadorventas.actions.init.js?v=1.0'
+                '/js/objetivosmetasindicadores/indicadorventas.actions.init.js?v=' . time(),
                 
             ],
             'help' => true
@@ -1116,8 +1116,8 @@ class ObjetivosMetasIndicadoresController extends BaseController{
                 '/js/vendor.min.js',
                  '/libs/apexcharts/dist/apexcharts.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/objetivosmetasindicadores/experienciacliente.datatable.init.js?v=1.3',
-                '/js/objetivosmetasindicadores/experienciacliente.actions.init.js?v=1.3'
+                '/js/objetivosmetasindicadores/experienciacliente.datatable.init.js?v=' . time(),
+                '/js/objetivosmetasindicadores/experienciacliente.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -1304,7 +1304,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                  '/libs/apexcharts/dist/apexcharts.min.js',
-                 '/js/objetivosmetasindicadores/experienciaclienteeditar.actions.init.js?v=1.0'
+                 '/js/objetivosmetasindicadores/experienciaclienteeditar.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -1401,7 +1401,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                  '/libs/apexcharts/dist/apexcharts.min.js',
-                 '/js/objetivosmetasindicadores/experienciaclientedetalle.actions.init.js?v=1.1'
+                 '/js/objetivosmetasindicadores/experienciaclientedetalle.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];

@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <ul class="dropdown-menu">
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal/${row.id}">
                                 <i class="ti ti-eye fs-4"></i>
                                 Ficha Personal
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!canEdit ? 'disabled text-muted' : ''}"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!canEdit ? 'disabled text-muted' : ''}"
                             ${canEdit ? `onclick="personal.openEditar(${JSON.stringify(row).replace(/"/g, '&quot;')})"` : ''}>
                                 <i class="ti ti-edit fs-4"></i>
                                 Editar
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3 ${!canDelete ? 'disabled text-muted' : ''}"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!canDelete ? 'disabled text-muted' : ''}"
                             ${canDelete ? `onclick="personal.delete(${row.id})"` : ''}>
                                 <i class="ti ti-trash fs-4"></i>
                                 Eliminar

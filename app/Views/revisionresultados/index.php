@@ -8,7 +8,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
             </button>
             <ul class="dropdown-menu animated rubberBand">
                  <li>
-                    <a class="dropdown-item" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
+                    <a class="dropdown-item pointer" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
                 </li>
             </ul>
         </div>
@@ -482,10 +482,10 @@ x-data="{ ...actions(), ...revisionResultados()}">
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="openModalRevisionResultado()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalRevisionResultado()"><i class="ti ti-plus"></i> Agregar</a>
               </li>
               <li>
-                <a class="dropdown-item" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.027.docx" download><i class="ti ti-file-word"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.027.docx" download><i class="ti ti-file-word"></i> Descargar</a>
               </li>
             </ul>
           </div>   
@@ -551,19 +551,19 @@ x-data="{ ...actions(), ...revisionResultados()}">
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             @click="editarRevision(item)">
                             <i class="fs-4 ti ti-edit"></i>Editar
                             </a>
                             </li>
                             <li>
-                            <a class="dropdown-item d-flex align-items-center gap-3"
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
                             :href="item.archivo" download>
                             <i class="fs-4 ti ti-download"></i>Descargar
                             </a>
                             </li>
                             <li>
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-3"
+                            <a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3"
                             @click="eliminar(item.id)">
                             <i class="fs-4 ti ti-trash"></i>Eliminar
                             </a>

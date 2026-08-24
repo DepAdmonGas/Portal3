@@ -33,8 +33,8 @@ protected string $modulo = 'sasisopa';
                 'scripts' => [
                     '/js/vendor.min.js',
                     '/libs/datatables.net/js/jquery.dataTables.min.js',
-                    '/js/integridadmecanica/equipocritico.datatable.init.js?v=1.0.2',
-                    '/js/integridadmecanica/equipocritico.action.init.js?v=1.0.4'
+                    '/js/integridadmecanica/equipocritico.datatable.init.js?v=' . time(),
+                    '/js/integridadmecanica/equipocritico.action.init.js?v=' . time(),
                 ],
                 'help' => true
             ];

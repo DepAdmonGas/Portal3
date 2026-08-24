@@ -78,8 +78,8 @@ class BitacoraMantenimientoController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/mantenimientoquincenal.datatable.init.js?v=1.4',
-                '/js/controlactividadproceso/mantenimientoquincenal.action.init.js?v=1.5'
+                '/js/controlactividadproceso/mantenimientoquincenal.datatable.init.js?v=' . time(),
+                '/js/controlactividadproceso/mantenimientoquincenal.action.init.js?v=' . time(),
             ],
 
             'help' => false

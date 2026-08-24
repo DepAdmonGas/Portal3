@@ -35,8 +35,8 @@ class CambioPrecioController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/cambioprecio/index.datatable.init.js?v=1.3',
-                '/js/cambioprecio/index.actions.init.js?v=1.2'
+                '/js/cambioprecio/index.datatable.init.js?v=' . time(),
+                '/js/cambioprecio/index.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];

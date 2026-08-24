@@ -2,8 +2,10 @@
     x-data="{ ...actions(), ...capacitacionInterna() }">
 
     <div class="text-end">
-        <a type="button" class="btn btn-light" @click="openModalBuscar()">
-            <i class="ti ti-search"></i> Buscar</a>
+
+        <a type="button" class="btn bg-primary-subtle text-primary" @click="openModalBuscar()">
+        <i class="ti ti-search"></i> Buscar</a>
+
     </div>
 
     <div class="position-relative">
@@ -53,7 +55,9 @@
             <div class="modal-content">
 
                 <div class="modal-header modal-colored-header bg-primary text-white">
-                    <h4 class="modal-title text-white">Buscar</h4>
+                    <h4 class="modal-title text-white">
+                    <i class="ti ti-search"></i>    
+                    Buscar</h4>
                     <button class="btn-close btn-close-white" @click="closeModal('buscar')"></button>
                 </div>
 
@@ -65,7 +69,7 @@
 
                 <div class="modal-footer">
                     <button class="btn bg-danger-subtle text-danger" @click="closeModal('buscar')"><i class="ti ti-x"></i> Cancelar</button>
-                    <button class="btn btn-primary" @click="buscar()"><i class="ti ti-check"></i> Buscar</button>
+                    <button class="btn btn-success" @click="buscar()"><i class="ti ti-check"></i> Buscar</button>
                 </div>
 
             </div>

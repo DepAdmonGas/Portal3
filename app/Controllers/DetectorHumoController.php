@@ -38,8 +38,8 @@ class DetectorHumoController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/detectorhumo.datatable.init.js?v=1.1',
-                '/js/controlactividadproceso/detectorhumo.action.init.js?v=1.1',
+                '/js/controlactividadproceso/detectorhumo.datatable.init.js?v=' . time(),
+                '/js/controlactividadproceso/detectorhumo.action.init.js?v=' . time(),
             ],
 
             'help' => false

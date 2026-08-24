@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
                 data: 'nombreresiduo',
+                className: 'text-center align-middle',
                 defaultContent: 'S/I'
             },
 
@@ -48,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
                 data: 'areaproceso',
+                className: 'text-center align-middle',
                 defaultContent: 'S/I'
             },
 

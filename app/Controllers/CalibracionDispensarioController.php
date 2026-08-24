@@ -135,7 +135,7 @@ class CalibracionDispensarioController extends BaseController
             'links' => [],
             'scripts' => [
                     '/js/vendor.min.js',
-                    '/js/controlactividadproceso/calibraciondispensario.init.js?v=1.0.1'
+                    '/js/controlactividadproceso/calibraciondispensario.init.js?v=' . time(),
                 
             ],
             'help' => false

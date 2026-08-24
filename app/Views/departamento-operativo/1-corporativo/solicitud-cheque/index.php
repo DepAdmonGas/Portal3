@@ -201,7 +201,7 @@ Guardar
 <span> <i class="ti ti-signature me-1"></i> Hace falta la firma del Visto Bueno (VO.BO)</span>
 </template>
 <template x-if="detalle.status === 1">
-<span> <i class="ti ti-signature me-1"></i> ace falta la firma de Autorización</span>
+<span> <i class="ti ti-signature me-1"></i> Hace falta la firma de Autorización</span>
 </template>
 </div>
 </div>

@@ -67,6 +67,7 @@ class CursosController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/cursos/index.action.init.js?v=1.5',
+
             ]
         ];
 
@@ -274,10 +275,12 @@ class CursosController extends BaseController
             'modulo' => $this->modulo,
             'tema' => $tema,
             'calendario' => $calendario,
+
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/cursos/evaluacion.action.init.js?v=1.1',
             ]
+
         ];
 
         View::render('cursos/evaluacion', $data, $layout);
@@ -560,7 +563,7 @@ class CursosController extends BaseController
             'categoria'      => $categoria,
             'scripts'        => [
                 '/js/vendor.min.js',
-                '/js/cursos/modulo.action.init.js?v=1.0'
+                '/js/cursos/modulo.action.init.js?v=' . time(),
             ]
         ];
 

@@ -39,7 +39,7 @@ class IncidentesAccidentesController extends BaseController
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/incidentesaccidentes/index.actions.init.js?v=1.3'
+                '/js/incidentesaccidentes/index.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];

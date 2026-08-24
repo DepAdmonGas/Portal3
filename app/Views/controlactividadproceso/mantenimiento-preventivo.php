@@ -7,31 +7,31 @@ x-data="{ ...actions(), ...mantenimientoPreventivo()}">
           <i class="ti ti-dots-vertical fs-4"></i>
         </button>
         <ul class="dropdown-menu animated rubberBand">
-         <li><a class="dropdown-item"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
+         <li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
           <li>
-              <a class="dropdown-item" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+              <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
           </li>
         
           <li>
             <hr class="dropdown-divider">
           </li>
           <li>
-              <a class="dropdown-item" href="/sasisopa/control-actividades-procesos/detector-humo"><i class="ti ti-alarm-smoke"></i> Detector de Humo</a>
+              <a class="dropdown-item pointer" href="/sasisopa/control-actividades-procesos/detector-humo"><i class="ti ti-alarm-smoke"></i> Detector de Humo</a>
           </li>
 
           <li>
-              <a class="dropdown-item" href="/sasisopa/control-actividades-procesos/extintores"><i class="ti ti-fire-extinguisher"></i> Extintores</a>
+              <a class="dropdown-item pointer" href="/sasisopa/control-actividades-procesos/extintores"><i class="ti ti-fire-extinguisher"></i> Extintores</a>
           </li>
 
           <li>
-              <a class="dropdown-item" href="/sasisopa/control-actividades-procesos/mantenimiento-correctivo"><i class="ti ti-tool"></i> Mantenimiento Correctivo</a>
+              <a class="dropdown-item pointer" href="/sasisopa/control-actividades-procesos/mantenimiento-correctivo"><i class="ti ti-tool"></i> Mantenimiento Correctivo</a>
           </li>
         </ul>
     </div>
 </div>
 
     <div class="datatables">
-        <div class="table-responsive">
+        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
         <table id="table-mantenimiento-preventivo" class="table table-bordered text-nowrap align-middle w-100">
             <thead>
             <tr>
@@ -63,11 +63,12 @@ x-data="{ ...actions(), ...mantenimientoPreventivo()}">
             <div class="modal-content border-0 shadow-lg">
 
                 <!-- HEADER -->
-                <div class="modal-header head-modal">
+                <div class="modal-header modal-colored-header bg-primary text-white">
 
                     <div>
 
-                        <h4 class="modal-title">
+                        <h4 class="modal-title text-white">
+                            <i class="ti ti-search"></i>
                             Buscar registros
                         </h4>
 
@@ -79,7 +80,7 @@ x-data="{ ...actions(), ...mantenimientoPreventivo()}">
 
                     <button
                         type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                     </button>
 
@@ -186,13 +187,13 @@ x-data="{ ...actions(), ...mantenimientoPreventivo()}">
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         @click="limpiarBuscar()">
-
+<i class="ti ti-x"></i>
                         Cancelar
 
                     </button>
 
                     <button
-                        class="btn btn-primary"
+                        class="btn btn-success"
                         @click="buscar()">
 
                         <i class="ti ti-search me-1"></i>

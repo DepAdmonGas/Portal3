@@ -37,7 +37,7 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/monitoreoverificacionevaluacion/calibracionverificacionmantenimiento.actions.init.js?v=1.0'
+                '/js/monitoreoverificacionevaluacion/calibracionverificacionmantenimiento.actions.init.js?v=' . time(),
             ],
             'help' => false
         ];
@@ -207,7 +207,7 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
     <table class="table table-bordered">
 
         <tr>
-            <td class="text-center align-middle" width="20%">
+            <td class="text-center align-middle" width="30%">
                 <img src="{$logo}" style="width:150px;">
             </td>
 

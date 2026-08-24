@@ -50,8 +50,8 @@ class RecepcionDescargaProductoController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/controlactividadproceso/recepciondescargaproducto.datatable.init.js?v=1.0',
-                '/js/controlactividadproceso/recepciondescargaproducto.action.init.js?v=1.0',
+                '/js/controlactividadproceso/recepciondescargaproducto.datatable.init.js?v=' . time(),
+                '/js/controlactividadproceso/recepciondescargaproducto.action.init.js?v=' . time(),
             ],
 
             'help' => false

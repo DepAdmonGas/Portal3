@@ -150,7 +150,7 @@
 
 <button
     type="button"
-    class="btn btn-info"
+    class="btn bg-primary-subtle text-primary"
     @click="
         cargarDispensariosDisponibles();
         new bootstrap.Modal(
@@ -277,7 +277,7 @@
         <div class="text-secondary">
             <label class="form-label">Responsable de la verificación:</label>
         </div>
-
+         
         <input
             type="text"
             class="form-control"
@@ -287,7 +287,7 @@
                 calibracion.responsable_verificacion,
                 'responsable_verificacion'
             )">
-
+            
     </div>
 
 </div>
@@ -333,7 +333,9 @@
         <div class="modal-content">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title text-white">Agregar dispensario</h4>
+                <h4 class="modal-title text-white">
+                <i class="ti ti-gas-station"></i>    
+                Agregar dispensario</h4>
                 <button
                     type="button"
                     class="btn-close btn-close-white"
@@ -347,11 +349,11 @@
                 <label class="form-label">* Dispensario:</label>
 
                 <select
-                class="form-control"
+                class="form-select"
                 x-model="nuevoDispensario">
 
                 <option value="">
-                    Seleccione
+                    Seleccione una opcion...
                 </option>
 
                 <template
@@ -380,7 +382,9 @@
 
         <div class="modal-footer">
         <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
-        <button class="btn btn-primary" @click="agregarDispensario()"><i class="ti ti-check"></i> Guardar
+        <button class="btn btn-success" @click="agregarDispensario()">
+            <i class="ti ti-check"></i> 
+            Guardar
         </button>
         </div>
 

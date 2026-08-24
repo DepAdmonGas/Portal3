@@ -56,7 +56,7 @@ return `
 
 <li>
 <a href="javascript:void(0)" 
-class="dropdown-item d-flex align-items-center gap-1 ${noDesc ? disabled : ''}"
+class="dropdown-item pointer d-flex align-items-center gap-1 ${noDesc ? disabled : ''}"
 ${noDesc ? '' : ` @click="download('solicitud-gafetes','${row.foto_gafete}')"`}>
 <i class="ti ti-file-download"></i> Descargar 
 </a>
@@ -65,7 +65,7 @@ ${noDesc ? '' : ` @click="download('solicitud-gafetes','${row.foto_gafete}')"`}>
 <!-- ELIMINAR -->
 <li>
 <a href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-1 ${noDelete ? disabled : ''}"
+class="dropdown-item pointer d-flex align-items-center gap-1 ${noDelete ? disabled : ''}"
 ${noDelete ? '' : `
 @click="async () => {
 await deleteAction({

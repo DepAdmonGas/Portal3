@@ -261,6 +261,7 @@ x-data="{ ...actions(), ...calibracionTanques() }">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h5 class="modal-title text-white">
+                    <i class="ti ti-report"></i>
                     Adjuntar resultados
                 </h5>
 
@@ -291,7 +292,7 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                 <div x-show="tanqueSeleccionado?.resultados">
                     <hr>
 
-                    <a class="btn btn-secondary btn-sm"
+                    <a class="btn bg-primary-subtle primary"
                         :href="'/uploads/archivos/calibracion/' + tanqueSeleccionado.resultados"
                         target="_blank">
                         Resultados de la calibración <i class="ti ti-file-type-pdf fs-6"></i>
@@ -312,7 +313,7 @@ x-data="{ ...actions(), ...calibracionTanques() }">
 
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="subirResultados()">
                     <i class="ti ti-check"></i> Guardar
                 </button>

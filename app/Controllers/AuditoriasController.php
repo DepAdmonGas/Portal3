@@ -75,7 +75,7 @@ class AuditoriasController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/auditorias/programa.actions.init.js?v=1.1'
+                '/js/auditorias/programa.actions.init.js?v=?v=' . time(),
             ],
             'help' => true
         ];
@@ -445,7 +445,7 @@ class AuditoriasController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/auditorias/interna.actions.init.js?v=1.2'
+                '/js/auditorias/interna.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -941,7 +941,7 @@ class AuditoriasController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
-                '/js/auditorias/externa.actions.init.js?v=1.0'
+                '/js/auditorias/externa.actions.init.js?v=' . time(),
             ],
             'help' => true
         ];
