@@ -687,6 +687,50 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/delete-horario', Route::auth(['BiometricosController', 'deleteHorario']));
 
 
+//----- Incidencias de Nómina
+$r->addRoute('GET','/recursos-humanos/incidencias-nomina/{idYear:\d+}',Route::auth(['IncidenciasNominaController', 'index']));
+$r->addRoute('GET','/recursos-humanos/incidencias-nomina/{idYear:\d+}/data',Route::auth(['IncidenciasNominaController', 'data']));
+$r->addRoute('GET','/recursos-humanos/incidencias-nomina/{idYear:\d+}/pdf-estaciones',Route::auth(['IncidenciasNominaController', 'pdfEstaciones']));
+$r->addRoute('GET','/recursos-humanos/incidencias-nomina/{idYear:\d+}/pdf-individual',Route::auth(['IncidenciasNominaController', 'pdfIndividual']));
+$r->addRoute('POST','/recursos-humanos/incidencias-nomina/guardar-contexto',Route::auth(['IncidenciasNominaController', 'guardarContexto']));
+
+//----- Día Doble
+$r->addRoute('GET','/recursos-humanos/dia-doble/{idYear:\d+}',Route::auth(['DiaDobleController', 'index']));
+$r->addRoute('GET','/recursos-humanos/dia-doble/{idYear:\d+}/data',Route::auth(['DiaDobleController', 'getData']));
+$r->addRoute('GET','/recursos-humanos/dia-doble/{idYear:\d+}/data-estaciones',Route::auth(['DiaDobleController', 'getDataEstaciones']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/guardar-contexto',Route::auth(['DiaDobleController', 'guardarContexto']));
+$r->addRoute('GET','/recursos-humanos/dia-doble/{idYear:\d+}/pdf-estaciones',Route::auth(['DiaDobleController', 'pdfEstaciones']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/{idYear:\d+}/add',Route::auth(['DiaDobleController', 'add']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/edit-quincena',Route::auth(['DiaDobleController', 'editQuincena']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/delete',Route::auth(['DiaDobleController', 'delete']));
+$r->addRoute('GET','/recursos-humanos/dia-doble/detail',Route::auth(['DiaDobleController', 'getDetail']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/add-personal',Route::auth(['DiaDobleController', 'addPersonal']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/delete-personal',Route::auth(['DiaDobleController', 'deletePersonal']));
+$r->addRoute('GET','/recursos-humanos/dia-doble/personal',Route::auth(['DiaDobleController', 'getPersonal']));
+$r->addRoute('GET','/recursos-humanos/dia-doble/comentarios',Route::auth(['DiaDobleController', 'getComentarios']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/add-comentario',Route::auth(['DiaDobleController', 'addComentario']));
+$r->addRoute('GET','/recursos-humanos/dia-doble/{idYear:\d+}/pdf-direccion',Route::auth(['DiaDobleController', 'pdfDireccion']));
+$r->addRoute('GET','/recursos-humanos/dia-doble/firmas',Route::auth(['DiaDobleController', 'getFirmas']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/firmar',Route::auth(['DiaDobleController', 'firmar']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/firmar-firma',Route::auth(['DiaDobleController', 'firmarFirma']));
+$r->addRoute('POST','/recursos-humanos/dia-doble/crear-token',Route::auth(['DiaDobleController', 'crearToken']));
+$r->addRoute('GET','/recursos-humanos/dia-doble-registro/{id:\d+}',Route::auth(['DiaDobleController', 'form']));
+$r->addRoute('GET','/recursos-humanos/dia-doble-firma/{id:\d+}',Route::auth(['DiaDobleController', 'firmarPage']));
+$r->addRoute('GET','/recursos-humanos/dia-doble/personal-direccion',Route::auth(['DiaDobleController', 'getPersonalDireccion']));
+
+//----- Rol de Comodines
+$r->addRoute('GET','/recursos-humanos/rol-comodines',Route::auth(['RolComodinesController', 'index']));
+$r->addRoute('GET','/recursos-humanos/rol-comodines/{id:\d+}',Route::auth(['RolComodinesController', 'form']));
+$r->addRoute('GET','/recursos-humanos/rol-comodines/data',Route::auth(['RolComodinesController', 'getData']));
+$r->addRoute('GET','/recursos-humanos/rol-comodines/detail',Route::auth(['RolComodinesController', 'getDetail']));
+$r->addRoute('POST','/recursos-humanos/rol-comodines/add',Route::auth(['RolComodinesController', 'add']));
+$r->addRoute('POST','/recursos-humanos/rol-comodines/edit-assignment',Route::auth(['RolComodinesController', 'editAssignment']));
+$r->addRoute('POST','/recursos-humanos/rol-comodines/save-dates',Route::auth(['RolComodinesController', 'saveDates']));
+$r->addRoute('POST','/recursos-humanos/rol-comodines/finalize',Route::auth(['RolComodinesController', 'finalize']));
+$r->addRoute('POST','/recursos-humanos/rol-comodines/delete',Route::auth(['RolComodinesController', 'delete']));
+$r->addRoute('GET','/recursos-humanos/rol-comodines/pdf',Route::auth(['RolComodinesController', 'pdf']));
+$r->addRoute('GET','/recursos-humanos/rol-comodines/pdf/{id}',Route::auth(['RolComodinesController', 'pdf']));
+
 
 
 
