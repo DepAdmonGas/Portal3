@@ -1654,6 +1654,20 @@ $r->addRoute('GET','/recursos-humanos/rol-comodines/pdf/{id}',Route::auth(['RolC
 
         $r->addRoute('GET', '/permisos', Route::auth(['GestoriaPermisosController', 'index']));
         $r->addRoute('GET', '/permisos/table', Route::auth(['GestoriaPermisosController', 'table']));
+
+        $r->addRoute('GET', '/entregas', Route::auth(['GestoriaEntregasController', 'index']));
+        $r->addRoute('GET', '/entregas/table', Route::auth(['GestoriaEntregasController', 'table']));
+        $r->addRoute('POST', '/entregas/create', Route::auth(['GestoriaEntregasController', 'create']));
+        $r->addRoute('POST', '/entregas/delete', Route::auth(['GestoriaEntregasController', 'delete']));
+        $r->addRoute('GET', '/entregas/pdf/{id:\d+}', Route::auth(['GestoriaEntregasController', 'pdf']));
+
+        $r->addRoute('GET', '/entregas/formulario/{id:\d+}', Route::auth(['GestoriaEntregasController', 'formularioEntregas']));
+        $r->addRoute('GET', '/entregas/formulario/{id:\d+}/data', Route::auth(['GestoriaEntregasController', 'formularioData']));
+        $r->addRoute('POST', '/entregas/formulario/{id:\d+}/create/documento', Route::auth(['GestoriaEntregasController', 'createDocumento']));
+        $r->addRoute('POST', '/entregas/formulario/{id:\d+}/delete/documento', Route::auth(['GestoriaEntregasController', 'deleteDocumento']));
+        $r->addRoute('POST', '/entregas/formulario/{id:\d+}/create/acuse', Route::auth(['GestoriaEntregasController', 'createAcuse']));
+        $r->addRoute('POST', '/entregas/formulario/{id:\d+}/finalizar/formulario', Route::auth(['GestoriaEntregasController', 'finalizarFormulario']));
+        $r->addRoute('POST', '/entregas/formulario/{id:\d+}/finalizar/entrega', Route::auth(['GestoriaEntregasController', 'finalizarEntrega']));
     });
 
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
