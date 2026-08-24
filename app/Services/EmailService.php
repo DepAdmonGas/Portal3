@@ -39,15 +39,15 @@ $this->mail->isHTML(true);
 $this->mail->CharSet = 'UTF-8';
 }
 
-public function sendToken(string $email, string $token): bool
+public function sendToken(string $email, string $token, string $modulo = 'Corte Diario'): bool
 {
 try {
 $this->mail->clearAddresses();
 $this->mail->addAddress($email);
 
-$this->mail->Subject = 'Token web - Corte Diario';
-$this->mail->Body = 'AdmonGas: Usa el siguiente token para firmar la solicitud de corte diario. Token: <b>' . $token . '</b>';
-$this->mail->AltBody = 'AdmonGas: Usa el siguiente token para firmar la solicitud de corte diario. Token: ' . $token;
+$this->mail->Subject = 'Token web - ' . $modulo;
+$this->mail->Body = 'AdmonGas: Usa el siguiente token para firmar la solicitud de ' . mb_strtolower($modulo) . '. Token: <b>' . $token . '</b>';
+$this->mail->AltBody = 'AdmonGas: Usa el siguiente token para firmar la solicitud de ' . mb_strtolower($modulo) . '. Token: ' . $token;
 
 $this->mail->send();
 return true;

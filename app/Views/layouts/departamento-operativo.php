@@ -155,6 +155,13 @@
 </li>
 
 <li class="sidebar-item">
+<a class="sidebar-link" href="/departamento-operativo/recursos-humanos/rol-comodines" aria-expanded="false">
+<span><i class="ti ti-users-group"></i></span>
+<span class="hide-menu">Rol de Comodines</span>
+</a>
+</li>
+
+<li class="sidebar-item">
 <a class="sidebar-link" href="/departamento-operativo/importacion/descarga-merma" aria-expanded="false">
 <span><i class="ti ti-trash"></i></span>
 <span class="hide-menu">Descarga de merma</span>

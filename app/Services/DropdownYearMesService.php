@@ -84,11 +84,10 @@ return $html;
 DROPDOWN YEAR MANUAL (SIN CONSULTA)
 Inicia desde el 2020 hasta el año actual
 ============================================ */
-public static function dropdownYearManual($idYear, $idMes)
+public static function dropdownYearManual($idYear, $idMes, $yearInicio = 2020)
 {
 
 $yearActual = date("Y");
-$yearInicio = 2020;
 
 $html = '
 <a class="dropdown-toggle breadcrumb-item active" role="button" data-bs-toggle="dropdown" aria-expanded="false">
