@@ -54,7 +54,6 @@
                     },
                     function(error) {
                         if (error.response && error.response.status === 419) {
-                            alert('Su sesión ha expirado. Por favor actualice la página.');
                             window.location.reload();
                         }
                         return Promise.reject(error);
@@ -66,6 +65,7 @@
 </head>
 
 <body class="link-sidebar">
+
 
 
 <!-- Pantalla de carga (Loader) -->
@@ -411,6 +411,7 @@ $badgeText = $detalle['estacion_nombre'];
 <script src="<?= $script ?>"></script>
 <?php endforeach; ?>
 <?php endif; ?>
+
 
 
 </body>

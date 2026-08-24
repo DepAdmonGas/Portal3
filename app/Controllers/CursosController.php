@@ -39,7 +39,9 @@ class CursosController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+
                 '/js/cursos/index.action.init.js?v=1.5',
+
             ]
         ];
 

@@ -4,7 +4,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
 <div class="row mt-4">
 
-  <div class="col-md-6 align-items-stretch">
+  <div class="col-md-8 align-items-stretch">
     <div class="card">
         <div class="card-header">
 
@@ -27,20 +27,20 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
         </div>
   <div class="card-body">
 
-<div class="table-responsive mt-3">
+<div class="table-responsive">
 
-    <table class="table table-sm table-bordered table-hover">
+    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
         <thead>
 
             <tr>
 
-                <th class="bg-primary text-white">
+                <th class="">
                     Fecha elaboración
                 </th>
 
                 <th
-                    class="bg-primary text-white text-center"
+                    class=""
                     width="60">
 
                     PDF
@@ -48,7 +48,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                 </th>
 
                 <th
-                    class="bg-primary text-white text-center"
+                    class=""
                     width="60">
 
                     Anexos
@@ -56,18 +56,18 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                 </th>
 
                 <th
-                    class="bg-primary text-white text-center"
+                    class="b"
                     width="60">
 
-                    Editar
+                 <i class="ti ti-edit fs-7 text-danger"></i>
 
                 </th>
 
                 <th
-                    class="bg-primary text-white text-center"
+                    class="b"
                     width="60">
 
-                    Eliminar
+                    <i class="ti ti-trash fs-7 text-danger"></i>
 
                 </th>
 
@@ -177,7 +177,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 </div>
   </div>
 
-    <div class="col-md-6 align-items-stretch">
+    <div class="col-md-4 align-items-stretch">
     <div class="card w-100">
         <div class="card-header">
        <h4 class="card-title"> Teléfonos de emergencias </h4>
@@ -278,19 +278,23 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title text-white">
+              <h4 class="modal-title text-white">
 
-                    <span x-show="modoProtocolo == 'create'">
-                        <i class="ti ti-plus"></i>
-                        Agregar protocolo de respuesta a emergencias
-                    </span>
+    <template x-if="modoProtocolo === 'create'">
+        <span class="d-inline-flex align-items-center">
+            <i class="ti ti-alert-circle me-2"></i>
+            Agregar protocolo de respuesta a emergencias
+        </span>
+    </template>
 
-                    <span x-show="modoProtocolo == 'edit'">
-                        <i class="ti ti-edit"></i>
-                        Editar protocolo de respuesta a emergencias
-                    </span>
+    <template x-if="modoProtocolo === 'edit'">
+        <span class="d-inline-flex align-items-center">
+            <i class="ti ti-edit me-2"></i>
+            Editar protocolo de respuesta a emergencias
+        </span>
+    </template>
 
-                </h4>
+</h4>
 
                 <button
                     type="button"
@@ -303,7 +307,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
             <div class="modal-body">
 
                <label class="form-label">
-                  * Fecha elaboración
+                  * Fecha elaboración:
               </label>
 
               <input
@@ -434,8 +438,8 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                         <tr>
 
-                            <th>Nombre</th>
-                            <th>Fecha</th>
+                            <th>Nombre:</th>
+                            <th>Fecha:</th>
                             <th
                                 width="70"
                                 class="text-center">
@@ -544,13 +548,13 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                 </div>
 
-                <div class="modal-body">
+                <div class="modal-body pb-0">
 
-                    <div class="text-end mb-3">
+                    <div class="text-end ">
 
                         <button
                             class="btn bg-primary-subtle text-primary"
-                            @click="nuevoTelefono()">
+                            @click="nuevoTelefono()" x-show="!mostrarFormulario">
 
                             <i class="ti ti-plus"></i>
                             Nuevo teléfono
@@ -562,12 +566,11 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                     <!-- FORMULARIO -->
 
                     <div
-                        class="card border mb-4"
                         x-show="mostrarFormulario"
                         x-transition>
-                          <div class="card-header bg-primary">
 
-                          <h5 class="mb-3 text-white">
+                      
+                          <h5 class="mb-3 pt-0 mt-0">
 
                                 <span x-show="modoTelefono == 'create'">
                                     <i class="ti ti-phone-plus"></i>
@@ -580,8 +583,9 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                                 </span>
 
                             </h5>
-                          </div>
-                        <div class="card-body">
+                          
+
+                        <div>
 
                             
 
@@ -590,7 +594,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                                 <div class="col-md-7">
 
                                     <label class="form-label">
-                                        Servicio de emergencia
+                                        Servicio de emergencia:
                                     </label>
 
                                     <input
@@ -603,7 +607,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                                 <div class="col-md-5">
 
                                     <label class="form-label">
-                                        Teléfono
+                                        Teléfono:
                                     </label>
 
                                     <input
@@ -615,33 +619,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                             </div>
 
-                            <div class="text-end mt-3">
 
-                                <button
-                                    class="btn bg-danger-subtle text-danger"
-                                    @click="cancelarTelefono()">
-
-                                    <i class="ti ti-x"></i> Cancelar
-
-                                </button>
-
-                                <button
-                                    class="btn bg-success-subtle text-success"
-                                    @click="guardarTelefono()">
-
-                                    <i class="ti ti-check"></i>
-
-                                    <span x-show="modoTelefono == 'create'">
-                                        Guardar
-                                    </span>
-
-                                    <span x-show="modoTelefono == 'edit'">
-                                        Actualizar
-                                    </span>
-
-                                </button>
-
-                            </div>
 
                         </div>
 
@@ -649,16 +627,18 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                     <!-- TABLA -->
 
-                    <div class="table-responsive pb-4 overflow-x-auto overflow-hidden">
+                    <div x-show="!mostrarFormulario">
+                    <div class="table-responsive mt-3 overflow-x-auto overflow-hidden">
 
-                        <table class="table table-bordered table-sm table-hover align-middle">
+                        <table class="table table-bordered table-striped align-middle">
 
                             <thead>
 
                                 <tr>
                                     <th>Servicio de emergencia</th>
                                     <th>Teléfono</th>
-                                    <th class="text-center" width="120">Acciones</th>
+                                    <th class="text-center" width="120"><i class="ti ti-edit fs-7 text-primary"></i></th>
+                                    <th class="text-center" width="120"><i class="ti ti-trash fs-7 text-danger"></i> </th>
                                 </tr>
 
                             </thead>
@@ -690,21 +670,22 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                                         </td>
 
                                         <td class="text-center">
-                                        <div class="btn-group btn-group-sm">
 
-                                            <button
-                                                class="btn btn-warning"
+                                            <span
                                                 @click="editarTelefono(item)">
-                                                <i class="ti ti-pencil"></i>
-                                            </button>
+                                                <i class="ti ti-edit fs-7 text-primary pointer"></i>
+                                            </span>
+                                              </td>
 
-                                            <button
-                                                class="btn btn-danger"
+
+                                              <td class="text-center">
+                                                <span
                                                 @click="eliminarTelefono(item.id,item.titulo)">
-                                                <i class="ti ti-trash"></i>
-                                            </button>
-
-                                        </div>
+                                                <i class="ti ti-trash fs-7 text-danger pointer"></i>
+                                            </span>
+</td>
+                                            
+                                        
                                     </td>
 
                                     </tr>
@@ -724,11 +705,56 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                             </tbody>
 
                         </table>
-
+</div>
                     </div>
 
                 </div>
 
+
+                   <div class="modal-footer" >
+
+                <button
+                    class="btn bg-danger-subtle text-danger"
+                    data-bs-dismiss="modal" x-show="!mostrarFormulario"
+                        x-transition>
+
+                    <i class="ti ti-x"></i> Cerrar
+                </button>
+
+
+                            <div x-show="mostrarFormulario"
+                        x-transition>
+
+                                <button
+                                    class="btn bg-danger-subtle text-danger"
+                                    @click="cancelarTelefono()">
+
+                                    <i class="ti ti-x"></i> Cancelar
+
+                                </button>
+
+                                <button
+                                    class="btn btn-success"
+                                    @click="guardarTelefono()">
+
+                                    <i class="ti ti-check"></i>
+
+                                    <span x-show="modoTelefono == 'create'">
+                                        Guardar
+                                    </span>
+
+                                    <span x-show="modoTelefono == 'edit'">
+                                        Actualizar
+                                    </span>
+
+                                </button>
+
+                            </div>
+
+
+            </div>
+
+            
             </div>
 
         </div>
@@ -769,7 +795,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                     <label class="form-label">
 
-                        * Nombre del simulacro
+                        * Nombre del simulacro:
 
                     </label>
 
@@ -787,7 +813,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                     <label class="form-label">
 
-                        Periodicidad:
+                        * Periodicidad:
 
                     </label>
 
@@ -803,7 +829,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                     <label class="form-label">
 
-                        * Fecha
+                        * Fecha:
 
                     </label>
 
@@ -875,7 +901,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                 <label
                     class="form-label">
 
-                    * Nombre completo
+                    * Nombre del personal:
 
                 </label>
 
@@ -895,7 +921,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                     <div class="col-md-2">
 
                         <button
-                            class="btn bg-primary-subtle text-primary w-100"
+                            class="btn btn-success w-100"
                             @click="agregarPersonal()">
 
                             <i class="ti ti-check"></i> Agregar
@@ -1025,7 +1051,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                 <label class="form-label">
 
-                    * Resumen del programa anual de simulacros
+                    * Resumen del programa anual de simulacros:
 
                 </label>
 
@@ -1079,7 +1105,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
-
+   <i class="ti ti-file-check"></i>
                     Evaluación
 
                 </h4>
@@ -1097,7 +1123,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                 <label class="form-label">
 
                     Adjunta la Evaluación de Simulacro
-                    (Fo.ADMONGAS.016a)
+                    (Fo.ADMONGAS.016a):
 
                 </label>
 

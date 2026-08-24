@@ -591,100 +591,101 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/recursos-humanos/organigrama/search-personal', Route::auth(['OrganigramaController', 'searchPersonal']));
 
 
-      //----- Control de Documentos del Personal
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal',Route::auth(['ControlDocumentosPersonalController', 'index']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-data',Route::auth(['ControlDocumentosPersonalController', 'getData']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-data-inactivos',Route::auth(['ControlDocumentosPersonalController', 'getDataInactivos']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/add',Route::auth(['ControlDocumentosPersonalController', 'add']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/edit',Route::auth(['ControlDocumentosPersonalController', 'edit']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/delete',Route::auth(['ControlDocumentosPersonalController', 'delete']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-comentarios',Route::auth(['ControlDocumentosPersonalController', 'getComentarios']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/add-comentario',Route::auth(['ControlDocumentosPersonalController', 'addComentario']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/upload-documento',Route::auth(['ControlDocumentosPersonalController', 'uploadDocumento']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/delete-documento',Route::auth(['ControlDocumentosPersonalController', 'deleteDocumento']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/add-baja',Route::auth(['ControlDocumentosPersonalController', 'addBaja']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-acceso',Route::auth(['ControlDocumentosPersonalController', 'getAcceso']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/editar-pin',Route::auth(['ControlDocumentosPersonalController', 'editarPin']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-puestos',Route::auth(['ControlDocumentosPersonalController', 'getPuestos']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-estaciones',Route::auth(['ControlDocumentosPersonalController', 'getEstaciones']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-personal-by-id',Route::auth(['ControlDocumentosPersonalController', 'getPersonalById']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal-excel',Route::auth(['ControlDocumentosPersonalController', 'excel']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal-kpi/{idYear:\d+}',Route::auth(['ControlDocumentosPersonalController', 'kpi']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal-kpi-data/{idYear:\d+}/{tipo:\d+}',Route::auth(['ControlDocumentosPersonalController', 'kpiData']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/asistencia/{id}',Route::auth(['ControlDocumentosPersonalController', 'asistencia']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-asistencia-data',Route::auth(['ControlDocumentosPersonalController', 'getAsistenciaData']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/crear-incidencia',Route::auth(['ControlDocumentosPersonalController', 'crearIncidencia']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/agregar-incidencia',Route::auth(['ControlDocumentosPersonalController', 'agregarIncidencia']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/subir-documento-incidencia',Route::auth(['ControlDocumentosPersonalController', 'subirDocumentoIncidencia']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-incidencias-catalogo',Route::auth(['ControlDocumentosPersonalController', 'getIncidenciasCatalogo']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-incidencia-por-asistencia',Route::auth(['ControlDocumentosPersonalController', 'getIncidenciaPorAsistencia']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/acceso/{id}',Route::auth(['ControlDocumentosPersonalController', 'acceso']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/detalle-baja/{id}',Route::auth(['ControlDocumentosPersonalController', 'bajaDetalle']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-archivos-baja',Route::auth(['ControlDocumentosPersonalController', 'getArchivosBaja']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/upload-baja-archivo',Route::auth(['ControlDocumentosPersonalController', 'uploadBajaArchivo']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/delete-baja-archivo',Route::auth(['ControlDocumentosPersonalController', 'deleteBajaArchivo']));
-$r->addRoute('GET','/recursos-humanos/control-documentos-personal/get-comentarios-baja',Route::auth(['ControlDocumentosPersonalController', 'getComentariosBaja']));
-$r->addRoute('POST','/recursos-humanos/control-documentos-personal/add-comentario-baja',Route::auth(['ControlDocumentosPersonalController', 'addComentarioBaja']));
+        //----- Control de Documentos del Personal
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal', Route::auth(['ControlDocumentosPersonalController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-data', Route::auth(['ControlDocumentosPersonalController', 'getData']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-data-inactivos', Route::auth(['ControlDocumentosPersonalController', 'getDataInactivos']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/add', Route::auth(['ControlDocumentosPersonalController', 'add']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/edit', Route::auth(['ControlDocumentosPersonalController', 'edit']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/delete', Route::auth(['ControlDocumentosPersonalController', 'delete']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-comentarios', Route::auth(['ControlDocumentosPersonalController', 'getComentarios']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/add-comentario', Route::auth(['ControlDocumentosPersonalController', 'addComentario']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/upload-documento', Route::auth(['ControlDocumentosPersonalController', 'uploadDocumento']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/delete-documento', Route::auth(['ControlDocumentosPersonalController', 'deleteDocumento']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/add-baja', Route::auth(['ControlDocumentosPersonalController', 'addBaja']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-acceso', Route::auth(['ControlDocumentosPersonalController', 'getAcceso']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/editar-pin', Route::auth(['ControlDocumentosPersonalController', 'editarPin']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-puestos', Route::auth(['ControlDocumentosPersonalController', 'getPuestos']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-estaciones', Route::auth(['ControlDocumentosPersonalController', 'getEstaciones']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-personal-by-id', Route::auth(['ControlDocumentosPersonalController', 'getPersonalById']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal-excel', Route::auth(['ControlDocumentosPersonalController', 'excel']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal-kpi/{idYear:\d+}', Route::auth(['ControlDocumentosPersonalController', 'kpi']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal-kpi-data/{idYear:\d+}/{tipo:\d+}', Route::auth(['ControlDocumentosPersonalController', 'kpiData']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/asistencia/{id}', Route::auth(['ControlDocumentosPersonalController', 'asistencia']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-asistencia-data', Route::auth(['ControlDocumentosPersonalController', 'getAsistenciaData']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/crear-incidencia', Route::auth(['ControlDocumentosPersonalController', 'crearIncidencia']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/agregar-incidencia', Route::auth(['ControlDocumentosPersonalController', 'agregarIncidencia']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/subir-documento-incidencia', Route::auth(['ControlDocumentosPersonalController', 'subirDocumentoIncidencia']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-incidencias-catalogo', Route::auth(['ControlDocumentosPersonalController', 'getIncidenciasCatalogo']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-incidencia-por-asistencia', Route::auth(['ControlDocumentosPersonalController', 'getIncidenciaPorAsistencia']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/acceso/{id}', Route::auth(['ControlDocumentosPersonalController', 'acceso']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/detalle-baja/{id}', Route::auth(['ControlDocumentosPersonalController', 'bajaDetalle']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-archivos-baja', Route::auth(['ControlDocumentosPersonalController', 'getArchivosBaja']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/upload-baja-archivo', Route::auth(['ControlDocumentosPersonalController', 'uploadBajaArchivo']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/delete-baja-archivo', Route::auth(['ControlDocumentosPersonalController', 'deleteBajaArchivo']));
+        $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-comentarios-baja', Route::auth(['ControlDocumentosPersonalController', 'getComentariosBaja']));
+        $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/add-comentario-baja', Route::auth(['ControlDocumentosPersonalController', 'addComentarioBaja']));
 
 
-      //----- Formatos
-$r->addRoute('GET','/recursos-humanos/formatos',Route::auth(['FormatosController', 'index']));
-$r->addRoute('GET','/recursos-humanos/formatos/get-data',Route::auth(['FormatosController', 'getData']));
-$r->addRoute('GET','/recursos-humanos/formatos/pendientes',Route::auth(['FormatosController', 'getPendingCountsEndpoint']));
-$r->addRoute('GET','/recursos-humanos/formatos/detalle',Route::auth(['FormatosController', 'getDetalle']));
-$r->addRoute('GET','/recursos-humanos/formatos/comentarios',Route::auth(['FormatosController', 'getComentarios']));
-$r->addRoute('POST','/recursos-humanos/formatos/store-comentario',Route::auth(['FormatosController', 'storeComentario']));
-$r->addRoute('POST','/recursos-humanos/formatos/delete',Route::auth(['FormatosController', 'destroy']));
-$r->addRoute('GET','/recursos-humanos/formatos-formulario/{formato:\d+}',Route::auth(['FormatosController', 'crear']));
-$r->addRoute('GET','/recursos-humanos/formatos-formulario/{formato:\d+}/{idLocalidad:\d+}',Route::auth(['FormatosController', 'crear']));
-$r->addRoute('POST','/recursos-humanos/formatos/agregar-fila',Route::auth(['FormatosController', 'agregarFila']));
-$r->addRoute('POST','/recursos-humanos/formatos/eliminar-fila',Route::auth(['FormatosController', 'eliminarFila']));
-$r->addRoute('GET','/recursos-humanos/formatos-editar/{id:\d+}',Route::auth(['FormatosController', 'editar']));
-$r->addRoute('POST','/recursos-humanos/formatos/update',Route::auth(['FormatosController', 'update']));
-$r->addRoute('GET','/recursos-humanos/formatos/firmar/{id:\d+}',Route::auth(['FormatosController', 'firmarPage']));
-$r->addRoute('POST','/recursos-humanos/formatos/crear-token',Route::auth(['FormatosController', 'crearToken']));
-$r->addRoute('POST','/recursos-humanos/formatos/firmar',Route::auth(['FormatosController', 'firmar']));
-$r->addRoute('POST','/recursos-humanos/formatos/firma-imagen',Route::auth(['FormatosController', 'firmarImagen']));
-$r->addRoute('GET','/recursos-humanos/formatos/firmas',Route::auth(['FormatosController', 'getFirmas']));
-$r->addRoute('GET','/recursos-humanos/formatos/pdf/{id:\d+}',Route::auth(['FormatosController', 'downloadPdf']));
+        //----- Formatos
+        $r->addRoute('GET', '/recursos-humanos/formatos', Route::auth(['FormatosController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/formatos/get-data', Route::auth(['FormatosController', 'getData']));
+        $r->addRoute('GET', '/recursos-humanos/formatos/pendientes', Route::auth(['FormatosController', 'getPendingCountsEndpoint']));
+        $r->addRoute('GET', '/recursos-humanos/formatos/detalle', Route::auth(['FormatosController', 'getDetalle']));
+        $r->addRoute('GET', '/recursos-humanos/formatos/comentarios', Route::auth(['FormatosController', 'getComentarios']));
+        $r->addRoute('POST', '/recursos-humanos/formatos/store-comentario', Route::auth(['FormatosController', 'storeComentario']));
+        $r->addRoute('POST', '/recursos-humanos/formatos/delete', Route::auth(['FormatosController', 'destroy']));
+        $r->addRoute('GET', '/recursos-humanos/formatos-formulario/{formato:\d+}', Route::auth(['FormatosController', 'crear']));
+        $r->addRoute('GET', '/recursos-humanos/formatos-formulario/{formato:\d+}/{idLocalidad:\d+}', Route::auth(['FormatosController', 'crear']));
+        $r->addRoute('POST', '/recursos-humanos/formatos/agregar-fila', Route::auth(['FormatosController', 'agregarFila']));
+        $r->addRoute('POST', '/recursos-humanos/formatos/eliminar-fila', Route::auth(['FormatosController', 'eliminarFila']));
+        $r->addRoute('GET', '/recursos-humanos/formatos-editar/{id:\d+}', Route::auth(['FormatosController', 'editar']));
+        $r->addRoute('POST', '/recursos-humanos/formatos/update', Route::auth(['FormatosController', 'update']));
+        $r->addRoute('GET', '/recursos-humanos/formatos/firmar/{id:\d+}', Route::auth(['FormatosController', 'firmarPage']));
+        $r->addRoute('POST', '/recursos-humanos/formatos/crear-token', Route::auth(['FormatosController', 'crearToken']));
+        $r->addRoute('POST', '/recursos-humanos/formatos/firmar', Route::auth(['FormatosController', 'firmar']));
+        $r->addRoute('POST', '/recursos-humanos/formatos/firma-imagen', Route::auth(['FormatosController', 'firmarImagen']));
+        $r->addRoute('GET', '/recursos-humanos/formatos/firmas', Route::auth(['FormatosController', 'getFirmas']));
+        $r->addRoute('GET', '/recursos-humanos/formatos/pdf/{id:\d+}', Route::auth(['FormatosController', 'downloadPdf']));
 
-      //----- Horario Personal
-$r->addRoute('GET','/recursos-humanos/horario-personal',Route::auth(['HorarioPersonalController', 'index']));
-$r->addRoute('GET','/recursos-humanos/horario-personal/get-data',Route::auth(['HorarioPersonalController', 'getData']));
-$r->addRoute('POST','/recursos-humanos/horario-personal/editar',Route::auth(['HorarioPersonalController', 'editar']));
-$r->addRoute('POST','/recursos-humanos/horario-personal/eliminar',Route::auth(['HorarioPersonalController', 'eliminar']));
-$r->addRoute('GET','/recursos-humanos/horario-personal/pdf',Route::auth(['HorarioPersonalController', 'pdf']));
+        //----- Horario Personal
+        $r->addRoute('GET', '/recursos-humanos/horario-personal', Route::auth(['HorarioPersonalController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/horario-personal/get-data', Route::auth(['HorarioPersonalController', 'getData']));
+        $r->addRoute('POST', '/recursos-humanos/horario-personal/editar', Route::auth(['HorarioPersonalController', 'editar']));
+        $r->addRoute('POST', '/recursos-humanos/horario-personal/eliminar', Route::auth(['HorarioPersonalController', 'eliminar']));
+        $r->addRoute('GET', '/recursos-humanos/horario-personal/pdf', Route::auth(['HorarioPersonalController', 'pdf']));
 
-      //----- Biometricos
-$r->addRoute('GET','/recursos-humanos/biometricos',Route::auth(['BiometricosController', 'index']));
-$r->addRoute('GET','/recursos-humanos/biometricos/get-data',Route::auth(['BiometricosController', 'getData']));
-$r->addRoute('GET','/recursos-humanos/biometricos/get-incidencias-catalogo',Route::auth(['BiometricosController', 'getIncidenciasCatalogo']));
-$r->addRoute('GET','/recursos-humanos/biometricos/get-incidencia-por-asistencia',Route::auth(['BiometricosController', 'getIncidenciaPorAsistencia']));
-$r->addRoute('POST','/recursos-humanos/biometricos/agregar-incidencia',Route::auth(['BiometricosController', 'agregarIncidencia']));
-$r->addRoute('POST','/recursos-humanos/biometricos/subir-documento-incidencia',Route::auth(['BiometricosController', 'subirDocumentoIncidencia']));
-$r->addRoute('POST','/recursos-humanos/biometricos/editar-sueldo-incidencia',Route::auth(['BiometricosController', 'editarSueldoIncidencia']));
-$r->addRoute('POST','/recursos-humanos/biometricos/eliminar-incidencia',Route::auth(['BiometricosController', 'eliminarIncidencia']));
-$r->addRoute('GET','/recursos-humanos/biometricos/get-reporte',Route::auth(['BiometricosController', 'getReporte']));
-$r->addRoute('GET','/recursos-humanos/biometricos/reporte-pdf',Route::auth(['BiometricosController', 'reportePdf']));
-$r->addRoute('GET','/recursos-humanos/biometricos/reporte-excel',Route::auth(['BiometricosController', 'reporteExcel']));
-$r->addRoute('GET','/recursos-humanos/biometricos/reporte-estaciones-pdf',Route::auth(['BiometricosController', 'reportePdfEstaciones']));
-$r->addRoute('GET','/recursos-humanos/biometricos/configuracion',Route::auth(['BiometricosController', 'configuracion']));
-$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/{modulo:[a-z-]+}',Route::auth(['BiometricosController', 'configuracionModulo']));
-$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/puestos/datatable',Route::auth(['BiometricosController', 'datatablePuestos']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/puestos/create',Route::auth(['BiometricosController', 'createPuesto']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/puestos/update',Route::auth(['BiometricosController', 'updatePuesto']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/puestos/delete',Route::auth(['BiometricosController', 'deletePuesto']));
-$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/perfil/datatable',Route::auth(['BiometricosController', 'datatablePerfil']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/perfil/create',Route::auth(['BiometricosController', 'createPerfil']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/perfil/update',Route::auth(['BiometricosController', 'updatePerfil']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/perfil/delete',Route::auth(['BiometricosController', 'deletePerfil']));
+        //----- Biometricos
+        $r->addRoute('GET', '/recursos-humanos/biometricos', Route::auth(['BiometricosController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/get-data', Route::auth(['BiometricosController', 'getData']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/get-incidencias-catalogo', Route::auth(['BiometricosController', 'getIncidenciasCatalogo']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/get-incidencia-por-asistencia', Route::auth(['BiometricosController', 'getIncidenciaPorAsistencia']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/agregar-incidencia', Route::auth(['BiometricosController', 'agregarIncidencia']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/subir-documento-incidencia', Route::auth(['BiometricosController', 'subirDocumentoIncidencia']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/editar-sueldo-incidencia', Route::auth(['BiometricosController', 'editarSueldoIncidencia']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/eliminar-incidencia', Route::auth(['BiometricosController', 'eliminarIncidencia']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/get-reporte', Route::auth(['BiometricosController', 'getReporte']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/reporte-pdf', Route::auth(['BiometricosController', 'reportePdf']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/reporte-excel', Route::auth(['BiometricosController', 'reporteExcel']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/reporte-estaciones-pdf', Route::auth(['BiometricosController', 'reportePdfEstaciones']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/configuracion', Route::auth(['BiometricosController', 'configuracion']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/configuracion/{modulo:[a-z-]+}', Route::auth(['BiometricosController', 'configuracionModulo']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/configuracion/puestos/datatable', Route::auth(['BiometricosController', 'datatablePuestos']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/puestos/create', Route::auth(['BiometricosController', 'createPuesto']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/puestos/update', Route::auth(['BiometricosController', 'updatePuesto']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/puestos/delete', Route::auth(['BiometricosController', 'deletePuesto']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/configuracion/perfil/datatable', Route::auth(['BiometricosController', 'datatablePerfil']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/perfil/create', Route::auth(['BiometricosController', 'createPerfil']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/perfil/update', Route::auth(['BiometricosController', 'updatePerfil']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/perfil/delete', Route::auth(['BiometricosController', 'deletePerfil']));
 
-$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/get-retardo-incidencia',Route::auth(['BiometricosController', 'getRetardoIncidencia']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/update-retardo-incidencia',Route::auth(['BiometricosController', 'updateRetardoIncidencia']));
-$r->addRoute('GET','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/datatable-horarios',Route::auth(['BiometricosController', 'datatableHorarios']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/create-horario',Route::auth(['BiometricosController', 'createHorario']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/update-horario',Route::auth(['BiometricosController', 'updateHorario']));
-$r->addRoute('POST','/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/delete-horario',Route::auth(['BiometricosController', 'deleteHorario']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/get-retardo-incidencia', Route::auth(['BiometricosController', 'getRetardoIncidencia']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/update-retardo-incidencia', Route::auth(['BiometricosController', 'updateRetardoIncidencia']));
+        $r->addRoute('GET', '/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/datatable-horarios', Route::auth(['BiometricosController', 'datatableHorarios']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/create-horario', Route::auth(['BiometricosController', 'createHorario']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/update-horario', Route::auth(['BiometricosController', 'updateHorario']));
+        $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/delete-horario', Route::auth(['BiometricosController', 'deleteHorario']));
+
 
 //----- Incidencias de Nómina
 $r->addRoute('GET','/recursos-humanos/incidencias-nomina/{idYear:\d+}',Route::auth(['IncidenciasNominaController', 'index']));
@@ -731,7 +732,6 @@ $r->addRoute('GET','/recursos-humanos/rol-comodines/pdf',Route::auth(['RolComodi
 $r->addRoute('GET','/recursos-humanos/rol-comodines/pdf/{id}',Route::auth(['RolComodinesController', 'pdf']));
 
 
-      
 
 
         //----- 3. Importacion
@@ -1633,7 +1633,29 @@ $r->addRoute('GET','/recursos-humanos/rol-comodines/pdf/{id}',Route::auth(['RolC
 
     $r->addGroup('/gestoria', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['GestoriaController', 'index']));
+
+        $r->addRoute('GET', '/requisitos-legales', Route::auth(['GestoriaController', 'requisitosLegales']));
+        $r->addRoute('GET', '/requisitos-legales/datatable-nivel-gobierno', Route::auth(['GestoriaController', 'datatableNivelGobierno']));
+        $r->addRoute('POST', '/requisitos-legales/create-nivel-gobierno', Route::auth(['GestoriaController', 'createNivelGobierno']));
+        $r->addRoute('POST', '/requisitos-legales/delete-nivel-gobierno', Route::auth(['GestoriaController', 'deleteNivelGobierno']));
+
+        $r->addRoute('GET', '/requisitos-legales/datatable-municipio-alcaldia-estado', Route::auth(['GestoriaController', 'datatableMunicipioAlcaldiaEstado']));
+        $r->addRoute('POST', '/requisitos-legales/create-municipio-alcaldia-estado', Route::auth(['GestoriaController', 'createMunicipioAlcaldiaEstado']));
+        $r->addRoute('POST', '/requisitos-legales/delete-municipio-alcaldia-estado', Route::auth(['GestoriaController', 'deleteMunicipioAlcaldiaEstado']));
+
+        $r->addRoute('GET', '/requisitos-legales/datatable-dependencias', Route::auth(['GestoriaController', 'datatableDependencias']));
+        $r->addRoute('POST', '/requisitos-legales/create-dependencias', Route::auth(['GestoriaController', 'createDependencias']));
+        $r->addRoute('POST', '/requisitos-legales/delete-dependencias', Route::auth(['GestoriaController', 'deleteDependencias']));
+
+        $r->addRoute('GET', '/requisitos-legales/datatable-requisito-legal', Route::auth(['GestoriaController', 'datatableRequisitoLegal']));
+        $r->addRoute('POST', '/requisitos-legales/create-requisito-legal', Route::auth(['GestoriaController', 'createRequisitoLegal']));
+        $r->addRoute('POST', '/requisitos-legales/update-requisito-legal', Route::auth(['GestoriaController', 'updateRequisitosLegales']));
+        $r->addRoute('POST', '/requisitos-legales/delete-requisito-legal', Route::auth(['GestoriaController', 'deleteRequisitoLegal']));
+
+        $r->addRoute('GET', '/permisos', Route::auth(['GestoriaPermisosController', 'index']));
+        $r->addRoute('GET', '/permisos/table', Route::auth(['GestoriaPermisosController', 'table']));
     });
+
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
     $r->addRoute('POST', '/telegram/webhook', ['TelegramWebhookController', 'handle']);
     $r->addRoute('GET', '/telegram/poll', Route::auth(['TelegramWebhookController', 'poll']));

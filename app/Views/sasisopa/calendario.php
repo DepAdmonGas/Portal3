@@ -72,10 +72,41 @@
 
                 <div class="modal-body">
 
+
+                    <div class="table-responsive">
+
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+
                 <div class="table-responsive overflow-x-auto overflow-hidden">
 
 
-                        <table class="table table-hover align-middle mb-0">
+
+                        <thead>
+                            <tr>
+                                <th width="60">#</th>
+                                <th>Nombre</th>
+                                <th width="120">Tipo</th>
+                                <th width="120">Estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <template
+                                x-for="(item,index) in actividadesDia"
+                                :key="item.tipo + item.id">
+
+
 
                             <thead>
                                 <tr>

@@ -1,0 +1,33 @@
+# Dependencias y paquetes pesados
+/vendor/
+/node_modules/
+
+# Archivos de entorno y credenciales
+.env
+.env.*
+
+# Caché y almacenamiento temporal
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
+/bootstrap/cache/
+
+# Archivos de build y assets compilados
+/public/build/
+/public/hot/
+/public/storage/
+mix-manifest.json
+vite.config.js.timestamp-*
+
+# Control de versiones e IDEs
+/.git/
+/.github/
+/.vscode/
+/.idea/
+
+# Cobertura de tests y bases de datos locales
+/.phpunit.cache/
+/coverage/
+*.sqlite
+*.sqlite-journal

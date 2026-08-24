@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Sasisopa\RequisitosLegalesCalendario;
+
 class Estacion extends Model
 {
     protected $table = 'tb_estaciones';
@@ -54,7 +56,7 @@ class Estacion extends Model
         'estatus' => 'integer',
     ];
 
-     public static function siguienteNumlista(): int
+    public static function siguienteNumlista(): int
     {
         $ultimo = self::select('numlista')
             ->orderByDesc('numlista')
@@ -74,4 +76,11 @@ class Estacion extends Model
         return $this->hasMany(Usuario::class, 'id_gas');
     }
 
+    public function calendarios()
+    {
+        return $this->hasMany(
+            RequisitosLegalesCalendario::class,
+            'id_estacion'
+        );
+    }
 }

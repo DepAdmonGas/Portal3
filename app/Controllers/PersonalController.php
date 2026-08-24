@@ -87,8 +87,10 @@ class PersonalController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
+
                 '/js/personal/index.datatable.init.js?v=1.0.0',
                 '/js/personal/index.actions.init.js?v=1.0.0'
+
             ],
             'help' => true
         ];
