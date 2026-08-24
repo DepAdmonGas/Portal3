@@ -19,44 +19,46 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
     <div class="col-12 col-md-8">
 
     <div class="card">
-    <div class="card-body p-3">
-    
-    <div class="d-flex align-items-center">
-        <h5 class="card-title mb-0">Matriz de evaluación del cumplimiento legal</h5>
+        <div class="card-header">
+ <div class="d-flex align-items-center">
+        <h5 class="card-title">Matriz de evaluación del cumplimiento legal</h5>
         <div class="ms-auto">
         <div class="dropdown dropstart">
-                <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="ti ti-dots fs-7"></i>
+                <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ti ti-dots-vertical fs-6"></i>
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <li>
                     <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
                 </li>
                 <li>
-                    <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.022.docx"><i class="ti ti-file-type-docx"></i> Descargar</a>
+                    <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.022.docx"><i class="ti ti-download"></i> Descargar</a>
                 </li>
                 </ul>
             </div>   
         </div>
     </div>      
 
-    <table class="table table-bordered table-sm mt-3">
+        </div>
+    <div class="card-body p-3">
+    
+    <table class="table table-striped pb-4 table-bordered  text-nowrap align-middle">
         <thead>
             <tr>
-                <th class="text-center bg-primary text-white align-middle">
+                <th class="text-center align-middle">
                     #
                 </th>
 
-                <th class="text-center bg-primary text-white align-middle">
+                <th class="text-center align-middle">
                     Fecha
                 </th>
 
-                <th class="text-center bg-primary text-white align-middle" width="40">
-                    <i class="ti ti-file-type-pdf fs-6 text-white"></i>
+                <th class="text-center  align-middle" width="40">
+                    <i class="ti ti-download text-primary fs-6"></i>
                 </th>
 
-                <th class="text-center bg-primary text-white align-middle" width="40">
-                    <i class="ti ti-trash fs-6 text-white"></i>
+                <th class="text-center  align-middle" width="40">
+                    <i class="ti ti-trash text-danger fs-6"></i>
                 </th>
             </tr>
         </thead>
@@ -84,14 +86,14 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
                                 :href="registro.url_pdf"
                                 download>
 
-                                <i class="ti ti-file-type-pdf fs-6 text-danger"></i>
+                                <i class="ti ti-download fs-6 text-primary"></i>
                             </a>
 
                         </td>
 
                         <td class="text-center">
 
-                        <a @click="eliminar(registro.id)"><i class="ti ti-trash fs-6 text-danger"></i></a>
+                        <a @click="eliminar(registro.id)"><i class="ti ti-trash fs-6 text-danger pointer"></i></a>
 
                         </td>
 
@@ -137,6 +139,7 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h5 class="modal-title text-white">
+                    <i class="ti ti-report-search"></i>
                     Informe de revisión de resultados
                 </h5>
 

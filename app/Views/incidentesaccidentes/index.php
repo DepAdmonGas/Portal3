@@ -433,17 +433,17 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
+            <div class="modal-header head-modal bg-primary">
 
-                <h4 class="modal-title">
-
+                <h4 class="modal-title text-white">
+<i class="ti ti-report"></i>
                     Investigación de Incidentes y Accidentes
 
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -454,7 +454,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Fecha
+                        Fecha:
                     </label>
 
                     <input
@@ -469,7 +469,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Descripción del evento
+                        Descripción del evento:
                     </label>
 
                     <textarea
@@ -485,7 +485,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Tipo de evento
+                        Tipo de evento:
                     </label>
 
                     <select
@@ -496,7 +496,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                         @input="errors.form.tipo_evento = false">
 
                         <option value="">
-                            Seleccionar
+                            Selecciona una opcion...
                         </option>
 
                         <option value="1">
@@ -719,7 +719,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
             <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
+<i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
@@ -728,7 +728,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                     type="button"
                     class="btn btn-success"
                     @click="guardarInvestigacion()">
-
+<i class="ti ti-check"></i>
                     Guardar
 
                 </button>

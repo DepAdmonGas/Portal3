@@ -64,7 +64,7 @@
                 </div>
 
                 <div class="modal-body">
-                    <label class="fw-bold">Agregar Año:</label>
+                    <label class="fw-bold">Año:</label>
                     <input type="number" class="form-control mt-2"
                         x-model="year">
                 </div>

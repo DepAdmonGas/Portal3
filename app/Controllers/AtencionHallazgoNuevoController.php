@@ -14,7 +14,7 @@ class AtencionHallazgoNuevoController extends BaseController{
 
     public function index($id){
 
-    $title = 'AGREGAR ATENCION';
+    $title = 'FORMULARIO DE ATENCION';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');

@@ -93,7 +93,7 @@ const idmodulo = document.getElementById('container').dataset.idmodulo;
                         <li>                            
                             <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noCreate ? 'disabled' : ''}" 
                             @click="openModalProgramar(${row.id}, ${idmodulo}, ${idtema})">
-                                <i class="ti ti-eye"></i>Programar Curso
+                               <i class="ti ti-chalkboard-teacher"></i>Programar Curso
                             </a>
                         </li>
 

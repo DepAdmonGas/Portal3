@@ -80,20 +80,22 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
         <div class="modal-content">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
-                <h4 class="modal-title text-white">CAPACITACIÓN INTERNA</h4>
+                <h4 class="modal-title text-white">
+                <i class="ti ti-chalkboard-teacher"></i>    
+                CAPACITACIÓN INTERNA</h4>
                 <button type="button" class="btn-close btn-close-white"
                         @click="closeModal('cursos')"></button>
             </div>
 
             <div class="modal-body">
 
-                <h5 class="text-center" x-text="cursosTitulo"></h5>
+                <h5 class="text-start" x-text="cursosTitulo"></h5>
 
-                <h6 class="text-center text-muted mt-2" x-text="nombreUsuarioCursos"></h6>
+                <h6 class="text-start text-muted mt-2" x-text="nombreUsuarioCursos"></h6>
            
-                    <div class="table-responsive overflow-x-auto overflow-y-hidden">
+                    <div class="table-responsive table-striped overflow-x-auto overflow-y-hidden">
                     <table class="table table-bordered table-sm">
-                        <thead class="table-primary text-center">
+                        <thead class="text-center">
                             <tr>
                                 <th>Fecha Programada</th>
                                 <th>Fecha Real</th>
@@ -142,7 +144,7 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
 
                             <tr x-show="cursos.length === 0">
                                 <td colspan="5" class="text-center text-muted">
-                                    Sin información
+                                    No se encontro información
                                 </td>
                             </tr>
                         </tbody>

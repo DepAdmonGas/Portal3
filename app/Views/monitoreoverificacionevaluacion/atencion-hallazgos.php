@@ -4,14 +4,14 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
     <div class="text-end">
         <?= 
             !empty($permisos['crear']) ? 
-            '<button type="button" class="btn btn-primary" @click="nuevo()">
+            '<button type="button" class="btn bg-primary-subtle text-primary" @click="nuevo()">
             <i class="ti ti-plus"></i> Nuevo
             </button>' 
             : '' 
             ?>     
     </div>
-
-    <table class="table table-bordered table-sm mt-2 mb-2">
+<div class="table-responsive">
+    <table class="table table-bordered p-4 table-sm mt-2 mb-2">
     <tr>
     <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>
     <td colspan="2" class="text-center align-middle"><b>Atención de Hallazgos</b></td>
@@ -24,15 +24,18 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
     <td class="text-center align-middle">Fecha de autorizacion 01/10/2018</td>
     </tr>
     </table>
+</div>
 
-    <table class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle mt-3">
+
+<div class="table-responsive">
+    <table class="table  table-striped p-4 table-bordered  text-nowrap align-middle ">
         <thead>
           <tr>
-           <th class="bg-primary text-white text-center">#</th>
-            <th class="bg-primary text-white text-center">Fecha de la auditoria</th>
-            <th class="bg-primary text-white text-center">No de control de la auditoria</th>
-            <th class="bg-primary text-white text-center">Tipo de auditoria</th>
-          <th class="bg-primary text-white text-center">
+           <th class="text-center">#</th>
+            <th class="text-center">Fecha de la auditoria</th>
+            <th class="text-center">No de control de la auditoria</th>
+            <th class="text-center">Tipo de auditoria</th>
+          <th class="text-center">
           <a><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -67,6 +70,8 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
                         <td class="text-center">
 
                         <div x-data="actions()" class="d-flex gap-1 justify-content-center">
+
+
                         <div class="dropdown dropstart">
                             <a href="javascript:void(0)" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
@@ -97,6 +102,8 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
                                 </li>
                             </ul>
                         </div>
+
+                        
                         </div>
 
                         </td>
@@ -122,5 +129,5 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
         </tbody>
       </table>
 
-
+</div>
 </div>
