@@ -3,24 +3,9 @@ x-data="monitoreoEvaluacion()">
 
 <div x-data="monitoreoEvaluacion">
 
-
-<div class="text-end mt-2">
-   <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
-            <ul class="dropdown-menu animated rubberBand">
-                 <li>
-                    <a class="dropdown-item pointer" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
-                </li>
-            </ul>
-        </div>
-</div>
-
-
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <label class="form-label">Año</label>
+<div class="row mt-3 mb-3">
+<div class="col-6">
+            <!-- <label class="form-label">Año</label> -->
             <select
                 class="form-select"
                 x-model.number="year"
@@ -31,12 +16,25 @@ x-data="monitoreoEvaluacion()">
                     </option>
                 <?php endfor; ?>
             </select>
-        </div>
-    </div>
-    
-    <!-- Implementación del SA -->
+</div>
 
-    <table class="table table-bordered table-sm pb-0 mb-0 mt-2">
+<div class="col-6">
+    <div class="text-end">
+   <button type="button" class="btn bg-primary-subtle text-primary">
+                    <a class="dropdown-item pointer " :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
+</button>
+</div>
+</div>
+</div>
+
+<div class="row">
+
+<!-- Implementación del SA -->
+<div class="col-12">
+<div class="card">
+<div class="card-body">
+    <div class="table-responsive">
+<table class="table table-responsive table-striped table-bordered mb-0 text-nowrap align-middle">
         <tbody>
             <tr>
                 <td class="align-middle text-center">
@@ -65,7 +63,7 @@ x-data="monitoreoEvaluacion()">
                     <b>Frecuencia de medición</b>
                 </td>
                 <td class="align-middle">
-                    ANUAL
+                    Anual
                 </td>
             </tr>
 
@@ -81,13 +79,24 @@ x-data="monitoreoEvaluacion()">
             </tr>
         </tbody>
     </table>
+</div>
+</div>
+<div class="card-footer">
+        <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="implementacionDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
 
-    <div class="text-end mt-2"><button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info" @click="implementacionDetalle()"><i class="ti ti-eye"></i>Ver detalle</button></div>
+</div>
+</div>
+</div>
+</div>  
+    <!-- Implementación del SA -->
+    
     <!-- Implementación del SA -->
     <!-- Ventas -->
-    <hr>
-
-    <table class="table table-bordered table-sm pb-0 mb-0">
+<div class="col-12">
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
     <tbody>
       <tr>
         <td class="align-middle text-center"><b>Objeto</b></td>
@@ -105,7 +114,8 @@ x-data="monitoreoEvaluacion()">
       </tr>
     </tbody>
   </table>
-  <div class="mt-1"><b>Resultado:</b></div>
+  </div>
+  <div class="mt-3 md-3"><b>Resultado:</b></div>
 
   <div class="row">
 
@@ -113,11 +123,10 @@ x-data="monitoreoEvaluacion()">
         x-for="(item,index) in ventas.detalle"
         :key="index">
 
-        <div class="col-2">
-
+        <div class="col-md-2 mt-3 ">
+<div class="table-responsive">
             <table
-                class="table table-sm table-bordered"
-                style="font-size:.9em;">
+                class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
 
                 <thead>
 
@@ -193,18 +202,28 @@ x-data="monitoreoEvaluacion()">
                 </tbody>
 
             </table>
-
+</div>
         </div>
 
     </template>
 
   </div>
+    
+    </div>
+    <div class="card-footer">
+<button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="VentasDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
+    </div>
+</div>
+</div>
 
-  <div class="text-end"><button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info" @click="VentasDetalle()"><i class="ti ti-eye"></i>Ver detalle</button></div>
-  <hr>
+
   <!-- Ventas -->
   <!-- Capacitación -->
-  <table class="table table-bordered table-sm pb-0 mb-0">
+   <div class="col-12">
+<div class="card">
+<div class="card-body">
+    <div class="table-responsive">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
           <tbody>
             <tr>
               <td class="align-middle text-center"><b>Objeto</b></td>
@@ -263,12 +282,22 @@ x-data="monitoreoEvaluacion()">
             </tr>
           </tbody>
         </table>
+        </div>
+</div>
+<div class="card-footer">
+<button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" data-bs-toggle="modal" data-bs-target="#modal-capacitacion"><i class="ti ti-eye"></i> Ver detalle</button>
+</div>
+</div>
 
-        <div class="text-end mt-2"><button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info" data-bs-toggle="modal" data-bs-target="#modal-capacitacion"><i class="ti ti-eye"></i>Ver detalle</button></div>
-        <hr>
+   </div>
+  
    <!-- Capacitación -->
   <!-- Satisfacción del cliente -->
-<table class="table table-bordered table-sm">
+   <div class="col-12">
+<div class="card">
+<div class="card-body">
+    <div class="table-responsive">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
     <tbody>
 
@@ -382,13 +411,22 @@ x-data="monitoreoEvaluacion()">
     </tbody>
 
 </table>
+</div>
+</div>
+<div class="card-footer">
+<button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="satisfaccionClientes()"><i class="ti ti-eye"></i> Ver detalle</button>
+</div>
 
-        <div class="text-end mt-2"><button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info" @click="satisfaccionClientes()"><i class="ti ti-eye"></i>Ver detalle</button></div>
-        <hr>
+</div>
+
+   </div>
 
   <!-- Satisfacción del cliente -->
   <!-- Incidentes y accidentes -->
-<table class="table table-bordered table-sm pb-0 mb-0">
+   <div class="col-12">
+<div class="card">
+    <div class="card-body">
+<table class="table table-striped table-bordered mb-0">
 
     <tbody>
 
@@ -477,9 +515,13 @@ x-data="monitoreoEvaluacion()">
     </tbody>
 
 </table>
+    </div>
+<div class="card-footer">
+    <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="IncidentesAccidentes()"><i class="ti ti-eye"></i> Ver detalle</button>
+</div>
+</div>
 
-<div class="text-end mt-2"><button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info" @click="IncidentesAccidentes()"><i class="ti ti-eye"></i>Ver detalle</button></div>
-<hr>
+   </div>
 <!-- Incidentes y accidentes -->
 
 <table class="table table-sm table-bordered pb-0 mb-0">
@@ -569,17 +611,20 @@ x-data="monitoreoEvaluacion()">
 <div class="modal fade" id="modal-capacitacion" tabindex="-1" aria-labelledby="mySmallModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-md">
                 <div class="modal-content">
-                    <div class="modal-header d-flex align-items-center">
-                        <h4 class="modal-title" id="myModalLabel">
+                    <div class="card-header bg-primary">
+ <div class="modal-header d-flex align-items-center">
+                        <h4 class="card-title text-white" id="myModalLabel">
                             Capacitación
                         </h4>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
 
+                    </div>
+                   
+                    <div class="modal-body">
                     
                     <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/capacitacion-interna" 
-                    class="btn btn-lg bg-info-subtle text-info p-2 w-100">
+                    class="btn btn-lg bg-info-subtle text-info  w-100">
                         <i class="ti ti-device-imac"></i> Programa de capacitación interna
                     </a>
 
@@ -590,10 +635,10 @@ x-data="monitoreoEvaluacion()">
 
                     
                         
-                    </div>
+                    
                 </div>
                 <!-- /.modal-content -->
-            </div>
+       
             <!-- /.modal-dialog -->
         </div>
         <!-- /.modal -->

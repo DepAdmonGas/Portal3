@@ -16,7 +16,7 @@ document.addEventListener('alpine:init', () => {
         modals: {},
 
         cursos: [],
-        cursosTitulo: '',
+        cursosTitulo: '.',
         nombreUsuarioCursos: '',
         cursoSeleccion: {
             id_usuario: null,

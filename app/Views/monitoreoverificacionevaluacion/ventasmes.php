@@ -2,10 +2,10 @@
 x-data="ventasMes()">
 
     <div class="row mb-3 mt-3">
-        <div class="col-md-3">
-            <label class="form-label">Año</label>
+        <div class="col-md-12 d-flex justify-content-end">
             <select
-                class="form-select"
+                class="form-select "
+                style="width: 200px;"
                 x-model.number="year"
                 @change="buscar()">
                 <?php for($i = date('Y'); $i >= 2019; $i--): ?>
@@ -20,15 +20,16 @@ x-data="ventasMes()">
 
 <div class="table-responsive overflow-x-auto overflow-y-hidden">
 
-    <table class="table table-bordered table-sm">
+    <table class="table table-striped table-bordered">
+         
 
     <thead>
         <tr>
-            <th class="bg-primary text-white">Mes</th>
-            <th class="text-end bg-primary text-white">Ventas</th>
-            <th class="bg-primary text-white">Mes anterior</th>
-            <th class="text-end bg-primary text-white">Ventas</th>
-            <th class="text-end bg-primary text-white">Resultado</th>
+            <th>Mes</th>
+            <th>Ventas</th>
+            <th>Mes anterior</th>
+            <th>Ventas</th>
+            <th>Resultado</th>
         </tr>
     </thead>
 

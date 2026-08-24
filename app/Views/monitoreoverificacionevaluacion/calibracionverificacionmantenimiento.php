@@ -3,7 +3,7 @@ x-data="calibracionVerificacion()">
 
 
     <div class="row">
-    <div class="col-5 mt-3">
+    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mt-3">
       <div class="card">
       <div class="card-body">
       <h5>Bitácora calibración de equipos</h5>
@@ -15,31 +15,21 @@ x-data="calibracionVerificacion()">
     </div>
 
 
-<div class="col-12 mt-3">
+<div class="col-12">
 
 <div class="card">  
 
 <div class="card-header">
-  <div class="d-flex align-items-center">
-      <div class="ms-auto">
-      <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots-vertical fs-6"></i>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li>
+              <button class="btn bg-primary-subtle text-primary float-end">
                 <a class="dropdown-item pointer" href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-equipos-calibracion"><i class="ti ti-download"></i> Descargar</a>
-              </li>
-            </ul>
-          </div>   
-      </div>
-  </div>
+              </button>
+            
 </div>
 
-<div class="card-body">
+<div class="card-body p-3">
     
     <div class="table-responsive">
-          <table class="table table-bordered table-sm mt-2 mb-4">
+          <table class="table table-bordered table-sm mt-2 mb-2">
 <tr>
 <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>
 <td colspan="2" class="text-center align-middle"><b>Equipos sometidos a calibración</b></td>
@@ -55,25 +45,25 @@ x-data="calibracionVerificacion()">
 </div>
 
     <div class="table-responsive">
-<table class="table table-bordered table-sm">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
         <thead>
 
             <tr>
 
-                <th class="text-center bg-primary text-white align-middle">
+                <th class="align-middle">
                     Número de identificación
                 </th>
 
-                <th class="text-center bg-primary text-white align-middle">
+                <th class="align-middle">
                     Nombre del equipo (marca y modelo)
                 </th>
 
-                <th class="text-center bg-primary text-white align-middle">
+                <th class="align-middle">
                     Descripcion del equipo
                 </th>
 
-                <th class="text-center bg-primary text-white align-middle">
+                <th class=" align-middle">
                     Frecuencia de la calibración
                 </th>
 
@@ -142,16 +132,9 @@ x-data="calibracionVerificacion()">
 <div class="card-header">
       <div class="d-flex align-items-center">
       <div class="ms-auto">
-      <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots-vertical fs-6"></i>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li>
+              <button class="btn bg-primary-subtle text-primary float-end">
                 <a class="dropdown-item pointer" href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-calendario-calibracion"><i class="ti ti-download"></i> Descargar</a>
-              </li>
-            </ul>
-          </div>   
+              </button>
       </div>
   </div>
 </div>
@@ -160,7 +143,8 @@ x-data="calibracionVerificacion()">
 
 
 <div class="table-responsive">
-  <table class="table table-bordered table-sm mt-2 mb-2" <div class="table-responsive overflow-x-auto overflow-y-hidden">
+  <table class="table table-bordered table-sm mt-2 mb-2">
+  <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <tr>
 <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>
 <td colspan="2" class="text-center align-middle"><b>Calendario de calibraciones</b></td>
@@ -175,29 +159,29 @@ x-data="calibracionVerificacion()">
 </table>
 </div>
 
-<div class="table-responsive mt-3">
-<table class="table table-bordered table-sm">
+<div class="table-responsive">
+<table class="table table-striped pb-4 table-bordered  text-nowrap align-middle">
 
     <thead>
 
         <tr>
 
-            <th class="text-center align-middle bg-primary text-white">Número de identificación</th>
-            <th class="text-center align-middle bg-primary text-white">Nombre del equipo</th>
-            <th class="text-center align-middle bg-primary text-white">Frecuencia de la calibración</th>
+            <th class="text-center align-middle ">Número de identificación</th>
+            <th class="text-center align-middle ">Nombre del equipo</th>
+            <th class="text-center align-middle ">Frecuencia de la calibración</th>
 
-            <th class="text-center align-middle bg-primary text-white">Ene</th>
-            <th class="text-center align-middle bg-primary text-white">Feb</th>
-            <th class="text-center align-middle bg-primary text-white">Mar</th>
-            <th class="text-center align-middle bg-primary text-white">Abr</th>
-            <th class="text-center align-middle bg-primary text-white">May</th>
-            <th class="text-center align-middle bg-primary text-white">Jun</th>
-            <th class="text-center align-middle bg-primary text-white">Jul</th>
-            <th class="text-center align-middle bg-primary text-white">Ago</th>
-            <th class="text-center align-middle bg-primary text-white">Sep</th>
-            <th class="text-center align-middle bg-primary text-white">Oct</th>
-            <th class="text-center align-middle bg-primary text-white">Nov</th>
-            <th class="text-center align-middle bg-primary text-white">Dic</th>
+            <th class="text-center align-middle ">Ene</th>
+            <th class="text-center align-middle ">Feb</th>
+            <th class="text-center align-middle ">Mar</th>
+            <th class="text-center align-middle ">Abr</th>
+            <th class="text-center align-middle ">May</th>
+            <th class="text-center align-middle ">Jun</th>
+            <th class="text-center align-middle ">Jul</th>
+            <th class="text-center align-middle ">Ago</th>
+            <th class="text-center align-middle ">Sep</th>
+            <th class="text-center align-middle ">Oct</th>
+            <th class="text-center align-middle ">Nov</th>
+            <th class="text-center align-middle ">Dic</th>
 
         </tr>
 

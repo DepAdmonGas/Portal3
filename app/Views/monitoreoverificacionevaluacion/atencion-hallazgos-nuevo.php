@@ -9,7 +9,18 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
 
      buscarHallazgos();
 ">
+        <div class="text-end mt-3 mb-3">
 
+            <button onclick="window.history.back();"
+                class="btn btn-success">
+                <i class="ti ti-check"></i>
+                Finalizar
+            </button>
+
+        </div>
+
+        <div class="card">
+            <div class="card-body">
 <div class="bg-white mt-3 p-3">
 
         <div class="row">
@@ -17,7 +28,7 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
             <div class="col-md-4">
 
                 <label class="form-label">
-                    Fecha de la auditoría
+                    Fecha de la auditoría:
                 </label>
 
                 <input
@@ -31,7 +42,7 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
             <div class="col-md-4">
 
                 <label class="form-label">
-                    No. de control de la auditoría
+                    No. de control de la auditoría:
                 </label>
 
                 <input
@@ -45,7 +56,7 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
             <div class="col-md-4">
 
                 <label class="form-label">
-                    Tipo de auditoría
+                    Tipo de auditoría:
                 </label>
 
                 <input
@@ -57,27 +68,37 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
             </div>
 
         </div>
+        
 
-        <hr>
+</div>
+</div>
+</div>
 
-        <div class="d-flex justify-content-between align-items-center mt-4">
 
-            <h5 class="mb-0">
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center mt-0">
+
+            <h5 class="mb-0 form-label">
                 Hallazgos
             </h5>
 
             <button
-                class="btn btn-primary"
+                class="btn bg-primary-subtle text-primary"
                 @click="abrirModal()">
                 <i class="ti ti-plus"></i>
                 Nuevo
             </button>
 
         </div>
+    </div>
 
-        <div class="mt-3">
+    <div class="card-body">
+        <div class="mt-0">
+<div class="table-responsive">
 
-            <table class="table table-bordered table-striped table-sm mt-3">
+
+            <table class="table table-striped pb-4 table-bordered   align-middle">
             <thead>
             <tr>
             <th class="align-middle">SASISOPA</th>
@@ -86,9 +107,7 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
             <th class="align-middle">Fecha de implementación</th>
             <th class="align-middle">Evidencia</th>
             <th class="align-middle">% de cumplimiento</th>
-            <th class="align-middle text-center" width="36"><i class="ti ti-paperclip fs-7 text-primary"></i></th>
-            <th class="align-middle text-center" width="36"><i class="ti ti-edit fs-7 text-info"></i></th>
-            <th class="align-middle text-center" width="36"><i class="ti ti-trash fs-7 text-danger"></i></th>
+            <th class="alling-middle text-center whidth=36"><i class="ti ti-dots-vertical fs-6"></i></th>
             </tr>
             </thead>
             <tbody>
@@ -123,22 +142,41 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
         x-text="registro.cumplimiento">
     </td>
 
-    <td class="align-middle text-center">
-        <a @click="abrirModalEvidencia(registro.id)">
-            <i class="ti ti-paperclip fs-7 text-primary"></i>
-        </a>
-    </td>
 
-    <td class="align-middle text-center">
-        <a @click="editar(registro)">
-            <i class="ti ti-edit fs-7 text-info"></i>
-        </a>
-    </td>
 
-    <td class="align-middle text-center">
-        <a @click="eliminar(registro.id)">
-            <i class="ti ti-trash fs-7 text-danger"></i>
-        </a>
+    <td class="text-center">
+
+<div class="dropdown dropstart">
+        <a href="javascript:void(0)"data-bs-toggle="dropdown">
+        <i class="ti ti-dots-vertical fs-6"></i>
+    </a>
+
+
+    <ul class="dropdown-menu">
+
+                <li>
+                          <a class="dropdown-item pointer d-flex align-items-center gap-3"
+                            href="javascript:void(0)" @click="abrirModalEvidencia(registro.id)">
+                          <i class="ti ti-camera-plus"></i>Evidencia
+                        </a>
+                </li>
+                <li>
+                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
+                    href="javascrip:void(0)" @click="editar(registro)">
+            <i class="ti ti-edit"></i>Editar
+        </a> 
+        </li>
+        <li>
+            <a class="dropdown-item pointer d-flex align-items-center gap-3"
+                href="javascript:void(0)" @click="eliminar(registro.id)">
+                <i class="ti ti-trash"></i> Eliminar
+            </a>
+        </li>
+
+    </ul>
+
+
+
     </td>
 
 </tr>
@@ -153,7 +191,7 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
                         class="text-center">
 
                         <small>
-                            No se encontró información para mostrar
+                            No se encontró información 
                         </small>
 
                     </td>
@@ -163,17 +201,12 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
             </table>
 
         </div>
-
-        <div class="text-end mt-3">
-
-            <button onclick="window.history.back();"
-                class="btn btn-success">
-                Finalizar
-            </button>
-
         </div>
-
+    </div>
 </div>
+
+
+
 
 <!-- Modal -->
 
@@ -190,10 +223,12 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
                 <h5 class="modal-title text-white">
 
                     <span x-show="modoHallazgo == 'create'">
-                        Agregar Hallazgos
+                        <i class="ti ti-clipboard-plus"></i>
+                        Nuevo Hallazgo
                     </span>
 
                     <span x-show="modoHallazgo == 'edit'">
+                        <i class="ti ti-clipboard-search"></i>
                         Editar Hallazgos
                     </span>
 
@@ -210,15 +245,15 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
             <div class="modal-body">
 
                <label class="form-label">
-                  * SASISOPA
+                  * SASISOPA:
               </label>
 
-            <select class="form-control rounded-0"
+            <select class="form-select rounded-0"
                 x-model.number="hallazgo.id_sasisopa"
                 :class="errors.id_sasisopa ? 'is-invalid' : ''"
                 @input="errors.id_sasisopa = false">
 
-            <option value="">Seleccione</option>
+            <option value="">Seleccione una opcion...</option>
 
             <template x-for="item in sasisopaOptions" :key="item.id">
                 <option
@@ -306,7 +341,8 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
-                    Agregar evidencia
+                    <i class="ti ti-camera-plus"></i>
+                     Evidencia
                 </h4>
 
                 <button
@@ -317,7 +353,7 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
 
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body pb-0">
 
                 <div class="input-group mb-3">
 
@@ -327,17 +363,17 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
                         @change="seleccionarArchivo($event)">
 
                     <button
-                        class="btn btn-primary"
+                        class="btn btn-success"
                         @click="subirEvidencia()"
                         :disabled="loadingEvidencia">
-
-                        Subir
+<i class="ti ti-check"></i>
+                        Guardar
 
                     </button>
 
                 </div>
 
-                <table class="table table-bordered table-striped table-sm">
+                <table class="table table-bordered table-striped">
 
                     <tbody>
 
@@ -361,7 +397,7 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
                                     class="text-center align-middle">
 
                                     <button
-                                        class="btn btn-sm btn-danger"
+                                        class="btn  btn-danger"
                                         @click="eliminarEvidencia(item.id)">
 
                                         <i class="ti ti-trash"></i>
@@ -388,7 +424,17 @@ x-data="{ ...actions(), ...atencionHallazgos()}"
                     </tbody>
 
                 </table>
+                
 
+            </div>
+            <div class="modal-footer">
+  <button
+                    class="btn bg-danger-subtle text-danger"
+                    data-bs-dismiss="modal">
+
+                    <i class="ti ti-x"></i> Cancelar
+
+                </button>
             </div>
 
         </div>

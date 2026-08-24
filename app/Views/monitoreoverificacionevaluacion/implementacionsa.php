@@ -11,8 +11,8 @@ x-data="{ ...actions(), ...implementacionSA()}">
         ?>     
     </div>
 
-      <div class="datatables mt-3">
-    <div class="table-responsive overflow-x-auto overflow-hidden">
+      <div class="datatables ">
+    <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-implementacionsa" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -45,7 +45,7 @@ x-data="{ ...actions(), ...implementacionSA()}">
                 <div class="modal-header modal-colored-header bg-primary text-white">
                     <h4 class="modal-title text-white">
                         <i class="ti"
-   :class="mode === 'create' ? 'ti-plus' : 'ti-edit'">
+   :class="mode === 'create' ? 'ti-presentation-analytics' : 'ti-edit'">
 </i>
                         <span x-text="mode === 'create'
                         ? 'Nueva Implementación del SA'
@@ -62,9 +62,9 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
                 <div class="modal-body">
 
-                <div class="text-center"><b class="fs-6">Lee detalladamente y contesta de manera honesta los siguientes cuestionamientos</b></div>
+                <div class="text-start"> <h5 class="form-label">Lee detalladamente y contesta de manera honesta los siguientes cuestionamientos </h5></div>
 
-                <label class="form-label mt-4">* Fecha</label>
+                <label class="form-label mt-2">* Fecha:</label>
                 <input type="date" class="form-control w-50" x-model="fecha"
                 :class="errors.fecha ? 'is-invalid' : ''"
                   @input="errors.fecha = false">
@@ -73,63 +73,84 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
                 <div class="row mt-3">
 
+<!-- VISTA DE AGREGAR -->
                     <template x-for="(grupo,index) in preguntas" :key="index">
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+                            <div class="card">
 
-                            <div class="card h-100">
-
-                                <div class="card-body">
-
-                                    <h5 class="mb-3">
-                                        <span class="text-success"
+                                
+<div class="card-header bg-primary">
+                                    <h5 class="mb-0 text-white">
+                                        <span class="text-white"
                                             x-text="(index + 1) + '.'"></span>
 
                                         <span x-text="grupo.titulo"></span>
                                     </h5>
+</div>
+<div class="card-body p-0">
+<div class="table-responsive">
+
+    <table class="table table-striped table-bordered mb-0 p-0 align-middle">
+        <thead>
+<tr>
+    <th>Pregunta:</th>
+    <th class="text-center">Si</th>
+    <th class="text-center">No</th>
+</tr>
+
+        </thead>
+        <tbody>
 
                                     <template
                                         x-for="pregunta in grupo.preguntas"
                                         :key="pregunta.id">
+<tr>
+                                        <div class="">
 
-                                        <div class="mb-3">
-
-                                            <p class="fw-bold"
+                                            <td class="form-label"
                                             x-text="pregunta.id + '. ' + pregunta.texto">
-                                            </p>
+                                            </td>
 
                                             <div>
+<td class="text-center">
 
-                                                <label class="me-3">
 
-                                                    <input type="radio"
+                                                    <input 
+                                                    class="pointer"
+                                                    type="radio"
                                                         :name="'pregunta_' + pregunta.id"
                                                         value="1"
                                                         x-model="pregunta.respuesta">
 
-                                                    Sí
+                                                    
 
-                                                </label>
+</td>
+<td class="text-center">
+  
 
-                                                <label>
-
-                                                    <input type="radio"
+                                                    <input 
+                                                    class="pointer"
+                                                    type="radio"
                                                         :name="'pregunta_' + pregunta.id"
                                                         value="0"
                                                         x-model="pregunta.respuesta">
 
-                                                    No
-
-                                                </label>
-
+</td>
                                             </div>
 
-                                        </div>
+                                         </div>
+</tr>
+                                       </template>
 
-                                    </template>
+        </tbody>
 
+    
+                                  
+                                    </table>
+                                
                                 </div>
-
+</div>
                             </div>
 
                         </div>
@@ -175,7 +196,7 @@ x-data="{ ...actions(), ...implementacionSA()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
-                    <i class="ti ti-file-description"></i>
+                    <i class="ti ti-eye"></i>
                     Detalle Implementación del SA
                 </h4>
 
@@ -190,7 +211,7 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
                 <div class="mb-4">
 
-                    <label class="fw-bolder">
+                    <label class="form-label">
                         Fecha
                     </label>
 
@@ -198,21 +219,26 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
                 </div>
 
-                <template
+                
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+    <thead>
+        <tr>
+           <th>Pregunta</th> 
+           <th>Respuesta</th>
+        </tr>
+    </thead>
+    <tbody>
+            
+    <template
                     x-for="pregunta in detallePreguntas"
                     :key="pregunta.pregunta">
-
-                    <div class="card mb-2">
-
-                        <div class="card-body">
-
-                            <div class="fw-bolder"
+<tr>
+                         <td class="form-label"
                                  x-text="pregunta.pregunta">
-                            </div>
+</td>
 
-                            <div class="mt-2">
-
-                                <span
+<td class="text-center">
+                               <span
                                     class="badge bg-info"
                                     x-show="pregunta.resultado == 1">
 
@@ -227,15 +253,17 @@ x-data="{ ...actions(), ...implementacionSA()}">
                                     No
 
                                 </span>
-
-                            </div>
+                                </td>
+</tr>
+</template>
 
                         </div>
 
                     </div>
 
-                </template>
-
+                
+                </tbody>
+</table>
             </div>
 
             <div class="modal-footer">
