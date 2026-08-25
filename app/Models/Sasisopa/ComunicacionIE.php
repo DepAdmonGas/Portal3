@@ -48,21 +48,20 @@ class ComunicacionIE extends Model
         'asistencia' => 'integer',
     ];
 
-     public function encargado()
-        {
-            return $this->belongsTo(
-                Usuario::class,
-                'encargado_comunicacion',
-                'id'
-            );
-        }
+    public function encargado()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'encargado_comunicacion',
+            'id'
+        );
+    }
 
     public function evidencias()
     {
-       return $this->hasMany(
-       ComunicacionEvidencia::class,
-       'id_comunicacion'
-       );
+        return $this->hasMany(
+            ComunicacionEvidencia::class,
+            'id_comunicacion'
+        );
     }
-
 }
