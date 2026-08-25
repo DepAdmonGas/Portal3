@@ -4,7 +4,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
     <div class="text-end">
         <?= 
             !empty($permisos['crear']) ? 
-            '<button type="button" class="btn btn-primary" @click="abrirModalAgregar()">
+            '<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirModalAgregar()">
             <i class="ti ti-plus"></i> Nuevo
             </button>' 
             : '' 
@@ -14,45 +14,45 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 <div class="table-responsive mt-3">
 
         <table
-            class="table table-bordered table-striped table-hover table-sm">
+            class="table table-bordered table-striped       ">
 
             <thead>
 
                 <tr>
 
-                    <th class="text-center bg-primary text-white align-middle">
+                    <th class="align-middle text-center">
                         #
                     </th>
-                    <th class="text-center bg-primary text-white align-middle">
+                    <th class="align-middle">
                         Fecha
                     </th>
-                    <th class="text-center bg-primary text-white align-middle">
+                    <th class="align-middle">
                         Auditor
                     </th>
                     <th
-                        class="text-center bg-primary text-white align-middle"
+                        class="align-middle text-center"
                         colspan="3">
                         Fo.ADMONGAS.024
                         <small>
                             (INFORME DE AUDITORÍA)
                         </small>
                     </th>
-                    <th class="text-center bg-primary text-white align-middle">
+                    <th class="align-middle text-center">
                         Anexos
                     </th>
                     <th
-                        class="text-center bg-primary text-white align-middle"
+                        class="align-middle text-center"
                         colspan="3">
                         Fo.ADMONGAS.025
                         <small>
                             (PLAN DE ATENCIÓN DE HALLAZGOS)
                         </small>
                     </th>
-                    <th class="text-center bg-primary text-white align-middle">
+                    <th class="align-middle text-center">
                         Anexos
                     </th>
-                    <th class="text-center bg-primary text-white align-middle">
-                       <i class="ti ti-trash text-white fs-7"></i>
+                    <th class="align-middle text-center">
+                       <i class="ti ti-trash text-danger fs-7"></i>
                     </th>
                 </tr>
 
@@ -88,21 +88,21 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                             x-text="item.auditor">
                         </td>
                         <!-- FORMATO 024 -->
-                        <td class="text-center">
+                        <td class="text-center align-middle">
                             <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" download>
                                 <i class="ti ti-file-download text-info fs-7"></i>
                             </a>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center align-middle">
                         <a href="javascript:void(0)" @click="subir024(item.id)"><i class="ti ti-file-upload text-success fs-7"></i></a>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center align-middle">
                             <template
                                 x-if="
                                     item.formato024.existe
                                 ">
 
-                                <a :href="`/uploads/${item.formato024.archivo}`" download=""><i class="ti ti-file-type-pdf text-danger fs-7"></i></a>
+                                <a :href="`/uploads/${item.formato024.archivo}`" download=""><i class="ti ti-download text-danger fs-7 "></i></a>
 
                             </template>
                             <template
@@ -110,15 +110,15 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                                <i class="ti ti-x fs-7"></i>
                             </template>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center align-middle">
 
-                        <a @click="abrirAnexos(item.id,24)"><i class="ti ti-paperclip text-primary fs-7"></i></a>
+                        <a @click="abrirAnexos(item.id,24)"><i class=" pointer ti ti-paperclip text-primary fs-7"></i></a>
 
                         </td>
 
                         <!-- FORMATO 025 -->
 
-                        <td class="text-center">
+                        <td class="text-center align-middle">
 
                             <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" download>
                                 <i class="ti ti-file-download text-info fs-7"></i>
@@ -126,18 +126,17 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
                         </td>
 
-                        <td class="text-center">
+                        <td class="text-center align-middle">
                             <a href="javascript:void(0)" @click="subir025(item.id)"><i class="ti ti-file-upload text-success fs-7"></i></a>
                         </td>
 
-                        <td class="text-center">
+                        <td class="text-center align-middle">
 
                             <template
                                 x-if="
                                     item.formato025.existe
                                 ">
-
-                                <a :href="`/uploads/${item.formato025.archivo}`" download=""><i class="ti ti-file-type-pdf text-danger fs-7"></i></a>
+                                <a :href="`/uploads/${item.formato025.archivo}`" download=""><i class="ti ti-download text-danger fs-7"></i></a>
 
                             </template>
 
@@ -151,14 +150,14 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
                         </td>
 
-                        <td class="text-center">
+                        <td class="text-center align-middle">
 
-                           <a @click="abrirAnexos(item.id,25)"><i class="ti ti-paperclip text-primary fs-7"></i></a>
+                           <a @click="abrirAnexos(item.id,25)"><i class="pointer ti ti-paperclip text-primary fs-7"></i></a>
 
                         </td>
 
-                        <td class="text-center">
-                            <a @click="eliminar(item.id)"><i class="ti ti-trash text-danger fs-7"></i></a>
+                        <td class="text-center align-middle">
+                            <a @click="eliminar(item.id)"><i class="pointer ti ti-trash text-danger fs-7"></i></a>
                         </td>
 
                     </tr>
@@ -183,17 +182,17 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
+            <div class="modal-header head-colored-header bg-primary">
 
-                <h5 class="modal-title">
-
-                    Crear auditoría interna
+                <h5 class="modal-title text-white">
+<i class="ti ti-binoculars"></i>
+                    Nueva auditoría interna
 
                 </h5>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -204,21 +203,18 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                 <div class="mb-2">
 
                     <label class="form-label">
-                        * Nombre del auditor
+                        * Nombre del auditor:
                     </label>
 
                 </div>
 
                 <input
                     type="text"
-                    class="form-control"
+                    class="form-control mb-3"
                     x-model="auditor"
                     :class="errors.auditor ? 'is-invalid' : ''"
                     @input="errors.auditor = false">
-
-                <hr>
-
-                <small class="fw-bold">
+                <small class="form-label">
 
                     * Descarga los siguientes formatos
                     y carga cada uno al sistema
@@ -234,7 +230,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                             download>
 
                             <div
-                                class="bg-light text-center p-3">
+                                class="bg-primary-subtle text-center p-3">
 
                                 <i
                                     class="fa fa-file-word fa-3x">
@@ -259,7 +255,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                             download>
 
                             <div
-                                class="bg-light text-center p-3">
+                                class="bg-primary-subtle text-center p-3">
 
                                 <i
                                     class="fa fa-file-word fa-3x">
@@ -286,7 +282,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
             <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
+                    <i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
@@ -295,8 +291,8 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                     type="button"
                     class="btn btn-success"
                     @click="guardarAuditoria()">
-
-                    Crear auditoría
+                    <i class="ti ti-check"></i>
+                    Guardar
 
                 </button>
 
@@ -319,15 +315,16 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
+            <div class="modal-header head-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
+                    <i class="ti ti-file-upload"></i>
                     Fo.ADMONGAS.024 (INFORME DE AUDITORÍA)
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -338,7 +335,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                 <div class="mb-1">
 
                     <label class="form-label">
-                        * DOCUMENTO INFORME DE AUDITORÍA:
+                        * Formato (Fo.ADMONGAS.024):
                     </label>
 
                 </div>
@@ -360,17 +357,17 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
              <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
+                     <i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
 
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="guardar024()">
-
-                    Agregar archivo
+                    <i class="ti ti-check"></i>
+                    Guardar
 
                 </button>
 
@@ -393,15 +390,16 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
+            <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
+<i class="ti ti-file-upload"></i>
                     Fo.ADMONGAS.025 (PLAN DE ATENCIÓN DE HALLAZGOS)
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -412,7 +410,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                 <div class="mb-1">
 
                     <label class="form-label">
-                        * DOCUMENTO PLAN DE ATENCIÓN DE HALLAZGOS:
+                        * Formato (Fo.ADMONGAS.025):
                     </label>
 
                 </div>
@@ -434,17 +432,17 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
              <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
+<i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
 
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="guardar025()">
-
-                    Agregar archivo
+<i class="ti ti-check"></i>
+                    Guardar
 
                 </button>
 
@@ -462,19 +460,22 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
-      <div class="modal-header head-modal">
-        <h5 class="modal-title">Anexos</h5>
-        <button type="button" class="btn-close"
+      <div class="modal-header modal-colored-header bg-primary">
+        <h5 class="modal-title text-white">
+        <i class="ti ti-file-upload"></i>    
+        Anexos
+    </h5>
+        <button type="button" class="btn-close btn-close-white"
                 @click="modalAnexos.hide()"></button>
       </div>
 
       <div class="modal-body">
 
-        <label class="form-label">* Documento</label>
+        <label class="form-label">* Nombre del anexo:</label>
 
-        <select class="form-control mb-2"
+        <select class="form-select mb-2"
                 x-model="documentoAnexo">
-            <option value="">Seleccione</option>
+            <option value="">Seleccione una opcion...</option>
             <option>Lista de verificación</option>
             <option>Acta de verificación</option>
             <option>Evidencia</option>
@@ -486,15 +487,23 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                @change="archivoAnexo = $event.target.files[0]">
 
         <div class="text-end">
-            <button class="btn btn-primary"
+            <button class="btn btn-success"
                     @click="guardarAnexo">
+                    <i class="ti ti-check"></i>
                 Agregar
             </button>
         </div>
 
-        <hr>
 
-        <table class="table table-sm table-bordered">
+
+        <table class="table table-striped  table-bordered mt-3 text-nowrap align-middle">
+            <thead>
+<tr>
+    <th>Documento</th>
+    <th><i class="ti ti-file-type-pdf fs-7"></i></th>
+</tr>
+
+            </thead>
             <tbody>
 
                 <template x-if="anexos.length === 0">
@@ -518,8 +527,17 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
             </tbody>
         </table>
+</div>
+<div class="modal-footer">
+         <button
+                    class="btn bg-danger-subtle text-danger"
+                    data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+                    Cancelar
 
-      </div>
+                </button>
+</div>
+      
     </div>
   </div>
 </div>
