@@ -1,23 +1,9 @@
 <div id="container" class="pb-4"
 x-data="{ ...actions(), ...revisionResultados()}">
 
-<div class="text-end mt-2">
-   <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
-            <ul class="dropdown-menu animated rubberBand">
-                 <li>
-                    <a class="dropdown-item pointer" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
-                </li>
-            </ul>
-        </div>
-</div>
 
-
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <label class="form-label">Año</label>
+    <div class="row p-3 mb-3">
+        <div class="col-6">
             <select
                 class="form-select"
                 x-model.number="year"
@@ -29,11 +15,23 @@ x-data="{ ...actions(), ...revisionResultados()}">
                 <?php endfor; ?>
             </select>
         </div>
-    </div>
     
-    <!-- Implementación del SA -->
+<div class="col-6">
+    <div class="text-end">
+   <div class="btn-group">
+                 <button class="btn bg-primary-subtle text-primary">
+                    <a class="dropdown-item pointer" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
+                </button>
 
-    <table class="table table-bordered table-sm pb-0 mb-0 mt-2">
+        </div>
+</div>
+</div>
+    </div>
+    <!-- Implementación del SA -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+    <table class="table table-responsive table-striped table-bordered mb-0  align-middle2">
         <tbody>
             <tr>
                 <td class="align-middle text-center">
@@ -78,12 +76,16 @@ x-data="{ ...actions(), ...revisionResultados()}">
             </tr>
         </tbody>
     </table>
-
+    </div>
+    </div>
+</div>
     <!-- Implementación del SA -->
     <!-- Ventas -->
-    <hr>
 
-    <table class="table table-bordered table-sm pb-0 mb-0">
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+    <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
     <tbody>
       <tr>
         <td class="align-middle text-center"><b>Objeto</b></td>
@@ -101,7 +103,14 @@ x-data="{ ...actions(), ...revisionResultados()}">
       </tr>
     </tbody>
   </table>
-  <div class="mt-1"><b>Resultado:</b></div>
+  </div>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-body">
+  <div class="mt-1 mb-3 form-label"><b>Resultado:</b></div>
 
   <div class="row">
 
@@ -109,10 +118,10 @@ x-data="{ ...actions(), ...revisionResultados()}">
         x-for="(item,index) in ventas.detalle"
         :key="index">
 
-        <div class="col-2">
-
+        <div class="col-md-3">
+<div class="table-responsive">
             <table
-                class="table table-sm table-bordered"
+                class="table table-responsive table-striped table-bordered  align-middle"
                 style="font-size:.9em;">
 
                 <thead>
@@ -189,17 +198,24 @@ x-data="{ ...actions(), ...revisionResultados()}">
                 </tbody>
 
             </table>
-
+            </div>
+</div>
         </div>
 
     </template>
 
-  </div>
 
-  <hr>
+  
+    </div>
+</div>
+
+
   <!-- Ventas -->
   <!-- Capacitación -->
-  <table class="table table-bordered table-sm pb-0 mb-0">
+   <div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+  <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
           <tbody>
             <tr>
               <td class="align-middle text-center"><b>Objeto</b></td>
@@ -258,11 +274,17 @@ x-data="{ ...actions(), ...revisionResultados()}">
             </tr>
           </tbody>
         </table>
+</div>
+    </div>
+   </div>
 
-       <hr>
+
    <!-- Capacitación -->
   <!-- Satisfacción del cliente -->
-<table class="table table-bordered table-sm">
+   <div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+<table class="table table-responsive table-striped table-bordered mb-0  align-middle">
 
     <tbody>
 
@@ -376,12 +398,18 @@ x-data="{ ...actions(), ...revisionResultados()}">
     </tbody>
 
 </table>
+</div>
+    </div>
+   </div>
 
- <hr>
+
 
   <!-- Satisfacción del cliente -->
   <!-- Incidentes y accidentes -->
-<table class="table table-bordered table-sm pb-0 mb-0">
+   <div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+<table class="table table-responsive table-striped table-bordered mb-0 align-middle">
 
     <tbody>
 
@@ -470,45 +498,49 @@ x-data="{ ...actions(), ...revisionResultados()}">
     </tbody>
 
 </table>
-
+</div>
+    </div>
+   </div>
 
 <div class="card mt-4">
-  <div class="card-body">
-  <div class="d-flex align-items-center">
+    <div class="card-header">
+          <div class="d-flex align-items-center ">
       <div class="ms-auto">
-      <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+      <div class="dropdown center">
+            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalRevisionResultado()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalRevisionResultado()"><i class="ti ti-plus"></i> Nuevo</a>
               </li>
               <li>
-                <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.027.docx" download><i class="ti ti-file-word"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.027.docx" download><i class="ti ti-download"></i>   Descargar</a>
               </li>
             </ul>
           </div>   
       </div>
   </div>
-
-    <table class="table table-sm table-bordered table-striped table-hover">
+        </div>
+  <div class="card-body">
+<div class="table-responsive">
+    <table class="table table-responsive table-striped table-bordered mb-0 text-nowrap align-middle">
 
         <thead>
 
             <tr>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle ">
                     #
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle ">
                     Fecha
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle ">
                     Nombre completo
                 </th>
                 <th
                     width="35"
-                    class="text-center align-middle bg-primary text-white">
+                    class="text-center align-middle ">
                     <i class="fas fa-ellipsis-v"></i>
                 </th>
             </tr>
@@ -580,7 +612,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
         </tbody>
 
     </table>
-                    
+ </div>                   
   </div>
 </div>
 
@@ -594,11 +626,12 @@ x-data="{ ...actions(), ...revisionResultados()}">
         <div class="modal-content">
             <div class="modal-header modal-colored-header bg-primary text-white">
                 <h4 class="modal-title text-white">
-
+<i class="ti" :class="modoRevision ==='create' ? 'ti-clipboard-plus' :'ti-edit'"></i>
                     <span
+                    
                         x-text="
                             modoRevision === 'create'
-                                ? 'Agregar Archivo'
+                                ? 'Nuevo Archivo'
                                 : 'Editar Archivo'
                         ">
                     </span>
@@ -615,9 +648,9 @@ x-data="{ ...actions(), ...revisionResultados()}">
 
             <div class="modal-body">
 
-                <div class="mb-3">
+                <div class="mb-0">
 
-                    <label class="form-label fw-bolder">
+                    <label class="form-label fw-bolder mb-2">
                         * Fecha:
                     </label>
 
@@ -630,9 +663,9 @@ x-data="{ ...actions(), ...revisionResultados()}">
 
                 </div>
 
-                <div class="mb-3">
+                <div class="mt-3 mb-0">
 
-                    <label class="form-label fw-bolder">
+                    <label class="form-label fw-bolder mb-2">
 
                          Revisión de resultados en formato PDF:
 
@@ -657,17 +690,9 @@ x-data="{ ...actions(), ...revisionResultados()}">
                     ">
 
                     <div>
-
-                        <a
-                            :href="`${revision.archivo_actual}`"
-                            target="_blank">
-
-                            <i class="ti ti-file-type-pdf text-danger fs-7"></i>
-
-                            Ver archivo actual
-
-                        </a>
-
+<div class="mt-3">
+                      
+</div>  
                     </div>
 
                 </template>
@@ -684,6 +709,18 @@ x-data="{ ...actions(), ...revisionResultados()}">
 
                 </button>
 
+
+  <a class="btn bg-primary-subtle text-primary"
+                            :href="`${revision.archivo_actual}`"
+                            target="_blank">
+
+                            <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+
+                            Ver archivo actual
+
+                        </a>
+
+                        
                 <button
                     class="btn btn-success"
                     @click="guardarRevisionResultado()">
