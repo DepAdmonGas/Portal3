@@ -16,8 +16,8 @@ x-data="programaAuditoria()">
             </ul>
         </div>
 </div>
-
-    <table class="table table-bordered table-sm mt-3">
+<div class="table-resposive overflow-x-auto overflow-y-hiddien mb-3">
+    <table class="table table-bordered mt-3  align-middle">
     <tr>
     <td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png'; ?>" style="width: 200px;"></td>
     <td colspan="2" class="text-center align-middle"><b>Formato Programa de auditorias (Internas y externas) </b></td>
@@ -30,21 +30,22 @@ x-data="programaAuditoria()">
     <td class="text-center align-middle">Fecha de autorizacion 01-Oct-2018</td>
     </tr>
     </table>
-
-    <table class="table table-bordered table-sm mt-3">
+    </div>
+<div class="table-resposive overflow-x-auto overflow-y-hiddien mb-3">
+    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
         <thead>
 
             <tr>
-                <th class="bg-primary text-white">Tipo auditoría</th>
-                <th class="bg-primary text-white">Responsable</th>
-                <th class="bg-primary text-white">Periodicidad</th>
+                <th class="text-center">Tipo auditoría</th>
+                <th class="text-center">Responsable</th>
+                <th class="text-center">Periodicidad</th>
                 <template
                     x-for="year in years"
                     :key="year">
 
                     <th
-                        class="bg-primary text-white text-center"
+                        class=" text-center"
                         x-text="year">
                     </th>
 
@@ -62,11 +63,17 @@ x-data="programaAuditoria()">
 
                 <tr>
 
-                    <td x-text="registro.tipo_auditoria"></td>
+                    <td
+                    class="text-center" 
+                    x-text="registro.tipo_auditoria"></td>
 
-                    <td x-text="registro.responsable"></td>
+                    <td 
+                    class="text-center"
+                    x-text="registro.responsable"></td>
 
-                    <td x-text="registro.periodicidad"></td>
+                    <td 
+                    class="text-center"
+                    x-text="registro.periodicidad"></td>
 
                     <template
                         x-for="year in years"
@@ -100,6 +107,7 @@ x-data="programaAuditoria()">
         </tbody>
 
     </table>
+</div>
 
     <div class="text-center"><small>*Las auditorias al SA se realizaran por personal interno de la empresa, que puede ser el gerente de la estación de servicio, el Representante legal, el departamento de gestión, entre otras y las auditorias externas se realizaran por un tercer acreditado (cada dos años de acuerdo a las DACG expendio de petrolíferos) ante la Agencia de Seguridad Energía y Ambiente, tercer acreditado que tendrá que tener vigente su autorización ante la Agencia y el personal podrá elegir. </small></div>
 
@@ -117,6 +125,7 @@ x-data="programaAuditoria()">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h5 class="modal-title text-white">
+                    <i class="ti ti-search"></i>
                     Buscar
                 </h5>
 
@@ -131,7 +140,7 @@ x-data="programaAuditoria()">
             <div class="modal-body">
 
                 <label class="form-label">
-                    Fecha inicio
+                    Fecha inicio:
                 </label>
 
                 <input
@@ -140,7 +149,7 @@ x-data="programaAuditoria()">
                     x-model="fechaInicio">
 
                 <label class="form-label mt-3">
-                    Fecha término
+                    Fecha término:
                 </label>
 
                 <input
@@ -161,9 +170,9 @@ x-data="programaAuditoria()">
                 </button>
 
                 <button
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="buscar()">
-                    <i class="ti ti-check"></i>
+                    <i class="ti ti-search"></i>
                     Buscar
 
                 </button>
