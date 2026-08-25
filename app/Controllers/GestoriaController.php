@@ -360,4 +360,6 @@ class GestoriaController extends BaseController
         // 4. Responder con éxito
         JsonResponse::success('Requisito legal actualizado correctamente.');
     }
+
+    //-----
 }

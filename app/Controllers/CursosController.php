@@ -683,7 +683,7 @@ class CursosController extends BaseController
 
         // Fondo
         $pdf->Image(
-            asset('images/cursos/fondo-2024.jpg'),
+            dirname(__DIR__, 2) . '/public/assets/images/cursos/fondo-2024.jpg',
             0,
             0,
             300,
