@@ -10,17 +10,16 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 ">
 
 <div class="card mt-2">
-  <div class="card-body">
-
+    <div class="card-header">
   <div class="d-flex align-items-center">
       <div class="ms-auto">
       <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+            <a href="javascript:void(0)" class="btn btn-light text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ti ti-dots-vertical fs-6"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalInvestigacion()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalInvestigacion()"><i class="ti ti-plus"></i> Nuevo</a>
               </li>
               <li>
                 <a class="dropdown-item pointer" href="/sasisopa/investigacion-incidentes-accidentes/pdf"><i class="ti ti-download"></i> Descargar</a>
@@ -29,30 +28,34 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
           </div>   
       </div>
   </div>
+    </div>
+  <div class="card-body">
+
+
 
   <div class="datatables mt-3">
-    <div class="table-responsive overflow-x-auto overflow-hidden">
-      <table class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
+    <div class="table-responsive overflow-x-auto overflow-hidden P-3">
+      <table class="table table-striped table-bordered text-nowrap align-middle">
         <thead>
           <tr>
-            <th class="text-center bg-primary text-white">#</th>
-            <th class="text-center bg-primary text-white">Fecha</th>
-            <th class="text-center bg-primary text-white">Nombre</th>
-            <th class="text-center bg-primary text-white">Puesto</th>
-            <th class="text-center bg-primary text-white">Descripción evento</th>
-            <th class="text-center bg-primary text-white">Tipo evento</th>
-            <th class="text-center bg-primary text-white">Muertes</th>
-            <th class="text-center bg-primary text-white" colspan="2">
-                <span class="badge rounded-pill text-bg-dark"><small>1</small></span> 
+            <th class="text-center">#</th>
+            <th class="text-center">Fecha</th>
+            <th class="text-center">Nombre</th>
+            <th class="text-center">Puesto</th>
+            <th class="text-center">Descripción evento</th>
+            <th class="text-center">Tipo evento</th>
+            <th class="text-center">Muertes</th>
+            <th class="text-center" colspan="2">
+                <span class="badge rounded-pill text-bg-primary me-1"><small>1</small></span> 
                 Grupo interdiciplinario</th>
-            <th class="text-center bg-primary text-white" colspan="3">
-                <span class="badge rounded-pill text-bg-dark"><small>2</small></span> 
+            <th class="text-center" colspan="3">
+                <span class="badge rounded-pill text-bg-primary me-1"><small>2</small></span> 
                 Fo.ADMONGAS.026</th>
-            <th class="text-center bg-primary text-white">
-                <span class="badge rounded-pill text-bg-dark"><small>3</small></span> 
+            <th class="text-center">
+                <span class="badge rounded-pill text-bg-primary me-1"><small>3</small></span> 
                 Tercer Autorizado</th>
-          <th class="text-center bg-primary text-white">
-          <a class="text-white"><i class="ti ti-trash fs-6"></i></a>
+          <th class="text-center">
+          <a class="text-danger"><i class="ti ti-trash fs-6"></i></a>
           </th>
           </tr>
         </thead>
@@ -134,7 +137,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                             )
                         ">
 
-                        <i class="ti ti-users fs-6">
+                        <i class="pointer ti ti-users fs-6">
                         </i>
 
                     </a>
@@ -190,7 +193,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                                 )
                             ">
 
-                            <i class="ti ti-upload text-success fs-6">
+                            <i class="pointer ti ti-upload text-success fs-6">
                             </i>
 
                         </a>
@@ -260,7 +263,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                             ">
 
                             <i
-                                class="ti ti-shield-check text-success fs-6">
+                                class="pointer ti ti-shield-check text-success fs-6">
                             </i>
 
                         </a>
@@ -313,34 +316,30 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 </div>
 
 <div class="card">
-  <div class="card-body">
-
+    <div class="card-header">
     <div class="d-flex align-items-center">
-        <h4>Sin accidentes a la fecha</h4>
+        <h4>
+            
+        Sin accidentes a la fecha</h4>
       <div class="ms-auto">
-      <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalNoAccidentes()"><i class="ti ti-plus"></i> Agregar</a>
-              </li>
-            </ul>
-          </div>   
+        <button type="button" class="btn bg-primary-subtle text-primary">
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalNoAccidentes()"><i class="ti ti-plus"></i> Nuevo</a>
+</button>
       </div>
   </div>
+    </div>
+  <div class="card-body">
 
-  <div class="datatables mt-3">
-    <div class="table-responsive overflow-x-auto overflow-hidden">
+  <div class="datatables">
+    <div class="table-responsive p-0 overflow-x-auto overflow-hidden">
 
-      <table class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th class="bg-primary text-white text-center">#</th>
-            <th class="bg-primary text-white text-center">Fecha</th>
-            <th class="bg-primary text-white text-center">Nombre completo</th>
-          <th class="bg-primary text-white text-center" width="36">
+           <th class="text-center">#</th>
+            <th class="text-center">Fecha</th>
+            <th class="text-center">Nombre completo</th>
+          <th class="text-center" width="36">
           <a class="text-white"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -355,7 +354,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 class="text-center">
 
                 <small>
-                    No se encontró información para mostrar
+                    No se encontró información
                 </small>
 
             </td>
@@ -454,7 +453,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Fecha:
+                        * Fecha:
                     </label>
 
                     <input
@@ -469,7 +468,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Descripción del evento:
+                        * Descripción del evento:
                     </label>
 
                     <textarea
@@ -485,7 +484,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Tipo de evento:
+                        * Tipo de evento:
                     </label>
 
                     <select
@@ -608,7 +607,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 <!-- Hubo muertes de personal -->
                 <template x-if="form.tipo_evento == '2'">
 
-                <div class="form-check mb-3">
+                <div class="form-check mb-0">
 
                     <input
                         class="form-check-input"
@@ -616,7 +615,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                         x-model="form.hubo_muertes"
                         @change="toggleMuertes()">
 
-                    <label class="form-check-label">
+                    <label class=" form-label form-check-label">
 
                         Hubo muertes de personal
 
@@ -639,7 +638,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                         class="form-check-input"
                         x-model="form.contratar_tercero"
                         :disabled="form.hubo_muertes">
-                    <label class="form-check-label">
+                    <label class="form-label form-check-label">
                         Contratar tercer autorizado
                     </label>
                 </div>
@@ -747,10 +746,12 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
-      <div class="modal-header head-modal">
-        <h5 class="modal-title">Grupo interdiciplinario</h5>
+      <div class="modal-header modal-colored-header bg-primary">
+        <h5 class="modal-title text-white">
+            <i class="ti ti-users"></i>
+            Grupo interdiciplinario</h5>
        <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                 </button>
       </div>
@@ -787,25 +788,24 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
         <div class="text-end">
             <button class="btn btn-success"
                     @click="guardarPersonal()">
-                Agregar personal
+                <i class="ti ti-check"></i>
+                    Guardar
             </button>
         </div>
 
-        <hr>
-
-        <table class="table table-sm table-bordered table-striped">
+        <table class="mt-3 table  table-bordered table-striped">
             <thead>
-                <th class="text-center bg-primary text-white">#</th>
-                <th class="text-center bg-primary text-white">Nombre</th>
-                <th class="text-center bg-primary text-white">Puesto</th>
-                <th class="text-center bg-primary text-white">Especialidad</th>
+                <th class="text-center">#</th>
+                <th class="text-center">Nombre</th>
+                <th class="text-center">Puesto</th>
+                <th class="text-center">Especialidad</th>
             </thead>
             <tbody>
 
                 <template x-if="grupo_personal.length === 0">
                     <tr>
                         <td colspan="4" class="text-center text-muted">
-                            Sin información
+                            No se encontro informacion
                         </td>
                     </tr>
                 </template>
@@ -824,6 +824,15 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
         </table>
 
       </div>
+      <div class="modal-footer">
+                <button
+                    class="btn bg-danger-subtle text-danger"
+                    data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+                    Cancelar
+
+                </button>
+      </div>
     </div>
   </div>
 </div>
@@ -838,15 +847,16 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
+            <div class="modal-header modal-colored-header bg-primary">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white d-flex align-items-center">
+                    <i class="ti ti-file-upload me-1"></i>
                     Fo.ADMONGAS.026 (Formato para el informe detallado de la Investigación de Causa Raíz de los Eventos tipo 1)
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -857,7 +867,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 <div class="mb-1">
 
                     <label class="form-label">
-                        * DOCUMENTO FORMATO PARA EL INFORME DETALLADO:
+                        * Formato (Fo.ADMONGAS.026):
                     </label>
 
                 </div>
@@ -879,17 +889,17 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
              <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
+<i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
 
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="guardar026()">
-
-                    Agregar archivo
+<i class="ti ti-check"></i>
+                    Guardar
 
                 </button>
 
@@ -912,15 +922,16 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 
         <div class="modal-content">
 
-            <div class="modal-header head-modal">
+            <div class="modal-header modal-colored-header bg-primary">
 
-                <h4 class="modal-title">
+                <h4 class="modal-title text-white">
+                    <i class="ti ti-user"></i>
                     Tercer Autorizado
                 </h4>
 
                 <button
                     type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="modal">
                 </button>
 
@@ -928,25 +939,20 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 
             <div class="modal-body">
 
-            <b>* Nombre del tercer autorizado:</b>
-            <div x-text="nombreTercer"></div>
-            <hr>
+            <b class="form-label">Nombre del tercer autorizado:</b>
+            <div class="mb-3" x-text="nombreTercer"></div>
 
-            <b>* Numero de autorización:</b>
-            <div x-text="numeroTercer"></div>
-            <hr>
+            <b class="form-label">Numero de autorización:</b>
+            <div class="mb-3" x-text="numeroTercer"></div>
 
-            <b>* Nombre del líder de la investigación: </b>
-            <div x-text="liderTercer"></div>
-            <hr>
+            <b class="form-label">Nombre del líder de la investigación: </b>
+            <div class="mb-3" x-text="liderTercer"></div>
 
-                <div class="mb-1">
 
-                    <label class="form-label">
-                        * Agregar informe final:
+                    <label class="form-label mb-0">
+                        * Informe final:
                     </label>
 
-                </div>
 
                 <input
                     id="archivoTercer"
@@ -958,24 +964,24 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                         archivoTercer = $event.target.files[0];
                         errors.archivoTercer = false;
                     ">
-                <div class="text-end mt-3">
+                <div class="text-end mt-3 mb-3">
                     <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-success"
                     @click="guardarTercero">
-
-                    Agregar archivo
+<i class="ti ti-check"></i>
+                    Guardar
 
                 </button>
                 </div>
 
-                <b> Informe final de la investigación causa raíz </b>
+                <b class="form-label"> Informe final de la investigación causa raíz </b>
 
-               <table class="table table-sm table-bordered mt-2">
+               <table class="table table-bordered mt-2">
 
     <thead>
         <tr>
-            <th class="text-center align-middle">Fecha</th>
+            <th class="text-start">Fecha</th>
             <th class="text-center align-middle" width="36">
                 <i class="ti ti-file-type-pdf text-muted fs-7"></i>
             </th>
@@ -1027,7 +1033,15 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 </table>
 
             </div>
+<div class="modal-footer">
+         <button
+                    class="btn bg-danger-subtle text-danger"
+                    data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+                    Cancelar
 
+                </button>
+</div>
         </div>
 
     </div>
@@ -1043,14 +1057,15 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 
         <div class="modal-content rounded-0">
 
-            <div class="modal-header head-modal">
+            <div class="modal-header modal-colored-header bg-primary">
+<h4 class="modal-title text-white">
 
-                <h4 class="modal-title">
+                 <i  class="ti" :class="modoModal ==='create' ? 'ti-alert-triangle' :'ti-edit'"></i>
                     Sin accidentes a la fecha
                 </h4>
 
                 <button type="button"
-                        class="btn-close"
+                        class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                 </button>
 
@@ -1060,18 +1075,17 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 
                 <table class="w-100">
 
-                    <tr>
+                    <tr class="text-end">
 
                     <td>
                         <span x-text="municipio"></span>
-                        <span x-text="estado"></span>, a    
+                        <span x-text="estado"></span>
+                        <span class="me-2">, a    </span>
                     </td>
 
-                        <td class="text-end">
-                            Fecha:
-                        </td>
 
-                        <td width="250">
+
+                        <td>
 
                             <input type="date"
                                    class="form-control"
@@ -1110,11 +1124,11 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 
                 </p>
 
-                <p><b>Atentamente</b></p>
+                <p class="text-center align-middle"><b>Atentamente</b></p>
 
-                <div x-text="nombre"></div>
+                <div class="text-center align-middle" x-text="nombre"></div>
 
-                <div x-text="puesto"></div>
+                <div class="text-center align-middle" x-text="puesto"></div>
 
             </div>
 
@@ -1123,7 +1137,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
             <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
+<i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
@@ -1132,7 +1146,7 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
                 type="button"
                 class="btn btn-success"
                 @click="guardarNoAccidentes()">
-
+<i class="ti ti-check"></i>
                 <span
                     x-text="
                         idNoAccidentes
