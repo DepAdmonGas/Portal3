@@ -2,43 +2,45 @@
 x-data="{ ...actions(), ...informesDesempeno()}">
 
 <div class="card mt-4">
-  <div class="card-body">
-  <div class="d-flex align-items-center">
+    <div class="card-header">
+<div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Informe de Evaluación de Desempeño (IED)</h4>
       <div class="ms-auto">
-     <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+     <div class="dropdown center">
+            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalEvaluacion()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalEvaluacion()"><i class="ti ti-plus"></i> Nuevo</a>
               </li>
               <li>
-                <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.028.docx"><i class="ti ti-file-word"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.028.docx"><i class="ti ti-download"></i> Descargar</a>
               </li>
             </ul>
           </div>   
       </div>
   </div>
+    </div>
+  <div class="card-body">
 
-<table class="table table-sm table-bordered table-striped table-hover mt-3">
+<table class="table table-responsive table-striped table-bordered mb-0  align-middle">
 
         <thead>
 
             <tr>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle">
                     #
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle">
                     Fecha
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle">
                     Nombre completo
                 </th>
                 <th
                     width="35"
-                    class="text-center align-middle bg-primary text-white">
+                    class="text-center align-middle">
                     <i class="fas fa-ellipsis-v"></i>
                 </th>
             </tr>
@@ -51,7 +53,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                         colspan="4"
                         class="text-center">
                         <small>
-                            No se encontró información para mostrar
+                            No se encontró información
                         </small>
                     </td>
                 </tr>
@@ -115,32 +117,27 @@ x-data="{ ...actions(), ...informesDesempeno()}">
 </div>
 
 <div class="card">
-  <div class="card-body">
-
+    <div class="card-header">
     <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Control de la implementación de los procedimientos del SASISOPA (Fo.ADMONGAS.029)</h4>
       <div class="ms-auto">
-     <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="createImplementacion()"><i class="ti ti-plus"></i> Agregar</a>
-              </li>
-            </ul>
-          </div>   
+
+              <button class="btn bg-primary-subtle text-primary">
+                <a class="dropdown-item pointer" href="javascript:void(0)" @click="createImplementacion()"><i class="ti ti-plus"></i> Nuevo</a>
+              </button>
+  
+ 
       </div>
   </div>
-
-
-      <table class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle mt-3">
+    </div>
+  <div class="card-body">
+      <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
         <thead>
           <tr>
-           <th class="text-center bg-primary text-white">#</th>
-            <th class="text-center bg-primary text-white">Fecha</th>
-            <th class="text-center bg-primary text-white">Nombre completo</th>
-          <th class="text-center bg-primary text-white">
+           <th class="text-center">#</th>
+            <th class="text-center">Fecha</th>
+            <th class="text-center">Nombre completo</th>
+          <th class="text-center">
           <a><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -234,12 +231,12 @@ x-data="{ ...actions(), ...informesDesempeno()}">
         <div class="modal-content">
             <div class="modal-header modal-colored-header bg-primary text-white">
                 <h4 class="modal-title text-white">
-
+<i class="ti" :class="modoEvaluacion=== 'create' ? 'ti-clipboard-plus' :'ti-edit'"></i>
                     <span
                         x-text="
                             modoEvaluacion === 'create'
-                                ? 'Agregar archivo Fo.ADMONGAS.028'
-                                : 'Editar archivo Fo.ADMONGAS.028'
+                                ? 'Nuevo Fo.ADMONGAS.028'
+                                : 'Editar Fo.ADMONGAS.028'
                         ">
                     </span>
 
@@ -290,28 +287,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
 
                 </div>
 
-                <template
-                    x-if="
-                        modoEvaluacion === 'edit'
-                        && evaluacion.archivo_actual
-                    ">
-
-                    <div>
-
-                        <a
-                            :href="`${evaluacion.archivo_actual}`"
-                            target="_blank">
-
-                            <i class="ti ti-file-type-pdf text-danger fs-7"></i>
-
-                            Ver archivo actual
-
-                        </a>
-
-                    </div>
-
-                </template>
-
+                
             </div>
 
             <div class="modal-footer">
@@ -323,6 +299,28 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                     <i class="ti ti-x"></i> Cancelar
 
                 </button>
+<template
+                    x-if="
+                        modoEvaluacion === 'edit'
+                        && evaluacion.archivo_actual
+                    ">
+
+                    <div>
+
+                        <a class="btn bg-primary-subtle text-primary"
+                            :href="`${evaluacion.archivo_actual}`"
+                            target="_blank">
+
+                            <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+
+                            Ver archivo actual
+
+                        </a>
+
+                    </div>
+
+                </template>
+
 
                 <button
                     class="btn btn-success"
@@ -360,6 +358,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
+                    <i class="ti ti-eye"></i>
                     Detalle de la implementación de los procedimientos del SASISOPA
                 </h4>
 
@@ -435,7 +434,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
 
                 </table>
 
-                <table class="table table-bordered table-sm mt-3">
+                <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
 
                     <thead>
 
@@ -455,7 +454,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
 
                             <th class="text-center align-middle">
                                 <div class="border-bottom pb-1">Se dio a conocer la implementación</div>
-                                <div><label class="border-right pr-3 pl-2">Si</label> <label class="pl-2 pr-2">No</label></div>
+                                <div><label class="border-right pr-3 pl-2">Si</label>   / <label class="pl-2 pr-2">No</label></div>
                             </th>
 
                             <th class="text-center align-middle">
@@ -545,7 +544,16 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                 </table>
 
             </div>
+            
+<div class="modal-footer">
+                   <button
+                    class="btn bg-danger-subtle text-danger"
+                    data-bs-dismiss="modal">
 
+                    <i class="ti ti-x"></i> Cancelar
+
+                </button>
+</div>
         </div>
 
     </div>

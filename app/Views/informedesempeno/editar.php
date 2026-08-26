@@ -1,23 +1,38 @@
 <div id="container" class="pb-4"
 x-data="{ ...actions(), ...informesDesempenoEditar(<?= $idReporte ?>)}">
 
-<label class="form-label mt-3">Fecha: </label>
-<input type="date" class="form-control w-40"
+
+<div class="row p-3 mb-3">
+    <div class="col-6">
+<input type="date" class="form-control"
 x-model="fechaReporte"
 @change="actualizarFechaReporte()" />
+</div>
 
-<table class="table table-bordered table-sm mt-3">
+
+<div class="col-6">
+<div class="text-end">
+    <button class="btn btn-success" @click="finalizar()">
+        <i class="ti ti-check"></i>
+    Finalizar</button>
+</div>
+</div>
+</div>
+
+
+<div class="table-responsive">
+<table class="table table-responsive p-0 table-striped table-bordered  align-middle">
 <thead>
     <tr>
-    <th class="text-center align-middle bg-primary text-white">Fecha de implementación</th>
-    <th class="text-center align-middle bg-primary text-white">Nombre del procedimiento</th>
-    <th class="text-center align-middle bg-primary text-white" width="300px">Breve descripción de la implementación </th>
-    <th class="text-center align-middle bg-primary text-white">
+    <th class="text-center align-middle">Fecha de implementación</th>
+    <th class="text-center align-middle">Nombre del procedimiento</th>
+    <th class="text-center align-middle" width="300px">Breve descripción de la implementación </th>
+    <th class="text-center align-middle">
         <div class="border-bottom pb-1">Se dio a conocer la implementación</div>
-        <div><label class="border-right pr-3 pl-2">Si</label> <label class="pl-2 pr-2">No</label></div>
+        <div><label class="border-right pr-3 pl-2">Si</label> / <label class="pl-2 pr-2">No</label></div>
     </th>
-    <th class="text-center align-middle bg-primary text-white">Puestos de personal enterados de la implementación</th>
-    <th class="text-center align-middle bg-primary text-white" width="300px">Observaciones</th>
+    <th class="text-center align-middle" width="200px">Puestos de personal enterados de la implementación</th>
+    <th class="text-center align-middle" width="300px">Observaciones</th>
     </tr>
 </thead>
 
@@ -28,7 +43,7 @@ x-model="fechaReporte"
             :key="item.id">
 
             <tr>
-                <td class="align-middle">
+                <td class="text-center">
 
                     <input
                         type="date"
@@ -37,7 +52,7 @@ x-model="fechaReporte"
                         @change="actualizarFecha(item)">
                 </td>
 
-                <td class="align-middle">
+                <td class="text-center">
                     <b x-text="item.procedimiento"></b>
                 </td>
 
@@ -52,7 +67,7 @@ x-model="fechaReporte"
 
                 <td class="text-center align-middle">
 
-                    <label class="me-2">
+                    <label class=" pointer me-2">
 
                         <input
                             type="radio"
@@ -65,7 +80,7 @@ x-model="fechaReporte"
 
                     </label>
 
-                    <label>
+                    <label class="pointer">
 
                         <input
                             type="radio"
@@ -80,26 +95,30 @@ x-model="fechaReporte"
 
                 </td>
 
-                <td>
+        <td>
+    <template x-for="puesto in puestos" :key="puesto.id">
+        <div style="display: flex; align-items: flex-center; margin-left: 0px; margin-bottom: 5px;">
+            <input
+                class="pointer me-1"
+                type="checkbox"
+                :checked="tienePuesto(item, puesto.id)"
+                @change="togglePuesto(item, puesto)"
+                style="flex-shrink: 0;"
+            >
 
-                    <template
-                        x-for="puesto in puestos"
-                        :key="puesto.id">
+            <span
+                x-text="puesto.nombre"
+                style="
+                    margin-left: 1px;
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                    white-space: normal;
+                "
+            ></span>
+        </div>
+    </template>
+</td>
 
-                        <div>
-
-                            <input
-                                type="checkbox"
-                                :checked="tienePuesto(item,puesto.id)"
-                                @change="togglePuesto(item,puesto)">
-
-                            <span x-text="puesto.nombre"></span>
-
-                        </div>
-
-                    </template>
-
-                </td>
 
                 <td>
 
@@ -117,9 +136,5 @@ x-model="fechaReporte"
     </tbody>
 
 </table>
-
-<div class="text-end">
-    <button class="btn btn-success" @click="finalizar()">Finalizar</button>
 </div>
-
 </div>
