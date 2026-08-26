@@ -31,7 +31,9 @@ class LoginController
     {
         $data = [
             'title' => 'Login Portal3',
-            'scripts' => []
+            'scripts' => [
+                '/js/login/actions-login.init.js?v=3.0.1',
+            ]
         ];
 
         View::render('login/index', $data, 'auth');
@@ -78,14 +80,13 @@ class LoginController
 
 
             JsonResponse::error(
-                $result->message,
-                $result->status
+                '¡Usuario o contraseña Incorrectos!'
             );
         } catch (Throwable $e) {
 
             Logger::critical($e);
 
-            JsonResponse::serverError();
+            JsonResponse::error('¡Usuario o contraseña Incorrectos!');
         }
     }
 
