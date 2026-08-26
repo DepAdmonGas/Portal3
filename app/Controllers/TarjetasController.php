@@ -59,14 +59,14 @@ $data = [
 'idPuestoUser' => $idPuesto
 ],
 'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js?v=' . time(),
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/core/module-station-selector.js',
-'/assets/js/tarjetas/tarjetas.datatable.init.js?v=' . time(),
-'/assets/js/tarjetas/actions.init.js?v=' . time()
+'/js/vendor.min.js?v=' . time(),
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/core/module-station-selector.js',
+'/js/tarjetas/tarjetas.datatable.init.js?v=' . time(),
+'/js/tarjetas/actions.init.js?v=' . time()
 ]
 ];
 
@@ -460,13 +460,13 @@ $data = [
 'idPuestoUser' => $idPuesto
 ],
 'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js?v=' . time(),
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/tarjetas/tarjetas.formulario.datatable.init.js?v=' . time(),
-'/assets/js/tarjetas/actions.formulario.init.js?v=' . time()
+'/js/vendor.min.js?v=' . time(),
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/tarjetas/tarjetas.formulario.datatable.init.js?v=' . time(),
+'/js/tarjetas/actions.formulario.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -915,14 +915,14 @@ $data = [
 'idPuestoUser' => $idPuesto
 ],
 'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js?v=' . time(),
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/tarjetas/tarjetas.detalle.datatable.init.js',
-'/assets/js/tarjetas/tarjetas.seguimiento.timeline.js?v=' . time(),
-'/assets/js/tarjetas/actions.detalle.init.js?v=' . time()
+'/js/vendor.min.js?v=' . time(),
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/tarjetas/tarjetas.detalle.datatable.init.js',
+'/js/tarjetas/tarjetas.seguimiento.timeline.js?v=' . time(),
+'/js/tarjetas/actions.detalle.init.js?v=' . time()
 ],
 'help' => false
 ];
