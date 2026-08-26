@@ -1652,6 +1652,13 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/sgm', Route::auth(['GestoriaSgmController', 'index']));
     });
 
+    $r->addGroup('/sala-juntas', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['SalaJuntasController', 'index']));
+        $r->addRoute('GET', '/calendario/data', Route::auth(['SalaJuntasController', 'dataCalendario']));
+        $r->addRoute('GET', '/calendario/dia', Route::auth(['SalaJuntasController', 'diaCalendario']));
+        $r->addRoute('GET', '/calendario/detalle/{id:\d+}', Route::auth(['SalaJuntasController', 'detalleCalendario']));
+    });
+
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
     $r->addRoute('POST', '/telegram/webhook', ['TelegramWebhookController', 'handle']);
     $r->addRoute('GET', '/telegram/poll', Route::auth(['TelegramWebhookController', 'poll']));
