@@ -10,15 +10,15 @@
                 <i class="ti ti-dots-vertical fs-4"></i>
             </button>
             <ul class="dropdown-menu animated rubberBand">
-s
-                <?= 
-                !empty($permisos['crear']) ? 
-                '<li>
+
+                <?=
+                !empty($permisos['crear']) ?
+                    '<li>
                   <a class="dropdown-item pointer" @click="openCreate()"><i class="ti ti-plus"></i> Agregar</a>
-                </li>' 
-                : '' 
-                ?>   
-                 <li>
+                </li>'
+                    : ''
+                ?>
+                <li>
 
                     <a class="dropdown-item" href="<?= ($layout == 'sgm') ? '/personal/sgm/pdf' : '/uploads/archivos/renuncia/' . $renuncia; ?>" download><i class="ti ti-download"></i> Descargar</a>
 
