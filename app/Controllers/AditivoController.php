@@ -46,14 +46,14 @@ $data = [
 'diesel' => $inventario->diesel ?? 0
 ],
 'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/core/module-station-selector.js?v=' . time(),
-'/assets/js/bitacora/aditivo.datatable.init.js??v=' . time(),
-'/assets/js/bitacora/actions.init.js??v=' . time(),
+'/js/vendor.min.js',
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/core/module-station-selector.js?v=' . time(),
+'/js/bitacora/aditivo.datatable.init.js??v=' . time(),
+'/js/bitacora/actions.init.js??v=' . time(),
 ],
 'help' => false
 ];
@@ -380,14 +380,14 @@ $data = [
 'moduleStationKey' => 'bitacora-aditivo',
 'estacionId' => $estacionId,
 'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/core/module-station-selector.js?v=' . time(),
-'/assets/js/bitacora/reporte.datatable.init.js?v=' . time(),
-'/assets/js/bitacora/reporte.actions.init.js?v=' . time(),
+'/js/vendor.min.js',
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/core/module-station-selector.js?v=' . time(),
+'/js/bitacora/reporte.datatable.init.js?v=' . time(),
+'/js/bitacora/reporte.actions.init.js?v=' . time(),
 ]
 ];
 
@@ -608,14 +608,14 @@ $data = [
 'estacionId' => $estacionId,
 'inventario' => $inventarioData,
 'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/core/module-station-selector.js?v=' . time(),
-'/assets/js/bitacora/inventario.datatable.init.js?v=' . time(),
-'/assets/js/bitacora/inventario.actions.init.js?v=' . time(),
+'/js/vendor.min.js',
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/core/module-station-selector.js?v=' . time(),
+'/js/bitacora/inventario.datatable.init.js?v=' . time(),
+'/js/bitacora/inventario.actions.init.js?v=' . time(),
 ]
 ];
 

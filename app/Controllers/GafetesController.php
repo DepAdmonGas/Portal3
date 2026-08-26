@@ -143,14 +143,14 @@ $data = [
 'idPuestoUser' => $idPuesto
 ],
 'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js?v=' . time(),
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/core/module-station-selector.js',
-'/assets/js/gafetes/gafetes.datatable.init.js?v=' . time(),
-'/assets/js/gafetes/actions.init.js?v=' . time()
+'/js/vendor.min.js?v=' . time(),
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/core/module-station-selector.js',
+'/js/gafetes/gafetes.datatable.init.js?v=' . time(),
+'/js/gafetes/actions.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -549,13 +549,13 @@ $data = [
 'idPuestoUser' => $idPuesto
 ],
 'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js?v=' . time(),
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/gafetes/gafetes.formulario.datatable.init.js?v=' . time(),
-'/assets/js/gafetes/actions.formulario.init.js?v=' . time()
+'/js/vendor.min.js?v=' . time(),
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/gafetes/gafetes.formulario.datatable.init.js?v=' . time(),
+'/js/gafetes/actions.formulario.init.js?v=' . time()
 ],
 'help' => false
 ];
@@ -840,14 +840,14 @@ $data = [
 'idPuestoUser' => $idPuesto
 ],
 'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
 ],
 'scripts' => [
-'/assets/js/vendor.min.js',
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/gafetes/gafetes.detalle.datatable.init.js?v=' . time(),
-'/assets/js/gafetes/gafetes.seguimiento.timeline.js?v=' . time(),
-'/assets/js/gafetes/actions.detalle.init.js?v=' . time()
+'/js/vendor.min.js',
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/gafetes/gafetes.detalle.datatable.init.js?v=' . time(),
+'/js/gafetes/gafetes.seguimiento.timeline.js?v=' . time(),
+'/js/gafetes/actions.detalle.init.js?v=' . time()
 ],
 'help' => false
 ];
