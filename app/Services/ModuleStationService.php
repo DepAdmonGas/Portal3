@@ -263,7 +263,7 @@ $html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounde
 if ($showSelector) {
 $placeholder = $cfg['placeholder'] ?? 'Selecciona una estación...';
 if (empty($depts) && $cfg['type'] === 'stations_and_departments') {
-$placeholder = $cfg['allow_all'] ? 'Todas las estaciones' : 'Selecciona una estación...';
+$placeholder = $cfg['allow_all'] ? 'Todas las estaciones y departamentos' : 'Selecciona una estación...';
 }
 $allowAll = $cfg['allow_all'] ?? false;
 

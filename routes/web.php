@@ -655,6 +655,19 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/recursos-humanos/horario-personal/eliminar', Route::auth(['HorarioPersonalController', 'eliminar']));
         $r->addRoute('GET', '/recursos-humanos/horario-personal/pdf', Route::auth(['HorarioPersonalController', 'pdf']));
 
+        //----- Programar Horario
+        $r->addRoute('GET', '/recursos-humanos/programar-horario', Route::auth(['ProgramarHorarioController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/programar-horario/get-data', Route::auth(['ProgramarHorarioController', 'getData']));
+        $r->addRoute('GET', '/recursos-humanos/programar-horario/nuevo', Route::auth(['ProgramarHorarioController', 'nuevo']));
+        $r->addRoute('GET', '/recursos-humanos/programar-horario-formulario', Route::auth(['ProgramarHorarioController', 'formulario']));
+        $r->addRoute('GET', '/recursos-humanos/programar-horario-formulario/{id:\d+}', Route::auth(['ProgramarHorarioController', 'formulario']));
+        $r->addRoute('GET', '/recursos-humanos/programar-horario-detalle/{id:\d+}', Route::auth(['ProgramarHorarioController', 'detalle']));
+        $r->addRoute('GET', '/recursos-humanos/programar-horario/get-detalle', Route::auth(['ProgramarHorarioController', 'getDetalle']));
+        $r->addRoute('POST', '/recursos-humanos/programar-horario/editar-turno', Route::auth(['ProgramarHorarioController', 'editarTurno']));
+        $r->addRoute('POST', '/recursos-humanos/programar-horario/actualizar-fecha', Route::auth(['ProgramarHorarioController', 'actualizarFecha']));
+        $r->addRoute('POST', '/recursos-humanos/programar-horario/guardar', Route::auth(['ProgramarHorarioController', 'guardar']));
+        $r->addRoute('POST', '/recursos-humanos/programar-horario/eliminar', Route::auth(['ProgramarHorarioController', 'eliminar']));
+
         //----- Biometricos
         $r->addRoute('GET', '/recursos-humanos/biometricos', Route::auth(['BiometricosController', 'index']));
         $r->addRoute('GET', '/recursos-humanos/biometricos/get-data', Route::auth(['BiometricosController', 'getData']));
