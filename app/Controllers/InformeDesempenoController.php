@@ -493,7 +493,8 @@ class InformeDesempenoController extends BaseController{
             });
 
             echo json_encode([
-                'success' => true
+                'success' => true,
+                'message' => 'Registro eliminado correctamente'
             ]);
 
         } catch (\Throwable $e) {

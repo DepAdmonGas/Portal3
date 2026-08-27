@@ -5,6 +5,9 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Core\Request;
+use App\Core\JsonResponse;
+
 use App\Models\Usuario;
 use App\Models\Puestos;
 use App\Models\Estacion;
@@ -67,7 +70,11 @@ class PersonalController extends BaseController
             $descarga = "FORMATO DE RENUNCIA XOCHIMILCO.docx";
         }
 
-        $layout = ($categoria == 'SASISOPA') ? 'sasisopa' : 'sgm';
+        $layout = match ($categoria) {
+            'SASISOPA' => 'sasisopa',
+            'SGM'      => 'sgm',
+            default    => 'main',
+        };
 
         $puestos = $puestos
             ->orderBy('tipo_puesto')
@@ -105,7 +112,19 @@ class PersonalController extends BaseController
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $rows = Usuario::where('id_gas', $this->estacionId())
+
+        $usuario = Usuario::findOrFail($this->userId());
+
+        $rows = Usuario::query()
+            ->where('id_gas', $this->estacionId())
+            ->when($this->estacionId() == 8, function ($query) use ($usuario) {
+
+                if (in_array($usuario->id_puesto, [13, 14])) {
+                    $query->whereIn('id_puesto', [13, 14]);
+                } else {
+                    $query->where('id_puesto', $usuario->id_puesto);
+                }
+            })
             ->with('puesto')
             ->orderBy('id')
             ->get();
@@ -153,7 +172,8 @@ class PersonalController extends BaseController
             ];
         }
 
-        echo json_encode([
+        JsonResponse::custom([
+            "id_gas" => $this->estacionId(),
             "data" => $data,
             "permisos" => [
                 "eliminar" => $permisoEliminar,

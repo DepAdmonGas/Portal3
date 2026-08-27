@@ -31,7 +31,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
-    <table class="table table-responsive table-striped table-bordered mb-0  align-middle2">
+    <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
         <tbody>
             <tr>
                 <td class="align-middle text-center">
