@@ -282,6 +282,10 @@
             <div class="body-wrapper">
                 <div class="container-fluid">
                     <?php include __DIR__ . '/../partials/_global-badge.php'; ?>
+
+            <!---------- OPCION PARA IMPLEMENTAR EL SELECTOR ---------->
+            <?= $moduleStationSelector ?? '' ?>
+
                     <h4 class="fw-semibold mt-3"><?= $title; ?></h4>
                     <?php \App\Core\Breadcrumb::render(); ?>
 

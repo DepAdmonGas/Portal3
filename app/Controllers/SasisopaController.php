@@ -5,16 +5,15 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Models\Sasisopa\Sasisopa;
 use App\Core\Breadcrumb;
+use App\Models\Estacion; 
 
-use App\Services\ModuleStationService;
-
-use App\Models\Estacion;
 use App\Models\Sasisopa\AnalisisRiesgo;
 use App\Models\Sasisopa\AnalisisRiesgoAnexo;
 use App\Models\Sasisopa\RepresentanteTecnico;
 use App\Models\Sasisopa\SasisopaConsulta;
 
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Services\ReporteRequisitosLegalesService;
 use App\Models\Sasisopa\CapacitacionExterna;
 use App\Models\Sasisopa\ComunicacionIE;
@@ -64,6 +63,13 @@ class SasisopaController extends BaseController
         // Buscar permisos de los modulos
         $permisos = ModuloService::getPermisos($this->userId());
 
+        $moduleCtx = ModuleStationService::getContext('sasisopa');
+        $idEstacion = $moduleCtx['id_estacion'];
+
+        if (!$this->guardModuleAccess('sasisopa', $title, 'sasisopa')) {
+            return;
+        }
+
         $sasisopa = Sasisopa::all();
 
         $data = [
@@ -71,9 +77,13 @@ class SasisopaController extends BaseController
             'elementos' => $sasisopa,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
-            'links' => [],
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
+            'links' =>[],
+
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sasisopa/index.actions.init.js?v=' . time(),
             ],
             'help' => false
@@ -1234,6 +1244,9 @@ class SasisopaController extends BaseController
         // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $moduleCtx = ModuleStationService::getContext('sasisopa');
+        $idEstacion = $moduleCtx['id_estacion'];
+
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
@@ -1242,8 +1255,12 @@ class SasisopaController extends BaseController
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
             'filtro_usuario' => $this->filtro_usuario,
-            'links' => [
+
+            'moduleStationKey' => 'sasisopa',
+             'links' =>[
+
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
@@ -1252,6 +1269,7 @@ class SasisopaController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sasisopa/analisisriesgo.datatable.init.js?v=' . time(),
                 '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
                 '/js/asistencia/listaasistencia.crear.init.js?v=' . time(),
@@ -1267,10 +1285,11 @@ class SasisopaController extends BaseController
     {
 
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
+        $data = AnalisisRiesgo::where('id_estacion', $idEstacion)
+        ->orderBy('fecha','desc')
+        ->get();
 
-        $data = AnalisisRiesgo::where('id_estacion', $this->estacionId())
-            ->orderBy('fecha', 'desc')
-            ->get();
 
         echo json_encode([
             "data" => $data,
@@ -1285,7 +1304,8 @@ class SasisopaController extends BaseController
     public function pdfAspectosAmbientales()
     {
 
-        $estacion = Estacion::find($this->estacionId());
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
+        $estacion = Estacion::find($idEstacion);
         $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
         if (!ModuloService::validaPermiso($this->modulo, 'descargar')) {
@@ -1720,7 +1740,9 @@ class SasisopaController extends BaseController
     public function pdfRiesgosPeligros()
     {
 
-        $estacion = Estacion::find($this->estacionId());
+    $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
+    $estacion = Estacion::find($idEstacion);
+
         $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
         if (!ModuloService::validaPermiso($this->modulo, 'descargar')) {

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Usuario;
 use App\Models\Sgm\RevisionProcedimientoRegistro;
@@ -27,7 +28,7 @@ class SgmRevisionController extends BaseController
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $data = RevisionProcedimientoRegistro::where('id_estacion', $this->estacionId())
+        $data = RevisionProcedimientoRegistro::where('id_estacion', ModuleStationService::getContext('sgm')['id_estacion'])
             ->orderBy('fecha')
             ->get();
 
@@ -49,14 +50,16 @@ class SgmRevisionController extends BaseController
         header('Content-Type: application/json; charset=utf-8');
         $data = json_decode(file_get_contents('php://input'), true);
 
+        $idEstacion = ModuleStationService::getContext('sgm')['id_estacion'];
+
         $realizadoPor = Autorizado::query()
             ->join('tb_usuarios', 'sgm_autorizado.id_usuario', '=', 'tb_usuarios.id')
-            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('tb_usuarios.id_gas', $idEstacion)
             ->where('sgm_autorizado.estado', 1)
             ->value('id_usuario') ?? 0;
 
         $revision = RevisionProcedimientoRegistro::create([
-            'id_estacion'   => $this->estacionId(),
+            'id_estacion'   => $idEstacion,
             'id_usuario'    => $this->userId(),
             'fecha'         => date('Y-m-d'),
             'hora'          => date('H:m:s'),
@@ -179,6 +182,9 @@ class SgmRevisionController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'id' => $id,
+            'estacionId' => ModuleStationService::getContext('sgm')['id_estacion'],
+            'moduleStationKey' => 'sgm',
+            'ocultarSelectorEstacion' => true,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
@@ -194,7 +200,7 @@ class SgmRevisionController extends BaseController
     {
         $revision = RevisionProcedimientoRegistro::with('detalles')
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', ModuleStationService::getContext('sgm')['id_estacion'])
             ->firstOrFail();
 
         header('Content-Type: application/json');
@@ -267,11 +273,12 @@ class SgmRevisionController extends BaseController
     {
         header('Content-Type: application/pdf');
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $idEstacion = ModuleStationService::getContext('sgm')['id_estacion'];
+        $estacion = Estacion::findOrFail($idEstacion);
 
         $revision = RevisionProcedimientoRegistro::with('detalles')
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $idEstacion)
             ->firstOrFail();
 
         $realizadoPor = 'S/I';
