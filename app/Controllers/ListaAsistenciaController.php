@@ -12,6 +12,7 @@ use App\Models\Sasisopa\ListaAsistenciaEvidencia;
 use App\Models\Sasisopa\ComunicacionIE;
 use App\Models\Sgm\Autorizado;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -19,13 +20,24 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 class ListaAsistenciaController extends BaseController{
         protected string $modulo = 'sasisopa';
 
+        private static function moduleKeyPorPunto(int $punto): string
+        {
+            return $punto >= 100 ? 'sgm' : 'sasisopa';
+        }
+
         public function indexListaAsistencia($id){
         
-        $asistencia = ListaAsistencia::where('id', $id)
-        ->where('id_estacion', $this->estacionId())
-        ->first();
+        $asistencia = ListaAsistencia::where('id', $id)->first();
 
         if (!$asistencia) {
+            header("Location: /404");
+            exit;
+        }
+
+        $moduleKey = self::moduleKeyPorPunto((int) $asistencia->punto_sasisopa);
+        $idEstacion = ModuleStationService::getContext($moduleKey)['id_estacion'];
+
+        if ($asistencia->id_estacion !== $idEstacion) {
             header("Location: /404");
             exit;
         }
@@ -97,7 +109,7 @@ class ListaAsistenciaController extends BaseController{
         Breadcrumb::add($bcSubModulo, $bcSubUrl);        
         Breadcrumb::add($title, '');
 
-        $encargados = Usuario::where('id_gas', $this->estacionId())
+        $encargados = Usuario::where('id_gas', $idEstacion)
         ->where('id_puesto', 6)
         ->activo()
         ->orderBy('nombre')
@@ -107,7 +119,7 @@ class ListaAsistenciaController extends BaseController{
         ->pluck('usuario');
 
         $personal = Usuario::activo()
-        ->where('id_gas', $this->estacionId())
+        ->where('id_gas', $idEstacion)
         ->when(!empty($usuariosAsignados), function ($query) use ($usuariosAsignados) {
             $query->whereNotIn('nombre', $usuariosAsignados);
         })->get(['id', 'nombre']);
@@ -121,6 +133,9 @@ class ListaAsistenciaController extends BaseController{
             'asistencia' => $asistencia,
             'encargados' => $encargados,
             'personal' => $personal,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => $moduleKey,
+            'ocultarSelectorEstacion' => true,
              'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
@@ -166,8 +181,10 @@ class ListaAsistenciaController extends BaseController{
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
+        $moduleKey = self::moduleKeyPorPunto((int) $elemento);
+        $idEstacion = ModuleStationService::getContext($moduleKey)['id_estacion'];
         $asistencia = ListaAsistencia::where('punto_sasisopa', $elemento)
-        ->where('id_estacion', $this->estacionId())
+        ->where('id_estacion', $idEstacion)
         ->orderBy('fecha')
         ->get();
 
@@ -218,7 +235,7 @@ class ListaAsistenciaController extends BaseController{
 
         try {
 
-            $estacion = $this->estacionId();
+            $estacion = ModuleStationService::getContext(self::moduleKeyPorPunto((int) $punto))['id_estacion'];
             $usuario = $this->userId();
 
             // buscar autorizado
@@ -328,12 +345,17 @@ class ListaAsistenciaController extends BaseController{
     public function pdfListaAsistencia($id){
         header('Content-Type: application/pdf');
 
-        $estacion = Estacion::find($this->estacionId());
+        $asistencia = ListaAsistencia::find($id);
+
+        $idEstacion = $asistencia
+            ? ModuleStationService::getContext(self::moduleKeyPorPunto((int) $asistencia->punto_sasisopa))['id_estacion']
+            : null;
+
+        $estacion = Estacion::find($idEstacion);
         $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-        $asistencia = ListaAsistencia::find($id);
         $detalle = ListaAsistenciaDetalle::where('id_lista_asistencia',$id)->get();
         $comunicacion = ComunicacionIE::where('asistencia', $id)->first();
         $evidencias = ListaAsistenciaEvidencia::where('id_lista_asistencia',$id)->get();
@@ -734,9 +756,14 @@ class ListaAsistenciaController extends BaseController{
             return;
         }
 
+        $asistencia = ListaAsistencia::find($_POST['id'] ?? null);
+
+        $idEstacion = $asistencia->id_estacion
+            ?? ModuleStationService::getContext('sasisopa')['id_estacion'];
+
         $nombre = sprintf(
             'EVIDENCIA-LA-%d-%d.%s',
-            $this->estacionId(),
+            $idEstacion,
             time(),
             $extension
         );

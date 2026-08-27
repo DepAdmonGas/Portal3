@@ -6,6 +6,8 @@ use App\Core\View;
 use App\Models\Sgm\Elemento;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
+
 
 class SgmController extends BaseController
 {
@@ -17,6 +19,11 @@ class SgmController extends BaseController
 
         $title = 'SGM';
 
+        // 1. Obtener contexto de estación para ESTE módulo
+        $moduleCtx = ModuleStationService::getContext('sgm');
+        $idEstacion = $moduleCtx['id_estacion'];
+
+
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add($title, '');
 
@@ -25,9 +32,12 @@ class SgmController extends BaseController
         $data = [
             'title' => $title,
             'elementos' => $sgm,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sgm',  // ← ACTIVA EL SELECTOR
             'links' => [],
             'scripts' => [
-                '/js/vendor.min.js'
+                '/js/vendor.min.js',
+                 '/js/core/module-station-selector.js?v=' . time(),
             ],
             'help' => false
         ];

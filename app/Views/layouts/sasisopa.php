@@ -312,6 +312,9 @@
                 <div class="container-fluid">
 
                     <?php include __DIR__ . '/../partials/_global-badge.php'; ?>
+
+                    <?= $moduleStationSelector ?? '' ?>
+
                     <h4 class="fw-semibold mt-3"><?= $title; ?></h4>
                     <?php \App\Core\Breadcrumb::render(); ?>
                     <?= $content ?>

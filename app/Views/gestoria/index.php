@@ -41,8 +41,8 @@
             </div>
 
             <div class="list-group border-0">
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3" href="#"
+                    @click.prevent="irSasisopa()">
                     <i class="ti ti-currency-solana fs-4 me-2"></i>
                     SASISOPA
                 </a>

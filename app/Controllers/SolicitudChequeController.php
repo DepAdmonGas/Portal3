@@ -101,13 +101,16 @@ $departamentosFiltrados[] = $d;
 }
 }
 
-if ($permisos['es_gestoria'] && !MultiestacionService::isEnabled()) {
+if ($permisos['es_gestoria']) {
 ModuleStationService::setContext('solicitud-cheques', 8, 5);
 $idEstacion = 8;
 $idDepto = 5;
 $nombreFiltro = 'Gestoría';
-$estacionesFiltradas = array_filter($estacionesFiltradas, fn($s) => $s['id'] == 8);
-$departamentosFiltrados = array_filter($departamentosFiltrados, fn($d) => $d['id_puesto'] == 5);
+$esMultiestacion = false;
+$estacionesFiltradas = array_filter($estacionesFiltradas, fn($s) => 
+$s['id'] == 8);
+$departamentosFiltrados = array_filter($departamentosFiltrados, fn($d) 
+=> $d['id_puesto'] == 5);
 }
 
 $totalPendientes = array_sum(array_column($estacionesFiltradas, 'pendientes'))
@@ -136,7 +139,7 @@ $data = [
 'estacionesFiltradas' => $estacionesFiltradas,
 'departamentosFiltrados' => $departamentosFiltrados,
 'totalPendientes' => $totalPendientes,
-'moduleStationKey' => 'solicitud-cheques',
+'moduleStationKey' => $permisos['es_gestoria'] ? null : 'solicitud-cheques',
 'pendientesData' => $pendientesMap,
 'esGestoria' => $permisos['es_gestoria'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
@@ -795,7 +798,7 @@ $data = [
 'esUser22' => $permisos['id_usuario'] == 22,
 'esGestoria' => $permisos['es_gestoria'],
 'esUserGestoria' => $permisos['es_gestoria'],
-'puedeFirmarVOBO' => ($permisos['id_usuario'] == 19 || $permisos['es_user_30'] || $permisos['es_gestoria']),
+'puedeFirmarVOBO' => ($permisos['id_usuario'] == 19 || $permisos['es_user_30']),
 'puedeFirmarAuth' => ($permisos['id_usuario'] == 2 || $permisos['id_usuario'] == 22),
 'multiestacion' => $permisos['multiestacion'],
 'nombreContexto' => $nombreContexto,

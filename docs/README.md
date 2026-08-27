@@ -26,6 +26,7 @@ Este directorio contiene la documentación técnica de **Portal3**, un sistema w
 | [`refactoring/`](./refactoring/README.md) | Deuda técnica, mejoras propuestas y roadmap |
 | [`decisions/`](./decisions/README.md) | Architecture Decision Records (ADRs) |
 | [`audits/`](./audits/README.md) | Auditorías de arquitectura, seguridad, rendimiento y calidad |
+| [`MULTIESTACION/`](./MULTIESTACION/README.md) | Sistema de multiestación: selector de estaciones por módulo |
 
 ---
 

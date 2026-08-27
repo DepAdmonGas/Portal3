@@ -1,4 +1,6 @@
-<div id="container" data-elemento="1" data-herramienta="1">
+<div id="container" data-elemento="1" data-herramienta="1"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
 
 <div class="text-end mt-2">
@@ -37,9 +39,9 @@
 <div class="card-body">
 <p id="politica_text"
 class="card-text fs-4 fw-normal"
-data-politica="<?= htmlspecialchars($user->estacion->politica ?? '') ?>">
+data-politica="<?= htmlspecialchars($estacion->politica ?? '') ?>">
 
-<?= htmlspecialchars($user->estacion->politica ?? '') ?>
+<?= htmlspecialchars($estacion->politica ?? '') ?>
 </p>
 
 </div>
@@ -57,9 +59,9 @@ data-politica="<?= htmlspecialchars($user->estacion->politica ?? '') ?>">
 <div class="card-body">
 <p id="mision_text"
 class="card-text fs-4 fw-normal"
-data-mision="<?= htmlspecialchars($user->estacion->mision ?? '') ?>">
+data-mision="<?= htmlspecialchars($estacion->mision ?? '') ?>">
 
-<?= htmlspecialchars($user->estacion->mision ?? '') ?>
+<?= htmlspecialchars($estacion->mision ?? '') ?>
 </p>
 </div>
 </>
@@ -77,9 +79,9 @@ data-mision="<?= htmlspecialchars($user->estacion->mision ?? '') ?>">
 <div class="card-body">
 <p id="vision_text"
 class="card-text fs-4 fw-normal"
-data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
+data-vision="<?= htmlspecialchars($estacion->vision ?? '') ?>">
 
-<?= htmlspecialchars($user->estacion->vision ?? '') ?>
+<?= htmlspecialchars($estacion->vision ?? '') ?>
 </p>
 
 </div>
