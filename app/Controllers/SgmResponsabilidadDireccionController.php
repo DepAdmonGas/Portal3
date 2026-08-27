@@ -35,7 +35,7 @@ protected string $modulo = 'sgm';
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
-                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.crear.init.js?v=' . time(),
                 '/js/sgm/revision/index.action.init.js?v=' . time(),
 
                 '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),               

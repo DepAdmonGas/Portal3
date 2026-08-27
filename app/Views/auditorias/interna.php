@@ -14,7 +14,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 <div class="table-responsive mt-3">
 
         <table
-            class="table table-bordered table-striped       ">
+            class="table table-bordered table-striped ">
 
             <thead>
 

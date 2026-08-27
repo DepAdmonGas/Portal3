@@ -82,30 +82,6 @@ document.addEventListener('alpine:init', () => {
         return valid;
     },
 
-        async crearAsistencia() {
-
-            const punto = document
-                .getElementById('container')
-                .dataset.elemento;
-
-            const herramienta = document
-                .getElementById('container')
-                .dataset.herramienta;
-
-            const res = await this.createAction({
-                url: '/lista-asistencia/create',
-                data: {
-                    punto_sasisopa: punto,
-                    herramienta: herramienta
-                },
-                onSuccess: (res) => {
-                    // redirección solo si todo salió bien
-                    window.location.href = "/lista-asistencia/" + res.id;
-                }
-            });
-
-        },
-
         async actualizar(id){
 
             if (!this.validate()) {
@@ -192,7 +168,6 @@ document.addEventListener('alpine:init', () => {
     const id = document
     .getElementById('container')
     .dataset.id;
-
             const {data}=await axios.get(
                 `/lista-asistencia-evidencia/datatble/${id}`
             );

@@ -153,7 +153,6 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 </button>' 
 : '' 
 ?>   
-
 </div>  
 </div>
 
