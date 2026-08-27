@@ -44,7 +44,7 @@ class PoliticaController extends BaseController
                 '/js/sasisopa/politica.actions.init.js?v=' . time(),
                 '/js/sasisopa/listacomprobacion.actions.init.js?v=' . time(),
                 '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
-                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.crear.init.js?v=' . time(),
             ],
             'help' => true
         ];

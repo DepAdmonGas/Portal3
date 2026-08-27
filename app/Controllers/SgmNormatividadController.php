@@ -44,7 +44,7 @@ class SgmNormatividadController extends BaseController
                 '/libs/select2/dist/js/select2.min.js',
 
                 '/js/sgm/normatividad/inventario.actions.init.js?v=' . time(),
-                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.crear.init.js?v=' . time(),
 
                 '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
                 '/js/sgm/normatividad/inventario.datatable.init.js?v=' . time(),

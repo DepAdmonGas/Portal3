@@ -3,23 +3,34 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
 
 <!-- 1. POLÍTICA -->
 <div class="card mt-3">
-    <div class="card-body">
-
+    <div class="card-header">
         <div class="d-flex align-items-start">
             <h4 class="card-title">1. POLÍTICA</h4>
             <div class="ms-auto">
                 <div class="">
-                    <a href="/sasisopa/politica/pdf" class="link text-dark">
+                    <a href="/sasisopa/politica/pdf" class="btn bg-primary-subtle text-primary">
                       <i class="ti ti-file-type-pdf fs-4"></i> Politica
                     </a>
                 </div>
             </div>
         </div>
+    </div>
 
+
+
+    <div class="card-body">
 <div class="row mt-2">
     <div class="col-md-6">
-        <div class="fw-bolder mb-2">Fo.ADMONGAS.001 (Lista de comprobación)</div>
-        <table class="table table-sm table-bordered pb-0 mb-0">
+<div class="card">
+<div class="card-header bg-primary align-middle">
+      <h6 class="text-white mb-0">
+      <i class="ti ti-label"></i> 
+      Fo.ADMONGAS.001 (Lista de comprobación)</h6>
+</div>
+
+
+<div class="card-body p-0">
+        <table class="table table-bordered table-striped mb-0">
             <thead>
                 <th class="text-center">#</th>
                 <th class="text-center">Fecha</th>
@@ -42,10 +53,23 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
             </tbody>
         </table>
     </div>
+    </div>
+</div>
 
-    <div class="col-md-6">
-        <div class="fw-bolder mb-2">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</div>
-        <table class="table table-sm table-bordered pb-0 mb-0">
+<div class="col-md-6">
+<div class="card">
+    
+ <div class="card-header bg-primary">
+    <div class="text-white mb-0 d-flex align-items-center">
+        <i class="ti ti-label me-2"></i>
+        <span>Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</span>
+    </div>
+</div>
+
+    
+
+        <div class="card-body p-0">
+        <table class="table table-bordered table-striped mb-0">
             <thead>
                 <th class="text-center">#</th>
                 <th class="text-center">Fecha</th>
@@ -69,23 +93,32 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
                 </template>
             </tbody>
         </table>
+        </div>
+   
     </div>
 </div>
 
 </div> 
 </div>
+</div>
 <!-- 1. POLÍTICA -->
 
-<!-- 2. ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES -->
-<div class="card">
-    <div class="card-body">
-    <h4 class="card-title">2. ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES</h4>
 
-    <div class="row mt-3">
+<!-- 2. ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES -->
+<!---- card principal header----->
+<div class="card">
+
+    <div class="card-header">
+ <h4 class="card-title">2. ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES</h4>
+    </div>
+
+<!----card  principal body---->
+    <div class="card-body">
+    <div class="row mt-2">
 
     <div class="col-md-6">
 
-        <table class="table table-bordered table-sm mb-0 pb-0">
+        <table class="table table-bordered  mb-3 pb-0">
 
             <tbody>
                 <tr>
@@ -102,11 +135,16 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
             </tbody>
         </table>
 
-        <div class="fw-bolder mt-3 mb-2">
+<!------Card 1----->
+        <div class="card">
+            <div class="card-header bg-primary align-middle">
+        <h6 class="text-white mb-0">
+            <i class="ti ti-label"></i>
             Análisis de Riesgo del Sector Hidrocarburos (ARSH)
+        </h6>
         </div>
-
-        <table class="table table-sm table-bordered table-hover mb-0 pb-0">
+<div class="card-body p-0">
+        <table class="table table-bordered table-striped mb-0">
 
             <thead>
                 <tr>
@@ -146,10 +184,13 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
             </tbody>
         </table>
     </div>
+</div>
+</div>
 
-    <div class="col-md-6">
+<div class="col-md-6">
 
-        <table class="table table-bordered table-sm mb-0 pb-0">
+
+            <table class="table table-bordered mb-3">
 
             <tbody>
 
@@ -175,11 +216,18 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
 
         </table>
 
-        <div class="fw-bolder mt-3 mb-2">
-            Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)
-        </div>
 
-        <table class="table table-sm table-bordered mb-0 pb-0">
+
+<!-------card 2----->
+<div class="card">
+    <div class="card-header bg-primary align-middle">
+        <div class="text-white  d-flex align-items-center ">
+            <i class="ti ti-label me-2"></i>
+            <span> (Registro de la atención y el seguimiento a la comunicación interna y externa.)</span>
+        </div>
+</div>
+<div class="card-body p-0">
+        <table class="table table-bordered table-striped mb-0">
             <thead>
                 <tr>
                     <th class="text-center align-middle">#</th>
@@ -230,19 +278,23 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
             </tbody>
 
         </table>
-
-    </div>
-
 </div>
-
-    </div>
+        </div>
+</div>
+</div>
+</div>
 </div>
 <!-- 2. ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES -->
 
+
+
 <!-- 3. REQUISITOS LEGALES -->
 <div class="card">
-    <div class="card-body">
+    <div class="card-header">
     <h4 class="card-title">3. REQUISITOS LEGALES</h4>
+    </div>
+    <div class="card-body">
+
 
     <template
     x-for="nivel in [
@@ -253,26 +305,33 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     ]"
     :key="nivel.titulo"
 >
-
-<div class="mt-3">
+<!------titulo card--->
+<div class="card">
+    <div class="card-header">
+<div class="mb-3">
 
     <h5 x-text="nivel.titulo"></h5>
+</div>
 
-    <table class="table table-bordered table-sm">
+
+<!------cuerpo card----->
+<div class="card-body p-0">
+    <div class="table-responsive">
+    <table class="table table-bordered table-striped">
 
         <thead>
 
-            <tr class="bg-primary text-white">
+            <tr>
 
-                <th class="text-center align-middle bg-primary text-white">Dependencia</th>
-                <th class="text-center align-middle bg-primary text-white">Permiso</th>
-                <th class="text-center align-middle bg-primary text-white">Vigencia</th>
-                <th class="text-center align-middle bg-primary text-white">Fecha emisión</th>
-                <th class="text-center align-middle bg-primary text-white">Fecha vencimiento</th>
-                <th class="text-center align-middle bg-primary text-white">Acuse</th>
-                <th class="text-center align-middle bg-primary text-white">Requisito Legal</th>
-                <th class="text-center align-middle bg-primary text-white">% Cumplimiento</th>
-                <th class="text-center align-middle bg-primary text-white">Renovación</th>
+                <th class="text-center align-middle">Dependencia</th>
+                <th class="text-center align-middle">Permiso</th>
+                <th class="text-center align-middle">Vigencia</th>
+                <th class="text-center align-middle">Fecha emisión</th>
+                <th class="text-center align-middle">Fecha vencimiento</th>
+                <th class="text-center align-middle">Acuse</th>
+                <th class="text-center align-middle">Requisito Legal</th>
+                <th class="text-center align-middle">% Cumplimiento</th>
+                <th class="text-center align-middle">Renovación</th>
 
             </tr>
 
@@ -374,7 +433,7 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
         </tbody>
 
     </table>
-
+</div>
     <div class="mt-3 mb-4">
 
         <label class="text-muted">
@@ -402,11 +461,11 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
             Cumple
             <span x-text="nivel.data?.porcentaje?.cumple ?? 0"></span>%
         </span>
-
+</div>
     </div>
 
 </div>
-
+</div>
 </div>
 
 </div>

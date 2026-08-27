@@ -1263,7 +1263,7 @@ public function elemento18()
                 '/libs/select2/dist/js/select2.min.js',
                 '/js/sasisopa/analisisriesgo.datatable.init.js?v=' . time(),
                 '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
-                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.crear.init.js?v=' . time(),
                 '/js/sasisopa/analisisriesgo.actions.init.js?v=' . time(),
             ],
             'help' => true
@@ -2301,7 +2301,7 @@ public function elemento18()
                 '/libs/select2/dist/js/select2.min.js',
 
                 '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
-                '/js/asistencia/listaasistencia.actions.init.js?v=' . time(),
+                '/js/asistencia/listaasistencia.crear.init.js?v=' . time(),
                 '/js/sasisopa/listarepresentantetecnico.datatable.init.js?v=' . time(),
                 '/js/sasisopa/representantetecnico.action.init.js?v=' . time(),
             ],
