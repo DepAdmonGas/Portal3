@@ -289,3 +289,11 @@ p {
 .bg-muted{
     background: #48566E;
 }
+
+hr {
+margin: 1rem 0;
+color: inherit;
+border: 0;
+border-top: var(--bs-border-width) solid #ebf1f6;
+opacity: 1;
+}

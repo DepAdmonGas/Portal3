@@ -1,8 +1,13 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Core\View;
 use App\Models\Sasisopa\Sasisopa;
 use App\Core\Breadcrumb;
+
+use App\Services\ModuleStationService;
+
 use App\Models\Estacion;
 use App\Models\Sasisopa\AnalisisRiesgo;
 use App\Models\Sasisopa\AnalisisRiesgoAnexo;
@@ -41,11 +46,15 @@ use App\Models\Sasisopa\ListaAsistencia;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 
-class SasisopaController extends BaseController{
+class SasisopaController extends BaseController
+{
 
     protected string $modulo = 'sasisopa';
 
-    public function index(){
+    public function index()
+    {
+
+        ModuleStationService::resetAllContexts();
 
         $title = 'SASISOPA';
 
@@ -57,12 +66,12 @@ class SasisopaController extends BaseController{
 
         $sasisopa = Sasisopa::all();
 
-         $data = [
+        $data = [
             'title' => $title,
             'elementos' => $sasisopa,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
-            'links' =>[],
+            'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/sasisopa/index.actions.init.js?v=' . time(),
@@ -70,14 +79,14 @@ class SasisopaController extends BaseController{
             'help' => false
 
         ];
-        
-        View::render('sasisopa/index', $data,'sasisopa');
 
+        View::render('sasisopa/index', $data, 'sasisopa');
     }
 
-    public function reporte($fechainicio, $fechatermino){
+    public function reporte($fechainicio, $fechatermino)
+    {
 
-    $title = 'REPORTE SASISOPA';
+        $title = 'REPORTE SASISOPA';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
@@ -87,14 +96,14 @@ class SasisopaController extends BaseController{
         $permisos = ModuloService::getPermisos($this->userId());
         $estacion = Estacion::find($this->estacionId());
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'fechaInicio' => $fechainicio,
             'fechaTermino' => $fechatermino,
             'organigrama' => asset('/images/organigramas/' . $estacion->organigrama),
-            'links' =>[],
+            'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/sasisopa/reporte.actions.init.js?v=' . time(),
@@ -102,9 +111,8 @@ class SasisopaController extends BaseController{
             'help' => false
 
         ];
-        
-        View::render('sasisopa/reporte', $data,'sasisopa');
 
+        View::render('sasisopa/reporte', $data, 'sasisopa');
     }
 
     public function elemento1()
@@ -198,22 +206,22 @@ class SasisopaController extends BaseController{
         $fin    = $_GET['fin'] ?? null;
 
         $asistencias = ListaAsistencia::query()
-                ->where('id_estacion', $this->estacionId())
-                ->where('punto_sasisopa', 3)
-                ->whereBetween('fecha', [$inicio, $fin])
-                ->orderByDesc('fecha')
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'id' => $item->id,
-                        'fecha' => formatearFecha($item->fecha?->format('Y-m-d')),
-                        'hora' => $item->hora?->format('g:i a'),
-                        'estado' => $item->estado,
-                    ];
-                });
+            ->where('id_estacion', $this->estacionId())
+            ->where('punto_sasisopa', 3)
+            ->whereBetween('fecha', [$inicio, $fin])
+            ->orderByDesc('fecha')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'fecha' => formatearFecha($item->fecha?->format('Y-m-d')),
+                    'hora' => $item->hora?->format('g:i a'),
+                    'estado' => $item->estado,
+                ];
+            });
 
 
-        
+
 
 
         if (!$inicio || !$fin) {
@@ -224,7 +232,6 @@ class SasisopaController extends BaseController{
             ]);
 
             exit;
-
         }
 
 
@@ -272,34 +279,34 @@ class SasisopaController extends BaseController{
 
 
         exit;
-
     }
 
-    public function calendarioRequisitosLegales(){
+    public function calendarioRequisitosLegales()
+    {
 
-            $estacion = Estacion::find($this->estacionId());
-            $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+        $estacion = Estacion::find($this->estacionId());
+        $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
-            $service = new ReporteRequisitosLegalesService();
-            $inicio = $_GET['inicio'] ?? null;
-            $fin    = $_GET['fin'] ?? null;
+        $service = new ReporteRequisitosLegalesService();
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
 
-            $niveles = $service->obtenerTodosLosNiveles(
+        $niveles = $service->obtenerTodosLosNiveles(
             $this->estacionId(),
             $inicio,
             $fin
-            );
+        );
 
-            $html = '';
-            $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
+        $html = '';
+        $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-            $html .= '
+        $html .= '
             <!DOCTYPE html>
             <html>
             <head>
             <meta charset="UTF-8">
             <title>Calendario anual de renovacion de Requisitos Legales</title>
-            <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
+            <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
             </head>
             <body>
 
@@ -308,7 +315,7 @@ class SasisopaController extends BaseController{
             <tr>
 
             <td class="align-middle text-center">
-            <img src="'.$logo.'" style="width: 150px;">
+            <img src="' . $logo . '" style="width: 150px;">
             </td>
             <td colspan="2" class="align-middle text-center">
             <b>Calendario anual de renovacion de Requisitos Legales</b>
@@ -327,7 +334,7 @@ class SasisopaController extends BaseController{
             Revisado por:<br> Eduardo Galicia Flores
             </td>
             <td class="align-middle text-center">
-            Autorizado por:<br> '.$apoderado.'
+            Autorizado por:<br> ' . $apoderado . '
             </td>
             <td class="align-middle text-center">
             Fecha de aprobacion:<br>  01-oct-18
@@ -347,55 +354,54 @@ class SasisopaController extends BaseController{
             <td class="text-center align-middle"><b>Renovación</b></td>
             </tr>';
 
-            $html .= $this->renderNivel('Municipal', $niveles['Municipal']);
-            $html .= $this->renderNivel('Estatal', $niveles['Estatal']);
-            $html .= $this->renderNivel('Federal', $niveles['Federal']);
-            $html .= $this->renderNivel('Varios', $niveles['Varios']);
+        $html .= $this->renderNivel('Municipal', $niveles['Municipal']);
+        $html .= $this->renderNivel('Estatal', $niveles['Estatal']);
+        $html .= $this->renderNivel('Federal', $niveles['Federal']);
+        $html .= $this->renderNivel('Varios', $niveles['Varios']);
 
-            $html .= '</table>
+        $html .= '</table>
 
             </body>
             </html>';
 
-            $options = new Options();
-            $options->set('isRemoteEnabled', true);
-            $options->set('defaultFont', 'Arial');
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
 
-            $dompdf = new Dompdf($options);
+        $dompdf = new Dompdf($options);
 
-            $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4', 'landscape');
-            $dompdf->render();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
 
-            $dompdf->stream("Calendario-anual-renovacion-Requisitos-Legales.pdf", ["Attachment" => true]);
-            
+        $dompdf->stream("Calendario-anual-renovacion-Requisitos-Legales.pdf", ["Attachment" => true]);
     }
 
     private function renderNivel(string $titulo, array $data): string
-{
-    $html = '';
+    {
+        $html = '';
 
-    $html .= '
+        $html .= '
     <tr>
         <td class="text-center table-info" colspan="6">
-            <b>Nivel de Gobierno '.$titulo.'</b>
+            <b>Nivel de Gobierno ' . $titulo . '</b>
         </td>
     </tr>';
 
-    foreach ($data['items'] as $row) {
+        foreach ($data['items'] as $row) {
 
-        $html .= '
+            $html .= '
         <tr>
-            <td>'.$row['dependencia'].'</td>
-            <td><b>'.$row['permiso'].'</b></td>
-            <td>'.$row['vigencia'].'</td>
-            <td>'.$row['fecha_emision'].'</td>
-            <td>'.$row['fecha_vencimiento'].'</td>
-            <td>'.$row['renovacion'].'</td>
+            <td>' . $row['dependencia'] . '</td>
+            <td><b>' . $row['permiso'] . '</b></td>
+            <td>' . $row['vigencia'] . '</td>
+            <td>' . $row['fecha_emision'] . '</td>
+            <td>' . $row['fecha_vencimiento'] . '</td>
+            <td>' . $row['renovacion'] . '</td>
         </tr>';
-    }
+        }
 
-    return $html;
+        return $html;
     }
 
     public function elemento5()
@@ -445,7 +451,7 @@ class SasisopaController extends BaseController{
                     ),
 
                     'duracion' => trim(
-                        $item->duracion.' '.$item->duraciondetalle
+                        $item->duracion . ' ' . $item->duraciondetalle
                     ),
 
                     'instructor' => $item->instructor,
@@ -460,7 +466,6 @@ class SasisopaController extends BaseController{
                         )
 
                 ];
-
             });
 
         echo json_encode($capacitaciones);
@@ -506,7 +511,6 @@ class SasisopaController extends BaseController{
                     'seguimiento' => $item->seguimiento
 
                 ];
-
             });
 
         $quejas = QuejasSugerencia::query()
@@ -528,7 +532,6 @@ class SasisopaController extends BaseController{
                     )
 
                 ];
-
             });
 
         echo json_encode([
@@ -562,209 +565,203 @@ class SasisopaController extends BaseController{
         exit;
     }
 
-    public function elemento12(){
+    public function elemento12()
+    {
 
-    $inicio = $_GET['inicio'] ?? null;
-    $fin    = $_GET['fin'] ?? null;
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
 
-    $registros = RequisicionObra::with([
-        'usuario:id,nombre',
-        'formato12:id,id_requisicion',
-        'formato14:id,id_requisicion,archivo',
-        'formato15:id,id_requisicion',
-        'cartaResponsiva:id,id_requisicion'
-    ])
-    ->where('id_estacion', $this->estacionId())
-    ->when($inicio && $fin, function ($q) use ($inicio, $fin) {
-        $q->whereBetween('fecha', [$inicio, $fin]);
-    })
-    ->orderByDesc('fecha')
-    ->get();
+        $registros = RequisicionObra::with([
+            'usuario:id,nombre',
+            'formato12:id,id_requisicion',
+            'formato14:id,id_requisicion,archivo',
+            'formato15:id,id_requisicion',
+            'cartaResponsiva:id,id_requisicion'
+        ])
+            ->where('id_estacion', $this->estacionId())
+            ->when($inicio && $fin, function ($q) use ($inicio, $fin) {
+                $q->whereBetween('fecha', [$inicio, $fin]);
+            })
+            ->orderByDesc('fecha')
+            ->get();
 
-    echo json_encode([
-        'success' => true,
-        'data' => $registros->map(function ($item) {
+        echo json_encode([
+            'success' => true,
+            'data' => $registros->map(function ($item) {
 
-            return [
+                return [
 
-                'id' => $item->id,
+                    'id' => $item->id,
 
-                'folio' => str_pad($item->no_folio, 2, '0', STR_PAD_LEFT),
+                    'folio' => str_pad($item->no_folio, 2, '0', STR_PAD_LEFT),
 
-                'fecha' => formatearFecha(optional($item->fecha)->format('Y-m-d')),
+                    'fecha' => formatearFecha(optional($item->fecha)->format('Y-m-d')),
 
-                'solicitante' => $item->usuario->nombre ?? 'S/I',
+                    'solicitante' => $item->usuario->nombre ?? 'S/I',
 
-                'formato12' => [
-                    'existe' => $item->formato12 !== null,
-                    'id' => $item->id ?? null
-                ],
+                    'formato12' => [
+                        'existe' => $item->formato12 !== null,
+                        'id' => $item->id ?? null
+                    ],
 
-                'formato13' => [
-                    'id' => $item->id
-                ],
+                    'formato13' => [
+                        'id' => $item->id
+                    ],
 
-                'formato14' => [
-                    'existe' => $item->formato14 !== null,
-                    'archivo' => $item->formato14->archivo ?? null
-                ],
+                    'formato14' => [
+                        'existe' => $item->formato14 !== null,
+                        'archivo' => $item->formato14->archivo ?? null
+                    ],
 
-                'formato15' => [
-                    'existe' => $item->formato15 !== null,
-                    'id' => $item->id ?? null
-                ],
+                    'formato15' => [
+                        'existe' => $item->formato15 !== null,
+                        'id' => $item->id ?? null
+                    ],
 
-                'carta' => [
-                    'existe' => $item->cartaResponsiva !== null,
-                    'id' => $item->id ?? null
-                ]
+                    'carta' => [
+                        'existe' => $item->cartaResponsiva !== null,
+                        'id' => $item->id ?? null
+                    ]
 
-            ];
-
-        })
-    ]);
-
+                ];
+            })
+        ]);
     }
 
     public function elemento13()
-{
-    $inicio = $_GET['inicio'] ?? null;
-    $fin    = $_GET['fin'] ?? null;
+    {
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
 
-    $registros = ProgramaAnualSimulacros::with([
-        'personal',
-        'resumen',
-        'ultimaEvaluacion'
-    ])
-    ->where('id_estacion', $this->estacionId())
-    ->when($inicio && $fin, function ($q) use ($inicio, $fin) {
-        $q->whereBetween('fecha', [$inicio, $fin]);
-    })
-    ->orderByDesc('fecha')
-    ->get();
+        $registros = ProgramaAnualSimulacros::with([
+            'personal',
+            'resumen',
+            'ultimaEvaluacion'
+        ])
+            ->where('id_estacion', $this->estacionId())
+            ->when($inicio && $fin, function ($q) use ($inicio, $fin) {
+                $q->whereBetween('fecha', [$inicio, $fin]);
+            })
+            ->orderByDesc('fecha')
+            ->get();
 
-    echo json_encode([
-        'success' => true,
-        'data' => $registros->map(function ($item) {
+        echo json_encode([
+            'success' => true,
+            'data' => $registros->map(function ($item) {
 
-            return [
+                return [
 
-                'id' => $item->id,
+                    'id' => $item->id,
 
-                'nombre_simulacro' => $item->nombre_simulacro,
+                    'nombre_simulacro' => $item->nombre_simulacro,
 
-                'periodicidad' => $item->periodicidad,
+                    'periodicidad' => $item->periodicidad,
 
-                'fecha' => $item->fecha
-                    ? formatearFecha($item->fecha->format('Y-m-d'))
-                    : 'S/I',
+                    'fecha' => $item->fecha
+                        ? formatearFecha($item->fecha->format('Y-m-d'))
+                        : 'S/I',
 
-                'personal' => [
-                    'total' => $item->personal->count(),
-                    'texto' => $item->personal->count() == 0
-                        ? 'No se encontró personal'
-                        : $item->personal->count().' personas'
-                ],
+                    'personal' => [
+                        'total' => $item->personal->count(),
+                        'texto' => $item->personal->count() == 0
+                            ? 'No se encontró personal'
+                            : $item->personal->count() . ' personas'
+                    ],
 
-                'resumen' => $item->resumen->resumen ?? 'S/I',
+                    'resumen' => $item->resumen->resumen ?? 'S/I',
 
-                'evaluacion' => [
+                    'evaluacion' => [
 
-                    'existe' => !empty($item->ultimaEvaluacion?->archivo),
+                        'existe' => !empty($item->ultimaEvaluacion?->archivo),
 
-                    'archivo' => $item->ultimaEvaluacion->archivo ?? null
+                        'archivo' => $item->ultimaEvaluacion->archivo ?? null
 
-                ]
+                    ]
 
-            ];
-
-        })
-    ]);
+                ];
+            })
+        ]);
     }
 
     public function elemento14()
-{
-    $inicio = $_GET['inicio'] ?? null;
-    $fin    = $_GET['fin'] ?? null;
+    {
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
 
-    $year = $fin
-        ? date('Y', strtotime($fin))
-        : date('Y');
+        $year = $fin
+            ? date('Y', strtotime($fin))
+            : date('Y');
 
-    $informes = InformeRevisionResultado::query()
+        $informes = InformeRevisionResultado::query()
 
-        ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionId())
 
-        ->when($inicio && $fin, function ($q) use ($inicio, $fin) {
+            ->when($inicio && $fin, function ($q) use ($inicio, $fin) {
 
-            $q->whereBetween('fecha', [$inicio, $fin]);
+                $q->whereBetween('fecha', [$inicio, $fin]);
+            })
 
-        })
+            ->orderByDesc('fecha')
 
-        ->orderByDesc('fecha')
+            ->get();
 
-        ->get();
+        $hallazgos = AtencionHallazgo::query()
 
-    $hallazgos = AtencionHallazgo::query()
+            ->where('id_estacion', $this->estacionId())
 
-        ->where('id_estacion', $this->estacionId())
+            ->when($inicio && $fin, function ($q) use ($inicio, $fin) {
 
-        ->when($inicio && $fin, function ($q) use ($inicio, $fin) {
+                $q->whereBetween(
+                    'fecha_auditoria',
+                    [$inicio, $fin]
+                );
+            })
 
-            $q->whereBetween(
-                'fecha_auditoria',
-                [$inicio, $fin]
-            );
+            ->orderByDesc('id')
 
-        })
+            ->get();
 
-        ->orderByDesc('id')
+        echo json_encode([
 
-        ->get();
+            'success' => true,
 
-    echo json_encode([
+            'year' => $year,
 
-        'success' => true,
+            'informes' => $informes->map(function ($item) {
 
-        'year' => $year,
+                return [
 
-        'informes' => $informes->map(function ($item) {
+                    'id' => $item->id,
 
-            return [
+                    'fecha' => $item->fecha
+                        ? formatearFecha($item->fecha->format('Y-m-d'))
+                        : 'S/I',
 
-                'id' => $item->id,
+                    'archivo' => $item->archivo
 
-                'fecha' => $item->fecha
-                    ? formatearFecha($item->fecha->format('Y-m-d'))
-                    : 'S/I',
+                ];
+            }),
 
-                'archivo' => $item->archivo
+            'hallazgos' => $hallazgos->map(function ($item) {
 
-            ];
+                return [
 
-        }),
+                    'id' => $item->id,
 
-        'hallazgos' => $hallazgos->map(function ($item) {
+                    'folio' => $item->folio,
 
-            return [
+                    'fecha_auditoria' => $item->fecha_auditoria
+                        ? formatearFecha($item->fecha_auditoria->format('Y-m-d'))
+                        : 'S/I',
 
-                'id' => $item->id,
+                    'no_control' => $item->no_control,
 
-                'folio' => $item->folio,
+                    'tipo_auditoria' => $item->tipo_auditoria
 
-                'fecha_auditoria' => $item->fecha_auditoria
-                    ? formatearFecha($item->fecha_auditoria->format('Y-m-d'))
-                    : 'S/I',
+                ];
+            })
 
-                'no_control' => $item->no_control,
-
-                'tipo_auditoria' => $item->tipo_auditoria
-
-            ];
-
-        })
-
-    ]);
+        ]);
     }
 
     public function elemento15()
@@ -809,16 +806,15 @@ class SasisopaController extends BaseController{
 
                     'formato024' => optional(
                         $item->formatos
-                            ->firstWhere('formato','formato024')
+                            ->firstWhere('formato', 'formato024')
                     )->archivo,
 
                     'formato025' => optional(
                         $item->formatos
-                            ->firstWhere('formato','formato025')
+                            ->firstWhere('formato', 'formato025')
                     )->archivo
 
                 ];
-
             }),
 
             'externa' => $externa->map(function ($item) {
@@ -835,34 +831,32 @@ class SasisopaController extends BaseController{
 
                     'formato024' => optional(
                         $item->formatos
-                            ->firstWhere('formato','formato024')
+                            ->firstWhere('formato', 'formato024')
                     )->archivo,
 
                     'formato025' => optional(
                         $item->formatos
-                            ->firstWhere('formato','formato025')
+                            ->firstWhere('formato', 'formato025')
                     )->archivo,
 
-                    'asea' => $item->asea->map(function ($a){
+                    'asea' => $item->asea->map(function ($a) {
 
                         return [
 
-                            'id'=>$a->id,
+                            'id' => $a->id,
 
-                            'fecha'=>formatearFecha(
+                            'fecha' => formatearFecha(
                                 $a->fechacreacion->format('Y-m-d')
                             ),
 
-                            'comentario'=>$a->comentario,
+                            'comentario' => $a->comentario,
 
-                            'archivo'=>$a->archivo
+                            'archivo' => $a->archivo
 
                         ];
-
                     })
 
                 ];
-
             })
 
         ]);
@@ -880,43 +874,43 @@ class SasisopaController extends BaseController{
             'terceroAutorizado'
         ])
 
-        ->where(
-            'id_estacion',
-            $this->estacionId()
-        )
-
-        ->when(
-            $inicio && $fin,
-            fn ($q) => $q->whereBetween(
-                'fechacreacion',
-                [$inicio, $fin]
+            ->where(
+                'id_estacion',
+                $this->estacionId()
             )
-        )
 
-        ->orderByDesc('id')
+            ->when(
+                $inicio && $fin,
+                fn($q) => $q->whereBetween(
+                    'fechacreacion',
+                    [$inicio, $fin]
+                )
+            )
 
-        ->get();
+            ->orderByDesc('id')
+
+            ->get();
 
         $sinAccidentes = InvestigacionIncidenteAccidenteNo::with(
             'usuario:id,nombre'
         )
 
-        ->where(
-            'id_estacion',
-            $this->estacionId()
-        )
-
-        ->when(
-            $inicio && $fin,
-            fn ($q) => $q->whereBetween(
-                'fecha',
-                [$inicio, $fin]
+            ->where(
+                'id_estacion',
+                $this->estacionId()
             )
-        )
 
-        ->orderByDesc('id')
+            ->when(
+                $inicio && $fin,
+                fn($q) => $q->whereBetween(
+                    'fecha',
+                    [$inicio, $fin]
+                )
+            )
 
-        ->get();
+            ->orderByDesc('id')
+
+            ->get();
 
         echo json_encode([
 
@@ -958,7 +952,7 @@ class SasisopaController extends BaseController{
 
                         'tipo_evento' => $item->tipo_evento,
 
-                        'muertes' => ($item->muertes == 1)? 'SI' : 'No',
+                        'muertes' => ($item->muertes == 1) ? 'SI' : 'No',
 
                         'grupo' => [
 
@@ -970,16 +964,15 @@ class SasisopaController extends BaseController{
 
                         'formato026' =>
 
-                            $formato026
+                        $formato026
                             ? $formato026->archivo
                             : null,
 
                         'tercer_autorizado' =>
 
-                            $item->tercer_autorizado == 1
+                        $item->tercer_autorizado == 1
 
                     ];
-
                 }
 
             ),
@@ -1004,7 +997,6 @@ class SasisopaController extends BaseController{
                         'estatus' => $item->estatus
 
                     ];
-
                 }
 
             )
@@ -1033,7 +1025,7 @@ class SasisopaController extends BaseController{
 
             'data' => $grupo->map(
 
-                fn ($item) => [
+                fn($item) => [
 
                     'id' => $item->id,
 
@@ -1048,7 +1040,6 @@ class SasisopaController extends BaseController{
             )
 
         ]);
-
     }
 
     public function tercerAutorizado(
@@ -1078,121 +1069,54 @@ class SasisopaController extends BaseController{
 
                 'fecha' =>
 
-                    $tercero?->fecha
-                        ? formatearFecha(
-                            $tercero
-                                ->fecha
-                                ->format('Y-m-d')
-                        )
-                        : null,
+                $tercero?->fecha
+                    ? formatearFecha(
+                        $tercero
+                            ->fecha
+                            ->format('Y-m-d')
+                    )
+                    : null,
 
                 'archivo' => $tercero?->archivo
 
             ]
 
         ]);
-
     }
 
-public function elemento17()
-{
-    $inicio = $_GET['inicio'] ?? null;
-    $fin    = $_GET['fin'] ?? null;
+    public function elemento17()
+    {
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
 
-    $consulta = RevisionResultados::with('usuario')
-        ->where(
-            'id_estacion',
-            $this->estacionId()
-        );
+        $consulta = RevisionResultados::with('usuario')
+            ->where(
+                'id_estacion',
+                $this->estacionId()
+            );
 
-    if (!empty($inicio) && !empty($fin)) {
+        if (!empty($inicio) && !empty($fin)) {
 
-        $consulta->whereBetween(
-            'fecha_hora',
-            [
-                $inicio.' 00:00:00',
-                $fin.' 23:59:59'
-            ]
-        );
-    }
+            $consulta->whereBetween(
+                'fecha_hora',
+                [
+                    $inicio . ' 00:00:00',
+                    $fin . ' 23:59:59'
+                ]
+            );
+        }
 
-    $registros = $consulta
-        ->orderByDesc('fecha_hora')
-        ->get();
-
-    echo json_encode([
-
-        'success' => true,
-
-        'data' => $registros->values()->map(
-
-            fn($item) => [
-
-                'id' => $item->id,
-
-                'fecha' => $item->fecha_hora
-                    ->translatedFormat('d \d\e F \d\e\l Y'),
-
-                'nombre' => $item->usuario?->nombre,
-
-                'archivo' => $item->archivo
-
-            ]
-
-        )
-
-    ]);
-}
-
-public function elemento18()
-{
-    $inicio = $_GET['inicio'] ?? null;
-    $fin    = $_GET['fin'] ?? null;
-
-    $evaluaciones = EvaluacionDesempeno::with('usuario')
-        ->where(
-            'id_estacion',
-            $this->estacionId()
-        );
-
-    $implementaciones = ImplementacionSasisopa::with('usuario')
-        ->where(
-            'id_estacion',
-            $this->estacionId()
-        );
-
-    if (!empty($inicio) && !empty($fin)) {
-
-        $evaluaciones->whereBetween(
-            'fecha_hora',
-            [
-                $inicio.' 00:00:00',
-                $fin.' 23:59:59'
-            ]
-        );
-
-        $implementaciones->whereBetween(
-            'fecha_hora',
-            [
-                $inicio.' 00:00:00',
-                $fin.' 23:59:59'
-            ]
-        );
-    }
-
-    echo json_encode([
-
-        'success' => true,
-
-        'evaluaciones' => $evaluaciones
+        $registros = $consulta
             ->orderByDesc('fecha_hora')
-            ->get()
-            ->values()
-            ->map(
+            ->get();
 
-                fn ($item, $i) => [
+        echo json_encode([
 
-                    'numero' => $i + 1,
+            'success' => true,
+
+            'data' => $registros->values()->map(
+
+                fn($item) => [
 
                     'id' => $item->id,
 
@@ -1205,31 +1129,97 @@ public function elemento18()
 
                 ]
 
-            ),
-
-        'implementaciones' => $implementaciones
-            ->orderByDesc('fecha_hora')
-            ->get()
-            ->values()
-            ->map(
-
-                fn ($item, $i) => [
-
-                    'numero' => $i + 1,
-
-                    'id' => $item->id,
-
-                    'fecha' => $item->fecha_hora
-                        ->translatedFormat('d \d\e F \d\e\l Y'),
-
-                    'nombre' => $item->usuario?->nombre
-
-                ]
-
             )
 
-    ]);
-}
+        ]);
+    }
+
+    public function elemento18()
+    {
+        $inicio = $_GET['inicio'] ?? null;
+        $fin    = $_GET['fin'] ?? null;
+
+        $evaluaciones = EvaluacionDesempeno::with('usuario')
+            ->where(
+                'id_estacion',
+                $this->estacionId()
+            );
+
+        $implementaciones = ImplementacionSasisopa::with('usuario')
+            ->where(
+                'id_estacion',
+                $this->estacionId()
+            );
+
+        if (!empty($inicio) && !empty($fin)) {
+
+            $evaluaciones->whereBetween(
+                'fecha_hora',
+                [
+                    $inicio . ' 00:00:00',
+                    $fin . ' 23:59:59'
+                ]
+            );
+
+            $implementaciones->whereBetween(
+                'fecha_hora',
+                [
+                    $inicio . ' 00:00:00',
+                    $fin . ' 23:59:59'
+                ]
+            );
+        }
+
+        echo json_encode([
+
+            'success' => true,
+
+            'evaluaciones' => $evaluaciones
+                ->orderByDesc('fecha_hora')
+                ->get()
+                ->values()
+                ->map(
+
+                    fn($item, $i) => [
+
+                        'numero' => $i + 1,
+
+                        'id' => $item->id,
+
+                        'fecha' => $item->fecha_hora
+                            ->translatedFormat('d \d\e F \d\e\l Y'),
+
+                        'nombre' => $item->usuario?->nombre,
+
+                        'archivo' => $item->archivo
+
+                    ]
+
+                ),
+
+            'implementaciones' => $implementaciones
+                ->orderByDesc('fecha_hora')
+                ->get()
+                ->values()
+                ->map(
+
+                    fn($item, $i) => [
+
+                        'numero' => $i + 1,
+
+                        'id' => $item->id,
+
+                        'fecha' => $item->fecha_hora
+                            ->translatedFormat('d \d\e F \d\e\l Y'),
+
+                        'nombre' => $item->usuario?->nombre
+
+                    ]
+
+                )
+
+        ]);
+    }
 
     //------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------
@@ -1237,7 +1227,8 @@ public function elemento18()
     //------------------------------------------------------------------------------------
     //------------ 2 Identificacion de peligros y aspectos ambientales -------------------
 
-    public function identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales(){
+    public function identificacionPeligrosAspectosAmbientalesAnalisisRiesgoEvaluacionImpactosAmbientales()
+    {
 
         $title = '2. IDENTIFICACIÓN DE PELIGROS Y ASPECTOS AMBIENTALES, ANÁLISIS DE RIESGO Y EVALUACIÓN DE IMPACTOS AMBIENTALES';
         // Buscar permisos de los modulos
@@ -1247,12 +1238,12 @@ public function elemento18()
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
-         $data = [
+        $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
@@ -1268,30 +1259,31 @@ public function elemento18()
             ],
             'help' => true
         ];
-        
-        View::render('sasisopa/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales', $data,'sasisopa');
 
+        View::render('sasisopa/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales', $data, 'sasisopa');
     }
 
-    public function datatableListaAnalisisRiesgo(){
+    public function datatableListaAnalisisRiesgo()
+    {
 
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $data = AnalisisRiesgo::where('id_estacion',$this->estacionId())
-        ->orderBy('fecha','desc')
-        ->get();
+        $data = AnalisisRiesgo::where('id_estacion', $this->estacionId())
+            ->orderBy('fecha', 'desc')
+            ->get();
 
-         echo json_encode([
+        echo json_encode([
             "data" => $data,
             "permisos" => [
                 "descargar" => $permisoDescargar
             ]
         ]);
-        
+
         exit;
     }
 
-    public function pdfAspectosAmbientales(){
+    public function pdfAspectosAmbientales()
+    {
 
         $estacion = Estacion::find($this->estacionId());
         $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
@@ -1311,7 +1303,7 @@ public function elemento18()
         <head>
         <meta charset="UTF-8">
         <title>Identificación y evaluación de Aspectos e Impactos Ambientales.</title>
-        <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
+        <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
         </head>
         <body>
 
@@ -1320,7 +1312,7 @@ public function elemento18()
         <tr>
 
         <td class="align-middle text-center">
-        <img src="'.$logo.'" style="width: 150px;">
+        <img src="' . $logo . '" style="width: 150px;">
         </td>
         <td colspan="2" class="align-middle text-center">
         <b>Identificación y evaluación de Aspectos e Impactos Ambientales.</b>
@@ -1339,7 +1331,7 @@ public function elemento18()
         Revisado por:<br> Eduardo Galicia Flores
         </td>
         <td class="align-middle text-center">
-        Autorizado por:<br> '.$apoderado.'
+        Autorizado por:<br> ' . $apoderado . '
         </td>
         <td class="align-middle text-center">
         Fecha de aprobacion:<br>  01-oct-18
@@ -1725,9 +1717,10 @@ public function elemento18()
         $dompdf->stream("Identificación-evaluación-Aspectos-Impactos-Ambientales.pdf", ["Attachment" => true]);
     }
 
-    public function pdfRiesgosPeligros(){
+    public function pdfRiesgosPeligros()
+    {
 
-    $estacion = Estacion::find($this->estacionId());
+        $estacion = Estacion::find($this->estacionId());
         $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
         if (!ModuloService::validaPermiso($this->modulo, 'descargar')) {
@@ -1745,7 +1738,7 @@ public function elemento18()
         <head>
         <meta charset="UTF-8">
         <title>Identificación y evaluación de Riesgos y Peligros para registrar el análisis.</title>
-        <link rel="stylesheet" href="'.$_ENV['APP_URL'].'/assets/css/pdf.css">
+        <link rel="stylesheet" href="' . $_ENV['APP_URL'] . '/assets/css/pdf.css">
         </head>
         <body>
 
@@ -1754,7 +1747,7 @@ public function elemento18()
         <tr>
 
         <td class="align-middle text-center">
-        <img src="'.$logo.'" style="width: 150px;">
+        <img src="' . $logo . '" style="width: 150px;">
         </td>
         <td colspan="2" class="align-middle text-center">
         <b>Identificación y evaluación de Riesgos y Peligros para registrar el análisis.</b>
@@ -1773,7 +1766,7 @@ public function elemento18()
         Revisado por:<br> Eduardo Galicia Flores
         </td>
         <td class="align-middle text-center">
-        Autorizado por:<br> '.$apoderado.'
+        Autorizado por:<br> ' . $apoderado . '
         </td>
         <td class="align-middle text-center">
         Fecha de aprobacion:<br>  01-oct-18
@@ -2230,39 +2223,37 @@ public function elemento18()
         $dompdf->render();
 
         $dompdf->stream("Identificación-evaluación-Riesgos-Peligros-registrar-análisis.pdf", ["Attachment" => true]);
-
     }
 
     public function anexosAnalisisRiesgo($id)
     {
-            header('Content-Type: application/json; charset=utf-8');
+        header('Content-Type: application/json; charset=utf-8');
 
-            try {
+        try {
 
-                $analisis = AnalisisRiesgo::find($id);
+            $analisis = AnalisisRiesgo::find($id);
 
-                if (!$analisis) {
-                    throw new \Exception('No encontrado');
-                }
-
-                $anexos = AnalisisRiesgoAnexo::where('id_analisis', $id)->get();
-
-                echo json_encode([
-                    'success' => true,
-                    'data' => [
-                        'fecha' => formatearFecha($analisis->fecha),
-                        'descripcion' => $analisis->descripcion,
-                        'anexos' => $anexos
-                    ]
-                ]);
-
-            } catch (\Throwable $e) {
-
-                echo json_encode([
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ]);
+            if (!$analisis) {
+                throw new \Exception('No encontrado');
             }
+
+            $anexos = AnalisisRiesgoAnexo::where('id_analisis', $id)->get();
+
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'fecha' => formatearFecha($analisis->fecha),
+                    'descripcion' => $analisis->descripcion,
+                    'anexos' => $anexos
+                ]
+            ]);
+        } catch (\Throwable $e) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     //------------------------------------------------------------------------------------
@@ -2270,9 +2261,10 @@ public function elemento18()
 
     //------------------------------------------------------------------------------------
     //------------- 5 Funciones, responsabilidades y auditoria ---------------------------
-    
 
-    public function funcionesResponsabilidadesAutoridad(){
+
+    public function funcionesResponsabilidadesAutoridad()
+    {
 
         $title = '5. FUNCIONES, RESPONSABILIDADES Y AUTORIDAD';
         // Buscar permisos de los modulos
@@ -2283,14 +2275,14 @@ public function elemento18()
         Breadcrumb::add($title, '');
 
         $estacion = Estacion::find($this->estacionId());
-        
-         $data = [
+
+        $data = [
             'title' => $title,
-             'permisos' => $permisos,
+            'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'organigrama' => asset('/images/organigramas/' . $estacion->organigrama),
-             'links' =>[
+            'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
@@ -2307,38 +2299,39 @@ public function elemento18()
             ],
             'help' => true
         ];
-        
-        View::render('sasisopa/funciones-responsabilidades-autoridad', $data,'sasisopa');
 
+        View::render('sasisopa/funciones-responsabilidades-autoridad', $data, 'sasisopa');
     }
 
-    public function datatableListaRepresentanteTecnico(){
+    public function datatableListaRepresentanteTecnico()
+    {
 
         $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $data = RepresentanteTecnico::where('id_estacion',$this->estacionId())
-        ->orderBy('fecha')
-        ->get();
+        $data = RepresentanteTecnico::where('id_estacion', $this->estacionId())
+            ->orderBy('fecha')
+            ->get();
 
-         echo json_encode([
+        echo json_encode([
             "data" => $data,
-             "permisos" => [
+            "permisos" => [
                 "eliminar" => $permisoEliminar,
                 "editar"   => $permisoEditar,
                 "descargar" => $permisoDescargar
             ]
         ]);
-        
+
         exit;
     }
 
-    public function createRepresentanteTecnico(){
+    public function createRepresentanteTecnico()
+    {
 
         header('Content-Type: application/json; charset=utf-8');
 
-         if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
                 'success' => false,
                 'message' => 'No tienes permiso para crear'
@@ -2346,17 +2339,17 @@ public function elemento18()
             exit;
         }
 
-        
+
         $nombre = sanitize_input($_POST['nombre'] ?? null, 'string');
         $fecha = sanitize_input($_POST['fecha'] ?? null, 'string');
         $file  = $_FILES['pdf'] ?? null;
 
         if (!$nombre || !$fecha) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Campos obligatorios'
-        ]);
-        exit;
+            echo json_encode([
+                'success' => false,
+                'message' => 'Campos obligatorios'
+            ]);
+            exit;
         }
 
         // CONFIG RUTA
@@ -2399,7 +2392,6 @@ public function elemento18()
                 'success' => true,
                 'message' => 'Representante técnico almacenado correctamente'
             ]);
-
         } catch (\Throwable $e) {
 
             // Si falla BD, borrar archivo
@@ -2413,11 +2405,11 @@ public function elemento18()
             ]);
         }
 
-        exit;   
-
+        exit;
     }
 
-    public function deleteRepresentanteTecnico(){
+    public function deleteRepresentanteTecnico()
+    {
         header('Content-Type: application/json; charset=utf-8');
 
         $data = json_decode(file_get_contents('php://input'), true);
@@ -2432,11 +2424,11 @@ public function elemento18()
         }
 
         if (!$id) {
-            echo json_encode(['success' => false,'message' => 'ID requerido']);
+            echo json_encode(['success' => false, 'message' => 'ID requerido']);
             exit;
         }
 
-            try {
+        try {
 
             // Buscar registro
             $reporte = RepresentanteTecnico::find($id);
@@ -2466,7 +2458,6 @@ public function elemento18()
                 'success' => true,
                 'message' => 'Representante técnico eliminado correctamente'
             ]);
-
         } catch (\Throwable $e) {
 
             Capsule::rollBack();
@@ -2484,8 +2475,9 @@ public function elemento18()
     //------------------------------------------------------------------------------------
     //--------------------------------------------------------------
 
-    public function  programaImplementacion(){
-        
+    public function  programaImplementacion()
+    {
+
         $title = 'PROGRAMA DE IMPLEMENTACION';
 
         Breadcrumb::add('Home', '/home');
@@ -2497,28 +2489,29 @@ public function elemento18()
 
         $sasisopa = Sasisopa::all();
 
-         $data = [
+        $data = [
             'title' => $title,
             'elementos' => $sasisopa,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
-            'links' =>[],
+            'links' => [],
             'scripts' => [
                 '/js/vendor.min.js'
             ],
             'help' => false
 
         ];
-        
-        View::render('sasisopa/programa-implementacion', $data,'sasisopa');
+
+        View::render('sasisopa/programa-implementacion', $data, 'sasisopa');
     }
 
     //---------------------------------------
     //---------------- CONSULTA TU SASISOPA
 
-    public function consultaSasisopa(){
+    public function consultaSasisopa()
+    {
 
-    $title = 'CONSULTA TU SASISOPA';
+        $title = 'CONSULTA TU SASISOPA';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
@@ -2529,12 +2522,12 @@ public function elemento18()
 
         $sasisopa = Sasisopa::all();
 
-         $data = [
+        $data = [
             'title' => $title,
             'elementos' => $sasisopa,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
-            'links' =>[],
+            'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/sasisopa/consultasasisopa.actions.init.js?v=' . time(),
@@ -2542,43 +2535,41 @@ public function elemento18()
             'help' => false
 
         ];
-        
-        View::render('sasisopa/consulta-sasisopa', $data,'sasisopa');
 
+        View::render('sasisopa/consulta-sasisopa', $data, 'sasisopa');
     }
 
-    public function datatableConsulta(){
+    public function datatableConsulta()
+    {
         header('Content-Type: application/json');
 
         $estacion = Estacion::find($this->estacionId());
 
         $data = SasisopaConsulta::where(
-        'id_estacion',
-        $this->estacionId()
+            'id_estacion',
+            $this->estacionId()
         )
-        ->orderByDesc('id')
-        ->get()
+            ->orderByDesc('id')
+            ->get()
 
-        ->map(function ($item) {
+            ->map(function ($item) {
 
-            return [
-                'id' => $item->id,
-                'permisocre' => $item->estacion->permisocre,
-                'razonsocial' => $item->estacion->razonsocial,
-                'version' => $item->version,
-                'documento' => '/uploads/' . $item->documento
-            ];
-        });
+                return [
+                    'id' => $item->id,
+                    'permisocre' => $item->estacion->permisocre,
+                    'razonsocial' => $item->estacion->razonsocial,
+                    'version' => $item->version,
+                    'documento' => '/uploads/' . $item->documento
+                ];
+            });
 
-    echo json_encode([
-        'success' => true,
-        'data' => $data,
-    ]);
-
-    
+        echo json_encode([
+            'success' => true,
+            'data' => $data,
+        ]);
     }
     //---------------------------------------
     //---------------- CONSULTA TU SASISOPA
-  
+
 
 }

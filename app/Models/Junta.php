@@ -3,16 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Junta extends Model
 {
     protected $table = 'juntas';
 
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
-    public $timestamps = false; // No existen created_at ni updated_at
+    public $timestamps = false;
 
     protected $fillable = [
         'idPuesto',
@@ -23,7 +27,7 @@ class Junta extends Model
         'hora_inicio',
         'hora_termino',
         'estatus',
-        'deletedBy'
+        'deletedBy',
     ];
 
     protected $casts = [
@@ -34,4 +38,22 @@ class Junta extends Model
         'hora_inicio' => 'datetime:H:i',
         'hora_termino' => 'datetime:H:i',
     ];
+
+    public function usuario(): BelongsTo
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'idUsuario',
+            'id'
+        );
+    }
+
+    public function comentarios(): HasMany
+    {
+        return $this->hasMany(
+            JuntasComentario::class,
+            'id_junta',
+            'id'
+        );
+    }
 }
