@@ -1,46 +1,106 @@
 function loginForm() {
-return {
-usuario: '',
-password: '',
-message: '',
-type: '',
-loading: false,
 
-login() {
-if (this.loading) return;
+    return {
 
-this.message = '';
-this.type = '';
+        usuario: '',
+        password: '',
 
-if (!this.usuario || !this.password) {
-this.message = 'Usuario y contraseña son obligatorios';
-this.type = 'error';
-return;
-}
+        errors: {
+            usuario: '',
+            password: ''
+        },
 
-this.loading = true;
+        message: '',
+        type: '',
+        loading: false,
 
-axios.post('/login/acceso', {
-usuario: this.usuario,
-password: this.password
-})
-.then(res => {
-this.message = res.data.message;
-this.type = res.data.type;
 
-if (this.type === 'success') {
-setTimeout(() => {
-window.location.href = '/home';
-}, 800);
-} else {
-this.loading = false;
-}
-})
-.catch((e) => {
-this.message = e;
-this.type = 'error';
-this.loading = false;
-});
-}
-}
+        validar() {
+
+            this.errors.usuario = '';
+            this.errors.password = '';
+
+            let valido = true;
+
+            if (!this.usuario.trim()) {
+
+                this.errors.usuario =
+                    'El usuario es obligatorio.';
+
+                valido = false;
+            }
+
+            if (!this.password.trim()) {
+
+                this.errors.password =
+                    'La contraseña es obligatoria.';
+
+                valido = false;
+            }
+
+            return valido;
+        },
+
+
+        async login() {
+
+            if (this.loading) {
+                return;
+            }
+
+            this.message = '';
+            this.type = '';
+
+            if (!this.validar()) {
+                return;
+            }
+
+            this.loading = true;
+
+            try {
+
+                const res = await axios.post(
+                    '/login/acceso',
+                    {
+                        usuario: this.usuario.trim(),
+                        password: this.password
+                    }
+                );
+
+                this.message =
+                    res.data.message ?? '';
+
+                this.type =
+                    res.data.type ?? 'error';
+
+
+                if (this.type === 'success') {
+
+                    setTimeout(() => {
+
+                        window.location.href =
+                            '/home';
+
+                    }, 800);
+
+                    return;
+                }
+
+                this.loading = false;
+
+            } catch (error) {
+
+                this.message =
+                    error.response?.data?.message
+                    ?? 'Ocurrió un error al iniciar sesión.';
+
+                this.type = 'error';
+
+                this.loading = false;
+            }
+
+        }
+
+    };
+
 }

@@ -148,6 +148,13 @@
 </li>
 
 <li class="sidebar-item">
+<a class="sidebar-link" href="/departamento-operativo/recursos-humanos/programar-horario" aria-expanded="false">
+<span><i class="ti ti-calendar-event"></i></span>
+<span class="hide-menu">Programar Horario</span>
+</a>
+</li>
+
+<li class="sidebar-item">
 <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/biometricos" aria-expanded="false">
 <span><i class="ti ti-fingerprint"></i></span>
 <span class="hide-menu">Biométricos</span>

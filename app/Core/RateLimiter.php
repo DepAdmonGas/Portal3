@@ -15,7 +15,7 @@ namespace App\Core;
 class RateLimiter
 {
     private static $limits = [
-        'login' => ['max' => 5, 'window' => 300],      // 5 intentos cada 5 min
+        'login' => ['max' => 10, 'window' => 300],      // 5 intentos cada 5 min
         'api' => ['max' => 60, 'window' => 60],        // 60 req/min
         'default' => ['max' => 100, 'window' => 60],   // 100 req/min
     ];
