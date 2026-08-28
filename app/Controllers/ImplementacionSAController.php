@@ -2,6 +2,7 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Models\Sasisopa\Implementacionsa;
@@ -10,6 +11,11 @@ use App\Models\Sasisopa\ImplementacionsaDetalle;
 use Illuminate\Database\Capsule\Manager as Capsule;
 class ImplementacionSAController extends BaseController{
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
 
@@ -27,12 +33,15 @@ class ImplementacionSAController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'    
             ],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/implementacionsa.datatable.init.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/implementacionsa.actions.init.js?v=' . time(),
             ],
@@ -47,7 +56,7 @@ class ImplementacionSAController extends BaseController{
 
    $implementaciones = Implementacionsa::query()
     ->with('usuario:id,nombre')
-    ->where('id_estacion', $this->estacionId())
+    ->where('id_estacion', $this->estacionModulo())
     ->orderByDesc('fecha')
     ->get();
 
@@ -153,8 +162,20 @@ class ImplementacionSAController extends BaseController{
                 return;
             }
 
+            $estacion = $this->estacionModulo();
+
+            if (!$estacion) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona una estación para continuar'
+                ]);
+
+                return;
+            }
+
             $this->createImplementacion(
-                $this->estacionId(),
+                $estacion,
                 $this->userId(),
                 $fecha,
                 $preguntas

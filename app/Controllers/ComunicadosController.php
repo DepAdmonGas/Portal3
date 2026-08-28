@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Services\ModuloService;
 use App\Core\Breadcrumb;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Usuario;
 use App\Models\Puestos;
@@ -14,6 +15,11 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 
 class ComunicadosController extends BaseController{
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
 
@@ -30,12 +36,15 @@ class ComunicadosController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' =>[ 
                  '/libs/select2/dist/css/select2.min.css',
                  '/css/select2-modal.css?v=' . time(),
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
                 '/js/sasisopa/comunicados.actions.init.js?v=' . time(),
@@ -56,7 +65,7 @@ public function datatable()
 
         $registros = Comunicado::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->orderByDesc('fecha')
             ->get();
@@ -152,7 +161,19 @@ public function create()
 
     try {
 
-        Capsule::transaction(function () {
+        $estacionId = $this->estacionModulo();
+
+        if (!$estacionId) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Selecciona una estación para continuar'
+            ]);
+
+            exit;
+        }
+
+        Capsule::transaction(function () use ($estacionId) {
 
             $dirigidoa = json_decode(
                 $_POST['dirigidoa'],
@@ -162,7 +183,7 @@ public function create()
             $ultimo =
                 Comunicado::where(
                     'id_estacion',
-                    $this->estacionId()
+                    $estacionId
                 )
                 ->max('id_comunicado');
 
@@ -204,7 +225,7 @@ public function create()
 
             $comunicado = Comunicado::create([
 
-                'id_estacion'   => $this->estacionId(),
+                'id_estacion'   => $estacionId,
                 'id_comunicado' => $idComunicado,
                 'id_usuario'    => $this->userId(),
                 'fecha'         => date('Y-m-d'),
@@ -218,7 +239,7 @@ public function create()
 
             $url =
                 'comunicados/comunicado-' .
-                $this->estacionId() .
+                $estacionId .
                 '-' .
                 $idComunicado;
 
@@ -267,14 +288,14 @@ public function create()
             $ultimoCom =
                 ComunicacionIE::where(
                     'id_estacion',
-                    $this->estacionId()
+                    $estacionId
                 )
                 ->max('no_comunicacion');
 
             ComunicacionIE::create([
 
                 'id_estacion' =>
-                    $this->estacionId(),
+                    $estacionId,
 
                 'no_comunicacion' =>
                     ($ultimoCom ?? 0) + 1,
@@ -337,9 +358,13 @@ public function delete()
 
         Capsule::transaction(function () use ($data) {
 
-            $comunicado = Comunicado::findOrFail(
-                $data['id']
-            );
+            $comunicado = Comunicado::query()
+                ->where('id', $data['id'] ?? 0)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+                )
+                ->firstOrFail();
 
             // Eliminar archivo físico
             if (

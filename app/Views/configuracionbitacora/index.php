@@ -1,4 +1,6 @@
 <div class="mb-4" id="container"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 x-data="{ ...actions(), ...configuracionBitacora() }">
 
   <div class="text-end">

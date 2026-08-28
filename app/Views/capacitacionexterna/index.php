@@ -1,4 +1,6 @@
 <div id="container" class="pb-4"
+data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 x-data="{ ...actions(), ...capacitacionExterna() }">
 
 <table class="table table-bordered table-sm mt-3">

@@ -1,4 +1,7 @@
-<div id="container" class="mb-4">
+<div id="container"
+data-module-station-key="sasisopa"
+data-estacion-id="<?= $estacionId ?? '' ?>"
+class="mb-4">
 
 <div class="row mt-4">
 

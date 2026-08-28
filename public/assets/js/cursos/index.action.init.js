@@ -1,7 +1,8 @@
 document.addEventListener('alpine:init', () => {
-    Alpine.data('cursos', (categoria) => ({
+    Alpine.data('cursos', (categoria, multiestacion) => ({
 
         categoria,
+        multiestacion: !!multiestacion,
 
         loadingModulos: true,
         loadingPendientes: true,

@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Sasisopa\MantenimientoCorrectivo;
 use App\Models\Sasisopa\MantenimientoCorrectivoEvidencia;
@@ -13,6 +14,12 @@ use Dompdf\Options;
 class MantenimientoCorrectivoController extends BaseController
 {
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
 
@@ -32,16 +39,21 @@ class MantenimientoCorrectivoController extends BaseController
             $this->modulo
         );
 
+        $idEstacion = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/mantenimientocorrectivo.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/mantenimientocorrectivo.action.init.js?v=' . time(),
@@ -59,7 +71,7 @@ class MantenimientoCorrectivoController extends BaseController
     $year = sanitize_input($_GET['year'] ?? null,'int');
     $mes = sanitize_input($_GET['mes'] ?? null,'int');
 
-      $data = MantenimientoCorrectivo::where('id_estacion',$this->estacionId())
+      $data = MantenimientoCorrectivo::where('id_estacion',$this->estacionModulo())
         ->when($year, function ($q) use ($year) {
                 $q->whereYear('fechacreacion',$year);
             })
@@ -105,7 +117,7 @@ class MantenimientoCorrectivoController extends BaseController
 
             $registro = MantenimientoCorrectivo::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )->find($data['id']);
 
             if(!$registro){
@@ -454,7 +466,7 @@ class MantenimientoCorrectivoController extends BaseController
         ] = $this->filtros();
 
         $estacion = Estacion::find(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         if (!$estacion) {
@@ -765,7 +777,7 @@ class MantenimientoCorrectivoController extends BaseController
     {
         return MantenimientoCorrectivo::query()
             ->with(['evidencias','firmas.usuario:id,nombre,firma'])
-            ->where('id_estacion',$this->estacionId())
+            ->where('id_estacion',$this->estacionModulo())
             ->when(
                 $year,
                 function ($q) use ($year) {

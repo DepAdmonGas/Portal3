@@ -15,12 +15,18 @@ use App\Models\Sasisopa\EncuentasEstacionCliente;
 use App\Models\Sasisopa\EncuentasEstacionClienteComentarios;
 use App\Models\Sasisopa\EncuentasEstacionClientePreguntas;
 use App\Services\CapacitacionService;
+use App\Services\ModuleStationService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
 class ObjetivosMetasIndicadoresController extends BaseController{
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
 
@@ -32,16 +38,21 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/objetivosmetasindicadores/seguimientoindicadores.datatable.init.js?v=' . time(),
                 '/js/objetivosmetasindicadores/seguimientoobjetivosmetas.datatable.init.js?v=' . time(),
@@ -60,7 +71,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $data = SeguimientoReporteIndicador::where('id_estacion', $this->estacionId())
+        $data = SeguimientoReporteIndicador::where('id_estacion', $this->estacionModulo())
             ->orderBy('fecha')
             ->get();
 
@@ -82,7 +93,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $rows = SeguimientoObjetivosMetas::where('id_estacion',$this->estacionId())
+        $rows = SeguimientoObjetivosMetas::where('id_estacion',$this->estacionModulo())
         ->orderBy('fecha')
         ->get();
 
@@ -183,7 +194,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             exit;
         }
 
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
         $idUsuario  = $this->userId();
 
         $seguimiento = SeguimientoObjetivosMetas::create([
@@ -250,6 +261,18 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         header('Content-Type: application/json; charset=utf-8');
 
         try {
+
+            $seguimiento = SeguimientoObjetivosMetas::where('id', $id)
+                ->where('id_estacion', $this->estacionModulo())
+                ->first();
+
+            if (!$seguimiento) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No se encontró información'
+                ]);
+                return;
+            }
 
             // Obtener detalle
             $rows = SeguimientoObjetivosMetasDetalle::where('id_seguimiento', $id)->get();
@@ -361,7 +384,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
             $json = $input['data'];
 
-            $seguimiento = SeguimientoObjetivosMetas::find($id);
+            $seguimiento = SeguimientoObjetivosMetas::where('id', $id)
+                ->where('id_estacion', $this->estacionModulo())
+                ->first();
 
             if (!$seguimiento) {
                 throw new \Exception('Registro no encontrado');
@@ -441,7 +466,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             Capsule::beginTransaction();
             SeguimientoObjetivosMetasDetalle::where('id_seguimiento', $id)->delete();
 
-            $deleted = SeguimientoObjetivosMetas::where('id', $id)->delete();
+            $deleted = SeguimientoObjetivosMetas::where('id', $id)
+                ->where('id_estacion', $this->estacionModulo())
+                ->delete();
 
             if (!$deleted) {
                 throw new \Exception('No se encontró el registro');
@@ -471,13 +498,14 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         $inicio = $_GET['inicio'] ?? null;
         $fin    = $_GET['fin'] ?? null;
 
-        $estacion = Estacion::find($this->estacionId());
-        $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+        $idEstacion = $this->estacionModulo();
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
+        $apoderado = htmlspecialchars($estacion?->apoderado_legal ?? '');
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-        $query = SeguimientoObjetivosMetasDetalle::whereHas('seguimiento', function ($q) {
-        $q->where('id_estacion', $this->estacionId());
+        $query = SeguimientoObjetivosMetasDetalle::whereHas('seguimiento', function ($q) use ($idEstacion) {
+        $q->where('id_estacion', $idEstacion);
         });
 
         if (!empty($inicio) && !empty($fin)) {
@@ -603,7 +631,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             Capsule::beginTransaction();
 
             SeguimientoReporteIndicador::create([
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $this->estacionModulo(),
                 'id_usuario'  => $this->userId(),
                 'fecha'       => $data['fecha'],
                 'capacitacion'=> $data['capacitacion'],
@@ -677,7 +705,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
             Capsule::beginTransaction();
 
-            $registro = SeguimientoReporteIndicador::find($id);
+            $registro = SeguimientoReporteIndicador::where('id', $id)
+                ->where('id_estacion', $this->estacionModulo())
+                ->first();
 
             if (!$registro) {
                 throw new \Exception('Registro no encontrado');
@@ -716,7 +746,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
         try {
 
-            $row = SeguimientoReporteIndicador::find($id);
+            $row = SeguimientoReporteIndicador::where('id', $id)
+                ->where('id_estacion', $this->estacionModulo())
+                ->first();
 
             if (!$row) {
                 echo json_encode([
@@ -772,7 +804,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
             Capsule::beginTransaction();
  
-            $deleted = SeguimientoReporteIndicador::where('id', $id)->delete();
+            $deleted = SeguimientoReporteIndicador::where('id', $id)
+                ->where('id_estacion', $this->estacionModulo())
+                ->delete();
 
             if (!$deleted) {
                 throw new \Exception('No se encontró el registro');
@@ -802,14 +836,15 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         $inicio = $_GET['inicio'] ?? null;
         $fin    = $_GET['fin'] ?? null;
 
-        $estacion = Estacion::find($this->estacionId());
-        $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+        $idEstacion = $this->estacionModulo();
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
+        $apoderado = htmlspecialchars($estacion?->apoderado_legal ?? '');
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
         $query = SeguimientoReporteIndicador::where(
             'id_estacion',
-            $this->estacionId()
+            $idEstacion
         );
 
         if (!empty($inicio) && !empty($fin)) {
@@ -925,16 +960,21 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/objetivosmetasindicadores/capacitacionpersonal.actions.init.js?v=' . time(),
             ],
             'help' => false
@@ -951,7 +991,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             $year = $_GET['year'] ?? date('Y');
 
             $data = CapacitacionService::getResumen(
-                $this->estacionId(),
+                $this->estacionModulo(),
                 $year
             );
 
@@ -971,16 +1011,21 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/apexcharts/dist/apexcharts.min.js',
                 '/js/objetivosmetasindicadores/indicadorventas.actions.init.js?v=' . time(),
                 
@@ -996,16 +1041,16 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
         $year = $_GET['year'] ?? date('Y');
 
-        $estacion = Estacion::find($this->estacionId());
-        $estacionId = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
 
-        $producto1 = $estacion->producto_uno;
-        $producto2 = $estacion->producto_dos;
-        $producto3 = $estacion->producto_tres;
+        $producto1 = $estacion?->producto_uno;
+        $producto2 = $estacion?->producto_dos;
+        $producto3 = $estacion?->producto_tres;
 
         // Traer todo en una sola consulta
         $meses = ReporteCreMes::with('productos')
-            ->where('id_estacion', $estacionId)
+            ->where('id_estacion', $idEstacion)
             ->where('year', $year)
             ->get();
 
@@ -1103,10 +1148,14 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
@@ -1114,6 +1163,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                  '/libs/apexcharts/dist/apexcharts.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/objetivosmetasindicadores/experienciacliente.datatable.init.js?v=' . time(),
@@ -1135,7 +1185,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 
         $encuestas = EncuentaEstacion::withCount('clientes')
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->where('estado', 1)
             ->orderBy('id')
             ->get();
@@ -1212,7 +1262,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             $query->where('c.id_cuentas_estacion', $idEncuesta);
         } else {
     
-            $encuestas = EncuentaEstacion::where('id_estacion', $this->estacionId())
+            $encuestas = EncuentaEstacion::where('id_estacion', $this->estacionModulo())
                 ->where('estado', 1)
                 ->pluck('id');
 
@@ -1262,7 +1312,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             }
 
             $encuesta = EncuentaEstacion::create([
-                'id_estacion'   => $this->estacionId(),
+                'id_estacion'   => $this->estacionModulo(),
                 'id_usuario'    => $this->userId(),
                 'id_encuesta'   => 1,
                 'estado'        => 1
@@ -1286,16 +1336,22 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         Breadcrumb::add('Experiencia del cliente', '/sasisopa/objetivos-metas-indicadores/experiencia-cliente');
         Breadcrumb::add('Agregar', '');
 
-        $encuestaEstacion = EncuentaEstacion::find($id);
+        $idEstacion = $this->estacionModulo();
+        $encuestaEstacion = EncuentaEstacion::where('id', $id)
+            ->where('id_estacion', $idEstacion)
+            ->first();
         $cuestionario = EncuentaCuestionario::all();
 
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
+            'ocultarSelectorEstacion'=> true,
             'id' => $id,
-            'fecha' => formatDate($encuestaEstacion->fechacreacion),
+            'fecha' => formatDate($encuestaEstacion?->fechacreacion),
             'cuestionario' => $cuestionario,
              'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
@@ -1303,6 +1359,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                  '/libs/apexcharts/dist/apexcharts.min.js',
                  '/js/objetivosmetasindicadores/experienciaclienteeditar.actions.init.js?v=' . time(),
             ],
@@ -1341,7 +1398,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
             Capsule::connection()->transaction(function () use ($id) {
 
-                $encuesta = EncuentaEstacion::findOrFail($id);
+$encuesta = EncuentaEstacion::where('id', $id)
+                    ->where('id_estacion', $this->estacionModulo())
+                    ->firstOrFail();
 
                 $clientesIds = EncuentasEstacionCliente::where('id_cuentas_estacion', $id)
                     ->pluck('id');
@@ -1384,22 +1443,30 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         Breadcrumb::add('Experiencia del cliente', '/sasisopa/objetivos-metas-indicadores/experiencia-cliente');
         Breadcrumb::add('Detalle', '');
 
-        $encuestaEstacion = EncuentaEstacion::find($id);
+        $idEstacion = $this->estacionModulo();
+        $encuestaEstacion = EncuentaEstacion::where('id', $id)
+            ->where('id_estacion', $idEstacion)
+            ->first();
         $cuestionario = EncuentaCuestionario::all();
 
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
+                        'ocultarSelectorEstacion'=> true,
+
             'id' => $id,
-            'fecha' => formatearFecha($encuestaEstacion->fechacreacion),
+            'fecha' => formatearFecha($encuestaEstacion?->fechacreacion),
             'cuestionario' => $cuestionario,
              'links' =>[
                              
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                  '/libs/apexcharts/dist/apexcharts.min.js',
                  '/js/objetivosmetasindicadores/experienciaclientedetalle.actions.init.js?v=' . time(),
             ],
@@ -1431,6 +1498,18 @@ class ObjetivosMetasIndicadoresController extends BaseController{
                 ]);
                 return;
             }
+
+        $encuestaValida = EncuentaEstacion::where('id', $idReporte)
+            ->where('id_estacion', $this->estacionModulo())
+            ->exists();
+
+        if (!$encuestaValida) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al guardar encuesta'
+            ]);
+            return;
+        }
 
         try {
 
@@ -1558,7 +1637,9 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
         try {
 
-            $encuesta = EncuentaEstacion::findOrFail($id);
+            $encuesta = EncuentaEstacion::where('id', $id)
+                ->where('id_estacion', $this->estacionModulo())
+                ->firstOrFail();
 
             $encuesta->fechacreacion = $fecha; // formato: Y-m-d H:i:s
             $encuesta->estado = 1;

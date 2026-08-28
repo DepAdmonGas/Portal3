@@ -3,6 +3,8 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
+use App\Models\Estacion;
 use App\Models\Sasisopa\CambioPrecio;
 use App\Models\Sasisopa\Dispensario;
 use App\Models\Sasisopa\DispensarioAperturaBitacora;
@@ -11,6 +13,11 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 
 class CambioPrecioController extends BaseController{
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index()
     {
@@ -23,17 +30,26 @@ class CambioPrecioController extends BaseController{
         Breadcrumb::add('SASISOPA', '/sasisopa');        
         Breadcrumb::add($title, '');
 
+        $estacionId = $this->estacionModulo();
+
+        $productoTres = $estacionId !== null
+            ? (bool) (Estacion::find($estacionId)?->producto_tres)
+            : true;
 
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sasisopa',
+            'productoTres' => $productoTres,
              'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/cambioprecio/index.datatable.init.js?v=' . time(),
                 '/js/cambioprecio/index.actions.init.js?v=' . time(),
@@ -55,7 +71,7 @@ class CambioPrecioController extends BaseController{
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
 
         $rows = CambioPrecio::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->orderByDesc('id')
             ->get();
 
@@ -130,8 +146,18 @@ public function create(): void
         $data = json_decode(file_get_contents('php://input'), true);
 
 
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
         $idUsuario  = $this->userId();
+
+        if (!$idEstacion) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Selecciona una estación para continuar'
+            ]);
+
+            exit;
+        }
 
         Capsule::transaction(function () use ($data, $idEstacion, $idUsuario) {
 

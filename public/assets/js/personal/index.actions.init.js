@@ -43,6 +43,10 @@ document.addEventListener('alpine:init', () => {
 
         init() {
 
+            if (!document.getElementById('modalPersonal')) {
+                return;
+            }
+
             window.personal = this;
 
             this.modal = new bootstrap.Modal(

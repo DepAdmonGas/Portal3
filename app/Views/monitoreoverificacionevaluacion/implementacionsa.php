@@ -1,4 +1,6 @@
 <div id="container"
+data-module-station-key="sasisopa"
+data-estacion-id="<?= e($estacionId ?? '') ?>"
 x-data="{ ...actions(), ...implementacionSA()}">
 
 <div class="text-end">

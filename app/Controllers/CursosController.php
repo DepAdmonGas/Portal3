@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Core\View;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
+use App\Services\MultiestacionService;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Models\Sasisopa\CursoCalendario;
@@ -36,10 +38,13 @@ class CursosController extends BaseController
             'modulo' => $this->modulo,
             'categoria' => 'SASISOPA',
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null,
+            'moduleStationKey' => 'sasisopa',
+            'multiestacion' => MultiestacionService::isEnabled(),
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/cursos/index.action.init.js?v=1.5',
 
             ]
@@ -65,6 +70,8 @@ class CursosController extends BaseController
             'modulo' => 'sgm',
             'categoria' => 'SGM',
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionId(),
+            'multiestacion' => false,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
@@ -131,16 +138,32 @@ class CursosController extends BaseController
 
         $categoria = $_GET['categoria'] ?? null;
 
+        $multiestacion = ($categoria === 'SASISOPA')
+            && MultiestacionService::isEnabled();
+
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+
         try {
 
-            $cursos = CursoCalendario::query()
+            $query = CursoCalendario::query()
                 ->with([
-                    'tema:id,num_tema,titulo,categoria'
+                    'tema:id,num_tema,titulo,categoria',
+                    'usuario:id,nombre'
                 ])
-
-                ->where('id_personal', $this->userId())
                 ->where('estado', 0)
-                ->whereDate('fecha_programada', '<=', date('Y-m-d'))
+                ->whereDate('fecha_programada', '<=', date('Y-m-d'));
+
+            if ($multiestacion) {
+
+                $query->where('id_estacion', $idEstacion);
+
+            } else {
+
+                $query->where('id_personal', $this->userId());
+
+            }
+
+            $cursos = $query
 
                 ->when($categoria, function ($query) use ($categoria) {
                     $query->whereHas('tema', function ($query) use ($categoria) {
@@ -171,6 +194,8 @@ class CursosController extends BaseController
 
                     'categoria' => $curso->tema?->categoria,
 
+                    'personal' => $curso->usuario?->nombre,
+
                 ];
             }
 
@@ -190,6 +215,11 @@ class CursosController extends BaseController
 
     public function cursosIniciar(int $id): void
     {
+        if (MultiestacionService::isEnabled()) {
+            header('Location: /sasisopa/cursos');
+            exit;
+        }
+
         $calendario = CursoCalendario::query()
             ->with([
                 'tema'
@@ -513,18 +543,33 @@ class CursosController extends BaseController
 
         $categoria = $temas->first()?->categoria;
 
+        $multiestacion = ($categoria === 'SASISOPA')
+            && MultiestacionService::isEnabled();
+
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+
         $layout = match ($categoria) {
             'SASISOPA' => 'sasisopa',
             'SGM'      => 'sgm',
             default    => 'sasisopa',
         };
 
-        $temas = $temas->map(function ($tema) {
+        $temas = $temas->map(function ($tema) use ($multiestacion, $idEstacion) {
 
-            $calendarios = CursoCalendario::query()
-                ->where('id_tema', $tema->id)
-                ->where('id_personal', $this->userId())
-                ->get();
+            $query = CursoCalendario::query()
+                ->where('id_tema', $tema->id);
+
+            if ($multiestacion) {
+
+                $query->where('id_estacion', $idEstacion);
+
+            } else {
+
+                $query->where('id_personal', $this->userId());
+
+            }
+
+            $calendarios = $query->get();
 
             return [
                 'id'         => $tema->id,
@@ -563,8 +608,14 @@ class CursosController extends BaseController
             'modulo'         => $modulo,
             'temas'          => $temas,
             'categoria'      => $categoria,
+            'multiestacion'  => $multiestacion,
+            'estacionId'     => $categoria === 'SGM'
+                ? $this->estacionId()
+                : $idEstacion,
+            'moduleStationKey' => $categoria === 'SGM' ? null : 'sasisopa',
             'scripts'        => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/cursos/modulo.action.init.js?v=' . time(),
             ]
         ];
@@ -586,9 +637,26 @@ class CursosController extends BaseController
                 ->with('modulo')
                 ->findOrFail($idTema);
 
-            $calendarios = CursoCalendario::query()
-                ->where('id_personal', $this->userId())
-                ->where('id_tema', $idTema)
+            $multiestacion = ($tema->categoria === 'SASISOPA')
+                && MultiestacionService::isEnabled();
+
+            $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+
+            $query = CursoCalendario::query()
+                ->where('id_tema', $idTema);
+
+            if ($multiestacion) {
+
+                $query->where('id_estacion', $idEstacion);
+
+            } else {
+
+                $query->where('id_personal', $this->userId());
+
+            }
+
+            $calendarios = $query
+                ->with('usuario:id,nombre')
                 ->orderByDesc('fecha_programada')
                 ->get()
                 ->map(function ($c) {
@@ -625,6 +693,7 @@ class CursosController extends BaseController
                         'fecha' => formatearFecha(
                             $c->fecha_programada->format('Y-m-d')
                         ),
+                        'personal' => $c->usuario?->nombre,
                         'resultado' => $c->resultado,
                         'resultado_texto' => $titulo,
                         'resultado_color' => $color,
@@ -637,6 +706,7 @@ class CursosController extends BaseController
                 'success' => true,
                 'modulo' => $tema->modulo->num_modulo . '. ' . $tema->modulo->titulo,
                 'tema' => $tema->num_tema . '. ' . $tema->titulo,
+                'multiestacion' => $multiestacion,
                 'calendarios' => $calendarios
             ]);
         } catch (\Throwable $e) {
@@ -671,9 +741,11 @@ class CursosController extends BaseController
         $fecha = $cal->fecha_programada;
         $nombre = $cal->usuario->nombre;
 
-        $observacion = $cal->observaciones
-            ? ' (' . $cal->observaciones . ')'
-            : '';
+$observacion = $cal->observaciones
+                ? ' (' . $cal->observaciones . ')'
+                : '';
+
+        $estacion = Estacion::find($cal->id_estacion);
 
         // ======================
         // PDF
@@ -734,8 +806,15 @@ class CursosController extends BaseController
         );
 
         if (isset($estacion->firma)) {
-            $extension = pathinfo($estacion->firma, PATHINFO_EXTENSION);
-            $pdf->Image(PUBLIC_PATH . '/uploads/firma-personal/' . $estacion->firma, '175', '151', '50', '0', $extension);
+
+            $rutaFirma = PUBLIC_PATH
+                . '/uploads/firma-personal/'
+                . $estacion->firma;
+
+            if (file_exists($rutaFirma)) {
+                $extension = pathinfo($estacion->firma, PATHINFO_EXTENSION);
+                $pdf->Image($rutaFirma, '175', '151', '50', '0', $extension);
+            }
         }
 
         // ======================
@@ -746,8 +825,8 @@ class CursosController extends BaseController
 
     public function descargarAll(int $year, int $idModulo)
     {
-        $idEstacion = $this->estacionId();
-        $estacion = Estacion::findOrFail($idEstacion);
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+        $estacion = Estacion::find($idEstacion);
 
         // ======================
         // HELPER TEXTO
@@ -855,8 +934,15 @@ class CursosController extends BaseController
         }
 
         if (isset($estacion->firma)) {
-            $extension = pathinfo($estacion->firma, PATHINFO_EXTENSION);
-            $pdf->Image(PUBLIC_PATH . '/uploads/firma-personal/' . $estacion->firma, '175', '151', '50', '0', $extension);
+
+            $rutaFirma = PUBLIC_PATH
+                . '/uploads/firma-personal/'
+                . $estacion->firma;
+
+            if (file_exists($rutaFirma)) {
+                $extension = pathinfo($estacion->firma, PATHINFO_EXTENSION);
+                $pdf->Image($rutaFirma, '175', '151', '50', '0', $extension);
+            }
         }
 
         return $pdf->Output(

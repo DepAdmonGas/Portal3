@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    if (!document.getElementById('table-cambio-precio')) {
+        return;
+    }
+
     table1 = $('#table-cambio-precio').DataTable({
         processing: true,
         serverSide: false,

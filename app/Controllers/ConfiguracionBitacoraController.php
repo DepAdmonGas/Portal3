@@ -3,11 +3,17 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Usuario;
 use App\Models\UsuariosFirmaBitacora;
 class ConfiguracionBitacoraController extends BaseController{
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
 
@@ -20,10 +26,14 @@ class ConfiguracionBitacoraController extends BaseController{
 
          $permisos = ModuloService::permisosSesion($this->modulo);
 
+         $idEstacion = $this->estacionModulo();
+
          $data = [
            'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                  '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
@@ -31,6 +41,7 @@ class ConfiguracionBitacoraController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/configuracionbitacora/index.datatable.init.js?v=' . time(),
                 '/js/configuracionbitacora/index.action.init.js?v=' . time(),
@@ -44,7 +55,7 @@ class ConfiguracionBitacoraController extends BaseController{
 
     public function datatableConfiguracionBitacora(){
     
-       $idEstacion = $this->estacionId();
+       $idEstacion = $this->estacionModulo();
 
         $usuarios = UsuariosFirmaBitacora::query()
             ->with([
@@ -105,7 +116,7 @@ class ConfiguracionBitacoraController extends BaseController{
     {
         header('Content-Type: application/json');
 
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
 
         $usuarios = Usuario::query()
 
@@ -217,7 +228,7 @@ class ConfiguracionBitacoraController extends BaseController{
             if (!$existe) {
 
                 UsuariosFirmaBitacora::create([
-                    'id_estacion' => $this->estacionId(),
+                    'id_estacion' => $this->estacionModulo(),
                     'id_usuario' => $idUsuario,
                     'categoria' => $categoria,
                     'fechainicio' => date('Y-m-d H:i:s'),

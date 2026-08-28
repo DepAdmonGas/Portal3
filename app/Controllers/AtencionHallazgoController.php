@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\View;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Models\Sasisopa\AtencionHallazgo;
@@ -18,6 +19,11 @@ class AtencionHallazgoController extends BaseController
 {
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index()
     {
@@ -36,9 +42,12 @@ class AtencionHallazgoController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/atencionhallazgos.actions.init.js?v=' . time(),
             ],
             'help' => false
@@ -53,7 +62,7 @@ class AtencionHallazgoController extends BaseController
         $informes = AtencionHallazgo::query()
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->orderByDesc('fecha_auditoria')
             ->get()
@@ -90,13 +99,25 @@ class AtencionHallazgoController extends BaseController
     public function create()
     {
 
+        $estacion = $this->estacionModulo();
+
+        if (!$estacion) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Selecciona una estación para continuar'
+            ]);
+
+            exit;
+        }
+
         $folio = AtencionHallazgo::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $estacion)
             ->max('folio');
 
         $hallazgo = AtencionHallazgo::create([
 
-            'id_estacion'     => $this->estacionId(),
+            'id_estacion'     => $estacion,
             'folio'           => ($folio ?? 0) + 1,
             'fecha_auditoria' => date('Y-m-d'),
             'no_control'      => '',
@@ -112,8 +133,19 @@ class AtencionHallazgoController extends BaseController
     public function pdf(int $id)
     {
 
-        $estacion = Estacion::find($this->estacionId());
-        $hallazgo = AtencionHallazgo::find($id);
+        $estacion = Estacion::find($this->estacionModulo());
+$hallazgo = AtencionHallazgo::where('id', $id)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+            )
+            ->first();
+
+        if (!$hallazgo) {
+
+            exit('El hallazgo no pertenece a la estación seleccionada');
+        }
+
         $detalles = AtencionHallazgoDetalle::with([
             'sasisopa',
             'evidencias'
@@ -189,7 +221,7 @@ class AtencionHallazgoController extends BaseController
                     Revisado por: Eduardo Galicia Flores
                 </td>
                 <td class="text-center align-middle">
-                    Autorizado por: ' . $estacion->apoderado_legal . '
+                    Autorizado por: ' . ($estacion?->apoderado_legal ?? '') . '
                 </td>
                 <td class="text-center align-middle">
                     Fecha de autorización 01/10/2018
@@ -354,7 +386,12 @@ class AtencionHallazgoController extends BaseController
 
             $request = json_decode(file_get_contents('php://input'), true);
             $id = (int) ($request['id'] ?? 0);
-            $hallazgo = AtencionHallazgo::find($id);
+            $hallazgo = AtencionHallazgo::where('id', $id)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+                )
+                ->first();
 
             if (!$hallazgo) {
                 echo json_encode([
@@ -428,7 +465,13 @@ class AtencionHallazgoController extends BaseController
     public function descargarProgramaImplementacion()
     {
 
-        $estacion = Estacion::find($this->estacionId());
+        $estacion = Estacion::find($this->estacionModulo());
+
+        if (!$estacion) {
+
+            exit('Selecciona una estación para continuar');
+        }
+
         $FechaInicio = formatearFechaCorta($estacion->fecha_autorizacion);
         $SS1 = $this->Semanas($FechaInicio, 2);
         $SD1 = $this->Dias($SS1, 1);

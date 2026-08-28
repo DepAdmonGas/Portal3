@@ -1,4 +1,7 @@
-<div id="container" x-data="{ ...actions(), ...equipoCritico()}">
+<div id="container"
+data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+data-estacion-id="<?= $estacionId ?? '' ?>"
+x-data="{ ...actions(), ...equipoCritico()}">
 
 <div class="row mt-2">
 

@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Usuario;
 use App\Models\Sasisopa\CapacitacionExterna;
@@ -15,6 +16,11 @@ class CapacitacionExternaController extends BaseController{
 
  protected string $modulo = 'sasisopa';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
     public function index(){
 
         $title = 'Programa de capacitación externa';
@@ -26,17 +32,21 @@ class CapacitacionExternaController extends BaseController{
         Breadcrumb::add('6. COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO', '/sasisopa/competencia-personal-capacitacion-entrenamiento');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
 
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/capacitacionexterna/index.datatable.init.js?v=' . time(),
                 '/js/capacitacionexterna/index.init.js?v=' . time(),
@@ -56,7 +66,7 @@ class CapacitacionExternaController extends BaseController{
         $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 
          $capacitacion = CapacitacionExterna::
-         where('id_estacion', $this->estacionId())
+         where('id_estacion', $this->estacionModulo())
          ->get();
 
          echo json_encode([
@@ -102,7 +112,7 @@ $data = json_decode(file_get_contents('php://input'), true);
             return;
         }
 
-        $id_estacion = $this->estacionId();
+        $id_estacion = $this->estacionModulo();
         $id_usuario = $this->userId();
 
 
@@ -128,7 +138,7 @@ $data = json_decode(file_get_contents('php://input'), true);
             return;
         }
 
-        $id_estacion = $this->estacionId();
+        $id_estacion = $this->estacionModulo();
         $id_usuario = $this->userId();
 
 
@@ -211,7 +221,9 @@ $data = json_decode(file_get_contents('php://input'), true);
 
              Capsule::beginTransaction();
 
-            $cap = CapacitacionExterna::find($id);
+            $cap = CapacitacionExterna::where('id', $id)
+                ->where('id_estacion', $this->estacionModulo())
+                ->first();
             $capPersonal = CapacitacionExternaPersonal::where('id_capacitacion', $id);
 
 
@@ -276,7 +288,9 @@ $data = json_decode(file_get_contents('php://input'), true);
                 return;
             }
 
-            $cap = CapacitacionExterna::find($id);
+            $cap = CapacitacionExterna::where('id', $id)
+                ->where('id_estacion', $this->estacionModulo())
+                ->first();
 
             if (!$cap) {
                 echo json_encode([
@@ -313,7 +327,7 @@ $data = json_decode(file_get_contents('php://input'), true);
     {
         header('Content-Type: application/json');
 
-        $id_estacion = $this->estacionId();
+        $id_estacion = $this->estacionModulo();
 
         $personal = CapacitacionExternaPersonal::with('usuario')
             ->where('id_capacitacion', $id)
@@ -396,7 +410,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 
     public function pdfCapacitacionExterna(int $id)
     {
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
 
         $registro = Estacion::find($idEstacion);
 
@@ -524,7 +538,7 @@ $data = json_decode(file_get_contents('php://input'), true);
         $inicio = $_GET['inicio'] ?? null;
         $fin    = $_GET['fin'] ?? null;
 
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
 
         $estacion = Estacion::find($idEstacion);
 

@@ -1,4 +1,6 @@
-<div id="container" data-elemento="3" data-herramienta="1">
+<div id="container" data-elemento="3" data-herramienta="1"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
     <?php
     /** @var array<string, array<string, int|float|string>> $requisitos */
     ?>

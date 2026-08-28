@@ -1,4 +1,6 @@
-<div id="container" x-data="{ ...actions(), ...mejoresPracticasEstandares()}">
+<div id="container" x-data="{ ...actions(), ...mejoresPracticasEstandares()}"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
 
 

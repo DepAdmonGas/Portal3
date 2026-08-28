@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\RequisitosLegalesCalendario;
 use App\Models\Estacion;
 use Dompdf\Dompdf;
@@ -10,6 +11,12 @@ use Dompdf\Options;
 
 class DocumentosRegistrosController extends BaseController{
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
     public function index(){
         $title = '8. CONTROL DE DOCUMENTOS Y REGISTROS';
          // Buscar permisos de los modulos
@@ -19,16 +26,21 @@ class DocumentosRegistrosController extends BaseController{
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -51,7 +63,7 @@ class DocumentosRegistrosController extends BaseController{
         );
         Breadcrumb::add($title, '');
 
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
 
         $niveles = [
             'municipal' => 'Municipal',
@@ -78,6 +90,8 @@ class DocumentosRegistrosController extends BaseController{
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'niveles' => $niveles,
             'requisitos' => $requisitos,
@@ -85,6 +99,7 @@ class DocumentosRegistrosController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
 
             'help' => false
@@ -99,7 +114,7 @@ class DocumentosRegistrosController extends BaseController{
 
     public function pdfRequisitosLegales(){
 
-    $idEstacion = $this->estacionId();
+    $idEstacion = $this->estacionModulo();
 
     $registro = Estacion::find($idEstacion);
 
@@ -289,16 +304,21 @@ class DocumentosRegistrosController extends BaseController{
         Breadcrumb::add('8. CONTROL DE DOCUMENTOS Y REGISTROS', '/sasisopa/control-documentos-registros');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
             'help' => false
         ];

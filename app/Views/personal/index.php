@@ -1,4 +1,20 @@
-<div id="container" class="pb-4" x-data="{ ...actions(), ...personal()}" data-layout="<?= $layout ?>">
+<div id="container"
+    class="pb-4"
+    x-data="{ ...actions(), ...personal()}"
+    data-layout="<?= $layout ?>"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+
+    <?php if (empty($estacionId)): ?>
+
+        <div id="personal-empty-message"
+            class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+            Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+        </div>
+
+    <?php else: ?>
+
+    <div id="personal-content">
 
     <script>
         window.__PUESTOS__ = <?= json_encode($puestos, JSON_UNESCAPED_UNICODE) ?>;
@@ -316,5 +332,8 @@
 
     </div>
 
+    </div>
+
+    <?php endif; ?>
 
 </div>

@@ -80,6 +80,9 @@ document.addEventListener('alpine:init', () => {
 
         init() {
 
+            if (!document.getElementById('calendar')) {
+                return;
+            }
 
             this.modalDetalle =
                 new bootstrap.Modal(

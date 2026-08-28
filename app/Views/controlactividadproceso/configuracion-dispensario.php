@@ -1,4 +1,6 @@
 <div id="container"
+data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 x-data="{ ...actions(), ...dispensario()}">
 
 <div class="text-end">

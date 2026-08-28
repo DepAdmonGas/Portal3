@@ -1,7 +1,20 @@
 <?php /** @var \App\Models\Usuario $user */ ?>
-<div class="pb-4 mt-4">
+<div id="container" class="pb-4 mt-4"
+data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
-<?php if ($user->estacion->nombre == 'Ventura Puente'): ?>
+<?php if (empty($estacionId)): ?>
+
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
+    <div id="sasisopa-content">
+
+<?php if ($estacion?->nombre == 'Ventura Puente'): ?>
 <table class="table table-bordered table-sm mb-0 pb-0">
    <tr style="background: #F8F8F8">
     <td class="font-weight-bold align-middle text-center" style="font-size: 1.4em;">Programa de implementación del Sistema de Administración</td>
@@ -101,7 +114,7 @@
 </table>
 <?php endif; ?>
 
-<?php if ($user->estacion->nombre == 'Xochimilco'): ?>
+<?php if ($estacion?->nombre == 'Xochimilco'): ?>
 <table class="table table-bordered table-sm mb-0 pb-0">
    <tr style="background: #F8F8F8">
     <td class="font-weight-bold align-middle text-center" style="font-size: 1.4em;">Programa de implementación del Sistema de Administración</td>
@@ -201,12 +214,12 @@
    </table>
 <?php endif; ?>
 
-<?php if($user->estacion->nombre == "Interlomas" 
-|| $user->estacion->nombre == "Palo Solo" 
-|| $user->estacion->nombre == "San Agustin" 
-|| $user->estacion->nombre == "Gasomira" 
-|| $user->estacion->nombre == "Valle de Guadalupe" 
-|| $user->estacion->nombre == "Esmegas"):?>
+<?php if($estacion?->nombre == "Interlomas" 
+|| $estacion?->nombre == "Palo Solo" 
+|| $estacion?->nombre == "San Agustin" 
+|| $estacion?->nombre == "Gasomira" 
+|| $estacion?->nombre == "Valle de Guadalupe" 
+|| $estacion?->nombre == "Esmegas"):?>
 <table class="table table-bordered table-sm mb-0 pb-0">
     <tr style="background: #F8F8F8">
      <td class="font-weight-bold align-middle text-center" style="font-size: 1.4em;">Programa de implementación del Sistema de Administración</td> 
@@ -305,4 +318,8 @@
       </tr>
     </table>  
 <?php endif; ?>
+    </div>
+
+    <?php endif; ?>
+
 </div>
