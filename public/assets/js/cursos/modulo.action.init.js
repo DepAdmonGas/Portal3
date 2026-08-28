@@ -14,6 +14,10 @@ document.addEventListener('alpine:init', () => {
 
         init() {
 
+            if (!document.getElementById('detalleTemaModal')) {
+                return;
+            }
+
             this.modal = new bootstrap.Modal(
                 document.getElementById('detalleTemaModal')
             );

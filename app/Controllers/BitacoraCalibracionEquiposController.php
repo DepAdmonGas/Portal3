@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sgm\CalibracionEquipo;
 use App\Services\CalibracionEquipoService;
 use App\Models\Estacion;
@@ -17,6 +18,11 @@ class BitacoraCalibracionEquiposController extends BaseController
 
 protected string $modulo = 'sasisopa';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
 
@@ -29,12 +35,15 @@ protected string $modulo = 'sasisopa';
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
+        $idEstacion = $this->estacionModulo();
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
@@ -43,6 +52,7 @@ protected string $modulo = 'sasisopa';
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/bitacoracalibracionequipos.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/bitacoracalibracionequipos.action.init.js?v=' . time(),
+                '/js/core/module-station-selector.js?v=' . time(),
 
             ],
 
@@ -58,7 +68,7 @@ protected string $modulo = 'sasisopa';
         $year = sanitize_input($_GET['year'] ?? null,'int');
         $mes = sanitize_input($_GET['mes'] ?? null,'int');
 
-        $data = CalibracionEquipo::where('id_estacion',$this->estacionId())
+        $data = CalibracionEquipo::where('id_estacion',$this->estacionModulo())
 
         ->when($year, function ($q) use ($year) {
                 $q->whereYear('fecha',$year);
@@ -124,7 +134,7 @@ protected string $modulo = 'sasisopa';
     $data = json_decode(file_get_contents('php://input'),true);
 
     $equipo = sanitize_input($data['equipo'] ?? null, 'string');
-    $id_estacion = $this->estacionId();
+    $id_estacion = $this->estacionModulo();
     $id_usuario = $this->userId();
 
      if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
@@ -451,7 +461,7 @@ protected string $modulo = 'sasisopa';
     ] = $this->filtros();
 
     $estacion = Estacion::find(
-        $this->estacionId()
+        $this->estacionModulo()
     );
 
     if (!$estacion) {
@@ -478,7 +488,7 @@ protected string $modulo = 'sasisopa';
             'tanques.tanque'
         ])
 
-        ->where('id_estacion',$this->estacionId())
+        ->where('id_estacion',$this->estacionModulo())
          ->where('estado',1)
         ->when(
             $year,

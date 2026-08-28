@@ -1,4 +1,6 @@
-<div id="container" x-data="{ ...actions(), ...objetivosMetasIndicadoresForm()}">
+<div id="container" x-data="{ ...actions(), ...objetivosMetasIndicadoresForm()}"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
 <div class="row mt-4">
 

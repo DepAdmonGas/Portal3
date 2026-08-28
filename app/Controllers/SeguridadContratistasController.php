@@ -15,6 +15,7 @@ use App\Models\Sasisopa\RequisicionObraFormato12TrabajadorEncargado;
 use App\Models\Sasisopa\RequisicionObraFormato14;
 use App\Models\Sasisopa\RequisicionObraFormato15;
 use App\Services\SeguridadContratistasService;
+use App\Services\ModuleStationService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -23,6 +24,11 @@ use Carbon\Carbon;
 class SeguridadContratistasController extends BaseController
 {
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
     public function index()
     {
 
@@ -38,12 +44,15 @@ class SeguridadContratistasController extends BaseController
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/seguridadcontratistas/index.datatable.init.js?v=' . time(),
                 '/js/seguridadcontratistas/index.action.init.js?v=' . time(),
@@ -65,7 +74,7 @@ class SeguridadContratistasController extends BaseController
                 'formato15',
                 'cartaResponsiva'
             ])
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->orderByDesc('id')
             ->get()
             ->map(function ($item) {
@@ -114,6 +123,16 @@ class SeguridadContratistasController extends BaseController
 
         try {
 
+            if ($this->estacionModulo() === null) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona una estación para continuar'
+                ]);
+
+                return;
+            }
+
             $fecha = sanitize_input($data['fecha'] ?? null, 'string');
             $descripcion = sanitize_input($data['descripcion'] ?? null, 'string');
             $justificacion = sanitize_input($data['justificacion'] ?? null, 'string');
@@ -136,7 +155,7 @@ class SeguridadContratistasController extends BaseController
             }
 
             SeguridadContratistasService::createRequisicionObra(
-                $this->estacionId(),
+                $this->estacionModulo(),
                 $this->userId(),
                 $fecha,
                 $descripcion,
@@ -178,7 +197,12 @@ class SeguridadContratistasController extends BaseController
                 return;
             }
 
-            $registro = RequisicionObra::findOrFail($id);
+            $registro = RequisicionObra::query()
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $est) => $q->where('id_estacion', $est)
+                )
+                ->findOrFail($id);
             $fecha = sanitize_input($data['fecha'] ?? null, 'string');
             $descripcion = sanitize_input($data['descripcion'] ?? null, 'string');
             $justificacion = sanitize_input($data['justificacion'] ?? null, 'string');
@@ -224,7 +248,12 @@ class SeguridadContratistasController extends BaseController
         try {
 
             $data = json_decode(file_get_contents('php://input'), true);
-            $registro = RequisicionObra::find($data['id']);
+            $registro = RequisicionObra::query()
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $est) => $q->where('id_estacion', $est)
+                )
+                ->find($data['id']);
 
             if (!$registro) {
 
@@ -257,10 +286,45 @@ class SeguridadContratistasController extends BaseController
 
         try {
 
+            $requisicion = RequisicionObra::query()
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $est) => $q->where('id_estacion', $est)
+                )
+                ->find($id);
+
+            if (!$requisicion) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No se encontró la requisición'
+                ]);
+
+                return;
+            }
+
             $formato = RequisicionObraFormato12::query()
                 ->with(['procedimientos'])
                 ->where('id_requisicion', $id)
-                ->firstOrFail();
+                ->first();
+
+            if (!$formato) {
+
+                $estacion = $this->estacionModulo()
+                    ? Estacion::find($this->estacionModulo())
+                    : null;
+
+                SeguridadContratistasService::validarRequisicionObra(
+                    $id,
+                    (string) ($estacion?->di_municipio ?? ''),
+                    (string) ($estacion?->di_estado ?? '')
+                );
+
+                $formato = RequisicionObraFormato12::query()
+                    ->with(['procedimientos'])
+                    ->where('id_requisicion', $id)
+                    ->firstOrFail();
+            }
 
             $trabajadoresCat1 = RequisicionObraFormato12TrabajadorEncargado::where('id_requisicion', $formato->id)
                 ->where('categoria', 1)
@@ -292,7 +356,7 @@ class SeguridadContratistasController extends BaseController
                     ];
                 });
 
-            $encargadosList = Usuario::where('id_gas', $this->estacionId())
+            $encargadosList = Usuario::where('id_gas', $this->estacionModulo())
                 ->where('id_puesto', 6)
                 ->where('estatus', 0)
                 ->get()
@@ -566,7 +630,12 @@ class SeguridadContratistasController extends BaseController
     {
         header('Content-Type: application/pdf');
 
-        $formato = RequisicionObraFormato12::where('id_requisicion', $id)->firstOrFail();
+        $formato = RequisicionObraFormato12::where('id_requisicion', $id)->first();
+
+        if (!$formato) {
+            return 'No existe el Formato 12 para esta requisición';
+        }
+
         $horainicio = $formato->hora_inicio?->format('H:i:s');
 
         $horatermino = $formato->hora_inicio?->format('H:i:s');
@@ -594,7 +663,9 @@ class SeguridadContratistasController extends BaseController
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
         $imgX = 'X';
 
-        $estacion = Estacion::find($this->estacionId());
+        $estacion = Estacion::find(
+            $this->estacionModulo()
+        );
 
         $html = '
     <!DOCTYPE html>
@@ -786,7 +857,7 @@ class SeguridadContratistasController extends BaseController
     <tr>
     <td class="align-middle text-center">Realizado por:<br>Nelly Estrada Garcia</td>
     <td class="align-middle text-center">Revisado por:<br>Eduardo Galicia Flores</td>
-    <td class="align-middle text-center">Autorizado por:<br>' . $estacion->apoderado_legal . '</td>
+    <td class="align-middle text-center">Autorizado por:<br>' . $estacion?->apoderado_legal . '</td>
     <td class="align-middle text-center">Fecha de autorizacion 01/10/2018</td>
     </tr>
     </table>
@@ -956,11 +1027,15 @@ class SeguridadContratistasController extends BaseController
     {
         header('Content-Type: application/pdf');
 
-        $estacion = Estacion::find($this->estacionId());
+        $estacion = Estacion::find($this->estacionModulo());
 
-        $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+        $apoderado = htmlspecialchars($estacion?->apoderado_legal ?? '');
 
         $requisicion = RequisicionObra::with('usuario')
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $est) => $q->where('id_estacion', $est)
+            )
             ->findOrFail($id);
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
@@ -1053,7 +1128,7 @@ class SeguridadContratistasController extends BaseController
             <tr>
                 <td class="align-middle">
                     <b>Empresa solicitante:</b>
-                    ' . ($estacion->razonsocial ?? '') . '
+                    ' . ($estacion?->razonsocial ?? '') . '
                 </td>
             </tr>
 
@@ -1144,14 +1219,19 @@ class SeguridadContratistasController extends BaseController
 
             $requisicion = RequisicionObra::with(
                 'usuario:id,nombre'
-            )->findOrFail($id);
+            )
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $est) => $q->where('id_estacion', $est)
+            )
+            ->findOrFail($id);
 
             $formato = RequisicionObraFormato14::where(
                 'id_requisicion',
                 $id
             )->first();
 
-            $estacion = Estacion::find($this->estacionId());
+            $estacion = Estacion::find($this->estacionModulo());
 
             echo json_encode([
                 'success' => true,
@@ -1313,7 +1393,7 @@ class SeguridadContratistasController extends BaseController
 
             $supervisores = Usuario::query()
                 ->select('id', 'nombre')
-                ->where('id_gas', $this->estacionId())
+                ->where('id_gas', $this->estacionModulo())
                 ->where('id_puesto', 6)
                 ->where('estatus', 0)
                 ->orderBy('nombre')
@@ -1380,10 +1460,14 @@ class SeguridadContratistasController extends BaseController
             'supervisor:id,nombre,firma'
         )
             ->where('id_requisicion', $id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$formato) {
+            return 'No existe el Formato 15 para esta requisición';
+        }
 
         $estacion = Estacion::find(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $horaFormateada =
@@ -1525,7 +1609,7 @@ class SeguridadContratistasController extends BaseController
 
                 Autorizado por:<br>
                 ' . e(
-            $estacion->apoderado_legal
+            $estacion?->apoderado_legal ?? ''
         ) . '
 
             </td>
@@ -1702,7 +1786,41 @@ class SeguridadContratistasController extends BaseController
         $carta = RequisicionObraCartaResponsiva::where(
             'id_requisicion',
             $id
-        )->firstOrFail();
+        )->first();
+
+        if (!$carta) {
+
+            $requisicion = RequisicionObra::query()
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $est) => $q->where('id_estacion', $est)
+                )
+                ->find($id);
+
+            if (!$requisicion) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No se encontró la requisición'
+                ]);
+
+                return;
+            }
+
+            $estacion = $this->estacionModulo()
+                ? Estacion::find($this->estacionModulo())
+                : null;
+
+            $carta = SeguridadContratistasService::validarCartaResponsiva(
+                $id,
+                (string) ($estacion?->di_municipio ?? ''),
+                (string) ($estacion?->di_estado ?? ''),
+                (string) ($estacion?->apoderado_legal ?? ''),
+                (string) ($estacion?->razonsocial ?? ''),
+                (string) ($estacion?->direccioncompleta ?? ''),
+                (string) ($estacion?->firma ?? '')
+            );
+        }
 
         echo json_encode($carta);
 
@@ -1752,7 +1870,11 @@ class SeguridadContratistasController extends BaseController
         $carta = RequisicionObraCartaResponsiva::where(
             'id_requisicion',
             $id
-        )->firstOrFail();
+        )->first();
+
+        if (!$carta) {
+            return 'No existe la carta responsiva para esta requisición';
+        }
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 

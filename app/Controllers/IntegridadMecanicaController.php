@@ -5,6 +5,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\EquipoCritico;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -12,6 +13,11 @@ use Dompdf\Options;
 class IntegridadMecanicaController extends BaseController{
 
 protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
         $title = '11. INTEGRIDAD MECÁNICA Y ASEGURAMIENTO DE LA CALIDAD';
@@ -26,12 +32,15 @@ protected string $modulo = 'sasisopa';
                 'title' => $title,
                 'permisos' => $permisos,
                 'modulo' => $this->modulo,
+                'estacionId' => $this->estacionModulo(),
+                'moduleStationKey' => 'sasisopa',
                 'filtro_usuario' => $this->filtro_usuario,
                 'links' =>[
                     '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
                 ],
                 'scripts' => [
                     '/js/vendor.min.js',
+                    '/js/core/module-station-selector.js?v=' . time(),
                     '/libs/datatables.net/js/jquery.dataTables.min.js',
                     '/js/integridadmecanica/equipocritico.datatable.init.js?v=' . time(),
                     '/js/integridadmecanica/equipocritico.action.init.js?v=' . time(),
@@ -43,7 +52,7 @@ protected string $modulo = 'sasisopa';
     }
 
     public function datatableEquipoCritico(){
-        $data = EquipoCritico::where('id_estacion',$this->estacionId())
+        $data = EquipoCritico::where('id_estacion',$this->estacionModulo())
         ->where('estado',1)
         ->get();
 
@@ -141,11 +150,11 @@ try {
 
             $ultimo = EquipoCritico::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )->max('id_equipo');
 
             EquipoCritico::create([
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $this->estacionModulo(),
                 'id_equipo' => ($ultimo ?? 0) + 1,
                 'nombre_equipo' => $nombre,
                 'marca_modelo' => $marca,
@@ -184,7 +193,7 @@ try {
 
             $registro = EquipoCritico::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )->find($data['id']);
 
             if (!$registro) {
@@ -227,7 +236,7 @@ try {
 
             $registro = EquipoCritico::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )->find($data['id']);
 
             if (!$registro) {
@@ -260,7 +269,7 @@ try {
     public function pdfEquipoCritico(){
 
     $estacion = Estacion::find(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         if (!$estacion) {
@@ -269,7 +278,7 @@ try {
 
         $equipos = EquipoCritico::where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
         ->where('estado',1)
         ->orderByDesc('id_equipo')
@@ -392,11 +401,15 @@ try {
                 'title' => $title,
                 'permisos' => $permisos,
                 'modulo' => $this->modulo,
+                'estacionId' => $this->estacionModulo(),
+                'moduleStationKey' => 'sasisopa',
                 'filtro_usuario' => $this->filtro_usuario,
+                'ocultarSelectorEstacion'=> true,
                 'links' =>[
                 ],
                 'scripts' => [
                     '/js/vendor.min.js',
+                    '/js/core/module-station-selector.js?v=' . time(),
                 ],
                 'help' => false
             ];

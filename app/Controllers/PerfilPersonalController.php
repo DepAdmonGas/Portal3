@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Usuario;
 use App\Models\UsuariosFamiliares;
@@ -16,6 +17,11 @@ class PerfilPersonalController extends BaseController
 {
  protected string $modulo = 'sasisopa';
 
+ private function estacionModulo(): ?int
+ {
+     return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+ }
+
 public function perfilesPersonal(){
         $title = 'Perfil del personal';
          // Buscar permisos de los modulos
@@ -26,10 +32,14 @@ public function perfilesPersonal(){
         Breadcrumb::add('6. COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO', '/sasisopa/competencia-personal-capacitacion-entrenamiento');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                  '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
@@ -37,6 +47,7 @@ public function perfilesPersonal(){
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/competenciapersonalcapacitacionentrenamiento/perfilpersonal.datatable.init.js?v=' . time(),
             ],
@@ -53,7 +64,7 @@ public function perfilesPersonal(){
 
         $usuarios = Usuario::with('puesto')
             ->activo()
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('id_puesto', '!=', 1)
             ->orderBy('id','desc')
             ->get();
@@ -105,19 +116,27 @@ public function perfilesPersonal(){
         Breadcrumb::add('Perfil del personal', '/sasisopa/competencia-personal-capacitacion-entrenamiento/perfiles-personal');
         Breadcrumb::add($title, '');
 
-        $usuario = Usuario::find($id);
+        $idEstacion = $this->estacionModulo();
+        $usuario = Usuario::where('id', $id)
+            ->where('id_gas', $idEstacion)
+            ->first();
 
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
+                        'ocultarSelectorEstacion'=> true,
+
             'usuario' => $usuario,
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/signature_pad/docs/js/signature_pad.umd.min.js',
                 '/js/competenciapersonalcapacitacionentrenamiento/fichapersonal.actions.init.js?v=' . time(),
             ],
@@ -159,7 +178,9 @@ public function perfilesPersonal(){
 
         try {
 
-            $usuario = Usuario::find($id);
+            $usuario = Usuario::where('id', $id)
+                ->where('id_gas', $this->estacionModulo())
+                ->first();
 
             if (!$usuario) {
                 echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
@@ -500,6 +521,8 @@ public function perfilesPersonal(){
     public function updateFirma()
         {
 
+        header('Content-Type: application/json; charset=utf-8');
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (!$data || empty($data['id']) || empty($data['firma'])) {
@@ -509,47 +532,64 @@ public function perfilesPersonal(){
 
         try {
 
-           $usuario = Usuario::find($data['id']);
+            $usuario = Usuario::find($data['id']);
 
             if (!$usuario) {
                 echo json_encode([
                     'success' => false,
-                    'message'=> 'Usuario no encontrado'
-                    ]);
+                    'message' => 'Usuario no encontrado'
+                ]);
                 return;
             }
 
-              $firma = $data['firma'];
+            $firma = $data['firma'];
             $firma = str_replace('data:image/png;base64,', '', $firma);
             $firma = str_replace(' ', '+', $firma);
 
-            $imageData = base64_decode($firma);
+            $imageData = base64_decode($firma, true);
+
+            if ($imageData === false) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Firma inválida'
+                ]);
+                return;
+            }
 
             $nombreArchivo = 'firma_' . $usuario->id . '_' . time() . '.png';
-            $ruta = __DIR__ . '../../../public/uploads/firma-personal/' . $nombreArchivo;
+            $directorio = PUBLIC_PATH . '/uploads/firma-personal/';
 
-            file_put_contents($ruta, $imageData);
+            if (!is_dir($directorio)) {
+                mkdir($directorio, 0777, true);
+            }
 
-            $usuario->update([
-                'firma' => $nombreArchivo
-            ]);
+            $ruta = $directorio . $nombreArchivo;
+
+            if (file_put_contents($ruta, $imageData) === false) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No se pudo guardar el archivo de la firma'
+                ]);
+                return;
+            }
+
+            $usuario->firma = $nombreArchivo;
+            $usuario->save();
 
             echo json_encode([
                 'success' => true,
                 'message' => 'Firma actualizada correctamente',
-                'ruta' => $_ENV['APP_URL'] . '/uploads/firma-personal/' . $ruta
-                ]); 
-        
-          
+                'ruta' => $_ENV['APP_URL'] . '/uploads/firma-personal/' . $nombreArchivo
+            ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
 
             echo json_encode([
                 'success' => false,
                 'error' => 'Error al actualizar la firma'
             ]);
         }
-            
+
     }
 
     //------------------------------------------------------------------
@@ -581,7 +621,7 @@ public function perfilesPersonal(){
             'experiencias',
             'experienciaEmpresa'
         ])
-        ->where('id_gas', $this->estacionId())
+        ->where('id_gas', $this->estacionModulo())
         ->activo()
         ->get();
 
@@ -595,7 +635,7 @@ public function perfilesPersonal(){
 
     public function generarPdf(iterable $usuarios)
     {
-        $registro = Estacion::find($this->estacionId());
+        $registro = $this->estacionModulo() ? Estacion::find($this->estacionModulo()) : null;
 
         if (!$registro) {
             echo "No se encontró la información";

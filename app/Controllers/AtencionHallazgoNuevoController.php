@@ -2,6 +2,7 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Breadcrumb;
 use App\Models\Sasisopa\AtencionHallazgo;
 use App\Models\Sasisopa\AtencionHallazgoDetalle;
@@ -11,6 +12,11 @@ use App\Models\Sasisopa\Sasisopa;
 class AtencionHallazgoNuevoController extends BaseController{
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index($id){
 
@@ -38,10 +44,14 @@ class AtencionHallazgoNuevoController extends BaseController{
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'hallazgos' => $hallazgos,
+            'estacionId' => $this->estacionModulo(),
+            'ocultarSelectorEstacion'=> true,
+            'moduleStationKey' => 'sasisopa',
             'links' =>[ 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/atencionhallazgosnuevo.actions.init.js?v=' . time(),
             ],
             'help' => false
@@ -320,14 +330,33 @@ public function createEvidencia()
             '.' .
             $extension;
 
+        $carpeta =
+            __DIR__ . '../../../public/uploads/archivos/atencion-hallazgos/';
+
+        if(!file_exists($carpeta)){
+
+            mkdir_safe(
+                $carpeta,
+                true
+            );
+        }
+
         $ruta =
-            __DIR__ . '../../../public/uploads/archivos/atencion-hallazgos/' .
+            $carpeta .
             $nombre;
 
-        move_uploaded_file(
+        if(!move_uploaded_file(
             $file['tmp_name'],
             $ruta
-        );
+        )){
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se pudo guardar el archivo'
+            ]);
+
+            exit;
+        }
 
         AtencionHallazgoEvidencia::create([
 

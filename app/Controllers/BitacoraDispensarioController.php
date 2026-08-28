@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\DispensarioAperturaBitacora;
 use App\Models\Sasisopa\Dispensario;
 use App\Models\Estacion;
@@ -11,6 +12,11 @@ use Carbon\Carbon;
 class BitacoraDispensarioController extends BaseController{
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
 
@@ -28,6 +34,8 @@ class BitacoraDispensarioController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
@@ -36,6 +44,7 @@ class BitacoraDispensarioController extends BaseController{
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/bitacoradispensario.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/bitacoradispensario.action.init.js?v=' . time(),
+                '/js/core/module-station-selector.js?v=' . time(),
 
             ],
 
@@ -65,7 +74,7 @@ class BitacoraDispensarioController extends BaseController{
                 function ($query) {
                     $query->where(
                         'id_estacion',
-                        $this->estacionId()
+                        $this->estacionModulo()
                     );
                 }
             )
@@ -139,10 +148,10 @@ class BitacoraDispensarioController extends BaseController{
     public function catalogos()
     {
 
-        $estacion = Estacion::find($this->estacionId());
+        $estacion = Estacion::find($this->estacionModulo());
         $dispensarios = Dispensario::query()
 
-            ->where('id_estacion',$this->estacionId())
+            ->where('id_estacion',$this->estacionModulo())
             ->where('estado',1)
             ->orderBy('no_dispensario')
             ->get(['id','no_dispensario']);
@@ -328,7 +337,7 @@ private function crearCambioPrecio(
 
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
 
         ->where(
@@ -433,7 +442,7 @@ private function guardarRegistroCambioPrecio(
     $year = sanitize_input($_GET['year'] ?? null,'int');
     $mes = sanitize_input($_GET['mes'] ?? null,'int');
     $estacion = Estacion::find(
-        $this->estacionId()
+        $this->estacionModulo()
     );
 
     if (!$estacion) {
@@ -466,7 +475,7 @@ private function guardarRegistroCambioPrecio(
             'dispensario',
             fn($q) => $q->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
         )
 

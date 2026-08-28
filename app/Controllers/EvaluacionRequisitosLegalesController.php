@@ -2,6 +2,7 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Models\Sasisopa\RequisitosLegalesCalendario;
@@ -15,6 +16,11 @@ use Dompdf\Options;
 class EvaluacionRequisitosLegalesController extends BaseController{
 
 protected string $modulo = 'sasisopa';
+
+private function estacionModulo(): ?int
+{
+    return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+}
 
     public function index(){
 
@@ -32,10 +38,13 @@ protected string $modulo = 'sasisopa';
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' =>[
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/evaluacionrequisitoslegales.actions.init.js?v=' . time(),
             ],
             'help' => false
@@ -50,7 +59,7 @@ protected string $modulo = 'sasisopa';
     $fin    = $_GET['fin'] ?? null;
 
     $matriz = $this->getMatrizCumplimiento(
-        $this->estacionId(),
+        $this->estacionModulo(),
         $inicio,
         $fin
     );
@@ -70,7 +79,7 @@ protected string $modulo = 'sasisopa';
      
 
     $estacion = Estacion::find(
-            $this->estacionId()
+            $this->estacionModulo()
         );
     $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
@@ -176,7 +185,7 @@ protected string $modulo = 'sasisopa';
                 </td>
 
                 <td class="text-center align-middle">
-                    Autorizado por: ' . $estacion->apoderado_legal . '
+                    Autorizado por: ' . ($estacion?->apoderado_legal ?? '') . '
                 </td>
 
                 <td class="text-center align-middle">
@@ -289,7 +298,7 @@ private static function porcentajeGrupo(array $items): int
 }
 
 public function getMatrizCumplimiento(
-    int $estacionId,
+    ?int $estacionId,
     ?string $inicio = null,
     ?string $fin = null
 ): array {
@@ -416,7 +425,7 @@ $service = new ReporteRequisitosLegalesService();
             $informes = InformeRevisionResultado::query()
                 ->where(
                     'id_estacion',
-                    $this->estacionId()
+                    $this->estacionModulo()
                 )
                 ->orderByDesc('fecha')
                 ->get()
@@ -474,6 +483,18 @@ $service = new ReporteRequisitosLegalesService();
             return;
         }
 
+        $estacion = $this->estacionModulo();
+
+        if(!$estacion){
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Selecciona una estación para continuar'
+            ]);
+
+            return;
+        }
+
         $rutaBd = '';
 
         if(!empty($_FILES['documento'])
@@ -496,7 +517,7 @@ $service = new ReporteRequisitosLegalesService();
 
             $nombre =
                 'Informe-revision-resultados-'
-                .$this->estacionId()
+                .$estacion
                 .'-'
                 .time()
                 .'.pdf';
@@ -512,7 +533,7 @@ $service = new ReporteRequisitosLegalesService();
         InformeRevisionResultado::create([
 
             'id_estacion' =>
-                $this->estacionId(),
+                $estacion,
 
             'fecha' =>
                 $fecha,
@@ -546,7 +567,12 @@ $service = new ReporteRequisitosLegalesService();
 
             $data = json_decode(file_get_contents('php://input'),true);
             $id = (int)($data['id'] ?? 0);
-            $informe = InformeRevisionResultado::find($id);
+            $informe = InformeRevisionResultado::where('id', $id)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacion) => $q->where('id_estacion', $estacion)
+                )
+                ->first();
 
             if(!$informe){
 

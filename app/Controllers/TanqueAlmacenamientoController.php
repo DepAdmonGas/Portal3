@@ -3,6 +3,7 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
+use App\Services\ModuleStationService;
 use App\Services\ModuloService;
 use App\Models\Sasisopa\TanqueAlmacenamiento;
 
@@ -10,6 +11,11 @@ class TanqueAlmacenamientoController extends BaseController
 {
 
  protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index()
     {
@@ -23,18 +29,22 @@ class TanqueAlmacenamientoController extends BaseController
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
+        $idEstacion = $this->estacionModulo();
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/controlactividadproceso/tanquealmacenamiento.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/tanquealmacenamiento.action.init.js?v=' . time(),
 
@@ -51,9 +61,8 @@ class TanqueAlmacenamientoController extends BaseController
 
       $data = TanqueAlmacenamiento::where(
         'id_estacion',
-        $this->estacionId()
+        $this->estacionModulo()
         )
-        ->where('estado', 1)
         ->orderByDesc('no_tanque')
         ->get()
 
@@ -64,7 +73,6 @@ class TanqueAlmacenamientoController extends BaseController
                 'no_tanque' => $item->no_tanque,
                 'capacidad' => $item->capacidad,
                 'producto' => $item->producto,
-                'estado' => $item->estado,
             ];
         });
 
@@ -114,11 +122,10 @@ class TanqueAlmacenamientoController extends BaseController
     try{
 
         TanqueAlmacenamiento::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'no_tanque' => $no_tanque,
             'capacidad' => $capacidad,
             'producto' => $producto,
-            'estado' => 1
         ]);
 
         echo json_encode([
@@ -152,7 +159,7 @@ class TanqueAlmacenamientoController extends BaseController
 
     $registro = TanqueAlmacenamiento::where(
         'id_estacion',
-        $this->estacionId()
+        $this->estacionModulo()
     )->find($data['id_tanque']);
 
     if (!$registro) {
@@ -208,7 +215,10 @@ class TanqueAlmacenamientoController extends BaseController
 
         $data = json_decode(file_get_contents('php://input'),true);
 
-        $registro = TanqueAlmacenamiento::find($data['id']);
+        $registro = TanqueAlmacenamiento::where(
+            'id_estacion',
+            $this->estacionModulo()
+        )->find($data['id']);
 
         if(!$registro){
 
@@ -220,13 +230,11 @@ class TanqueAlmacenamientoController extends BaseController
             return;
         }
 
-        $registro->update([
-            'estado' => 0
-        ]);
+        $registro->delete();
 
         echo json_encode([
             'success' => true,
-            'message' => 'Extintor eliminado correctamente'
+            'message' => 'Tanque de Almacenamiento eliminado correctamente'
         ]);
 
     }catch(\Throwable $e){

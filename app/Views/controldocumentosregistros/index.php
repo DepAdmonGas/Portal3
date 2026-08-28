@@ -1,4 +1,6 @@
-<div id="container">
+<div id="container"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
 <div class="row mt-4">
   <div class="col-md-6 d-flex align-items-stretch">

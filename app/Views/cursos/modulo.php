@@ -2,7 +2,21 @@
 window.temas = <?= json_encode($temas->values()) ?>;
 </script>
 
-<div class="mt-4 pb-4" x-data="modulos()">
+<div class="mt-4 pb-4"
+     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
+     x-data="modulos()">
+
+<?php if (empty($estacionId)): ?>
+
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
+    <div id="sasisopa-content">
 
 <div class="row g-4">
 
@@ -128,6 +142,14 @@ window.temas = <?= json_encode($temas->values()) ?>;
 
                             <th>Fecha</th>
 
+                            <?php if ($multiestacion): ?>
+
+                            <th>
+                                Nombre del personal
+                            </th>
+
+                            <?php endif; ?>
+
                             <th class="text-center">
                                 Resultado
                             </th>
@@ -147,6 +169,12 @@ window.temas = <?= json_encode($temas->values()) ?>;
                 <tr>
 
                     <td x-text="item.fecha"></td>
+
+                    <?php if ($multiestacion): ?>
+
+                    <td x-text="item.personal"></td>
+
+                    <?php endif; ?>
 
                     <td class="text-center">
 
@@ -193,5 +221,9 @@ window.temas = <?= json_encode($temas->values()) ?>;
     </div>
 
 </div>
+
+    </div>
+
+    <?php endif; ?>
 
 </div>

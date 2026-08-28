@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\View;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Breadcrumb;
 use App\Models\Sasisopa\ReporteCreMes;
 use App\Models\Sasisopa\ReporteCreProducto;
@@ -18,6 +19,11 @@ class ReporteDiarioController extends BaseController
 {
     protected string $modulo = 'sasisopa';
 
+    protected function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext($this->modulo)['id_estacion'] ?? null;
+    }
+
     public function index()
     {
 
@@ -28,16 +34,24 @@ class ReporteDiarioController extends BaseController
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
-        $this->crearMesesReporteCre($this->estacionId());
+
+        $estacionId = $this->estacionModulo();
+
+        if (!empty($estacionId)) {
+            $this->crearMesesReporteCre($estacionId);
+        }
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sasisopa',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/reportediario/index.action.init.js?v=' . time(),
             ],
             'help' => false
@@ -86,7 +100,7 @@ class ReporteDiarioController extends BaseController
 
             $meses = ReporteCreMes::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
                 ->where('year', $year)
                 ->orderBy('mes')
@@ -140,11 +154,14 @@ class ReporteDiarioController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'mes' => $mes,
             'year' => $year,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/reportediario/reportemes.action.init.js?v=' . time(),
             ],
             'help' => false
@@ -162,7 +179,7 @@ class ReporteDiarioController extends BaseController
         $year = (int)($_GET['year'] ?? date('Y'));
 
         $head = $this->headCorte(
-            Estacion::find($this->estacionId())
+            Estacion::find($this->estacionModulo())
         );
 
         $productos = collect($head['productos']);
@@ -171,7 +188,7 @@ class ReporteDiarioController extends BaseController
             'productos.pipas',
             'mensajes'
         ])
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->where('mes', $mes)
             ->where('year', $year)
             ->firstOrFail();
@@ -350,11 +367,11 @@ class ReporteDiarioController extends BaseController
 
     public function reportePdf()
     {
-        $estacion = Estacion::find($this->estacionId());
+        $estacion = Estacion::find($this->estacionModulo());
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-        $reporte = ReporteCreMes::where('id_estacion', $this->estacionId())
+        $reporte = ReporteCreMes::where('id_estacion', $this->estacionModulo())
             ->where('mes', (int)$_GET['idMes'])
             ->where('year', (int)$_GET['idYear'])
             ->firstOrFail();
@@ -712,11 +729,14 @@ table {
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $reporte = ReporteCreMes::where('id_estacion', $this->estacionId())
+        $reporte = ReporteCreMes::where('id_estacion', $this->estacionModulo())
             ->where('year', $year)
             ->firstOrFail();
 
-        $meses = $this->obtenerMeses($this->estacionId(), $year);
+        $meses = $this->obtenerMeses(
+            $this->estacionModulo(),
+            $year
+        );
         $productos = $this->obtenerProductos();
 
         $data = [
@@ -724,6 +744,8 @@ table {
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'year' => $year,
             'idReporteCre' => $reporte->id,
             'meses'     => $meses,
@@ -731,6 +753,7 @@ table {
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/reportediario/facturas.action.init.js?v=' . time(),
             ],
             'help' => false
@@ -750,7 +773,7 @@ table {
                 'success' => true,
 
                 'meses' => $this->obtenerMeses(
-                    $this->estacionId(),
+                    $this->estacionModulo(),
                     $year
                 ),
 
@@ -772,7 +795,7 @@ table {
     }
 
     private function obtenerMeses(
-        int $idEstacion,
+        ?int $idEstacion,
         int $year
     ): array {
 
@@ -820,7 +843,7 @@ table {
     {
         $productos = [];
 
-        $estacioon = Estacion::find($this->estacionId());
+        $estacioon = Estacion::find($this->estacionModulo());
 
         if (!empty($estacioon->producto_uno)) {
 
@@ -973,7 +996,7 @@ table {
 
         $nombre = sprintf(
             '%s-P%s-%s.pdf',
-            $this->estacionId(),
+            $this->estacionModulo(),
             $producto,
             $timestamp
         );
@@ -1013,7 +1036,7 @@ table {
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $reporte = ReporteCreMes::where('id_estacion', $this->estacionId())
+        $reporte = ReporteCreMes::where('id_estacion', $this->estacionModulo())
             ->where('mes', $mes)
             ->where('year', $year)
             ->firstOrFail();
@@ -1042,6 +1065,10 @@ table {
 
             'filtro_usuario' => $this->filtro_usuario,
 
+            'estacionId' => $this->estacionModulo(),
+
+            'moduleStationKey' => 'sasisopa',
+            'ocultarSelectorEstacion'=> true,
             'mes' => $mes,
 
             'year' => $year,
@@ -1057,6 +1084,7 @@ table {
 
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/reportediario/reportemesnuevo.action.init.js?v=' . time(),
             ],
 
@@ -1077,7 +1105,7 @@ table {
 
         $reporte = ReporteCreMes::where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
             ->findOrFail($idReporteCre);
 
@@ -1122,6 +1150,10 @@ table {
 
             'filtro_usuario' => $this->filtro_usuario,
 
+            'estacionId' => $this->estacionModulo(),
+
+            'moduleStationKey' => 'sasisopa',
+'ocultarSelectorEstacion'=> true,
             'mes' => $mes,
 
             'year' => $year,
@@ -1139,6 +1171,7 @@ table {
 
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/reportediario/reportemesnuevo.action.init.js?v=' . time(),
             ],
 
@@ -1158,7 +1191,7 @@ table {
 
         header('Content-Type: application/json');
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionModulo());
 
         $productos = [];
 
@@ -1251,7 +1284,7 @@ table {
 
         try {
 
-            $estacion = Estacion::findOrFail($this->estacionId());
+            $estacion = Estacion::findOrFail($this->estacionModulo());
 
             $productos = [];
 

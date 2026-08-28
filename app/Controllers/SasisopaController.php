@@ -52,6 +52,7 @@ class SasisopaController extends BaseController
 
     public function index()
     {
+
         $title = 'SASISOPA';
 
         Breadcrumb::add('Home', '/home');
@@ -2293,20 +2294,25 @@ class SasisopaController extends BaseController
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
-        $estacion = Estacion::find($this->estacionId());
+        $moduleCtx = ModuleStationService::getContext('sasisopa');
+        $idEstacion = $moduleCtx['id_estacion'];
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
-            'organigrama' => asset('/images/organigramas/' . $estacion->organigrama),
+            'organigrama' => $estacion?->organigrama ? asset('/images/organigramas/' . $estacion->organigrama) : null,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -2329,7 +2335,9 @@ class SasisopaController extends BaseController
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $data = RepresentanteTecnico::where('id_estacion', $this->estacionId())
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
+
+        $data = RepresentanteTecnico::where('id_estacion', $idEstacion)
             ->orderBy('fecha')
             ->get();
 
@@ -2401,7 +2409,7 @@ class SasisopaController extends BaseController
 
             // GUARDAR EN BD
             RepresentanteTecnico::create([
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => ModuleStationService::getContext('sasisopa')['id_estacion'],
                 'nom_representante'  => $nombre,
                 'fecha'       => $fecha,
                 'archivo'   => 'archivos/representante-tecnico/' . $nombreArchivo
@@ -2450,7 +2458,9 @@ class SasisopaController extends BaseController
         try {
 
             // Buscar registro
-            $reporte = RepresentanteTecnico::find($id);
+            $reporte = RepresentanteTecnico::where('id', $id)
+                ->where('id_estacion', ModuleStationService::getContext('sasisopa')['id_estacion'])
+                ->first();
 
             if (!$reporte) {
                 throw new \Exception('Registro no encontrado');
@@ -2508,14 +2518,22 @@ class SasisopaController extends BaseController
 
         $sasisopa = Sasisopa::all();
 
+        $estacion = Estacion::find(
+            ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null
+        );
+
         $data = [
             'title' => $title,
             'elementos' => $sasisopa,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacion' => $estacion,
+            'estacionId' => $estacion?->id,
+            'moduleStationKey' => 'sasisopa',
             'links' => [],
             'scripts' => [
-                '/js/vendor.min.js'
+                '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time()
             ],
             'help' => false
 
@@ -2546,9 +2564,12 @@ class SasisopaController extends BaseController
             'elementos' => $sasisopa,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null,
+            'moduleStationKey' => 'sasisopa',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sasisopa/consultasasisopa.actions.init.js?v=' . time(),
             ],
             'help' => false
@@ -2562,11 +2583,11 @@ class SasisopaController extends BaseController
     {
         header('Content-Type: application/json');
 
-        $estacion = Estacion::find($this->estacionId());
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
 
         $data = SasisopaConsulta::where(
             'id_estacion',
-            $this->estacionId()
+            $idEstacion
         )
             ->orderByDesc('id')
             ->get()

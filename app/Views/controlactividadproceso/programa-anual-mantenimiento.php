@@ -1,7 +1,9 @@
 <?php 
 /** @var \Illuminate\Database\Eloquent\Collection $programas */
 ?>
-<div id="container" class="pb-4" x-data="{ ...actions(), ...programaMantenimiento() }">
+<div id="container" class="pb-4" x-data="{ ...actions(), ...programaMantenimiento() }"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
   <div class="text-end">
       <?= 

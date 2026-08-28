@@ -1,5 +1,5 @@
 
-<div class="container text-justify">
+<div class=" text-justify">
 <div class="card mt-3">
   <div class="card-header bg-primary">
 

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Sasisopa\RecepcionDescargar;
 use Dompdf\Dompdf;
@@ -13,6 +14,11 @@ use Dompdf\Options;
 class RecepcionDescargaProductoController extends BaseController
 {
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
 
     public function index()
@@ -33,6 +39,8 @@ class RecepcionDescargaProductoController extends BaseController
             $this->modulo
         );
 
+        $idEstacion = $this->estacionModulo();
+
         $data = [
 
             'title' => $title,
@@ -40,6 +48,10 @@ class RecepcionDescargaProductoController extends BaseController
             'permisos' => $permisos,
 
             'modulo' => $this->modulo,
+
+            'estacionId' => $idEstacion,
+
+            'moduleStationKey' => 'sasisopa',
 
             'filtro_usuario' => $this->filtro_usuario,
 
@@ -49,6 +61,7 @@ class RecepcionDescargaProductoController extends BaseController
 
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/recepciondescargaproducto.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/recepciondescargaproducto.action.init.js?v=' . time(),
@@ -120,9 +133,8 @@ class RecepcionDescargaProductoController extends BaseController
             'mes' => $mes
         ] = $this->filtros();
 
-        $estacion = Estacion::find(
-            $this->estacionId()
-        );
+        $idEstacion = $this->estacionModulo();
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
 
         if (!$estacion) {
             return 'No se encontró información';
@@ -519,7 +531,7 @@ class RecepcionDescargaProductoController extends BaseController
                 'tanques.tanque:id,no_tanque',
                 'sellos'
             ])
-            ->where('id_estacion',$this->estacionId())
+            ->where('id_estacion',$this->estacionModulo())
             ->where('estado',1)
             ->when($year, function ($q) use ($year) {
                 $q->whereYear('fecha',$year);

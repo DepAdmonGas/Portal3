@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Sasisopa\MantenimientoLista;
 use App\Models\Sasisopa\MantenimientoVerificar;
@@ -13,6 +14,11 @@ use Dompdf\Options;
 class MantenimientoPreventivoController extends BaseController{
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
 
@@ -32,11 +38,15 @@ class MantenimientoPreventivoController extends BaseController{
             $this->modulo
         );
 
+        $idEstacion = $this->estacionModulo();
+
         $data = [
 
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -44,6 +54,7 @@ class MantenimientoPreventivoController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -68,7 +79,7 @@ class MantenimientoPreventivoController extends BaseController{
 
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
 
         // FILTRO POR AÑO
@@ -154,9 +165,13 @@ class MantenimientoPreventivoController extends BaseController{
 
     public function pdf(): void
     {
-        $service = new MantenimientoPreventivoService($this->estacionId()); 
+        $idEstacion = $this->estacionModulo();
+        if (!$idEstacion) {
+            exit('Selecciona una estación para generar el PDF');
+        }
+        $service = new MantenimientoPreventivoService($idEstacion);
         $service->generarPdf();
-        exit;     
+        exit;
     }   
 
     public function evidencias(int $id): void

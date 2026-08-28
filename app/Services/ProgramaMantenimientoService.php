@@ -111,11 +111,15 @@ class ProgramaMantenimientoService
     }
 
     public static function buscaFechaSemanal(
-        int $idEstacion,
+        ?int $idEstacion,
         int $idMantenimiento,
         int $year,
         int $mes
     ): string {
+
+        if ($idEstacion === null) {
+            return '0000-00-00';
+        }
 
         $fecha = DB::table(
             'po_programa_anual_mantenimiento_calendario'

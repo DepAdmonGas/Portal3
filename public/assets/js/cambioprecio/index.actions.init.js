@@ -20,6 +20,10 @@ document.addEventListener('alpine:init', () => {
 
         init(){
 
+            if (!document.getElementById('modalCambioPrecio')) {
+                return;
+            }
+
             window.cambioprecio = this;
             this.modal = new bootstrap.Modal(
                 document.getElementById('modalCambioPrecio')
@@ -104,7 +108,7 @@ document.addEventListener('alpine:init', () => {
     try {
 
         const params = new URLSearchParams({
-            idEstacion: this.estacion,
+            idEstacion: document.getElementById('container').dataset.estacionId || this.estacion,
             idReporte: idReporte,
             GSUPER: this.form.gsuper,
             GPREMIUM: this.form.gpremium,

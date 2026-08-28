@@ -1,4 +1,7 @@
-<div id="container" class="pb-4"
+<div id="container"
+data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+data-estacion-id="<?= $estacionId ?? '' ?>"
+class="pb-4"
 x-data="{ ...actions(), ...seguridadContratistas()}">
 
 <div class="text-end">

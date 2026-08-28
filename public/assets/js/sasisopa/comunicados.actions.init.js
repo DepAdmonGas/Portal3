@@ -35,6 +35,10 @@ document.addEventListener('alpine:init', () => {
 
         init(){
 
+        if (!document.getElementById('modalComunicado')) {
+            return;
+        }
+
         this.modalComunicado =
             new bootstrap.Modal(
                 document.getElementById('modalComunicado')

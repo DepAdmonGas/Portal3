@@ -1,9 +1,22 @@
 <div id="container" class="mb-4"
+data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 x-data="{ ...actions(), ...corteNuevo({
         idReporteCre: <?= $idReporteCre ?>,
         modo: '<?= $modo ?? 'nuevo' ?>',
         fecha: '<?= $fecha ?? '' ?>'
      }) }">
+
+<?php if (empty($estacionId)): ?>
+
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
+    <div id="sasisopa-content">
 
 
           <div class="row mt-3">
@@ -310,5 +323,8 @@ x-data="{ ...actions(), ...corteNuevo({
         </button>
       </div>
 
+    </div>
+
+    <?php endif; ?>
 
 </div>

@@ -44,29 +44,16 @@ document.addEventListener('alpine:init', () => {
         this.modal025 = new bootstrap.Modal(document.getElementById('modal025'));
         this.modalAnexos = new bootstrap.Modal(document.getElementById('modalAnexos'));
 
-        this.listar();
+        window.auditoriasInterna = this;
 
     },
 
     async listar() {
 
-            this.loading = true;
+        if (window.table1) {
 
-            try {
-
-                const { data } =
-                    await axios.get(
-                            '/sasisopa/auditorias/interna/datatable'
-                    );
-
-                if(data.success){
-                    this.registros = data.data;
-                }
-
-            } finally {
-
-                this.loading = false;
-            }
+            window.table1.ajax.reload(null, false);
+        }
     },
 
     abrirModalAgregar() {

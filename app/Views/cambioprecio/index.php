@@ -1,4 +1,18 @@
-<div id="container" class="pb-4" x-data="{ ...actions(), ...cambioPrecio()}">
+<div id="container" class="pb-4"
+    x-data="{ ...actions(), ...cambioPrecio()}"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+
+<?php if (empty($estacionId)): ?>
+
+    <div id="cambioprecio-empty-message"
+        class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
+    <div id="cambioprecio-content">
 
 <div class="text-end mt-2">
    <div class="btn-group">
@@ -120,7 +134,7 @@
                             step="0.01"
                             min="0"
                             class="form-control"
-                            x-model="form.gdiesel" <?=(!$user->estacion->producto_tres)? 'disabled': '';?> >
+                            x-model="form.gdiesel" <?= empty($productoTres) ? 'disabled' : ''; ?> >
 
                     </div>
 
@@ -156,9 +170,13 @@
                             @input="errors.hora = false"
                             :class="errors.hora ? 'is-invalid' : ''">
 
-                    </div>
+</div>
 
-                </div>
+    </div>
+
+    <?php endif; ?>
+
+</div>
 
             </div>
 

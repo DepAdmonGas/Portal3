@@ -1,4 +1,6 @@
 <div id="container" class="pb-4"
+data-module-station-key="sasisopa"
+data-estacion-id="<?= e($estacionId ?? '') ?>"
 x-data="monitoreoEvaluacion()">
 
 <div x-data="monitoreoEvaluacion">

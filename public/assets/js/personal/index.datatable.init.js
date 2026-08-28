@@ -2,6 +2,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const layout = document.getElementById('container').dataset.layout;
 
+  if (!document.getElementById('table-personal')) {
+    return;
+  }
+
     table1 = $('#table-personal').DataTable({
         processing: true,
         serverSide: false,

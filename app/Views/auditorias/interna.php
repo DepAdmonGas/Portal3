@@ -1,4 +1,6 @@
 <div id="container"
+data-module-station-key="sasisopa"
+data-estacion-id="<?= e($estacionId ?? '') ?>"
 x-data="{ ...actions(), ...auditoriaInterna()}">
 
     <div class="text-end">
@@ -11,10 +13,12 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
             ?>     
     </div>
 
-<div class="table-responsive mt-3">
+<div class="datatables">
+    <div class="table-responsive mt-3 pb-4 overflow-x-auto overflow-hidden">
 
         <table
-            class="table table-bordered table-striped ">
+            id="tablaAuditorias"
+            class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
             <thead>
 
@@ -58,116 +62,11 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
             </thead>
 
-            <tbody>
-
-                <template
-                    x-if="!registros.length">
-                    <tr>
-                        <td
-                            colspan="12"
-                            class="text-center">
-                            No se encontró información
-                        </td>
-                    </tr>
-                </template>
-
-                <template
-                    x-for="item in registros"
-                    :key="item.id">
-                    <tr>
-                        <td
-                            class="text-center align-middle"
-                            x-text="item.id">
-                        </td>
-                        <td
-                            class="text-center align-middle"
-                            x-text="item.fecha_larga">
-                        </td>
-                        <td
-                            class="text-center align-middle"
-                            x-text="item.auditor">
-                        </td>
-                        <!-- FORMATO 024 -->
-                        <td class="text-center align-middle">
-                            <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" download>
-                                <i class="ti ti-file-download text-info fs-7"></i>
-                            </a>
-                        </td>
-                        <td class="text-center align-middle">
-                        <a href="javascript:void(0)" @click="subir024(item.id)"><i class="ti ti-file-upload text-success fs-7"></i></a>
-                        </td>
-                        <td class="text-center align-middle">
-                            <template
-                                x-if="
-                                    item.formato024.existe
-                                ">
-
-                                <a :href="`/uploads/${item.formato024.archivo}`" download=""><i class="ti ti-download text-danger fs-7 "></i></a>
-
-                            </template>
-                            <template
-                                x-if="!item.formato024.existe">
-                               <i class="ti ti-x fs-7"></i>
-                            </template>
-                        </td>
-                        <td class="text-center align-middle">
-
-                        <a @click="abrirAnexos(item.id,24)"><i class=" pointer ti ti-paperclip text-primary fs-7"></i></a>
-
-                        </td>
-
-                        <!-- FORMATO 025 -->
-
-                        <td class="text-center align-middle">
-
-                            <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" download>
-                                <i class="ti ti-file-download text-info fs-7"></i>
-                            </a>
-
-                        </td>
-
-                        <td class="text-center align-middle">
-                            <a href="javascript:void(0)" @click="subir025(item.id)"><i class="ti ti-file-upload text-success fs-7"></i></a>
-                        </td>
-
-                        <td class="text-center align-middle">
-
-                            <template
-                                x-if="
-                                    item.formato025.existe
-                                ">
-                                <a :href="`/uploads/${item.formato025.archivo}`" download=""><i class="ti ti-download text-danger fs-7"></i></a>
-
-                            </template>
-
-                            <template
-                                x-if="
-                                    !item.formato025.existe
-                                ">
-                                <i class="ti ti-x fs-7"></i>
-
-                            </template>
-
-                        </td>
-
-                        <td class="text-center align-middle">
-
-                           <a @click="abrirAnexos(item.id,25)"><i class="pointer ti ti-paperclip text-primary fs-7"></i></a>
-
-                        </td>
-
-                        <td class="text-center align-middle">
-                            <a @click="eliminar(item.id)"><i class="pointer ti ti-trash text-danger fs-7"></i></a>
-                        </td>
-
-                    </tr>
-
-                </template>
-
-            </tbody>
+            <tbody></tbody>
 
         </table>
 
+    </div>
 </div>
 
 <!-- Modal Nuevo -->

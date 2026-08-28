@@ -1,4 +1,8 @@
-<div id="container" class="pb-4" x-data="{ ...actions(), ...requisitosLegalesForm()}" data-ngobierno="<?= $title ?>" data-modulo="0">
+<div id="container" class="pb-4" x-data="{ ...actions(), ...requisitosLegalesForm()}"
+     data-ngobierno="<?= $title ?>"
+     data-modulo="0"
+     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
     <div class="text-end mt-2">
           <?= 

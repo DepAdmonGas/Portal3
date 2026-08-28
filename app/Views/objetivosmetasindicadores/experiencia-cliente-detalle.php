@@ -1,4 +1,6 @@
-<div id="container" class="mb-3" data-id="<?= $id ?>" x-data="experienciaClienteDetalle">
+<div id="container" class="mb-3" data-id="<?= $id ?>" x-data="experienciaClienteDetalle"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
 <div class="mt-3"><h4>Reporte <?= $fecha ?></h4></div>
 

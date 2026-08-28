@@ -4,9 +4,10 @@ namespace App\Controllers;
 
 use App\Core\View;
 use App\Core\Breadcrumb;
-use App\Services\ModuloService;
 use App\Core\Request;
 use App\Core\JsonResponse;
+use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 
 use App\Models\Usuario;
 use App\Models\Puestos;
@@ -54,19 +55,26 @@ class PersonalController extends BaseController
         }
 
         $descarga = '';
-        if ($usuario->id_gas == 1) {
+        // ===== Multiestación: estación del contexto del módulo (solo vista SASISOPA) =====
+        $isSasisopa = $categoria === 'SASISOPA';
+
+        $idEstacion = (int) (ModuleStationService::getContext('sasisopa')['id_estacion'] ?? $this->estacionId());
+
+        $estacionRenuncia = $idEstacion ?: (int) $usuario->id_gas;
+
+        if ($estacionRenuncia == 1) {
             $descarga = "FORMATO DE RENUNCIA INTERLOMAS.docx";
-        } else if ($usuario->id_gas == 2) {
+        } else if ($estacionRenuncia == 2) {
             $descarga = "FORMATO DE RENUNCIA PALO SOLO.docx";
-        } else if ($usuario->id_gas == 3) {
+        } else if ($estacionRenuncia == 3) {
             $descarga = "FORMATO DE RENUNCIA SAN AGUSTIN.docx";
-        } else if ($usuario->id_gas == 4) {
+        } else if ($estacionRenuncia == 4) {
             $descarga = "FORMATO DE RENUNCIA GASOMIRA.docx";
-        } else if ($usuario->id_gas == 5) {
+        } else if ($estacionRenuncia == 5) {
             $descarga = "FORMATO DE RENUNCIA VALLE.docx";
-        } else if ($usuario->id_gas == 6) {
+        } else if ($estacionRenuncia == 6) {
             $descarga = "FORMATO DE RENUNCIA ESMEGAS.docx";
-        } else if ($usuario->id_gas == 7) {
+        } else if ($estacionRenuncia == 7) {
             $descarga = "FORMATO DE RENUNCIA XOCHIMILCO.docx";
         }
 
@@ -88,15 +96,25 @@ class PersonalController extends BaseController
             'puestos' => $puestos,
             'renuncia' => $descarga,
             'layout' => $layout,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => $isSasisopa ? 'sasisopa' : null,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
-            'scripts' => [
+            'scripts' => $isSasisopa ? [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
 
-                '/js/personal/index.datatable.init.js?v=1.0.0',
-                '/js/personal/index.actions.init.js?v=1.0.0'
+                '/js/personal/index.datatable.init.js?v=1.2.0',
+                '/js/personal/index.actions.init.js?v=1.2.0',
+                '/js/core/module-station-selector.js?v=' . time()
+
+            ] : [
+                '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+
+                '/js/personal/index.datatable.init.js?v=1.2.0',
+                '/js/personal/index.actions.init.js?v=1.2.0'
 
             ],
             'help' => true
@@ -115,9 +133,11 @@ class PersonalController extends BaseController
 
         $usuario = Usuario::findOrFail($this->userId());
 
+        $idEstacion = (int) (ModuleStationService::getContext('sasisopa')['id_estacion'] ?? $this->estacionId());
+
         $rows = Usuario::query()
-            ->where('id_gas', $this->estacionId())
-            ->when($this->estacionId() == 8, function ($query) use ($usuario) {
+            ->where('id_gas', $idEstacion)
+            ->when($idEstacion == 8, function ($query) use ($usuario) {
 
                 if (in_array($usuario->id_puesto, [13, 14])) {
                     $query->whereIn('id_puesto', [13, 14]);
@@ -173,7 +193,7 @@ class PersonalController extends BaseController
         }
 
         JsonResponse::custom([
-            "id_gas" => $this->estacionId(),
+            "id_gas" => $idEstacion,
             "data" => $data,
             "permisos" => [
                 "eliminar" => $permisoEliminar,
@@ -246,7 +266,8 @@ class PersonalController extends BaseController
         try {
 
             $data = json_decode(file_get_contents('php://input'), true);
-            $idEstacion = $this->estacionId();
+
+            $idEstacion = (int) (ModuleStationService::getContext('sasisopa')['id_estacion'] ?? $this->estacionId());
 
             Capsule::transaction(function () use ($data, $idEstacion) {
 
