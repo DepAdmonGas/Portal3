@@ -38,8 +38,8 @@ class GestoriaController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/gestoria/index.datatable.init.js?v=1.1.0',
-                '/js/gestoria/index.actions.init.js?v=1.1.0'
+                '/js/gestoria/index.datatable.init.js?v=1.2.0',
+                '/js/gestoria/index.actions.init.js?v=1.2.0'
             ],
             'help' => false
         ];
