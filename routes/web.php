@@ -1650,6 +1650,16 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/entregas/formulario/{id:\d+}/finalizar/entrega', Route::auth(['GestoriaEntregasController', 'finalizarEntrega']));
 
         $r->addRoute('GET', '/sgm', Route::auth(['GestoriaSgmController', 'index']));
+
+        $r->addRoute('GET', '/analisis-riesgo/{id:\d+}', Route::auth(['GestoriaAnalisisRiesgoController', 'index']));
+        $r->addRoute('GET', '/analisis-riesgo/{id:\d+}/data', Route::auth(['GestoriaAnalisisRiesgoController', 'data']));
+        $r->addRoute('POST', '/analisis-riesgo/{id:\d+}/create', Route::auth(['GestoriaAnalisisRiesgoController', 'create']));
+        $r->addRoute('POST', '/analisis-riesgo/{id:\d+}/delete', Route::auth(['GestoriaAnalisisRiesgoController', 'delete']));
+        $r->addRoute('GET', '/analisis-riesgo/{idEstacion}/{idAnalisis}/anexos/data', Route::auth(['GestoriaAnalisisRiesgoController', 'anexosData']));
+        $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{idAnalisis}/anexos/create', Route::auth(['GestoriaAnalisisRiesgoController', 'createAnexo']));
+        $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{idAnalisis}/anexos/delete', Route::auth(['GestoriaAnalisisRiesgoController', 'deleteAnexo']));
+        $r->addRoute('GET', '/analisis-riesgo/{idEstacion}/{id}/data', Route::auth(['GestoriaAnalisisRiesgoController', 'editData']));
+        $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{id}/update', Route::auth(['GestoriaAnalisisRiesgoController', 'update']));
     });
 
     $r->addGroup('/sala-juntas', function (RouteCollector $r) {
