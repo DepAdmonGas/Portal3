@@ -1,4 +1,17 @@
-<div id="container" class="pb-4" x-data="{ ...actions(), ...requisitosLegalesForm()}" data-ngobierno="<?= $title ?>" data-modulo="1">
+<div id="container" class="pb-4"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+
+<?php if (empty($estacionId)): ?>
+
+    <div id="sgm-empty-message"
+        class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SGM.
+    </div>
+
+<?php else: ?>
+
+<div id="sgm-content" x-data="{ ...actions(), ...requisitosLegalesForm()}" data-ngobierno="<?= $title ?>" data-modulo="1">
 
     <div class="text-end mt-2">
           <?= 
@@ -508,5 +521,9 @@
             </div>
         </div>
     </div>
+
+</div>
+
+<?php endif; ?>
 
 </div>

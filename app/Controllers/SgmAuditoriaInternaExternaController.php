@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Request;
 use App\Core\JsonResponse;
 
@@ -17,6 +18,11 @@ class SgmAuditoriaInternaExternaController extends BaseController
 {
 
     protected string $modulo = 'sgm';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
 
     public function index()
     {
@@ -35,12 +41,15 @@ class SgmAuditoriaInternaExternaController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css',
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -56,10 +65,16 @@ class SgmAuditoriaInternaExternaController extends BaseController
 
     private function validarAuditoria(): void
     {
+        $estacionId = $this->estacionModulo();
+
+        if (!$estacionId) {
+            return;
+        }
+
         Auditoria::query()->firstOrCreate(
 
             [
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $estacionId,
                 'year' => date('Y'),
             ],
 
@@ -76,7 +91,7 @@ class SgmAuditoriaInternaExternaController extends BaseController
 
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
 
             ->withCount([

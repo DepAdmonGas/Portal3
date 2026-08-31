@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Request;
 use App\Core\JsonResponse;
 
@@ -22,6 +23,11 @@ class SgmPlanAtencionHallazgoController extends BaseController
 
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index(int $id)
     {
         $title = 'Plan de atencion de Hallazgos';
@@ -35,7 +41,7 @@ class SgmPlanAtencionHallazgoController extends BaseController
         Breadcrumb::add($title, '');
 
         $this->validaAuditoria(
-            $this->estacionId(),
+            $this->estacionModulo(),
             $id
         );
 
@@ -46,9 +52,14 @@ class SgmPlanAtencionHallazgoController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
+                        'ocultarSelectorEstacion'=> true,
+
             'id' => $id,
             'links' => [],
             'scripts' => [
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/auditorias/planatencionhallazgo.actions.init.js?v=1.5.0',
             ],
             'help' => false,
@@ -95,7 +106,7 @@ class SgmPlanAtencionHallazgoController extends BaseController
 
     public function data(int $id): void
     {
-        $estacionId = $this->estacionId();
+        $estacionId = $this->estacionModulo();
 
         $auditoria = Auditoria::query()
             ->where('id', $id)
@@ -301,7 +312,7 @@ class SgmPlanAtencionHallazgoController extends BaseController
      */
         $auditoria = Auditoria::query()
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->firstOrFail();
 
         /*
@@ -335,7 +346,7 @@ class SgmPlanAtencionHallazgoController extends BaseController
      */
         $usuario = Usuario::query()
             ->where('id', $idResponsable)
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('estatus', 0)
             ->with('puesto')
             ->firstOrFail();
@@ -437,7 +448,7 @@ class SgmPlanAtencionHallazgoController extends BaseController
             ->whereHas('auditoria', function ($query) {
                 $query->where(
                     'id_estacion',
-                    $this->estacionId()
+                    $this->estacionModulo()
                 );
             })
             ->firstOrFail();
@@ -452,7 +463,7 @@ class SgmPlanAtencionHallazgoController extends BaseController
 
             Usuario::query()
                 ->where('id', (int) $valor)
-                ->where('id_gas', $this->estacionId())
+                ->where('id_gas', $this->estacionModulo())
                 ->where('estatus', 0)
                 ->firstOrFail();
         }

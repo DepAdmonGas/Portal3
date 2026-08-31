@@ -49,12 +49,8 @@ class CalendarioService
     {
 
         $categoria = 'SGM';
-        $usuario = Session::get('usuario');
-        if (!$usuario) {
-            return 0;
-        }
 
-        $idEstacion = $usuario['id_estacion'];
+        $idEstacion = ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
         if (!$idEstacion) {
             return 0;
         }

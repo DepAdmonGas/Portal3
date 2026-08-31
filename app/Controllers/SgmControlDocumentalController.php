@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sgm\Documento;
 use App\Models\Estacion;
 use App\Models\Usuario;
@@ -17,6 +18,11 @@ class SgmControlDocumentalController extends BaseController
 
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
 
@@ -26,17 +32,22 @@ class SgmControlDocumentalController extends BaseController
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $estacionId = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -58,10 +69,12 @@ class SgmControlDocumentalController extends BaseController
 
     public function documentos()
     {
-        $documentos = Documento::with([
-            'archivos' => function ($query) {
+        $idEstacion = $this->estacionModulo();
 
-                $query->where('id_estacion', $this->estacionId())
+        $documentos = Documento::with([
+            'archivos' => function ($query) use ($idEstacion) {
+
+                $query->where('id_estacion', $idEstacion)
                     ->latest('fecha');
             }
         ])
@@ -100,12 +113,12 @@ class SgmControlDocumentalController extends BaseController
     {
         header('Content-Type: application/pdf');
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionModulo());
 
         $realizadoPor = Usuario::query()
             ->select('tb_usuarios.nombre')
             ->join('sgm_autorizado', 'sgm_autorizado.id_usuario', '=', 'tb_usuarios.id')
-            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('tb_usuarios.id_gas', $this->estacionModulo())
             ->where('sgm_autorizado.estado', 1)
             ->value('nombre') ?? 'S/I';
 

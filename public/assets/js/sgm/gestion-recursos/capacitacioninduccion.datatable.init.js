@@ -1,6 +1,10 @@
 let table1;
 document.addEventListener('DOMContentLoaded', () => {
 
+    if (!document.getElementById('sgm-content')) {
+        return;
+    }
+
     table1 = $('#table-capacitacion-induccion').DataTable({
 
         processing: true,

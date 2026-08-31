@@ -181,7 +181,8 @@ async submit() {
         id_puesto: this.id_puesto,
         usuario: this.usuario,
         password: this.password,
-        password_confirmacion: this.password_confirmacion
+        password_confirmacion: this.password_confirmacion,
+        module: document.getElementById('container').dataset.moduleStationKey || 'sasisopa'
     };
 
     const url = this.mode === 'create'
@@ -280,7 +281,10 @@ async submit() {
                 url: '/personal/delete',
                 id,
                 name: 'Personal',
-                table: '#table-personal'
+                table: '#table-personal',
+                data: {
+                    module: document.getElementById('container').dataset.moduleStationKey || 'sasisopa'
+                }
             });
 
         }

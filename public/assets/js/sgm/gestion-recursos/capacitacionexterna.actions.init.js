@@ -39,6 +39,10 @@ document.addEventListener('alpine:init', () => {
 
           window.capacitacion = this;
 
+          if (!document.getElementById('sgm-content')) {
+              return;
+          }
+
           this.modalNuevo = new bootstrap.Modal(
               document.getElementById('modalNuevo')
           );

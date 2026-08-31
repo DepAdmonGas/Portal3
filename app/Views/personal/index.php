@@ -9,7 +9,7 @@
 
         <div id="personal-empty-message"
             class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
-            Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+            Debes de seleccionar una estación del menú superior para poder visualizar los elementos.
         </div>
 
     <?php else: ?>

@@ -25,6 +25,18 @@ class PersonalController extends BaseController
 
     protected string $modulo = 'sasisopa';
 
+    private function moduleKey(?array $body = null): string
+    {
+        $module = $_GET['module']
+            ?? $body['module']
+            ?? $_POST['module']
+            ?? 'sasisopa';
+
+        return in_array($module, ['sasisopa', 'sgm'], true)
+            ? $module
+            : 'sasisopa';
+    }
+
     public function index($categoria = null)
     {
         $title = 'PERSONAL';
@@ -55,10 +67,25 @@ class PersonalController extends BaseController
         }
 
         $descarga = '';
-        // ===== Multiestación: estación del contexto del módulo (solo vista SASISOPA) =====
+        // ===== Multiestación: estación del contexto del módulo (SASISOPA / SGM) =====
         $isSasisopa = $categoria === 'SASISOPA';
+        $isSgm = $categoria === 'SGM';
 
-        $idEstacion = (int) (ModuleStationService::getContext('sasisopa')['id_estacion'] ?? $this->estacionId());
+        $moduleStationKey = $isSasisopa
+            ? 'sasisopa'
+            : ($isSgm ? 'sgm' : null);
+
+        if ($moduleStationKey) {
+
+            $idEstacion = (int) (
+                ModuleStationService::getContext($moduleStationKey)['id_estacion']
+                ?? 0
+            );
+
+        } else {
+
+            $idEstacion = (int) $this->estacionId();
+        }
 
         $estacionRenuncia = $idEstacion ?: (int) $usuario->id_gas;
 
@@ -97,11 +124,11 @@ class PersonalController extends BaseController
             'renuncia' => $descarga,
             'layout' => $layout,
             'estacionId' => $idEstacion,
-            'moduleStationKey' => $isSasisopa ? 'sasisopa' : null,
+            'moduleStationKey' => $moduleStationKey,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
-            'scripts' => $isSasisopa ? [
+            'scripts' => ($isSasisopa || $isSgm) ? [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
 
@@ -133,7 +160,7 @@ class PersonalController extends BaseController
 
         $usuario = Usuario::findOrFail($this->userId());
 
-        $idEstacion = (int) (ModuleStationService::getContext('sasisopa')['id_estacion'] ?? $this->estacionId());
+        $idEstacion = (int) (ModuleStationService::getContext($this->moduleKey())['id_estacion'] ?? $this->estacionId());
 
         $rows = Usuario::query()
             ->where('id_gas', $idEstacion)
@@ -267,7 +294,7 @@ class PersonalController extends BaseController
 
             $data = json_decode(file_get_contents('php://input'), true);
 
-            $idEstacion = (int) (ModuleStationService::getContext('sasisopa')['id_estacion'] ?? $this->estacionId());
+            $idEstacion = (int) (ModuleStationService::getContext($this->moduleKey($data ?? []))['id_estacion'] ?? $this->estacionId());
 
             Capsule::transaction(function () use ($data, $idEstacion) {
 
@@ -385,18 +412,20 @@ class PersonalController extends BaseController
 
     public function sgmPdf(): void
     {
+        $estacionId = (int) (ModuleStationService::getContext('sgm')['id_estacion'] ?? $this->estacionId());
+
         $autorizado = Autorizado::with('usuario')
             ->where('estado', 1)
-            ->whereHas('usuario', fn($q) => $q->where('id_gas', $this->estacionId()))
+            ->whereHas('usuario', fn($q) => $q->where('id_gas', $estacionId))
             ->first();
 
         $usuarios = Usuario::with(['puesto', 'ultimaExperiencia'])
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $estacionId)
             ->where('estatus', 0)
             ->orderBy('nombre')
             ->get();
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($estacionId);
 
         $rows = '';
 

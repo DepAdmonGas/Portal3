@@ -33,6 +33,10 @@ document.addEventListener('alpine:init', () => {
 
           window.inventario = this;
 
+          if (!document.getElementById('sgm-content')) {
+              return;
+          }
+
           this.modalNuevo = new bootstrap.Modal(
               document.getElementById('modalNuevo')
           );

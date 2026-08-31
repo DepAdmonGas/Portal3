@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Request;
 use App\Core\JsonResponse;
+use App\Services\ModuleStationService;
 
 use App\Models\Estacion;
 use App\Models\Sgm\Autorizado;
@@ -15,13 +16,18 @@ use Dompdf\Options;
 class SgmProgramaVerificacionController extends BaseController
 {
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function deleteProgramacionAnualVerificacion()
     {
         $id = (int) Request::jsonInput('id');
 
         ProgramaAnualCalibracionVerificacion::where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
             ->findOrFail($id)
             ->delete();
@@ -36,7 +42,7 @@ class SgmProgramaVerificacionController extends BaseController
         header('Content-Type: application/pdf');
 
         $estacion = Estacion::findOrFail(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $realizadoPor = 'S/I';
@@ -44,7 +50,7 @@ class SgmProgramaVerificacionController extends BaseController
         $realizadoPor = Autorizado::query()
             ->where('estado', 1)
             ->whereHas('usuario', function ($q) {
-                $q->where('id_gas', $this->estacionId());
+                $q->where('id_gas', $this->estacionModulo());
             })
             ->with('usuario:id,nombre')
             ->first()
@@ -132,7 +138,7 @@ class SgmProgramaVerificacionController extends BaseController
                     'verificar:id,identificacion'
                 ])
 
-                ->where('id_estacion', $this->estacionId())
+                ->where('id_estacion', $this->estacionModulo())
                 ->whereYear('fecha', $year)
                 ->whereHas('equipo', function ($query) use ($categoria) {
                     $query->where(

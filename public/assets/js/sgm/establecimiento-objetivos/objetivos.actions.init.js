@@ -12,6 +12,10 @@ Alpine.data('objetivoForm',()=>({
 
     async cargar(){
 
+        if (!document.getElementById('sgm-content')) {
+            return;
+        }
+
         const {data}=await axios.get(
             '/sgm/establecimiento-objetivos-enfocados-cliente/datatable-objetivos'
         );

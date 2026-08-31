@@ -14,6 +14,11 @@ class SgmController extends BaseController
 
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
 
@@ -63,12 +68,15 @@ class SgmController extends BaseController
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
-
-        $data = [
+    $estacionId = $this->estacionModulo();
+    
+    $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
@@ -78,13 +86,14 @@ class SgmController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
 
                 '/js/asistencia/listaasistencia.crear.init.js?v=' . time(),
                 '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
             ],
             'help' => true
         ];
-
+ 
         View::render('sgm/gestion-riesgos-impactan-medicion', $data, 'sgm');
     }
 
@@ -97,12 +106,15 @@ class SgmController extends BaseController
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
+        $estacionId = $this->estacionModulo();
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+                        'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
@@ -112,6 +124,7 @@ class SgmController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
 
                 '/js/asistencia/listaasistencia.crear.init.js?v=' . time(),
                 '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),

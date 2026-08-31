@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Usuario;
 use App\Models\Sgm\Autorizado;
@@ -20,6 +21,11 @@ class SgmEvaluacionCumplimientoController extends BaseController
 {
 
     protected string $modulo = 'sgm';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
 
     public function index()
     {
@@ -37,11 +43,14 @@ class SgmEvaluacionCumplimientoController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/sgm/evaluacion-cumplimiento/index.actions.init.js?v=' . time(),
                 '/js/sgm/evaluacion-cumplimiento/index.datatable.init.js?v=' . time(),
@@ -54,7 +63,11 @@ class SgmEvaluacionCumplimientoController extends BaseController
 
     public function validaRegistro(int $year): void
     {
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
+
+        if (!$idEstacion) {
+            return;
+        }
 
         $existe = CumplimientoObjetivosRevision::query()
             ->where('id_estacion', $idEstacion)
@@ -74,8 +87,8 @@ class SgmEvaluacionCumplimientoController extends BaseController
         CumplimientoObjetivosRevision::create([
             'id_estacion'  => $idEstacion,
             'year'         => $year,
-            'fecha'        => null,
-            'hora'         => null,
+            'fecha'        => '0000-00-00',
+            'hora'         => '00:00:00',
             'lugar'        => '',
             'responsable'  => '',
             'realizadopor' => $realizadoPor,
@@ -92,7 +105,7 @@ class SgmEvaluacionCumplimientoController extends BaseController
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
         $registros = CumplimientoObjetivosRevision::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->orderByDesc('id')
             ->get();
 
@@ -140,12 +153,16 @@ class SgmEvaluacionCumplimientoController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
             'id' => $id,
+            'ocultarSelectorEstacion'=> true,
             'links' => [
                 '/libs/select2/dist/css/select2.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
@@ -209,7 +226,7 @@ class SgmEvaluacionCumplimientoController extends BaseController
 
         // Responsable
         $usuarios = Usuario::query()
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('estatus', 0)
             ->get([
                 'nombre'
@@ -217,7 +234,7 @@ class SgmEvaluacionCumplimientoController extends BaseController
 
         // Disponibles para agregar como asistentes
         $usuariosDisponibles = Usuario::query()
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('estatus', 0)
             ->whereNotIn('id', $idsAsistentes)
             ->get([
@@ -339,7 +356,7 @@ class SgmEvaluacionCumplimientoController extends BaseController
 
         header('Content-Type: application/pdf');
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionModulo());
 
         $revision = CumplimientoObjetivosRevision::with([
             'detalles',

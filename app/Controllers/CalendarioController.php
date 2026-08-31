@@ -43,6 +43,11 @@ class CalendarioController extends BaseController
         return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
     }
 
+    private function estacionModuloSgm(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     private const CRITERIOS_POLITICA = [
         'La política es adecuada a la naturaleza magnitud y actividades del proyecto',
         'La política incluye la seguridad operativa',
@@ -156,11 +161,13 @@ class CalendarioController extends BaseController
             'permisos' => $permisos,
             'modulo' => 'sgm',
             'filtro_usuario' => $this->filtro_usuario,
-            'estacionId' => $this->estacionId(),
+            'estacionId' => $this->estacionModuloSgm(),
+            'moduleStationKey' => 'sgm',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sasisopa/calendar-init.js?v=1.0.1'
 
             ]
@@ -195,7 +202,7 @@ class CalendarioController extends BaseController
 
         $idEstacion = ($modulo == 'SASISOPA')
             ? $this->estacionModulo()
-            : $this->estacionId();
+            : $this->estacionModuloSgm();
 
         if ($modulo == 'SASISOPA') {
 
@@ -307,7 +314,7 @@ class CalendarioController extends BaseController
 
         $idEstacion = ($modulo == 'SASISOPA')
             ? $this->estacionModulo()
-            : $this->estacionId();
+            : $this->estacionModuloSgm();
 
         if ($modulo == 'SASISOPA') {
 
