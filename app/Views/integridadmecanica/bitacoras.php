@@ -1,4 +1,13 @@
 
+<?php if (empty($estacionId)): ?>
+ 
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
 <div class=" text-justify">
 <div class="card mt-3">
   <div class="card-header bg-primary">
@@ -51,4 +60,4 @@
 
 
 </div>
-  
+  <?php endif; ?>

@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ajax: {
             url: '/personal/datatable',
             type: 'GET',
+            data: {
+                module: document.getElementById('container').dataset.moduleStationKey || 'sasisopa'
+            },
             dataSrc: function (json) {
             //guardas permisos globalmente
             permisos = json.permisos;

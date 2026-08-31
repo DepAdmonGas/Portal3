@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Request;
 use App\Core\JsonResponse;
 
@@ -27,6 +28,11 @@ class SgmBitacoraVerificacionController extends BaseController
 {
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function datatable()
     {
         $fecha = date('Y-m-d');
@@ -41,7 +47,7 @@ class SgmBitacoraVerificacionController extends BaseController
                 'equipo:id,nombre,periodicidad,categoria'
             ])
 
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
 
             ->whereDate('fecha', '<=', $fecha)
 
@@ -124,10 +130,13 @@ class SgmBitacoraVerificacionController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
             'id' => $id,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/procesos-medicion/editarbitacoraverificacion.actions.init.js?v=' . time(),
 
             ],
@@ -567,7 +576,7 @@ class SgmBitacoraVerificacionController extends BaseController
         header('Content-Type: application/pdf');
 
         $estacion = Estacion::findOrFail(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $css = file_get_contents(

@@ -3,6 +3,15 @@ data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTE
 data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 x-data="{ ...actions(), ...bitacoraResiduos()}">
 
+<?php if (empty($estacionId)): ?>
+ 
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
      <div class="text-end">
     <div class="btn-group">
         <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -369,4 +378,6 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
     </div>
 
 </div>
+<?php endif; ?>
+
 </div>

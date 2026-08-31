@@ -38,6 +38,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         init() {
+
+            if (!document.getElementById('table-lista-requisitos-legales-detalle')) {
+                return;
+            }
+
             window.requisitosInstance = this;
             this.bindModalSelect2({
                 modalRef: 'modalNuevo',
@@ -85,6 +90,27 @@ document.addEventListener('alpine:init', () => {
                 this.updateHistorialFechaVencimiento();
             });
 
+        },
+
+        getContentContainer() {
+            return document.getElementById('sgm-content') || document.getElementById('container');
+        },
+
+        getModuleKey() {
+            return (document.getElementById('container')?.dataset?.moduleStationKey) || 'sasisopa';
+        },
+
+        getNgobierno() {
+            return this.getContentContainer()?.dataset?.ngobierno;
+        },
+
+        getModulo() {
+            return this.getContentContainer()?.dataset?.modulo;
+        },
+
+        buildUrl(path) {
+            const sep = path.includes('?') ? '&' : '?';
+            return `${path}${sep}module=${this.getModuleKey()}`;
         },
 
         parseIsoDate(value) {
@@ -367,19 +393,16 @@ document.addEventListener('alpine:init', () => {
 
         async getPermisos(currentId = null) {
 
-            const ngobierno = document
-                .getElementById('container')
-                .dataset.ngobierno;
-
-            const modulo = document
-                .getElementById('container')
-                .dataset.modulo;
+            const ngobierno = this.getNgobierno();
+            const modulo = this.getModulo();
 
             let url = `/sasisopa/requisitos-legales/permisos/${ngobierno}/${modulo}`;
 
             if (currentId) {
                 url += `/${currentId}`;
             }
+
+            url = this.buildUrl(url);
 
             try {
                 const res = await fetch(url);
@@ -428,9 +451,7 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            const ngobierno = document
-        .getElementById('container')
-        .dataset.ngobierno;
+            const ngobierno = this.getNgobierno();
 
             const formData = new FormData();
 
@@ -462,6 +483,8 @@ document.addEventListener('alpine:init', () => {
                 url = `/sasisopa/requisitos-legales/update-permiso-detalle/${this.editId}`;
             }
 
+            url = this.buildUrl(url);
+
             try {
                 const res = await this.createAction({
                     url,
@@ -482,7 +505,7 @@ document.addEventListener('alpine:init', () => {
 
         async openDetalle(id) {
             try {
-                const res = await fetch(`/sasisopa/requisitos-legales/detalle/${id}`);
+                const res = await fetch(this.buildUrl(`/sasisopa/requisitos-legales/detalle/${id}`));
                 const data = await res.json();
 
                  if (!data.success) {
@@ -515,7 +538,7 @@ document.addEventListener('alpine:init', () => {
 
         async handleDelete(id, name) {
             const res = await this.deleteAction({
-                url: '/sasisopa/requisitos-legales/delete-detalle',
+                url: this.buildUrl('/sasisopa/requisitos-legales/delete-detalle'),
                 id,
                 name,
                 table: '#table-lista-requisitos-legales-detalle'
@@ -534,7 +557,7 @@ document.addEventListener('alpine:init', () => {
             this.resetHistorialForm();
 
             try {
-                const res = await fetch(`/sasisopa/requisitos-legales/historial/${id}`);
+                const res = await fetch(this.buildUrl(`/sasisopa/requisitos-legales/historial/${id}`));
                 const data = await res.json();
 
                 console.log(res)
@@ -618,6 +641,8 @@ document.addEventListener('alpine:init', () => {
                 url = `/sasisopa/requisitos-legales/historial/update/${this.historialForm.id}`;
             }
 
+            url = this.buildUrl(url);
+
             const res = await this.createAction({
                 url,
                 data: formData,
@@ -635,7 +660,7 @@ document.addEventListener('alpine:init', () => {
 
         async deleteHistorialRow(row) {
             const res = await this.deleteAction({
-                url: '/sasisopa/requisitos-legales/historial/delete',
+                url: this.buildUrl('/sasisopa/requisitos-legales/historial/delete'),
                 id: row.id,
                 name: this.historialTitle,
                 table: null
@@ -650,7 +675,7 @@ document.addEventListener('alpine:init', () => {
 
         async openEditar(id){
             try {
-                const res = await fetch(`/sasisopa/requisitos-legales/detalle/${id}`);
+                const res = await fetch(this.buildUrl(`/sasisopa/requisitos-legales/detalle/${id}`));
                 const data = await res.json();
 
                 if (!data.success) {

@@ -9,14 +9,16 @@ window.temas = <?= json_encode($temas->values()) ?>;
 
 <?php if (empty($estacionId)): ?>
 
-    <div id="sasisopa-empty-message"
+    <div id="<?= ($categoria ?? '') === 'SGM' ? 'sgm' : 'sasisopa' ?>-empty-message"
          class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
-        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+        <?= ($categoria ?? '') === 'SGM'
+            ? 'Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SGM.'
+            : 'Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.' ?>
     </div>
 
 <?php else: ?>
 
-    <div id="sasisopa-content">
+    <div id="<?= ($categoria ?? '') === 'SGM' ? 'sgm' : 'sasisopa' ?>-content">
 
 <div class="row g-4">
 

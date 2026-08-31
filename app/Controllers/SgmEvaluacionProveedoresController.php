@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 
 use App\Models\Estacion;
 use App\Models\Usuario;
@@ -22,6 +23,12 @@ use Dompdf\Options;
 class SgmEvaluacionProveedoresController extends BaseController
 {
     protected string $modulo = 'sgm';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
         $title = 'Orden de servicio y Evaluación de proveedores';
@@ -31,15 +38,19 @@ class SgmEvaluacionProveedoresController extends BaseController
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $estacionId = $this->estacionModulo();
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/gestion-recursos/orderservicioevaluacionproveedores.actions.init.js?v=1.1.0'
             ],
             'help' => true
@@ -54,7 +65,7 @@ class SgmEvaluacionProveedoresController extends BaseController
             ->with('evaluacion')
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->orderByDesc('id')
             ->get()
@@ -126,7 +137,7 @@ class SgmEvaluacionProveedoresController extends BaseController
 
             ->where(
                 'tb_usuarios.id_gas',
-                $this->estacionId()
+                $this->estacionModulo()
             )
 
             ->where(
@@ -142,17 +153,17 @@ class SgmEvaluacionProveedoresController extends BaseController
         try {
 
             $folio = RequisicionObra::query()
-                ->where('id_estacion', $this->estacionId())
+                ->where('id_estacion', $this->estacionModulo())
                 ->max('no_folio');
 
             $folio = $folio ? $folio + 1 : 1;
 
             $orden = OrdenServicio::create([
 
-                'id_estacion'     => $this->estacionId(),
+                'id_estacion'     => $this->estacionModulo(),
                 'fecha'           => date('Y-m-d'),
                 'hora'            => date('H:i:s'),
-                'id_solicitante'  => $this->estacionId(),
+                'id_solicitante'  => $this->estacionModulo(),
                 'descripcion'     => Request::input('descripcion'),
                 'justificacion'   => Request::input('justificacion'),
                 'realizadopor'    => $this->usuarioAutorizado(),
@@ -162,7 +173,7 @@ class SgmEvaluacionProveedoresController extends BaseController
 
             RequisicionObra::create([
 
-                'id_estacion'    => $this->estacionId(),
+                'id_estacion'    => $this->estacionModulo(),
                 'id_usuario'     => $this->userId(),
                 'no_folio'       => $folio,
                 'fecha'          => date('Y-m-d H:i:s'),
@@ -206,7 +217,7 @@ class SgmEvaluacionProveedoresController extends BaseController
 
                 ->where(
                     'id_estacion',
-                    $this->estacionId()
+                    $this->estacionModulo()
                 )
 
                 ->where(
@@ -253,7 +264,7 @@ class SgmEvaluacionProveedoresController extends BaseController
 
                 ->where(
                     'id_estacion',
-                    $this->estacionId()
+                    $this->estacionModulo()
                 )
 
                 ->where(
@@ -281,7 +292,7 @@ class SgmEvaluacionProveedoresController extends BaseController
     ): void {
 
         $estacion = Estacion::findOrFail(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $orden = OrdenServicio::query()
@@ -324,7 +335,7 @@ class SgmEvaluacionProveedoresController extends BaseController
     public function pdfOrdenServicio(int $id): void
     {
         $estacion = Estacion::findOrFail(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $orden = OrdenServicio::query()
@@ -525,7 +536,7 @@ class SgmEvaluacionProveedoresController extends BaseController
 
             ->where(
                 'id_gas',
-                $this->estacionId()
+                $this->estacionModulo()
             )
 
             ->where(
@@ -689,7 +700,7 @@ class SgmEvaluacionProveedoresController extends BaseController
     public function pdfEvaluacion(int $idOrden)
     {
         $estacion = Estacion::findOrFail(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $orden = OrdenServicio::query()
@@ -958,3 +969,4 @@ class SgmEvaluacionProveedoresController extends BaseController
         );
     }
 }
+

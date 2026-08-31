@@ -5,12 +5,18 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sgm\ProgramaAnualCalibracionVerificacion;
 
 class SgmProcesosMedicionController extends BaseController
 {
 
     protected string $modulo = 'sgm';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
 
     public function index()
     {
@@ -20,20 +26,24 @@ class SgmProcesosMedicionController extends BaseController
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $pendientesCalibracion = $this->pendientesCalibracion($this->estacionId());
-        $pendientesVerificacion = $this->pendientesVerificacion($this->estacionId());
+        $estacionId = $this->estacionModulo();
+
+        $pendientesCalibracion = $this->pendientesCalibracion($estacionId ?? 0);
+        $pendientesVerificacion = $this->pendientesVerificacion($estacionId ?? 0);
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'pendientesCalibracion' => $pendientesCalibracion,
             'pendientesVerificacion' => $pendientesVerificacion,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
-
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -83,9 +93,12 @@ class SgmProcesosMedicionController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/procesos-medicion/programaanualcalibracion.actions.init.js?v=' . time(),
 
             ],
@@ -113,13 +126,15 @@ class SgmProcesosMedicionController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/procesos-medicion/bitacoracalibracion.actions.init.js?v=' . time(),
                 '/js/sgm/procesos-medicion/bitacoracalibracion.datatable.init.js?v=' . time(),
 
@@ -148,9 +163,12 @@ class SgmProcesosMedicionController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/procesos-medicion/programaanualverificacion.actions.init.js?v=' . time(),
 
             ],
@@ -176,13 +194,15 @@ class SgmProcesosMedicionController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/procesos-medicion/bitacoraverificacion.actions.init.js?v=' . time(),
                 '/js/sgm/procesos-medicion/bitacoraverificacion.datatable.init.js?v=' . time(),
 

@@ -50,11 +50,6 @@ class IncidentesAccidentesController extends BaseController
         $permisos = ModuloService::permisosSesion($this->modulo);
         $estacion = Estacion::find($this->estacionModulo()); 
 
-        if (!$estacion) {
-
-            exit('Selecciona una estación para continuar');
-        }
-
          $data = [
             'title' => $title,
             'permisos' => $permisos,

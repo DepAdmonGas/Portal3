@@ -58,12 +58,13 @@ class AuditoriasController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
             'moduleStationKey' => 'sasisopa',
             'links' =>[
                 
             ],
             'scripts' => [
-                
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -87,19 +88,18 @@ class AuditoriasController extends BaseController{
 
         $estacion = Estacion::find($this->estacionModulo());
 
-        if (!$estacion) {
+        if ($estacion) {
 
-            exit('Selecciona una estación para continuar');
+            $this->generarProgramaAuditorias($estacion->fecha_autorizacion, $estacion->id, (int) date('Y'));
+
         }
-
-        $this->generarProgramaAuditorias($estacion->fecha_autorizacion,$estacion->id,(int) date('Y'));
 
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-            'apoderado_legal' => $estacion->apoderado_legal,
+            'apoderado_legal' => $estacion?->apoderado_legal,
             'estacionId' => $this->estacionModulo(),
             'moduleStationKey' => 'sasisopa',
             'links' =>[

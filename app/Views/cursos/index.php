@@ -6,14 +6,16 @@
 
     <?php if (empty($estacionId)): ?>
 
-        <div id="sasisopa-empty-message"
+        <div id="<?= $modulo === 'sgm' ? 'sgm' : 'sasisopa' ?>-empty-message"
              class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
-            Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+            <?= $modulo === 'sgm'
+                ? 'Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SGM.'
+                : 'Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.' ?>
         </div>
 
     <?php else: ?>
 
-    <div id="sasisopa-content">
+    <div id="<?= $modulo === 'sgm' ? 'sgm' : 'sasisopa' ?>-content">
 
 
 

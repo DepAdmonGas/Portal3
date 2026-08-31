@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Request;
 use App\Core\JsonResponse;
 
@@ -30,9 +31,14 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
 
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index(int $id)
     {
-        $title = 'Reporte e Hallazgos de Auditoria';
+        $title = 'Reporte de Hallazgos de Auditoria';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SGM', '/sgm');
@@ -41,7 +47,7 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $this->validaHallazgoAuditoria($this->estacionId(), $id);
+        $this->validaHallazgoAuditoria($this->estacionModulo(), $id);
         $this->validaResultados($id);
 
         $data = [
@@ -49,9 +55,13 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
+            'ocultarSelectorEstacion'=> true,
             'id' => $id,
             'links' => [],
             'scripts' => [
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/auditorias/reportehallazgoauditoria.actions.init.js?v=1.9.0',
             ],
             'help' => true,
@@ -132,7 +142,6 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
 
         $auditoria = Auditoria::query()
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
             ->with([
                 'planAuditoria',
                 'estacion',
@@ -164,7 +173,7 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
         }
 
         $usuarios = Usuario::query()
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('estatus', 0)
             ->with('puesto')
             ->orderBy('nombre')
@@ -450,7 +459,7 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
             ->whereHas('auditoria', function ($query) {
                 $query->where(
                     'id_estacion',
-                    $this->estacionId()
+                    $this->estacionModulo()
                 );
             })
             ->firstOrFail();
@@ -473,7 +482,7 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
 
         $usuario = Usuario::query()
             ->where('id', $idResponsable)
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('estatus', 0)
             ->with('puesto')
             ->firstOrFail();
@@ -545,29 +554,30 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
         $idUsuario = (int) Request::jsonInput('id_usuario');
         $area = Request::jsonInput('area_descripcion');
 
+        $usuario = null;
+
+        if ($idUsuario > 0) {
+
+            $usuario = Usuario::query()
+                ->where('id', $idUsuario)
+                ->with('puesto')
+                ->first();
+        }
+
         $entrevistado = HallazgoAuditoriaEntrevistador::query()
             ->create([
                 'id_hallazgo' =>
                 $id,
 
-                'id_usuario' =>
-                $idUsuario,
-
                 'nombre' =>
-                '',
+                $usuario?->nombre ?? '',
 
                 'puesto' =>
-                '',
+                $usuario?->puesto?->tipo_puesto ?? '',
 
                 'area_descripcion' =>
                 $area
             ]);
-
-        $entrevistado->load('usuario.puesto');
-
-        $tieneUsuario =
-            !is_null($entrevistado->id_usuario)
-            && (int) $entrevistado->id_usuario !== 0;
 
         JsonResponse::custom([
             'success' => true,
@@ -581,17 +591,13 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
                 $entrevistado->id_hallazgo,
 
                 'id_usuario' =>
-                $entrevistado->id_usuario,
+                $usuario?->id,
 
                 'nombre' =>
-                $tieneUsuario
-                    ? ($entrevistado->usuario?->nombre ?? '')
-                    : ($entrevistado->nombre ?? ''),
+                $entrevistado->nombre ?? '',
 
                 'puesto' =>
-                $tieneUsuario
-                    ? ($entrevistado->usuario?->puesto?->tipo_puesto ?? '')
-                    : ($entrevistado->puesto ?? ''),
+                $entrevistado->puesto ?? '',
 
                 'area_descripcion' =>
                 $entrevistado->area_descripcion ?? '',
@@ -625,42 +631,29 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
             ->where('id', $id)
             ->firstOrFail();
 
+        $usuario = null;
+
         if (!empty($idusuario)) {
 
-            $auditor = HallazgoAuditoriaAuditor::query()
-                ->create([
-
-                    'id_hallazgo' =>
-                    $hallazgo->id,
-
-                    'id_usuario' =>
-                    $idusuario,
-
-                    'nombre' =>
-                    '',
-
-                    'rol' =>
-                    '',
-
-                ]);
-        } else {
-
-            $auditor = HallazgoAuditoriaAuditor::query()
-                ->create([
-
-                    'id_hallazgo' =>
-                    $hallazgo->id,
-
-                    'nombre' =>
-                    $nombre,
-
-                    'rol' =>
-                    $rol,
-
-                ]);
+            $usuario = Usuario::query()
+                ->where('id', $idusuario)
+                ->with('puesto')
+                ->first();
         }
 
-        $auditor->load('usuario.puesto');
+        $auditor = HallazgoAuditoriaAuditor::query()
+            ->create([
+
+                'id_hallazgo' =>
+                $hallazgo->id,
+
+                'nombre' =>
+                $usuario?->nombre ?? $nombre,
+
+                'rol' =>
+                $usuario?->puesto?->tipo_puesto ?? $rol,
+
+            ]);
 
         JsonResponse::custom([
             'success' => true,
@@ -674,15 +667,13 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
                 $auditor->id_hallazgo,
 
                 'id_usuario' =>
-                $idusuario,
+                $usuario?->id,
 
                 'nombre' =>
-                $auditor->usuario?->nombre
-                    ?: ($auditor->nombre ?? ''),
+                $auditor->nombre ?? '',
 
                 'rol' =>
-                $auditor->usuario?->puesto?->tipo_puesto
-                    ?: ($auditor->rol ?? ''),
+                $auditor->rol ?? '',
 
             ],
         ]);
@@ -805,7 +796,7 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
     public function pdf(int $id): void
     {
 
-        $estacion = Estacion::find($this->estacionId());
+        $estacion = Estacion::find($this->estacionModulo());
 
         $hallazgo = HallazgoAuditoria::query()
             ->where('id_auditoria', $id)

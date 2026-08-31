@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    if (!document.getElementById('sgm-content')) {
+        return;
+    }
+
     let permisos = {};
 
     table1 = $('#table-bitacora-verificacion-equipos').DataTable({

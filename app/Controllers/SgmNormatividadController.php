@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Sgm\Autorizado;
 use App\Models\Sasisopa\RequisitosLegalesMatriz;
@@ -19,6 +20,11 @@ class SgmNormatividadController extends BaseController
 
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
 
@@ -28,17 +34,22 @@ class SgmNormatividadController extends BaseController
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $estacionId = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -68,7 +79,7 @@ class SgmNormatividadController extends BaseController
 
         $inventario = InventarioNormatividadAplicable::query()
             ->whereIn('estado', [
-                $this->estacionId(),
+                $this->estacionModulo(),
                 0
             ])
             ->orderBy('id')
@@ -127,7 +138,7 @@ class SgmNormatividadController extends BaseController
             'fecha_aplicacion'   => $data['fecha_aplicacion'] ?: '',
             'equipo'             => $data['equipo'],
             'link'               => $data['link'],
-            'estado'             => $this->estacionId(),
+            'estado'             => $this->estacionModulo(),
         ]);
 
         echo json_encode([
@@ -152,7 +163,7 @@ class SgmNormatividadController extends BaseController
 
             $registro = InventarioNormatividadAplicable::query()
                 ->where('id', $data['id'])
-                ->where('estado', $this->estacionId())
+                ->where('estado', $this->estacionModulo())
                 ->first();
 
             if (!$registro) {
@@ -184,7 +195,7 @@ class SgmNormatividadController extends BaseController
     {
         header('Content-Type: application/pdf');
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionModulo());
 
         $realizadoPor = Autorizado::query()
             ->join(
@@ -193,13 +204,13 @@ class SgmNormatividadController extends BaseController
                 '=',
                 'sgm_autorizado.id_usuario'
             )
-            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('tb_usuarios.id_gas', $this->estacionModulo())
             ->where('sgm_autorizado.estado', 1)
             ->value('tb_usuarios.nombre') ?? 'S/I';
 
         $inventario = InventarioNormatividadAplicable::query()
             ->whereIn('estado', [
-                $this->estacionId(),
+                $this->estacionModulo(),
                 0
             ])
             ->orderBy('norma')
@@ -414,7 +425,7 @@ class SgmNormatividadController extends BaseController
     {
         header('Content-Type: application/pdf');
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionModulo());
         $realizadoPor = $this->realizadoPor();
 
         $css = file_get_contents(
@@ -549,7 +560,7 @@ class SgmNormatividadController extends BaseController
                 '=',
                 'sgm_autorizado.id_usuario'
             )
-            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('tb_usuarios.id_gas', $this->estacionModulo())
             ->where('sgm_autorizado.estado', 1)
             ->value('tb_usuarios.nombre') ?? 'S/I';
     }
@@ -603,7 +614,7 @@ class SgmNormatividadController extends BaseController
             )
             ->where(
                 'rl_requisitos_legales_calendario.id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->where(
                 'rl_requisitos_legales_calendario.estado',
@@ -645,7 +656,9 @@ class SgmNormatividadController extends BaseController
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(), 1);
+        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionModulo(), 1);
+
+        $estacionId = $this->estacionModulo();
 
         $data = [
             'title' => $title,
@@ -653,6 +666,8 @@ class SgmNormatividadController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'requisitos' => $requisitos,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css',
@@ -660,6 +675,7 @@ class SgmNormatividadController extends BaseController
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',

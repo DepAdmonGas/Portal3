@@ -64,17 +64,21 @@ class CursosController extends BaseController
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $estacionSgm = ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => 'sgm',
             'categoria' => 'SGM',
             'filtro_usuario' => $this->filtro_usuario,
-            'estacionId' => $this->estacionId(),
-            'multiestacion' => false,
+            'estacionId' => $estacionSgm,
+            'moduleStationKey' => 'sgm',
+            'multiestacion' => (bool) $estacionSgm,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/cursos/index.action.init.js?v=1.5',
 
             ]
@@ -138,11 +142,6 @@ class CursosController extends BaseController
 
         $categoria = $_GET['categoria'] ?? null;
 
-        $multiestacion = ($categoria === 'SASISOPA')
-            && MultiestacionService::isEnabled();
-
-        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
-
         try {
 
             $query = CursoCalendario::query()
@@ -153,9 +152,23 @@ class CursosController extends BaseController
                 ->where('estado', 0)
                 ->whereDate('fecha_programada', '<=', date('Y-m-d'));
 
-            if ($multiestacion) {
+            if ($categoria === 'SGM') {
 
-                $query->where('id_estacion', $idEstacion);
+                $idEstacion = ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+
+                if ($idEstacion) {
+
+                    $query->where('id_estacion', $idEstacion);
+
+                } else {
+
+                    $query->where('id_personal', $this->userId());
+
+                }
+
+            } elseif (MultiestacionService::isEnabled() && $categoria === 'SASISOPA') {
+
+                $query->where('id_estacion', ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null);
 
             } else {
 
@@ -543,10 +556,18 @@ class CursosController extends BaseController
 
         $categoria = $temas->first()?->categoria;
 
-        $multiestacion = ($categoria === 'SASISOPA')
-            && MultiestacionService::isEnabled();
+        if ($categoria === 'SGM') {
 
-        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+            $idEstacion = ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+            $multiestacion = (bool) $idEstacion;
+
+        } else {
+
+            $multiestacion = ($categoria === 'SASISOPA')
+                && MultiestacionService::isEnabled();
+
+            $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+        }
 
         $layout = match ($categoria) {
             'SASISOPA' => 'sasisopa',
@@ -609,10 +630,8 @@ class CursosController extends BaseController
             'temas'          => $temas,
             'categoria'      => $categoria,
             'multiestacion'  => $multiestacion,
-            'estacionId'     => $categoria === 'SGM'
-                ? $this->estacionId()
-                : $idEstacion,
-            'moduleStationKey' => $categoria === 'SGM' ? null : 'sasisopa',
+            'estacionId'     => $idEstacion,
+            'moduleStationKey' => $categoria === 'SGM' ? 'sgm' : 'sasisopa',
             'scripts'        => [
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
@@ -637,10 +656,18 @@ class CursosController extends BaseController
                 ->with('modulo')
                 ->findOrFail($idTema);
 
-            $multiestacion = ($tema->categoria === 'SASISOPA')
-                && MultiestacionService::isEnabled();
+            if ($tema->categoria === 'SGM') {
 
-            $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+                $idEstacion = ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+                $multiestacion = (bool) $idEstacion;
+
+            } else {
+
+                $multiestacion = ($tema->categoria === 'SASISOPA')
+                    && MultiestacionService::isEnabled();
+
+                $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+            }
 
             $query = CursoCalendario::query()
                 ->where('id_tema', $idTema);

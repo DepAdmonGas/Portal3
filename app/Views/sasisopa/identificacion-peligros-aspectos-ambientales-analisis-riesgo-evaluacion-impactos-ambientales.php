@@ -1,5 +1,15 @@
 <div id="container" data-elemento="2" data-herramienta="1">
 
+<?php if (empty($estacionId)): ?>
+ 
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
+
 <div class="row mt-4">
 <div class="col-12 col-md-6 d-flex align-items-stretch">
 <div class="card w-100">
@@ -123,6 +133,9 @@ Descargar
 </div>
 
 </div>
+
+    <?php endif; ?>
+
 
 </div>
 

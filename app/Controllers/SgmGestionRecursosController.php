@@ -8,6 +8,7 @@ use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Helpers\ImageHelper;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 
 use App\Models\Usuario;
 use App\Models\Sgm\Responsable;
@@ -19,6 +20,11 @@ class SgmGestionRecursosController extends BaseController
 {
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
         $title = '6. Gestion de los Recursos';
@@ -27,7 +33,9 @@ class SgmGestionRecursosController extends BaseController
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $usuarios = Usuario::where('id_gas', $this->estacionId())
+        $estacionId = $this->estacionModulo();
+
+        $usuarios = Usuario::where('id_gas', $estacionId)
             ->where('estatus', 0)
             ->orderBy('nombre')
             ->get();
@@ -38,9 +46,12 @@ class SgmGestionRecursosController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'usuarios' => $usuarios,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/gestion-recursos/index.actions.init.js?v=1.1.0'
             ],
             'help' => true
@@ -54,7 +65,7 @@ class SgmGestionRecursosController extends BaseController
 
         $data = Responsable::where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
             ->orderByDesc('fecha')
             ->get()
@@ -86,7 +97,7 @@ class SgmGestionRecursosController extends BaseController
         }
 
         Responsable::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'fecha'        => $fecha,
             'responsable'  => $responsable,
             'auxiliar'     => $auxiliar,
@@ -105,7 +116,7 @@ class SgmGestionRecursosController extends BaseController
         }
 
         $responsable = Responsable::where('id', $id)
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->first();
 
         if (!$responsable) {
@@ -126,7 +137,7 @@ class SgmGestionRecursosController extends BaseController
             'estacion'
         ])
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->first();
 
         if (!$registro) {
@@ -136,7 +147,7 @@ class SgmGestionRecursosController extends BaseController
 
         $realizadoPor = Usuario::select('tb_usuarios.nombre')
             ->join('sgm_autorizado', 'sgm_autorizado.id_usuario', '=', 'tb_usuarios.id')
-            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('tb_usuarios.id_gas', $this->estacionModulo())
             ->where('sgm_autorizado.estado', 1)
             ->value('nombre');
 

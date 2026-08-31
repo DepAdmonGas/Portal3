@@ -20,9 +20,13 @@ class RequisitosLegalesController extends BaseController
 
     protected string $modulo = 'sasisopa';
 
-    private function estacionModulo(): ?int
+    private function estacionModulo(?string $moduleKey = null): ?int
     {
-        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+        $moduleKey = $moduleKey ?? ($_GET['module'] ?? ($_POST['module'] ?? 'sasisopa'));
+        if (!in_array($moduleKey, ['sasisopa', 'sgm'], true)) {
+            $moduleKey = 'sasisopa';
+        }
+        return ModuleStationService::getContext($moduleKey)['id_estacion'] ?? null;
     }
 
     public function requisitosLegales()

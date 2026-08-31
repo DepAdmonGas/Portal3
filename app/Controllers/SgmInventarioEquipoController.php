@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Services\FileValidatorService;
 
 use App\Models\Estacion;
@@ -23,6 +24,11 @@ class SgmInventarioEquipoController extends BaseController
 {
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
         $title = 'Inventario de equipo';
@@ -31,6 +37,8 @@ class SgmInventarioEquipoController extends BaseController
         Breadcrumb::add('6. Gestion de los Recursos', '/sgm/gestion-recursos/inventario-equipo');
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
+
+        $estacionId = $this->estacionModulo();
 
         $this->importarEquipo(
             'Tanques de almacenamiento',
@@ -51,11 +59,14 @@ class SgmInventarioEquipoController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/sgm/gestion-recursos/inventarioequipo.actions.init.js?v=1.2.0',
                 '/js/sgm/gestion-recursos/inventarioequipo.datatable.init.js?v=1.3.0'
@@ -80,13 +91,13 @@ class SgmInventarioEquipoController extends BaseController
                 '=',
                 'tb_usuarios.id'
             )
-            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('tb_usuarios.id_gas', $this->estacionModulo())
             ->where('sgm_autorizado.estado', 1)
             ->value('tb_usuarios.id') ?? 0;
 
         if (
             InventarioEquipo::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->where('nombre', $nombre)
             ->exists()
         ) {
@@ -94,7 +105,7 @@ class SgmInventarioEquipoController extends BaseController
         }
 
         $modelo::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->orderBy($campo)
             ->get()
             ->each(function ($registro) use (
@@ -105,7 +116,7 @@ class SgmInventarioEquipoController extends BaseController
             ) {
 
                 InventarioEquipo::create([
-                    'id_estacion' => $this->estacionId(),
+                    'id_estacion' => $this->estacionModulo(),
                     'nombre' => $nombre,
                     'identificacion' => $registro->{$campo},
                     'funcion' => '',
@@ -117,7 +128,7 @@ class SgmInventarioEquipoController extends BaseController
                 if ($crearSondas) {
 
                     InventarioEquipo::create([
-                        'id_estacion' => $this->estacionId(),
+                        'id_estacion' => $this->estacionModulo(),
                         'nombre' => 'Sondas de nivel y temperatura',
                         'identificacion' => $registro->{$campo},
                         'funcion' => '',
@@ -132,7 +143,7 @@ class SgmInventarioEquipoController extends BaseController
     public function datatable(): void
     {
         $data = InventarioEquipo::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->where('estado', '<', 2)
             ->orderByDesc('nombre')
             ->get()
@@ -182,12 +193,12 @@ class SgmInventarioEquipoController extends BaseController
                 '=',
                 'tb_usuarios.id'
             )
-            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('tb_usuarios.id_gas', $this->estacionModulo())
             ->where('sgm_autorizado.estado', 1)
             ->value('tb_usuarios.id') ?? 0;
 
         $inventario = InventarioEquipo::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'nombre' => Request::jsonInput('nombre'),
             'identificacion' => Request::jsonInput('identificacion'),
             'funcion' => Request::jsonInput('funcion'),
@@ -463,7 +474,7 @@ class SgmInventarioEquipoController extends BaseController
             )
             ->where(
                 'tb_usuarios.id_gas',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->where(
                 'sgm_autorizado.estado',
@@ -472,13 +483,13 @@ class SgmInventarioEquipoController extends BaseController
             ->value('nombre');
 
         $estacion = Estacion::findOrFail(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $equipos = InventarioEquipo::with('manuales')
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->where(
                 'estado',
@@ -681,3 +692,4 @@ class SgmInventarioEquipoController extends BaseController
         );
     }
 }
+

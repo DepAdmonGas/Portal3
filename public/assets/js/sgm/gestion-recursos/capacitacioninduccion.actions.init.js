@@ -7,6 +7,10 @@ document.addEventListener('alpine:init', () => {
 
           window.capacitacion = this;
 
+          if (!document.getElementById('sgm-content')) {
+              return;
+          }
+
       },
 
       

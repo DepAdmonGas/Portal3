@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sgm\ObjetivoCliente;
 use App\Models\Sgm\SeguimientoObjetivoIndicador;
 use App\Models\Usuario;
@@ -26,6 +27,11 @@ class SgmEstablecimientoController extends BaseController
 {
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
 
@@ -36,17 +42,22 @@ class SgmEstablecimientoController extends BaseController
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $estacionId = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -71,7 +82,7 @@ class SgmEstablecimientoController extends BaseController
 
         $objetivos = ObjetivoCliente::where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
             ->orderByDesc('id')
             ->get();
@@ -96,16 +107,22 @@ class SgmEstablecimientoController extends BaseController
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $estacionId = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
+            'ocultarSelectorEstacion'=> true,
             'links' => [
                 'libs/quill/dist/quill.snow.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/quill/dist/quill.js',
                 '/js/sgm/establecimiento-objetivos/objetivoseditar.actions.init.js?v=' . time(),
             ],
@@ -121,7 +138,7 @@ class SgmEstablecimientoController extends BaseController
 
         $objetivo = ObjetivoCliente::where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
             ->latest('id')
             ->first();
@@ -149,7 +166,7 @@ class SgmEstablecimientoController extends BaseController
         $data = json_decode(file_get_contents('php://input'), true);
 
         ObjetivoCliente::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'detalle'   => $data['detalle']
         ]);
 
@@ -170,7 +187,7 @@ class SgmEstablecimientoController extends BaseController
 
         ObjetivoCliente::where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
             ->findOrFail($data['id'])
             ->delete();
@@ -195,18 +212,24 @@ class SgmEstablecimientoController extends BaseController
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $estacionId = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'id' => $id,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
+            'ocultarSelectorEstacion'=> true,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
 
@@ -227,7 +250,7 @@ class SgmEstablecimientoController extends BaseController
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
         $registros = SeguimientoObjetivoIndicador::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->orderBy('fecha')
             ->get();
 
@@ -267,13 +290,13 @@ class SgmEstablecimientoController extends BaseController
                     '=',
                     'sgm_autorizado.id_usuario'
                 )
-                ->where('tb_usuarios.id_gas', $this->estacionId())
+                ->where('tb_usuarios.id_gas', $this->estacionModulo())
                 ->where('sgm_autorizado.estado', 1)
                 ->value('sgm_autorizado.id_usuario') ?? 0;
 
             $seguimiento = SeguimientoObjetivoIndicador::create([
 
-                'id_estacion'  => $this->estacionId(),
+                'id_estacion'  => $this->estacionModulo(),
                 'id_usuario'   => $this->userId(),
                 'fecha'        => date('Y-m-d'),
                 'hora'         => date('H:i:s'),
@@ -387,7 +410,7 @@ class SgmEstablecimientoController extends BaseController
         ])->findOrFail($id);
 
         $usuarios = Usuario::query()
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('estatus', 0)
             ->whereNotIn(
                 'id',
@@ -520,7 +543,7 @@ class SgmEstablecimientoController extends BaseController
 
             ObjetivoCliente::create([
 
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $this->estacionModulo(),
                 'detalle'     => $data['contenido']
 
             ]);
@@ -563,7 +586,7 @@ class SgmEstablecimientoController extends BaseController
 
         header('Content-Type: application/pdf');
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionModulo());
 
         $seguimiento = SeguimientoObjetivoIndicador::with([
             'implementacion',

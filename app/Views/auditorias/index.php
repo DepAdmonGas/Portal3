@@ -1,3 +1,16 @@
+<div id="container"
+data-module-station-key="sasisopa"
+data-estacion-id="<?= e($estacionId ?? '') ?>">
+
+<?php if (empty($estacionId)): ?>
+
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
 <div class="row mt-4">
 
   <div class="col-md-4 align-items-stretch">
@@ -88,3 +101,6 @@
   </div>
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->
+
+<?php endif; ?>
+</div>
