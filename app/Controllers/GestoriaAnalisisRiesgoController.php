@@ -121,7 +121,7 @@ class GestoriaAnalisisRiesgoController extends BaseController
 
 
             $file = $_FILES['documento'];
-            $maxSize = 20 * 1024 * 1024;
+            $maxSize = 10 * 1024 * 1024;
 
 
             if (

@@ -1660,6 +1660,12 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{idAnalisis}/anexos/delete', Route::auth(['GestoriaAnalisisRiesgoController', 'deleteAnexo']));
         $r->addRoute('GET', '/analisis-riesgo/{idEstacion}/{id}/data', Route::auth(['GestoriaAnalisisRiesgoController', 'editData']));
         $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{id}/update', Route::auth(['GestoriaAnalisisRiesgoController', 'update']));
+
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}', Route::auth(['GestoriaReporteCreController', 'index']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/data', Route::auth(['GestoriaReporteCreController', 'data']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/mensajes', Route::auth(['GestoriaReporteCreController', 'mensajes']));
+        $r->addRoute('POST', '/reporte-cre/{idEstacion}/mensajes/create', Route::auth(['GestoriaReporteCreController', 'createMensaje']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/facturas/anual', Route::auth(['GestoriaReporteCreController', 'descargarFacturasAnual']));
     });
 
     $r->addGroup('/sala-juntas', function (RouteCollector $r) {
