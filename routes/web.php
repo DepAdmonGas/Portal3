@@ -1666,6 +1666,10 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/reporte-cre/{idEstacion}/mensajes', Route::auth(['GestoriaReporteCreController', 'mensajes']));
         $r->addRoute('POST', '/reporte-cre/{idEstacion}/mensajes/create', Route::auth(['GestoriaReporteCreController', 'createMensaje']));
         $r->addRoute('GET', '/reporte-cre/{idEstacion}/facturas/anual', Route::auth(['GestoriaReporteCreController', 'descargarFacturasAnual']));
+
+        $r->addRoute('GET', '/cambio-precio/{idEstacion}', Route::auth(['GestoriaCambioPrecioController', 'index']));
+        $r->addRoute('GET', '/cambio-precio/{idEstacion}/data', Route::auth(['GestoriaCambioPrecioController', 'data']));
+        $r->addRoute('POST', '/cambio-precio/{idEstacion}/actualizar', Route::auth(['GestoriaCambioPrecioController', 'actualizarEstado']));
     });
 
     $r->addGroup('/sala-juntas', function (RouteCollector $r) {
