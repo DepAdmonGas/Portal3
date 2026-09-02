@@ -144,7 +144,7 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 
   <div class="card-header">
 
-<div class="float-end">
+<div class="d-flex aling-items-center float-end">
 <div x-data="{ ...actions(), ...listaasistenciaForm() }">
 <?= 
 !empty($permisos['crear']) ? 
@@ -156,7 +156,7 @@ data-vision="<?= htmlspecialchars($user->estacion->vision ?? '') ?>">
 </div>  
 </div>
 
-<h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+<h4 class="card-title mb-0 ">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
 
 
   </div>

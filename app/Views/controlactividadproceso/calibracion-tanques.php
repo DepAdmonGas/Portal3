@@ -226,7 +226,7 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                     'Sondas de medición'
                 )">
 
-                <i class="ti ti-check"></i> Finalizar Bitácora
+                <i class="ti ti-check"></i> Finalizar
 
             </button>
 
@@ -239,7 +239,7 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                 class="btn btn-success"
                 @click="window.history.back()">
 
-                <i class="ti ti-check"></i> Finalizar Bitácora
+                <i class="ti ti-check"></i> Finalizar
 
             </button>
 
@@ -290,7 +290,6 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                 </div>
 
                 <div x-show="tanqueSeleccionado?.resultados">
-                    <hr>
 
                     <a class="btn bg-primary-subtle primary"
                         :href="'/uploads/archivos/calibracion/' + tanqueSeleccionado.resultados"

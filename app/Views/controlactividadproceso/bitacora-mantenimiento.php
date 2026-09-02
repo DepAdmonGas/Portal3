@@ -40,7 +40,9 @@
       <div class="card">
         <div class="card-header bg-primary">
         <h5 class="text-white mb-0">
-          <i class="ti ti-label"></i>Mantenimiento Predictivo</h5>
+          <i class="ti ti-label ">
+
+          </i>Mantenimiento Predictivo</h5>
         </div>
     <div class="card-body">
         <p class="card-text">Este tipo de mantenimiento es capaz de predecir cuando van a producirse averías y solucionarlas antes de que sucedan. En base a toda la información recogida, a las condiciones de funcionamiento y a las acciones realizadas previamente, el sistema detecta fallos potenciales y actúa de acuerdo a un conjunto de acciones previas diseñado para evitar que ocurran las incidencias.</p>

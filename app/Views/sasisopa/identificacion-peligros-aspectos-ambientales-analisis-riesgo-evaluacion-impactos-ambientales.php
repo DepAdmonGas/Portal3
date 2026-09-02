@@ -79,7 +79,7 @@ Descargar
 <div class="card">
 
 <div class="card-header">
-<div class="float-end">
+<div class="d-flex aling-items-center float-end">
 <div x-data="{ ...actions(), ...listaasistenciaForm() }">
 <?= 
 !empty($permisos['crear']) ? 
@@ -212,7 +212,7 @@ No se encontró información para mostrar.
 </div>
 
 </div>
-
+</div>
 <!-- FOOTER -->
 <div class="modal-footer">
 
@@ -224,7 +224,7 @@ data-bs-dismiss="modal">
 
 </div>
 
-</div>
+
 </div>
 </div>
 

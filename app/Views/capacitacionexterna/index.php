@@ -1,6 +1,7 @@
 <div id="container" class="pb-4"
 x-data="{ ...actions(), ...capacitacionExterna() }">
 
+<div class="table-responsive">
 <table class="table table-bordered table-sm mt-3">
     <tr>
     <td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png' ?>" style="width: 200px;"></td>
@@ -14,7 +15,7 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
     <td class="text-center align-middle">Fecha de autorizacion 01/10/2018</td>
     </tr>
 </table>
-
+</div>
     <div class="d-flex align-items-center">
          <div class="ms-auto">
             <?= 
@@ -95,7 +96,7 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
 
             <label class="form-label mt-3">Fecha real:</label>
              <div class="mb-1 text-primary">
-                <small>* Agrega la fecha real de cuando se impartió el curso</small>
+                <div>* Agrega la fecha real de cuando se impartió el curso</div>
             </div>
             <input type="date" class="form-control" x-model="fecha_real">
 
@@ -142,11 +143,12 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
                 <div class="text-end">
                 <button class="btn btn-success mb-3"
                     @click="addEmpleado()">
+<i class="ti ti-check"></i>
                     Agregar 
                 </button>
                 </div>
 
-                <table class="table table-bordered table-sm">
+                <table class="table table-bordered mb-0">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -167,6 +169,15 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
                         </template>
                     </tbody>
                 </table>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
 
             </div>
         </div>

@@ -287,6 +287,13 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                   </div>
 
               </div>
+              <div class="modal-footer">
+                <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cerrar
+</button>
+              </div>
 
           </div>
 

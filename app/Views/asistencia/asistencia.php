@@ -8,39 +8,58 @@ x-init="
         tema='<?= htmlspecialchars($asistencia->tema) ?>';
         finalidad='<?= htmlspecialchars($asistencia->finalidad) ?>';
      ">
+            <div class="text-end mt-3 mb-3">
+                 <?= 
+          !empty($permisos['crear']) ? 
+          '<button class="btn btn-success"
+                    @click="actualizar('.$idListaAsistencia.')"
+                    :disabled="loading">
+                <i class="ti ti-check"></i> 
+                <span x-show="!loading">Finalizar</span>
+                <span x-show="loading">Guardando...</span>
 
+            </button>' 
+          : '' 
+        ?>   
+        </div>
+
+<!----------inicio de primera card------->
 <div class="row">
+
     <div class="col-sm-6 col-12">
+        
+<div class="card">
+    <div class="card-body">
         <div class="row">
 
           <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
             <div class="form-group">
-              <label class="form-label">Fecha:</label>
+              <label class="form-label">* Fecha:</label>
               <input type="date" class="form-control" x-model="fecha" :class="errors.fecha ? 'is-invalid' : ''">
             </div>
           </div>
 
           <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
             <div class="form-group">
-              <label class="form-label">Hora:</label>
+              <label class="form-label">* Hora:</label>
               <input type="time" step="1" class="form-control" x-model="hora" :class="errors.hora ? 'is-invalid' : ''">
             </div>
           </div>
 
           <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
             <div class="form-group">
-              <label class="form-label">Lugar:</label>
+              <label class="form-label">* Lugar:</label>
               <input type="text" class="form-control" x-model="lugar" :class="errors.lugar ? 'is-invalid' : ''">
             </div>
           </div>
 
           <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
             <div class="form-group">
-                <label class="form-label">Nombre del encargado de la comunicación:</label>
+                <label class="form-label">* Nombre del encargado de la comunicación:</label>
 
                 <select class="form-control" x-model="encargado" :class="errors.encargado ? 'is-invalid' : ''">
 
-                    <option value="">Selecciona el encargado</option>
+                    <option value="">Selecciona una opcion...</option>
 
                      <?php foreach ($encargados as $encargado): ?>
                         <option value="<?= $encargado->nombre ?>">
@@ -54,14 +73,14 @@ x-init="
 
           <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
             <div class="form-group">
-              <label class="form-label">Tema a comunicar:</label>
+              <label class="form-label">* Tema a comunicar:</label>
               <textarea class="form-control" x-model="tema" :class="errors.tema ? 'is-invalid' : ''"></textarea>
             </div>
           </div>
 
           <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
             <div class="form-group">
-              <label class="form-label">Finalidad de la comunicación:</label>
+              <label class="form-label">* Finalidad de la comunicación:</label>
               <textarea class="form-control" x-model="finalidad" :class="errors.finalidad ? 'is-invalid' : ''"></textarea>
             </div>
           </div>
@@ -69,13 +88,22 @@ x-init="
 
         </div>
 
-        <div class="mt-4">
+</div>
+</div>
+
+<!-------inicio de segunda card-------->
             <?php
-            if ($asistencia->realizadopor != 0) { ?>
-                <h5>Evidencia</h5>
+            if ($asistencia->realizadopor !=0) { ?>
+<div class="card">
+    <div class="card-header">
+         <h5>Evidencia</h5>
 
                 <small class="text-muted">Agrega la evidencia del elemento lista de asistencia, un máximo de 3 imágenes</small>
-                <hr>
+    </div>
+
+        <div class="card-body">
+
+               
 
                <input
                 type="file"
@@ -95,20 +123,20 @@ x-init="
                 x-text="error"
             ></small>
 
-              <div class="mt-2 text-end">
+              <div class="mt-3 text-end">
 
                   <button
                       class="btn bg-info-subtle text-info"
                       @click="subir()"
                   >
-                      <i class="ti ti-upload"></i>
-                      Agregar evidencia
+                      <i class="ti ti-upload me-1"></i>
+                      Nueva evidencia
                   </button>
 
               </div>
 
-
-    <table class="table table-sm table-bordered mt-3">
+<div class="table-responsive">
+    <table class="table table-bordered table-striped  text-nowrap align-middle mt-3">
 
         <thead>
 
@@ -162,14 +190,14 @@ x-init="
 
                 <td class="text-center align-middle">
 
-                    <button
-                        class="btn btn-sm btn-danger"
+                    <div
+                        class="pointer"
                         @click="eliminar(item.id)"
                     >
 
-                        <i class="ti ti-trash"></i>
+                        <i class="ti ti-trash text-danger fs-7"></i>
 
-                    </button>
+                    </div>
 
                 </td>
 
@@ -180,35 +208,34 @@ x-init="
         </tbody>
 
     </table>
+</div>
 
+        </div>
+
+
+
+
+</div>
 
             <?php } ?>
-        </div>
-
-        <hr>
-
-            <div class="text-end mt-3">
-                 <?= 
-          !empty($permisos['crear']) ? 
-          '<button class="btn btn-success"
-                    @click="actualizar('.$idListaAsistencia.')"
-                    :disabled="loading">
-                <i class="ti ti-check"></i> 
-                <span x-show="!loading">Finalizar Registro</span>
-                <span x-show="loading">Guardando...</span>
-
-            </button>' 
-          : '' 
-        ?>   
-        </div>
-
-
     </div>
 
-    <div class="col-sm-6 col-12">
-        <label class="form-label">Selecciona el personal:</label>
 
-        <div class="input-group">
+
+
+   <!--------inicio de tercera card------> 
+
+
+
+
+    <div class="col-sm-6 col-12">
+
+
+    <div class="card">
+        <div class="card-body">
+        <label class="form-label">* Nombre del personal:</label>
+
+        <div class="input-group mb-3">
             <select class="select2 form-control" multiple="multiple" id="selectPersonal">
                     <?php foreach ($personal as $persona): ?>
                         <option value="<?= $persona->nombre ?>"
@@ -220,7 +247,7 @@ x-init="
              <?= 
           !empty($permisos['crear']) ? 
           '<button class="btn bg-info-subtle text-info" type="button" @click="guardarPersonal('.$idListaAsistencia.')">
-          <i class="ti ti-plus"></i> Agregar
+          <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
         ?>   
@@ -228,8 +255,8 @@ x-init="
         </div>
 
         <div class="datatables">
-            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-                <table id="table-lista-asistencia-firma" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
+            <div class="table-responsive  p-4 overflow-x-auto overflow-y-hidden">
+                <table id="table-lista-asistencia-firma" class="table table-bordered table-striped  text-nowrap align-middle">
                     <thead>
                     <tr>
                         <th>#</th>
@@ -246,6 +273,8 @@ x-init="
             </div>
         </div>
 
+</div>
+</div>
         
 
     </div>

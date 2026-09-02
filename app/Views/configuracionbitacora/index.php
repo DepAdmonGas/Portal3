@@ -134,7 +134,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
 <div class="modal-header modal-colored-header bg-primary text-white d-flex align-items-center justify-content-between">
 
     <h4 class="modal-title text-white d-flex align-items-center mb-0">
-        <i class="ti ti-trash fs-6"></i>
+        <i class="ti ti-trash fs-6 me-1"></i>
         <span x-text="titulo"></span>
     </h4>
 

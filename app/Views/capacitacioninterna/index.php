@@ -1,27 +1,23 @@
 <div id="container" class="pb-4"
     x-data="{ ...actions(), ...capacitacionInterna() }">
 
-    <div class="text-end">
+    <div class="row mt-3 d-flex justify-content-between align-items-center">
 
+        <div class="col-12 mb-3">
+    <div class="text-end">
     
         <a type="button" class="btn bg-primary-subtle text-primary" @click="openModalBuscar()">
         <i class="ti ti-search"></i> Buscar</a>
 
 
     </div>
+</div>
+    
 
-    <div class="position-relative">
-
-        <button
-            x-show="htmlReporte"
-            @click="limpiarBusqueda()"
-            class="btn btn-sm btn-danger position-absolute top-0 end-0">
-            <i class="ti ti-x"></i>
-        </button>
-
-        <div class="mt-4" x-html="DOMPurify.sanitize(htmlReporte)"></div>
-
-    </div>
+        <div class="mt-0" x-html="DOMPurify.sanitize(htmlReporte)"></div>
+        
+</div>
+   
 
     <div class="row mt-3">
         <?php foreach ($cursos ?? [] as $curso): ?>
@@ -71,7 +67,7 @@
 
                 <div class="modal-footer">
                     <button class="btn bg-danger-subtle text-danger" @click="closeModal('buscar')"><i class="ti ti-x"></i> Cancelar</button>
-                    <button class="btn btn-success" @click="buscar()"><i class="ti ti-check"></i> Buscar</button>
+                    <button class="btn btn-success" @click="buscar()"><i class="ti ti-search"></i> Buscar</button>
                 </div>
 
             </div>

@@ -132,27 +132,27 @@
 
                     <div class="row" x-show="mode === 'create'">
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label mt-3">Fecha de emisión</label>
+                            <label class="form-label mt-3">Fecha de emisión:</label>
                             <input type="date" class="form-control" x-model="fechaemision"
                             @change="errors.fechaemision = false"
                             :class="errors.fechaemision ? 'is-invalid' : ''">
                         </div>
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label mt-3">Fecha de vencimiento</label>
+                            <label class="form-label mt-3">Fecha de vencimiento:</label>
                             <input type="date" class="form-control" x-model="fechavencimiento" readonly>
                         </div>
 
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label mt-3">Acuse PDF</label>
+                            <label class="form-label mt-3">Acuse PDF:</label>
                             <input class="form-control" type="file" x-ref="acusePDF">
                         </div>
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label mt-3">Requisito Legal PDF</label>
+                            <label class="form-label mt-3">Requisito Legal PDF:</label>
                             <input class="form-control" type="file" x-ref="requisitoPDF">
                         </div>
                     </div>
 
-                <label class="form-label mt-3">Renovación</label>
+                <label class="form-label mt-3">Renovación:</label>
 
                 <table class="table table-sm table-bordered">
                 <tbody>
@@ -251,7 +251,6 @@
                         </div>
                     </div>
 
-                    <hr>
 
                     <div class="row">
                         <div class="col-md-6">
@@ -265,7 +264,6 @@
                         </div>
                     </div>
 
-                    <hr>
 
                     <div class="row">
                         <div class="col-md-6">
@@ -281,7 +279,7 @@
                         </div>
                     </div>
 
-                    <hr>
+
 
                     <!-- MATRIZ -->
                     <table class="table table-bordered">

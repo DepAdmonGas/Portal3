@@ -261,40 +261,91 @@ class CapacitacionInternaController extends BaseController
         ->orderBy('num_modulo')
         ->get();
 
-    
+echo '<div class="row mb-3 mt-0 d-flex justify-content-between align-items-end">
+<div class="col-6">
+        <h4> '.$year.'</h4>
+</div>
 
-        echo '<div>';
-   
-        echo '<h4>Año: '.$year.'</h4>';
+<div class="col-6 text-end">
+<button
+            x-show="htmlReporte"
+            @click="limpiarBusqueda()"
+            class="btn bg-danger-subtle text-danger top-3 end-0">
+          <i class="ti ti-arrow-left"></i>
+            Regresar
+           
+        </button>
+</div>
 
-        foreach ($modulos as $modulo) {
 
-            echo '<div class="bg-info p-2 mt-2">';
-            echo '<div class="text-white fw-bold fs-6">'.$modulo->num_modulo.'. '.$modulo->titulo.'</div>';
-            echo '</div>';
+</div>';
 
-            echo '<a class="btn btn-light mt-3" target="_blank" href="/sasisopa/competencia-personal-capacitacion-entrenamiento/descargar-capacitacion-interna/'.$year.'/'.$modulo->id.'">
+
+    foreach ($modulos as $modulo) {
+        echo '<div class="card">';
+
+
+        echo '<div class="card-header card-colored-header  d-flex align-items-center justify-content-between">';
+  
+  
+            echo '<div class="card-title mb-0 ">'.$modulo->num_modulo.'. '.$modulo->titulo.'</div>';
+            
+    echo '<div class="btn-group">
+            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="ti ti-dots-vertical fs-4"></i>
+           
+           
+                </button>
+            
+            
+            <ul class="dropdown-menu dropdown-menu-end">
+               
+            
+            
+            
+            <li>
+                    <a class="dropdown-item pointer" target="_blank" href="/sasisopa/competencia-personal-capacitacion-entrenamiento/descargar-capacitacion-interna/'.$year.'/'.$modulo->id.'">
                     <i class="ti ti-download"></i> Programa de Capacitacion y adiestramiento
-                </a>';
-
-            echo '<a class="btn btn-light mt-3" target="_blank" href="/cursos/descargar/'.$year.'/'.$modulo->id.'">
+                </a>
+                </li>
+                 <li>
+                    <a class="dropdown-item pointer" target="_blank" href="/cursos/descargar/'.$year.'/'.$modulo->id.'">
                     <i class="ti ti-download"></i> Reconocimientos personal
-                </a>';
+                </a>
+                </li>
+            </ul>
+        </div>';
+        
+        echo '</div>';
+
+
+
+
+
+        echo '<div class="card-body pb-1">';
+
 
             foreach ($modulo->temas as $tema) {
 
                 if ($tema->calendarios->isEmpty()) continue;
+echo '<div class="card">';
 
-                echo '<div class="mt-3">';
-                echo '<div class="fs-5">'.$tema->num_tema.'. '.$tema->titulo.'</div>';
+echo '<div class="card-header card-colored-header bg-primary">';
+echo '<div class="fs-5  text-white">'.$tema->num_tema.'. '.$tema->titulo.'</div>';
+echo '</div>';
 
-                echo '<table class="table table-sm table-bordered mt-2">';
+echo '<div class="card-body p-0">';
+echo '<div class="mt-0">';
+                
+
+                echo '<div class="table-responsive">';
+                echo '<table class="table table-striped table-bordered mb-0  align-middle">';
                 echo '<thead>
                         <tr>
-                            <th>Usuario</th>
-                            <th>Puesto</th>
-                            <th>Fecha</th>
-                            <th>Resultado</th>
+                            <th class="text-center" >Usuario</th>
+                            <th class="text-center" >Puesto</th>
+                            <th class="text-center" >Fecha</th>
+                            <th class="text-center" >Resultado</th>
                             <th class="text-center align-middle"><i class="ti ti-download fs-6"></i></th>
                         </tr>
                     </thead>';
@@ -310,7 +361,7 @@ class CapacitacionInternaController extends BaseController
 
                     if (!$c->usuario) continue;
 
-                    echo '<tr>';
+                    echo '<tr class="text-center">';
                     echo '<td>'.$c->usuario->nombre.'</td>';
                     echo '<td>'.($c->usuario->puesto->tipo_puesto ?? '').'</td>';
                     echo '<td>'.formatearFecha($c->fecha_programada).'</td>';
@@ -321,12 +372,32 @@ class CapacitacionInternaController extends BaseController
 
                 echo '</tbody>';
                 echo '</table>';
+
+  echo '</div>';
+
+echo '</div>';
+
+
+
+
+
+
+
+echo '</div>';
+                
+                
+
+
                 echo '</div>';
             }
-        }
-
         echo '</div>';
+        echo '</div>';
+        
+            }
 
+
+
+        
 
     }
 

@@ -19,14 +19,16 @@
             </ul>
       </div>
   </div>
+<!--------tabla dentro del card------>
 
   <div class="row mt-3">
 
     <div class="col-md-8 col-sm-12">
-
-      <div class="datatables">
+<div class="card">
+  <div class="card-body">
+        <div class="datatables">
             <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-          <table id="table-experiencia-cliente" class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
+          <table id="table-experiencia-cliente" class="table  table-striped table-bordered mb-0 text-nowrap align-middle">
             <thead>
               <tr>
                   <th colspan="3"></th>
@@ -57,15 +59,26 @@
           </table>
         </div>
       </div> 
-
+</div>
     </div>
-    <div class="col-md-4 col-sm-12">
+</div>
+
+ <div class="col-md-4 col-sm-4">
+    <div class="card">
+      <div class="card-header card-colored-header bg-primary">
+      <h4 class="card-title text-white mb-0"> 
+       <i class="ti ti-chart-pie me-1"></i>
+      ENCUESTA</h4>
+      </div>
+      <div class="card-body">
+   
           <div id="chart"></div>
+    </div>
     </div>
   </div>
 
-</div>
 
+</div>
 
 <!-- ------------------------- -->
 <!-- inicio offcanvas -------- -->

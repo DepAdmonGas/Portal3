@@ -21,7 +21,7 @@
             <th>Permiso</th>
             <th>Fundamento</th>
           <th class="text-center">
-          <a class="text-muted pointer"><i class="ti ti-trash fs-6"></i></a>
+          <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
           </th>
           </tr>
         </thead>
@@ -64,7 +64,7 @@
                         x-model="gobierno"
                         @change="errors.gobierno = false"
                         :class="errors.gobierno ? 'is-invalid' : ''">
-                  <option value=""></option>
+                  <option value="">selecciona una opcion...</option>
                   <option value="Municipal">Municipal</option>
                   <option value="Estatal">Estatal</option>
                   <option value="Federal">Federal</option>

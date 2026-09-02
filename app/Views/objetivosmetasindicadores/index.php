@@ -101,8 +101,8 @@ Ventas
 <h4 class="card-title mb-0">Seguimiento de objetivos y metas</h4>
 <div class="ms-auto">
 
-<div class="dropdown dropstart">
-<a href="javascript:void(0)" class="btn btn-light text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+<div class="dropdown dropcenter">
+<a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
   <i class="ti ti-dots-vertical fs-4"></i>
 </a>
 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -162,8 +162,8 @@ Ventas
 <h4 class="card-title mb-0">Seguimiento y reporte de indicadores</h4>
 <div class="ms-auto">
 
-<div class="dropdown dropstart">
-<a href="javascript:void(0)" class="btn btn-light text-dark" id="dropdownMenuButton " data-bs-toggle="dropdown" aria-expanded="false">
+<div class="dropdown dropcenter">
+<a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton " data-bs-toggle="dropdown" aria-expanded="false">
   <i class="ti ti-dots-vertical fs-4"></i>
 </a>
 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -417,7 +417,7 @@ tabindex="-1">
     </div>
 
     <!-- FOOTER -->
-    <div class="modal-footer" x-show="mode !== 'view'">
+    <div class="modal-footer" >
 
         <button type="button"
                 class="btn bg-danger-subtle text-danger"
@@ -427,6 +427,7 @@ tabindex="-1">
         </button>
 
         <button type="button"
+        x-show="mode !== 'view'"
                 class="btn btn-success"
                 @click="$event.target.blur(); submitObjetivosMetas()"
                 :disabled="loading">
@@ -486,7 +487,7 @@ tabindex="-1">
 
     <template x-if="mode !== 'view'">
     <div>
-    <label class="form-label">* Fecha:</label>
+    <label class="form-label mb-1">* Fecha:</label>
     <input type="date" class="form-control" 
     x-model="reporteIndicadores.fecha"
     :class="errors.reporteIndicadores.fecha ? 'is-invalid' : ''"
@@ -527,28 +528,28 @@ tabindex="-1">
     <template x-if="mode === 'view'">
           <div>
 
-              <label class="form-label">Fecha:</label>
-              <div class="border rounded p-2 bg-light"
+              <label class="form-label mb-0">Fecha:</label>
+              <div class="p-0"
                 x-text="reporteIndicadores.fecha_format || 'S/I'"></div>
 
-              <label class="form-label mt-3">Capacitación:</label>
-              <div class="border rounded p-2 bg-light" 
+              <label class="form-label mt-3 mb-0">Capacitación:</label>
+              <div class="p-0" 
                 x-text="reporteIndicadores.capacitacion || 'S/I'"></div>
 
-              <label class="form-label mt-3">Experiencia del cliente:</label>
-              <div class="border rounded p-2 bg-light" 
+              <label class="form-label mt-3 mb-0">Experiencia del cliente:</label>
+              <div class="p-0" 
                 x-text="reporteIndicadores.experiencia || 'S/I'"></div>
 
-              <label class="form-label mt-3">Ventas:</label>
-              <div class="border rounded p-2 bg-light" 
+              <label class="form-label mt-3 mb-0">Ventas:</label>
+              <div class="p-0" 
                 x-text="reporteIndicadores.ventas || 'S/I'"></div>
 
-              <label class="form-label mt-3">Medidas correctivas:</label>
-              <div class="border rounded p-2 bg-light" 
+              <label class="form-label mt-3 mb-0">Medidas correctivas:</label>
+              <div class="p-0" 
                 x-text="reporteIndicadores.medidas || 'S/I'"></div>
 
-              <label class="form-label mt-3">Fecha de aplicación:</label>
-              <div class="border rounded p-2 bg-light" 
+              <label class="form-label mt-3 mb-0">Fecha de aplicación:</label>
+              <div class="p-0" 
                 x-text="reporteIndicadores.fecha_aplicacion_format || 'S/I'"></div>
 
           </div>
@@ -557,7 +558,7 @@ tabindex="-1">
     </div>
 
     <!-- FOOTER -->
-    <div class="modal-footer" x-show="mode !== 'view'">
+    <div class="modal-footer" >
 
         <button type="button"
                 class="btn bg-danger-subtle text-danger"
@@ -567,6 +568,7 @@ tabindex="-1">
         </button>
 
         <button type="button"
+        x-show="mode !== 'view'"
                 class="btn btn-success"
                 @click="submitReporteIndicadores()"
                 :disabled="loading">
