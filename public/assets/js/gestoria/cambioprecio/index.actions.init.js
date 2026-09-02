@@ -87,16 +87,6 @@ async actualiza(id) {
 
             });
 
-
-        if (res.success) {
-
-            this.notify(
-                'success',
-                'El cambio de precio fue actualizado.'
-            );
-
-        }
-
     } catch (e) {
 
         console.error(
