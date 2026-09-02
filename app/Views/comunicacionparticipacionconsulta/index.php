@@ -12,6 +12,8 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 
 <?php else: ?>
 
+<div class="table-responsive">
+
 <table class="table table-bordered table-sm mt-3">
 <tr>
 <td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png' ?>" style="width: 200px;"></td>
@@ -25,7 +27,7 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 <td class="text-center align-middle">Fecha de autorizacion 01/10/2018</td>
 </tr>
 </table>
-
+</div>
 <div class="text-end">
 <div class="btn-group">
 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -55,11 +57,11 @@ Descargar
 <table id="table-registro-comunicacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
-<th>No.</th>
-<th>Fecha</th>
-<th>Tema a comunicar</th>
+<th class="text-center">No.</th>
+<th class="text-center">Fecha</th>
+<th class="text-center">Tema a comunicar</th>
 <th>Encargado de la comunicación</th>
-<th>Tipo de comunicación</th>
+<th class="text-center">Tipo de comunicación</th>
 <th width="200px">Material utilizado para la comunicación</th>
 <th width="200px">Seguimiento de la comunicación</th>
 <th class="text-center">
@@ -101,7 +103,7 @@ Descargar
 <thead>
 <tr>
 <th>#</th>
-<th>Fecha</th>
+<th class="text-center">Fecha</th>
 <th class="text-center">
 <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
 </th>
@@ -330,25 +332,15 @@ class="form-control"
 x-ref="fileEvidencia"
 accept=".jpg,.jpeg,.png,.gif">
 
-<div class="text-end mt-3">
-
-<button class="btn btn-success"
-@click="guardarEvidencia()">
-<i class="ti ti-check"></i>
-Agregar 
-</button>
-
-</div>
-
-<hr>
 
 <template x-if="evidencias.length === 0">
 
-<div class="text-center text-muted">
+<div class="text-center text-muted mt-3">
 No se encontraron evidencias
 </div>
 
 </template>
+
 
 <div class="row">
 
@@ -360,7 +352,7 @@ No se encontraron evidencias
 
 <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
 @click="eliminarEvidencia(item.id)">
-<i class="ti ti-trash"></i>
+<i class="ti ti-x"></i>
 </button>
 
 <img :src="item.url"
@@ -373,6 +365,24 @@ class="img-fluid">
 </template>
 
 </div>
+
+</div>
+
+<div class="modal-footer">
+
+<button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
+
+<button class="btn btn-success"
+@click="guardarEvidencia()">
+<i class="ti ti-check"></i>
+Agregar 
+</button>
+
+
 
 </div>
 
@@ -533,7 +543,6 @@ S/I
 
 <div>
 
-<hr>
 
 <div class="d-flex justify-content-between align-items-center mb-2">
 
@@ -570,8 +579,6 @@ x-text="detalle.detalle">
 
 <div>
 
-<hr>
-
 <div class="d-flex align-items-center gap-2">
 
 <span class="form-label">
@@ -594,6 +601,17 @@ Descargar asistencia
 </template>
 
 </div>
+<div class="modal-footer">
+    <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cerrar
+</button>
+
+</div>
+
+
+
 
 </div>
 
@@ -630,7 +648,7 @@ data-bs-dismiss="modal"
 aria-label="Close"
 @click="year ? resetBusqueda() : limpiarBusqueda()">
 <i class="ti ti-x"></i>
-<span x-text="year ? 'Cancelar búsqueda' : 'Cancelar'"></span>
+<span x-text="year ? 'Cancelar' : 'Cancelar'"></span>
 
 </button>
 <button class="btn btn-success" @click="buscarYear()">

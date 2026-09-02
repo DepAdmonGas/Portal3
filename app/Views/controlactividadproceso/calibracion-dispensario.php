@@ -303,7 +303,7 @@
             class="btn btn-success"
             @click="finalizar('Dispensario')">
 
-            <i class="ti ti-check"></i> Finalizar Bitácora
+            <i class="ti ti-check"></i> Finalizar
 
         </button>
 
@@ -316,7 +316,7 @@
             class="btn btn-success"
             @click="window.location.href='/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos'">
 
-            <i class="ti ti-check"></i> Finalizar Bitácora 
+            <i class="ti ti-check"></i> Finalizar 
 
         </button>
 

@@ -215,7 +215,7 @@ x-data="{ ...actions(), ...calibracionSondas() }">
                     'Sondas de medición'
                 )">
 
-                <i class="ti ti-check"></i> Finalizar Bitácora
+                <i class="ti ti-check"></i> Finalizar
 
             </button>
 
@@ -228,7 +228,7 @@ x-data="{ ...actions(), ...calibracionSondas() }">
                 class="btn btn-success"
                 @click="window.history.back()">
 
-                <i class="ti ti-check"></i> Finalizar Bitácora
+                <i class="ti ti-check"></i> Finalizar
 
             </button>
 

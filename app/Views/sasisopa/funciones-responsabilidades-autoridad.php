@@ -11,12 +11,12 @@
 
 <?php else: ?>
 
-<div class="row mt-3">
+<div class="row mt-0">
 
   <div class="col-md-9 col-12">
     <div class="card">
       <div class="card-header bg-primary">
-<h4 class="card-title  text-white">Organigrama</h4>
+<h4 class="card-title mb-0 text-white">Organigrama</h4>
       </div>
 <div class="card-body">
     <?php if (!empty($organigrama)): ?>
@@ -34,7 +34,7 @@
   <div class="col-md-3 col-12">
     <div class="card">
       <div class="card-header bg-primary">
-<h4 class="card-title text-center text-white">Responsabilidades</h4>
+<h4 class="card-title text-center text-white mb-0">Responsabilidades</h4>
 
       </div>
       <div class="card-body">
@@ -253,6 +253,10 @@
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->
 
+
+
+
+
 <div id="ModalReTe" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -306,7 +310,14 @@
 
                       
               </div>
-                   
+                 <div class="modal-footer">
+                  <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
+
+                 </div>  
         </div>
         </div>
     </div>
@@ -359,7 +370,16 @@
 
                       
               </div>
-                   
+
+
+         <div class="modal-footer">
+          <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
+
+         </div>          
         </div>
         </div>
     </div>
@@ -402,7 +422,14 @@ referente al SA</td>
           </table>
                       
               </div>
-                   
+               <div class="modal-footer">
+                <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
+
+               </div>    
         </div>
         </div>
     </div>
@@ -446,7 +473,14 @@ referente al SA</td>
           </table>
                       
               </div>
-                   
+                   <div class="modal-footer">
+                    <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
+
+                   </div>
         </div>
         </div>
     </div>
@@ -489,7 +523,14 @@ referente al SA</td>
           </table>
                       
               </div>
-                   
+         <div class="modal-footer">
+          <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
+
+         </div>          
         </div>
         </div>
     </div>
@@ -533,7 +574,14 @@ referente al SA</td>
           </table>
                       
               </div>
-                   
+               <div class="modal-footer">
+                <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
+
+               </div>    
         </div>
         </div>
     </div>
@@ -579,7 +627,14 @@ al SA</td>
           </table>
                       
               </div>
-                   
+          <div class="modal-footer">
+            <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
+
+          </div>
         </div>
         </div>
     </div>

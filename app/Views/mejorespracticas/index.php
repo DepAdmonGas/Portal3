@@ -21,8 +21,8 @@
     <h4 class="card-title mb-0">Diseño y construcción</h4>
       <div class="ms-auto">
 
-        <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" arial-explaned="false">
+        <div class="dropdown dropcenter">
+            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" arial-explaned="false">
               <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -85,8 +85,8 @@
   <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Operación y Mantenimiento</h4>
       <div class="ms-auto">
-      <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+      <div class="dropdown dropcenter">
+            <a href="javascript:void(0)" class="link btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
  
             <i class="ti ti-dots-vertical fs-4"></i>
             </a>
@@ -202,7 +202,7 @@
 
     <div class="modal-body">
 
-        <label class="form-label">* Fecha::</label>
+        <label class="form-label">* Fecha:</label>
         <input type="date" class="form-control mb-2" x-model="om.fecha"
                 :class="errorsOM.fecha ? 'is-invalid' : ''"
                 @input="errorsOM.fecha = false"/>

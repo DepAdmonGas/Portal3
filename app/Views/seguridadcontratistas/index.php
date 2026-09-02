@@ -195,7 +195,8 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
             <div class="modal-body">
 
                 <!-- FECHA / UBICACIÓN (TABLA IGUAL QUE PHP) -->
-                <table style="width: 100%">
+                 <div class="table-responsive mb-3">
+<table style="width: 100%">
                     <tr>
                         <td>
                             <input type="text"
@@ -239,62 +240,70 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                         </td>
                     </tr>
                 </table>
+                 </div>
+                
 
-                <div class="mt-1 mb-1 form-label"><b>Trabajo a realizar:</b></div>
-                <textarea class="form-control"
+                <div class="mb-1 form-label"><b>Trabajo a realizar:</b></div>
+                <textarea class="form-control mb-3"
                           rows="1"
-                          x-model="formato12.trabajo_realizar"></textarea>
+                          x-model="formato12.trabajo_realizar "></textarea>
 
-                <div class="mt-1 mb-1 form-label"><b>Descripcion:</b></div>
-                <textarea class="form-control"
+                <div class="mb-1 form-label"><b>Descripcion:</b></div>
+                <textarea class="form-control mb-3"
                           rows="1"
                           x-model="formato12.descripcion"></textarea>
 
-                <div class="mt-1 mb-1 form-label"><b>Área:</b></div>
-                <textarea class="form-control"
+                <div class="mb-1 form-label"><b>Área:</b></div>
+                <textarea class="form-control mb-3"
                           rows="1"
                           x-model="formato12.area"></textarea>
 
                 <!-- FECHAS -->
-                <table class="mt-3" style="width: 100%">
-                    <tr>
-                        <td><b class="form-label">Fecha de inicio:</b></td>
-                        <td>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="mb-1 form-label">Fecha de inicio:</div>
+                       
                             <input type="date"
-                                   class="form-control"
+                                   class="form-control mb-3"
                                    x-model="formato12.fecha_inicio">
-                        </td>
+                      
+                    </div>
 
-                        <td><b class="form-label p-3">Fecha de término:</b></td>
-                        <td>
+                 <div class="col-6">
+
+                    <div class="form-label mb-1">Fecha de término:</div>
                             <input type="date"
-                                   class="form-control"
+                                   class="form-control mb-3"
                                    x-model="formato12.fecha_termino">
-                        </td>
-                    </tr>
+                       
 
-                    <tr>
-                        <td><b class="form-label">Hora de Inicio:</b></td>
-                        <td>
+                 </div>
+<div class="col-6">
+    
+                        <div class="form-label mb-1">Hora de Inicio:</div>
+                        
                             <input type="time"
-                                   class="form-control"
+                                   class="form-control mb-3"
                                    x-model="formato12.hora_inicio">
-                        </td>
+                       
 
-                        <td><b class="form-label p-3">Hora de Termino:</b></td>
+</div>
+                <div class="col-6">
+       <div class="form-label mb-1">Hora de Termino:</div>
                         <td>
                             <input type="time"
-                                   class="form-control"
+                                   class="form-control mb-3"
                                    x-model="formato12.hora_termino">
-                        </td>
-                    </tr>
-                </table>
+                       
+                </div>
 
+                </div>
+                 
                 <br>
 
-                <b class="form-label">El trabajo a realizar contempla alguno de los siguientes procedimientos:</b>
+                <div class="form-label mb-3">El trabajo a realizar contempla alguno de los siguientes procedimientos:</div>
 
-                <table class="table table-bordered table-sm mt-2">
+                <table class="table table-striped table-bordered mb-2 text-nowrap align-middle">
                     <tbody>
 
                         <template x-for="p in formato12.procedimientos"
@@ -317,25 +326,33 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     </tbody>
                 </table>
 
-                <div class="mt-1 mb-1">
-                    <b class="form-label">Nombre del prestador de servicios:</b>
-                </div>
+                
+                    <div class="form-label mb-1">Nombre del prestador de servicios:</div>
+                
 
-                <textarea class="form-control"
+                <textarea class="form-control mb-3"
                           rows="1"
                           x-model="formato12.prestador_servicio"></textarea>
 
                 <!-- RADIO BUTTONS IGUAL -->
-                <table style="width: 100%" class="mt-2">
+                 <div class="table-resposive">
+  <table class="table table-striped table-bordered mb-3">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Pregunta</th>
+                            <th class="text-center" colspan="2">Respuesta</th>
+                        </tr>
+                    </thead>
 
                     <tr>
                         <td class="form-label">Cuenta con capacitación para realizar trabajos peligrosos:</td>
-                        <td>
+                        <td class="text-center">
                             Si
                             <input class="pointer" type="radio"
                                    value="1"
                                    x-model="formato12.cprtp">
-
+                        </td>
+                        <td class="text-center">
                             No
                             <input class="pointer" type="radio"
                                    value="0"
@@ -345,67 +362,69 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     <tr>
                         <td class="form-label">Cuenta con todo el Equipo de Protección Personal correspondiente (EPP):</td>
-                        <td>
+                        <td class="text-center">
                             Si
                             <input class="pointer" type="radio"
                                    value="1"
                                    x-model="formato12.cteppc">
-
+                        </td>
+                        <td class="text-center">
                             No
                             <input class="pointer" 
                             type="radio"
                                    value="0"
                                    x-model="formato12.cteppc">
-                        </td>
+                       </td>
                     </tr>
 
                 </table>
+                 </div>
+              
 
-                <div class="text-center">
-                    <small class="form-label">*De no contar con capacitación, bajo ninguna circunstancia realizara los trabajos</small>
+                <div class="text-center form-label mb-3">
+                    <small>*De no contar con capacitación, bajo ninguna circunstancia realizara los trabajos</small>
                 </div>
 
-                <br>
-
                 <!-- TRABAJADORES -->
-                <div class="border p-2">
+                <div class="border p-3 mb-3">
 
-                    <b class="form-label">Datos de los trabajadores que acuden al servicio:</b>
+                    <div class="form-label">Datos de los trabajadores que acuden al servicio:</div>
 
                     <div class="row mt-2">
 
                         <div class="col-4 form-label">
                             * Nombre:
                             <input type="text"
-                                   class="form-control"
+                                   class="form-control mt-1"
                                    x-model="trabajador.nombre">
                         </div>
 
                         <div class="col-4 form-label">
                             * Puesto:
                             <input type="text"
-                                   class="form-control"
+                                   class="form-control mt-1"
                                    x-model="trabajador.puesto">
                         </div>
 
                         <div class="col-4 form-label">
                             * No. De Seguro:
                             <input type="text"
-                                   class="form-control"
+                                   class="form-control mt-1"
                                    x-model="trabajador.no_seguro">
                         </div>
 
                     </div>
 
-                    <div class="text-end mt-2">
+                    <div class="text-end mt-3 mb-3">
                         <button type="button"
                                 class="btn bg-primary-subtle text-primary"
                                 @click="agregarTrabajador()">
+                                <i class="ti ti-plus"></i>
                             Agregar
                         </button>
                     </div>
 
-                    <table class="table table-bordered table-sm mt-2" id="table-trabajadores">
+                    <table class="table table-striped table-bordered mb-3 text-nowrap mt-2" id="table-trabajadores">
 
                     <thead>
                         <tr>
@@ -427,8 +446,8 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                                 <td x-text="t.no_seguro"></td>
 
                                 <td class="text-center">
-
-                                <a @click="eliminarTrabajador(t.id, t.nombre)"><i class="ti ti-trash fs-6 text-danger"></i></a>
+                                   
+                                <a @click="eliminarTrabajador(t.id, t.nombre)"><i class="ti ti-trash fs-6 text-danger pointer"></i></a>
 
                                 </td>
                             </tr>
@@ -441,14 +460,13 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                 </div>
 
-                <hr>
 
                 <!-- ENCARGADOS -->
-                <b class="form-label">* Encargado de la estación de servicio de darle seguimiento al servicio:</b>
+                <div class="form-label mb-1">* Encargado de la estación de servicio de darle seguimiento al servicio:</div>
 
-                <div class="row mt-2">
+                <div class="input-group mb-3">
 
-                    <div class="col-10">
+               
 
                       <select class="form-select"
                             x-model="encargado.id_personal">
@@ -461,21 +479,22 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     </select>
 
-                    </div>
+                 
 
-                    <div class="col-2 text-end">
+                    
 
                         <button type="button"
                                 class="btn bg-primary-subtle text-primary"
                                 @click="agregarEncargado()">
+                                <i class="ti ti-plus"></i>
                             Agregar
                         </button>
 
-                    </div>
+                   
 
                 </div>
-
-                <table class="table table-bordered table-sm mt-2" id="table-encargados">
+          <div class="table-responsive mb-3">
+<table class="table table-striped table-bordered mb-0 text-nowrap" id="table-encargados">
                 <thead>
                     <tr>
                         <th>Nombre</th>
@@ -494,7 +513,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                             <td x-text="e.seguro_social"></td>
 
                             <td class="text-center">
-                                <a @click="eliminarEncargado(e.id, e.nombre)"><i class="ti ti-trash fs-6 text-danger"></i></a>
+                                <a @click="eliminarEncargado(e.id, e.nombre)"><i class="ti ti-trash fs-6 text-danger pointer"></i></a>
                             </td>
                         </tr>
 
@@ -504,24 +523,26 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
             </table>
 
-                <hr>
+          </div>
+                
+
 
                 <!-- EXTERNO -->
-                <div class="border p-2 mt-2">
+                <div class="border p-3">
 
                     <small class="form-label">Trabajo realizado por un externo</small>
 
-                    <div class="mt-1 form-label"><b>Nombre empresa:</b></div>
-                    <textarea class="form-control mt-1"
+                    <div class=" form-label mt-3">Nombre empresa:</div>
+                    <textarea class="form-control mb-3"
                               rows="1"
                               x-model="formato12.nombre_empresa"></textarea>
 
-                    <div class="mt-1 form-label"><b>Nombre del responsable:</b></div>
-                    <textarea class="form-control mt-1"
+                    <div class="mt-1 form-label">Nombre del responsable:</div>
+                    <textarea class="form-control mb-3"
                               rows="1"
                               x-model="formato12.nombre_responsable"></textarea>
 
-                    <div class="text-center mt-3">
+                    <div class="text-center">
                         <small class="form-label">Nota: Si el personal es externo deberá presentar su procedimiento para realizar la actividad</small>
                     </div>
 
@@ -594,8 +615,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                         <input
                             class="form-control"
-                            x-model="formato14.folio"
-                            disabled>
+                            disabled x-model="formato14.folio">
 
                     </div>
 
@@ -609,8 +629,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                         <input
                             class="form-control"
-                            x-model="formato14.fecha"
-                            disabled>
+                           disabled x-model="formato14.fecha">
 
                     </div>
 
@@ -630,8 +649,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                         <input
                             class="form-control"
-                            x-model="formato14.nombre_solicitante"
-                            disabled>
+                            disabled x-model="formato14.nombre_solicitante">
 
                     </div>
 
@@ -645,8 +663,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                         <input
                             class="form-control"
-                            x-model="formato14.empresa"
-                            disabled>
+                            disabled x-model="formato14.empresa">
 
                     </div>
 

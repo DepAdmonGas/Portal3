@@ -434,11 +434,11 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
       <div class="modal-dialog modal-xl modal-dialog-centered">
           <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
+                  <h4 class="modal-title text-white d-flex align-items-center">
+    <i class="ti ti-file me-1"></i>
 
-                  <h4
-                      class="modal-title text-white"
-                      x-text="'Registro #' + (detalleRegistro.id ?? '')">
-                  </h4>
+    <span x-text="'Registro #' + (detalleRegistro.id ?? '')"></span>
+</h4>
 
                   <button
                       type="button"
@@ -451,7 +451,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
               <div class="modal-body">
 
                   <!-- FECHA -->
-
+                  
                   <table class="table table-bordered table-sm">
 
                       <thead>
@@ -647,6 +647,13 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 
               </div>
 
+              <div class="modal-footer">
+              <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cerrar
+</button>
+              </div>
           </div>
 
       </div>

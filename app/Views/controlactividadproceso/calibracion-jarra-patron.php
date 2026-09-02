@@ -282,7 +282,7 @@ x-data="{ ...actions(), ...calibracionJarraPatron() }">
                 class="btn btn-success"
                 @click="finalizar('Jarra patron')">
 
-                <i class="ti ti-check"></i> Finalizar Bitácora
+                <i class="ti ti-check"></i> Finalizar
             </button>
 
         </template>
@@ -294,7 +294,7 @@ x-data="{ ...actions(), ...calibracionJarraPatron() }">
                 class="btn btn-success"
                 @click="window.history.back()">
 
-                <i class="ti ti-check"></i> Finalizar Bitácora
+                <i class="ti ti-check"></i> Finalizar
 
             </button>
 
