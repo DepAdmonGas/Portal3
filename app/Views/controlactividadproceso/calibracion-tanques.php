@@ -2,6 +2,8 @@
 /** @var \App\Models\Sgm\CalibracionEquipo $calibracion */
 ?>
 <div id="container"
+data-module-station-key="sasisopa"
+data-estacion-id="<?= $estacionId ?? '' ?>"
 class="pb-4"
 x-data="{ ...actions(), ...calibracionTanques() }">
 <script type="application/json" id="calibracion-data">

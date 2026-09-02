@@ -1,5 +1,18 @@
 <div id="container" class="pb-4"
+data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 x-data="{ ...actions(), ...consulta()}">
+
+<?php if (empty($estacionId)): ?>
+
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
+    <div id="sasisopa-content">
 
 <table class="table table-sm table-bordered table-striped table-hover mt-4">
 
@@ -74,5 +87,9 @@ x-data="{ ...actions(), ...consulta()}">
         </tbody>
 
     </table>
+
+    </div>
+
+    <?php endif; ?>
 
 </div>

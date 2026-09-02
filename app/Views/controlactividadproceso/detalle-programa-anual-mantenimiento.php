@@ -2,6 +2,8 @@
 /** @var int $idPrograma */
 ?>
 <div id="container" class="mb-4" data-idprograma="<?= $idPrograma ?>"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 x-data="{ ...actions(), ...programaAnualMantenimiento() }">
 
     <div class="text-end">

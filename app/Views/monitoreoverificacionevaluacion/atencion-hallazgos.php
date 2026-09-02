@@ -1,5 +1,16 @@
 <div id="container"
+data-module-station-key="sasisopa"
+data-estacion-id="<?= e($estacionId ?? '') ?>"
 x-data="{ ...actions(), ...atencionHallazgos()}">
+
+<?php if (empty($estacionId)): ?>
+ 
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
 
     <div class="text-end">
         <?= 
@@ -130,4 +141,6 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
       </table>
 
 </div>
+<?php endif; ?>
+
 </div>

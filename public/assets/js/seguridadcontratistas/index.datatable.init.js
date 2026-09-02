@@ -88,13 +88,13 @@ document.addEventListener('DOMContentLoaded', () => {
             className: 'text-center align-middle',
             render: function (data, type, row) {
 
+                if (!row.formato12) {
+                    return `<span class="opacity-50" style="cursor:default;"><i class="ti ti-x text-danger fs-7"></i></span>`;
+                }
+
                 return `
                     <a href="/sasisopa/seguridad-contratistas/formato12/pdf/${row.id}">
-                        <i class="ti ${
-                            row.formato12
-                                ? 'ti-file-type-pdf text-danger fs-7'
-                                : 'ti-x text-danger fs-7'
-                        } fs-7"></i>
+                        <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                     </a>
                 `;
             }
@@ -142,13 +142,13 @@ document.addEventListener('DOMContentLoaded', () => {
             className: 'text-center align-middle',
             render: function (data, type, row) {
 
+                if (!row.formato14 || !row.formato14_url) {
+                    return `<span class="opacity-50" style="cursor:default;"><i class="ti ti-x text-danger fs-7"></i></span>`;
+                }
+
                 return `
                     <a href="${row.formato14_url}" target="_BLANK">
-                        <i class="ti ${
-                            row.formato14
-                                ? 'ti-file-type-pdf text-danger'
-                                : 'ti-x text-danger'
-                        } fs-7"></i>
+                        <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                     </a>
                 `;
             }
@@ -185,13 +185,13 @@ document.addEventListener('DOMContentLoaded', () => {
             className: 'text-center align-middle',
             render: function (data, type, row) {
 
+                if (!row.formato15) {
+                    return `<span class="opacity-50" style="cursor:default;"><i class="ti ti-x text-danger fs-7"></i></span>`;
+                }
+
                 return `
                     <a href="/sasisopa/seguridad-contratistas/formato15/pdf/${row.id}">
-                        <i class="ti ${
-                            row.formato15
-                                ? 'ti-file-type-pdf text-danger fs-7'
-                                : 'ti-x text-danger fs-7'
-                        } fs-7"></i>
+                        <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                     </a>
                 `;
             }
@@ -224,13 +224,13 @@ document.addEventListener('DOMContentLoaded', () => {
             className: 'text-center align-middle',
             render: function (data, type, row) {
 
+                if (!row.carta_responsiva) {
+                    return `<span class="opacity-50" style="cursor:default;"><i class="ti ti-x text-danger fs-7"></i></span>`;
+                }
+
                 return `
                     <a href="/sasisopa/seguridad-contratistas/carta-responsiva/pdf/${row.id}">
-                        <i class="ti ${
-                            row.carta_responsiva
-                                ? 'ti-file-type-pdf text-danger'
-                                : 'ti-x text-danger'
-                        } fs-7"></i>
+                        <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                     </a>
                 `;
             }

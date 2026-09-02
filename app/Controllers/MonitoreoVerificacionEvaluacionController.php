@@ -2,6 +2,7 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Models\Sasisopa\MedicionIndicadores;
@@ -19,6 +20,12 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 
 class MonitoreoVerificacionEvaluacionController extends BaseController{
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
     public function index(){
 
         $title = '14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN';
@@ -35,11 +42,14 @@ class MonitoreoVerificacionEvaluacionController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/index.actions.init.js?v=' . time(),
             ],
             'help' => true
@@ -50,6 +60,12 @@ class MonitoreoVerificacionEvaluacionController extends BaseController{
 
     public function agregarIndicadores(): void
     {
+        $estacion = $this->estacionModulo();
+
+        if (!$estacion) {
+            return;
+        }
+
         collect([
             1 => '60%',
             2 => '80%',
@@ -57,11 +73,11 @@ class MonitoreoVerificacionEvaluacionController extends BaseController{
             4 => 'Buena',
             5 => '60%'
         ])
-        ->each(function ($meta, $objeto) {
+        ->each(function ($meta, $objeto) use ($estacion) {
 
             MedicionIndicadores::firstOrCreate(
                 [
-                    'id_estacion' => $this->estacionId(),
+                    'id_estacion' => $estacion,
                     'objeto'      => $objeto
                 ],
                 [
@@ -117,7 +133,7 @@ class MonitoreoVerificacionEvaluacionController extends BaseController{
     public function meta(int $objeto): ?string
     {
         return MedicionIndicadores::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->where('objeto', $objeto)
             ->latest('id')
             ->value('meta');
@@ -131,7 +147,7 @@ class MonitoreoVerificacionEvaluacionController extends BaseController{
 
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
 
         ->whereYear(
@@ -167,7 +183,7 @@ public function ventasMes(
 
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
 
         ->where('mes', $mes)
@@ -287,7 +303,7 @@ public function resultadoCapacitacion(
             fn ($q) =>
                 $q->where(
                     'id_gas',
-                    $this->estacionId()
+                    $this->estacionModulo()
                 )
         )
         ->avg('resultado');
@@ -327,7 +343,7 @@ public function resultadoSatisfaccion(
 
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
 
         ->where(
@@ -411,7 +427,7 @@ public function resultadoIncidentes(
 
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
 
         ->whereYear(
@@ -467,7 +483,7 @@ public function resultadoIncidentes(
 public function revisionResultadoPdf($id): void
 {
 
-$estacion = Estacion::find($this->estacionId());  
+$estacion = Estacion::find($this->estacionModulo());  
 
 $indicadores = [
 
@@ -698,9 +714,9 @@ hr {
     <body>';
 
     $html .= '<div style="text-align: center;font-family: Arial, Helvetica, sans-serif;font-size: 1.2em;">Resumen del Año: '.$id.'</div>
-    <div style="text-align: center;font-family: Arial, Helvetica, sans-serif;"><b>'.$estacion->permisocre.'</b></div>
-    <div style="text-align: center;font-family: Arial, Helvetica, sans-serif;">'.$estacion->razonsocial.'</div>
-    <div style="text-align: center;font-family: Arial, Helvetica, sans-serif;"><small>'.$estacion->direccioncompleta.'</small></div>';
+    <div style="text-align: center;font-family: Arial, Helvetica, sans-serif;"><b>'.($estacion?->permisocre ?? '').'</b></div>
+    <div style="text-align: center;font-family: Arial, Helvetica, sans-serif;">'.($estacion?->razonsocial ?? '').'</div>
+    <div style="text-align: center;font-family: Arial, Helvetica, sans-serif;"><small>'.($estacion?->direccioncompleta ?? '').'</small></div>';
 
 
     $html .= '<table class="table table-bordered table-sm pb-0 mb-0" style="margin-top: 50px;">
@@ -1014,12 +1030,15 @@ $title = 'VENTAS DEL MES';
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'    
             ],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/ventasmes.actions.init.js?v=' . time(),
             ],
             'help' => false
@@ -1041,7 +1060,7 @@ $title = 'VENTAS DEL MES';
             );
 
             $data = self::getVentasMeses(
-                $this->estacionId(),
+                $this->estacionModulo(),
                 $year
             );
 
@@ -1062,7 +1081,7 @@ $title = 'VENTAS DEL MES';
     }
 
         public static function ventasMensual(
-        int $estacionId,
+        ?int $estacionId,
         int $mes,
         int $year
     ): float {
@@ -1083,7 +1102,7 @@ $title = 'VENTAS DEL MES';
     }
 
 public static function getVentasMeses(
-    int $estacionId,
+    ?int $estacionId,
     int $year
 ): array {
 

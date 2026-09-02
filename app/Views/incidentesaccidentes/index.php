@@ -1,15 +1,25 @@
 <div id="container"
-x-data="{ ...actions(), ...incidentesAccidentes()}"
-x-init="
-municipio='<?= $estacion['di_municipio']; ?>';
-estado='<?= $estacion['di_estado']; ?>';
-nombre='<?= $filtro_usuario['nombre']; ?>';
-puesto='<?= $user->puesto->tipo_puesto ?>';
-razon_social='<?= $estacion['razonsocial']; ?>';
-direccion='<?= $estacion['direccioncompleta']; ?>';
-">
+data-module-station-key="sasisopa"
+data-estacion-id="<?= e($estacionId ?? '') ?>"
+x-data="{ ...actions(), ...incidentesAccidentes()}">
 
-<div class="card mt-2">
+<?php if (empty($estacionId)): ?>
+
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
+
+<div class="card mt-2" x-init="
+municipio='<?= $estacion['di_municipio'] ?? '' ?>';
+estado='<?= $estacion['di_estado'] ?? '' ?>';
+nombre='<?= $filtro_usuario['nombre'] ?? '' ?>';
+puesto='<?= $user->puesto->tipo_puesto ?? '' ?>';
+razon_social='<?= $estacion['razonsocial'] ?? '' ?>';
+direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
+">
     <div class="card-header">
   <div class="d-flex align-items-center">
       <div class="ms-auto">
@@ -1207,4 +1217,5 @@ direccion='<?= $estacion['direccioncompleta']; ?>';
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->
 
+<?php endif; ?>
 </div>

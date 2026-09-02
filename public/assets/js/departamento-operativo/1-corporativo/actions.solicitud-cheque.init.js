@@ -726,11 +726,14 @@ est = c.dataset.idEstacion || '';
 dep = c.dataset.idDepto || '';
 }
 var esContextoDepartamento = parseInt(dep) > 0;
+var esSeleccionEspecifica = (est !== '' && est !== '0') || (dep !== '' && dep !== '0');
 
 actualizarBadgePendientes();
 
 var tools = document.getElementById('sc-tools-wrapper');
 if (tools) tools.remove();
+
+if (!esSeleccionEspecifica) return;
 
 var anchor = document.getElementById('sc-tools-anchor');
 var tmpl = document.getElementById('sc-tools-tmpl');

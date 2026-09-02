@@ -1,6 +1,15 @@
-<div id="container" data-elemento="5" data-herramienta="1">
+<div id="container" data-elemento="5" data-herramienta="1"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
+<?php if (empty($estacionId)): ?>
+ 
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
 
+<?php else: ?>
 
 <div class="row mt-0">
 
@@ -10,7 +19,11 @@
 <h4 class="card-title mb-0 text-white">Organigrama</h4>
       </div>
 <div class="card-body">
-    <img src="<?= $organigrama ?? '' ?>" class="w-100" alt="">
+    <?php if (!empty($organigrama)): ?>
+    <img src="<?= $organigrama ?>" class="w-100" alt="">
+<?php else: ?>
+    <div class="alert alert-warning mb-0">Selecciona una estación para ver el organigrama.</div>
+<?php endif; ?>
     </div>
 
     </div>
@@ -204,6 +217,7 @@
 
 </div>
 
+    <?php endif; ?>
 
 </div>
 

@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Sasisopa\ProgramaAuditorias;
 use App\Models\Sasisopa\AuditoriaInterna;
@@ -20,6 +21,28 @@ use Dompdf\Options;
 
 class AuditoriasController extends BaseController{
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
+    private function carpetaAuditorias(): string
+    {
+        $carpeta =
+            __DIR__ . '../../../public/uploads/archivos/auditorias/';
+
+        if (!file_exists($carpeta)) {
+
+            mkdir_safe(
+                $carpeta,
+                true
+            );
+        }
+
+        return $carpeta;
+    }
+
     public function index(){
 
     $title = '15. AUDITORÍAS';
@@ -35,11 +58,13 @@ class AuditoriasController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' =>[
                 
             ],
             'scripts' => [
-                
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -61,20 +86,28 @@ class AuditoriasController extends BaseController{
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $estacion = Estacion::findOrFail($this->estacionId());
-        $this->generarProgramaAuditorias($estacion->fecha_autorizacion,$estacion->id,(int) date('Y'));
+        $estacion = Estacion::find($this->estacionModulo());
+
+        if ($estacion) {
+
+            $this->generarProgramaAuditorias($estacion->fecha_autorizacion, $estacion->id, (int) date('Y'));
+
+        }
 
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-            'apoderado_legal' => $estacion->apoderado_legal,
+            'apoderado_legal' => $estacion?->apoderado_legal,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/auditorias/programa.actions.init.js?v=?v=' . time(),
             ],
             'help' => true
@@ -183,7 +216,7 @@ class AuditoriasController extends BaseController{
         $yearFin    = date('Y', strtotime($fin));
 
         $registros = ProgramaAuditorias::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->whereYear('fecha', '>=', $yearInicio)
             ->whereYear('fecha', '<=', $yearFin)
             ->orderBy('fecha')
@@ -202,11 +235,11 @@ class AuditoriasController extends BaseController{
     public function formatpPdfAuditorias(int $yearInicio, int $yearFin)
     {
         $estacion = Estacion::find(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $auditorias = ProgramaAuditorias::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->whereYear('fecha', '>=', $yearInicio)
             ->whereYear('fecha', '<=', $yearFin)
             ->orderBy('fecha')
@@ -301,7 +334,7 @@ class AuditoriasController extends BaseController{
 
                     <td class="text-center align-middle">
                         Autorizado por:
-                        '.$estacion->apoderado_legal.'
+                        '.($estacion?->apoderado_legal ?? '').'
                     </td>
 
                     <td class="text-center align-middle">
@@ -440,11 +473,16 @@ class AuditoriasController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' =>[
-                
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
+                '/js/auditorias/interna.datatable.init.js?v=' . time(),
                 '/js/auditorias/interna.actions.init.js?v=' . time(),
             ],
             'help' => true
@@ -464,7 +502,7 @@ class AuditoriasController extends BaseController{
         ])
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
         ->orderByDesc('id')
         ->get();
@@ -522,6 +560,7 @@ class AuditoriasController extends BaseController{
 
         echo json_encode([
             'success' => true,
+            'permisos' => ModuloService::permisosSesion($this->modulo),
             'data' => $data
         ]);
 
@@ -546,8 +585,20 @@ class AuditoriasController extends BaseController{
 
             }
 
+            $estacion = $this->estacionModulo();
+
+            if (!$estacion) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona una estación para continuar'
+                ]);
+
+                exit;
+            }
+
             $registro = AuditoriaInterna::create([
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $estacion,
                 'id_usuario'  => $this->userId(),
                 'auditor'     => $auditor
             ]);
@@ -585,7 +636,13 @@ class AuditoriasController extends BaseController{
             $auditoria = AuditoriaInterna::with([
                 'formatos',
                 'anexos'
-            ])->find($id);
+            ])
+            ->where('id', $id)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+            )
+            ->first();
 
             if (!$auditoria) {
 
@@ -656,7 +713,7 @@ class AuditoriasController extends BaseController{
                 time()
             );
 
-            $rutaFisica = __DIR__ . '../../../public/uploads/archivos/auditorias/' . $nombre;
+            $rutaFisica = $this->carpetaAuditorias() . $nombre;
         
             if (!move_uploaded_file(
                 $archivo['tmp_name'],
@@ -732,7 +789,7 @@ class AuditoriasController extends BaseController{
                 time()
             );
 
-            $rutaFisica = __DIR__ . '../../../public/uploads/archivos/auditorias/' . $nombre;
+            $rutaFisica = $this->carpetaAuditorias() . $nombre;
         
             if (!move_uploaded_file(
                 $archivo['tmp_name'],
@@ -869,8 +926,7 @@ class AuditoriasController extends BaseController{
             );
 
             $rutaFisica =
-                __DIR__ .
-                '../../../public/uploads/archivos/auditorias/' .
+                $this->carpetaAuditorias() .
                 $nombre;
 
             if (!move_uploaded_file(
@@ -936,11 +992,16 @@ class AuditoriasController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' =>[
-                
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
+                '/js/auditorias/externa.datatable.init.js?v=' . time(),
                 '/js/auditorias/externa.actions.init.js?v=' . time(),
             ],
             'help' => true
@@ -960,7 +1021,7 @@ class AuditoriasController extends BaseController{
         ])
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
         ->orderByDesc('id')
         ->get();
@@ -1009,6 +1070,7 @@ class AuditoriasController extends BaseController{
 
         echo json_encode([
             'success' => true,
+            'permisos' => ModuloService::permisosSesion($this->modulo),
             'data' => $data
         ]);
 
@@ -1023,6 +1085,7 @@ class AuditoriasController extends BaseController{
         try {
 
             $auditor = trim($data['auditor'] ?? '');
+            $organismo = trim($data['organismo'] ?? $auditor);
 
             if ($auditor === '') {
 
@@ -1033,10 +1096,23 @@ class AuditoriasController extends BaseController{
 
             }
 
+$estacion = $this->estacionModulo();
+
+            if (!$estacion) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona una estación para continuar'
+                ]);
+
+                exit;
+            }
+
             $registro = AuditoriaExterna::create([
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $estacion,
                 'id_usuario'  => $this->userId(),
-                'prestador_servicio'     => $auditor
+                'prestador_servicio' => $organismo,
+                'auditor'     => $auditor
             ]);
 
             echo json_encode([
@@ -1072,7 +1148,13 @@ class AuditoriasController extends BaseController{
             $auditoria = AuditoriaExterna::with([
                 'formatos',
                 'asea'
-            ])->find($id);
+            ])
+            ->where('id', $id)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+            )
+            ->first();
 
             if (!$auditoria) {
 
@@ -1144,7 +1226,7 @@ class AuditoriasController extends BaseController{
                 time()
             );
 
-            $rutaFisica = __DIR__ . '../../../public/uploads/archivos/auditorias/' . $nombre;
+            $rutaFisica = $this->carpetaAuditorias() . $nombre;
         
             if (!move_uploaded_file(
                 $archivo['tmp_name'],
@@ -1220,7 +1302,7 @@ class AuditoriasController extends BaseController{
                 time()
             );
 
-            $rutaFisica = __DIR__ . '../../../public/uploads/archivos/auditorias/' . $nombre;
+            $rutaFisica = $this->carpetaAuditorias() . $nombre;
         
             if (!move_uploaded_file(
                 $archivo['tmp_name'],
@@ -1359,8 +1441,7 @@ class AuditoriasController extends BaseController{
             );
 
             $rutaFisica =
-                __DIR__ .
-                '../../../public/uploads/archivos/auditorias/' .
+                $this->carpetaAuditorias() .
                 $nombre;
 
             if (!move_uploaded_file(

@@ -5,6 +5,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\DisenoConstruccion;
 use App\Models\Sasisopa\OperacionMantenimiento;
 use Dompdf\Dompdf;
@@ -13,6 +14,11 @@ use Dompdf\Options;
 class MejoresPracticasEstandaresController extends BaseController{
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
 
@@ -24,10 +30,14 @@ class MejoresPracticasEstandaresController extends BaseController{
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
@@ -35,6 +45,7 @@ class MejoresPracticasEstandaresController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/mejorespracticas/disenoconstruccion.datatable.init.js?v=' . time(),
                 '/js/mejorespracticas/operacionmantenimiento.datatable.init.js?v=' . time(),
@@ -51,7 +62,7 @@ class MejoresPracticasEstandaresController extends BaseController{
     {
 
         $data = DisenoConstruccion::where(function ($query) {
-            $query->where('estado', $this->estacionId())
+            $query->where('estado', $this->estacionModulo())
                   ->orWhere('estado', 0);
         })
         ->select(['id', 'valor1', 'valor2'])
@@ -94,7 +105,7 @@ class MejoresPracticasEstandaresController extends BaseController{
         DisenoConstruccion::create([
             'valor1' => $codigo,
             'valor2' => $area,
-            'estado' => $this->estacionId()
+            'estado' => $this->estacionModulo()
         ]);
 
         echo json_encode([
@@ -122,7 +133,7 @@ class MejoresPracticasEstandaresController extends BaseController{
 
         $registro = DisenoConstruccion::where(
             'estado',
-            $this->estacionId()
+            $this->estacionModulo()
         )->find($data['id']);
 
         if(!$registro){
@@ -154,7 +165,7 @@ class MejoresPracticasEstandaresController extends BaseController{
 
     public function pdfDisenoConstruccion(){
 
-    $idEstacion = $this->estacionId();
+    $idEstacion = $this->estacionModulo();
 
     $registro = Estacion::find($idEstacion);
 
@@ -165,7 +176,7 @@ class MejoresPracticasEstandaresController extends BaseController{
    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
    $disenos = DisenoConstruccion::where(function ($query) {
-            $query->where('estado', $this->estacionId())
+            $query->where('estado', $this->estacionModulo())
                   ->orWhere('estado', 0);
         })
         ->select(['id', 'valor1', 'valor2'])
@@ -254,7 +265,7 @@ class MejoresPracticasEstandaresController extends BaseController{
     public function datatableOperacionMantenimiento(){
 
      $data = OperacionMantenimiento::where(function ($query) {
-            $query->where('estado', $this->estacionId())
+            $query->where('estado', $this->estacionModulo())
                   ->orWhere('estado', 0);
         })
         ->select(['id','fecha', 'norma', 'nombre', 'link'])
@@ -301,7 +312,7 @@ class MejoresPracticasEstandaresController extends BaseController{
         'norma' => $norma,
         'nombre' => $nombre,
         'link' => $link,
-        'estado'=> $this->estacionId()
+        'estado'=> $this->estacionModulo()
         ]);
 
         echo json_encode([
@@ -328,7 +339,7 @@ class MejoresPracticasEstandaresController extends BaseController{
 
         $registro = OperacionMantenimiento::where(
             'estado',
-            $this->estacionId()
+            $this->estacionModulo()
         )->find($data['id']);
 
         if(!$registro){
@@ -358,7 +369,7 @@ class MejoresPracticasEstandaresController extends BaseController{
 
     }
     public function pdfOperacionMantenimiento(){
-         $idEstacion = $this->estacionId();
+         $idEstacion = $this->estacionModulo();
 
     $registro = Estacion::find($idEstacion);
 
@@ -369,7 +380,7 @@ class MejoresPracticasEstandaresController extends BaseController{
    $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
     $data = OperacionMantenimiento::where(function ($query) {
-            $query->where('estado', $this->estacionId())
+            $query->where('estado', $this->estacionModulo())
                   ->orWhere('estado', 0);
         })
         ->select(['id','fecha', 'norma', 'nombre', 'link'])

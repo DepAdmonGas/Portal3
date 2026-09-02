@@ -311,60 +311,9 @@
             <div class="body-wrapper">
                 <div class="container-fluid">
 
-                    <div class="d-flex align-items-center">
-                        <?php include __DIR__ . '/../partials/_global-badge.php'; ?>
-                    </div>
-
-                    <?php if (empty($moduleStationSelector) && isset($estacionesFiltradas) && ((!empty($estacionesFiltradas) && $multiestacion) || ($esGestoria ?? false))): ?>
-                        <div class="d-flex align-items-center justify-content-between flex-wrap w-100">
-                            <span id="sc-badge" class="badge rounded-pill text-bg-info">
-                                <?= htmlspecialchars($nombreFiltro ?? ($esGestoria ? 'Gestoría' : '')) ?>
-                            </span>
-                            <?php if (!($esGestoria ?? false)): ?>
-                                <div class="ms-auto">
-                                    <select class="form-select form-select-sm"
-                                        id="sc-selector-estacion"
-                                        onchange="cambiarEstacion(this)"
-                                        style="min-width:260px;">
-                                        <option value="all" <?= (!$idEstacion && !$idDepto) ? ' selected' : '' ?>>
-                                            <?= htmlspecialchars($nombreFiltro ?? 'Todas las estaciones y departamentos') ?> (<?= $totalPendientes ?>)
-                                        </option>
-                                        <optgroup label="Estaciones">
-                                            <?php foreach ($estacionesFiltradas as $s):
-                                                $sel = ($s['id'] == $idEstacion && !$idDepto) ? ' selected' : '';
-                                            ?>
-                                                <option value="estacion_<?= $s['id'] ?>" <?= $sel ?>>
-                                                    <?= htmlspecialchars($s['nombre']) ?> (<?= $s['pendientes'] ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </optgroup>
-                                        <optgroup label="Departamentos">
-                                            <?php foreach ($departamentosFiltrados as $d):
-                                                $sel = ($d['id_puesto'] == $idDepto) ? ' selected' : '';
-                                            ?>
-                                                <option value="depto_<?= $d['id_puesto'] ?>" <?= $sel ?>>
-                                                    <?= htmlspecialchars($d['nombre']) ?> (<?= $d['pendientes'] ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </optgroup>
-                                    </select>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <span id="sc-pendientes-data" style="display:none;"><?= $pendientesJson ?? '{}' ?></span>
-                    <?php endif; ?>
+                    <?php include __DIR__ . '/../partials/_global-badge.php'; ?>
 
                     <?= $moduleStationSelector ?? '' ?>
-
-                    <?php
-                    $badgeText = $nombreContexto ?? '';
-                    if (empty($badgeText) && !empty($detalle['estacion_nombre'])) {
-                        $badgeText = $detalle['estacion_nombre'];
-                    }
-                    ?>
-                    <?php if (!empty($badgeText)): ?>
-                        <span id="contextBadge" class="mb-1 badge rounded-pill text-bg-info w-auto"><?= htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') ?></span>
-                    <?php endif; ?>
 
 
                     <h4 class="fw-semibold mt-3"><?= $title; ?></h4>

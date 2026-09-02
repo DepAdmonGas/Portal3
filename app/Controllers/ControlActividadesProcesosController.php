@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Sasisopa\MantenimientoLista;
 use App\Models\Sasisopa\ProgramaAnualMantenimiento;
@@ -19,6 +20,11 @@ class ControlActividadesProcesosController extends BaseController{
 
     protected string $modulo = 'sasisopa';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
     public function index(){
 
      $title = '10. CONTROL DE ACTIVIDADES Y PROCESOS';
@@ -29,16 +35,21 @@ class ControlActividadesProcesosController extends BaseController{
 
          $permisos = ModuloService::permisosSesion($this->modulo);
 
+         $idEstacion = $this->estacionModulo();
+
          $data = [
            'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 
             ],
             'scripts' => [
-                '/js/vendor.min.js'
+                '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -58,9 +69,11 @@ class ControlActividadesProcesosController extends BaseController{
 
          $permisos = ModuloService::permisosSesion($this->modulo);
 
+         $idEstacion = $this->estacionModulo();
+
          $programas = ProgramaAnualMantenimiento::where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
         ->select([
             'id',
@@ -74,6 +87,8 @@ class ControlActividadesProcesosController extends BaseController{
            'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'programas'=> $programas,
              'links' =>[
@@ -81,6 +96,7 @@ class ControlActividadesProcesosController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/controlactividadproceso/programamantenimiento.action.init.js?v=' . time(),
             ],
             'help' => true
@@ -113,7 +129,7 @@ class ControlActividadesProcesosController extends BaseController{
 
             Capsule::beginTransaction();
 
-            $idEstacion = $this->estacionId();
+            $idEstacion = $this->estacionModulo();
 
             $year = date('Y');
 
@@ -403,10 +419,15 @@ class ControlActividadesProcesosController extends BaseController{
 
          $permisos = ModuloService::permisosSesion($this->modulo);
 
+         $idEstacion = $this->estacionModulo();
+
          $data = [
            'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
+            'ocultarSelectorEstacion'=> true,
             'filtro_usuario' => $this->filtro_usuario,
             'idPrograma' => (int)$id,
              'links' =>[
@@ -414,6 +435,7 @@ class ControlActividadesProcesosController extends BaseController{
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/programaanualmantenimiento.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/programaanualmantenimiento.action.init.js?v=' . time(),
@@ -428,7 +450,12 @@ class ControlActividadesProcesosController extends BaseController{
     public function datatableProgramaMantenimiento(int $id)
     {
 
-        $programa = ProgramaAnualMantenimiento::find($id);
+$programa = ProgramaAnualMantenimiento::query()
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $est) => $q->where('id_estacion', $est)
+            )
+            ->find($id);
 
         if (!$programa) {
             echo json_encode([
@@ -476,7 +503,7 @@ class ControlActividadesProcesosController extends BaseController{
                 if ($item->mantenimiento?->periodicidad == 'Semanal') {
                     $fecha =
                         ProgramaMantenimientoService::buscaFechaSemanal(
-                            $this->estacionId(),
+                            $this->estacionModulo(),
                             $item->id_mantenimiento,
                             $year,
                             $index + 1
@@ -637,7 +664,7 @@ class ControlActividadesProcesosController extends BaseController{
                         ->format('Y-m-d');
 
                     $existe = ProgramaAnualMantenimientoCalendario
-                    ::where('id_estacion',$this->estacionId()
+                    ::where('id_estacion',$this->estacionModulo()
                     )
                     ->where('id_mantenimiento',$idMantenimiento
                     )
@@ -649,7 +676,7 @@ class ControlActividadesProcesosController extends BaseController{
 
                         ProgramaAnualMantenimientoCalendario
                         ::create([
-                            'id_estacion' => $this->estacionId(),
+                            'id_estacion' => $this->estacionModulo(),
                             'id_mantenimiento' => $idMantenimiento,
                             'fecha' => $fecha
                         ]);
@@ -911,12 +938,24 @@ class ControlActividadesProcesosController extends BaseController{
 
     public function pdfProgramaMantenimiento(int $id){
 
-    $estacion = Estacion::find($this->estacionId());
-    $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+    $idEstacion = $this->estacionModulo();
+
+    $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
+    $apoderado = htmlspecialchars($estacion?->apoderado_legal ?? '');
 
     $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
-    $programa = ProgramaAnualMantenimiento::find($id);
+    $programa = ProgramaAnualMantenimiento::query()
+        ->when(
+            $this->estacionModulo(),
+            fn ($q, $est) => $q->where('id_estacion', $est)
+        )
+        ->find($id);
+
+    if (!$programa) {
+        exit('El programa no pertenece a la estación seleccionada');
+    }
+
     $year = $programa->year;
 
     $detalles = ProgramaAnualMantenimientoDetalle::with(
@@ -1052,7 +1091,7 @@ class ControlActividadesProcesosController extends BaseController{
                     $fecha =
                         ProgramaMantenimientoService
                         ::buscaFechaSemanal(
-                            $this->estacionId(),
+                            $this->estacionModulo(),
                             $mantenimiento->id,
                             $year,
                             $numeroMes

@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Sasisopa\InvestigacionIncidenteAccidenteNo;
 use App\Models\Sasisopa\InvestigacionIncidenteAccidente;
@@ -17,6 +18,27 @@ class IncidentesAccidentesController extends BaseController
 {
     protected string $modulo = 'sasisopa';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
+    private function carpetaIncidentes(): string
+    {
+        $carpeta =
+            __DIR__ . '../../../public/uploads/archivos/incidentes-accidentes/';
+
+        if (!file_exists($carpeta)) {
+
+            mkdir_safe(
+                $carpeta,
+                true
+            );
+        }
+
+        return $carpeta;
+    }
+
     public function index(){
 
         $title = '16. INVESTIGACIÓN DE INCIDENTES Y ACCIDENTES';
@@ -26,7 +48,7 @@ class IncidentesAccidentesController extends BaseController
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
-        $estacion = Estacion::find($this->estacionId()); 
+        $estacion = Estacion::find($this->estacionModulo()); 
 
          $data = [
             'title' => $title,
@@ -34,11 +56,14 @@ class IncidentesAccidentesController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacion' => $estacion,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/incidentesaccidentes/index.actions.init.js?v=' . time(),
             ],
             'help' => true
@@ -66,7 +91,7 @@ class IncidentesAccidentesController extends BaseController
             ])
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->orderByDesc('id')
             ->get();
@@ -186,14 +211,26 @@ class IncidentesAccidentesController extends BaseController
                 true
             );
 
+            $estacionId = $this->estacionModulo();
+
+            if (!$estacionId) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona una estación para continuar'
+                ]);
+
+                exit;
+            }
+
             Capsule::transaction(
-                function () use ($data) {
+                function () use ($data, $estacionId) {
 
                     $investigacion =
                         InvestigacionIncidenteAccidente::create([
 
                             'id_estacion' =>
-                                $this->estacionId(),
+                                $estacionId,
 
                             'id_usuario' =>
                                 $this->userId(),
@@ -288,7 +325,13 @@ class IncidentesAccidentesController extends BaseController
             'formatos',
             'grupos',
             'terceroAutorizado'
-        ])->find($id);
+        ])
+        ->where('id', $id)
+        ->when(
+            $this->estacionModulo(),
+            fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+        )
+        ->first();
 
         if (!$registro) {
 
@@ -447,7 +490,7 @@ class IncidentesAccidentesController extends BaseController
                 time()
             );
 
-            $rutaFisica = __DIR__ . '../../../public/uploads/archivos/incidentes-accidentes/' . $nombre;
+            $rutaFisica = $this->carpetaIncidentes() . $nombre;
         
             if (!move_uploaded_file(
                 $archivo['tmp_name'],
@@ -494,7 +537,29 @@ class IncidentesAccidentesController extends BaseController
         try {
 
             $id = (int) ($_POST['id'] ?? 0);
-            $registro = InvestigacionIncidenteAccidenteTercerautorizado::findOrFail($id);
+
+            $registro = InvestigacionIncidenteAccidenteTercerautorizado::query()
+                ->where('id', $id)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->whereIn(
+                        'id_investigacion',
+                        InvestigacionIncidenteAccidente::query()
+                            ->where('id_estacion', $estacionId)
+                            ->select('id')
+                    )
+                )
+                ->first();
+
+            if (!$registro) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Registro no encontrado'
+                ]);
+
+                exit;
+            }
 
             if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
                 echo json_encode([
@@ -524,7 +589,7 @@ class IncidentesAccidentesController extends BaseController
                 time()
             );
 
-            $rutaFisica = __DIR__ . '../../../public/uploads/archivos/incidentes-accidentes/' . $nombre;
+            $rutaFisica = $this->carpetaIncidentes() . $nombre;
         
             if (!move_uploaded_file(
                 $archivo['tmp_name'],
@@ -575,7 +640,7 @@ class IncidentesAccidentesController extends BaseController
             ])
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->when(
                 !empty($inicio) && !empty($fin),
@@ -874,7 +939,7 @@ $html .= '
             $registros = InvestigacionIncidenteAccidenteNo::with([
                 'usuario:id,nombre'
             ])
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->orderByDesc('id')
             ->get();
 
@@ -943,11 +1008,23 @@ $html .= '
                 exit;
             }
 
+            $estacionId = $this->estacionModulo();
+
+            if (!$estacionId) {
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona una estación para continuar'
+                ]);
+
+                exit;
+            }
+
             $registro =
                 InvestigacionIncidenteAccidenteNo::create([
 
                     'id_estacion' =>
-                        $this->estacionId(),
+                        $estacionId,
 
                     'id_usuario' =>
                         $this->userId(),
@@ -1013,7 +1090,13 @@ $html .= '
             }
 
             $registro =
-                InvestigacionIncidenteAccidenteNo::find($id);
+                InvestigacionIncidenteAccidenteNo::query()
+                    ->where('id', $id)
+                    ->when(
+                        $this->estacionModulo(),
+                        fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+                    )
+                    ->first();
 
             if (!$registro) {
 
@@ -1052,7 +1135,13 @@ $html .= '
         $registro = InvestigacionIncidenteAccidenteNo::with([
         'usuario.puesto',
         'estacion'
-        ])->findOrFail($id);
+        ])
+        ->where('id', $id)
+        ->when(
+            $this->estacionModulo(),
+            fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+        )
+        ->firstOrFail();
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
         $usuario = $registro->usuario;
@@ -1192,7 +1281,13 @@ $html .= '
 
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'),true);
-        $accidentes = InvestigacionIncidenteAccidenteNo::find($data['id']);
+        $accidentes = InvestigacionIncidenteAccidenteNo::query()
+            ->where('id', $data['id'] ?? 0)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+            )
+            ->first();
 
         if (!$accidentes) {
 

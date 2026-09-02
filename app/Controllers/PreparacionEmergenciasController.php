@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\TelefonosEmergencias;
 use App\Models\Sasisopa\ProtocoloEmergencias;
 use App\Models\Sasisopa\ProtocoloEmergenciasAnexo;
@@ -17,6 +18,12 @@ use Dompdf\Options;
 
 class PreparacionEmergenciasController extends BaseController{
 protected string $modulo = 'sasisopa';
+
+private function estacionModulo(): ?int
+{
+    return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+}
+
 public function index(){
 
  $title = '13. PREPARACIÓN Y RESPUESTA A EMERGENCIAS';
@@ -32,6 +39,8 @@ public function index(){
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
@@ -39,6 +48,7 @@ public function index(){
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
                 '/js/preparacionemergencias/index.datatable.init.js?v=' . time(),
@@ -61,7 +71,7 @@ public function protocoloGet()
         $protocolos =
             ProtocoloEmergencias::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->orderByDesc('fechacreacion')
             ->get()
@@ -142,7 +152,7 @@ public function protocoloCreate()
 
             $nombre =
                 'PROTOCOLO-'
-                .$this->estacionId()
+                .$this->estacionModulo()
                 .'-'
                 .time()
                 .'.pdf';
@@ -160,7 +170,7 @@ public function protocoloCreate()
         ProtocoloEmergencias::create([
 
             'id_estacion' =>
-                $this->estacionId(),
+                $this->estacionModulo(),
 
             'fechacreacion' =>
                 $fecha,
@@ -195,7 +205,12 @@ public function protocoloUpdate()
             (int)($_POST['id'] ?? 0);
 
         $registro =
-            ProtocoloEmergencias::find($id);
+            ProtocoloEmergencias::where('id', $id)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacion) => $q->where('id_estacion', $estacion)
+            )
+            ->first();
 
         if(!$registro){
 
@@ -273,7 +288,12 @@ public function protocoloDelete()
             (int)($data['id'] ?? 0);
 
         $protocolo =
-            ProtocoloEmergencias::find($id);
+            ProtocoloEmergencias::where('id', $id)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacion) => $q->where('id_estacion', $estacion)
+            )
+            ->first();
 
         if(!$protocolo){
 
@@ -501,7 +521,7 @@ public function telefonosGet()
 
         $telefonos = TelefonosEmergencias::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->orderBy('prioridad', 'desc')
             ->get();
@@ -558,7 +578,7 @@ public function telefonosCreate()
 
         TelefonosEmergencias::create([
 
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
 
             'titulo' => $titulo,
 
@@ -597,7 +617,12 @@ public function telefonosUpdate()
 
         $id = (int)($data['id'] ?? 0);
 
-        $registro = TelefonosEmergencias::find($id);
+        $registro = TelefonosEmergencias::where('id', $id)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacion) => $q->where('id_estacion', $estacion)
+            )
+            ->first();
 
         if (!$registro) {
 
@@ -650,9 +675,12 @@ public function telefonosDelete()
             true
         );
 
-        $registro = TelefonosEmergencias::find(
-            $data['id'] ?? 0
-        );
+        $registro = TelefonosEmergencias::where('id', $data['id'] ?? 0)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacion) => $q->where('id_estacion', $estacion)
+            )
+            ->first();
 
         if (!$registro) {
 
@@ -694,7 +722,7 @@ public function simulacroDatatable(){
         $data =
             ProgramaAnualSimulacros::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
              ->when(
             $year,
@@ -820,7 +848,7 @@ public function simulacroCreate()
         ProgramaAnualSimulacros::create([
 
             'id_estacion' =>
-                $this->estacionId(),
+                $this->estacionModulo(),
 
             'nombre_simulacro' =>
                 $nombre,
@@ -864,7 +892,12 @@ public function simulacroUpdate()
             (int)($data['id'] ?? 0);
 
         $registro =
-            ProgramaAnualSimulacros::find($id);
+            ProgramaAnualSimulacros::where('id', $id)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacion) => $q->where('id_estacion', $estacion)
+            )
+            ->first();
 
         if (!$registro) {
 
@@ -914,7 +947,12 @@ public function simulacroDelete()
     try {
 
         $data = json_decode(file_get_contents('php://input'),true);
-        $registro = ProgramaAnualSimulacros::find((int)$data['id']);
+        $registro = ProgramaAnualSimulacros::where('id', (int)($data['id'] ?? 0))
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacion) => $q->where('id_estacion', $estacion)
+            )
+            ->first();
 
         if (!$registro) {
 
@@ -962,7 +1000,7 @@ public function personalUsuarios($idPrograma)
         $usuarios =
             Usuario::where(
                 'id_gas',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->where(
                 'estatus',
@@ -1354,7 +1392,7 @@ public function simulacroPdf(){
     'fin'    => $fin
     ] = $this->filtros();
 
-    $estacion = Estacion::find($this->estacionId());
+    $estacion = Estacion::find($this->estacionModulo());
     $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
     $simulacros = ProgramaAnualSimulacros::with([
@@ -1363,7 +1401,7 @@ public function simulacroPdf(){
     ])
     ->where(
         'id_estacion',
-        $this->estacionId()
+        $this->estacionModulo()
     )
 
     ->when(
@@ -1601,7 +1639,7 @@ public function simulacroPdf(){
 
                 Autorizado por:<br>
                 ' . e(
-                    $estacion->apoderado_legal
+                    $estacion?->apoderado_legal ?? ''
                 ) . '
 
             </td>

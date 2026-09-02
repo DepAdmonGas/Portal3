@@ -21,12 +21,8 @@ class CalendarioService
     public static function sasisopa(): int
     {
         $categoria = 'SASISOPA';
-        $usuario = Session::get('usuario');
-        if (!$usuario) {
-            return 0;
-        }
 
-        $idEstacion = $usuario['id_estacion'];
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
         if (!$idEstacion) {
             return 0;
         }
@@ -53,12 +49,8 @@ class CalendarioService
     {
 
         $categoria = 'SGM';
-        $usuario = Session::get('usuario');
-        if (!$usuario) {
-            return 0;
-        }
 
-        $idEstacion = $usuario['id_estacion'];
+        $idEstacion = ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
         if (!$idEstacion) {
             return 0;
         }

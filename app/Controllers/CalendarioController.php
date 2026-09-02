@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\CalendarioActividad;
 use App\Models\Sasisopa\CursoCalendario;
 
@@ -36,6 +37,16 @@ class CalendarioController extends BaseController
 {
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
+    private function estacionModuloSgm(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
 
     private const CRITERIOS_POLITICA = [
         'La política es adecuada a la naturaleza magnitud y actividades del proyecto',
@@ -119,11 +130,13 @@ class CalendarioController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
-
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sasisopa/calendar-init.js?v=1.0.2'
 
             ]
@@ -148,10 +161,13 @@ class CalendarioController extends BaseController
             'permisos' => $permisos,
             'modulo' => 'sgm',
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModuloSgm(),
+            'moduleStationKey' => 'sgm',
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sasisopa/calendar-init.js?v=1.0.1'
 
             ]
@@ -184,7 +200,9 @@ class CalendarioController extends BaseController
         $inicio = date('Y-m-d', strtotime($inicio));
         $fin    = date('Y-m-d', strtotime($fin));
 
-        $idEstacion = $this->estacionId();
+        $idEstacion = ($modulo == 'SASISOPA')
+            ? $this->estacionModulo()
+            : $this->estacionModuloSgm();
 
         if ($modulo == 'SASISOPA') {
 
@@ -294,7 +312,9 @@ class CalendarioController extends BaseController
             exit;
         }
 
-        $idEstacion = $this->estacionId();
+        $idEstacion = ($modulo == 'SASISOPA')
+            ? $this->estacionModulo()
+            : $this->estacionModuloSgm();
 
         if ($modulo == 'SASISOPA') {
 
@@ -628,7 +648,7 @@ class CalendarioController extends BaseController
     {
 
         CapacitacionExterna::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'id_usuario' => $this->userId(),
             'curso' => '',
             'fecha_programada' => $actividad->fecha_inicio,
@@ -654,7 +674,7 @@ class CalendarioController extends BaseController
     ): string {
 
         ComunicacionIE::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'no_comunicacion' => $this->folioRASCIE(),
             'fecha' => $actividad->fecha_inicio,
             'tema' => 'Bitácoras con el registro de la atención y el seguimiento a la comunicación interna y externa.',
@@ -682,7 +702,7 @@ class CalendarioController extends BaseController
     private function folioRASCIE(): int
     {
         $ultimoFolio = ComunicacionIE::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->max('no_comunicacion');
 
         return $ultimoFolio ? $ultimoFolio + 1 : 1;
@@ -693,7 +713,7 @@ class CalendarioController extends BaseController
     ): string {
 
         ProgramaAnualSimulacros::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'nombre_simulacro' => '',
             'periodicidad' => 'Trimestral',
             'fecha' => $actividad->fecha_inicio,
@@ -715,7 +735,7 @@ class CalendarioController extends BaseController
     ): string {
 
         ProtocoloEmergencias::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'fechacreacion' => $actividad->fecha_inicio,
             'archivo' => '',
         ]);
@@ -736,7 +756,7 @@ class CalendarioController extends BaseController
     ): string {
 
         AtencionHallazgo::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'folio' => $this->folioAH(),
             'fecha_auditoria' => $actividad->fecha_inicio,
             'no_control' => '',
@@ -758,7 +778,7 @@ class CalendarioController extends BaseController
     {
         return (
             AtencionHallazgo::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->max('folio') ?? 0
         ) + 1;
     }
@@ -768,7 +788,7 @@ class CalendarioController extends BaseController
     ): string {
 
         RevisionResultados::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'id_usuario' => $this->userId(),
             'fecha_hora' => $actividad->fecha_inicio . ' ' . date('H:i:s'),
             'archivo' => '',
@@ -790,7 +810,7 @@ class CalendarioController extends BaseController
     ): string {
 
         EvaluacionDesempeno::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'id_usuario' => $this->userId(),
             'fecha_hora' => $actividad->fecha_inicio . ' ' . date('H:i:s'),
             'archivo' => '',
@@ -815,7 +835,7 @@ class CalendarioController extends BaseController
         Capsule::transaction(function () use ($actividad) {
 
             $reporte = ImplementacionSasisopa::create([
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $this->estacionModulo(),
                 'id_usuario' => $this->userId(),
                 'fecha_hora' => $actividad->fecha_inicio . ' ' . date('H:i:s'),
             ]);
@@ -937,7 +957,7 @@ class CalendarioController extends BaseController
             ->get();
 
         $existentes = SasisopaEstacionActividad::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->pluck('id_actividad')
             ->toArray();
 
@@ -1031,7 +1051,7 @@ class CalendarioController extends BaseController
     private function registrarActividadEstacion(int $actividad): void
     {
         SasisopaEstacionActividad::firstOrCreate([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'id_actividad' => $actividad
         ]);
     }
@@ -1043,7 +1063,7 @@ class CalendarioController extends BaseController
 
         CalendarioActividad::create([
 
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
 
             'id_actividad' => $actividad,
 
@@ -1064,7 +1084,7 @@ class CalendarioController extends BaseController
 
         return CalendarioActividad::query()
 
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
 
             ->where('id_actividad', $actividad)
 

@@ -41,62 +41,62 @@
             </div>
 
             <div class="list-group border-0">
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    @click.prevent="irSasisopa()">
                     <i class="ti ti-currency-solana fs-4 me-2"></i>
                     SASISOPA
                 </a>
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    @click.prevent="irConsultaSasisopa()">
                     <i class="ti ti-list-search fs-4 me-2"></i>
                     Consulta tu SASISOPA
                 </a>
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="/gestoria/bitacora">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    @click.prevent="irConfiguracionBitacora()">
                     <i class="ti ti-currency-solana fs-4 me-2"></i>
-                    Bitácoras
+                    Configuración Bitácoras
                 </a>
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    :href="'/gestoria/analisis-riesgo/' + estacionId">
                     <i class="ti ti-prison fs-4 me-2"></i>
                     Análisis de Riesgo
                 </a>
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    @click.prevent="irRequisitosLegales()">
                     <i class="ti ti-certificate fs-4 me-2"></i>
                     Requisitos Legales
                 </a>
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    :href="'/gestoria/reporte-cre/' + estacionId">
                     <i class="ti ti-report-analytics fs-4 me-2"></i>
                     Reporte de la CRE
                 </a>
                 <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                    :href="'/gestoria/cambio-precio/' + estacionId">
                     <i class="ti ti-report-money fs-4 me-2"></i>
                     Cambio de Precio
                 </a>
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    @click.prevent="irProgramaAnual()">
                     <i class="ti ti-calendar-week fs-4 me-2"></i>
                     Programa de Mantenimiento
                 </a>
 
                 <hr>
 
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    @click.prevent="irSGM()">
                     <i class="ti ti-currency-solana fs-4 me-2"></i>
                     SGM
                 </a>
 
                 <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                    :href="'/gestoria/calibracion-tanques/' + estacionId">
                     <i class="ti ti-cylinder fs-4 me-2"></i>
                     Calibración de Tanques
                 </a>
                 <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                    :href="'/gestoria/control-documental-sgm/' + estacionId">
                     <i class="ti ti-file-zip fs-4 me-2"></i>
                     SGM (Documentos)
                 </a>
@@ -111,8 +111,8 @@
 
                 <hr>
 
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    @click.prevent="irPersonal()">
                     <i class="ti ti-users fs-4 me-2"></i>
                     Personal
                 </a>

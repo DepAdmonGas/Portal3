@@ -8,6 +8,7 @@ use App\Models\Estacion;
 use App\Models\Sasisopa\PoliticaListaComprobacion;
 use App\Models\Sasisopa\PoliticaListaComprobacionDetalle;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -22,15 +23,23 @@ class PoliticaController extends BaseController
         // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $moduleCtx = ModuleStationService::getContext('sasisopa');
+        $idEstacion = $moduleCtx['id_estacion'];
+
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
+
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
 
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'estacion' => $estacion,
             'filtro_usuario' => $this->filtro_usuario,
+            'moduleStationKey' => 'sasisopa',
              'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'
@@ -40,6 +49,7 @@ class PoliticaController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sasisopa/politica.datatable.init.js?v=' . time(),
                 '/js/sasisopa/politica.actions.init.js?v=' . time(),
                 '/js/sasisopa/listacomprobacion.actions.init.js?v=' . time(),
@@ -70,7 +80,8 @@ class PoliticaController extends BaseController
             return;
         }
 
-        $registro = Estacion::find($this->estacionId());
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
+        $registro = Estacion::find($idEstacion);
 
         if (!$registro) {
             echo json_encode([
@@ -95,7 +106,8 @@ class PoliticaController extends BaseController
 
     public function descargarPolitica()
     {
-        $registro = Estacion::find($this->estacionId());
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
+        $registro = Estacion::find($idEstacion);
 
         if (!$registro) {
             echo "No se encontró la información";
@@ -164,7 +176,8 @@ class PoliticaController extends BaseController
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar   = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $data = PoliticaListaComprobacion::where('id_estacion', $this->estacionId())
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
+        $data = PoliticaListaComprobacion::where('id_estacion', $idEstacion)
         ->orderBy('fecha','desc')
         ->get();
 
@@ -207,8 +220,9 @@ class PoliticaController extends BaseController
         try {
 
             // CREAR LISTA
+            $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
             $lista = PoliticaListaComprobacion::create([
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $idEstacion,
                 'id_usuario'  => $this->userId(),
                 'fecha'       => $fecha,
                 'asistentes'  => $data['asistentes'] ?? '',
@@ -341,8 +355,9 @@ class PoliticaController extends BaseController
     {
         header('Content-Type: application/json; charset=utf-8');
 
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
         $lista = PoliticaListaComprobacion::with('detalles')
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $idEstacion)
             ->find($id);
 
         if (!$lista) {
@@ -446,7 +461,8 @@ class PoliticaController extends BaseController
     {
         header('Content-Type: application/pdf');
 
-        $estacion = Estacion::find($this->estacionId());
+        $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
+        $estacion = Estacion::find($idEstacion);
         $reporte  = PoliticaListaComprobacion::find($id);
 
         if (!$reporte) {

@@ -4,11 +4,17 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\MantenimientoQuincenal;
 
 class BitacoraMantenimientoController extends BaseController{
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
         public function index()
     {
@@ -27,10 +33,13 @@ class BitacoraMantenimientoController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' => [
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
 
             ],
 
@@ -53,15 +62,15 @@ class BitacoraMantenimientoController extends BaseController{
 
         $permisos = ModuloService::permisosSesion($this->modulo);
         $carpeta = '';
-        if ($this->estacionId() == 1) {
+        if ($this->estacionModulo() == 1) {
         $carpeta = "interlomas";
-        }else if ($this->estacionId() == 2) {
+        }else if ($this->estacionModulo() == 2) {
         $carpeta = "palosolo";
-        }else if ($this->estacionId() == 4) {
+        }else if ($this->estacionModulo() == 4) {
         $carpeta = "gasomira";
-        }else if ($this->estacionId() == 5) {
+        }else if ($this->estacionModulo() == 5) {
         $carpeta = "valleguadalupe";
-        }else if ($this->estacionId() == 6) {
+        }else if ($this->estacionModulo() == 6) {
         $carpeta = "esmegas";
         }
 
@@ -72,6 +81,8 @@ class BitacoraMantenimientoController extends BaseController{
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'carpeta' => $carpeta,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' => [
                  '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
@@ -80,6 +91,7 @@ class BitacoraMantenimientoController extends BaseController{
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/mantenimientoquincenal.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/mantenimientoquincenal.action.init.js?v=' . time(),
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
 
             'help' => false
@@ -94,7 +106,7 @@ class BitacoraMantenimientoController extends BaseController{
 
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
 
         ->orderBy('fechacreacion', 'desc')
@@ -171,7 +183,7 @@ public function create()
             );
         }
 
-        $folio = $this->folioMantenimientoQuincenal($this->estacionId(),$fecha);
+        $folio = $this->folioMantenimientoQuincenal($this->estacionModulo(),$fecha);
 
         $carpetaFisica = __DIR__ . '../../../public/uploads/archivos/mantenimiento-quincenal/';
 
@@ -185,7 +197,7 @@ public function create()
 
         $registro = [
 
-            'id_estacion'   => $this->estacionId(),
+            'id_estacion'   => $this->estacionModulo(),
             'id_empleado'   => $this->userId(),
             'fechacreacion' => $fecha,
             'folio'         => $folio,
@@ -229,7 +241,7 @@ public function create()
 
             $nombreArchivo = sprintf(
                 'MQ%d-F%d-%d.pdf',
-                $this->estacionId(),
+                $this->estacionModulo(),
                 $i,
                 $timestamp
             );
@@ -379,7 +391,7 @@ public function update()
 
             $nombreArchivo = sprintf(
                     'MQ%d-F%d-%d.pdf',
-                    $this->estacionId(),
+                    $this->estacionModulo(),
                     $i,
                     $timestamp
                 );

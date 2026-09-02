@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Usuario;
 use App\Models\Sasisopa\CursoModulo;
@@ -15,6 +16,12 @@ class CapacitacionInternaController extends BaseController
 {
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
     public function index(){
 
         $title = 'Programa de capacitación interna';
@@ -30,15 +37,20 @@ class CapacitacionInternaController extends BaseController
         ->orderBy('num_modulo', 'asc')
         ->get();
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'cursos' => $cursos,
              'links' =>[],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/capacitacioninterna/capacitacioninterna.actions.init.js',
             ],
             'help' => false
@@ -64,10 +76,14 @@ class CapacitacionInternaController extends BaseController
         Breadcrumb::add('Capacitación Interna', '/sasisopa/competencia-personal-capacitacion-entrenamiento/capacitacion-interna');
         Breadcrumb::add($title, '');
 
+         $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'idModulo' => $idModulo,
             'nom_modulo' => $modulo->titulo,
@@ -80,6 +96,7 @@ class CapacitacionInternaController extends BaseController
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/capacitacioninterna/capacitacioninterna.datatable.init.js?v=' . time(),
                 '/js/capacitacioninterna/capacitacioninterna.actions.init.js?v=' . time(),
@@ -107,7 +124,7 @@ class CapacitacionInternaController extends BaseController
               ->limit(1);
             }
         ])
-        ->where('id_gas', $this->estacionId())
+        ->where('id_gas', $this->estacionModulo())
         ->where('id_puesto', '!=', 1)
         ->activo()
         ->get();
@@ -187,7 +204,7 @@ class CapacitacionInternaController extends BaseController
     CursoCalendario::create([
         'fecha_programada' => $fecha_programada,
         'fecha_real' => '',
-        'id_estacion' => $this->estacionId(),
+        'id_estacion' => $this->estacionModulo(),
         'id_personal' => $id_usuario,
         'id_tema' => $id_tema,
         'resultado' => 0,
@@ -218,7 +235,9 @@ class CapacitacionInternaController extends BaseController
 
         try {
 
-            CursoCalendario::where('id', $data['id'])->delete();
+            CursoCalendario::where('id', $data['id'])
+                ->where('id_estacion', $this->estacionModulo())
+                ->delete();
 
             echo json_encode([
                 'success' => true,
@@ -236,7 +255,7 @@ class CapacitacionInternaController extends BaseController
 
     public function buscarCapacitacionInterna(int $year)
     {
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
 
         $modulos = CursoModulo::whereHas('temas.calendarios', function ($q) use ($year, $idEstacion) {
             $q->whereYear('fecha_programada', $year)
@@ -431,7 +450,7 @@ public function reconocimiento($c){
 
 public function descargarCapacitacionInterna(int $year, int $idModulo)
 {
-    $idEstacion = $this->estacionId();
+    $idEstacion = $this->estacionModulo();
 
     $registro = Estacion::find($idEstacion);
 

@@ -1,6 +1,17 @@
 <div id="container" class="pb-4"
+data-module-station-key="sasisopa"
+data-estacion-id="<?= e($estacionId ?? '') ?>"
 x-data="calibracionVerificacion()">
 
+
+<?php if (empty($estacionId)): ?>
+ 
+    <div id="sasisopa-empty-message"
+         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+    </div>
+
+<?php else: ?>
 
     <div class="row">
     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mt-3">
@@ -244,5 +255,6 @@ x-data="calibracionVerificacion()">
 
 
     
+<?php endif; ?>
 
 </div>

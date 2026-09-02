@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\ResiduoPeligroso;
 use App\Models\Estacion;
 use Carbon\Carbon;
@@ -12,6 +13,11 @@ use Dompdf\Options;
 class BitacoraResiduosController extends BaseController
 {
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index()
     {
@@ -30,6 +36,8 @@ class BitacoraResiduosController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
@@ -38,6 +46,7 @@ class BitacoraResiduosController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/bitacoraresiduos.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/bitacoraresiduos.action.init.js?v=' . time(),
+                '/js/core/module-station-selector.js?v=' . time(),
 
             ],
 
@@ -56,7 +65,7 @@ class BitacoraResiduosController extends BaseController
 
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
 
         ->where(
@@ -140,7 +149,7 @@ public function pdf()
     ] = $this->filtros();
 
     $estacion = Estacion::find(
-        $this->estacionId()
+        $this->estacionModulo()
     );
 
     if (!$estacion) {
@@ -153,7 +162,7 @@ public function pdf()
 
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
 
         ->when(

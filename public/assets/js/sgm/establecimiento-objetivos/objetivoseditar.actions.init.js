@@ -21,6 +21,10 @@ document.addEventListener('alpine:init', () => {
 
 async cargar() {
 
+    if (!document.getElementById('sgm-content')) {
+        return;
+    }
+
     const { data } = await axios.get(
         '/sgm/establecimiento-objetivos-enfocados-cliente/objetivo-cliente/detalle'
     );

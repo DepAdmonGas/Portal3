@@ -9,10 +9,16 @@ use App\Models\Sgm\CalibracionEquipo;
 use App\Models\Sgm\CalibracionEquipoDetalle;
 use App\Models\Sgm\CalibracionEquipoJarra;
 use App\Services\CalibracionEquipoService;
+use App\Services\ModuleStationService;
 
 class CalibracionJarraPatronController extends BaseController
 {
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(int $id)
     {
@@ -34,6 +40,10 @@ class CalibracionJarraPatronController extends BaseController
         $permisos = ModuloService::permisosSesion($this->modulo);
 
         $calibracion = CalibracionEquipo::query()
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $est) => $q->where('id_estacion', $est)
+            )
             ->with([
                 'detalles',
                 'jarras.jarra'
@@ -131,14 +141,17 @@ class CalibracionJarraPatronController extends BaseController
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
-
+'ocultarSelectorEstacion'=> true,
             'calibracion' => $calibracion,
 
             'links' => [],
 
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/controlactividadproceso/calibracionjarrapatron.init.js?v=' . time(),
             ],
 

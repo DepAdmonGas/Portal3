@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 
 use App\Models\Estacion;
 use App\Models\Usuario;
@@ -21,6 +22,11 @@ class SgmCapacitacionInternaController extends BaseController
 
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
         $title = 'Programa Capacitacion Interna';
@@ -30,16 +36,21 @@ class SgmCapacitacionInternaController extends BaseController
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $estacionId = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/sgm/gestion-recursos/capacitacioninterna.actions.init.js?v=1.0.1',
                 '/js/sgm/gestion-recursos/capacitacioninterna.datatable.init.js?v=1.0.1',
@@ -59,7 +70,7 @@ class SgmCapacitacionInternaController extends BaseController
         ])
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->whereHas('tema', function ($query) {
 
@@ -155,7 +166,7 @@ class SgmCapacitacionInternaController extends BaseController
     {
         $pdf = new FPDF();
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionModulo());
 
         // ======================
         // OBTENER DATOS
@@ -248,17 +259,17 @@ class SgmCapacitacionInternaController extends BaseController
 
         $realizadoPor = Usuario::select('tb_usuarios.nombre')
             ->join('sgm_autorizado', 'sgm_autorizado.id_usuario', '=', 'tb_usuarios.id')
-            ->where('tb_usuarios.id_gas', $this->estacionId())
+            ->where('tb_usuarios.id_gas', $this->estacionModulo())
             ->where('sgm_autorizado.estado', 1)
             ->value('nombre');
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionModulo());
 
         $cursos = CursoCalendario::with([
             'tema',
             'usuario'
         ])
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->whereYear('fecha_programada', $year)
             ->whereHas('tema', function ($q) {
                 $q->where('categoria', 'SGM');
@@ -458,7 +469,7 @@ class SgmCapacitacionInternaController extends BaseController
 
     public function reconocimientoYear(int $year)
     {
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
         $estacion = Estacion::findOrFail($idEstacion);
 
         // ======================
@@ -575,3 +586,4 @@ class SgmCapacitacionInternaController extends BaseController
         );
     }
 }
+

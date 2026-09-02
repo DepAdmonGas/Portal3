@@ -66,6 +66,10 @@ document.addEventListener('alpine:init', () => {
 
       init(){
 
+        if (!document.getElementById('sgm-content')) {
+            return;
+        }
+
         this.cargarOrdenes();
 
         this.modalNuevo = new bootstrap.Modal(

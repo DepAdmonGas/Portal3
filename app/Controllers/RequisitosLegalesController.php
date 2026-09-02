@@ -10,6 +10,7 @@ use App\Models\Sasisopa\RequisitosLegalesLista;
 use App\Models\Sasisopa\RequisitosLegalesDependencia;
 use App\Models\Sasisopa\RequisitosLegalesMatriz;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -18,6 +19,15 @@ class RequisitosLegalesController extends BaseController
 {
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(?string $moduleKey = null): ?int
+    {
+        $moduleKey = $moduleKey ?? ($_GET['module'] ?? ($_POST['module'] ?? 'sasisopa'));
+        if (!in_array($moduleKey, ['sasisopa', 'sgm'], true)) {
+            $moduleKey = 'sasisopa';
+        }
+        return ModuleStationService::getContext($moduleKey)['id_estacion'] ?? null;
+    }
 
     public function requisitosLegales()
     {
@@ -30,12 +40,16 @@ class RequisitosLegalesController extends BaseController
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
-        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(), 0);
+        $idEstacion = $this->estacionModulo();
+
+        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($idEstacion, 0);
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'requisitos' => $requisitos,
             'links' => [
@@ -44,6 +58,7 @@ class RequisitosLegalesController extends BaseController
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -59,18 +74,19 @@ class RequisitosLegalesController extends BaseController
     public function calendarioRequisitosLegales()
     {
 
-        $estacion = Estacion::find($this->estacionId());
-        $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
+        $idEstacion = $this->estacionModulo();
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
+        $apoderado = htmlspecialchars($estacion?->apoderado_legal ?? '');
 
         if (!ModuloService::validaPermiso($this->modulo, 'descargar')) {
             header("Location: /404");
             exit;
         }
 
-        $municipal = RequisitosLegalesCalendario::NivelGobierno('Municipal', $this->estacionId(), 0);
-        $estatal   = RequisitosLegalesCalendario::NivelGobierno('Estatal', $this->estacionId(), 0);
-        $federal   = RequisitosLegalesCalendario::NivelGobierno('Federal', $this->estacionId(), 0);
-        $varios    = RequisitosLegalesCalendario::NivelGobierno('Varios', $this->estacionId(), 0);
+        $municipal = RequisitosLegalesCalendario::NivelGobierno('Municipal', $idEstacion, 0);
+        $estatal   = RequisitosLegalesCalendario::NivelGobierno('Estatal', $idEstacion, 0);
+        $federal   = RequisitosLegalesCalendario::NivelGobierno('Federal', $idEstacion, 0);
+        $varios    = RequisitosLegalesCalendario::NivelGobierno('Varios', $idEstacion, 0);
 
         $html = '';
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
@@ -191,10 +207,14 @@ class RequisitosLegalesController extends BaseController
         Breadcrumb::add('3. REQUISITOS LEGALES', '/sasisopa/requisitos-legales');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -203,6 +223,7 @@ class RequisitosLegalesController extends BaseController
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -217,11 +238,11 @@ class RequisitosLegalesController extends BaseController
     public function datatableConfiguracion()
     {
 
-        $idEstacion = $this->estacionId();
-        $estacion = Estacion::find($idEstacion);
+        $idEstacion = $this->estacionModulo();
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
 
-        $estado = $estacion->di_estado;
-        $municipio = $estacion->di_municipio;
+        $estado = $estacion?->di_estado;
+        $municipio = $estacion?->di_municipio;
         // permisos
         $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
 
@@ -291,7 +312,17 @@ class RequisitosLegalesController extends BaseController
             return;
         }
 
+        $idEstacion = $this->estacionModulo();
+
         if ($requisito->disabled != 0) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se puede eliminar'
+            ]);
+            return;
+        }
+
+        if ($idEstacion && !in_array((int) $requisito->id_estacion, [(int) $idEstacion, 0])) {
             echo json_encode([
                 'success' => false,
                 'message' => 'No se puede eliminar'
@@ -312,7 +343,7 @@ class RequisitosLegalesController extends BaseController
     {
         header('Content-Type: application/json');
 
-        $idEstacion = $this->estacionId();
+        $idEstacion = $this->estacionModulo();
 
         $data = RequisitosLegalesDependencia::whereIn('id_estacion', [$idEstacion, 0])
             ->where('estado', 1)
@@ -353,13 +384,13 @@ class RequisitosLegalesController extends BaseController
             return;
         }
 
-        $estacion = Estacion::find($this->estacionId());
-
+        $idEstacion = $this->estacionModulo();
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
 
         if ($gobierno == "Municipal") {
-            $MA = $estacion->di_municipio;
+            $MA = $idEstacion ? $estacion->di_municipio : null;
         } else if ($gobierno == "Estatal") {
-            $MA = $estacion->di_estado;
+            $MA = $idEstacion ? $estacion->di_estado : null;
         } else if ($gobierno == "Federal") {
             $MA = "";
         } else if ($gobierno == "Varios") {
@@ -372,7 +403,7 @@ class RequisitosLegalesController extends BaseController
             'dependencia'     => $dependencia,
             'permiso'         => $permiso,
             'fundamento'      => $fundamento,
-            'id_estacion'     => $this->estacionId(),
+            'id_estacion'     => $idEstacion,
             'disabled'        => 0,
             'estado'          => 1
         ]);
@@ -396,12 +427,16 @@ class RequisitosLegalesController extends BaseController
         Breadcrumb::add('3. REQUISITOS LEGALES', '/sasisopa/requisitos-legales');
         Breadcrumb::add($title, '');
 
-        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($this->estacionId(), 0);
+        $idEstacion = $this->estacionModulo();
+
+        $requisitos = RequisitosLegalesCalendario::ToRequisitosTodos($idEstacion, 0);
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'requisitos' => $requisitos,
             'links' => [
@@ -411,6 +446,7 @@ class RequisitosLegalesController extends BaseController
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -429,9 +465,11 @@ class RequisitosLegalesController extends BaseController
         $permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
         $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 
+        $idEstacion = $this->estacionModulo();
+
         $rows = RequisitosLegalesCalendario::NivelGobierno(
             $nGobierno,
-            $this->estacionId(),
+            $idEstacion,
             $modulo
         );
 
@@ -579,11 +617,11 @@ class RequisitosLegalesController extends BaseController
     {
         header('Content-Type: application/json');
 
-        $idEstacion = $this->estacionId();
-        $estacion = Estacion::find($idEstacion);
+        $idEstacion = $this->estacionModulo();
+        $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
 
-        $estado = $estacion->di_estado;
-        $municipio = $estacion->di_municipio;
+        $estado = $estacion?->di_estado;
+        $municipio = $estacion?->di_municipio;
 
         $query = RequisitosLegalesLista::whereIn('id_estacion', [$idEstacion, 0])
             ->where('nivel_gobierno', $nGobierno)
@@ -702,7 +740,7 @@ class RequisitosLegalesController extends BaseController
             $transactionStarted = true;
 
             $calendario = RequisitosLegalesCalendario::create([
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $this->estacionModulo(),
                 'id_requisito_legal' => $permiso->id,
                 'nivel_gobierno' => $nivelGobierno,
                 'requisito_legal' => $permiso->permiso,
@@ -734,7 +772,7 @@ class RequisitosLegalesController extends BaseController
             Capsule::commit();
 
             $cumplimiento = round(
-                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno, 0)['Cumplimiento'] ?? 0
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionModulo(), $nivelGobierno, 0)['Cumplimiento'] ?? 0
             );
 
             echo json_encode([
@@ -801,7 +839,11 @@ class RequisitosLegalesController extends BaseController
 
         try {
 
-            $calendario = RequisitosLegalesCalendario::find($id);
+            $idEstacion = $this->estacionModulo();
+
+            $calendario = RequisitosLegalesCalendario::where('id', $id)
+                ->where('id_estacion', $idEstacion)
+                ->first();
 
             if (!$calendario) {
                 throw new \Exception('Registro no encontrado');
@@ -838,7 +880,7 @@ class RequisitosLegalesController extends BaseController
             Capsule::commit();
 
             $cumplimiento = round(
-                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $nivelGobierno, 0)['Cumplimiento'] ?? 0
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionModulo(), $nivelGobierno, 0)['Cumplimiento'] ?? 0
             );
 
             echo json_encode([
@@ -863,10 +905,15 @@ class RequisitosLegalesController extends BaseController
     {
         header('Content-Type: application/json');
 
+        $idEstacion = $this->estacionModulo();
+
         $calendario = RequisitosLegalesCalendario::with([
             'requisito',
             'matriz'
-        ])->find($id);
+        ])
+            ->where('id', $id)
+            ->where('id_estacion', $idEstacion)
+            ->first();
 
         if (!$calendario) {
             echo json_encode(['success' => false]);
@@ -948,7 +995,7 @@ class RequisitosLegalesController extends BaseController
 
         $estacionId = !empty($idEstacion)
             ? (int) $idEstacion
-            : (int) $this->estacionId();
+            : $this->estacionModulo();
 
         $calendario = RequisitosLegalesCalendario::query()
             ->where('id', $id)
@@ -984,7 +1031,7 @@ class RequisitosLegalesController extends BaseController
 
         $estacionId = !empty($idEstacion)
             ? (int) $idEstacion
-            : $this->estacionId();
+            : $this->estacionModulo();
 
         $calendario = RequisitosLegalesCalendario::where('id', $id)
             ->where('id_estacion', $estacionId)
@@ -1067,7 +1114,7 @@ class RequisitosLegalesController extends BaseController
         $idEstacion = $_POST['idEstacion'] ?? null;
         $estacionId = !empty($idEstacion)
             ? (int) $idEstacion
-            : $this->estacionId();
+            : $this->estacionModulo();
 
         $matriz = RequisitosLegalesMatriz::find($id);
 
@@ -1165,6 +1212,7 @@ class RequisitosLegalesController extends BaseController
 
 
         $calendario = RequisitosLegalesCalendario::where('id', $matriz->idcalendario)
+            ->where('id_estacion', $this->estacionModulo())
             ->first();
 
         if (!$calendario) {
@@ -1215,7 +1263,7 @@ class RequisitosLegalesController extends BaseController
     private function getCumplimientoPorCalendario(RequisitosLegalesCalendario $calendario)
     {
         return round(
-            RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $calendario->nivel_gobierno, 0)['Cumplimiento'] ?? 0
+            RequisitosLegalesCalendario::ToRequisitos($this->estacionModulo(), $calendario->nivel_gobierno, 0)['Cumplimiento'] ?? 0
         );
     }
 
@@ -1233,7 +1281,7 @@ class RequisitosLegalesController extends BaseController
 
         try {
 
-            $idEstacion = $this->estacionId();
+            $idEstacion = $this->estacionModulo();
 
             $registro = RequisitosLegalesCalendario::where('id', $id)
                 ->where('id_estacion', $idEstacion)
@@ -1279,7 +1327,7 @@ class RequisitosLegalesController extends BaseController
             $registro->save();
 
             $cumplimiento = round(
-                RequisitosLegalesCalendario::ToRequisitos($this->estacionId(), $registro->nivel_gobierno, 0)['Cumplimiento'] ?? 0
+                RequisitosLegalesCalendario::ToRequisitos($this->estacionModulo(), $registro->nivel_gobierno, 0)['Cumplimiento'] ?? 0
             );
 
             echo json_encode([

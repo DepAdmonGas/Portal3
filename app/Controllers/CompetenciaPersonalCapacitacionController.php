@@ -3,11 +3,18 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 
 
 class CompetenciaPersonalCapacitacionController extends BaseController
 {
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
     public function index(){
 
         $title = '6. COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO';
@@ -18,16 +25,21 @@ class CompetenciaPersonalCapacitacionController extends BaseController
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 
             ],
             'scripts' => [
-                '/js/vendor.min.js'
+                '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -46,16 +58,22 @@ class CompetenciaPersonalCapacitacionController extends BaseController
         Breadcrumb::add('6. COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO', '/sasisopa/competencia-personal-capacitacion-entrenamiento');
         Breadcrumb::add($title, '');
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa', 
+            'ocultarSelectorEstacion'=> true,
             'filtro_usuario' => $this->filtro_usuario,
              'links' =>[
                 
             ],
             'scripts' => [
-                '/js/vendor.min.js'
+                '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
             ],
             'help' => false
         ];

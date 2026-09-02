@@ -2,6 +2,7 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Models\Sasisopa\TanqueAlmacenamiento;
@@ -16,6 +17,11 @@ use Dompdf\Options;
 class CalibracionVerificacionMantenimientoController extends BaseController{
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
 
@@ -33,10 +39,13 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'links' =>[ 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/calibracionverificacionmantenimiento.actions.init.js?v=' . time(),
             ],
             'help' => false
@@ -52,7 +61,7 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
 
         try {
 
-            $equipos = $this->getEquipos($this->estacionId());
+            $equipos = $this->getEquipos($this->estacionModulo());
             echo json_encode([
                 'success' => true,
                 'data' => $equipos
@@ -69,9 +78,9 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
         exit;
     }
 
-    public static function getEquipos(
-    int $estacionId
-    ): array {
+public static function getEquipos(
+    ?int $estacionId
+): array {
 
         $equipos = [];
 
@@ -143,8 +152,8 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
     }
     public function pdfEquiposCalibracion() {
 
-    $estacion = Estacion::find($this->estacionId());
-    $equipos = self::getEquipos($this->estacionId());
+    $estacion = Estacion::find($this->estacionModulo());
+    $equipos = self::getEquipos($this->estacionModulo());
 
     $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
@@ -231,7 +240,7 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
             </td>
 
             <td class="text-center align-middle">
-                Autorizado por: {$estacion->apoderado_legal}
+                Autorizado por: {$estacion?->apoderado_legal}
             </td>
 
             <td class="text-center align-middle">
@@ -329,7 +338,7 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
 
         try {
 
-            $data = self::calendarioCalibracion($this->estacionId());
+            $data = self::calendarioCalibracion($this->estacionModulo());
 
             echo json_encode([
                 'success' => true,
@@ -348,7 +357,7 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
     }
 
 public static function calendarioCalibracion(
-    int $estacionId
+    ?int $estacionId
 ): array {
 
     $equipos = CalibracionEquipo::query()
@@ -406,7 +415,7 @@ public static function calendarioCalibracion(
 }
 
 public static function calendarioCalibracionPdf(
-    int $estacionId,
+    ?int $estacionId,
     ?int $year = null
 ): array {
 
@@ -503,10 +512,10 @@ $year = isset($_GET['year'])
     : null;
 
     $calendario = self::calendarioCalibracionPdf(
-    $this->estacionId(),
+    $this->estacionModulo(),
     $year
     );
-    $estacion = Estacion::find($this->estacionId());
+    $estacion = Estacion::find($this->estacionModulo());
     $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
     $html = '
@@ -591,7 +600,7 @@ $year = isset($_GET['year'])
                 </td>
 
                 <td class="text-center align-middle">
-                    Autorizado por: ' . $estacion->apoderado_legal . '
+                    Autorizado por: ' . ($estacion?->apoderado_legal ?? '') . '
                 </td>
 
                 <td class="text-center align-middle">

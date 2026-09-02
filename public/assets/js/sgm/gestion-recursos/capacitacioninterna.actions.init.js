@@ -17,6 +17,10 @@ document.addEventListener('alpine:init', () => {
 
       init(){
 
+        if (!document.getElementById('sgm-content')) {
+            return;
+        }
+
         this.modalBuscar = new bootstrap.Modal(
             document.getElementById('modalBuscar')
         );

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Request;
 use App\Core\JsonResponse;
+use App\Services\ModuleStationService;
 
 use App\Models\Sgm\Autorizado;
 use App\Models\Estacion;
@@ -17,6 +18,11 @@ use Carbon\Carbon;
 
 class SgmProgramaCalibracionController extends BaseController
 {
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
 
     public function tableProgramaCalibracionPatrones()
     {
@@ -42,7 +48,7 @@ class SgmProgramaCalibracionController extends BaseController
                 'equipo:id,nombre,periodicidad,categoria',
                 'verificar:id,identificacion'
             ])
-                ->where('id_estacion', $this->estacionId())
+                ->where('id_estacion', $this->estacionModulo())
                 ->whereYear('fecha', $year)
                 ->whereHas('equipo', function ($q) use ($categoria) {
                     $q->where('categoria', $categoria);
@@ -77,7 +83,7 @@ class SgmProgramaCalibracionController extends BaseController
         $formato = (int) Request::input('formato');
 
         $equiposProgramados = ProgramaAnualCalibracionVerificacion::query()
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->pluck('id_equipo');
 
         $equipos = PatronInstrumento::query()
@@ -114,6 +120,24 @@ class SgmProgramaCalibracionController extends BaseController
 
         $equipo = PatronInstrumento::findOrFail($equipoId);
 
+        if (
+            $equipo->periodicidad === 'Mensual'
+            && $this->inventarioActivo('Dispensarios') === 0
+        ) {
+            JsonResponse::error(
+                'No se encontraron dispensarios activos para esta estación.'
+            );
+        }
+
+        if (
+            $equipo->periodicidad === 'Trimestral'
+            && $this->inventarioActivo('Tanques de almacenamiento') === 0
+        ) {
+            JsonResponse::error(
+                'No se encontraron tanques de almacenamiento activos para esta estación.'
+            );
+        }
+
         match ($equipo->periodicidad) {
 
             'Mensual'     => $this->crearMensual($equipo, $fecha),
@@ -134,6 +158,15 @@ class SgmProgramaCalibracionController extends BaseController
         JsonResponse::success('Programa anual de calibración creado');
     }
 
+    private function inventarioActivo(string $nombre): int
+    {
+        return InventarioEquipo::query()
+            ->where('id_estacion', $this->estacionModulo())
+            ->where('nombre', $nombre)
+            ->where('estado', 1)
+            ->count();
+    }
+
     private function agregarPrograma(
         int $equipoId,
         string $fecha,
@@ -143,7 +176,7 @@ class SgmProgramaCalibracionController extends BaseController
         ProgramaAnualCalibracionVerificacion::firstOrCreate(
 
             [
-                'id_estacion' => $this->estacionId(),
+                'id_estacion' => $this->estacionModulo(),
                 'id_equipo'   => $equipoId,
                 'fecha'       => $fecha,
                 'id_verificar' => $verificar
@@ -204,7 +237,7 @@ class SgmProgramaCalibracionController extends BaseController
     ): void {
         $disp = InventarioEquipo::query()
 
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
 
             ->where('nombre', 'Dispensarios')
 
@@ -236,7 +269,7 @@ class SgmProgramaCalibracionController extends BaseController
 
         $tanques = InventarioEquipo::query()
 
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
 
             ->where('nombre', 'Tanques de almacenamiento')
 
@@ -268,7 +301,7 @@ class SgmProgramaCalibracionController extends BaseController
         header('Content-Type: application/pdf');
 
         $estacion = Estacion::findOrFail(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $realizadoPor = 'S/I';
@@ -276,7 +309,7 @@ class SgmProgramaCalibracionController extends BaseController
         $realizadoPor = Autorizado::query()
             ->where('estado', 1)
             ->whereHas('usuario', function ($q) {
-                $q->where('id_gas', $this->estacionId());
+                $q->where('id_gas', $this->estacionModulo());
             })
             ->with('usuario:id,nombre')
             ->first()
@@ -364,7 +397,7 @@ class SgmProgramaCalibracionController extends BaseController
                     'verificar:id,identificacion'
                 ])
 
-                ->where('id_estacion', $this->estacionId())
+                ->where('id_estacion', $this->estacionModulo())
                 ->whereYear('fecha', $year)
                 ->whereHas('equipo', function ($query) use ($categoria) {
                     $query->where(

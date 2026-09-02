@@ -3,12 +3,18 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\DetectorHumo;
 
 class DetectorHumoController extends BaseController{
 
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(){
 
@@ -27,16 +33,21 @@ class DetectorHumoController extends BaseController{
             $this->modulo
         );
 
+        $idEstacion = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/detectorhumo.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/detectorhumo.action.init.js?v=' . time(),
@@ -50,7 +61,7 @@ class DetectorHumoController extends BaseController{
 
     public function datatable(){
 
-        $data = DetectorHumo::where('id_estacion', $this->estacionId())
+        $data = DetectorHumo::where('id_estacion', $this->estacionModulo())
         ->where('estado', 1)
         ->get();
 
@@ -91,7 +102,7 @@ class DetectorHumoController extends BaseController{
     try{
 
         DetectorHumo::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'no_detector' => $detector,
             'ubicacion' => $ubicacion,
             'estado' => 1

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Core\Request;
 use App\Core\JsonResponse;
 
@@ -26,6 +27,11 @@ class SgmPlanAuditoriaController extends BaseController
 
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index(int $id)
     {
         $title = 'Plan de Auditoria';
@@ -42,7 +48,6 @@ class SgmPlanAuditoriaController extends BaseController
 
         $auditoria = Auditoria::query()
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
             ->with('planAuditoria')
             ->firstOrFail();
 
@@ -53,9 +58,13 @@ class SgmPlanAuditoriaController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
+            'ocultarSelectorEstacion'=> true,
             'id' => $id,
             'links' => [],
             'scripts' => [
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/auditorias/planauditoria.actions.init.js?v=1.9.1',
             ],
             'help' => false,
@@ -81,7 +90,7 @@ class SgmPlanAuditoriaController extends BaseController
             ->whereHas('usuario', function ($query) {
                 $query->where(
                     'id_gas',
-                    $this->estacionId()
+                    $this->estacionModulo()
                 );
             })
             ->value('id_usuario');
@@ -108,7 +117,6 @@ class SgmPlanAuditoriaController extends BaseController
     {
         $auditoria = Auditoria::query()
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
             ->with([
                 'planAuditoria',
                 'estacion',
@@ -118,7 +126,7 @@ class SgmPlanAuditoriaController extends BaseController
         $plan = $this->asegurarPlanAuditoria($auditoria);
 
         $usuarios = Usuario::query()
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('estatus', 0)
             ->with('puesto')
             ->orderBy('nombre')
@@ -165,7 +173,6 @@ class SgmPlanAuditoriaController extends BaseController
 
         $auxiliares = PlanAuditoriaAuditor::query()
             ->where('id_plan', $plan->id)
-            ->whereNull('id_usuario')
             ->whereIn('categoria', [
                 'GUÍAS',
                 'OBSERVADORES',
@@ -311,14 +318,13 @@ class SgmPlanAuditoriaController extends BaseController
 
         $auditoria = Auditoria::query()
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
             ->firstOrFail();
 
         $plan = $this->asegurarPlanAuditoria($auditoria);
 
         $usuario = Usuario::query()
             ->where('id', $id_responsable)
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('estatus', 0)
             ->with('puesto')
             ->firstOrFail();
@@ -401,12 +407,6 @@ class SgmPlanAuditoriaController extends BaseController
 
         $plan = PlanAuditoria::query()
             ->where('id', $id)
-            ->whereHas('auditoria', function ($query) {
-                $query->where(
-                    'id_estacion',
-                    $this->estacionId()
-                );
-            })
             ->firstOrFail();
 
         $plan->{$campo} = $valor;
@@ -434,7 +434,6 @@ class SgmPlanAuditoriaController extends BaseController
 
         $auditoria = Auditoria::query()
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
             ->firstOrFail();
 
 
@@ -443,23 +442,10 @@ class SgmPlanAuditoriaController extends BaseController
 
         $auditor = PlanAuditoriaAuditor::create([
             'id_plan' => $plan->id,
-            'id_usuario' => $idUsuario ?: null,
             'nombre' => $nombreExterno ?: '',
             'area_actividad' => $area,
             'categoria' => $categoria,
         ]);
-
-
-        // Obtener el usuario interno
-        $usuario = null;
-
-        if ($auditor->id_usuario) {
-
-            $usuario = Usuario::query()
-                ->where('id', $auditor->id_usuario)
-                ->first();
-        }
-
 
         JsonResponse::success(
             'Auditor agregado correctamente',
@@ -467,11 +453,8 @@ class SgmPlanAuditoriaController extends BaseController
                 'data' => [
                     'id' => $auditor->id,
                     'id_plan' => $auditor->id_plan,
-                    'id_usuario' => $auditor->id_usuario,
 
-                    'nombre' => $auditor->id_usuario
-                        ? ($usuario?->nombre ?? '')
-                        : $auditor->nombre,
+                    'nombre' => $auditor->nombre,
 
                     'categoria' => $auditor->categoria,
 
@@ -503,14 +486,12 @@ class SgmPlanAuditoriaController extends BaseController
 
         $auditoria = Auditoria::query()
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
             ->firstOrFail();
 
         $plan = $this->asegurarPlanAuditoria($auditoria);
 
         $auxiliar = PlanAuditoriaAuditor::create([
             'id_plan' => $plan->id,
-            'id_usuario' => null,
             'nombre' => $nombre,
             'area_actividad' => '',
             'categoria' => $categoria,
@@ -522,7 +503,6 @@ class SgmPlanAuditoriaController extends BaseController
                 'data' => [
                     'id' => $auxiliar->id,
                     'id_plan' => $auxiliar->id_plan,
-                    'id_usuario' => null,
                     'nombre' => $auxiliar->nombre,
                     'categoria' => $auxiliar->categoria,
                 ],
@@ -536,7 +516,6 @@ class SgmPlanAuditoriaController extends BaseController
 
         $auxiliar = PlanAuditoriaAuditor::query()
             ->where('id', $id)
-            ->whereNull('id_usuario')
             ->whereIn('categoria', [
                 'GUÍAS',
                 'OBSERVADORES',
@@ -564,7 +543,6 @@ class SgmPlanAuditoriaController extends BaseController
 
         $auditoria = Auditoria::query()
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
             ->firstOrFail();
 
         $plan = $this->asegurarPlanAuditoria($auditoria);
@@ -619,7 +597,6 @@ class SgmPlanAuditoriaController extends BaseController
     {
         $auditoria = Auditoria::query()
             ->where('id', $id)
-            ->where('id_estacion', $this->estacionId())
             ->with([
                 'planAuditoria',
                 'estacion',
@@ -656,21 +633,18 @@ class SgmPlanAuditoriaController extends BaseController
 
         $auxiliaresGuias = PlanAuditoriaAuditor::query()
             ->where('id_plan', $plan->id)
-            ->whereNull('id_usuario')
             ->where('categoria', 'GUÍAS')
             ->orderBy('id')
             ->get();
 
         $auxiliaresObservadores = PlanAuditoriaAuditor::query()
             ->where('id_plan', $plan->id)
-            ->whereNull('id_usuario')
             ->where('categoria', 'OBSERVADORES')
             ->orderBy('id')
             ->get();
 
         $auxiliaresExpertos = PlanAuditoriaAuditor::query()
             ->where('id_plan', $plan->id)
-            ->whereNull('id_usuario')
             ->where('categoria', 'EXPERTO(S) TÉCNICO(S)')
             ->orderBy('id')
             ->get();

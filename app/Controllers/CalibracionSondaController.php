@@ -9,10 +9,16 @@ use App\Models\Sgm\CalibracionEquipo;
 use App\Models\Sgm\CalibracionEquipoDetalle;
 use App\Models\Sgm\CalibracionEquipoSonda;
 use App\Services\CalibracionEquipoService;
+use App\Services\ModuleStationService;
 
 class CalibracionSondaController extends BaseController
 {
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(int $id)
     {
@@ -31,6 +37,10 @@ class CalibracionSondaController extends BaseController
         Breadcrumb::add($title, '');
 
         $calibracion = CalibracionEquipo::query()
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $est) => $q->where('id_estacion', $est)
+            )
             ->with([
                 'detalles',
                 'sondas.sonda'
@@ -98,14 +108,17 @@ class CalibracionSondaController extends BaseController
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
 
             'calibracion' => $calibracion,
-
+'ocultarSelectorEstacion'=> true,
             'links' => [],
 
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/controlactividadproceso/calibracionsondas.init.js?v=' . time(),
             ],
 

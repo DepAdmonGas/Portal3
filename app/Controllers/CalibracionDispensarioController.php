@@ -10,10 +10,16 @@ use App\Models\Sgm\CalibracionEquipoDispensario;
 use App\Models\Sasisopa\Dispensario;
 use App\Services\CalibracionEquipoService;
 use App\Services\CalibracionDispensarioService;
+use App\Services\ModuleStationService;
 
 class CalibracionDispensarioController extends BaseController
 {
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index(int $id)
     {
@@ -32,6 +38,10 @@ class CalibracionDispensarioController extends BaseController
         Breadcrumb::add($title, '');
 
         $calibracion = CalibracionEquipo::query()
+        ->when(
+            $this->estacionModulo(),
+            fn ($q, $est) => $q->where('id_estacion', $est)
+        )
         ->select([
             'id',
             'id_estacion',
@@ -114,6 +124,8 @@ class CalibracionDispensarioController extends BaseController
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
 
             'calibracion' => $calibracion,
@@ -131,10 +143,11 @@ class CalibracionDispensarioController extends BaseController
                         'categoria',
                         'No. de acreditación'
                     )?->resultado ?? '',
-
+'ocultarSelectorEstacion'=> true,
             'links' => [],
             'scripts' => [
                     '/js/vendor.min.js',
+                    '/js/core/module-station-selector.js?v=' . time(),
                     '/js/controlactividadproceso/calibraciondispensario.init.js?v=' . time(),
                 
             ],

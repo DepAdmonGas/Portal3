@@ -3,10 +3,32 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\RevisionResultados;
 
 class RevisionResultadosController extends BaseController{
 protected string $modulo = 'sasisopa';
+
+private function estacionModulo(): ?int
+{
+    return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+}
+
+private function carpetaRevisionResultados(): string
+{
+    $carpeta =
+        __DIR__ . '../../../public/uploads/archivos/revision-resultados/';
+
+    if (!file_exists($carpeta)) {
+
+        mkdir_safe(
+            $carpeta,
+            true
+        );
+    }
+
+    return $carpeta;
+}
 public function index(){
 
         $title = '17. REVISIÓN DE RESULTADOS';
@@ -22,11 +44,14 @@ public function index(){
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/revisionresultados/index.actions.init.js?v=' . time(),
             ],
             'help' => true
@@ -47,7 +72,7 @@ public function index(){
         ])
         ->where(
             'id_estacion',
-            $this->estacionId()
+            $this->estacionModulo()
         )
         ->orderByDesc('fecha_hora')
         ->get();
@@ -114,13 +139,22 @@ public function index(){
         $fecha = $_POST['fecha'];
         $archivo = $_FILES['archivo'];
 
+        $estacionId = $this->estacionModulo();
+
+        if (!$estacionId) {
+
+            throw new \Exception(
+                'Selecciona una estación para continuar'
+            );
+        }
+
         $nombreArchivo =
-            $this->estacionId()
+            $estacionId
             . '-RESULTADOS-'
             . time()
             . '.pdf';
 
-        $rutaFisica = __DIR__ . '../../../public/uploads/archivos/revision-resultados/' . $nombreArchivo;
+        $rutaFisica = $this->carpetaRevisionResultados() . $nombreArchivo;
 
        if (!move_uploaded_file(
                 $archivo['tmp_name'],
@@ -138,7 +172,7 @@ public function index(){
             RevisionResultados::create([
 
                 'id_estacion' =>
-                    $this->estacionId(),
+                    $estacionId,
 
                 'id_usuario' =>
                     $this->userId(),
@@ -174,9 +208,13 @@ public function index(){
         try {
 
             $revision =
-                RevisionResultados::find(
-                    $_POST['id']
-                );
+                RevisionResultados::query()
+                    ->where('id', $_POST['id'])
+                    ->when(
+                        $this->estacionModulo(),
+                        fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+                    )
+                    ->first();
 
             if (!$revision) {
 
@@ -214,7 +252,7 @@ public function index(){
                     . '.pdf';
 
                 $rutaFisica =
-                    __DIR__ . '../../../public/uploads/archivos/revision-resultados/'
+                    $this->carpetaRevisionResultados()
                     . $nombreArchivo;
 
                 move_uploaded_file(
@@ -256,9 +294,13 @@ public function index(){
                 true
             );
 
-            $revision = RevisionResultados::find(
-                $data['id'] ?? 0
-            );
+            $revision = RevisionResultados::query()
+                ->where('id', $data['id'] ?? 0)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+                )
+                ->first();
 
             if (!$revision) {
 

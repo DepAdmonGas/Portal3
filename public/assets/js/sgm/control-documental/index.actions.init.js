@@ -12,6 +12,10 @@ document.addEventListener('alpine:init', () => {
 
         async cargar() {
 
+            if (!document.getElementById('sgm-content')) {
+                return;
+            }
+
             const { data } = await axios.get(
                 '/sgm/control-documental-sistema-gestion-medicion/documentos'
             );

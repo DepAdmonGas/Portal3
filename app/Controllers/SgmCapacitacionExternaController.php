@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Usuario;
 use App\Models\Estacion;
 use App\Models\Sgm\Autorizado;
@@ -22,6 +23,11 @@ class SgmCapacitacionExternaController extends BaseController
 {
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function index()
     {
         $title = 'Programa Capacitacion Externa';
@@ -31,11 +37,15 @@ class SgmCapacitacionExternaController extends BaseController
         Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $estacionId = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $estacionId,
+            'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css',
@@ -43,6 +53,7 @@ class SgmCapacitacionExternaController extends BaseController
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -64,7 +75,7 @@ class SgmCapacitacionExternaController extends BaseController
         ])
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->whereYear(
                 'fecha_programada',
@@ -143,7 +154,7 @@ class SgmCapacitacionExternaController extends BaseController
         ])->findOrFail($id);
 
         $usuarios = Usuario::query()
-            ->where('id_gas', $this->estacionId())
+            ->where('id_gas', $this->estacionModulo())
             ->where('estatus', 0)
             ->whereNotIn(
                 'id',
@@ -208,20 +219,20 @@ class SgmCapacitacionExternaController extends BaseController
                 ->whereHas('usuario', function ($query) {
                     $query->where(
                         'id_gas',
-                        $this->estacionId()
+                        $this->estacionModulo()
                     );
                 })
                 ->value('id_usuario') ?? 0;
 
             ProgramaAnualCapacitacionExterna::create([
-                'id_estacion'       => $this->estacionId(),
+                'id_estacion'       => $this->estacionModulo(),
                 'id_personal'       => $this->userId(),
                 'nombre_curso'      => $nombrecurso,
                 'tipo_capacitacion' => $capacitacion,
                 'fecha_programada'  => $fechaprogramada,
                 'duracion'          => $duracion,
                 'instructor'        => $instructor,
-                'fecha_real'        => null,
+                'fecha_real'        => '0000-00-00',
                 'realizadopor'      => $realizadoPor,
                 'estado'            => 0,
             ]);
@@ -463,18 +474,18 @@ class SgmCapacitacionExternaController extends BaseController
     public function pdf(int $year)
     {
 
-        $estacion = Estacion::findOrFail($this->estacionId());
+        $estacion = Estacion::findOrFail($this->estacionModulo());
         $realizadoPor = Autorizado::query()
             ->with('usuario')
             ->where('estado', 1)
-            ->whereHas('usuario', fn($q) => $q->where('id_gas', $this->estacionId()))
+            ->whereHas('usuario', fn($q) => $q->where('id_gas', $this->estacionModulo()))
             ->first();
 
         $capacitaciones = ProgramaAnualCapacitacionExterna::with([
             'personal.usuario',
             'evidencias'
         ])
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
             ->whereYear('fecha_programada', $year)
             ->orderByDesc('fecha_programada')
             ->get();
@@ -610,3 +621,4 @@ class SgmCapacitacionExternaController extends BaseController
         );
     }
 }
+

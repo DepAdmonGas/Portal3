@@ -32,11 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!data || data === 'S/I') return 'S/I';
 
-                const partes = data.split('-');
+                const soloFecha = String(data).trim().split('T')[0].split(' ')[0];
+
+                const partes = soloFecha.split('-');
 
                 if (partes.length !== 3) return 'S/I';
 
                 const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
+
+                if (isNaN(fecha.getTime())) return 'S/I';
 
                 const fechaFormateada = fecha.toLocaleDateString('es-MX', {
                     day: 'numeric',

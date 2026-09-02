@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\ComunicacionIE;
 use App\Models\Sasisopa\ComunicacionEvidencia;
 use App\Models\Sasisopa\QuejasSugerencia;
@@ -19,6 +20,11 @@ class ComunicacionParticipacionConsultaController extends BaseController{
 
 protected string $modulo = 'sasisopa';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
   public function index(){
 
         $title = '7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA';
@@ -30,16 +36,21 @@ protected string $modulo = 'sasisopa';
         // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $idEstacion = $this->estacionModulo();
+
          $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
              'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                  '/libs/select2/dist/css/select2.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
@@ -88,7 +99,7 @@ protected string $modulo = 'sasisopa';
 
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             );
 
         // FILTRAR POR AÑO
@@ -170,7 +181,7 @@ protected string $modulo = 'sasisopa';
                 return;
             }
 
-            $id_estacion = $this->estacionId();
+            $id_estacion = $this->estacionModulo();
             $id_usuario = $this->userId();
 
             Capsule::beginTransaction();
@@ -254,7 +265,7 @@ protected string $modulo = 'sasisopa';
 
             $registro = ComunicacionIE::where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )->find($id);
 
             if (!$registro) {
@@ -321,7 +332,7 @@ protected string $modulo = 'sasisopa';
             // =========================
 
             $registro = ComunicacionIE::with('evidencias')
-                ->where('id_estacion', $this->estacionId())
+                ->where('id_estacion', $this->estacionModulo())
                 ->find($id);
 
             if (!$registro) {
@@ -698,6 +709,7 @@ protected string $modulo = 'sasisopa';
         try {
 
             $comunicacion = ComunicacionIE::with('encargado')
+                ->where('id_estacion', $this->estacionModulo())
                 ->find($id);
 
             if (!$comunicacion) {
@@ -752,14 +764,15 @@ protected string $modulo = 'sasisopa';
 
     public function pdfRegistroComunicacion(){
 
-    $idEstacion = $this->estacionId();
-    $registro = Estacion::find($idEstacion);
+    $idEstacion = $this->estacionModulo();
+    $registro = $idEstacion ? Estacion::find($idEstacion) : null;
     $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png'; 
-    $apoderadolegal = $registro->apoderado_legal;
 
     if (!$registro) {
         return "No se encontró la información";
     }
+
+    $apoderadolegal = $registro->apoderado_legal;
 
     $id = $_GET['id'] ?? null;
     $year = $_GET['year'] ?? null;
@@ -1014,7 +1027,7 @@ protected string $modulo = 'sasisopa';
         $permisoEliminar   = ModuloService::validaPermiso($this->modulo, 'eliminar');
         $permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
 
-        $data = QuejasSugerencia::where('id_estacion',$this->estacionId())
+        $data = QuejasSugerencia::where('id_estacion',$this->estacionModulo())
         ->orderBy('fecha','desc')
         ->get();
 
@@ -1080,7 +1093,7 @@ protected string $modulo = 'sasisopa';
             }
 
             QuejasSugerencia::create([
-                'id_estacion'      => $this->estacionId(),
+                'id_estacion'      => $this->estacionModulo(),
                 'fecha'            => $fecha,
                 'nombre'           => $nombre,
                 'motivos_causas'   => $motivos,
@@ -1137,7 +1150,7 @@ protected string $modulo = 'sasisopa';
                 return;
             }
 
-            $queja = QuejasSugerencia::where('id_estacion', $this->estacionId())
+            $queja = QuejasSugerencia::where('id_estacion', $this->estacionModulo())
                 ->find($id);
 
             if (!$queja) {
@@ -1168,7 +1181,7 @@ protected string $modulo = 'sasisopa';
 
     public function pdfQuejaSugerencia(int $id){
 
-    $idEstacion = $this->estacionId();
+    $idEstacion = $this->estacionModulo();
 
     $registro = Estacion::find($idEstacion);
 

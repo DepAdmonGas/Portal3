@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Services\ModuloService;
 use App\Core\Request;
 use App\Core\JsonResponse;
+use App\Services\ModuleStationService;
 
 use App\Models\Estacion;
 use App\Models\Sgm\Autorizado;
@@ -22,6 +23,11 @@ class SgmBitacoraCalibracionController extends BaseController
 {
     protected string $modulo = 'sgm';
 
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
     public function datatable()
     {
         $fecha = date('Y-m-d');
@@ -36,7 +42,7 @@ class SgmBitacoraCalibracionController extends BaseController
                 'equipo:id,nombre,periodicidad,categoria'
             ])
 
-            ->where('id_estacion', $this->estacionId())
+            ->where('id_estacion', $this->estacionModulo())
 
             ->whereDate('fecha', '<=', $fecha)
 
@@ -104,10 +110,14 @@ class SgmBitacoraCalibracionController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sgm',
+            'ocultarSelectorEstacion'=> true,
             'id' => $id,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/procesos-medicion/editarbitacoracalibracion.action.init.js?v=' . time(),
 
             ],
@@ -271,7 +281,7 @@ class SgmBitacoraCalibracionController extends BaseController
         header('Content-Type: application/pdf');
 
         $estacion = Estacion::findOrFail(
-            $this->estacionId()
+            $this->estacionModulo()
         );
 
         $bitacora = BitacoraCalibracionEquipo::query()

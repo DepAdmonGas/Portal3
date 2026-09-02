@@ -27,6 +27,11 @@ document.addEventListener('alpine:init', () => {
         loadingMensajes: false,
 
         init(){
+
+            if (!document.getElementById('modalDetalleReporte')) {
+                return;
+            }
+
             this.buscar();
 
               this.$nextTick(() => {

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
+use App\Services\ModuleStationService;
 use App\Services\ModuloService;
 use App\Models\Sasisopa\JarraPatron;
 
@@ -10,6 +11,11 @@ class JarraPatronController extends BaseController
 {
 
  protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
     public function index()
     {
@@ -23,18 +29,22 @@ class JarraPatronController extends BaseController
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
+        $idEstacion = $this->estacionModulo();
 
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/controlactividadproceso/jarrapatron.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/jarrapatron.action.init.js?v=' . time(),
 
@@ -51,9 +61,8 @@ class JarraPatronController extends BaseController
 
       $data = JarraPatron::where(
         'id_estacion',
-        $this->estacionId()
+        $this->estacionModulo()
         )
-        ->where('estado', 1)
         ->orderByDesc('id')
         ->get()
 
@@ -65,7 +74,6 @@ class JarraPatronController extends BaseController
                 'no_serie' => $item->no_serie,
                 'capacidad' => $item->capacidad,
                 'material' => $item->material,
-                'estado' => $item->estado,
             ];
         });
 
@@ -116,12 +124,11 @@ class JarraPatronController extends BaseController
     try{
 
         JarraPatron::create([
-            'id_estacion' => $this->estacionId(),            
+            'id_estacion' => $this->estacionModulo(),            
             'marca' => $marca,
             'no_serie' => $no_serie,
             'capacidad' => $capacidad,
-            'material' => $material,
-            'estado' => 1
+            'material' => $material
         ]);
 
         echo json_encode([
@@ -155,7 +162,7 @@ class JarraPatronController extends BaseController
 
     $registro = JarraPatron::where(
         'id_estacion',
-        $this->estacionId()
+        $this->estacionModulo()
     )->find($data['id_jarra']);
 
     if (!$registro) {
@@ -216,7 +223,10 @@ class JarraPatronController extends BaseController
 
         $data = json_decode(file_get_contents('php://input'),true);
 
-        $registro = JarraPatron::find($data['id']);
+        $registro = JarraPatron::where(
+            'id_estacion',
+            $this->estacionModulo()
+        )->find($data['id']);
 
         if(!$registro){
 
@@ -228,9 +238,7 @@ class JarraPatronController extends BaseController
             return;
         }
 
-        $registro->update([
-            'estado' => 0
-        ]);
+        $registro->delete();
 
         echo json_encode([
             'success' => true,

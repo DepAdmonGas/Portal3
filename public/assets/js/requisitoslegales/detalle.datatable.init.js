@@ -1,12 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-     const ngobierno = document
-    .getElementById('container')
-    .dataset.ngobierno;
+    const content = document.getElementById('sgm-content') || document.getElementById('container');
 
-     const modulo = document
-    .getElementById('container')
-    .dataset.modulo;
+    if (!content || !document.getElementById('table-lista-requisitos-legales-detalle')) {
+        return;
+    }
+
+     const ngobierno = content.dataset.ngobierno;
+
+     const modulo = content.dataset.modulo;
+
+     const moduleKey = (document.getElementById('container')?.dataset?.moduleStationKey) || 'sasisopa';
 
     table1 = $('#table-lista-requisitos-legales-detalle').DataTable({
         processing: true,
@@ -20,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ajax: {
             url: '/sasisopa/requisitos-legales/datatable-detalle/' + ngobierno + '/' + modulo,
             type: 'GET',
+            data: { module: moduleKey },
             dataSrc: function (json) {
             
             //guardas permisos globalmente

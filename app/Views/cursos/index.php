@@ -1,6 +1,21 @@
 <div id="container"
-    x-data="{...actions(),...cursos('<?= $categoria ?>')}"
-    class="container-fluid pb-4">
+    x-data="{...actions(),...cursos('<?= $categoria ?>', <?= $multiestacion ? 'true' : 'false' ?>)}"
+    class="container-fluid pb-4"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+
+    <?php if (empty($estacionId)): ?>
+
+        <div id="<?= $modulo === 'sgm' ? 'sgm' : 'sasisopa' ?>-empty-message"
+             class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+            <?= $modulo === 'sgm'
+                ? 'Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SGM.'
+                : 'Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.' ?>
+        </div>
+
+    <?php else: ?>
+
+    <div id="<?= $modulo === 'sgm' ? 'sgm' : 'sasisopa' ?>-content">
 
 
 
@@ -27,6 +42,33 @@
 
                 <table class="table table-hover align-middle mb-0">
 
+                    <thead>
+
+                        <tr>
+
+                            <th>Fecha</th>
+
+                            <th x-show="multiestacion">
+                                Nombre del personal
+                            </th>
+
+                            <th>
+                                Tema
+                            </th>
+
+                            <th class="text-center">
+                                Categoria
+                            </th>
+
+                            <th class="text-end"
+                                x-show="!multiestacion">
+                                Opcion
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
                     <tbody>
 
                         <template
@@ -42,6 +84,15 @@
                                         <span
                                             x-text="curso.fecha">
                                         </span>
+                                    </small>
+
+                                </td>
+
+                                <td x-show="multiestacion"
+                                    width="180">
+
+                                    <small
+                                        x-text="curso.personal">
                                     </small>
 
                                 </td>
@@ -64,7 +115,8 @@
                                 </td>
 
                                 <td width="140"
-                                    class="text-end">
+                                    class="text-end"
+                                    x-show="!multiestacion">
 
                                     <button
 
@@ -189,5 +241,9 @@
         </div>
 
     </div>
+
+    </div>
+
+    <?php endif; ?>
 
 </div>

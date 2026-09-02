@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Estacion;
 use App\Models\Sasisopa\EvaluacionDesempeno;
 use App\Models\Sasisopa\ImplementacionSasisopa;
@@ -16,6 +17,28 @@ use Dompdf\Options;
 
 class InformeDesempenoController extends BaseController{
     protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
+
+    private function carpetaEvaluacion(): string
+    {
+        $carpeta =
+            __DIR__ . '../../../public/uploads/archivos/evaluacion-desempeño/';
+
+        if (!file_exists($carpeta)) {
+
+            mkdir_safe(
+                $carpeta,
+                true
+            );
+        }
+
+        return $carpeta;
+    }
+
     public function index(){
 
         $title = '18. INFORMES DE DESEMPEÑO';
@@ -31,11 +54,14 @@ class InformeDesempenoController extends BaseController{
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/informedesempeno/index.actions.init.js?v=' . time(),
             ],
             'help' => true
@@ -56,7 +82,7 @@ class InformeDesempenoController extends BaseController{
             ])
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->orderByDesc('fecha_hora')
             ->get();
@@ -123,13 +149,22 @@ class InformeDesempenoController extends BaseController{
             $fecha = $_POST['fecha'];
             $archivo = $_FILES['archivo'];
 
+            $estacionId = $this->estacionModulo();
+
+            if (!$estacionId) {
+
+                throw new \Exception(
+                    'Selecciona una estación para continuar'
+                );
+            }
+
             $nombreArchivo =
-                $this->estacionId()
+                $estacionId
                 . '-EVALUACION-'
                 . time()
                 . '.pdf';
 
-            $rutaFisica = __DIR__ . '../../../public/uploads/archivos/evaluacion-desempeño/' . $nombreArchivo;
+            $rutaFisica = $this->carpetaEvaluacion() . $nombreArchivo;
 
         if (!move_uploaded_file(
                     $archivo['tmp_name'],
@@ -147,7 +182,7 @@ class InformeDesempenoController extends BaseController{
                 EvaluacionDesempeno::create([
 
                     'id_estacion' =>
-                        $this->estacionId(),
+                        $estacionId,
 
                     'id_usuario' =>
                         $this->userId(),
@@ -183,9 +218,13 @@ class InformeDesempenoController extends BaseController{
         try {
 
             $revision =
-                EvaluacionDesempeno::find(
-                    $_POST['id']
-                );
+                EvaluacionDesempeno::query()
+                    ->where('id', $_POST['id'])
+                    ->when(
+                        $this->estacionModulo(),
+                        fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+                    )
+                    ->first();
 
             if (!$revision) {
 
@@ -223,7 +262,7 @@ class InformeDesempenoController extends BaseController{
                     . '.pdf';
 
                 $rutaFisica =
-                    __DIR__ . '../../../public/uploads/archivos/evaluacion-desempeño/'
+                    $this->carpetaEvaluacion()
                     . $nombreArchivo;
 
                 move_uploaded_file(
@@ -265,9 +304,13 @@ class InformeDesempenoController extends BaseController{
                 true
             );
 
-            $revision = EvaluacionDesempeno::find(
-                $data['id'] ?? 0
-            );
+            $revision = EvaluacionDesempeno::query()
+                ->where('id', $data['id'] ?? 0)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+                )
+                ->first();
 
             if (!$revision) {
 
@@ -324,7 +367,7 @@ class InformeDesempenoController extends BaseController{
             ])
             ->where(
                 'id_estacion',
-                $this->estacionId()
+                $this->estacionModulo()
             )
             ->orderByDesc('fecha_hora')
             ->get();
@@ -382,10 +425,19 @@ class InformeDesempenoController extends BaseController{
 
         try {
 
-            $implementacion = Capsule::transaction(function () {
+            $estacionId = $this->estacionModulo();
+
+            if (!$estacionId) {
+
+                throw new \Exception(
+                    'Selecciona una estación para continuar'
+                );
+            }
+
+            $implementacion = Capsule::transaction(function () use ($estacionId) {
 
                 $reporte = ImplementacionSasisopa::create([
-                    'id_estacion' => $this->estacionId(),
+                    'id_estacion' => $estacionId,
                     'id_usuario' => $this->userId(),
                     'fecha_hora' => date('Y-m-d H:i:s')
                 ]);
@@ -457,7 +509,12 @@ class InformeDesempenoController extends BaseController{
 
             $implementacion =
                 ImplementacionSasisopa::with('procedimientos')
-                    ->find($data['id']);
+                    ->where('id', $data['id'] ?? 0)
+                    ->when(
+                        $this->estacionModulo(),
+                        fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+                    )
+                    ->first();
 
             if (!$implementacion) {
 
@@ -511,13 +568,19 @@ class InformeDesempenoController extends BaseController{
     public function pdfImplementacion($id){
 
     $estacion = Estacion::find(
-            $this->estacionId()
+            $this->estacionModulo()
         );
      $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
 
       $reporte = ImplementacionSasisopa::with([
         'procedimientos.puestos'
-    ])->findOrFail($id);
+    ])
+    ->where('id', $id)
+    ->when(
+        $this->estacionModulo(),
+        fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+    )
+    ->firstOrFail();
 
 
      $html = '
@@ -721,7 +784,7 @@ class InformeDesempenoController extends BaseController{
 
                     <td class="text-center align-middle">
                         Autorizado por:
-                        '.$estacion->apoderado_legal.'
+                        '.($estacion?->apoderado_legal ?? '').'
                     </td>
 
                     <td class="text-center align-middle">
@@ -827,6 +890,19 @@ class InformeDesempenoController extends BaseController{
         Breadcrumb::add('18. INFORMES DE DESEMPEÑO', '/sasisopa/informes-desempeno');
         Breadcrumb::add($title, '');
 
+        $reporte = ImplementacionSasisopa::query()
+            ->where('id', $id)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+            )
+            ->first();
+
+        if (!$reporte) {
+
+            exit('Registro no encontrado o no pertenece a la estación seleccionada');
+        }
+
         $permisos = ModuloService::permisosSesion($this->modulo);
 
                $data = [
@@ -835,11 +911,15 @@ class InformeDesempenoController extends BaseController{
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'idReporte' => $id,
+            'estacionId' => $this->estacionModulo(),
+            'moduleStationKey' => 'sasisopa',
+            'ocultarSelectorEstacion'=> true,
              'links' =>[
                 
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/informedesempeno/editar.actions.init.js?v=1.1'
             ],
             'help' => false
@@ -857,7 +937,13 @@ class InformeDesempenoController extends BaseController{
 
             $reporte = ImplementacionSasisopa::with([
                 'procedimientos.puestos'
-            ])->findOrFail($idReporte);
+            ])
+            ->where('id', $idReporte)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+            )
+            ->firstOrFail();
 
             $data = $reporte->procedimientos->map(function ($item) {
 
@@ -930,7 +1016,13 @@ class InformeDesempenoController extends BaseController{
 
         $data = json_decode(file_get_contents('php://input'), true);
 
-        $reporte = ImplementacionSasisopa::find($data['id']);
+        $reporte = ImplementacionSasisopa::query()
+            ->where('id', $data['id'] ?? 0)
+            ->when(
+                $this->estacionModulo(),
+                fn ($q, $estacionId) => $q->where('id_estacion', $estacionId)
+            )
+            ->first();
 
         if (!$reporte) {
 
@@ -963,9 +1055,18 @@ class InformeDesempenoController extends BaseController{
         $data = json_decode(file_get_contents('php://input'), true);
 
         $registro =
-            ImplementacionSasisopaProcedimientos::find(
-                $data['id']
-            );
+            ImplementacionSasisopaProcedimientos::query()
+                ->where('id', $data['id'] ?? 0)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->whereIn(
+                        'id_reporte',
+                        ImplementacionSasisopa::query()
+                            ->where('id_estacion', $estacionId)
+                            ->select('id')
+                    )
+                )
+                ->first();
 
         if(!$registro){
 
@@ -995,9 +1096,18 @@ class InformeDesempenoController extends BaseController{
         $data = json_decode(file_get_contents('php://input'), true);
 
         $registro =
-            ImplementacionSasisopaProcedimientos::find(
-                $data['id']
-            );
+            ImplementacionSasisopaProcedimientos::query()
+                ->where('id', $data['id'] ?? 0)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->whereIn(
+                        'id_reporte',
+                        ImplementacionSasisopa::query()
+                            ->where('id_estacion', $estacionId)
+                            ->select('id')
+                    )
+                )
+                ->first();
 
         if(!$registro){
 
@@ -1027,9 +1137,18 @@ class InformeDesempenoController extends BaseController{
         $data = json_decode(file_get_contents('php://input'), true);
 
         $registro =
-            ImplementacionSasisopaProcedimientos::find(
-                $data['id']
-            );
+            ImplementacionSasisopaProcedimientos::query()
+                ->where('id', $data['id'] ?? 0)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->whereIn(
+                        'id_reporte',
+                        ImplementacionSasisopa::query()
+                            ->where('id_estacion', $estacionId)
+                            ->select('id')
+                    )
+                )
+                ->first();
 
         if(!$registro){
 
@@ -1059,9 +1178,18 @@ class InformeDesempenoController extends BaseController{
         $data = json_decode(file_get_contents('php://input'), true);
 
         $registro =
-            ImplementacionSasisopaProcedimientos::find(
-                $data['id']
-            );
+            ImplementacionSasisopaProcedimientos::query()
+                ->where('id', $data['id'] ?? 0)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->whereIn(
+                        'id_reporte',
+                        ImplementacionSasisopa::query()
+                            ->where('id_estacion', $estacionId)
+                            ->select('id')
+                    )
+                )
+                ->first();
 
         if(!$registro){
 
@@ -1089,6 +1217,30 @@ class InformeDesempenoController extends BaseController{
         header('Content-Type: application/json');
 
         $data = json_decode(file_get_contents('php://input'), true);
+
+        $procedimiento =
+            ImplementacionSasisopaProcedimientos::query()
+                ->where('id', $data['procedimiento'] ?? 0)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->whereIn(
+                        'id_reporte',
+                        ImplementacionSasisopa::query()
+                            ->where('id_estacion', $estacionId)
+                            ->select('id')
+                    )
+                )
+                ->first();
+
+        if (!$procedimiento) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Procedimiento no encontrado'
+            ]);
+
+            exit;
+        }
 
         $existe =
             ImplementacionSasisopaProcedimientosPuesto
@@ -1125,6 +1277,30 @@ class InformeDesempenoController extends BaseController{
         header('Content-Type: application/json');
 
         $data = json_decode(file_get_contents('php://input'), true);
+
+        $procedimiento =
+            ImplementacionSasisopaProcedimientos::query()
+                ->where('id', $data['procedimiento'] ?? 0)
+                ->when(
+                    $this->estacionModulo(),
+                    fn ($q, $estacionId) => $q->whereIn(
+                        'id_reporte',
+                        ImplementacionSasisopa::query()
+                            ->where('id_estacion', $estacionId)
+                            ->select('id')
+                    )
+                )
+                ->first();
+
+        if (!$procedimiento) {
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'Procedimiento no encontrado'
+            ]);
+
+            exit;
+        }
 
         ImplementacionSasisopaProcedimientosPuesto
             ::where(

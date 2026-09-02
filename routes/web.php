@@ -1650,6 +1650,36 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/entregas/formulario/{id:\d+}/finalizar/entrega', Route::auth(['GestoriaEntregasController', 'finalizarEntrega']));
 
         $r->addRoute('GET', '/sgm', Route::auth(['GestoriaSgmController', 'index']));
+
+        $r->addRoute('GET', '/analisis-riesgo/{id:\d+}', Route::auth(['GestoriaAnalisisRiesgoController', 'index']));
+        $r->addRoute('GET', '/analisis-riesgo/{id:\d+}/data', Route::auth(['GestoriaAnalisisRiesgoController', 'data']));
+        $r->addRoute('POST', '/analisis-riesgo/{id:\d+}/create', Route::auth(['GestoriaAnalisisRiesgoController', 'create']));
+        $r->addRoute('POST', '/analisis-riesgo/{id:\d+}/delete', Route::auth(['GestoriaAnalisisRiesgoController', 'delete']));
+        $r->addRoute('GET', '/analisis-riesgo/{idEstacion}/{idAnalisis}/anexos/data', Route::auth(['GestoriaAnalisisRiesgoController', 'anexosData']));
+        $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{idAnalisis}/anexos/create', Route::auth(['GestoriaAnalisisRiesgoController', 'createAnexo']));
+        $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{idAnalisis}/anexos/delete', Route::auth(['GestoriaAnalisisRiesgoController', 'deleteAnexo']));
+        $r->addRoute('GET', '/analisis-riesgo/{idEstacion}/{id}/data', Route::auth(['GestoriaAnalisisRiesgoController', 'editData']));
+        $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{id}/update', Route::auth(['GestoriaAnalisisRiesgoController', 'update']));
+
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}', Route::auth(['GestoriaReporteCreController', 'index']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/data', Route::auth(['GestoriaReporteCreController', 'data']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/mensajes', Route::auth(['GestoriaReporteCreController', 'mensajes']));
+        $r->addRoute('POST', '/reporte-cre/{idEstacion}/mensajes/create', Route::auth(['GestoriaReporteCreController', 'createMensaje']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/facturas/anual', Route::auth(['GestoriaReporteCreController', 'descargarFacturasAnual']));
+
+        $r->addRoute('GET', '/cambio-precio/{idEstacion}', Route::auth(['GestoriaCambioPrecioController', 'index']));
+        $r->addRoute('GET', '/cambio-precio/{idEstacion}/data', Route::auth(['GestoriaCambioPrecioController', 'data']));
+        $r->addRoute('POST', '/cambio-precio/{idEstacion}/actualizar', Route::auth(['GestoriaCambioPrecioController', 'actualizarEstado']));
+
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}', Route::auth(['GestoriaCalibracionTanqueController', 'index']));
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}/data', Route::auth(['GestoriaCalibracionTanqueController', 'data']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/create', Route::auth(['GestoriaCalibracionTanqueController', 'create']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/delete/{id}', Route::auth(['GestoriaCalibracionTanqueController', 'delete']));
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}', Route::auth(['GestoriaCalibracionTanqueController', 'editarIndex']));
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/data', Route::auth(['GestoriaCalibracionTanqueController', 'dataCalibracion']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/documentos/create', Route::auth(['GestoriaCalibracionTanqueController', 'guardarDocumento']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/documentos/eliminar/{idDetalle}', Route::auth(['GestoriaCalibracionTanqueController', 'eliminarDocumento']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/finalizar', Route::auth(['GestoriaCalibracionTanqueController', 'finalizar']));
     });
 
     $r->addGroup('/sala-juntas', function (RouteCollector $r) {

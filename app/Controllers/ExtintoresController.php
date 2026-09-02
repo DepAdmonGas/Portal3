@@ -4,12 +4,18 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 use App\Models\Sasisopa\ExtintorEstacion;
 
 class ExtintoresController extends BaseController
 {
 
  protected string $modulo = 'sasisopa';
+
+    private function estacionModulo(): ?int
+    {
+        return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+    }
 
 
     public function index()
@@ -30,16 +36,21 @@ class ExtintoresController extends BaseController
             $this->modulo
         );
 
+        $idEstacion = $this->estacionModulo();
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
+            'estacionId' => $idEstacion,
+            'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/extintores.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/extintores.action.init.js?v=' . time(),
@@ -56,7 +67,7 @@ class ExtintoresController extends BaseController
 
       $data = ExtintorEstacion::where(
         'id_estacion',
-        $this->estacionId()
+        $this->estacionModulo()
         )
         ->where('estado', 1)
         ->orderByDesc('no_extintor')
@@ -122,7 +133,7 @@ class ExtintoresController extends BaseController
     try{
 
         ExtintorEstacion::create([
-            'id_estacion' => $this->estacionId(),
+            'id_estacion' => $this->estacionModulo(),
             'no_extintor' => $no_extintor,
             'ubicacion' => $ubicacion,
             'ultima_recarga' => $fecha_recarga,
@@ -168,7 +179,7 @@ class ExtintoresController extends BaseController
 
     $registro = ExtintorEstacion::where(
         'id_estacion',
-        $this->estacionId()
+        $this->estacionModulo()
     )->find($id);
 
     if (!$registro) {
