@@ -193,16 +193,7 @@ class GestoriaCambioPrecioController extends BaseController
             $cambioPrecio->save();
 
 
-            JsonResponse::custom([
-                'success' => true,
-                'data' => [
-                    'id' =>
-                    (int) $cambioPrecio->id,
-
-                    'estado' =>
-                    (int) $cambioPrecio->estado,
-                ]
-            ]);
+            JsonResponse::success('Cambio de precio actualizado');
         } catch (\Throwable $e) {
 
             JsonResponse::error(

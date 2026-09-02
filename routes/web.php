@@ -1670,6 +1670,16 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/cambio-precio/{idEstacion}', Route::auth(['GestoriaCambioPrecioController', 'index']));
         $r->addRoute('GET', '/cambio-precio/{idEstacion}/data', Route::auth(['GestoriaCambioPrecioController', 'data']));
         $r->addRoute('POST', '/cambio-precio/{idEstacion}/actualizar', Route::auth(['GestoriaCambioPrecioController', 'actualizarEstado']));
+
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}', Route::auth(['GestoriaCalibracionTanqueController', 'index']));
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}/data', Route::auth(['GestoriaCalibracionTanqueController', 'data']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/create', Route::auth(['GestoriaCalibracionTanqueController', 'create']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/delete/{id}', Route::auth(['GestoriaCalibracionTanqueController', 'delete']));
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}', Route::auth(['GestoriaCalibracionTanqueController', 'editarIndex']));
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/data', Route::auth(['GestoriaCalibracionTanqueController', 'dataCalibracion']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/documentos/create', Route::auth(['GestoriaCalibracionTanqueController', 'guardarDocumento']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/documentos/eliminar/{idDetalle}', Route::auth(['GestoriaCalibracionTanqueController', 'eliminarDocumento']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/finalizar', Route::auth(['GestoriaCalibracionTanqueController', 'finalizar']));
     });
 
     $r->addGroup('/sala-juntas', function (RouteCollector $r) {
