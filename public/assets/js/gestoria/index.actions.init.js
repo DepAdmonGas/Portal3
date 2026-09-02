@@ -186,10 +186,9 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
-
-        irPersonal(){
+        irProfeco(){
           if (!this.estacionId) {
-                window.location.href = '/personal';
+                window.location.href = '/sasisopa/control-actividades-procesos/bitacora-dispensario';
                 return;
             }
 
@@ -198,7 +197,33 @@ document.addEventListener('alpine:init', () => {
                 id_estacion: this.estacionId,
                 id_depto: null
             }).then(() => {
-                window.location.href = '/personal';
+                window.location.href = '/sasisopa/control-actividades-procesos/bitacora-dispensario';
+            }).catch(() => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo seleccionar la estación. Intente de nuevo.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        },
+
+
+        irPersonal(){
+          if (!this.estacionId) {
+                window.location.href = '/personal/SASISOPA';
+                return;
+            }
+
+            axios.post('/api/module-context/set', {
+                module_key: 'sasisopa',
+                id_estacion: this.estacionId,
+                id_depto: null
+            }).then(() => {
+                window.location.href = '/personal/SASISOPA';
             }).catch(() => {
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({

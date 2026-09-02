@@ -1680,6 +1680,11 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/documentos/create', Route::auth(['GestoriaCalibracionTanqueController', 'guardarDocumento']));
         $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/documentos/eliminar/{idDetalle}', Route::auth(['GestoriaCalibracionTanqueController', 'eliminarDocumento']));
         $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/finalizar', Route::auth(['GestoriaCalibracionTanqueController', 'finalizar']));
+
+        $r->addRoute('GET', '/control-documental-sgm/{idEstacion}', Route::auth(['GestoriaDocumentosSgmController', 'index']));
+        $r->addRoute('GET', '/control-documental-sgm/{idEstacion}/data', Route::auth(['GestoriaDocumentosSgmController', 'data']));
+        $r->addRoute('POST', '/control-documental-sgm/{idEstacion}/documentos/{idDocumento}/guardar', Route::auth(['GestoriaDocumentosSgmController', 'guardarDocumento']));
+        $r->addRoute('POST', '/control-documental-sgm/{idEstacion}/archivos/{idArchivo}/eliminar', Route::auth(['GestoriaDocumentosSgmController', 'eliminarDocumento']));
     });
 
     $r->addGroup('/sala-juntas', function (RouteCollector $r) {
