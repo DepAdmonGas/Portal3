@@ -103,8 +103,8 @@
 
                 <hr>
 
-                <a class="list-group-item list-group-item-action border-0 fs-4 p-3"
-                    href="">
+                <a class="list-group-item list-group-item-action border-0 fs-4 p-3 pointer"
+                    @click.prevent="irProfeco()">
                     <i class="ti ti-list fs-4 me-2"></i>
                     Bitacora PROFECO
                 </a>
