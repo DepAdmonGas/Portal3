@@ -23,8 +23,8 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
     <div class="card-header">
   <div class="d-flex align-items-center">
       <div class="ms-auto">
-      <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="btn btn-light text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+      <div class="dropdown dropcenter">
+            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="ti ti-dots-vertical fs-6"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -959,12 +959,12 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
             <div class="mb-3" x-text="liderTercer"></div>
 
 
-                    <label class="form-label mb-0">
+                    <label class="form-label mb-1">
                         * Informe final:
                     </label>
 
-
-                <input
+<div class="input-group mb-3">
+<input
                     id="archivoTercer"
                     type="file"
                     accept=".pdf"
@@ -974,16 +974,17 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                         archivoTercer = $event.target.files[0];
                         errors.archivoTercer = false;
                     ">
-                <div class="text-end mt-3 mb-3">
+                
                     <button
                     type="button"
                     class="btn btn-success"
                     @click="guardarTercero">
-<i class="ti ti-check"></i>
-                    Guardar
-
+<i class="ti ti-plus"></i>
+                    Nuevo
                 </button>
-                </div>
+</div>
+                
+
 
                 <b class="form-label"> Informe final de la investigación causa raíz </b>
 

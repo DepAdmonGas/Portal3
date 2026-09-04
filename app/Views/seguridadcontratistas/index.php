@@ -493,6 +493,8 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                    
 
                 </div>
+
+                
           <div class="table-responsive mb-3">
 <table class="table table-striped table-bordered mb-0 text-nowrap" id="table-encargados">
                 <thead>
@@ -1183,7 +1185,8 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     Sirva la presente para todos los fines
                     legales a que haya lugar.
-
+                    Sin más por el momento, quedo de usted.
+                    <br><br>
                 </div>
 
 

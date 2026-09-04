@@ -146,21 +146,24 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
 
                 <label class="form-label">Nombre del trabajador:</label>
 
-                <select class="form-control mb-2" x-model="selectedEmpleado">
-                    <option value="">Selecciona una opción...</option>
+
+                <div class="input-group mb-3">
+              <select class="form-control" x-model="selectedEmpleado">
+                    <option>Selecciona una opción...</option>
                     <template x-for="user in usuarios" :key="user.id">
                         <option :value="user.id" x-text="user.nombre"></option>
                     </template>
                 </select>
 
-                <div class="text-end">
-                <button class="btn btn-success mb-3"
+                <button class="btn btn-success"
                     @click="addEmpleado()">
 <i class="ti ti-check"></i>
-                    Agregar 
+                    Nuevo 
                 </button>
-                </div>
+                
 
+                </div>
+  
                 <table class="table table-bordered mb-0">
                     <thead>
                         <tr>

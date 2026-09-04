@@ -126,6 +126,7 @@ x-data="monitoreoEvaluacion()">
     </tbody>
   </table>
   </div>
+  
   <div class="mt-3 md-3"><b>Resultado:</b></div>
 
   <div class="row">
@@ -622,13 +623,14 @@ x-data="monitoreoEvaluacion()">
 <div class="modal fade" id="modal-capacitacion" tabindex="-1" aria-labelledby="mySmallModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-md">
                 <div class="modal-content">
-                    <div class="card-header bg-primary">
- <div class="modal-header d-flex align-items-center">
-                        <h4 class="card-title text-white" id="myModalLabel">
+                    <div class="modal-header mb-0 bg-primary d-flex align-items-center">
+ 
+                        <h4 class="modal-title text-white" id="myModalLabel">
+                            <i class="ti ti-settings"></i>
                             Capacitación
                         </h4>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
+                    
 
                     </div>
                    

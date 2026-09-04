@@ -183,7 +183,8 @@ x-data="{ ...actions(), ...implementacionSA()}">
                             class="btn btn-success"
                             @click="guardar()">
 
-                        <i class="ti ti-check"></i> Guardar
+                        <i class="ti ti-check"></i>
+                        <span x-text="mode === 'edit' ? 'Actualizar' : 'Guardar'"></span>
 
                     </button>
 
