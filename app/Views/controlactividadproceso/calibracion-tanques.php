@@ -17,26 +17,41 @@ x-data="{ ...actions(), ...calibracionTanques() }">
     JSON_HEX_QUOT
 ) ?>
 </script>
+<div class="d-flex justify-content-end mb-3 mt-3">
+<template x-if="calibracion.estado == 1">
 
-<div class="mt-3 p-3">
+            <button
+                type="button"
+                class="btn btn-success "
+                @click="window.history.back()">
 
+                <i class="ti ti-check"></i> Finalizar
+
+            </button>
+
+        </template>
+
+</div>
+        
+<div class="card">
+<div class="card-body p-3">
     <div class="row">
 
-        <div class="col-6 col-sm-3 mt-2">
-            <label class="form-label">Folio:</label>
-            <div>
+        <div class="col-12 col-sm-3 ">
+            <label class="form-label mb-2">Folio:</label>
+            <div class="mb-3">
                 <h5 x-text="'00' + calibracion.folio"></h5>
             </div>
         </div>
 
-        <div class="col-6 col-sm-3 mt-2">
-            <div class="text-secondary">
+        <div class="col-12 col-sm-3">
+            <div class="text-secondary mb-0">
                 <label class="form-label">Fecha:</label>
             </div>
 
             <input
                 type="date"
-                class="form-control"
+                class="form-control mb-3"
                 x-model="calibracion.fecha_formateada"
                 @change="editarCampo(
                     1,
@@ -45,14 +60,14 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                 )">
         </div>
 
-        <div class="col-6 col-sm-3 mt-2">
-            <div class="text-secondary">
+        <div class="col-12 col-sm-3">
+            <div class="text-secondary mb-0">
                 <label class="form-label">Hora:</label>
             </div>
 
             <input
                 type="time"
-                class="form-control"
+                class="form-control mb-3"
                 x-model="calibracion.hora"
                 @change="editarCampo(
                     2,
@@ -61,14 +76,14 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                 )">
         </div>
 
-        <div class="col-6 col-sm-3 mt-2">
-            <div class="text-secondary">
+        <div class="col-12 col-sm-3">
+            <div class="text-secondary mb-0">
                 <label class="form-label">Unidad de verificación:</label>
             </div>
 
             <input
                 type="text"
-                class="form-control"
+                class="form-control mb-3"
                 x-model="calibracion.unidad_verificacion"
                 @blur="editarCampo(
                     3,
@@ -77,14 +92,14 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                 )">
         </div>
 
-        <div class="col-6 col-sm-3 mt-2">
-            <div class="text-secondary">
+        <div class="col-12 col-sm-3">
+            <div class="text-secondary mb-0">
                 <label class="form-label">No. de acreditación:</label>
             </div>
 
             <input
                 type="text"
-                class="form-control"
+                class="form-control mb-3"
                 x-model="calibracion.numero_acreditacion"
                 @blur="editarCampo(
                     4,
@@ -93,14 +108,14 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                 )">
         </div>
 
-        <div class="col-6 col-sm-3 mt-2">
-            <div class="text-secondary">
+        <div class="col-12 col-sm-3">
+            <div class="text-secondary mb-0">
                 <label class="form-label">Método usado para la calibración:</label>
             </div>
 
             <input
                 type="text"
-                class="form-control"
+                class="form-control mb-3"
                 x-model="calibracion.metodo_calibracion"
                 @blur="editarCampo(
                     5,
@@ -111,15 +126,16 @@ x-data="{ ...actions(), ...calibracionTanques() }">
 
     </div>
 
-    <table class="table table-sm table-bordered mt-4">
+    <div class="table table-responsive">
+  <table class="table table-striped table-bordered mt-4 mb-0 text-nowrap align-middle">
 
         <thead>
             <tr>
                 <th class="align-middle text-center">No. Tanque</th>
-                <th class="align-middle">Capacidad</th>
-                <th class="align-middle">Producto</th>
-                <th class="align-middle">Incertidumbre de calibración</th>
-                <th class="align-middle">Cumple con los límites establecidos</th>
+                <th class="align-middle text-center">Capacidad</th>
+                <th class="align-middle text-center">Producto</th>
+                <th class="align-middle text-center">Incertidumbre de calibración</th>
+                <th class="align-middle text-center">Cumple con los límites establecidos</th>
                 <th class="align-middle text-center"><i class="ti ti-file-text text-muted fs-6"></i></th>
             </tr>
         </thead>
@@ -133,12 +149,12 @@ x-data="{ ...actions(), ...calibracionTanques() }">
     <tr>
 
         <td  class="align-middle text-center" x-text="item.tanque?.no_tanque"></td>
-        <td  class="align-middle" x-text="item.tanque?.capacidad"></td>
-        <td  class="align-middle" x-text="item.tanque?.producto"></td>
+        <td  class="align-middle text-center" x-text="item.tanque?.capacidad"></td>
+        <td  class="align-middle text-center" x-text="item.tanque?.producto"></td>
         <td class="p-0">
             <input
                 type="text"
-                class="form-control border-0 rounded-0"
+                class="text-center form-control border-0 rounded-0"
                 x-model="item.resultado1"
                 @blur="editarTanque(
                     item,
@@ -150,7 +166,7 @@ x-data="{ ...actions(), ...calibracionTanques() }">
         <td class="p-0">
             <input
                 type="text"
-                class="form-control border-0 rounded-0"
+                class="text-center form-control border-0 rounded-0"
                 x-model="item.resultado2"
                 @blur="editarTanque(
                     item,
@@ -176,17 +192,19 @@ x-data="{ ...actions(), ...calibracionTanques() }">
 </tbody>
 
     </table>
+    </div>
+  
 
-    <div class="row">
+    <div class="row mt-3">
 
-        <div class="col-6">
+        <div class="col-12 col-md-6">
 
-            <div class="text-secondary mt-2">
+            <div class="text-secondary mb-0">
                 <label class="form-label">Observaciones:</label>
             </div>
 
             <textarea
-                class="form-control"
+                class="form-control mb-3"
                 x-model="calibracion.observaciones"
                 @blur="editarCampo(
                     6,
@@ -197,15 +215,15 @@ x-data="{ ...actions(), ...calibracionTanques() }">
 
         </div>
 
-        <div class="col-6">
+        <div class="col-12 col-md-6">
 
-            <div class="text-secondary mt-2">
+            <div class="text-secondary mb-0">
                 <label class="form-label">Responsable de la verificación:</label>
             </div>
 
             <input
                 type="text"
-                class="form-control"
+                class="form-control mb-3"
                 x-model="calibracion.responsable_verificacion"
                 @blur="editarCampo(
                     7,
@@ -234,22 +252,13 @@ x-data="{ ...actions(), ...calibracionTanques() }">
 
         </template>
 
-        <template x-if="calibracion.estado == 1">
 
-            <button
-                type="button"
-                class="btn btn-success"
-                @click="window.history.back()">
-
-                <i class="ti ti-check"></i> Finalizar
-
-            </button>
-
-        </template>
 
     </div>
 
 </div>
+</div>
+
 
 <!-- Modal Resultados -->
 
@@ -280,7 +289,7 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                 <div class="mb-3">
 
                     <label class="form-label">
-                        * Resultados (PDF)
+                        * Resultados (PDF):
                     </label>
 
                     <input
@@ -291,15 +300,7 @@ x-data="{ ...actions(), ...calibracionTanques() }">
 
                 </div>
 
-                <div x-show="tanqueSeleccionado?.resultados">
-
-                    <a class="btn bg-primary-subtle primary"
-                        :href="'/uploads/archivos/calibracion/' + tanqueSeleccionado.resultados"
-                        target="_blank">
-                        Resultados de la calibración <i class="ti ti-file-type-pdf fs-6"></i>
-                    </a>
-
-                </div>
+  
 
             </div>
 
@@ -311,6 +312,16 @@ x-data="{ ...actions(), ...calibracionTanques() }">
                     data-bs-dismiss="modal">
                     <i class="ti ti-x"></i> Cancelar
                 </button>
+
+              <div x-show="tanqueSeleccionado?.resultados">
+
+                    <a class="btn bg-primary-subtle primary"
+                        :href="'/uploads/archivos/calibracion/' + tanqueSeleccionado.resultados"
+                        target="_blank">
+                        Resultados de la calibración <i class="ti ti-file-type-pdf fs-6"></i>
+                    </a>
+
+                </div>
 
                 <button
                     type="button"

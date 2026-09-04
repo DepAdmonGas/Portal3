@@ -212,42 +212,42 @@ document.addEventListener('alpine:init', () => {
             <div class="row">
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Temperatura ambiente:</label>
+                <label class="form-label mb-1">Temperatura ambiente:</label>
                 <div>${this.detalle.temperatura_ambiente}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Presión atmosférica:</label>
+                <label class="form-label mb-1">Presión atmosférica:</label>
                 <div>${this.detalle.presion_atmosferica}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Humedad:</label>
+                <label class="form-label mb-1">Humedad:</label>
                 <div>${this.detalle.humedad}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Liquido usado en la calibración:</label>
+                <label class="form-label mb-1">Liquido usado en la calibración:</label>
                 <div>${this.detalle.liquido_calibracion}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Temperatura del líquido:</label>
+                <label class="form-label mb-1">Temperatura del líquido:</label>
                 <div>${this.detalle.temperatura_liquido}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Laboratorio de calibración:</label>
+                <label class="form-label mb-1">Laboratorio de calibración:</label>
                 <div>${this.detalle.laboratorio_calibracion}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">No. de acreditación:</label>
+                <label class="form-label mb-1">No. de acreditación:</label>
                 <div>${this.detalle.numero_acreditacion}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Método de calibración:</label>
+                <label class="form-label mb-1">Método de calibración:</label>
                 <div>${this.detalle.metodo_calibracion}</div>
             </div>
 
@@ -291,17 +291,17 @@ document.addEventListener('alpine:init', () => {
             <div class="row">
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Unidad de verificación:</label>
+                <label class="form-label mb-1">Unidad de verificación:</label>
                 <div>${this.detalle.unidad_verificacion}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">No. de acreditación:</label>
+                <label class="form-label mb-1">No. de acreditación:</label>
                 <div>${this.detalle.numero_acreditacion}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Método usado para la calibración:</label>
+                <label class="form-label mb-1">Método usado para la calibración:</label>
                 <div>${this.detalle.metodo_usado_calibracion}</div>
             </div>
 
@@ -345,17 +345,17 @@ document.addEventListener('alpine:init', () => {
             <div class="row">
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Unidad de verificación:</label>
+                <label class="form-label mb-1">Unidad de verificación:</label>
                 <div>${this.detalle.unidad_verificacion}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">No. de acreditación:</label>
+                <label class="form-label mb-1">No. de acreditación:</label>
                 <div>${this.detalle.numero_acreditacion}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Método usado para la calibración:</label>
+                <label class="form-label mb-1">Método usado para la calibración:</label>
                 <div>${this.detalle.metodo_usado_calibracion}</div>
             </div>
 
@@ -401,17 +401,17 @@ document.addEventListener('alpine:init', () => {
             <div class="row">
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Unidad de verificación:</label>
+                <label class="form-label mb-1">Unidad de verificación:</label>
                 <div>${this.detalle.unidad_verificacion}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">No. de acreditación:</label>
+                <label class="form-label mb-1">No. de acreditación:</label>
                 <div>${this.detalle.numero_acreditacion}</div>
             </div>
 
             <div class="col-md-3 mt-2">
-                <label class="form-label">Tipo calibración:</label>
+                <label class="form-label mb-1">Tipo calibración:</label>
                 <div>${this.detalle.categoria_detalle}</div>
             </div>
 

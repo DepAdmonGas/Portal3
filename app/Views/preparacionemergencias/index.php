@@ -65,21 +65,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                 </th>
 
-                <th
-                    class="b"
-                    width="60">
-
-                 <i class="ti ti-edit fs-7 text-danger"></i>
-
-                </th>
-
-                <th
-                    class="b"
-                    width="60">
-
-                    <i class="ti ti-trash fs-7 text-danger"></i>
-
-                </th>
+                <th class="text-center"><i class="ti ti-dots-vertical fs-6"></i></th>
 
             </tr>
 
@@ -137,7 +123,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                     </td>
 
-                    <td class="text-center">
+                    <td class="text-center" >
 
                         <a
                         href="javascript:void(0)"
@@ -149,30 +135,28 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                     </td>
 
-                    <td class="text-center">
+                    <td class="text-center" width="48px">
 
-                        <a
-                        href="javascript:void(0)"
-                            @click="editarProtocolo(item)">
+                        <div class="dropcen">
+                            <a href="javascript:void(0)"  id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        
+                    <div class="dropcen">
+                        <a href="javascript:void(0)"  id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+             <i class="ti ti-dots-vertical fs-6"></i>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                  <li>
+             <a class="dropdown-item pointer d-flex align-items-center gap-3 " href="javascript:void(0)"  @click="editarProtocolo(item)"><i class="ti ti-edit fs-4"></i> Editar</a>
 
-                            <i class="ti ti-edit fs-7 text-warning"></i>
+        </li>
+        <li>
+             <a class="dropdown-item pointer d-flex align-items-center gap-3 " href="javascript:void(0)"  @click="eliminarProtocolo(item.id)"><i class="ti ti-trash fs-4"></i> Eliminar</a>
 
-                        </a>
-
-                    </td>
-
-                    <td class="text-center">
-
-                        <a
-                            href="javascript:void(0)"
-                            @click="eliminarProtocolo(item.id)">
-
-                            <i class="ti ti-trash text-danger fs-7"></i>
-
-                        </a>
-
-                    </td>
-
+        </li>
+       
+        </ul>
+        </div>
+        </td>
                 </tr>
 
             </template>
@@ -218,8 +202,8 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
   <div class="d-flex align-items-center">
       <div class="ms-auto">
-      <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="btn btn-light" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+      <div class="dropdown dropcenter">
+            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
              <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -429,7 +413,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                                 errors.anexo.archivo = false;
                             ">
 
-                <div class="mt-3 text-end">
+                <div class="mt-3 mb-3 text-end">
                   <button
                             class="btn btn-success"
                             @click="guardarAnexo()">
@@ -439,10 +423,9 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                         </button>
                 </div>
 
-                <hr>
 
                 <table
-                    class="table table-sm table-bordered table-hover">
+                    class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
                     <thead>
 
@@ -527,7 +510,13 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                 </table>
 
             </div>
-
+<div class="modal-footer">
+     <button type="button"
+                        class="btn bg-danger-subtle text-danger"
+                        data-bs-dismiss="modal">
+                        <i class="ti ti-x"></i> Cancelar
+                    </button>
+</div>
         </div>
 
     </div>
@@ -567,7 +556,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                             @click="nuevoTelefono()" x-show="!mostrarFormulario">
 
                             <i class="ti ti-plus"></i>
-                            Nuevo teléfono
+                            Nuevo
 
                         </button>
 
@@ -908,6 +897,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
             <div class="modal-body">
 
+           
                 <label
                     class="form-label">
 
@@ -915,39 +905,34 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                 </label>
 
-                <div class="row">
 
-                    <div class="col-md-10">
 
-                        <select
-                            id="selectPersonal"
-                            multiple
-                            class="form-select">
+           
+<div class="input-group mb-3 rounded overflow-hidden"
+     style="display: flex; flex-wrap: nowrap;">
 
-                        </select>
+    <select class="form-select"
+            id="selectPersonal"
+            multiple
+            style="min-width: 0;">
+    </select>
 
-                    </div>
+    <button type="button"
+            class="btn btn-success"
+            style="flex-shrink: 0;"
+            @click="agregarPersonal()">
+        <i class="ti ti-check"></i> Agregar
+    </button>
 
-                    <div class="col-md-2">
+</div>
+                
 
-                        <button
-                            class="btn btn-success w-100"
-                            @click="agregarPersonal()">
 
-                            <i class="ti ti-check"></i> Agregar
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <hr>
 
                 <div class="table-responsive overflow-x-auto overflow-hidden">
 
                     <table
-                        class="table table-bordered table-hover table-sm">
+                        class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
                         <thead>
 
@@ -1024,7 +1009,13 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
                 </div>
 
             </div>
-
+<div class="modal-footer">
+      <button type="button"
+                        class="btn bg-danger-subtle text-danger"
+                        data-bs-dismiss="modal">
+                        <i class="ti ti-x"></i> Cancelar
+                    </button>
+</div>
         </div>
 
     </div>
@@ -1132,7 +1123,7 @@ x-data="{ ...actions(), ...preparacionEmergencias()}">
 
                 <label class="form-label">
 
-                    Adjunta la Evaluación de Simulacro
+                    * Adjunta la Evaluación de Simulacro
                     (Fo.ADMONGAS.016a):
 
                 </label>

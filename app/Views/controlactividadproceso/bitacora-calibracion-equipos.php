@@ -95,8 +95,8 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
 
               <div class="modal-header modal-colored-header bg-primary text-white">
                   <h5 class="modal-title text-white">
-                    <i class="ti ti-chart-bar ms-2"></i>
-                      Adjuntar resultados
+                    <i class="ti ti-folder-up"></i>
+                      Resultados
                   </h5>
 
                   <button
@@ -110,20 +110,20 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
 
                   <div class="row mb-3">
 
-                      <div class="col-6">
-                          <strong>Equipo:</strong>
+                      <div class="col-6 ">
+                          <span class="form-label">Equipo:</span>
                           <div x-text="resultadoSeleccionado.equipo"></div>
                       </div>
 
                       <div class="col-6">
-                          <strong>Fecha:</strong>
+                         <span class="form-label">Fecha:</span> 
                           <div x-text="resultadoSeleccionado.fecha"></div>
                       </div>
 
                   </div>
 
                   <label class="form-label">
-                      * Archivo PDF
+                      * Archivo (PDF):
                   </label>
 
                   <input
@@ -135,26 +135,7 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                           $event.target.files[0]
                       ">
 
-                  <template
-                      x-if="resultadoSeleccionado.resultado">
 
-                      <div class="mt-3">
-
-                          <hr>
-
-                          <a
-                              class="btn bg-primary-subtle text-primary"
-                              target="_blank"
-                              :href="'/uploads/archivos/calibracion/' + resultadoSeleccionado.resultado">
-                            
-                              Resultados de la calibración
-                              <i class="ti ti-file-type-pdf fs-6"></i>
-
-                          </a>
-
-                      </div>
-
-                  </template>
 
               </div>
 
@@ -167,6 +148,25 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                       <i class="ti ti-x"></i> Cancelar
 
                   </button>
+
+                  <template
+                      x-if="resultadoSeleccionado.resultado">
+
+                      <div>
+
+                          <a
+                              class="btn bg-primary-subtle text-primary"
+                              target="_blank"
+                              :href="'/uploads/archivos/calibracion/' + resultadoSeleccionado.resultado">
+                            
+                              Descargar resultados 
+                              <i class="ti ti-file-type-pdf fs-6"></i>
+
+                          </a>
+
+                      </div>
+
+                  </template>
 
                   <button
                       class="btn btn-success"
@@ -217,45 +217,43 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
 
                       <div class="row">
 
-                          <div class="col-md-3 mt-2">
-                              <label class="form-label">Equipo:</label>
+                          <div class="col-md-3">
+                              <label class="form-label mb-1">Equipo:</label>
                               <div x-text="detalle.equipo"></div>
                           </div>
 
-                          <div class="col-md-3 mt-2">
-                              <label class="form-label">Folio:</label>
+                          <div class="col-md-3">
+                              <label class="form-label mb-1">Folio:</label>
                               <div x-text="'00' + detalle.folio"></div>
                           </div>
 
-                          <div class="col-md-3 mt-2">
-                              <label class="form-label">Fecha:</label>
+                          <div class="col-md-3">
+                              <label class="form-label mb-1">Fecha:</label>
                               <div x-text="detalle.fecha_formateada"></div>
                           </div>
 
-                          <div class="col-md-3 mt-2">
-                              <label class="form-label">Hora:</label>
+                          <div class="col-md-3">
+                              <label class="form-label mb-1">Hora:</label>
                               <div x-text="detalle.hora_formateada"></div>
                           </div>
                           
 
                       </div>
 
-                      <div x-html="otrosDetalle"></div>
+                      <div class="mt-2 mb-2" x-html="otrosDetalle"></div>
 
-                      <hr>
 
                       <!-- TABLA DINAMICA -->
 
-                      <div x-html="tablaDetalle"></div>
+                      <div class="mb-2 mt-4" x-html="tablaDetalle"></div>
 
                 
 
-                      <label class="fw-bold">
+                      <label class="form-label">
                           Observaciones:
                       </label>
 
                       <div
-                          class="border p-2"
                           x-text="detalle.observaciones">
                       </div>
 
