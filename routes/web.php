@@ -1717,6 +1717,12 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/soporte', Route::auth(['SoporteController', 'index']));
     });
 
+    //--------------------- Perfil
+
+    $r->addGroup('/perfil', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['PerfilController', 'index']));
+    });
+
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
     $r->addRoute('POST', '/telegram/webhook', ['TelegramWebhookController', 'handle']);
     $r->addRoute('GET', '/telegram/poll', Route::auth(['TelegramWebhookController', 'poll']));
