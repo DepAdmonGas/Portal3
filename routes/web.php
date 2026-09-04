@@ -229,10 +229,6 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/modulos-operativo-usuarios/delete', Route::auth(['ConfiguracionController', 'deleteModulosDptoOperativUsuarios']));
     });
 
-    // ---------------- DEPARTAMENTO DE SISTEMAS ----------------
-    $r->addGroup('/departamento-sistemas', function (RouteCollector $r) {});
-
-
     // ---------------- DEPARTAMENTO OPERATIVO ----------------
     $r->addGroup('/departamento-operativo', function (RouteCollector $r) {
 
@@ -785,6 +781,26 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/configuracion-modulos-usuario/submodulos/delete', Route::auth(['EstructuraUsuarioController', 'deleteSubmoduloUsuario']));
         $r->addRoute('GET', '/configuracion-modulos-usuario/{usuario:\d+}/permisos-modulos/{estructura:\d+}', Route::auth(['EstructuraUsuarioController', 'detallePermisosUsuario']));
         $r->addRoute('PUT', '/configuracion-modulos-usuario-permiso/{id:\d+}', Route::auth(['EstructuraUsuarioController', 'updatePermisosModuloUsuario']));
+    });
+
+    $r->addGroup('/reportes', function (RouteCollector $r) {
+
+        $r->addRoute('GET', '', Route::auth(['ReportesController', 'index']));
+        $r->addRoute('GET', '/estaciones', Route::auth(['ReportesController', 'estaciones']));
+        $r->addRoute('GET', '/data', Route::auth(['ReportesController', 'data']));
+        $r->addRoute('GET', '/autolavado/anual', Route::auth(['ReportesController', 'autolavadoAnual']));
+        $r->addRoute('GET', '/autolavado/diario', Route::auth(['ReportesController', 'autolavadoDiario']));
+        $r->addRoute('GET', '/resumen-aceites/pdf', Route::auth(['ReportesController', 'pdfResumenAceites']));
+        $r->addRoute('GET', '/resumen-aceites/excel', Route::auth(['ReportesController', 'excelResumenAceites']));
+        $r->addRoute('GET', '/concentrado-ventas/pdf', Route::auth(['ReportesController', 'pdfConcentradoVentas']));
+        $r->addRoute('GET', '/concentrado-ventas/excel', Route::auth(['ReportesController', 'excelConcentradoVentas']));
+        $r->addRoute('GET', '/solicitud-cheque/pdf', Route::auth(['ReportesController', 'pdfSolicitudCheque']));
+        $r->addRoute('GET', '/solicitud-cheque/excel', Route::auth(['ReportesController', 'excelSolicitudCheque']));
+        $r->addRoute('GET', '/solicitud-vales/pdf', Route::auth(['ReportesController', 'pdfSolicitudVales']));
+        $r->addRoute('GET', '/solicitud-vales/excel', Route::auth(['ReportesController', 'excelSolicitudVales']));
+        $r->addRoute('GET', '/recibo-nomina/pdf', Route::auth(['ReportesController', 'pdfReciboNomina']));
+        $r->addRoute('GET', '/recibo-nomina/excel', Route::auth(['ReportesController', 'excelReciboNomina']));
+        $r->addRoute('GET', '/tesoreria/pdf', Route::auth(['ReportesController', 'pdfTesoreria']));
     });
 
     //----------------- Lista de asistencia ------------
@@ -1692,6 +1708,13 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/calendario/data', Route::auth(['SalaJuntasController', 'dataCalendario']));
         $r->addRoute('GET', '/calendario/dia', Route::auth(['SalaJuntasController', 'diaCalendario']));
         $r->addRoute('GET', '/calendario/detalle/{id:\d+}', Route::auth(['SalaJuntasController', 'detalleCalendario']));
+    });
+
+    //----------------------------------------------------------------
+    // ---------------- DEPARTAMENTO DE SISTEMAS ----------------
+    $r->addGroup('/sistemas', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['SistemasController', 'index']));
+        $r->addRoute('GET', '/soporte', Route::auth(['SoporteController', 'index']));
     });
 
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
