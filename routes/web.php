@@ -77,8 +77,10 @@ return function (RouteCollector $r) {
     $r->addGroup('/estaciones', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['EstacionController', 'viewIndex']));
         $r->addRoute('GET', '/datatable', Route::auth(['EstacionController', 'datatableEstaciones']));
-        $r->addRoute('GET', '/crear', Route::auth(['EstacionController', 'viewCrear']));
-        $r->addRoute('POST', '/create-estacion', ['EstacionController', 'crearEstacion']);
+        $r->addRoute('GET', '/{id:\d+}', Route::auth(['EstacionController', 'obtenerEstacion']));
+        $r->addRoute('POST', '/create', Route::auth(['EstacionController', 'crearEstacion']));
+        $r->addRoute('POST', '/update', Route::auth(['EstacionController', 'actualizarEstacion']));
+        $r->addRoute('POST', '/delete', Route::auth(['EstacionController', 'eliminarEstacion']));
     });
 
     // ---------------- PUESTOS ----------------

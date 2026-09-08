@@ -15,7 +15,6 @@ class Estacion extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'id',
         'numlista',
         'nombre',
         'es',
@@ -38,6 +37,8 @@ class Estacion extends Model
         'fecha_autorizacion',
         'organigrama',
         'volumetrico',
+        'noregistro_generador',
+        'categoria',
         'latitud',
         'longitud',
         'distmax',
