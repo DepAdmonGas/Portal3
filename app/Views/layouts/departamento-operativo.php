@@ -428,6 +428,7 @@ $badgeText = $detalle['estacion_nombre'];
 
 
 
+
 </body>
 
 </html>

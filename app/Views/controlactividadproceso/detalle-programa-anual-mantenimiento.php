@@ -26,7 +26,7 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
             </ul>
         </div>
     </div>
-
+<div class="table-responsive">
     <table class="table table-bordered table-sm mt-3">
     <tr>
     <td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png' ?>" style="width: 200px;"></td>
@@ -40,7 +40,7 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
     <td class="text-center align-middle">Fecha de autorizacion 01/10/2018</td>
     </tr>
 </table>
-
+</div>
     <div class="datatables">
             <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
         <table id="table-programa-anual" class="table table-bordered mb-0 align-middle">

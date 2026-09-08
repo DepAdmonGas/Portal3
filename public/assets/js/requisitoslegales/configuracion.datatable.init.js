@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     }'
                     `}>
-                    <i class="fs-6 ti ti-trash pointer"></i>
+                    <i class="fs-6 ti ti-trash text-danger pointer"></i>
                 </a>
                     `;
                 }

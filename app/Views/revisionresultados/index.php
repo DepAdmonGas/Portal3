@@ -114,13 +114,9 @@ x-data="{ ...actions(), ...revisionResultados()}">
     </tbody>
   </table>
   </div>
-    </div>
-</div>
+  
 
-
-<div class="card">
-    <div class="card-body">
-  <div class="mt-1 mb-3 form-label"><b>Resultado:</b></div>
+  <div class="mt-3 mb-3 form-label"><b>Resultado:</b></div>
 
   <div class="row">
 
@@ -131,7 +127,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
         <div class="col-md-3">
 <div class="table-responsive">
             <table
-                class="table table-responsive table-striped table-bordered  align-middle"
+                class="table table-responsive table-striped table-bordered mb-0 align-middle"
                 style="font-size:.9em;">
 
                 <thead>
@@ -210,14 +206,15 @@ x-data="{ ...actions(), ...revisionResultados()}">
             </table>
             </div>
 </div>
-        </div>
+        
 
     </template>
-
-
-  
-    </div>
 </div>
+</div>
+</div>
+  
+  
+
 
 
   <!-- Ventas -->

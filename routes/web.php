@@ -229,10 +229,6 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/modulos-operativo-usuarios/delete', Route::auth(['ConfiguracionController', 'deleteModulosDptoOperativUsuarios']));
     });
 
-    // ---------------- DEPARTAMENTO DE SISTEMAS ----------------
-    $r->addGroup('/departamento-sistemas', function (RouteCollector $r) {});
-
-
     // ---------------- DEPARTAMENTO OPERATIVO ----------------
     $r->addGroup('/departamento-operativo', function (RouteCollector $r) {
 
@@ -797,6 +793,26 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/configuracion-modulos-usuario/submodulos/delete', Route::auth(['EstructuraUsuarioController', 'deleteSubmoduloUsuario']));
         $r->addRoute('GET', '/configuracion-modulos-usuario/{usuario:\d+}/permisos-modulos/{estructura:\d+}', Route::auth(['EstructuraUsuarioController', 'detallePermisosUsuario']));
         $r->addRoute('PUT', '/configuracion-modulos-usuario-permiso/{id:\d+}', Route::auth(['EstructuraUsuarioController', 'updatePermisosModuloUsuario']));
+    });
+
+    $r->addGroup('/reportes', function (RouteCollector $r) {
+
+        $r->addRoute('GET', '', Route::auth(['ReportesController', 'index']));
+        $r->addRoute('GET', '/estaciones', Route::auth(['ReportesController', 'estaciones']));
+        $r->addRoute('GET', '/data', Route::auth(['ReportesController', 'data']));
+        $r->addRoute('GET', '/autolavado/anual', Route::auth(['ReportesController', 'autolavadoAnual']));
+        $r->addRoute('GET', '/autolavado/diario', Route::auth(['ReportesController', 'autolavadoDiario']));
+        $r->addRoute('GET', '/resumen-aceites/pdf', Route::auth(['ReportesController', 'pdfResumenAceites']));
+        $r->addRoute('GET', '/resumen-aceites/excel', Route::auth(['ReportesController', 'excelResumenAceites']));
+        $r->addRoute('GET', '/concentrado-ventas/pdf', Route::auth(['ReportesController', 'pdfConcentradoVentas']));
+        $r->addRoute('GET', '/concentrado-ventas/excel', Route::auth(['ReportesController', 'excelConcentradoVentas']));
+        $r->addRoute('GET', '/solicitud-cheque/pdf', Route::auth(['ReportesController', 'pdfSolicitudCheque']));
+        $r->addRoute('GET', '/solicitud-cheque/excel', Route::auth(['ReportesController', 'excelSolicitudCheque']));
+        $r->addRoute('GET', '/solicitud-vales/pdf', Route::auth(['ReportesController', 'pdfSolicitudVales']));
+        $r->addRoute('GET', '/solicitud-vales/excel', Route::auth(['ReportesController', 'excelSolicitudVales']));
+        $r->addRoute('GET', '/recibo-nomina/pdf', Route::auth(['ReportesController', 'pdfReciboNomina']));
+        $r->addRoute('GET', '/recibo-nomina/excel', Route::auth(['ReportesController', 'excelReciboNomina']));
+        $r->addRoute('GET', '/tesoreria/pdf', Route::auth(['ReportesController', 'pdfTesoreria']));
     });
 
     //----------------- Lista de asistencia ------------
@@ -1672,6 +1688,31 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{idAnalisis}/anexos/delete', Route::auth(['GestoriaAnalisisRiesgoController', 'deleteAnexo']));
         $r->addRoute('GET', '/analisis-riesgo/{idEstacion}/{id}/data', Route::auth(['GestoriaAnalisisRiesgoController', 'editData']));
         $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{id}/update', Route::auth(['GestoriaAnalisisRiesgoController', 'update']));
+
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}', Route::auth(['GestoriaReporteCreController', 'index']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/data', Route::auth(['GestoriaReporteCreController', 'data']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/mensajes', Route::auth(['GestoriaReporteCreController', 'mensajes']));
+        $r->addRoute('POST', '/reporte-cre/{idEstacion}/mensajes/create', Route::auth(['GestoriaReporteCreController', 'createMensaje']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/facturas/anual', Route::auth(['GestoriaReporteCreController', 'descargarFacturasAnual']));
+
+        $r->addRoute('GET', '/cambio-precio/{idEstacion}', Route::auth(['GestoriaCambioPrecioController', 'index']));
+        $r->addRoute('GET', '/cambio-precio/{idEstacion}/data', Route::auth(['GestoriaCambioPrecioController', 'data']));
+        $r->addRoute('POST', '/cambio-precio/{idEstacion}/actualizar', Route::auth(['GestoriaCambioPrecioController', 'actualizarEstado']));
+
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}', Route::auth(['GestoriaCalibracionTanqueController', 'index']));
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}/data', Route::auth(['GestoriaCalibracionTanqueController', 'data']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/create', Route::auth(['GestoriaCalibracionTanqueController', 'create']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/delete/{id}', Route::auth(['GestoriaCalibracionTanqueController', 'delete']));
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}', Route::auth(['GestoriaCalibracionTanqueController', 'editarIndex']));
+        $r->addRoute('GET', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/data', Route::auth(['GestoriaCalibracionTanqueController', 'dataCalibracion']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/documentos/create', Route::auth(['GestoriaCalibracionTanqueController', 'guardarDocumento']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/documentos/eliminar/{idDetalle}', Route::auth(['GestoriaCalibracionTanqueController', 'eliminarDocumento']));
+        $r->addRoute('POST', '/calibracion-tanques/{idEstacion}/editar/{idCalibracion}/finalizar', Route::auth(['GestoriaCalibracionTanqueController', 'finalizar']));
+
+        $r->addRoute('GET', '/control-documental-sgm/{idEstacion}', Route::auth(['GestoriaDocumentosSgmController', 'index']));
+        $r->addRoute('GET', '/control-documental-sgm/{idEstacion}/data', Route::auth(['GestoriaDocumentosSgmController', 'data']));
+        $r->addRoute('POST', '/control-documental-sgm/{idEstacion}/documentos/{idDocumento}/guardar', Route::auth(['GestoriaDocumentosSgmController', 'guardarDocumento']));
+        $r->addRoute('POST', '/control-documental-sgm/{idEstacion}/archivos/{idArchivo}/eliminar', Route::auth(['GestoriaDocumentosSgmController', 'eliminarDocumento']));
     });
 
     $r->addGroup('/sala-juntas', function (RouteCollector $r) {
@@ -1679,6 +1720,19 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/calendario/data', Route::auth(['SalaJuntasController', 'dataCalendario']));
         $r->addRoute('GET', '/calendario/dia', Route::auth(['SalaJuntasController', 'diaCalendario']));
         $r->addRoute('GET', '/calendario/detalle/{id:\d+}', Route::auth(['SalaJuntasController', 'detalleCalendario']));
+    });
+
+    //----------------------------------------------------------------
+    // ---------------- DEPARTAMENTO DE SISTEMAS ----------------
+    $r->addGroup('/sistemas', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['SistemasController', 'index']));
+        $r->addRoute('GET', '/soporte', Route::auth(['SoporteController', 'index']));
+    });
+
+    //--------------------- Perfil
+
+    $r->addGroup('/perfil', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['PerfilController', 'index']));
     });
 
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------

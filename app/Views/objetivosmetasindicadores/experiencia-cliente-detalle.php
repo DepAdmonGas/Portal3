@@ -2,24 +2,43 @@
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
-<div class="mt-3"><h4>Reporte <?= $fecha ?></h4></div>
+
 
 <div class="row mt-3">
         <!-- TABLA - CUESTIONARIO -->
         <div class="col-xl-7 col-lg-7 col-md-12 col-sm-12">
 
 
+<div class="card">
+    <div class="card-header card-colored-header bg-primary">
+<div class="mt-0"><h4 class="card-title text-white mb-0">
+<i class="ti ti-chart-pie"></i>    
+Reporte <?= $fecha ?></h4></div>
+</div>
+
+    <div class="card-body">
         <div id="chart"></div>
-        
         </div>
+        </div>
+        </div>
+
+
 
         <!-- TABLA - CUESTIONARIO -->
         <div class="col-xl-5 col-lg-5 col-md-12 col-sm-12">
-        
+        <div class="card">
+
+            <div class="card-header  card-colored-header bg-primary">
+<h4 class="mb-0 card-title text-white">
+<i class="ti ti-user"></i>  
+Encuesta de cliente</h4>
+            </div>
+
+            <div class="card-body p-0">
         <div style="max-height: 500px; overflow-y: auto;">
          <template x-if="clientes.length > 0">
-        <div class="m-2">
-            <table class="table table-sm table-hover table-striped table-bordered">
+        <div >
+            <table class="table m-0 table-bordered table-striped  text-nowrap align-middle">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -53,27 +72,35 @@
 
     </div>
 
-        
         </div>
-    </div>
+
+</div>
+        </div>
+</div>
 
 
  <div class="row">
 
         <template x-for="p in preguntas" :key="p.id">
             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+<div class="card">
+    <div class="card-header crad-colored-header bg-primary">
+   <div class="p-0 fw-bold">
+                        <span class="fw-bold fs-5 card-title text-white" x-text="p.num_pregunta + '.-'"></span>
+                        <span class="fw-bold fs-5 card-title text-white" x-text="p.pregunta"></span>
+                    </div>
 
+    </div>
+    <div class="card-body">
                 <div class="bg-white mt-4 p-2">
 
-                    <div class="p-2 fw-bold">
-                        <span class="fw-bold fs-5" x-text="p.num_pregunta"></span>.-
-                        <span class="fw-bold fs-5" x-text="p.pregunta"></span>
-                    </div>
+                 
 
                     <div :id="'chartPregunta' + p.id" style="height:250px;"></div>
 
                 </div>
-
+</div>
+            </div>
             </div>
         </template>
 
@@ -92,32 +119,66 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
 
+
+
+
       <!-- BODY -->
       <div class="modal-body">
+                                       <!-------aqui se encuentra la tabla---->
 
-        <template x-for="item in detalle.preguntas" :key="item.num_pregunta">
-            <div class="p-1">
-                <div class="card p-3">
-                    <div style="font-size:1.2em">
+
+        
+
+
+            <table class="table table-bordered table-striped  text-nowrap align-middle">
+
+            <thead>
+                <tr>
+                    <th>Pregunta</th>
+                    <th class="text-center">Respuesta</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <template x-for="item in detalle.preguntas" :key="item.num_pregunta">
+
+                <tr>
+       
+                    <td class="py-3"">
                         <span x-text="item.num_pregunta"></span>.-
                         <span x-text="item.pregunta"></span>
-                    </div>
+                    </td>
 
-                    <div style="margin-top:5px; font-size:1.1em;"
-                         :style="'color:' + getColor(item.resultado)">
-                        R: <span x-text="getTexto(item.resultado)"></span>
-                    </div>
-                </div>
-            </div>
-        </template>
+                     <td class="text-center py-3" 
+                    >
+                        <span ></span>
 
-        <hr>
+                        <span class="badge rounded-pill" 
+                         :style="'background-color:' + getColor(item.resultado)" x-text="getTexto(item.resultado)"></span>
+                    </td>
+             
+                </tr>
+                </template>
+            </tbody>
+                
+            </table>
+        
+
+
+
 
         <div>
-            <small class="text-secondary">Comentario:</small>
+            <div class="form-label">Comentario:</div>
             <p style="font-size:1.1em" x-text="detalle.comentario"></p>
         </div>
 
+      </div>
+      <div class="modal-footer">
+               <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
       </div>
 
     </div>

@@ -892,7 +892,7 @@ protected string $modulo = 'sasisopa';
                 <th>Encargado de la comunicación</th>
                 <td>' . ($comunicacion->encargado->nombre ?? 'S/I') . '</td>
             </tr>
-            <tr>
+            <tr >
                 <th>Tipo de comunicación</th>
                 <td>' . $comunicacion->tipo_comunicacion . '</td>
             </tr>

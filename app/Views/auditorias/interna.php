@@ -381,7 +381,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
         <label class="form-label">* Nombre del anexo:</label>
 
-        <select class="form-select mb-2"
+        <select class="form-select mb-3"
                 x-model="documentoAnexo">
             <option value="">Seleccione una opcion...</option>
             <option>Lista de verificación</option>
@@ -389,18 +389,22 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
             <option>Evidencia</option>
         </select>
 
-        <input type="file"
+
+<div class="input-group mb-2">
+       <input type="file"
                id="archivoAnexo"
-               class="form-control mb-3"
+               class="form-control"
                @change="archivoAnexo = $event.target.files[0]">
 
-        <div class="text-end">
+  
             <button class="btn btn-success"
                     @click="guardarAnexo">
-                    <i class="ti ti-check"></i>
-                Agregar
+                    <i class="ti ti-plus"></i>
+                Nuevo
             </button>
-        </div>
+
+</div>
+     
 
 
 

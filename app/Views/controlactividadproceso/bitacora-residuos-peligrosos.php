@@ -187,7 +187,7 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                         Nombre del residuo peligroso:
                     </strong>
 </label>
-                    <div
+                    <div class="mb-2"
                         x-text="detalleRegistro.nombreresiduo || 'S/I'">
                     </div>
                      
@@ -254,9 +254,9 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
                 </div>
 
-                <hr>
+     
 
-                <h5 >
+                <h5 class="mt-3">
                     Recolector
                 </h5>
 
@@ -283,8 +283,6 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                     </div>
 
                 </div>
-
-                <hr>
 
                 <h5>
                    Transportista
@@ -314,7 +312,6 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
                 </div>
 
-                <hr>
 
                 <h5>
                     Destinatario
@@ -357,7 +354,6 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
                 </div>
 
-                <hr>
 
                 <div>
 <label class="form-label">
@@ -371,6 +367,13 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
                 </div>
 
+            </div>
+            <div class="modal-footer">
+                <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cerrar
+</button>
             </div>
 
         </div>

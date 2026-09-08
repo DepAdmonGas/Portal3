@@ -27,14 +27,15 @@
     </div> 
     </div>
 <div class="card-body p-0">
+    <div class="table-responsive">
 <table class="table table-striped table-bordered mb-0  align-middle">
         
 <thead>
             <tr>
 
-                <th>Dependencia</th>
-                <th>Permiso</th>
-                <th>Fundamento</th>
+                <th class="text-center">Dependencia</th>
+                <th class="text-center">Permiso</th>
+                <th class="text-center">Fundamento</th>
             </tr>
 </thead>
 
@@ -47,7 +48,7 @@
     
                 <tr>
 
-                    <td class="align-middle">
+                    <td class="align-middle text-center">
                         <b>
                             <?= $item->requisito->dependencia ?? 'S/I' ?>
                         </b>
@@ -82,7 +83,7 @@
         </tbody>
 
     </table>
-
+</div>
 </div>
 
     
