@@ -15,14 +15,9 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 <?php else: ?>
 
      <div class="text-end">
-    <div class="btn-group">
-        <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="ti ti-dots-vertical fs-4"></i>
-        </button>
-        <ul class="dropdown-menu animated rubberBand">
-         <li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openNuevoModal()"><i class="ti ti-plus"></i> Nuevo </a></li>
-        </ul>
-    </div>
+ 
+         <button type="button" class="btn bg-primary-subtle text-primary"><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openNuevoModal()"><i class="ti ti-plus"></i> Nuevo </a></button>
+    
 </div>
 
 <div class="datatables">
@@ -81,7 +76,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
                 <div class="form-label">
      
-                        Fecha:
+                        * Fecha:
                 </div>
 
                 <input
@@ -147,11 +142,11 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
                 @click="submit()">
                 <i class="ti ti-check"></i>
                 <span x-show="mode == 'create'">
-                    Crear mantenimiento
+                    Guardar
                 </span>
 
                 <span x-show="mode == 'edit'">
-                    Actualizar mantenimiento
+                    Actualizar
                 </span>
 
             </button>

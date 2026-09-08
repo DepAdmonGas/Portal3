@@ -4,17 +4,31 @@
 
 <div class="row mt-3">
     <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12">
+        <div class="items-d-flex aling-start">
         <input type="date" class="form-control" x-model="fecha"
         :class="{'is-invalid': errors.fecha}"
          @input="errors.fecha = false">
+         </div>
     </div>
-</div>
+
     
+<div class="col-xl-9 col-lg-9 col-md-12 col-sm-12">
+        <div class="text-end mt-0 items-d-flex aling-end">
+            <button class="btn btn-success"
+                    @click="finalizarEncuesta()">
+                    <i class="ti ti-check"></i>
+                Finalizar 
+            </button>
+        </div>
+        </div>
+</div>
+
 
     <div class="row mt-3">
         <!-- TABLA - CUESTIONARIO -->
         <div class="col-xl-7 col-lg-7 col-md-12 col-sm-12">
-
+<div class="card">
+<div class="card-body">
         <label class="form-label">Nombre:</label>
         <input type="text" class="form-control" x-model="nombre"
         :class="{'is-invalid': errors.nombre}"
@@ -51,25 +65,47 @@
                 </tbody>
             </table>
 
+
                 <label class="form-label">Comentario:</label>
                 <textarea class="form-control" x-model="comentario"></textarea>
-
-                <div class="text-end mt-3">
+                </div>
+<div class="card-footer">
+                <div class="text-end mt-0">
                     <button class="btn bg-primary-subtle text-primary"
                             :disabled="loading"
                             @click="guardar()">
-                        Agregar encuesta
+                            <i class="ti ti-plus"></i>
+                         Nuevo
                     </button>
                 </div>
+
+</div>
+
+                <!-----card termina abajo----->
         </div>
 
+
+
+</div>
         <!-- TABLA - CUESTIONARIO -->
         <div class="col-xl-5 col-lg-5 col-md-12 col-sm-12">
         
+        
+        <!----aqui empieza la card de clientes---->
+<div class="card">
+
+<div class="card-header card-colored-header bg-primary">
+
+            <h4 class="card-title text-white mb-0">
+                <i class="ti ti-user"></i>
+                Encuesta de clientes</h4>
+        
+    </div>
+ <div class="card-body p-0">
         <div style="max-height: 500px; overflow-y: auto;">
          <template x-if="clientes.length > 0">
-        <div class="m-2">
-            <table class="table table-sm table-hover table-striped table-bordered">
+        <div class="m-0">
+            <table class="table  table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -103,13 +139,13 @@
 
     </div>
 
-        <div class="text-end mt-4">
-            <button class="btn btn-success"
-                    @click="finalizarEncuesta()">
-                Finalizar encuesta
-            </button>
-        </div>
-        
+
+
+</div>
+    <!----------------aqui debe terminar la card---->
+</div>
+
+
         </div>
     </div>
 
@@ -128,29 +164,55 @@
 
       <!-- BODY -->
       <div class="modal-body">
+        
+      
+<table class="table table-bordered table-striped  text-nowrap align-middle">
+<thead>
+    <tr>
+        <th>Pregunta</th>
+        <th>Respuesta</th>
+    </tr>
+</thead>
 
+
+<tbody>
         <template x-for="item in detalle.preguntas" :key="item.num_pregunta">
-            <div class="p-1">
-                <div class="card p-3">
-                    <div style="font-size:1.2em">
+<tr>
+    
+       <td class="py-3">
                         <span x-text="item.num_pregunta"></span>.-
                         <span x-text="item.pregunta"></span>
-                    </div>
+                    </td>
 
-                    <div style="margin-top:5px; font-size:1.1em;"
-                         :style="'color:' + getColor(item.resultado)">
-                        R: <span x-text="getTexto(item.resultado)"></span>
-                    </div>
-                </div>
-            </div>
-        </template>
+                    <td class="text-center py-3" 
+                    >
+                        <span ></span>
 
-        <hr>
-
-        <div>
-            <small class="text-secondary">Comentario:</small>
-            <p style="font-size:1.1em" x-text="detalle.comentario"></p>
+                        <span class="badge rounded-pill" 
+                         :style="'background-color:' + getColor(item.resultado)" x-text="getTexto(item.resultado)"></span>
+                    </td>
+</tr>
+</template>
+</tbody>
+                 
+                </table>
+<div>
+            <div class="form-label">Comentario:</div>
+            <p x-text="detalle.comentario"></p>
         </div>
+
+            </div>
+
+
+  <div class="modal-footer">
+
+            <button type="button"
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> Cancelar
+</button>
+        </div>
+        
 
       </div>
 

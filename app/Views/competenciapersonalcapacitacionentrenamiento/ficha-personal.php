@@ -392,12 +392,12 @@ x-init="
                             <td x-text="formatearFecha(e.periodo_fin)"></td>
                              <td>
                                 <a @click="editarEmpresa(e.id)">
-                                    <i class="ti ti-edit fs-6"></i>
+                                    <i class="ti ti-edit fs-7 pointer"></i>
                                 </a>
                             </td>
                             <td>
                                 <a @click="eliminarEmpresa(e.id, e.razon_social)">
-                                    <i class="ti ti-trash text-danger fs-6"></i>
+                                    <i class="ti ti-trash text-danger fs-7 pointer"></i>
                                 </a>
                             </td>
                         </tr>

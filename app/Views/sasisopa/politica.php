@@ -154,11 +154,13 @@
 
                 <div class="card-header">
 
-                    <div class="float-end">
-                        <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-                            <?=
-                            !empty($permisos['crear']) ?
-                                '<button type="button" class="btn bg-primary-subtle text-primary"  @click="crearAsistencia()">
+
+<div class="d-flex aling-items-center float-end">
+<div x-data="{ ...actions(), ...listaasistenciaForm() }">
+<?= 
+!empty($permisos['crear']) ? 
+'<button type="button" class="btn bg-primary-subtle text-primary"  @click="crearAsistencia()">
+
 <i class="ti ti-plus"></i> Nuevo
 </button>'
                                 : ''
@@ -166,7 +168,9 @@
                         </div>
                     </div>
 
-                    <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+
+<h4 class="card-title mb-0 ">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+
 
 
                 </div>

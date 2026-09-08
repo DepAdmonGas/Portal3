@@ -8,6 +8,7 @@ use App\Services\ModuleStationService;
 use App\Services\MultiestacionService;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
+use App\Models\Usuario;
 use App\Models\Sasisopa\CursoCalendario;
 use App\Models\Sasisopa\CursoModulo;
 use App\Models\Sasisopa\CursoTemaPregunta;
@@ -23,13 +24,23 @@ class CursosController extends BaseController
 
     public function cursosIndex()
     {
-
         $title = 'Cursos';
 
-        Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SASISOPA', '/sasisopa');
-        Breadcrumb::add($title, '');
+        $datosUsuario = Usuario::query()
+            ->select('id_puesto')
+            ->find($this->userId());
 
+        $layout = $datosUsuario?->id_puesto == 6
+            ? 'sasisopa'
+            : 'main';
+
+        Breadcrumb::add('Home', '/home');
+
+        if ($datosUsuario?->id_puesto == 6) {
+            Breadcrumb::add('SASISOPA', '/sasisopa');
+        }
+
+        Breadcrumb::add($title, '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
         $data = [
@@ -38,33 +49,57 @@ class CursosController extends BaseController
             'modulo' => $this->modulo,
             'categoria' => 'SASISOPA',
             'filtro_usuario' => $this->filtro_usuario,
-            'estacionId' => ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null,
+
+            'estacionId' =>
+            ModuleStationService::getContext('sasisopa')['id_estacion']
+                ?? null,
+
             'moduleStationKey' => 'sasisopa',
-            'multiestacion' => MultiestacionService::isEnabled(),
+
+            'multiestacion' =>
+            MultiestacionService::isEnabled(),
+
             'links' => [],
+
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/cursos/index.action.init.js?v=1.5',
-
             ]
         ];
 
-        View::render('cursos/index', $data, 'sasisopa');
+        View::render(
+            'cursos/index',
+            $data,
+            $layout
+        );
     }
 
     public function cursosSgmIndex()
     {
-
         $title = 'Cursos';
 
+        $datosUsuario = Usuario::query()
+            ->select('id_puesto')
+            ->find($this->userId());
+
+        $layout = $datosUsuario?->id_puesto == 6
+            ? 'sgm'
+            : 'main';
+
         Breadcrumb::add('Home', '/home');
-        Breadcrumb::add('SGM', '/sgm');
+
+        if ($datosUsuario?->id_puesto == 6) {
+            Breadcrumb::add('SGM', '/sgm');
+        }
+
         Breadcrumb::add($title, '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
-        $estacionSgm = ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+        $estacionSgm =
+            ModuleStationService::getContext('sgm')['id_estacion']
+            ?? null;
 
         $data = [
             'title' => $title,
@@ -80,15 +115,15 @@ class CursosController extends BaseController
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/cursos/index.action.init.js?v=1.5',
-
             ]
         ];
 
-        View::render('cursos/index', $data, 'sgm');
+        View::render(
+            'cursos/index',
+            $data,
+            $layout
+        );
     }
-
-
-
 
     public function getModulos(): void
     {
@@ -159,21 +194,16 @@ class CursosController extends BaseController
                 if ($idEstacion) {
 
                     $query->where('id_estacion', $idEstacion);
-
                 } else {
 
                     $query->where('id_personal', $this->userId());
-
                 }
-
             } elseif (MultiestacionService::isEnabled() && $categoria === 'SASISOPA') {
 
                 $query->where('id_estacion', ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null);
-
             } else {
 
                 $query->where('id_personal', $this->userId());
-
             }
 
             $cursos = $query
@@ -241,40 +271,66 @@ class CursosController extends BaseController
             ->where('id_personal', $this->userId())
             ->firstOrFail();
 
+        $tema = $calendario->tema;
+
+        $datosUsuario = Usuario::query()
+            ->select('id_puesto')
+            ->find($this->userId());
+
+        $rutaCursos = match ($tema->categoria) {
+            'SGM'      => '/sgm/cursos',
+            'SASISOPA' => '/sasisopa/cursos',
+            default    => '/sasisopa/cursos',
+        };
+
         if ($calendario->estado == 1) {
-            header('Location: /sasisopa/cursos');
+            header('Location: ' . $rutaCursos);
             exit;
         }
 
-
-        $tema = $calendario->tema;
-
         $title = $tema->num_tema . ' - ' . $tema->titulo;
 
-        $layout = 'sasisopa';
+        if ($datosUsuario?->id_puesto != 6) {
 
-        if ($tema->categoria == 'SASISOPA') {
-            $layout = 'sasisopa';
-        } else if ($tema->categoria == 'SGM') {
-            $layout = 'sgm';
+            $layout = 'main';
+        } else {
+
+            $layout = match ($tema->categoria) {
+                'SASISOPA' => 'sasisopa',
+                'SGM'      => 'sgm',
+                default    => 'sasisopa',
+            };
         }
 
         Breadcrumb::add('Home', '/home');
-        Breadcrumb::add($tema->categoria, '/' . mb_strtolower($tema->categoria));
-        Breadcrumb::add('Cursos', '/' . mb_strtolower($tema->categoria) . '/cursos');
-        Breadcrumb::add($title, '');
+
+        if ($datosUsuario?->id_puesto == 6) {
+
+            Breadcrumb::add(
+                $tema->categoria,
+                '/' . mb_strtolower($tema->categoria)
+            );
+        }
+
+        Breadcrumb::add(
+            'Cursos',
+            $rutaCursos
+        );
+
+        Breadcrumb::add(
+            $title,
+            ''
+        );
 
         View::render(
             'cursos/iniciar',
             [
-
                 'title' => $title,
                 'tema' => $tema,
                 'calendario' => $calendario,
                 'scripts' => [
                     '/js/vendor.min.js'
                 ]
-
             ],
             $layout
         );
@@ -290,30 +346,64 @@ class CursosController extends BaseController
             ->where('id_personal', $this->userId())
             ->firstOrFail();
 
+        $tema = $calendario->tema;
+
+        $datosUsuario = Usuario::query()
+            ->select('id_puesto')
+            ->find($this->userId());
+
+        $rutaCursos = match ($tema->categoria) {
+            'SGM'      => '/sgm/cursos',
+            'SASISOPA' => '/sasisopa/cursos',
+            default    => '/sasisopa/cursos',
+        };
         if ($calendario->estado == 1) {
-            header('Location: /sasisopa/cursos');
+            header('Location: ' . $rutaCursos);
             exit;
         }
 
-        $tema = $calendario->tema;
+        $title =
+            'Evaluacion, '
+            . $tema->num_tema
+            . ' - '
+            . $tema->titulo;
 
-        $title = 'Evaluacion, ' . $tema->num_tema . ' - ' . $tema->titulo;
+        if ($datosUsuario?->id_puesto != 6) {
 
-        $layout = 'sasisopa';
+            $layout = 'main';
+        } else {
 
-        if ($tema->categoria == 'SASISOPA') {
-            $layout = 'sasisopa';
-        } else if ($tema->categoria == 'SGM') {
-            $layout = 'sgm';
+            $layout = match ($tema->categoria) {
+                'SASISOPA' => 'sasisopa',
+                'SGM'      => 'sgm',
+                default    => 'sasisopa',
+            };
         }
 
         Breadcrumb::add('Home', '/home');
-        Breadcrumb::add($tema->categoria, '/' . mb_strtolower($tema->categoria));
-        Breadcrumb::add('Cursos', '/' . mb_strtolower($tema->categoria) . '/cursos');
-        Breadcrumb::add($title, '');
 
-        $permisos = ModuloService::permisosSesion($this->modulo);
+        if ($datosUsuario?->id_puesto == 6) {
 
+            Breadcrumb::add(
+                $tema->categoria,
+                '/' . mb_strtolower($tema->categoria)
+            );
+        }
+
+        Breadcrumb::add(
+            'Cursos',
+            $rutaCursos
+        );
+
+        Breadcrumb::add(
+            $title,
+            ''
+        );
+
+        $permisos =
+            ModuloService::permisosSesion(
+                $this->modulo
+            );
         $data = [
             'title' => $title,
             'permisos' => $permisos,
@@ -325,10 +415,13 @@ class CursosController extends BaseController
                 '/js/vendor.min.js',
                 '/js/cursos/evaluacion.action.init.js?v=1.1',
             ]
-
         ];
 
-        View::render('cursos/evaluacion', $data, $layout);
+        View::render(
+            'cursos/evaluacion',
+            $data,
+            $layout
+        );
     }
 
     public function getEvaluacion(int $id): void
@@ -546,6 +639,7 @@ class CursosController extends BaseController
 
     public function cursosModulos(int $idModulo): void
     {
+
         $modulo = CursoModulo::query()
             ->findOrFail($idModulo);
 
@@ -558,81 +652,129 @@ class CursosController extends BaseController
 
         if ($categoria === 'SGM') {
 
-            $idEstacion = ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
-            $multiestacion = (bool) $idEstacion;
+            $idEstacion =
+                ModuleStationService::getContext('sgm')['id_estacion']
+                ?? null;
 
+            $multiestacion =
+                (bool) $idEstacion;
         } else {
 
-            $multiestacion = ($categoria === 'SASISOPA')
+            $multiestacion =
+                ($categoria === 'SASISOPA')
                 && MultiestacionService::isEnabled();
 
-            $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+            $idEstacion =
+                ModuleStationService::getContext('sasisopa')['id_estacion']
+                ?? null;
         }
 
-        $layout = match ($categoria) {
-            'SASISOPA' => 'sasisopa',
-            'SGM'      => 'sgm',
-            default    => 'sasisopa',
+        $datosUsuario = Usuario::query()
+            ->select('id_puesto')
+            ->find($this->userId());
+
+        if ($datosUsuario?->id_puesto != 6) {
+
+            $layout = 'main';
+        } else {
+
+            $layout = match ($categoria) {
+                'SASISOPA' => 'sasisopa',
+                'SGM'      => 'sgm',
+                default    => 'sasisopa',
+            };
+        }
+
+        $temas = $temas->map(
+            function ($tema) use ($multiestacion, $idEstacion) {
+
+                $query = CursoCalendario::query()
+                    ->where('id_tema', $tema->id);
+
+                if ($multiestacion) {
+
+                    $query->where(
+                        'id_estacion',
+                        $idEstacion
+                    );
+                } else {
+
+                    $query->where(
+                        'id_personal',
+                        $this->userId()
+                    );
+                }
+
+                $calendarios = $query->get();
+
+                return [
+                    'id'         => $tema->id,
+                    'numero'     => $tema->num_tema,
+                    'titulo'     => $tema->titulo,
+                    'total'      => $calendarios->count(),
+                    'pendientes' => $calendarios
+                        ->where('estado', 0)
+                        ->count(),
+                    'categoria'  => $tema->categoria,
+                ];
+            }
+        );
+
+        $title =
+            "MÓDULO {$modulo->num_modulo} - {$modulo->titulo}";
+
+        $rutaCursos = match ($categoria) {
+            'SGM'      => '/sgm/cursos',
+            'SASISOPA' => '/sasisopa/cursos',
+            default    => '/sasisopa/cursos',
         };
 
-        $temas = $temas->map(function ($tema) use ($multiestacion, $idEstacion) {
-
-            $query = CursoCalendario::query()
-                ->where('id_tema', $tema->id);
-
-            if ($multiestacion) {
-
-                $query->where('id_estacion', $idEstacion);
-
-            } else {
-
-                $query->where('id_personal', $this->userId());
-
-            }
-
-            $calendarios = $query->get();
-
-            return [
-                'id'         => $tema->id,
-                'numero'     => $tema->num_tema,
-                'titulo'     => $tema->titulo,
-                'total'      => $calendarios->count(),
-                'pendientes' => $calendarios->where('estado', 0)->count(),
-                'categoria'  => $tema->categoria,
-            ];
-        });
-
-
-        $title = "MÓDULO {$modulo->num_modulo} - {$modulo->titulo}";
-
-
-        Breadcrumb::add('Home', '/home');
         Breadcrumb::add(
-            $categoria ?? 'Cursos',
-            '/' . mb_strtolower($categoria ?? 'sasisopa', 'UTF-8')
+            'Home',
+            '/home'
         );
+
+        if ($datosUsuario?->id_puesto == 6) {
+
+            Breadcrumb::add(
+                $categoria ?? 'Cursos',
+                '/' . mb_strtolower(
+                    $categoria ?? 'sasisopa',
+                    'UTF-8'
+                )
+            );
+        }
+
         Breadcrumb::add(
             'Cursos',
-            '/' . mb_strtolower($categoria ?? 'sasisopa', 'UTF-8') . '/cursos'
+            $rutaCursos
         );
+
         Breadcrumb::add(
             $title,
             ''
         );
 
-        $permisos = ModuloService::permisosSesion($this->modulo);
+        $permisos =
+            ModuloService::permisosSesion(
+                $this->modulo
+            );
 
         $data = [
-            'title'          => $title,
-            'permisos'       => $permisos,
-            'filtro_usuario' => $this->filtro_usuario,
-            'modulo'         => $modulo,
-            'temas'          => $temas,
-            'categoria'      => $categoria,
-            'multiestacion'  => $multiestacion,
-            'estacionId'     => $idEstacion,
-            'moduleStationKey' => $categoria === 'SGM' ? 'sgm' : 'sasisopa',
-            'scripts'        => [
+            'title'             => $title,
+            'permisos'          => $permisos,
+            'filtro_usuario'    => $this->filtro_usuario,
+            'modulo'            => $modulo,
+            'temas'             => $temas,
+            'categoria'         => $categoria,
+            'multiestacion'     => $multiestacion,
+            'estacionId'        => $idEstacion,
+            'moduleStationKey'  =>
+            $categoria === 'SGM'
+                ? 'sgm'
+                : 'sasisopa',
+
+            'scripts' => [
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/cursos/modulo.action.init.js?v=' . time(),
@@ -660,7 +802,6 @@ class CursosController extends BaseController
 
                 $idEstacion = ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
                 $multiestacion = (bool) $idEstacion;
-
             } else {
 
                 $multiestacion = ($tema->categoria === 'SASISOPA')
@@ -675,11 +816,9 @@ class CursosController extends BaseController
             if ($multiestacion) {
 
                 $query->where('id_estacion', $idEstacion);
-
             } else {
 
                 $query->where('id_personal', $this->userId());
-
             }
 
             $calendarios = $query
@@ -768,9 +907,9 @@ class CursosController extends BaseController
         $fecha = $cal->fecha_programada;
         $nombre = $cal->usuario->nombre;
 
-$observacion = $cal->observaciones
-                ? ' (' . $cal->observaciones . ')'
-                : '';
+        $observacion = $cal->observaciones
+            ? ' (' . $cal->observaciones . ')'
+            : '';
 
         $estacion = Estacion::find($cal->id_estacion);
 

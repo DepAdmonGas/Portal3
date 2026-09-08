@@ -451,33 +451,36 @@ x-data="{ ...actions(), ...informesDesempeno()}">
 
                         <tr>
 
-                            <th class="text-center align-middle">
+                            <th class="text-center align-middle" rowspan="2">
                                 Fecha de implementación
                             </th>
 
-                            <th class="text-center align-middle">
+                            <th class="text-center align-middle" rowspan="2">
                                 Nombre del procedimiento
                             </th>
 
-                            <th class="text-center align-middle">
+                            <th class="text-center align-middle" rowspan="2">
                                 Breve descripción de la implementación
                             </th>
 
-                            <th class="text-center align-middle">
-                                <div class="border-bottom pb-1">Se dio a conocer la implementación</div>
-                                <div><label class="border-right pr-3 pl-2">Si</label>   / <label class="pl-2 pr-2">No</label></div>
+                            <th class="text-center align-middle" colspan="2">
+                               Se dio a conocer la implementación
                             </th>
 
-                            <th class="text-center align-middle">
+                            <th class="text-center align-middle" rowspan="2">
                                 Puestos de personal enterados de la implementación 	
                             </th>
 
-                            <th class="text-center align-middle">
+                            <th class="text-center align-middle" rowspan="2">
                                 Observaciones
                             </th>
-
                         </tr>
+<tr>
+    <th class="text-center align-middle" >SI</th>
+    <th class="text-center align-middle" >NO</th>
 
+ </tr>
+                        
                     </thead>
 
                     <tbody>
@@ -505,11 +508,14 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                                     x-text="item.descripcion">
                                 </td>
 
-                                <td
-                                    class="text-center"
-                                    x-text="item.informacion">
-                                </td>
+                    <td class="text-center">
+    <span x-show="item.informacion === 'Si'">Sí</span>
+</td>
 
+<td class="text-center">
+    <span x-show="item.informacion === 'No'">No</span>
+</td>
+Z
                                 <td>
 
                                     <template

@@ -248,7 +248,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="message-body">
-                                                    <a href="" class="py-8 px-7 mt-8 d-flex align-items-center">
+                                                    <a href="/perfil" class="py-8 px-7 mt-8 d-flex align-items-center">
                                                         <span class="d-flex align-items-center justify-content-center text-bg-light rounded-1 p-6">
                                                             <img src="<?= asset('images/svgs/icon-account.svg') ?>" alt="modernize-img" width="24" height="24" />
                                                         </span>
@@ -283,8 +283,8 @@
                 <div class="container-fluid">
                     <?php include __DIR__ . '/../partials/_global-badge.php'; ?>
 
-            <!---------- OPCION PARA IMPLEMENTAR EL SELECTOR ---------->
-            <?= $moduleStationSelector ?? '' ?>
+                    <!---------- OPCION PARA IMPLEMENTAR EL SELECTOR ---------->
+                    <?= $moduleStationSelector ?? '' ?>
 
                     <h4 class="fw-semibold mt-3"><?= $title; ?></h4>
                     <?php \App\Core\Breadcrumb::render(); ?>

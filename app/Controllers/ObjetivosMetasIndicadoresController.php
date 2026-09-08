@@ -1326,7 +1326,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
     public function editarExperienciaCliente($id){
 
-         $title = 'Agregar Experiencia del cliente';
+         $title = 'Formulario Experiencia del cliente';
          // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -1334,7 +1334,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
         Breadcrumb::add('Experiencia del cliente', '/sasisopa/objetivos-metas-indicadores/experiencia-cliente');
-        Breadcrumb::add('Agregar', '');
+        Breadcrumb::add('Formulario', '');
 
         $idEstacion = $this->estacionModulo();
         $encuestaEstacion = EncuentaEstacion::where('id', $id)

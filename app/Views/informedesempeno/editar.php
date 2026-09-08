@@ -4,7 +4,7 @@ data-estacion-id="<?= e($estacionId ?? '') ?>"
 x-data="{ ...actions(), ...informesDesempenoEditar(<?= $idReporte ?>)}">
 
 
-<div class="row p-3 mb-3">
+<div class="row  mb-3 mt-3">
     <div class="col-6">
 <input type="date" class="form-control"
 x-model="fechaReporte"
@@ -23,19 +23,23 @@ x-model="fechaReporte"
 
 
 <div class="table-responsive">
-<table class="table table-responsive p-0 table-striped table-bordered  align-middle">
+
+<table class="table table-responsive p-0 table-striped table-bordered mt-2 align-middle">
 <thead>
     <tr>
-    <th class="text-center align-middle">Fecha de implementación</th>
-    <th class="text-center align-middle">Nombre del procedimiento</th>
-    <th class="text-center align-middle" width="300px">Breve descripción de la implementación </th>
-    <th class="text-center align-middle">
-        <div class="border-bottom pb-1">Se dio a conocer la implementación</div>
-        <div><label class="border-right pr-3 pl-2">Si</label> / <label class="pl-2 pr-2">No</label></div>
-    </th>
-    <th class="text-center align-middle" width="200px">Puestos de personal enterados de la implementación</th>
-    <th class="text-center align-middle" width="300px">Observaciones</th>
+    <th class="text-center align-middle" rowspan="2">Fecha de implementación</th>
+    <th class="text-center align-middle" rowspan="2">Nombre del procedimiento</th>
+    <th class="text-center align-middle" rowspan="2" width="300px">Breve descripción de la implementación </th>
+    <th class="text-center align-middle" colspan="2">Se dio a conocer la implementación</th>
+    <th class="text-center align-middle" rowspan="2" width="200px">Puestos de personal enterados de la implementación</th>
+    <th class="text-center align-middle" rowspan="2" width="300px">Observaciones</th>
     </tr>
+    </tr>
+<tr>
+    <th class="text-center align-middle" >SI</th>
+    <th class="text-center align-middle" >NO</th>
+
+ </tr>
 </thead>
 
     <tbody>
@@ -81,7 +85,8 @@ x-model="fechaReporte"
                         Sí
 
                     </label>
-
+</td>
+<td>
                     <label class="pointer">
 
                         <input
