@@ -16,25 +16,14 @@
         <div id="sasisopa-content">
 
             <div class="text-end mt-2">
-                <div class="btn-group">
-                    <button type="button"
-                        class="btn btn-light dropdown-toggle text-dark"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false">
-                        <i class="ti ti-dots-vertical fs-4"></i>
-                    </button>
+                
+</button>
+<button class="btn bg-primary-subtle text-primary "@click="abrirModalBuscar()">
+<i class="ti ti-search"></i> Buscar
+</button>
 
-                    <ul class="dropdown-menu animated rubberBand">
-                        <li>
-                            <a class="dropdown-item pointer"
-                                @click="abrirModalBuscar()">
-                                <i class="ti ti-search"></i> Buscar
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+             
+            
 
             <div class="row mt-4">
                 <?php foreach ($elementos as $elemento): ?>
@@ -105,7 +94,7 @@
                     <div class="mb-3">
 
                         <label class="form-label">
-                            * Fecha inicio
+                            * Fecha inicio:
                         </label>
 
                         <input
@@ -122,7 +111,7 @@
                     <div>
 
                         <label class="form-label">
-                            * Fecha término
+                            * Fecha término:
                         </label>
 
                         <input

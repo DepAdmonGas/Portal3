@@ -63,40 +63,26 @@
             <!-- Acciones SASISOPA -->
             <?php if ($modulo === 'sasisopa'): ?>
 
-                <div class="btn-group">
-
-                    <button
-                        type="button"
-                        class="btn btn-light dropdown-toggle text-dark"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="ti ti-dots-vertical fs-4"></i>
-                    </button>
-
-                    <ul class="dropdown-menu animated rubberBand">
 
                         <?php if (!empty($permisos['crear'])): ?>
 
-                            <li>
-                                <a
-                                    class="dropdown-item pointer"
+                                <button
+                                    class="pointer btn bg-primary-subtle text-primary"
                                     @click="abrirModalActividad()">
                                     <i class="ti ti-plus"></i>
-                                    Agregar
-                                </a>
-                            </li>
+                                    Nuevo
+                                </button>
 
                         <?php endif; ?>
 
-                    </ul>
 
-                </div>
+             
 
             <?php endif; ?>
 
         </div>
 
-        <div id="calendar"></div>
+        <div class="text-capitalize" id="calendar"></div>
 
     </div>
 
@@ -119,7 +105,7 @@
 
                 <div
                     class="modal-header modal-colored-header bg-primary text-white">
-
+<i class="ti ti-calendar-month fs-6 me-1"></i>
                     <h4
                         class="modal-title text-white"
                         id="modalDiaLabel"
@@ -138,11 +124,11 @@
 
                     <div class="table-responsive">
 
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-striped p-0 text-nowrap align-middle"">
 
                             <thead>
                                 <tr>
-                                    <th width="60">
+                                    <th class="text-center">
                                         #
                                     </th>
 
@@ -150,11 +136,11 @@
                                         Nombre
                                     </th>
 
-                                    <th width="120">
+                                    <th class="text-center">
                                         Tipo
                                     </th>
 
-                                    <th width="120">
+                                    <th class="text-center">
                                         Estado
                                     </th>
                                 </tr>
@@ -171,7 +157,7 @@
                                         class="pointer"
                                         @click="abrirDetalle(item)">
 
-                                        <td
+                                        <td class="text-center"
                                             x-text="index + 1"></td>
 
                                         <td>
@@ -197,10 +183,10 @@
 
                                         </td>
 
-                                        <td>
+                                        <td class="text-center">
 
                                             <span
-                                                class="badge"
+                                                class="badge text-capitalize"
                                                 :class="
                                                     item.tipo === 'actividad'
                                                         ? 'bg-primary'
@@ -210,7 +196,7 @@
 
                                         </td>
 
-                                        <td>
+                                        <td class="text-center">
 
                                             <span
                                                 class="badge"
@@ -298,13 +284,14 @@
                     <h4
                         class="modal-title text-white"
                         id="modalDetalleLabel">
+                        
+  <i class="ti" :class="detalle.tipo === 'Detalle' ? 'ti-file' : 'ti-file-search'"></i>
+                        
+  <span x-text="detalle.tipo === 'actividad' 
+  ? 'Detalle de la actividad'
+   : 'Detalle del curso' ">
 
-                        <span
-                            x-text="
-                                detalle.tipo === 'actividad'
-                                    ? 'Detalle de la actividad'
-                                    : 'Detalle del curso'
-                            "></span>
+</span>
 
                     </h4>
 
@@ -324,13 +311,13 @@
                         <!-- Tema -->
                         <div class="col-12">
 
-                            <label class="form-label fw-semibold">
-                                Tema
+                            <label class="form-label fw-semibold mb-1">
+                                Tema:
                             </label>
 
-                            <div
-                                class="form-control bg-light"
-                                x-text="detalle.nombre ?? ''"></div>
+                            <span
+                                class="d-block mb-1"
+                                x-text="detalle.nombre ?? 'Sin información'"></span>
 
                         </div>
 
@@ -338,13 +325,13 @@
                         <!-- Nombre -->
                         <div class="col-12">
 
-                            <label class="form-label fw-semibold">
-                                Nombre
+                            <label class="form-label fw-semibold mb-1">
+                                Nombre:
                             </label>
 
-                            <div
-                                class="form-control bg-light"
-                                x-text="detalle.participante ?? ''"></div>
+                            <span
+                                class="d-block mb-1"
+                                x-text="detalle.participante ?? 'Sin información'"></span>
 
                         </div>
 
@@ -352,13 +339,13 @@
                         <!-- Fecha -->
                         <div class="col-md-6">
 
-                            <label class="form-label fw-semibold">
-                                Fecha programada
+                            <label class="form-label fw-semibold mb-1">
+                                Fecha programada:
                             </label>
 
-                            <div
-                                class="form-control bg-light"
-                                x-text="detalle.fecha ?? ''"></div>
+                            <span
+                                class="d-block mb-1"
+                                x-text="detalle.fecha ?? 'Sin información'"></span>
 
                         </div>
 
@@ -366,14 +353,14 @@
                         <!-- Estado -->
                         <div class="col-md-6">
 
-                            <label class="form-label fw-semibold">
-                                Estado
+                            <label class="form-label mb-1">
+                                Estado:
                             </label>
 
                             <div>
 
                                 <span
-                                    class="badge"
+                                    class="badge mb-1"
                                     :class="
                                         detalle.estado
                                             ? 'bg-success'
@@ -408,7 +395,7 @@
                                             Resultado
                                         </label>
 
-                                        <div class="form-control bg-light">
+                                        <div class="form-control border-0 bg-light"></div>
 
                                             <span
                                                 x-text="detalle.resultado ?? 0"></span>
@@ -426,11 +413,11 @@
                                             Participante
                                         </label>
 
-                                        <div
-                                            class="form-control bg-light"
+                                        <span
+                                            class="d-block mb-3 bg-light"
                                             x-text="
-                                                detalle.participante ?? ''
-                                            "></div>
+                                                detalle.participante ?? 'Sin información'
+                                            "></span>
 
                                     </div>
 
@@ -446,7 +433,7 @@
                                             class="form-control bg-light"
                                             style="min-height: 90px;"
                                             x-text="
-                                                detalle.observaciones ?? ''
+                                                detalle.observaciones ?? 'Sin información'
                                             "></div>
 
                                     </div>
@@ -472,13 +459,13 @@
                                     <div class="col-md-6">
 
                                         <label
-                                            class="form-label fw-semibold">
-                                            Folio
+                                            class="form-label fw-semibold mb-1">
+                                            Folio:
                                         </label>
 
-                                        <div
-                                            class="form-control bg-light"
-                                            x-text="detalle.folio ?? ''"></div>
+                                        <span
+                                            class="d-block mb-3"
+                                            x-text="detalle.folio ?? 'Sin información'"></span>
 
                                     </div>
 
@@ -486,15 +473,15 @@
                                     <div class="col-md-6">
 
                                         <label
-                                            class="form-label fw-semibold">
-                                            Fecha término
+                                            class="form-label fw-semibold mb-1">
+                                            Fecha término:
                                         </label>
 
-                                        <div
-                                            class="form-control bg-light"
-                                            x-text="
-                                                detalle.fecha_termino ?? ''
-                                            "></div>
+                                        <span
+                                            class="d-block mb-1"
+                                            x-text="detalle.fecha_termino && detalle.fecha_termino !== '000-00-00'
+    ? detalle.fecha_termino
+    : 'Sin información'"></span>
 
                                     </div>
 
@@ -571,7 +558,8 @@
                     <h4
                         class="modal-title text-white"
                         id="modalActividadLabel">
-                        Agregar actividad al calendario
+                        <i class="ti ti-calendar-plus"></i>
+                        Nueva actividad
                     </h4>
 
                     <button
@@ -591,7 +579,7 @@
                         <div class="col-12">
 
                             <label class="form-label">
-                                * Actividad
+                                * Actividad:
                             </label>
 
                             <select
@@ -599,7 +587,7 @@
                                 x-model="nuevaActividad.actividad">
 
                                 <option value="">
-                                    Seleccione...
+                                    Seleccione una opcion...
                                 </option>
 
                                 <template
@@ -629,10 +617,10 @@
 
 
                         <!-- Fecha -->
-                        <div class="col-md-4">
+                        <div class="col-12">
 
                             <label class="form-label">
-                                * Fecha
+                                * Fecha:
                             </label>
 
                             <input
@@ -662,7 +650,7 @@
                         class="btn btn-success"
                         @click="guardarActividad()">
                         <i class="ti ti-check"></i>
-                        Agregar actividad
+                        Guardar
                     </button>
 
                 </div>
