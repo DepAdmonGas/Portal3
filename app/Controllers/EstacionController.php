@@ -3,19 +3,25 @@
 namespace App\Controllers;
 
 use Illuminate\Database\Capsule\Manager as DB;
+
 use App\Models\Estacion;
+use App\Models\Usuario;
+
 use App\Core\View;
 use App\Core\Breadcrumb;
-use App\Core\Request;
 use App\Core\JsonResponse;
-
-use App\Models\Usuario;
 
 class EstacionController extends BaseController
 {
 
-    public function viewIndex()
+    public function viewIndex(): void
     {
+        $usuario = Usuario::find($this->userId());
+
+        if (!$usuario || (int) $usuario->id_puesto !== 25) {
+            header('Location: /home');
+            exit;
+        }
 
         $title = 'Estaciones';
 
@@ -24,163 +30,373 @@ class EstacionController extends BaseController
 
         $data = [
             'title' => $title,
+
             'links' => [
-                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
+
             'scripts' => [
-                '/assets/js/vendor.min.js',
-                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/assets/js/estaciones/datatable.init.js'
+                '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/estaciones/datatable.init.js?v=' . time(),
+                '/js/estaciones/index.actions.init.js?v=' . time()
             ]
         ];
 
-        View::render('estaciones/index', $data, 'main');
+        View::render(
+            'estaciones/index',
+            $data,
+            'main'
+        );
     }
 
-    public function viewCrear()
+    public function datatableEstaciones(): void
     {
-
-        $data = [
-            'title' => 'Crear Estacion',
-            'scripts' => []
-        ];
-
-        View::render('estaciones/crear', $data, 'main');
-    }
-
-    public function datatableEstaciones()
-    {
-        $usuario = Usuario::with('puesto')
-            ->where('id', $this->userId())
-            ->first();
-
-        if ($usuario->puesto->tipo_puesto == 'Gestoria') {
-            $estaciones = Estacion::whereNotIn('id', [8, 10, 13])
-                ->orderBy('numlista')
-                ->get();
-        } else {
-            $estaciones = Estacion::orderBy('numlista')->get();
-        }
-
-        JsonResponse::custom([
-            'data' => $estaciones
-        ]);
-    }
-
-
-    public function crearEstacion()
-    {
-        header('Content-Type: application/json');
-
         try {
 
-            /* =====================================================
-         * 1️⃣ Obtener datos (JSON o POST)
-         * ===================================================== */
-            $input = json_decode(file_get_contents('php://input'), true);
-            $data = is_array($input) && !empty($input) ? $input : $_POST;
+            $usuario = Usuario::with('puesto')
+                ->where('id', $this->userId())
+                ->first();
 
-            if (empty($data)) {
-                echo json_encode([
-                    'ok' => false,
+            $query = Estacion::query()
+                ->orderBy('numlista');
+
+            if (
+                $usuario?->puesto
+                && $usuario->puesto->tipo_puesto === 'Gestoria'
+            ) {
+                $query->whereNotIn('id', [8, 10, 13]);
+            }
+
+            $estaciones = $query->get();
+
+            JsonResponse::custom([
+                'success' => true,
+                'data' => $estaciones
+            ]);
+        } catch (\Throwable $e) {
+
+            JsonResponse::error('No fue posible cargar las estaciones.');
+        }
+    }
+
+    public function crearEstacion(): void
+    {
+        try {
+
+            $data = $this->requestData();
+
+            $error = $this->validarEstacion($data);
+
+            if ($error !== null) {
+
+                JsonResponse::custom([
+                    'success' => false,
                     'type' => 'error',
-                    'message' => 'No se recibieron datos'
+                    'message' => $error
                 ]);
+
                 return;
             }
 
-            /* =====================================================
-         * 2️⃣ Labels personalizados (nombres legibles)
-         * ===================================================== */
-            $labels = [
-                'nombre'             => 'Nombre de la estación',
-                'permisocre'         => 'Permiso CRE',
-                'razonsocial'        => 'Razón social',
-                'rfc'                => 'RFC',
-                'direccioncompleta'  => 'Dirección completa',
-                'di_estado'          => 'Estado',
-                'di_municipio'       => 'Municipio',
-                'apoderado_legal'    => 'Apoderado Legal',
-                'fecha_autorizacion' => 'Fecha de autorización',
-                'distmax'            => 'Distancia máxima',
-            ];
 
-            /* =====================================================
-         * 3️⃣ Validaciones mínimas
-         * ===================================================== */
-            $requeridos = array_keys($labels);
+            $estacion = DB::transaction(
+                function () use ($data) {
 
-            foreach ($requeridos as $campo) {
-                if (!isset($data[$campo]) || $data[$campo] === '') {
+                    $ultimoNumero = Estacion::max('numlista');
 
-                    $nombre = $labels[$campo];
+                    $payload = $this->crearPayload(
+                        $data
+                    );
 
-                    echo json_encode([
-                        'ok' => false,
-                        'type' => 'error',
-                        'message' => "El campo {$nombre} es obligatorio"
-                    ]);
-                    return;
+                    $payload['numlista'] =
+                        ((int) $ultimoNumero) + 1;
+
+                    $payload['latitud'] = 0;
+                    $payload['longitud'] = 0;
+                    $payload['ubicacion'] = 0;
+                    $payload['estatus'] = 1;
+
+                    return Estacion::create(
+                        $payload
+                    );
                 }
-            }
+            );
 
-            /* =====================================================
-         * 4️⃣ Preparar datos para Eloquent
-         * ===================================================== */
 
-            $payload = [
-                'nombre'             => trim($data['nombre']),
-                'es'                 => $data['es'] ?? '',
-                'permisocre'         => trim($data['permisocre']),
-                'razonsocial'        => trim($data['razonsocial']),
-                'rfc'                => strtoupper(trim($data['rfc'])),
-                'direccioncompleta'  => trim($data['direccioncompleta']),
-                'di_estado'          => trim($data['di_estado']),
-                'di_municipio'       => trim($data['di_municipio']),
-                'apoderado_legal'    => $data['apoderado_legal'] ?? '',
-                'firma'              => $data['firma'] ?? '',
-                'politica'           => $data['politica'] ?? '',
-                'mision'             => $data['mision'] ?? '',
-                'vision'             => $data['vision'] ?? '',
-                'franquicia'         => $data['franquicia'] ?? '',
-                'producto_uno'       => $data['producto_uno'] ?? '',
-                'producto_dos'       => $data['producto_dos'] ?? '',
-                'producto_tres'      => $data['producto_tres'] ?? '',
-                'sasisopa'           => $data['sasisopa'] ?? '',
-                'fecha_autorizacion' => $data['fecha_autorizacion'] ?? '',
-                'organigrama'        => $data['organigrama'] ?? '',
-                'volumetrico'        => $data['volumetrico'] ?? '',
-                'latitud'            => 0,
-                'longitud'           => 0,
-                'distmax'            => (float) $data['distmax'],
-                'ubicacion'          => 0,
-                'estatus'            => 1
-            ];
-
-            /* =====================================================
-         * 5️⃣ Transacción
-         * ===================================================== */
-            $estacion = DB::transaction(function () use ($payload) {
-                $payload['numlista'] = Estacion::siguienteNumlista();
-                return Estacion::guardar($payload);
-            });
-
-            /* =====================================================
-         * 6️⃣ Respuesta OK
-         * ===================================================== */
-            echo json_encode([
-                'ok' => true,
+            JsonResponse::custom([
+                'success' => true,
                 'type' => 'success',
-                'message' => 'Estación creada correctamente',
-                //'id' => $estacion->id
+                'message' => 'Estación creada correctamente.',
+                'id' => $estacion->id
             ]);
         } catch (\Throwable $e) {
-            echo json_encode([
-                'ok' => false,
+
+            JsonResponse::custom([
+                'success' => false,
                 'type' => 'error',
-                //'message' => 'Error interno del servidor',
-                'message' => $e->getMessage() // quitar en producción
+                'message' => $e->getMessage()
+                // En desarrollo:
+                // 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    public function obtenerEstacion(int $id): void
+    {
+        try {
+
+            $estacion = Estacion::find($id);
+
+            if (!$estacion) {
+
+                JsonResponse::custom([
+                    'success' => false,
+                    'message' => 'La estación no existe.'
+                ]);
+
+                return;
+            }
+
+
+            JsonResponse::custom([
+                'success' => true,
+                'data' => $estacion
+            ]);
+        } catch (\Throwable $e) {
+
+            JsonResponse::custom([
+                'success' => false,
+                'message' => 'No fue posible obtener la estación.'
+            ]);
+        }
+    }
+
+    public function actualizarEstacion(): void
+    {
+        try {
+
+            $data = $this->requestData();
+
+            $id = isset($data['id'])
+                ? (int) $data['id']
+                : 0;
+
+
+            if ($id <= 0) {
+
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => 'La estación no es válida.'
+                ]);
+
+                return;
+            }
+
+
+            $estacion = Estacion::find($id);
+
+            if (!$estacion) {
+
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => 'La estación no existe.'
+                ]);
+
+                return;
+            }
+
+
+            $error = $this->validarEstacion($data);
+
+            if ($error !== null) {
+
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => $error
+                ]);
+
+                return;
+            }
+
+
+            $payload = $this->crearPayload(
+                $data
+            );
+
+
+            $estacion->fill($payload);
+
+            $estacion->save();
+
+
+            JsonResponse::custom([
+                'success' => true,
+                'type' => 'success',
+                'message' => 'Estación actualizada correctamente.'
+            ]);
+        } catch (\Throwable $e) {
+
+            JsonResponse::custom([
+                'success' => false,
+                'type' => 'error',
+                'message' => 'No fue posible actualizar la estación.'
+            ]);
+        }
+    }
+
+    public function eliminarEstacion(): void
+    {
+        try {
+
+            $data = $this->requestData();
+
+            $id = isset($data['id'])
+                ? (int) $data['id']
+                : 0;
+
+
+            if ($id <= 0) {
+
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => 'La estación no es válida.'
+                ]);
+
+                return;
+            }
+
+
+            $estacion = Estacion::find($id);
+
+            if (!$estacion) {
+
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => 'La estación no existe.'
+                ]);
+
+                return;
+            }
+
+
+            if ((int) $estacion->estatus === 0) {
+
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'warning',
+                    'message' => 'La estación ya se encuentra cancelada.'
+                ]);
+
+                return;
+            }
+
+
+            $estacion->estatus = 0;
+
+            $estacion->save();
+
+
+            JsonResponse::custom([
+                'success' => true,
+                'type' => 'success',
+                'message' => 'Estación cancelada correctamente.'
+            ]);
+        } catch (\Throwable $e) {
+
+            JsonResponse::custom([
+                'success' => false,
+                'type' => 'error',
+                'message' => 'No fue posible cancelar la estación.'
+            ]);
+        }
+    }
+
+    private function requestData(): array
+    {
+        $input = json_decode(
+            file_get_contents('php://input'),
+            true
+        );
+
+        if (is_array($input)) {
+            return $input;
+        }
+
+        return $_POST ?? [];
+    }
+
+    private function validarEstacion(array $data): ?string
+    {
+        $campos = [
+            'nombre' => 'Nombre de la estación',
+            'permisocre' => 'Permiso CRE',
+            'razonsocial' => 'Razón social',
+            'rfc' => 'RFC',
+            'direccioncompleta' => 'Dirección completa',
+            'di_estado' => 'Estado',
+            'di_municipio' => 'Municipio',
+            'apoderado_legal' => 'Apoderado legal',
+            'fecha_autorizacion' => 'Fecha de autorización',
+            'distmax' => 'Distancia máxima',
+        ];
+
+
+        foreach ($campos as $campo => $nombre) {
+
+            if (
+                !isset($data[$campo])
+                || trim((string) $data[$campo]) === ''
+            ) {
+                return "El campo {$nombre} es obligatorio.";
+            }
+        }
+
+
+        if (!is_numeric($data['distmax'])) {
+            return 'La distancia máxima debe ser un valor numérico.';
+        }
+
+
+        return null;
+    }
+
+    private function crearPayload(array $data): array
+    {
+        return [
+            'nombre' => trim((string) ($data['nombre'] ?? '')),
+            'es' => trim((string) ($data['es'] ?? '')),
+            'permisocre' => trim((string) ($data['permisocre'] ?? '')),
+            'razonsocial' => trim((string) ($data['razonsocial'] ?? '')),
+            'rfc' => strtoupper(trim((string) ($data['rfc'] ?? ''))),
+            'direccioncompleta' => trim((string) ($data['direccioncompleta'] ?? '')),
+            'di_estado' => trim((string) ($data['di_estado'] ?? '')),
+            'di_municipio' => trim((string) ($data['di_municipio'] ?? '')),
+            'apoderado_legal' => trim((string) ($data['apoderado_legal'] ?? '')),
+            'firma' => trim((string) ($data['firma'] ?? '')),
+            'politica' => trim((string) ($data['politica'] ?? '')),
+            'mision' => trim((string) ($data['mision'] ?? '')),
+            'vision' => trim((string) ($data['vision'] ?? '')),
+            'franquicia' => trim((string) ($data['franquicia'] ?? '')),
+            'producto_uno' => trim((string) ($data['producto_uno'] ?? '')),
+            'producto_dos' => trim((string) ($data['producto_dos'] ?? '')),
+            'producto_tres' => trim((string) ($data['producto_tres'] ?? '')),
+            'sasisopa' => trim((string) ($data['sasisopa'] ?? '')),
+            'fecha_autorizacion' => $data['fecha_autorizacion'] ?? null,
+            'organigrama' => trim((string) ($data['organigrama'] ?? '')),
+            'volumetrico' => trim((string) ($data['volumetrico'] ?? '')),
+            'noregistro_generador' => trim(
+                (string) ($data['noregistro_generador'] ?? '')
+            ),
+            'categoria' => trim(
+                (string) ($data['categoria'] ?? '')
+            ),
+            'distmax' => (float) ($data['distmax'] ?? 0),
+        ];
     }
 }
