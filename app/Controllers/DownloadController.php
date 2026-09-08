@@ -52,6 +52,7 @@ class DownloadController
     'aclaracion-voucher'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/aclaracion-voucher/',
     'solicitud-vales'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-vales/',
     'lista-negra'                          => dirname(__DIR__, 2) . '/public/uploads/archivos/lista-negra/',
+    'bitacora-rrhh'                        => dirname(__DIR__, 2) . '/public/uploads/archivos/bitacora-rrhh/',
     'factura-monedero'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/factura-monedero/',
     'organigrama'                          => dirname(__DIR__, 2) . '/public/uploads/archivos/organigrama/',
     'organigrama-documentos'               => dirname(__DIR__, 2) . '/public/uploads/archivos/organigrama-documentos/',

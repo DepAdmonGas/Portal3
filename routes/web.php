@@ -742,6 +742,22 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/recursos-humanos/rol-comodines/pdf', Route::auth(['RolComodinesController', 'pdf']));
         $r->addRoute('GET', '/recursos-humanos/rol-comodines/pdf/{id}', Route::auth(['RolComodinesController', 'pdf']));
 
+        //----- Bitácora RRHH
+        $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/formulario/{id:\d+}', Route::auth(['BitacoraRrhhController', 'editar']));
+        $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/{idYear:\d+}/{idMes:\d+}', Route::auth(['BitacoraRrhhController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/data', Route::auth(['BitacoraRrhhController', 'getData']));
+        $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/pendientes', Route::auth(['BitacoraRrhhController', 'getPendingCounts']));
+        $r->addRoute('POST', '/recursos-humanos/bitacora-rrhh/crear', Route::auth(['BitacoraRrhhController', 'crear']));
+        $r->addRoute('POST', '/recursos-humanos/bitacora-rrhh/finalizar', Route::auth(['BitacoraRrhhController', 'finalizar']));
+        $r->addRoute('POST', '/recursos-humanos/bitacora-rrhh/delete', Route::auth(['BitacoraRrhhController', 'delete']));
+        $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/comentarios', Route::auth(['BitacoraRrhhController', 'getComentarios']));
+        $r->addRoute('POST', '/recursos-humanos/bitacora-rrhh/add-comentario', Route::auth(['BitacoraRrhhController', 'addComentario']));
+        $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/documentos', Route::auth(['BitacoraRrhhController', 'getDocumentos']));
+        $r->addRoute('POST', '/recursos-humanos/bitacora-rrhh/add-documento', Route::auth(['BitacoraRrhhController', 'addDocumento']));
+        $r->addRoute('POST', '/recursos-humanos/bitacora-rrhh/delete-documento', Route::auth(['BitacoraRrhhController', 'deleteDocumento']));
+        $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/registros', Route::auth(['BitacoraRrhhController', 'getRegistros']));
+        $r->addRoute('POST', '/recursos-humanos/bitacora-rrhh/registrar-visualizacion', Route::auth(['BitacoraRrhhController', 'registrarVisualizacion']));
+
         $r->addRoute('GET', '/recursos-humanos/lista-negra', Route::auth(['ListaNegraController', 'index']));
         $r->addRoute('GET', '/recursos-humanos/lista-negra/get-data', Route::auth(['ListaNegraController', 'getData']));
         $r->addRoute('GET', '/recursos-humanos/lista-negra/get-personal', Route::auth(['ListaNegraController', 'getPersonal']));

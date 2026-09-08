@@ -176,6 +176,13 @@
 </li>
 
 <li class="sidebar-item">
+<a class="sidebar-link" href="/departamento-operativo/recursos-humanos/bitacora-rrhh/<?= date('Y') ?>/<?= date('n') ?>" aria-expanded="false">
+<span><i class="ti ti-book-2"></i></span>
+<span class="hide-menu">Bitácora RRHH</span>
+</a>
+</li>
+
+<li class="sidebar-item">
 <a class="sidebar-link" href="/departamento-operativo/importacion/descarga-merma" aria-expanded="false">
 <span><i class="ti ti-trash"></i></span>
 <span class="hide-menu">Descarga de merma</span>
