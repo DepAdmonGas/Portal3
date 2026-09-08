@@ -740,6 +740,18 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/recursos-humanos/rol-comodines/pdf', Route::auth(['RolComodinesController', 'pdf']));
         $r->addRoute('GET', '/recursos-humanos/rol-comodines/pdf/{id}', Route::auth(['RolComodinesController', 'pdf']));
 
+        $r->addRoute('GET', '/recursos-humanos/lista-negra', Route::auth(['ListaNegraController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/lista-negra/get-data', Route::auth(['ListaNegraController', 'getData']));
+        $r->addRoute('GET', '/recursos-humanos/lista-negra/get-personal', Route::auth(['ListaNegraController', 'getPersonal']));
+        $r->addRoute('POST', '/recursos-humanos/lista-negra/add', Route::auth(['ListaNegraController', 'add']));
+        $r->addRoute('POST', '/recursos-humanos/lista-negra/delete', Route::auth(['ListaNegraController', 'delete']));
+        $r->addRoute('GET', '/recursos-humanos/lista-negra/get-comentarios', Route::auth(['ListaNegraController', 'getComentarios']));
+        $r->addRoute('POST', '/recursos-humanos/lista-negra/add-comentario', Route::auth(['ListaNegraController', 'addComentario']));
+        $r->addRoute('GET', '/recursos-humanos/lista-negra/get-archivos', Route::auth(['ListaNegraController', 'getArchivos']));
+        $r->addRoute('POST', '/recursos-humanos/lista-negra/upload-archivo', Route::auth(['ListaNegraController', 'uploadArchivo']));
+        $r->addRoute('POST', '/recursos-humanos/lista-negra/delete-archivo', Route::auth(['ListaNegraController', 'deleteArchivo']));
+        $r->addRoute('GET', '/recursos-humanos/lista-negra/pdf', Route::auth(['ListaNegraController', 'pdf']));
+
 
 
 

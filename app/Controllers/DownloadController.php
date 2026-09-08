@@ -51,6 +51,7 @@ class DownloadController
     'seguros-polizas'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/poliza-estacion/',
     'aclaracion-voucher'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/aclaracion-voucher/',
     'solicitud-vales'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-vales/',
+    'lista-negra'                          => dirname(__DIR__, 2) . '/public/uploads/archivos/lista-negra/',
     'factura-monedero'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/factura-monedero/',
     'organigrama'                          => dirname(__DIR__, 2) . '/public/uploads/archivos/organigrama/',
     'organigrama-documentos'               => dirname(__DIR__, 2) . '/public/uploads/archivos/organigrama-documentos/',
