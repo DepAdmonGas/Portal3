@@ -1735,6 +1735,7 @@ return function (RouteCollector $r) {
         $r->addRoute('PUT', '/configuracion-modulos-usuario-permiso/{id:\d+}', Route::auth(['EstructuraUsuarioController', 'updatePermisosModuloUsuario']));
     });
 
+    // ---------------- Reportes ----------------
     $r->addGroup('/reportes', function (RouteCollector $r) {
 
         $r->addRoute('GET', '', Route::auth(['ReportesController', 'index']));
@@ -1761,6 +1762,16 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/datatable', Route::auth(['SistemasSolicitudValesController', 'datatableVales']));
         $r->addRoute('POST', '/update-field', Route::auth(['SistemasSolicitudValesController', 'actualizarCampo']));
     });
+
+    //----------- Solicitud Cheques
+    $r->addGroup('/solicitud-cheques', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['SistemasSolicitudChequeController', 'index']));
+        $r->addRoute('GET', '/datatable', Route::auth(['SistemasSolicitudChequeController', 'datatableCheques']));
+        $r->addRoute('POST', '/update-field', Route::auth(['SistemasSolicitudChequeController', 'actualizarCampo']));
+        $r->addRoute('POST', '/sign', Route::auth(['SistemasSolicitudChequeController', 'firmarCheque']));
+    });
+
+
     //--------------------- Perfil
 
     $r->addGroup('/perfil', function (RouteCollector $r) {
