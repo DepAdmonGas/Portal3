@@ -94,6 +94,10 @@ return function (RouteCollector $r) {
     $r->addGroup('/usuarios', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['UsuarioController', 'index']));
         $r->addRoute('GET', '/datatable', Route::auth(['UsuarioController', 'datatableUsuarios']));
+        $r->addRoute('GET', '/detail', Route::auth(['UsuarioController', 'obtenerUsuario']));
+        $r->addRoute('POST', '/create', Route::auth(['UsuarioController', 'crearUsuario']));
+        $r->addRoute('POST', '/update', Route::auth(['UsuarioController', 'actualizarUsuario']));
+        $r->addRoute('POST', '/delete', Route::auth(['UsuarioController', 'eliminarUsuario']));
     });
 
     // ---------------- BITACORA ADITIVO ----------------

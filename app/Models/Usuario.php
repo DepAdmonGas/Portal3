@@ -31,12 +31,16 @@ class Usuario extends Model
         'id_gas',
         'id_puesto',
         'usuario',
+        'password',
         'fecha_nacimiento',
         'estado_civil',
         'seguro_social',
         'domicilio',
+        'firma',
+        'bitacora_app',
         'fecha_ingreso',
         'responsabilidad_sgm',
+        'estatus'
     ];
 
     // Campos que nunca se exponen en serialización JSON
