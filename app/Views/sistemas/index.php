@@ -232,7 +232,7 @@
     <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
 
         <a
-            href="/solicitud-vale"
+            href="/solicitud-vales"
             class="card h-100 border-0 shadow-sm text-decoration-none text-body cursor-pointer">
             <div class="card-body">
 

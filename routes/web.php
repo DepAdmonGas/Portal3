@@ -792,56 +792,6 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/comercializadora', Route::auth(['DptoOperativoController', 'comercializadoraIndex']));
     });
 
-
-    // ---------------- CONFIGURACION SISTEMAS ----------------
-    $r->addGroup('/configuracion-sistemas', function (RouteCollector $r) {
-
-        // Catalogo modulos
-        $r->addRoute('GET', '/catalogo-modulos', Route::auth(['CatalogoController', 'index']));
-        $r->addRoute('GET', '/catalogo-modulos/datatable', Route::auth(['CatalogoController', 'datatableCatalogos']));
-        $r->addRoute('POST', '/catalogo-modulos/create', Route::auth(['CatalogoController', 'createModuloCatalogo']));
-        $r->addRoute('POST', '/catalogo-modulos/update', Route::auth(['CatalogoController', 'updateModuloCatalogo']));
-        $r->addRoute('POST', '/catalogo-modulos/delete', Route::auth(['CatalogoController', 'deleteModuloCatalogo']));
-
-        // Puestos
-        $r->addRoute('GET', '/configuracion-modulos-puesto', Route::auth(['EstructuraPuestoController', 'index']));
-        $r->addRoute('GET', '/configuracion-modulos-puesto/{id:\d+}', Route::auth(['EstructuraPuestoController', 'indexEstructuraPuesto']));
-        $r->addRoute('POST', '/configuracion-modulos-puesto/modulos/create', Route::auth(['EstructuraPuestoController', 'createModuloPuesto']));
-        $r->addRoute('POST', '/configuracion-modulos-puesto/submodulos/create', Route::auth(['EstructuraPuestoController', 'createSubmoduloPuesto']));
-        $r->addRoute('POST', '/configuracion-modulos-puesto/submodulos/delete', Route::auth(['EstructuraPuestoController', 'deleteSubmoduloPuesto']));
-        $r->addRoute('GET', '/configuracion-modulos-puesto/{puesto:\d+}/permisos-modulos/{estructura:\d+}', Route::auth(['EstructuraPuestoController', 'detallePermisosPuesto']));
-        $r->addRoute('PUT', '/configuracion-modulos-puesto-permiso/{id:\d+}', Route::auth(['EstructuraPuestoController', 'updatePermisosModuloPuesto']));
-
-        // Usuarios
-        $r->addRoute('GET', '/configuracion-modulos-usuario', Route::auth(['EstructuraUsuarioController', 'index']));
-        $r->addRoute('GET', '/configuracion-modulos-usuario/{id:\d+}', Route::auth(['EstructuraUsuarioController', 'indexEstructuraUsuario']));
-        $r->addRoute('POST', '/configuracion-modulos-usuario/modulos/create', Route::auth(['EstructuraUsuarioController', 'createModuloUsuario']));
-        $r->addRoute('POST', '/configuracion-modulos-usuario/submodulos/create', Route::auth(['EstructuraUsuarioController', 'createSubmoduloUsuario']));
-        $r->addRoute('POST', '/configuracion-modulos-usuario/submodulos/delete', Route::auth(['EstructuraUsuarioController', 'deleteSubmoduloUsuario']));
-        $r->addRoute('GET', '/configuracion-modulos-usuario/{usuario:\d+}/permisos-modulos/{estructura:\d+}', Route::auth(['EstructuraUsuarioController', 'detallePermisosUsuario']));
-        $r->addRoute('PUT', '/configuracion-modulos-usuario-permiso/{id:\d+}', Route::auth(['EstructuraUsuarioController', 'updatePermisosModuloUsuario']));
-    });
-
-    $r->addGroup('/reportes', function (RouteCollector $r) {
-
-        $r->addRoute('GET', '', Route::auth(['ReportesController', 'index']));
-        $r->addRoute('GET', '/estaciones', Route::auth(['ReportesController', 'estaciones']));
-        $r->addRoute('GET', '/data', Route::auth(['ReportesController', 'data']));
-        $r->addRoute('GET', '/autolavado/anual', Route::auth(['ReportesController', 'autolavadoAnual']));
-        $r->addRoute('GET', '/autolavado/diario', Route::auth(['ReportesController', 'autolavadoDiario']));
-        $r->addRoute('GET', '/resumen-aceites/pdf', Route::auth(['ReportesController', 'pdfResumenAceites']));
-        $r->addRoute('GET', '/resumen-aceites/excel', Route::auth(['ReportesController', 'excelResumenAceites']));
-        $r->addRoute('GET', '/concentrado-ventas/pdf', Route::auth(['ReportesController', 'pdfConcentradoVentas']));
-        $r->addRoute('GET', '/concentrado-ventas/excel', Route::auth(['ReportesController', 'excelConcentradoVentas']));
-        $r->addRoute('GET', '/solicitud-cheque/pdf', Route::auth(['ReportesController', 'pdfSolicitudCheque']));
-        $r->addRoute('GET', '/solicitud-cheque/excel', Route::auth(['ReportesController', 'excelSolicitudCheque']));
-        $r->addRoute('GET', '/solicitud-vales/pdf', Route::auth(['ReportesController', 'pdfSolicitudVales']));
-        $r->addRoute('GET', '/solicitud-vales/excel', Route::auth(['ReportesController', 'excelSolicitudVales']));
-        $r->addRoute('GET', '/recibo-nomina/pdf', Route::auth(['ReportesController', 'pdfReciboNomina']));
-        $r->addRoute('GET', '/recibo-nomina/excel', Route::auth(['ReportesController', 'excelReciboNomina']));
-        $r->addRoute('GET', '/tesoreria/pdf', Route::auth(['ReportesController', 'pdfTesoreria']));
-    });
-
     //----------------- Lista de asistencia ------------
 
     $r->addRoute('GET', '/datatable-lista-asistencia/elemento/{idsasisopa:\d+}', Route::auth(['ListaAsistenciaController', 'datatableListaAsistencia']));
@@ -1756,6 +1706,61 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/soporte', Route::auth(['SoporteController', 'index']));
     });
 
+    // ---------------- CONFIGURACION SISTEMAS ----------------
+    $r->addGroup('/configuracion-sistemas', function (RouteCollector $r) {
+
+        // Catalogo modulos
+        $r->addRoute('GET', '/catalogo-modulos', Route::auth(['CatalogoController', 'index']));
+        $r->addRoute('GET', '/catalogo-modulos/datatable', Route::auth(['CatalogoController', 'datatableCatalogos']));
+        $r->addRoute('POST', '/catalogo-modulos/create', Route::auth(['CatalogoController', 'createModuloCatalogo']));
+        $r->addRoute('POST', '/catalogo-modulos/update', Route::auth(['CatalogoController', 'updateModuloCatalogo']));
+        $r->addRoute('POST', '/catalogo-modulos/delete', Route::auth(['CatalogoController', 'deleteModuloCatalogo']));
+
+        // Puestos
+        $r->addRoute('GET', '/configuracion-modulos-puesto', Route::auth(['EstructuraPuestoController', 'index']));
+        $r->addRoute('GET', '/configuracion-modulos-puesto/{id:\d+}', Route::auth(['EstructuraPuestoController', 'indexEstructuraPuesto']));
+        $r->addRoute('POST', '/configuracion-modulos-puesto/modulos/create', Route::auth(['EstructuraPuestoController', 'createModuloPuesto']));
+        $r->addRoute('POST', '/configuracion-modulos-puesto/submodulos/create', Route::auth(['EstructuraPuestoController', 'createSubmoduloPuesto']));
+        $r->addRoute('POST', '/configuracion-modulos-puesto/submodulos/delete', Route::auth(['EstructuraPuestoController', 'deleteSubmoduloPuesto']));
+        $r->addRoute('GET', '/configuracion-modulos-puesto/{puesto:\d+}/permisos-modulos/{estructura:\d+}', Route::auth(['EstructuraPuestoController', 'detallePermisosPuesto']));
+        $r->addRoute('PUT', '/configuracion-modulos-puesto-permiso/{id:\d+}', Route::auth(['EstructuraPuestoController', 'updatePermisosModuloPuesto']));
+
+        // Usuarios
+        $r->addRoute('GET', '/configuracion-modulos-usuario', Route::auth(['EstructuraUsuarioController', 'index']));
+        $r->addRoute('GET', '/configuracion-modulos-usuario/{id:\d+}', Route::auth(['EstructuraUsuarioController', 'indexEstructuraUsuario']));
+        $r->addRoute('POST', '/configuracion-modulos-usuario/modulos/create', Route::auth(['EstructuraUsuarioController', 'createModuloUsuario']));
+        $r->addRoute('POST', '/configuracion-modulos-usuario/submodulos/create', Route::auth(['EstructuraUsuarioController', 'createSubmoduloUsuario']));
+        $r->addRoute('POST', '/configuracion-modulos-usuario/submodulos/delete', Route::auth(['EstructuraUsuarioController', 'deleteSubmoduloUsuario']));
+        $r->addRoute('GET', '/configuracion-modulos-usuario/{usuario:\d+}/permisos-modulos/{estructura:\d+}', Route::auth(['EstructuraUsuarioController', 'detallePermisosUsuario']));
+        $r->addRoute('PUT', '/configuracion-modulos-usuario-permiso/{id:\d+}', Route::auth(['EstructuraUsuarioController', 'updatePermisosModuloUsuario']));
+    });
+
+    $r->addGroup('/reportes', function (RouteCollector $r) {
+
+        $r->addRoute('GET', '', Route::auth(['ReportesController', 'index']));
+        $r->addRoute('GET', '/estaciones', Route::auth(['ReportesController', 'estaciones']));
+        $r->addRoute('GET', '/data', Route::auth(['ReportesController', 'data']));
+        $r->addRoute('GET', '/autolavado/anual', Route::auth(['ReportesController', 'autolavadoAnual']));
+        $r->addRoute('GET', '/autolavado/diario', Route::auth(['ReportesController', 'autolavadoDiario']));
+        $r->addRoute('GET', '/resumen-aceites/pdf', Route::auth(['ReportesController', 'pdfResumenAceites']));
+        $r->addRoute('GET', '/resumen-aceites/excel', Route::auth(['ReportesController', 'excelResumenAceites']));
+        $r->addRoute('GET', '/concentrado-ventas/pdf', Route::auth(['ReportesController', 'pdfConcentradoVentas']));
+        $r->addRoute('GET', '/concentrado-ventas/excel', Route::auth(['ReportesController', 'excelConcentradoVentas']));
+        $r->addRoute('GET', '/solicitud-cheque/pdf', Route::auth(['ReportesController', 'pdfSolicitudCheque']));
+        $r->addRoute('GET', '/solicitud-cheque/excel', Route::auth(['ReportesController', 'excelSolicitudCheque']));
+        $r->addRoute('GET', '/solicitud-vales/pdf', Route::auth(['ReportesController', 'pdfSolicitudVales']));
+        $r->addRoute('GET', '/solicitud-vales/excel', Route::auth(['ReportesController', 'excelSolicitudVales']));
+        $r->addRoute('GET', '/recibo-nomina/pdf', Route::auth(['ReportesController', 'pdfReciboNomina']));
+        $r->addRoute('GET', '/recibo-nomina/excel', Route::auth(['ReportesController', 'excelReciboNomina']));
+        $r->addRoute('GET', '/tesoreria/pdf', Route::auth(['ReportesController', 'pdfTesoreria']));
+    });
+
+    //----------- Solicitud Vales
+    $r->addGroup('/solicitud-vales', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['SistemasSolicitudValesController', 'index']));
+        $r->addRoute('GET', '/datatable', Route::auth(['SistemasSolicitudValesController', 'datatableVales']));
+        $r->addRoute('POST', '/update-field', Route::auth(['SistemasSolicitudValesController', 'actualizarCampo']));
+    });
     //--------------------- Perfil
 
     $r->addGroup('/perfil', function (RouteCollector $r) {
