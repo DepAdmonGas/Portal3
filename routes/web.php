@@ -1771,6 +1771,13 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/sign', Route::auth(['SistemasSolicitudChequeController', 'firmarCheque']));
     });
 
+    //----------- Corte Diario
+    $r->addGroup('/corte-diario', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['SistemasCorteDiarioController', 'index']));
+        $r->addRoute('GET', '/datatable', Route::auth(['SistemasCorteDiarioController', 'datatable']));
+        $r->addRoute('POST', '/activate', Route::auth(['SistemasCorteDiarioController', 'activar']));
+        $r->addRoute('POST', '/finalize', Route::auth(['SistemasCorteDiarioController', 'finalizar']));
+    });
 
     //--------------------- Perfil
 
