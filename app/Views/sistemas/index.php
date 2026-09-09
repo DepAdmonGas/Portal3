@@ -80,7 +80,7 @@
     <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
 
         <a
-            href="/personal"
+            href="/usuarios"
             class="card h-100 border-0 shadow-sm text-decoration-none text-body cursor-pointer">
             <div class="card-body">
 
@@ -94,7 +94,7 @@
 
                     <div class="w-100">
                         <h5 class="fw-semibold mb-1">
-                            Personal
+                            Usuarios
                         </h5>
 
                         <p class="text-muted mb-0 small">

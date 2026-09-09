@@ -85,9 +85,14 @@ return function (RouteCollector $r) {
 
     // ---------------- PUESTOS ----------------
     $r->addGroup('/puestos', function (RouteCollector $r) {
+
         $r->addRoute('GET', '', Route::auth(['PuestoController', 'index']));
         $r->addRoute('GET', '/datatable', Route::auth(['PuestoController', 'datatablePuestos']));
         $r->addRoute('GET', '/get-puestos', Route::auth(['PuestoController', 'getPuestos']));
+        $r->addRoute('GET', '/detail', Route::auth(['PuestoController', 'obtenerPuesto']));
+        $r->addRoute('POST', '/create', Route::auth(['PuestoController', 'crearPuesto']));
+        $r->addRoute('POST', '/update', Route::auth(['PuestoController', 'actualizarPuesto']));
+        $r->addRoute('POST', '/delete', Route::auth(['PuestoController', 'eliminarPuesto']));
     });
 
     // ---------------- USUARIOS ----------------
