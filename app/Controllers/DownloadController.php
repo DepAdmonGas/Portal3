@@ -73,6 +73,7 @@ class DownloadController
     'docs-personal-baja'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/solicitud-baja/',
     'docs-personal-incidencias'            => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/incidencias/',
     'dia-doble-firma'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/dia-doble-firma/',
+    'permisos-firma'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/permisos-firma/',
     'lista-formatos'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/lista-formatos/',
     'formatos-alta'                        => dirname(__DIR__, 2) . '/public/uploads/archivos/formatos/alta/',
 ];

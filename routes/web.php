@@ -758,6 +758,23 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/registros', Route::auth(['BitacoraRrhhController', 'getRegistros']));
         $r->addRoute('POST', '/recursos-humanos/bitacora-rrhh/registrar-visualizacion', Route::auth(['BitacoraRrhhController', 'registrarVisualizacion']));
 
+        //----- Permisos (Recursos Humanos)
+        $r->addRoute('GET', '/recursos-humanos/permisos', Route::auth(['PermisosRrhhController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/permisos/data', Route::auth(['PermisosRrhhController', 'getData']));
+        $r->addRoute('GET', '/recursos-humanos/permisos/pendientes', Route::auth(['PermisosRrhhController', 'getPendingCounts']));
+        $r->addRoute('GET', '/recursos-humanos/permisos/detalle', Route::auth(['PermisosRrhhController', 'getDetalle']));
+        $r->addRoute('GET', '/recursos-humanos/permisos/firmas', Route::auth(['PermisosRrhhController', 'getFirmas']));
+        $r->addRoute('GET', '/recursos-humanos/permisos/personal', Route::auth(['PermisosRrhhController', 'getPersonal']));
+        $r->addRoute('GET', '/recursos-humanos/permisos-nuevo', Route::auth(['PermisosRrhhController', 'nuevo']));
+        $r->addRoute('GET', '/recursos-humanos/permisos-editar/{id:\d+}', Route::auth(['PermisosRrhhController', 'editar']));
+        $r->addRoute('GET', '/recursos-humanos/permisos/firmar/{id:\d+}', Route::auth(['PermisosRrhhController', 'firmarPage']));
+        $r->addRoute('POST', '/recursos-humanos/permisos/guardar', Route::auth(['PermisosRrhhController', 'guardar']));
+        $r->addRoute('POST', '/recursos-humanos/permisos/update', Route::auth(['PermisosRrhhController', 'update']));
+        $r->addRoute('POST', '/recursos-humanos/permisos/delete', Route::auth(['PermisosRrhhController', 'delete']));
+        $r->addRoute('POST', '/recursos-humanos/permisos/firma-quien-cubre', Route::auth(['PermisosRrhhController', 'firmaQuienCubre']));
+        $r->addRoute('POST', '/recursos-humanos/permisos/crear-token', Route::auth(['PermisosRrhhController', 'crearToken']));
+        $r->addRoute('POST', '/recursos-humanos/permisos/firmar', Route::auth(['PermisosRrhhController', 'firmar']));
+
         $r->addRoute('GET', '/recursos-humanos/lista-negra', Route::auth(['ListaNegraController', 'index']));
         $r->addRoute('GET', '/recursos-humanos/lista-negra/get-data', Route::auth(['ListaNegraController', 'getData']));
         $r->addRoute('GET', '/recursos-humanos/lista-negra/get-personal', Route::auth(['ListaNegraController', 'getPersonal']));
