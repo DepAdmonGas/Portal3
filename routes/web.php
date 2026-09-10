@@ -1796,6 +1796,21 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/finalize', Route::auth(['SistemasCorteDiarioController', 'finalizar']));
     });
 
+    //----------- Cursos Admin
+    $r->addGroup('/cursos', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['SistemasCursosController', 'index']));
+        $r->addRoute('GET', '/datatable', Route::auth(['SistemasCursosController', 'datatable']));
+        $r->addRoute('POST', '/modulos/create', Route::auth(['SistemasCursosController', 'crearModulo']));
+        $r->addRoute('POST', '/modulos/update', Route::auth(['SistemasCursosController', 'editarModulo']));
+        $r->addRoute('POST', '/temas/create', Route::auth(['SistemasCursosController', 'crearTema']));
+        $r->addRoute('POST', '/temas/update', Route::auth(['SistemasCursosController', 'editarTema']));
+        $r->addRoute('GET', '/cuestionario/{idTema}', Route::auth(['SistemasCursosController', 'cuestionario']));
+        $r->addRoute('POST', '/preguntas/create', Route::auth(['SistemasCursosController', 'crearPregunta']));
+        $r->addRoute('POST', '/preguntas/update', Route::auth(['SistemasCursosController', 'editarPregunta']));
+        $r->addRoute('POST', '/respuestas/create', Route::auth(['SistemasCursosController', 'crearRespuesta']));
+        $r->addRoute('POST', '/respuestas/correcta', Route::auth(['SistemasCursosController', 'respuestaCorrecta']));
+    });
+
     //--------------------- Perfil
 
     $r->addGroup('/perfil', function (RouteCollector $r) {
