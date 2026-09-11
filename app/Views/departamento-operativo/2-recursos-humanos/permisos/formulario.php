@@ -18,7 +18,7 @@
 
     <div class="row align-items-stretch">
 
-        <div class="col-md-8 d-flex">
+        <div class="col-md-8">
             <div class="card w-100">
                 <div class="card-header bg-primary text-white py-3 border-0">
                     <h5 class="mb-0 text-white d-flex align-items-center gap-2">
@@ -27,7 +27,7 @@
                         <span x-show="!esNuevo" x-text="'(#' + (detalle ? detalle.id : '') + ')'"></span>
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body pb-3">
                     <div class="row">
 
                         <div class="col-md-12 mb-3">
@@ -101,29 +101,52 @@
         </div>
 
         <div class="col-md-4 d-flex">
-            <div class="card w-100">
-                <div class="card-header text-bg-primary">
-                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                        <h5 class="mb-0 text-white">
-                            <i class="fa-solid fa-signature me-2"></i>
-                            FIRMA DEL SOLICITANTE
-                        </h5>
-                        <button type="button" class="btn btn-danger btn-sm" @click="limpiarFirma()">
-                            <i class="ti ti-eraser me-1"></i>
-                            Limpiar firma
-                        </button>
-                    </div>
+<div class="card border-0 bg-white w-100  d-flex flex-column">
+
+    <!-- Encabezado con ícono circular -->
+    <div class="card-header text-bg-primary py-3 border-0 flex-shrink-0">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:45px;height:45px;">
+                    <i class="ti ti-signature fs-6"></i>
                 </div>
-                <div class="card-body p-0 d-flex">
-                    <div id="signature-pad" class="signature-pad border-0 w-100 d-flex">
-                        <div class="signature-pad--body w-100 d-flex">
-                            <canvas id="firma-canvas-form"
-                                style="width:100%; height:100%; min-height:0; display:block; cursor:crosshair; touch-action:none; background:#fff;"></canvas>
-                        </div>
-                        <input type="hidden" name="firma_solicitante" id="firma_solicitante" value="">
-                    </div>
+                <div class="ms-3">
+                    <h5 class="mb-0 text-white">FIRMA DEL SOLICITANTE</h5>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Cuerpo con pad punteado ocupando el 100% del espacio restante -->
+    <div class="card-body p-3 flex-fill d-flex flex-column">
+        <div id="signature-pad" class="signature-pad-wrapper flex-fill d-flex" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+            <div class="signature-pad--body w-100 h-100 d-flex">
+                <canvas 
+                    id="firma-canvas-form" 
+                    style="
+                        width: 100%; 
+                        height: 100%; 
+                        min-height: 0; 
+                        display: block; 
+                        touch-action: none; 
+                        background: #fff;
+                    ">
+                </canvas>
+            </div>
+        </div>
+        <input type="hidden" name="firma_solicitante" id="firma_solicitante" value="">
+    </div>
+
+    <!-- Botón pegado en la base a lo ancho -->
+    <button 
+        type="button" 
+        class="btn bg-danger-subtle text-danger w-100 rounded-top-0 flex-shrink-0" 
+        style="border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;" 
+        @click="limpiarFirma()">
+        <i class="ti ti-eraser me-1"></i> Limpiar firma
+    </button>
+
+</div>
         </div>
 
     </div>

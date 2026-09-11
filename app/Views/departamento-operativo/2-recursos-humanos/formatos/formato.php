@@ -29,7 +29,7 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 <div class="col-md-8 d-flex">
 <div class="card w-100" id="card-formato">
 
-<div class="card-body">
+<div class="card-body pb-1">
 
 <div class="row">
 
@@ -237,68 +237,61 @@ title="Quitar empleado"
 </template>
 
 <!---------- FIRMA DE QUIEN ELABORA (SIGNATURE PAD) ---------->
-<div class="col-12 text-center mt-4"><p>Sin más por el momento quedo de usted.</p><hr></div>
-
-<div class="float-end">
-<button type="button" class="btn btn-success" @click="guardar()" :disabled="guardando"><i class="ti ti-check me-1"></i> <?= $esEdicion ? 'Guardar' : 'Actualizar' ?></button>
+<div class="col-12 text-center mt-4"><p>Sin más por el momento quedo de usted.</p></div>
 </div>
 
+<div class="card-footer">
+<button type="button" class="btn btn-success float-end" @click="guardar()" :disabled="guardando"><i class="ti ti-check me-1"></i> <?= $esEdicion ? 'Guardar' : 'Actualizar' ?></button>
 </div>
 
 </div>
 </div>
 
 <div class="col-md-4 d-flex">
-<div class="card w-100">
+<div class="card border-0 bg-white w-100 d-flex flex-column">
 
-<div class="card-header text-bg-primary">
-<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-<h5 class="mb-0 text-white">
-<i class="fa-solid fa-signature me-2"></i>
-FIRMA DE QUIEN ELABORA
-</h5>
+    <!-- Encabezado con ícono circular -->
+    <div class="card-header text-bg-primary py-3 border-0 flex-shrink-0">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:45px;height:45px;">
+                                            <i class="ti ti-signature fs-6"></i>
+                </div>
+                <div class="ms-3">
+                    <h5 class="mb-0 text-white">FIRMA DE QUIEN ELABORA</h5>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<button type="button"
-class="btn btn-danger btn-sm"
-@click="limpiarFirma()">
-<i class="ti ti-eraser me-1"></i>
-Limpiar firma
-</button>
-</div>
-</div>
+    <!-- Cuerpo adaptable que ocupa todo el alto restante -->
+    <div class="card-body p-3 flex-fill d-flex flex-column">
+        <div id="signature-pad" class="signature-pad-wrapper flex-fill d-flex" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+            <div class="signature-pad--body w-100 h-100 d-flex">
+                <canvas 
+                    id="canvas" 
+                    style="
+                        width: 100%; 
+                        height: 100%; 
+                        min-height: 0; 
+                        display: block; 
+                        touch-action: none;
+                    ">
+                </canvas>
+            </div>
+        </div>
+        <input type="hidden" name="firma_elaboro" id="firma_elaboro" value="">
+    </div>
 
-<div class="card-body p-0 d-flex">
+    <!-- Botón fijo a lo ancho en la base -->
+    <button 
+        type="button" 
+        class="btn bg-danger-subtle text-danger w-100 rounded-top-0 flex-shrink-0" 
+        style="border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;" 
+        @click="limpiarFirma()">
+        <i class="ti ti-eraser me-1"></i> Limpiar firma
+    </button>
 
-<div id="signature-pad"
-class="signature-pad border-0 w-100 d-flex">
-
-<div class="signature-pad--body w-100 d-flex">
-
-<canvas
-id="canvas"
-style="
-width: 100%;
-height: 100%;
-min-height: 0;
-display: block;
-cursor: crosshair;
-touch-action: none;
-">
-</canvas>
-
-</div>
-
-<input
-type="hidden"
-name="firma_elaboro"
-id="firma_elaboro"
-value="">
-
-</div>
-
-</div>
-
-</div>
 </div>
 
 </div>

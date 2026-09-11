@@ -309,23 +309,36 @@ data-id-depto="<?= $idDepto ?>">
 
 <!---------- FIRMA ---------->
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
-<div class="card h-100">
+<div class="card border-0 bg-white h-100">
 
-<div class="card-header text-bg-primary">
-<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-<h5 class="mb-0 text-white"><i class="fa-solid fa-signature me-2"></i>FIRMA DEL ENCARGADO</h5>
-<button type="button" class="btn btn-danger btn-sm" @click="limpiarFirma()"><i class="ti ti-eraser me-1"></i> Limpiar firma</button>
+<!-- Encabezado con ícono circular -->
+<div class="card-header text-bg-primary py-3 border-0">
+<div class="d-flex align-items-center justify-content-between">
+<div class="d-flex align-items-center">
+<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:45px;height:45px;">
+<i class="ti ti-signature fs-6"></i>
+</div>
+<div class="ms-3">
+<h5 class="mb-0 text-white">FIRMA DEL ENCARGADO</h5>
+</div>
+</div>
 </div>
 </div>
 
-<div class="card-body p-0">
-<div id="signature-pad" class="signature-pad border-0">
+<!-- Cuerpo con pad en borde punteado -->
+<div class="card-body p-3 pb-0">
+<div id="signature-pad" class="signature-pad-wrapper" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
 <div class="signature-pad--body">
-<canvas id="canvas" style="width:100%; height:200px; cursor:crosshair; border-bottom:0px solid #dee2e6;"></canvas>
+<canvas id="canvas" style="width:100%; height:250px; display: block;"></canvas>
+</div>
 </div>
 <input type="hidden" name="base64" id="base64" value="">
 </div>
-</div>
+
+<!-- Botón completamente incorporado a lo ancho y pegado a la base -->
+<button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" style="border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;" @click="limpiarFirma()">
+<i class="ti ti-eraser me-1"></i> Limpiar firma
+</button>
 
 </div>
 </div>

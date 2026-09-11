@@ -158,7 +158,7 @@ class ListaNegraService
                 'comentario'    => $r->comentario,
                 'fecha_hora'    => $r->fecha_hora
                     ? formatearFecha($r->fecha_hora) . ', ' . date('g:i a', strtotime($r->fecha_hora))
-                    : '-',
+                    : 'Sin información',
                 'esPropio'      => (int)$r->id_usuario === $idUsuarioActual,
             ];
         }

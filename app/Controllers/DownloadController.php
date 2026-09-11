@@ -76,6 +76,8 @@ class DownloadController
     'permisos-firma'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/permisos-firma/',
     'lista-formatos'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/lista-formatos/',
     'formatos-alta'                        => dirname(__DIR__, 2) . '/public/uploads/archivos/formatos/alta/',
+    'formato-descarga-merma'               => dirname(__DIR__, 2) . '/public/uploads/archivos/formato-descarga-merma/',
+    'formato-descarga-merma-firma'         => dirname(__DIR__, 2) . '/public/uploads/archivos/formato-descarga-merma-firmas/',
 ];
 
 
