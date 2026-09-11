@@ -95,8 +95,8 @@ final class Cookie
      */
     private static function isSecure(): bool
     {
-        return ($_ENV['APP_ENV'] ?? 'dev') === 'prod'
-            && Request::isSecure();
+        return ($_ENV['APP_ENV'] ?? 'prod') === 'prod'
+            || Request::isSecure();
     }
 
     public static function add(

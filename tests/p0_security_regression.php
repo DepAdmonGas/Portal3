@@ -234,6 +234,30 @@ $tests = [
         $response = json_decode(p0_request('GET', '/__test/authorized-personal?id=999', null, $cookie)['body'], true, 512, JSON_THROW_ON_ERROR);
         p0_assert($response['id'] === null, 'Expected nonexistent personnel resource to be denied.');
     },
+    'AUTHZ-TENANT-007 Boundary 2A authorizes Tenant A solicitud de cheque' => static function (): void {
+        global $cookie;
+        p0_request('POST', '/__test/login-a', null, $cookie);
+        $response = json_decode(p0_request('GET', '/__test/authorized-solicitud?id=11', null, $cookie)['body'], true, 512, JSON_THROW_ON_ERROR);
+        p0_assert($response['id'] === 11, 'Expected Tenant A to resolve its cheque request.');
+    },
+    'AUTHZ-TENANT-007 Boundary 2A rejects Tenant B solicitud de cheque' => static function (): void {
+        global $cookie;
+        $response = json_decode(p0_request('GET', '/__test/authorized-solicitud?id=22', null, $cookie)['body'], true, 512, JSON_THROW_ON_ERROR);
+        p0_assert($response['id'] === null, 'Expected cross-station cheque request not to be exposed.');
+    },
+    'AUTHZ-TENANT-007 Boundary 2A rejects missing solicitud de cheque' => static function (): void {
+        global $cookie;
+        $response = json_decode(p0_request('GET', '/__test/authorized-solicitud?id=999', null, $cookie)['body'], true, 512, JSON_THROW_ON_ERROR);
+        p0_assert($response['id'] === null, 'Expected missing cheque request not to be exposed.');
+    },
+    'AUTHZ-TENANT-007 Boundary 2B does not expose Tenant B cheque documents' => static function (): void {
+        global $cookie;
+        p0_request('POST', '/__test/login-a', null, $cookie);
+        $authorized = json_decode(p0_request('GET', '/__test/solicitud-documentos?id=11', null, $cookie)['body'], true, 512, JSON_THROW_ON_ERROR);
+        $denied = json_decode(p0_request('GET', '/__test/solicitud-documentos?id=22', null, $cookie)['body'], true, 512, JSON_THROW_ON_ERROR);
+        p0_assert(count($authorized) === 1 && $authorized[0]['nombre'] === 'A', 'Expected Tenant A document metadata.');
+        p0_assert($denied === [], 'Expected no Tenant B document metadata.');
+    },
 ];
 
 $passed = 0;

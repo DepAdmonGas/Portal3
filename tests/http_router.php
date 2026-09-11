@@ -10,6 +10,7 @@ use App\Core\CsrfToken;
 use App\Core\Session;
 use App\Middleware\CsrfMiddleware;
 use App\Services\ControlDocumentosPersonalService;
+use App\Services\SolicitudChequeService;
 use App\Models\Operativo\TokenTelegram;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
@@ -45,12 +46,17 @@ if (!$schema->hasTable('tb_usuarios')) {
     $schema->create('tb_modulos_config', static function ($table): void { $table->integer('id')->primary(); $table->string('modulo_key'); $table->string('tipo'); $table->text('estaciones_soportadas')->nullable(); $table->text('departamentos_soportados')->nullable(); $table->string('tipo_departamento')->nullable(); $table->boolean('allow_all')->default(false); $table->string('placeholder')->nullable(); $table->boolean('activo')->default(true); });
     $schema->create('op_rh_personal', static function ($table): void { $table->integer('id')->primary(); $table->integer('id_estacion'); $table->string('ine')->nullable(); });
     $schema->create('op_token_telegram', static function ($table): void { $table->integer('id')->primary(); $table->integer('id_usuario'); $table->string('token'); $table->integer('chat_id')->default(0); $table->string('fecha_creacion'); $table->integer('estatus')->default(0); });
+    $schema->create('op_solicitud_cheque', static function ($table): void { $table->integer('id')->primary(); $table->integer('id_estacion'); $table->integer('id_year')->default(2026); $table->integer('id_mes')->default(9); $table->integer('status')->default(0); });
+    $schema->create('op_solicitud_cheque_documento', static function ($table): void { $table->integer('id')->primary(); $table->integer('id_solicitud'); $table->string('nombre'); });
     Capsule::table('tb_estaciones')->insert([['id' => 101, 'nombre' => 'Tenant A', 'razonsocial' => 'A SA', 'estatus' => 0], ['id' => 202, 'nombre' => 'Tenant B', 'razonsocial' => 'B SA', 'estatus' => 0]]);
     Capsule::table('tb_usuarios')->insert([['id' => 1, 'nombre' => 'Usuario A', 'id_gas' => 101, 'id_puesto' => 10, 'estatus' => 0], ['id' => 2, 'nombre' => 'Usuario B', 'id_gas' => 202, 'id_puesto' => 20, 'estatus' => 0]]);
     Capsule::table('tb_multiestacion_usuario')->insert(['id' => 1, 'id_usuario' => 1, 'estaciones' => '[101]', 'activo' => 1]);
     Capsule::table('tb_modulos_config')->insert(['id' => 1, 'modulo_key' => 'control-documentos-personal', 'tipo' => 'stations', 'estaciones_soportadas' => '[101,202]', 'tipo_departamento' => 'puestos', 'activo' => 1]);
     Capsule::table('op_rh_personal')->insert([['id' => 1, 'id_estacion' => 101, 'ine' => 'tenant-a-ine.pdf'], ['id' => 2, 'id_estacion' => 202, 'ine' => 'tenant-b-ine.pdf']]);
     Capsule::table('op_token_telegram')->insert(['id' => 1, 'id_usuario' => 2, 'token' => 'b-token', 'chat_id' => 222, 'fecha_creacion' => '2026-09-11 00:00:00', 'estatus' => 1]);
+    Capsule::table('tb_modulos_config')->insert(['id' => 2, 'modulo_key' => 'solicitud-cheque', 'tipo' => 'stations', 'estaciones_soportadas' => '[101,202]', 'tipo_departamento' => 'puestos', 'activo' => 1]);
+    Capsule::table('op_solicitud_cheque')->insert([['id' => 11, 'id_estacion' => 101], ['id' => 22, 'id_estacion' => 202]]);
+    Capsule::table('op_solicitud_cheque_documento')->insert([['id' => 1, 'id_solicitud' => 11, 'nombre' => 'A'], ['id' => 2, 'id_solicitud' => 22, 'nombre' => 'B']]);
 }
 
 Session::init();
@@ -65,6 +71,8 @@ if ($path === '/__test/csrf-token') exit(CsrfToken::token());
 if ($path === '/__test/csrf') { (new CsrfMiddleware())->handle(); Session::set('csrf_handler_reached', true); exit('accepted'); }
 if ($path === '/__test/sensitive-upload-path') { exit(ControlDocumentosPersonalService::getUploadDir()); }
 if ($path === '/__test/authorized-personal') { $personal = ControlDocumentosPersonalService::findAuthorizedPersonal((int) ($_GET['id'] ?? 0)); header('Content-Type: application/json'); exit(json_encode(['id' => $personal?->id])); }
+if ($path === '/__test/authorized-solicitud') { $solicitud = SolicitudChequeService::findAuthorizedSolicitudCheque((int) ($_GET['id'] ?? 0)); header('Content-Type: application/json'); exit(json_encode(['id' => $solicitud?->id])); }
+if ($path === '/__test/solicitud-documentos') { header('Content-Type: application/json'); exit(json_encode(SolicitudChequeService::getDocumentos((int) ($_GET['id'] ?? 0)))); }
 if ($path === '/__test/telegram-state') { header('Content-Type: application/json'); exit(json_encode(TokenTelegram::orderBy('id')->get()->map(static fn ($r) => ['id_usuario' => $r->id_usuario, 'token' => $r->token, 'chat_id' => $r->chat_id, 'estatus' => $r->estatus])->all())); }
 if ($path === '/switch-estacion') { (new SwitchEstacionController())->switchSessionEstacion(); exit; }
 if ($path === '/download') { (new DownloadController())->download(); exit; }

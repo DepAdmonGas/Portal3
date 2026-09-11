@@ -52,22 +52,17 @@ class ErrorHandler
 
     public static function handleError($errno, $errstr, $errfile, $errline)
     {
-        $logger = Logger::getLogger();
-        $logger->error("PHP Error [$errno]: $errstr en $errfile:$errline");
+        Logger::error('PHP runtime error', [
+            'error_code' => $errno,
+            'file' => $errfile,
+            'line' => $errline,
+        ]);
         return false;
     }
 
     public static function handleException(Throwable $exception)
     {
-        $logger = Logger::getLogger();
-        
-        // SECURITY: Loguear detalles completos pero nunca exponer al usuario (Vulnerabilidad #10)
-        $logger->critical("Excepción no controlada", [
-            'message' => $exception->getMessage(),
-            'file' => $exception->getFile(),
-            'line' => $exception->getLine(),
-            'trace' => $exception->getTraceAsString()
-        ]);
+        Logger::critical($exception);
 
         http_response_code(500);
         
@@ -87,8 +82,11 @@ class ErrorHandler
     {
         $error = error_get_last();
         if ($error !== null) {
-            $logger = Logger::getLogger();
-            $logger->critical("Error fatal: {$error['message']} en {$error['file']} línea {$error['line']}");
+            Logger::critical('Fatal runtime error', [
+                'error_type' => $error['type'],
+                'file' => $error['file'],
+                'line' => $error['line'],
+            ]);
         }
     }
 }

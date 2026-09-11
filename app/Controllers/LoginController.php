@@ -44,19 +44,28 @@ class LoginController
     {
         try {
 
-            if (!RateLimiter::check('login')) {
-                return;
+            $usuario = (string) Request::jsonInput('usuario', '');
+            $limit = RateLimiter::consume('login', $usuario);
+
+            if (!$limit['allowed']) {
+                JsonResponse::send([
+                    'success' => false,
+                    'type' => 'rate_limit_exceeded',
+                    'message' => 'Demasiadas solicitudes. Intente más tarde.',
+                ], 429, ['Retry-After' => (string) $limit['retry_after']]);
             }
 
 
             $result = $this->authenticationService->login(
-                Request::jsonInput('usuario'),
+                $usuario,
                 Request::jsonInput('password'),
                 Request::jsonInput('two_factor_code')
             );
 
 
             if ($result->type === 'success') {
+
+                RateLimiter::clear('login', $usuario);
 
                 JsonResponse::success(
                     $result->message,
