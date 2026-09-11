@@ -127,57 +127,88 @@
         </div>
     </div>
 
-    <!-- Card B: QUIEN CUBRE -->
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
-        <div class="card border h-100">
-            <div class="card-header bg-primary text-white py-3 border-0">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
-                        <i class="ti ti-user-check fs-5" x-show="firmaB"></i>
-                        <i class="ti ti-circle-check fs-5" x-show="!firmaB && estado === 0 && puedeFirmarCubre"></i>
-                        <i class="ti ti-clock-hour-4 fs-5" x-show="!firmaB && !(estado === 0 && puedeFirmarCubre)"></i>
-                    </div>
-                    <div class="ms-3 overflow-hidden">
-                        <h6 class="mb-0 text-white" x-text="firmaB ? firmaB.tipo_label : 'NOMBRE Y FIRMA DE QUIEN CUBRE'"></h6>
-                    </div>
+<!-- Card B: QUIEN CUBRE -->
+<div class="col-xl-4 col-lg-6 col-md-6 mb-4">
+    <div class="card border-0 bg-white h-100">
+
+        <!-- Encabezado con íconos dinámicos -->
+        <div class="card-header text-bg-primary py-3 border-0">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:45px;height:45px;">
+                    <i class="ti ti-user-check fs-6" x-show="firmaB"></i>
+                    <i class="ti ti-circle-check fs-6" x-show="!firmaB && estado === 0 && puedeFirmarCubre"></i>
+                    <i class="ti ti-clock-hour-4 fs-6" x-show="!firmaB && !(estado === 0 && puedeFirmarCubre)"></i>
+                </div>
+                <div class="ms-3 overflow-hidden">
+                    <h5 class="mb-0 text-white text-truncate" x-text="firmaB ? firmaB.tipo_label : 'NOMBRE Y FIRMA DE QUIEN CUBRE'"></h5>
                 </div>
             </div>
-            <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-                <template x-if="firmaB">
-                    <img :src="firmaB.firma_img_url" class="img-fluid w-75" :alt="firmaB.usuario_nombre || 'Firma'">
-                </template>
-                <template x-if="!firmaB && estado === 0 && puedeFirmarCubre">
-                    <div class="w-100">
-                        <div class="card card-border shadow-none w-100 pt-0">
-                            <div class="card-body p-0">
-                                <div class="position-relative border border-3 border-dashed rounded-3 overflow-hidden" style="height:250px; background:#fff;">
-                                    <canvas id="firma-canvas-b" style="width:100%; height:100%; touch-action:none;"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-outline-danger w-100 mt-3 mb-2" @click="limpiarFirmaB()">
-                            <i class="ti ti-eraser me-1"></i> Limpiar
-                        </button>
-                        <button type="button" class="btn btn-success w-100" @click="firmarQuienCubre()" :disabled="firmandoCubre">
-                            <template x-if="!firmandoCubre"><i class="ti ti-check me-1"></i></template>
-                            <template x-if="firmandoCubre"><span class="spinner-border spinner-border-sm me-1"></span></template>
-                            Finalizar
-                        </button>
-                    </div>
-                </template>
-                <template x-if="!firmaB && !(estado === 0 && puedeFirmarCubre)">
-                    <div class="text-center">
-                        <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
-                        <h6 class="text-muted mb-0">¡Falta la firma de quien cubre!</h6>
-                    </div>
-                </template>
-            </div>
-            <div class="card-footer bg-light text-center">
-                <h6 class="mb-0 fw-semibold text-truncate" x-text="firmaB ? firmaB.usuario_nombre : ''"></h6>
-                <small class="text-muted" x-show="!firmaB" x-text="(estado === 0 && puedeFirmarCubre) ? 'Firma pendiente de registrar' : 'Pendiente de firma'"></small>
-            </div>
         </div>
+
+        <!-- Cuerpo con el marco de borde punteado -->
+        <div class="card-body h-100p-3 flex-fill d-flex flex-column">
+            
+            <!-- Caso 1: YA FIRMÓ -->
+            <template x-if="firmaB">
+                <div class="signature-pad-wrapper p-3 flex-fill d-flex align-items-center justify-content-center text-center" >
+                    <img :src="firmaB.firma_img_url" class="img-fluid" style="max-height: 250px; object-fit: contain;" :alt="firmaB.usuario_nombre || 'Firma'">
+                </div>
+            </template>
+
+            <!-- Caso 2: PAD PARA FIRMAR -->
+            <template x-if="!firmaB && estado === 0 && puedeFirmarCubre">
+                <div class="d-flex flex-column flex-fill">
+                    <div class="signature-pad-wrapper flex-fill" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+                        <div class="signature-pad--body w-100 h-100">
+        <canvas 
+                    id="firma-canvas-b"
+                    style="
+                        width: 100%; 
+                        height: 100%; 
+                        min-height: 0; 
+                        display: block; 
+                        touch-action: none;
+                    ">
+                </canvas>                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Caso 3: PENDIENTE / SIN FIRMAR -->
+            <template x-if="!firmaB && !(estado === 0 && puedeFirmarCubre)">
+                <div class="signature-pad-wrapper p-3 flex-fill d-flex flex-column align-items-center justify-content-center text-center" style="border: 2px dashed #adb5bd; border-radius: 6px; min-height: 250px;">
+                    <i class="ti ti-signature-off text-muted mb-2" style="font-size:80px;"></i>
+                    <h6 class="text-muted mb-0 fw-medium">¡Falta la firma de quien cubre!</h6>
+                </div>
+            </template>
+
+        </div>
+
+        <!-- Footer con información de usuario o estado -->
+        <div x-show="firmaB" class="card-footer bg-light text-center py-3 border-top-0" :class="{ 'rounded-bottom': firmaB || !(estado === 0 && puedeFirmarCubre) }">
+            <h6 class="mb-0 fw-semibold text-dark text-truncate" x-text="firmaB ? firmaB.usuario_nombre : ''"></h6>
+        </div>
+
+        <!-- Botones divididos 50/50 en la base (Limpiar y Finalizar) -->
+        <template x-if="!firmaB && estado === 0 && puedeFirmarCubre">
+            <div class="row g-0">
+                <div class="col-6">
+                    <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-0" style="border-bottom-left-radius: 6px !important;" @click="limpiarFirmaB()">
+                        <i class="ti ti-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button type="button" class="btn btn-success w-100 rounded-0" style="border-bottom-right-radius: 6px !important;" @click="firmarQuienCubre()" :disabled="firmandoCubre">
+                        <template x-if="!firmandoCubre"><i class="ti ti-check me-1"></i></template>
+                        <template x-if="firmandoCubre"><span class="spinner-border spinner-border-sm me-1"></span></template>
+                        Finalizar
+                    </button>
+                </div>
+            </div>
+        </template>
+
     </div>
+</div>
 
     <!-- Card C: VISTO BUENO -->
     <div class="col-xl-4 col-lg-6 col-md-6 mb-4">

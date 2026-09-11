@@ -107,4 +107,15 @@ class View
 
         require $layoutPath;
     }
+
+    public static function renderPartial(string $view, array $data = []): void
+    {
+        extract($data, EXTR_SKIP);
+        $viewPath = __DIR__ . "/../Views/{$view}.php";
+        if (!file_exists($viewPath)) {
+            http_response_code(404);
+            return;
+        }
+        require $viewPath;
+    }
 }

@@ -190,7 +190,7 @@
 </li>
 
 <li class="sidebar-item">
-<a class="sidebar-link" href="/departamento-operativo/importacion/precios-combustible" aria-expanded="false">
+<a class="sidebar-link" href="/departamento-operativo/importacion/precios-diarios-combustible" aria-expanded="false">
 <span><i class="ti ti-gas-station"></i></span>
 <span class="hide-menu">Precios diarios combustible</span>
 </a>

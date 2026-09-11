@@ -802,6 +802,41 @@ return function (RouteCollector $r) {
         //----- 3. Importacion
         $r->addRoute('GET', '/importacion', Route::auth(['DptoOperativoController', 'importacionIndex']));
 
+        //----- Mediciones
+        $r->addRoute('GET', '/importacion/mediciones', Route::auth(['MedicionesController', 'index']));
+        $r->addRoute('GET', '/importacion/mediciones/data', Route::auth(['MedicionesController', 'getData']));
+        $r->addRoute('POST', '/importacion/mediciones/store', Route::auth(['MedicionesController', 'store']));
+        $r->addRoute('POST', '/importacion/mediciones/delete', Route::auth(['MedicionesController', 'delete']));
+
+        //----- Precios Diarios Combustible
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible', Route::auth(['PreciosCombustibleController', 'index']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible/data', Route::auth(['PreciosCombustibleController', 'getData']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible/nuevo/{year:\d+}/{mes:\d+}/{fecha}', Route::auth(['PreciosCombustibleController', 'nuevo']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible/editar/{id:\d+}', Route::auth(['PreciosCombustibleController', 'editar']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible/detalle/{id:\d+}', Route::auth(['PreciosCombustibleController', 'detalle']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible/reporte/{id:\d+}', Route::auth(['PreciosCombustibleController', 'reporte']));
+        $r->addRoute('POST', '/importacion/precios-diarios-combustible/update', Route::auth(['PreciosCombustibleController', 'update']));
+        $r->addRoute('POST', '/importacion/precios-diarios-combustible/finalizar', Route::auth(['PreciosCombustibleController', 'finalizar']));
+        $r->addRoute('POST', '/importacion/precios-diarios-combustible/toggle-precio-bajo', Route::auth(['PreciosCombustibleController', 'togglePrecioBajo']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible/{year}/{mes}', Route::auth(['PreciosCombustibleController', 'filtrarPorAnioMes']));
+
+        //----- Formato Descarga Merma
+        $r->addRoute('GET', '/importacion/formato-descarga-merma', Route::auth(['FormatoDescargaMermaController', 'index']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma/data', Route::auth(['FormatoDescargaMermaController', 'getData']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma-nuevo', Route::auth(['FormatoDescargaMermaController', 'nuevo']));
+        $r->addRoute('POST', '/importacion/formato-descarga-merma/store', Route::auth(['FormatoDescargaMermaController', 'store']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma-detalle/{id:\d+}', Route::auth(['FormatoDescargaMermaController', 'detalle']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma-editar/{id:\d+}', Route::auth(['FormatoDescargaMermaController', 'editar']));
+        $r->addRoute('POST', '/importacion/formato-descarga-merma/update', Route::auth(['FormatoDescargaMermaController', 'update']));
+        $r->addRoute('POST', '/importacion/formato-descarga-merma/delete', Route::auth(['FormatoDescargaMermaController', 'delete']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma/comentarios/{id:\d+}', Route::auth(['FormatoDescargaMermaController', 'comentarios']));
+        $r->addRoute('POST', '/importacion/formato-descarga-merma/agregar-comentario', Route::auth(['FormatoDescargaMermaController', 'agregarComentario']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma/pdf/{id:\d+}', Route::auth(['FormatoDescargaMermaController', 'pdf']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma/excel/{id:\d+}', Route::auth(['FormatoDescargaMermaController', 'excel']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma/excel-busqueda', Route::auth(['FormatoDescargaMermaController', 'excelBusqueda']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma/excel-general', Route::auth(['FormatoDescargaMermaController', 'excelGeneral']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma/{year}/{mes}', Route::auth(['FormatoDescargaMermaController', 'filtrarPorAnioMes']));
+
         //----- 4. Almacen
         $r->addRoute('GET', '/almacen', Route::auth(['DptoOperativoController', 'almacenIndex']));
 

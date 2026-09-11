@@ -629,32 +629,44 @@ x-model="pc.nota"
 <!---------- FIRMA ---------->
 <template x-if="!multiestacion && estado == 0">
 <div class="col-12">
-<div class="card">
+    <div class="card border-0 bg-white">
 
-<div class="card-header text-bg-primary">
-<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-<h5 class="mb-0 text-white"><i class="ti ti-signature me-2"></i>FIRMA DE QUIEN ELABORA</h5>
-<button type="button" class="btn bg-danger text-white" @click="limpiarFirma"><i class="ti ti-eraser me-1"></i> Limpiar firma </button>
-</div>
-</div>
+        <!-- Encabezado con icono circular -->
+        <div class="card-header text-bg-primary py-3 border-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:45px;height:45px;">
+                        <i class="ti ti-signature fs-6"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="mb-0 text-white">FIRMA DE QUIEN ELABORA</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div class="card-body p-0">
-<div id="signature-pad" class="signature-pad border-0" style="cursor: crosshair;">
-<div class="signature-pad--body">
-<canvas id="canvas" style="width: 100%; height: 250px;"></canvas>
-</div>
-</div>
-</div>
+        <!-- Cuerpo con pad punteado y checkbox de términos -->
+        <div class="card-body p-3">
+            <div id="signature-pad" class="signature-pad-wrapper" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+                <div class="signature-pad--body">
+                    <canvas id="canvas" style="width: 100%; height: 250px; display: block;"></canvas>
+                </div>
+            </div>
 
-<div class="card-footer border-top bg-white">
-<div class="form-check">
-<input class="form-check-input" type="checkbox" id="terminosid" x-model="aceptoTerminos">
-<label class="form-check-label" for="terminosid">
-<strong class="text-primary">Acepto los resultados del corte del día: <?= $fecha ?></strong>
-</label>
-</div>
-</div>
-</div>
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" id="terminosid" x-model="aceptoTerminos">
+                <label class="form-check-label" for="terminosid">
+                    <strong class="text-primary">Acepto los resultados del corte del día: <?= $fecha ?></strong>
+                </label>
+            </div>
+        </div>
+
+        <!-- Botón inferior a lo ancho pegado a la tarjeta -->
+        <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" style="border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;" @click="limpiarFirma">
+            <i class="ti ti-eraser me-1"></i> Repetir firma
+        </button>
+
+    </div>
 </div>
 </template>
 
