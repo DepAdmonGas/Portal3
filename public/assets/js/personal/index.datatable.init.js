@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         columns: [
         { data: 'id', className: 'text-center' },
-        { data: 'nombre', className: 'text-center' },
+        { data: 'nombre', className: 'text-start' },
         
         { data: 'puesto', className: 'text-center' },
         { data: 'telefono', className: 'text-center' },

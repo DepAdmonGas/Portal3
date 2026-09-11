@@ -17,11 +17,10 @@ x-data="{ ...actions(), ...corteNuevo({
 <?php else: ?>
 
     <div id="sasisopa-content">
+<div class="row mt-3">
+   
 
-
-          <div class="row mt-3">
-
-          <div class="col-12 col-sm-3">
+          <div class="col-md-6">
         
             <div class="input-group mb-3">
             <span class="input-group-text fw-bolder">Fecha:</span>
@@ -36,39 +35,62 @@ x-data="{ ...actions(), ...corteNuevo({
             </div>
 
             </div>
+               <div class="col-md-6">
+      <div class="text-end mb-3">
+        <button
+            class="btn btn-success"
+            @click="submit()"
+            :disabled="loading">
+<i class="ti ti-check"></i>
+            Finalizar
+
+        </button>
+      </div>
+</div>
+        
 
           </div>
 
 
 <template x-for="(producto,index) in productos" :key="index">
 
-    <div class="border mb-3">
 
-        <div class="p-3">
+  <!-----------card principal------>
 
-            <!-- Titulo -->
-            <div style="font-size:1.2em">
-                <label :style="`border-bottom:2px solid var(--bs-${producto.color})`">
-                    Producto:
+<div class="card">
+<div class="card-header text-white" :style="`background-color: var(--bs-${producto.color})`">
+    <!-- Titulo -->
+                <label>
                     <b x-text="producto.nombre"></b>
                 </label>
-            </div>
+</div>
+        
 
-            <div class="row">
 
-                <!-- ========================= -->
+
+ <div class="card-body pb-0">
+<div class="row">
+<div class="col-md-12">
+
+
+<div class="card">
+    <div class="card-header bg-primary">
+
+                        <h5 class="mb-0 text-white"> <i class="ti ti-cash me-1"></i>
+1. Agregar el volumen inicial, final y ventas en (Lt).</h5>
+                    </div>
+    
+
+
+    <div class="card-body p-0 ">
+  <!-- ========================= -->
                 <!-- VOLUMEN -->
                 <!-- ========================= -->
+                   
 
-                <div class="col-xl-5 col-lg-5 col-md-12 col-sm-12">
+                    <div class="table-responsive">
 
-                    <div class="text-muted mt-2 mb-2 fs-3">
-                        <b>* 1.</b> Agregar el volumen inicial, final y ventas en (Lt).
-                    </div>
-
-                    <div style="overflow-x:auto">
-
-                        <table class="table table-bordered table-sm">
+                        <table class="table table-striped table-bordered  align-middle mb-0">
 
                             <thead>
 
@@ -99,8 +121,8 @@ x-data="{ ...actions(), ...corteNuevo({
                                         type="number"
                                         min="0"
                                         step="any"
-                                        class="form-control border-0"
-                                        placeholder="Inicial"
+                                        class="form-control border-0 text-center"
+                                        
                                         x-model="producto.volumen.inicial"
                                         :class="{ 'is-invalid': errors.volumen[index]?.inicial }"
                                         @input="errors.volumen[index].inicial = false">
@@ -113,8 +135,8 @@ x-data="{ ...actions(), ...corteNuevo({
                                         type="number"
                                         min="0"
                                         step="any"
-                                        class="form-control border-0"
-                                        placeholder="Venta"
+                                        class="form-control border-0 text-center"
+                                        
                                         x-model="producto.volumen.venta"
                                         :class="{ 'is-invalid': errors.volumen[index]?.venta }"
                                         @input="errors.volumen[index].venta = false">
@@ -127,8 +149,8 @@ x-data="{ ...actions(), ...corteNuevo({
                                         type="number"
                                         min="0"
                                         step="any"
-                                        class="form-control border-0"
-                                        placeholder="Final"
+                                        class="form-control border-0 text-center"
+                                        
                                         x-model="producto.volumen.final"
                                         :class="{ 'is-invalid': errors.volumen[index]?.final }"
                                         @input="errors.volumen[index].final = false">
@@ -143,27 +165,51 @@ x-data="{ ...actions(), ...corteNuevo({
 
                     </div>
 
-                </div>
+          
+    </div>
 
-                <!-- ========================= -->
-                <!-- PIPAS -->
-                <!-- ========================= -->
+</div>
+</div>
+</div>
 
-                <div class="col-xl-7 col-lg-7 col-md-12 col-sm-12">
+<div class="row">
+<div class="col-md-12">
+    <div class="card">
+<div class="card-header bg-primary">
+<div class="row  align-items-center">
 
-                    <div class="text-muted mt-2 mb-2 fs-3">
-                        <b>* 2.</b> Agregar el volumen de las compras de pipas.
-                    </div>
 
-                    <div style="overflow-x:auto">
+    <div class="col-9">
+                        <h5 class="mb-0 text-white">                <i class="ti ti-truck me-1"></i>
+2. Agregar el volumen de las compras de pipas.</h5>
+                   
+    </div>
 
-                    <a class="btn btn-sm btn-light mb-2"                   
+
+    <div class="col-3 text-end">
+ <a class="btn bg-success-subtle text-success"                   
                     href="javascript:void(0)"
                     @click="agregarPipa(producto)">
-                    <i class="ti ti-plus fs-6"></i>
+                    <i class="ti ti-plus"></i> Nuevo
                     </a>
+    </div>
+ 
+</div>
+                   
 
-                        <table class="table table-bordered table-sm">
+</div>
+
+<div class="card-body p-0 pb-0">
+<!-- ========================= -->
+                <!-- PIPAS -->
+                <!-- ========================= -->
+ 
+
+                    <div class="table-responsive">
+
+                   
+
+                        <table class="table table-striped table-bordered align-middle mb-0 " >
 
                             <thead>
 
@@ -207,13 +253,13 @@ x-data="{ ...actions(), ...corteNuevo({
 
                                 <tr>
 
-                                    <td class="p-0">
+                                    <td>
 
                                         <div class="input-group">
 
                                             <span
-                                                class="input-group-text border-0 rounded-0"
-                                                style="font-size:.9em">
+                                                class="input-group-text border-0 rounded-0 bg-transparent"
+                                                >
 
                                                 Pipa <span x-text="i+1"></span>
 
@@ -223,7 +269,7 @@ x-data="{ ...actions(), ...corteNuevo({
                                                 type="number"
                                                 min="0"
                                                 step="any"
-                                                class="form-control border-0"
+                                                class="form-control border-0 text-center"
                                                 x-model="pipa.volumen"
                                                 @input="calcularPrecio(pipa)">
 
@@ -231,13 +277,13 @@ x-data="{ ...actions(), ...corteNuevo({
 
                                     </td>
 
-                                    <td class="p-0">
+                                    <td>
 
                                         <input
                                             type="number"
                                             min="0"
                                             step="any"
-                                            class="form-control border-0 rounded-0 bg-light"
+                                            class="form-control border-0 rounded-0  text-center"
                                             x-model="pipa.precio"
                                             readonly
                                             tabindex="-1">
@@ -250,7 +296,7 @@ x-data="{ ...actions(), ...corteNuevo({
                                             type="number"
                                             min="0"
                                             step="any"
-                                            class="form-control border-0"
+                                            class="form-control border-0 text-center"
                                             x-model="pipa.costo">
 
                                     </td>
@@ -259,7 +305,7 @@ x-data="{ ...actions(), ...corteNuevo({
 
                                         <input
                                             type="text"
-                                            class="form-control border-0"
+                                            class="form-control border-0 text-center"
                                             x-model="pipa.factura">
 
                                     </td>
@@ -268,7 +314,7 @@ x-data="{ ...actions(), ...corteNuevo({
 
                                         <input
                                             type="text"
-                                            class="form-control border-0"
+                                            class="form-control border-0 text-center"
                                             x-model="pipa.transportista">
 
                                     </td>
@@ -279,7 +325,7 @@ x-data="{ ...actions(), ...corteNuevo({
                                             type="number"
                                             min="0"
                                             step="any"
-                                            class="form-control border-0"
+                                            class="form-control border-0 text-center"
                                             x-model="pipa.importe"
                                             @input="calcularPrecio(pipa)">
 
@@ -302,26 +348,27 @@ x-data="{ ...actions(), ...corteNuevo({
 
                     </div>
 
-                </div>
 
-            </div>
+</div>
+    </div>
+</div>
+</div>
+
+              
+
+                
+
+            
+        </div>
+       
+
 
         </div>
-
-    </div>
+<!-----------aqui termina el card principal------>
 
 </template>
 
-      <div class="text-end mt-2">
-        <button
-            class="btn btn-success"
-            @click="submit()"
-            :disabled="loading">
 
-            Guardar cambios
-
-        </button>
-      </div>
 
     </div>
 

@@ -14,26 +14,26 @@ x-data="{ ...actions(), ...consulta()}">
 
     <div id="sasisopa-content">
 
-<table class="table table-sm table-bordered table-striped table-hover mt-4">
+<table class="table  table-bordered table-striped  mt-4">
 
         <thead>
 
             <tr>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle">
                     #
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle">
                     Permiso CRE
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle">
                     Estación
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle">
                     Versión
                 </th>
                 <th
                     width="35"
-                    class="text-center align-middle bg-primary text-white">
+                    class="text-center align-middle">
                     <i class="ti ti-file-type-pdf fs-7"></i>
                 </th>
             </tr>

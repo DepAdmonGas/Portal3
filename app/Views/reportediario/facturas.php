@@ -33,10 +33,10 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
 
         <div class="card">
 
-            <div class="card-header bg-white p-3">
+            <div class="card-header card-colored-header bg-primary p-3">
 
                 <h5
-                    class="mb-0"
+                    class="mb-0 text-white"
                     x-text="mes.nombre + ' ' + mes.year">
                 </h5>
 
@@ -64,7 +64,7 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
 
                                 <div class="table-responsive overflow-x-auto overflow-hidden">
 
-                                    <table class="table table-sm table-bordered table-hover align-middle mb-0 pb-0">
+                                    <table class="table table-sm table-bordered align-middle mb-0 pb-0">
 
                                         <thead>
 
@@ -158,8 +158,8 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                      <h4 class="modal-title text-white">
-
-                        Agregar facturas
+<i class="ti ti-file-dollar"></i>
+                        Nuevas facturas
 
                     </h4>
 
@@ -172,12 +172,12 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
 
             <div class="modal-body">
 
-            <small
-                class="text-muted"
-                x-text="modal.mes?.nombre + ' ' + modal.mes?.year">
-            </small>
+            <span
+                class="form-label"
+                x-text="modal.mes?.nombre + ' ' + modal.mes?.year +':'">
+            </span>
 
-                <div class="alert alert-primary text-primary mt-2">
+                <div class="alert alert-primary mt-2">
                     <strong>Periodo:</strong>
                     <span x-text="modal.etapa?.titulo"></span>
                 </div>
@@ -188,11 +188,11 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
 
                     <div class="mb-3">
 
-                        <div class="">
+                        <div>
 
                             <h6
-                                class="fw-bolder"
-                                x-text="producto.nombre">
+                                class="fw-bolder mb-1"
+                                x-text="'* '+producto.nombre +':'">
                             </h6>
 
                             <input

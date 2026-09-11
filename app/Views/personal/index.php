@@ -30,7 +30,7 @@
                 <?=
                 !empty($permisos['crear']) ?
                     '<li>
-                  <a class="dropdown-item pointer" @click="openCreate()"><i class="ti ti-plus"></i> Agregar</a>
+                  <a class="dropdown-item pointer" @click="openCreate()"><i class="ti ti-plus"></i> Nuevo</a>
                 </li>'
                     : ''
                 ?>
@@ -44,8 +44,8 @@
     </div>
 
     <div class="datatables mt-3">
-        <div class="table-responsive">
-            <table id="table-personal" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+        <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2" >
+            <table id="table-personal" class="table table-striped table-bordered align-middle">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -82,9 +82,10 @@
 
                     <h4 class="modal-title text-white">
 
-                        <span class="ms-2"
+                    <span> <i class="ti" :class="mode === 'create' ? 'ti ti-user-plus' :'ti-edit'"></i></span>  
+                        <span
                             x-text="mode === 'create'
-                                ? 'Agregar Usuario'
+                                ? 'Nuevo Usuario'
                                 : 'Editar Usuario'">
                         </span>
 
@@ -106,7 +107,7 @@
                         <div class="col-12">
 
                             <label class="form-label fw-semibold">
-                                Nombre completo
+                                * Nombre completo:
                             </label>
 
                             <input type="text"
@@ -123,7 +124,7 @@
 
                             <label class="form-label fw-semibold">
 
-                                Teléfono
+                                Teléfono:
 
                             </label>
 
@@ -139,7 +140,7 @@
 
                             <label class="form-label fw-semibold">
 
-                                Correo electrónico
+                                * Correo electrónico:
 
                             </label>
 
@@ -157,7 +158,7 @@
 
                             <label class="form-label fw-semibold">
 
-                                Fecha de ingreso
+                                * Fecha de ingreso:
 
                             </label>
 
@@ -174,7 +175,7 @@
 
                             <label class="form-label fw-semibold">
 
-                                Puesto
+                                * Puesto:
 
                             </label>
 
@@ -184,7 +185,7 @@
                                 :class="errors.id_puesto ? 'is-invalid' : ''">
 
                                 <option value="">
-                                    Seleccione...
+                                    Selecciona una opción...
                                 </option>
 
                                 <?php foreach ($puestos as $puesto): ?>
@@ -202,7 +203,7 @@
 
                             <label class="form-label fw-semibold">
 
-                                Usuario
+                                * Usuario:
 
                             </label>
 
@@ -238,7 +239,7 @@
 
                             <label class="form-label fw-semibold">
 
-                                Contraseña
+                                Contraseña:
 
                             </label>
 
@@ -270,7 +271,7 @@
 
                             <label class="form-label fw-semibold">
 
-                                Confirmar contraseña
+                                Confirmar contraseña:
 
                             </label>
 
@@ -309,7 +310,11 @@
 
                         <span x-show="!loading">
 
-                            <i class="ti ti-check"></i> Guardar
+                            <i class="ti ti-check"></i>
+                            
+                        <span x-show="!loading">
+<span x-text="mode=== 'create' ? 'Guardar' :'Actualizar'"></span>
+                        </span>
 
                         </span>
 
