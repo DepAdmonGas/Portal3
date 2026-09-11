@@ -760,6 +760,8 @@ return [
 
 public static function getDocumentos(int $idSolicitud): array
 {
+if (!self::findAuthorizedSolicitudCheque($idSolicitud)) return [];
+
 return SolicitudChequeDocumento::where('id_solicitud', $idSolicitud)
 ->where('nombre', '!=', 'PAGO')
 ->orderBy('id', 'asc')
