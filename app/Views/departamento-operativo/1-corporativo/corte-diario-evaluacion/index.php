@@ -94,7 +94,7 @@ style="display: none;"></div>
 <h5 class="modal-title">Forma de Evaluación (Apertura de Cortes Diarios)</h5>
 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 </div>
-<div class="modal-body" x-html="data.info"></div>
+<div class="modal-body" x-html="DOMPurify.sanitize(data.info)"></div>
 <div class="modal-footer">
 <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
 </div>

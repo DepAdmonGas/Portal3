@@ -442,7 +442,7 @@ default => 'Desconocido',
 
 public static function getDetalle(int $id): ?array
 {
-$row = SolicitudCheque::find($id);
+$row = self::findAuthorizedSolicitudCheque($id);
 if (!$row) return null;
 
 $firmas = SolicitudChequeFirma::with('usuario:id,nombre')
@@ -478,6 +478,7 @@ $f['tipo_label'] = 'NOMBRE Y FIRMA DE AUTORIZACIÓN';
 $f['firma_img_url'] = null;
 $f['firma_texto'] = '<b>Fecha: ' . formatearFecha($fechaF) . ', ' . $horaF . '</b> <br> La solicitud de cheque se firmó por un medio electrónico.';
 }
+
 }
 unset($f);
 
@@ -549,6 +550,15 @@ return [
 'firmas_pendientes' => $firmasPendientes,
 'documentos' => $documentos,
 ];
+}
+
+public static function findAuthorizedSolicitudCheque(int $id): ?SolicitudCheque
+{
+$stations = ModuleStationService::getAvailableStations('solicitud-cheque');
+$ids = array_map(static fn (array $station): int => (int) $station['id'], $stations);
+if (empty($ids)) return null;
+
+return SolicitudCheque::whereIn('id_estacion', $ids)->where('id', $id)->first();
 }
 
 public static function store(array $data, array $files): array

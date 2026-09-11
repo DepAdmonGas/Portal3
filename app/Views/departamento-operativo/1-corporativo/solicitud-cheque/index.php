@@ -379,7 +379,7 @@ $<span x-text="formatNum(detalle.monto)"></span>
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
 <i class="ti ti-signature text-primary mb-3" style="font-size:70px;"></i>
-<small class="text-dark" x-html="getFirma('B').firma_texto || ''"></small>
+<small class="text-dark" x-html="DOMPurify.sanitize(getFirma('B').firma_texto || '')"></small>
 </div>
 <div class="card-footer bg-light text-center">
 <h6 class="mb-0 fw-semibold text-truncate" x-text="getFirma('B').usuario_nombre"></h6>
@@ -425,7 +425,7 @@ $<span x-text="formatNum(detalle.monto)"></span>
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
 <i class="ti ti-signature text-primary mb-3" style="font-size:70px;"></i>
-<small class="text-dark" x-html="getFirma('C').firma_texto || ''"></small>
+<small class="text-dark" x-html="DOMPurify.sanitize(getFirma('C').firma_texto || '')"></small>
 </div>
 <div class="card-footer bg-light text-center">
 <h6 class="mb-0 fw-semibold text-truncate" x-text="getFirma('C').usuario_nombre"></h6>

@@ -68,7 +68,7 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 <thead>
 <tr>
 <template x-for="(col, ci) in columnas" :key="'col-' + ci">
-<th :class="ci === 1 ? 'text-start' : 'text-center'" x-html="col"></th>
+<th :class="ci === 1 ? 'text-start' : 'text-center'" x-text="col"></th>
 </template>
 </tr>
 </thead>

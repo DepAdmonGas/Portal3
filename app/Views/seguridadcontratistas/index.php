@@ -685,7 +685,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                         <div
                             
-                            x-html="formato14.descripcion">
+                            x-html="DOMPurify.sanitize(formato14.descripcion)">
                         </div>
 
                     </div>
@@ -705,7 +705,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                         </div>
 
                         <div
-                            x-html="formato14.justificacion">
+                            x-html="DOMPurify.sanitize(formato14.justificacion)">
                         </div>
 
                     </div>

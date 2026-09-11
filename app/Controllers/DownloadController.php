@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Services\SensitiveDownloadAuthorizationService;
+
 class DownloadController
 {
 
@@ -18,6 +20,14 @@ class DownloadController
 
         // LIMPIAR NOMBRE
         $file = basename($file);
+
+        // Resolve the domain resource and authorize it before locating or
+        // delivering bytes. Unknown types intentionally fail closed.
+        $resolved = SensitiveDownloadAuthorizationService::resolve($tipo, $file);
+        if ($resolved === null) {
+            header("Location: /404");
+            exit;
+        }
 
         // MAPA DE CARPETAS (CONTROLADO)
         $rutas = [
@@ -87,7 +97,8 @@ class DownloadController
             exit;
         }
 
-        $ruta = $rutas[$tipo] . $file;
+        $rutas[$tipo] = $resolved['base'];
+        $ruta = $resolved['path'];
 
         // ============================================================
         // SECURITY: Validación de path traversal y Directory Traversal
@@ -103,14 +114,6 @@ class DownloadController
         if (!$realPath || !$basePath || strpos($realPath, $basePath) !== 0) {
             http_response_code(403);
             echo 'Archivo no permitido';
-            exit;
-        }
-
-        // Validar que el archivo está dentro de public/ (seguridad adicional)
-        $publicPath = realpath(dirname(__DIR__, 2) . '/public/');
-        if (!$publicPath || strpos($realPath, $publicPath) !== 0) {
-            http_response_code(403);
-            echo 'Ubicación no permitida';
             exit;
         }
 
