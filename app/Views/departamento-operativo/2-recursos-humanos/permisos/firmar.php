@@ -12,7 +12,7 @@
     <div class="col-12 mb-4">
         <div class="alert border-0 d-flex flex-column justify-content-center align-items-center text-center py-4 px-4 mb-0" :class="alertMensaje.clase">
             <h4 class="fw-semibold mb-2" x-text="alertMensaje.titulo"></h4>
-            <p class="mb-0" x-html="alertMensaje.texto"></p>
+            <p class="mb-0" x-html="DOMPurify.sanitize(alertMensaje.texto)"></p>
         </div>
     </div>
 </div>

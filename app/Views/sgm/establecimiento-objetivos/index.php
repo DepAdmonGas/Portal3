@@ -107,7 +107,7 @@ x-text="objetivo.fecha"
 
 <div
 class="mt-3"
-x-html="objetivo.detalle"
+x-html="DOMPurify.sanitize(objetivo.detalle)"
 ></div>
 
 </div>

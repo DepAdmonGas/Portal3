@@ -240,12 +240,12 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
 
                       </div>
 
-                      <div class="mt-2 mb-2" x-html="otrosDetalle"></div>
+                      <div class="mt-2 mb-2" x-html="DOMPurify.sanitize(otrosDetalle)"></div>
 
 
                       <!-- TABLA DINAMICA -->
 
-                      <div class="mb-2 mt-4" x-html="tablaDetalle"></div>
+                      <div class="mb-2 mt-4" x-html="DOMPurify.sanitize(tablaDetalle)"></div>
 
                 
 
