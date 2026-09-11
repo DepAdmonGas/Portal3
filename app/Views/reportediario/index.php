@@ -14,22 +14,10 @@ x-data="{ ...actions(), ...corteDiario() }">
 
     <div id="sasisopa-content">
 
-<div class="text-end mt-2">
-   <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
-            <ul class="dropdown-menu animated rubberBand">
-                <li>
-                    <a class="dropdown-item pointer" :href="url"><i class="ti ti-file-dollar"></i> Facturas</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-
 <div class="row mt-2">
-    <label class="form-label">Año:</label>
-    <div class="col-12 col-sm-3">
+                   
+        
+    <div class="col-5">
         <select
             class="form-select"
             x-model.number="year"
@@ -41,6 +29,14 @@ x-data="{ ...actions(), ...corteDiario() }">
             <?php endfor; ?>
         </select>
     </div>
+
+
+    <div class="col-7 text-end">
+   <button class="btn bg-primary-subtle text-primary">
+                    <a class="dropdown-item pointer" :href="url"><i class="ti ti-file-dollar"></i> Facturas</a>
+            
+            </button>
+            </div>
     
 </div>
 

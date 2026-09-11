@@ -14,7 +14,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
     <div id="sasisopa-content">
 
-<div class="text-end mt-2">
+<div class="text-end mt-2 mb-3">
    <div class="btn-group">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ti ti-dots-vertical fs-4"></i>
@@ -29,8 +29,8 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
             </ul>
         </div>
 </div>
-
-    <table class="table table-bordered table-sm mt-3">
+<div class="table-responsive">
+    <table class="table table-striped table-bordered text-nowrap align-middle">
     <thead>
 
     <tr>
@@ -174,6 +174,8 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
     </tfoot>
     </table>
 
+</div>
+
 
     <!-- Modal Detalle -->
 <div
@@ -189,7 +191,10 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
-                    Detalle del Reporte Diario
+
+                <i class="ti ti-eye"></i>
+                    Detalle del Reporte Diario (<label class="text-white" x-text="detalleFecha"></label>)
+                     
                 </h4>
 
                 <button
@@ -202,54 +207,52 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
             <div class="modal-body">
 
-            <h5 class="mb-3">
-    Fecha:
-    <span class="text-muted" x-text="detalleFecha"></span>
-</h5>
-
+  
                 <template
                     x-for="(producto,index) in detalleProductos"
                     :key="index">
-
-                    <div class="border mb-3">
-
-                        <div class="p-3">
-
-                            <!-- =========================== -->
+<div class="card">
+<div class="card-header text-white" :style="`background-color: var(--bs-${producto.color})`">
+ <!-- =========================== -->
                             <!-- TITULO -->
                             <!-- =========================== -->
 
-                            <div style="font-size:1.2em">
+                            
 
-                                <label
-                                    :style="`border-bottom:2px solid var(--bs-${producto.color})`">
-
-                                    Producto:
-
+                                <label>
                                     <b x-text="producto.nombre"></b>
-
                                 </label>
 
-                            </div>
 
-                            <div class="row">
+</div>
 
-                                <!-- ======================================= -->
-                                <!-- VOLUMEN -->
-                                <!-- ======================================= -->
 
-                                <div class="col-xl-5 col-lg-5 col-md-12">
+<!--------aqui comienza el body-card principal----->
+<div class="card-body pb-0">
 
-                                    <div class="text-muted mt-2 mb-2 fs-6">
-
-                                        <b>1.</b>
+ <div class="row">
+<div class="col-12">
+<div class="card">
+<div class="card-header card-colored-header bg-primary">
+            <h5  class="card-title text-white mb-0">
+              <i class="ti ti-cash me-1"></i>                          
+            1.
                                         Volúmenes registrados
 
-                                    </div>
+                                    </h5>
+</div>
 
-                                    <div style="overflow-x:auto">
+    <div class="card-body p-0">
+                        <!-- ======================================= -->
+                                       <!-- VOLUMEN -->
+                        <!-- ======================================= -->
 
-                                        <table class="table table-bordered table-sm">
+                               
+
+
+                                    <div class="table-responsive">
+
+                                        <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
                                         <thead>
                                             <tr>
@@ -276,25 +279,31 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                                     </table>
 
                                     </div>
+    </div>
+</div>
+</div>
 
-                                </div>
 
-                                <!-- ======================================= -->
+<div class="col-12">
+<div class="card">
+    <div class="card-header card-colored-header bg-primary">
+   <h5 class="card-title text-white mb-0">
+<i class="ti ti-truck me-1"></i>
+                                        2.
+                                        Compras de pipas
+
+                                    </h5>
+    </div>
+<div class="card-body p-0">
+   <!-- ======================================= -->
                                 <!-- PIPAS -->
                                 <!-- ======================================= -->
 
-                                <div class="col-xl-7 col-lg-7 col-md-12">
+                                 
 
-                                    <div class="text-muted mt-2 mb-2 fs-6">
+                                    <div class="table-responsive">
 
-                                        <b>2.</b>
-                                        Compras de pipas
-
-                                    </div>
-
-                                    <div style="overflow-x:auto">
-
-                                        <table class="table table-bordered table-sm">
+                                        <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
     <thead>
 
@@ -368,21 +377,26 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
                                     </div>
 
-                                </div>
+</div>
 
-                            </div>
+</div>
+</div>
 
-                            <!-- =========================== -->
+                               </div>
+                               
+                   </div>             
+<!---------aqui termina el body-card------->
+
+
+        <div class="card-footer">
+  <!-- =========================== -->
                             <!-- MERMA -->
                             <!-- =========================== -->
 
                             <div class="row">
 
-                            <hr>
 
-<div class="row">
-
-    <div class="col-md-6">
+    <div class="col-6">
 
         <strong>Total Compra:</strong>
 
@@ -396,7 +410,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
     </div>
 
-    <div class="col-md-6 text-end">
+    <div class="col-6 text-end">
 
         <strong>Total Merma:</strong>
 
@@ -410,11 +424,14 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
     </div>
 
-</div>
+
 
                             </div>
+        </div>
 
-                        </div>
+                          
+
+                  
 
                     </div>
 
@@ -439,6 +456,13 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
 </div>
 
+
+
+
+
+
+
+
 <div class="modal fade"
      id="modalMensajes"
      tabindex="-1">
@@ -452,7 +476,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                     <h4 class="modal-title text-white">
-                        <i class="ti ti-message-circle me-2 text-primary"></i>
+                        <i class="ti ti-message-circle"></i>
                         Mensaje
                     </h4>
 

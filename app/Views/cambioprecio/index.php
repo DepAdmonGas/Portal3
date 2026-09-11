@@ -13,28 +13,22 @@
 <?php else: ?>
 
     <div id="cambioprecio-content">
-
-<div class="text-end mt-2">
-   <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
-            <ul class="dropdown-menu animated rubberBand">
-                <?= 
+        <div class="d-flex justify-content-end">
+            <?= 
                 !empty($permisos['crear']) ? 
-                '<li>
-                  <a class="dropdown-item pointer" @click="openCreate()"><i class="ti ti-plus"></i> Agregar</a>
-                </li>' 
+                '
+                  <button class="btn bg-primary-subtle text-primary" @click="openCreate()"><i class="ti ti-plus"></i> Nuevo</a> </button>
+               ' 
                 : '' 
-                ?>   
-                 
-            </ul>
+                ?>  
         </div>
-</div>
+               
+                 
 
-    <div class="datatables mt-3">
-          <div class="table-responsive overflow-x-auto overflow-y-hidden">
-        <table id="table-cambio-precio" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+
+    <div class="datatables mt-1">
+          <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
+        <table id="table-cambio-precio" class="table table-striped table-bordered text-nowrap align-middle">
           <thead>
             <tr>
             <th>#</th>
@@ -69,7 +63,8 @@
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h4 class="modal-title text-white mb-0">
-                    Cambio de Precio
+                    <i class="ti ti-arrows-exchange-2"></i>
+                    Nuevo cambio de Precio
                 </h4>
 
                 <button
@@ -89,7 +84,7 @@
                     <!-- G SUPER -->
                     <div class="col-12">
                         <label class="form-label fw-bolder text-success mb-1">
-                            G SUPER
+                            G SUPER:
                         </label>
 
                         <input
@@ -103,7 +98,7 @@
                     <!-- G PREMIUM -->
                     <div class="col-12">
                         <label class="form-label fw-bolder text-danger mb-1">
-                            G PREMIUM
+                            G PREMIUM:
                         </label>
 
                         <input
@@ -117,7 +112,7 @@
                     <!-- G DIESEL -->
                     <div class="col-12">
                         <label class="form-label fw-bolder mb-1">
-                            G DIESEL
+                            G DIESEL:
                         </label>
 
                         <input
@@ -132,7 +127,7 @@
                     <!-- FECHA Y HORA -->
                     <div class="col-md-6">
                         <label class="form-label mb-1">
-                            Fecha programada
+                            * Fecha programada:
                         </label>
 
                         <input
@@ -151,7 +146,7 @@
 
                     <div class="col-md-6">
                         <label class="form-label mb-1">
-                            Hora programada
+                            * Hora programada:
                         </label>
 
                         <input

@@ -14,47 +14,35 @@ x-data="{ ...actions(), ...comunicados()}">
 
     <div id="sasisopa-content">
 
-<div class="card mt-4">
-  <div class="card-body">
-  <div class="d-flex align-items-center">
-      <div class="ms-auto">
-     <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalComunicado()"><i class="ti ti-plus"></i> Agregar</a>
-              </li>
-            </ul>
-          </div>   
-      </div>
-  </div>
 
-<table class="table table-sm table-bordered table-striped table-hover mb-0 pb-0">
+<div class="d-flex justify-content-end mb-3">
+                <button class="btn bg-primary-subtle text-primary" @click="openModalComunicado()"><i class="ti ti-plus"></i> Nuevo</button>
+        </div>
+<div class="table-responsive">
+<table class="table table-bordered table-striped  mb-0 pb-0">
 
         <thead>
 
             <tr>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle ">
                     #
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle ">
                     Fecha
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle ">
                     Tema
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle ">
                     Detalle
                 </th>
-                <th class="text-center align-middle bg-primary text-white">
+                <th class="text-center align-middle ">
                     Dirigido a
                 </th>
                 <th
                     width="35"
-                    class="text-center align-middle bg-primary text-white">
-                    <i class="ti ti-dots-vertical fs-7"></i>
+                    class="text-center align-middle ">
+                    <i class="ti ti-dots-vertical fs-6"></i>
                 </th>
             </tr>
         </thead>
@@ -92,14 +80,14 @@ x-data="{ ...actions(), ...comunicados()}">
                         x-text="item.detalle">
                     </td>
 
-                    <td class="text-center align-middle">
+                    <td class="text-center align-middle pb-0">
 
                     <template
                         x-for="puesto in item.dirigidoa"
                         :key="puesto.id">
 
                         <span
-                            class="badge bg-info-subtle text-info me-1 mb-1"
+                            class="badge rounded-pill text-bg-info me-2 mb-3"
                             x-text="puesto.puesto">
                         </span>
 
@@ -112,7 +100,7 @@ x-data="{ ...actions(), ...comunicados()}">
 
                         <div class="dropdown dropstart">
                     <a href="javascript:void(0)" data-bs-toggle="dropdown">
-                         <i class="ti ti-dots-vertical fs-7"></i>
+                         <i class="ti ti-dots-vertical fs-6"></i>
                     </a>
                     <ul class="dropdown-menu">
                         <li>
@@ -146,9 +134,8 @@ x-data="{ ...actions(), ...comunicados()}">
         </tbody>
 
     </table>
-                    
-  </div>
-</div>
+    </div>                
+ 
 
 
 <div
@@ -162,7 +149,9 @@ tabindex="-1">
 
 <div class="modal-header modal-colored-header bg-primary text-white">
 
-<h4 class="modal-title text-white">Crear comunicado</h4>
+<h4 class="modal-title text-white">
+<i class="ti ti-bubble-plus"></i>    
+Nuevo comunicado</h4>
 
 <button
 class="btn-close btn-close-white"
@@ -175,7 +164,7 @@ data-bs-dismiss="modal">
 
 <div class="mb-3">
 
-<label class="form-label fw-bolder">Tema:</label>
+<label class="form-label fw-bolder">* Tema:</label>
 
 <input
 class="form-control"
@@ -187,7 +176,7 @@ x-model="comunicado.tema"
 
 <div class="mb-3">
 
-<label class="form-label fw-bolder">Detalle:</label>
+<label class="form-label fw-bolder">* Detalle:</label>
 
 <textarea
 class="form-control"
@@ -255,7 +244,7 @@ $event.target.files[0]
                 class="btn btn-success"
                 @click="guardarComunicado()">
 
-                <i class="ti ti-check"></i> Crear comunicado
+                <i class="ti ti-check"></i> Guardar
 
                 </button>
 
@@ -278,6 +267,7 @@ $event.target.files[0]
             <div class="modal-header modal-colored-header bg-primary text-white">
 
                 <h5 class="modal-title text-white">
+                    <i class="ti ti-eye"></i>
                     Detalle del comunicado
                 </h5>
 
@@ -290,44 +280,44 @@ $event.target.files[0]
 
             <div class="modal-body">
 
-                <div class="row mb-3">
+                <div class="row mb-2">
 
                     <div class="col-md-6">
 
-                        <label class="fw-bolder">
+                        <label class="form-label mb-1">
                             Fecha:
                         </label>
 
-                        <div class="mt-2" x-text="detalleComunicado.fecha_larga"></div>
+                        <div  x-text="detalleComunicado.fecha_larga"></div>
 
                     </div>
 
                     <div class="col-md-6">
 
-                        <label class="fw-bolder">
+                        <label class="form-label mb-1">
                             Tema:
                         </label>
 
-                        <div class="mt-2" x-text="detalleComunicado.tema"></div>
+                        <div x-text="detalleComunicado.tema"></div>
 
                     </div>
 
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-2">
 
-                    <label class="fw-bolder">
+                    <label class="form-label mb-1">
                         Dirigido a:
                     </label>
 
-                    <div class="mt-2">
+                    <div>
 
                         <template
                             x-for="puesto in detalleComunicado.dirigidoa"
                             :key="puesto.id">
 
                             <span
-                                class="badge bg-info-subtle text-info me-1 mb-1"
+                                class="badge rounded-pill text-bg-info me-2 mb-3"
                                 x-text="puesto.puesto">
                             </span>
 
@@ -337,13 +327,13 @@ $event.target.files[0]
 
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-2">
 
-                    <label class="fw-bolder">
+                    <label class="form-label mb-1">
                         Detalle:
                     </label>
 
-                    <div class="border rounded p-3 bg-light mt-2"
+                    <div 
                          style="white-space:pre-wrap;"
                          x-text="detalleComunicado.detalle">
                     </div>
@@ -352,9 +342,9 @@ $event.target.files[0]
 
                 <template x-if="detalleComunicado.archivo">
 
-                    <div class="mb-3">
+                    <div class="mb-2">
 
-                        <label class="fw-bolder">
+                        <label class="form-label mb-1">
                             Archivo:
                         </label>
 
@@ -363,11 +353,11 @@ $event.target.files[0]
                             <a
                                 :href="detalleComunicado.archivo"
                                 target="_blank"
-                                class="btn btn-outline-primary mt-2">
+                                class="btn btn-outline-primary">
 
                                 <i class="ti ti-file-download"></i>
 
-                                Descargar archivo
+                                Descargar 
 
                             </a>
 
@@ -378,7 +368,12 @@ $event.target.files[0]
                 </template>
 
             </div>
+<div class="modal-footer">
+     <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+                        <i class="ti ti-x"></i> Cerrar
+                    </button>
 
+</div>
         </div>
 
     </div>
