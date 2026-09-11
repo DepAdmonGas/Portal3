@@ -28,6 +28,30 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
+    <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
+    <script>
+        (function() {
+            function getCsrfToken() {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                return meta ? meta.getAttribute('content') : null;
+            }
+
+            const csrfToken = getCsrfToken();
+            if (csrfToken) {
+                axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+
+                axios.interceptors.request.use(
+                    function(config) {
+                        config.headers['X-CSRF-TOKEN'] = getCsrfToken();
+                        return config;
+                    },
+                    function(error) {
+                        return Promise.reject(error);
+                    }
+                );
+            }
+        })();
+    </script>
 
 
 </head>

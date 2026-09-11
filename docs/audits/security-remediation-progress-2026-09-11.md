@@ -161,3 +161,36 @@
 ## DOC-001 — documentation consolidation
 
 - Snapshot: [security-remediation-status-2026-09-11.md](./security-remediation-status-2026-09-11.md) consolidates the current local, production-pending and concurrent-work status without replacing this progress log, the original audit or the remediation plan.
+
+## SOLICITUD-CHEQUE-CSRF-INTEGRATION
+
+- Status: remediated locally.
+- Root cause: native `fetch` with `FormData` omitted the CSRF token for `POST /departamento-operativo/solicitud-cheque/store`.
+- Fix: `solicitudChequeCrearComponent.guardar()` reads the current authenticated-page `meta[name="csrf-token"]`, fails safely through the existing notifier if absent, and sends it as `X-CSRF-TOKEN`. The browser retains ownership of the multipart `Content-Type` boundary.
+- Server CSRF security: unchanged and fail-closed; missing or invalid tokens still receive 419.
+- Follow-up: manual authenticated record creation must be retested before commit/deployment.
+
+## VIEW-LAYOUT-CSRF-LOGOUT
+
+- Status: remediated locally.
+- Affected: `app/Views/layouts/sgm.php` and `app/Views/layouts/sasisopa.php`.
+- Root cause: both layouts used the shared Axios `performLogout()` flow for `POST /logout` but omitted the current CSRF meta tag and Axios header configuration.
+- Fix: both layouts now render the current session CSRF token and use the canonical Axios default/request-interceptor bootstrap. Server validation, the POST-only logout route, and fail-closed behavior are unchanged.
+- Follow-up: manually retest logout from `/sgm` and `/sasisopa`. `configuracion.php` remains outside this slice.
+
+## CONFIGURACION-LOGOUT-CSRF-CONSISTENCY
+
+- Status: remediated locally.
+- Root cause: `configuracion.php` combined the shared POST logout action with a legacy `GET /logout` anchor and omitted the current CSRF meta/Axios header configuration.
+- Fix: the layout now uses the canonical current-token Axios bootstrap and both visible logout controls invoke `performLogout()`; the legacy GET client flow was removed.
+- Backend: unchanged. The POST logout route and fail-closed CSRF middleware remain required.
+- Follow-up: manually retest logout from Configuración before commit/deployment.
+
+## SECURITY-PAUSE-CONCURRENT-WORK
+
+- Pause point: the local security regression suite is 62 passed, 0 failed, 0 skipped. Production remains untouched and deployment is not authorized.
+- `VIEW-LAYOUT-CSRF-LOGOUT`: remediated locally. Seven active layouts were reviewed; five provide logout and all five use POST with the current CSRF token. No legacy GET logout or mutable logout without CSRF remains.
+- `SOLICITUD-CHEQUE-CSRF-INTEGRATION`: the client hotfix is present, but `MANUAL_CREATE_RETEST` remains **PENDING** because no manual confirmation has been provided.
+- Concurrent-work block remains active for `AUTHZ-TENANT-007`, `AUTHZ-DL-002`, and `SEC-UPLOAD-004` in or dependent on `departamento-operativo`.
+- Resume only after concurrent work is complete and versioned, SolicitudCheque creation is manually retested, and the security suite remains green. Resume order: finalize SolicitudCheque CSRF verification, run the full suite, then continue AUTHZ-TENANT-007, AUTHZ-DL-002, SEC-UPLOAD-004, and production-verification preparation.
+- Do not initiate DATA-VALID-011, SEC-CSP-012, DEP-TEST-013, ARCH-001, or OPS-001 without new prioritization.

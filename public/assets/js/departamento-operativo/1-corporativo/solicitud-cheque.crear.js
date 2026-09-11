@@ -130,7 +130,19 @@ fd.append('doc_' + i, input.files[0]);
 }
 }
 
-const resp = await fetch('/departamento-operativo/solicitud-cheque/store', { method: 'POST', body: fd });
+const csrfToken = document
+.querySelector('meta[name="csrf-token"]')
+?.getAttribute('content');
+if (!csrfToken) {
+this._notify('error', 'No se encontró el token de seguridad. Actualice la página e intente de nuevo.');
+return;
+}
+
+const resp = await fetch('/departamento-operativo/solicitud-cheque/store', {
+method: 'POST',
+headers: { 'X-CSRF-TOKEN': csrfToken },
+body: fd
+});
 const json = await resp.json();
 
     if (json.success) {
