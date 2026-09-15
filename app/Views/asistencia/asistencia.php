@@ -95,10 +95,10 @@ x-init="
             <?php
             if ($asistencia->realizadopor !=0) { ?>
 <div class="card">
-    <div class="card-header">
-         <h5>Evidencia</h5>
+    <div class="card-header card-colored-header bg-primary">
+         <h5 class="card-title text-white pb-0 mb-0 ">Evidencia</h5>
 
-                <small class="text-muted">Agrega la evidencia del elemento lista de asistencia, un máximo de 3 imágenes</small>
+                <small class="text-white">Agrega la evidencia del elemento lista de asistencia, un máximo de 3 imágenes</small>
     </div>
 
         <div class="card-body">
@@ -233,7 +233,7 @@ x-init="
 
     <div class="card">
         <div class="card-body">
-        <label class="form-label">* Nombre del personal:</label>
+        <label class="form-label mb-1">* Nombre del personal:</label>
 
         <div class="input-group mb-3">
             <select class="select2 form-control" multiple="multiple" id="selectPersonal">

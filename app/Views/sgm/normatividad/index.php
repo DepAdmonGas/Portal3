@@ -235,7 +235,7 @@
         ?>    
     </div>
 
-    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+    <h4 class="card-title mb-0"></h4>
 
   <div class="datatables mt-4">
     <div class="table-responsive">

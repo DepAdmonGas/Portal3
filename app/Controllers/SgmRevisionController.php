@@ -85,24 +85,24 @@ class SgmRevisionController extends BaseController
                 'A la fecha del presente se han realizado cambios por nueva legislación:',
                 'Cuales:',
                 'Los cambios fueron registrados en el SGM en el apartado de control de revisiones:',
-                'El cuerpo del SGM, mantienen su estructura de elaboración',
-                'Se da a conocer a la alta dirección la revisión del SGM',
+                'El cuerpo del SGM, mantienen su estructura de elaboración:',
+                'Se da a conocer a la alta dirección la revisión del SGM:',
             ],
 
             'Procedimientos' => [
                 'A la fecha del presente se han realizado cambios por nueva legislación:',
                 'Cuales:',
                 'Los cambios fueron registrados en el manual de procedimientos en el apartado de control de revisiones:',
-                'El cuerpo del SGM, mantienen su estructura de elaboración',
-                'Se da a conocer a la alta dirección la revisión de los procedimientos del SGM',
+                'El cuerpo del SGM, mantienen su estructura de elaboración:',
+                'Se da a conocer a la alta dirección la revisión de los procedimientos del SGM:',
             ],
 
             'Registros' => [
                 'A la fecha del presente se han realizado cambios por nueva legislación:',
                 'Cuales:',
                 'Los cambios fueron registrados en el manual de procedimientos en el apartado de control de revisiones y codificados por el responsable del SGM:',
-                'El cuerpo del SGM, mantienen su estructura de elaboración',
-                'Se da a conocer a la alta y a los involucrados los cambios en los formatos del SGM',
+                'El cuerpo del SGM, mantienen su estructura de elaboración:',
+                'Se da a conocer a la alta y a los involucrados los cambios en los formatos del SGM:',
             ],
 
         ];
