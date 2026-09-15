@@ -20,14 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         },
         columns: [
-        { data: 'id', name: 'id' },
-        { data: 'nombre', name: 'nombre' },
-        { data: 'puesto', name: 'puesto' },
-        { data: 'telefono', name: 'telefono' },
-        { data: 'email', name: 'email' },
+        { data: 'id', name: 'id', className: 'text-center align-middle' },
+        { data: 'nombre', name: 'nombre', className: 'text-start align-middle' },
+        { data: 'puesto', name: 'puesto', className: 'text-center align-middle' },
+        { data: 'telefono', name: 'telefono', className: 'text-center align-middle' },
+        { data: 'email', name: 'email', className: 'text-center align-middle' },
         {
             data: null,
-            name: 'porcentaje',
+            name: 'porcentaje', className: 'text-center align-middle',
             render: function (data, type, row) {
                 return `<span class="${row.color} fw-bold">${row.porcentaje}%</span>`;
             }

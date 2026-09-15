@@ -27,11 +27,11 @@ x-data="{ ...actions(), ...sondasMedicion()}">
       <table id="table-sondas-medicion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>No. Sonda</th>
-            <th>Marca</th>
-            <th>Modelo</th>
-            <th>Ubicación</th>
-          <th class="text-center" width="100px">
+           <th class="text-center align-middle" width="100px">No. Sonda</th>
+            <th class="text-center align-middle">Marca</th>
+            <th class="text-center align-middle">Modelo</th>
+            <th class="text-center align-middle">Ubicación</th>
+          <th class="text-center align-middle" width="48px">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -61,22 +61,22 @@ x-data="{ ...actions(), ...sondasMedicion()}">
 
 
         <label class="form-label">* No. Sonda:</label>
-        <input type="number" class="form-control mb-2" x-model="no_sonda"
+        <input type="number" class="form-control mb-3" x-model="no_sonda"
                 :class="errors.no_sonda ? 'is-invalid' : ''"
                 @input="errors.no_sonda = false" />
 
         <label class="form-label">* Marca:</label>
-        <input type="text" class="form-control mb-2" x-model="marca"
+        <input type="text" class="form-control mb-3" x-model="marca"
                 :class="errors.marca ? 'is-invalid' : ''"
                 @input="errors.marca = false" />
 
         <label class="form-label">* Modelo:</label>
-        <input type="text" class="form-control mb-2" x-model="modelo"
+        <input type="text" class="form-control mb-3" x-model="modelo"
                 :class="errors.modelo ? 'is-invalid' : ''"
                 @input="errors.modelo = false" />
 
         <label class="form-label">* Ubicación:</label>
-        <input type="text" class="form-control mb-2" x-model="ubicacion"
+        <input type="text" class="form-control" x-model="ubicacion"
                 :class="errors.ubicacion ? 'is-invalid' : ''"
                 @input="errors.ubicacion = false" />
         

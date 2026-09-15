@@ -13,7 +13,7 @@
   <div class="card-header bg-primary">
 
 <h5 class="text-white mb-0 d-flex align-items-center">
-    <i class="ti ti-label me-2"></i>
+    <i class="ti ti-scale me-2"></i>
     <span>
         Apartados de la NORMA Oficial Mexicana NOM-005-ASEA-2016, 
         Diseño, construcción, operación y mantenimiento de Estaciones de 

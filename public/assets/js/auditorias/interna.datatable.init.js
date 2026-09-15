@@ -29,14 +29,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 className: 'text-center align-middle'
             },
 
-            { data: 'auditor' },
+            { data: 'auditor', className: 'text-center align-middle' },
 
             {
                 data: null,
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle',
-                width: '1%',
+                width: '48px',
                 render: function () {
                     return `
                         <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" download>
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle',
-                width: '1%',
+                width: '48px',
                 render: function (data, type, row) {
                     return `
                         <a href="javascript:void(0)"
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle',
-                width: '1%',
+                width: '48px',
                 render: function (data, type, row) {
                     return row.formato024.existe
                         ? `
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle',
-                width: '1%',
+                width: '48px',
                 render: function (data, type, row) {
                     return `
                         <a @click="window.auditoriasInterna.abrirAnexos(${row.id}, 24)">
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle',
-                width: '1%',
+                width: '48px',
                 render: function () {
                     return `
                         <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" download>
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle',
-                width: '1%',
+                width: '48px',
                 render: function (data, type, row) {
                     return `
                         <a href="javascript:void(0)"
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle',
-                width: '1%',
+                width: '48px',
                 render: function (data, type, row) {
                     return row.formato025.existe
                         ? `
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle',
-                width: '1%',
+                width: '48px',
                 render: function (data, type, row) {
                     return `
                         <a @click="window.auditoriasInterna.abrirAnexos(${row.id}, 25)">
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 className: 'text-center align-middle',
-                width: '1%',
+                width: '48px',
                 render: function (data, type, row) {
                     return `
                         <a @click="window.auditoriasInterna.eliminar(${row.id})">

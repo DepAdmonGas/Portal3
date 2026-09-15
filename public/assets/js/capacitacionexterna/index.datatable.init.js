@@ -21,19 +21,19 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         columns: [
         {
-        data: null,
+        data: null, className: 'text-center align-middle',
         render: function (data, type, row, meta) {
                 return meta.row + meta.settings._iDisplayStart + 1;
             }
         },
 
     { 
-        data: 'curso',
+        data: 'curso', className: 'text-start align-middle',
         defaultContent: 'S/I'
     },
 
     {
-        data: 'fecha_programada',
+        data: 'fecha_programada', className: 'text-center align-middle',
         render: function (data, type, row) {
 
             if (!data) return 'S/I';
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
    {
-        data: null,
+        data: null, className: 'text-center align-middle',
         defaultContent: 'S/I',
         render: function (data, type, row) {
             let duracion = row.duracion ?? '';
@@ -68,12 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
      { 
-        data: 'instructor',
+        data: 'instructor', className: 'text-center align-middle',
         defaultContent: 'S/I'
     },
 
     {
-        data: 'fecha_real',
+        data: 'fecha_real', className: 'text-center align-middle',
         render: function (data) {
 
             if (

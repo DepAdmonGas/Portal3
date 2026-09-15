@@ -43,9 +43,9 @@ x-data="monitoreoEvaluacion()">
 <!-- Implementación del SA -->
 <div class="col-12">
 <div class="card">
-<div class="card-body">
+<div class="card-body p-0">
     <div class="table-responsive">
-<table class="table table-responsive table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-responsive table-striped mb-0 text-nowrap align-middle">
         <tbody>
             <tr>
                 <td class="align-middle text-center">
@@ -138,7 +138,7 @@ x-data="monitoreoEvaluacion()">
         <div class="col-md-2 mt-3 ">
 <div class="table-responsive">
             <table
-                class="table table-sm table-striped table-bordered mb-0 text-nowrap align-middle">
+                class="table table-responsive table-striped mb-0 text-nowrap align-middle">
 
                 <thead>
 
@@ -233,9 +233,9 @@ x-data="monitoreoEvaluacion()">
   <!-- Capacitación -->
    <div class="col-12">
 <div class="card">
-<div class="card-body">
+<div class="card-body p-0">
     <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped mb-0 text-nowrap align-middle">
           <tbody>
             <tr>
               <td class="align-middle text-center"><b>Objeto</b></td>
@@ -297,7 +297,7 @@ x-data="monitoreoEvaluacion()">
         </div>
 </div>
 <div class="card-footer">
-<button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" data-bs-toggle="modal" data-bs-target="#modal-capacitacion"><i class="ti ti-eye"></i> Ver detalle</button>
+<button type="button" class="btn bg-primary-subtle text-primary float-end" data-bs-toggle="modal" data-bs-target="#modal-capacitacion"><i class="ti ti-eye"></i> Ver detalle</button>
 </div>
 </div>
 
@@ -307,9 +307,9 @@ x-data="monitoreoEvaluacion()">
   <!-- Satisfacción del cliente -->
    <div class="col-12">
 <div class="card">
-<div class="card-body">
+<div class="card-body p-0">
     <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped mb-0 text-nowrap align-middle">
 
     <tbody>
 
@@ -437,8 +437,10 @@ x-data="monitoreoEvaluacion()">
   <!-- Incidentes y accidentes -->
    <div class="col-12">
 <div class="card">
-    <div class="card-body">
-<table class="table table-striped table-bordered mb-0">
+    <div class="card-body p-0">
+
+
+<table class="table table-striped mb-0 text-nowrap align-middle">
 
     <tbody>
 
@@ -536,92 +538,162 @@ x-data="monitoreoEvaluacion()">
    </div>
 <!-- Incidentes y accidentes -->
 
-<table class="table table-sm table-bordered pb-0 mb-0">
-        <tbody>
-          <tr>
-            <td class="align-middle"><b>Programa de implementación del Sistema de Administración</b></td>
-            <td class="text-center align-middle" width="40px"><a href="/sasisopa/monitoreo-verificacion-evaluacion/descargar-programa-implementacion-s-a"><i class="ti ti-file-type-pdf fs-7 text-danger"></i></a></td>
-
-          </tr>
-        </tbody>
-      </table>
 
 </div>
 
+<div class="row">
+    <!-- Programa de implementación del Sistema de Administración -->
+    <div class="col-12 mb-4">
+        <a href="/sasisopa/monitoreo-verificacion-evaluacion/descargar-programa-implementacion-s-a" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-file-type-pdf text-white display-6"></i> 
+                    </div>
 
-<div class="row mt-4">
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Programa de implementación del Sistema de Administración
+                        </h4>
+                    </div>
+                </div>
+            </div>
 
-  <div class="col-md-3 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Monitoreo de aspectos ambientales y riesgos</h4>
-
-         <div class="text-end mt-4">
-          <a href="/sasisopa/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver detalle 
-          </a>
-        </div>
-
-      </div>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-download fs-5"></i>
+                </div>
+            </div>
+        </a>
     </div>
-  </div>
-
-  <div class="col-md-3 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Calibración, Verificación y mantenimiento de equipos</h4>
-          
-          <div class="text-end mt-4">
-          <a href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver detalle
-          </a>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-3 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Evaluación y cumplimiento de requisitos legales</h4>
-          
-          <div class="text-end mt-4">
-          <a href="/sasisopa/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales" 
-          class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver detalle
-          </a>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-3 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Administración de hallazgos derivados del monitoreo del sistema de administración</h4>
-          
-          <div class="text-end mt-4">
-          <a href="/sasisopa/monitoreo-verificacion-evaluacion/atencion-hallazgos"
-           class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver detalle
-          </a>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
 </div>
 
+<div class="row">
+
+    <!-- Monitoreo de aspectos ambientales y riesgos -->
+    <div class="col-md-3 d-flex align-items-stretch mb-4">
+        <a href="/sasisopa/identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-chart-radar text-white display-6"></i> 
+                    </div>
+
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Monitoreo de aspectos ambientales y riesgos
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Calibración, Verificación y mantenimiento de equipos -->
+    <div class="col-md-3 d-flex align-items-stretch mb-4">
+        <a href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-adjustments-horizontal text-white display-6"></i> 
+                    </div>
+
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Calibración, Verificación y mantenimiento de equipos
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Evaluación y cumplimiento de requisitos legales -->
+    <div class="col-md-3 d-flex align-items-stretch mb-4">
+        <a href="/sasisopa/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-gavel text-white display-6"></i> 
+                    </div>
+
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Evaluación y cumplimiento de requisitos legales
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Administración de hallazgos derivados del monitoreo del sistema de administración -->
+    <div class="col-md-3 d-flex align-items-stretch mb-4">
+        <a href="/sasisopa/monitoreo-verificacion-evaluacion/atencion-hallazgos" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-search text-white display-6"></i> 
+                    </div>
+
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Administración de hallazgos derivados del monitoreo del sistema de administración
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
 
 <div class="modal fade" id="modal-capacitacion" tabindex="-1" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-md">
+            <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header mb-0 bg-primary d-flex align-items-center">
  
@@ -634,23 +706,84 @@ x-data="monitoreoEvaluacion()">
 
                     </div>
                    
-                    <div class="modal-body">
-                    
-                    <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/capacitacion-interna" 
-                    class="btn btn-lg bg-info-subtle text-info  w-100">
-                        <i class="ti ti-device-imac"></i> Programa de capacitación interna
-                    </a>
+                    <div class="modal-body pb-0">
+      <div class="row">
 
-                    <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/capacitacion-externa" 
-                    class="btn btn-lg bg-info-subtle text-info mt-3 p-2 w-100">
-                        <i class="ti ti-device-imac"></i> Programa de capacitación externa
-                    </a>
+    <!-- Programa de capacitación interna -->
+    <div class="col-md-6  mb-3">
+        <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/capacitacion-interna" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-school text-white display-6"></i> 
+                    </div>
 
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Programa de capacitación interna
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Programa de capacitación externa -->
+    <div class="col-md-6  mb-3">
+        <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/capacitacion-externa" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-certificate text-white display-6"></i> 
+                    </div>
+
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Programa de capacitación externa
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
                     
                         
                     
                 </div>
-                <!-- /.modal-content -->
+
+                <div class="modal-footer">
+           <button
+                    class="btn bg-danger-subtle text-danger"
+                    data-bs-dismiss="modal">
+
+                    <i class="ti ti-x"></i> Cancelar
+
+                </button>
+                </div>
+                
+                  
        
             <!-- /.modal-dialog -->
         </div>

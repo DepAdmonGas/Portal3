@@ -32,12 +32,12 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
       <table id="table-bitacora-calibracion-equipos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>Folio</th>
-            <th>Fecha</th>
-            <th>Equipo</th>
-            <th>Resultados</th>
-            <th>Estado</th>
-          <th class="text-center" width="100px">
+           <th class="text-center align-middle" width="96px">Folio</th>
+            <th class="text-center align-middle">Fecha</th>
+            <th class="text-center align-middle">Equipo</th>
+            <th class="text-center align-middle" width="100px">Resultados</th>
+            <th class="text-center align-middle" width="100px">Estado</th>
+          <th class="text-center" width="48px">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -217,22 +217,22 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
 
                       <div class="row">
 
-                          <div class="col-md-3">
+                          <div class="col-md-3 mb-3">
                               <label class="form-label mb-1">Equipo:</label>
                               <div x-text="detalle.equipo"></div>
                           </div>
 
-                          <div class="col-md-3">
+                          <div class="col-md-3 mb-3">
                               <label class="form-label mb-1">Folio:</label>
                               <div x-text="'00' + detalle.folio"></div>
                           </div>
 
-                          <div class="col-md-3">
+                          <div class="col-md-3 mb-3">
                               <label class="form-label mb-1">Fecha:</label>
                               <div x-text="detalle.fecha_formateada"></div>
                           </div>
 
-                          <div class="col-md-3">
+                          <div class="col-md-3 mb-3">
                               <label class="form-label mb-1">Hora:</label>
                               <div x-text="detalle.hora_formateada"></div>
                           </div>
@@ -240,12 +240,12 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
 
                       </div>
 
-                      <div class="mt-2 mb-2" x-html="otrosDetalle"></div>
+                      <div class="mb-3" x-html="otrosDetalle"></div>
 
 
                       <!-- TABLA DINAMICA -->
 
-                      <div class="mb-2 mt-4" x-html="tablaDetalle"></div>
+                      <div class="mb-3" x-html="tablaDetalle"></div>
 
                 
 
@@ -253,45 +253,103 @@ x-data="{ ...actions(), ...bitacoraCalibracionEquipos()}">
                           Observaciones:
                       </label>
 
-                      <div
-                          x-text="detalle.observaciones">
-                      </div>
+              <div x-text="detalle.observaciones ? detalle.observaciones : 'Sin observaciones'"></div>
 
-                      <div class="row mt-4">
+<div class="row mt-4">
+<!-- Responsable de la verificación -->
+    <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
+        <template x-if="detalle.responsable_verificacion">
+            <div class="card border h-100">
+                <div class="card-header bg-primary text-white py-3 border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                            <i class="ti ti-user-check fs-5"></i>
+                        </div>
+                        <div class="ms-3 overflow-hidden">
+                            <h6 class="mb-0 text-white">Responsable de la verificación</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+                    <i class="ti ti-user text-primary mb-3" style="font-size:80px;"></i>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <h6 class="mb-0 fw-semibold text-truncate" x-text="detalle.responsable_verificacion"></h6>
+                </div>
+            </div>
+        </template>
+        <template x-if="!detalle.responsable_verificacion">
+            <div class="card border h-100">
+                <div class="card-header bg-primary text-white py-3 border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                            <i class="ti ti-clock-hour-4 fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="mb-0 text-white">Responsable de la verificación</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+                    <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+                    <h6 class="text-muted mb-0">Sin responsable registrado</h6>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <small class="text-muted">Pendiente de asignar</small>
+                </div>
+            </div>
+        </template>
+    </div>
 
-                          <div class="col-md-6 text-center">
+    <!-- Supervisor de la actividad -->
+    <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
 
-                              <div
-                                  x-text="detalle.responsable_verificacion">
-                              </div>
+        <template x-if="detalle.usuario?.firma_url">
+            <div class="card border h-100">
+                <div class="card-header bg-primary text-white py-3 border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                            <i class="ti ti-user-check fs-5"></i>
+                        </div>
+                        <div class="ms-3 overflow-hidden">
+                            <h6 class="mb-0 text-white">Firma de quien supervisa la actividad</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+                    <div>
+                        <img :src="detalle.usuario.firma_url" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma">
+                    </div>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <h6 class="mb-0 fw-semibold text-truncate" x-text="detalle.usuario?.nombre"></h6>
+                </div>
+            </div>
+        </template>
 
-                              <div class="border-top mt-2 pt-1">
-                                  Responsable de la verificación
-                              </div>
-
-                          </div>
-
-                          <div class="col-md-6 text-center">
-
-                            <template x-if="detalle.usuario?.firma_url">
-                                <img
-                                    width="100"
-                                    :src="detalle.usuario.firma_url"
-                                    alt="Firma">
-                            </template>
-
-                              <div
-                                  x-text="detalle.usuario?.nombre">
-                              </div>
-
-                              <div class="border-top mt-2 pt-1">
-                                  Firma de quien supervisa la actividad
-                              </div>
-
-
-                          </div>
-
-                      </div>
+        <template x-if="!detalle.usuario?.firma_url">
+            <div class="card border h-100">
+                <div class="card-header bg-primary text-white py-3 border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                            <i class="ti ti-clock-hour-4 fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="mb-0 text-white">Firma de quien supervisa la actividad</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+                    <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+                    <h6 class="text-muted mb-0" x-text="detalle.usuario?.nombre || 'Sin firma registrada'"></h6>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <small class="text-muted">Pendiente de firma electronica</small>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
 
                   </div>
 

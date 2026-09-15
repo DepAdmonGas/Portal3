@@ -209,60 +209,60 @@ document.addEventListener('alpine:init', () => {
         if (equipo === 'Jarra patron') {
 
             this.otrosDetalle = `
-            <div class="row">
+            <div class="row g-3">
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Temperatura ambiente:</label>
-                <div>${this.detalle.temperatura_ambiente}</div>
+                <div class="">${this.detalle.temperatura_ambiente}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Presión atmosférica:</label>
-                <div>${this.detalle.presion_atmosferica}</div>
+                <div class="">${this.detalle.presion_atmosferica}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Humedad:</label>
-                <div>${this.detalle.humedad}</div>
+                <div class="">${this.detalle.humedad}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Liquido usado en la calibración:</label>
-                <div>${this.detalle.liquido_calibracion}</div>
+                <div class="">${this.detalle.liquido_calibracion}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Temperatura del líquido:</label>
-                <div>${this.detalle.temperatura_liquido}</div>
+                <div class="">${this.detalle.temperatura_liquido}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Laboratorio de calibración:</label>
-                <div>${this.detalle.laboratorio_calibracion}</div>
+                <div class="">${this.detalle.laboratorio_calibracion}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">No. de acreditación:</label>
-                <div>${this.detalle.numero_acreditacion}</div>
+                <div class="">${this.detalle.numero_acreditacion}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Método de calibración:</label>
-                <div>${this.detalle.metodo_calibracion}</div>
+                <div class="">${this.detalle.metodo_calibracion}</div>
             </div>
 
             </div>
             `;
 
             this.tablaDetalle = `
-                <table class="table table-bordered">
+                <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
                     <thead>
                         <tr>
-                            <th>Marca</th>
-                            <th>Serie</th>
-                            <th>Capacidad</th>
-                            <th>Incertidumbre</th>
+                            <th class="text-center align-middle">Marca</th>
+                            <th class="text-center align-middle">Serie</th>
+                            <th class="text-center align-middle">Capacidad</th>
+                            <th class="text-center align-middle">Incertidumbre</th>
                         </tr>
                     </thead>
 
@@ -288,35 +288,35 @@ document.addEventListener('alpine:init', () => {
         if (equipo === 'Sondas de medición') {
 
             this.otrosDetalle = `
-            <div class="row">
+            <div class="row g-3">
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Unidad de verificación:</label>
-                <div>${this.detalle.unidad_verificacion}</div>
+                <div class="">${this.detalle.unidad_verificacion}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">No. de acreditación:</label>
-                <div>${this.detalle.numero_acreditacion}</div>
+                <div class="">${this.detalle.numero_acreditacion}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Método usado para la calibración:</label>
-                <div>${this.detalle.metodo_usado_calibracion}</div>
+                <div class="">${this.detalle.metodo_usado_calibracion}</div>
             </div>
 
             </div>
             `;
 
             this.tablaDetalle = `
-                <table class="table table-bordered">
+                <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
                     <thead>
                         <tr>
-                            <th>No. Sonda</th>
-                            <th>Marca</th>
-                            <th>Modelo</th>
-                            <th>Incertidumbre</th>
+                            <th class="text-center align-middle">No. Sonda</th>
+                            <th class="text-center align-middle">Marca</th>
+                            <th class="text-center align-middle">Modelo</th>
+                            <th class="text-center align-middle">Incertidumbre</th>
                         </tr>
                     </thead>
 
@@ -324,10 +324,10 @@ document.addEventListener('alpine:init', () => {
 
                     ${this.detalle.sondas.map(s => `
                         <tr>
-                            <td>${s.sonda?.no_sonda ?? ''}</td>
-                            <td>${s.sonda?.marca ?? ''}</td>
-                            <td>${s.sonda?.modelo ?? ''}</td>
-                            <td>${s.resultado1 ?? ''}</td>
+                            <td class="text-center align-middle">${s.sonda?.no_sonda ?? ''}</td>
+                            <td class="text-center align-middle">${s.sonda?.marca ?? ''}</td>
+                            <td class="text-center align-middle">${s.sonda?.modelo ?? ''}</td>
+                            <td class="text-center align-middle">${s.resultado1 ?? ''}</td>
                         </tr>
                     `).join('')}
 
@@ -342,36 +342,36 @@ document.addEventListener('alpine:init', () => {
         if (equipo === 'Tanques de almacenamiento') {
 
             this.otrosDetalle = `
-            <div class="row">
+            <div class="row g-3">
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Unidad de verificación:</label>
-                <div>${this.detalle.unidad_verificacion}</div>
+                <div class="">${this.detalle.unidad_verificacion}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">No. de acreditación:</label>
-                <div>${this.detalle.numero_acreditacion}</div>
+                <div class="">${this.detalle.numero_acreditacion}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Método usado para la calibración:</label>
-                <div>${this.detalle.metodo_usado_calibracion}</div>
+                <div class="">${this.detalle.metodo_usado_calibracion}</div>
             </div>
 
             </div>
             `;
 
             this.tablaDetalle = `
-                <table class="table table-bordered">
+                <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
                     <thead>
                         <tr>
-                            <th>Tanque</th>
-                            <th>Capacidad</th>
-                            <th>Producto</th>
-                            <th>Incertidumbre</th>
-                            <th>Cumple</th>
+                            <th class="text-center align-middle">Tanque</th>
+                            <th class="text-center align-middle">Capacidad</th>
+                            <th class="text-center align-middle">Producto</th>
+                            <th class="text-center align-middle">Incertidumbre</th>
+                            <th class="text-center align-middle">Cumple</th>
                         </tr>
                     </thead>
 
@@ -379,11 +379,11 @@ document.addEventListener('alpine:init', () => {
 
                     ${this.detalle.tanques.map(t => `
                         <tr>
-                            <td>${t.tanque?.no_tanque ?? ''}</td>
-                            <td>${t.tanque?.capacidad ?? ''}</td>
-                            <td>${t.tanque?.producto ?? ''}</td>
-                            <td>${t.resultado1 ?? ''}</td>
-                            <td>${t.resultado2 ?? ''}</td>
+                            <td class="text-center align-middle">${t.tanque?.no_tanque ?? ''}</td>
+                            <td class="text-center align-middle">${t.tanque?.capacidad ?? ''}</td>
+                            <td class="text-center align-middle">${t.tanque?.producto ?? ''}</td>
+                            <td class="text-center align-middle">${t.resultado1 ?? ''}</td>
+                            <td class="text-center align-middle">${t.resultado2 ?? ''}</td>
                         </tr>
                     `).join('')}
 
@@ -398,39 +398,39 @@ document.addEventListener('alpine:init', () => {
         if (equipo === 'Dispensario') {
 
             this.otrosDetalle = `
-            <div class="row">
+            <div class="row g-3">
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Unidad de verificación:</label>
-                <div>${this.detalle.unidad_verificacion}</div>
+                <div class="">${this.detalle.unidad_verificacion}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">No. de acreditación:</label>
-                <div>${this.detalle.numero_acreditacion}</div>
+                <div class="">${this.detalle.numero_acreditacion}</div>
             </div>
 
-            <div class="col-md-3 mt-2">
+            <div class="col-md-3">
                 <label class="form-label mb-1">Tipo calibración:</label>
-                <div>${this.detalle.categoria_detalle}</div>
+                <div class="">${this.detalle.categoria_detalle}</div>
             </div>
 
             </div>
             `;
 
             this.tablaDetalle = `
-                <table class="table table-bordered">
+                <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
                     <thead>
                         <tr>
-                            <th>No.</th>
-                            <th>Marca</th>
-                            <th>Modelo</th>
-                            <th>Serie</th>
-                            <th>Error máximo</th>
-                            <th>Repetibilidad</th>
-                            <th>Holograma</th>
-                            <th>Distintivo</th>
+                            <th class="text-center align-middle">No.</th>
+                            <th class="text-center align-middle">Marca</th>
+                            <th class="text-center align-middle">Modelo</th>
+                            <th class="text-center align-middle">Serie</th>
+                            <th class="text-center align-middle">Error máximo</th>
+                            <th class="text-center align-middle">Repetibilidad</th>
+                            <th class="text-center align-middle">Holograma</th>
+                            <th class="text-center align-middle">Distintivo</th>
                         </tr>
                     </thead>
 
@@ -438,14 +438,14 @@ document.addEventListener('alpine:init', () => {
 
                     ${this.detalle.dispensarios.map(d => `
                         <tr>
-                            <td>${d.dispensario?.no_dispensario ?? ''}</td>
-                            <td>${d.dispensario?.marca ?? ''}</td>
-                            <td>${d.dispensario?.modelo ?? ''}</td>
-                            <td>${d.dispensario?.serie ?? ''}</td>
-                            <td>${d.resultado1 ?? ''}</td>
-                            <td>${d.resultado2 ?? ''}</td>
-                            <td>${d.resultado3 ?? ''}</td>
-                            <td>${d.resultado4 ?? ''}</td>
+                            <td class="text-center align-middle">${d.dispensario?.no_dispensario ?? ''}</td>
+                            <td class="text-center align-middle">${d.dispensario?.marca ?? ''}</td>
+                            <td class="text-center align-middle">${d.dispensario?.modelo ?? ''}</td>
+                            <td class="text-center align-middle">${d.dispensario?.serie ?? ''}</td>
+                            <td class="text-center align-middle">${d.resultado1 ?? ''}</td>
+                            <td class="text-center align-middle">${d.resultado2 ?? ''}</td>
+                            <td class="text-center align-middle">${d.resultado3 ?? ''}</td>
+                            <td class="text-center align-middle">${d.resultado4 ?? ''}</td>
                         </tr>
                     `).join('')}
 

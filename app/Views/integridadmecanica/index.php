@@ -14,65 +14,101 @@ x-data="{ ...actions(), ...equipoCritico()}">
 
 <div class="row mt-2">
 
-  <div class="col-md-4 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Programa anual de mantenimiento</h4>
+    <!-- Programa anual de mantenimiento -->
+    <div class="col-md-4 d-flex align-items-stretch mb-4">
+        <a href="/sasisopa/control-actividades-procesos/programa-anual-mantenimiento" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-calendar-event text-white display-6"></i> 
+                    </div>
 
-         <div class="text-end mt-4">
-          <a type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info"
-          href="/sasisopa/control-actividades-procesos/programa-anual-mantenimiento">
-            <i class="ti ti-eye"></i>
-            Ver programa 
-          </a>
-        </div>
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Programa anual de mantenimiento
+                        </h4>
+                    </div>
+                </div>
+            </div>
 
-      </div>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver programa</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
     </div>
-  </div>
 
-  <div class="col-md-4 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Procedimientos de Operación, Seguridad y Mantenimiento</h4>
-          
-          <div class="text-end mt-4">
-          <a type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info"
-          target="_blabk" href="/uploads/archivos/procedimientos/DLES.ADMONGAS.001.pdf">
-            <i class="ti ti-eye"></i>
-            Ver procedimientos
-          </a>
-        </div>
+    <!-- Procedimientos de Operación, Seguridad y Mantenimiento -->
+    <div class="col-md-4 d-flex align-items-stretch mb-4">
+        <a href="/uploads/archivos/procedimientos/DLES.ADMONGAS.001.pdf" target="_blank"
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-settings-automation text-white display-6"></i> 
+                    </div>
 
-      </div>
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Procedimientos de Operación, Seguridad y Mantenimiento
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver procedimientos</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
     </div>
-  </div>
 
-  <div class="col-md-4 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Bitácoras</h4>
-          
-          <div class="text-end mt-4">
-          <a type="button" href="/sasisopa/integridad-mecanica-aseguramiento/bitacoras" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver detalle
-          </a>
-        </div>
+    <!-- Bitácoras -->
+    <div class="col-md-4 d-flex align-items-stretch mb-4">
+        <a href="/sasisopa/integridad-mecanica-aseguramiento/bitacoras" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-notebook text-white display-6"></i> 
+                    </div>
 
-      </div>
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Bitácoras
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
     </div>
-  </div>
 
 </div>
-
 <div class="card">
   <div class="card-header">
   <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Lista de equipos críticos</h4>
       <div class="ms-auto">
       <div class="dropdown dropcenter">
-            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">

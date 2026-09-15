@@ -12,22 +12,6 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 
 <?php else: ?>
 
-<div class="table-responsive">
-
-<table class="table table-bordered table-sm mt-3">
-<tr>
-<td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png' ?>" style="width: 200px;"></td>
-<td colspan="2" class="text-center align-middle"><b>Registro de la atención y el seguimiento a la comunicación interna y externa.</b></td>
-<td class="text-center align-middle">Fo.ADMONGAS.010</td>
-</tr>
-<tr>
-<td class="text-center align-middle">Realizado por: Nelly Estrada Garcia </td>
-<td class="text-center align-middle">Revisado por: Eduardo Galicia Flores </td>
-<td class="text-center align-middle">Autorizado por: Tomas Tarno Quinzaños </td>
-<td class="text-center align-middle">Fecha de autorizacion 01/10/2018</td>
-</tr>
-</table>
-</div>
 <div class="text-end">
 <div class="btn-group">
 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -51,6 +35,25 @@ Descargar
 </ul>
 </div>
 </div>
+
+
+<div class="table-responsive">
+
+<table class="table table-bordered mt-3">
+<tr>
+<td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png' ?>" style="width: 200px;"></td>
+<td colspan="2" class="text-center align-middle"><b>Registro de la atención y el seguimiento a la comunicación interna y externa.</b></td>
+<td class="text-center align-middle">Fo.ADMONGAS.010</td>
+</tr>
+<tr>
+<td class="text-center align-middle">Realizado por: Nelly Estrada Garcia </td>
+<td class="text-center align-middle">Revisado por: Eduardo Galicia Flores </td>
+<td class="text-center align-middle">Autorizado por: Tomas Tarno Quinzaños </td>
+<td class="text-center align-middle">Fecha de autorizacion 01/10/2018</td>
+</tr>
+</table>
+</div>
+
 
 <div class="datatables">
 <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
@@ -146,7 +149,7 @@ aria-label="Close"
 
 <!-- Tema -->
 <div class="mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Tema a comunicar:
 </label>
 
@@ -160,7 +163,7 @@ x-model="comie.tema"
 
 <!-- Detalle -->
 <div class="mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Detalle:
 </label>
 
@@ -174,7 +177,7 @@ x-model="comie.detalle"
 
 <!-- Tipo comunicación -->
 <div class="mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Tipo de comunicación:
 </label>
 
@@ -192,7 +195,7 @@ x-model="comie.tipo_comunicacion"
 
 <!-- Material -->
 <div class="mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Material utilizado para la comunicación:
 </label>
 
@@ -229,7 +232,7 @@ Portal AdmonGas
 <!-- Dirigido a -->
 <div class="col-md-6 mb-3">
 
-<label class="form-label">
+<label class="form-label mb-1">
 Dirigido a:
 </label>
 
@@ -252,7 +255,7 @@ x-text="puesto.tipo_puesto">
 <!-- Seguimiento -->
 <div class="col-md-6 mb-3">
 
-<label class="form-label">
+<label class="form-label mb-1">
 Seguimiento de la comunicación:
 </label>
 
@@ -424,15 +427,15 @@ aria-label="Close"
 <!-- ROW 1 -->
 <div class="row">
 
-<div class="col-md-6 mb-2">
+<div class="col-md-6 mb-3">
 
 
 
-<div class="form-label">
+<div class="form-label mb-1">
 Encargado de la comunicación:
 </div>
 
-<div class="fw-bold"
+<div 
 x-text="detalle.encargado_comunicacion || 'S/I'">
 </div>
 
@@ -443,11 +446,11 @@ x-text="detalle.encargado_comunicacion || 'S/I'">
 <div class="col-md-6 mb-3">
 
 
-<div class="form-label">
+<div class="form-label mb-1">
 Fecha:
 </div>
 
-<div class="fw-bold"
+<div 
 x-text="formatFecha(detalle.fecha)">
 </div>
 
@@ -461,7 +464,7 @@ x-text="formatFecha(detalle.fecha)">
 
 <div class="col-md-6 mb-3">
 
-<div class="form-label">
+<div class="form-label mb-1">
 Tipo de comunicación:
 </div>
 
@@ -473,7 +476,7 @@ Tipo de comunicación:
 <div class="col-md-6 mb-3">
 
 
-<div class="form-label">
+<div class="form-label mb-1">
 Material utilizado para la comunicación:
 </div>
 
@@ -490,7 +493,7 @@ Material utilizado para la comunicación:
 <div class="col-md-6 mb-3">
 
 
-<div class="form-label">
+<div class="form-label mb-1">
 Seguimiento de la comunicación:
 </div>
 
@@ -501,7 +504,7 @@ Seguimiento de la comunicación:
 
 <div class="col-md-6 mb-3">
 
-<div class="form-label">
+<div class="form-label mb-1">
 Dirigido a:
 </div>
 
@@ -541,12 +544,12 @@ S/I
 <!-- DETALLE -->
 <template x-if="detalle.detalle">
 
-<div>
+<div class="pt-0" mb-3 >
 
 
-<div class="d-flex justify-content-between align-items-center mb-2">
+<div class="d-flex justify-content-between align-items-center">
 
-<label class="form-label">
+<label class="form-label mb-1">
 Detalle:
 </label>
 
@@ -579,9 +582,9 @@ x-text="detalle.detalle">
 
 <div>
 
-<div class="d-flex align-items-center gap-2">
+<div class="d-flex align-items-center mt-3">
 
-<span class="form-label">
+<span class="form-label mb-1">
 Fo.ADMONGAS.010 (Comunicación interna):
 </span>
 </div>
@@ -634,8 +637,8 @@ Buscar</h4>
 <div class="modal-body">
 
 
-<label class="form-label">* Año:</label>
-<input type="number" class="form-control mb-2" x-model="year"
+<label class="form-label mb-1">* Año:</label>
+<input type="number" class="form-control mb-3" x-model="year"
 :class="errors.year ? 'is-invalid' : ''"
 @input="errors.year = false" placeholder="Ingresa el año">
 
@@ -694,7 +697,7 @@ aria-label="Close"
 <div class="row">
 
 <div class="col-md-4 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Fecha:
 </label>
 
@@ -706,7 +709,7 @@ x-model="qs.fecha"
 </div>
 
 <div class="col-md-8 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Nombre:
 </label>
 
@@ -718,7 +721,7 @@ x-model="qs.nombre"
 </div>
 
 <div class="col-12 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Exposición de los motivos y del hecho causante:
 </label>
 
@@ -731,7 +734,7 @@ x-model="qs.motivos"
 </div>
 
 <div class="col-md-6 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Nombre de a quien va dirigida la queja:
 </label>
 
@@ -743,7 +746,7 @@ x-model="qs.dirigido"
 </div>
 
 <div class="col-md-6 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Datos de contacto:
 </label>
 
@@ -768,7 +771,7 @@ x-model="qs.contacto"
 <div class="row">
 
 <div class="col-12 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Nombre y puesto de quien atiende la queja:
 </label>
 
@@ -780,7 +783,7 @@ x-model="qs.nombre_puesto"
 </div>
 
 <div class="col-12 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Efectos o consecuencias de la queja:
 </label>
 
@@ -793,7 +796,7 @@ x-model="qs.efectos"
 </div>
 
 <div class="col-12 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Solución propuesta y adoptada:
 </label>
 
@@ -806,7 +809,7 @@ x-model="qs.solucion"
 </div>
 
 <div class="col-md-6 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Plazo para llevarla a cabo:
 </label>
 
@@ -818,7 +821,7 @@ x-model="qs.plazo"
 </div>
 
 <div class="col-md-6 mb-3">
-<label class="form-label">
+<label class="form-label mb-1">
 * Confirmación de la resolución:
 </label>
 
@@ -875,7 +878,7 @@ Bienvenido al elemento 7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA, del Sistema 
 
 <p>Aquí vas a encontrar el formato para el registro y seguimiento de la comunicación interna y externa de la empresa.</b>.</p>
 <hr>
-<label class="fw-bold">Que se comunica:</label>
+<label >Que se comunica:</label>
 <ul class="list-group list-group-flush">
 <li class="list-group-item">Implementación del Sistema de Administración</li>
 <li class="list-group-item">Política, objetivos y Metas</li>
@@ -886,7 +889,7 @@ Bienvenido al elemento 7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA, del Sistema 
 </ul>
 
 <hr>
-<label class="fw-bold">Como hacerlo:</label>
+<label >Como hacerlo:</label>
 <ul class="list-group list-group-flush">
 <li >Atreves del correo electrónico</li>
 <li class="list-group-item">Vía telefónica</li>
@@ -896,7 +899,7 @@ Bienvenido al elemento 7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA, del Sistema 
 </ul>
 <hr>
 
-<label class="fw-bold">Responsables:</label>
+<label >Responsables:</label>
 <p>Recuerda que es responsabilidad del <a class="text-danger fw-bold">Representante Técnico</a> (RT), <a class="text-danger fw-bold">Gerente de la Estación</a>, hacer los registros del seguimiento a quejas y sugerencias de los clientes (Comunicación Externa), así como también registrar la comunicación interna que no se halla ejecutado a través del portal.
 </p>
 <p>

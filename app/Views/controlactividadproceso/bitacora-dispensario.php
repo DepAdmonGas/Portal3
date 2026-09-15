@@ -39,22 +39,22 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 
   <div class="datatables">
    <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-      <table id="table-bitacora-dispensario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-bitacora-dispensario" class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
         <thead>
           <tr>
            <th>Fecha</th>
-            <th>Hora inicio</th>
-            <th>Hora termino</th>
-            <th style="max-width:100px;">Dispensario</th>
-            <th style="max-width:100px;">Marca</th>
-            <th style="max-width:100px;">Modelo</th>
-            <th style="max-width:100px;">Serie</th>
-            <th style="max-width:100px;">Lado</th>
-            <th>Producto</th>
-            <th>Motivo</th>
-            <th style="max-width:100px;">Responsable</th>
-            <th style="max-width:100px;">Detalle</th>
-          <th class="text-center" width="40px">
+            <th class="text-center align-middle">Hora inicio</th>
+            <th class="text-center align-middle">Hora termino</th>
+            <th class="text-center align-middle">Dispensario</th>
+            <th class="text-center align-middle">Marca</th>
+            <th class="text-center align-middle">Modelo</th>
+            <th class="text-center align-middle">Serie</th>
+            <th class="text-center align-middle">Lado</th>
+            <th class="text-center align-middle">Producto</th>
+            <th class="text-center align-middle">Motivo</th>
+            <th class="text-center align-middle">Responsable</th>
+            <th class="text-center align-middle">Detalle</th>
+          <th class="text-center" width="48px">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -452,25 +452,25 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 
                   <!-- FECHA -->
                   
-                  <table class="table table-bordered table-sm">
+                  <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
 
                       <thead>
 
                           <tr>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Fecha
                               </th>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Hora inicio
                               </th>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Hora término
                               </th>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Responsable
                               </th>
 
@@ -510,33 +510,33 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 
                   <!-- DISPENSARIO -->
 
-                  <table class="table table-bordered table-sm">
+                  <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
 
                       <thead>
 
                           <tr>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Dispensario
                               </th>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Marca
                               </th>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Modelo
                               </th>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Serie
                               </th>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Lado
                               </th>
 
-                              <th class="text-center bg-light">
+                              <th class="text-center">
                                   Producto
                               </th>
 
@@ -586,13 +586,13 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 
                   <!-- MOTIVO -->
 
-                  <table class="table table-bordered table-sm">
+                  <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
 
                       <thead>
 
                           <tr>
 
-                              <th class="bg-light">
+                              <th>
                                   Motivo
                               </th>
 
@@ -616,13 +616,13 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
 
                   <!-- DETALLE -->
 
-                  <table class="table table-bordered table-sm mb-0">
+                  <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
 
                       <thead>
 
                           <tr>
 
-                              <th class="bg-light">
+                              <th>
                                   Detalle
                               </th>
 

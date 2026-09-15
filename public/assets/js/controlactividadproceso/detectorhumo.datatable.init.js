@@ -20,11 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         columns: [
 
-             { data: 'no_detector',
+             { data: 'no_detector', className: 'text-center align-middle',
                 defaultContent: 'S/I'
              },
 
-             { data: 'ubicacion',
+             { data: 'ubicacion', className: 'text-center align-middle',
                 defaultContent: 'S/I'
              },
 

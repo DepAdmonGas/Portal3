@@ -31,7 +31,7 @@ x-data="{...actions(), ...recepcionDescargaProducto()}">
 
     <div class="datatables">
             <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-        <table id="table-recepcion-descarga-producto" class="table table-bordered align-middle">
+        <table id="table-recepcion-descarga-producto" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
             <thead>
             <tr>
             <th>Folio</th>

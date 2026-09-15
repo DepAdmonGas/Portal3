@@ -256,7 +256,7 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
      
 
-                <h5 class="mt-3">
+                <h5 class="mt-3 text-primary">
                     Recolector
                 </h5>
 
@@ -284,7 +284,7 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
 
                 </div>
 
-                <h5>
+                <h5 class="mt-3 text-primary">
                    Transportista
                 </h5>
 
@@ -313,7 +313,7 @@ x-data="{ ...actions(), ...bitacoraResiduos()}">
                 </div>
 
 
-                <h5>
+                <h5 class="mt-3 text-primary">
                     Destinatario
                 </h5>
 

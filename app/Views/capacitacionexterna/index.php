@@ -13,9 +13,21 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
 
 <?php else: ?>
 
+    <div class="d-flex align-items-center">
+         <div class="ms-auto">
+            <?= 
+              !empty($permisos['crear']) ? 
+              '<button type="button" class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openModalNuevo()">
+              <i class="ti ti-plus"></i> Nuevo
+              </button>' 
+              : '' 
+            ?>   
+          </div>
+      </div>
+
 
 <div class="table-responsive">
-<table class="table table-bordered table-sm mt-3">
+<table class="table table-bordered  mt-3">
     <tr>
     <td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png' ?>" style="width: 200px;"></td>
     <td colspan="2" class="text-center align-middle"><b>Programa de Capacitacion y adiestramiento </b></td>
@@ -29,31 +41,20 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
     </tr>
 </table>
 </div>
-    <div class="d-flex align-items-center">
-         <div class="ms-auto">
-            <?= 
-              !empty($permisos['crear']) ? 
-              '<button type="button" class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openModalNuevo()">
-              <i class="ti ti-plus"></i> Nuevo
-              </button>' 
-              : '' 
-            ?>   
-          </div>
-      </div>
-
+ 
     <div class="datatables">
     <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
     <table class="table table-bordered table-striped" id="table-capacitacion-externa">
     <thead>	
-    <tr class="bg-primary text-white">
+    <tr>
     <th class="text-center align-middle">#</th>
-    <th class="text-center align-middle">Curso</th>
+    <th class="text-start align-middle">Curso</th>
     <th class="text-center align-middle">Fecha programada</th>
     <th class="text-center align-middle">Duración</th>
     <th class="text-center align-middle">Instructor</th>
     <th class="text-center align-middle">Fecha real</th>
     <th class="text-center align-middle">
-    <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
+    <a class="text-center align-middle text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
     </th>
     </tr>
     </thead>
@@ -133,7 +134,7 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
 
     <div class="modal fade" id="modal-personal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content modal-lg">
 
             <div class="modal-header head-modal card-header bg-primary">
                 <h4 class="modal-title text-white">
@@ -155,9 +156,9 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
                     </template>
                 </select>
 
-                <button class="btn btn-success"
+                <button class="btn bg-primary-subtle text-primary"
                     @click="addEmpleado()">
-<i class="ti ti-check"></i>
+<i class="ti ti-plus"></i>
                     Nuevo 
                 </button>
                 

@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${!noDelete ? '' : `
                     @click="eliminarPersonal(${row.id}, '${row.usuario}')"
                     `}>
-                    <i class="fs-6 ti ti-trash"></i>
+                    <i class="fs-6 ti ti-trash text-danger"></i>
                 </a>
             `;
                 }

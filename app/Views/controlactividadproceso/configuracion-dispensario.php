@@ -26,14 +26,14 @@ x-data="{ ...actions(), ...dispensario()}">
       <table id="table-dispensario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>No Dispensario</th>
-            <th>Marca</th>
-            <th>Modelo</th>
-            <th>Serie</th>
-            <th>Mangueras G SUPER</th>
-            <th>Mangueras G PREMIUM</th>
-            <th>Mangueras G DIESEL</th>
-          <th class="text-center" width="100px">
+           <th class="text-center align-middle" width="100px">No Dispensario</th>
+            <th class="text-center align-middle">Marca</th>
+            <th class="text-center align-middle">Modelo</th>
+            <th class="text-center align-middle">Serie</th>
+            <th class="text-center align-middle">Mangueras G SUPER</th>
+            <th class="text-center align-middle">Mangueras G PREMIUM</th>
+            <th class="text-center align-middle">Mangueras G DIESEL</th>
+          <th class="text-center" width="48px">
           <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
           </th>
           </tr>
@@ -61,43 +61,43 @@ x-data="{ ...actions(), ...dispensario()}">
     <div class="row">
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">* No. Dispensario:</label>
-            <input type="number" class="form-control mb-2" x-model="no_dispensario"
+            <input type="number" class="form-control mb-3" x-model="no_dispensario"
                     :class="errors.no_dispensario ? 'is-invalid' : ''"
                     @input="errors.no_dispensario = false" />
          </div>
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">* Marca:</label>
-            <input type="text" class="form-control mb-2" x-model="marca"
+            <input type="text" class="form-control mb-3" x-model="marca"
                     :class="errors.marca ? 'is-invalid' : ''"
                     @input="errors.marca = false" />
          </div>
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">* Modelo:</label>
-            <input type="text" class="form-control mb-2" x-model="modelo"
+            <input type="text" class="form-control mb-3" x-model="modelo"
                     :class="errors.modelo ? 'is-invalid' : ''"
                     @input="errors.modelo = false" />
          </div>
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">* Serie:</label>
-            <input type="text" class="form-control mb-2" x-model="serie"
+            <input type="text" class="form-control mb-3" x-model="serie"
                 :class="errors.serie ? 'is-invalid' : ''"
                 @input="errors.serie = false" />
          </div>
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">Mangueras G SUPER:</label>
-            <input type="text" class="form-control mb-2" x-model="producto1"
+            <input type="text" class="form-control mb-3" x-model="producto1"
                     :class="errors.producto1 ? 'is-invalid' : ''"
                     @input="errors.producto1 = false" />
          </div>
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">Mangueras G PREMIUM:</label>
-            <input type="text" class="form-control mb-2" x-model="producto2"
+            <input type="text" class="form-control mb-3" x-model="producto2"
                 :class="errors.producto2 ? 'is-invalid' : ''"
                 @input="errors.producto2 = false" />
          </div>
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">Mangueras G DIESEL:</label>
-            <input type="text" class="form-control mb-2" x-model="producto3"
+            <input type="text" class="form-control mb-3" x-model="producto3"
                 :class="errors.producto3 ? 'is-invalid' : ''"
                 @input="errors.producto3 = false" />
          </div>

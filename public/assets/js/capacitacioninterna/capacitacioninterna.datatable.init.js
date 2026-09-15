@@ -23,30 +23,30 @@ const idmodulo = document.getElementById('container').dataset.idmodulo;
         }
         },
         columns: [
-    { data: 'id' },
+    { data: 'id', className: 'text-center align-middle' },
 
     { 
-        data: 'nombre',
+        data: 'nombre', className: 'text-start align-middle',
         defaultContent: 'S/I'
     },
 
     { 
-        data: 'puesto',
+        data: 'puesto', className: 'text-center align-middle',
         defaultContent: 'S/I'
     },
 
     { 
-        data: 'telefono',
+        data: 'telefono', className: 'text-center align-middle',
         defaultContent: 'S/I'
     },
 
     { 
-        data: 'email',
+        data: 'email', className: 'text-center align-middle',
         defaultContent: 'S/I'
     },
 
     {
-        data: 'fecha_programada',
+        data: 'fecha_programada', className: 'text-center align-middle',
         render: function (data) {
 
             if (!data) return 'S/I';
@@ -64,7 +64,7 @@ const idmodulo = document.getElementById('container').dataset.idmodulo;
     },
 
     {
-    data: null,
+    data: null, className: 'text-center align-middle',
     render: function (data, type, row) {
         return `<span class="${row.color} fw-bold">
                     ${row.texto_resultado}

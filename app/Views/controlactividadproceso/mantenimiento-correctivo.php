@@ -31,12 +31,12 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
       <table id="table-mantenimiento-correctivo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>Folio</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Nombre del equipo o área donde se detecta la no conformidad</th>
-            <th>Descripción breve del hallazgo detectado que requiere mantenimiento</th>
-          <th class="text-center" width="100px">
+           <th class="text-center align-middle">Folio</th>
+            <th class="text-center align-middle">Fecha</th>
+            <th class="text-center align-middle">Hora</th>
+            <th class="text-center align-middle">Nombre del equipo o área donde se detecta la no conformidad</th>
+            <th class="text-center align-middle">Descripción breve del hallazgo detectado que requiere mantenimiento</th>
+          <th class="text-center align-middle" width="48px">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -414,7 +414,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
                 <textarea
                     class="form-control"
-                    rows="2"
+                    rows="4"
                     x-model="form.herramienta">
                 </textarea>
 
@@ -475,7 +475,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Subir imágenes:
+                        * Imágenes:
                     </label>
 
                     <input

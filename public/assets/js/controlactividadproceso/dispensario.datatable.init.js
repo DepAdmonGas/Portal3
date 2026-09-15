@@ -20,31 +20,31 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         columns: [
 
-             { data: 'no_dispensario',
+             { data: 'no_dispensario', className: 'text-center align-middle',
                 defaultContent: 'S/I'
              },
 
-             { data: 'marca',
+             { data: 'marca', className: 'text-center align-middle',
                 defaultContent: 'S/I'
              },
 
-             { data: 'modelo',
+             { data: 'modelo', className: 'text-center align-middle',
                 defaultContent: 'S/I'
              },
 
-             { data: 'serie',
+             { data: 'serie', className: 'text-center align-middle',
                 defaultContent: 'S/I'
              },
 
-             { data: 'producto1',
+             { data: 'producto1', className: 'text-center align-middle',
                 defaultContent: 'S/I'
              },
 
-             { data: 'producto2',
+             { data: 'producto2', className: 'text-center align-middle',
                 defaultContent: 'S/I'
              },
 
-             { data: 'producto3',
+             { data: 'producto3', className: 'text-center align-middle',
                 defaultContent: 'S/I'
              },
 

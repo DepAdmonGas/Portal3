@@ -43,15 +43,15 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
     <div class="datatables">
         <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-        <table id="table-mantenimiento-preventivo" class="table table-bordered text-nowrap align-middle w-100">
+        <table id="table-mantenimiento-preventivo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
             <thead>
             <tr>
-            <th>Folio</th>
-			<th>Equipo o instalación</th>
-			<th>Fecha</th>
-            <th>Hora</th>
-            <th>Estatdo</th>
-            <th class="text-center" width="100px">
+            <th class="text-center align-middle">Folio</th>
+			<th class="text-start align-middle">Equipo o instalación</th>
+			<th class="text-center align-middle">Fecha</th>
+            <th class="text-center align-middle">Hora</th>
+            <th class="text-center align-middle">Estatdo</th>
+            <th class="text-center" width="48px">
             <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
             </th>
             </tr>
@@ -231,10 +231,10 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
         <div class="modal-content">
 
-            <div class="modal-header modal-colored-header bg-primary text-white">
+            <div class="modal-header bg-primary text-white">
 
                 <h4 class="modal-title text-white">
-                    Detalle de Mantenimiento Preventivo
+                    <i class="ti ti-file-settings"></i> Detalle de Mantenimiento Preventivo
                 </h4>
 
                 <button
@@ -251,12 +251,11 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
                     <div class="col-md-4 mb-3">
 
-                        <label class="form-label fw-bolder">
-                            Folio
+                        <label class="form-label mb-1">
+                            Folio: 
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.folio">
                         </div>
 
@@ -264,12 +263,11 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
                     <div class="col-md-4 mb-3">
 
-                        <label class="form-label fw-bolder">
-                            Fecha
+                        <label class="form-label mb-1">
+                            Fecha:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.fechacreacion">
                         </div>
 
@@ -277,12 +275,11 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
                     <div class="col-md-4 mb-3">
 
-                        <label class="form-label fw-bolder">
-                            Hora
+                        <label class="form-label">
+                            Hora:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.horacreacion">
                         </div>
 
@@ -290,12 +287,11 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
                     <div class="col-md-12 mb-3">
 
-                        <label class="form-label fw-bolder">
-                            Equipo
+                        <label class="form-label mb-1">
+                            Equipo:
                         </label>
 
                         <div
-                            class="border rounded p-2 bg-light"
                             x-text="detalle.nombre_equipo">
                         </div>
 
@@ -303,11 +299,11 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
                 </div>
 
-                <div class="d-flex align-items-center mb-3">
+                <div class="d-flex align-items-center mt-1 mb-3">
 
-                    <h5 class="mb-0">
-                        Evidencias
-                    </h5>
+                 <label class="form-label mb-1">
+                            Evidencias:
+                        </label>
 
                     <span
                         class="badge bg-primary ms-2"
@@ -396,7 +392,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
                 <div class="modal-header modal-colored-header bg-primary text-white">
 
                     <h4 class="modal-title text-white">
-                        Evidencias
+                        <i class="ti ti-camera"></i> Evidencias
                     </h4>
 
                     <button
@@ -407,12 +403,12 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
                 </div>
 
-                <div class="modal-body">
+                <div class="modal-body pb-0">
 
-                    <div class="mb-3">
+                    <div class="">
 
                         <label class="form-label">
-                            Seleccionar imágenes
+                             Imágenes:
                         </label>
 
                         <input
@@ -434,7 +430,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
             <div class="col-md-3 mb-3">
 
-                <div class="card shadow-sm border border-warning position-relative overflow-hidden">
+                <div class="card border border-warning position-relative overflow-hidden">
 
                     <!-- BADGE -->
                     <span
@@ -456,7 +452,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
                             class="btn btn-danger btn-sm w-100"
                             @click="removePreview(index)">
 
-                            <i class="ti ti-x"></i>
+                            <i class="ti ti-trash"></i>
                             Eliminar
                         </button>
 
@@ -533,7 +529,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
                     </button>
 
                     <button
-                        class="btn btn-primary"
+                        class="btn btn-success"
                         @click="guardarEvidencias()">
 
                         <i class="ti ti-check"></i> Guardar

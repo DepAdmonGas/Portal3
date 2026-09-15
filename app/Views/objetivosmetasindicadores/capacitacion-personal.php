@@ -46,7 +46,7 @@
 
 <div class="card">
 <div class="card-header bg-primary">
-<h4 class="text-white">Programa de capacitación interna</h4>
+<h4 class="text-white"><i class="ti ti-school"></i> Programa de capacitación interna</h4>
 </div>
 
 <div class="card-body">
@@ -89,7 +89,7 @@
 
 <div class="card">
 <div class="card-header bg-primary">
-<h4 class="text-white">Porcentaje total de capacitación</h4>
+<h4 class="text-white"><i class="ti ti-percentage"></i> Porcentaje total de capacitación</h4>
 </div>
 <div class="card-body">
 <div class="row">
@@ -124,7 +124,7 @@
 
 <div class="card">
 <div class="card-header bg-primary">
-<h4 class="text-white"> Programa de capacitación externa</h4>
+<h4 class="text-white"> <i class="ti ti-school"></i> Programa de capacitación externa</h4>
 </div>
 <div class="card-body">
 <div class="row">

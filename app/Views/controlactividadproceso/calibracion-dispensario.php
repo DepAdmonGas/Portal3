@@ -19,6 +19,8 @@
         ) ?>
     </script>
 
+    <div class="text-end mt-3">
+
     <template x-if="calibracion.estado == 0">
 <div class="d-md-flex justify-content-md-end mb-3 mt-3">
         <button
@@ -32,7 +34,7 @@
 </div>
     </template>
 
-    <div class="text-end mt-3">
+
 
     <template x-if="calibracion.estado == 1">
 
@@ -50,7 +52,7 @@
 </div>
 
     <div class="card">
-        <div class="card-body p-3">
+        <div class="card-body">
 
 <div class="row">
 
@@ -206,7 +208,7 @@
 
     <thead>
         <tr>
-            <th class="align-middle text-center">No Dispensario</th>
+            <th class="align-middle text-center">No. Dispensario</th>
             <th class="align-middle text-center">Marca</th>
             <th class="align-middle text-center">Modelo</th>
             <th class="align-middle text-center">Serie</th>
@@ -289,7 +291,26 @@
 
 <div class="row mt-3">
 
-    <div class="col-12 col-md-6">
+    <div class="col-12">
+
+        <div class="text-secondary mb-0">
+            <label class="form-label">Responsable de la verificación:</label>
+        </div>
+         
+        <input
+            type="text"
+            class="form-control mb-3"
+            x-model="calibracion.responsable_verificacion"
+            @blur="editarCampo(
+                6,
+                calibracion.responsable_verificacion,
+                'responsable_verificacion'
+            )">
+            
+    </div>
+
+
+    <div class="col-12">
 
         <div class="text-secondary mb-0">
             <label class="form-label">Observaciones:</label>
@@ -308,23 +329,7 @@
 
     </div>
 
-    <div class="col-12 col-md-6">
 
-        <div class="text-secondary mb-0">
-            <label class="form-label">Responsable de la verificación:</label>
-        </div>
-         
-        <input
-            type="text"
-            class="form-control mb-3"
-            x-model="calibracion.responsable_verificacion"
-            @blur="editarCampo(
-                6,
-                calibracion.responsable_verificacion,
-                'responsable_verificacion'
-            )">
-            
-    </div>
 
 </div>
 
