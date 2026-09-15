@@ -2,6 +2,7 @@
 
 namespace App\Models\Operativo;
 
+use App\Models\Estacion;
 use Illuminate\Database\Eloquent\Model;
 
 class CuentaLitros extends Model
@@ -28,5 +29,15 @@ class CuentaLitros extends Model
         'mes' => 'integer',
         'estatus' => 'integer',
     ];
+
+    public function detalles()
+    {
+        return $this->hasMany(CuentaLitrosDetalle::class, 'id_cuenta_litros', 'id_cuenta_litros');
+    }
+
+    public function estacion()
+    {
+        return $this->belongsTo(Estacion::class, 'id_estacion', 'id');
+    }
 }
 

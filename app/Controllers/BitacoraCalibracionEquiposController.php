@@ -78,11 +78,18 @@ protected string $modulo = 'sasisopa';
                 $q->whereMonth('fecha',$mes);
         })
 
-        ->whereDate('fecha', '<=', Carbon::today())
+        ->where(function ($q) {
+            $q->where('fecha', '<=', Carbon::today()->toDateString())
+              ->orWhere('estado', 1);
+        })
         ->orderBy('id', 'DESC')
         ->get()
 
         ->map(function ($item) {
+
+        $fecha = $item->fecha && $item->fecha->year > 1900
+            ? $item->fecha->format('Y-m-d')
+            : '';
 
         $location = '';
 
@@ -99,8 +106,8 @@ protected string $modulo = 'sasisopa';
             return [
                 'id' => $item->id,
                 'folio' => str_pad($item->folio,3,'0',STR_PAD_LEFT),
-                'fecha' => $item->fecha->format('Y-m-d'),
-                'fecha_larga' => formatearFecha($item->fecha->format('Y-m-d')),
+                'fecha' => $fecha,
+                'fecha_larga' => $fecha ? formatearFecha($fecha) : 'S/I',
                 'equipo' => $item->equipo,
                 'resultado' => $item->resultados,
                 'resultado_estado' => $item->resultados == null ? '<i class="ti ti-file-x text-danger fs-7"></i>' : '<a href="/uploads/archivos/calibracion/'.$item->resultados.'" target="_blank"><i class="ti ti-file-check text-success fs-7"></i></a>',
@@ -430,19 +437,19 @@ protected string $modulo = 'sasisopa';
 
 
         
-        if (
-            $calibracion->usuario &&
-            !empty($calibracion->usuario->firma)
-        ) {
+        if ($calibracion->usuario) {
 
-            $calibracion->usuario->firma_url =
-                ImageHelper::firmaUrl(
-                    $calibracion->usuario->firma
-                );
+            if (!empty($calibracion->usuario->firma)) {
 
-        } else {
+                $calibracion->usuario->firma_url =
+                    ImageHelper::firmaUrl(
+                        $calibracion->usuario->firma
+                    );
 
-            $calibracion->usuario->firma_url = null;
+            } else {
+
+                $calibracion->usuario->firma_url = null;
+            }
         }
 
         echo json_encode([
@@ -820,10 +827,12 @@ td{
 
             <td>
 
-                '.formatearFecha(
-                    $item->fecha->format(
-                        'Y-m-d'
-                    )
+                '.(
+                    $item->fecha && $item->fecha->year > 1900
+                        ? formatearFecha(
+                            $item->fecha->format('Y-m-d')
+                        )
+                        : 'S/I'
                 ).'
 
             </td>

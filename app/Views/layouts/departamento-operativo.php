@@ -54,6 +54,15 @@
                     },
                     function(error) {
                         if (error.response && error.response.status === 419) {
+                            const meta = document.querySelector('meta[name="csrf-token"]');
+                            const newToken = error.response.data && error.response.data.new_token;
+                            if (meta && newToken) {
+                                meta.setAttribute('content', newToken);
+                                if (error.config && !error.config._csrfRetried) {
+                                    error.config._csrfRetried = true;
+                                    return axios(error.config);
+                                }
+                            }
                             window.location.reload();
                         }
                         return Promise.reject(error);

@@ -39,6 +39,7 @@ class CalibracionTanquesController extends BaseController
                 $this->estacionModulo(),
                 fn ($q, $est) => $q->where('id_estacion', $est)
             )
+            ->where('equipo', 'Tanques de almacenamiento')
             ->with(['detalles','tanques.tanque'])
             ->findOrFail($id);
 

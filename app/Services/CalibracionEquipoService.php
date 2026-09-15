@@ -26,7 +26,9 @@ class CalibracionEquipoService
         $fecha = null
     ): array {
 
-     $fecha_programada = $this->calcularProximaCalibracion($equipo, $fecha);
+     $fecha_programada = $fecha
+         ? $this->calcularProximaCalibracion($equipo, $fecha)
+         : Carbon::today()->format('Y-m-d');
 
         return Capsule::transaction(function () use (
             $id_estacion,
@@ -275,7 +277,9 @@ class CalibracionEquipoService
                 $calibracion->id_estacion,
                 $calibracion->id_usuario,
                 $calibracion->equipo,
-                $calibracion->fecha ? $calibracion->fecha->format('Y-m-d') : null
+                $calibracion->fecha && $calibracion->fecha->year > 1900
+                    ? $calibracion->fecha->format('Y-m-d')
+                    : null
             );
         });
     }
@@ -284,11 +288,15 @@ class CalibracionEquipoService
 
 private function calcularProximaCalibracion(string $equipo, ?string $fecha): ?string
 {
-    if (!$fecha) {
-        return '';
+    if (!$fecha || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+        $fecha = Carbon::today()->format('Y-m-d');
     }
 
     $date = Carbon::parse($fecha);
+
+    if ($date->year < 1900) {
+        $date = Carbon::today();
+    }
 
     return match ($equipo) {
 

@@ -44,6 +44,7 @@ class CalibracionJarraPatronController extends BaseController
                 $this->estacionModulo(),
                 fn ($q, $est) => $q->where('id_estacion', $est)
             )
+            ->where('equipo', 'Jarra patron')
             ->with([
                 'detalles',
                 'jarras.jarra'

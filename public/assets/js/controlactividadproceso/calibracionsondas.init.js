@@ -75,11 +75,11 @@ async editarCampo(input, valor, campo) {
             }
         });
 
-        if (!response.success) {
+        if (!response || !response.success) {
 
             this.calibracion[campo] = original;
 
-            this.notify('error', response.message);
+            this.notify('error', (response && response.message) || 'Error al guardar');
             return;
         }
 
@@ -112,10 +112,10 @@ async editarSonda(item, input, campo) {
             }
         });
 
-        if (!response.success) {
+        if (!response || !response.success) {
 
             item[campo] = original;
-            this.notify('error', response.message);
+            this.notify('error', (response && response.message) || 'Error al guardar');
             return;
         }
 
@@ -141,7 +141,7 @@ async editarSonda(item, input, campo) {
                         }
                     });
 
-                if (!response.success) {
+                if (!response || !response.success) {
                     return;
                 }
 

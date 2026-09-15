@@ -28,6 +28,13 @@
 </div>
     
 
+        <template x-if="htmlReporte">
+            <div class="mt-0 d-flex justify-content-end mb-2">
+                <button type="button" class="btn bg-danger-subtle text-danger" @click="limpiarBusqueda()">
+                    <i class="ti ti-arrow-left"></i> Regresar
+                </button>
+            </div>
+        </template>
         <div class="mt-0" x-html="DOMPurify.sanitize(htmlReporte)"></div>
         
 </div>

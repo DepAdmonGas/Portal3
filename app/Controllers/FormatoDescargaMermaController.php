@@ -11,6 +11,7 @@ use App\Services\ModuleStationService;
 use App\Services\DropdownYearMesService;
 use App\Models\Usuario;
 use App\Models\Estacion;
+use App\Core\Session;
 
 class FormatoDescargaMermaController extends BaseController
 {
@@ -250,10 +251,10 @@ class FormatoDescargaMermaController extends BaseController
 
         $title = 'Detalle Formato de Descarga' . ' (#00' . $registro['folio'] . ')';
 
-        $contextoCtx = \App\Core\Session::get('module_context') ?? [];
+        $contextoCtx = Session::get('module_context') ?? [];
         $contextoAnterior = $contextoCtx[FormatoDescargaMermaService::MODULE_KEY] ?? null;
 
-        \App\Services\ModuleStationService::setContext(FormatoDescargaMermaService::MODULE_KEY, $registro['id_estacion']);
+        ModuleStationService::setContext(FormatoDescargaMermaService::MODULE_KEY, $registro['id_estacion']);
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
@@ -273,13 +274,14 @@ class FormatoDescargaMermaController extends BaseController
             ],
         ], 'departamento-operativo');
 
-        $ctxRestaurado = \App\Core\Session::get('module_context') ?? [];
+        $ctxRestaurado = Session::get('module_context') ?? [];
         if ($contextoAnterior === null) {
             unset($ctxRestaurado[FormatoDescargaMermaService::MODULE_KEY]);
         } else {
             $ctxRestaurado[FormatoDescargaMermaService::MODULE_KEY] = $contextoAnterior;
         }
-        \App\Core\Session::set('module_context', $ctxRestaurado);
+
+       Session::set('module_context', $ctxRestaurado);
     }
 
     public function editar(int $id)
