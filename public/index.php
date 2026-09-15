@@ -54,16 +54,17 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 // Control de permisos del navegador
 header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
 
-// ============================================================
-// INICIALIZACIÓN DE SESIÓN
-// ============================================================
-Session::init();
-
 // --------------------------------------------------------
 // CARGAR VARIABLES DE ENTORNO (.env)
 // --------------------------------------------------------
 $dotenv = Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->safeLoad(); // Usa safeLoad() para evitar error si falta .env
+
+// ============================================================
+// INICIALIZACIÓN DE SESIÓN
+// ============================================================
+// Cookie flags depend on APP_ENV, so load environment before creating a session.
+Session::init();
 // --------------------------------------------------------
 // CONFIGURAR ZONA HORARIA Y CODIFICACIÓN
 // --------------------------------------------------------

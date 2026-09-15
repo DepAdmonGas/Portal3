@@ -52,6 +52,27 @@ return $cfg['estaciones'];
 }
 
 /**
+* Whether a user may select a station for the global session context.
+*
+* A null station list is the documented unrestricted value for an enabled
+* multi-station configuration. An explicit list is an allowlist.
+*/
+public static function canSelectStation(int $idEstacion, ?object $usuario = null): bool
+{
+$cfg = self::getConfig($usuario);
+if ($cfg === null) return false;
+
+$allowedStations = $cfg['estaciones'];
+if ($allowedStations === null) return true;
+
+foreach ($allowedStations as $allowedStation) {
+if ((int) $allowedStation === $idEstacion) return true;
+}
+
+return false;
+}
+
+/**
  * Determine which station ID space a module belongs to.
  *
  * Derived from tb_modulos_config.tipo_departamento: modules configured

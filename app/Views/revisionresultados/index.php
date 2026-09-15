@@ -35,60 +35,67 @@ x-model.number="year"
 
 </div>
 </div>
-</div>
-</div>
 
-<!-- Implementación del SA -->
-<div class="table-responsive">
-<table class="table table-responsive table-striped table-bordered mb-4 align-middle">
-<tbody>
-<tr>
-<td class="align-middle text-center">
-<b>Objeto</b>
-</td>
-<td class="align-middle">
-Implementación del SA
-</td>
-<td class="align-middle text-center">
-<b>Indicador</b>
-</td>
-<td class="align-middle">
-No. Total de elementos implementados VS No. de elementos del SA
-</td>
-</tr>
-
-<tr>
-<td class="align-middle text-center">
-<b>Meta</b>
-</td>
-<td
-class="align-middle"
-x-text="implementacion.meta">
-</td>
-<td class="align-middle text-center">
-<b>Frecuencia de medición</b>
-</td>
-<td class="align-middle">
-ANUAL
-</td>
-</tr>
-
-<tr>
-<td colspan="4">
-<div class="mt-1">
-<b>Resultado:</b>
-<span
-x-html="implementacion.resultado">
-</span>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
 
 <!-- Implementación del SA -->
 <!-- Ventas -->
+
+    </div>
+    <!-- Implementación del SA -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+    <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
+        <tbody>
+            <tr>
+                <td class="align-middle text-center">
+                    <b>Objeto</b>
+                </td>
+                <td class="align-middle">
+                    Implementación del SA
+                </td>
+                <td class="align-middle text-center">
+                    <b>Indicador</b>
+                </td>
+                <td class="align-middle">
+                    No. Total de elementos implementados VS No. de elementos del SA
+                </td>
+            </tr>
+
+            <tr>
+                <td class="align-middle text-center">
+                    <b>Meta</b>
+                </td>
+                <td
+                    class="align-middle"
+                    x-text="implementacion.meta">
+                </td>
+                <td class="align-middle text-center">
+                    <b>Frecuencia de medición</b>
+                </td>
+                <td class="align-middle">
+                    ANUAL
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="4">
+                    <div class="mt-1">
+                        <b>Resultado:</b>
+                        <span
+                            x-html="DOMPurify.sanitize(implementacion.resultado)">
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+    </div>
+</div>
+    <!-- Implementación del SA -->
+    <!-- Ventas -->
+
 
 <div class="card">
 <div class="card-body">
@@ -459,9 +466,11 @@ Semestral
 Primer semestre:
 </div>
 
-<div
-x-html="incidentes.semestre1">
-</div>
+
+                        <div
+                            x-html="DOMPurify.sanitize(incidentes.semestre1)">
+                        </div>
+
 
 </div>
 
@@ -474,9 +483,11 @@ x-if="incidentes.semestre2">
 Segundo semestre:
 </div>
 
-<div
-x-html="incidentes.semestre2">
-</div>
+
+                            <div
+                            x-html="DOMPurify.sanitize(incidentes.semestre2)">
+                            </div>
+
 
 </div>
 

@@ -15,9 +15,19 @@
 
 <div
     x-data="{ ...actions(), ...objetivosForm() }"
-    class="card mt-4"
 >
+ <div class="text-end mb-3 mb-3">
 
+            <button
+                class="btn btn-success"
+                @click="guardar()"
+            >
+            <i class="ti ti-check"></i>
+                Actualizar
+            </button>
+
+        </div>
+<div class="card">
     <div class="card-body">
 
         <div
@@ -25,18 +35,11 @@
             style="height:300px"
         ></div>
 
-        <div class="text-end mt-3">
-
-            <button
-                class="btn btn-primary"
-                @click="guardar()"
-            >
-                Guardar objetivos
-            </button>
-
-        </div>
+       
 
     </div>
+</div>
+
 
 </div>
 

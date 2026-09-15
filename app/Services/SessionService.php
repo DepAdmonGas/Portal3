@@ -3,12 +3,16 @@
 namespace App\Services;
 
 use App\Core\Session;
+use App\Core\CsrfToken;
 
 class SessionService
 {
     public static function start(array $data): void
     {
         Session::regenerate();
+
+        // A post-authentication session must not retain an anonymous CSRF token.
+        CsrfToken::refresh();
 
         Session::set('usuario', $data);
 

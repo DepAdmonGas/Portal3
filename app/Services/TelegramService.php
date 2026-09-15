@@ -324,6 +324,10 @@ return $result['result'] ?? [];
 public function setWebhook(string $url): bool
 {
 $data = ['url' => $url];
+$secret = $_ENV['TELEGRAM_WEBHOOK_SECRET'] ?? getenv('TELEGRAM_WEBHOOK_SECRET') ?: '';
+if ($secret !== '') {
+$data['secret_token'] = $secret;
+}
 
 $ch = curl_init();
 curl_setopt_array($ch, [

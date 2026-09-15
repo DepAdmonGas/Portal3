@@ -390,7 +390,7 @@ x-model="modalIncidencia.sueldoDia">
 <i class="ti ti-arrow-left me-1"></i>Regresar al listado
 </button>
 </div>
-<div id="contenido-reporte-biometricos" x-html="reporte.html"></div>
+<div id="contenido-reporte-biometricos" x-html="DOMPurify.sanitize(reporte.html)"></div>
 </div>
 
 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Auth;
 use App\Models\Operativo\TokenTelegram;
 use App\Services\TelegramService;
 
@@ -11,13 +12,7 @@ public function status()
 {
 header('Content-Type: application/json; charset=utf-8');
 
-$input = json_decode(file_get_contents('php://input'), true);
-$idUsuario = (int) ($input['id_usuario'] ?? 0);
-
-if (!$idUsuario) {
-echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-exit;
-}
+$idUsuario = $this->authenticatedUserId();
 
 $record = TokenTelegram::where('id_usuario', $idUsuario)
 ->orderBy('id', 'desc')
@@ -63,13 +58,7 @@ public function generate()
 {
 header('Content-Type: application/json; charset=utf-8');
 
-$input = json_decode(file_get_contents('php://input'), true);
-$idUsuario = (int) ($input['id_usuario'] ?? 0);
-
-if (!$idUsuario) {
-echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-exit;
-}
+$idUsuario = $this->authenticatedUserId();
 
 $record = TokenTelegram::generateToken($idUsuario);
 
@@ -93,13 +82,7 @@ public function revoke()
 {
 header('Content-Type: application/json; charset=utf-8');
 
-$input = json_decode(file_get_contents('php://input'), true);
-$idUsuario = (int) ($input['id_usuario'] ?? 0);
-
-if (!$idUsuario) {
-echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-exit;
-}
+$idUsuario = $this->authenticatedUserId();
 
 TokenTelegram::revokeAccess($idUsuario);
 
@@ -111,13 +94,7 @@ public function testNotification()
 {
 header('Content-Type: application/json; charset=utf-8');
 
-$input = json_decode(file_get_contents('php://input'), true);
-$idUsuario = (int) ($input['id_usuario'] ?? 0);
-
-if (!$idUsuario) {
-echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-exit;
-}
+$idUsuario = $this->authenticatedUserId();
 
 $telegram = new TelegramService();
 $sent = $telegram->sendToken($idUsuario, "Mensaje de prueba desde Portal3.\n\nSi recibes esto, tu Telegram está vinculado correctamente.");
@@ -127,6 +104,16 @@ echo json_encode(['success' => true, 'message' => 'Mensaje de prueba enviado cor
 } else {
 echo json_encode(['success' => false, 'message' => 'No se pudo enviar el mensaje. Verifica que tengas tu chat vinculado.']);
 }
+exit;
+}
+
+private function authenticatedUserId(): int
+{
+$idUsuario = Auth::id();
+if ($idUsuario !== null) return (int) $idUsuario;
+
+http_response_code(401);
+echo json_encode(['success' => false, 'message' => 'Sesión no válida']);
 exit;
 }
 }

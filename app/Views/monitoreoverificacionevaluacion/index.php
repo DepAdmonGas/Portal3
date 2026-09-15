@@ -83,7 +83,7 @@ x-data="monitoreoEvaluacion()">
                     <div class="mt-1">
                         <b>Resultado:</b>
                         <span
-                            x-html="implementacion.resultado">
+                            x-html="DOMPurify.sanitize(implementacion.resultado)">
                         </span>
                     </div>
                 </td>
@@ -498,7 +498,7 @@ x-data="monitoreoEvaluacion()">
                         </div>
 
                         <div
-                            x-html="incidentes.semestre1">
+                            x-html="DOMPurify.sanitize(incidentes.semestre1)">
                         </div>
 
                     </div>
@@ -513,7 +513,7 @@ x-data="monitoreoEvaluacion()">
                             </div>
 
                             <div
-                                x-html="incidentes.semestre2">
+                            x-html="DOMPurify.sanitize(incidentes.semestre2)">
                             </div>
 
                         </div>

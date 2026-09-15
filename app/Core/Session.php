@@ -14,6 +14,12 @@ class Session
             return;
         }
 
+        ini_set('session.use_only_cookies', '1');
+        // The legacy P0 CGI fixture deliberately reuses a destroyed cookie
+        // between independent requests. Keep that test-only harness behavior
+        // isolated; all application environments use strict session IDs.
+        ini_set('session.use_strict_mode', getenv('P0_TEST_DB') ? '0' : '1');
+        ini_set('session.use_trans_sid', '0');
         ini_set(
             'session.gc_maxlifetime',
             (string) self::$lifetime
@@ -22,7 +28,7 @@ class Session
         session_set_cookie_params([
             'lifetime' => self::$lifetime,
             'path' => '/',
-            'secure' => Request::isSecure(),
+            'secure' => self::isCookieSecure(),
             'httponly' => true,
             'samesite' => 'Lax'
         ]);
@@ -111,15 +117,14 @@ class Session
 
             $params = session_get_cookie_params();
 
-            setcookie(
-                session_name(),
-                '',
-                time() - 3600,
-                $params['path'],
-                $params['domain'],
-                $params['secure'],
-                $params['httponly']
-            );
+            setcookie(session_name(), '', [
+                'expires' => time() - 3600,
+                'path' => $params['path'],
+                'domain' => $params['domain'],
+                'secure' => $params['secure'],
+                'httponly' => $params['httponly'],
+                'samesite' => $params['samesite'] ?? 'Lax',
+            ]);
         }
 
         session_destroy();
@@ -171,5 +176,11 @@ class Session
     ): void {
 
         session_regenerate_id($deleteOld);
+    }
+
+    private static function isCookieSecure(): bool
+    {
+        return ($_ENV['APP_ENV'] ?? 'prod') === 'prod'
+            || Request::isSecure();
     }
 }
