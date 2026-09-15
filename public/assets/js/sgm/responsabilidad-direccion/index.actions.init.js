@@ -15,7 +15,7 @@ Alpine.data('politicaForm',()=>({
 
         if (!document.getElementById('sgm-content')) {
             return;
-        }
+        } 
 
         const {data}=await axios.get(
             '/sgm/responsabilidades-direccion/datatable-politica'
@@ -27,6 +27,7 @@ Alpine.data('politicaForm',()=>({
         this.politica=this.politicas[0] ?? null;
 
     },
+
 
     seleccionar(item){
 

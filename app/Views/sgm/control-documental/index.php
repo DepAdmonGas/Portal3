@@ -19,23 +19,22 @@
 
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-  <div class="card-body">
-
-    <div class="float-end">
-        <?= 
+<div class="card-header d-flex justify-content-between align-items-center">
+      <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+  <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+          '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
-        ?>    
-    </div>
+        ?>  
+</div>
 
-    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+  <div class="card-body">
 
   <div class="datatables mt-4">
-    <div class="table-responsive">
-      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+      <table id="table-lista-asistencia" class="table table-striped table-bordered  text-nowrap align-middle">
         <thead>
           <tr>
           <th>#</th>
@@ -60,22 +59,21 @@
 
 <div class="card">
   <div x-data="{ ...actions(), ...revision() }">
-  <div class="card-body">
+    <div class="card-header d-flex justify-content-between align-items-center">
+<h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
 
-  <div class="float-end">
        <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearRevision()">
+          '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearRevision()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
-        ?>        
+        ?> 
     </div>
-
-<h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
+  <div class="card-body">
 
   <div class="datatables mt-4">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
       <table id="table-revision-sgm" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -102,20 +100,28 @@
 </div>
 
 <div class="card">
-  <div class="card-body">
+<div class="card-header">
 
-  <div x-data="controlDocumental()">
 
-  <div class="d-flex align-items-center">
+   <div class="d-flex justify-content-between align-items-center">
     <h4 class="card-title mb-0">Fo. SGM.003 Control documental del SGM</h4>
+    
       <div class="ms-auto">
-      <a type="button" class="btn" href="/sgm/control-documental-sistema-gestion-medicion/pdf">
-        <i class="ti ti-download fs-7 text-primary"></i>
+      <a type="button" class="btn bg-primary-subtle text-primary" href="/sgm/control-documental-sistema-gestion-medicion/pdf">
+        Descargar
+        <i class="ti ti-download"></i>
         </a>
       </div>
   </div>
+</div>
 
-  <table class="table table-bordered table-sm mt-3">
+  <div class="card-body">
+
+  <div  x-data="controlDocumental()">
+
+
+
+  <table class="table table-striped table-bordered text-nowrap align-middle mb-4">
 
             <tbody>
 
@@ -157,20 +163,26 @@
 
   </table>
 
+  
+
   <template x-for="seccion in [1,2]">
+<div class="card">
+  <div class="card-header card-colored-header bg-primary">
+    <h5 class="card-title text-white" x-text="titulo(seccion)"></h5>
+  </div>
 
-    <div class="mt-4">
+    <div class="card-body p-0">
 
-      <h5 x-text="titulo(seccion)"></h5>
+  
 
-      <table class="table table-bordered table-hover">
+      <table class="table table-bordered table-striped mb-0">
 
         <thead>
           <tr>
-          <th class="bg-primary text-white text-center">#</th>
-          <th class="bg-primary text-white">Codificación</th>
-          <th class="bg-primary text-white">Nombre</th>
-          <th class="bg-primary text-white">Fecha aprobación</th>
+          <th class="text-center">#</th>
+          <th class="text-center">Codificación</th>
+          <th class="text-center">Nombre</th>
+          <th class="text-center">Fecha aprobación</th>
           <th width="40"><i class="ti ti-file-download fs-7 text-muted"></i></th>
           </tr>
         </thead>
@@ -182,9 +194,9 @@
         <tr>
 
         <td class="fw-bolder text-center" x-text="doc.id"></td>
-        <td x-text="doc.codificacion"></td>
-        <td x-text="doc.nombre"></td>
-        <td x-text="doc.fecha_aprobacion"></td>
+        <td  class="text-cenetr" x-text="doc.codificacion"></td>
+        <td class="text-center" x-text="doc.nombre"></td>
+        <td  class="text-center" x-text="doc.fecha_aprobacion"></td>
         <td class="text-center">
         <template x-if="doc.url">
 
@@ -214,6 +226,8 @@
       </table>
 
     </div>
+  </div>
+    
   </template>
 
 </div>                    

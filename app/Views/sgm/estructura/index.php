@@ -5,23 +5,26 @@
 
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-  <div class="card-body">
 
-    <div class="float-end">
+<div class="card-header d-flex justify-content-between align-items-center">
+    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
         <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+          '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
         ?>    
-    </div>
 
-    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+</div>
+
+  <div class="card-body">
+
+   
 
   <div class="datatables mt-4">
-    <div class="table-responsive">
-      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+      <table id="table-lista-asistencia" class="table table-striped table-bordered text-nowrap align-middle">
         <thead>
           <tr>
           <th>#</th>
@@ -46,23 +49,24 @@
 
 <div class="card">
   <div x-data="{ ...actions(), ...revision() }">
-  <div class="card-body">
+    <div class="card-header d-flex justify-content-between align-items-center">
+<h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
 
-  <div class="float-end">
        <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearRevision()">
+          '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearRevision()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
         ?>        
-    </div>
 
-<h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
+
+    </div>
+  <div class="card-body">
 
   <div class="datatables mt-4">
-    <div class="table-responsive">
-      <table id="table-revision-sgm" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+      <table id="table-revision-sgm" class="table table-striped table-bordered text-nowrap align-middle">
         <thead>
           <tr>
            <th>#</th>

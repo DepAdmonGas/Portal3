@@ -16,7 +16,23 @@
  <div class="pb-4" x-data="{ ...actions(), ...seguimientoObjetivos() }"
  data-id="<?= $id ?>">
 
-    <div class="row mt-4">
+
+    <div class="text-end mt-4">
+
+        <button
+            class="btn btn-success mb-3 mt-3"
+            @click="finalizar()"
+        >
+<i class="ti ti-check"></i>
+            Guardar
+
+        </button>
+
+    </div>
+
+ <div class="card">
+    <div class="card-body">
+    <div class="row ">
 
         <div class="col-md-4">
 
@@ -60,16 +76,26 @@
         </div>
 
     </div>
+    </div>
+</div>
 
 
-    <h5 class="mt-4 bg-light p-3">
-        Indicador: Implementacion del SGM
+
+<div class="card">
+<div class="card-header card-colored-header bg-primary">
+ <h5 class=" card-title text-white mb-0">
+ <i class="ti ti-chart-bar-popular"></i>       
+ Indicador: Implementacion del SGM
     </h5>
+</div>
 
-    <table class="table table-sm table-bordered">
+<div class="card-body p-0">
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered  align-middle mb-0">
         <tbody>
             <tr>
-                <td class="align-middle fs-4">
+                <td class="align-middle">
                     Porcentaje de procedimientos implementados durante el año inmediato anterior
                 </td>
                 <td class="p-0">
@@ -80,7 +106,7 @@
                 </td>
             </tr>
             <tr>
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     Porcentaje de procedimientos documentados durante el año inmediato anterior
                 </td>
                 <td class="p-0">
@@ -95,7 +121,7 @@
 
             <tr>
 
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     Comentarios y observaciones:
                 </td>
 
@@ -114,7 +140,7 @@
 
             <tr>
 
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     En caso de no obtener resultados favorables, describa las acciones a tomar junto con los recursos que necesita con la finalidad de cambiar los resultados obtenidos para la siguiente evaluacion
                 </td>
 
@@ -134,18 +160,28 @@
         </tbody>
 
     </table>
+</div>
+</div>
 
-    <hr>
+</div>
+   
+<!---hasta qui llega la card 1---->
 
-    <h5 class="mt-4 bg-light p-3">
+
+<div class="card">
+    <div class="card-header card-colored-header bg-primary">
+   <h5 class="modal-title text-white mb-0">
+    <i class="ti ti-device-desktop-cog"></i>
         Indicador: Calibracion de equipos
     </h5>
-
-    <table class="table table-sm table-bordered">
+    </div>
+    <div class="card-body p-0">
+<div class="table-responsive">
+<table class="table table-striped table-bordered  align-middle mb-0">
 
         <tbody>
             <tr>
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     Porcentaje de quipos calibrados durante el año 
                     <span x-text="seguimiento.fecha?.substring(0, 4)"></span>
                 </td>
@@ -162,7 +198,7 @@
 
             <tr>
 
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     Comentarios y observaciones:
                 </td>
 
@@ -179,7 +215,7 @@
 
             <tr>
 
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     En caso de no obtener resultados favorables, describa las acciones a tomar junto con los recursos que necesita con la finalidad de cambiar los resultados obtenidos para la siguiente evaluacion
                 </td>
 
@@ -197,17 +233,30 @@
         </tbody>
 
     </table>
+</div>
+    
+    </div>
+</div>
 
-    <hr>
 
-    <h5 class="mt-4 bg-light p-3">
+ <!------hasta aqui llega la card 2--->
+
+
+<div class="card">
+    <div class="card-header card-colored-header bg-primary">
+<h5 class="card-title text-white mb-0">
+    <i class="ti ti-message-circle-user"></i>
         Indicador: Satisfaccion del cliente
     </h5>
 
-    <table class="table table-sm table-bordered">
+    </div>
+    <div class="card-body p-0">
+ 
+<div class="table-responsive">
+ <table class="table table-striped table-bordered align-middle mb-0">
         <tbody>
             <tr>
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     Número de quejas por parte de los clientes
                 </td>
                 <td class="p-0" width="500px">
@@ -220,7 +269,7 @@
                 </td>
             </tr>
             <tr>
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     Número de quejas atendidas de manera satisfactoria
                 </td>
 
@@ -238,7 +287,7 @@
 
             <tr>
 
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     Si ya se cuenta con resultados del año inmediato anterior, determinar el porcentaje que representan las quejas del año inmediato anterior contra los resultados con los que cuenta la estación de servicio.
                 </td>
 
@@ -257,7 +306,7 @@
 
             <tr>
 
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     Comentarios y observaciones
                 </td>
                 <td class="p-0" width="500px">
@@ -275,7 +324,7 @@
 
             <tr>
 
-                <td class="align-middle fs-4">
+                <td class="align-middle ">
                     En caso de no obtener resultados favorables, describa las acciones a tomar junto con los recursos que necesita con la finalidad de cambiar los resultados obtenidos para la siguiente evaluación.
                 </td>
 
@@ -294,19 +343,29 @@
         </tbody>
 
     </table>
+</div>
+   
+    </div>
+</div>
 
-    <div class="row">
-    <div class="col-md-7">
-    <h5 class="mt-4 bg-light p-3">
+ <!-----hasta aqui llega la card 3--->
+
+
+ <div class="card">
+    <div class="card-header card-colored-header bg-primary">
+
+    <h5 class="card-title text-white mb-0">
+        <i class="ti ti-user-circle"></i>
         Asistentes
     </h5>
+    
     </div>
-    </div>
+<div class="card-body ">
+  
 
-    <div class="row">
+<div class="d-flex align-items-start gap-2">
 
-        <div class="col-md-6">
-
+    <div class="flex-grow-1">
         <select
             x-ref="usuarios"
             class="select2 form-control"
@@ -322,28 +381,27 @@
                 ></option>
             </template>
         </select>
-
-        </div>
-
-        <div class="col-md-1 d-grid">
-
-            <button
-                class="btn btn-success"
-                @click="agregarAsistentes()"
-            >
-                Agregar
-            </button>
-
-        </div>
-
     </div>
 
-    <div class="row">
-    <div class="col-md-7">
-    <table class="table table-sm table-bordered table-sm mt-3">
+    <button
+        type="button"
+        class="btn bg-primary-subtle text-primary"
+        @click="agregarAsistentes()"
+    >
+    <i class="ti ti-plus"></i>
+        Nuevo
+    </button>
+
+</div>
+ 
+<!------grup---->
+
+
+ 
+    <table class="table table-striped table-bordered align-middle mt-3 mb-0">
         <thead>
             <tr>
-                <th>#</th>
+                <th class="text-center">#</th>
                 <th>Nombre</th>
                 <th class="text-center">
                     Firma
@@ -360,8 +418,7 @@
                         colspan="4"
                         class="text-center text-muted"
                     >
-                        Sin asistentes
-                    </td>
+No se encontro informacion                     </td>
                 </tr>
             </template>
             <template
@@ -369,7 +426,7 @@
                 :key="asistente.id"
             >
                 <tr>
-                    <td class="align-middle"
+                    <td class="align-middle text-center"
                         x-text="index+1"
                     ></td>
                     <td class="align-middle"
@@ -384,7 +441,7 @@
                     </td>
                     <td class="text-center align-middle">
 
-                        <a  @click="eliminarAsistente(asistente.id)">
+                        <a class="pointer" @click="eliminarAsistente(asistente.id)">
                             <i class="ti ti-trash fs-7 text-danger"></i>
                         </a>
 
@@ -397,21 +454,13 @@
         </tbody>
 
     </table>
-    </div>
-    </div>
 
-    <div class="text-end mt-4">
+</div>
 
-        <button
-            class="btn btn-primary"
-            @click="finalizar()"
-        >
+ </div>
 
-            Finalizar seguimiento
+<!---hasta aqui llega la card 4---->
 
-        </button>
-
-    </div>
 
 </div>
 

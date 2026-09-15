@@ -12,31 +12,34 @@
 <?php else: ?>
 
 <div id="sgm-content">
+<div x-data="{ ...actions(), ...objetivoForm() }">
 
-<div class="card mt-4">
-  <div class="card-body">
 
-  <div x-data="{ ...actions(), ...objetivoForm() }">
-
+<div class="row mt-4">
+<div class="col-md-5">
+<div class="card">
+  <div class="card-header">
   <div class="d-flex align-items-center">
     
       <div class="ms-auto">
-      <a type="button" class="btn" href="/sgm/establecimiento-objetivos-enfocados-cliente/objetivo-cliente">
-        <i class="ti ti-edit fs-7 text-primary"></i>
+      <a type="button" class="btn bg-primary-subtle text-primary" href="/sgm/establecimiento-objetivos-enfocados-cliente/objetivo-cliente">
+        <i class="ti ti-edit fs-6"></i>
+        Editar
         </a>
       </div>
   </div>
 
-<div class="row">
+  </div>
+  <div class="card-body p-0">
 
-  <div class="col-md-4">
 
-    <table class="table table-sm table-bordered table-hover">
+
+    <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
       <thead>
       <tr>
-      <th class="text-center bg-primary text-white">#</th>
-      <th class="text-center bg-primary text-white">Fecha</th>
-      <th class="text-center bg-primary text-white"><i class="ti ti-trash  fs-7"></i></th>
+      <th class="text-center">#</th>
+      <th class="text-center">Fecha</th>
+      <th class="text-center text-danger"><i class="ti ti-trash  fs-6"></i></th>
       </tr>
       </thead>
       <tbody>
@@ -57,12 +60,12 @@
       <td class="text-center align-middle"
       x-text="item.fecha"
       ></td>
-      <td class="text-center align-middle" width="40">
+      <td class="text-center align-middle" width="48 px">
       <a
       class="text-danger"
       @click.stop="eliminar(item)"
       >
-      <i class="ti ti-trash fs-7"></i>
+      <i class="ti ti-trash fs-6"></i>
       </a>
       </td>
       </tr>
@@ -86,11 +89,22 @@
       </tbody>
 
     </table>
-
+  
   </div>
+</div>
 
-<div class="col-md-8">
-<h5>Objetivos generales</h5>
+</div>
+
+<div class="col-md-7">
+<div class="card">
+  <div class="card-header card-colored-header bg-primary">
+<h5 class="mb-0 card-title text-white">
+<i class="ti ti-target"></i>  
+Objetivos generales</h5>
+  </div>
+<div class="card-body">
+
+
 <template x-if="objetivo">
 
 <div class="fs-5">
@@ -114,36 +128,58 @@ x-html="objetivo.detalle"
 
 </template>
 
+
+
+
+</div>
+</div>
 </div>
 
 </div>
+
+
 
   </div>
                   
-  </div>
-</div>
+  
 
 <div class="row">
 <div class="col-md-6">
 
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-  <div class="card-body">
 
-    <div class="float-end">
-        <?= 
-          !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
-          <i class="ti ti-plus"></i> Nuevo
-          </button>' 
-          : '' 
-        ?>    
+    <div class="card-header">
+<div class="row align-items-center">
+    <div class="col-9">
+        <h4 class="card-title mb-0">
+            Fo.SGM.001 Lista de asistencia
+        </h4>
     </div>
 
-    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+    <div class="col-3 text-end">
+        <?= 
+            !empty($permisos['crear']) ? 
+            '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearAsistencia()">
+                <i class="ti ti-plus"></i> Nuevo
+            </button>' 
+            : '' 
+        ?>
+    </div>
+</div>
+   
+     
+    </div>
+  <div class="card-body">
+
+  
+        
+   
+
+  
 
   <div class="datatables mt-4">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
       <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -169,22 +205,40 @@ x-html="objetivo.detalle"
 
 <div class="card">
   <div x-data="{ ...actions(), ...seguimientoObjetivos() }" data-id="0">
-  <div class="card-body">
+    <div class="card-header">
+      
+ 
 
-  <div class="float-end">
-        <?= 
+  <div class="row align-items-center">
+    <div class="col-9">
+ <h4 class="card-title mb-0">Fo.SGM.004 Seguimiento de objetivos e indicadores </h4>
+    </div>
+    <div class="col-3 text-end">
+      <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearSeguimiento()">
+          '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearSeguimiento()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
-          : '' 
+         : '' 
         ?>    
     </div>
+  </div>
+   
+  
 
-  <h4 class="card-title mb-0">Fo.SGM.004 Seguimiento de objetivos e indicadores </h4>
+
+  
+    
+
+</div>
+  <div class="card-body">
+
+ 
+
+
 
   <div class="datatables mt-4">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
       <table id="table-seguimiento-objetivos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
