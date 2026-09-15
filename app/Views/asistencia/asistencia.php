@@ -95,10 +95,10 @@ x-init="
             <?php
             if ($asistencia->realizadopor !=0) { ?>
 <div class="card">
-    <div class="card-header">
-         <h5>Evidencia</h5>
+    <div class="card-header card-colored-header bg-primary">
+         <h5 class="card-title text-white pb-0 mb-0 ">Evidencia</h5>
 
-                <small class="text-muted">Agrega la evidencia del elemento lista de asistencia, un máximo de 3 imágenes</small>
+                <small class="text-white">Agrega la evidencia del elemento lista de asistencia, un máximo de 3 imágenes</small>
     </div>
 
         <div class="card-body">

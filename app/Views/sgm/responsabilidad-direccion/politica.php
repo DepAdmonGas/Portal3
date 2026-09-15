@@ -1,3 +1,16 @@
+  <style>
+  span[style] {
+    color: inherit !important;
+    background-color: transparent !important;
+}
+
+  strong[style] {
+    color: inherit !important;
+    background-color: transparent !important;
+}
+
+</style>
+
 <div id="container"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
@@ -14,10 +27,20 @@
 <div id="sgm-content">
 
 <div
-    x-data="{ ...actions(), ...politicaForm() }"
-    class="card mt-4"
+    x-data="{ ...actions(), ...politicaForm() }"  
 >
-    <div class="card-body">
+    <div class="text-end mb-3">
+            <button
+                class="btn btn-success"
+                @click="guardar"
+            >
+            <i class="ti ti-check"></i>
+                Actualizar
+            </button>
+        </div>
+
+<div class="class="card mt-4">
+<div class="card-body">
 
         <input
             type="date"
@@ -30,16 +53,12 @@
             style="height:350px"
         ></div>
 
-        <div class="text-end mt-3">
-            <button
-                class="btn btn-primary"
-                @click="guardar"
-            >
-                Guardar
-            </button>
-        </div>
+    
 
     </div>
+
+</div>    
+
 </div>
 
 </div>

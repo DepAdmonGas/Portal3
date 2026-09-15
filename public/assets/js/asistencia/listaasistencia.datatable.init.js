@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             {
-            data: 'fecha',
+            data: 'fecha', className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';

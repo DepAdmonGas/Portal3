@@ -13,6 +13,21 @@ final class Logger
 {
     private static ?MonoLogger $logger = null;
 
+    private const REDACTED = '[REDACTED]';
+
+    private const SENSITIVE_CONTEXT_KEYS = [
+        'password', 'password_confirmation', 'token', 'access_token', 'refresh_token',
+        'authorization', 'cookie', 'session', 'session_id', 'csrf_token', 'secret',
+        'webhook_secret', 'telegram_webhook_secret', 'api_key', 'api_token',
+        'headers', 'body', 'request_body', 'response_body', 'payload', 'document_path',
+        'filename', 'sql', 'query',
+    ];
+
+    private const PII_CONTEXT_KEYS = [
+        'usuario', 'username', 'email', 'ip', 'remote_addr', 'phone', 'telefono',
+        'address', 'direccion', 'curp', 'rfc', 'nss', 'ine',
+    ];
+
     /**
      * Obtiene la instancia de Monolog
      */
@@ -49,7 +64,7 @@ final class Logger
                 new LineFormatter(
                     "[%datetime%] %level_name%: %message% %context%\n",
                     "Y-m-d H:i:s",
-                    true,
+                    false,
                     true
                 )
             );
@@ -66,35 +81,35 @@ final class Logger
         string $message,
         array $context = []
     ): void {
-        self::instance()->debug($message, $context);
+        self::instance()->debug(self::sanitizeMessage($message), self::sanitizeContext($context));
     }
 
     public static function info(
         string $message,
         array $context = []
     ): void {
-        self::instance()->info($message, $context);
+        self::instance()->info(self::sanitizeMessage($message), self::sanitizeContext($context));
     }
 
     public static function notice(
         string $message,
         array $context = []
     ): void {
-        self::instance()->notice($message, $context);
+        self::instance()->notice(self::sanitizeMessage($message), self::sanitizeContext($context));
     }
 
     public static function warning(
         string $message,
         array $context = []
     ): void {
-        self::instance()->warning($message, $context);
+        self::instance()->warning(self::sanitizeMessage($message), self::sanitizeContext($context));
     }
 
     public static function error(
         string $message,
         array $context = []
     ): void {
-        self::instance()->error($message, $context);
+        self::instance()->error(self::sanitizeMessage($message), self::sanitizeContext($context));
     }
 
     public static function critical(
@@ -105,23 +120,23 @@ final class Logger
         if ($message instanceof Throwable) {
 
             self::instance()->critical(
-                $message->getMessage(),
-                array_merge(
+                'Unhandled exception',
+                self::sanitizeContext(array_merge(
                     [
-                        'file'  => $message->getFile(),
-                        'line'  => $message->getLine(),
-                        'trace' => $message->getTraceAsString()
+                        'exception_class' => $message::class,
+                        'file' => $message->getFile(),
+                        'line' => $message->getLine(),
                     ],
                     $context
-                )
+                ))
             );
 
             return;
         }
 
         self::instance()->critical(
-            $message,
-            $context
+            self::sanitizeMessage($message),
+            self::sanitizeContext($context)
         );
     }
 
@@ -129,13 +144,44 @@ final class Logger
         string $message,
         array $context = []
     ): void {
-        self::instance()->alert($message, $context);
+        self::instance()->alert(self::sanitizeMessage($message), self::sanitizeContext($context));
     }
 
     public static function emergency(
         string $message,
         array $context = []
     ): void {
-        self::instance()->emergency($message, $context);
+        self::instance()->emergency(self::sanitizeMessage($message), self::sanitizeContext($context));
+    }
+
+    private static function sanitizeContext(array $context): array
+    {
+        $sanitized = [];
+        foreach ($context as $key => $value) {
+            $normalizedKey = strtolower(str_replace('-', '_', (string) $key));
+            if (in_array($normalizedKey, self::SENSITIVE_CONTEXT_KEYS, true)
+                || in_array($normalizedKey, self::PII_CONTEXT_KEYS, true)) {
+                $sanitized[$key] = self::REDACTED;
+                continue;
+            }
+
+            $sanitized[$key] = is_array($value)
+                ? self::sanitizeContext($value)
+                : self::sanitizeValue($value);
+        }
+
+        return $sanitized;
+    }
+
+    private static function sanitizeMessage(string $message): string
+    {
+        return str_replace(["\r", "\n"], ' ', $message);
+    }
+
+    private static function sanitizeValue(mixed $value): mixed
+    {
+        return is_string($value)
+            ? str_replace(["\r", "\n"], ' ', $value)
+            : $value;
     }
 }

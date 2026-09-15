@@ -35,6 +35,7 @@ x-model.number="year"
 
 </div>
 </div>
+
 </div>
 </div>
 
@@ -296,9 +297,11 @@ x-text="capacitacion.semestre2.texto">
 Satisfacción del cliente
 </td>
 
+
 <td class="align-middle text-center">
 <b>Indicador</b>
 </td>
+
 
 <td>
 Media del total de clientes con experiencia:

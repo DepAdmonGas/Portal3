@@ -22,7 +22,20 @@ true
 
 $idEstacion = $input['id_estacion'] ?? null;
 
-if (!$idEstacion) {
+if (!is_int($idEstacion) && !(is_string($idEstacion) && ctype_digit($idEstacion))) {
+
+echo json_encode([
+'ok' => false,
+'type' => 'error',
+'message' => 'Estación inválida'
+]);
+
+return;
+}
+
+$idEstacion = (int) $idEstacion;
+
+if ($idEstacion < 1) {
 
 echo json_encode([
 'ok' => false,
@@ -47,6 +60,17 @@ return;
 }
 
 if (!MultiestacionService::isEnabled($user)) {
+
+echo json_encode([
+'ok' => false,
+'type' => 'error',
+'message' => 'No autorizado'
+]);
+
+return;
+}
+
+if (!MultiestacionService::canSelectStation($idEstacion, $user)) {
 
 echo json_encode([
 'ok' => false,

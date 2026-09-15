@@ -64,8 +64,7 @@ if (!$user || !$isValidPassword) {
 Logger::info(
 'Login fallido',
 [
-'usuario' => $usuario,
-'ip' => Request::ip()
+'outcome' => 'invalid_credentials'
 ]
 );
 
@@ -84,8 +83,7 @@ if (PasswordService::isLegacy($user->password)) {
 Logger::warning(
 'Usuario con contraseña no hasheada detectado',
 [
-'user_id' => $user->id,
-'ip' => Request::ip()
+'user_id' => $user->id
 ]
 );
 }
@@ -115,7 +113,7 @@ Logger::warning(
 '2FA inválido',
 [
 'user_id' => $user->id,
-'ip' => Request::ip()
+'outcome' => 'invalid_2fa'
 ]
 );
 
@@ -161,7 +159,7 @@ Logger::info(
 'Login exitoso',
 [
 'user_id' => $user->id,
-'ip' => Request::ip()
+'outcome' => 'success'
 ]
 );
 
@@ -182,8 +180,7 @@ public function logout(): void
 Logger::info(
 'Logout',
 [
-'user_id' => Session::get('usuario')['id'] ?? null,
-'ip' => Request::ip()
+'user_id' => Session::get('usuario')['id'] ?? null
 ]
 );
 

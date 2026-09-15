@@ -110,7 +110,7 @@ x-text="politica.fecha"
 
 <div
 class="mt-3"
-x-html="politica.contenido"
+x-html="DOMPurify.sanitize(politica.contenido)"
 ></div>
 
 <div class="row mt-5">

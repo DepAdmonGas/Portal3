@@ -78,6 +78,15 @@ $ids[] = (int)$d['id'];
 return array_values(array_unique($ids));
 }
 
+/** Resolve a personnel resource only within the caller's authorized stations. */
+public static function findAuthorizedPersonal(int $idPersonal): ?RhPersonal
+{
+$allowedStations = self::getAllowedEstacionIds();
+if (empty($allowedStations)) return null;
+
+return RhPersonal::whereIn('id_estacion', $allowedStations)->where('id', $idPersonal)->first();
+}
+
 public static function resolveNombreEstacion(int $idEstacion): string
 {
 $loc = RhLocalidad::find($idEstacion);
@@ -443,8 +452,8 @@ $record->update([$campo => $filename]);
 
 public static function getUploadDir(): string
 {
-$dir = __DIR__ . '/../../public/uploads/archivos/documentos-personal/';
-if (!is_dir($dir)) mkdir($dir, 0775, true);
+$dir = __DIR__ . '/../../storage/private/documentos-personal/';
+if (!is_dir($dir)) mkdir($dir, 0750, true);
 return $dir;
 }
 
@@ -464,7 +473,7 @@ return $result;
 
 public static function getPersonalById(int $id): ?array
 {
-$p = RhPersonal::find($id);
+$p = self::findAuthorizedPersonal($id);
 if (!$p) return null;
 
 $puesto = RhPuestos::find($p->puesto);
@@ -637,7 +646,7 @@ $acceso = RhPersonalAcceso::create([
 ]);
 }
 
-$personal = RhPersonal::find($idPersonal);
+$personal = self::findAuthorizedPersonal($idPersonal);
 $puesto = $personal ? RhPuestos::find($personal->puesto) : null;
 $nombrePuesto = $puesto ? $puesto->puesto : '';
 
@@ -893,6 +902,9 @@ return [
 
 public static function getAsistenciaData(int $idPersonal): array
 {
+$personal = self::findAuthorizedPersonal($idPersonal);
+if (!$personal) return [];
+
 $asistencias = RhPersonalAsistencia::where('id_personal', $idPersonal)
 ->orderBy('fecha', 'desc')
 ->get();
