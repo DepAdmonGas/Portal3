@@ -72,11 +72,11 @@ document.addEventListener('alpine:init', () => {
                 }
             });
 
-            if (!response.success) {
+            if (!response || !response.success) {
 
                 this.calibracion[campo] = original;
 
-                this.notify('error', response.message);
+                this.notify('error', (response && response.message) || 'Error al guardar');
                 return;
             }
 
@@ -111,7 +111,7 @@ document.addEventListener('alpine:init', () => {
                 }
             });
 
-            if (!response.success) {
+            if (!response || !response.success) {
                 item[campo] = original;
                 return;
             }

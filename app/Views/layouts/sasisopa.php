@@ -28,7 +28,57 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
+    <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
 
+    <script>
+        (function() {
+            // Función para obtener el token actual del meta tag
+            function getCsrfToken() {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                return meta ? meta.getAttribute('content') : null;
+            }
+
+            const csrfToken = getCsrfToken();
+            if (csrfToken) {
+                // Agregar token a todas las solicitudes Axios
+                axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+
+                // Interceptar solicitudes para asegurar token fresco
+                axios.interceptors.request.use(
+                    function(config) {
+                        // Actualizar token antes de cada request
+                        config.headers['X-CSRF-TOKEN'] = getCsrfToken();
+                        return config;
+                    },
+                    function(error) {
+                        return Promise.reject(error);
+                    }
+                );
+
+                // Interceptar respuestas para detectar CSRF expirado
+                axios.interceptors.response.use(
+                    function(response) {
+                        return response;
+                    },
+                    function(error) {
+                        if (error.response && error.response.status === 419) {
+                            const meta = document.querySelector('meta[name="csrf-token"]');
+                            const newToken = error.response.data && error.response.data.new_token;
+                            if (meta && newToken) {
+                                meta.setAttribute('content', newToken);
+                                if (error.config && !error.config._csrfRetried) {
+                                    error.config._csrfRetried = true;
+                                    return axios(error.config);
+                                }
+                            }
+                            window.location.reload();
+                        }
+                        return Promise.reject(error);
+                    }
+                );
+            }
+        })();
+    </script>
 
 </head>
 

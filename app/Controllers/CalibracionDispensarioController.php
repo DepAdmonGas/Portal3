@@ -42,6 +42,7 @@ class CalibracionDispensarioController extends BaseController
             $this->estacionModulo(),
             fn ($q, $est) => $q->where('id_estacion', $est)
         )
+        ->where('equipo', 'Dispensario')
         ->select([
             'id',
             'id_estacion',

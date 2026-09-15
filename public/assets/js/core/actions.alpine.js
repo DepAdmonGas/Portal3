@@ -236,7 +236,10 @@ async deleteAction({ url, id, name, table, data = {} }) {
     onError = null
 }) {
 
-    if (this.loading) return;
+    if (this.loading) {
+        await new Promise(r => setTimeout(r, 250));
+        if (this.loading) return;
+    }
     this.loading = true;
 
     try {

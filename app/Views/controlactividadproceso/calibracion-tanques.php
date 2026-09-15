@@ -21,7 +21,7 @@ JSON_HEX_QUOT
 <div class="d-flex justify-content-end mb-3 mt-3">
 
 <template x-if="calibracion.estado == 0">
-<button type="button" class="btn btn-success" @click="finalizar('Sondas de medición')">
+<button type="button" class="btn btn-success" @click="finalizar('Tanques de almacenamiento')">
 <i class="ti ti-check"></i> Finalizar
 </button>
 </template>
