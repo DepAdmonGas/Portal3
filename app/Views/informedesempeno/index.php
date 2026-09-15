@@ -13,12 +13,13 @@ x-data="{ ...actions(), ...informesDesempeno()}">
 <?php else: ?>
 
 <div class="card mt-4">
+
     <div class="card-header">
 <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Informe de Evaluación de Desempeño (IED)</h4>
       <div class="ms-auto">
      <div class="dropdown center">
-            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -33,14 +34,16 @@ x-data="{ ...actions(), ...informesDesempeno()}">
       </div>
   </div>
     </div>
-  <div class="card-body">
 
+  <div class="card-body p-0">
+
+  <div class="table-responsive">
 <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
 
         <thead>
 
             <tr>
-                <th class="text-center align-middle">
+                <th class="text-center align-middle" width="96px">
                     #
                 </th>
                 <th class="text-center align-middle">
@@ -50,9 +53,9 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                     Nombre completo
                 </th>
                 <th
-                    width="35"
+                    width="48px"
                     class="text-center align-middle">
-                    <i class="fas fa-ellipsis-v"></i>
+                    <i class="ti ti-dots-vertical fs-6"></i>
                 </th>
             </tr>
         </thead>
@@ -123,7 +126,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
         </tbody>
 
     </table>
-                    
+                 </div>   
   </div>
 </div>
 
@@ -141,7 +144,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
       </div>
   </div>
     </div>
-  <div class="card-body">
+  <div class="card-body p-0">
       <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
         <thead>
           <tr>
@@ -159,9 +162,9 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                 <tr>
                     <td
                         colspan="4"
-                        class="text-center">
+                        class="text-center text-primary">
                         <small>
-                            No se encontró información para mostrar
+                            No se encontró información
                         </small>
                     </td>
                 </tr>
@@ -171,7 +174,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                 :key="item.id">
                 <tr>
                     <td
-                        class="text-center fw-bolder"
+                        class="text-center" width="96px"
                         x-text="item.id">
                     </td>
                     <td
@@ -183,7 +186,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
                         x-text="item.usuario">
                     </td>
                     <td
-                        class="text-center align-middle">
+                        class="text-center align-middle" width="48px">
 
                         <div class="dropdown dropstart">
                     <a href="javascript:void(0)" data-bs-toggle="dropdown">
@@ -382,7 +385,7 @@ x-data="{ ...actions(), ...informesDesempeno()}">
 
             <div class="modal-body">
 
-                <table class="table table-bordered table-sm">
+                <table class="table table-bordered">
 
                     <tr>
 

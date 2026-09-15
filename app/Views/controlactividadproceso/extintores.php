@@ -18,12 +18,12 @@ x-data="{ ...actions(), ...extintores()}">
       <table id="table-extintores" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>No. De extintor</th>
-            <th>Ubicación</th>
-            <th>Fecha de ultima recarga</th>
-            <th>Tipo de Extintor</th>
-            <th>Peso Kg</th>
-          <th class="text-center" width="100px">
+           <th class="text-center align-middle">No. De extintor</th>
+            <th class="text-start align-middle">Ubicación</th>
+            <th class="text-center align-middle">Fecha de ultima recarga</th>
+            <th class="text-center align-middle">Tipo de Extintor</th>
+            <th class="text-center align-middle">Peso Kg</th>
+          <th class="text-center" width="48px">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -53,27 +53,27 @@ x-data="{ ...actions(), ...extintores()}">
 
 
         <label class="form-label">* No. De extintor:</label>
-        <input type="number" class="form-control mb-2" x-model="no_extintor"
+        <input type="number" class="form-control mb-3" x-model="no_extintor"
                 :class="errors.no_extintor ? 'is-invalid' : ''"
                 @input="errors.no_extintor = false" />
 
         <label class="form-label">* Ubicación:</label>
-        <textarea class="form-control mb-2" x-model="ubicacion"
+        <textarea class="form-control mb-3" x-model="ubicacion"
                 :class="errors.ubicacion ? 'is-invalid' : ''"
                 @input="errors.ubicacion = false"></textarea>
 
         <label class="form-label">* Fecha de ultima recarga:</label>
-        <input type="date" class="form-control mb-2" x-model="fecha_recarga"
+        <input type="date" class="form-control mb-3" x-model="fecha_recarga"
                 :class="errors.fecha_recarga ? 'is-invalid' : ''"
                 @input="errors.fecha_recarga = false" />
 
         <label class="form-label">*  Tipo de Extintor:</label>
-        <input type="text" class="form-control mb-2" x-model="tipo_extintor"
+        <input type="text" class="form-control mb-3" x-model="tipo_extintor"
                 :class="errors.tipo_extintor ? 'is-invalid' : ''"
                 @input="errors.tipo_extintor = false" />
 
         <label class="form-label">*  Peso Kg:</label>
-        <input type="text" class="form-control mb-2" x-model="peso_kg"
+        <input type="text" class="form-control" x-model="peso_kg"
                 :class="errors.peso_kg ? 'is-invalid' : ''"
                 @input="errors.peso_kg = false" />
 

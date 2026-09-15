@@ -18,10 +18,10 @@ x-data="{ ...actions(), ...detectorHumo()}">
       <table id="table-detector-humo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>No. Detector</th>
-            <th>Ubicación</th>
-          <th class="text-center" width="100px">
-          <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
+           <th class="text-center align-middle" width="96px">No. Detector</th>
+            <th class="text-center align-middle">Ubicación</th>
+          <th class="text-center align-middle" width="48px">
+          <a class="text-muted"><i class="ti ti-trash text-danger fs-6"></i></a>
           </th>
           </tr>
         </thead>
@@ -48,7 +48,7 @@ x-data="{ ...actions(), ...detectorHumo()}">
 
 
         <label class="form-label">* No. Detector:</label>
-        <input type="number" class="form-control mb-2" x-model="no_detector"
+        <input type="number" class="form-control mb-3" x-model="no_detector"
                 :class="errors.no_detector ? 'is-invalid' : ''"
                 @input="errors.no_detector = false" />
 

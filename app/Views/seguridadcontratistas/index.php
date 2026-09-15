@@ -420,7 +420,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                                 class="btn bg-primary-subtle text-primary"
                                 @click="agregarTrabajador()">
                                 <i class="ti ti-plus"></i>
-                            Agregar
+                            Nuevo
                         </button>
                     </div>
 
@@ -431,30 +431,33 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                             <th>Nombre</th>
                             <th>Puesto</th>
                             <th>No. De Seguro</th>
-                            <th class="text-center"><i class="ti ti-trash fs-6 text-muted"></i></th>
+                            <th class="text-center" width="48px"><i class="ti ti-trash fs-6 text-muted"></i></th>
                         </tr>
                     </thead>
+<tbody>
+    <!-- Si hay trabajadores, muestra la lista -->
+    <template x-if="formato12.trabajadores.length > 0">
+        <template x-for="t in formato12.trabajadores" :key="t.id">
+            <tr>
+                <td x-text="t.nombre"></td>
+                <td x-text="t.puesto"></td>
+                <td x-text="t.no_seguro"></td>
+                <td class="text-center">
+                    <a @click="eliminarTrabajador(t.id, t.nombre)">
+                        <i class="ti ti-trash fs-6 text-danger pointer"></i>
+                    </a>
+                </td>
+            </tr>
+        </template>
+    </template>
 
-                    <tbody>
-
-                        <template x-for="t in formato12.trabajadores"
-                                :key="t.id">
-
-                            <tr>
-                                <td x-text="t.nombre"></td>
-                                <td x-text="t.puesto"></td>
-                                <td x-text="t.no_seguro"></td>
-
-                                <td class="text-center">
-                                   
-                                <a @click="eliminarTrabajador(t.id, t.nombre)"><i class="ti ti-trash fs-6 text-danger pointer"></i></a>
-
-                                </td>
-                            </tr>
-
-                        </template>
-
-                    </tbody>
+    <!-- Si no hay datos, muestra el mensaje ocupando todas las columnas -->
+    <template x-if="formato12.trabajadores.length === 0">
+        <tr>
+            <td colspan="4" class="text-center text-primary">No se encontró información</td>
+        </tr>
+    </template>
+</tbody>
 
                 </table>
 
@@ -487,7 +490,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                                 class="btn bg-primary-subtle text-primary"
                                 @click="agregarEncargado()">
                                 <i class="ti ti-plus"></i>
-                            Agregar
+                            Nuevo
                         </button>
 
                    
@@ -502,26 +505,33 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                         <th>Nombre</th>
                         <th>Puesto</th>
                         <th>No. De Seguro</th>
-                        <th class="text-center"><i class="ti ti-trash fs-6 text-muted"></i></th>
+                        <th class="text-center" width="48px"><i class="ti ti-trash fs-6 text-muted"></i></th>
                     </tr>
                     </thead>
-                <tbody>
+<tbody>
+    <!-- Si hay encargados, muestra la lista -->
+    <template x-if="formato12.encargados.length > 0">
+        <template x-for="e in formato12.encargados" :key="e.id">
+            <tr>
+                <td x-text="e.nombre"></td>
+                <td x-text="e.puesto"></td>
+                <td x-text="e.seguro_social"></td>
+                <td class="text-center">
+                    <a @click="eliminarEncargado(e.id, e.nombre)">
+                        <i class="ti ti-trash fs-6 text-danger pointer"></i>
+                    </a>
+                </td>
+            </tr>
+        </template>
+    </template>
 
-                   <template x-for="e in formato12.encargados" :key="e.id">
-
-                        <tr>
-                            <td x-text="e.nombre"></td>
-                            <td x-text="e.puesto"></td>
-                            <td x-text="e.seguro_social"></td>
-
-                            <td class="text-center">
-                                <a @click="eliminarEncargado(e.id, e.nombre)"><i class="ti ti-trash fs-6 text-danger pointer"></i></a>
-                            </td>
-                        </tr>
-
-                        </template>
-
-                </tbody>
+    <!-- Si no hay datos, muestra el mensaje ocupando todas las columnas -->
+    <template x-if="formato12.encargados.length === 0">
+        <tr>
+            <td colspan="4" class="text-center text-primary">No se encontró información</td>
+        </tr>
+    </template>
+</tbody>
 
             </table>
 
@@ -544,7 +554,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                               rows="1"
                               x-model="formato12.nombre_responsable"></textarea>
 
-                    <div class="text-center">
+                    <div class="text-start">
                         <small class="form-label">Nota: Si el personal es externo deberá presentar su procedimiento para realizar la actividad</small>
                     </div>
 
@@ -615,6 +625,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                             </label>
                         </div>
 
+                        
                         <input
                             class="form-control"
                             disabled x-model="formato14.folio">
@@ -733,8 +744,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                 </div>
 
+                <div class="table-responsive">
                 <table
-                    class="table table-bordered table-striped table-sm">
+                    class="table table-bordered table-striped">
 
                     <tr>
 
@@ -797,6 +809,7 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     </tr>
 
                 </table>
+                </div>
 
             </div>
 

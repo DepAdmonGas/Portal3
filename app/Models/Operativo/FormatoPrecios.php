@@ -21,7 +21,7 @@ class FormatoPrecios extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'fecha' => 'date',
+        'fecha' => 'string',
         'year' => 'integer',
         'mes' => 'integer',
         'estatus' => 'integer',

@@ -13,50 +13,68 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
 <?php else: ?>
 
 <div class="row mt-3">
-    <div class="col-12 col-md-4">
 
-      <div class="card">
-      <div class="card-body">
-      <h5>Matriz de evaluación del cumplimiento legal</h5>
+<div class="col-12 col-md-4  mb-4">
+    <a href="/sasisopa/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales/pdf" 
+       class="card  text-decoration-none card-hover overflow-hidden position-relative">
+        
+        <div class="card-body pb-4 p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Icono circular -->
+                <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 60px; height: 60px;">
+                    <i class="ti ti-file-text text-white display-6"></i> 
+                </div>
 
-      <div class="text-end">
-      <a class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info" type="button"
-      href="/sasisopa/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales/pdf"><i class="ti ti-download"></i> Descargar</a>
-      </div>
-      </div>
-      </div>
+                <!-- Título a la derecha -->
+                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end">
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">
+                        Matriz de evaluación del cumplimiento legal
+                    </h4>
+                </div>
+            </div>
+        </div>
 
-    </div>
+        <!-- Pie de la tarjeta -->
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+            <span class="small">Descargar documento</span>
+            <div class="icon-transition">
+                <i class="ti ti-download fs-5"></i>
+            </div>
+        </div>
+    </a>
+</div>
+
     <div class="col-12 col-md-8">
 
     <div class="card">
-        <div class="card-header">
- <div class="d-flex align-items-center">
-        <h5 class="card-title">Matriz de evaluación del cumplimiento legal</h5>
-        <div class="ms-auto">
-        <div class="dropdown dropcener">
-                <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots-vertical fs-4"></i>
+<div class="card-header py-3">
+    <div class="d-flex align-items-center">
+        <h5 class="card-title mb-0">Matriz de evaluación del cumplimiento legal</h5>
+        <div class="ms-auto d-flex align-items-center">
+            <div class="dropdown">
+                <a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-dots-vertical fs-4"></i>
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <li>
-                    <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
-                </li>
-                <li>
-                    <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.022.docx"><i class="ti ti-download"></i> Descargar</a>
-                </li>
+                    <li>
+                        <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.022.docx"><i class="ti ti-download"></i> Descargar</a>
+                    </li>
                 </ul>
             </div>   
         </div>
-    </div>      
+    </div>   
+</div>
 
-        </div>
-    <div class="card-body p-3">
+    <div class="card-body p-0">
     
-    <table class="table table-striped pb-4 table-bordered  text-nowrap align-middle">
+    <table class="table table-striped mb-0 table-bordered text-nowrap align-middle">
         <thead>
             <tr>
-                <th class="text-center align-middle">
+                <th class="text-center align-middle" width="48px">
                     #
                 </th>
 
@@ -64,11 +82,11 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
                     Fecha
                 </th>
 
-                <th class="text-center  align-middle" width="40">
+                <th class="text-center align-middle" width="48px">
                     <i class="ti ti-download text-primary fs-6"></i>
                 </th>
 
-                <th class="text-center  align-middle" width="40">
+                <th class="text-center  align-middle" width="48px">
                     <i class="ti ti-trash text-danger fs-6"></i>
                 </th>
             </tr>
@@ -164,7 +182,7 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
 
             <div class="modal-body">
 
-               <label class="form-label">
+               <label class="form-label mb-1">
                   * Fecha:
               </label>
 
@@ -175,7 +193,7 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
                   :class="errors.fecha ? 'is-invalid' : ''"
                   @input="errors.fecha = false">
 
-                  <label class="form-label mt-2">
+                  <label class="form-label mt-3 mb-1">
                       * Documento:
                   </label>
 

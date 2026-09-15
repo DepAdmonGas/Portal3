@@ -4,38 +4,42 @@ data-estacion-id="<?= e($estacionId ?? '') ?>"
 x-data="{ ...actions(), ...revisionResultados()}">
 
 <?php if (empty($estacionId)): ?>
- 
-    <div id="sasisopa-empty-message"
-         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
-        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
-    </div>
+
+<div id="sasisopa-empty-message"
+class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+</div>
 
 <?php else: ?>
 
-    <div class="row p-3 mb-3">
-        <div class="col-6">
-            <select
-                class="form-select"
-                x-model.number="year"
-                @change="buscar()">
-                <?php for($i = date('Y'); $i >= 2019; $i--): ?>
-                    <option value="<?= $i ?>">
-                        <?= $i ?>
-                    </option>
-                <?php endfor; ?>
-            </select>
-        </div>
-    
-<div class="col-6">
-    <div class="text-end">
-   <div class="btn-group">
-                 <button class="btn bg-primary-subtle text-primary">
-                    <a class="dropdown-item pointer" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
-                </button>
+<div class="row g-3 mt-1 mb-3">
+<div class="col-md-6 ">
+<select
+class="form-select w-50"
+x-model.number="year"
+@change="buscar()">
+<?php for($i = date('Y'); $i >= 2019; $i--): ?>
+<option value="<?= $i ?>">
+<?= $i ?>
+</option>
+<?php endfor; ?>
+</select>
+</div>
 
-        </div>
+<div class="col-md-6">
+<div class="text-end">
+<div class="btn-group">
+<button class="btn bg-primary-subtle text-primary">
+<a class="dropdown-item pointer" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
+</button>
+
 </div>
 </div>
+
+
+<!-- Implementación del SA -->
+<!-- Ventas -->
+
     </div>
     <!-- Implementación del SA -->
 <div class="card">
@@ -92,703 +96,692 @@ x-data="{ ...actions(), ...revisionResultados()}">
     <!-- Implementación del SA -->
     <!-- Ventas -->
 
+
 <div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-    <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
-    <tbody>
-      <tr>
-        <td class="align-middle text-center"><b>Objeto</b></td>
-        <td class="align-middle">Ventas</td>
-        <td class="align-middle text-center"><b>Indicador</b></td>
-        <td class="align-middle">Venta del mes inmediato anterior VS venta del mes actual</td>
-      </tr>
-      <tr>
-        <td class="align-middle text-center"><b>Meta</b></td>
-        <td class="align-middle"
-        x-text="ventas.meta">
-        </td>
-        <td class="align-middle text-center"><b>Frecuencia de medición</b></td>
-        <td class="align-middle">Mensual</td>
-      </tr>
-    </tbody>
-  </table>
-  </div>
-  
-
-  <div class="mt-3 mb-3 form-label"><b>Resultado:</b></div>
-
-  <div class="row">
-
-    <template
-        x-for="(item,index) in ventas.detalle"
-        :key="index">
-
-        <div class="col-md-3">
+<div class="card-body">
 <div class="table-responsive">
-            <table
-                class="table table-responsive table-striped table-bordered mb-0 align-middle"
-                style="font-size:.9em;">
-
-                <thead>
-
-                    <tr>
-
-                        <th class="text-center bg-light">
-
-                            <span x-text="item.mes_anterior"></span>
-                            <span x-text="item.year_anterior"></span>
-
-                        </th>
-
-                        <th class="text-center bg-light">
-
-                            <span x-text="item.mes_actual"></span>
-                            <span x-text="item.year_actual"></span>
-
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    <tr>
-
-                        <td class="text-center bg-light">
-
-                            <span x-text="
-                                Number(item.valor_anterior)
-                                .toLocaleString(
-                                    'es-MX',
-                                    {
-                                        minimumFractionDigits:2
-                                    }
-                                )
-                            "></span>
-
-                        </td>
-
-                        <td class="text-center bg-light">
-
-                            <span x-text="
-                                Number(item.valor_actual)
-                                .toLocaleString(
-                                    'es-MX',
-                                    {
-                                        minimumFractionDigits:2
-                                    }
-                                )
-                            "></span>
-
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td
-                            colspan="2"
-                            class="text-center bg-light">
-
-                            <b
-                                :class="item.tc.clase"
-                                x-text="item.tc.texto">
-                            </b>
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-            </div>
-</div>
-        
-
-    </template>
-</div>
-</div>
-</div>
-  
-  
-
-
-
-  <!-- Ventas -->
-  <!-- Capacitación -->
-   <div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-  <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
-          <tbody>
-            <tr>
-              <td class="align-middle text-center"><b>Objeto</b></td>
-              <td class="align-middle">Capacitación</td>
-              <td class="align-middle text-center"><b>Indicador</b></td>
-              <td class="align-middle">No. de personal capacitado vs No. de personal de la estación</td>
-            </tr>
-            <tr>
-              <td class="align-middle text-center"><b>Meta</b></td>
-              <td class="align-middle" x-text="capacitacion.meta"></td>
-              <td class="align-middle text-center"><b>Frecuencia de medición</b></td>
-              <td class="align-middle">Semestral</td>
-            </tr>
-            <tr>
-              <td colspan="4">
-
-              <div class="mt-1">
-                  <b>Resultado:</b>
-              </div>
-
-              <div class="row">
-
-                  <div class="col-6">
-
-                      <div class="text-secondary">
-                          Primer semestre
-                      </div>
-
-                      <b
-                          :class="capacitacion.semestre1?.clase"
-                          x-text="capacitacion.semestre1?.texto">
-                      </b>
-
-                  </div>
-
-                  <template x-if="capacitacion.semestre2">
-
-                      <div class="col-6">
-
-                          <div class="text-secondary">
-                              Segundo semestre
-                          </div>
-
-                          <b
-                              :class="capacitacion.semestre2.clase"
-                              x-text="capacitacion.semestre2.texto">
-                          </b>
-
-                      </div>
-
-                  </template>
-
-              </div>
-
-              </td>
-            </tr>
-          </tbody>
-        </table>
-</div>
-    </div>
-   </div>
-
-
-   <!-- Capacitación -->
-  <!-- Satisfacción del cliente -->
-   <div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
 <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
+<tbody>
+<tr>
+<td class="align-middle text-center"><b>Objeto</b></td>
+<td class="align-middle">Ventas</td>
+<td class="align-middle text-center"><b>Indicador</b></td>
+<td class="align-middle">Venta del mes inmediato anterior VS venta del mes actual</td>
+</tr>
+<tr>
+<td class="align-middle text-center"><b>Meta</b></td>
+<td class="align-middle"
+x-text="ventas.meta">
+</td>
+<td class="align-middle text-center"><b>Frecuencia de medición</b></td>
+<td class="align-middle">Mensual</td>
+</tr>
+</tbody>
+</table>
+</div>
 
-    <tbody>
 
-        <tr>
-            <td class="align-middle text-center">
-                <b>Objeto</b>
-            </td>
+<div class="mt-3 mb-3 form-label"><b>Resultado:</b></div>
 
-            <td>
-                Satisfacción del cliente
-            </td>
+<div class="row g-3">
 
-            <td class="align-middle text-center">
-                <b>Indicador</b>
-            </td>
+<template
+x-for="(item,index) in ventas.detalle"
+:key="index">
 
-            <td>
-                Media del total de clientes con experiencia:
-                Mala, Regular, Buena y Excelente
-            </td>
-        </tr>
+<div class="col-md-3">
+<div class="table-responsive">
+<table
+class="table table-responsive table-striped table-bordered mb-0 align-middle"
+style="font-size:.9em;">
 
-        <tr>
-            <td class="align-middle text-center">
-                <b>Meta</b>
-            </td>
+<thead>
 
-            <td x-text="satisfaccion.meta"></td>
+<tr>
 
-            <td class="align-middle text-center">
-                <b>Frecuencia de medición</b>
-            </td>
+<th class="text-center bg-light">
 
-            <td>
-                Semestral
-            </td>
-        </tr>
+<span x-text="item.mes_anterior"></span>
+<span x-text="item.year_anterior"></span>
 
-        <tr>
+</th>
 
-            <td colspan="4">
+<th class="text-center bg-light">
 
-                <b>Resultado:</b>
+<span x-text="item.mes_actual"></span>
+<span x-text="item.year_actual"></span>
 
-                <div class="row mt-2">
+</th>
 
-                    <div class="col-md-6"
-                        x-show="satisfaccion.semestre1">
+</tr>
 
-                        <div class="text-secondary">
-                            Primer semestre
-                        </div>
+</thead>
 
-                        <div class="text-danger">
-                            Mala:
-                            <b x-text="satisfaccion.semestre1?.mala ?? 0"></b>
-                        </div>
+<tbody>
 
-                        <div class="text-warning">
-                            Regular:
-                            <b x-text="satisfaccion.semestre1?.regular ?? 0"></b>
-                        </div>
+<tr>
 
-                        <div class="text-info">
-                            Buena:
-                            <b x-text="satisfaccion.semestre1?.buena ?? 0"></b>
-                        </div>
+<td class="text-center bg-light">
 
-                        <div class="text-success">
-                            Excelente:
-                            <b x-text="satisfaccion.semestre1?.excelente ?? 0"></b>
-                        </div>
+<span x-text="
+Number(item.valor_anterior)
+.toLocaleString(
+'es-MX',
+{
+minimumFractionDigits:2
+}
+)
+"></span>
 
-                    </div>
+</td>
 
-                    <div class="col-md-6"
-                        x-show="satisfaccion.semestre2">
+<td class="text-center bg-light">
 
-                        <div class="text-secondary">
-                            Segundo semestre
-                        </div>
+<span x-text="
+Number(item.valor_actual)
+.toLocaleString(
+'es-MX',
+{
+minimumFractionDigits:2
+}
+)
+"></span>
 
-                        <div class="text-danger">
-                            Mala:
-                            <b x-text="satisfaccion.semestre2?.mala ?? 0"></b>
-                        </div>
+</td>
 
-                        <div class="text-warning">
-                            Regular:
-                            <b x-text="satisfaccion.semestre2?.regular ?? 0"></b>
-                        </div>
+</tr>
 
-                        <div class="text-info">
-                            Buena:
-                            <b x-text="satisfaccion.semestre2?.buena ?? 0"></b>
-                        </div>
+<tr>
 
-                        <div class="text-success">
-                            Excelente:
-                            <b x-text="satisfaccion.semestre2?.excelente ?? 0"></b>
-                        </div>
+<td
+colspan="2"
+class="text-center bg-light">
 
-                    </div>
+<b
+:class="item.tc.clase"
+x-text="item.tc.texto">
+</b>
 
-                </div>
+</td>
 
-            </td>
+</tr>
 
-        </tr>
-
-    </tbody>
+</tbody>
 
 </table>
 </div>
-    </div>
-   </div>
+</div>
+
+
+</template>
+</div>
+</div>
+</div>
 
 
 
-  <!-- Satisfacción del cliente -->
-  <!-- Incidentes y accidentes -->
-   <div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-<table class="table table-responsive table-striped table-bordered mb-0 align-middle">
 
-    <tbody>
 
-        <tr>
-            <td class="align-middle text-center">
-                <b>Objeto</b>
-            </td>
+<!-- Ventas -->
+<!-- Capacitación -->
 
-            <td>
-                Incidentes y accidentes
-            </td>
+<div class="table-responsive">
+<table class="table table-responsive table-striped table-bordered mb-3 align-middle">
+<tbody>
+<tr>
+<td class="align-middle text-center"><b>Objeto</b></td>
+<td class="align-middle">Capacitación</td>
+<td class="align-middle text-center"><b>Indicador</b></td>
+<td class="align-middle">No. de personal capacitado vs No. de personal de la estación</td>
+</tr>
+<tr>
+<td class="align-middle text-center"><b>Meta</b></td>
+<td class="align-middle" x-text="capacitacion.meta"></td>
+<td class="align-middle text-center"><b>Frecuencia de medición</b></td>
+<td class="align-middle">Semestral</td>
+</tr>
+<tr>
+<td colspan="4">
 
-            <td class="align-middle text-center">
-                <b>Indicador</b>
-            </td>
+<div class="mt-1">
+<b>Resultado:</b>
+</div>
 
-            <td>
-                No total de accidentes e incidentes ocurridos VS
-                número total de accidentes e incidentes atendidos
-            </td>
-        </tr>
+<div class="row">
 
-        <tr>
+<div class="col-6">
 
-            <td class="align-middle text-center">
-                <b>Meta</b>
-            </td>
+<div class="text-secondary">
+Primer semestre
+</div>
 
-            <td x-text="incidentes.meta"></td>
+<b
+:class="capacitacion.semestre1?.clase"
+x-text="capacitacion.semestre1?.texto">
+</b>
 
-            <td class="align-middle text-center">
-                <b>Frecuencia de medición</b>
-            </td>
+</div>
 
-            <td>
-                Semestral
-            </td>
+<template x-if="capacitacion.semestre2">
 
-        </tr>
+<div class="col-6">
 
-        <tr>
+<div class="text-secondary">
+Segundo semestre
+</div>
 
-            <td colspan="4">
+<b
+:class="capacitacion.semestre2.clase"
+x-text="capacitacion.semestre2.texto">
+</b>
 
-                <div class="mt-1">
-                    <b>Resultado:</b>
-                </div>
+</div>
 
-                <div class="row">
+</template>
 
-                    <div class="col-md-6">
+</div>
 
-                        <div class="text-secondary">
-                            Primer semestre:
-                        </div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+<!-- Satisfacción del cliente -->
+<div class="table-responsive">
+<table class="table table-responsive table-striped table-bordered mb-3 align-middle">
+
+<tbody>
+
+<tr>
+<td class="align-middle text-center">
+<b>Objeto</b>
+</td>
+
+<td>
+Satisfacción del cliente
+</td>
+
+<td class="align-middle text-center">
+<b>Indicador</b>
+</td>
+
+<td>
+Media del total de clientes con experiencia:
+Mala, Regular, Buena y Excelente
+</td>
+</tr>
+
+<tr>
+<td class="align-middle text-center">
+<b>Meta</b>
+</td>
+
+<td x-text="satisfaccion.meta"></td>
+
+<td class="align-middle text-center">
+<b>Frecuencia de medición</b>
+</td>
+
+<td>
+Semestral
+</td>
+</tr>
+
+<tr>
+
+<td colspan="4">
+
+<b>Resultado:</b>
+
+<div class="row mt-2">
+
+<div class="col-md-6"
+x-show="satisfaccion.semestre1">
+
+<div class="text-secondary">
+Primer semestre
+</div>
+
+<div class="text-danger">
+Mala:
+<b x-text="satisfaccion.semestre1?.mala ?? 0"></b>
+</div>
+
+<div class="text-warning">
+Regular:
+<b x-text="satisfaccion.semestre1?.regular ?? 0"></b>
+</div>
+
+<div class="text-info">
+Buena:
+<b x-text="satisfaccion.semestre1?.buena ?? 0"></b>
+</div>
+
+<div class="text-success">
+Excelente:
+<b x-text="satisfaccion.semestre1?.excelente ?? 0"></b>
+</div>
+
+</div>
+
+<div class="col-md-6"
+x-show="satisfaccion.semestre2">
+
+<div class="text-secondary">
+Segundo semestre
+</div>
+
+<div class="text-danger">
+Mala:
+<b x-text="satisfaccion.semestre2?.mala ?? 0"></b>
+</div>
+
+<div class="text-warning">
+Regular:
+<b x-text="satisfaccion.semestre2?.regular ?? 0"></b>
+</div>
+
+<div class="text-info">
+Buena:
+<b x-text="satisfaccion.semestre2?.buena ?? 0"></b>
+</div>
+
+<div class="text-success">
+Excelente:
+<b x-text="satisfaccion.semestre2?.excelente ?? 0"></b>
+</div>
+
+</div>
+
+</div>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+</div>
+
+
+<!-- Incidentes y accidentes -->
+<div class="table-responsive">
+<table class="table table-responsive table-striped table-bordered mb-3 align-middle">
+
+<tbody>
+
+<tr>
+<td class="align-middle text-center">
+<b>Objeto</b>
+</td>
+
+<td>
+Incidentes y accidentes
+</td>
+
+<td class="align-middle text-center">
+<b>Indicador</b>
+</td>
+
+<td>
+No total de accidentes e incidentes ocurridos VS
+número total de accidentes e incidentes atendidos
+</td>
+</tr>
+
+<tr>
+
+<td class="align-middle text-center">
+<b>Meta</b>
+</td>
+
+<td x-text="incidentes.meta"></td>
+
+<td class="align-middle text-center">
+<b>Frecuencia de medición</b>
+</td>
+
+<td>
+Semestral
+</td>
+
+</tr>
+
+<tr>
+
+<td colspan="4">
+
+<div class="mt-1">
+<b>Resultado:</b>
+</div>
+
+<div class="row">
+
+<div class="col-md-6">
+
+<div class="text-secondary">
+Primer semestre:
+</div>
+
 
                         <div
                             x-html="DOMPurify.sanitize(incidentes.semestre1)">
                         </div>
 
-                    </div>
 
-                    <template
-                        x-if="incidentes.semestre2">
+</div>
 
-                        <div class="col-md-6">
+<template
+x-if="incidentes.semestre2">
 
-                            <div class="text-secondary">
-                                Segundo semestre:
-                            </div>
+<div class="col-md-6">
+
+<div class="text-secondary">
+Segundo semestre:
+</div>
+
 
                             <div
                             x-html="DOMPurify.sanitize(incidentes.semestre2)">
                             </div>
 
-                        </div>
 
-                    </template>
+</div>
 
-                </div>
+</template>
 
-            </td>
+</div>
 
-        </tr>
+</td>
 
-    </tbody>
+</tr>
+
+</tbody>
 
 </table>
 </div>
-    </div>
-   </div>
 
 <div class="card mt-4">
-    <div class="card-header">
-          <div class="d-flex align-items-center ">
-      <div class="ms-auto">
-      <div class="dropdown center">
-            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots-vertical fs-4"></i>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalRevisionResultado()"><i class="ti ti-plus"></i> Nuevo</a>
-              </li>
-              <li>
-                <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.027.docx" download><i class="ti ti-download"></i>   Descargar</a>
-              </li>
-            </ul>
-          </div>   
-      </div>
-  </div>
-        </div>
-  <div class="card-body">
+<div class="card-header">
+<div class="d-flex align-items-center ">
+<div class="ms-auto">
+<div class="dropdown center">
+<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+<i class="ti ti-dots-vertical fs-6"></i>
+</a>
+<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+<li>
+<a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalRevisionResultado()"><i class="ti ti-plus"></i> Nuevo</a>
+</li>
+<li>
+<a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.027.docx" download><i class="ti ti-download"></i>   Descargar</a>
+</li>
+</ul>
+</div>   
+</div>
+</div>
+</div>
+<div class="card-body">
 <div class="table-responsive">
-    <table class="table table-responsive table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-responsive table-striped table-bordered mb-0 text-nowrap align-middle">
 
-        <thead>
+<thead>
 
-            <tr>
-                <th class="text-center align-middle ">
-                    #
-                </th>
-                <th class="text-center align-middle ">
-                    Fecha
-                </th>
-                <th class="text-center align-middle ">
-                    Nombre completo
-                </th>
-                <th
-                    width="35"
-                    class="text-center align-middle ">
-                    <i class="fas fa-ellipsis-v"></i>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            <template
-                x-if="revisionResultados.length === 0">
-                <tr>
-                    <td
-                        colspan="4"
-                        class="text-center">
-                        <small>
-                            No se encontró información para mostrar
-                        </small>
-                    </td>
-                </tr>
-            </template>
-            <template
-                x-for="item in revisionResultados"
-                :key="item.id">
-                <tr>
-                    <td
-                        class="text-center fw-bolder"
-                        x-text="item.id">
-                    </td>
-                    <td
-                        class="text-center"
-                        x-text="item.fecha_larga">
-                    </td>
-                    <td
-                        class="text-center"
-                        x-text="item.usuario">
-                    </td>
-                    <td
-                        class="text-center align-middle">
+<tr>
+<th class="text-center align-middle" width="96px">
+#
+</th>
+<th class="text-center align-middle ">
+Fecha
+</th>
+<th class="text-center align-middle ">
+Nombre completo
+</th>
+<th
+width="48px"
+class="text-center align-middle">
+<i class="ti ti-dots-vertical fs-6"></i>
+</th>
+</tr>
+</thead>
+<tbody>
+<template
+x-if="revisionResultados.length === 0">
+<tr>
+<td
+colspan="4"
+class="text-center text-primary">
+No se encontró información
+</td>
+</tr>
+</template>
+<template
+x-for="item in revisionResultados"
+:key="item.id">
+<tr>
+<td
+class="text-center fw-bolder"
+x-text="item.id">
+</td>
+<td
+class="text-center"
+x-text="item.fecha_larga">
+</td>
+<td
+class="text-center"
+x-text="item.usuario">
+</td>
+<td
+class="text-center align-middle">
 
-                        <div class="dropdown dropstart">
-                    <a href="javascript:void(0)" data-bs-toggle="dropdown">
-                         <i class="ti ti-dots-vertical fs-6"></i>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                            @click="editarRevision(item)">
-                            <i class="fs-4 ti ti-edit"></i>Editar
-                            </a>
-                            </li>
-                            <li>
-                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                            :href="item.archivo" download>
-                            <i class="fs-4 ti ti-download"></i>Descargar
-                            </a>
-                            </li>
-                            <li>
-                            <a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3"
-                            @click="eliminar(item.id)">
-                            <i class="fs-4 ti ti-trash"></i>Eliminar
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+<div class="dropdown dropstart">
+<a href="javascript:void(0)" data-bs-toggle="dropdown">
+<i class="ti ti-dots-vertical fs-6"></i>
+</a>
+<ul class="dropdown-menu">
+<li>
+<a class="dropdown-item pointer d-flex align-items-center gap-3"
+@click="editarRevision(item)">
+<i class="fs-4 ti ti-edit"></i>Editar
+</a>
+</li>
+<li>
+<a class="dropdown-item pointer d-flex align-items-center gap-3"
+:href="item.archivo" download>
+<i class="fs-4 ti ti-download"></i>Descargar
+</a>
+</li>
+<li>
+<a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3"
+@click="eliminar(item.id)">
+<i class="fs-4 ti ti-trash"></i>Eliminar
+</a>
+</li>
+</ul>
+</div>
 
-                    </td>
+</td>
 
-                </tr>
+</tr>
 
-            </template>
+</template>
 
-        </tbody>
+</tbody>
 
-    </table>
- </div>                   
-  </div>
+</table>
+</div>                   
+</div>
 </div>
 
 <!-- ModalNuevo -->
 <div
-    class="modal fade"
-    id="modalRevisionResultado"
-    tabindex="-1">
+class="modal fade"
+id="modalRevisionResultado"
+tabindex="-1">
 
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header modal-colored-header bg-primary text-white">
-                <h4 class="modal-title text-white">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content">
+<div class="modal-header modal-colored-header bg-primary text-white">
+<h4 class="modal-title text-white">
 <i class="ti" :class="modoRevision ==='create' ? 'ti-clipboard-plus' :'ti-edit'"></i>
-                    <span
-                    
-                        x-text="
-                            modoRevision === 'create'
-                                ? 'Nuevo Archivo'
-                                : 'Editar Archivo'
-                        ">
-                    </span>
+<span
 
-                </h4>
+x-text="
+modoRevision === 'create'
+? 'Nuevo Archivo'
+: 'Editar Archivo'
+">
+</span>
 
-               <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal">
-                </button>
+</h4>
 
-            </div>
+<button
+type="button"
+class="btn-close btn-close-white"
+data-bs-dismiss="modal">
+</button>
 
-            <div class="modal-body">
+</div>
 
-                <div class="mb-0">
+<div class="modal-body">
 
-                    <label class="form-label fw-bolder mb-2">
-                        * Fecha:
-                    </label>
+<div class="mb-0">
 
-                    <input
-                        type="date"
-                        class="form-control"
-                        x-model="revision.fecha"
-                        :class="errors.fecha ? 'is-invalid' : ''"
-                        @input="errors.fecha = false">
+<label class="form-label fw-bolder mb-2">
+* Fecha:
+</label>
 
-                </div>
+<input
+type="date"
+class="form-control"
+x-model="revision.fecha"
+:class="errors.fecha ? 'is-invalid' : ''"
+@input="errors.fecha = false">
 
-                <div class="mt-3 mb-0">
+</div>
 
-                    <label class="form-label fw-bolder mb-2">
+<div class="mt-3 mb-0">
 
-                         Revisión de resultados en formato PDF:
+<label class="form-label fw-bolder mb-2">
 
-                    </label>
+Revisión de resultados en formato PDF:
 
-                    <input
-                    id="archivo"
-                        type="file"
-                        accept=".pdf"
-                        class="form-control"
-                        @change="
-                            revision.archivo =
-                            $event.target.files[0]
-                        ">
+</label>
 
-                </div>
+<input
+id="archivo"
+type="file"
+accept=".pdf"
+class="form-control"
+@change="
+revision.archivo =
+$event.target.files[0]
+">
 
-                <template
-                    x-if="
-                        modoRevision === 'edit'
-                        && revision.archivo_actual
-                    ">
+</div>
 
-                    <div>
+<template
+x-if="
+modoRevision === 'edit'
+&& revision.archivo_actual
+">
+
+<div>
 <div class="mt-3">
-                      
+
 </div>  
-                    </div>
+</div>
 
-                </template>
+</template>
 
-            </div>
+</div>
 
-            <div class="modal-footer">
+<div class="modal-footer">
 
-               <button
-                    class="btn bg-danger-subtle text-danger"
-                    data-bs-dismiss="modal">
+<button
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
 
-                    <i class="ti ti-x"></i> Cancelar
+<i class="ti ti-x"></i> Cancelar
 
-                </button>
+</button>
 
 
-  <a class="btn bg-primary-subtle text-primary"
-                            :href="`${revision.archivo_actual}`"
-                            target="_blank">
+<a class="btn bg-primary-subtle text-primary"
+:href="`${revision.archivo_actual}`"
+target="_blank">
 
-                            <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+<i class="ti ti-file-type-pdf text-danger fs-6"></i>
 
-                            Ver archivo actual
+Ver archivo actual
 
-                        </a>
+</a>
 
-                        
-                <button
-                    class="btn btn-success"
-                    @click="guardarRevisionResultado()">
 
-                    <i class="ti ti-check"></i>
+<button
+class="btn btn-success"
+@click="guardarRevisionResultado()">
 
-                    <span
-                        x-text="
-                            modoRevision === 'create'
-                                ? 'Guardar'
-                                : 'Actualizar'
-                        ">
-                    </span>
+<i class="ti ti-check"></i>
 
-                </button>
+<span
+x-text="
+modoRevision === 'create'
+? 'Guardar'
+: 'Actualizar'
+">
+</span>
 
-            </div>
+</button>
 
-        </div>
+</div>
 
-    </div>
+</div>
+
+</div>
 
 </div>
 
 <!-- ------------------------- -->
 <!-- inicio offcanvas -------- -->
-  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
-            Bienvenido al elemento 17. REVISIÓN DE RESULTADOS, del Sistema de Administración
-        </h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body fs-4">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHelp" aria-labelledby="offcanvasHelpLabel">
+<div class="offcanvas-header">
+<h5 class="offcanvas-title" id="offcanvasExampleLabel">
+Bienvenido al elemento 17. REVISIÓN DE RESULTADOS, del Sistema de Administración
+</h5>
+<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+</div>
+<div class="offcanvas-body fs-4">
 
-          <p>
-            En este apartado podrás verificar los resultados arrojados en el elemento <b>14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN</b>, así como también proponer acciones de mejora para poder cumplir los objetivos y las metas.
-          </p>
-         
+<p>
+En este apartado podrás verificar los resultados arrojados en el elemento <b>14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN</b>, así como también proponer acciones de mejora para poder cumplir los objetivos y las metas.
+</p>
 
-          <hr>
 
-          <label class="fw-bold">Como hacerlo:</label>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item">Da clic en el icono de descargar para llenar el informe de revisión de resultados <b>(Fo.ADMONGAS.027)</b>.</li>
-            <li class="list-group-item">Lee detenidamente cada uno de los puntos del formato y realiza el llenado como se te indica.</li>
-            <li class="list-group-item">Dicha plantilla deberá ser retroalimentada en cuanto al contenido asegúrate de no dejar ningún punto en blanco.</li>
-            <li class="list-group-item">El informe deberá ser firmado por el Representante legal de la estación.</li>
-            <li class="list-group-item">Escanea y sube tu archivo en formato PDF, dando clic en el icono <i class="ti ti-plus fs-6 text-primary"></i> agregar documento.</li>
-            <li class="list-group-item">Podrás verificar el estado de tu documento en el icono PDF.</li>
-          </ul>
+<hr>
 
-          <hr>
+<label class="fw-bold">Como hacerlo:</label>
+<ul class="list-group list-group-flush">
+<li class="list-group-item">Da clic en el icono de descargar para llenar el informe de revisión de resultados <b>(Fo.ADMONGAS.027)</b>.</li>
+<li class="list-group-item">Lee detenidamente cada uno de los puntos del formato y realiza el llenado como se te indica.</li>
+<li class="list-group-item">Dicha plantilla deberá ser retroalimentada en cuanto al contenido asegúrate de no dejar ningún punto en blanco.</li>
+<li class="list-group-item">El informe deberá ser firmado por el Representante legal de la estación.</li>
+<li class="list-group-item">Escanea y sube tu archivo en formato PDF, dando clic en el icono <i class="ti ti-plus fs-6 text-primary"></i> agregar documento.</li>
+<li class="list-group-item">Podrás verificar el estado de tu documento en el icono PDF.</li>
+</ul>
 
-          <label class="fw-bold">Responsables:</label>
-          <p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label>, el interpretar los resultados obtenidos durante el tiempo de implementación y el generar propuestas de mejora para obtener los resultados deseados.</p>
+<hr>
 
-          <small>Nota: El informe de revisión de resultados deberá ser actualizado anualmente </small>
+<label class="fw-bold">Responsables:</label>
+<p>Recuerda que es responsabilidad del <label class="text-danger fw-bold">Representante Técnico</label> (RT), <label class="text-danger fw-bold">Gerente de la Estación</label>, el interpretar los resultados obtenidos durante el tiempo de implementación y el generar propuestas de mejora para obtener los resultados deseados.</p>
 
-    </div>
-  </div>
+<small>Nota: El informe de revisión de resultados deberá ser actualizado anualmente </small>
+
+</div>
+</div>
 <!-- ------------------------- -->
 <!-- fin offcanvas -------- -->
 <?php endif; ?>

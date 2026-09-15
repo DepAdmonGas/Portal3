@@ -13,10 +13,13 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
 <?php else: ?>
 
 <div class="row mt-3">
-<div class="col-9 p-2"><h5><?= $nom_tema ?? '' ?></h5></div>
-<div class="col-md-3 col-xl-3">
-    <select class="form-select mt-2"  @change="irATema($event)">
-        <option value="">Selecciona un tema</option>
+
+
+<div class="col-md-6"><h5><?= $nom_tema ?? '' ?></h5></div>
+
+<div class="col-md-6">
+    <select class="form-select w-50 float-end"  @change="irATema($event)">
+        <option value="">Selecciona un tema...</option>
             <optgroup label="<?= $nom_modulo ?? 'Temas' ?>">
             <?php foreach($temas ?? [] as $tema): ?>
             <option value="<?= $tema->id ?>"
@@ -33,13 +36,13 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
       <table id="table-capacitacion-interna" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>#</th>
-            <th>Nombre Usuario</th>
-            <th>Puesto</th>
-            <th>Telefono</th>
-            <th>Email</th>
-            <th>Fecha Programada</th>
-            <th>Resultado</th>
+           <th class="text-center align-middle">#</th>
+            <th class="text-start align-middle">Nombre Usuario</th>
+            <th class="text-center align-middle">Puesto</th>
+            <th class="text-center align-middle">Telefono</th>
+            <th class="text-center align-middle">Email</th>
+            <th class="text-center align-middle">Fecha Programada</th>
+            <th class="text-center align-middle">Resultado</th>
           <th class="text-center">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
@@ -51,7 +54,7 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
   </div>
 
   <div class="modal fade" id="modalProgramar" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
@@ -66,7 +69,7 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
 
                 <h5 class="text-start" x-text="programacion.titulo"></h5>
 
-                <label class="form-label mt-3">* Fecha programada:</label>
+                <label class="form-label mt-1">* Fecha programada:</label>
                 <input type="date"
                        class="form-control"
                        x-model="programacion.fecha"

@@ -27,14 +27,14 @@ x-data="{ ...actions(), ...implementacionSA()}">
       <table id="table-implementacionsa" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>#</th>
-            <th>Responsable</th>
-            <th>Fecha</th>
-            <th>Preguntas</th>
-            <th>SI</th>
-            <th>NO</th>
-            <th>Resultado</th>
-          <th class="text-center">
+           <th class="text-center align-middle">#</th>
+            <th class="text-start align-middle">Responsable</th>
+            <th class="text-center align-middle">Fecha</th>
+            <th class="text-center align-middle">Preguntas</th>
+            <th class="text-center align-middle">SI</th>
+            <th class="text-center align-middle">NO</th>
+            <th class="text-center align-middle">Resultado</th>
+          <th class="text-center align-middle" width="48px">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -223,33 +223,36 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
                 <div class="mb-4">
 
-                    <label class="form-label">
-                        Fecha
+                    <label class="form-label mb-1">
+                        Fecha:
                     </label>
 
                     <div x-text="detalleFecha"></div>
 
                 </div>
 
-                
+
+<div class="table-responsive">          
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
-    <thead>
+   
+<thead>
         <tr>
-           <th>Pregunta</th> 
-           <th>Respuesta</th>
+           <th class="text-start align-middle">Pregunta</th> 
+           <th class="text-center align-middle">Respuesta</th>
         </tr>
     </thead>
+
     <tbody>
             
     <template
                     x-for="pregunta in detallePreguntas"
                     :key="pregunta.pregunta">
 <tr>
-                         <td class="form-label"
+                         <td class="form-label text-start align-middle"
                                  x-text="pregunta.pregunta">
 </td>
 
-<td class="text-center">
+<td class="text-center align-middle">
                                <span
                                     class="badge bg-info"
                                     x-show="pregunta.resultado == 1">
@@ -269,13 +272,10 @@ x-data="{ ...actions(), ...implementacionSA()}">
 </tr>
 </template>
 
-                        </div>
-
-                    </div>
-
-                
+           
                 </tbody>
 </table>
+</div>   
             </div>
 
             <div class="modal-footer">

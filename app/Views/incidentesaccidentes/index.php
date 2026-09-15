@@ -6,7 +6,7 @@ x-data="{ ...actions(), ...incidentesAccidentes()}">
 <?php if (empty($estacionId)): ?>
 
     <div id="sasisopa-empty-message"
-         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+         class="alert alert-secondary border-0 text-center text-primary py-4 mt-4">
         Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
     </div>
 
@@ -24,7 +24,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
   <div class="d-flex align-items-center">
       <div class="ms-auto">
       <div class="dropdown dropcenter">
-            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="ti ti-dots-vertical fs-6"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -39,13 +39,12 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
       </div>
   </div>
     </div>
-  <div class="card-body">
 
+  <div class="card-body p-0">
 
-
-  <div class="datatables mt-3">
-    <div class="table-responsive overflow-x-auto overflow-hidden P-3">
-      <table class="table table-striped table-bordered text-nowrap align-middle">
+  <div class="datatables">
+    <div class="table-responsive overflow-x-auto overflow-hidden">
+      <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
         <thead>
           <tr>
             <th class="text-center">#</th>
@@ -338,18 +337,18 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
       </div>
   </div>
     </div>
-  <div class="card-body">
+  <div class="card-body p-0">
 
   <div class="datatables">
-    <div class="table-responsive p-0 overflow-x-auto overflow-hidden">
+    <div class="table-responsive overflow-x-auto overflow-hidden">
 
       <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th class="text-center">#</th>
-            <th class="text-center">Fecha</th>
-            <th class="text-center">Nombre completo</th>
-          <th class="text-center" width="36">
+           <th class="text-center align-middle" width="96px">#</th>
+            <th class="text-center align-middle">Fecha</th>
+            <th class="text-center align-middle">Nombre completo</th>
+          <th class="text-center align-middle" width="48px">
           <a class="text-white"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -803,7 +802,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
             </button>
         </div>
 
-        <table class="mt-3 table  table-bordered table-striped">
+      <table class="table table-striped table-bordered text-nowrap align-middle mb-0 mt-3">
             <thead>
                 <th class="text-center">#</th>
                 <th class="text-center">Nombre</th>
@@ -814,7 +813,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
                 <template x-if="grupo_personal.length === 0">
                     <tr>
-                        <td colspan="4" class="text-center text-muted">
+                        <td colspan="4" class="text-center text-primary">
                             No se encontro informacion
                         </td>
                     </tr>
@@ -986,13 +985,15 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                 
 
 
-                <b class="form-label"> Informe final de la investigación causa raíz </b>
+                <b class="form-label"> Informe final de la investigación causa raíz: </b>
 
-               <table class="table table-bordered mt-2">
+
+<div class="table-responsive">
+               <table class="table table-striped table-bordered text-nowrap align-middle mb-0 mt-1">
 
     <thead>
         <tr>
-            <th class="text-start">Fecha</th>
+            <th class="text-start align-middle">Fecha</th>
             <th class="text-center align-middle" width="36">
                 <i class="ti ti-file-type-pdf text-muted fs-7"></i>
             </th>
@@ -1005,7 +1006,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
             <tr>
 
-                <td class="text-center align-middle"
+                <td class="text-start align-middle"
                     x-text="fechaTercer">
                 </td>
 
@@ -1029,7 +1030,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
             <tr>
 
                 <td colspan="2"
-                    class="text-center text-muted">
+                    class="text-center text-primary">
 
                     No se encontró información
 
@@ -1042,6 +1043,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
     </tbody>
 
 </table>
+</div>
 
             </div>
 <div class="modal-footer">
@@ -1068,7 +1070,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
         <div class="modal-content rounded-0">
 
-            <div class="modal-header modal-colored-header bg-primary">
+            <div class="modal-header bg-primary">
 <h4 class="modal-title text-white">
 
                  <i  class="ti" :class="modoModal ==='create' ? 'ti-alert-triangle' :'ti-edit'"></i>
@@ -1082,9 +1084,11 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
             </div>
 
-            <div class="modal-body fs-4">
+            <div class="modal-body">
 
-                <table class="w-100">
+            <div class="table-responsive">
+                      <table class="table p-0 text-nowrap align-middle mb-0">
+
 
                     <tr class="text-end">
 
@@ -1109,6 +1113,8 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                     </tr>
 
                 </table>
+                </div>
+
 
                 <p class="mt-3">
 

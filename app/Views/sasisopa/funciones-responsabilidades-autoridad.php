@@ -11,45 +11,98 @@
 
 <?php else: ?>
 
-<div class="row mt-0">
+<div class="row mt-3">
 
-  <div class="col-md-9 col-12">
+<div class="col-md-9 col-12">
     <div class="card">
       <div class="card-header bg-primary">
-<h4 class="card-title mb-0 text-white">Organigrama</h4>
-      </div>
-<div class="card-body">
-    <?php if (!empty($organigrama)): ?>
-    <img src="<?= $organigrama ?>" class="w-100" alt="">
-<?php else: ?>
-    <div class="alert alert-warning mb-0">Selecciona una estación para ver el organigrama.</div>
-<?php endif; ?>
-    </div>
-
-    </div>
-
-  </div>
-
-
-  <div class="col-md-3 col-12">
-    <div class="card">
-      <div class="card-header bg-primary">
-<h4 class="card-title text-center text-white mb-0">Responsabilidades</h4>
-
+        <h4 class="card-title mb-0 text-white d-flex align-items-center">
+          <i class="ti ti-sitemap me-2"></i>Organigrama
+        </h4>
       </div>
       <div class="card-body">
-        
-        <button type="button" class="btn bg-info-subtle text-info w-100 " data-bs-toggle="modal" data-bs-target="#ModalReTe">Representante Técnico</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalGerente">Gerente</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalJefePiso">Jefe de Piso</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalFacturista">Facturista</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalDespachador">Despachador</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalAuxiliar">Auxiliar administrativo</button>
-        <button type="button" class="btn bg-info-subtle text-info w-100 mt-2" data-bs-toggle="modal" data-bs-target="#ModalMantenimiento">Mantenimiento</button>
-         
+        <?php if (!empty($organigrama)): ?>
+          <img src="<?= $organigrama ?>" class="w-100" alt="Organigrama">
+        <?php else: ?>
+          <div class="alert alert-warning mb-0 d-flex align-items-center">
+            <i class="ti ti-alert-circle me-2 fs-4"></i>
+            <div>Selecciona una estación para ver el organigrama o esta estación no cuenta con uno registrado.</div>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
   </div>
+
+<div class="col-md-3 col-12">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-primary text-white d-flex align-items-center py-3">
+        <i class="ti ti-clipboard-list fs-4 me-2"></i>
+        <h4 class="card-title text-white mb-0 fs-5">Responsabilidades</h4>
+      </div>
+      <div class="card-body p-3 mb-0 pb-0 mt-1">
+        <div class="d-flex flex-column gap-2">
+          
+          <!-- Representante Técnico -->
+          <button type="button" class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2" data-bs-toggle="modal" data-bs-target="#ModalReTe">
+            <span class="d-flex align-items-center fw-medium">
+              <i class="ti ti-user-shield fs-5 me-2"></i>Representante Técnico
+            </span>
+            <i class="ti ti-chevron-right fs-6"></i>
+          </button>
+
+          <!-- Gerente -->
+          <button type="button" class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2" data-bs-toggle="modal" data-bs-target="#ModalGerente">
+            <span class="d-flex align-items-center fw-medium">
+              <i class="ti ti-briefcase fs-5 me-2"></i>Gerente
+            </span>
+            <i class="ti ti-chevron-right fs-6"></i>
+          </button>
+
+          <!-- Jefe de Piso -->
+          <button type="button" class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2" data-bs-toggle="modal" data-bs-target="#ModalJefePiso">
+            <span class="d-flex align-items-center fw-medium">
+              <i class="ti ti-user-check fs-5 me-2"></i>Jefe de Piso
+            </span>
+            <i class="ti ti-chevron-right fs-6"></i>
+          </button>
+
+          <!-- Facturista -->
+          <button type="button" class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2" data-bs-toggle="modal" data-bs-target="#ModalFacturista">
+            <span class="d-flex align-items-center fw-medium">
+              <i class="ti ti-file-invoice fs-5 me-2"></i>Facturista
+            </span>
+            <i class="ti ti-chevron-right fs-6"></i>
+          </button>
+
+          <!-- Despachador -->
+          <button type="button" class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2" data-bs-toggle="modal" data-bs-target="#ModalDespachador">
+            <span class="d-flex align-items-center fw-medium">
+              <i class="ti ti-gas-station fs-5 me-2"></i>Despachador
+            </span>
+            <i class="ti ti-chevron-right fs-6"></i>
+          </button>
+
+          <!-- Auxiliar administrativo -->
+          <button type="button" class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2" data-bs-toggle="modal" data-bs-target="#ModalAuxiliar">
+            <span class="d-flex align-items-center fw-medium">
+              <i class="ti ti-file-text fs-5 me-2"></i>Auxiliar administrativo
+            </span>
+            <i class="ti ti-chevron-right fs-6"></i>
+          </button>
+
+          <!-- Mantenimiento -->
+          <button type="button" class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2" data-bs-toggle="modal" data-bs-target="#ModalMantenimiento">
+            <span class="d-flex align-items-center fw-medium">
+              <i class="ti ti-tool fs-5 me-2"></i>Mantenimiento
+            </span>
+            <i class="ti ti-chevron-right fs-6"></i>
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  
 </div>
 
 <div class="row mt-3">
@@ -70,7 +123,7 @@
           <div class="col-3">
         <?= 
               !empty($permisos['crear']) ? 
-              '<button type="button"  class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openNuevo()">
+              '<button type="button"  class="btn bg-primary-subtle text-primary float-end" href="javascript:void(0)" @click="openNuevo()">
               <i class="ti ti-plus"></i> Nuevo
               </button>' 
               : '' 

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
 
         {
-            data: 'fecha',
+            data: 'fecha', className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -50,11 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
             searchable: true
         },
 
-        { data: 'hora_inicio',
+        { data: 'hora_inicio', className: 'text-center align-middle',
           defaultContent: 'S/I'
         },
 
-        { data: 'hora_termino',
+        { data: 'hora_termino', className: 'text-center align-middle',
           defaultContent: 'S/I'
         },
 
@@ -114,8 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 data: null,
                 orderable: false,
                 searchable: false,
-                className:
-                    'text-center align-middle',
+                className: 'text-center align-middle',
                 render: function(data, type, row) {
 
                 const noDelete = permisos.eliminar;

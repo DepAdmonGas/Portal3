@@ -21,11 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
 
             {
-                data: 'folio'
+                data: 'folio', className: 'text-center align-middle'
             },
 
            {
-            data: 'fecha',
+            data: 'fecha', className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
             {
-                data: 'equipo'
+                data: 'equipo', className: 'text-center align-middle'
             },
 
             {

@@ -13,17 +13,38 @@ x-data="calibracionVerificacion()">
 
 <?php else: ?>
 
-    <div class="row">
-    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mt-3">
-      <div class="card">
-      <div class="card-body">
-      <h5>Bitácora calibración de equipos</h5>
-      <div class="text-end mt-4">
-      <a type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info" href="/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos"><i class="ti ti-eye"></i> Ver detalle</a>
-      </div>
-      </div>
-      </div>
-    </div>
+    <div class="row mt-3">
+
+<div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 d-flex align-items-stretch mb-4">
+    <a href="/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos" 
+       class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+        
+        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Icono circular -->
+                <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 60px; height: 60px;">
+                    <i class="ti ti-notebook text-white display-6"></i> 
+                </div>
+
+                <!-- Título a la derecha -->
+                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">
+                        Bitácora calibración de equipos
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie de la tarjeta -->
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+            <span class="small">Ver detalle</span>
+            <div class="icon-transition">
+                <i class="ti ti-arrow-right fs-5"></i>
+            </div>
+        </div>
+    </a>
+</div>
 
 
 <div class="col-12">
@@ -37,10 +58,10 @@ x-data="calibracionVerificacion()">
             
 </div>
 
-<div class="card-body p-3">
+<div class="card-body">
     
     <div class="table-responsive">
-          <table class="table table-bordered table-sm mt-2 mb-2">
+          <table class="table table-bordered mb-3">
 <tr>
 <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>
 <td colspan="2" class="text-center align-middle"><b>Equipos sometidos a calibración</b></td>
@@ -62,19 +83,19 @@ x-data="calibracionVerificacion()">
 
             <tr>
 
-                <th class="align-middle">
+                <th class="text-center align-middle" width="150px">
                     Número de identificación
                 </th>
 
-                <th class="align-middle">
+                <th class="text-center align-middle">
                     Nombre del equipo (marca y modelo)
                 </th>
 
-                <th class="align-middle">
+                <th class="text-center align-middle">
                     Descripcion del equipo
                 </th>
 
-                <th class=" align-middle">
+                <th class="text-center  align-middle">
                     Frecuencia de la calibración
                 </th>
 
@@ -150,11 +171,11 @@ x-data="calibracionVerificacion()">
   </div>
 </div>
 
-  <div class="card-body p-3">
+  <div class="card-body">
 
 
 <div class="table-responsive">
-  <table class="table table-bordered table-sm mt-2 mb-2">
+  <table class="table table-bordered mb-3">
   <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <tr>
 <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>

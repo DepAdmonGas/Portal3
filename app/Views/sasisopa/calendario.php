@@ -315,9 +315,9 @@
                                 Tema:
                             </label>
 
-                            <span
-                                class="d-block mb-1"
-                                x-text="detalle.nombre ?? 'Sin información'"></span>
+                            <div
+                                class="mb-1"
+                                x-text="detalle.nombre ?? 'Sin información'"></div>
 
                         </div>
 
@@ -329,9 +329,9 @@
                                 Nombre:
                             </label>
 
-                            <span
-                                class="d-block mb-1"
-                                x-text="detalle.participante ?? 'Sin información'"></span>
+                            <div
+                                class="mb-1"
+                                x-text="detalle.participante ?? 'Sin información'"></div>
 
                         </div>
 
@@ -343,9 +343,9 @@
                                 Fecha programada:
                             </label>
 
-                            <span
-                                class="d-block mb-1"
-                                x-text="detalle.fecha ?? 'Sin información'"></span>
+                            <div
+                                class="mb-1"
+                                x-text="detalle.fecha ?? 'Sin información'"></div>
 
                         </div>
 
@@ -386,16 +386,14 @@
 
                             <div class="col-12">
 
-                                <div class="row g-3">
+                                <div class="row g-3 mb-3">
 
                                     <div class="col-md-6">
 
                                         <label
                                             class="form-label fw-semibold">
-                                            Resultado
+                                            Resultado:
                                         </label>
-
-                                        <div class="form-control border-0 bg-light"></div>
 
                                             <span
                                                 x-text="detalle.resultado ?? 0"></span>
@@ -410,11 +408,11 @@
 
                                         <label
                                             class="form-label fw-semibold">
-                                            Participante
+                                            Participante:
                                         </label>
 
                                         <span
-                                            class="d-block mb-3 bg-light"
+                                            class="d-block mb-3"
                                             x-text="
                                                 detalle.participante ?? 'Sin información'
                                             "></span>
@@ -426,13 +424,13 @@
 
                                         <label
                                             class="form-label fw-semibold">
-                                            Observaciones
+                                            Observaciones:
                                         </label>
 
-                                        <div
-                                            class="form-control bg-light"
-                                            style="min-height: 90px;"
-                                            x-text="
+
+  <div
+                                class="mb-1"
+                                x-text="
                                                 detalle.observaciones ?? 'Sin información'
                                             "></div>
 
@@ -478,7 +476,7 @@
                                         </label>
 
                                         <span
-                                            class="d-block mb-1"
+                                            class="mb-1"
                                             x-text="detalle.fecha_termino && detalle.fecha_termino !== '000-00-00'
     ? detalle.fecha_termino
     : 'Sin información'"></span>

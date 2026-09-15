@@ -4,7 +4,7 @@
 
 <div class="card-header bg-primary ">
 <h4  class="mb-0 text-white card-title">
-<i class="ti ti-label"></i> Gerente
+<i class="ti ti-briefcase"></i> Gerente
 </h4>
 </div>
 
@@ -97,7 +97,7 @@
 <div class="card">
 <div class="card-header bg-primary">
     <h4  class="mb-0 text-white card-title">
-<i class="ti ti-label"></i> Auxiliar Administrativo
+<i class="ti ti-clipboard"></i> Auxiliar Administrativo
 </h4>
 </div>
 <div class="card-body p-0">
@@ -162,7 +162,7 @@
 <div class="card">
   <div class="card-header bg-primary">
     <h4  class="mb-0 text-white card-title">
-<i class="ti ti-label"></i> Jefe de piso
+<i class="ti ti-user-check"></i> Jefe de piso
 </h4>
   </div>
   <div class="card-body p-0">
@@ -220,7 +220,7 @@
 <div class="card">
   <div class="card-header bg-primary">
     <h4  class="mb-0 text-white card-title">
-<i class="ti ti-label"></i> Facturista
+<i class="ti ti-receipt"></i> Facturista
 </h4>
   </div>
 <div class="card-body p-0">
@@ -262,7 +262,7 @@
 <div class="card">
   <div class="card-header bg-primary">
     <h4  class="mb-0 text-white card-title">
-<i class="ti ti-label"></i> Despachador
+<i class="ti ti-gas-station"></i> Despachador
   </div>
   <div class="card-body p-0">
 <div class="table-responsive overflow-x-auto overflow-y-hidden">
@@ -308,7 +308,7 @@
 <div class="card">
   <div class="card-header bg-primary">
    <h4  class="mb-0 text-white card-title">
-<i class="ti ti-label"></i> Personal de mantenimiento
+<i class="ti ti-tools"></i> Personal de mantenimiento
   </div>
   <div class="card-body p-0">
 <div class="table-responsive overflow-x-auto overflow-y-auto">

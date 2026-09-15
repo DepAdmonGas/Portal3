@@ -811,9 +811,9 @@ return function (RouteCollector $r) {
         //----- Precios Diarios Combustible
         $r->addRoute('GET', '/importacion/precios-diarios-combustible', Route::auth(['PreciosCombustibleController', 'index']));
         $r->addRoute('GET', '/importacion/precios-diarios-combustible/data', Route::auth(['PreciosCombustibleController', 'getData']));
-        $r->addRoute('GET', '/importacion/precios-diarios-combustible/nuevo/{year:\d+}/{mes:\d+}/{fecha}', Route::auth(['PreciosCombustibleController', 'nuevo']));
-        $r->addRoute('GET', '/importacion/precios-diarios-combustible/editar/{id:\d+}', Route::auth(['PreciosCombustibleController', 'editar']));
-        $r->addRoute('GET', '/importacion/precios-diarios-combustible/detalle/{id:\d+}', Route::auth(['PreciosCombustibleController', 'detalle']));
+        $r->addRoute('POST', '/importacion/precios-diarios-combustible/agregar', Route::auth(['PreciosCombustibleController', 'agregar']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible/formulario/{id:\d+}', Route::auth(['PreciosCombustibleController', 'formulario']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible-detalle/{id:\d+}', Route::auth(['PreciosCombustibleController', 'detalle']));
         $r->addRoute('GET', '/importacion/precios-diarios-combustible/reporte/{id:\d+}', Route::auth(['PreciosCombustibleController', 'reporte']));
         $r->addRoute('POST', '/importacion/precios-diarios-combustible/update', Route::auth(['PreciosCombustibleController', 'update']));
         $r->addRoute('POST', '/importacion/precios-diarios-combustible/finalizar', Route::auth(['PreciosCombustibleController', 'finalizar']));

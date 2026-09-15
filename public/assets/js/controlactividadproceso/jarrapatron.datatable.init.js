@@ -21,27 +21,26 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
 
             {
-                data: 'marca'
+                data: 'marca', className: 'text-center align-middle',
             },
 
             {
-                data: 'no_serie'
+                data: 'no_serie', className: 'text-center align-middle',
             },
 
             {
-                data: 'capacidad'
+                data: 'capacidad', className: 'text-center align-middle',
             },
 
             {
-                data: 'material'
+                data: 'material', className: 'text-center align-middle',
             },
             
             {
                 data: null,
                 orderable: false,
                 searchable: false,
-                className:
-                    'text-center align-middle',
+                className: 'text-center align-middle',
                 render: function(data,type,row){
 
                     const noDelete = permisos.eliminar;

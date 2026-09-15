@@ -21,15 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
 
             {
-                data: 'no_extintor'
+                data: 'no_extintor', className: 'text-center align-middle',
             },
 
             {
-                data: 'ubicacion'
+                data: 'ubicacion', className: 'text-start align-middle',
             },
 
              {
-            data: 'ultima_recarga',
+            data: 'ultima_recarga', className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -57,19 +57,18 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
             {
-                data: 'tipo_extintor'
+                data: 'tipo_extintor', className: 'text-center align-middle',
             },
 
             {
-                data: 'peso_kg'
+                data: 'peso_kg', className: 'text-center align-middle',
             },
             
             {
                 data: null,
                 orderable: false,
                 searchable: false,
-                className:
-                    'text-center align-middle',
+                className: 'text-center align-middle',
                 render: function(data,type,row){
 
                     const noDelete = permisos.eliminar;

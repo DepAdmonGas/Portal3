@@ -32,30 +32,30 @@ x-init="
     <div class="card-body">
         <div class="row">
 
-          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
             <div class="form-group">
-              <label class="form-label">* Fecha:</label>
+              <label class="form-label mb-1">* Fecha:</label>
               <input type="date" class="form-control" x-model="fecha" :class="errors.fecha ? 'is-invalid' : ''">
             </div>
           </div>
 
-          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
             <div class="form-group">
-              <label class="form-label">* Hora:</label>
+              <label class="form-label mb-1">* Hora:</label>
               <input type="time" step="1" class="form-control" x-model="hora" :class="errors.hora ? 'is-invalid' : ''">
             </div>
           </div>
 
-          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
+          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
             <div class="form-group">
-              <label class="form-label">* Lugar:</label>
+              <label class="form-label mb-1">* Lugar:</label>
               <input type="text" class="form-control" x-model="lugar" :class="errors.lugar ? 'is-invalid' : ''">
             </div>
           </div>
 
-          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
+          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
             <div class="form-group">
-                <label class="form-label">* Nombre del encargado de la comunicación:</label>
+                <label class="form-label mb-1">* Nombre del encargado de la comunicación:</label>
 
                 <select class="form-control" x-model="encargado" :class="errors.encargado ? 'is-invalid' : ''">
 
@@ -71,16 +71,16 @@ x-init="
             </div>
           </div>
 
-          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
+          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
             <div class="form-group">
-              <label class="form-label">* Tema a comunicar:</label>
+              <label class="form-label mb-1">* Tema a comunicar:</label>
               <textarea class="form-control" x-model="tema" :class="errors.tema ? 'is-invalid' : ''"></textarea>
             </div>
           </div>
 
-          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mt-3">
+          <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
             <div class="form-group">
-              <label class="form-label">* Finalidad de la comunicación:</label>
+              <label class="form-label mb-1">* Finalidad de la comunicación:</label>
               <textarea class="form-control" x-model="finalidad" :class="errors.finalidad ? 'is-invalid' : ''"></textarea>
             </div>
           </div>
@@ -136,7 +136,7 @@ x-init="
               </div>
 
 <div class="table-responsive">
-    <table class="table table-bordered table-striped  text-nowrap align-middle mt-3">
+    <table class="table table-bordered table-striped  text-nowrap align-middle mb-3">
 
         <thead>
 
@@ -255,7 +255,7 @@ x-init="
         </div>
 
         <div class="datatables">
-            <div class="table-responsive  p-4 overflow-x-auto overflow-y-hidden">
+            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
                 <table id="table-lista-asistencia-firma" class="table table-bordered table-striped  text-nowrap align-middle">
                     <thead>
                     <tr>
@@ -264,7 +264,7 @@ x-init="
                         <th>Puesto</th>
                         <th>Firma</th>
                     <th class="text-center">
-                    <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
+                    <a class="text-muted"><i class="ti ti-trash text-danger fs-6"></i></a>
                     </th>
                     </tr>
                     </thead>

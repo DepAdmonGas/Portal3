@@ -23,13 +23,13 @@ const year = new Date().getFullYear();
         columns: [
 
             {
-                data: 'folio'
+                data: 'folio', className: 'text-center align-middle'
             }, 
 
-             { data: 'detalle'
+             { data: 'detalle' , className: 'text-start align-middle'
              },
             {
-                data: 'fechacreacion',
+                data: 'fechacreacion', className: 'text-center align-middle',
                 render: function (data, type) {
                     if (!data) return '';
 
@@ -48,10 +48,10 @@ const year = new Date().getFullYear();
             },
 
             {
-                data: 'horacreacion'
+                data: 'horacreacion', className: 'text-center align-middle'
             }, 
             {   
-            data: 'estado', className: 'text-center',
+            data: 'estado', className: 'text-center align-middle',
             render: function (data) {
             const estatus = Number(data);
 
@@ -97,7 +97,7 @@ const year = new Date().getFullYear();
                             <ul class="dropdown-menu">
 
                                 <li>
-                                    <a class=" pointer d-flex align-items-center gap-3"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                     href="javascript:void(0)"
                                     @click='window.mantenimientoPreventivo.openModalDetalle(${JSON.stringify(row)})'>
                                         <i class="ti ti-eye"></i>Detalle
