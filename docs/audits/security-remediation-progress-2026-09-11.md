@@ -505,3 +505,25 @@
 - Updated direct dependency `guzzlehttp/guzzle` from `7.15.1` to patched `7.15.2` using a targeted Composer update; related required updates were `guzzlehttp/promises 2.5.1 → 2.5.3` and `guzzlehttp/psr7 2.13.0 → 2.13.1`.
 - `composer audit --locked` now reports no security vulnerability advisories. Local security suite remains 99 PASS / 0 FAIL / 0 SKIPPED.
 - CI commit `6f9195d` completed remotely with `php-syntax`, `security-tests`, and `dependency-audit` all successful. No production or application code was changed.
+## DEP-TEST-013-A-REASSESS-AFTER-CI-CLOSURE
+
+- Current in-scope CDN inventory remains unchanged at 20 references: DOMPurify 3.0.6 (4 exact), Iconify 1.0.8 (6 exact), Axios 1.7.9 (5 exact), and Alpine `3.x.x` (5 major-floating). `departamento-operativo` remains excluded.
+- No exact-pinned reference currently carries SRI (`SRI_PROTECTED_REFERENCES=0`, `SRI_MISSING_EXACT_PINNED_REFERENCES=15`).
+- jsDelivr and unpkg are reachable. Double-download verification produced stable bytes and HTTP 200 JavaScript responses for all three exact resources. SHA-384 values are ready for a future implementation slice: DOMPurify `sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu`, Iconify `sha384-D4fI2O1dD9gQnn73J775jfm7LFa+lp87psAf0aiqjF9EQjnhGwZwkGm+2bffcJSF`, Axios `sha384-jLwhcmGu/RL8PSTUEl/559f8QVLL4QqM+HBvoZlt4F7XCdsdoDGAwW4nPFfoM7lU`.
+- CDN responses include `Access-Control-Allow-Origin: *`, immutable caching for jsDelivr resources, and exact versioned final URLs. `crossorigin="anonymous"` is recommended for future SRI implementation; no attributes were added here.
+- Alpine floating URL currently resolves to `3.17.3`; this is current CDN evidence only, not historical proof. The local Alpine fallback remains version-unknown and unchanged (SHA256 `3ed1eed252488921df65e363d6715deb04d7f92aaedb9e52199fdf73cb1e0ad3`). Iconify code contains runtime API provider URLs, so secondary remote loads remain `YES`.
+- `DEP-TEST-013-A` remains `PARTIAL`: SRI hashes are ready, but SRI implementation and Alpine stabilization remain separate authorized slices. No code, CSP, dependency, or production changes were made.
+## DEP-TEST-013-A-ALPINE-PINNING-REASSESSMENT
+
+- The five in-scope Alpine references remain identical and all use `https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js`; no inventory regression was found. `departamento-operativo` remains excluded.
+- Current unpkg resolution is HTTP 302 → `alpinejs@3.17.3/dist/cdn.min.js`, followed by HTTP 200 JavaScript with `Access-Control-Allow-Origin: *`. This is current resolution evidence, not historical runtime proof.
+- Alpine 3.17.3 is a technically plausible compatibility-pin candidate, but implementation safety is `MEDIUM`: the project uses broad Alpine APIs (`x-data`, `x-init`, `x-show`, `x-model`, `x-bind`/`x-on`, `$dispatch`, and `Alpine.data`) across many views/assets and no browser smoke harness was identified.
+- Local fallback remains present and unchanged with SHA256 `3ed1eed252488921df65e363d6715deb04d7f92aaedb9e52199fdf73cb1e0ad3`; its version remains unknown, so it is not evidence of CDN equivalence.
+- Recommendation: pin the five references to exact Alpine 3.17.3 only in a separately authorized implementation slice, then add SRI from the exact pinned response and run representative Alpine/browser validation. No URL, SRI, CSP, JS, dependency, or production changes were made here.
+- `DEP-TEST-013-A` remains `PARTIAL`; the remaining work can be split into Alpine compatibility pinning, Alpine SRI, and later CSP/build assessment.
+## DEP-TEST-013-CLOSURE
+
+- `DEP-TEST-013-A`, `DEP-TEST-013-B`, and `DEP-TEST-013-C` are formally closed as `REMEDIATED_REMOTE_VERIFIED`.
+- Final dependency posture: 20 CDN references, 20 exact-pinned, 20 SRI-protected, 0 floating, 0 unversioned. Alpine 3.17.3 is exact-pinned and SRI-protected in all five in-scope layouts; `departamento-operativo` remains outside scope.
+- GitHub Actions run `35267559938` passed `php-syntax`, `security-tests`, and `dependency-audit`. Composer lock is tracked; Guzzle 7.15.2 is free of the previously reported advisories.
+- `DEP-TEST-013` is closed without production changes. Ongoing dependency monitoring remains recommended; no new remediation is initiated by this closure.
