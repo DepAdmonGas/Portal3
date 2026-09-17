@@ -500,3 +500,8 @@
 - GitHub Actions run `35260755896` for commit `f2a7689` passed `php-syntax` but both Composer jobs failed before tests/audit because locked packages `symfony/clock v8.1.0` and `symfony/translation v8.1.1` require PHP `>=8.4.1`.
 - Updated only `.github/workflows/security.yml`, changing all three jobs from PHP 8.2 to PHP 8.4. `composer.json`, `composer.lock`, dependency versions, application code, Alpine, CSP, and SRI were not changed.
 - The project documentation and root constraint remain PHP 8.2+; this workflow adjustment targets the effective locked dependency runtime and does not assert production PHP compatibility.
+## DEP-TEST-013-C-GUZZLE-ADVISORY-REMEDIATION
+
+- Updated direct dependency `guzzlehttp/guzzle` from `7.15.1` to patched `7.15.2` using a targeted Composer update; related required updates were `guzzlehttp/promises 2.5.1 → 2.5.3` and `guzzlehttp/psr7 2.13.0 → 2.13.1`.
+- `composer audit --locked` now reports no security vulnerability advisories. Local security suite remains 99 PASS / 0 FAIL / 0 SKIPPED.
+- CI commit `6f9195d` completed remotely with `php-syntax`, `security-tests`, and `dependency-audit` all successful. No production or application code was changed.
