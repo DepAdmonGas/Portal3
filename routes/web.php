@@ -1861,10 +1861,11 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/respuestas/correcta', Route::auth(['SistemasCursosController', 'respuestaCorrecta']));
     });
 
-    //--------------------- Perfil
+    //--------------------- Perfil -----------------------------------------
 
     $r->addGroup('/perfil', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['PerfilController', 'index']));
+        $r->addRoute('POST', '/cambiar-password', Route::auth(['PerfilController', 'cambiarPassword']));
     });
 
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------

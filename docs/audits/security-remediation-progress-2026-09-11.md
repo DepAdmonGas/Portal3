@@ -161,3 +161,46 @@
 ## DOC-001 — documentation consolidation
 
 - Snapshot: [security-remediation-status-2026-09-11.md](./security-remediation-status-2026-09-11.md) consolidates the current local, production-pending and concurrent-work status without replacing this progress log, the original audit or the remediation plan.
+
+## SOLICITUD-CHEQUE-CSRF-INTEGRATION
+
+- Status: remediated locally.
+- Root cause: native `fetch` with `FormData` omitted the CSRF token for `POST /departamento-operativo/solicitud-cheque/store`.
+- Fix: `solicitudChequeCrearComponent.guardar()` reads the current authenticated-page `meta[name="csrf-token"]`, fails safely through the existing notifier if absent, and sends it as `X-CSRF-TOKEN`. The browser retains ownership of the multipart `Content-Type` boundary.
+- Server CSRF security: unchanged and fail-closed; missing or invalid tokens still receive 419.
+- Follow-up: manual authenticated record creation must be retested before commit/deployment.
+
+## VIEW-LAYOUT-CSRF-LOGOUT
+
+- Status: remediated locally.
+- Affected: `app/Views/layouts/sgm.php` and `app/Views/layouts/sasisopa.php`.
+- Root cause: both layouts used the shared Axios `performLogout()` flow for `POST /logout` but omitted the current CSRF meta tag and Axios header configuration.
+- Fix: both layouts now render the current session CSRF token and use the canonical Axios default/request-interceptor bootstrap. Server validation, the POST-only logout route, and fail-closed behavior are unchanged.
+- Follow-up: manually retest logout from `/sgm` and `/sasisopa`. `configuracion.php` remains outside this slice.
+
+## CONFIGURACION-LOGOUT-CSRF-CONSISTENCY
+
+- Status: remediated locally.
+- Root cause: `configuracion.php` combined the shared POST logout action with a legacy `GET /logout` anchor and omitted the current CSRF meta/Axios header configuration.
+- Fix: the layout now uses the canonical current-token Axios bootstrap and both visible logout controls invoke `performLogout()`; the legacy GET client flow was removed.
+- Backend: unchanged. The POST logout route and fail-closed CSRF middleware remain required.
+- Follow-up: manually retest logout from Configuración before commit/deployment.
+
+## SECURITY-PAUSE-CONCURRENT-WORK
+
+- Pause point: the local security regression suite is 62 passed, 0 failed, 0 skipped. Production remains untouched and deployment is not authorized.
+- `VIEW-LAYOUT-CSRF-LOGOUT`: remediated locally. Seven active layouts were reviewed; five provide logout and all five use POST with the current CSRF token. No legacy GET logout or mutable logout without CSRF remains.
+- `SOLICITUD-CHEQUE-CSRF-INTEGRATION`: the client hotfix is present, but `MANUAL_CREATE_RETEST` remains **PENDING** because no manual confirmation has been provided.
+- Concurrent-work block remains active for `AUTHZ-TENANT-007`, `AUTHZ-DL-002`, and `SEC-UPLOAD-004` in or dependent on `departamento-operativo`.
+- Resume only after concurrent work is complete and versioned, SolicitudCheque creation is manually retested, and the security suite remains green. Resume order: finalize SolicitudCheque CSRF verification, run the full suite, then continue AUTHZ-TENANT-007, AUTHZ-DL-002, SEC-UPLOAD-004, and production-verification preparation.
+- Do not initiate DATA-VALID-011, SEC-CSP-012, DEP-TEST-013, ARCH-001, or OPS-001 without new prioritization.
+
+## DATA-VALID-011 — input validation reassessment outside departamento-operativo
+
+- Scope: read-only reassessment outside `departamento-operativo`; its views, JavaScript, and the protected `SolicitudChequeService`, `ResumenMonederoService`, and `VentasService` were not reviewed in depth. The operational/RH upload and JSON flows encountered through `ControlDocumentosPersonalController`, `ControlVolumetricoController`, `FormatoDescargaMermaController`, and the protected route group remain deferred.
+- Reviewed request-to-use surfaces: public login and Telegram webhook; authenticated station and module-context selection; authorized download query parameters; Seguro uploads; Solicitud de Gafetes uploads; and Solicitud de Tarjetas create/update JSON and multipart forms. Login, webhook, station selection, module context, downloads, and Gafetes have a bounded contract or an existing security control and are not new DATA-VALID findings. No client request array is passed directly to an Eloquent mass-assignment method in the reviewed non-operational flows.
+- Confirmed DATA-VALID-011-A: `POST /solicitud-tarjetas/create-reporte` accepts an optional `archivo` and persists it under `public/uploads/archivos/solicitud-tarjetas/` after deriving only its client-supplied extension. It imposes no size limit, real-MIME verification, extension/MIME correspondence, or allowlist. The same controller's `POST /solicitud-tarjetas/update-reporte-formulario` accepts decoded JSON and checks only truthiness, so IDs and mutable strings have no strict type, maximum-length, or schema validation. Recommended follow-up: a bounded non-operational upload/JSON contract slice that validates the multipart file before storage and applies explicit typed DTO-style validation to the update payload.
+- Confirmed DATA-VALID-011-B: `POST /seguro/create-poliza-seguro` and `POST /seguro/create-cobertura-poliza-seguro` accept `poliza`/`cobertura` uploads, retain only the client filename extension, and move them to `public/uploads/archivos/poliza-seguro/` with no maximum size, real-MIME check, or extension allowlist. Recommended follow-up: a bounded Seguro upload-validation slice with server-side MIME/size/extension validation and a review of whether public storage is appropriate.
+- Classification: two confirmed findings (Medium, high confidence); no mass assignment observed in the reviewed flows; no new enum-validation gap was confirmed. `UNVALIDATED_JSON_FOUND` is yes because the Tarjetas update payload lacks a structural contract. Broader raw JSON and file-upload call sites in the excluded operational module remain deferred, not counted as confirmed here.
+- Tests: existing security regression baseline passed: 62 passed, 0 failed, 0 skipped. No tests or implementation were changed. Production was not touched.
+- Next recommended slice: `DATA-VALID-011-TARJETAS-SEGURO-UPLOAD-JSON-CONTRACT`.

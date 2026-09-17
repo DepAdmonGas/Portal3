@@ -7,7 +7,6 @@ use App\Models\Sasisopa\CursoCalendario;
 use App\Core\TwoFactorAuth;
 use App\Models\Sasisopa\InvestigacionIncidenteAccidenteNo;
 
-
 class Usuario extends Model
 {
     protected $table = 'tb_usuarios';
@@ -20,10 +19,6 @@ class Usuario extends Model
 
     public $timestamps = false;
 
-    // ============================================================
-    // SECURITY: Mass Assignment Protection (Vulnerabilidad #12)
-    // Solo campos legítimos de perfil pueden ser asignados masivamente
-    // ============================================================
     protected $fillable = [
         'nombre',
         'email',
@@ -62,9 +57,7 @@ class Usuario extends Model
         'firma',
     ];
 
-    // ============================================================
-    // SECURITY: Boot method para protección Mass Assignment
-    // ============================================================
+
     protected static function boot()
     {
         parent::boot();
@@ -92,9 +85,6 @@ class Usuario extends Model
         });
     }
 
-    // ============================================================
-    // SECURITY: Casts para 2FA (BAJO #32)
-    // ============================================================
     protected $casts = [
         'two_factor_enabled' => 'boolean',
         'two_factor_backup_codes' => 'array'
@@ -196,10 +186,6 @@ class Usuario extends Model
             'id_usuario'
         );
     }
-
-    // ============================================================
-    // SECURITY: Métodos para 2FA (BAJO #32)
-    // ============================================================
 
     /**
      * Verifica si el usuario tiene 2FA habilitado
