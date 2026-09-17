@@ -23,7 +23,7 @@
 
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js" integrity="sha384-jLwhcmGu/RL8PSTUEl/559f8QVLL4QqM+HBvoZlt4F7XCdsdoDGAwW4nPFfoM7lU" crossorigin="anonymous"></script>
 
     <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
     <script src="<?= asset('js/core/http-security.js') ?>"></script>
@@ -271,7 +271,7 @@
     <script src="<?= asset('js/theme/sidebarmenu.js') ?>"></script>
 
     <!-- solar icons -->
-    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js" integrity="sha384-D4fI2O1dD9gQnn73J775jfm7LFa+lp87psAf0aiqjF9EQjnhGwZwkGm+2bffcJSF" crossorigin="anonymous"></script>
     <!-- highlight.js (code view) -->
     <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
     <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
