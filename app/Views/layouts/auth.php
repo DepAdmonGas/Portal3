@@ -32,7 +32,7 @@
     <!-- Alpine + Axios -->
     <script
         defer
-        src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        src="https://unpkg.com/alpinejs@3.17.3/dist/cdn.min.js"></script>
     <script
         src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js" integrity="sha384-jLwhcmGu/RL8PSTUEl/559f8QVLL4QqM+HBvoZlt4F7XCdsdoDGAwW4nPFfoM7lU" crossorigin="anonymous"></script>
 
