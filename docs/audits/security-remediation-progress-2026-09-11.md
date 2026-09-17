@@ -495,3 +495,96 @@
 - Runner fail-closed behavior is confirmed: current green exit code is 0, and child non-zero exits increment failure status. Local runner result is 99 PASS / 0 FAIL / 0 SKIPPED; PHP syntax validation passes. YAML parser execution was unavailable locally, so validation is structural/static only.
 - Composer lock packages are compatible with PHP 8.2; no `config.platform.php` override is defined. Required runtime extensions resolved by the lock include common PHP extensions (`ctype`, `dom`, `fileinfo`, `filter`, `gd`, `hash`, `iconv`, `json`, `libxml`, `mbstring`, `pcre`, `pdo`, `simplexml`, `xml`, `xmlreader`, `xmlwriter`, `zip`, `zlib`); setup-php supplies the standard runtime, with hosted execution still pending.
 - `DEP-TEST-013-B: REMOTE_CI_READY_PENDING_VERSION_CONTROL`. No commit or push was made; GitHub-hosted execution remains unverified.
+## RESOLVE-REMOTE-CI-PHP-VERSION-CONFLICT
+
+- GitHub Actions run `35260755896` for commit `f2a7689` passed `php-syntax` but both Composer jobs failed before tests/audit because locked packages `symfony/clock v8.1.0` and `symfony/translation v8.1.1` require PHP `>=8.4.1`.
+- Updated only `.github/workflows/security.yml`, changing all three jobs from PHP 8.2 to PHP 8.4. `composer.json`, `composer.lock`, dependency versions, application code, Alpine, CSP, and SRI were not changed.
+- The project documentation and root constraint remain PHP 8.2+; this workflow adjustment targets the effective locked dependency runtime and does not assert production PHP compatibility.
+## DEP-TEST-013-C-GUZZLE-ADVISORY-REMEDIATION
+
+- Updated direct dependency `guzzlehttp/guzzle` from `7.15.1` to patched `7.15.2` using a targeted Composer update; related required updates were `guzzlehttp/promises 2.5.1 → 2.5.3` and `guzzlehttp/psr7 2.13.0 → 2.13.1`.
+- `composer audit --locked` now reports no security vulnerability advisories. Local security suite remains 99 PASS / 0 FAIL / 0 SKIPPED.
+- CI commit `6f9195d` completed remotely with `php-syntax`, `security-tests`, and `dependency-audit` all successful. No production or application code was changed.
+## DEP-TEST-013-A-REASSESS-AFTER-CI-CLOSURE
+
+- Current in-scope CDN inventory remains unchanged at 20 references: DOMPurify 3.0.6 (4 exact), Iconify 1.0.8 (6 exact), Axios 1.7.9 (5 exact), and Alpine `3.x.x` (5 major-floating). `departamento-operativo` remains excluded.
+- No exact-pinned reference currently carries SRI (`SRI_PROTECTED_REFERENCES=0`, `SRI_MISSING_EXACT_PINNED_REFERENCES=15`).
+- jsDelivr and unpkg are reachable. Double-download verification produced stable bytes and HTTP 200 JavaScript responses for all three exact resources. SHA-384 values are ready for a future implementation slice: DOMPurify `sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu`, Iconify `sha384-D4fI2O1dD9gQnn73J775jfm7LFa+lp87psAf0aiqjF9EQjnhGwZwkGm+2bffcJSF`, Axios `sha384-jLwhcmGu/RL8PSTUEl/559f8QVLL4QqM+HBvoZlt4F7XCdsdoDGAwW4nPFfoM7lU`.
+- CDN responses include `Access-Control-Allow-Origin: *`, immutable caching for jsDelivr resources, and exact versioned final URLs. `crossorigin="anonymous"` is recommended for future SRI implementation; no attributes were added here.
+- Alpine floating URL currently resolves to `3.17.3`; this is current CDN evidence only, not historical proof. The local Alpine fallback remains version-unknown and unchanged (SHA256 `3ed1eed252488921df65e363d6715deb04d7f92aaedb9e52199fdf73cb1e0ad3`). Iconify code contains runtime API provider URLs, so secondary remote loads remain `YES`.
+- `DEP-TEST-013-A` remains `PARTIAL`: SRI hashes are ready, but SRI implementation and Alpine stabilization remain separate authorized slices. No code, CSP, dependency, or production changes were made.
+## DEP-TEST-013-A-ALPINE-PINNING-REASSESSMENT
+
+- The five in-scope Alpine references remain identical and all use `https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js`; no inventory regression was found. `departamento-operativo` remains excluded.
+- Current unpkg resolution is HTTP 302 → `alpinejs@3.17.3/dist/cdn.min.js`, followed by HTTP 200 JavaScript with `Access-Control-Allow-Origin: *`. This is current resolution evidence, not historical runtime proof.
+- Alpine 3.17.3 is a technically plausible compatibility-pin candidate, but implementation safety is `MEDIUM`: the project uses broad Alpine APIs (`x-data`, `x-init`, `x-show`, `x-model`, `x-bind`/`x-on`, `$dispatch`, and `Alpine.data`) across many views/assets and no browser smoke harness was identified.
+- Local fallback remains present and unchanged with SHA256 `3ed1eed252488921df65e363d6715deb04d7f92aaedb9e52199fdf73cb1e0ad3`; its version remains unknown, so it is not evidence of CDN equivalence.
+- Recommendation: pin the five references to exact Alpine 3.17.3 only in a separately authorized implementation slice, then add SRI from the exact pinned response and run representative Alpine/browser validation. No URL, SRI, CSP, JS, dependency, or production changes were made here.
+- `DEP-TEST-013-A` remains `PARTIAL`; the remaining work can be split into Alpine compatibility pinning, Alpine SRI, and later CSP/build assessment.
+## DEP-TEST-013-CLOSURE
+
+- `DEP-TEST-013-A`, `DEP-TEST-013-B`, and `DEP-TEST-013-C` are formally closed as `REMEDIATED_REMOTE_VERIFIED`.
+- Final dependency posture: 20 CDN references, 20 exact-pinned, 20 SRI-protected, 0 floating, 0 unversioned. Alpine 3.17.3 is exact-pinned and SRI-protected in all five in-scope layouts; `departamento-operativo` remains outside scope.
+- GitHub Actions run `35267559938` passed `php-syntax`, `security-tests`, and `dependency-audit`. Composer lock is tracked; Guzzle 7.15.2 is free of the previously reported advisories.
+- `DEP-TEST-013` is closed without production changes. Ongoing dependency monitoring remains recommended; no new remediation is initiated by this closure.
+## AUTHZ-DL-002-REASSESSMENT
+
+- The original finding concerns authenticated `/download` access selecting a pathname via `tipo` + `file` without resource-level owner/tenant authorization.
+- Current `DownloadController` still exposes one authenticated `GET /download` route with a 58-type controlled folder map (plus 5 MIME entries). It now invokes `SensitiveDownloadAuthorizationService` before path resolution and fails closed for unknown/unresolved types.
+- `SensitiveDownloadAuthorizationService` currently resolves and authorizes only the 14 `docs-personal-*` resource types through `RhPersonal`, module download permission, and allowed station IDs. Authorization precedes filesystem resolution and `readfile`; traversal checks remain in place.
+- The remaining mapped types are not covered by a domain resolver and therefore are denied by the current central gate rather than authorized by resource metadata. This is a functional coverage gap and requires a type-by-type resolver inventory before enabling additional types; no IDOR closure is claimed for them.
+- Separate authenticated PDF/Excel controller routes exist across RH, SGM, finance, operations, and reports. They are not automatically equivalent to `/download` and require independent ownership/tenant review; no broad remediation was started.
+- `departamento-operativo` remains excluded. Current status: `PARTIAL_CONCURRENT_WORK_BLOCKED`. Recommended next low-risk slice: resolver inventory and one non-concurrent high-sensitivity type with A/B authorization tests, after module ownership is confirmed.
+## AUTHZ-DL-002-RESOLVER-INVENTORY-AND-FIRST-HIGH-SENSITIVITY-TYPE
+
+- Reconciled the generic `/download` map: 58 business types plus five MIME keys; 14 `docs-personal-*` types are protected by the central resolver and 44 mapped business types remain default-deny.
+- Active references exist for `requisitos-legales` and independent PDF/Excel/export routes. Their resource-to-station and permission contracts are not uniform enough to select a low/medium-risk first resolver without inventing authorization semantics.
+- `docs-personal-baja` and `docs-personal-incidencias` remain excluded because their active surfaces belong to `departamento-operativo`.
+- No first high-sensitivity type was implemented; no application code or tests changed. Status remains `PARTIAL_CONCURRENT_WORK_BLOCKED`.
+## AUTHZ-DL-002-RESOLVER-INVENTORY-PER-TYPE
+
+- Reconciled exactly 44 unresolved business types from the controller map (58 business types minus the 14 protected `docs-personal-*` types). The five MIME keys are not business resources.
+- Classification: `READY_FOR_REMEDIATION=0`, `NEEDS_AUTHZ_DECISION=35`, `INACTIVE_OR_ORPHANED=0`, `PUBLIC_BY_DESIGN=1` (`poliza-seguro`, whose public storage is an architectural constraint), `DEFERRED_DEPARTAMENTO_OPERATIVO=2` (`docs-personal-baja`, `docs-personal-incidencias`), `NOT_SENSITIVE=0`, `UNKNOWN=6`. Total reconciled: 44.
+- `NEEDS_AUTHZ_DECISION` types: `bitacora-aditivo`, `analisis-riesgo`, `solicitud-gafetes`, `solicitud-tarjetas`, `procedimientos-actividades-tecnicas`, `procedimientos-visita-estacion`, `requisitos-legales`, `encuestas`, `representante-tecnico`, `comprobantes-clientes`, `documentos-ventas`, `control-volumetrico`, `aceites-documentos`, `aceites-facturas`, `aceites-diferencias`, `monedero-documentos`, `monedero-lista-documentos`, `embarques`, `solicitud-cheque`, `ingresos-facturacion`, `contratos`, `estimulo-fiscal`, `comparativo-xml`, `seguros-incidencias`, `seguros-polizas`, `aclaracion-voucher`, `solicitud-vales`, `lista-negra`, `bitacora-rrhh`, `factura-monedero`, `organigrama-documentos`, `dia-doble-firma`, `permisos-firma`, `formato-descarga-merma`, `formato-descarga-merma-firma`. For each, the repository does not expose a uniform resource identifier → station/owner → permission contract suitable for centralization without a product decision; several also have independent routes or direct links.
+- `UNKNOWN` pending evidence: `empresa`, `manual`, `organigrama`, `lista-negra`, `lista-formatos`, `formatos-alta`. No type is marked ready and no authorization rule was invented. `requisitos-legales` is active, backed by `RequisitosLegalesMatriz` → `RequisitosLegalesCalendario.id_estacion`, but its permission contract and all download variants still require confirmation.
+- Independent PDF/Excel/export routes and direct public links remain inventoried as separate surfaces; no bypass was remediated in this read-only slice. `AUTHZ-DL-002` remains open and partial.
+## AUTHZ-DL-002-RESOLVE-REQUISITOS-LEGALES-AUTHZ-CONTRACT
+
+- `/download?tipo=requisitos-legales&file=...` receives a client-controlled filename (`file`); views pass `acuse`, `requisito`, `acusepdf`, or `requisitolegalpdf` values returned by the legal-requirements data flow. The generic map targets `public/uploads/archivos/reuisitos-legales/` (public storage).
+- The logical record is `RequisitosLegalesMatriz`; its `idcalendario` belongs to `RequisitosLegalesCalendario`, whose `id_estacion` is the tenant/station boundary. Matrix file metadata is `acusepdf` or `requisitolegalpdf` (legacy `acuse`/`requisito` values are also emitted by views/services).
+- Existing backend permission evidence is `ModuloService::validaPermiso('sasisopa', 'descargar')` in `RequisitosLegalesController::calendarioRequisitosLegales`; station context is obtained through `ModuleStationService::getContext('sasisopa'|'sgm')`. This is module/station evidence, but no shared resolver currently binds every filename variant to one matrix row before file access.
+- Independent authenticated PDF routes exist: `/requisitos-legales/calendario-pdf`, `/control-documentos-registros/pdf-requisitos-legales`, and `/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales/pdf`. They generate reports and require separate resource-level review.
+- Ownership is station/shared-resource based; no per-user owner field was identified. A safe central resolver is technically plausible only after deciding the canonical filename columns and enforcing the module permission plus authorized station set. Until then: `READY_FOR_REMEDIATION=NO`, `NEEDS_AUTHZ_DECISION=YES`.
+## AUTHZ-DL-002-RESOLVE-REQUISITOS-LEGALES-FILE-MAPPING
+
+- `RequisitosLegalesMatriz` declares only `acusepdf` and `requisitolegalpdf` as file columns; no `acuse`, `requisito`, `archivo`, `path`, or URL column exists in the model fillable/cast contract.
+- `ReporteRequisitosLegalesService` maps persisted `acusepdf`/`requisitolegalpdf` into response aliases (`acuse`, `requisito`, and URL fields). Therefore the four frontend variants are aliases of two persisted columns, not four independent resources.
+- The current client sends only `tipo` + `file`; no matrix or calendar identifier is included. A filename-only lookup is not proven globally unique (no uniqueness constraint or generated-name guarantee was found), so it is not a safe canonical resolver key.
+- Required future context is at least matrix/calendar identity (with `id_estacion` derived through `RequisitosLegalesCalendario`) plus the `sasisopa` download permission and authorized station set. The mapping remains unresolved and no code was changed.
+## AUTHZ-DL-002-DESIGN-REQUISITOS-LEGALES-CANONICAL-CONTRACT
+
+- `RequisitosLegalesMatriz` has primary key `id`; `idcalendario` references `RequisitosLegalesCalendario.id`, whose `id_estacion` supplies the station boundary.
+- The proposed canonical request is `tipo=requisitos-legales&matrix_id=<id>&variant=<acuse|requisito>`. `acuse` selects `acusepdf`; `requisito` selects `requisitolegalpdf`. No first-party caller was found that requires `acusepdf` or `requisitolegalpdf` as public variant values.
+- `matrix_id` uniquely identifies one matrix row. Current `file` is filename-only, not guaranteed unique, and must never be the authorization identity. During migration it may only be a consistency check against the selected persisted filename; mismatch must deny.
+- The proposed fail-closed flow (matrix lookup → calendar/station authorization → `sasisopa` download permission → persisted filename selection → path containment/existence → response) is valid in principle. It is not implemented in this design slice.
+- Station context is currently dual (`sasisopa` and `sgm`) in callers, while the effective download permission is hard-coded to `sasisopa`; cross-module permission equivalence remains a decision. Storage remains the legacy public `public/uploads/archivos/reuisitos-legales/` path and must not be renamed.
+- Status remains `PARTIAL_CONCURRENT_WORK_BLOCKED`; implementation requires explicit approval of the canonical identifier and SGM permission semantics.
+## AUTHZ-DL-002-RESOLVE-REQUISITOS-LEGALES-SGM-PERMISSION
+
+- The SGM caller is routed under `/sgm/normatividad-aplicable-mediciones` to `SgmNormatividadController`; it derives station context with `ModuleStationService::getContext('sgm')` and obtains `ModuloService::permisosSesion('sgm')`. Its datatable explicitly reads the `sgm` `descargar` permission.
+- SASISOPA callers use `RequisitosLegalesController`, `ModuleStationService::getContext('sasisopa')`, and `ModuloService::validaPermiso('sasisopa', 'descargar')`. The repository therefore proves distinct module permissions and station contexts, not intentional sharing.
+- The SGM and SASISOPA contexts can differ for one user; using the SASISOPA context for an SGM request risks both under- and over-authorization. A client-supplied `module` must not be trusted as authority; the server must bind module/context to the canonical resource or route.
+- A single unified rule is not currently valid. The future resolver must carry a trusted module context (`sasisopa` or `sgm`) and apply the corresponding permission/station set. No implementation was made.
+## AUTHZ-DL-002-DESIGN-REQUISITOS-LEGALES-TRUSTED-MODULE-BOUNDARY
+
+- Active SASISOPA callers use `RequisitosLegalesController` routes and SGM uses `SgmNormatividadController` under `/sgm/normatividad-aplicable-mediciones`; both ultimately call the generic `/download` helper with legacy filename values.
+- The safest boundary is module-specific server routes/actions (or an equivalent server-side dispatcher) that establish `sasisopa` or `sgm` before invoking one shared matrix/variant/path resolver. A client `module` parameter and HTTP `Referer` are not authorities; session module state is not reliable across tabs/context switches.
+- Required authorization order is valid: establish trusted module → check that module's `descargar` permission → load matrix/calendar → authorize station in that module context → choose persisted filename → containment/existence → response. Missing matrix, station, permission, or filename must deny without filesystem probing.
+- `sasisopa` and `sgm` permissions/contexts are distinct and may yield different station sets; no evidence supports intentionally sharing `sasisopa/descargar`. Canonical variants remain `acuse` and `requisito`.
+- Design status remains `PARTIAL_CONCURRENT_WORK_BLOCKED`; no routes, services, views, tests, or production configuration were changed.
+## AUTHZ-DL-002-IMPLEMENT-REQUISITOS-LEGALES-SGM-MODULE-BOUNDARY
+
+- Added SGM-only route `/sgm/normatividad-aplicable-mediciones/requisitos-legales/download` handled by `SgmNormatividadController::downloadRequisitoLegal`; module and permission are server-side (`sgm/descargar`).
+- The action requires positive `matrix_id` and strict `variant` (`acuse|requisito`), resolves `RequisitosLegalesMatriz` → calendar → `id_estacion`, requires the current SGM station, selects only persisted `acusepdf`/`requisitolegalpdf`, and applies containment before serving.
+- Migrated only the SGM requisitos-legales view and datatable helper to the new contract. SASISOPA callers and generic `/download` remain unchanged/default-deny for this type. No `departamento-operativo` files were touched.
+- Verification: targeted PHP lint passed; security suite remains 99 PASS / 0 FAIL / 0 SKIPPED. No commit, push, or production access performed.

@@ -25,6 +25,45 @@ class SgmNormatividadController extends BaseController
         return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
     }
 
+    public function downloadRequisitoLegal(): void
+    {
+        if (!ModuloService::validaPermiso('sgm', 'descargar')) {
+            http_response_code(404);
+            return;
+        }
+        $matrixId = filter_input(INPUT_GET, 'matrix_id', FILTER_VALIDATE_INT);
+        $variant = (string) ($_GET['variant'] ?? '');
+        if (!$matrixId || !in_array($variant, ['acuse', 'requisito'], true)) {
+            http_response_code(404);
+            return;
+        }
+        $matrix = RequisitosLegalesMatriz::with('calendario')->find($matrixId);
+        $station = $matrix?->calendario?->id_estacion;
+        $ctxStation = $this->estacionModulo();
+        if (!$matrix || !$station || !$ctxStation || (int) $station !== (int) $ctxStation) {
+            http_response_code(404);
+            return;
+        }
+        $filename = $variant === 'acuse' ? $matrix->acusepdf : $matrix->requisitolegalpdf;
+        if (!is_string($filename) || trim($filename) === '' || $filename !== basename($filename)) {
+            http_response_code(404);
+            return;
+        }
+        $testRoot = getenv('P0_TEST_DOWNLOAD_ROOT');
+        $root = (is_string($testRoot) && str_starts_with($testRoot, '/tmp/portal3-p0-download-'))
+            ? rtrim($testRoot, '/') . '/reuisitos-legales/'
+            : dirname(__DIR__, 2) . '/public/uploads/archivos/reuisitos-legales/';
+        $path = realpath($root . $filename);
+        $base = realpath($root);
+        if ($path === false || $base === false || !str_starts_with($path, rtrim($base, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR) || !is_file($path)) {
+            http_response_code(404);
+            return;
+        }
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . basename($path) . '"');
+        readfile($path);
+    }
+
     public function index()
     {
 

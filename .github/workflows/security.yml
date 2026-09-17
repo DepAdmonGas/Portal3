@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           tools: composer:stable
       - name: PHP syntax
         run: find app public tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           tools: composer:stable
       - name: Install locked dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           tools: composer:stable
       - name: Install locked dependencies
         run: composer install --no-interaction --prefer-dist --no-progress

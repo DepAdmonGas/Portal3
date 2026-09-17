@@ -34,6 +34,6 @@
   <script src="../assets/js/theme/app.init.js"></script>
   <script src="../assets/js/theme/theme.js"></script>
   <script src="../assets/js/theme/app.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js" integrity="sha384-D4fI2O1dD9gQnn73J775jfm7LFa+lp87psAf0aiqjF9EQjnhGwZwkGm+2bffcJSF" crossorigin="anonymous"></script>
 </body>
 </html>

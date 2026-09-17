@@ -307,7 +307,7 @@
                                 <td>
                                     <template x-if="row.acuse">
                                        <a href="javascript:void(0)"
-                                        @click="download('requisitos-legales', row.acuse)">
+                                        @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
                                             <i class="ti ti-download text-success fs-6"></i>
                                         </a>
                                     </template>
@@ -320,7 +320,7 @@
                                 <td>
                                     <template x-if="row.requisito">
                                         <a href="javascript:void(0)"
-                                        @click="download('requisitos-legales', row.requisito)">
+                                        @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
                                             <i class="ti ti-download text-success fs-6"></i>
                                         </a>
                                     </template>
@@ -443,7 +443,7 @@
                                         <td>
                                             <template x-if="row.acusepdf">
                                                 <a href="javascript:void(0)"
-                                                    @click="download('requisitos-legales', row.acusepdf)">
+                                                    @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
                                                     <i class="ti ti-download text-success fs-6"></i>
                                                 </a>
                                             </template>
@@ -454,7 +454,7 @@
                                         <td>
                                             <template x-if="row.requisitolegalpdf">
                                                 <a href="javascript:void(0)"
-                                                    @click="download('requisitos-legales', row.requisitolegalpdf)">
+                                                    @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
                                                     <i class="ti ti-download text-success fs-6"></i>
                                                 </a>
                                             </template>
