@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
      const modulo = content.dataset.modulo;
 
      const moduleKey = (document.getElementById('container')?.dataset?.moduleStationKey) || 'sasisopa';
+     const downloadEndpoint = moduleKey === 'sgm'
+         ? '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download'
+         : '/requisitos-legales/download';
 
     table1 = $('#table-lista-requisitos-legales-detalle').DataTable({
         processing: true,
@@ -127,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                     <a class="${!noDescargar ? 'disabled' : ''}" href="javascript:void(0)"
                     ${!noDescargar ? '' : `
-                        @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=${row.id}&variant=acuse'"
+                        @click="window.location.href='${downloadEndpoint}?matrix_id=${row.id}&variant=acuse'"
                         `}>
                         <i class="ti ti-download fs-6 text-success"></i>
                     </a>
@@ -157,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div x-data="actions()">
                     <a class="${!noDescargar ? 'disabled' : ''}" href="javascript:void(0)"
                      ${!noDescargar ? '' : `
-                        @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=${row.id}&variant=requisito'"
+                        @click="window.location.href='${downloadEndpoint}?matrix_id=${row.id}&variant=requisito'"
                         `}>
                         <i class="ti ti-download fs-6 text-success"></i>
                     </a>
@@ -265,4 +268,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
-

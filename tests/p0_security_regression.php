@@ -78,6 +78,8 @@ file_put_contents($downloadDirectory . '/documentos-personal/ine/tenant-a-ine.pd
 file_put_contents($downloadDirectory . '/documentos-personal/ine/tenant-b-ine.pdf', 'tenant-b-private-document');
 file_put_contents($downloadDirectory . '/reuisitos-legales/sgm-a-acuse.pdf', 'sgm-a-acuse');
 file_put_contents($downloadDirectory . '/reuisitos-legales/sgm-a-requisito.pdf', 'sgm-a-requisito');
+file_put_contents($downloadDirectory . '/reuisitos-legales/sasisopa-a-acuse.pdf', 'sasisopa-a-acuse');
+file_put_contents($downloadDirectory . '/reuisitos-legales/sasisopa-a-requisito.pdf', 'sasisopa-a-requisito');
 touch($dbFile);
 $login = p0_request('POST', '/__test/login-a');
 $cookie = p0_cookie($login['headers']);
@@ -189,6 +191,23 @@ $tests = [
         }
         p0_assert(p0_request('GET', '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=401&variant=acuse&file=../../sgm-a-acuse.pdf', null, $cookie)['body'] === 'sgm-a-acuse', 'Expected client filename to be ignored.');
         p0_assert(p0_request('GET', '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=401&variant=acuse&module=sasisopa&id_estacion=202', null, $cookie)['body'] === 'sgm-a-acuse', 'Expected client module and station to be ignored.');
+    },
+    'AUTHZ-DL-002 SASISOPA canonical download allows authorized variants' => static function (): void {
+        global $cookie;
+        p0_request('POST', '/__test/login-a', null, $cookie);
+        foreach (['acuse' => 'sgm-a-acuse', 'requisito' => 'sgm-a-requisito'] as $variant => $body) {
+            $response = p0_request('GET', '/requisitos-legales/download?matrix_id=401&variant=' . $variant, null, $cookie);
+            p0_assert($response['body'] === $body, 'Expected SASISOPA canonical download for ' . $variant . '.');
+        }
+    },
+    'AUTHZ-DL-002 SASISOPA canonical download denies invalid authority' => static function (): void {
+        global $cookie;
+        p0_request('POST', '/__test/login-a', null, $cookie);
+        foreach (['matrix_id=402&variant=acuse', 'matrix_id=405&variant=acusepdf', 'matrix_id=999&variant=acuse'] as $query) {
+            $response = p0_request('GET', '/requisitos-legales/download?' . $query, null, $cookie);
+            p0_assert($response['body'] === '', 'Expected SASISOPA denial for ' . $query . '.');
+        }
+        p0_assert(p0_request('GET', '/requisitos-legales/download?matrix_id=405&variant=acuse&module=sgm&id_estacion=202&file=../../sasisopa-a-acuse.pdf', null, $cookie)['body'] === 'sasisopa-a-acuse', 'Expected client authority overrides to be ignored.');
     },
     'SEC-UPLOAD-004 does not expose a sensitive document through its former public path' => static function (): void {
         $response = p0_request('GET', '/uploads/archivos/documentos-personal/ine/tenant-a-ine.pdf');
