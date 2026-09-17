@@ -1526,6 +1526,7 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/normatividad-aplicable-mediciones/inventario-normatividad/pdf', Route::auth(['SgmNormatividadController', 'pdfInventario']));
         $r->addRoute('GET', '/normatividad-aplicable-mediciones/pdf-requisito-legal', Route::auth(['SgmNormatividadController', 'pdfRequisitoLegal']));
         $r->addRoute('GET', '/normatividad-aplicable-mediciones/requisito-legal-sgm', Route::auth(['SgmNormatividadController', 'requisitoLegal']));        //---------- 5. NORMATIVIDAD APLICABLE A MEDICIONES ----------------------------------------------
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/requisitos-legales/download', Route::auth(['SgmNormatividadController', 'downloadRequisitoLegal']));
 
         //--------- 6. Gestion de los Recursos ------------------------------------------------------------
         $r->addRoute('GET', '/gestion-recursos', Route::auth(['SgmGestionRecursosController', 'index']));

@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                     <a class="${!noDescargar ? 'disabled' : ''}" href="javascript:void(0)"
                     ${!noDescargar ? '' : `
-                        @click="download('requisitos-legales','${archivo}')"
+                        @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=${row.id}&variant=acuse'"
                         `}>
                         <i class="ti ti-download fs-6 text-success"></i>
                     </a>
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div x-data="actions()">
                     <a class="${!noDescargar ? 'disabled' : ''}" href="javascript:void(0)"
                      ${!noDescargar ? '' : `
-                        @click="download('requisitos-legales','${archivo}')"
+                        @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=${row.id}&variant=requisito'"
                         `}>
                         <i class="ti ti-download fs-6 text-success"></i>
                     </a>
@@ -264,5 +264,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
-
 
