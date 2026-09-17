@@ -23,32 +23,10 @@
 
     <!-- Alpine + Axios -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
 
     <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
-    <script>
-        (function() {
-            function getCsrfToken() {
-                const meta = document.querySelector('meta[name="csrf-token"]');
-                return meta ? meta.getAttribute('content') : null;
-            }
-
-            const csrfToken = getCsrfToken();
-            if (csrfToken) {
-                axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-
-                axios.interceptors.request.use(
-                    function(config) {
-                        config.headers['X-CSRF-TOKEN'] = getCsrfToken();
-                        return config;
-                    },
-                    function(error) {
-                        return Promise.reject(error);
-                    }
-                );
-            }
-        })();
-    </script>
+    <script src="<?= asset('js/core/http-security.js') ?>"></script>
 </head>
 
 <body class="link-sidebar">
@@ -148,7 +126,7 @@
                             <h6 class="mb-0 fs-5 fw-normal text-white"><?= implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2)); ?></h6>
                             <span class="fs-2"><?= $user->puesto->tipo_puesto ?></span>
                         </div>
-                        <a href="javascript:void(0)" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir" onclick="performLogout()">
+                        <a href="#" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-action="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
                             <i class="ti ti-power text-danger fs-6"></i>
                         </a>
                     </div>
@@ -241,7 +219,7 @@
                                                 </div>
 
                                                 <div class="d-grid py-4 px-7 pt-8">
-                                                    <a href="javascript:void(0)" class="btn btn-outline-primary" onclick="performLogout()">Salir</a>
+                                                    <a href="#" class="btn btn-outline-primary" data-action="logout">Salir</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -299,6 +277,7 @@
     <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
     <script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script>
     <script src="<?= asset('js/core/actions.alpine.js?v=1.1') ?>"></script>
+    <script src="<?= asset('js/core/inline-handler-remediation.js') ?>"></script>
 
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>

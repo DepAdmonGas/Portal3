@@ -10,6 +10,46 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 
 class SeguroController extends BaseController{
 protected string $modulo = 'seguro';
+
+private const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+private function validateSeguroUpload(?array $file): array
+{
+if ($file === null) {
+return ['valid' => false, 'message' => 'Archivo requerido.'];
+}
+
+if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+return ['valid' => false, 'message' => 'El archivo no se pudo subir correctamente.'];
+}
+
+if (!isset($file['tmp_name'], $file['size'], $file['name'])
+    || !is_string($file['tmp_name'])
+    || !is_int($file['size'])
+    || $file['size'] < 1
+    || $file['size'] > self::MAX_UPLOAD_BYTES
+    || !is_file($file['tmp_name'])) {
+return ['valid' => false, 'message' => 'El archivo excede el tamaño permitido o es inválido.'];
+}
+
+$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+$allowed = [
+'pdf' => ['application/pdf'],
+'jpg' => ['image/jpeg'],
+'jpeg' => ['image/jpeg'],
+'png' => ['image/png'],
+];
+if (!isset($allowed[$extension])) {
+return ['valid' => false, 'message' => 'Tipo de archivo no permitido.'];
+}
+
+$mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+if (!is_string($mime) || !in_array($mime, $allowed[$extension], true)) {
+return ['valid' => false, 'message' => 'El contenido del archivo no coincide con su extensión.'];
+}
+
+return ['valid' => true, 'extension' => $extension];
+}
 public function index(){
 
 $title = 'Seguro';
@@ -87,15 +127,19 @@ if (!file_exists($carpeta)) {
 }
 
 $nombreArchivo = null;
+$validation = $this->validateSeguroUpload($file);
+if (!$validation['valid']) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => $validation['message']]);
+return;
+}
 
 try {
 
 Capsule::beginTransaction();
 
-if ($file && $file['error'] === UPLOAD_ERR_OK) {
-
-$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-$nombreArchivo = uniqid('rep_') . '.' . $extension;
+if ($file) {
+$nombreArchivo = bin2hex(random_bytes(16)) . '.' . $validation['extension'];
 $rutaDestino = $carpeta . $nombreArchivo;
 
 if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {
@@ -233,15 +277,19 @@ if (!file_exists($carpeta)) {
 }
 
 $nombreArchivo = null;
+$validation = $this->validateSeguroUpload($file);
+if (!$validation['valid']) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => $validation['message']]);
+return;
+}
 
 try {
 
 Capsule::beginTransaction();
 
-if ($file && $file['error'] === UPLOAD_ERR_OK) {
-
-$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-$nombreArchivo = uniqid('rep_') . '.' . $extension;
+if ($file) {
+$nombreArchivo = bin2hex(random_bytes(16)) . '.' . $validation['extension'];
 $rutaDestino = $carpeta . $nombreArchivo;
 
 if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {

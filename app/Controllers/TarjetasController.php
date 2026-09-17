@@ -16,6 +16,110 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 class TarjetasController extends BaseController{
 protected string $modulo = 'solicitud-tarjetas';
 
+private const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
+private function validateTarjetaUpload(?array $file): array
+{
+    if ($file === null) {
+        return ['valid' => true, 'extension' => null];
+    }
+
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        return ['valid' => false, 'message' => 'El archivo no se pudo subir correctamente.'];
+    }
+
+    if (!isset($file['tmp_name'], $file['size'], $file['name'])
+        || !is_string($file['tmp_name'])
+        || !is_int($file['size'])
+        || $file['size'] < 1
+        || $file['size'] > self::MAX_UPLOAD_BYTES
+        || !is_file($file['tmp_name'])) {
+        return ['valid' => false, 'message' => 'El archivo excede el tamaño permitido o es inválido.'];
+    }
+
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $allowed = [
+        'jpg' => ['image/jpeg'],
+        'jpeg' => ['image/jpeg'],
+        'png' => ['image/png'],
+        'pdf' => ['application/pdf'],
+    ];
+
+    if (!isset($allowed[$extension])) {
+        return ['valid' => false, 'message' => 'Tipo de archivo no permitido.'];
+    }
+
+    $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+    if (!is_string($mime) || !in_array($mime, $allowed[$extension], true)) {
+        return ['valid' => false, 'message' => 'El contenido del archivo no coincide con su extensión.'];
+    }
+
+    return ['valid' => true, 'extension' => $extension];
+}
+
+private function tarjetaJsonPayload(): array
+{
+    try {
+        $payload = json_decode(file_get_contents('php://input') ?: '', true, 512, JSON_THROW_ON_ERROR);
+    } catch (\JsonException) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'errors' => ['json' => 'El cuerpo JSON no es válido.']]);
+        return [];
+    }
+
+    $allowed = ['id', 'razon_social', 'nombre_usuario', 'vehiculo', 'placas', 'no_unidad', 'tarjeta', 'tipo_tarjeta'];
+    if (!is_array($payload) || array_diff(array_keys($payload), $allowed)) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'errors' => ['json' => 'La estructura JSON no es válida.']]);
+        return [];
+    }
+
+    $rules = [
+        'id' => ['required' => true, 'integer' => true, 'min' => 1],
+        'razon_social' => ['max' => 255],
+        'nombre_usuario' => ['max' => 255],
+        'vehiculo' => ['max' => 255],
+        'placas' => ['max' => 20],
+        'no_unidad' => ['max' => 20],
+        'tarjeta' => ['max' => 50],
+        'tipo_tarjeta' => ['enum' => ['Cliente Nuevo', 'Tarjeta Adicional', 'Desgaste', 'Reposición por extravio $50.00']],
+    ];
+    $errors = [];
+    foreach ($rules as $field => $rule) {
+        $value = $payload[$field] ?? null;
+        if (($rule['required'] ?? false) && $value === null) {
+            $errors[$field] = 'Campo requerido.';
+            continue;
+        }
+        if ($field === 'id' && (!is_int($value) || $value < 1)) {
+            $errors[$field] = 'Debe ser un entero positivo.';
+            continue;
+        }
+        if ($field !== 'id' && (!is_string($value) || trim($value) === '')) {
+            $errors[$field] = 'Debe ser texto no vacío.';
+            continue;
+        }
+        if (isset($rule['max']) && is_string($value) && mb_strlen($value) > $rule['max']) {
+            $errors[$field] = 'Excede la longitud permitida.';
+        }
+        if (isset($rule['enum']) && !in_array($value, $rule['enum'], true)) {
+            $errors[$field] = 'Valor no permitido.';
+        }
+    }
+    if ($errors) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'errors' => $errors]);
+        return [];
+    }
+
+    foreach (array_keys($rules) as $field) {
+        if (is_string($payload[$field] ?? null)) {
+            $payload[$field] = trim($payload[$field]);
+        }
+    }
+    return $payload;
+}
+
 public function index(){
 
 $title = 'Solicitud de Tarjetas';
@@ -260,12 +364,17 @@ mkdir_safe($carpeta, true);
 $nombreArchivo = null;
 try {
 
+$upload = $this->validateTarjetaUpload($file);
+if (!$upload['valid']) {
+http_response_code(422);
+echo json_encode(['success' => false, 'errors' => ['archivo' => $upload['message']]]);
+return;
+}
+
 // SUBIR ARCHIVO (opcional)
 if ($file && $file['error'] === UPLOAD_ERR_OK) {
-// Validar extensión
-$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 // nombre único
-$nombreArchivo = uniqid('rep_') . '.' . $extension;
+$nombreArchivo = bin2hex(random_bytes(16)) . '.' . $upload['extension'];
 $rutaDestino = $carpeta . $nombreArchivo;
 
 if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {
@@ -614,9 +723,12 @@ echo json_encode([
 public function updateReporteFormulario(){
 
 header('Content-Type: application/json');
-$data = json_decode(file_get_contents('php://input'), true);
+$data = $this->tarjetaJsonPayload();
+if ($data === []) {
+return;
+}
 
-$id = $data['id'] ?? null;
+$id = $data['id'];
 $razon_social = $data['razon_social'] ?? null;
 $nombre_usuario = $data['nombre_usuario'] ?? null;
 $vehiculo = $data['vehiculo'] ?? null;

@@ -28,8 +28,8 @@ Este documento es una fotografía del estado actual. No sustituye ni reescribe l
 | SEC-WEBHOOK-008 | Medium | Webhook Telegram sin autenticidad ni replay protection. | REMEDIATED_LOCAL_PRODUCTION_VERIFICATION_REQUIRED | Sí; secret header y deduplicación. | Configurar secreto y storage compartido/privado. | No. | Registro y entrega controlada del webhook. |
 | SEC-SESSION-009 | Medium | Seguridad de sesión/TLS dependía de entorno/proxy. | REMEDIATED_LOCAL_PRODUCTION_VERIFICATION_REQUIRED | Sí; endurecimiento de sesión y rotación CSRF post-login. | Verificar HTTPS, cookies y session storage. | No. | Checklist de sesión en producción. |
 | PRIV-LOG-010 | Medium | Logging de autenticación retenía PII. | REMEDIATED_LOCAL_PRODUCTION_VERIFICATION_REQUIRED | Sí; minimización y redacción central. | Verificar ruta, ACL, rotación y retención. | No. | Revisión operacional de logs. |
-| DATA-VALID-011 | Medium | Validación y mass assignment heterogéneos. | NEEDS_REASSESSMENT | No; fuera de alcance. | No evaluada. | No. | Inventario acotado de payloads alcanzables. |
-| SEC-CSP-012 | Low | CSP mantiene `unsafe-inline`/`unsafe-eval`. | NEEDS_REASSESSMENT | No; fuera de alcance. | Requiere estrategia de nonces/hashes. | No. | Inventario de scripts antes de endurecer CSP. |
+| DATA-VALID-011 | Medium | Validación y mass assignment heterogéneos. | REMEDIATED_LOCAL_WITH_DOCUMENTED_RESIDUAL_CONSTRAINTS | Sí fuera de `departamento-operativo`; uploads y contrato JSON endurecidos. Seguro permanece en almacenamiento público por requisito arquitectónico. | Verificar listado de directorio y ejecución de scripts en producción. | 3 superficies de `departamento-operativo` diferidas. | Reassessment de SEC-CSP-012. |
+| SEC-CSP-012 | Low | CSP mantiene `unsafe-inline`/`unsafe-eval`. | READY_FOR_IMPLEMENTATION | Reassessment completo; no se implementó CSP. | Report-Only, nonce/refactor y verificación de CDN/Alpine/embed. | No. | Diseñar e implementar un slice Report-Only autorizado. |
 | DEP-TEST-013 | Low | Dependencias/controles sin verificación automatizada visible. | NEEDS_REASSESSMENT | No; fuera de alcance. | CI y auditoría de lockfiles pendientes. | No. | Diseñar slice de CI/dependencias. |
 | ARCH-001 | Informational | DI no se aplica uniformemente. | NEEDS_REASSESSMENT | No; fuera de alcance. | No evaluada. | No. | Revisión arquitectónica acotada. |
 | OPS-001 | Informational | Infraestructura, retención y auditoría no verificables desde repositorio. | PRODUCTION_ONLY_PENDING | No aplica al repositorio. | Runbook e inspección de producción. | No. | Preparar y ejecutar runbook aprobado. |
@@ -42,6 +42,7 @@ Este documento es una fotografía del estado actual. No sustituye ni reescribe l
 - **AUTHZ-TENANT-001:** el cambio de estación se autoriza contra el alcance permitido antes de mutar la sesión.
 - **AUTHZ-TOKEN-003:** las operaciones personales de Telegram derivan identidad de la sesión, no del cliente.
 - **SEC-XSS-005:** los sinks HTML inventariados permanecen detrás de la frontera de sanitización acordada.
+- **DATA-VALID-011:** las superficies revisadas fuera de `departamento-operativo` tienen validación estricta de uploads y contrato JSON. Seguro permanece bajo `public/uploads/archivos/poliza-seguro/` por requisito arquitectónico; el acceso estático público es residual y el listado/ejecución de scripts requiere verificación de producción.
 - **DOC-001:** este documento centraliza el estado y remite a la auditoría, el plan y el historial sin reemplazarlos.
 
 ## 4. Remediated Locally / Production Pending
@@ -53,6 +54,10 @@ La aplicación valida el encabezado secreto de Telegram y protege contra replay 
 ### SEC-RATE-006
 
 El límite de login usa almacenamiento privado atómico. Producción debe comprobar `storage/private/rate-limits`, permisos, la topología de almacenamiento compartido, que `REMOTE_ADDR` represente una dirección confiable detrás del proxy y el comportamiento HTTP 429/`Retry-After`.
+
+### SEC-CSP-012
+
+La reevaluación fuera de `departamento-operativo` confirmó CSP enforced con excepciones `'unsafe-inline'`/`'unsafe-eval'`, numerosos bloques inline, Alpine CDN, CDNs externos, estilos inline y un `<embed>` PDF same-origin. El riesgo de enforcement estricto inmediato es alto. El siguiente paso autorizado debe ser Report-Only con una estrategia de nonce/refactor y análisis de reportes; no se modificó el header en este slice.
 
 ### PRIV-LOG-010
 
@@ -128,6 +133,6 @@ El harness compartido de seguridad está verde a nivel de infraestructura. Esto 
 
 - No hay autorización para producción, despliegue, secretos, infraestructura, proxy, base de datos ni archivos históricos.
 - No hay autorización para modificar el módulo concurrente `departamento-operativo` hasta liberación explícita.
-- No iniciar DATA-VALID-011, SEC-CSP-012, DEP-TEST-013 ni ARCH-001 sin un nuevo slice de evaluación.
+- DATA-VALID-011 queda cerrado localmente con restricciones residuales documentadas. SEC-CSP-012 está en `PARTIAL_HARDENING_CHECKPOINT`: la CSP enforced permanece sin cambios, no quedan scripts ejecutables inline ni handlers inline fuera de `departamento-operativo`, y permanecen pendientes Alpine/unsafe-eval, `javascript:void(0)`, estilos inline, el módulo diferido y el eventual tightening de enforcement. DEP-TEST-013 y ARCH-001 siguen pendientes de reevaluación.
 - OPS-001 permanece **PRODUCTION_ONLY_PENDING** con runbook pendiente.
 - SQL-001 permanece **INFORMATIONAL_NO_REMEDIATION** y se reevalúa contextualmente al cambiar módulos.
