@@ -1,9 +1,7 @@
 <div
     x-data="sgm()"
     class="container-fluid">
-    <script>
-        window.estacionesSgm = <?= json_encode($estaciones) ?>;
-    </script>
+    <script type="application/json" id="gestoria-sgm-data"><?= json_encode($estaciones, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 
     <div class="row">
 

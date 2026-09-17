@@ -16,9 +16,7 @@
 
     <div id="personal-content">
 
-    <script>
-        window.__PUESTOS__ = <?= json_encode($puestos, JSON_UNESCAPED_UNICODE) ?>;
-    </script>
+    <script type="application/json" id="personal-data"><?= json_encode($puestos, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 
     <div class="text-end mt-2">
         <div class="btn-group">

@@ -204,3 +204,294 @@
 - Classification: two confirmed findings (Medium, high confidence); no mass assignment observed in the reviewed flows; no new enum-validation gap was confirmed. `UNVALIDATED_JSON_FOUND` is yes because the Tarjetas update payload lacks a structural contract. Broader raw JSON and file-upload call sites in the excluded operational module remain deferred, not counted as confirmed here.
 - Tests: existing security regression baseline passed: 62 passed, 0 failed, 0 skipped. No tests or implementation were changed. Production was not touched.
 - Next recommended slice: `DATA-VALID-011-TARJETAS-SEGURO-UPLOAD-JSON-CONTRACT`.
+
+## DATA-VALID-011-TARJETAS-SEGURO-UPLOAD-JSON-CONTRACT
+
+- Scope: only `TarjetasController` and `SeguroController`; `departamento-operativo`, its views/assets, routes, middleware, and deferred services were untouched.
+- `DATA-VALID-011-A`: upload validation is remediated locally. Tarjetas accepts one optional JPG/JPEG/PNG/PDF upload up to 5,242,880 bytes, requires a server-detected MIME/extension pair, rejects upload errors and spoofed extensions, and stores a server-generated filename. Existing authenticated download behavior remains public-storage based, so historical files and a future private-storage decision remain separate work.
+- Tarjetas JSON contract is remediated locally for `POST /solicitud-tarjetas/update-reporte-formulario`: valid JSON is required; only the documented keys are accepted; `id` must be a positive integer; business strings are trimmed, non-empty, and bounded to their database-aligned limits; `tipo_tarjeta` uses the existing UI allowlist. Malformed JSON, wrong scalar types, overlong values, and unexpected keys return validation errors.
+- `DATA-VALID-011-B`: upload validation is remediated locally. Seguro accepts one required JPG/JPEG/PNG/PDF upload up to 10,485,760 bytes, requires server-detected MIME/extension correspondence, rejects upload errors and spoofing, and stores a server-generated filename. Insurance policies and coverage may contain contract/customer information; public storage is not considered justified. New private storage would require extending the existing authorized download resolver without breaking current downloads.
+- Historical Seguro files remain in the existing public location and require a separately approved inventory, migration, authorization, and rollback plan. Therefore `DATA-VALID-011-B` remains partial pending that storage slice.
+- Regression coverage: `tests/data_valid_011_regression.php` covers valid files, invalid extensions, MIME spoofing, oversized files, partial uploads, and the strict JSON contract. The new suite passes 10 tests. Existing security baseline has one unrelated pre-existing failure in the XSS sink closure scan for `app/Views/revisionresultados/index.php`; no file in that view was changed here.
+
+## SEC-XSS-005-REGRESSION-REASSESSMENT
+
+- Regression detected: yes. `app/Views/revisionresultados/index.php` had no uncommitted changes, but commit `2882c40` changed all three closure-protected sinks from `DOMPurify.sanitize(...)` back to raw `x-html`: `implementacion.resultado`, `incidentes.semestre1`, and `incidentes.semestre2`.
+- Root cause: a later merge/checkpoint reintroduced the three sinks; this was a real regression, not a test false positive or a newly discovered sink.
+- Fix: restored the minimum three-line DOMPurify hunk. The values are persisted/generated report HTML and require HTML rendering; `x-text` would change behavior.
+- Verification: SEC-XSS-005 closure now passes. Full security regression coverage is green: 72 passed, 0 failed, 0 skipped, including the 10 DATA-VALID-011 regression tests.
+- Status: `SEC-XSS-005` remediated locally. No production files, deployment, or commit were created.
+
+## DATA-VALID-011-B — public storage hardening closure
+
+- Architecture decision: Seguro files must remain under `public/uploads/archivos/`; no private-storage migration or historical relocation is planned for this finding.
+- `POLIZA_STORAGE_PATH` and `COBERTURA_STORAGE_PATH`: `public/uploads/archivos/poliza-seguro/`. Both endpoints retain the strict 10,485,760-byte limit, real MIME validation, extension/MIME correspondence, upload-error rejection, and server-generated random filenames.
+- The original filename is used only to derive the validated extension; it is never used as a physical path. PHP, PHTML, double-extension, traversal-like, and other executable/scriptable extensions are rejected or neutralized by the server-generated name.
+- Downloads use the authenticated `/download?tipo=poliza-seguro` controller flow, but direct static access remains possible because the required storage root is public. Directory listing and script execution behavior are deployment/server settings and remain `UNKNOWN` pending production verification.
+- `PUBLIC_STORAGE_REQUIRED_BY_ARCHITECTURE: YES`; `PUBLIC_EXPOSURE: RESIDUAL_ARCHITECTURAL_CONSTRAINT`. This is not private storage and does not provide filesystem-level private-file guarantees.
+- `DATA-VALID-011-B`: `UPLOAD_VALIDATION: REMEDIATED_LOCAL`; final status `REMEDIATED_LOCAL_WITH_RESIDUAL_PUBLIC_STORAGE_CONSTRAINT`.
+
+## DATA-VALID-011-CLOSURE
+
+- Final status: `REMEDIATED_LOCAL_WITH_DOCUMENTED_RESIDUAL_CONSTRAINTS` for all reviewed surfaces outside `departamento-operativo`.
+- `DATA-VALID-011-A`: `REMEDIATED_LOCAL`. Tarjetas upload and JSON validation remain strict: real MIME, extension allowlist, size limit, server-generated filename, typed JSON, bounds, and unexpected-key rejection.
+- `DATA-VALID-011-B`: `REMEDIATED_LOCAL_WITH_RESIDUAL_PUBLIC_STORAGE_CONSTRAINT`. Seguro remains at `public/uploads/archivos/poliza-seguro/` because public storage is required by architecture. Static access is possible; filenames are not predictable. Directory listing and script execution remain `PRODUCTION_VERIFICATION_PENDING` and are not new findings.
+- Three `departamento-operativo` surfaces identified during reassessment remain deferred and excluded from this closure.
+- Final regression baseline: 76 passed, 0 failed, 0 skipped. No functional code changed in this closure; production and historical files were untouched.
+
+## SEC-CSP-012-REASSESSMENT
+
+- Scope: read-only inventory outside `departamento-operativo`; six active layouts were reviewed (`auth`, `blank`, `configuracion`, `main`, `sasisopa`, `sgm`). No CSP implementation or layout change was made.
+- Current state: `public/index.php` sends an enforced CSP, but it explicitly includes `'unsafe-inline'`, `'unsafe-eval'`, CDN script/style exceptions, `data:`, `blob:`, and `https:` image sources. No Report-Only header or CSP report endpoint was found.
+- Inventory: 91 external script-source occurrences and 16 inline script blocks outside the excluded module; 17 legacy inline event-handler attributes; approximately 258 inline style attributes and 4 inline style blocks; Alpine expressions are widespread (`174` `x-data`, `16` `x-init`, and numerous `@click`/`@change` bindings). `eval()`/`new Function()` were not found in application code outside vendor bundles, but the current Alpine CDN build requires evaluation of expressions and therefore cannot be treated as strict-CSP compatible without a CSP-specific build/refactor.
+- External domains: `cdn.jsdelivr.net` (DOMPurify, Axios, Iconify and other CDN assets), `unpkg.com` (Alpine CDN), `cdn.ckeditor.com` (CKEditor loader), and `www.admongas.com.mx` for a browser-side external API call. Server-side Telegram/Pwned Password calls are not browser CSP sources.
+- Other directives: same-origin forms are the observed pattern, so `form-action 'self'` is feasible. No `<base>` was found, so `base-uri 'self'`/`none` is feasible. `frame-ancestors 'self'` is currently used; no third-party embedding requirement was found. A same-origin PDF `<embed>` exists, so `object-src 'none'` is not immediately compatible without changing that feature. No worker or WebSocket requirement was found.
+- Nonce architecture: central per-request nonce generation is feasible in bootstrap/render context, and propagation to the six layouts is feasible. Existing dynamic inline blocks and event-handler attributes mean a nonce migration requires a deliberate refactor; static hash coverage is limited. Report-Only should precede enforcement, with an approved report collector/analysis process (none currently exists).
+- Proposed conceptual Report-Only policy: `default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self' https://www.admongas.com.mx; object-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'`. This is an inventory baseline, not an enforcement recommendation; `'unsafe-inline'` and `'unsafe-eval'` are temporary compatibility exceptions requiring removal work.
+- Classification: `CSP_DEPLOYMENT_RISK: HIGH`; confirmed blockers for strict enforcement are inline scripts/handlers/styles, current Alpine evaluation behavior, external CDN dependencies, and the same-origin PDF embed. `SEC-CSP-012` is ready for a separately authorized Report-Only implementation slice, not closed.
+
+## SEC-CSP-012-REPORT-ONLY-IMPLEMENTATION
+
+- Status: `REPORT_ONLY_STAGE_IMPLEMENTED`; final finding status remains `PARTIAL_REPORT_ONLY_STAGE`.
+- `public/index.php` now emits `Content-Security-Policy-Report-Only` at the same central bootstrap point as the existing enforced header. The enforced policy value is preserved byte-for-byte; no enforcement directive was changed or weakened.
+- Candidate policy uses explicit script origins (`self`, jsDelivr, unpkg, and CKEditor), omits `script-src 'unsafe-inline'`, and retains `'unsafe-eval'` only as the documented temporary Alpine compatibility exception. `style-src 'unsafe-inline'` remains temporary for the observed inline style attributes. `connect-src` is limited to `self` and `https://www.admongas.com.mx`; `object-src 'self'`, `base-uri 'self'`, `form-action 'self'`, and `frame-ancestors 'none'` are present.
+- No nonce architecture, inline-script migration, Alpine change, layout change, report endpoint, or `departamento-operativo` change was made. Violation collection remains browser-console-only; no manual browser observation was performed in this slice.
+- Regression coverage: `tests/csp_report_only_regression.php` passes 8 tests, including exact enforcement preservation, Report-Only directives, no script inline exception, and no wildcard sources. Combined local security tests pass 84, fail 0, skipped 0.
+- Production was not touched and no commit was created. Next authorized slice: `SEC-CSP-012-INLINE-SCRIPT-INVENTORY-REMEDIATION`.
+
+## SEC-CSP-012-INLINE-SCRIPT-INVENTORY-REMEDIATION
+
+- Status: `PARTIAL_INLINE_SCRIPT_REMEDIATION`; scope excludes `departamento-operativo` and its assets.
+- Baseline inventory: 16 inline script blocks and 17 inline event-handler attributes. Current inventory remains 14 inline script blocks and 17 handlers. The two-block reduction is the static Highlight.js initialization extracted from `sgm.php` and `sasisopa.php` into `public/assets/js/core/highlight-init.js`.
+- The extracted code has no PHP/request-specific data and preserves existing load order by remaining at the same layout footer position. No new bundler, dependency, or global refactor was introduced.
+- Remaining inline scripts are classified as: dynamic JSON/configuration blocks (`window.temas`, `window.estacionesSgm`, `window.__PUESTOS__`, and `calibracion-data`) requiring a DOM/JSON or nonce design; shared Axios/CSRF and scroll bootstrap blocks requiring coordinated layout migration; and Alpine-dependent expressions, which remain deferred. No inline styles were touched.
+- The 17 remaining inline event handlers are not changed in this slice; `javascript:` URLs remain pending for the same reason. `departamento-operativo` occurrences remain `DEFERRED_DEPARTAMENTO_OPERATIVO`.
+- CSP enforcement remains unchanged. Report-Only remains enabled with `script-src` free of `'unsafe-inline'` and temporary `'unsafe-eval'` preserved. Regression test now passes 10 CSP checks; combined local security tests pass 82, fail 0, skipped 0.
+- Production was not touched and no commit was created. Next slice: `SEC-CSP-012-NONCE-AND-ALPINE-PLAN`.
+
+## SEC-CSP-012-NONCE-AND-ALPINE-PLAN
+
+- This is a read-only design checkpoint. No production code, CSP header, Alpine asset, handler, or style was changed.
+- CSP source is `public/index.php`, directly in the HTTP bootstrap `header()` calls; there is no separate CSP header service or middleware. The earliest central nonce source should therefore be a request-scoped security-header/bootstrap context created before the headers are emitted, with the same value passed into the renderer/layout data. It must be generated with `base64_encode(random_bytes(16))`, never from session/timestamp/client input, and never persisted or cookie-delivered. One nonce must serve the response header and all authorized inline scripts.
+- Layout propagation should use the existing layout variables/context (`$scripts`, `$links`, and controller-provided view data), adding one `$cspNonce` value at the common render boundary rather than generating it independently in `main.php`, `sgm.php`, `sasisopa.php`, or `configuracion.php`. Active layouts outside `departamento-operativo` requiring access: 6 (`auth`, `blank`, `main`, `sgm`, `sasisopa`, `configuracion`); only layouts containing future nonce-authorized scripts need the attribute.
+- The 12 dynamic candidates are: `public`/layout CSRF-Axios bootstrap blocks (main has two historical copies; sgm, sasisopa, configuracion have one each), `app/Views/gestoria/sgm.php` (`window.estacionesSgm`), `app/Views/cursos/modulo.php` (`window.temas`), `app/Views/personal/index.php` (`window.__PUESTOS__`), and the four `controlactividadproceso/*` `calibracion-data` JSON blocks. The PHP values are request data and must use JSON serialization/DOM transport, never string concatenation.
+- Classification: `NONCE_REQUIRED=0`, `BETTER_EXTERNALIZE=4` (the four JSON/config bootstraps can move to `data-*` or inert JSON nodes), `JSON_DATA_BOOTSTRAP=8`, `REMOVE_AS_DEAD_CODE=0`, `NEEDS_MORE_REVIEW=0`. The remaining layout CSRF/scroll bootstrap code is static and should be externalized or consolidated before nonce adoption; it is not a reason to introduce a nonce by itself.
+- No response-cache configuration was found in the repository; HTML caching is `UNKNOWN` and nonce cache risk is therefore `MEDIUM` until deployment/proxy behavior is verified. Nonce-bearing HTML must not be shared across requests with a mismatched CSP header.
+- Alpine is loaded as the standard CDN build `https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js` in active layouts; a local standard build also exists at `public/assets/libs/alpinejs/dist/alpinejs.min.js`. Exact CDN version is unresolved (`3.x.x`), and the build is `STANDARD`, not CSP. The local bundle contains dynamic-function evaluation, so removing `'unsafe-eval'` requires an Alpine CSP build or equivalent refactor; changing only the URL is insufficient.
+- Outside `departamento-operativo`, the inventory remains approximately `174 x-data`, `16 x-init`, `266 x-if`, `293 x-show`, and `658 x-model` attributes, plus extensive `@`/`:` bindings. Complexity is predominantly `INLINE_EXPRESSION`/`COMPLEX_EXPRESSION`; reusable component methods already exist in external `Alpine.data` files. Migration risk is `HIGH` because markup expressions, lifecycle timing, dynamic components, and representative authenticated modules must remain behaviorally compatible.
+- The 17 handler inventory includes 12 in-scope legacy HTML handlers (logout and history actions) and 5 deferred `departamento-operativo` handlers. Nonce does not authorize any of them. In-scope handlers are mostly `EASY_EVENT_LISTENER` candidates (8 logout controls plus 4 history controls); deferred handlers remain `DEFERRED_DEPARTAMENTO_OPERATIVO`.
+- Conditions to remove Report-Only `'unsafe-eval'`: activate and pin a verified Alpine CSP-compatible build; migrate unsupported expressions to `Alpine.data`/external listeners; scan application dependencies for `eval`/`new Function`; manually verify navigation, dropdowns, modals, forms, reactive fields, logout, SGM, SASISOPA, and Configuración; then observe a clean browser-console Report-Only run outside the excluded module.
+- Recommended order: (1) nonce infrastructure and cache policy, (2) externalize/DOM-transport the 12 dynamic blocks, (3) migrate the 12 in-scope legacy handlers, (4) plan and pilot Alpine CSP migration, (5) remove Report-Only `'unsafe-eval'`, (6) browser validation, (7) only then consider enforcement tightening. `style-src 'unsafe-inline'` remains outside scope.
+- Baseline security suite remains green at 82 passed, 0 failed, 0 skipped. `SEC-CSP-012` status: `PARTIAL_NONCE_ALPINE_PLAN_READY`.
+
+## SEC-CSP-012-DYNAMIC-INLINE-ELIMINATION
+
+- Status: `PARTIAL_DYNAMIC_INLINE_ELIMINATION`; `departamento-operativo` remains excluded.
+- Converted the three executable PHP data bootstraps (`cursos/modulo.php`, `gestoria/sgm.php`, and `personal/index.php`) into non-executable `script type="application/json"` DOM payloads with `JSON_HEX_*` flags. Their external Alpine modules now parse the scoped DOM payloads and preserve the existing defaults/timing; no `window.*` data globals remain for these modules.
+- The four calibration payloads were already `application/json` and remain unchanged. No nonce was introduced, no handlers were migrated, and Alpine/CSP were not changed.
+- Dynamic executable inline inventory reduced from 12 to 9 (the remaining cases are shared layout CSRF/scroll bootstrap blocks requiring a coordinated extraction). Executable inline blocks now count 7; application/json blocks count 7.
+- Enforced CSP remains unchanged; Report-Only remains present with no `script-src 'unsafe-inline'` and temporary `'unsafe-eval'`. PHP syntax checks and the existing security suite remain green at 82 passed, 0 failed, 0 skipped.
+- Production was not touched and no commit was created. Next slice: `SEC-CSP-012-INLINE-EVENT-HANDLER-REMEDIATION` only after the remaining shared bootstrap blocks are separately resolved.
+
+## SEC-CSP-012-INLINE-EVENT-HANDLER-REMEDIATION
+
+- Inventory reconciliation: `EXECUTABLE_INLINE_SCRIPT_BLOCKS_BASELINE=7`, `DYNAMIC_EXECUTABLE_INLINE_BASELINE=9` was corrected to `7` (the prior 9 included non-executable JSON data), `STATIC_EXECUTABLE_INLINE_BASELINE=0`, `APPLICATION_JSON_DATA_BLOCKS_BASELINE=7`, and `INLINE_EVENT_HANDLERS_BASELINE=17` globally. Five handlers belong to excluded `departamento-operativo`; 12 were in scope.
+- Migrated the 12 in-scope easy handlers: eight logout controls and four history-back controls. They now use `data-action` and the external delegated listener `public/assets/js/core/inline-handler-remediation.js`; no Alpine conversion or inline JavaScript replacement was used.
+- `INLINE_EVENT_HANDLERS_AFTER=5`, all deferred to `departamento-operativo`. `JAVASCRIPT_URLS_AFTER=142` in the broader view inventory; remaining occurrences are outside the migrated handler set and require separate review.
+- Executable inline script count remains 7 and application/json count remains 7; handler migration did not add inline scripts. Alpine, styles, enforced CSP, and Report-Only policy were unchanged.
+- Updated the logout regression assertion to cover the new `data-action` contract. Full local security suite remains green: 82 passed, 0 failed, 0 skipped. `SEC-CSP-012` status: `PARTIAL_EVENT_HANDLER_REMEDIATION`.
+- Production was not touched and no commit was created. Next slice: `SEC-CSP-012-ALPINE-CSP-MIGRATION-REASSESSMENT`.
+
+## SEC-CSP-012-JAVASCRIPT-URL-REMEDIATION
+
+- Reconciled the reported 142 matches outside `departamento-operativo`: all 142 are `javascript:void(0)` in first-party view templates. No executable `javascript:<function(...)>` URL was found in this inventory.
+- Classification: `ACTIVE_FIRST_PARTY=142`; `THIRD_PARTY_VENDOR=0`; `DEAD_OR_UNUSED=0`; `COMMENT_OR_DOCUMENTATION=0`; `TEST_FIXTURE=0`; `DEFERRED_DEPARTAMENTO_OPERATIVO=0`; `FALSE_POSITIVE=0`. The matches are inert placeholder hrefs used by Bootstrap/Alpine controls, but remain active markup requiring semantic/button or listener migration rather than mechanical replacement.
+- No vendor files, generated module HTML, Alpine expressions, or styles were changed. No safe single-hunk migration was identified that would preserve all dropdown/modal behavior across the affected templates without a broader component review.
+- `ACTIVE_FIRST_PARTY_REMEDIATED=0`; active first-party URLs after remain 142 and raw matches remain 142. Plugin-generated JavaScript URLs: none identified in this view-template inventory.
+- Executable inline scripts remain 7; application/json blocks remain 7; in-scope inline handlers remain 0. Alpine, styles, enforced CSP, and Report-Only policy are unchanged.
+- Security suite remains green at 82 passed, 0 failed, 0 skipped. Status: `PARTIAL_JAVASCRIPT_URL_REMEDIATION`; next slice is `SEC-CSP-012-REMAINING-INLINE-SCRIPTS` for a scoped semantic migration plan.
+
+## SEC-CSP-012-REMAINING-INLINE-SCRIPTS
+
+- Exact executable inventory outside `departamento-operativo`: 6 blocks. The reported seventh block is the excluded `departamento-operativo` layout bootstrap.
+- All six in-scope blocks are shared layout bootstrap logic: CSRF/Axios initialization in `main`, `sgm`, `sasisopa`, and `configuracion`; a second main response-retry bootstrap; and SGM scroll-state persistence.
+- Classification: `EXTERNALIZE=0`, `JSON_DATA_BOOTSTRAP=0`, `REMOVE_DEAD_CODE=0`, `TEMPORARILY_BLOCKED=6`. Their duplicated interceptors and layout-specific retry/scroll timing require a coordinated shared-bootstrap design; removing one inline copy without that design could change behavior.
+- No code was changed. Previously migrated JSON bootstraps remain untouched. Executable inline count remains 7 globally (6 in scope, 1 deferred), application/json remains 7, and no nonce was introduced.
+- Alpine, styles, enforced CSP, and Report-Only remain unchanged. Security suite remains green: 82 passed, 0 failed, 0 skipped. Status: `PARTIAL_REMAINING_INLINE_SCRIPT_REMEDIATION`.
+
+## SEC-CSP-012-JAVASCRIPT-VOID-PATTERN-REASSESSMENT
+
+- Read-only pattern mapping of the 142 in-scope `javascript:void(0)` occurrences. No replacements were made.
+- Four reusable functional patterns account for the inventory: `DROPDOWN_TRIGGER=24`, `COLLAPSE_TRIGGER=5`, `ALPINE_COUPLED_ACTION_TRIGGER=44`, and `PLACEHOLDER_LINK=69`; total 142. No modal or tab-specific pattern was found in the current view-template inventory.
+- The dropdown/collapse cases are predominantly repeated Modernize/Bootstrap theme markup. Shared layout/menu sources exist for the repeated header/sidebar triggers; other occurrences are direct view or generated-table templates. Alpine-coupled triggers must not be converted to native buttons in this slice because their `@click`/component context is a separate migration concern.
+- Pattern strategy: dropdown/collapse should retain Bootstrap `data-bs-toggle`/`data-bs-target` and use semantic buttons where the shared theme allows it; Alpine-coupled actions require an Alpine-compatible plan; placeholder links should become buttons or real anchors only after selector/plugin review. A global `href="#"` replacement is unsafe.
+- Classification by implementation priority: `P1_LOW_RISK_SHARED_FIX=0` pending confirmation of all shared selectors; `P2_LOW_RISK_LOCAL_FIX=0`; `P3_MEDIUM_RISK=2` (dropdown/collapse); `DEFERRED_COMPLEX=2` (Alpine-coupled and placeholder links). Theme-pattern matches: 29; shared-component candidates: 24; direct-view/generated matches: 89.
+- Bootstrap-native replacement is available for 29 dropdown/collapse triggers. Semantic button candidates are 29, real navigation links 0, plugin-coupled cases 0 confirmed, Alpine-coupled cases 44, unknown remaining 0.
+- The six in-scope executable inline blocks and five deferred handlers were not touched. CSP, Alpine, styles, and Report-Only remain unchanged. Status: `PARTIAL_JAVASCRIPT_VOID_PATTERN_MAPPED`.
+
+## SEC-CSP-012-BOOTSTRAP-NATIVE-TRIGGER-REMEDIATION
+
+- Reconciled targets: `DROPDOWN_TRIGGER=24` and `COLLAPSE_TRIGGER=5`; total 29. The counts match the current first-party view inventory.
+- No implementation was applied. The targets are spread across shared Modernize layout markup and generated/module templates; `public/assets/js/theme/sidebarmenu.js` still relies on anchor selectors (`li.querySelector("a")` and `link.closest("a")`). A global anchor-to-button change therefore requires a shared selector/accessibility compatibility patch and representative browser validation.
+- `DROPDOWN_TRIGGERS_REMEDIATED=0`; `COLLAPSE_TRIGGERS_REMEDIATED=0`; all 29 remain temporarily blocked by theme selector and cross-template behavior risk. Alpine-coupled (44) and placeholder-link (69) groups remain untouched.
+- No custom JavaScript, Alpine, styles, CSP, or inline scripts were changed. Security suite remains green at 82 passed, 0 failed, 0 skipped. Status: `PARTIAL_BOOTSTRAP_TRIGGER_REMEDIATION`.
+
+## SEC-CSP-012-PLACEHOLDER-LINK-REASSESSMENT
+
+- Read-only mapping of the 69 remaining placeholder links; no code was changed. The 29 Bootstrap triggers and 44 Alpine-coupled triggers remain excluded.
+- Principal pattern grouping: `BUTTON_ACTION=35`, `JS_SELECTOR_DEPENDENT=20`, `CSS_TAG_DEPENDENT=14`; total 69. No demonstrable real-navigation or pure inert-only group was confirmed without runtime/component review.
+- Theme dependency is present in the repeated Modernize navigation/dropdown markup; shared selector dependency is present in `public/assets/js/theme/sidebarmenu.js`. Alpine-dependent cases remain deferred and no Alpine migration was attempted.
+- Accessibility finding: these anchors are focusable placeholders, so replacing them requires confirming keyboard behavior, Bootstrap/Alpine selectors, and visual theme rules. No safe low-risk candidate was approved from static inspection alone.
+- Classification: `PURE_PLACEHOLDER=0`, `BUTTON_ACTION=35`, `REAL_NAVIGATION=0`, `JS_SELECTOR_DEPENDENT=20`, `CSS_TAG_DEPENDENT=14`, `THEME_DEPENDENT=29`, `ALPINE_DEPENDENT=0` in this disjoint principal grouping, `INERT_BUT_FOCUSABLE=69`, `UNKNOWN=0`.
+- Remediation priority: `LOW_RISK_REMEDIATION=0`, `MEDIUM_RISK_REMEDIATION=35`, `DEFERRED_COMPLEX=34`, `SHARED_FIX_CANDIDATES=29`. Recommended next step is a scoped semantic migration with browser/accessibility validation; no global `#` or `<button>` replacement.
+- CSP, Alpine, styles, the six blocked inline scripts, and Bootstrap triggers remain unchanged. Security suite remains green: 82 passed, 0 failed, 0 skipped. Status: `PARTIAL_PLACEHOLDER_LINKS_MAPPED`.
+
+## SEC-CSP-012-SHARED-INLINE-SCRIPT-DESIGN
+
+- Read-only design inventory: six in-scope executable blocks are `main.php` CSRF/Axios bootstrap (head), `main.php` duplicate footer response/retry bootstrap, `sgm.php` CSRF/Axios bootstrap, `sgm.php` scroll-state bootstrap, `sasisopa.php` CSRF/Axios bootstrap, and `configuracion.php` CSRF/Axios bootstrap. The seventh block is the excluded `departamento-operativo` bootstrap.
+- Shared concepts: `CSRF_BOOTSTRAP=6`, `AXIOS_CONFIGURATION=6`, `419_HANDLING=2`, `RETRY=2`, `SCROLL=1`, `DOM_TIMING=1`; no shared UI/error-display implementation was found. The four non-main blocks only configure request headers; main additionally retries once after a 419 and reloads on failure.
+- `AXIOS_BOOTSTRAP_DUPLICATED=YES`. No central external Axios configuration currently exists; the current source is duplicated in the layout views. The CSRF meta tag is the correct shared source; no token should be copied to JSON, globals, or cookies.
+- `AUTOMATIC_RETRY_SAFE=MIXED`: a generic retry could duplicate POST/PUT/PATCH/DELETE effects. The future helper must default to bounded reload/error handling and only retry explicitly safe/idempotent requests with a one-attempt guard.
+- `SHARED_ABSTRACTION_JUSTIFIED=YES` for transport-only CSRF/Axios setup. It is not justified to create a god-helper for response UX, business actions, or scroll. Recommended components: `public/assets/js/core/http-security.js` for token/header setup and bounded 419 classification; a separate layout-specific scroll-state module for SGM; main-specific response policy retained outside the transport helper.
+- Planned migration: main head block → `http-security.js` plus explicit response policy; main footer duplicate → consolidate only after proving it is redundant; SGM CSRF block → shared helper; SGM scroll block → layout-specific external file; SASISOPA and Configuración CSRF blocks → shared helper. All use existing meta CSRF and preserve current load order. Expected risk: medium for CSRF extraction, high for main retry consolidation, low/medium for SGM scroll extraction.
+- `NONCE_REQUIRED_AFTER_REVIEW=0`; expected executable inline count after a future implementation is 0 in scope, with the department-operativo block still deferred. `javascript:void(0)` remains deferred because there are no low-risk candidates.
+- No code was changed. Alpine, styles, CSP enforcement, Report-Only, and the six inline blocks remain unchanged. Security suite remains green: 82 passed, 0 failed, 0 skipped. Status: `PARTIAL_SHARED_INLINE_SCRIPT_DESIGN_READY`.
+
+## SEC-CSP-012-SHARED-INLINE-SCRIPT-IMPLEMENTATION-A
+
+- Created `public/assets/js/core/http-security.js` with one responsibility: read the existing CSRF meta tag and configure Axios defaults when Axios and a non-empty token exist. It contains no UI, retry, interceptor, navigation, or business logic.
+- Created `public/assets/js/sgm/scroll-state.js` preserving SGM pathname/sessionStorage behavior and `DOMContentLoaded` timing.
+- Externalized `MAIN_CSRF_HEAD`, `SGM_CSRF`, `SGM_SCROLL`, `SASISOPA_CSRF`, and `CONFIGURACION_CSRF`. Axios is loaded before the helper and the helper is loaded before module footer scripts/requests in each layout.
+- `MAIN_RESPONSE_RETRY` remains inline and unchanged as the only in-scope executable block. The department-operativo inline block remains deferred. No automatic retry was added to the shared helper.
+- Added `tests/http_security_regression.php` covering meta-token source, Axios header configuration, absence of hardcoded tokens/retry, and external asset loading. Updated logout regression expectations for the shared helper.
+- In-scope executable inline scripts: `6 → 1`; application/json blocks remain 7. `javascript:void(0)` remains deferred at 142. Alpine, styles, enforced CSP, and Report-Only remain unchanged.
+- Full local security suite is green: 86 passed, 0 failed, 0 skipped (including 4 new HTTP-security checks). Status: `PARTIAL_SHARED_INLINE_IMPLEMENTATION_A`.
+
+## SEC-CSP-012-MAIN-RESPONSE-RETRY-REASSESSMENT
+
+- The remaining inline block is at the footer of `app/Views/layouts/main.php` (approximately lines 281–313). Despite its historical label, the current code does not replay requests: it registers Axios request and response interceptors, refreshes the request header from the CSRF meta tag, and reloads the page on HTTP 419.
+- `REQUEST_INTERCEPTOR=YES`; `RESPONSE_INTERCEPTOR=YES`; `GLOBAL_AXIOS_INTERCEPTOR=YES`. The response policy handles only 419; there is no 401/403/5xx/network UI policy, refresh endpoint, token-fetch request, or redirect.
+- `RETRY_APPLIES_TO=NONE`; `NON_IDEMPOTENT_REQUESTS_CAN_RETRY=NO`; `DUPLICATE_SIDE_EFFECT_RISK=NONE` for the current code. `BOUNDED_RETRY=YES` with `MAX_RETRIES=0`; infinite retry risk is `NO`.
+- `419_BEHAVIOR=RELOAD_PAGE`. `REFRESH_ENDPOINT=NONE`; `REFRESH_METHOD=NONE`; `REFRESH_FAILURE_BEHAVIOR=NOT_APPLICABLE`. CSRF and authentication expiration are not distinguished beyond the status code (`CSRF_AND_AUTH_EXPIRATION_DISTINGUISHED=NO`).
+- `MULTIPLE_REGISTRATION_POSSIBLE=YES` if the layout is evaluated repeatedly in one document, because the interceptor registration is unconditional; normal full-page navigation registers it once. The existing shared `http-security.js` correctly owns only the default CSRF header and must not absorb this page-specific response policy.
+- No idempotency-key infrastructure was identified for a generic retry. Recommended policy is: GET/HEAD no replay is currently needed; POST/PUT/PATCH/DELETE do not retry automatically; 419 reload remains the safest current UX until a dedicated response-policy implementation is approved.
+- `PHP_DYNAMIC_DATA_REQUIRED=NO`; externalization is feasible to a main-specific file such as `public/assets/js/core/main-response-policy.js`, preserving footer timing after Axios and existing module assets. Implementation risk: medium due global interceptor scope and UX compatibility, not request duplication.
+- No code was changed. `EXPECTED_IN_SCOPE_EXECUTABLE_INLINE_AFTER=0` after the future implementation. `javascript:void(0)` remains deferred; Alpine and CSP remain unchanged. Security baseline remains 86 passed, 0 failed, 0 skipped. Status: `PARTIAL_MAIN_RESPONSE_RETRY_REASSESSED`.
+
+## SEC-CSP-012-MAIN-RESPONSE-RETRY-IMPLEMENTATION
+
+- Externalized the remaining main response policy to `public/assets/js/core/main-response-policy.js`. The inline block was removed from `app/Views/layouts/main.php` and replaced with the external asset after Axios and `http-security.js`.
+- Preserved behavior: request interceptor refreshes the current meta CSRF header; response success passes through; HTTP 419 calls `window.location.reload()`; no request replay, token refresh, or retry was added; other errors remain rejected.
+- Added a small initialization guard to prevent duplicate interceptor registration. The guard stores only a boolean state and no sensitive data.
+- Added `tests/main_response_policy_regression.php` covering externalization, single registration, 419 reload/no replay, and non-419 error propagation.
+- In-scope executable inline scripts are now `0`; the one deferred `departamento-operativo` block remains untouched. `javascript:void(0)`, Alpine, styles, enforced CSP, and Report-Only remain unchanged.
+- Full local security suite: 90 passed, 0 failed, 0 skipped. Status: `PARTIAL_NO_IN_SCOPE_EXECUTABLE_INLINE_SCRIPTS`.
+
+## SEC-CSP-012-CURRENT-STATE-CLOSURE
+
+- Intermediate checkpoint, no new implementation. Outside `departamento-operativo`, executable inline scripts are closed at `0` and inline event handlers at `0`. One executable inline block and five handlers remain deferred inside `departamento-operativo`.
+- Enforced CSP remains present and unchanged. Report-Only remains present with `script-src` without `'unsafe-inline'` and temporary `'unsafe-eval'`.
+- `javascript:void(0)` remains `142`, classified as `DEFERRED_ARCHITECTURAL_UI_REFACTOR`: 29 Bootstrap/Modernize triggers require coordinated selector changes, 44 Alpine-coupled triggers require Alpine migration, and 69 placeholder links have no low-risk bulk path.
+- Alpine remains the standard build and requires a future CSP migration reassessment; inline styles remain pending. `http-security.js` owns only CSRF meta lookup/Axios default configuration; `main-response-policy.js` reloads on 419 without replay and is registration-guarded.
+- `SEC-CSP-012` status: `PARTIAL_HARDENING_CHECKPOINT`. Completed: Report-Only, zero in-scope executable inline scripts/handlers, centralized CSRF/Axios bootstrap, and externalized main response policy. Pending: Alpine/unsafe-eval, javascript:void family, inline styles, deferred module, and eventual enforcement tightening.
+
+## DEP-TEST-013-DEPENDENCY-AND-TEST-POSTURE-REASSESSMENT
+
+- PHP dependency management is present and lock-backed: `composer.json` + `composer.lock`; PHP requirement is `^8.2`, with 17 direct production packages and 179 locked package records (including transitive dependencies). No custom repositories or Composer scripts were declared; no dev dependency section is present.
+- Composer 2.10.3 is available. `composer audit` and `composer outdated --direct` could not query Packagist because DNS/network access is unavailable in this environment; therefore vulnerability/update counts are `UNKNOWN`, not zero. No update command was run.
+- No `package.json`, npm/yarn/pnpm lockfile, or frontend package manager configuration exists. Frontend dependencies are served from committed assets and CDN references. 24 CDN references were found in views; no `integrity`/SRI attributes were found. CDN versions are mixed: Alpine uses floating `3.x.x`, while other URLs include explicit library versions or unversioned CDN paths. This is a reproducibility/supply-chain risk, not by itself a confirmed runtime vulnerability.
+- Test inventory contains 17 files, including security regression, HTTP-router, CSRF, session, tenant/authorization, upload, XSS, CSP, logging, rate-limit, webhook, and data-validation coverage. Existing commands are individual PHP entrypoints; no Composer/NPM test script is defined.
+- No CI workflow, pipeline definition, Dependabot configuration, or Renovate configuration was found. `CI_PRESENT=NO`, `SECURITY_TESTS_IN_CI=NO`, `DEPENDENCY_AUDIT_IN_CI=NO`, `DEPENDABOT_PRESENT=NO`, `RENOVATE_PRESENT=NO`.
+- Test posture from the current harness: baseline remains 90 passed, 0 failed, 0 skipped. Tests use temporary router/session/storage paths in several suites; filesystem isolation is `PARTIAL`, DB isolation is `UNKNOWN`, and order dependency is `UNKNOWN` because the suite has no unified runner or CI orchestration.
+- Reproducibility: PHP install `GOOD` due to composer.lock and explicit PHP constraint; frontend install `POOR` because there is no package manifest/lockfile and CDN assets include floating/unpinned references.
+- Findings: `DEP-TEST-013-A` (MEDIUM, CONFIRMED): frontend dependency reproducibility/supply-chain posture is weak due to CDN-only, partly floating dependencies and absent SRI; production reachability depends on rendered layouts. `DEP-TEST-013-B` (LOW, CONFIRMED): dependency audit and security regression tests are not automated in CI. Composer vulnerability status is `NOT_REPRODUCED/UNKNOWN` pending network-capable audit, not a confirmed vulnerable package finding.
+- Recommended small slices: `DEP-TEST-013-A-CDN-INVENTORY-AND-PINNING-PLAN` (no changes yet), then `DEP-TEST-013-B-CI-SECURITY-TESTS-DESIGN`, followed by a separately authorized Composer audit/update review when network access is available. No mass updates are authorized.
+
+## DEP-TEST-013-A-CDN-INVENTORY-AND-PINNING-PLAN
+
+- Inventory reconciled to the established `RAW_CDN_REFERENCES=24` view references, including shared/deferred layout references. Unique conceptual libraries: 4 — DOMPurify, Alpine, Axios, and Iconify.
+- CDN domains: `cdn.jsdelivr.net` (18 references, HTTPS; DOMPurify, Axios, Iconify), `unpkg.com` (6 references, HTTPS; Alpine). No `cdn.ckeditor.com`, Google Fonts, cdnjs, or other remote domain was found in the current view inventory.
+- Version styles: exact pins include DOMPurify `3.0.6` and Iconify `1.0.8`; Alpine `3.x.x` is a major float; Axios URLs are unversioned/latest-style. No SRI attributes were found. Approximate classification: `EXACT_PIN=10`, `MAJOR_FLOAT=6`, `UNVERSIONED=8`; no patch/minor/latest aliases were separately identified.
+- Duplications: all four libraries are repeated across layouts; this is intentional shared-layout loading but creates update/SRI coordination. No conflicting versions were found (`VERSION_CONFLICTS=0`).
+- Runtime scope: DOMPurify, Alpine, Axios, and Iconify are `GLOBAL_LAYOUT`; the department-operativo fallback references remain deferred. DOMPurify/Alpine/Axios are HIGH runtime criticality; Iconify is MEDIUM. Floating/unversioned references can alter production behavior without a repository change.
+- Pinning feasibility: DOMPurify and Iconify are `P1_SAFE_PINNING` because the effective versions are explicit; Alpine and Axios are `P4_UNKNOWN_VERSION` until the currently effective artifacts are established. SRI is feasible only after exact immutable URLs are selected. Self-hosting is technically feasible for all four but requires license, asset, and update review; no assets were downloaded.
+- Recommended strategy: exact pinning first without upgrades; runtime smoke validation of authenticated layouts and security suite; then SRI for immutable CDN resources; then evaluate self-hosting/CSP domain reduction independently. Alpine pinning must not be combined with its CSP-build migration.
+- `CDN_URLS_CHANGED=NO`, `COMPOSER_CHANGED=NO`, `NPM_MANIFEST_CREATED=NO`, `SRI_ADDED=NO`, `ALPINE_CHANGED=NO`, `CSP_CHANGED=NO`. Status: `DEP-TEST-013-A: PINNING_PLAN_READY`.
+
+## DEP-TEST-013-A-CDN-INVENTORY-RECONCILIATION
+
+- Rebuilt the inventory from first-party view files with `departamento-operativo` excluded. The exact in-scope total is `20`, not 24. The previous 24 included the four deferred `departamento-operativo` layout references (DOMPurify, Alpine, Axios, Iconify once each).
+- In-scope references by library: DOMPurify `4` at `https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js` (`EXACT_PIN`); Iconify `6` at `https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js` (`EXACT_PIN`); Alpine `5` at `https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js` (`MAJOR_FLOAT`); Axios `5` at `https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js` (`UNVERSIONED`).
+- Domains reconcile exactly: `cdn.jsdelivr.net=15`, `unpkg.com=5`, total 20. `CDN_WITH_SRI=0`, `CDN_WITHOUT_SRI=20`. No missing or misclassified in-scope reference remains; the discrepancy was scope leakage from the excluded layout.
+- Version-style totals: `EXACT_PIN=10`, `PATCH_FLOAT=0`, `MINOR_FLOAT=0`, `MAJOR_FLOAT=5`, `LATEST_ALIAS=0`, `UNVERSIONED=5`, `UNKNOWN=0`; total 20. Floating references are 10 and reconcile exactly.
+- `REFERENCES_ALREADY_EXACT_PINNED=10`; `FLOATING_WITH_KNOWN_EFFECTIVE_VERSION=0`; `FLOATING_WITH_UNKNOWN_EFFECTIVE_VERSION=10`; `ALREADY_PINNED_SRI_CANDIDATES=10`; `SAFE_PINNING_CANDIDATES=0`; `NEEDS_VERSION_DISCOVERY=10`.
+- No URLs, versions, SRI, Alpine, CSP, Composer, or npm files were changed. Security baseline remains 90 passed, 0 failed, 0 skipped. Status: `INVENTORY_RECONCILED`; next step is version discovery for the 10 floating references, not blind pinning.
+
+## DEP-TEST-013-A-CDN-VERSION-DISCOVERY
+
+- Confirmed five in-scope Alpine references at `https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js` and five in-scope Axios references at `https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js`. The four department-operativo fallback references remain excluded.
+- Network resolution to both CDN domains failed in this environment (`curl` DNS error), so no redirect chain, served banner, or response version could be confirmed. No files were downloaded into the repository.
+- Alpine effective version: `UNKNOWN`, evidence `UNKNOWN`; local `public/assets/libs/alpinejs/dist/alpinejs.min.js` has no unambiguous version banner. Build remains `STANDARD`; safe pinning: `NO`.
+- Axios effective version: `UNKNOWN`, evidence `WEAK`; the local fallback `public/assets/libs/axios/dist/axios.min.js` contains an `Axios v1.7.9` banner, but this does not prove the unversioned CDN resource currently serves that version. Safe pinning: `NO`.
+- Local API compatibility evidence only: Alpine uses `x-data`, `x-show`, `x-model`, `x-for`, `x-init`, event bindings, and `Alpine.data`; Axios uses `get`, `post`, defaults, and interceptors. These are compatibility hints, not version proof.
+- `FLOATING_REFERENCES_BEFORE=10`, `FLOATING_REFERENCES_AFTER=10`; `SAFE_PINNING_CANDIDATES_AFTER_DISCOVERY=0`; `NEEDS_FURTHER_VERSION_DISCOVERY=10`. URLs, SRI, Alpine, CSP, and npm were unchanged. Status: `PARTIAL_VERSION_DISCOVERY`.
+
+## DEP-TEST-013-A-RESOLVE-VERSION-DISCOVERY-ALPINE-AXIOS
+
+- Axios local fallback: `public/assets/libs/axios/dist/axios.min.js`, unambiguous banner `Axios v1.7.9`, SHA-256 `9cf48244581d6cb6486d6702f7372292284faef2489a3be419ac1bc70606be72`. It is referenced by the excluded department-operativo fallback path and is a project-local runtime artifact; its runtime reachability for the five CDN layouts is `UNKNOWN` because those layouts load CDN first. Current first-party APIs (`get`, `post`, `defaults`, `interceptors`) are compatible with the local 1.7.9 artifact. Git history contains a 1.7.9 occurrence, but this does not prove the CDN served that version.
+- Axios classification: `CDN_SERVED_VERSION=UNKNOWN`, `HISTORIC_CDN_VERSION_PROVEN=NO`, `LOCAL_COMPATIBILITY_TARGET=1.7.9`, `EVIDENCE_CLASSIFICATION=LOCAL_COMPATIBILITY_TARGET_CONFIRMED`, `SAFE_TO_PIN_CURRENT_EFFECTIVE_VERSION=NO`, `SAFE_TO_PIN_LOCAL_COMPATIBILITY_TARGET=YES` pending explicit approval and runtime validation.
+- Alpine local fallback: `public/assets/libs/alpinejs/dist/alpinejs.min.js`, SHA-256 `3ed1eed252488921df65e363d6715deb04d7f92aaedb9e52199fdf73cb1e0ad3`. No version banner, package metadata, source map, or exact historical `alpinejs@3.x.y` reference was found. Alpine classification remains `CDN_SERVED_VERSION=UNKNOWN`, `LOCAL_COMPATIBILITY_TARGET=UNKNOWN`, `EVIDENCE_CLASSIFICATION=INSUFFICIENT_EVIDENCE`, and both current/equivalent pinning decisions are `NO`.
+- Network remained unavailable, so no CDN final URL or redirect was observed. API usage remains compatibility evidence only; Alpine stays `STANDARD` and its CSP migration remains separate. No URLs, SRI, npm, Alpine, or CSP changed. Status: `PARTIAL_VERSION_DISCOVERY` with Axios local target resolved and Alpine unresolved.
+## DEP-TEST-013-A-AXIOS-COMPATIBILITY-PINNING
+
+- Five first-party Axios CDN references in scope were pinned to `https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js`.
+- This is a `COMPATIBILITY_PIN` / `LOCAL_COMPATIBILITY_TARGET`; the historic CDN-served version remains unproven.
+- `departamento-operativo` remains excluded and its local-fallback/reference pair is unchanged.
+- The local Axios fallback remains version `1.7.9` with SHA256 `9cf48244581d6cb6486d6702f7372292284faef2489a3be419ac1bc70606be72`.
+- No SRI, Alpine, CSP, API, interceptor, CSRF, production, or package-manifest changes were made.
+- Static pinning regression coverage passes; full executed security regression subset remains green (90 baseline plus 5 pinning checks).
+- `DEP-TEST-013-A` remains partial: Alpine is still floating, SRI is absent, and later self-hosting/CSP domain reduction remain deferred.
+## DEP-TEST-013-A-CDN-SRI-PLAN
+
+- Inventory confirmed 15 exact-pinned in-scope CDN references: DOMPurify 3.0.6 (4), Iconify 1.0.8 (6), and Axios 1.7.9 (5). Alpine remains excluded because it is floating (`3.x.x`).
+- All three libraries use one unique exact-version URL per library. Exact versions make SRI technically plausible, but CDN response bodies, redirects, content types, and CORS headers could not be verified because DNS/network access is unavailable.
+- No SRI hashes were invented. All three resources therefore remain pending network verification; recommended algorithm is `sha384` and `crossorigin="anonymous"` is recommended pending CDN validation.
+- Axios local fallback remains available and unchanged; DOMPurify and Iconify have no local fallback found. Iconify secondary remote loading remains unknown.
+- SRI implementation is not ready for execution. No `integrity`, `crossorigin`, CSP, Alpine, version, dependency, production, or package-manifest changes were made.
+- `DEP-TEST-013-A: SRI_PLAN_READY` with implementation gated on network retrieval and browser/runtime validation.
+## DEP-TEST-013-B-CI-SECURITY-TESTS-DESIGN
+
+- Repository host is GitHub (`github.com/DepAdmonGas/Portal3`); no CI provider configuration exists in the repository. Recommended provider/path: GitHub Actions at `.github/workflows/security.yml`, to be created only in the implementation slice.
+- Runtime requirements are PHP `^8.2` and Composer lock-backed installation. No Composer scripts or dev dependencies exist; use `composer install --no-interaction --prefer-dist --no-progress` without `--no-dev`, then run the explicit PHP regression entrypoints. `composer.lock` is present in the working tree, although ignored by the current `.gitignore`; this should be resolved before CI implementation because reproducible CI requires the lockfile to be versioned.
+- No single test entrypoint exists. The current suite consists of individual `tests/*_regression.php` scripts with reliable non-zero exits on failure. A future implementation should add a small fail-closed runner or explicit ordered command list; no runner was created in this design slice.
+- Proposed minimal jobs: `php-syntax` (lint `app`, `public`, and `tests`, excluding `vendor`), `security-tests` (all current regression entrypoints, including CSP and dependency pinning checks), and independent `dependency-audit` (`composer audit --locked`). Audit network/DNS failure must be reported as `AUDIT_UNAVAILABLE`, never as zero vulnerabilities.
+- Tests are currently local/static and use temporary session, storage, and router fixtures; no database connection is required by the regression suite. Filesystem isolation is partial, so the future runner must execute in a clean workspace and use writable temporary paths rather than broad permissions. Relevant writable areas are `storage/` and test-created temporary directories; uploads are not a CI artifact target.
+- CI environment names should be limited to test-safe configuration such as `APP_ENV`, `APP_TIMEZONE`, and (only if bootstrap requires them) `DB_CONNECTION`, `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`; production credentials, Telegram secrets, mail credentials, and real `.env` files must never enter CI.
+- External network is not required for the local security tests; Composer install and audit require package-network access. No npm job is justified because there is no npm manifest. No deploy, SSH, Plesk, migration, or write permission is part of the design; recommended permissions are read-only repository contents.
+- Suggested triggers are push and pull_request on the repository's existing branches, to be confirmed during implementation; no cron is proposed. Composer cache may be used only as an optimization while `composer.lock` remains authoritative.
+- `DEP-TEST-013-B: CI_DESIGN_READY`. Implementation risk: LOW, contingent on first versioning/confirming `composer.lock` and documenting the runner order/isolation assumptions.
+## DEP-TEST-013-B-COMPOSER-LOCK-CI-READINESS
+
+- Portal3 is a deployable web application (`app/`, controllers/views, `public/index.php`), so `composer.lock` should be versionable for reproducible CI installs.
+- The lockfile was not tracked because `.gitignore:8` explicitly ignored `composer.lock`; no repository-local or global ignore rule justified the exclusion.
+- Removed only that ignore entry. `composer.lock` is now visible as an untracked versionable file; no `git add`, commit, push, reset, restore, clean, Composer install, or Composer update was performed.
+- `composer validate --no-check-publish` passed with only the pre-existing missing-license warning. Lockfile SHA256 remained `489acf71dcf6a417681d59156e40c522734efdd2ce9ed2f3544c6a9b7818b9d2` before and after the change.
+- Composer JSON and dependency versions were unchanged. The security regression suite remains green; all current `tests/*_regression.php` entrypoints completed successfully (95 PASS, 0 FAIL, 0 SKIPPED baseline).
+- `DEP-TEST-013-B: COMPOSER_LOCK_CI_READY`; GitHub Actions and a unified runner remain deferred to the next implementation slice.
+## DEP-TEST-013-B-CI-SECURITY-TESTS-IMPLEMENTATION
+
+- Added `.github/workflows/security.yml` for GitHub Actions with read-only `contents: read` permissions and only `push`/`pull_request` triggers. No deployment, production secrets, SSH, migration, or write capabilities are present.
+- Added `tests/run_security_suite.php`, an explicit deterministic runner for 13 current `*_regression.php` security scripts. Each script runs in its own PHP process and any non-zero exit fails the runner.
+- Added `tests/ci_workflow_regression.php` for static workflow safety checks. It is not included in the security runner to avoid self-referential CI validation.
+- Jobs implemented: `php-syntax` (PHP 8.2 lint over `app`, `public`, `tests`), `security-tests` (Composer lock install plus runner), and independent `dependency-audit` (`composer audit --locked`). Audit failures, including network unavailability, remain blocking and are not converted to success.
+- Composer uses `composer install --no-interaction --prefer-dist --no-progress`; no update was run. `composer.lock` remains unchanged with SHA256 `489acf71dcf6a417681d59156e40c522734efdd2ce9ed2f3544c6a9b7818b9d2`.
+- Local PHP lint passed, workflow static validation passed (6 checks), and the runner passed 99 assertions across 13 scripts. The historical 95-assertion baseline is exceeded because the current inventory includes all active regression checks; failures/skips remain 0/0. GitHub-hosted execution has not occurred because no push was made.
+- `DEP-TEST-013-B: REMEDIATED_LOCAL_PENDING_REMOTE_CI_EXECUTION`.
+## DEP-TEST-013-B-CI-REMOTE-READINESS-CHECK
+
+- CI files are present and versionable: `.github/workflows/security.yml`, `tests/run_security_suite.php`, `tests/ci_workflow_regression.php`, `.gitignore`, and this progress log. `composer.lock` exists, is no longer ignored, remains untracked, and must be included in the future checkpoint (`SHA256=489acf71dcf6a417681d59156e40c522734efdd2ce9ed2f3544c6a9b7818b9d2`).
+- Workflow path/command review found no broken references, no `composer update`, no secrets, no write permissions, no database services, and no deployment capability. Actions are `actions/checkout@v4` and `shivammathur/setup-php@v2` (major-tag references).
+- The runner explicitly includes 13 regression scripts. The discovered set contains 14 because `tests/ci_workflow_regression.php` is a static self-check and is intentionally excluded; no security regression file is missing.
+- Runner fail-closed behavior is confirmed: current green exit code is 0, and child non-zero exits increment failure status. Local runner result is 99 PASS / 0 FAIL / 0 SKIPPED; PHP syntax validation passes. YAML parser execution was unavailable locally, so validation is structural/static only.
+- Composer lock packages are compatible with PHP 8.2; no `config.platform.php` override is defined. Required runtime extensions resolved by the lock include common PHP extensions (`ctype`, `dom`, `fileinfo`, `filter`, `gd`, `hash`, `iconv`, `json`, `libxml`, `mbstring`, `pcre`, `pdo`, `simplexml`, `xml`, `xmlreader`, `xmlwriter`, `zip`, `zlib`); setup-php supplies the standard runtime, with hosted execution still pending.
+- `DEP-TEST-013-B: REMOTE_CI_READY_PENDING_VERSION_CONTROL`. No commit or push was made; GitHub-hosted execution remains unverified.

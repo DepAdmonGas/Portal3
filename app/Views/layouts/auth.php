@@ -34,7 +34,7 @@
         defer
         src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script
-        src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
 
     <style>
         [x-cloak] {
