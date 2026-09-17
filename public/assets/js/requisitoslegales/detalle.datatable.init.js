@@ -34,8 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         columns: [
             { data: 'dependencia',
+                className: 'text-center align-middle',
                 render: function (data) {
-                return `<div style="max-width:500px; white-space:normal; word-break:break-word;">${data}</div>`;
+                return `<div style="max-width:1000px; white-space:normal; word-break:break-word;">${data}</div>`;
                 }
              },
              {
@@ -49,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
              },
             {
             data: 'fecha_emision',
-            className: 'text-center align-middle',
+            className: 'text-center align-middle  text-nowrap',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
         },{
             data: 'fecha_vencimiento',
-            className: 'text-center align-middle',
+            className: 'text-center align-middle  text-nowrap',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -172,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return (data ?? 0) + ' %';
             }
         },
-        { data: 'renovacion', className: 'text-center align-middle',
+        { data: 'renovacion', className: 'text-center align-middle  text-nowrap',
             render: function (data) {
                 return `<div style="max-width:500px; white-space:normal; word-break:break-word;">${data}</div>`;
                 }

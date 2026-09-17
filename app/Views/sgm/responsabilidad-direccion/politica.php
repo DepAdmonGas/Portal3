@@ -11,7 +11,8 @@
 
 </style>
 
-<div id="container"
+<div id="container" 
+class="pb-4"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
