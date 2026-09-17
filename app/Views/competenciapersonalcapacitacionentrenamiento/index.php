@@ -1,68 +1,131 @@
 <div class="row mt-4">
-  <div class="col-md-3 d-flex align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title text-center">Perfiles de puesto de trabajo</h4>
+    <!-- Perfiles de puesto de trabajo -->
+    <div class="col-md-3 d-flex align-items-stretch mb-4">
+        <a href="competencia-personal-capacitacion-entrenamiento/perfiles-puesto-trabajo" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-id text-white display-6"></i> 
+                    </div>
 
-         <div class="text-end mt-4">
-          <a type="button" href="competencia-personal-capacitacion-entrenamiento/perfiles-puesto-trabajo" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver detalle
-          </a>
-        </div>
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Perfiles de puesto de trabajo
+                        </h4>
+                    </div>
+                </div>
+            </div>
 
-      </div>
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
     </div>
-  </div>
 
-  <div class="col-md-3 d-flex align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title text-center">Perfil del personal</h4>
-          
-          <div class="text-end mt-4">
-          <a href="competencia-personal-capacitacion-entrenamiento/perfiles-personal" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver detalle
-          </a>
-        </div>
+    <!-- Perfil del personal -->
+    <div class="col-md-3 d-flex align-items-stretch mb-4">
+        <a href="competencia-personal-capacitacion-entrenamiento/perfiles-personal" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-user-check text-white display-6"></i> 
+                    </div>
 
-      </div>
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Perfil del personal
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
     </div>
-  </div>
 
-  <div class="col-md-3 d-flex align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title text-center">Programa de capacitación interna</h4>
+    <!-- Programa de capacitación interna -->
+    <div class="col-md-3 d-flex align-items-stretch mb-4">
+        <a href="competencia-personal-capacitacion-entrenamiento/capacitacion-interna" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-school text-white display-6"></i> 
+                    </div>
 
-           <div class="text-end mt-4">
-          <a href="competencia-personal-capacitacion-entrenamiento/capacitacion-interna" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver detalle
-          </a>
-        </div>
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Programa de capacitación interna
+                        </h4>
+                    </div>
+                </div>
+            </div>
 
-      </div>
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
     </div>
-  </div>
 
-  <div class="col-md-3 d-flex align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title text-center">Programa de capacitación externa</h4>
+    <!-- Programa de capacitación externa -->
+    <div class="col-md-3 d-flex align-items-stretch mb-4">
+        <a href="competencia-personal-capacitacion-entrenamiento/capacitacion-externa" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-certificate text-white display-6"></i> 
+                    </div>
 
-           <div class="text-end mt-4">
-          <a href="competencia-personal-capacitacion-entrenamiento/capacitacion-externa" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver detalle
-          </a>
-        </div>
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Programa de capacitación externa
+                        </h4>
+                    </div>
+                </div>
+            </div>
 
-      </div>
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
     </div>
-  </div>
-
 </div>
 
 <!-- ------------------------- -->

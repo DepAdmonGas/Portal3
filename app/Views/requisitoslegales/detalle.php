@@ -108,7 +108,7 @@
                     
 
                     <!-- Permiso -->
-                    <label class="form-label mt-3">* Permiso:</label>
+                    <label class="form-label">* Permiso:</label>
                     <div class="select2-modal-field is-select2-pending"
                         x-ref="permisoWrapper"
                         :class="errors.permiso ? 'is-invalid' : ''">
@@ -169,7 +169,8 @@
 
                 <label class="form-label mt-3">Renovación:</label>
 
-                <table class="table table-sm table-bordered">
+                <div class="table-responsive">
+                <table class="table table-bordered table-striped  text-nowrap align-middle">
                 <tbody>
                     <tr class="font-weight-bold align-middle">
                     <td class="text-center bg-light text-black">Ene</td>
@@ -201,7 +202,7 @@
                 </tr>
                 </tbody>
                 </table>
-
+</div>
                 </div>
 
                 <!-- FOOTER -->
@@ -254,42 +255,42 @@
                 <div class="modal-body">
 
                     <!-- DETALLE -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Nivel de gobierno:</label>
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label mb-1">Nivel de gobierno:</label>
                             <div x-text="detalle.nivel_gobierno || 'S/I'"></div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Municipio / Estado:</label>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label mb-1">Municipio / Estado:</label>
                             <div x-text="detalle.mun_alc_est"></div>
                         </div>
                     </div>
 
 
                     <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Dependencia:</label>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label mb-1">Dependencia:</label>
                             <div x-text="detalle.dependencia"></div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Permiso:</label>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label mb-1">Permiso:</label>
                             <div x-text="detalle.permiso"></div>
                         </div>
                     </div>
 
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Vigencia:</label>
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label mb-1">Vigencia:</label>
                             <div x-text="detalle.vigencia"></div>
                         </div>
                     </div>
 
-                    <div class="row mt-2" x-show="detalle.fundamento">
-                        <div class="col-12">
-                            <label class="form-label">Fundamento:</label>
+                    <div class="row g-3" x-show="detalle.fundamento">
+                        <div class="col-12 mb-3">
+                            <label class="form-label mb-1">Fundamento:</label>
                             <div x-text="detalle.fundamento"></div>
                         </div>
                     </div>
@@ -297,7 +298,8 @@
 
 
                     <!-- MATRIZ -->
-                    <table class="table table-bordered">
+                     <div class="table-responsive">
+                    <table class="table table-bordered table-striped  text-nowrap align-middle">
                         <tr class="text-center">
                             <th>Fecha emisión</th>
                             <th>Fecha vencimiento</th>
@@ -316,7 +318,7 @@
                                     <template x-if="row.acuse">
                                        <a href="javascript:void(0)"
                                         @click="download('requisitos-legales', row.acuse)">
-                                            <i class="ti ti-download text-success fs-6"></i>
+                                            <i class="ti ti-download text-primary fs-6"></i>
                                         </a>
                                     </template>
                                     <template x-if="!row.acuse">
@@ -329,7 +331,7 @@
                                     <template x-if="row.requisito">
                                         <a href="javascript:void(0)"
                                         @click="download('requisitos-legales', row.requisito)">
-                                            <i class="ti ti-download text-success fs-6"></i>
+                                            <i class="ti ti-download text-primary fs-6"></i>
                                         </a>
                                     </template>
                                     <template x-if="!row.requisito">
@@ -346,11 +348,12 @@
                             </td>
                         </tr>
                     </table>
+</div>
 
+                <label class="form-label mb-1">Renovación:</label>
 
-                <label class="form-label">Renovación</label>
-
-                <table class="table table-sm table-bordered">
+                <div class="table-responsive">
+                <table class="table table-bordered table-striped  text-nowrap align-middle">
                 <tbody>
                     <tr class="font-weight-bold align-middle">
                     <td class="text-center  bg-light text-black">Ene</td>
@@ -382,6 +385,7 @@
                 </tr>
                 </tbody>
                 </table>
+</div>
 
                 </div>
 
@@ -431,15 +435,15 @@
             </div>
                         
                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                        <table class="table table-bordered align-middle">
+                        <table class="table table-bordered table-striped  text-nowrap align-middle">
                             <thead>
                                 <tr class="text-center">
                                     <th>Fecha emisión</th>
                                     <th>Fecha vencimiento</th>
                                     <th>Acuse</th>
                                     <th>Requisito legal</th>
-                                    <th><a class="text-muted"><i class="ti ti-edit fs-6"></i></a></th>
-                                    <th><a class="text-muted"><i class="ti ti-trash fs-6"></i></a></th>
+                                    <th><a class="text-muted"><i class="ti ti-edit text-warning fs-6"></i></a></th>
+                                    <th><a class="text-muted"><i class="ti ti-trash text-danger fs-6"></i></a></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -451,7 +455,7 @@
                                             <template x-if="row.acusepdf">
                                                 <a href="javascript:void(0)"
                                                     @click="download('requisitos-legales', row.acusepdf)">
-                                                    <i class="ti ti-download text-success fs-6"></i>
+                                                    <i class="ti ti-download text-primary fs-6"></i>
                                                 </a>
                                             </template>
                                             <template x-if="!row.acusepdf">
@@ -462,7 +466,7 @@
                                             <template x-if="row.requisitolegalpdf">
                                                 <a href="javascript:void(0)"
                                                     @click="download('requisitos-legales', row.requisitolegalpdf)">
-                                                    <i class="ti ti-download text-success pointer fs-6"></i>
+                                                    <i class="ti ti-download text-primary pointer fs-6"></i>
                                                 </a>
                                             </template>
                                             <template x-if="!row.requisitolegalpdf">
@@ -470,7 +474,7 @@
                                             </template>
                                         </td>
                                         <td>
-                                            <a @click="editHistorialRow(row)"><i class="ti ti-edit pointer fs-6"></i></a>
+                                            <a @click="editHistorialRow(row)"><i class="ti ti-edit text-warning pointer fs-6"></i></a>
                                         </td>
                                         <td><a @click="deleteHistorialRow(row)"><i class="ti ti-trash pointer text-danger fs-6"></i></a></td>
                                     </tr>
@@ -490,7 +494,7 @@
 
                     <div class="row">
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label">Fecha de emisión:</label>
+                            <label class="form-label mb-1">Fecha de emisión:</label>
                             <input type="date"
                                 class="form-control"
                                 x-model="historialForm.fecha_emision"
@@ -498,7 +502,7 @@
                                 :class="historialErrors.fecha_emision ? 'is-invalid' : ''">
                         </div>
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label">Fecha de vencimiento:</label>
+                            <label class="form-label mb-1">Fecha de vencimiento:</label>
                             <input type="date"
                                 class="form-control"
                                 x-model="historialForm.fecha_vencimiento">
@@ -513,6 +517,13 @@
                         </div>
                     </div>
 
+
+                    </div>
+
+                </div>
+
+                                <div x-show="showHistorialForm" x-transition>
+                    
                     <div class="modal-footer">
 
                     <button type="button"
@@ -529,9 +540,6 @@
                         <span x-text="historialForm.id ? 'Actualizar' : 'Guardar'"></span>
                     </button>
                 </div>
-
-                    </div>
-
                 </div>
 
 

@@ -34,23 +34,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
                 data: null,
-                className: 'text-center',
+                className: 'text-center align-middle',
                 orderable: false,
                 searchable: false,
                 render: (data, type, row, meta) => meta.row + 1
             },
 
             {
-                data: 'curso'
+                data: 'curso', className: 'text-center align-middle'
             },
 
             {
                 data: 'tipo',
-                className: 'text-center'
+                className: 'text-start align-middle'
             },
 
             {
-            data: 'fecha_programada',
+            data: 'fecha_programada', className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -79,16 +79,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
                 data: 'duracion',
-                className: 'text-center'
+                className: 'text-center align-middle'
             },
 
             {
                 data: 'instructor',
-                className: 'text-center'
+                className: 'text-center align-middle'
             },
 
             {
-            data: 'fecha_real',
+            data: 'fecha_real', className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
             {
-              data: 'personal',
+              data: 'personal', className: 'text-center align-middle',
 
               render(data){
 
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
            {
               data: 'evidencias',
-              className: 'text-center',
+              className: 'text-center align-middle',
 
               render(data){
 
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: '1%',
                 orderable: false,
                 searchable: false,
-                className: 'text-center align-middle td-small',
+                className: 'text-center align-middle',
                 render: function (data, type, row) {
 
                     const noEdit = permisos.editar;

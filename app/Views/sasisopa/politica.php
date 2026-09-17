@@ -41,7 +41,7 @@
             <div class="card w-100">
                 <div class="card-header text-bg-info">
                     <h4 class="mb-0 text-white card-title">
-                        <i class="ti ti-label"></i> Política
+                        <i class="ti ti-scale"></i> Política
                     </h4>
                 </div>
                 <div class="card-body">
@@ -61,7 +61,7 @@
             <div class="card w-100">
                 <div class="card-header text-bg-info">
                     <h4 class="mb-0 text-white card-title">
-                        <i class="ti ti-label"></i> Misión
+                        <i class="ti ti-target"></i> Misión
                     </h4>
                 </div>
                 <div class="card-body">
@@ -81,7 +81,7 @@
             <div class="card w-100">
                 <div class="card-header text-bg-info">
                     <h4 class="mb-0 text-white card-title">
-                        <i class="ti ti-label"></i> Visión
+                        <i class="ti ti-eye"></i> Visión
                     </h4>
                 </div>
                 <div class="card-body">

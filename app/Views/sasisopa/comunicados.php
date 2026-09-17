@@ -52,10 +52,10 @@ x-data="{ ...actions(), ...comunicados()}">
                 <tr>
                     <td
                         colspan="7"
-                        class="text-center">
-                        <small>
-                            No se encontró información para mostrar
-                        </small>
+                        class="text-center text-primary">
+                       
+                            No se encontró información
+                     
                     </td>
                 </tr>
             </template>

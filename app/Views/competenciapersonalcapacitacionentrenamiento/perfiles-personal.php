@@ -25,13 +25,13 @@
       <table id="table-personal-estacion" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>#</th>
-            <th>Nombre Usuario</th>
-            <th>Puesto</th>
-            <th>Telefono</th>
-            <th>Email</th>
-            <th>Cumplimiento</th>
-          <th class="text-center">
+           <th class="text-center align-middle">#</th>
+            <th class="text-start align-middle">Nombre Usuario</th>
+            <th class="text-center align-middle">Puesto</th>
+            <th class="text-center align-middle">Telefono</th>
+            <th class="text-center align-middle">Email</th>
+            <th class="text-center align-middle">Cumplimiento</th>
+          <th class="text-center align-middle">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>

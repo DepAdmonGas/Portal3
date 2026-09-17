@@ -22,11 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
 
             {
-                data: 'folio'
+                data: 'folio', className: 'text-center align-middle',
             },
 
             {
-                data: 'fechacreacion',
+                data: 'fechacreacion', className: 'text-center align-middle',
                 render: function (data, type) {
                     if (!data) return '';
 
@@ -45,23 +45,22 @@ document.addEventListener('DOMContentLoaded', () => {
             },
 
             {
-                data: 'horacreacion'
+                data: 'horacreacion', className: 'text-center align-middle',
             },
 
             {
-                data: 'nombre_equipo'
+                data: 'nombre_equipo', className: 'text-center align-middle',
             },
 
             {
-                data: 'descripcion_hallazgo'
+                data: 'descripcion_hallazgo', className: 'text-center align-middle',
             },
             
             {
                 data: null,
                 orderable: false,
                 searchable: false,
-                className:
-                    'text-center align-middle',
+                className: 'text-center align-middle',
                 render: function(data,type,row){
 
                     const noEditar = permisos.editar;

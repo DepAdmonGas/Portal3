@@ -36,7 +36,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
             <th>CUMPLIMIENTO A LOS APARTADOS 8.17.5 AL 8.19.5</th>
             <th>REVISIÓN Y MANTENIMIENTO PLANTA DE LUZ</th>
             <th>REVISIÓN AL COMPRESOR</th>
-            <th width="40px"><i class="ti ti-dots-vertical fs-6 text-muted"></i></th>
+            <th width="48px"><i class="ti ti-dots-vertical fs-6 text-muted"></i></th>
         </tr>
     </thead>
 

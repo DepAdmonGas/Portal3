@@ -83,7 +83,7 @@ document.addEventListener('alpine:init', () => {
                 if (!response || !response.success) {
 
                     this.calibracion[campo] = valorAnterior;
-                    this.notify('error',response.message);
+                    this.notify('error', (response && response.message) || 'Error al guardar');
                     return;
 
                 }
@@ -92,7 +92,7 @@ document.addEventListener('alpine:init', () => {
 
             } catch (error) {
 
-                this.notify('error',response.message);
+                this.notify('error','Error al guardar');
                 this.calibracion[campo] = valorAnterior;
 
             }
@@ -123,7 +123,7 @@ document.addEventListener('alpine:init', () => {
                 if (!response || !response.success) {
 
                     item[campo] = valorAnterior;
-                    this.notify('error',response.message);
+                    this.notify('error', (response && response.message) || 'Error al guardar');
                     return;
 
                 }
@@ -132,7 +132,7 @@ document.addEventListener('alpine:init', () => {
 
             } catch (error) {
 
-                this.notify('error',response.message);
+                this.notify('error','Error al guardar');
                 item[campo] =  valorAnterior;
 
             }
@@ -271,7 +271,7 @@ document.addEventListener('alpine:init', () => {
                         }
                     });
 
-                if (!response.success) {
+                if (!response || !response.success) {
                     return;
                 }
 

@@ -285,18 +285,6 @@ echo '<div class="row mb-3 mt-0 d-flex justify-content-between align-items-end">
         <h4> '.$year.'</h4>
 </div>
 
-<div class="col-6 text-end">
-<button
-            x-show="htmlReporte"
-            @click="limpiarBusqueda()"
-            class="btn bg-danger-subtle text-danger top-3 end-0">
-          <i class="ti ti-arrow-left"></i>
-            Regresar
-           
-        </button>
-</div>
-
-
 </div>';
 
 
@@ -310,7 +298,7 @@ echo '<div class="row mb-3 mt-0 d-flex justify-content-between align-items-end">
             echo '<div class="card-title mb-0 ">'.$modulo->num_modulo.'. '.$modulo->titulo.'</div>';
             
     echo '<div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button type="button" class="btn bg-primary-subtle text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ti ti-dots-vertical fs-4"></i>
            
            
@@ -365,7 +353,7 @@ echo '<div class="mt-0">';
                             <th class="text-center" >Puesto</th>
                             <th class="text-center" >Fecha</th>
                             <th class="text-center" >Resultado</th>
-                            <th class="text-center align-middle"><i class="ti ti-download fs-6"></i></th>
+                            <th class="text-center align-middle"><i class="ti ti-download text-primary fs-6"></i></th>
                         </tr>
                     </thead>';
                 echo '<tbody>';
@@ -435,13 +423,13 @@ public function resultadoHTML($c)
 
 public function reconocimiento($c){
 
- if ($c->estado == 0) return '<i class="ti ti-x fs-6"></i>';
+ if ($c->estado == 0) return '<i class="ti ti-x text-danger fs-6"></i>';
 
     $r = $c->resultado;
 
-    if ($r >= 90) return '<a href="/cursos/descargar/'.$c->id.'" target="_blank"><i class="ti ti-download fs-6 text-danger"></i></a>';
-    if ($r >= 80) return '<a href="/cursos/descargar/'.$c->id.'" target="_blank"><i class="ti ti-download fs-6 text-danger"></i></a>';
-    if ($r >= 60) return '<a href="/cursos/descargar/'.$c->id.'" target="_blank"><i class="ti ti-download fs-6 text-danger"></i></a>';
+    if ($r >= 90) return '<a href="/cursos/descargar/'.$c->id.'" target="_blank"><i class="ti ti-download fs-6 text-primary"></i></a>';
+    if ($r >= 80) return '<a href="/cursos/descargar/'.$c->id.'" target="_blank"><i class="ti ti-download fs-6 text-primary"></i></a>';
+    if ($r >= 60) return '<a href="/cursos/descargar/'.$c->id.'" target="_blank"><i class="ti ti-download fs-6 text-primary"></i></a>';
 
     return '<i class="ti ti-x fs-6"></i>';
 

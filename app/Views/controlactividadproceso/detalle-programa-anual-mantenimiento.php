@@ -27,7 +27,7 @@ x-data="{ ...actions(), ...programaAnualMantenimiento() }">
         </div>
     </div>
 <div class="table-responsive">
-    <table class="table table-bordered table-sm mt-3">
+    <table class="table table-bordered mt-3">
     <tr>
     <td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png' ?>" style="width: 200px;"></td>
     <td colspan="2" class="text-center align-middle">Programa Anual de Mantenimiento</td>

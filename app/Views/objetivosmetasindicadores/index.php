@@ -18,7 +18,7 @@
 
 <div class="card-header text-bg-info">
 <h4 class="mb-0 text-white card-title">
-<i class="ti ti-label"> </i> OBJETIVO
+<i class="ti ti-target"> </i> OBJETIVO
 </h4>
 </div>
 
@@ -36,7 +36,7 @@ Brindar a nuestros clientes una experiencia inigualable al cargar combustible o 
 
 <div class="card-header text-bg-info">
 <h4 class="mb-0 text-white card-title">   
-<i class="ti ti-label"> </i> METAS
+<i class="ti ti-flag"> </i> METAS
 </h4> 
 </div>
 
@@ -55,51 +55,104 @@ altamente capacitado tanto en operación como en mantenimiento.</li>
 </div>
 </div>
 
-<h4>INDICADORES</h4>
+<h5 class="fw-semibold">INDICADORES</h5>
 
 <div class="row mt-4">
+    <!-- Capacitación del personal -->
+    <div class="col-md-4 d-flex align-items-stretch mb-4">
+        <a href="objetivos-metas-indicadores/capacitacion-personal" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-school text-white display-6"></i>
+                    </div>
 
-<div class="col-md-4 d-flex align-items-stretch">
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Capacitación del personal
+                        </h4>
+                    </div>
+                </div>
+            </div>
 
-<div class="card w-100">
-<a href="objetivos-metas-indicadores/capacitacion-personal">
-<div class="card-body text-center">     
-<i class="ti ti-chart-infographic fs-13"></i>   
-<div class="fs-7 mt-3">
-Capacitación del personal
-</div>
-</div>
-</a>
-</div>
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
 
-</div>
+    <!-- Experiencia del cliente -->
+    <div class="col-md-4 d-flex align-items-stretch mb-4">
+        <a href="objetivos-metas-indicadores/experiencia-cliente" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-heart-handshake text-white display-6"></i> 
+                    </div>
 
-<div class="col-md-4 d-flex align-items-stretch">
-<div class="card w-100">
-<a href="objetivos-metas-indicadores/experiencia-cliente">
-<div class="card-body text-center">
-<i class="ti ti-chart-infographic fs-13"></i>   
-<div class="fs-7 mt-3">
-Experiencia del cliente
-</div>
-</div>
-</a>
-</div>
-</div>
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Experiencia del cliente
+                        </h4>
+                    </div>
+                </div>
+            </div>
 
-<div class="col-md-4 d-flex align-items-stretch">
-<div class="card w-100">
-<a href="objetivos-metas-indicadores/indicador-ventas">
-<div class="card-body text-center">
-<i class="ti ti-chart-infographic fs-13"></i>   
-<div class="fs-7 mt-3">
-Ventas
-</div>
-</div>
-</a>
-</div>
-</div>
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
 
+    <!-- Ventas -->
+    <div class="col-md-4 d-flex align-items-stretch mb-4">
+        <a href="objetivos-metas-indicadores/indicador-ventas" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-chart-line text-white display-6"></i> 
+                    </div>
+
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Ventas
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
 </div>
 
 <div class="row mt-3">
@@ -113,7 +166,7 @@ Ventas
 <div class="ms-auto">
 
 <div class="dropdown dropcenter">
-<a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
   <i class="ti ti-dots-vertical fs-4"></i>
 </a>
 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -174,7 +227,7 @@ Ventas
 <div class="ms-auto">
 
 <div class="dropdown dropcenter">
-<a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton " data-bs-toggle="dropdown" aria-expanded="false">
+<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton " data-bs-toggle="dropdown" aria-expanded="false">
   <i class="ti ti-dots-vertical fs-4"></i>
 </a>
 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -266,7 +319,7 @@ tabindex="-1">
     <div class="modal-body">
 
     <div x-show="mode !== 'view'">
-    <h6 class="fs-5">Satisfacción del cliente</h6>                
+    <h6 class="fs-5 text-primary">Satisfacción del cliente</h6>                
 
     <div class="row">
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
@@ -288,7 +341,7 @@ tabindex="-1">
 
     <hr>
 
-    <h6 class="fs-5">Mantenimiento</h6>
+    <h6 class="fs-5 text-primary">Mantenimiento</h6>
                     
     <div class="row">
       
@@ -311,7 +364,7 @@ tabindex="-1">
     <hr>
 
 
-  <h6 class=" fs-5">Capacitación</h6>
+  <h6 class="text-primary fs-5">Capacitación</h6>
 
   <div class="row">
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
@@ -334,7 +387,7 @@ tabindex="-1">
   <hr>
 
 
-  <h6 class=" fs-5">Quejas y sugerencias</h6>
+  <h6 class="text-primary fs-5">Quejas y sugerencias</h6>
   <div class="row">
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
       <label class="form-label">Fecha:</label>
@@ -355,7 +408,7 @@ tabindex="-1">
   </div>
   <hr>
 
-  <h6 class=" fs-5">Cumplimiento de legislación </h6>
+  <h6 class="text-primary fs-5">Cumplimiento de legislación </h6>
   <div class="row">
     
 

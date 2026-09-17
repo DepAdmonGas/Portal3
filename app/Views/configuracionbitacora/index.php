@@ -23,7 +23,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
 
 <div class="datatables mt-2">
             <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-        <table id="table-trabajador-autorizado" class="table table-bordered mb-0 align-middle">
+        <table id="table-trabajador-autorizado" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
             <thead>
             <tr>
             <th>#</th>

@@ -27,10 +27,10 @@ x-data="{ ...actions(), ...tanqueAlmacenamiento()}">
       <table id="table-tanque-almacenamiento" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>No. Tanque</th>
-            <th>Capacidad</th>
-            <th>Producto</th>
-          <th class="text-center" width="100px">
+           <th class="text-center align-middle" width="100px">No. Tanque</th>
+            <th class="text-center align-middle">Capacidad</th>
+            <th class="text-center align-middle">Producto</th>
+          <th class="text-center align-middle" width="48px">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -59,17 +59,17 @@ x-data="{ ...actions(), ...tanqueAlmacenamiento()}">
 
 
         <label class="form-label">* No. Tanque:</label>
-        <input type="number" class="form-control mb-2" x-model="no_tanque"
+        <input type="number" class="form-control mb-3" x-model="no_tanque"
                 :class="errors.no_tanque ? 'is-invalid' : ''"
                 @input="errors.no_tanque = false" />
 
         <label class="form-label">* Capacidad:</label>
-        <textarea class="form-control mb-2" x-model="capacidad"
+        <textarea class="form-control mb-3" x-model="capacidad"
                 :class="errors.capacidad ? 'is-invalid' : ''"
                 @input="errors.capacidad = false"></textarea>
 
         <label class="form-label">* Producto:</label>
-        <select class="form-select mb-2" x-model="producto"
+        <select class="form-select mb-3" x-model="producto"
                 :class="errors.producto ? 'is-invalid' : ''"
                 @input="errors.producto = false">
             <option value="">Seleccione un producto...</option>

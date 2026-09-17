@@ -9,40 +9,70 @@
 
 <?php else: ?>
 
-
 <div class="row mt-4">
-<div class="col-12 col-md-6 d-flex align-items-stretch">
-<div class="card w-100">
-<div class="card-body">
+    <!-- Card 1 -->
+    <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
+        <a href="identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales/aspectos-ambientales-pdf" 
+        class="card h-100 w-100 border-0 overflow-hidden position-relative card-hover">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between ">
+                <!-- Bloque Superior: Icono + Título alineados -->
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono de Categoría -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-file-text text-white display-6"></i> 
+                    </div>
 
-<h4 class="card-title">Identificación y evaluación de Aspectos e Impactos Ambientales.</h4>
+                    <!-- Título alineado a la derecha y centrado verticalmente -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Identificación y evaluación de Aspectos e Impactos Ambientales.
+                        </h4>
+                    </div>
+                </div>
+            </div>
 
-<div class="text-end">
-<a href="identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales/aspectos-ambientales-pdf" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-<i class="ti ti-download"></i>
-Descargar
+            <!-- Pie de la tarjeta: Acción -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-download fs-5"></i>
+                </div>
+            </div>
 </a>
-</div>
+    </div>
 
-</div>
-</div>
-</div>
+    <!-- Card 2 -->
+    <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
+        <a href="identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales/riesgos-peligros-pdf"
+         class="card h-100 w-100 border-0 overflow-hidden position-relative card-hover">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <!-- Bloque Superior: Icono + Título alineados -->
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono de Categoría -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-file-text text-white display-6"></i> 
+                    </div>
 
-<div class="col-12 col-md-6 d-flex align-items-stretch">
-<div class="card w-100">
-<div class="card-body">
-<h4 class="card-title">Identificación y evaluación de Riesgos y Peligros para registrar el análisis.</h4>
+                    <!-- Título alineado a la derecha y centrado verticalmente -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Identificación y evaluación de Riesgos y Peligros para registrar el análisis.
+                        </h4>
+                    </div>
+                </div>
+            </div>
 
-<div class="text-end">
-<a href="identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales/riesgos-peligros-pdf" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-<i class="ti ti-download"></i>
-Descargar
+            <!-- Pie de la tarjeta: Acción -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-download fs-5"></i>
+                </div>
+            </div>
 </a>
-</div>
-
-</div>
-</div>
-</div>
+    </div>
 </div>
 
 <div class="row">

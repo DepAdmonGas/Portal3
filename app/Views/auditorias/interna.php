@@ -12,7 +12,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
 <?php else: ?>
 
-    <div class="text-end">
+    <div class="text-end mb-3">
         <?= 
             !empty($permisos['crear']) ? 
             '<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirModalAgregar()">
@@ -23,7 +23,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
     </div>
 
 <div class="datatables">
-    <div class="table-responsive mt-3 pb-4 overflow-x-auto overflow-hidden">
+    <div class="table-responsive mb-3 overflow-x-auto overflow-hidden">
 
         <table
             id="tablaAuditorias"
@@ -36,10 +36,10 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                     <th class="align-middle text-center">
                         #
                     </th>
-                    <th class="align-middle">
+                    <th class="align-middle text-center">
                         Fecha
                     </th>
-                    <th class="align-middle">
+                    <th class="align-middle text-center">
                         Auditor
                     </th>
                     <th
@@ -50,7 +50,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                             (INFORME DE AUDITORÍA)
                         </small>
                     </th>
-                    <th class="align-middle text-center">
+                    <th class="align-middle text-center" width="96px">
                         Anexos
                     </th>
                     <th
@@ -61,7 +61,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                             (PLAN DE ATENCIÓN DE HALLAZGOS)
                         </small>
                     </th>
-                    <th class="align-middle text-center">
+                    <th class="align-middle text-center" width="100px">
                         Anexos
                     </th>
                     <th class="align-middle text-center">
@@ -86,7 +86,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
     tabindex="-1">
 
     <div
-        class="modal-dialog modal-lg modal-dialog-centered">
+        class="modal-dialog modal-xl modal-dialog-centered">
 
         <div class="modal-content">
 
@@ -129,59 +129,77 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
                 </small>
 
-                <div class="row mt-3">
+ <div class="row mt-4">
 
-                    <div class="col-md-6">
-
-                        <a
-                            href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc"
-                            download>
-
-                            <div
-                                class="bg-primary-subtle text-center p-3">
-
-                                <i
-                                    class="fa fa-file-word fa-3x">
-                                </i>
-
-                                <div class="mt-2">
-
-                                    Fo.ADMONGAS.024
-
-                                </div>
-
-                            </div>
-
-                        </a>
-
+    <!-- Tarjeta 1: Fo.ADMONGAS.024 -->
+    <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
+        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" 
+           download
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular (Apropiado para Word con tono primario o azul suave) -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="fa fa-file-word text-white fs-4"></i> 
                     </div>
 
-                    <div class="col-md-6">
-
-                        <a
-                            href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx"
-                            download>
-
-                            <div
-                                class="bg-primary-subtle text-center p-3">
-
-                                <i
-                                    class="fa fa-file-word fa-3x">
-                                </i>
-
-                                <div class="mt-2">
-
-                                    Fo.ADMONGAS.025
-
-                                </div>
-
-                            </div>
-
-                        </a>
-
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Fo.ADMONGAS.024
+                        </h4>
+                        <span class="text-muted small mt-1">Documento Word (.doc)</span>
                     </div>
-
                 </div>
+            </div>
+
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-download fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Tarjeta 2: Fo.ADMONGAS.025 -->
+    <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
+        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" 
+           download
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="fa fa-file-word text-white fs-4"></i> 
+                    </div>
+
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Fo.ADMONGAS.025
+                        </h4>
+                        <span class="text-muted small mt-1">Documento Word (.docx)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-download fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
 
             </div>
 
@@ -407,12 +425,12 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
      
 
 
-
-        <table class="table table-striped  table-bordered mt-3 text-nowrap align-middle">
+<div class="table-responsive">
+        <table class="table table-striped table-bordered mt-3 text-nowrap align-middle">
             <thead>
 <tr>
-    <th>Documento</th>
-    <th><i class="ti ti-file-type-pdf fs-7"></i></th>
+    <th class="text-start align-middle">Documento</th>
+    <th class="text-center align-middle" width="48px"><i class="ti ti-file-type-pdf text-danger fs-7"></i></th>
 </tr>
 
             </thead>
@@ -420,16 +438,16 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
                 <template x-if="anexos.length === 0">
                     <tr>
-                        <td class="text-center text-muted">
-                            Sin anexos
+                        <td class="text-center text-primary" colspan="2">
+                            No se encontro información
                         </td>
                     </tr>
                 </template>
 
                 <template x-for="a in anexos" :key="a.id">
                     <tr>
-                        <td class="align-middle" x-text="a.documento"></td>
-                        <td class="text-center align-middle" width="36">
+                        <td class="text-start align-middle" x-text="a.documento"></td>
+                        <td class="text-center align-middle" >
                             <a :href="`/uploads/${a.archivo}`" download>
                                 <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                             </a>
@@ -439,6 +457,9 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
             </tbody>
         </table>
+</div>
+
+
 </div>
 <div class="modal-footer">
          <button

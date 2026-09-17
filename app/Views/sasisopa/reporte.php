@@ -2336,6 +2336,7 @@ Resumen de revisión de resultados
 
     <b>Informe de Evaluación de Desempeño (IED)</b>
 
+    <div class="table-responsive">
 <table class="table table-sm table-bordered table-hover mt-2">
 
     <thead>
@@ -2420,6 +2421,7 @@ Resumen de revisión de resultados
     </tbody>
 
 </table>
+</div>
 
 <b>
 Control de la implementación de los procedimientos del SASISOPA

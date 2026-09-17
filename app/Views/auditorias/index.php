@@ -11,54 +11,105 @@ data-estacion-id="<?= e($estacionId ?? '') ?>">
 
 <?php else: ?>
 
-<div class="row mt-4">
+  <div class="row mt-4">
 
-  <div class="col-md-4 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Formato Programa de auditorias (Internas y externas) </h4>
+  <!-- Tarjeta 1: Formato Programa de auditorias -->
+  <div class="col-12 col-md-4 d-flex align-items-stretch mb-4">
+    <a href="/sasisopa/auditorias/programa" 
+       class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+        
+        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Icono circular -->
+                <div class="rounded-circle bg-info text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 60px; height: 60px;">
+                    <i class="ti ti-file-text text-white display-6"></i> 
+                </div>
 
-         <div class="text-end mt-4">
-          <a href="/sasisopa/auditorias/programa" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver programa de auditorias 
-          </a>
+                <!-- Título a la derecha -->
+                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">
+                        Formato Programa de auditorias (Internas y externas)
+                    </h4>
+                </div>
+            </div>
         </div>
 
-      </div>
-    </div>
+        <!-- Pie de la tarjeta -->
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-info fw-semibold mt-auto">
+            <span class="small">Ver detalle</span>
+            <div class="icon-transition">
+                                            <i class="ti ti-arrow-right fs-5"></i>
+
+            </div>
+        </div>
+    </a>
   </div>
 
-  <div class="col-md-4 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Auditoria interna </h4>
-          
-          <div class="text-end mt-4">
-          <a href="/sasisopa/auditorias/interna" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver auditoria interna
-          </a>
+  <!-- Tarjeta 2: Auditoria interna -->
+  <div class="col-12 col-md-4 d-flex align-items-stretch mb-4">
+    <a href="/sasisopa/auditorias/interna" 
+       class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+        
+        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Icono circular -->
+                <div class="rounded-circle bg-info text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 60px; height: 60px;">
+                    <i class="ti ti-clipboard-check text-white display-6"></i> 
+                </div>
+
+                <!-- Título a la derecha -->
+                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">
+                        Auditoria interna
+                    </h4>
+                </div>
+            </div>
         </div>
 
-      </div>
-    </div>
+        <!-- Pie de la tarjeta -->
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-info fw-semibold mt-auto">
+            <span class="small">Ver detalle</span>
+            <div class="icon-transition">
+                                            <i class="ti ti-arrow-right fs-5"></i>
+
+            </div>
+        </div>
+    </a>
   </div>
 
-  <div class="col-md-4 align-items-stretch">
-    <div class="card w-100">
-      <div class="card-body">
-        <h4 class="card-title">Auditoria externa</h4>
-          
-          <div class="text-end mt-4">
-          <a href="/sasisopa/auditorias/externa" type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info">
-            <i class="ti ti-eye"></i>
-            Ver auditoria externa
-          </a>
+  <!-- Tarjeta 3: Auditoria externa -->
+  <div class="col-12 col-md-4 d-flex align-items-stretch mb-4">
+    <a href="/sasisopa/auditorias/externa" 
+       class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+        
+        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Icono circular -->
+                <div class="rounded-circle bg-info text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 60px; height: 60px;">
+                    <i class="ti ti-file-certificate text-white display-6"></i> 
+                </div>
+
+                <!-- Título a la derecha -->
+                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">
+                        Auditoria externa
+                    </h4>
+                </div>
+            </div>
         </div>
 
-      </div>
-    </div>
+        <!-- Pie de la tarjeta -->
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-info fw-semibold mt-auto">
+            <span class="small">Ver detalle</span>
+            <div class="icon-transition">
+                                            <i class="ti ti-arrow-right fs-5"></i>
+
+            </div>
+        </div>
+    </a>
   </div>
 
 </div>

@@ -79,7 +79,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
                     <div class="mt-1">
                         <b>Resultado:</b>
                         <span
-                            x-html="DOMPurify.sanitize(implementacion.resultado)">
+                            x-html="implementacion.resultado">
                         </span>
                     </div>
                 </td>
@@ -474,7 +474,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
                         </div>
 
                         <div
-                            x-html="DOMPurify.sanitize(incidentes.semestre1)">
+                            x-html="incidentes.semestre1">
                         </div>
 
                     </div>
@@ -489,7 +489,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
                             </div>
 
                             <div
-                            x-html="DOMPurify.sanitize(incidentes.semestre2)">
+                                x-html="incidentes.semestre2">
                             </div>
 
                         </div>
@@ -514,7 +514,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
           <div class="d-flex align-items-center ">
       <div class="ms-auto">
       <div class="dropdown center">
-            <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -548,7 +548,7 @@ x-data="{ ...actions(), ...revisionResultados()}">
                 <th
                     width="35"
                     class="text-center align-middle ">
-                    <i class="fas fa-ellipsis-v"></i>
+                    <i class="ti ti-dots-vertical fs-6"></i>
                 </th>
             </tr>
         </thead>
@@ -584,9 +584,9 @@ x-data="{ ...actions(), ...revisionResultados()}">
                     <td
                         class="text-center align-middle">
 
-                        <div class="dropdown dropstart">
+                        <div class="dropdown dropstart ">
                     <a href="javascript:void(0)" data-bs-toggle="dropdown">
-                         <i class="ti ti-dots-vertical fs-6"></i>
+                        <i class="ti ti-dots-vertical fs-6"></i>
                     </a>
                     <ul class="dropdown-menu">
                         <li>

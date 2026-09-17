@@ -811,14 +811,29 @@ return function (RouteCollector $r) {
         //----- Precios Diarios Combustible
         $r->addRoute('GET', '/importacion/precios-diarios-combustible', Route::auth(['PreciosCombustibleController', 'index']));
         $r->addRoute('GET', '/importacion/precios-diarios-combustible/data', Route::auth(['PreciosCombustibleController', 'getData']));
-        $r->addRoute('GET', '/importacion/precios-diarios-combustible/nuevo/{year:\d+}/{mes:\d+}/{fecha}', Route::auth(['PreciosCombustibleController', 'nuevo']));
-        $r->addRoute('GET', '/importacion/precios-diarios-combustible/editar/{id:\d+}', Route::auth(['PreciosCombustibleController', 'editar']));
-        $r->addRoute('GET', '/importacion/precios-diarios-combustible/detalle/{id:\d+}', Route::auth(['PreciosCombustibleController', 'detalle']));
+        $r->addRoute('POST', '/importacion/precios-diarios-combustible/agregar', Route::auth(['PreciosCombustibleController', 'agregar']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible/formulario/{id:\d+}', Route::auth(['PreciosCombustibleController', 'formulario']));
+        $r->addRoute('GET', '/importacion/precios-diarios-combustible-detalle/{id:\d+}', Route::auth(['PreciosCombustibleController', 'detalle']));
         $r->addRoute('GET', '/importacion/precios-diarios-combustible/reporte/{id:\d+}', Route::auth(['PreciosCombustibleController', 'reporte']));
         $r->addRoute('POST', '/importacion/precios-diarios-combustible/update', Route::auth(['PreciosCombustibleController', 'update']));
         $r->addRoute('POST', '/importacion/precios-diarios-combustible/finalizar', Route::auth(['PreciosCombustibleController', 'finalizar']));
         $r->addRoute('POST', '/importacion/precios-diarios-combustible/toggle-precio-bajo', Route::auth(['PreciosCombustibleController', 'togglePrecioBajo']));
         $r->addRoute('GET', '/importacion/precios-diarios-combustible/{year}/{mes}', Route::auth(['PreciosCombustibleController', 'filtrarPorAnioMes']));
+
+        //----- Cuenta Litros
+        $r->addRoute('GET', '/importacion/cuenta-litros', Route::auth(['CuentaLitrosController', 'index']));
+        $r->addRoute('GET', '/importacion/cuenta-litros/data', Route::auth(['CuentaLitrosController', 'getData']));
+        $r->addRoute('GET', '/importacion/cuenta-litros-formato/{id:\d+}', Route::auth(['CuentaLitrosController', 'formato']));
+        $r->addRoute('GET', '/importacion/cuenta-litros-detalle/{id:\d+}', Route::auth(['CuentaLitrosController', 'detalle']));
+        $r->addRoute('GET', '/importacion/cuenta-litros/{year}/{mes}', Route::auth(['CuentaLitrosController', 'filtrarPorAnioMes']));
+        $r->addRoute('POST', '/importacion/cuenta-litros/crear', Route::auth(['CuentaLitrosController', 'crear']));
+        $r->addRoute('POST', '/importacion/cuenta-litros/agregar-detalle', Route::auth(['CuentaLitrosController', 'agregarDetalle']));
+        $r->addRoute('POST', '/importacion/cuenta-litros/editar-detalle', Route::auth(['CuentaLitrosController', 'editarDetalle']));
+        $r->addRoute('POST', '/importacion/cuenta-litros/eliminar-detalle', Route::auth(['CuentaLitrosController', 'eliminarDetalle']));
+        $r->addRoute('POST', '/importacion/cuenta-litros/finalizar', Route::auth(['CuentaLitrosController', 'finalizar']));
+        $r->addRoute('POST', '/importacion/cuenta-litros/habilitar', Route::auth(['CuentaLitrosController', 'habilitar']));
+        $r->addRoute('POST', '/importacion/cuenta-litros/eliminar', Route::auth(['CuentaLitrosController', 'eliminar']));
+        $r->addRoute('POST', '/importacion/cuenta-litros/editar-fecha', Route::auth(['CuentaLitrosController', 'editarFecha']));
 
         //----- Formato Descarga Merma
         $r->addRoute('GET', '/importacion/formato-descarga-merma', Route::auth(['FormatoDescargaMermaController', 'index']));
@@ -1165,7 +1180,7 @@ return function (RouteCollector $r) {
 
         $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/{id:\d+}', Route::auth(['CalibracionSondaController', 'index']));
         $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/update', Route::auth(['CalibracionSondaController', 'update']));
-        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos//bitacora-calibracion-equipos-sonda/finalizar', Route::auth(['CalibracionSondaController', 'finalizar']));
+        $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/finalizar', Route::auth(['CalibracionSondaController', 'finalizar']));
 
         $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/{id:\d+}', Route::auth(['CalibracionJarraPatronController', 'index']));
         $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/update', Route::auth(['CalibracionJarraPatronController', 'update']));

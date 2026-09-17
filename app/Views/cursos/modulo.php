@@ -22,91 +22,60 @@ window.temas = <?= json_encode($temas->values()) ?>;
 
 <div class="row g-4">
 
-    <template x-for="tema in temas" :key="tema.id">
-
-        <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
-
-                <!-- Encabezado -->
-                <div class="bg-info bg-gradient text-white p-2">
-
-                    <div class="d-flex justify-content-between align-items-center">
-
-
-                        <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center"
-                             style="width:50px;height:50px;">
-
-                        <div>
-                            <h4 class="fw-bolder text-white mb-0"
-                                x-text="tema.numero">
-                            </h4>
-                        </div>
-
-                        </div>
-
+<template x-for="tema in temas" :key="tema.id">
+    <div class="col-xl-4 col-lg-6 mb-4">
+        <div class="card shadow-sm h-100 overflow-hidden card-hover"
+             @click="verDetalle(tema.id)"
+             style="cursor: pointer;">
+            
+            <!-- Encabezado: Círculo y Título a la izquierda -->
+            <div class="card-header bg-transparent pt-4 px-4 pb-0 border-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 48px; height: 48px; font-size: 1.1rem;">
+                        <span x-text="tema.numero"></span>
                     </div>
-
+                    <h6 class="fw-bold text-dark mb-0" style="line-height: 1.4; font-size: 1.05rem;" x-text="tema.titulo"></h6>
                 </div>
-
-                <!-- Contenido -->
-                <div class="card-body d-flex flex-column">
-
-                    <h5 class="fs-7 text-center mb-3"
-                        style="min-height:60px;"
-                        x-text="tema.titulo">
-                    </h5>
-
-                    <div class="border rounded-3 p-3 bg-light">
-
-                        <div class="d-flex justify-content-between mb-2">
-
-                            <span class="text-muted">
-                                Cursos
-                            </span>
-
-                            <span class="fw-bolder"
-                                  x-text="tema.total">
-                            </span>
-
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-
-                            <span class="text-muted">
-                                Pendientes
-                            </span>
-
-                            <span class="badge rounded-pill"
-                                  :class="tema.pendientes>0 ? 'bg-danger' : 'bg-success'"
-                                  x-text="tema.pendientes">
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <div class="mt-auto pt-4">
-
-                        <button
-                            class="btn btn-primary w-100 rounded-pill shadow-sm"
-                            @click="verDetalle(tema.id)">
-
-                            <i class="ti ti-eye"></i>
-
-                            Ver detalle
-
-                        </button>
-
-                    </div>
-
-                </div>
-
             </div>
 
-        </div>
+            <!-- Cuerpo de la tarjeta: Métricas rediseñadas -->
+            <div class="card-body pb-0">
+                <div class="row g-3">
+                    <!-- Métrico Cursos -->
+                    <div class="col-sm-6">
+                        <div class="border rounded-3 p-2 text-center bg-body-tertiary">
+                            <span class="d-block text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Cursos</span>
+                            <span class="fs-4 fw-bold text-dark" x-text="tema.total"></span>
+                        </div>
+                    </div>
 
-    </template>
+                    <!-- Métrico Pendientes -->
+                    <div class="col-sm-6">
+                        <div class="border rounded-3 p-2 text-center"
+                             :class="tema.pendientes > 0 ? 'bg-danger-subtle border-danger-subtle' : 'bg-body-tertiary'">
+                            <span class="d-block text-uppercase fw-semibold"
+                                  :class="tema.pendientes > 0 ? 'text-danger' : 'text-muted'"
+                                  style="font-size: 0.7rem; letter-spacing: 0.5px;">Pendientes</span>
+                            <span class="fs-4 fw-bold"
+                                  :class="tema.pendientes > 0 ? 'text-danger' : 'text-dark'"
+                                  x-text="tema.pendientes">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de la tarjeta: Acción -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 
 </div>
 

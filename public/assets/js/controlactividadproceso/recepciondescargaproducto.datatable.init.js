@@ -23,11 +23,11 @@ const year = new Date().getFullYear();
         columns: [
 
             {
-                data: 'folio'
+                data: 'folio', className: 'text-center align-middle'
             }, 
             
             {
-                data: 'fecha',
+                data: 'fecha', className: 'text-center align-middle',
                 render: function(data, type) {
 
                     if (type === 'sort' || type === 'type') {
@@ -40,7 +40,7 @@ const year = new Date().getFullYear();
 
            {
                 data: 'hora_llegada',
-                className: 'text-center',
+                className: 'text-center align-middle',
                 render: function(data, type) {
 
                     if (type === 'sort' || type === 'type') {
@@ -53,7 +53,7 @@ const year = new Date().getFullYear();
 
            {
                 data: 'hora_salida',
-                className: 'text-center',
+                className: 'text-center align-middle',
                 render: function(data, type) {
 
                     if (type === 'sort' || type === 'type') {
@@ -65,15 +65,15 @@ const year = new Date().getFullYear();
             },
                         
             {
-                data: 'placa'
+                data: 'placa', className: 'text-center align-middle'
             },
 
             {
-                data: 'operador'
+                data: 'operador', className: 'text-center align-middle'
             },
 
             {
-                data: 'no_factura'
+                data: 'no_factura', className: 'text-center align-middle'
             },
 
            {
@@ -91,7 +91,7 @@ const year = new Date().getFullYear();
 
             {
                 data: 'producto',
-                className: 'text-center',
+                className: 'text-center align-middle',
                 render: function(data) {
 
                     return `
@@ -105,7 +105,7 @@ const year = new Date().getFullYear();
 
             {
                 data: 'firma_recibe',
-                className: 'text-center',
+                className: 'text-center align-middle',
                 orderable: false,
                 render: function(data) {
 
@@ -130,7 +130,7 @@ const year = new Date().getFullYear();
 
             {
                 data: 'firma_supervisa',
-                className: 'text-center',
+                className: 'text-center align-middle',
                 orderable: false,
                 render: function(data) {
 

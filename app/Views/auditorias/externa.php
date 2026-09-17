@@ -12,7 +12,7 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 
 <?php else: ?>
 
-    <div class="text-end">
+    <div class="text-end mb-3">
         <?= 
             !empty($permisos['crear']) ? 
             '<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirModalAgregar()">
@@ -23,11 +23,11 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
     </div>
 
     <div class="datatables">
-    <div class="table-responsive mt-3 pb-4 overflow-x-auto overflow-hidden">
+    <div class="table-responsive mb-3 overflow-x-auto overflow-hidden">
 
         <table
             id="tablaAuditoriasExternas"
-            class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+           class="table table-striped table-bordered mt-3 text-nowrap align-middle">
 
             <thead>
 
@@ -39,7 +39,7 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
                     <th class="text-center align-middle">
                         Fecha
                     </th>
-                    <th class="text-center align-middle">
+                    <th class="text-start align-middle">
                         Prestador de servicio
                     </th>
                     <th
@@ -83,7 +83,7 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
     tabindex="-1">
 
     <div
-        class="modal-dialog modal-lg modal-dialog-centered">
+        class="modal-dialog modal-xl modal-dialog-centered">
 
         <div class="modal-content">
 
@@ -103,7 +103,7 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body pb-0">
 
                 <div class="mb-1">
 
@@ -125,60 +125,75 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
                     y carga cada uno al sistema
 
                 </small>
+<div class="row mt-4">
 
-                <div class="row mt-3">
-
-                    <div class="col-md-6">
-
-                        <a
-                            href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc"
-                            download>
-
-                            <div
-                                class="bg-primary-subtle text-center p-3">
-
-                                <i
-                                    class="fa fa-file-word fa-3x">
-                                </i>
-
-                                <div class="mt-2">
-
-                                    Fo.ADMONGAS.024
-
-                                </div>
-
-                            </div>
-
-                        </a>
-
+    <!-- Tarjeta 1: Fo.ADMONGAS.024 -->
+    <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
+        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" 
+           download
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular con estilo Word -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="fa fa-file-word text-white fs-4"></i> 
                     </div>
 
-                    <div class="col-md-6">
-
-                        <a
-                            href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx"
-                            download>
-
-                            <div
-                                class="bg-primary-subtle text-center p-3">
-
-                                <i
-                                    class="fa fa-file-word fa-3x">
-                                </i>
-
-                                <div class="mt-2">
-
-                                    Fo.ADMONGAS.025
-
-                                </div>
-
-                            </div>
-
-                        </a>
-
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Fo.ADMONGAS.024
+                        </h4>
                     </div>
-
                 </div>
+            </div>
+
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-download fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Tarjeta 2: Fo.ADMONGAS.025 -->
+    <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
+        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" 
+           download
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular con estilo Word -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="fa fa-file-word text-white fs-4"></i> 
+                    </div>
+
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Fo.ADMONGAS.025
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-download fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
 
             </div>
 
@@ -373,7 +388,7 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
                 @click="modalAsea.hide()"></button>
       </div>
 
-      <div class="modal-body">
+      <div class="modal-body pb-0">
 
 
         <label class="form-label">* Documento:</label>
@@ -407,8 +422,8 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 
                 <template x-if="aseas.length === 0">
                     <tr>
-                        <td colspan="4" class="text-center text-muted">
-                            Sin información
+                        <td colspan="4" class="text-center text-primary">
+                            No se encontro información
                         </td>
                     </tr>
                 </template>

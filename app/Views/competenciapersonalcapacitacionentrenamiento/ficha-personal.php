@@ -87,86 +87,61 @@ x-init="
         </div>
 
 
-
 <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
+    <div class="card border-0 bg-white h-100">
 
-    <div class="card">
-
-        <!-- Header -->
-        <div class="card-header text-bg-primary">
-            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-
-                <h5 class="mb-0 text-white">
-                    <i class="ti ti-signature me-2"></i>
-                    FIRMA
-                </h5>
-
-                <button
-                    type="button"
-                    class="btn bg-danger text-white"
-                    @click="limpiarFirma()">
-                    <i class="ti ti-eraser me-1"></i>
-                    Limpiar firma
-                </button>
-
-            </div>
-        </div>
-
-        <!-- Área de firma -->
-        <div class="card-body p-0">
-            <div
-                id="signature-pad"
-                class="signature-pad border-0"
-                style="cursor: crosshair;">
-
-                <div class="signature-pad--body">
-                    <canvas
-                        x-ref="canvas"
-                        id="canvas"
-                        style="width: 100%; height: 250px;">
-                    </canvas>
+        <!-- Encabezado con ícono circular -->
+        <div class="card-header text-bg-primary py-3 border-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:45px;height:45px;">
+                        <i class="ti ti-signature fs-6"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="mb-0 text-white">FIRMA</h5>
+                    </div>
                 </div>
-
             </div>
         </div>
 
-        <!-- Acciones y preview -->
-        <div class="card-body border-top">
-
-            <div class="text-end">
-                <button
-                    type="button"
-                    class="btn btn-success"
-                    @click="guardarFirma()">
-                    <i class="ti ti-check"></i>
-                    Guardar
-                </button>
+        <!-- Cuerpo con el pad de firma punteado -->
+        <div class="card-body p-3 pb-0">
+            <div id="signature-pad" class="signature-pad-wrapper" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+                <div class="signature-pad--body">
+                    <!-- Se agregaron width/height nativos para resolver el fallo al borrar -->
+                    <canvas x-ref="canvas" id="canvas" width="500" height="250" style="width:100%; height:250px; display: block;"></canvas>
+                </div>
             </div>
+        </div>
+
+        <!-- Botón a lo ancho pegado a la base del área de dibujo -->
+        <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-0" @click="limpiarFirma(); firmaPreview = null; firmaError = false;">
+            <i class="ti ti-eraser me-1"></i> Limpiar firma
+        </button>
+
+                <button type="button" class="btn btn-success mt-3 w-100 rounded-0" @click="guardarFirma()">
+                    <i class="ti ti-check me-1"></i> Guardar Firma
+                </button>
+
+        <!-- Bloque inferior: Guardar y Vista previa -->
+        <div class="card-body p-3 border-top mt-auto">
+      
 
             <!-- Preview de la firma -->
-            <div
-                class="mt-3 text-center"
-                x-show="firmaPreview && !firmaError">
-
-                <img
-                    :src="firmaPreview"
-                    @error="firmaError = true"
-                    style="max-width: 200px;">
+            <div class="mt-3 text-center" x-show="firmaPreview && !firmaError">
+                <span class="d-block small text-muted mb-1">Vista previa:</span>
+                <img :src="firmaPreview" @error="firmaError = true" class="img-fluid border rounded p-1" style="max-height: 100px;">
             </div>
 
-            <!-- Sin firma -->
-            <div
-                x-show="!firmaPreview || firmaError"
-                class="text-muted text-center mt-4">
-
-                No se ha agregado una firma
+            <!-- Estado sin firma -->
+            <div x-show="!firmaPreview || firmaError" class="text-muted text-center mt-3">
+                <small><i class="ti ti-info-circle me-1"></i>No se ha registrado una firma</small>
             </div>
-
         </div>
 
     </div>
-
 </div>
+
 
 
     </div>

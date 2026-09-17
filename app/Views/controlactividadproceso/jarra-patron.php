@@ -27,11 +27,11 @@ x-data="{ ...actions(), ...jarraPatron()}">
       <table id="table-jarra-patron" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>Marca</th>
-            <th>No de serie</th>
-            <th>Capacidad</th>
-            <th>Material de fabricación</th>
-          <th class="text-center" width="100px">
+           <th class="text-center align-middle">Marca</th>
+            <th class="text-center align-middle">No de serie</th>
+            <th class="text-center align-middle">Capacidad</th>
+            <th class="text-center align-middle">Material de fabricación</th>
+          <th class="text-center" width="48px">
           <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
           </th>
           </tr>
@@ -61,22 +61,22 @@ x-data="{ ...actions(), ...jarraPatron()}">
 
 
         <label class="form-label">* Marca:</label>
-        <input type="text" class="form-control mb-2" x-model="marca"
+        <input type="text" class="form-control mb-3" x-model="marca"
                 :class="errors.marca ? 'is-invalid' : ''"
                 @input="errors.marca = false" />
 
         <label class="form-label">* No. Serie:</label>
-        <input type="text" class="form-control mb-2" x-model="no_serie"
+        <input type="text" class="form-control mb-3" x-model="no_serie"
                 :class="errors.no_serie ? 'is-invalid' : ''"
                 @input="errors.no_serie = false" />
 
         <label class="form-label">* Capacidad:</label>
-        <input type="text" class="form-control mb-2" x-model="capacidad"
+        <input type="text" class="form-control mb-3" x-model="capacidad"
                 :class="errors.capacidad ? 'is-invalid' : ''"
                 @input="errors.capacidad = false" />
 
         <label class="form-label">* Material de fabricación:</label>
-        <input type="text" class="form-control mb-2" x-model="material"
+        <input type="text" class="form-control" x-model="material"
                 :class="errors.material ? 'is-invalid' : ''"
                 @input="errors.material = false" />
         

@@ -15,14 +15,14 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
     <div class="text-end">
         <?= 
             !empty($permisos['crear']) ? 
-            '<button type="button" class="btn bg-primary-subtle text-primary" @click="nuevo()">
+            '<button type="button" class="btn bg-primary-subtle text-primary mb-3" @click="nuevo()">
             <i class="ti ti-plus"></i> Nuevo
             </button>' 
             : '' 
             ?>     
     </div>
 <div class="table-responsive">
-    <table class="table table-bordered p-4 table-sm mt-2 mb-2">
+    <table class="table table-bordered mb-3">
     <tr>
     <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>
     <td colspan="2" class="text-center align-middle"><b>Atención de Hallazgos</b></td>
@@ -39,15 +39,15 @@ x-data="{ ...actions(), ...atencionHallazgos()}">
 
 
 <div class="table-responsive">
-    <table class="table  table-striped p-4 table-bordered  text-nowrap align-middle ">
-        <thead>
+    <table class="table table-striped mb-0 table-bordered text-nowrap align-middle">
+        <thead> 
           <tr>
-           <th class="text-center">#</th>
+           <th class="text-center align-middle" width="96px">#</th>
             <th class="text-center">Fecha de la auditoria</th>
             <th class="text-center">No de control de la auditoria</th>
             <th class="text-center">Tipo de auditoria</th>
-          <th class="text-center">
-          <a><i class="ti ti-dots-vertical fs-6"></i></a>
+          <th class="text-center" width="96px">
+          <i class="ti ti-dots-vertical fs-6"></i>
           </th>
           </tr>
         </thead>

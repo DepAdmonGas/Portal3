@@ -20,6 +20,8 @@ Alpine.data('editRevision', (id) => ({
 
         this.revision=data;
 
+   
+
     },
 
     async actualizar(campo, valor) {

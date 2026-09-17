@@ -28,20 +28,35 @@
 <?php
 foreach($programas as $program):?>
 
-<div class="col-md-3 d-flex align-items-stretch">
-<a href="/sasisopa/control-actividades-procesos/programa-anual-mantenimiento/<?= htmlspecialchars($program->id) ?>" class="card w-100 card-hover">
-<div class="card-body">
-<div class="d-flex align-items-center">
-<i class="ti ti-calendar-cog text-primary display-6"></i>
-<div class="ms-auto">
-<i class="ti ti-arrow-right text-primary fs-7"></i>
-</div>
-</div>
-<div class="mt-1 text-center">
-<h4 class="mb-1 opacity-80"><?= htmlspecialchars($program->year) ?></h4>
-</div>
-</div>
-</a>
+<div class="col-md-3 d-flex align-items-stretch mb-4">
+    <a href="/sasisopa/control-actividades-procesos/programa-anual-mantenimiento/<?= htmlspecialchars($program->id) ?>" 
+       class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+        
+        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Icono circular -->
+                <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 60px; height: 60px;">
+                    <i class="ti ti-calendar-cog text-white display-6"></i> 
+                </div>
+
+                <!-- Título a la derecha -->
+                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">
+                        <?= htmlspecialchars($program->year) ?>
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie de la tarjeta -->
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+            <span class="small">Ver programa</span>
+            <div class="icon-transition">
+                <i class="ti ti-arrow-right fs-5"></i>
+            </div>
+        </div>
+    </a>
 </div>
 
 <?php endforeach; ?>

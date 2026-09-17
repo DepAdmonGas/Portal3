@@ -41,6 +41,7 @@ class CalibracionSondaController extends BaseController
                 $this->estacionModulo(),
                 fn ($q, $est) => $q->where('id_estacion', $est)
             )
+            ->where('equipo', 'Sondas de medición')
             ->with([
                 'detalles',
                 'sondas.sonda'
