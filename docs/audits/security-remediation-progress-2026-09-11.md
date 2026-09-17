@@ -495,3 +495,8 @@
 - Runner fail-closed behavior is confirmed: current green exit code is 0, and child non-zero exits increment failure status. Local runner result is 99 PASS / 0 FAIL / 0 SKIPPED; PHP syntax validation passes. YAML parser execution was unavailable locally, so validation is structural/static only.
 - Composer lock packages are compatible with PHP 8.2; no `config.platform.php` override is defined. Required runtime extensions resolved by the lock include common PHP extensions (`ctype`, `dom`, `fileinfo`, `filter`, `gd`, `hash`, `iconv`, `json`, `libxml`, `mbstring`, `pcre`, `pdo`, `simplexml`, `xml`, `xmlreader`, `xmlwriter`, `zip`, `zlib`); setup-php supplies the standard runtime, with hosted execution still pending.
 - `DEP-TEST-013-B: REMOTE_CI_READY_PENDING_VERSION_CONTROL`. No commit or push was made; GitHub-hosted execution remains unverified.
+## RESOLVE-REMOTE-CI-PHP-VERSION-CONFLICT
+
+- GitHub Actions run `35260755896` for commit `f2a7689` passed `php-syntax` but both Composer jobs failed before tests/audit because locked packages `symfony/clock v8.1.0` and `symfony/translation v8.1.1` require PHP `>=8.4.1`.
+- Updated only `.github/workflows/security.yml`, changing all three jobs from PHP 8.2 to PHP 8.4. `composer.json`, `composer.lock`, dependency versions, application code, Alpine, CSP, and SRI were not changed.
+- The project documentation and root constraint remain PHP 8.2+; this workflow adjustment targets the effective locked dependency runtime and does not assert production PHP compatibility.
