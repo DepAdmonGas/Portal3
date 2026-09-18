@@ -11,6 +11,7 @@ use App\Models\Sasisopa\RequisitosLegalesDependencia;
 use App\Models\Sasisopa\RequisitosLegalesMatriz;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
+use App\Services\RequisitosLegalesStorageService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -40,13 +41,9 @@ class RequisitosLegalesController extends BaseController
         $ctxStation = $this->estacionModulo('sasisopa');
         if (!$matrix || !$station || !$ctxStation || (int)$station !== (int)$ctxStation) { http_response_code(404); return; }
         $filename = $variant === 'acuse' ? $matrix->acusepdf : $matrix->requisitolegalpdf;
-        if (!is_string($filename) || trim($filename) === '' || $filename !== basename($filename)) { http_response_code(404); return; }
-        $testRoot = getenv('P0_TEST_DOWNLOAD_ROOT');
-        $root = (is_string($testRoot) && str_starts_with($testRoot, '/tmp/portal3-p0-download-'))
-            ? rtrim($testRoot, '/') . '/reuisitos-legales/'
-            : dirname(__DIR__, 2) . '/public/uploads/archivos/reuisitos-legales/';
-        $path = realpath($root . $filename); $base = realpath($root);
-        if ($path === false || $base === false || !str_starts_with($path, rtrim($base, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR) || !is_file($path)) { http_response_code(404); return; }
+        if (!is_string($filename) || RequisitosLegalesStorageService::normalizeReference($filename) === null) { http_response_code(404); return; }
+        $path = RequisitosLegalesStorageService::resolveReadablePath($filename);
+        if ($path === null) { http_response_code(404); return; }
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . basename($path) . '"');
         readfile($path);
@@ -739,11 +736,7 @@ class RequisitosLegalesController extends BaseController
             'diciembre' => (int) ($_POST['diciembre'] ?? 0),
         ];
 
-        $carpeta = __DIR__ . '../../../public/uploads/archivos/reuisitos-legales/';
-
-        if (!file_exists($carpeta)) {
-            mkdir_safe($carpeta, true);
-        }
+        $carpeta = RequisitosLegalesStorageService::privateRoot();
 
         $acusePath = null;
         $requisitoPath = null;
@@ -809,13 +802,8 @@ class RequisitosLegalesController extends BaseController
                 Capsule::rollBack();
             }
 
-            if ($acusePath && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($acusePath, '/'))) {
-                unlink(__DIR__ . '../../../public/uploads/' . ltrim($acusePath, '/'));
-            }
-
-            if ($requisitoPath && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($requisitoPath, '/'))) {
-                unlink(__DIR__ . '../../../public/uploads/' . ltrim($requisitoPath, '/'));
-            }
+            RequisitosLegalesStorageService::deleteReference($acusePath);
+            RequisitosLegalesStorageService::deleteReference($requisitoPath);
 
             echo json_encode([
                 'success' => false,
@@ -828,14 +816,7 @@ class RequisitosLegalesController extends BaseController
     {
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-        $nombreArchivo = uniqid($prefijo, true) . '.' . $extension;
-        $rutaDestino = $carpeta . $nombreArchivo;
-
-        if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {
-            throw new \Exception('No se pudo guardar el archivo');
-        }
-
-        return 'archivos/reuisitos-legales/' . $nombreArchivo;
+        return RequisitosLegalesStorageService::storeUploadedFile($file, $prefijo);
     }
 
     public function deleteDetalle()
@@ -1076,17 +1057,11 @@ class RequisitosLegalesController extends BaseController
             exit;
         }
 
-        $carpeta = dirname(__DIR__, 2) .
-            '/public/uploads/archivos/reuisitos-legales/';
-
-        if (!is_dir($carpeta)) {
-
-            mkdir(
-                $carpeta,
-                0777,
-                true
-            );
-        }
+        $carpeta = RequisitosLegalesStorageService::privateRoot();
+        $oldAcusePath = $matriz->acusepdf ?? null;
+        $oldRequisitoPath = $matriz->requisitolegalpdf ?? null;
+        $newAcusePath = null;
+        $newRequisitoPath = null;
 
         try {
             if (!empty($_FILES['acuse_pdf']) && $_FILES['acuse_pdf']['error'] === UPLOAD_ERR_OK) {
@@ -1114,13 +1089,8 @@ class RequisitosLegalesController extends BaseController
             ]);
             exit;
         } catch (\Throwable $e) {
-            if ($acusePath && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($acusePath, '/'))) {
-                unlink(__DIR__ . '../../../public/uploads/' . ltrim($acusePath, '/'));
-            }
-
-            if ($requisitoPath && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($requisitoPath, '/'))) {
-                unlink(__DIR__ . '../../../public/uploads/' . ltrim($requisitoPath, '/'));
-            }
+            RequisitosLegalesStorageService::deleteReference($acusePath);
+            RequisitosLegalesStorageService::deleteReference($requisitoPath);
 
             echo json_encode([
                 'success' => false,
@@ -1172,34 +1142,30 @@ class RequisitosLegalesController extends BaseController
             exit;
         }
 
-        $carpeta = dirname(__DIR__, 2) .
-            '/public/uploads/archivos/reuisitos-legales/';
-
-        if (!file_exists($carpeta)) {
-            mkdir_safe($carpeta, true);
-        }
+        $carpeta = RequisitosLegalesStorageService::privateRoot();
 
         try {
             $matriz->fecha_emision = $fechaEmision;
             $matriz->fecha_vencimiento = $fechaVencimiento ?: null;
 
             if (!empty($_FILES['acuse_pdf']) && $_FILES['acuse_pdf']['error'] === UPLOAD_ERR_OK) {
-                if (!empty($matriz->acusepdf) && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($matriz->acusepdf, '/'))) {
-                    unlink(__DIR__ . '../../../public/uploads/' . ltrim($matriz->acusepdf, '/'));
-                }
-
-                $matriz->acusepdf = $this->guardarArchivoRequisitoLegal($_FILES['acuse_pdf'], $carpeta, 'acuse_hist_');
+                $newAcusePath = $this->guardarArchivoRequisitoLegal($_FILES['acuse_pdf'], $carpeta, 'acuse_hist_');
+                $matriz->acusepdf = $newAcusePath;
             }
 
             if (!empty($_FILES['requisito_pdf']) && $_FILES['requisito_pdf']['error'] === UPLOAD_ERR_OK) {
-                if (!empty($matriz->requisitolegalpdf) && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($matriz->requisitolegalpdf, '/'))) {
-                    unlink(__DIR__ . '../../../public/uploads/' . ltrim($matriz->requisitolegalpdf, '/'));
-                }
-
-                $matriz->requisitolegalpdf = $this->guardarArchivoRequisitoLegal($_FILES['requisito_pdf'], $carpeta, 'requisito_hist_');
+                $newRequisitoPath = $this->guardarArchivoRequisitoLegal($_FILES['requisito_pdf'], $carpeta, 'requisito_hist_');
+                $matriz->requisitolegalpdf = $newRequisitoPath;
             }
 
             $matriz->save();
+
+            if ($newAcusePath !== null) {
+                RequisitosLegalesStorageService::deleteReference($oldAcusePath);
+            }
+            if ($newRequisitoPath !== null) {
+                RequisitosLegalesStorageService::deleteReference($oldRequisitoPath);
+            }
 
             echo json_encode([
                 'success' => true,
@@ -1209,6 +1175,8 @@ class RequisitosLegalesController extends BaseController
             ]);
             exit;
         } catch (\Throwable $e) {
+            RequisitosLegalesStorageService::deleteReference($newAcusePath);
+            RequisitosLegalesStorageService::deleteReference($newRequisitoPath);
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -1246,13 +1214,8 @@ class RequisitosLegalesController extends BaseController
             exit;
         }
 
-        if (!empty($matriz->acusepdf) && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($matriz->acusepdf, '/'))) {
-            unlink(__DIR__ . '../../../public/uploads/' . ltrim($matriz->acusepdf, '/'));
-        }
-
-        if (!empty($matriz->requisitolegalpdf) && file_exists(__DIR__ . '../../../public/uploads/' . ltrim($matriz->requisitolegalpdf, '/'))) {
-            unlink(__DIR__ . '../../../public/uploads/' . ltrim($matriz->requisitolegalpdf, '/'));
-        }
+        RequisitosLegalesStorageService::deleteReference($matriz->acusepdf ?? null);
+        RequisitosLegalesStorageService::deleteReference($matriz->requisitolegalpdf ?? null);
 
         $matriz->delete();
 

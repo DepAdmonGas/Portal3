@@ -17,6 +17,7 @@ $tests = [
     'telegram_webhook_security_regression.php',
     'csp_report_only_regression.php',
     'authz_dl_002_sgm_requisitos_legales_regression.php',
+    'authz_dl_002_requisitos_legales_private_storage_regression.php',
 ];
 
 $passed = $failed = $skipped = 0;

@@ -6,6 +6,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
+use App\Services\RequisitosLegalesStorageService;
 use App\Models\Estacion;
 use App\Models\Sgm\Autorizado;
 use App\Models\Sasisopa\RequisitosLegalesMatriz;
@@ -45,17 +46,12 @@ class SgmNormatividadController extends BaseController
             return;
         }
         $filename = $variant === 'acuse' ? $matrix->acusepdf : $matrix->requisitolegalpdf;
-        if (!is_string($filename) || trim($filename) === '' || $filename !== basename($filename)) {
+        if (!is_string($filename) || RequisitosLegalesStorageService::normalizeReference($filename) === null) {
             http_response_code(404);
             return;
         }
-        $testRoot = getenv('P0_TEST_DOWNLOAD_ROOT');
-        $root = (is_string($testRoot) && str_starts_with($testRoot, '/tmp/portal3-p0-download-'))
-            ? rtrim($testRoot, '/') . '/reuisitos-legales/'
-            : dirname(__DIR__, 2) . '/public/uploads/archivos/reuisitos-legales/';
-        $path = realpath($root . $filename);
-        $base = realpath($root);
-        if ($path === false || $base === false || !str_starts_with($path, rtrim($base, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR) || !is_file($path)) {
+        $path = RequisitosLegalesStorageService::resolveReadablePath($filename);
+        if ($path === null) {
             http_response_code(404);
             return;
         }
