@@ -588,3 +588,10 @@
 - The action requires positive `matrix_id` and strict `variant` (`acuse|requisito`), resolves `RequisitosLegalesMatriz` → calendar → `id_estacion`, requires the current SGM station, selects only persisted `acusepdf`/`requisitolegalpdf`, and applies containment before serving.
 - Migrated only the SGM requisitos-legales view and datatable helper to the new contract. SASISOPA callers and generic `/download` remain unchanged/default-deny for this type. No `departamento-operativo` files were touched.
 - Verification: targeted PHP lint passed; security suite remains 99 PASS / 0 FAIL / 0 SKIPPED. No commit, push, or production access performed.
+
+## AUTHZ-DL-002-PRIVATE-STORAGE-PHASE2-IMPLEMENT-MIGRATION-TOOL
+
+- Implemented a local-only PHP CLI migration tool with dry-run as the default and explicit `--apply` gating.
+- The tool uses fixed legacy/private roots, strict `RequisitosLegalesStorageService::normalizeReference()` semantics, SHA-256 verification, JSON manifests, two-pass blocker checks, idempotent same-hash handling, and temporary-file cleanup.
+- Database writes and legacy source deletion are unsupported. Orphans are report-only. Production inventory and migration remain pending; the legacy read fallback remains enabled.
+- Targeted migration-tool regression: 15 PASS / 0 FAIL / 0 SKIPPED. Full security suite: 149 PASS / 0 FAIL / 0 SKIPPED. `AUTHZ-DL-002` remains `PARTIAL`.
