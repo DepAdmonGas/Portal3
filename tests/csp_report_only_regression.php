@@ -22,6 +22,25 @@ $tests = [
     'report-only policy retains temporary inline styles' => str_contains($expectedReportOnly, "style-src 'self' https://cdn.jsdelivr.net https://cdn.ckeditor.com 'unsafe-inline'"),
     'highlight initialization is externalized' => is_file(__DIR__ . '/../public/assets/js/core/highlight-init.js'),
     'layouts do not retain inline highlight initialization' => !preg_match('~hljs\.initHighlightingOnLoad\(\)~', implode('', array_map(static fn (string $path): string => (string) file_get_contents($path), glob(__DIR__ . '/../app/Views/layouts/{sgm,sasisopa}.php', GLOB_BRACE)))),
+    'requisitos legales downloads do not use javascript URLs' => !str_contains((string) file_get_contents(__DIR__ . '/../app/Views/requisitoslegales/detalle.php'), 'href="javascript:void(0)"'),
+    'mejores practicas dropdowns use semantic buttons' => (function (): bool {
+        $source = (string) file_get_contents(__DIR__ . '/../app/Views/mejorespracticas/index.php');
+        return !str_contains($source, '<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle"')
+            && !str_contains($source, '<a href="javascript:void(0)" class="link btn bg-primary-subtle text-primary dropdown-toggle"')
+            && substr_count($source, 'type="button" class="btn bg-primary-subtle text-primary dropdown-toggle"') === 1
+            && substr_count($source, 'type="button" class="link btn bg-primary-subtle text-primary dropdown-toggle"') === 1
+            && str_contains($source, 'aria-expanded="false"')
+            && !str_contains($source, 'arial-explaned');
+    })(),
+    'integridad mecanica dropdown uses semantic button without changing actions' => (function (): bool {
+        $source = (string) file_get_contents(__DIR__ . '/../app/Views/integridadmecanica/index.php');
+        return !str_contains($source, '<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle"')
+            && substr_count($source, 'type="button" class="btn bg-primary-subtle text-primary dropdown-toggle"') === 1
+            && str_contains($source, 'data-bs-toggle="dropdown"')
+            && str_contains($source, 'aria-expanded="false"')
+            && str_contains($source, '@click="openModal()"')
+            && str_contains($source, 'href="/sasisopa/integridad-mecanica-aseguramiento/pdf-equipo-critico"');
+    })(),
 ];
 
 $passed = 0;
