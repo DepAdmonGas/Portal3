@@ -32,6 +32,15 @@ $tests = [
             && str_contains($source, 'aria-expanded="false"')
             && !str_contains($source, 'arial-explaned');
     })(),
+    'integridad mecanica dropdown uses semantic button without changing actions' => (function (): bool {
+        $source = (string) file_get_contents(__DIR__ . '/../app/Views/integridadmecanica/index.php');
+        return !str_contains($source, '<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle"')
+            && substr_count($source, 'type="button" class="btn bg-primary-subtle text-primary dropdown-toggle"') === 1
+            && str_contains($source, 'data-bs-toggle="dropdown"')
+            && str_contains($source, 'aria-expanded="false"')
+            && str_contains($source, '@click="openModal()"')
+            && str_contains($source, 'href="/sasisopa/integridad-mecanica-aseguramiento/pdf-equipo-critico"');
+    })(),
 ];
 
 $passed = 0;

@@ -679,6 +679,12 @@
 - Added a focused CSP regression. No CSP policy, Alpine, inline-style policy, CDN, or `departamento-operativo` changes were made. Security suite: 163 PASS / 0 FAIL / 0 SKIPPED.
 - Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; remote verification and production header verification remain pending.
 
+## SEC-CSP-012-BOOTSTRAP-DROPDOWN-BUTTON-IMPLEMENTATION-INTEGRIDAD-MECANICA
+
+- Converted exactly one page-local Bootstrap dropdown trigger in `app/Views/integridadmecanica/index.php` from `javascript:void(0)` anchor to semantic `button type="button"`.
+- Preserved dropdown attributes, menu relationship, the Alpine `openModal()` action item, and the PDF navigation route. No shared layouts, deferred module, CSP policy, Alpine architecture, or production configuration changed.
+- Added a focused structural regression. Local security suite: 164 PASS / 0 FAIL / 0 SKIPPED. Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL` pending remote verification.
+
 ## DOC-001-REMOTE-VERIFICATION-RECONCILIATION
 
 - Original scope: audit and security documents mixed prior results, TODOs, and stale figures, creating documentation drift; the audit explicitly required consolidation after remediation without deleting history.
