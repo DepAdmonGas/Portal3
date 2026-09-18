@@ -32,6 +32,85 @@
     <script src="<?= asset('js/core/http-security.js') ?>"></script>
 
 
+    <script>
+        (function() {
+            // Función para obtener el token actual del meta tag
+            function getCsrfToken() {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                return meta ? meta.getAttribute('content') : null;
+            }
+
+            const csrfToken = getCsrfToken();
+            if (csrfToken) {
+                // Agregar token a todas las solicitudes Axios
+                axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+
+                // Interceptar solicitudes para asegurar token fresco
+                axios.interceptors.request.use(
+                    function(config) {
+                        // Actualizar token antes de cada request
+                        config.headers['X-CSRF-TOKEN'] = getCsrfToken();
+                        return config;
+                    },
+                    function(error) {
+                        return Promise.reject(error);
+                    }
+                );
+
+                // Interceptar respuestas para detectar CSRF expirado
+                axios.interceptors.response.use(
+                    function(response) {
+                        return response;
+                    },
+                    function(error) {
+                        if (error.response && error.response.status === 419) {
+                            const meta = document.querySelector('meta[name="csrf-token"]');
+                            const newToken = error.response.data && error.response.data.new_token;
+                            if (meta && newToken) {
+                                meta.setAttribute('content', newToken);
+                                if (error.config && !error.config._csrfRetried) {
+                                    error.config._csrfRetried = true;
+                                    return axios(error.config);
+                                }
+                            }
+                            window.location.reload();
+                        }
+                        return Promise.reject(error);
+                    }
+                );
+            }
+
+            const __origFetch = window.fetch;
+            if (typeof __origFetch === 'function') {
+                window.fetch = function (input, init) {
+                    init = init || {};
+                    var method = ((init.method || (input && input.method) || 'GET') + '').toUpperCase();
+                    if (method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH') {
+                        var url = typeof input === 'string' ? input : (input && input.url);
+                        var sameOrigin = true;
+                        if (url && /^https?:\/\//i.test(url)) {
+                            try {
+                                sameOrigin = new URL(url, window.location.href).origin === window.location.origin;
+                            } catch (e) {
+                                sameOrigin = false;
+                            }
+                        }
+                        if (sameOrigin) {
+                            var headers = new Headers(init.headers || (input && input.headers) || undefined);
+                            var token = getCsrfToken();
+                            if (token && !headers.has('X-CSRF-TOKEN')) {
+                                headers.set('X-CSRF-TOKEN', token);
+                            }
+                            init.headers = headers;
+                        }
+                    }
+                    return __origFetch.call(window, input, init);
+                };
+            }
+        })();
+    </script>
+
+
 </head>
 
 <body class="link-sidebar">
@@ -358,7 +437,35 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
+
+    <script>
+        (function () {
+            function getCsrfToken() {
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                return meta ? meta.getAttribute('content') : null;
+            }
+            if (window.jQuery) {
+                jQuery.ajaxSetup({
+                    beforeSend: function (jqXHR) {
+                        var token = getCsrfToken();
+                        if (token) {
+                            jqXHR.setRequestHeader('X-CSRF-TOKEN', token);
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+
+    <script>
+        hljs.initHighlightingOnLoad();
+        document.querySelectorAll("pre.code-view > code").forEach((codeBlock) => {
+            codeBlock.textContent = codeBlock.innerHTML;
+        });
+    </script>
+
     <script src="<?= asset('js/core/highlight-init.js') ?>"></script>
+
 
 </body>
 

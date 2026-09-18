@@ -554,7 +554,7 @@ return [
 
 public static function findAuthorizedSolicitudCheque(int $id): ?SolicitudCheque
 {
-$stations = ModuleStationService::getAvailableStations('solicitud-cheque');
+$stations = ModuleStationService::getAvailableStations('solicitud-cheques');
 $ids = array_map(static fn (array $station): int => (int) $station['id'], $stations);
 if (empty($ids)) return null;
 
