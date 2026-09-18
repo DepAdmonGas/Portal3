@@ -44,7 +44,7 @@
             Ir al inicio
         </a>
 
-        <button onclick="history.back()"
+    <button data-action="history-back"
                 class="inline-flex items-center justify-center px-5 py-2.5
                        text-sm font-medium text-gray-900 bg-white border border-gray-300
                        rounded-lg hover:bg-gray-100 focus:ring-4 focus:ring-gray-200

@@ -20,27 +20,14 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js" integrity="sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu" crossorigin="anonymous"></script>
     <!-- Alpine + Axios -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.17.3/dist/cdn.min.js" integrity="sha384-/7syvHwR9PpZbxOwOnlTTl4DepN0R0q9aiGAu+D0AcTtZXmrNw0zgp+TzUlPgDx2" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js" integrity="sha384-jLwhcmGu/RL8PSTUEl/559f8QVLL4QqM+HBvoZlt4F7XCdsdoDGAwW4nPFfoM7lU" crossorigin="anonymous"></script>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-
-            const key = "scroll-" + window.location.pathname;
-
-            const scrollPosition = sessionStorage.getItem(key);
-            if (scrollPosition) {
-                window.scrollTo(0, parseInt(scrollPosition));
-            }
-
-            window.addEventListener("scroll", function() {
-                sessionStorage.setItem(key, window.scrollY);
-            });
-
-        });
-    </script>
+    <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
+    <script src="<?= asset('js/core/http-security.js') ?>"></script>
+    <script src="<?= asset('js/sgm/scroll-state.js') ?>"></script>
 
 </head>
 
@@ -166,7 +153,7 @@
                             <h6 class="mb-0 fs-5 fw-normal text-white"><?= implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2)); ?></h6>
                             <span class="fs-2"><?= $user->puesto->tipo_puesto ?></span>
                         </div>
-                        <a class="border-0 bg-transparent text-primary ms-auto" onclick="performLogout()" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
+                        <a class="border-0 bg-transparent text-primary ms-auto" data-action="logout" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
                             <i class="ti ti-power text-danger fs-6"></i>
                         </a>
                     </div>
@@ -259,7 +246,7 @@
                                                     </a>
                                                 </div>
                                                 <div class="d-grid py-4 px-7 pt-8">
-                                                    <a class="btn btn-outline-primary pointer" onclick="performLogout()">Salir</a>
+                                                    <a class="btn btn-outline-primary pointer" data-action="logout">Salir</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -312,13 +299,14 @@
     <script src="<?= asset('js/theme/sidebarmenu.js') ?>"></script>
 
     <!-- solar icons -->
-    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js" integrity="sha384-D4fI2O1dD9gQnn73J775jfm7LFa+lp87psAf0aiqjF9EQjnhGwZwkGm+2bffcJSF" crossorigin="anonymous"></script>
     <!-- highlight.js (code view) -->
     <!-- highlight.js (code view) -->
     <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
     <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
     <script src="<?= asset('js/core/notify.js?v=1.0.1') ?>"></script>
     <script src="<?= asset('js/core/actions.alpine.js?v=1.0.3') ?>"></script>
+    <script src="<?= asset('js/core/inline-handler-remediation.js') ?>"></script>
 
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>
@@ -327,12 +315,7 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <script>
-        hljs.initHighlightingOnLoad();
-        document.querySelectorAll("pre.code-view > code").forEach((codeBlock) => {
-            codeBlock.textContent = codeBlock.innerHTML;
-        });
-    </script>
+    <script src="<?= asset('js/core/highlight-init.js') ?>"></script>
 
 </body>
 

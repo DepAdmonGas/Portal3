@@ -4,7 +4,11 @@ document.addEventListener('alpine:init', () => {
 
         anio: new Date().getFullYear(),
 
-        estaciones: window.estacionesSgm ?? [],
+        estaciones: (() => {
+            const element = document.getElementById('gestoria-sgm-data');
+            if (!element) return [];
+            try { return JSON.parse(element.textContent || '[]'); } catch (_) { return []; }
+        })(),
 
         years: [],
 

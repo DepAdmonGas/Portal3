@@ -14,7 +14,11 @@ document.addEventListener('alpine:init', () => {
 
         modal: null,
 
-        puestos: window.__PUESTOS__ ?? [],
+        puestos: (() => {
+            const element = document.getElementById('personal-data');
+            if (!element) return [];
+            try { return JSON.parse(element.textContent || '[]'); } catch (_) { return []; }
+        })(),
 
         id: null,
         nombre: '',

@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const noDownload = permisos.descargar;
 
                     return `
-                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
+                    <a class="dropdown pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"
                                     ${!noDelete ? '' : `
                                     @click='async () => {
                                     const res = await deleteAction({
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     });
                                     }'
                                     `}>
-                                        <i class="ti ti-trash fs-7 text-danger"></i>
+                                        <i class="ti ti-trash fs-6 text-danger "></i>
                                     </a>
                     `;
                 }

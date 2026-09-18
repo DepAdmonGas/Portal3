@@ -948,6 +948,7 @@ $r->addRoute('GET', '/importacion/formato-descarga-merma/{year}/{mes}', Route::a
         $r->addRoute('GET', '/requisitos-legales', Route::auth(['RequisitosLegalesController', 'requisitosLegales']));
         $r->addRoute('GET', '/requisitos-legales/configuracion', Route::auth(['RequisitosLegalesController', 'requisitosLegalesConfiguracion']));
         $r->addRoute('GET', '/requisitos-legales/calendario-pdf', Route::auth(['RequisitosLegalesController', 'calendarioRequisitosLegales']));
+        $r->addRoute('GET', '/requisitos-legales/download', Route::auth(['RequisitosLegalesController', 'downloadRequisitoLegal']));
 
         $r->addRoute('GET', '/requisitos-legales/datatable-configuracion', Route::auth(['RequisitosLegalesController', 'datatableConfiguracion']));
         $r->addRoute('POST', '/requisitos-legales/delete-configuracion', Route::auth(['RequisitosLegalesController', 'deleteConfiguracion']));
@@ -1546,6 +1547,7 @@ $r->addRoute('GET', '/importacion/formato-descarga-merma/{year}/{mes}', Route::a
         $r->addRoute('GET', '/normatividad-aplicable-mediciones/inventario-normatividad/pdf', Route::auth(['SgmNormatividadController', 'pdfInventario']));
         $r->addRoute('GET', '/normatividad-aplicable-mediciones/pdf-requisito-legal', Route::auth(['SgmNormatividadController', 'pdfRequisitoLegal']));
         $r->addRoute('GET', '/normatividad-aplicable-mediciones/requisito-legal-sgm', Route::auth(['SgmNormatividadController', 'requisitoLegal']));        //---------- 5. NORMATIVIDAD APLICABLE A MEDICIONES ----------------------------------------------
+        $r->addRoute('GET', '/normatividad-aplicable-mediciones/requisitos-legales/download', Route::auth(['SgmNormatividadController', 'downloadRequisitoLegal']));
 
         //--------- 6. Gestion de los Recursos ------------------------------------------------------------
         $r->addRoute('GET', '/gestion-recursos', Route::auth(['SgmGestionRecursosController', 'index']));
@@ -1726,6 +1728,7 @@ $r->addRoute('GET', '/importacion/formato-descarga-merma/{year}/{mes}', Route::a
 
         $r->addRoute('GET', '/permisos', Route::auth(['GestoriaPermisosController', 'index']));
         $r->addRoute('GET', '/permisos/table', Route::auth(['GestoriaPermisosController', 'table']));
+        $r->addRoute('GET', '/permisos/requisitos-legales/download', Route::auth(['GestoriaPermisosController', 'downloadRequisitoLegal']));
 
         $r->addRoute('GET', '/entregas', Route::auth(['GestoriaEntregasController', 'index']));
         $r->addRoute('GET', '/entregas/table', Route::auth(['GestoriaEntregasController', 'table']));
@@ -1881,10 +1884,11 @@ $r->addRoute('GET', '/importacion/formato-descarga-merma/{year}/{mes}', Route::a
         $r->addRoute('POST', '/respuestas/correcta', Route::auth(['SistemasCursosController', 'respuestaCorrecta']));
     });
 
-    //--------------------- Perfil
+    //--------------------- Perfil -----------------------------------------
 
     $r->addGroup('/perfil', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['PerfilController', 'index']));
+        $r->addRoute('POST', '/cambiar-password', Route::auth(['PerfilController', 'cambiarPassword']));
     });
 
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------

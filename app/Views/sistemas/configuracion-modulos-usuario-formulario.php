@@ -22,7 +22,7 @@ Agregar módulo
 
 <nav aria-label="breadcrumb">
 <ol class="breadcrumb mb-0">
-<li class="breadcrumb-item text-muted text-decoration-none" onclick="history.go(-1)">
+<li class="breadcrumb-item text-muted text-decoration-none" data-action="history-back">
 Regresar
 </li>
 <li class="breadcrumb-item">Configuracion de Modulos (Usuario) - <?=$usuario->nombre?></li>

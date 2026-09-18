@@ -316,10 +316,10 @@
                                 <!-- ACUSE -->
                                 <td>
                                     <template x-if="row.acuse">
-                                       <a href="javascript:void(0)"
-                                        @click="download('requisitos-legales', row.acuse)">
+                                       <button type="button" class="btn btn-link p-0"
+                                        @click="window.location.href='/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
                                             <i class="ti ti-download text-primary fs-6"></i>
-                                        </a>
+                                        </button>
                                     </template>
                                     <template x-if="!row.acuse">
                                         <i class="ti ti-x text-danger fs-6"></i>
@@ -329,10 +329,10 @@
                                 <!-- REQUISITO -->
                                 <td>
                                     <template x-if="row.requisito">
-                                        <a href="javascript:void(0)"
-                                        @click="download('requisitos-legales', row.requisito)">
+                                        <button type="button" class="btn btn-link p-0"
+                                        @click="window.location.href='/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
                                             <i class="ti ti-download text-primary fs-6"></i>
-                                        </a>
+                                        </button>
                                     </template>
                                     <template x-if="!row.requisito">
                                         <i class="ti ti-x text-danger fs-6"></i>
@@ -453,10 +453,10 @@
                                         <td x-text="row.fecha_vencimiento || 'S/I'"></td>
                                         <td>
                                             <template x-if="row.acusepdf">
-                                                <a href="javascript:void(0)"
-                                                    @click="download('requisitos-legales', row.acusepdf)">
+                                                <button type="button" class="btn btn-link p-0"
+                                                    @click="window.location.href='/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
                                                     <i class="ti ti-download text-primary fs-6"></i>
-                                                </a>
+                                                </button>
                                             </template>
                                             <template x-if="!row.acusepdf">
                                                 <i class="ti ti-x text-danger pointer fs-6"></i>
@@ -464,10 +464,10 @@
                                         </td>
                                         <td>
                                             <template x-if="row.requisitolegalpdf">
-                                                <a href="javascript:void(0)"
-                                                    @click="download('requisitos-legales', row.requisitolegalpdf)">
+                                                <button type="button" class="btn btn-link p-0"
+                                                    @click="window.location.href='/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
                                                     <i class="ti ti-download text-primary pointer fs-6"></i>
-                                                </a>
+                                                </button>
                                             </template>
                                             <template x-if="!row.requisitolegalpdf">
                                                 <i class="ti ti-x text-danger fs-6"></i>
