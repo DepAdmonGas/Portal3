@@ -595,3 +595,10 @@
 - The tool uses fixed legacy/private roots, strict `RequisitosLegalesStorageService::normalizeReference()` semantics, SHA-256 verification, JSON manifests, two-pass blocker checks, idempotent same-hash handling, and temporary-file cleanup.
 - Database writes and legacy source deletion are unsupported. Orphans are report-only. Production inventory and migration remain pending; the legacy read fallback remains enabled.
 - Targeted migration-tool regression: 15 PASS / 0 FAIL / 0 SKIPPED. Full security suite: 149 PASS / 0 FAIL / 0 SKIPPED. `AUTHZ-DL-002` remains `PARTIAL`.
+
+## AUTHZ-DL-002-REMEDIATE-GESTORIA-REQUISITOS-LEGALES-CANONICAL-DOWNLOAD
+
+- Gestoría requisitos legales now uses a canonical download route based on `matrix_id` and strict `acuse|requisito` variants.
+- Authorization is server-side through `gestoria/descargar`, the current station context, the persisted matrix reference, and the shared private-first/legacy-fallback storage resolver.
+- Generic `/download?tipo=requisitos-legales` remains default-deny. No historical files or database rows were migrated or changed.
+- Targeted regression: 12 PASS / 0 FAIL / 0 SKIPPED. Full security suite: 161 PASS / 0 FAIL / 0 SKIPPED. `AUTHZ-DL-002` remains `PARTIAL` because deferred module surfaces remain.
