@@ -7,6 +7,8 @@ $controller = file_get_contents(__DIR__ . '/../app/Controllers/SgmNormatividadCo
 $route = file_get_contents(__DIR__ . '/../routes/web.php');
 $view = file_get_contents(__DIR__ . '/../app/Views/sgm/normatividad/requisito-legal.php');
 $js = file_get_contents(__DIR__ . '/../public/assets/js/requisitoslegales/detalle.datatable.init.js');
+$docs = file_get_contents(__DIR__ . '/../app/Controllers/DocumentosRegistrosController.php');
+$eval = file_get_contents(__DIR__ . '/../app/Controllers/EvaluacionRequisitosLegalesController.php');
 
 $tests = [
     'SGM route is module-specific' => str_contains($route, '/normatividad-aplicable-mediciones/requisitos-legales/download'),
@@ -19,6 +21,8 @@ $tests = [
     'SGM view no longer calls generic requisitos download' => !str_contains($view, "download('requisitos-legales'"),
     'SGM datatable uses canonical matrix and variant' => str_contains($js, 'matrix_id=${row.id}') && str_contains($js, 'variant=acuse') && str_contains($js, 'variant=requisito'),
     'generic route remains fail-closed for unresolved type' => str_contains(file_get_contents(__DIR__ . '/../app/Services/SensitiveDownloadAuthorizationService.php'), 'PERSONAL_DOCUMENTS'),
+    'alternate PDF route 2 enforces SASISOPA download permission' => str_contains($docs, "validaPermiso('sasisopa', 'descargar')"),
+    'alternate PDF route 3 enforces SASISOPA download permission' => str_contains($eval, "validaPermiso('sasisopa', 'descargar')"),
 ];
 foreach ($tests as $name => $ok) { assert_sgm($ok, $name); echo "PASS {$name}\n"; }
 printf("RESULT: %d PASS / 0 FAIL / 0 SKIPPED\n", count($tests));
