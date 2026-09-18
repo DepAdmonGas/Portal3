@@ -126,9 +126,9 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
         <td class="text-center align-middle">
 
          <div class="dropdown dropstart">
-            <a href="javascript:void(0)" data-bs-toggle="dropdown">
+            <button type="button" data-bs-toggle="dropdown">
                 <i class="ti ti-dots-vertical fs-6"></i>
-            </a>
+            </button>
                 <ul class="dropdown-menu">
                     <li>
                         <a class="dropdown-item pointer d-flex align-items-center gap-3"

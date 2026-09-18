@@ -685,6 +685,20 @@
 - Preserved dropdown attributes, menu relationship, the Alpine `openModal()` action item, and the PDF navigation route. No shared layouts, deferred module, CSP policy, Alpine architecture, or production configuration changed.
 - Added a focused structural regression. Local security suite: 164 PASS / 0 FAIL / 0 SKIPPED. Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL` pending remote verification.
 
+## SEC-CSP-012-BOOTSTRAP-DROPDOWN-BUTTON-IMPLEMENTATION-OBJETIVOS-METAS-INDICADORES
+
+- Converted exactly two page-local Bootstrap dropdown triggers in `app/Views/objetivosmetasindicadores/index.php` from `javascript:void(0)` anchors to semantic `button type="button"` elements.
+- Preserved classes, IDs, `data-bs-toggle`, `aria-expanded`, dropdown menu relationships, permission-controlled rendering, Alpine actions, and both PDF navigation links.
+- Added a focused structural regression. Local security suite: 165 PASS / 0 FAIL / 0 SKIPPED. Remaining inventory is 126 JavaScript URL surfaces; CSP policy, Alpine architecture, deferred module, and production configuration remain unchanged.
+- Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; remote verification and production header verification remain pending.
+
+## SEC-CSP-012-SAFE-BATCH-BOOTSTRAP-DROPDOWN-REMEDIATION
+
+- Applied the verified semantic-button conversion to 8 non-deferred page-local Bootstrap dropdown triggers across 8 views; DataTables/dynamic and uncertain candidates were excluded.
+- Preserved Bootstrap attributes, IDs, menu relationships, permissions, real links, Alpine/custom actions, and routes. No CSP, Alpine architecture, CSS architecture, or `departamento-operativo` changes were made.
+- Focused CSP regression: 15 PASS / 0 FAIL / 0 SKIPPED. Security suite: 166 PASS / 0 FAIL / 0 SKIPPED. Remaining JavaScript URL inventory: 118.
+- Excluded residual dropdown candidates remain documented for later bounded review; status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL` pending checkpoint and remote verification.
+
 ## DOC-001-REMOTE-VERIFICATION-RECONCILIATION
 
 - Original scope: audit and security documents mixed prior results, TODOs, and stale figures, creating documentation drift; the audit explicitly required consolidation after remediation without deleting history.
