@@ -665,6 +665,20 @@
 - Enforced CSP remains unchanged and permissive (`unsafe-inline`, `unsafe-eval`, and explicit legacy CDN sources). Report-Only omits script `unsafe-inline`, keeps temporary `unsafe-eval` for Alpine, retains temporary inline styles, and includes boundary directives without wildcard sources.
 - Remaining CSP work is not closed: Alpine/`unsafe-eval`, inline styles, `javascript:void(0)` migration, CDN/runtime verification, and eventual enforcement tightening remain pending. `departamento-operativo` remains outside the reviewed scope.
 
+## SEC-CSP-012-RESIDUAL-ENFORCEMENT-REMEDIATION
+
+- Replaced the four `javascript:void(0)` download pseudo-links in `app/Views/requisitoslegales/detalle.php` with semantic `button` elements retaining the existing Alpine `@click` download behavior.
+- `departamento-operativo`, Alpine `unsafe-eval`, inline styles, CSP headers, and CDN dependencies were not changed. The enforced policy remains permissive and policy alignment is not claimed.
+- Added a narrow structural regression asserting that this requisitos-legales view no longer contains those JavaScript URLs. Full security suite remains green at 161 PASS / 0 FAIL / 0 SKIPPED.
+- Status: `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; production header verification remains `PENDING_FIRST_DEPLOY`.
+
+## SEC-CSP-012-BOOTSTRAP-DROPDOWN-BUTTON-IMPLEMENTATION-MEJORES-PRACTICAS
+
+- Converted exactly two non-deferred Bootstrap dropdown triggers in `app/Views/mejorespracticas/index.php` from `javascript:void(0)` anchors to semantic `button type="button"` elements.
+- Preserved classes, dropdown IDs, `data-bs-toggle="dropdown"`, `aria-haspopup`, `aria-expanded`, menu relationships, and existing permission-controlled menu contents. Corrected the local `arial-explaned` typo to `aria-expanded`.
+- Added a focused CSP regression. No CSP policy, Alpine, inline-style policy, CDN, or `departamento-operativo` changes were made. Security suite: 163 PASS / 0 FAIL / 0 SKIPPED.
+- Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; remote verification and production header verification remain pending.
+
 ## DOC-001-REMOTE-VERIFICATION-RECONCILIATION
 
 - Original scope: audit and security documents mixed prior results, TODOs, and stale figures, creating documentation drift; the audit explicitly required consolidation after remediation without deleting history.
