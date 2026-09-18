@@ -18,6 +18,7 @@ $tests = [
     'csp_report_only_regression.php',
     'authz_dl_002_sgm_requisitos_legales_regression.php',
     'authz_dl_002_requisitos_legales_private_storage_regression.php',
+    'authz_dl_002_requisitos_legales_migration_tool_regression.php',
 ];
 
 $passed = $failed = $skipped = 0;
