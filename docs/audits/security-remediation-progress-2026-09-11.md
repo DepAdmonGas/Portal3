@@ -93,8 +93,15 @@
 - Identity: the incoming payload only supplies Telegram message/chat data; it does not supply an internal user ID. The service continues to resolve the pending server-side `TokenTelegram` record by token before linking a chat.
 - Configuration required: `TELEGRAM_WEBHOOK_SECRET` must be set in the appropriate environment and supplied when the real webhook is registered. Production deployments with more than one application node must use shared private storage for `storage/private/telegram-webhook-replay` (or replace the guard with an atomic shared cache/database implementation) so the atomic claim spans nodes.
 - Tests: dedicated `tests/telegram_webhook_security_regression.php` covers missing/invalid secret rejection, authenticated delivery, replay idempotency, a subsequent new event, invalid JSON, and an incomplete update. The 26-test existing security harness also remains green.
-- Production verification: required. Confirm the configured Telegram webhook uses the same secret, verify private replay storage is shared/atomic for the deployment topology, and send an approved non-production/controlled Telegram update. No production service, secret, webhook, database, or deployment was touched.
-- Status: remediated locally.
+- Remote code/test verification: commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`; `php-syntax`, `security-tests`, and `dependency-audit` passed. The remote security log includes `telegram_webhook_security_regression.php` and `161 PASS / 0 FAIL / 0 SKIPPED`.
+- Production runtime verification: pending first production deploy. The actual secret configuration, proxy/header forwarding, durable/shared replay storage, deployment topology, and Telegram webhook registration remain unverified. No production service, secret, webhook, database, or deployment was touched.
+- Status: `REMEDIATED_REMOTE_VERIFIED`; production verification remains `PENDING_FIRST_DEPLOY`.
+
+## SEC-WEBHOOK-008-REMOTE-VERIFICATION-RECONCILIATION
+
+- Authentication and replay-protection code are remotely verified by the Security workflow. The regression covers missing/invalid secret rejection, authenticated delivery, `update_id` replay idempotency, invalid JSON, and incomplete updates.
+- Production checklist for later: configure the secret through deployment secret management, verify header delivery to PHP, reject invalid/missing secrets, accept a legitimate webhook, reject duplicate `update_id`, verify replay-state durability across the deployment topology, and ensure logs do not expose secrets or unnecessary payload data.
+- Reopen if the webhook route/controller, authentication, replay guard, proxy forwarding, or replay persistence changes or fails deployment verification.
 
 ## SEC-RATE-006
 
@@ -106,8 +113,17 @@
 - Storage failure policy: fail open, to avoid a private-storage outage becoming a global login outage. The failure is logged without account credentials; production monitoring and writable private storage are required.
 - IP/proxy assumption: only `REMOTE_ADDR` is used. It is not client-header spoofable, but a reverse proxy may cause several clients to share its address unless production preserves the client address through a trusted proxy configuration.
 - Tests: dedicated `tests/rate_limiter_security_regression.php` covers requests under the limit, limit exceeded, account/IP isolation, window reset without sleeping, and post-success counter clearing. Webhook regression (7) and the existing security harness (26) remain green.
-- Production verification: required. Verify that `storage/private/rate-limits` is writable and shared by all application instances, and that the web/proxy layer sets a trustworthy `REMOTE_ADDR` value. No production configuration, cache, database, deploy, or host was touched.
-- Status: remediated locally.
+- Remote code/test verification: commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`; `rate_limiter_security_regression.php` passed and the remote suite reported `161 PASS / 0 FAIL / 0 SKIPPED`.
+- Production runtime verification: pending first production deploy. The limiter key is `login|normalized account|REMOTE_ADDR`, the fixed window is 300 seconds, the threshold is 10 attempts, and over-limit requests receive HTTP 429 with `Retry-After`. Reverse-proxy identity, shared storage/topology, real traffic thresholds, and operational alerting remain unverified.
+- Status: `REMEDIATED_REMOTE_VERIFIED`; production verification remains `PENDING_FIRST_DEPLOY`.
+
+## SEC-RATE-006-REMOTE-VERIFICATION-RECONCILIATION
+
+- The finding scope remains login abuse/authentication brute force. `LoginController::login` invokes the fixed-window `RateLimiter` before authentication, and successful login clears the account/IP counter.
+- The limiter uses private file storage with exclusive locking. The key is not client-header controlled; it uses `REMOTE_ADDR` and a normalized account identifier. Storage failure is fail-open by design and logs only the storage error.
+- The regression covers the 10-attempt threshold, rejection of attempt 11, account/IP key isolation, window reset, and successful-operation counter clearing.
+- Later post-deploy checks: preserve client identity through the trusted proxy, prevent forwarding-header bypass, verify shared persistence across instances, confirm abusive requests are rejected without pathological blocking, and confirm diagnostic logs/metrics do not expose secrets.
+- Reopen if the limiter, protected routes, key source, deployment topology, or production verification reveals ineffective throttling or bypass.
 
 ## PRIV-LOG-010
 
@@ -117,6 +133,13 @@
 - Changed: `AuthenticationService` retains only event outcome and internal `user_id` where available. `Logger` now centrally redacts secrets, authentication/session values, request/response bodies, headers, document paths, SQL/query content, and common PII keys recursively. It also neutralizes line breaks in messages/context values. The error handler now uses the facade and records bounded exception metadata (class, source file, line) rather than the exception message or full trace.
 - Retained operational/audit context: event name, outcome, internal user ID where known, error code, exception class, source file, and line. No raw password, auth token, cookie/session value, Telegram secret, account identifier, or IP is retained by these logger calls.
 - Tests: dedicated `tests/privacy_logging_security_regression.php` verifies redaction of dummy password/token/cookie/Telegram-secret/username/IP values and confirms useful context remains while newline log injection is neutralized. Rate limiting (5), webhook (7), and existing security regression (26) suites remain green.
+- Remote code/test verification: commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`; `privacy_logging_security_regression.php` passed and the remote suite reported `161 PASS / 0 FAIL / 0 SKIPPED`.
+- Status: `REMEDIATED_REMOTE_VERIFIED`; production log runtime verification remains `PENDING_FIRST_DEPLOY`. Verify log path permissions, web inaccessibility, exception verbosity, rotation/retention, backup/shipping ACLs, and authorized readers after deployment.
+
+## PRIV-LOG-010-REMOTE-VERIFICATION-RECONCILIATION
+
+- `Logger` sanitizes messages against line injection and recursively redacts secret, credential, request-body, header, path, SQL, and PII context keys. Exception logging records bounded class/file/line metadata rather than exception messages or payloads.
+- Reopen if logger sanitization, exception handling, log destinations, or production verification reveals sensitive data exposure.
 - Operations: log retention, access control, and any `LOG_PATH` override are deployment concerns not controlled by this code. The default `storage/logs` path is outside the apparent webroot, but production must verify the effective path, permissions, rotation, retention, and log-reader ACLs. No existing log was deleted.
 - Status: remediated locally.
 
@@ -147,7 +170,16 @@
 - Root cause: `public/index.php` called `Session::init()` before loading `.env`. `Session` therefore used its fail-closed production fallback and emitted the PHP session cookie with `Secure` before `APP_ENV=dev` became available. The browser correctly did not return that cookie over HTTP. JWT cookies were created later, after environment loading, leaving the authenticated middleware with a JWT but no `Session['usuario']` state.
 - Fix: environment loading now occurs before session initialization. Local HTTP with `APP_ENV=dev` receives non-Secure development cookies; production and direct HTTPS retain `Secure` cookies. No session hardening control was removed.
 - Tests: `tests/session_post_login_regression.php` uses a browser-like cookie jar to prove the corrected local HTTP flow and the production HTTPS flow, and reproduces the old bootstrap order as a `302 /login` post-login failure. Existing session, privacy, rate-limit, webhook, and P0 suites remain green.
-- Final status: `SEC-SESSION-009` remains remediated locally; functional regression resolved. Production still requires the previously documented HTTPS/proxy/session-storage verification.
+- Final status: application-level hardening is `REMEDIATED_REMOTE_VERIFIED` by Security workflow run `35377218278` for commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`; production runtime verification remains `PENDING_FIRST_DEPLOY`.
+
+## SEC-SESSION-009-REMOTE-VERIFICATION-RECONCILIATION
+
+- Scope remains session fixation, post-login session persistence, logout invalidation, CSRF continuity after rotation, and hardened cookie attributes.
+- `Session::init()` enables cookie-only sessions, strict mode outside the P0 fixture, disables transparent SID transport, sets the 90,000-second application lifetime, and configures `HttpOnly`, `SameSite=Lax`, and environment/HTTPS-dependent `Secure` cookies.
+- Successful login rotates the session ID with old-session deletion; logout clears authentication state, destroys the session, and expires the session cookie.
+- `session_security_regression.php` covers cookie attributes, session rotation, stale-session rejection, CSRF after rotation, and logout invalidation. `session_post_login_regression.php` covers authenticated state across local HTTP/production HTTPS and the historical bootstrap-order regression.
+- Remote evidence: both session regression scripts passed in Security run `35377218278`; the remote suite reported `161 PASS / 0 FAIL / 0 SKIPPED`.
+- Runtime checks remain pending first deploy: HTTPS/TLS termination, proxy-aware secure-cookie behavior, effective PHP session settings/storage permissions, session lifetime, and cookie forwarding.
 
 ## SEC-SESSION-009-CSRF-POST-LOGIN-REGRESSION
 
@@ -236,6 +268,13 @@
 - Final status: `REMEDIATED_LOCAL_WITH_DOCUMENTED_RESIDUAL_CONSTRAINTS` for all reviewed surfaces outside `departamento-operativo`.
 - `DATA-VALID-011-A`: `REMEDIATED_LOCAL`. Tarjetas upload and JSON validation remain strict: real MIME, extension allowlist, size limit, server-generated filename, typed JSON, bounds, and unexpected-key rejection.
 - `DATA-VALID-011-B`: `REMEDIATED_LOCAL_WITH_RESIDUAL_PUBLIC_STORAGE_CONSTRAINT`. Seguro remains at `public/uploads/archivos/poliza-seguro/` because public storage is required by architecture. Static access is possible; filenames are not predictable. Directory listing and script execution remain `PRODUCTION_VERIFICATION_PENDING` and are not new findings.
+
+## DATA-VALID-011-REMOTE-VERIFICATION-RECONCILIATION
+
+- The remediated Tarjetas and Seguro upload boundaries and typed JSON contract are `REMEDIATED_REMOTE_VERIFIED` at commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`; Security run `35377218278` passed `data_valid_011_regression.php` and reported `161 PASS / 0 FAIL / 0 SKIPPED`.
+- Covered boundaries include server-detected MIME/extension allowlists, upload-size and upload-error checks, server-generated filenames, strict JSON parsing, typed/bounded fields, and unexpected-key rejection. Invalid inputs fail closed.
+- Residual constraints are non-blocking and separately tracked: Seguro remains in architecturally required public storage (expected domain behavior); directory listing and script execution remain production verification; three `departamento-operativo` surfaces are deferred concurrency; authorization is tracked separately under `AUTHZ-DL-002`/tenant findings.
+- No true unresolved validation vulnerability remains within the reviewed scope. This is not a blanket validation audit of future or deferred modules.
 - Three `departamento-operativo` surfaces identified during reassessment remain deferred and excluded from this closure.
 - Final regression baseline: 76 passed, 0 failed, 0 skipped. No functional code changed in this closure; production and historical files were untouched.
 
@@ -595,3 +634,41 @@
 - The tool uses fixed legacy/private roots, strict `RequisitosLegalesStorageService::normalizeReference()` semantics, SHA-256 verification, JSON manifests, two-pass blocker checks, idempotent same-hash handling, and temporary-file cleanup.
 - Database writes and legacy source deletion are unsupported. Orphans are report-only. Production inventory and migration remain pending; the legacy read fallback remains enabled.
 - Targeted migration-tool regression: 15 PASS / 0 FAIL / 0 SKIPPED. Full security suite: 149 PASS / 0 FAIL / 0 SKIPPED. `AUTHZ-DL-002` remains `PARTIAL`.
+
+## AUTHZ-DL-002-REMEDIATE-GESTORIA-REQUISITOS-LEGALES-CANONICAL-DOWNLOAD
+
+- Gestoría requisitos legales now uses a canonical download route based on `matrix_id` and strict `acuse|requisito` variants.
+- Authorization is server-side through `gestoria/descargar`, the current station context, the persisted matrix reference, and the shared private-first/legacy-fallback storage resolver.
+- Generic `/download?tipo=requisitos-legales` remains default-deny. No historical files or database rows were migrated or changed.
+- Targeted regression: 12 PASS / 0 FAIL / 0 SKIPPED. Full security suite: 161 PASS / 0 FAIL / 0 SKIPPED. `AUTHZ-DL-002` remains `PARTIAL` because deferred module surfaces remain.
+
+## AUTHZ-DL-002-DEFERRED-CLOSURE-DOCUMENTATION
+
+- Current status: `PARTIAL_DEFERRED`. No confirmed active non-deferred vulnerable download surface remains after the Gestoría canonical-download remediation.
+- Gestoría evidence: `GET /gestoria/permisos/requisitos-legales/download`, `GestoriaPermisosController::downloadRequisitoLegal`, `matrix_id`, strict `acuse|requisito` variants, `gestoria/descargar`, server-side station context, and shared private-first/legacy-fallback resolution. Remote verification: commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`, 161 PASS / 0 FAIL / 0 SKIPPED.
+- Generic `/download` remains fail-closed: 53 types total, 14 authorized, 39 default-deny, 0 unknown. Default-deny and legacy/dead callers are not treated as active exposure; remaining active download callers belong to deferred `departamento-operativo` surfaces.
+- Deferred concurrency includes Aceites, Ingresos Facturación, Comparativo XML and other `departamento-operativo` download/upload callers. This is `DEFERRED_CONCURRENCY`, not accepted risk or a statement that those surfaces are safe.
+- Requisitos-legales new uploads remain private, historical fallback remains available, and migration tooling is remotely verified. No historical migration is required before the first production deployment; server verification remains deferred until that deploy.
+- Reopen when `departamento-operativo` concurrent development is completed or explicitly released for security remediation. At that time reassess generic callers, canonical resource IDs, permissions, station boundaries, filename authority and private-storage coupling.
+
+## SQL-001-CLOSURE-DOCUMENTATION
+
+- `SQL-001` is `CLOSED_WITH_EVIDENCE` at commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`; no active SQL injection vulnerability was identified in the reviewed application code.
+- Evidence: 4 direct parameterized `DB::select` queries, 34 raw-expression surfaces reviewed, 0 unsafe value interpolation, 0 unsafe identifier interpolation, 0 unsafe sort/LIKE/IN/LIMIT-OFFSET/raw-expression surfaces, and 0 real SQL injection candidates.
+- `AnalisisCompraService` uses bound parameters for all four direct queries. The two dynamic identifiers in `KpiAceitesService` are selected from fixed internal application values and are not request-controlled.
+- `departamento-operativo` SQL surfaces remain deferred/not fully assessed due to concurrent development. Re-run a SQL-focused review before first production deployment if that module introduces or materially changes raw SQL.
+- Reopen if new raw SQL, request-controlled identifiers, user-controlled raw sorting/filtering, or new pre-deployment SQL construction surfaces appear.
+
+## SEC-CSP-012-REMOTE-VERIFICATION-RECONCILIATION
+
+- Report-Only CSP and the externalized highlight initialization are remotely verified at commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`; `csp_report_only_regression.php` passed and the suite reported `161 PASS / 0 FAIL / 0 SKIPPED`.
+- Enforced CSP remains unchanged and permissive (`unsafe-inline`, `unsafe-eval`, and explicit legacy CDN sources). Report-Only omits script `unsafe-inline`, keeps temporary `unsafe-eval` for Alpine, retains temporary inline styles, and includes boundary directives without wildcard sources.
+- Remaining CSP work is not closed: Alpine/`unsafe-eval`, inline styles, `javascript:void(0)` migration, CDN/runtime verification, and eventual enforcement tightening remain pending. `departamento-operativo` remains outside the reviewed scope.
+
+## DOC-001-REMOTE-VERIFICATION-RECONCILIATION
+
+- Original scope: audit and security documents mixed prior results, TODOs, and stale figures, creating documentation drift; the audit explicitly required consolidation after remediation without deleting history.
+- Remediation: commit `6448939` added the consolidated security status document and reconciled the remediation progress record while preserving historical entries. The current status snapshot links the technical audit, plan, and progress history rather than replacing them.
+- `6448939` is an ancestor of current `HEAD` `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`; therefore the documentation remediation is present on `origin/Silvino`.
+- Current status matrices are consistent with the reconciled states, including deferred findings and the documented CSP/production residuals. `DOC-001` is `CLOSED_WITH_EVIDENCE`; the Security workflow is supporting evidence only, not the primary documentation proof.
+- Reopen if the matrix drifts materially from implementation, security decisions lack records, pre-deployment status changes are undocumented, or operational guidance becomes contradictory.

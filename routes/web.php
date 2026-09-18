@@ -1708,6 +1708,7 @@ return function (RouteCollector $r) {
 
         $r->addRoute('GET', '/permisos', Route::auth(['GestoriaPermisosController', 'index']));
         $r->addRoute('GET', '/permisos/table', Route::auth(['GestoriaPermisosController', 'table']));
+        $r->addRoute('GET', '/permisos/requisitos-legales/download', Route::auth(['GestoriaPermisosController', 'downloadRequisitoLegal']));
 
         $r->addRoute('GET', '/entregas', Route::auth(['GestoriaEntregasController', 'index']));
         $r->addRoute('GET', '/entregas/table', Route::auth(['GestoriaEntregasController', 'table']));
