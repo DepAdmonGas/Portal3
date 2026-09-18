@@ -114,6 +114,11 @@ class DocumentosRegistrosController extends BaseController{
 
     public function pdfRequisitosLegales(){
 
+    if (!ModuloService::validaPermiso('sasisopa', 'descargar')) {
+        header("Location: /404");
+        exit;
+    }
+
     $idEstacion = $this->estacionModulo();
 
     $registro = Estacion::find($idEstacion);
