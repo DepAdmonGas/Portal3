@@ -54,6 +54,25 @@ $tests = [
             && str_contains($source, 'href="/sasisopa/objetivos-metas-indicadores/pdf-objetivos-metas"')
             && str_contains($source, 'href="/sasisopa/objetivos-metas-indicadores/pdf-reporte-indicadores"');
     })(),
+    'safe batch dropdowns use semantic buttons' => (function (): bool {
+        $views = [
+            ['incidentesaccidentes/index.php', '<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle"'],
+            ['informedesempeno/index.php', '<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle"'],
+            ['monitoreoverificacionevaluacion/evaluacion-requisitos-legales.php', '<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle"'],
+            ['preparacionemergencias/index.php', '<a href="javascript:void(0)" class="btn  bg-primary-subtle text-primary dropdown-toggle"'],
+            ['reportediario/reporte-mes.php', '<a href="javascript:void(0)" data-bs-toggle="dropdown"'],
+            ['sgm/normatividad/index.php', '<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle"'],
+            ['sgm/procesos-medicion/programacion-anual-calibracion.php', '<a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton"'],
+            ['sgm/procesos-medicion/programacion-anual-verificacion.php', '<a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton"'],
+        ];
+        foreach ($views as [$relativePath, $legacyTrigger]) {
+            $source = (string) file_get_contents(__DIR__ . '/../app/Views/' . $relativePath);
+            if (str_contains($source, $legacyTrigger) || !str_contains($source, 'type="button"') || !str_contains($source, 'data-bs-toggle="dropdown"')) {
+                return false;
+            }
+        }
+        return true;
+    })(),
 ];
 
 $passed = 0;

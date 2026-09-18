@@ -20,9 +20,9 @@
                 <div class="ms-auto">
 
                     <div class="dropdown dropstart">
-                        <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button type="button" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="ti ti-dots fs-7"></i>
-                        </a>
+                        </button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <li>
                                 <a class="dropdown-item" href="javascript:void(0)" @click="openModalNuevo()"><i class="ti ti-plus"></i> Agregar</a>

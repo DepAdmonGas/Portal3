@@ -53,9 +53,9 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
         <h5 class="card-title mb-0">Matriz de evaluación del cumplimiento legal</h5>
         <div class="ms-auto d-flex align-items-center">
             <div class="dropdown">
-                <a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                <button type="button" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="ti ti-dots-vertical fs-4"></i>
-                </a>
+                </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     <li>
                         <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
