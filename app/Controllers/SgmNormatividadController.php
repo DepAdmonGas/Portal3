@@ -6,6 +6,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
+use App\Services\RequisitosLegalesStorageService;
 use App\Models\Estacion;
 use App\Models\Sgm\Autorizado;
 use App\Models\Sasisopa\RequisitosLegalesMatriz;
@@ -23,6 +24,40 @@ class SgmNormatividadController extends BaseController
     private function estacionModulo(): ?int
     {
         return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
+    }
+
+    public function downloadRequisitoLegal(): void
+    {
+        if (!ModuloService::validaPermiso('sgm', 'descargar')) {
+            http_response_code(404);
+            return;
+        }
+        $matrixId = filter_input(INPUT_GET, 'matrix_id', FILTER_VALIDATE_INT);
+        $variant = (string) ($_GET['variant'] ?? '');
+        if (!$matrixId || !in_array($variant, ['acuse', 'requisito'], true)) {
+            http_response_code(404);
+            return;
+        }
+        $matrix = RequisitosLegalesMatriz::with('calendario')->find($matrixId);
+        $station = $matrix?->calendario?->id_estacion;
+        $ctxStation = $this->estacionModulo();
+        if (!$matrix || !$station || !$ctxStation || (int) $station !== (int) $ctxStation) {
+            http_response_code(404);
+            return;
+        }
+        $filename = $variant === 'acuse' ? $matrix->acusepdf : $matrix->requisitolegalpdf;
+        if (!is_string($filename) || RequisitosLegalesStorageService::normalizeReference($filename) === null) {
+            http_response_code(404);
+            return;
+        }
+        $path = RequisitosLegalesStorageService::resolveReadablePath($filename);
+        if ($path === null) {
+            http_response_code(404);
+            return;
+        }
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . basename($path) . '"');
+        readfile($path);
     }
 
     public function index()

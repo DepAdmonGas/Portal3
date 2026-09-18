@@ -22,9 +22,9 @@
       <div class="ms-auto">
 
         <div class="dropdown dropcenter">
-            <a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" arial-explaned="false">
+            <button type="button" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <i class="ti ti-dots-vertical fs-4"></i>
-            </a>
+            </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
             <?= 
               !empty($permisos['crear']) ? 
@@ -86,10 +86,10 @@
     <h4 class="card-title mb-0">Operación y Mantenimiento</h4>
       <div class="ms-auto">
       <div class="dropdown dropcenter">
-            <a href="javascript:void(0)" class="link btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <button type="button" class="link btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
  
             <i class="ti ti-dots-vertical fs-4"></i>
-            </a>
+            </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <?= 
               !empty($permisos['crear']) ? 

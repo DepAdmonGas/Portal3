@@ -14,24 +14,92 @@
 <div id="sgm-content">
 
 <div class="row mt-4">
-<div class="col-md-8">
 
+<!---------- CARD DESCARGA Fo.SGM.006 ---------->
+    <div class="col-md-6 d-flex align-items-stretch mb-4">
+        <a href="/sgm/normatividad-aplicable-mediciones/pdf-requisito-legal" download
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-file-text text-white display-6"></i>
+                    </div>
+
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                            Fo.SGM.006 Requisitos legales del SGM
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-download fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+
+    <!---------- CARD REQUISITOS LEGALES SASISOPA ---------->
+   <div class="col-md-6 d-flex align-items-stretch mb-4">
+        <a  href="/sgm/normatividad-aplicable-mediciones/requisito-legal-sgm"
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-file-text text-white display-6"></i>
+                    </div>
+
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                             Requisitos legales SASISOPA
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                   <i class="ti ti-arrow-right fs-5"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+
+
+        <!---------- INICIO DE TABLAS ---------->
+
+<div class="col-md-6">
 <div x-data="{ ...actions(), ...inventarioNormatividad() }">
 
 <div class="card">
-  <div class="card-body">
-
+  <div class="card-header">
   <div class="d-flex align-items-center">
     <h4 class="card-title mb-0">Fo.SGM.005 Inventario de Normatividad Aplicable</h4>
       <div class="ms-auto">
         
-       <div class="dropdown dropstart">
-            <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ti ti-dots fs-7"></i>
+       <div class="dropdown dropcenter">
+            <a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ti ti-dots-vertical fs-4"></i>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="nuevo()"><i class="ti ti-plus"></i> Agregar</a>
+                <a class="dropdown-item" href="javascript:void(0)" @click="nuevo()"><i class="ti ti-plus"></i> Nuevo</a>
               </li>
               <li>
                 <a class="dropdown-item" href="/sgm/normatividad-aplicable-mediciones/inventario-normatividad/pdf"><i class="ti ti-download"></i> Descargar</a>
@@ -44,10 +112,14 @@
       
       </div>
   </div>
+  </div>
+  <div class="card-body">
+
+
 
   <div class="datatables mt-3">
-    <div class="table-responsive">
-      <table id="table-inventario-normatividad" class="table table-sm table-striped table-bordered align-middle">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+      <table id="table-inventario-normatividad" class="table  table-striped table-bordered  align-middle">
         <thead>
           <tr>
           <th class="text-center align-middle" style="max-width:100px;">Norma, acuerdo, disposición</th>
@@ -56,7 +128,7 @@
           <th class="text-center align-middle" style="max-width:200px;">Equipo o procedimiento de medición al que aplica</th>
           <th class="text-center align-middle" style="max-width:100px;">Link</th>
           <th class="text-center align-middle">
-          <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
+          <a class="text-muted"><i class=" text-danger ti ti-trash fs-6"></i></a>
           </th>
           </tr>
         </thead>
@@ -77,7 +149,8 @@
         <div class="modal-content">
             <div class="modal-header bg-primary">
                 <h5 class="modal-title text-white">
-                    Operación y mantenimiento
+                  <i class="ti ti-settings-plus"></i>
+                    Nueva operación y mantenimiento
                 </h5>
                 <button
                     class="btn-close btn-close-white"
@@ -89,7 +162,7 @@
                 <div class="mb-3">
 
                     <label class="form-label">
-                        Norma, acuerdo o disposición
+                        * Norma, acuerdo o disposición:
                     </label>
 
                     <textarea
@@ -107,7 +180,7 @@
                     <div class="col-md-6">
 
                         <label class="form-label">
-                            Fecha de publicación
+                           * Fecha de publicación:
                         </label>
 
                         <input
@@ -123,7 +196,7 @@
                     <div class="col-md-6">
 
                         <label class="form-label">
-                            Fecha de aplicación
+                          Fecha de aplicación:
                         </label>
 
                         <input
@@ -139,7 +212,7 @@
                 <div class="mt-3">
 
                     <label class="form-label">
-                        Equipo o procedimiento
+                       * Equipo o procedimiento:
                     </label>
 
                     <textarea
@@ -155,7 +228,7 @@
                 <div class="mt-3">
 
                     <label class="form-label">
-                        Link
+                        * Link:
                     </label>
 
                     <textarea
@@ -196,50 +269,34 @@
 </div>
 </div>
 
-<div class="col-md-4">
+<div class="col-md-6">
 
-<div class="card">
-  <div class="card-body">
-
-  <div class="d-flex align-items-center">
-    <h4 class="card-title mb-0">Fo.SGM.006 Requisitos legales del SGM</h4>
-      <div class="ms-auto">
-      </div>
-  </div>
-
-  <div class="mt-1 text-end">
-
-          <a class="btn bg-danger-subtle text-danger mt-2" 
-          href="/sgm/normatividad-aplicable-mediciones/pdf-requisito-legal" download>
-          <i class="ti ti-download"></i> Descargar</a>
-
-          <a class="btn bg-info-subtle text-info mt-2" 
-          href="/sgm/normatividad-aplicable-mediciones/requisito-legal-sgm">
-          <i class="ti ti-file"></i> Requisitos Legales SASISOPA</a>
-  </div>
-                    
-  </div>
-</div>
 
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-  <div class="card-body">
-
-    <div class="float-end">
-        <?= 
+    <div class="card-header d-flex align-items-center">
+      <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+<div class="ms-auto">
+    
+  <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+          '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
-        ?>    
-    </div>
+        ?>
+</div>
 
-    <h4 class="card-title mb-0"></h4>
+
+          
+   
+    </div>
+  <div class="card-body">
+
 
   <div class="datatables mt-4">
-    <div class="table-responsive">
-      <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+      <table id="table-lista-asistencia" class="table table-striped table-bordered  text-nowrap align-middle">
         <thead>
           <tr>
           <th>#</th>

@@ -55,6 +55,11 @@ private function estacionModulo(): ?int
 
     public function pdf(){
 
+    if (!ModuloService::validaPermiso('sasisopa', 'descargar')) {
+        header("Location: /404");
+        exit;
+    }
+
     $inicio = $_GET['inicio'] ?? null;
     $fin    = $_GET['fin'] ?? null;
 

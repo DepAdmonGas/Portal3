@@ -1,3 +1,17 @@
+  <style>
+  span[style] {
+    color: inherit !important;
+    background-color: transparent !important;
+}
+
+  strong[style] {
+    color: inherit !important;
+    background-color: transparent !important;
+}
+
+</style>
+
+
 <div id="container" data-elemento="103" data-herramienta="2" data-id="0"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
@@ -14,32 +28,38 @@
 <div id="sgm-content">
 
 
-<div class="card mt-4">
-  <div class="card-body">
 
   <div x-data="{ ...actions(), ...politicaForm() }">
 
-  <div class="d-flex align-items-center">
-    <h4 class="card-title mb-0">POLITICA</h4>
+
+<div class="row mt-3">
+  <div class="col-md-5">
+
+<div class="card">
+  <div class="card-header">
+
+ <div class="d-flex align-items-center">
+    <h4 class="mb-0 card-title ">
+      
+    POLÍTICA</h4>
+
       <div class="ms-auto">
-      <a type="button" class="btn" href="/sgm/responsabilidades-direccion/politica-sgm">
-        <i class="ti ti-edit fs-7 text-primary"></i>
+      <a type="button" class="btn bg-primary-subtle text-primary " href="/sgm/responsabilidades-direccion/politica-sgm">
+        <i class="ti ti-edit fs-6"></i>
+        Editar
         </a>
       </div>
   </div>
+  </div>
+  <div class="card-body p-0">
 
-  <div x-data="{...actions(),...politicaForm()}">
 
-<div class="row">
-
-<div class="col-md-4">
-
-  <table class="table table-sm table-bordered table-hover">
+  <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
     <thead>
     <tr>
-    <th class="text-center bg-primary text-white">#</th>
-    <th class="text-center bg-primary text-white">Fecha</th>
-    <th class="text-center bg-primary text-white"><i class="ti ti-trash  fs-7"></i></th>
+    <th class="text-center">#</th>
+    <th class="text-center">Fecha</th>
+    <th class="text-center text-danger"><i class="ti ti-trash  fs-6"></i></th>
     </tr>
     </thead>
     <tbody>
@@ -60,12 +80,12 @@
     <td class="text-center align-middle"
     x-text="item.fecha"
     ></td>
-    <td class="text-center align-middle" width="40">
+    <td class="text-center align-middle" width="48">
     <a
     class="text-danger"
     @click.stop="eliminar(item)"
     >
-    <i class="ti ti-trash fs-7"></i>
+    <i class="ti ti-trash fs-6"></i>
     </a>
     </td>
     </tr>
@@ -90,33 +110,48 @@
 
   </table>
 
-</div>
 
-<div class="col-md-8">
+  </div>
+</div>    
+  </div>
 
+
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+<div class="col-md-7">
+<div class="card">
+  <div class="card-header card-colored-header bg-primary">
+    
+<h4 class="mb-0">
+  <i class="ti ti-calendar-event fs-6 text-white"></i>
+  <span
+class="card-title text-white"
+x-text="politica.fecha">
+</span>
+</h4>
+
+
+  </div>
+  <div class="card-body">
 <template x-if="politica">
 
 <div>
 
-<div>
 
-<b>Fecha:</b>
-
-<span
-x-text="politica.fecha"
-></span>
-
-</div>
 
 <div
 class="mt-3"
 x-html="DOMPurify.sanitize(politica.contenido)"
 ></div>
 
-<div class="row mt-5">
 
-<div class="col-3">
-
+<div class="text-center">
 <img
 src="<?= $_ENV['APP_URL'] . '/uploads/firma-personal/' . $estacion->firma ?>"
 class="img-fluid"
@@ -130,52 +165,58 @@ class="img-fluid"
 
 </div>
 
-<div class="text-center">
+
 
 Representante Legal
 
 </div>
 
-</div>
 
-</div>
 
 </div>
 
 </template>
+  </div>
+</div>
+
+
 
 </div>
 
 </div>
 
-</div>
+
 
   </div>
 
-  </div>
-</div>
+  
 
 <div class="row">
 <div class="col-md-6">
 
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-  <div class="card-body">
-
-    <div class="float-end">
+    <div class="card-header d-flex justify-content-between align-items-center">
+    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+  
         <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+          '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
         ?>    
-    </div>
+   
 
-    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+    </div>
+  <div class="card-body">
+
+  
+
+
 
   <div class="datatables mt-4">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
       <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -201,22 +242,26 @@ Representante Legal
 
 <div class="card">
   <div x-data="{ ...actions(), ...revision() }">
-  <div class="card-body">
+    <div class="card-header d-flex justify-content-between align-items-center">
+<h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
 
-  <div class="float-end">
        <?= 
           !empty($permisos['crear']) ? 
-          '<button type="button" class="btn btn-primary" @click="crearRevision()">
+          '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearRevision()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
         ?>        
-    </div>
 
-<h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
+
+    </div>
+  <div class="card-body">
+
+  
+
 
   <div class="datatables mt-4">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
       <table id="table-revision-sgm" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>

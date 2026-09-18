@@ -73,8 +73,13 @@ $sessionDirectory = sys_get_temp_dir() . '/portal3-p0-session-' . bin2hex(random
 $downloadDirectory = sys_get_temp_dir() . '/portal3-p0-download-' . bin2hex(random_bytes(8));
 mkdir($sessionDirectory, 0700, true);
 mkdir($downloadDirectory . '/documentos-personal/ine', 0700, true);
+mkdir($downloadDirectory . '/reuisitos-legales', 0700, true);
 file_put_contents($downloadDirectory . '/documentos-personal/ine/tenant-a-ine.pdf', 'tenant-a-private-document');
 file_put_contents($downloadDirectory . '/documentos-personal/ine/tenant-b-ine.pdf', 'tenant-b-private-document');
+file_put_contents($downloadDirectory . '/reuisitos-legales/sgm-a-acuse.pdf', 'sgm-a-acuse');
+file_put_contents($downloadDirectory . '/reuisitos-legales/sgm-a-requisito.pdf', 'sgm-a-requisito');
+file_put_contents($downloadDirectory . '/reuisitos-legales/sasisopa-a-acuse.pdf', 'sasisopa-a-acuse');
+file_put_contents($downloadDirectory . '/reuisitos-legales/sasisopa-a-requisito.pdf', 'sasisopa-a-requisito');
 touch($dbFile);
 $login = p0_request('POST', '/__test/login-a');
 $cookie = p0_cookie($login['headers']);
@@ -157,6 +162,52 @@ $tests = [
         p0_request('POST', '/__test/login-a', null, $cookie);
         $response = p0_request('GET', '/download?tipo=docs-personal-ine&file=missing.pdf', null, $cookie);
         p0_assert($response['body'] === '', 'Expected no document bytes for a missing resource.');
+    },
+    'AUTHZ-DL-002 SGM allows same-station canonical acuse and requisito' => static function (): void {
+        global $cookie;
+        p0_request('POST', '/__test/login-a', null, $cookie);
+        foreach (['acuse' => 'sgm-a-acuse', 'requisito' => 'sgm-a-requisito'] as $variant => $body) {
+            $response = p0_request('GET', '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=401&variant=' . $variant, null, $cookie);
+            p0_assert($response['body'] === $body, 'Expected canonical SGM download for ' . $variant . '.');
+        }
+    },
+    'AUTHZ-DL-002 SGM denies other station and invalid inputs' => static function (): void {
+        global $cookie;
+        p0_request('POST', '/__test/login-a', null, $cookie);
+        foreach (['matrix_id=402&variant=acuse', 'matrix_id=999&variant=acuse', 'matrix_id=401&variant=acusepdf', 'matrix_id=403&variant=acuse'] as $query) {
+            $response = p0_request('GET', '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?' . $query, null, $cookie);
+            p0_assert($response['body'] === '', 'Expected SGM denial for ' . $query . '.');
+        }
+    },
+    'AUTHZ-DL-002 SGM critical denials fail closed' => static function (): void {
+        global $cookie;
+        p0_request('POST', '/__test/login-a-no-sgm', null, $cookie);
+        p0_assert(p0_request('GET', '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=401&variant=acuse', null, $cookie)['body'] === '', 'Expected missing SGM permission denial.');
+        p0_request('POST', '/__test/logout', null, $cookie);
+        p0_assert(p0_request('GET', '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=401&variant=acuse', null, $cookie)['body'] === '', 'Expected anonymous denial.');
+        p0_request('POST', '/__test/login-a', null, $cookie);
+        foreach (['matrix_id=403&variant=acuse', 'matrix_id=403&variant=requisito', 'matrix_id=404&variant=acuse'] as $query) {
+            p0_assert(p0_request('GET', '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?' . $query, null, $cookie)['body'] === '', 'Expected fail-closed denial for ' . $query . '.');
+        }
+        p0_assert(p0_request('GET', '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=401&variant=acuse&file=../../sgm-a-acuse.pdf', null, $cookie)['body'] === 'sgm-a-acuse', 'Expected client filename to be ignored.');
+        p0_assert(p0_request('GET', '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=401&variant=acuse&module=sasisopa&id_estacion=202', null, $cookie)['body'] === 'sgm-a-acuse', 'Expected client module and station to be ignored.');
+    },
+    'AUTHZ-DL-002 SASISOPA canonical download allows authorized variants' => static function (): void {
+        global $cookie;
+        p0_request('POST', '/__test/login-a', null, $cookie);
+        foreach (['acuse' => 'sgm-a-acuse', 'requisito' => 'sgm-a-requisito'] as $variant => $body) {
+            $response = p0_request('GET', '/requisitos-legales/download?matrix_id=401&variant=' . $variant, null, $cookie);
+            p0_assert($response['body'] === $body, 'Expected SASISOPA canonical download for ' . $variant . '.');
+        }
+    },
+    'AUTHZ-DL-002 SASISOPA canonical download denies invalid authority' => static function (): void {
+        global $cookie;
+        p0_request('POST', '/__test/login-a', null, $cookie);
+        foreach (['matrix_id=402&variant=acuse', 'matrix_id=405&variant=acusepdf', 'matrix_id=999&variant=acuse'] as $query) {
+            $response = p0_request('GET', '/requisitos-legales/download?' . $query, null, $cookie);
+            p0_assert($response['body'] === '', 'Expected SASISOPA denial for ' . $query . '.');
+        }
+        p0_assert(p0_request('GET', '/requisitos-legales/download?matrix_id=405&variant=acuse&module=sgm&id_estacion=202&file=../../sasisopa-a-acuse.pdf', null, $cookie)['body'] === 'sasisopa-a-acuse', 'Expected client authority overrides to be ignored.');
     },
     'SEC-UPLOAD-004 does not expose a sensitive document through its former public path' => static function (): void {
         $response = p0_request('GET', '/uploads/archivos/documentos-personal/ine/tenant-a-ine.pdf');
@@ -284,5 +335,7 @@ foreach (glob($downloadDirectory . '/documentos-personal/ine/*') ?: [] as $docum
 }
 @rmdir($downloadDirectory . '/documentos-personal/ine');
 @rmdir($downloadDirectory . '/documentos-personal');
+foreach (glob($downloadDirectory . '/reuisitos-legales/*') ?: [] as $document) { @unlink($document); }
+@rmdir($downloadDirectory . '/reuisitos-legales');
 @rmdir($downloadDirectory);
 exit($failed === 0 ? 0 : 1);

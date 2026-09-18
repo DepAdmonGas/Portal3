@@ -2,7 +2,11 @@ document.addEventListener('alpine:init', () => {
 
     Alpine.data('modulos', () => ({
 
-        temas: window.temas ?? [],
+        temas: (() => {
+            const element = document.getElementById('modulos-data');
+            if (!element) return [];
+            try { return JSON.parse(element.textContent || '[]'); } catch (_) { return []; }
+        })(),
 
         detalle: {
             modulo: '',
