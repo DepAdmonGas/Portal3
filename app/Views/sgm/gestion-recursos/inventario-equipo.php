@@ -32,17 +32,17 @@
     </div>
 
     <div class="datatables mt-3">
-        <div class="table-responsive">
+        <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
             <table id="table-inventario-equipo" class="table table-striped table-bordered align-middle">
                 <thead>
                     <tr>
-                        <th class="text-center align-middle">#</th>
+                        <th class="text-center align-middle" whidth="98 px">#</th>
                         <th class="text-center align-middle">Nombre del equipo de medición</th>
                         <th class="text-center align-middle">Identificación</th>
                         <th class="text-center align-middle">Función que desempeña dentro de la ES</th>
                         <th class="text-center align-middle">Fecha de instalación</th>
                         <th class="text-center align-middle">Manuales, garantías o información </th>
-                        <th class="text-center align-middle" width="35px"><i class="ti ti-dots-vertical fs-6 text-muted"></i></th>
+                        <th class="text-center align-middle" width="48px"><i class="ti ti-dots-vertical fs-6 text-muted"></i></th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -64,7 +64,9 @@
                 <div class="modal-header bg-primary">
 
                     <h4 class="modal-title text-white">
-
+<span>
+    <i class="ti" :class="modo==='create'? ' ti-device-desktop-plus' :'ti-edit'"></i>
+</span>
                         <template x-if="modo == 'create'">
                             <span>Nuevo inventario de equipo</span>
                         </template>
@@ -84,20 +86,20 @@
 
                 <div class="modal-body">
 
-                    <div class="mb-3">
+                 
 
-                        <label class="form-label">
-                            * Nombre del equipo de medición
+                        <label class="form-label mb-2">
+                            * Nombre del equipo de medición:
                         </label>
 
                         <select
-                            class="form-select"
+                            class="form-select mb-3"
                             x-model="form.nombre"
                             @input="errors.nombre = false"
                             :class="errors.nombre ? 'is-invalid' : ''">
 
                             <option value="">
-                                Seleccione...
+                                Seleccione una opcion...
                             </option>
 
                             <option>
@@ -134,107 +136,98 @@
 
                         </select>
 
-                    </div>
 
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            * Identificación
+                        <label class="form-label mb-2">
+                            * Identificación:
                         </label>
 
                         <textarea
-                            class="form-control"
+                            class="form-control mb-3"
                             rows="2"
                             x-model="form.identificacion"
                             @input="errors.identificacion = false"
                             :class="errors.identificacion ? 'is-invalid' : ''">
                     </textarea>
 
-                    </div>
+                   
 
-                    <div class="mb-3">
+              
 
-                        <label class="form-label">
-                            * Función que desempeña dentro de la ES
+                        <label class="form-label mb-2">
+                            * Función que desempeña dentro de la ES:
                         </label>
 
                         <textarea
-                            class="form-control"
+                            class="form-control mb-3"
                             rows="3"
                             x-model="form.funcion"
                             @input="errors.funcion = false"
                             :class="errors.funcion ? 'is-invalid' : ''">
                     </textarea>
 
-                    </div>
+                  
 
-                    <div class="mb-4">
 
-                        <label class="form-label">
-                            * Fecha de instalación
+                        <label class="form-label mb-2">
+                            * Fecha de instalación:
                         </label>
 
                         <input
                             type="date"
-                            class="form-control"
+                            class="form-control mb-3"
                             x-model="form.fecha_instalacion">
 
-                    </div>
 
                     <!-- Manuales -->
 
                     <template x-if="modo == 'edit'">
 
                         <div>
+                            <label class="form-label fw-bolder mb-2">
 
-                            <hr>
+                                Manuales, garantías o información documental:
 
-                            <h5 class="mb-3">
+                            </label>
 
-                                Manuales, garantías o información documental
+                            <div class="input-group mb-3">
 
-                            </h5>
-
-                            <div class="row g-2 align-items-center mb-3">
-
-                                <div class="col">
+                                
 
                                     <input
                                         type="file"
                                         class="form-control"
                                         x-ref="manual">
 
-                                </div>
+                                
 
-                                <div class="col-auto">
+                               
 
                                     <button
-                                        class="btn btn-info"
+                                        class="btn bg-primary-subtle text-primary"
                                         @click="subirManual()">
 
-                                        <i class="ti ti-upload"></i>
+                                        <i class="ti ti-plus"></i>
 
                                         Agregar
 
                                     </button>
 
-                                </div>
+                                
 
                             </div>
 
                             <div class="table-responsive">
 
-                                <table class="table table-bordered table-sm align-middle">
+                                <table class="table table-striped table-bordered text-nowrap align-middle">
 
                                     <thead>
 
                                         <tr>
 
-                                            <th class="text-center" width="60">
-                                                #
+                                            <th class="text-center"> #
                                             </th>
 
-                                            <th width="170">
+                                            <th class="text-center">
                                                 Fecha
                                             </th>
 
@@ -242,8 +235,8 @@
                                                 Archivo
                                             </th>
 
-                                            <th class="text-center" width="60">
-                                                <i class="ti ti-trash fs-7 text-muted"></i>
+                                            <th class="text-center" width="48">
+                                                <i class="ti ti-trash fs-6 text-muted"></i>
                                             </th>
 
                                         </tr>
@@ -277,6 +270,7 @@
 
                                                 <td
                                                     class="text-center"
+                                                    whidth="98 px"
                                                     x-text="index+1">
                                                 </td>
 
@@ -299,7 +293,7 @@
 
                                                     <a class="pointer" @click="eliminarManual(manual.id)">
 
-                                                        <i class="ti ti-trash fs-7 text-danger"></i>
+                                                        <i class="ti ti-trash fs-6 text-danger"></i>
 
                                                     </a>
 
@@ -368,6 +362,7 @@
                 <div class="modal-header bg-primary">
 
                     <h4 class="modal-title text-white">
+                      <i class="ti ti-vocabulary fs-6"></i>  
                         Manuales, garantías o información documental del equipo
                     </h4>
 
@@ -380,47 +375,51 @@
 
                 <div class="modal-body">
 
-                    <div class="mb-3">
+                    <div>
 
                         <div>
-                            <label class="text-muted">
+                            <label class="form-label fw-bolder mb-1">
                                 Nombre del equipo:
                             </label>
 
-                            <strong
+                            <div
+                            class="mb-3 "
                                 x-text="manuales.nombre">
-                            </strong>
+                            </div>
                         </div>
 
 
 
                     </div>
 
-                    <div class="mb-3">
+                    <div >
 
                         <div>
-                            <label class="text-muted">
+                            <label class="form-label fw-bolder mb-1">
                                 Identificación:
                             </label>
 
-                            <strong
+                            <div
+                            class="mb-3"
                                 x-text="manuales.identificacion">
-                            </strong>
+                            </div>
                         </div>
 
 
 
                     </div>
 
-                    <table class="table table-bordered table-striped">
+                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
                         <thead>
 
                             <tr>
 
-                                <th width="60">#</th>
+                                <th  class="text-center">
+                                    #
+                                </th>
 
-                                <th width="180">
+                                <th class="text-center">
                                     Fecha
                                 </th>
 
@@ -458,10 +457,13 @@
                                 <tr>
 
                                     <td
+                                    class="text-center"
+                                    whidth="96 px"
                                         x-text="index+1">
                                     </td>
 
                                     <td
+                                    class="text-center"
                                         x-text="manual.fecha_hora">
                                     </td>
 

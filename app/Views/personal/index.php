@@ -46,7 +46,7 @@
             <table id="table-personal" class="table table-striped table-bordered align-middle">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th class="text-center">#</th>
                         <th>Nombre Usuario</th>
                         <th>Puesto</th>
                         <th>Telefono</th>

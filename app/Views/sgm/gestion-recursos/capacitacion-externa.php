@@ -20,10 +20,10 @@
             </button>
             <ul class="dropdown-menu animated rubberBand">
                 <li>
-                    <a class="dropdown-item" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
+                    <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
                 </li>
                 <li>
-                    <a class="dropdown-item" @click="openBuscar()"><i class="ti ti-search"></i> Buscar</a>
+                    <a class="dropdown-item pointer" @click="openBuscar()"><i class="ti ti-search"></i> Buscar</a>
                 </li>
                 <li>
                     <a class="dropdown-item"
@@ -35,7 +35,7 @@
     </div>
 
     <div class="datatables mt-3">
-        <div class="table-responsive">
+        <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
             <table id="table-capacitacion-externa" class="table table-striped table-bordered align-middle">
                 <thead>
                     <tr>
@@ -70,7 +70,13 @@
                 <div class="modal-header bg-primary">
 
                     <h4 class="modal-title text-white">
-                        Agregar programa anual de capacitacion externa
+                    <span i class="ti" :class="modo ==='edit' ? 'ti-edit' :'ti-calendar-plus fs-6'">
+
+</span>
+                        <span x-text="modo ==='edit' ? 'Editar programa de capacitacion' :'Nuevo programa de capacitacion'">
+
+</span>
+                       
                     </h4>
 
                     <button
@@ -82,38 +88,38 @@
 
                 <div class="modal-body">
 
-                    <label class="form-label">
+                    <label class="form-label mb-2">
                         * Nombre del curso:
                     </label>
 
                     <input
                         type="text"
-                        class="form-control"
+                        class="form-control mb-3"
                         x-model="form.nombre_curso"
                         @input="errors.nombre_curso = false"
                         :class="errors.nombre_curso ? 'is-invalid' : ''">
 
                     <div class="row">
                         <div class="col-sm-6 col-6">
-                            <label class="form-label mt-3">
+                            <label class="form-label mb-2">
                                 * Fecha programada:
                             </label>
 
                             <input
                                 type="date"
-                                class="form-control"
+                                class="form-control mb-3"
                                 x-model="form.fecha_programada"
                                 @input="errors.fecha_programada = false"
                                 :class="errors.fecha_programada ? 'is-invalid' : ''">
                         </div>
                         <div class="col-sm-6 col-6">
-                            <label class="form-label mt-3">
+                            <label class="form-label mb-2">
                                 * Duración:
                             </label>
 
                             <input
                                 type="text"
-                                class="form-control"
+                                class="form-control mb-3"
                                 x-model="form.duracion"
                                 @input="errors.duracion = false"
                                 :class="errors.duracion ? 'is-invalid' : ''">
@@ -121,13 +127,13 @@
                     </div>
 
 
-                    <label class="form-label mt-3">
+                    <label class="form-label mb-2">
                         * Instructor:
                     </label>
 
                     <input
                         type="text"
-                        class="form-control"
+                        class="form-control mb-3"
                         x-model="form.instructor"
                         @input="errors.instructor = false"
                         :class="errors.instructor ? 'is-invalid' : ''">
@@ -136,13 +142,13 @@
 
                         <div>
 
-                            <label class="form-label mt-3">
-                                Fecha real
+                            <label class="form-label mb-2">
+                                Fecha real:
                             </label>
 
                             <input
                                 type="date"
-                                class="form-control"
+                                class="form-control mb-3"
                                 x-model="form.fecha_real">
 
                         </div>
@@ -152,47 +158,48 @@
                     <div x-show="modo=='edit'">
 
                         <div class="mt-3">
-
-                            <hr>
-
-                            <label class="form-label">
-                                Nombre de las personas que asistieron al curso
+                            <label class="form-label mb-2">
+                                Nombre de las personas que asistieron al curso:
                             </label>
-                            <div
-                                class="select2-modal-field is-select2-pending"
-                                x-ref="personalWrapper">
+                            <div class="d-flex align-items-start mb-3">
 
-                                <select
-                                    id="selectPersonal"
-                                    x-ref="selectPersonal"
-                                    multiple>
+    <div
+        class="select2-modal-field is-select2-pending"
+        x-ref="personalWrapper">
 
-                                    <template
-                                        x-for="usuario in form.usuarios"
-                                        :key="usuario.id">
+        <select
+            id="selectPersonal"
+            x-ref="selectPersonal"
+            multiple>
 
-                                        <option
-                                            :value="usuario.id"
-                                            x-text="usuario.nombre">
-                                        </option>
+            <template
+                x-for="usuario in form.usuarios"
+                :key="usuario.id">
 
-                                    </template>
+                <option
+                    :value="usuario.id"
+                    x-text="usuario.nombre">
+                </option>
 
-                                </select>
+            </template>
 
-                            </div>
+        </select>
 
-                            <div class="text-end">
-                                <button
-                                    class="btn btn-info mt-2"
-                                    @click="guardarPersonal()">
+    </div>
 
-                                    <i class="ti ti-check"></i> Agregar Personal
+    <button
+        type="button"
+        class="btn bg-primary-subtle text-primary text-nowrap"
+        @click="guardarPersonal()">
 
-                                </button>
-                            </div>
+        <i class="ti ti-plus"></i> Nuevo
 
-                            <table class="table table-sm table-bordered mt-3">
+    </button>
+
+</div>
+
+                           
+                            <table class="table table-striped table-bordered text-nowrap align-middle mb-3">
 
                                 <thead>
 
@@ -222,12 +229,12 @@
                                                 x-text="persona.nombre">
                                             </td>
 
-                                            <td class="text-center">
+                                            <td class="text-center" width="48">
 
                                                 <a
                                                     @click="eliminarPersonal(persona.id)">
 
-                                                    <i class="ti ti-trash fs-6 text-danger"></i>
+                                                    <i class="ti ti-trash fs-6 text-danger pointer"></i>
 
                                                 </a>
 
@@ -240,21 +247,19 @@
                                 </tbody>
 
                             </table>
-
-                            <hr>
                         </div>
 
                     </div>
 
                     <div x-show="modo=='edit'">
 
-                        <div class="mt-4">
+                        <div class="mt-3">
 
-                            <label class="form-label">
-                                Evidencia
+                            <label class="form-label mb-2">
+                                Evidencia:
                             </label>
 
-                            <div class="d-flex gap-2">
+                            <div class="input-group mb-3">
 
                                 <input
                                     id="FileEvidencia"
@@ -262,8 +267,9 @@
                                     class="form-control">
 
                                 <button
-                                    class="btn btn-info"
+                                    class="btn bg-primary-subtle text-primary"
                                     @click="guardarEvidencia()">
+                                    <i class="ti ti-plus"></i>
                                     Agregar
 
                                 </button>
@@ -271,7 +277,7 @@
                             </div>
 
                             <table
-                                class="table table-sm mt-3">
+                                class="table table-striped table-bordered text-nowrap align-middle">
 
                                 <tbody>
 
@@ -291,11 +297,11 @@
 
                                             </td>
 
-                                            <td width="60">
+                                            <td width="48">
 
                                                 <a @click="eliminarEvidencia(evidencia.id)">
 
-                                                    <i class="ti ti-trash fs-7 text-danger"></i>
+                                                    <i class="ti ti-trash fs-6 text-danger pointer"></i>
 
                                                 </a>
 
@@ -329,7 +335,7 @@
                         class="btn btn-success"
                         @click="guardarRegistro()">
                         <i class="ti ti-check"></i>
-                        Guardar
+                      <span x-text="modo ==='create' ? 'Guardar': 'Actualizar'" ></span>
 
                     </button>
 
@@ -356,7 +362,8 @@
                 <div class="modal-header bg-primary">
 
                     <h4 class="modal-title text-white">
-                        Buscar programación externa
+                        <i class="ti ti-search fs-6"></i>
+                        Buscar programación
                     </h4>
 
                     <button
@@ -369,7 +376,7 @@
                 <div class="modal-body">
 
                     <label class="form-label">
-                        * Año
+                        * Año:
                     </label>
 
                     <input

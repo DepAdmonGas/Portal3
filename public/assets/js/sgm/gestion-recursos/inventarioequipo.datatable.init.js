@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
             },
 
             {
-                data: 'nombre'
+                data: 'nombre',
+                className: 'text-center'
             },
 
             {
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
             data: 'fecha_instalacion',
+            className: 'text-center',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';

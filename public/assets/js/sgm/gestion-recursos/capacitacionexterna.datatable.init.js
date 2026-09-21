@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
                 data: 'tipo',
-                className: 'text-start align-middle'
+                className: 'text-center align-middle'
             },
 
             {
@@ -173,12 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3" @click='capacitacion.editar(${row.id})'>
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" @click='capacitacion.editar(${row.id})'>
                                         <i class="fs-4 ti ti-edit"></i>Editar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}" 
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}" 
                                     ${!noDelete ? '' : `@click='capacitacion.eliminar(${row.id})'`}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>
