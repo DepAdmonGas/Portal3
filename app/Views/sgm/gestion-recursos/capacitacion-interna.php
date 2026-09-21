@@ -20,7 +20,7 @@
             </button>
             <ul class="dropdown-menu animated rubberBand">
                 <li>
-                    <a class="dropdown-item" @click="openBuscar()"><i class="ti ti-search"></i> Buscar</a>
+                    <a class="dropdown-item pointer" @click="openBuscar()"><i class="ti ti-search"></i> Buscar</a>
                 </li>
                 <li>
                     <a class="dropdown-item"
@@ -37,12 +37,12 @@
     </div>
 
     <div class="datatables mt-3">
-        <div class="table-responsive">
+        <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
             <table id="table-capacitacion-interna" class="table table-striped table-bordered align-middle">
                 <thead>
                     <tr>
                         <th class="text-center align-middle">No</th>
-                        <th class="text-center align-middle">Nombre del curso</th>
+                        <th class="text-start">Nombre del curso</th>
                         <th class="text-center align-middle">Tipo de capacitacion</th>
                         <th class="text-center align-middle">Fecha programada</th>
                         <th class="text-center align-middle">Duracion</th>
@@ -69,6 +69,7 @@
                 <div class="modal-header bg-primary">
 
                     <h4 class="modal-title text-white">
+                        <i class="ti ti-search"></i>
                         Buscar programación interna
                     </h4>
 
@@ -82,7 +83,7 @@
                 <div class="modal-body">
 
                     <label class="form-label">
-                        * Año
+                        * Año:
                     </label>
 
                     <input

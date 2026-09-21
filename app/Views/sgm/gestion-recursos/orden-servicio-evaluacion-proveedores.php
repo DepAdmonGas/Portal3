@@ -14,25 +14,24 @@
 <div id="sgm-content" x-data="{ ...actions(), ...evaluacion()}">
 
     <div class="text-end mt-2">
-        <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
-            <ul class="dropdown-menu animated rubberBand">
-                <li>
+       
+            
+            
+                <button class="btn bg-primary-subtle text-primary">
+
                     <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
-                </li>
-            </ul>
-        </div>
+                </button>
+            
+      
     </div>
 
     <div class="table-responsive mt-4">
-        <table class="table table-sm table-bordered table-striped">
+        <table class="table table-striped table-bordered mb-0  align-middle">
             <thead>
                 <tr>
-                    <th class="text-center align-middle">#</th>
-                    <th class="text-center align-middle">Fecha</th>
-                    <th class="text-center align-middle">Hora</th>
+                    <th class="text-center align-middle"whidt="96 px">#</th>
+                    <th class="text-center align-middle text-nowrap">Fecha</th>
+                    <th class="text-center align-middle text-nowrap">Hora</th>
                     <th class="align-middle">Descripción detallada del servicio</th>
                     <th colspan="3" class="text-center align-middle">
                         Fo.SGM.012 Orden de servicio
@@ -40,7 +39,7 @@
                     <th colspan="3" class="text-center align-middle">
                         Fo.SGM.013 Evaluación de proveedores
                     </th>
-                    <th class="text-center align-middle"><i class="ti ti-trash text-muted fs-7"></i></th>
+                    <th class="text-center align-middle"><i class="ti ti-trash text-muted fs-6"></i></th>
                 </tr>
             </thead>
             <tbody>
@@ -66,11 +65,13 @@
                             x-text="orden.numero">
                         </td>
                         <td
-                            class="text-center align-middle"
+                            class="text-center align-middle|
+                            text-nowrap"
                             x-text="orden.fecha">
                         </td>
                         <td
-                            class="text-center align-middle"
+                            class="text-center align-middle
+                            text-nowrap"
                             x-text="orden.hora">
                         </td>
                         <td class="align-middle"
@@ -79,13 +80,13 @@
                         <!-- Orden -->
                         <td class="text-center align-middle">
 
-                            <a
+                            <span
                                 class="pointer"
                                 @click="openEditar(orden.id)">
 
-                                <i class="ti ti-edit fs-7"></i>
+                                <i class="ti ti-edit fs-6 text-warning"></i>
 
-                            </a>
+                            </span>
 
                         </td>
 
@@ -95,7 +96,7 @@
                                 class="pointer"
                                 @click="detalleOrden(orden.id)">
 
-                                <i class="ti ti-file-description fs-7 text-info"></i>
+                                <i class="ti ti-file-description fs-6 text-info"></i>
 
                             </a>
 
@@ -108,7 +109,7 @@
                                 target="_blank"
                                 :href="'/sgm/gestion-recursos/orden-servicio-evaluacion-proveedores/pdf/'+orden.id">
 
-                                <i class="ti ti-file-type-pdf fs-7 text-danger"></i>
+                                <i class="ti ti-file-type-pdf fs-6 text-danger"></i>
 
                             </a>
 
@@ -118,13 +119,13 @@
 
                         <td class="text-center align-middle">
 
-                            <a
+                            <span
                                 class="pointer"
                                 @click="openEvaluacion(orden.id)">
 
-                                <i class="ti ti-edit fs-7"></i>
+                                <i class="ti ti-edit fs-6 text-warning"></i>
 
-                            </a>
+                            </span>
 
                         </td>
 
@@ -136,7 +137,7 @@
                                     class="pointer"
                                     @click="detalleEvaluacion(orden.id)">
 
-                                    <i class="ti ti-file-description fs-7 text-info"></i>
+                                    <i class="ti ti-file-description fs-6 text-info"></i>
 
                                 </a>
 
@@ -144,7 +145,7 @@
 
                             <template x-if="!orden.evaluacion">
 
-                                <i class="ti ti-x fs-7"></i>
+                                <i class="ti ti-x fs-6"></i>
 
                             </template>
 
@@ -159,7 +160,7 @@
                                     target="_blank"
                                     :href="'/sgm/gestion-recursos/orden-servicio-evaluacion-proveedores/evaluacion/pdf/'+orden.id">
 
-                                    <i class="ti ti-file-type-pdf fs-7 text-danger"></i>
+                                    <i class="ti ti-file-type-pdf fs-6 text-danger"></i>
 
                                 </a>
 
@@ -167,7 +168,7 @@
 
                             <template x-if="!orden.evaluacion">
 
-                                <i class="ti ti-x fs-7"></i>
+                                <i class="ti ti-x fs-6"></i>
 
                             </template>
 
@@ -178,7 +179,7 @@
                             <a
                                 class="pointer"
                                 @click="eliminar(orden.id)">
-                                <i class="ti ti-trash fs-7 text-danger"></i>
+                                <i class="ti ti-trash fs-6 text-danger"></i>
                             </a>
 
                         </td>
@@ -208,9 +209,8 @@
                 <div class="modal-header bg-primary">
 
                     <h4 class="modal-title text-white">
-
-                        Orden de servicio
-
+<span class="ti" :class="modo==='create'?'ti-clipboard-check':'ti-edit'"></span>
+<span x-text="modo==='create'?'Nueva orden de servicio':'Editar orden de servicio'"></span> 
                     </h4>
 
                     <button
@@ -226,7 +226,7 @@
 
                         <label class="form-label">
 
-                            * Descripción detallada del servicio que requiere
+                            * Descripción detallada del servicio que requiere:
 
                         </label>
 
@@ -244,7 +244,7 @@
 
                         <label class="form-label">
 
-                            * Justificación del servicio
+                            * Justificación del servicio:
 
                         </label>
 
@@ -306,6 +306,7 @@
                 <div class="modal-header bg-primary">
 
                     <h4 class="modal-title text-white">
+                        <i class="ti ti-folder-plus fs-6"></i>
                         Orden de servicio
                     </h4>
 
@@ -318,67 +319,70 @@
 
                 <div class="modal-body">
 
-                    <table class="table table-sm">
+                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
 
                         <tr>
-                            <th width="180">Fecha</th>
+                            <th class="text-center" width="180">Fecha</th>
                             <td x-text="detalle.fecha"></td>
                         </tr>
 
                         <tr>
-                            <th>Hora</th>
+                            <th class="text-center">Hora</th>
                             <td x-text="detalle.hora"></td>
                         </tr>
 
                         <tr>
-                            <th>Solicitante</th>
+                            <th class="text-center">Solicitante</th>
                             <td x-text="detalle.solicitante"></td>
                         </tr>
 
                         <tr>
-                            <th>Puesto</th>
+                            <th class="text-center">Puesto</th>
                             <td x-text="detalle.puesto"></td>
                         </tr>
 
                         <tr>
-                            <th>Razón social</th>
+                            <th class="text-center">Razón social</th>
                             <td x-text="detalle.razon_social"></td>
                         </tr>
 
                         <tr>
-                            <th>RFC</th>
+                            <th class="text-center">RFC</th>
                             <td x-text="detalle.rfc"></td>
                         </tr>
 
                         <tr>
-                            <th>Dirección</th>
+                            <th class="text-center">Dirección</th>
                             <td x-text="detalle.direccion"></td>
                         </tr>
 
                     </table>
 
-                    <div class="mt-3">
+                    <div>
 
-                        <label class="fw-bolder">
+                        <label class="form-label fw-bolder text-black mb-1">
                             Descripción detallada del servicio equipo que requiere:
                         </label>
 
-                        <div
-                            class="border rounded p-3 bg-light"
+                        <div>
+                            <p
+                        class="mb-3  text-black"
                             x-text="detalle.descripcion">
+                            </p>
                         </div>
 
                     </div>
 
-                    <div class="mt-3">
+                    <div>
 
-                        <label class="fw-bolder">
+                        <label class="form-label fw-bolder text-black mb-1">
                             Justificación del servicio que requiere:
                         </label>
 
-                        <div
-                            class="border rounded p-3 bg-light"
+                        <div>
+                        <p class="text-black"
                             x-text="detalle.justificacion">
+                        </p>
                         </div>
 
                     </div>
@@ -419,6 +423,7 @@
                 <div class="modal-header bg-primary">
 
                     <h4 class="modal-title text-white">
+                        <i class="ti ti-file-analytics fs-6"></i>
                         Evaluación de proveedores
                     </h4>
 
@@ -438,15 +443,19 @@
                         x-text="evaluacion.descripcion">
                     </h5>
 
+                    
+<!--------interferencia de mb----->
+
+
                     <div class="mb-3">
 
-                        <label class="form-label">
-                            Fecha de ejecución
+                        <label class="form-label mb-2">
+                            Fecha de ejecución:
                         </label>
 
                         <input
                             type="date"
-                            class="form-control"
+                            class="form-control mb-3"
                             x-model="evaluacion.fecha">
 
                     </div>
@@ -455,71 +464,71 @@
 
                         <div class="col-md-6">
 
-                            <label class="form-label">
-                                Hora inicio
+                            <label class="form-label mb-2">
+                                Hora inicio:
                             </label>
 
                             <input
                                 type="time"
-                                class="form-control"
+                                class="form-control mb-3"
                                 x-model="evaluacion.hora_inicio">
 
                         </div>
 
                         <div class="col-md-6">
 
-                            <label class="form-label">
-                                Hora término
+                            <label class="form-label mb-2">
+                                Hora término:
                             </label>
 
                             <input
                                 type="time"
-                                class="form-control"
+                                class="form-control mb-3"
                                 x-model="evaluacion.hora_termino">
 
                         </div>
 
                     </div>
 
-                    <div class="row mt-3">
+                    <div class="row">
 
                         <div class="col-md-6">
 
-                            <label class="form-label">
-                                Proveedor
+                            <label class="form-label mb-2">
+                                Proveedor:
                             </label>
 
                             <input
-                                class="form-control"
+                                class="form-control mb-3"
                                 x-model="evaluacion.nombre_proveedor">
 
                         </div>
 
                         <div class="col-md-6">
 
-                            <label class="form-label">
-                                No. acreditación
+                            <label class="form-label mb-2">
+                                No. acreditación:
                             </label>
 
                             <input
-                                class="form-control"
+                                class="form-control mb-3"
                                 x-model="evaluacion.no_acreditacion">
 
                         </div>
 
                     </div>
 
-                    <table class="table table-bordered mt-4">
+                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mt-2 mb-3">
 
                         <thead>
 
                             <tr>
 
-                                <th width="50">#</th>
+                                <th class="text-center" >#</th>
 
                                 <th>Aspecto</th>
 
-                                <th width="180">Respuesta</th>
+                                <th class="text-center" width="180">Respuesta</th>
 
                             </tr>
 
@@ -532,14 +541,17 @@
 
                                 <tr>
 
-                                    <td x-text="index+1"></td>
+                                    <td 
+                                    class="text-center"
+                                    width="96px"
+                                    x-text="index+1"></td>
 
                                     <td x-text="item.texto"></td>
 
-                                    <td class="p-0 m-0 align-middle">
+                                    <td class="p-0 m-0 align-middle text-center">
 
                                         <select
-                                            class="form-select border-0"
+                                            class="form-select border-0 text-center"
                                             x-model="evaluacion[item.campo]">
 
                                             <option value="2"></option>
@@ -560,8 +572,8 @@
 
                     <div class="mb-3">
 
-                        <label class="form-label">
-                            Observaciones
+                        <label class="form-label mb-2">
+                            Observaciones:
                         </label>
 
                         <textarea
@@ -574,8 +586,8 @@
 
                     <div>
 
-                        <label class="form-label">
-                            Personal que realiza la evaluación
+                        <label class="form-label mb-2">
+                            Personal que realiza la evaluación:
                         </label>
 
                         <select
@@ -591,6 +603,7 @@
                                 </option>
 
                             </template>
+                            <option>Selecciona una opcion...</option>
 
                         </select>
 
@@ -635,6 +648,7 @@
 
                 <div class="modal-header bg-info">
                     <h5 class="modal-title text-white">
+<i class="ti ti-chart-bar fs-6"></i>
                         Evaluación de proveedores
                     </h5>
 
@@ -647,7 +661,7 @@
 
                 <div class="modal-body" x-show="detalle">
 
-                    <table class="table table-bordered">
+                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-4">
                         <tbody>
 
                             <tr>
@@ -685,7 +699,7 @@
                         </tbody>
                     </table>
 
-                    <table class="table table-sm table-bordered mt-4">
+                    <table class="table table-striped table-bordered mb-4  align-middle">
 
                         <thead>
                             <tr>
@@ -761,21 +775,22 @@
 
                     </table>
 
-                    <div class="mt-4">
+                    <div>
 
-                        <label class="fw-bolder">
+                        <label class="mb-2 form-label fw-bolder">
                             Observaciones:
                         </label>
 
-                        <div
-                            class="border rounded p-3 mt-2"
-                            style="min-height:80px"
+                        <div>
+                            <p
+                            class="mb-3 text-dark"
                             x-text="detalle.observaciones">
+                            </p>
                         </div>
 
                     </div>
 
-                    <table class="table mt-4">
+                    <table class="table table-striped table-bordered  text-nowrap align-middle">
 
                         <tbody>
 
@@ -795,6 +810,15 @@
 
                     </table>
 
+                </div>
+                <div class="modal-footer">
+                      <button
+                        class="btn bg-danger-subtle text-danger"
+                        data-bs-dismiss="modal">
+
+                        <i class="ti ti-x"></i> Cancelar
+
+                    </button>
                 </div>
 
             </div>

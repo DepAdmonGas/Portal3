@@ -29,7 +29,7 @@
     </div>
 
     <div class="datatables mt-3">
-        <div class="table-responsive">
+        <div class="table-responsive overflow-x-auto overflow-y-hidden mb-3">
             <table id="table-capacitacion-induccion" class="table table-striped table-bordered align-middle">
                 <thead>
                     <tr>

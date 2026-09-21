@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
                 data:'curso',
+                className: 'text-estart',
                 render:function(data){
 
                     return `
@@ -75,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
             data: 'fecha_programada',
+            className:'text-center',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -116,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
             data: 'fecha_real',
+            className:'text-center',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -145,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {
                 data:'usuario',
-
+className:'text-center',
                 render:function(data){
 
                     return `
@@ -185,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
                     return `
-                    <i class="ti ti-x fs-7"></i>
+                    <i class="ti ti-x fs-7 text-danger"></i>
                     `;
 
                 }
