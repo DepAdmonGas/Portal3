@@ -1,6 +1,11 @@
 document.addEventListener('alpine:init', () => { 
     Alpine.data('inventarioForm', () => ({
 
+        getBaseUrl() {
+            const el = document.getElementById('container');
+            return el && el.dataset.baseUrl ? el.dataset.baseUrl : '/bitacora-aditivo';
+        },
+
         init() {
             window.inventarioInstance = this;
         },
@@ -50,7 +55,7 @@ document.addEventListener('alpine:init', () => {
                 diesel: this.diesel || 0
             };
 
-            let url = '/bitacora-aditivo/create-inventario';
+            let url = this.getBaseUrl() + '/create-inventario';
 
             try {
                 
@@ -74,7 +79,7 @@ document.addEventListener('alpine:init', () => {
 
         updateInventario() {
 
-        axios.get('/bitacora-aditivo/totalInventario')
+        axios.get(this.getBaseUrl() + '/totalInventario')
             .then(res => {
 
                 const gas = document.getElementById('inv-gasolina');

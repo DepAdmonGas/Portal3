@@ -129,6 +129,34 @@ function formatDate($fecha)
     return \Carbon\Carbon::parse($fecha)->format('Y-m-d');
 }
 
+function get_nombre_dia($fecha)
+{
+    if (empty($fecha)) return '';
+
+    $fechaStr = (string) $fecha;
+    if ($fechaStr === '0000-00-00' || str_contains($fechaStr, '-0001')) {
+        return '';
+    }
+
+    try {
+        $date = \Carbon\Carbon::parse($fecha);
+    } catch (\Throwable $e) {
+        return '';
+    }
+
+    $dias = [
+        0 => 'Domingo',
+        1 => 'Lunes',
+        2 => 'Martes',
+        3 => 'Miércoles',
+        4 => 'Jueves',
+        5 => 'Viernes',
+        6 => 'Sábado'
+    ];
+
+    return $dias[(int)$date->format('w')];
+}
+
 function nombremes($mes)
 {
     if ($mes == "01") $mes = "Enero";
@@ -144,6 +172,13 @@ function nombremes($mes)
     if ($mes == "11") $mes = "Noviembre";
     if ($mes == "12") $mes = "Diciembre";
     return $mes;
+}
+
+if (!function_exists('formatearCantidad')) {
+    function formatearCantidad($valor, int $decimales = 2): string
+    {
+        return number_format((float)$valor, $decimales);
+    }
 }
 
 function normalizarFecha($fecha): ?string

@@ -1,4 +1,5 @@
-<div id="container" class="mb-4" data-module-station-key="bitacora-aditivo">
+<?php $esImportacion = ($contexto ?? '') === 'importacion'; ?>
+<div id="container" class="mb-4" data-module-station-key="bitacora-aditivo" data-base-url="<?= $baseUrl ?>" data-importacion="<?= $esImportacion ? '1' : '0' ?>">
 
 <?php if (!$estacionId): ?>
 <div id="aditivo-inventario-empty-message" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
@@ -11,6 +12,8 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
 </div>
 <div id="aditivo-inventario-content">
 <?php endif; ?>
+
+
 
 <div class="row mt-4 mb-4">
     <div class="col-md-6 order-2 order-md-1">
@@ -26,8 +29,11 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
     </div>
     <div class="col-md-6 order-1 order-md-2">
 
-        <div class="text-end">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Agregar </button>
+        <div class="d-flex align-items-center justify-content-end gap-2">
+        <a href="<?= $baseUrl ?>" class="btn bg-danger-subtle text-danger">
+            <i class="ti ti-arrow-left"></i> Regresar
+        </a>
+        <?= (!$esImportacion && $capacidades['puedeCrear']) ? '<button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Nuevo </button>' : '' ?>
     </div>
 
     </div>
@@ -40,11 +46,11 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
           <thead>
 
             <tr>
-              <th>#</th>
-              <th>Fecha</th>
-              <th>Aditivo</th>
-              <th>Galones</th>
-              <th>Detalle</th>
+              <th class="text-center align-middle">#</th>
+              <th class="text-center align-middle">Fecha</th>
+              <th class="text-center align-middle">Aditivo</th>
+              <th class="text-center align-middle">Galones</th>
+              <th class="text-start align-middle">Detalle</th>
             </tr>
 
           </thead>
@@ -71,7 +77,8 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
 
             <!-- HEADER -->
             <div class="modal-header modal-colored-header bg-primary text-white">
-                <h4 class="modal-title text-white">Agregar aditivo al inventario</h4>
+                <h4 class="modal-title text-white"><i class="ti ti-flask"></i>
+ Nuevo aditivo al inventario</h4>
 
                 <button type="button"
                         class="btn-close btn-close-white"
@@ -84,13 +91,13 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
             <div class="modal-body">
 
                 <!-- Galones -->
-                <label class="form-label">*  Aditivo Gasolina Hitec 6590C <small>Galones</small> </label>
+                <label class="form-label">*  Aditivo Gasolina Hitec 6590C: <small>(Galones)</small> </label>
                 <input type="number"
                        class="form-control"
                        x-model="gasolina">
 
                 <!-- FECHA -->
-                <label class="form-label mt-3">* Aditivo Diesel Hitec 4133G <small>Galones</small> </label>
+                <label class="form-label mt-3">* Aditivo Diesel Hitec 4133G: <small>(Galones)</small> </label>
                 <input type="number"
                        class="form-control"
                        x-model="diesel">

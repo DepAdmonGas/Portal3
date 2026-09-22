@@ -5,6 +5,11 @@ const messageEl = document.getElementById('aditivo-inventario-empty-message');
 const contentEl = document.getElementById('aditivo-inventario-content');
 var table = null;
 
+function getBaseUrl() {
+var el = document.getElementById('container');
+return el && el.dataset.baseUrl ? el.dataset.baseUrl : '/bitacora-aditivo';
+}
+
 function showEmptyMessage() {
 if (contentEl) contentEl.style.display = 'none';
 if (messageEl) messageEl.style.display = '';
@@ -26,7 +31,7 @@ language: {
 url: '/assets/libs/datatables.net/js/es-ES.json'
 },
 ajax: {
-url: '/bitacora-aditivo/datatable-inventario',
+url: getBaseUrl() + '/datatable-inventario',
 type: 'GET',
 dataSrc: function (json) {
 permisos = json.permisos;
@@ -36,14 +41,15 @@ return json.data;
 columns: [
 {
 data: null,
-width: '60px',
-className: 'text-center',
+width: '98px',
+className: 'text-center align-middle',
 render: function (data, type, row, meta) {
 return meta.row + 1;
 }
 },
 {
 data: 'fecha',
+className: 'text-center align-middle',
 render: function (data, type) {
 if (!data) return '';
 const fecha = new Date(data);
@@ -57,9 +63,9 @@ if (type === 'filter') return formateada + ' ' + data;
 return data;
 }
 },
-{ data: 'aditivo' },
-{ data: 'galones' },
-{ data: 'detalle' }
+{ data: 'aditivo', className: 'text-center align-middle', },
+{ data: 'galones', className: 'text-center align-middle', },
+{ data: 'detalle', className: 'text-start align-middle', }
 ]
 });
 }

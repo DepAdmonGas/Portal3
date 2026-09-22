@@ -2,6 +2,11 @@ document.addEventListener('alpine:init', () => {
 
     Alpine.data('reporteForm', () => ({
 
+        getBaseUrl() {
+            const el = document.getElementById('container');
+            return el && el.dataset.baseUrl ? el.dataset.baseUrl : '/bitacora-aditivo';
+        },
+
         fecha: '',
         documento: null,
         loading: false,
@@ -79,7 +84,7 @@ document.addEventListener('alpine:init', () => {
         
         try {
         const res = await this.createAction({
-            url: '/bitacora-aditivo/create-reporte',
+            url: this.getBaseUrl() + '/create-reporte',
             data: formData,
             table: '#table-aditivo-reporte'
         });

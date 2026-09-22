@@ -19,8 +19,13 @@ class InventariosDiario extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'fecha' => 'date',
+        'fecha' => 'string',
         'estatus' => 'integer',
     ];
+
+    public function detalles()
+    {
+        return $this->hasMany(InventariosDiariosDetalle::class, 'id_reporte', 'id');
+    }
 }
 
