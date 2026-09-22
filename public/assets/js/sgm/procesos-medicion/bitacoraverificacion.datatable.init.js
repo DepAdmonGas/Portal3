@@ -26,11 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         columns: [
-            { data: 'equipo'},
-            { data: 'periodicidad'},
+            { data: 'equipo', 
+                className:'text-center'
+            },
+            { data: 'periodicidad',
+                className:'text-center'
+            },
 
             {
             data: 'fecha',
+            className:'text-center',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -105,23 +110,25 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
+ <li>
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!data.acciones.detalle ? 'disabled text-muted' : ''}"
+                                    ${!data.acciones.detalle ? '' : `@click="bitacoraVerificacion.abrir(${row.id})"`}
+                                    >
+                                        <i class="ti ti-eye"></i>Detalle
+                                    </a>
+                                </li>
+
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     ${!noEdit ? '' : `
                                     @click='goTo("/sgm/procesos-medicion/bitacora-verificacion-equipo-medicion/${row.id}")'
                                     `}>
                                         <i class="ti ti-edit"></i>Editar
                                     </a>
                                 </li>
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!data.acciones.detalle ? 'disabled text-muted' : ''}"
-                                    ${!data.acciones.detalle ? '' : `@click="bitacoraVerificacion.abrir(${row.id})"`}
-                                    >
-                                        <i class="ti ti-eye"></i>Detalle
-                                    </a>
-                                </li>
+                               
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!data.acciones.descargar ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!data.acciones.descargar ? 'disabled text-muted' : ''}"
                                     ${!data.acciones.descargar ? '' : `
                                       href="/sgm/procesos-medicion/bitacora-verificacion-equipo-medicion/pdf/${row.id}"`} download>
                                         <i class="ti ti-download"></i>Descargar

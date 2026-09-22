@@ -20,6 +20,9 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
        class="card shadow-sm h-100 w-100 border text-decoration-none card-hover overflow-hidden position-relative">
         
         <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+
+
+
             <!-- Bloque Superior: Icono + Título alineados -->
             <div class="d-flex align-items-center gap-3">
                 <!-- Icono de Categoría -->
@@ -27,6 +30,8 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
                      style="width: 60px; height: 60px; font-size: 1.1rem;">
                     <i class="ti ti-layout-grid text-white display-6"></i> 
                 </div>
+
+
 
                 <!-- Título y Número alineados a la derecha y centrados verticalmente -->
                 <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
@@ -40,6 +45,9 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
             </div>
         </div>
 
+
+
+        
         <!-- Pie de la tarjeta: Acción -->
         <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
             <span class="small">Ver elemento</span>

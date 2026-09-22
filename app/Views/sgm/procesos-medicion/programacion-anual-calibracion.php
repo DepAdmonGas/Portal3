@@ -13,19 +13,16 @@
 
 <div id="sgm-content" x-data="{ ...actions(), ...programacionAnual() }">
 
-    <div class="card mt-4">
-        <div class="card-body">
-
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center mb-3 mt-3">
                 <div class="ms-auto">
 
-                    <div class="dropdown dropstart">
-                        <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ti ti-dots fs-7"></i>
+                    <div class="dropdown dropcenter">
+                        <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-dots-vertical fs-4"></i>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <li>
-                                <a class="dropdown-item" href="javascript:void(0)" @click="openModalNuevo()"><i class="ti ti-plus"></i> Agregar</a>
+                                <a class="dropdown-item" href="javascript:void(0)" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="javascript:void(0)" @click="openModalBuscar()"><i class="ti ti-search"></i> Buscar</a>
@@ -39,59 +36,57 @@
                 </div>
             </div>
 
-            <table class="table table-sm table-bordered align-middle mt-3">
+            <template x-for="grupo in lista" :key="grupo.categoria">
 
-                <template x-if="lista.length === 0">
-                    <tbody>
-                        <tr>
-                            <td colspan="4" class="text-center text-muted py-4">
-                                No existe información para mostrar.
-                            </td>
-                        </tr>
-                    </tbody>
-                </template>
+    <div class="mb-4">
+        <div class="card">
+            <div class="card-header bg-primary mb-0">
+            <i class="ti ti-abacus fs-6 text-white"></i> 
+            <span  
+                class="card-title text-white"
+                x-text="grupo.categoria">
+                </span>
+            </div>
+            <div class="card-body p-0">
+<table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
-                <template x-for="grupo in lista" :key="grupo.categoria">
+            <thead>
+                <tr>
+                    <th
+                    class="text-center" 
+                    x-text="grupo.categoria"></th>
+                    <th class="text-center">Periodicidad</th>
+                    <th class="text-center">Fecha</th>
+                </tr>
+            </thead>
 
-                    <tbody>
+            <tbody>
 
-                        <tr>
-                            <td class="bg-muted text-white"><strong x-text="grupo.categoria"></strong></td>
-                            <td class="bg-muted text-white"><strong>Periodicidad</strong></td>
-                            <td class="bg-muted text-white"><strong>Fecha</strong></td>
-                        </tr>
+                <template x-for="item in grupo.items" :key="item.id">
 
-                        <template x-if="grupo.items.length === 0">
-                            <tr>
-                                <td colspan="4" class="text-center text-muted">
-                                    No existe información para esta categoría.
-                                </td>
-                            </tr>
-                        </template>
+                    <tr>
+                        <td class="text-center" x-text="item.nombre"></td>
 
-                        <template x-for="item in grupo.items" :key="item.id">
+                        <td class="text-center" x-text="item.periodicidad"></td>
 
-                            <tr>
-
-                                <td x-text="item.nombre"></td>
-
-                                <td x-text="item.periodicidad"></td>
-
-                                <td x-text="item.fecha"></td>
-
-
-                            </tr>
-
-                        </template>
-
-                    </tbody>
+                        <td class="text-center" x-text="item.fecha"></td>
+                    </tr>
 
                 </template>
 
-            </table>
+            </tbody>
 
+        </table>
+            </div>
         </div>
+
+        
+
     </div>
+
+</template>
+
+        
 
     <div
         class="modal fade"
@@ -101,7 +96,8 @@
             <div class="modal-content">
                 <div class="modal-header bg-primary">
                     <h4 class="modal-title text-white">
-                        Agregar
+                        <i class="ti ti-settings-plus"></i>
+                        Nuevo instrumento
                     </h4>
                     <button
                         class="btn-close btn-close-white"
@@ -117,7 +113,7 @@
                         @change="errors.equipo_id = false"
                         :class="errors.equipo_id ? 'is-invalid' : ''">
 
-                        <option value="">Seleccione...</option>
+                        <option value="">Seleccione una opcion...</option>
 
                         <template
                             x-for="equipo in equipos"
@@ -177,6 +173,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-primary">
                     <h4 class="modal-title text-white">
+                        <i class="ti ti-search"></i>
                         Buscar
                     </h4>
                     <button

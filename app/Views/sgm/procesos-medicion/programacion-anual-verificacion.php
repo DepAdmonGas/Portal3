@@ -13,19 +13,17 @@
 
 <div id="sgm-content" x-data="{ ...actions(), ...programacionAnual() }">
 
-    <div class="card mt-4">
-        <div class="card-body">
 
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center mb-3 mt-3">
                 <div class="ms-auto">
 
-                    <div class="dropdown dropstart">
-                        <a href="javascript:void(0)" class="link text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ti ti-dots fs-7"></i>
+                    <div class="dropdown dropcenter">
+                        <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-dots-vertical fs-4"></i>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <li>
-                                <a class="dropdown-item" href="javascript:void(0)" @click="openModalNuevo()"><i class="ti ti-plus"></i> Agregar</a>
+                                <a class="dropdown-item" href="javascript:void(0)" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="javascript:void(0)" @click="openModalBuscar()"><i class="ti ti-search"></i> Buscar</a>
@@ -39,7 +37,9 @@
                 </div>
             </div>
 
-            <table class="table table-sm table-bordered align-middle mt-3">
+<div class="table-responsive overflow-x-auto overflow-y-hidden">
+
+            <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
                 <template x-if="lista.length === 0">
                     <tbody>
@@ -56,10 +56,10 @@
                     <tbody>
 
                         <tr>
-                            <td class="bg-muted text-white"><strong x-text="grupo.categoria"></strong></td>
-                            <td class="bg-muted text-white"><strong>Periodicidad</strong></td>
-                            <td class="bg-muted text-white"><strong>Fecha</strong></td>
-                            <td class="bg-muted text-center text-white"><i class="ti ti-trash fs-7"></td>
+                            <td class="text-center"><strong x-text="grupo.categoria"></strong></td>
+                            <td class="text-center"><strong>Periodicidad</strong></td>
+                            <td class="text-center"><strong>Fecha</strong></td>
+                            <td class="text-center"><i class="ti ti-trash text-danger fs-6"></td>
                         </tr>
 
                         <template x-if="grupo.items.length === 0">
@@ -74,13 +74,13 @@
 
                             <tr>
 
-                                <td x-text="item.nombre + ' ' + item.detalle"></td>
+                                <td class="text-center" x-text="item.nombre + ' ' + item.detalle"></td>
 
-                                <td x-text="item.periodicidad"></td>
+                                <td class="text-center" x-text="item.periodicidad"></td>
 
-                                <td x-text="item.fecha"></td>
+                                <td class="text-center" x-text="item.fecha"></td>
 
-                                <td class="text-center"><a @click="eliminar(item.id, item.nombre)"><i class="ti ti-trash text-danger fs-7"></a></td>
+                                <td class="text-center " width="48px"><a @click="eliminar(item.id, item.nombre)"><i class="ti ti-trash pointer text-danger fs-6"></a></td>
 
 
                             </tr>
@@ -93,8 +93,9 @@
 
             </table>
 
-        </div>
-    </div>
+</div>
+
+   
 
     <div
         class="modal fade"
@@ -104,7 +105,8 @@
             <div class="modal-content">
                 <div class="modal-header bg-primary">
                     <h4 class="modal-title text-white">
-                        Agregar
+                        <i class="ti ti-calendar-plus"></i>
+                        Nuevo programa aunual
                     </h4>
                     <button
                         class="btn-close btn-close-white"
@@ -120,7 +122,7 @@
                         @change="errors.equipo_id = false"
                         :class="errors.equipo_id ? 'is-invalid' : ''">
 
-                        <option value="">Seleccione...</option>
+                        <option value="">Seleccione una opcion...</option>
 
                         <template
                             x-for="equipo in equipos"
@@ -180,6 +182,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-primary">
                     <h4 class="modal-title text-white">
+                        <i class="ti ti-search"></i>
                         Buscar
                     </h4>
                     <button
@@ -211,7 +214,7 @@
                         class="btn btn-success"
                         @click="buscar()">
 
-                        <i class="ti ti-check"></i> Buscar
+                        <i class="ti ti-search"></i> Buscar
 
                     </button>
 

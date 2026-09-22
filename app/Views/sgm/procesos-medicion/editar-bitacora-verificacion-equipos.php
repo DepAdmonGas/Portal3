@@ -17,23 +17,40 @@
     <template x-if="programa.equipo?.nombre == 'Sensor de nivel y temperatura'">
         <div>
 
-            <h5 class="mb-3 mt-3">
+            <div class="text-end mt-3 mb-3">
+
+                <button
+                    class="btn btn-success"
+                    @click="finalizar()">
+                    <i class="ti ti-check"></i>
+                    Finalizar 
+
+                </button>
+
+            </div>
+<!--------inicio de la primera card------>
+
+
+<div class="card">
+ <div class="card-header bg-primary">
+<h5 class="card-title text-white mb-0">
+   <i class="ti ti-settings-cog"></i>
                 Sensor de nivel y temperatura
             </h5>
+    </div>
 
-            <table class="table table-bordered table-sm fs-4">
-
-                <tbody>
-
-                    <tr>
+<div class="card-body p-0">
+<table class="table table-striped table-bordered mb-0  align-middle">
+  <tbody>
+                         <tr>
                         <td width="700" class="align-middle">
-                            <b>Fecha:</b>
+                            Fecha:
                         </td>
 
                         <td class="p-0">
                             <input
                                 type="date"
-                                class="form-control border-0"
+                                class="form-control border-0 text-center"
                                 x-model="bitacora.fecha"
                                 @change="guardar('fecha')">
                         </td>
@@ -41,33 +58,51 @@
 
                     <tr>
                         <td class="align-middle">
-                            <b>Hora:</b>
+                            Hora:
                         </td>
 
                         <td class="p-0">
                             <input
                                 type="time"
-                                class="form-control border-0"
+                                class="form-control border-0 text-center"
                                 x-model="bitacora.hora"
                                 @change="guardar('hora')">
                         </td>
                     </tr>
+                    </tbody>
 
-                    <tr>
-                        <td colspan="2" class="bg-muted text-white">
-                            <b>Verificación de sensores de nivel y temperatura</b>
-                        </td>
-                    </tr>
+
+</table>
+
+</div>
+                  
+</div>
+   
+
+<!---------inicio de la segunda card---->
+
+<div class="card">
+    <div class="card-header bg-primary">
+
+    <h5 class="card-title text-white mb-0">
+<i class="ti ti-progress-check"></i>
+                 Verificación de sensores de nivel y temperatura
+            </h5>
+    </div>
+
+<div class="card-body p-0">
+ <table class="table table-striped table-bordered mb-0  align-middle">
+<tbody>
 
                     <tr>
                         <td class="align-middle">
-                            <b>No. de tanque</b>
+                            No. de tanque
                         </td>
 
                         <td class="p-0">
                             <input
                                 type="text"
-                                class="form-control border-0"
+                                class="form-control border-0 text-center"
                                 x-model="bitacora.no_tanque"
                                 @change="guardar('no_tanque')">
                         </td>
@@ -75,13 +110,13 @@
 
                     <tr>
                         <td class="align-middle">
-                            <b>Marca</b>
+                            Marca
                         </td>
 
                         <td class="p-0">
                             <input
                                 type="text"
-                                class="form-control border-0"
+                                class="form-control border-0 text-center"
                                 x-model="bitacora.marca"
                                 @change="guardar('marca')">
                         </td>
@@ -89,13 +124,13 @@
 
                     <tr>
                         <td class="align-middle">
-                            <b>Capacidad</b>
+                            Capacidad
                         </td>
 
                         <td class="p-0">
                             <input
                                 type="text"
-                                class="form-control border-0"
+                                class="form-control border-0 text-center"
                                 x-model="bitacora.capacidad"
                                 @change="guardar('capacidad')">
                         </td>
@@ -103,13 +138,13 @@
 
                     <tr>
                         <td class="align-middle">
-                            <b>Producto que almacena</b>
+                            Producto que almacena
                         </td>
 
                         <td class="p-0">
                             <input
                                 type="text"
-                                class="form-control border-0"
+                                class="form-control border-0 text-center"
                                 x-model="bitacora.producto"
                                 @change="guardar('producto')">
                         </td>
@@ -117,16 +152,16 @@
 
                     <tr>
                         <td class="align-middle">
-                            <b>
+                        
                                 La verificación es realizada por personal interno o
                                 externo (en caso de ser externo indicar la empresa).
-                            </b>
+                        
                         </td>
 
                         <td class="p-0">
                             <textarea
                                 rows="3"
-                                class="form-control border-0"
+                                class="form-control border-0 text-center"
                                 x-model="bitacora.interno_externo"
                                 @change="guardar('interno_externo')"></textarea>
                         </td>
@@ -134,16 +169,16 @@
 
                     <tr>
                         <td class="align-middle">
-                            <b>
+                          
                                 Al iniciar la calibración se asegura que el producto se
                                 encuentre sin movimiento
-                            </b>
+                     
                         </td>
 
                         <td class="p-0">
                             <input
                                 type="text"
-                                class="form-control border-0"
+                                class="form-control border-0 text-center"
                                 x-model="bitacora.verificacion_movimiento"
                                 @change="guardar('verificacion_movimiento')">
                         </td>
@@ -151,16 +186,16 @@
 
                     <tr>
                         <td class="align-middle">
-                            <b>
+                        
                                 Método para determinar el nivel líquido dentro del tanque
                                 (Inmersión o medida seca)
-                            </b>
+                     
                         </td>
 
                         <td class="p-0">
                             <input
                                 type="text"
-                                class="form-control border-0"
+                                class="form-control border-0 text-center"
                                 x-model="bitacora.metodo_nivel"
                                 @change="guardar('metodo_nivel')">
                         </td>
@@ -169,22 +204,31 @@
                 </tbody>
 
             </table>
+</div>
+</div>
 
+            <!-----------------card de la ultima parte------->
             <template
                 x-for="categoria in resultados"
                 :key="categoria.titulo">
 
                 <div class="mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary">
+                            <span class="card-title text-white mb-0" x-text="categoria.titulo"></span>
+                        </div>
 
-                    <table class="table table-bordered table-sm fs-4">
+
+                      <div class="card-body p-0">
+                    <table class="table table-striped table-bordered mb-0  align-middle">
 
                         <thead>
 
                             <tr>
 
-                                <th class="bg-muted text-white" x-text="categoria.titulo"></th>
+                                <th>Preguntas</th>
 
-                                <th class="bg-muted text-white" width="250">
+                                <th class="text-center" width="250">
                                     Resultado
                                 </th>
 
@@ -208,7 +252,7 @@
 
                                         <input
                                             type="text"
-                                            class="form-control border-0"
+                                            class="form-control border-0 text-center"
                                             x-model="item.resultado"
                                             @change="guardarResultado(item)">
 
@@ -222,11 +266,13 @@
 
                     </table>
 
+                      </div>  
+                    </div>
                 </div>
 
             </template>
 
-            <div class="alert alert-light text-black mt-4">
+            <div class="alert alert-warning text-black mt-4">
 
                 <b>Nota 1:</b>
 
@@ -234,26 +280,18 @@
                 aplicaciones fiscales o transferencia de custodia los equipos deben
                 cumplir con un EMP de ±4 mm en todo el intervalo de medición.
 
-                <hr>
 
-                <b>Nota 2:</b>
+
+<div class="mt-2"> <b>Nota 2:</b>
 
                 Referente a la temperatura puede existir una variación igual o menor
                 a 0.5 °C.
+            </div>
+               
 
             </div>
 
-            <div class="text-end">
-
-                <button
-                    class="btn btn-primary"
-                    @click="finalizar()">
-                    <i class="ti ti-check"></i>
-                    Finalizar bitácora de verificación
-
-                </button>
-
-            </div>
+        
 
         </div>
     </template>
