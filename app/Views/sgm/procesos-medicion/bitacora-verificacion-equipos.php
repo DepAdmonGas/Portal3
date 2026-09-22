@@ -14,14 +14,14 @@
 <div id="sgm-content" x-data="{ ...actions(), ...bitacoraVerificacion() }">
 
     <div class="datatables mt-4">
-        <div class="table-responsive">
+        <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
             <table class="table table-bordered align-middle" id="table-bitacora-verificacion-equipos">
                 <thead>
                     <tr class="bg-primary text-white">
-                        <th>Equipo a calibrar</th>
-                        <th>Periodicidad</th>
-                        <th>Fechas programadas</th>
-                        <th>Estatus</th>
+                        <th class="text-center">Equipo a calibrar</th>
+                        <th class="text-center">Periodicidad</th>
+                        <th class="text-center">Fechas programadas</th>
+                        <th class="text-center">Estatus</th>
                         <th class="text-center align-middle" width="35px">
                             <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
                         </th>
@@ -45,6 +45,7 @@
 
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white">
+                        <i class="ti ti-eye"></i>
                         Detalle de bitácora de verificación
                     </h5>
 
@@ -60,120 +61,169 @@
                     <template x-if="programa.equipo?.nombre == 'Sensor de nivel y temperatura'">
                         <div>
 
-                            <h5 class="mb-3 mt-3">
+<!-----------inicio de la primera card detalle------->
+                            <div class="card">
+                                <div class="card-header bg-primary">
+                                    <h5 class="card-title text-white mb-0">
+                                        <i class="ti ti-settings-cog"></i>
                                 Sensor de nivel y temperatura
                             </h5>
+                                </div>
 
-                            <table class="table table-bordered table-sm fs-4">
-
-                                <tbody>
-
-                                    <tr>
+                            <div class="card-body p-0">
+                                <table class="table table-striped table-bordered  align-middle mb-0">
+ <tbody>
+  <tr>
                                         <td width="700" class="align-middle">
-                                            <b>Fecha:</b>
+                                        Fecha:
                                         </td>
 
-                                        <td x-text="bitacora.fecha"></td>
+                                        <td
+                                        class="text-center"
+                                         x-text="bitacora.fecha"></td>
                                     </tr>
 
                                     <tr>
                                         <td class="align-middle">
-                                            <b>Hora:</b>
+                                        Hora:
                                         </td>
 
-                                        <td x-text="bitacora.hora"></td>
+                                        <td
+                                        class="text-center" 
+                                        x-text="bitacora.hora"></td>
                                     </tr>
 
+ </tbody>
+
+                                  
+                                </table>
+
+                               
+                            </div>
+
+                            </div>
+
+<!------------inicio de la segunda card detalle---------->
+<div class="card">
+<div class="card-header bg-primary">
+<h5 class="card-title text-white mb-0">
+    <i class="ti ti-progress-check"></i>
+                                Verificación de sensores de nivel y temperatura
+                            </h5>
+</div>
+<div class="card-body p-0">
+<table class="table table-striped table-bordered  align-middle mb-0">
+<tbody>
                                     <tr>
-                                        <td colspan="2" class="bg-muted text-white">
-                                            <b>Verificación de sensores de nivel y temperatura</b>
+                                        <td class="align-middle">
+                                        No. de tanque
                                         </td>
+
+                                        <td 
+                                        class="text-center"
+                                        x-text="bitacora.no_tanque"></td>
                                     </tr>
 
                                     <tr>
                                         <td class="align-middle">
-                                            <b>No. de tanque</b>
+                                        Marca
                                         </td>
 
-                                        <td x-text="bitacora.no_tanque"></td>
+                                        <td 
+                                        class="text-center"
+                                        x-text="bitacora.marca"></td>
                                     </tr>
 
                                     <tr>
                                         <td class="align-middle">
-                                            <b>Marca</b>
+                                        Capacidad
                                         </td>
 
-                                        <td x-text="bitacora.marca"></td>
+                                        <td 
+                                        class="text-center"
+                                        x-text="bitacora.capacidad"></td>
                                     </tr>
 
                                     <tr>
                                         <td class="align-middle">
-                                            <b>Capacidad</b>
+                                        Producto que almacena
                                         </td>
 
-                                        <td x-text="bitacora.capacidad"></td>
+                                        <td 
+                                        class="text-center"
+                                        x-text="bitacora.producto"></td>
                                     </tr>
 
                                     <tr>
                                         <td class="align-middle">
-                                            <b>Producto que almacena</b>
-                                        </td>
-
-                                        <td x-text="bitacora.producto"></td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="align-middle">
-                                            <b>
+                                        
                                                 La verificación es realizada por personal interno o
                                                 externo (en caso de ser externo indicar la empresa).
-                                            </b>
+                                            
                                         </td>
 
-                                        <td x-text="bitacora.interno_externo"></td>
+                                        <td 
+                                        class="text-center"
+                                        x-text="bitacora.interno_externo"></td>
                                     </tr>
 
                                     <tr>
                                         <td class="align-middle">
-                                            <b>
+                                        
                                                 Al iniciar la calibración se asegura que el producto se
                                                 encuentre sin movimiento
-                                            </b>
+                                            
                                         </td>
 
-                                        <td x-text="bitacora.verificacion_movimiento"></td>
+                                        <td 
+                                        class="text-center"
+                                        x-text="bitacora.verificacion_movimiento"></td>
                                     </tr>
 
                                     <tr>
                                         <td class="align-middle">
-                                            <b>
+                                        
                                                 Método para determinar el nivel líquido dentro del tanque
                                                 (Inmersión o medida seca)
-                                            </b>
+                                            
                                         </td>
 
-                                        <td x-text="bitacora.metodo_nivel"></td>
+                                        <td 
+                                        class="text-center"
+                                        x-text="bitacora.metodo_nivel"></td>
                                     </tr>
-
-                                </tbody>
-
+</tbody>
                             </table>
+</div>
+</div>
+                            
+ 
 
-                            <template
+                            <!---------tercera y utima card---->
+                    <template
                                 x-for="categoria in resultados"
                                 :key="categoria.titulo">
 
                                 <div class="mb-4">
+                                    <div class="card">
+                                        <div class="card-header bg-primary">
+<span class="card-title text-white" x-text="categoria.titulo"></span>
+                                        </div>
+                
+                                        <div class="card-body p-0">
 
-                                    <table class="table table-bordered table-sm fs-4">
+                                    <table class="table table-striped table-bordered  align-middle mb-0">
 
                                         <thead>
 
                                             <tr>
 
-                                                <th class="bg-muted text-white" x-text="categoria.titulo"></th>
+                                                
+                                                    <th>
+                                                    pregunta
+                                                </th>
 
-                                                <th class="bg-muted text-white" width="250">
+                                                <th class="text-center" width="250">
                                                     Resultado
                                                 </th>
 
@@ -191,7 +241,9 @@
 
                                                     <td x-text="item.lista.pregunta"></td>
 
-                                                    <td x-text="item.resultado"></td>
+                                                    <td
+                                                    class="text-center" 
+                                                    x-text="item.resultado"></td>
 
                                                 </tr>
 
@@ -200,25 +252,28 @@
                                         </tbody>
 
                                     </table>
+                                        </div>
+                                    </div>
+
 
                                 </div>
 
                             </template>
 
-                            <div class="alert alert-light text-black mt-4">
+                            <div class="alert alert-warning text-black mt-4">
 
                                 <b>Nota 1:</b>
 
                                 Referente al nivel puede existir una variación de ±3 mm; para
                                 aplicaciones fiscales o transferencia de custodia los equipos deben
                                 cumplir con un EMP de ±4 mm en todo el intervalo de medición.
-
-                                <hr>
-
-                                <b>Nota 2:</b>
+<div class="mt-2">
+    <b>Nota 2:</b>
 
                                 Referente a la temperatura puede existir una variación igual o menor
                                 a 0.5 °C.
+</div>
+                                
 
                             </div>
 
@@ -382,7 +437,16 @@
                     </template>
 
                 </div>
+                <div class="modal-footer">
+   <button class="btn bg-danger-subtle text-danger"
+                        data-bs-dismiss="modal">
 
+                    <i class="ti ti-x"></i> Cerrar
+
+                </button>
+
+                </div>
+             
             </div>
 
         </div>

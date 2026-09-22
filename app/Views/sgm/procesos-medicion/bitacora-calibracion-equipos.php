@@ -14,13 +14,13 @@
 <div id="sgm-content" x-data="{ ...actions(), ...bitacoraCalibracion() }">
 
     <div class="datatables mt-4">
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle" id="table-bitacora-calibracion-equipos">
+        <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+            <table class="table table-striped table-bordered text-nowrap align-middle mb-0" id="table-bitacora-calibracion-equipos">
                 <thead>
                     <tr class="bg-primary text-white">
-                        <th>Equipo a calibrar</th>
-                        <th>Periodicidad</th>
-                        <th>Fechas programadas</th>
+                        <th class="text-center">Equipo a calibrar</th>
+                        <th class="text-center">Periodicidad</th>
+                        <th class="text-center">Fechas programadas</th>
                         <th>Estatus</th>
                         <th class="text-center align-middle" width="35px">
                             <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
@@ -45,6 +45,7 @@
 
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white">
+                        <i class="ti ti-eye"></i>
                         Detalle de bitácora de calibración
                     </h5>
 
@@ -57,82 +58,82 @@
 
                 <div class="modal-body">
 
-                    <table class="table table-bordered table-sm align-middle">
+                    <table class="table table-striped table-bordered align-middle mb-5">
                         <tbody>
                             <tr>
-                                <td class="align-middle" width="700"><b>Fecha:</b></td>
-                                <td><label x-text="bitacora.fecha"></label></td>
+                                <td class="align-middle" width="700">Fecha:</td>
+                                <td class="text-center"><label x-text="bitacora.fecha"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Hora:</b></td>
-                                <td><label x-text="bitacora.hora"></label></td>
+                                <td class="align-middle" width="700">Hora:</td>
+                                <td class="text-center"><label x-text="bitacora.hora"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Nombre del equipo a calibrar:</b></td>
-                                <td class="align-middle"><label class="fw-bolder" x-text="bitacora.nombre_equipo"></label></td>
+                                <td class="align-middle" width="700">Nombre del equipo a calibrar:</td>
+                                <td class="align-middle text-center"><label class="fw-bolder" x-text="bitacora.nombre_equipo"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Marca:</b></td>
-                                <td><label x-text="bitacora.marca"></label></td>
+                                <td class="align-middle" width="700">Marca:</td>
+                                <td class="text-center"><label x-text="bitacora.marca"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Capacidad:</b></td>
-                                <td><label x-text="bitacora.capacidad"></label></td>
+                                <td class="align-middle" width="700">Capacidad:</td>
+                                <td class="text-center"><label x-text="bitacora.capacidad"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Producto que almacena:</b></td>
-                                <td><label x-text="bitacora.almacena"></label></td>
+                                <td class="align-middle" width="700">Producto que almacena:</td>
+                                <td class="text-center"><label x-text="bitacora.almacena"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Nombre del laboratorio o unidad de verificación encargada de la calibración:</b></td>
-                                <td><label x-text="bitacora.nombre_laboratorio"></label></td>
+                                <td class="align-middle" width="700">Nombre del laboratorio o unidad de verificación encargada de la calibración:</td>
+                                <td class="text-center"><label x-text="bitacora.nombre_laboratorio"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>No de acreditación o aprobación:</b></td>
-                                <td><label x-text="bitacora.no_acreditacion"></label></td>
+                                <td class="align-middle" width="700">No de acreditación o aprobación:</td>
+                                <td class="text-center"><label x-text="bitacora.no_acreditacion"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Método utilizado para la calibración:</b></td>
-                                <td><label x-text="bitacora.metodo_calibracion"></label></td>
+                                <td class="align-middle" width="700">Método utilizado para la calibración:</td>
+                                <td class="text-center"><label x-text="bitacora.metodo_calibracion"></label></td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <h5>Descripción de patrones utilizados</h5>
+                    <h5 class="mt-4 fw-semibold">Descripción de patrones utilizados</h5>
 
-                    <table class="table table-bordered table-sm mt-3">
+                    <table class="table table-striped table-bordered text-nowrap align-middle mb-5">
                         <tbody>
                             <tr>
-                                <td class="align-middle" width="700"><b>Nombre del patrón</b></td>
-                                <td><label x-text="bitacora.nombre_patron"></label></td>
+                                <td class="align-middle" width="700">Nombre del patrón</td>
+                                <td class="text-center"><label x-text="bitacora.nombre_patron"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Marca y modelo y serie</b></td>
-                                <td><label x-text="bitacora.marca_modelo_serie"></label></td>
+                                <td class="align-middle" width="700">Marca y modelo y serie</td>
+                                <td class="text-center"><label x-text="bitacora.marca_modelo_serie"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Resolución</b></td>
-                                <td><label x-text="bitacora.resolucion"></label></td>
+                                <td class="align-middle" width="700">Resolución</td>
+                                <td class="text-center"><label x-text="bitacora.resolucion"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Incertidumbre</b></td>
-                                <td><label x-text="bitacora.incertidumbre"></label></td>
+                                <td class="align-middle" width="700">Incertidumbre</td>
+                                <td class="text-center"><label x-text="bitacora.incertidumbre"></label></td>
                             </tr>
                             <tr>
-                                <td class="align-middle" width="700"><b>Vigencia de su certificado de calibración</b></td>
-                                <td><label x-text="bitacora.vigencia_certificado"></label></td>
+                                <td class="align-middle" width="700">Vigencia de su certificado de calibración</td>
+                                <td class="text-center"><label x-text="bitacora.vigencia_certificado"></label></td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <table class="table table-bordered table-sm align-middle"
+                    <table class="table table-striped table-bordered text-nowrap align-middle mb-0"
                         x-show="detalles.length > 0">
 
                         <thead>
                             <tr>
-                                <th>Equipo</th>
-                                <th>Identificación</th>
-                                <th>Resultado</th>
+                                <th class="text-center">Equipo</th>
+                                <th class="text-center">Identificación</th>
+                                <th class="text-center">Resultado</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -141,12 +142,15 @@
                                 :key="detalle.id">
                                 <tr>
                                     <td
+                                    class="text-center"
                                         x-text="detalle.equipo.nombre">
                                     </td>
                                     <td
+                                    class="text-center"
                                         x-text="detalle.equipo.identificacion">
                                     </td>
-                                    <td>
+                                    <td
+                                    class="text-center" >
                                         <label x-text="detalle.resultado"></label>
                                     </td>
                                 </tr>
@@ -154,6 +158,14 @@
                         </tbody>
                     </table>
 
+                </div>
+                <div class="modal-footer">
+ <button class="btn bg-danger-subtle text-danger"
+                        data-bs-dismiss="modal">
+
+                    <i class="ti ti-x"></i> Cerrar
+
+                </button>
                 </div>
 
             </div>

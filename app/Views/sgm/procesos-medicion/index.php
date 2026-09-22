@@ -21,53 +21,178 @@
 
 <div class="row mt-4">
 
-    <div class="col-md-3">
-        <a href="/sgm/procesos-medicion/programa-anual-calibracion-patrones-instrumentos-medida">
-            <div class="card bg-primary mt-2">
-                <div class="card-body text-white fs-5">1. Programa anual de calibración de patrones e instrumentos de medida</div>
+<!----------------card  programa anual de claibracion----->
+<div class="col-md-6 d-flex align-items-stretch mb-4">
+        <a href="/sgm/procesos-medicion/programa-anual-calibracion-patrones-instrumentos-medida"
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                         <i class="ti ti-number-1 text-white display-6"></i>
+                    </div>
+
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                          Programa anual de calibración de patrones e instrumentos de medida
+                        </h4>
+                    </div>
+                </div>
             </div>
-        </a>
-    </div>
 
-    <div class="col-md-3">
-        <a href="/sgm/procesos-medicion/bitacora-calibracion-equipos">
-            <div class="card bg-info mt-2">
-                <div class="card-body">
-                    <?php if ($pendientesCalibracion > 0): ?>
-                        <span class="badge rounded-pill text-bg-light float-end fs-1">
-                            <?= $pendientesCalibracion ?>
-                        </span>
-                    <?php endif; ?>
-
-                    <div class="fs-5 text-white">2. Bitácora la para la calibración de equipos</div>
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-narrow-right fs-5"></i>
                 </div>
             </div>
         </a>
     </div>
 
-    <div class="col-md-3">
-        <a href="/sgm/procesos-medicion/programa-anual-verificacion-equipos">
-            <div class="card bg-primary mt-2">
-                <div class="card-body text-white fs-5">3. Programa anual de verificación de equipos</div>
-            </div>
-        </a>
-    </div>
 
-    <div class="col-md-3">
-        <a href="/sgm/procesos-medicion/bitacora-verificacion-equipo-medicion">
-            <div class="card bg-info mt-2">
-                <div class="card-body">
-                    <?php if ($pendientesVerificacion > 0): ?>
-                        <span class="badge rounded-pill text-bg-light float-end fs-1">
-                            <?= $pendientesVerificacion ?>
-                        </span>
-                    <?php endif; ?>
-                    <div class="fs-5 text-white">4. Bitácora para la verificación de equipos de medicion</div>
+    <!------------card de bitracora para la calibracion de equipos-------->
+<?php if ($pendientesCalibracion > 0): ?>
+
+<div class="col-md-6 d-flex align-items-stretch mb-4">
+    <a href="/sgm/procesos-medicion/bitacora-calibracion-equipos" 
+       class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+        
+        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+
+
+
+            <!-- Bloque Superior: Icono + Título alineados -->
+            <div class="d-flex align-items-center gap-3">
+                <!-- Icono de Categoría -->
+                <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 60px; height: 60px; font-size: 1.1rem;">
+                     <i class="ti ti-number-2 text-white display-6"></i>
+
+                </div>
+
+
+
+                <!-- Título y Número alineados a la derecha y centrados verticalmente -->
+                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                    <span class="badge bg-primary-subtle text-primary fw-bold mb-2">
+                         Pendientes:
+                    <?= $pendientesCalibracion ?>
+                       
+                    </span>
+<h4 class="fw-bold text-dark mb-0 lh-sm">
+                       Bitácora la para la calibración de equipos
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+
+
+        
+        <!-- Pie de la tarjeta: Acción -->
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+            <span class="small">Ver detalle</span>
+            <div class="icon-transition">
+                <i class="ti ti-arrow-right fs-5"></i>
+            </div>
+        </div>
+
+    </a>
+</div>
+<?php endif; ?>
+    
+
+
+
+
+
+    <!-----------card de programa anual de verificacion de equipos----->
+<div class="col-md-6 d-flex align-items-stretch mb-4">
+        <a  href="/sgm/procesos-medicion/programa-anual-verificacion-equipos"
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Icono circular -->
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px;">
+                        <i class="ti ti-number-3 text-white display-6"></i>
+                    </div>
+
+                    <!-- Título a la derecha -->
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">
+                        Programa anual de verificación de equipos
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de la tarjeta -->
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver detalle</span>
+                <div class="icon-transition">
+                   <i class="ti ti-arrow-narrow-right fs-5"></i>
                 </div>
             </div>
         </a>
     </div>
 
+
+
+<!--------card de vitacora para la verificacion------->
+ <?php if ($pendientesVerificacion > 0): ?>
+
+<div class="col-md-6 d-flex align-items-stretch mb-4">
+    <a href="/sgm/procesos-medicion/bitacora-verificacion-equipo-medicion" 
+      class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+        
+        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+
+
+
+            <!-- Bloque Superior: Icono + Título alineados -->
+            <div class="d-flex align-items-center gap-3">
+                <!-- Icono de Categoría -->
+                <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 60px; height: 60px; font-size: 1.1rem;">
+                    <i class="ti ti-number-4 text-white display-6"></i>
+                </div>
+
+
+
+                <!-- Título y Número alineados a la derecha y centrados verticalmente -->
+                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                    <span class="badge bg-primary-subtle text-primary fw-bold mb-2">
+                        Pendientes:
+                         <?= $pendientesVerificacion ?>
+                       
+                    </span>
+<h4 class="fw-bold text-dark mb-0 lh-sm">
+                  Bitácora para la verificación de equipos de medicion
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+
+
+        
+        <!-- Pie de la tarjeta: Acción -->
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+            <span class="small">Ver detalle</span>
+            <div class="icon-transition">
+                <i class="ti ti-arrow-right fs-5"></i>
+            </div>
+        </div>
+
+    </a>
+</div>
+<?php endif; ?>
 </div>
 
 <!-- ------------------------- -->
