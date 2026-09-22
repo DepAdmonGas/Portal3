@@ -32,5 +32,10 @@ class InventariosDiariosDetalle extends Model
         'oct91' => 'integer',
         'diesel' => 'integer',
     ];
+
+    public function reporte()
+    {
+        return $this->belongsTo(InventariosDiario::class, 'id_reporte', 'id');
+    }
 }
 

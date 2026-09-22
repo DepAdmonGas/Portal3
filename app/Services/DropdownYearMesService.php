@@ -59,7 +59,7 @@ return '<span class="text-muted">Sin años</span>';
 }
 
 $html = '
-<a class="dropdown-toggle breadcrumb-item active" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
+<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
 <i class="ti ti-calendar"></i> <span class="ms-1">' . $idYear . '</span> 
 </a>
 
@@ -69,7 +69,7 @@ foreach ($years as $year) {
 
 $html .= '
 <li class="pointer">
-<a class="dropdown-item" x-on:click.prevent="cambiarYearMes('. $year . ',' . $idMes . ')">
+<a class="dropdown-item pointer" x-on:click.prevent="cambiarYearMes('. $year . ',' . $idMes . ')">
 <i class="ti ti-calendar"></i> <span class="ms-1">'. $year .'</span>
 </a>
 </li>';
@@ -90,7 +90,7 @@ public static function dropdownYearManual($idYear, $idMes, $yearInicio = 2020)
 $yearActual = date("Y");
 
 $html = '
-<a class="dropdown-toggle breadcrumb-item active" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 <i class="ti ti-calendar"></i> <span class="ms-1">' . $idYear . '</span> 
 </a>
 
@@ -101,7 +101,7 @@ for ($year = $yearActual; $year >= $yearInicio; $year--) {
 $html .= '
 <li class="pointer">
 
-<a class="dropdown-item" x-on:click.prevent="cambiarYearMes('. $year . ',' . $idMes . ')">
+<a class="dropdown-item pointer" x-on:click.prevent="cambiarYearMes('. $year . ',' . $idMes . ')">
 <i class="ti ti-calendar"></i> <span class="ms-1">'. $year .'</span>
 </a>
 
@@ -123,7 +123,7 @@ $yearActual = date("Y");
 $mesActual  = date("n");
 
 $html = '
-<a class="dropdown-toggle breadcrumb-item active" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 <i class="ti ti-calendar-stats"></i> <span class="ms-1">' . nombremes($idMes) . '</span> 
 </a>
 
@@ -141,7 +141,7 @@ $clase = "d-none";
 
 $html .= '
 <li class="' . $clase . '">
-<a class="dropdown-item" x-on:click.prevent="cambiarYearMes(' . $idYear . ',' . $i . ')">
+<a class="dropdown-item pointer" x-on:click.prevent="cambiarYearMes(' . $idYear . ',' . $i . ')">
 <i class="fa-solid fa-calendar-days"></i>
 <i class="ti ti-calendar-stats"></i></i> <span class="ms-1">'. nombremes($i) .'</span>
 </a>

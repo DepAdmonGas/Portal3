@@ -2,6 +2,11 @@ document.addEventListener('alpine:init', () => {
 
     Alpine.data('aditivoForm', () => ({
 
+        getBaseUrl() {
+            const el = document.getElementById('container');
+            return el && el.dataset.baseUrl ? el.dataset.baseUrl : '/bitacora-aditivo';
+        },
+
         init() {
             window.aditivoInstance = this;
         },
@@ -154,7 +159,7 @@ document.addEventListener('alpine:init', () => {
 
         if (this.mode === 'create') {
 
-            url = '/bitacora-aditivo/create';
+            url = this.getBaseUrl() + '/create';
 
             payload = {
                 litros: this.litros,
@@ -166,7 +171,7 @@ document.addEventListener('alpine:init', () => {
 
         } else {
 
-            url = '/bitacora-aditivo/update';
+            url = this.getBaseUrl() + '/update';
 
             payload = {
                 id: this.id,
@@ -195,7 +200,7 @@ document.addEventListener('alpine:init', () => {
     },
         updateInventario() {
 
-        axios.get('/bitacora-aditivo/totalInventario')
+        axios.get(this.getBaseUrl() + '/totalInventario')
             .then(res => {
 
                 const gas = document.getElementById('inv-gasolina');

@@ -1,82 +1,304 @@
 <?php
 namespace App\Controllers;
 use App\Core\View;
-use App\Models\Operativo\BitacoraAditivo;
-use App\Models\Operativo\InventarioAditivo;
-use App\Models\Operativo\InventarioAditivoHist;
-use App\Models\Operativo\BitacoraReporte;
-use App\Services\ModuloService;
+use App\Services\BitacoraAditivoService;
+use App\Services\BitacoraAditivoContext;
 use App\Services\ModuleStationService;
 use App\Core\Breadcrumb;
-use Illuminate\Database\Capsule\Manager as Capsule;
-
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class AditivoController extends BaseController{
 
 protected string $modulo = 'bitacora-aditivo';
-public function index(){
 
-$title = 'Bitácora de aditivo';
-$permisos = ModuloService::permisosSesion($this->modulo);
-
-$ctx = ModuleStationService::getContext('bitacora-aditivo');
-$estacionId = $ctx['id_estacion'];
-
-$inventario = null;
-if ($estacionId) {
-$inventario = InventarioAditivo::where('id_estacion', $estacionId)->first();
+private function ctx(): BitacoraAditivoContext
+{
+return BitacoraAditivoContext::resolver();
 }
 
-Breadcrumb::add('Home', '/home');
-Breadcrumb::add($title, '');
+private function assetsFor(string $layout, array $paths): array
+{
+if ($layout === 'main') {
+return $paths;
+}
+return array_map(function (string $path) {
+return '/assets' . $path;
+}, $paths);
+}
 
-if (!$this->guardModuleAccess('bitacora-aditivo', $title, 'main')) {
+public function index(){
+
+$ctx = $this->ctx();
+$title = 'Bitácora de aditivo';
+
+if ($ctx->getContexto() === BitacoraAditivoContext::CONTEXTO_IMPORTACION) {
+if (!$ctx->getCapacidades()['puedeVer']) {
+View::render('errors/403', [], $ctx->getLayout());
+return;
+}
+}
+
+$estacionId = $ctx->getEstacionId();
+
+$inventario = ['gasolina' => 0, 'diesel' => 0];
+if ($estacionId) {
+$inventario = BitacoraAditivoService::getTotalInventario($estacionId);
+}
+
+foreach ($ctx->breadcrumbs($title) as [$label, $url]) {
+Breadcrumb::add($label, $url);
+}
+
+if (!$this->guardModuleAccess('bitacora-aditivo', $title, $ctx->getLayout())) {
 return;
 }
 
 $data = [
 'title' => $title,
-'permisos' => $permisos,
+'capacidades' => $ctx->getCapacidades(),
+'contexto' => $ctx->getContexto(),
+'baseUrl' => $ctx->getBaseUrl(),
 'modulo' => $this->modulo,
 'moduleStationKey' => 'bitacora-aditivo',
 'estacionId' => $estacionId,
+'estacionProductos' => $ctx->getProductos(),
 'filtro_usuario' => $this->filtro_usuario,
-'inventario' =>[
-'gasolina' => $inventario->gasolina ?? 0,
-'diesel' => $inventario->diesel ?? 0
-],
-'links' =>[
+'inventario' => $inventario,
+'links' =>$this->assetsFor($ctx->getLayout(), [
 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-],
-'scripts' => [
+]),
+'scripts' => $this->assetsFor($ctx->getLayout(), [
 '/js/vendor.min.js',
 '/libs/datatables.net/js/jquery.dataTables.min.js',
 '/js/core/module-station-selector.js?v=' . time(),
 '/js/bitacora/aditivo.datatable.init.js??v=' . time(),
 '/js/bitacora/actions.init.js??v=' . time(),
-],
+]),
 'help' => false
 ];
 
-View::render('aditivo/index', $data,'main');
+View::render('aditivo/index', $data, $ctx->getLayout());
+}
+
+public function resumen(){
+
+$ctx = $this->ctx();
+$title = 'Resumen aditivo';
+
+if (!$ctx->getCapacidades()['puedeVerResumen']) {
+View::render('errors/403', [], $ctx->getLayout());
+return;
+}
+
+foreach ($ctx->breadcrumbs($title, true) as [$label, $url]) {
+Breadcrumb::add($label, $url);
+}
+
+$data = [
+'title' => $title,
+'capacidades' => $ctx->getCapacidades(),
+'contexto' => $ctx->getContexto(),
+'baseUrl' => $ctx->getBaseUrl(),
+'modulo' => $this->modulo,
+'estacionId' => $ctx->getEstacionId(),
+'links' =>$this->assetsFor($ctx->getLayout(), [
+'/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
+]),
+'scripts' => $this->assetsFor($ctx->getLayout(), [
+'/js/vendor.min.js',
+'/libs/datatables.net/js/jquery.dataTables.min.js',
+'/js/bitacora/resumen.datatable.init.js?v=' . time(),
+]),
+'help' => false
+];
+
+View::render('aditivo/resumen', $data, $ctx->getLayout());
+}
+
+private function filasResumen(): array
+{
+$ctx = $this->ctx();
+
+$estaciones = $ctx->getEstaciones();
+$ids = array_column($estaciones, 'id');
+
+$resumen = BitacoraAditivoService::getResumen($ids);
+$resumenPorEstacion = [];
+foreach ($resumen as $fila) {
+$resumenPorEstacion[(int) $fila['id_estacion']] = $fila;
+}
+
+$filas = [];
+foreach ($estaciones as $estacion) {
+$id = (int) $estacion['id'];
+$datos = $resumenPorEstacion[$id] ?? ['gasolina' => 0, 'diesel' => 0];
+$filas[] = [
+'estacion' => $estacion['nombre'],
+'gasolina' => (float) ($datos['gasolina'] ?? 0),
+'diesel'   => (float) ($datos['diesel'] ?? 0),
+];
+}
+
+return $filas;
+}
+
+public function datatableResumen(){
+
+$ctx = $this->ctx();
+
+if (!$ctx->getCapacidades()['puedeVerResumen']) {
+echo json_encode(['data' => [], 'totales' => ['gasolina' => 0, 'diesel' => 0]]);
+exit;
+}
+
+$filas = $this->filasResumen();
+
+$totalGasolina = 0;
+$totalDiesel = 0;
+foreach ($filas as $fila) {
+$totalGasolina += $fila['gasolina'];
+$totalDiesel += $fila['diesel'];
+}
+
+echo json_encode([
+'data' => $filas,
+'totales' => [
+'gasolina' => $totalGasolina,
+'diesel'   => $totalDiesel,
+]
+]);
+exit;
+}
+
+public function resumenPdf(){
+
+$ctx = $this->ctx();
+
+if (!$ctx->getCapacidades()['puedeVerResumen']) {
+View::render('errors/403', [], $ctx->getLayout());
+return;
+}
+
+$filas = $this->filasResumen();
+
+$totalGasolina = 0;
+$totalDiesel = 0;
+foreach ($filas as $fila) {
+$totalGasolina += $fila['gasolina'];
+$totalDiesel += $fila['diesel'];
+}
+
+$logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
+
+$rows = '';
+foreach ($filas as $fila) {
+$rows .= '<tr>
+<td>' . htmlspecialchars((string) $fila['estacion']) . '</td>
+<td class="text-center">' . $fila['gasolina'] . ' <small>(Galones)</small></td>
+<td class="text-center">' . $fila['diesel'] . ' <small>(Galones)</small></td>
+</tr>';
+}
+
+$html = '
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Resumen de inventario de aditivo</title>
+<style>
+@page{
+    margin:0.4cm;
+}
+body{
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:10px;
+    color:#212529;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+th,
+td{
+    border:1px solid #dee2e6;
+    padding:3px;
+    vertical-align:middle;
+}
+th{
+    background:#F2F2F2;
+    font-weight:bold;
+}
+.text-center {
+    text-align:center !important;
+}
+.total{
+    background:#e2e3e5;
+    font-weight:bold;
+}
+</style>
+</head>
+<body>
+<div class="text-start">
+    <img src="' . $logo . '" width="180">
+</div>
+<h2 class="text-start">Resumen de inventario de aditivo</h2>
+<table>
+<thead>
+<tr>
+<th>Estación</th>
+<th>Gasolina Hitec 6590C</th>
+<th>Diesel Hitec 4133G</th>
+</tr>
+</thead>
+<tbody>
+' . $rows . '
+<tr class="total">
+<td>Total</td>
+<td class="text-center">' . $totalGasolina . ' <small>(Galones)</small></td>
+<td class="text-center">' . $totalDiesel . ' <small>(Galones)</small></td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
+';
+
+$options = new Options();
+$options->set('isRemoteEnabled', true);
+$options->set('defaultFont', 'Arial');
+
+$dompdf = new Dompdf($options);
+$dompdf->loadHtml($html);
+$dompdf->setPaper('A4', 'portrait');
+$dompdf->render();
+
+return $dompdf->stream(
+'Resumen-inventario-aditivo-estaciones.pdf',
+[
+'Attachment' => true
+]
+);
 }
 
 public function datatableAditivo(){
 
-$ctx = ModuleStationService::getContext('bitacora-aditivo');
-$idEstacion = $ctx['id_estacion'];
+$ctx = $this->ctx();
+$idEstacion = $ctx->getEstacionId();
 
 if (!$idEstacion) {
 echo json_encode(['data' => [], 'permisos' => ['editar' => false, 'eliminar' => false]]);
 exit;
 }
 
+$capacidades = $ctx->getCapacidades();
+
 $permisos = [
-'eliminar' => ModuloService::validaPermiso($this->modulo, 'eliminar'),
-'editar' => ModuloService::validaPermiso($this->modulo, 'editar')
+'eliminar' => $capacidades['puedeEliminar'],
+'editar' => $capacidades['puedeEditar']
 ];
 
-$aditivo = BitacoraAditivo::where('id_estacion', $idEstacion)->get();
+$aditivo = BitacoraAditivoService::getBitacora($idEstacion);
 
 echo json_encode([
 "data" => $aditivo,
@@ -88,20 +310,10 @@ exit;
 
 public function totalInventario()
 {
-$ctx = ModuleStationService::getContext('bitacora-aditivo');
-$idEstacion = $ctx['id_estacion'];
+$ctx = $this->ctx();
+$idEstacion = $ctx->getEstacionId();
 
-if (!$idEstacion) {
-echo json_encode(['gasolina' => 0, 'diesel' => 0]);
-exit;
-}
-
-$inventario = InventarioAditivo::where('id_estacion', $idEstacion)->first();
-
-echo json_encode([
-'gasolina' => $inventario->gasolina ?? 0,
-'diesel'   => $inventario->diesel ?? 0
-]);
+echo json_encode(BitacoraAditivoService::getTotalInventario((int) $idEstacion));
 exit;
 }
 
@@ -113,7 +325,7 @@ header('Content-Type: application/json; charset=utf-8');
 $data = json_decode(file_get_contents('php://input'), true);
 $id = $data['id'] ?? null;
 
-if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+if (!$this->ctx()->getCapacidades()['puedeEliminar']) {
 echo json_encode([
 'success' => false,
 'message' => 'No tienes permiso para eliminar'
@@ -126,77 +338,7 @@ echo json_encode(['success' => false,'message' => 'ID requerido']);
 exit;
 }
 
-// BITÁCORA
-$bitacora = BitacoraAditivo::find($id);
-
-if (!$bitacora) {
-echo json_encode(['success' => false, 'message' => 'Folio no encontrado']);
-exit;
-}
-
-if ($bitacora->estado == 0) {
-echo json_encode(['success' => false, 'message' => 'No se puede eliminar un folio ya inactivo']);
-exit;
-}
-
-// INVENTARIO
-$inventario = InventarioAditivo::where('id_estacion', $bitacora->id_estacion)->first();
-
-if (!$inventario) {
-echo json_encode(['success' => false, 'message' => 'Inventario no encontrado']);
-exit;
-}
-
-$producto = $bitacora->producto;
-$galones  = $bitacora->galones;
-$folio    = $bitacora->folio;
-
-// CALCULAR INVENTARIO
-if ($producto === "G SUPER" || $producto === "G PREMIUM") {
-$inventario->gasolina += $galones;
-$aditivoNombre = 'Gasolina Hitec 6590C';
-} elseif ($producto === "G DIESEL") {
-$inventario->diesel += $galones;
-$aditivoNombre = 'Diesel Hitec 4133G';
-}
-
-Capsule::beginTransaction();
-
-try {
-
-// ELIMINAR (SOFT)
-$bitacora->estado = 0;
-$bitacora->save();
-
-// INVENTARIO
-$inventario->save();
-
-// HISTÓRICO
-InventarioAditivoHist::create([
-'id_estacion' => $bitacora->id_estacion,
-'aditivo'     => $aditivoNombre,
-'galones'     => $galones,
-'detalle'     => 'Se agrega aditivo por cancelación del folio 00' . $folio
-]);
-
-Capsule::commit();
-
-echo json_encode([
-'success' => true,
-'message' => 'Folio eliminado correctamente'
-]);
-
-} catch (\Throwable $e) {
-
-Capsule::rollBack();
-
-echo json_encode([
-'success' => false,
-'message' => 'Error al eliminar',
-'error'   => $e->getMessage()
-]);
-}
-
+echo json_encode(BitacoraAditivoService::eliminarBitacora($id));
 exit;
 }
 
@@ -205,7 +347,7 @@ public function createAditivo(){
 header('Content-Type: application/json; charset=utf-8');
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+if (!$this->ctx()->getCapacidades()['puedeCrear']) {
 echo json_encode([
 'success' => false,
 'message' => 'No tienes permiso para crear'
@@ -216,12 +358,11 @@ exit;
 
 $litros     = sanitize_input($data['litros'] ?? null, 'float');
 $producto   = sanitize_input($data['producto'] ?? null, 'string');
-$galones    = sanitize_input($data['galones'] ?? 0, 'float');
 $fecha      = sanitize_input($data['fecha'] ?? null, 'string');
 $factura    = sanitize_input($data['no_factura'] ?? null, 'string');
 
-$ctx = ModuleStationService::getContext('bitacora-aditivo');
-$idEstacion = $ctx['id_estacion'];
+$ctx = $this->ctx();
+$idEstacion = $ctx->getEstacionId();
 
 if (!$idEstacion) {
 echo json_encode(['success' => false, 'message' => 'Debes seleccionar una estación primero']);
@@ -240,77 +381,14 @@ echo json_encode(['success' => false, 'errors' => $errors]);
 exit;
 }
 
-if (!$litros || !$producto || !$fecha) {
-echo json_encode([
-'success' => false,
-'message' => 'Campos obligatorios faltantes'
-]);
+echo json_encode(BitacoraAditivoService::crearBitacora(
+(int) $idEstacion,
+(float) ($litros ?? 0),
+(string) ($producto ?? ''),
+(string) ($fecha ?? ''),
+$factura
+));
 exit;
-}
-
-Capsule::beginTransaction();
-
-try {
-
-// INVENTARIO
-$inventario = InventarioAditivo::where('id_estacion', $idEstacion)->first();
-
-if (!$inventario) {
-throw new \Exception('Inventario no encontrado');
-}
-
-// FOLIO
-$folio = BitacoraAditivo::where('id_estacion', $idEstacion)->max('folio') + 1;
-$folio = $folio ?: 1;
-
-// CALCULAR INVENTARIO
-if ($producto === 'G SUPER' || $producto === 'G PREMIUM') {
-$inventarioFisico = $inventario->gasolina - $galones;
-} elseif ($producto === 'G DIESEL') {
-$inventarioFisico = $inventario->diesel - $galones;
-} else {
-throw new \Exception('Producto inválido');
-}
-
-// INSERTAR BITÁCORA
-BitacoraAditivo::create([
-'id_estacion'        => $idEstacion,
-'folio'              => $folio,
-'litros'             => $litros,
-'fecha'              => $fecha,
-'no_factura'         => $factura,
-'producto'           => $producto,
-'galones'            => $galones,
-'inventario_fisico'  => $inventarioFisico,
-'estado'             => 1
-]);
-
-//  ACTUALIZAR INVENTARIO
-if ($producto === 'G SUPER' || $producto === 'G PREMIUM') {
-$inventario->gasolina = $inventarioFisico;
-} else {
-$inventario->diesel = $inventarioFisico;
-}
-
-$inventario->save();
-
-Capsule::commit();
-
-echo json_encode(['success' => true,'message' => 'Registro guardado correctamente']);
-exit;
-
-
-} catch (\Exception $e) {
-
-Capsule::rollBack();
-
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
-
-}
-
 }
 
 public function updateAditivo()
@@ -330,7 +408,7 @@ echo json_encode([
 return;
 }
 
-if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+if (!$this->ctx()->getCapacidades()['puedeEditar']) {
 echo json_encode([
 'success' => false,
 'message' => 'Sin permisos'
@@ -338,23 +416,7 @@ echo json_encode([
 return;
 }
 
-$registro = BitacoraAditivo::find($id);
-
-if (!$registro) {
-echo json_encode([
-'success' => false,
-'message' => 'Registro no encontrado'
-]);
-return;
-}
-
-$registro->no_factura = $noFactura;
-$registro->save();
-
-echo json_encode([
-'success' => true,
-'message' => 'Factura actualizada correctamente'
-]);
+echo json_encode(BitacoraAditivoService::editarFactura((int) $id, (string) ($noFactura ?? '')));
 }
 
 //--------- Reporte Bitacora Aditivo --------------
@@ -362,59 +424,67 @@ echo json_encode([
 
 public function reporte(){
 
+$ctx = $this->ctx();
 $title = 'Reporte aditivo';
-$permisos = ModuloService::permisosSesion($this->modulo);
 
-$ctx = ModuleStationService::getContext('bitacora-aditivo');
-$estacionId = $ctx['id_estacion'];
+if ($ctx->getContexto() === BitacoraAditivoContext::CONTEXTO_IMPORTACION) {
+if (!$ctx->getCapacidades()['puedeVer']) {
+View::render('errors/403', [], $ctx->getLayout());
+return;
+}
+}
 
-Breadcrumb::add('Home', '/home');
-Breadcrumb::add('Bitácora de aditivo', '/bitacora-aditivo');        
-Breadcrumb::add($title, '');
+$estacionId = $ctx->getEstacionId();
+
+foreach ($ctx->breadcrumbs($title, true) as [$label, $url]) {
+Breadcrumb::add($label, $url);
+}
 
 $data = [
 'title' => $title,
-'permisos' => $permisos,
+'capacidades' => $ctx->getCapacidades(),
+'contexto' => $ctx->getContexto(),
+'baseUrl' => $ctx->getBaseUrl(),
 'modulo' => $this->modulo,
-'filtro_usuario' => $this->filtro_usuario,
 'moduleStationKey' => 'bitacora-aditivo',
 'estacionId' => $estacionId,
-'links' =>[
+'estacionProductos' => $ctx->getProductos(),
+'filtro_usuario' => $this->filtro_usuario,
+'links' =>$this->assetsFor($ctx->getLayout(), [
 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-],
-'scripts' => [
+]),
+'scripts' => $this->assetsFor($ctx->getLayout(), [
 '/js/vendor.min.js',
 '/libs/datatables.net/js/jquery.dataTables.min.js',
 '/js/core/module-station-selector.js?v=' . time(),
 '/js/bitacora/reporte.datatable.init.js?v=' . time(),
 '/js/bitacora/reporte.actions.init.js?v=' . time(),
-]
+])
 ];
 
-View::render('aditivo/reporte', $data,'main');
+View::render('aditivo/reporte', $data, $ctx->getLayout());
 }
 
 public function datatableReporte(){
-$ctx = ModuleStationService::getContext('bitacora-aditivo');
-$idEstacion = $ctx['id_estacion'];
+
+$ctx = $this->ctx();
+$idEstacion = $ctx->getEstacionId();
 
 if (!$idEstacion) {
 echo json_encode(['data' => [], 'permisos' => ['eliminar' => false, 'descargar' => false, 'editar' => false]]);
 exit;
 }
 
-$permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
-$permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
-$permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
+$capacidades = $ctx->getCapacidades();
 
-$reporte = BitacoraReporte::where('id_estacion', $idEstacion)->get();
+$reporte = BitacoraAditivoService::getReportes($idEstacion);
 
 echo json_encode([
 "data" => $reporte,
 "permisos" => [
-"eliminar" => $permisoEliminar,
-"descargar" => $permisoDescargar,
-"editar"   => $permisoEditar
+"eliminar" => $capacidades['puedeEliminar'],
+"descargar" => $capacidades['puedeDescargar'],
+"editar"   => $capacidades['puedeEditar']
 ]
 ]);
 
@@ -426,7 +496,7 @@ public function createReporte()
 header('Content-Type: application/json; charset=utf-8');
 
 // Permisos
-if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+if (!$this->ctx()->getCapacidades()['puedeCrear']) {
 echo json_encode([
 'success' => false,
 'message' => 'No tienes permiso para crear'
@@ -448,69 +518,12 @@ echo json_encode(['success' => false, 'errors' => $errors]);
 exit;
 }
 
-if (!$fecha) {
-echo json_encode([
-'success' => false,
-'message' => 'La fecha es obligatoria'
-]);
-exit;
-}
-
-// CONFIG RUTA
-$carpeta = __DIR__ . '../../../public/uploads/archivos/';
-
-// SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
-if (!file_exists($carpeta)) {
-mkdir_safe($carpeta, true);
-}
-
-$nombreArchivo = null;
-
-try {
-
-// SUBIR ARCHIVO (opcional)
-if ($file && $file['error'] === UPLOAD_ERR_OK) {
-
-// Validar extensión
-$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-// nombre único
-$nombreArchivo = uniqid('rep_') . '.' . $extension;
-
-$rutaDestino = $carpeta . $nombreArchivo;
-
-if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {
-throw new \Exception('No se pudo guardar el archivo');
-}
-}
-
-// GUARDAR EN BD
-BitacoraReporte::create([
-'id_estacion' => $this->estacionId(),
-'id_usuario'  => $this->userId(),
-'fecha'       => $fecha,
-'hora'        => date('H:i:s'),
-'documento'   => $nombreArchivo
-]);
-
-echo json_encode([
-'success' => true,
-'message' => 'Reporte guardado correctamente'
-]);
-
-} catch (\Throwable $e) {
-
-// Si falla BD, borrar archivo
-if ($nombreArchivo && file_exists($carpeta . $nombreArchivo)) {
-unlink($carpeta . $nombreArchivo);
-}
-
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
-}
-
+echo json_encode(BitacoraAditivoService::guardarReporte(
+(int) ($this->ctx()->getEstacionId() ?? 0),
+(int) ($this->userId() ?? 0),
+(string) ($fecha ?? ''),
+$file
+));
 exit;
 }
 
@@ -520,7 +533,7 @@ header('Content-Type: application/json; charset=utf-8');
 $data = json_decode(file_get_contents('php://input'), true);
 $id = $data['id'] ?? null;
 
-if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+if (!$this->ctx()->getCapacidades()['puedeEliminar']) {
 echo json_encode([
 'success' => false,
 'message' => 'No tienes permiso para eliminar'
@@ -533,47 +546,7 @@ echo json_encode(['success' => false,'message' => 'ID requerido']);
 exit;
 }
 
-try {
-
-// Buscar registro
-$reporte = BitacoraReporte::find($id);
-
-if (!$reporte) {
-throw new \Exception('Registro no encontrado');
-}
-
-// Ruta archivo
-$rutaBase = __DIR__ . '../../../public/uploads/archivos/bitacora-aditivo/';
-$rutaArchivo = $rutaBase . $reporte->documento;
-
-// TRANSACCIÓN
-Capsule::beginTransaction();
-
-// Eliminar archivo si existe
-if ($reporte->documento && file_exists($rutaArchivo)) {
-unlink($rutaArchivo);
-}
-
-// Eliminar registro (puedes usar delete o estado = 0)
-$reporte->delete();
-
-Capsule::commit();
-
-echo json_encode([
-'success' => true,
-'message' => 'Reporte eliminado correctamente'
-]);
-
-} catch (\Throwable $e) {
-
-Capsule::rollBack();
-
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
-}
-
+echo json_encode(BitacoraAditivoService::eliminarReporte((int) $id));
 exit;
 }
 
@@ -581,67 +554,72 @@ exit;
 //----------------------------------------
 public function inventario(){
 
+$ctx = $this->ctx();
 $title = 'Inventario aditivo';
-$permisos = ModuloService::permisosSesion($this->modulo);
 
-$ctx = ModuleStationService::getContext('bitacora-aditivo');
-$estacionId = $ctx['id_estacion'];
+if ($ctx->getContexto() === BitacoraAditivoContext::CONTEXTO_IMPORTACION) {
+if (!$ctx->getCapacidades()['puedeVer']) {
+View::render('errors/403', [], $ctx->getLayout());
+return;
+}
+}
+
+$estacionId = $ctx->getEstacionId();
 
 $inventarioData = ['gasolina' => 0, 'diesel' => 0];
 if ($estacionId) {
-$inventario = InventarioAditivo::where('id_estacion', $estacionId)->first();
-if ($inventario) {
-$inventarioData = ['gasolina' => $inventario->gasolina, 'diesel' => $inventario->diesel];
-}
+$inventarioData = BitacoraAditivoService::getTotalInventario($estacionId);
 }
 
-Breadcrumb::add('Home', '/home');
-Breadcrumb::add('Bitácora de aditivo', '/bitacora-aditivo');        
-Breadcrumb::add($title, '');
+foreach ($ctx->breadcrumbs($title, true) as [$label, $url]) {
+Breadcrumb::add($label, $url);
+}
 
 $data = [
 'title' => $title,
-'permisos' => $permisos,
+'capacidades' => $ctx->getCapacidades(),
+'contexto' => $ctx->getContexto(),
+'baseUrl' => $ctx->getBaseUrl(),
 'modulo' => $this->modulo,
-'filtro_usuario' => $this->filtro_usuario,
 'moduleStationKey' => 'bitacora-aditivo',
 'estacionId' => $estacionId,
+'estacionProductos' => $ctx->getProductos(),
 'inventario' => $inventarioData,
-'links' =>[
+'filtro_usuario' => $this->filtro_usuario,
+'links' =>$this->assetsFor($ctx->getLayout(), [
 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-],
-'scripts' => [
+]),
+'scripts' => $this->assetsFor($ctx->getLayout(), [
 '/js/vendor.min.js',
 '/libs/datatables.net/js/jquery.dataTables.min.js',
 '/js/core/module-station-selector.js?v=' . time(),
 '/js/bitacora/inventario.datatable.init.js?v=' . time(),
 '/js/bitacora/inventario.actions.init.js?v=' . time(),
-]
+])
 ];
 
-View::render('aditivo/inventario', $data,'main');
+View::render('aditivo/inventario', $data, $ctx->getLayout());
 }
 
 public function datatableInventario(){
 
-$ctx = ModuleStationService::getContext('bitacora-aditivo');
-$idEstacion = $ctx['id_estacion'];
+$ctx = $this->ctx();
+$idEstacion = $ctx->getEstacionId();
 
 if (!$idEstacion) {
 echo json_encode(['data' => [], 'permisos' => ['eliminar' => false, 'editar' => false]]);
 exit;
 }
 
-$permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
-$permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
+$capacidades = $ctx->getCapacidades();
 
-$inventario = InventarioAditivoHist::where('id_estacion', $idEstacion)->get();
+$inventario = BitacoraAditivoService::getInventarioHist($idEstacion);
 
 echo json_encode([
 "data" => $inventario,
 "permisos" => [
-"eliminar" => $permisoEliminar,
-"editar"   => $permisoEditar
+"eliminar" => $capacidades['puedeEliminar'],
+"editar"   => $capacidades['puedeEditar']
 ]
 ]);
 
@@ -653,15 +631,15 @@ public function createInventario(){
 header('Content-Type: application/json; charset=utf-8');
 $data = json_decode(file_get_contents('php://input'), true);
 
-$ctx = ModuleStationService::getContext('bitacora-aditivo');
-$idEstacion = $ctx['id_estacion'];
+$ctx = $this->ctx();
+$idEstacion = $ctx->getEstacionId();
 
 if (!$idEstacion) {
 echo json_encode(['success' => false, 'message' => 'Debes seleccionar una estación']);
 exit;
 }
 
-if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+if (!$ctx->getCapacidades()['puedeCrear']) {
 echo json_encode([
 'success' => false,
 'message' => 'No tienes permiso para crear'
@@ -672,62 +650,12 @@ exit;
 $gasolina = sanitize_input($data['gasolina'] ?? 0, 'float');
 $diesel   = sanitize_input($data['diesel'] ?? 0, 'float');
 
-if ($gasolina === 0 && $diesel === 0) {
-echo json_encode(['success' => false, 'message' => 'No se ingresado ningun aditivo']);
+echo json_encode(BitacoraAditivoService::crearInventario(
+(int) $idEstacion,
+(float) ($gasolina ?? 0),
+(float) ($diesel ?? 0)
+));
 exit;
-}
-
-Capsule::beginTransaction();
-
-try {
-// INVENTARIO
-$inventario = InventarioAditivo::firstOrCreate(
-['id_estacion' => $idEstacion],
-['gasolina' => 0, 'diesel' => 0]
-);
-
-if (!$inventario) {
-throw new \Exception('Inventario no encontrado');
-}
-
-if($gasolina > 0){
-
-InventarioAditivoHist::create([
-'id_estacion'        => $idEstacion,
-'aditivo'              => 'Gasolina Hitec 6590C',
-'galones'             => $gasolina,
-'detalle'              => 'Se agrega aditivo'
-]);
-
-$inventario->gasolina += $gasolina;
-
-}
-
-if($diesel > 0){
-InventarioAditivoHist::create([
-'id_estacion' => $idEstacion,
-'aditivo' => 'Diesel Hitec 4133G',
-'galones' => $diesel,
-'detalle' => 'Se agrega aditivo'
-]);
-
-$inventario->diesel += $diesel;
-}        
-
-$inventario->save();
-Capsule::commit();
-echo json_encode(['success' => true,'message' => 'Registro guardado correctamente']);
-exit;
-
-} catch (\Exception $e) {
-Capsule::rollBack();
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
-
-}
-
 }
 
 

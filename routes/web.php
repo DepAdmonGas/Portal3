@@ -112,6 +112,9 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/reporte', Route::auth(['AditivoController', 'reporte']));
 
         $r->addRoute('GET', '/inventario', Route::auth(['AditivoController', 'inventario']));
+        $r->addRoute('GET', '/resumen', Route::auth(['AditivoController', 'resumen']));
+        $r->addRoute('GET', '/resumen/datatable', Route::auth(['AditivoController', 'datatableResumen']));
+        $r->addRoute('GET', '/resumen/pdf', Route::auth(['AditivoController', 'resumenPdf']));
 
         $r->addRoute('POST', '/create', Route::auth(['AditivoController', 'createAditivo']));
         $r->addRoute('POST', '/delete', Route::auth(['AditivoController', 'deleteAditivo']));
@@ -870,13 +873,86 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/importacion/formato-descarga-merma/excel/{id:\d+}', Route::auth(['FormatoDescargaMermaController', 'excel']));
         $r->addRoute('GET', '/importacion/formato-descarga-merma/excel-busqueda', Route::auth(['FormatoDescargaMermaController', 'excelBusqueda']));
         $r->addRoute('GET', '/importacion/formato-descarga-merma/excel-general', Route::auth(['FormatoDescargaMermaController', 'excelGeneral']));
-$r->addRoute('GET', '/importacion/formato-descarga-merma/{year}/{mes}', Route::auth(['FormatoDescargaMermaController', 'filtrarPorAnioMes']));
+        $r->addRoute('GET', '/importacion/formato-descarga-merma/{year}/{mes}', Route::auth(['FormatoDescargaMermaController', 'filtrarPorAnioMes']));
+
+        //----- Inventarios Diarios
+        $r->addRoute('GET', '/importacion/inventarios-diarios', Route::auth(['InventariosDiariosController', 'index']));
+        $r->addRoute('GET', '/importacion/inventarios-diarios-reporte/{id:\d+}', Route::auth(['InventariosDiariosController', 'reporte']));
+        $r->addRoute('POST', '/importacion/inventarios-diarios/crear', Route::auth(['InventariosDiariosController', 'crear']));
+        $r->addRoute('POST', '/importacion/inventarios-diarios/update', Route::auth(['InventariosDiariosController', 'update']));
+        $r->addRoute('POST', '/importacion/inventarios-diarios/agregar-sucursal', Route::auth(['InventariosDiariosController', 'agregarSucursal']));
+        $r->addRoute('POST', '/importacion/inventarios-diarios/eliminar-destino', Route::auth(['InventariosDiariosController', 'eliminarDestino']));
+        $r->addRoute('POST', '/importacion/inventarios-diarios/finalizar', Route::auth(['InventariosDiariosController', 'finalizar']));
+        $r->addRoute('POST', '/importacion/inventarios-diarios/eliminar', Route::auth(['InventariosDiariosController', 'eliminar']));
+        $r->addRoute('GET', '/importacion/inventarios-diarios/{year:\d+}/{mes:\d+}', Route::auth(['InventariosDiariosController', 'filtrarPorAnioMes']));
+
+        //----- Bitácora Aditivo (entrada Importación)
+        $r->addRoute('GET', '/importacion/bitacora-aditivo', Route::auth(['AditivoController', 'index']));
+        $r->addRoute('GET', '/importacion/bitacora-aditivo/datatable', Route::auth(['AditivoController', 'datatableAditivo']));
+        $r->addRoute('GET', '/importacion/bitacora-aditivo/reporte', Route::auth(['AditivoController', 'reporte']));
+        $r->addRoute('GET', '/importacion/bitacora-aditivo/inventario', Route::auth(['AditivoController', 'inventario']));
+        $r->addRoute('GET', '/importacion/bitacora-aditivo/resumen', Route::auth(['AditivoController', 'resumen']));
+        $r->addRoute('GET', '/importacion/bitacora-aditivo/resumen/datatable', Route::auth(['AditivoController', 'datatableResumen']));
+        $r->addRoute('GET', '/importacion/bitacora-aditivo/resumen/pdf', Route::auth(['AditivoController', 'resumenPdf']));
+        $r->addRoute('GET', '/importacion/bitacora-aditivo/totalInventario', Route::auth(['AditivoController', 'totalInventario']));
+        $r->addRoute('POST', '/importacion/bitacora-aditivo/create', Route::auth(['AditivoController', 'createAditivo']));
+        $r->addRoute('POST', '/importacion/bitacora-aditivo/delete', Route::auth(['AditivoController', 'deleteAditivo']));
+        $r->addRoute('POST', '/importacion/bitacora-aditivo/update', Route::auth(['AditivoController', 'updateAditivo']));
+        $r->addRoute('GET', '/importacion/bitacora-aditivo/datatable-inventario', Route::auth(['AditivoController', 'datatableInventario']));
+        $r->addRoute('POST', '/importacion/bitacora-aditivo/create-inventario', Route::auth(['AditivoController', 'createInventario']));
+        $r->addRoute('GET', '/importacion/bitacora-aditivo/datatable-reporte', Route::auth(['AditivoController', 'datatableReporte']));
+        $r->addRoute('POST', '/importacion/bitacora-aditivo/create-reporte', Route::auth(['AditivoController', 'createReporte']));
+        $r->addRoute('POST', '/importacion/bitacora-aditivo/delete-reporte', Route::auth(['AditivoController', 'deleteReporte']));
+
+        //----- Análisis de Compra
+        $r->addRoute('GET', '/importacion/analisis-compra', Route::auth(['AnalisisCompraImportacionController', 'index']));
+        $r->addRoute('GET', '/importacion/analisis-compra/data', Route::auth(['AnalisisCompraImportacionController', 'getData']));
+        $r->addRoute('POST', '/importacion/analisis-compra/update', Route::auth(['AnalisisCompraImportacionController', 'update']));
+        $r->addRoute('GET', '/importacion/analisis-compra/{year:\d+}/{mes:\d+}', Route::auth(['AnalisisCompraImportacionController', 'index']));
 
 //----- 4. Almacen
         $r->addRoute('GET', '/almacen', Route::auth(['DptoOperativoController', 'almacenIndex']));
 
         //----- 5. Comercializadora
         $r->addRoute('GET', '/comercializadora', Route::auth(['DptoOperativoController', 'comercializadoraIndex']));
+
+        //----- 5.1 Pedido de Pinturas
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas', Route::auth(['PedidoPinturasController', 'index']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/get-data', Route::auth(['PedidoPinturasController', 'getData']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/get-pendientes', Route::auth(['PedidoPinturasController', 'getPendingCountsEndpoint']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/detalle', Route::auth(['PedidoPinturasController', 'getDetalle']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/crear', Route::auth(['PedidoPinturasController', 'crear']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/agregar-producto', Route::auth(['PedidoPinturasController', 'agregarProducto']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/editar-piezas', Route::auth(['PedidoPinturasController', 'editarPiezas']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/editar-detalle', Route::auth(['PedidoPinturasController', 'editarDetalle']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/editar-observaciones', Route::auth(['PedidoPinturasController', 'editarObservaciones']));
+        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-item', Route::auth(['PedidoPinturasController', 'eliminarItem']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/finalizar', Route::auth(['PedidoPinturasController', 'finalizar']));
+        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar', Route::auth(['PedidoPinturasController', 'eliminar']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/entregar', Route::auth(['PedidoPinturasController', 'entregar']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/crear-token', Route::auth(['PedidoPinturasController', 'crearToken']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/firmar-vobo', Route::auth(['PedidoPinturasController', 'firmarVoBo']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/pdf/{id:\d+}', Route::auth(['PedidoPinturasController', 'pdf']));
+
+        //----- 5.1 Catálogo de pinturas
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/catalogos', Route::auth(['PedidoPinturasController', 'getCatalogos']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/guardar-producto', Route::auth(['PedidoPinturasController', 'guardarProducto']));
+        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-producto', Route::auth(['PedidoPinturasController', 'eliminarProducto']));
+
+        //----- 5.1 Inventario de pinturas
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/inventario', Route::auth(['PedidoPinturasController', 'getInventario']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/agregar-inventario', Route::auth(['PedidoPinturasController', 'agregarInventario']));
+        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-inventario-item', Route::auth(['PedidoPinturasController', 'eliminarInventarioItem']));
+
+        //----- 5.1 Reportes de pinturas
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/reportes', Route::auth(['PedidoPinturasController', 'getReportes']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/reporte', Route::auth(['PedidoPinturasController', 'getReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/crear-reporte', Route::auth(['PedidoPinturasController', 'crearReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/guardar-reporte-datos', Route::auth(['PedidoPinturasController', 'guardarReporteDatos']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/agregar-producto-reporte', Route::auth(['PedidoPinturasController', 'agregarProductoReporte']));
+        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-producto-reporte', Route::auth(['PedidoPinturasController', 'eliminarProductoReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/aprobar-reporte', Route::auth(['PedidoPinturasController', 'aprobar']));
+        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-reporte', Route::auth(['PedidoPinturasController', 'eliminarReporte']));
     });
 
     //----------------- Lista de asistencia ------------
