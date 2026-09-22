@@ -1,6 +1,4 @@
-<script>
-window.temas = <?= json_encode($temas->values()) ?>;
-</script>
+<script type="application/json" id="modulos-data"><?= json_encode($temas->values(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 
 <div class="mt-4 pb-4"
      data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"

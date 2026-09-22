@@ -16,10 +16,12 @@
             <div class="d-flex align-items-center mb-3 mt-3">
                 <div class="ms-auto">
 
+
                     <div class="dropdown dropcenter">
                         <a href="javascript:void(0)" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="ti ti-dots-vertical fs-4"></i>
                         </a>
+
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <li>
                                 <a class="dropdown-item" href="javascript:void(0)" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo</a>

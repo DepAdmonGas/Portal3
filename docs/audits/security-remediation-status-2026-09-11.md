@@ -19,22 +19,22 @@ Este documento es una fotografía del estado actual. No sustituye ni reescribe l
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | SEC-CSRF-001 | Critical | CSRF aceptaba solicitudes mutables sin token. | CLOSED_LOCAL | Sí; validación fail-closed. | No específica. | No. | Mantener regresión CSRF. |
 | AUTHZ-TENANT-001 | Critical | Cambio de estación aceptaba una estación existente sin alcance. | CLOSED_LOCAL | Sí; selección acotada a estaciones permitidas. | No específica. | No. | Mantener regresión de estación. |
-| AUTHZ-DL-002 | High | Descargas sensibles se autorizaban sólo por sesión. | PARTIAL_CONCURRENT_WORK_BLOCKED | Parcial; resolutor `docs-personal-*` y default deny para tipos no resueltos. | Inventario/relocación de archivos históricos. | Sí. | Inventariar los demás tipos y sus resolutores al liberar módulos. |
+| AUTHZ-DL-002 | High | Descargas sensibles se autorizaban sólo por sesión. | PARTIAL_DEFERRED | SGM, SASISOPA y Gestoría requisitos legales usan descargas canónicas; private-first y legacy fallback están verificados; tipos no resueltos continúan default-deny. | Superficies restantes de `departamento-operativo` siguen diferidas. | Sí. | Reabrir cuando el desarrollo concurrente sea liberado. |
 | AUTHZ-TOKEN-003 | High | Operaciones Telegram confiaban en `id_usuario` del cliente. | CLOSED_LOCAL | Sí; identidad desde sesión autenticada. | No específica. | No. | Mantener regresión de identidad. |
 | SEC-UPLOAD-004 | High | Uploads no tenían validación/storage uniforme. | PARTIAL_CONCURRENT_WORK_BLOCKED | Parcial; nuevos documentos de personal son privados. | Relocar y validar archivos históricos. | Sí. | Plan aprobado de inventario, backup, migración y rollback. |
 | SEC-XSS-005 | High | Salidas HTML y `x-html` sin política uniforme. | CLOSED_LOCAL | Sí; frontera DOMPurify y regresión de sinks. | No específica. | No. | Mantener revisión de nuevos sinks. |
-| SEC-RATE-006 | Medium | Límite de login evadible por sesión/IP no confiable. | REMEDIATED_LOCAL_PRODUCTION_VERIFICATION_REQUIRED | Sí; contador atómico por cuenta/IP. | Validar almacenamiento, permisos, proxy y 429. | No. | Verificación controlada de producción. |
+| SEC-RATE-006 | Medium | Límite de login evadible por sesión/IP no confiable. | REMEDIATED_REMOTE_VERIFIED_PRODUCTION_RUNTIME_PENDING | Código y regresión verificados remotamente en Security run `35377218278`; contador atómico por cuenta/IP, ventana fija de 300 s y límite de 10 intentos. | Validar almacenamiento, permisos, proxy, identidad de cliente y 429. | No. | Verificación controlada tras el primer deploy. |
 | AUTHZ-TENANT-007 | Medium | Autorización objeto/estación heterogénea. | PARTIAL_CONCURRENT_WORK_BLOCKED | Parcial; superficies ControlDocumentosPersonal, `SolicitudCheque::getDetalle` y `getDocumentos`. | No específica. | Sí. | Continuar fronteras acotadas tras liberar concurrencia. |
-| SEC-WEBHOOK-008 | Medium | Webhook Telegram sin autenticidad ni replay protection. | REMEDIATED_LOCAL_PRODUCTION_VERIFICATION_REQUIRED | Sí; secret header y deduplicación. | Configurar secreto y storage compartido/privado. | No. | Registro y entrega controlada del webhook. |
-| SEC-SESSION-009 | Medium | Seguridad de sesión/TLS dependía de entorno/proxy. | REMEDIATED_LOCAL_PRODUCTION_VERIFICATION_REQUIRED | Sí; endurecimiento de sesión y rotación CSRF post-login. | Verificar HTTPS, cookies y session storage. | No. | Checklist de sesión en producción. |
-| PRIV-LOG-010 | Medium | Logging de autenticación retenía PII. | REMEDIATED_LOCAL_PRODUCTION_VERIFICATION_REQUIRED | Sí; minimización y redacción central. | Verificar ruta, ACL, rotación y retención. | No. | Revisión operacional de logs. |
-| DATA-VALID-011 | Medium | Validación y mass assignment heterogéneos. | NEEDS_REASSESSMENT | No; fuera de alcance. | No evaluada. | No. | Inventario acotado de payloads alcanzables. |
-| SEC-CSP-012 | Low | CSP mantiene `unsafe-inline`/`unsafe-eval`. | NEEDS_REASSESSMENT | No; fuera de alcance. | Requiere estrategia de nonces/hashes. | No. | Inventario de scripts antes de endurecer CSP. |
-| DEP-TEST-013 | Low | Dependencias/controles sin verificación automatizada visible. | NEEDS_REASSESSMENT | No; fuera de alcance. | CI y auditoría de lockfiles pendientes. | No. | Diseñar slice de CI/dependencias. |
+| SEC-WEBHOOK-008 | Medium | Webhook Telegram sin autenticidad ni replay protection. | REMEDIATED_REMOTE_VERIFIED_PRODUCTION_RUNTIME_PENDING | Código y regresión verificados remotamente en Security run `35377218278`; secret header y deduplicación cubiertos. | Configurar secreto, forwarding y storage compartido/privado. | No. | Verificación controlada tras el primer deploy. |
+| SEC-SESSION-009 | Medium | Seguridad de sesión/TLS dependía de entorno/proxy. | REMEDIATED_REMOTE_VERIFIED_PRODUCTION_RUNTIME_PENDING | Código y regresiones de sesión verificadas remotamente en Security run `35377218278`; endurecimiento de sesión, rotación post-login y logout. | Verificar HTTPS, cookies, proxy y PHP session storage. | No. | Checklist de sesión tras el primer deploy. |
+| PRIV-LOG-010 | Medium | Logging de autenticación retenía PII. | REMEDIATED_REMOTE_VERIFIED_PRODUCTION_RUNTIME_PENDING | Código y regresión de privacidad verificados remotamente en Security run `35377218278`; redacción central y neutralización de saltos de línea. | Verificar ruta, ACL, rotación, retención y exposición web. | No. | Revisión operacional tras el primer deploy. |
+| DATA-VALID-011 | Medium | Validación y mass assignment heterogéneos. | REMEDIATED_REMOTE_VERIFIED_WITH_DOCUMENTED_RESIDUAL_CONSTRAINTS | Uploads y contrato JSON endurecidos y verificados remotamente; Seguro permanece en almacenamiento público por requisito arquitectónico. | Verificar listado de directorio y ejecución de scripts en producción. | 3 superficies de `departamento-operativo` diferidas. | Reassessment de SEC-CSP-012. |
+| SEC-CSP-012 | Low | CSP mantiene `unsafe-inline`/`unsafe-eval`. | PARTIAL_HARDENING_LOCAL | Report-Only checkpoint remoto y eliminación local de seis pseudo-enlaces JavaScript en requisitos legales y Mejores Prácticas. | Alpine/`unsafe-eval`, inline styles, remaining JavaScript URLs, CDN/runtime and enforcement tightening. | No. | Revalidar remotamente este slice antes de promoverlo. |
+| DEP-TEST-013 | Low | Dependencias/controles sin verificación automatizada visible. | REMEDIATED_REMOTE_VERIFIED | Sí; CDN exact-pinned con SRI, lockfile versionado, CI y Composer audit verificados remotamente. | No específica. | No. | Mantener vigilancia de dependencias y renovar hashes según cambios autorizados. |
 | ARCH-001 | Informational | DI no se aplica uniformemente. | NEEDS_REASSESSMENT | No; fuera de alcance. | No evaluada. | No. | Revisión arquitectónica acotada. |
 | OPS-001 | Informational | Infraestructura, retención y auditoría no verificables desde repositorio. | PRODUCTION_ONLY_PENDING | No aplica al repositorio. | Runbook e inspección de producción. | No. | Preparar y ejecutar runbook aprobado. |
-| DOC-001 | Informational | Documentación de seguridad contradictoria/desfasada. | CLOSED_LOCAL | Sí; este snapshot enlaza el historial sin eliminarlo. | No específica. | No. | Revisar el snapshot al cerrar un slice. |
-| SQL-001 | Informational | Raw SQL sin flujo explotable confirmado. | INFORMATIONAL_NO_REMEDIATION | No aplica; sin vulnerabilidad confirmada. | No. | No. | Revisar contexto al modificar módulos afectados. |
+| DOC-001 | Informational | Documentación de seguridad contradictoria/desfasada. | CLOSED_WITH_EVIDENCE | Sí; el snapshot consolida estados y enlaza auditoría, plan e historial sin eliminar trazabilidad. Remediación documental presente remotamente desde `6448939`. | No específica. | No. | Reabrir sólo ante drift material o guía contradictoria. |
+| SQL-001 | Informational | Raw SQL sin flujo explotable confirmado. | CLOSED_WITH_EVIDENCE | 4 consultas directas parametrizadas y 34 superficies de expresiones raw revisadas; sin interpolación insegura ni candidato de inyección confirmado. | No específica; repetir revisión si cambia SQL antes del primer deploy. | `departamento-operativo` SQL permanece diferido. | Reabrir sólo ante nuevas superficies SQL o cambios materiales. |
 
 ## 3. Closed Locally
 
@@ -42,25 +42,30 @@ Este documento es una fotografía del estado actual. No sustituye ni reescribe l
 - **AUTHZ-TENANT-001:** el cambio de estación se autoriza contra el alcance permitido antes de mutar la sesión.
 - **AUTHZ-TOKEN-003:** las operaciones personales de Telegram derivan identidad de la sesión, no del cliente.
 - **SEC-XSS-005:** los sinks HTML inventariados permanecen detrás de la frontera de sanitización acordada.
-- **DOC-001:** este documento centraliza el estado y remite a la auditoría, el plan y el historial sin reemplazarlos.
+- **DATA-VALID-011:** las superficies revisadas fuera de `departamento-operativo` tienen validación estricta de uploads y contrato JSON. Seguro permanece bajo `public/uploads/archivos/poliza-seguro/` por requisito arquitectónico; el acceso estático público es residual y el listado/ejecución de scripts requiere verificación de producción.
+- **DOC-001:** `CLOSED_WITH_EVIDENCE`. El snapshot centraliza el estado y remite a la auditoría, el plan y el historial sin reemplazarlos; la remediación documental del commit `6448939` está contenida en el branch remoto actual.
 
 ## 4. Remediated Locally / Production Pending
 
 ### SEC-WEBHOOK-008
 
-La aplicación valida el encabezado secreto de Telegram y protege contra replay antes de procesar. Producción debe definir `TELEGRAM_WEBHOOK_SECRET`, registrar el webhook con ese secreto, comprobar el encabezado recibido y asegurar que el almacenamiento de replay sea privado, escribible y compartido si existen varias instancias.
+La implementación y su regresión están verificadas remotamente en el commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`; el log remoto incluye `telegram_webhook_security_regression.php` y `161 PASS / 0 FAIL / 0 SKIPPED`. La verificación runtime queda pendiente del primer deploy: secreto real, forwarding del header, registro del webhook y almacenamiento de replay privado, escribible y compartido cuando corresponda.
 
 ### SEC-RATE-006
 
-El límite de login usa almacenamiento privado atómico. Producción debe comprobar `storage/private/rate-limits`, permisos, la topología de almacenamiento compartido, que `REMOTE_ADDR` represente una dirección confiable detrás del proxy y el comportamiento HTTP 429/`Retry-After`.
+La implementación y su regresión están verificadas remotamente en el commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`; el log incluye `rate_limiter_security_regression.php` y `161 PASS / 0 FAIL / 0 SKIPPED`. El límite usa almacenamiento privado atómico, clave `login|cuenta normalizada|REMOTE_ADDR`, ventana de 300 segundos y máximo de 10 intentos. La verificación runtime queda pendiente del primer deploy: almacenamiento, proxy, topología compartida, identidad de cliente y comportamiento HTTP 429/`Retry-After`.
+
+### SEC-CSP-012
+
+La policy Report-Only y la externalización de highlight están verificadas remotamente en el commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`; `csp_report_only_regression.php` y la suite `161 PASS / 0 FAIL / 0 SKIPPED` pasaron. La policy enforced conserva `'unsafe-inline'`/`'unsafe-eval'`; permanecen pendientes Alpine/`unsafe-eval`, estilos inline, URLs JavaScript restantes, CDN/runtime y tightening de enforcement.
 
 ### PRIV-LOG-010
 
-La aplicación minimiza eventos de autenticación y redacta contexto sensible. Producción debe verificar la ruta efectiva de logs, permisos, ACL de lectores, inaccesibilidad desde web, rotación y retención.
+La implementación y su regresión están verificadas remotamente en el commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`; el log incluye `privacy_logging_security_regression.php` y `161 PASS / 0 FAIL / 0 SKIPPED`. La aplicación redacta secretos, credenciales, payloads, headers y PII, y neutraliza saltos de línea. La verificación runtime queda pendiente del primer deploy: ruta, permisos, inaccesibilidad web, rotación, retención, backups y shipping.
 
 ### SEC-SESSION-009
 
-Las sesiones usan cookies, modo estricto, `HttpOnly`, `SameSite=Lax` y cookies `Secure` en producción; el login rota sesión y CSRF. Producción debe verificar detección HTTPS efectiva, atributos de cookie, `session.save_path` fuera del webroot, permisos, modo estricto y cookie-only mode.
+La implementación y las regresiones `session_post_login_regression.php` y `session_security_regression.php` están verificadas remotamente en el commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`, Security workflow run `35377218278`; el log incluye ambos tests y `161 PASS / 0 FAIL / 0 SKIPPED`. El runtime queda pendiente del primer deploy: HTTPS/TLS, proxy, cookies efectivas, `session.save_path`, permisos, modo estricto y configuración PHP efectiva.
 
 #### Regresión post-login resuelta
 
@@ -128,6 +133,6 @@ El harness compartido de seguridad está verde a nivel de infraestructura. Esto 
 
 - No hay autorización para producción, despliegue, secretos, infraestructura, proxy, base de datos ni archivos históricos.
 - No hay autorización para modificar el módulo concurrente `departamento-operativo` hasta liberación explícita.
-- No iniciar DATA-VALID-011, SEC-CSP-012, DEP-TEST-013 ni ARCH-001 sin un nuevo slice de evaluación.
+- DATA-VALID-011 queda `REMEDIATED_REMOTE_VERIFIED` con restricciones residuales documentadas: storage público de Seguro por requisito arquitectónico, verificaciones web pendientes y tres superficies diferidas de `departamento-operativo`. SEC-CSP-012 está en `PARTIAL_HARDENING_CHECKPOINT`: la CSP enforced permanece sin cambios, no quedan scripts ejecutables inline ni handlers inline fuera de `departamento-operativo`, y permanecen pendientes Alpine/unsafe-eval, `javascript:void(0)`, estilos inline, el módulo diferido y el eventual tightening de enforcement. DEP-TEST-013 queda `REMEDIATED_REMOTE_VERIFIED`; ARCH-001 sigue pendiente de reevaluación.
 - OPS-001 permanece **PRODUCTION_ONLY_PENDING** con runbook pendiente.
-- SQL-001 permanece **INFORMATIONAL_NO_REMEDIATION** y se reevalúa contextualmente al cambiar módulos.
+- SQL-001 queda **CLOSED_WITH_EVIDENCE** al commit `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`: 4 consultas directas parametrizadas y 34 superficies raw revisadas, con 0 candidatos reales de inyección. Las superficies SQL de `departamento-operativo` siguen diferidas y requieren revisión antes del primer deploy si cambian materialmente.

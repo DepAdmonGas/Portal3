@@ -64,4 +64,34 @@ public function getLastError(): string
 {
 return $this->mail->ErrorInfo;
 }
+
+public function sendWithPdf(
+string $to,
+string $subject,
+string $bodyHtml,
+string $pdfPath,
+string $pdfName,
+string $altBody = ''
+): bool {
+try {
+$this->mail->clearAddresses();
+$this->mail->clearAttachments();
+$this->mail->addAddress($to);
+
+$this->mail->Subject = $subject;
+$this->mail->Body = $bodyHtml !== '' ? $bodyHtml : $subject;
+$this->mail->AltBody = $altBody !== '' ? $altBody : htmlspecialchars(strip_tags($bodyHtml), ENT_QUOTES, 'UTF-8');
+
+$this->mail->addAttachment($pdfPath, $pdfName);
+
+$this->mail->send();
+return true;
+
+} catch (Exception $e) {
+$errorMsg = 'Error SMTP: ' . $this->mail->ErrorInfo;
+error_log('[EmailService] ' . $errorMsg);
+
+return false;
+}
+}
 }

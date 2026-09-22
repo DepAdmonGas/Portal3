@@ -59,8 +59,9 @@ function layout_has_csrf_bootstrap(string $layout): bool
     $contents = (string) file_get_contents(dirname(__DIR__) . '/app/Views/layouts/' . $layout . '.php');
 
     return str_contains($contents, '<meta name="csrf-token" content="<?= \\App\\Core\\CsrfToken::token() ?>">')
-        && str_contains($contents, "axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken")
-        && str_contains($contents, "config.headers['X-CSRF-TOKEN'] = getCsrfToken()");
+        && (str_contains($contents, "axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken")
+            && str_contains($contents, "config.headers['X-CSRF-TOKEN'] = getCsrfToken()")
+            || str_contains($contents, "js/core/http-security.js"));
 }
 
 function layout_has_no_get_logout_anchor(string $layout): bool
@@ -68,7 +69,8 @@ function layout_has_no_get_logout_anchor(string $layout): bool
     $contents = (string) file_get_contents(dirname(__DIR__) . '/app/Views/layouts/' . $layout . '.php');
 
     return !str_contains($contents, 'href="/logout"')
-        && substr_count($contents, 'onclick="performLogout()"') === 2;
+        && substr_count($contents, 'data-action="logout"') === 2
+        && !str_contains($contents, 'onclick="performLogout()"');
 }
 
 function layout_csrf_logout_flow(): array

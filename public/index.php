@@ -40,8 +40,12 @@ header('X-Content-Type-Options: nosniff');
 // Protección XSS del navegador
 header('X-XSS-Protection: 1; mode=block');
 
-// Content Security Policy - Más permisiva para desarrollo
-header("Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.ckeditor.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.ckeditor.com; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net data: https://cdn.ckeditor.com; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdn.ckeditor.com; frame-ancestors 'self';");
+// Content Security Policy - enforcement histórica preservada literalmente.
+$enforcedCsp = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.ckeditor.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.ckeditor.com; img-src 'self' data: https: blob:; font-src 'self' https://cdn.jsdelivr.net data: https://cdn.ckeditor.com; connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdn.ckeditor.com; frame-ancestors 'self';";
+header('Content-Security-Policy: ' . $enforcedCsp);
+
+// Report-Only: política candidata más estricta, sin cambiar enforcement.
+header("Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdn.ckeditor.com 'unsafe-eval'; style-src 'self' https://cdn.jsdelivr.net https://cdn.ckeditor.com 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net https://cdn.ckeditor.com; connect-src 'self' https://www.admongas.com.mx; object-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';");
 
 // HSTS (solo si HTTPS está configurado)
 if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {

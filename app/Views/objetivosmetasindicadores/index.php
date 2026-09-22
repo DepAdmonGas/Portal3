@@ -166,9 +166,9 @@ altamente capacitado tanto en operación como en mantenimiento.</li>
 <div class="ms-auto">
 
 <div class="dropdown dropcenter">
-<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+<button type="button" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
   <i class="ti ti-dots-vertical fs-4"></i>
-</a>
+</button>
 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
   <?= 
@@ -227,9 +227,9 @@ altamente capacitado tanto en operación como en mantenimiento.</li>
 <div class="ms-auto">
 
 <div class="dropdown dropcenter">
-<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton " data-bs-toggle="dropdown" aria-expanded="false">
+<button type="button" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton " data-bs-toggle="dropdown" aria-expanded="false">
   <i class="ti ti-dots-vertical fs-4"></i>
-</a>
+</button>
 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
 <?= 

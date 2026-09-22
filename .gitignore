@@ -5,5 +5,4 @@
 /public/uploads
 /node_modules
 .env
-composer.lock
 package-lock.json

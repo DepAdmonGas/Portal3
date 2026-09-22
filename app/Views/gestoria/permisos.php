@@ -186,7 +186,7 @@
                                     x-if="requisito.acuse_url">
 
                                     <a class="pointer"
-                                        @click="download('requisitos-legales', requisito.acuse_url)"
+                                        @click="window.location.href='/gestoria/permisos/requisitos-legales/download?matrix_id=' + requisito.matrix_id + '&variant=acuse'"
                                         target="_blank"
                                         download>
 
@@ -216,7 +216,7 @@
                                     x-if="requisito.requisitolegal_url">
 
                                     <a class="pointer"
-                                        @click="download('requisitos-legales', requisito.requisitolegal_url)"
+                                        @click="window.location.href='/gestoria/permisos/requisitos-legales/download?matrix_id=' + requisito.matrix_id + '&variant=requisito'"
                                         target="_blank"
                                         download>
 
@@ -334,7 +334,7 @@
                                             <td>
                                                 <template x-if="row.acusepdf">
                                                     <a class="pointer"
-                                                        @click="download('requisitos-legales', row.acusepdf)">
+                                                        @click="window.location.href='/gestoria/permisos/requisitos-legales/download?matrix_id=' + row.matrix_id + '&variant=acuse'">
                                                         <i class="ti ti-download text-success fs-6"></i>
                                                     </a>
                                                 </template>
@@ -345,7 +345,7 @@
                                             <td>
                                                 <template x-if="row.requisitolegalpdf">
                                                     <a class="pointer"
-                                                        @click="download('requisitos-legales', row.requisitolegalpdf)">
+                                                        @click="window.location.href='/gestoria/permisos/requisitos-legales/download?matrix_id=' + row.matrix_id + '&variant=requisito'">
                                                         <i class="ti ti-download text-success fs-6"></i>
                                                     </a>
                                                 </template>

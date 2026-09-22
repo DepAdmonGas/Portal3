@@ -14,7 +14,7 @@ buscarHallazgos();">
 
 <div class="text-end mt-3 mb-3">
 
-<button onclick="window.history.back();"
+<button data-action="history-back"
 class="btn btn-success mb-3">
 <i class="ti ti-check"></i>
 Finalizar

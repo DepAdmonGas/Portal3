@@ -23,14 +23,18 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js" integrity="sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu" crossorigin="anonymous"></script>
     <!-- Alpine + Axios -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.17.3/dist/cdn.min.js" integrity="sha384-/7syvHwR9PpZbxOwOnlTTl4DepN0R0q9aiGAu+D0AcTtZXmrNw0zgp+TzUlPgDx2" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js" integrity="sha384-jLwhcmGu/RL8PSTUEl/559f8QVLL4QqM+HBvoZlt4F7XCdsdoDGAwW4nPFfoM7lU" crossorigin="anonymous"></script>
 
     <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
+    <script src="<?= asset('js/core/http-security.js') ?>"></script>
+
+
     <script>
         (function() {
+            // Función para obtener el token actual del meta tag
             function getCsrfToken() {
                 const meta = document.querySelector('meta[name="csrf-token"]');
                 return meta ? meta.getAttribute('content') : null;
@@ -38,10 +42,13 @@
 
             const csrfToken = getCsrfToken();
             if (csrfToken) {
+                // Agregar token a todas las solicitudes Axios
                 axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
 
+                // Interceptar solicitudes para asegurar token fresco
                 axios.interceptors.request.use(
                     function(config) {
+                        // Actualizar token antes de cada request
                         config.headers['X-CSRF-TOKEN'] = getCsrfToken();
                         return config;
                     },
@@ -49,6 +56,56 @@
                         return Promise.reject(error);
                     }
                 );
+
+                // Interceptar respuestas para detectar CSRF expirado
+                axios.interceptors.response.use(
+                    function(response) {
+                        return response;
+                    },
+                    function(error) {
+                        if (error.response && error.response.status === 419) {
+                            const meta = document.querySelector('meta[name="csrf-token"]');
+                            const newToken = error.response.data && error.response.data.new_token;
+                            if (meta && newToken) {
+                                meta.setAttribute('content', newToken);
+                                if (error.config && !error.config._csrfRetried) {
+                                    error.config._csrfRetried = true;
+                                    return axios(error.config);
+                                }
+                            }
+                            window.location.reload();
+                        }
+                        return Promise.reject(error);
+                    }
+                );
+            }
+
+            const __origFetch = window.fetch;
+            if (typeof __origFetch === 'function') {
+                window.fetch = function (input, init) {
+                    init = init || {};
+                    var method = ((init.method || (input && input.method) || 'GET') + '').toUpperCase();
+                    if (method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH') {
+                        var url = typeof input === 'string' ? input : (input && input.url);
+                        var sameOrigin = true;
+                        if (url && /^https?:\/\//i.test(url)) {
+                            try {
+                                sameOrigin = new URL(url, window.location.href).origin === window.location.origin;
+                            } catch (e) {
+                                sameOrigin = false;
+                            }
+                        }
+                        if (sameOrigin) {
+                            var headers = new Headers(init.headers || (input && input.headers) || undefined);
+                            var token = getCsrfToken();
+                            if (token && !headers.has('X-CSRF-TOKEN')) {
+                                headers.set('X-CSRF-TOKEN', token);
+                            }
+                            init.headers = headers;
+                        }
+                    }
+                    return __origFetch.call(window, input, init);
+                };
             }
         })();
     </script>
@@ -213,7 +270,7 @@
                             <h6 class="mb-0 fs-5 fw-normal text-white"><?= implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2)); ?></h6>
                             <span class="fs-2"><?= $user->puesto->tipo_puesto ?></span>
                         </div>
-                        <a href="javascript:void(0)" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir" onclick="performLogout()">
+                        <a href="#" class="border-0 bg-transparent text-primary ms-auto" tabindex="0" type="button" aria-label="logout" data-action="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir">
                             <i class="ti ti-power text-danger fs-6"></i>
                         </a>
                     </div>
@@ -311,7 +368,7 @@
                                                 </div>
 
                                                 <div class="d-grid py-4 px-7 pt-8">
-                                                    <a href="javascript:void(0)" class="btn btn-outline-primary" onclick="performLogout()">Salir</a>
+                                                    <a href="#" class="btn btn-outline-primary" data-action="logout">Salir</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -365,12 +422,13 @@
     <script src="<?= asset('js/theme/sidebarmenu.js') ?>"></script>
 
     <!-- solar icons -->
-    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js" integrity="sha384-D4fI2O1dD9gQnn73J775jfm7LFa+lp87psAf0aiqjF9EQjnhGwZwkGm+2bffcJSF" crossorigin="anonymous"></script>
     <!-- highlight.js (code view) -->
     <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
     <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
     <script src="<?= asset('js/core/notify.js?v=1.0.1') ?>"></script>
     <script src="<?= asset('js/core/actions.alpine.js?v=1.0.3') ?>"></script>
+    <script src="<?= asset('js/core/inline-handler-remediation.js') ?>"></script>
 
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>
@@ -379,12 +437,35 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
+
+    <script>
+        (function () {
+            function getCsrfToken() {
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                return meta ? meta.getAttribute('content') : null;
+            }
+            if (window.jQuery) {
+                jQuery.ajaxSetup({
+                    beforeSend: function (jqXHR) {
+                        var token = getCsrfToken();
+                        if (token) {
+                            jqXHR.setRequestHeader('X-CSRF-TOKEN', token);
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+
     <script>
         hljs.initHighlightingOnLoad();
         document.querySelectorAll("pre.code-view > code").forEach((codeBlock) => {
             codeBlock.textContent = codeBlock.innerHTML;
         });
     </script>
+
+    <script src="<?= asset('js/core/highlight-init.js') ?>"></script>
+
 
 </body>
 
