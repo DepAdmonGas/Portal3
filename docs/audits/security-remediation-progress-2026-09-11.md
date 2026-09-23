@@ -726,6 +726,12 @@
 - Added focused structural regression coverage. Targeted CSP regression passes; the full suite retains only the known deferred `AUTHZ-TENANT-007` SolicitudCheque failures. No production verification was performed.
 - Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; this slice does not close the finding.
 
+## SEC-CSP-012-BATCH-SAFE-JAVASCRIPT-VOID-CLEANUP
+
+- Converted 8 mechanically safe static Alpine action anchors across 5 non-deferred view files to semantic `button type="button"` controls.
+- The batch covered modal/search actions in Integridad Mecánica, Objetivos/Metas/Indicadores, SGM Normatividad, and SGM annual calibration/verification pages. Dynamic/DataTables, generated HTML, navigation, and uncertain ownership cases were excluded.
+- Added compact manifest-based CSP regression coverage. `SEC-CSP-012` remains open; `AUTHZ-TENANT-007` remains deferred concurrent, and production was not verified.
+
 ## SEC-CSP-012-COMUNICACION-PARTICIPACION-CONSULTA-SAFE-ACTIONS
 
 - Converted exactly three static `javascript:void(0)` Alpine action controls in `app/Views/comunicacionparticipacionconsulta/index.php` to semantic `button type="button"` controls: `openModalComunicacion()`, `openModalBuscar()`, and `openModalQS()`.

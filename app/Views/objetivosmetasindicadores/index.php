@@ -174,7 +174,7 @@ altamente capacitado tanto en operación como en mantenimiento.</li>
   <?= 
     !empty($permisos['crear']) ? 
     '<li>
-      <a class="dropdown-item pointer" href="javascript:void(0)" @click="openNuevoObjetivoMetas()"><i class="ti ti-plus"></i> Agregar</a>
+      <button type="button" class="dropdown-item pointer" @click="openNuevoObjetivoMetas()"><i class="ti ti-plus"></i> Agregar</button>
     </li>' 
     : '' 
   ?>   
@@ -235,7 +235,7 @@ altamente capacitado tanto en operación como en mantenimiento.</li>
 <?= 
     !empty($permisos['crear']) ? 
     '<li>
-      <a class="dropdown-item pointer" href="javascript:void(0)" @click="openNuevoReporteIndicador()"><i class="ti ti-plus"></i> Agregar</a>
+      <button type="button" class="dropdown-item pointer" @click="openNuevoReporteIndicador()"><i class="ti ti-plus"></i> Agregar</button>
     </li>' 
     : '' 
   ?>   

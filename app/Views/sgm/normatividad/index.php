@@ -99,7 +99,7 @@
             </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
               <li>
-                <a class="dropdown-item" href="javascript:void(0)" @click="nuevo()"><i class="ti ti-plus"></i> Nuevo</a>
+                <button type="button" class="dropdown-item" @click="nuevo()"><i class="ti ti-plus"></i> Nuevo</button>
               </li>
               <li>
                 <a class="dropdown-item" href="/sgm/normatividad-aplicable-mediciones/inventario-normatividad/pdf"><i class="ti ti-download"></i> Descargar</a>
