@@ -718,3 +718,10 @@
 - `6448939` is an ancestor of current `HEAD` `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`; therefore the documentation remediation is present on `origin/Silvino`.
 - Current status matrices are consistent with the reconciled states, including deferred findings and the documented CSP/production residuals. `DOC-001` is `CLOSED_WITH_EVIDENCE`; the Security workflow is supporting evidence only, not the primary documentation proof.
 - Reopen if the matrix drifts materially from implementation, security decisions lack records, pre-deployment status changes are undocumented, or operational guidance becomes contradictory.
+
+## SEC-CSP-012-MEJORES-PRACTICAS-STATIC-MODAL-ACTIONS
+
+- Converted exactly two `javascript:void(0)` modal-action anchors in `app/Views/mejorespracticas/index.php` to semantic `button type="button"` controls: `openModalDC()` and `openModalOM()`.
+- Preserved Alpine expressions, permission gates, classes, labels, icons, dropdown structure, and modal behavior. DataTables actions, dynamic rows, JavaScript, CSP policy, and `departamento-operativo` were not changed.
+- Added focused structural regression coverage. Targeted CSP regression passes; the full suite retains only the known deferred `AUTHZ-TENANT-007` SolicitudCheque failures. No production verification was performed.
+- Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; this slice does not close the finding.

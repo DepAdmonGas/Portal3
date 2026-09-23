@@ -32,6 +32,13 @@ $tests = [
             && str_contains($source, 'aria-expanded="false"')
             && !str_contains($source, 'arial-explaned');
     })(),
+    'mejores practicas modal actions use semantic buttons' => (function (): bool {
+        $source = (string) file_get_contents(__DIR__ . '/../app/Views/mejorespracticas/index.php');
+        return !str_contains($source, '<a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalDC()">')
+            && !str_contains($source, '<a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalOM()">')
+            && str_contains($source, '<button type="button" class="dropdown-item pointer" @click="openModalDC()">')
+            && str_contains($source, '<button type="button" class="dropdown-item pointer" @click="openModalOM()">');
+    })(),
     'integridad mecanica dropdown uses semantic button without changing actions' => (function (): bool {
         $source = (string) file_get_contents(__DIR__ . '/../app/Views/integridadmecanica/index.php');
         return !str_contains($source, '<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle"')

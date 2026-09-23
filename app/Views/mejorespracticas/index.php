@@ -29,7 +29,7 @@
             <?= 
               !empty($permisos['crear']) ? 
               '<li>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalDC()"><i class="ti ti-plus"></i> Agregar</a>
+                <button type="button" class="dropdown-item pointer" @click="openModalDC()"><i class="ti ti-plus"></i> Agregar</button>
               </li>
               <li>' 
               : '' 
@@ -94,7 +94,7 @@
               <?= 
               !empty($permisos['crear']) ? 
               '<li>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalOM()"><i class="ti ti-plus"></i> Agregar</a>
+                <button type="button" class="dropdown-item pointer" @click="openModalOM()"><i class="ti ti-plus"></i> Agregar</button>
               </li>
               <li>' 
               : '' 
