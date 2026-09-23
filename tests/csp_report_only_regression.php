@@ -39,6 +39,16 @@ $tests = [
             && str_contains($source, '<button type="button" class="dropdown-item pointer" @click="openModalDC()">')
             && str_contains($source, '<button type="button" class="dropdown-item pointer" @click="openModalOM()">');
     })(),
+    'comunicacion participacion consulta modal actions use semantic buttons' => (function (): bool {
+        $source = (string) file_get_contents(__DIR__ . '/../app/Views/comunicacionparticipacionconsulta/index.php');
+        return !str_contains($source, 'href="javascript:void(0)" @click="openModalComunicacion()"')
+            && !str_contains($source, 'href="javascript:void(0)" @click="openModalBuscar()"')
+            && !str_contains($source, 'href="javascript:void(0)" @click="openModalQS()"')
+            && str_contains($source, '<button type="button" class="dropdown-item pointer" @click="openModalComunicacion()">')
+            && str_contains($source, '<button type="button" class="dropdown-item pointer" @click="openModalBuscar()">')
+            && str_contains($source, '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalQS()"')
+            && str_contains($source, "!empty(\$permisos['crear'])");
+    })(),
     'integridad mecanica dropdown uses semantic button without changing actions' => (function (): bool {
         $source = (string) file_get_contents(__DIR__ . '/../app/Views/integridadmecanica/index.php');
         return !str_contains($source, '<a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle"')

@@ -725,3 +725,10 @@
 - Preserved Alpine expressions, permission gates, classes, labels, icons, dropdown structure, and modal behavior. DataTables actions, dynamic rows, JavaScript, CSP policy, and `departamento-operativo` were not changed.
 - Added focused structural regression coverage. Targeted CSP regression passes; the full suite retains only the known deferred `AUTHZ-TENANT-007` SolicitudCheque failures. No production verification was performed.
 - Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; this slice does not close the finding.
+
+## SEC-CSP-012-COMUNICACION-PARTICIPACION-CONSULTA-SAFE-ACTIONS
+
+- Converted exactly three static `javascript:void(0)` Alpine action controls in `app/Views/comunicacionparticipacionconsulta/index.php` to semantic `button type="button"` controls: `openModalComunicacion()`, `openModalBuscar()`, and `openModalQS()`.
+- Preserved Alpine ownership, modal targets, labels, icons, classes, station visibility, and the existing create permission gates. DataTables-generated actions, navigation links, custom JavaScript, CSP policy, and `departamento-operativo` were not changed.
+- Added focused structural regression coverage. The targeted CSP regression passes; the full suite retains only the known deferred `AUTHZ-TENANT-007` SolicitudCheque failures. No production verification was performed.
+- Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; this slice does not close the finding.

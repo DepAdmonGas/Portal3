@@ -19,11 +19,11 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 </button>
 <ul class="dropdown-menu animated rubberBand">
 <?= !empty($permisos['crear']) ? 
-'<li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openModalComunicacion()"><i class="ti ti-plus"></i> Nuevo </a></li>' 
+'<li><button type="button" class="dropdown-item pointer" @click="openModalComunicacion()"><i class="ti ti-plus"></i> Nuevo </button></li>'
 : '' 
 ?>
 <li>
-<a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalBuscar()"><i class="ti ti-search"></i> Buscar</a>
+<button type="button" class="dropdown-item pointer" @click="openModalBuscar()"><i class="ti ti-search"></i> Buscar</button>
 </li>
 <li>
 <a class="dropdown-item pointer"
@@ -90,9 +90,9 @@ Descargar
 <div class="ms-auto">
 <?= 
 !empty($permisos['crear']) ? 
-'<a class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openModalQS()"  >
+'<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalQS()"  >
 <i class="ti ti-plus"></i> Nuevo
-</a>' 
+</button>'
 : '' 
 ?>   
 </div>
