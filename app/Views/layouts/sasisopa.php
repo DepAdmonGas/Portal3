@@ -457,13 +457,6 @@
         })();
     </script>
 
-    <script>
-        hljs.initHighlightingOnLoad();
-        document.querySelectorAll("pre.code-view > code").forEach((codeBlock) => {
-            codeBlock.textContent = codeBlock.innerHTML;
-        });
-    </script>
-
     <script src="<?= asset('js/core/highlight-init.js') ?>"></script>
 
 
