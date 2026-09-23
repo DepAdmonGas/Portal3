@@ -699,6 +699,12 @@
 - Focused CSP regression: 15 PASS / 0 FAIL / 0 SKIPPED. Security suite: 166 PASS / 0 FAIL / 0 SKIPPED. Remaining JavaScript URL inventory: 118.
 - Excluded residual dropdown candidates remain documented for later bounded review; status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL` pending checkpoint and remote verification.
 
+## SEC-CSP-012-BATCH-OTHER-SAFE-ACTIONS
+
+- Migrated 6 safe static Alpine action controls across 3 application views, removing obsolete `javascript:void(0)` attributes while preserving actions and permission gates.
+- Residual `javascript:void(0)` inventory reduced from 53 to 47. Remaining categories are `DATATABLES_DYNAMIC`, `MIXED_COMPLEXITY`, and `REAL_NAVIGATION`.
+- `SEC-CSP-012` remains open; `AUTHZ-TENANT-007` remains deferred and production has not been verified.
+
 ## CSP-HIGHLIGHT-MERGE-REGRESSION-FIX
 
 - Reconciled the PR #204 merge regression in `app/Views/layouts/sasisopa.php` by removing the redundant inline highlight initialization while retaining the external `highlight-init.js` loader.

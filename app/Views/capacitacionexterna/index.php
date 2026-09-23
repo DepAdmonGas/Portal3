@@ -17,7 +17,7 @@ x-data="{ ...actions(), ...capacitacionExterna() }">
          <div class="ms-auto">
             <?= 
               !empty($permisos['crear']) ? 
-              '<button type="button" class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openModalNuevo()">
+              '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalNuevo()">
               <i class="ti ti-plus"></i> Nuevo
               </button>' 
               : '' 

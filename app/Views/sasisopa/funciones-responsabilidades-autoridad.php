@@ -123,7 +123,7 @@
           <div class="col-3">
         <?= 
               !empty($permisos['crear']) ? 
-              '<button type="button"  class="btn bg-primary-subtle text-primary float-end" href="javascript:void(0)" @click="openNuevo()">
+              '<button type="button"  class="btn bg-primary-subtle text-primary float-end" @click="openNuevo()">
               <i class="ti ti-plus"></i> Nuevo
               </button>' 
               : '' 

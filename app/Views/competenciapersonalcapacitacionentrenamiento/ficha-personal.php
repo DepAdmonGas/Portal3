@@ -155,7 +155,7 @@ x-init="
                 <div class="ms-auto">
                 <?= 
                     !empty($permisos['crear']) ? 
-                    '<button type="button" class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openModalFamiliar()">
+                    '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalFamiliar()">
                     <i class="ti ti-plus"></i> Nuevo
                     </button>' 
                     : '' 
@@ -215,7 +215,7 @@ x-init="
                 <div class="ms-auto">
                 <?= 
                     !empty($permisos['crear']) ? 
-                    '<button type="button" class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openModalFormacion()">
+                    '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalFormacion()">
                     <i class="ti ti-plus"></i> Nuevo
                     </button>' 
                     : '' 
@@ -275,7 +275,7 @@ x-init="
                 <div class="ms-auto">
                 <?= 
                     !empty($permisos['crear']) ? 
-                    '<button type="button" class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openModalExperiencia()">
+                    '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalExperiencia()">
                     <i class="ti ti-plus"></i> Nuevo
                     </button>' 
                     : '' 
@@ -329,7 +329,7 @@ x-init="
                 <div class="ms-auto">
                 <?= 
                     !empty($permisos['crear']) ? 
-                    '<button type="button" class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="openModalEmpresa()">
+                    '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalEmpresa()">
                     <i class="ti ti-plus"></i> Nuevo
                     </button>' 
                     : '' 
