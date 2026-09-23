@@ -115,7 +115,7 @@ x-data="{ ...actions(), ...equipoCritico()}">
              <?= 
               !empty($permisos['crear']) ? 
               '<li>
-                    <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModal()"><i class="ti ti-plus"></i> Agregar</a>
+                    <button type="button" class="dropdown-item pointer" @click="openModal()"><i class="ti ti-plus"></i> Agregar</button>
                 </li>' 
               : '' 
               ?>   

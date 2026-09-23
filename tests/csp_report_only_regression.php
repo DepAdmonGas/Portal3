@@ -90,6 +90,31 @@ $tests = [
         }
         return true;
     })(),
+    'safe javascript void alpine batch uses semantic buttons' => (function (): bool {
+        $manifest = [
+            ['integridadmecanica/index.php', 'openModal()'],
+            ['objetivosmetasindicadores/index.php', 'openNuevoObjetivoMetas()'],
+            ['objetivosmetasindicadores/index.php', 'openNuevoReporteIndicador()'],
+            ['sgm/normatividad/index.php', 'nuevo()'],
+            ['sgm/procesos-medicion/programacion-anual-calibracion.php', 'openModalNuevo()'],
+            ['sgm/procesos-medicion/programacion-anual-calibracion.php', 'openModalBuscar()'],
+            ['sgm/procesos-medicion/programacion-anual-verificacion.php', 'openModalNuevo()'],
+            ['sgm/procesos-medicion/programacion-anual-verificacion.php', 'openModalBuscar()'],
+        ];
+
+        foreach ($manifest as [$relativePath, $action]) {
+            $source = (string) file_get_contents(__DIR__ . '/../app/Views/' . $relativePath);
+            $quotedAction = preg_quote($action, '~');
+            if (preg_match('~<a\\b[^>]*href=["\\\']javascript:void\\(0\\)["\\\'][^>]*@click=["\\\']' . $quotedAction . '["\\\'][^>]*>~', $source)) {
+                return false;
+            }
+            if (!preg_match('~<button\\b[^>]*type=["\\\']button["\\\'][^>]*@click=["\\\']' . $quotedAction . '["\\\'][^>]*>~', $source)) {
+                return false;
+            }
+        }
+
+        return true;
+    })(),
 ];
 
 $passed = 0;

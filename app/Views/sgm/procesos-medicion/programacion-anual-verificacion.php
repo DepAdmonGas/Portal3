@@ -24,10 +24,10 @@
 
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <li>
-                                <a class="dropdown-item" href="javascript:void(0)" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
+                                <button type="button" class="dropdown-item" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo</button>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="javascript:void(0)" @click="openModalBuscar()"><i class="ti ti-search"></i> Buscar</a>
+                                <button type="button" class="dropdown-item" @click="openModalBuscar()"><i class="ti ti-search"></i> Buscar</button>
                             </li>
                             <li>
                                 <a class="dropdown-item" :href="pdf"><i class="ti ti-download"></i> Descargar</a>
