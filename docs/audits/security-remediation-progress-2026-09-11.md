@@ -699,6 +699,18 @@
 - Focused CSP regression: 15 PASS / 0 FAIL / 0 SKIPPED. Security suite: 166 PASS / 0 FAIL / 0 SKIPPED. Remaining JavaScript URL inventory: 118.
 - Excluded residual dropdown candidates remain documented for later bounded review; status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL` pending checkpoint and remote verification.
 
+## CSP-HIGHLIGHT-MERGE-REGRESSION-FIX
+
+- Reconciled the PR #204 merge regression in `app/Views/layouts/sasisopa.php` by removing the redundant inline highlight initialization while retaining the external `highlight-init.js` loader.
+- The existing CSP regression now passes: 15 PASS / 0 FAIL / 0 SKIPPED. `SEC-CSP-012` remains `PARTIAL_HARDENING_LOCAL_RECONCILIATION` pending remote verification.
+- Main response-policy reconciliation and concurrent `AUTHZ-TENANT-007` work remain separate/pending; no production verification was performed.
+
+## MAIN-RESPONSE-POLICY-RECONCILIATION
+
+- Removed the duplicate inline Axios/fetch/jQuery response-policy blocks reintroduced by the PR #204 merge in `app/Views/layouts/main.php`.
+- `public/assets/js/core/main-response-policy.js` remains the sole response-policy owner. Targeted regression: 4 PASS / 0 FAIL / 0 SKIPPED; CSP regression: 15 PASS / 0 FAIL / 0 SKIPPED.
+- The full suite reports 164 PASS / 3 FAIL / 0 SKIPPED; the remaining failures are the deferred AUTHZ-TENANT-007 SolicitudCheque cases. No production verification was performed.
+
 ## DOC-001-REMOTE-VERIFICATION-RECONCILIATION
 
 - Original scope: audit and security documents mixed prior results, TODOs, and stale figures, creating documentation drift; the audit explicitly required consolidation after remediation without deleting history.
