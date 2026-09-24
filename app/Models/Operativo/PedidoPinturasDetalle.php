@@ -25,5 +25,10 @@ class PedidoPinturasDetalle extends Model
         'id_pedido' => 'integer',
         'piezas' => 'integer'
     ];
+
+    public function pedido()
+    {
+        return $this->belongsTo(PedidoPinturasComplementos::class, 'id_pedido', 'id');
+    }
 }
 
