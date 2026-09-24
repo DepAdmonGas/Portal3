@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                
                     return `
-                        <a href="javascript:void(0)" @click='window.bitacoraResiduos.detalle(${JSON.stringify(row)})'>
+                        <a class="pointer" @click='window.bitacoraResiduos.detalle(${JSON.stringify(row)})'>
                             <i class="ti ti-eye fs-6"></i>
                         </a>
                     `;

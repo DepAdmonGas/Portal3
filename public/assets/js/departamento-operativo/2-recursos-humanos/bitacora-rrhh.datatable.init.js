@@ -44,33 +44,33 @@ $(document).ready(function () {
         var badge = conteo > 0
             ? '<span class="badge-historico position-absolute top-0 start-100 translate-middle">' + conteo + '</span>'
             : '';
-        return '<a href="javascript:void(0)" class="btn-comentarios btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center" data-action="comentarios" data-id="' + row.id + '" title="Comentarios">' +
+        return '<a class="btn-comentarios pointer btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center" data-action="comentarios" data-id="' + row.id + '" title="Comentarios">' +
             '<i class="ti ti-message fs-7"></i>' + badge + '</a>';
     }
 
     function renderVisualizaciones(row) {
         if (!permisos.puedeVerVisualizaciones) return '';
         var conteo = parseInt(row.total_visualizaciones) || 0;
-        return '<a href="javascript:void(0)" class="btn-visualizaciones d-inline-flex align-items-center justify-content-center mx-1" data-action="visualizaciones" data-id="' + row.id + '" title="Visualizaciones">' +
+        return '<a class="btn-visualizaciones pointer d-inline-flex align-items-center justify-content-center mx-1" data-action="visualizaciones" data-id="' + row.id + '" title="Visualizaciones">' +
             '<span class="badge rounded-pill bg-primary">' + conteo + '</span>' +
             '</a>';
     }
 
     function renderAcciones(row) {
         var html = '<div class="dropdown dropstart d-inline-block">';
-        html += '<a href="javascript:void(0)" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots-vertical fs-6"></i></a>';
+        html += '<a class="pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots-vertical fs-6"></i></a>';
         html += '<div class="dropdown-menu">';
 
-        html += '<a class="dropdown-item pointer" href="javascript:void(0)" data-action="detalle" data-id="' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
+        html += '<a class="dropdown-item pointer" data-action="detalle" data-id="' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
 
         html += '<a class="dropdown-item pointer' + cls(permisos.puedeEditar) + '" href="' + (permisos.puedeEditar ? '/departamento-operativo/recursos-humanos/bitacora-rrhh/formulario/' + row.id : 'javascript:void(0)') + '">';
         html += '<i class="ti ti-pencil me-1"></i> Editar</a>';
 
         if (parseInt(row.estatus) === 0 && permisos.puedeFinalizar) {
-            html += '<a class="dropdown-item pointer" href="javascript:void(0)" data-action="finalizar" data-id="' + row.id + '"><i class="ti ti-circle-check me-1"></i> Finalizar</a>';
+            html += '<a class="dropdown-item pointer" data-action="finalizar" data-id="' + row.id + '"><i class="ti ti-circle-check me-1"></i> Finalizar</a>';
         }
 
-        html += '<a class="dropdown-item pointer' + cls(permisos.puedeEliminar) + ' text-danger" href="javascript:void(0)" data-action="eliminar" data-id="' + row.id + '" data-name="Bitácora #' + row.id + '">';
+        html += '<a class="dropdown-item pointer' + cls(permisos.puedeEliminar) + ' text-danger" data-action="eliminar" data-id="' + row.id + '" data-name="Bitácora #' + row.id + '">';
         html += '<i class="ti ti-trash me-1"></i> Eliminar</a>';
 
         html += '</div></div>';

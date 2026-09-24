@@ -115,6 +115,30 @@ $tests = [
 
         return true;
     })(),
+    'other safe alpine actions use semantic buttons' => (function (): bool {
+        $manifest = [
+            ['capacitacionexterna/index.php', 'openModalNuevo()'],
+            ['competenciapersonalcapacitacionentrenamiento/ficha-personal.php', 'openModalFamiliar()'],
+            ['competenciapersonalcapacitacionentrenamiento/ficha-personal.php', 'openModalFormacion()'],
+            ['competenciapersonalcapacitacionentrenamiento/ficha-personal.php', 'openModalExperiencia()'],
+            ['competenciapersonalcapacitacionentrenamiento/ficha-personal.php', 'openModalEmpresa()'],
+            ['sasisopa/funciones-responsabilidades-autoridad.php', 'openNuevo()'],
+        ];
+
+        foreach ($manifest as [$relativePath, $action]) {
+            $source = (string) file_get_contents(__DIR__ . '/../app/Views/' . $relativePath);
+            $quotedAction = preg_quote($action, '~');
+            if (preg_match('~<a\\b[^>]*href=["\\\']javascript:void\\(0\\)["\\\'][^>]*@click=["\\\']' . $quotedAction . '["\\\'][^>]*>~', $source)
+                || preg_match('~<button\\b[^>]*href=["\\\']javascript:void\\(0\\)["\\\'][^>]*@click=["\\\']' . $quotedAction . '["\\\'][^>]*>~', $source)) {
+                return false;
+            }
+            if (!preg_match('~<button\\b[^>]*type=["\\\']button["\\\'][^>]*@click=["\\\']' . $quotedAction . '["\\\'][^>]*>~', $source)) {
+                return false;
+            }
+        }
+
+        return true;
+    })(),
 ];
 
 $passed = 0;

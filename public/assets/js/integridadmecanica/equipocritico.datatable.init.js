@@ -65,12 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     return `
                         <div class="dropdown dropstart">
-                            <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                            <a class="pointer" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
                                  <li>
-                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" href="javascript:void(0)" 
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" 
                                     @click="download('manual','${archivo}')">
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>

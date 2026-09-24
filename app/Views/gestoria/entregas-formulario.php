@@ -221,7 +221,7 @@
                             <td class="text-center align-middle">
 
                                 <a
-                                    href="javascript:void(0)"
+
                                     class="pointer"
                                     @click="openAcuse(documento.id,documento.documento, documento.archivo)">
 
@@ -237,7 +237,7 @@
                                 <template x-if="entrega.estatus == 0">
 
                                     <a
-                                        href="javascript:void(0)"
+
                                         class="pointer"
                                         @click="eliminar(documento.id)">
 

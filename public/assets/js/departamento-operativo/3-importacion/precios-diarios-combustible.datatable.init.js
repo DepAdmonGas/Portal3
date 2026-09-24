@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 className: 'text-center align-middle col-accion-editar',
                 render: function (data, type, row) {
                     if (row.estatus === -1) {
-                        return '<a href="javascript:void(0)" class="pointer" title="Agregar" onclick="agregarPrecio(' + year + ', ' + mes + ', \'' + escHtml(row.fechaRaw) + '\')">' +
+                        return '<a class="pointer" title="Agregar" onclick="agregarPrecio(' + year + ', ' + mes + ', \'' + escHtml(row.fechaRaw) + '\')">' +
                             '<i class="ti ti-plus text-success fs-6"></i></a>';
                     }
                     return '<a href="/departamento-operativo/importacion/precios-diarios-combustible/formulario/' + data + '" class="pointer" title="Editar">' +

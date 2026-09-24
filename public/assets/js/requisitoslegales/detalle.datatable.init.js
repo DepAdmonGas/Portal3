@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 return `
                 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
-                    <a class="${!noDescargar ? 'disabled' : ''}" href="javascript:void(0)"
+                    <a class="pointer ${!noDescargar ? 'disabled' : ''}"
                     ${!noDescargar ? '' : `
                         @click="window.location.href='${downloadEndpoint}?matrix_id=${row.id}&variant=acuse'"
                         `}>
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 return `
                     <div x-data="actions()">
-                    <a class="${!noDescargar ? 'disabled' : ''}" href="javascript:void(0)"
+                    <a class="pointer ${!noDescargar ? 'disabled' : ''}"
                      ${!noDescargar ? '' : `
                         @click="window.location.href='${downloadEndpoint}?matrix_id=${row.id}&variant=requisito'"
                         `}>
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                         <div class="dropdown dropstart">
-                            <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                            <a class="pointer" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">

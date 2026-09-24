@@ -82,15 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                         <div class="dropdown dropstart">
-                            <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                            <a class="pointer" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
 
                             <li>
                                 <a class="dropdown-item pointer d-flex align-items-center gap-3  ${!noDetalle ? 'text-muted' : ''}"
-                                ${!noDetalle ? '' : ` 
-                                href="javascript:void(0)"
+                                ${!noDetalle ? '' : `                             
                                 @click='window.bitacoraCalibracionEquipos.abrirDetalle(${row.id})'`}>
                                 <i class="ti ti-eye"></i>Detalle
                                 </a>    
@@ -105,8 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                
                                 <li>
                                     <a
-                                        class="dropdown-item pointer d-flex align-items-center gap-3"
-                                        href="javascript:void(0)"
+                                        class="dropdown-item pointer d-flex align-items-center gap-3"                                  
                                         ${`@click='window.bitacoraCalibracionEquipos.abrirModalResultados(${JSON.stringify(row)})'`}>
 
                                         <i class="ti ti-folder-up"></i>

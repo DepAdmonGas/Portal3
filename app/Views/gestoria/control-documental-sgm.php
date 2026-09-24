@@ -62,7 +62,7 @@
                                 class="text-center">
 
                                 <a
-                                    href="javascript:void(0)"
+
                                     class="pointer"
                                     @click="
                                         abrirDocumento(
@@ -281,7 +281,7 @@
                                 class="text-center">
 
                                 <a
-                                    href="javascript:void(0)"
+
                                     class="pointer"
                                     @click="
                                         abrirDocumento(
@@ -493,7 +493,7 @@
                                 class="text-center">
 
                                 <a
-                                    href="javascript:void(0)"
+
                                     class="pointer"
                                     @click="
                                         abrirDocumento(
@@ -890,7 +890,7 @@
                                             class="text-center">
 
                                             <a
-                                                href="javascript:void(0)"
+
                                                 class="pointer text-danger"
                                                 @click="
                                                     eliminarDocumento(

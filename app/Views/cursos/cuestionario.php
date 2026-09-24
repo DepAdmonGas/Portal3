@@ -43,8 +43,8 @@
                 <li>
 
                     <a
-                        href="javascript:void(0)"
-                        class="dropdown-item d-flex align-items-center gap-2"
+
+                        class="dropdown-item d-flex align-items-center gap-2 pointer"
                         @click="abrirModalRespuesta()">
                         <i class="ti ti-list"></i>
 
@@ -57,8 +57,8 @@
                 <li>
 
                     <a
-                        href="javascript:void(0)"
-                        class="dropdown-item d-flex align-items-center gap-2"
+
+                        class="dropdown-item d-flex align-items-center gap-2 pointer"
                         @click="abrirModalPregunta()">
                         <i class="ti ti-plus"></i>
 

@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var urlBase = '/departamento-operativo/importacion/pivoteo/' + row.id;
 
         var ver = row.puedeVer
-            ? '<a href="javascript:void(0)" class="dropdown-item" data-action="pivoteo-detalle" data-id="' + row.id + '"><i class="ti ti-eye fs-6"></i> Detalle</a>'
+            ? '<a class="dropdown-item pointer" data-action="pivoteo-detalle" data-id="' + row.id + '"><i class="ti ti-eye fs-6"></i> Detalle</a>'
             : '<a class="dropdown-item disabled"><i class="ti ti-eye fs-6"></i> Detalle</a>';
 
         var pdf = row.puedePDF
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
             : '<a class="dropdown-item disabled"><i class="ti ti-file-type-pdf fs-6"></i> Descargar PDF</a>';
 
         var gmail = row.puedeGmail
-            ? '<a href="javascript:void(0)" class="dropdown-item" data-action="pivoteo-gmail" data-id="' + row.id + '" data-nocontrol="' + escHtml(row.nocontrol_txt || '') + '"><i class="ti ti-mail fs-6"></i> Envío por correo</a>'
+            ? '<a class="dropdown-item pointer" data-action="pivoteo-gmail" data-id="' + row.id + '" data-nocontrol="' + escHtml(row.nocontrol_txt || '') + '"><i class="ti ti-mail fs-6"></i> Envío por correo</a>'
             : '<a class="dropdown-item disabled"><i class="ti ti-mail fs-6"></i> Envío por correo</a>';
 
         var editar = row.puedeEditar
@@ -108,11 +108,11 @@ document.addEventListener('DOMContentLoaded', function () {
             : '<a class="dropdown-item disabled"><i class="ti ti-pencil fs-6"></i> Editar</a>';
 
         var eliminar = row.puedeEliminar
-            ? '<a href="javascript:void(0)" class="dropdown-item" data-action="pivoteo-eliminar" data-id="' + row.id + '" data-name="#' + row.id + '"><i class="ti ti-trash fs-6"></i> Eliminar</a>'
+            ? '<a class="dropdown-item pointer" data-action="pivoteo-eliminar" data-id="' + row.id + '" data-name="#' + row.id + '"><i class="ti ti-trash fs-6"></i> Eliminar</a>'
             : '<a class="dropdown-item disabled"><i class="ti ti-trash fs-6"></i> Eliminar</a>';
 
         return '<div class="dropdown dropstart">' +
-            '<a href="javascript:void(0)" data-bs-toggle="dropdown">' +
+            '<a class="pointer" data-bs-toggle="dropdown">' +
             '<i class="ti ti-dots-vertical fs-6"></i>' +
             '</a>' +
             '<div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">' +

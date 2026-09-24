@@ -53,7 +53,7 @@ function renderAcciones(row) {
 var puedeDel = row.estado === 0;
 var puedeEdi = row.estado === 0;
 
-var html = '<div class="dropdown dropstart"><a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
+var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
 html += '<a class="dropdown-item pointer btn-av-detalle" data-id="' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
 html += '<a class="dropdown-item pointer btn-av-anexos" data-id="' + row.id + '"><i class="ti ti-file me-1"></i> Anexos</a>';
 html += '<a class="dropdown-item pointer btn-av-editar' + cls(puedeEdi) + '" data-id="' + row.id + '"><i class="ti ti-pencil me-1"></i> Editar</a>';

@@ -62,14 +62,13 @@ return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
 <div class="dropdown dropstart">
 
-<a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown" data-bs-display="static"><i class="ti ti-dots-vertical fs-6"></i></a> 
+<a class="text-muted" data-bs-toggle="dropdown pointer" data-bs-display="static"><i class="ti ti-dots-vertical fs-6"></i></a> 
 
 <ul class="dropdown-menu">
 
 <!-- SUBMODULOS -->
 <li>
 <a 
-href="javascript:void(0)"
 class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledCreate}"
 ${!permisos.disabledCreate  
 ? ` @click='async () => { 
@@ -81,7 +80,6 @@ const res = await goTo("/configuracion/modulos-operativo/${row.idModulo}"); }' `
 <!-- EDITAR -->
 <li>
 <a 
-href="javascript:void(0)"
 class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledEdit}"
 ${!permisos.disabledEdit 
 ? `@click='$dispatch("open-edit", ${JSON.stringify(row)})'` : ''}>
@@ -91,7 +89,7 @@ ${!permisos.disabledEdit
 
 <!-- ELIMINAR -->
 <li>
-<a href="javascript:void(0)"
+<a 
 class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledDelete}"
 ${permisos.disabledDelete ? '' : `
 @click="async () => {

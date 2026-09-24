@@ -136,7 +136,7 @@ const puedeArchivos = d.puede_archivos;
 const puedeEditar = d.puede_editar_row;
 const puedeEliminar = d.puede_eliminar_row;
 const puedePagos = d.puede_pagos;
-let html = '<div class="dropdown dropstart"><a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
+let html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
 html += '<a class="dropdown-item pointer btn-detalle" data-id="' + d.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
 html += '<a class="dropdown-item pointer btn-pdf' + cls(puedePdf) + '" data-id="' + d.id + '" data-pdf="' + (puedePdf ? 1 : 0) + '"><i class="ti ti-file-text me-1"></i> PDF</a>';
 html += '<a class="dropdown-item pointer btn-documentos' + cls(puedeArchivos) + '" data-id="' + d.id + '" data-documentos="' + (puedeArchivos ? 1 : 0) + '"><i class="ti ti-file me-1"></i> Archivos</a>';

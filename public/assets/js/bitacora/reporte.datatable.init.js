@@ -96,9 +96,9 @@ if (esImportacion()) {
 return [
 '<div x-data="actions()" class="d-flex gap-1 justify-content-center">',
 '<div class="dropdown dropstart">',
-'<a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>',
+'<a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>',
 '<ul class="dropdown-menu">',
-'<li><a href="javascript:void(0)" class="dropdown-item pointer ' + (noDesc ? 'disabled' : '') + '"' + (noDesc ? '' : ' @click="download(\'bitacora-aditivo\',\'' + row.documento + '\')"') + '><i class="ti ti-file-download"></i> Descargar</a></li>',
+'<li><a class="dropdown-item pointer ' + (noDesc ? 'disabled' : '') + '"' + (noDesc ? '' : ' @click="download(\'bitacora-aditivo\',\'' + row.documento + '\')"') + '><i class="ti ti-file-download"></i> Descargar</a></li>',
 '</ul></div></div>'
 ].join('');
 }
@@ -106,10 +106,10 @@ const noDelete = !permisos.eliminar || disabled;
 return [
 '<div x-data="actions()" class="d-flex gap-1 justify-content-center">',
 '<div class="dropdown dropstart">',
-'<a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>',
+'<a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>',
 '<ul class="dropdown-menu">',
-'<li><a href="javascript:void(0)" class="dropdown-item pointer ' + (noDesc ? 'disabled' : '') + '"' + (noDesc ? '' : ' @click="download(\'bitacora-aditivo\',\'' + row.documento + '\')"') + '><i class="ti ti-file-download"></i> Descargar</a></li>',
-'<li><a href="javascript:void(0)" class="dropdown-item pointer ' + (noDelete ? 'disabled' : '') + '"' + (noDelete ? '' : ' @click=\'async () => { const res = await deleteAction({ url: "' + getBaseUrl() + '/delete-reporte", id: ' + row.id + ', name: "' + row.id + '", table: "#table-aditivo-reporte" }); }\'') + '><i class="ti ti-trash"></i> Eliminar</a></li>',
+'<li><a class="dropdown-item pointer ' + (noDesc ? 'disabled' : '') + '"' + (noDesc ? '' : ' @click="download(\'bitacora-aditivo\',\'' + row.documento + '\')"') + '><i class="ti ti-file-download"></i> Descargar</a></li>',
+'<li><a class="dropdown-item pointer ' + (noDelete ? 'disabled' : '') + '"' + (noDelete ? '' : ' @click=\'async () => { const res = await deleteAction({ url: "' + getBaseUrl() + '/delete-reporte", id: ' + row.id + ', name: "' + row.id + '", table: "#table-aditivo-reporte" }); }\'') + '><i class="ti ti-trash"></i> Eliminar</a></li>',
 '</ul></div></div>'
 ].join('');
 }

@@ -76,7 +76,7 @@ var archivo = d.archivo || '';
 var desc = escStr(d.descripcion).replace(/S\/I/g, '').trim() || 'Contrato';
 var html = '<div x-data="{}">'
 + '<div class="dropdown dropstart">'
-+ '<a href="javascript:void(0)" data-bs-toggle="dropdown">'
++ '<a class="pointer" data-bs-toggle="dropdown">'
 + '<i class="ti ti-dots-vertical fs-5"></i>'
 + '</a>'
 + '<div class="dropdown-menu pointer">'

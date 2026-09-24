@@ -15,10 +15,10 @@ function renderAcciones(row) {
 
     var html = '<div x-data="actions()" class="d-flex gap-1 justify-content-center">';
     html += '<div class="dropdown dropstart">';
-    html += '<a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>';
+    html += '<a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>';
     html += '<ul class="dropdown-menu">';
 
-    html += '<li><a class="dropdown-item d-flex align-items-center pointer gap-3' + cls(!esBorrador) + '" href="javascript:void(0)" data-action="detalle" data-id="' + row.id + '">';
+    html += '<li><a class="dropdown-item d-flex align-items-center pointer gap-3' + cls(!esBorrador) + '" data-action="detalle" data-id="' + row.id + '">';
     html += '<i class="ti ti-eye fs-4"></i>Detalle</a></li>';
 
     // Opción Editar
@@ -28,12 +28,11 @@ function renderAcciones(row) {
     html += 'href="' + (noEdit ? 'javascript:void(0)' : '/departamento-operativo/recursos-humanos/rol-comodines/' + row.id) + '">';
     html += '<i class="fs-4 ti ti-edit"></i>Editar</a></li>';
 
-    html += '<li><a class="dropdown-item d-flex align-items-center pointer gap-3' + cls(!esBorrador) + '" href="javascript:void(0)" data-action="pdf" data-id="' + row.id + '">';
+    html += '<li><a class="dropdown-item d-flex align-items-center pointer gap-3' + cls(!esBorrador) + '" data-action="pdf" data-id="' + row.id + '">';
     html += '<i class="ti ti-file-text fs-4"></i>Descargar PDF</a></li>';
 
     // Opción Eliminar con la validación aplicada
     html += '<li><a class="dropdown-item d-flex align-items-center pointer gap-3 text-danger ' + (!esBorrador ? 'disabled text-muted' : '') + '" ';
-    html += 'href="javascript:void(0)" ';
     html += (!esBorrador ? '' : 'data-action="eliminar" ') + 'data-id="' + row.id + '" data-name="Rol #' + row.id + '">';
     html += '<i class="ti ti-trash fs-4"></i>Eliminar</a></li>';
 

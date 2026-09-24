@@ -82,7 +82,7 @@ var count = row.num_comentarios || 0;
 var badge = (count > 0)
 ? '<span class="badge-historico position-absolute top-0 start-100 translate-middle">' + count + '</span>'
 : '';
-return '<a href="javascript:void(0)" class="fmt-btn-comentarios btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center"'
+return '<a class="fmt-btn-comentarios pointer btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center"'
     + ' data-id="' + row.id + '" data-nombre="' + (row.nombre_empleado || '') + '" data-formato="' + row.formato + '" data-formato-nombre="' + (row.formato_nombre || '') + '"'
     + ' title="Comentarios">'
 + '<i class="ti ti-message fs-7"></i>' + badge + '</a>';
@@ -90,7 +90,7 @@ return '<a href="javascript:void(0)" class="fmt-btn-comentarios btn-badge-histor
 
 function renderAcciones(row) {
 var st = row.status;
-var html = '<div class="dropdown dropstart"><a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
+var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
 
 html += '<a class="dropdown-item pointer fmt-btn-detalle' + (row.puede_detalle ? '' : ' disabled') + '" data-id="' + row.id + '" data-formato="' + row.formato + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
 

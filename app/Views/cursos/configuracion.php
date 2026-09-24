@@ -26,8 +26,8 @@
 
                 <li>
                     <a
-                        href="javascript:void(0)"
-                        class="dropdown-item d-flex align-items-center gap-2"
+
+                        class="dropdown-item d-flex align-items-center gap-2 pointer"
                         @click="abrirModalModulo()">
                         <i class="ti ti-folders"></i>
 
@@ -37,8 +37,8 @@
 
                 <li>
                     <a
-                        href="javascript:void(0)"
-                        class="dropdown-item d-flex align-items-center gap-2"
+
+                        class="dropdown-item d-flex align-items-center gap-2 pointer"
                         @click="abrirModalTema()">
                         <i class="ti ti-plus"></i>
 

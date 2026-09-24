@@ -1,386 +1,386 @@
 <div id="container" class="pb-4"
-data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
-data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
-x-data="{ ...actions(), ...comunicados()}">
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
+    x-data="{ ...actions(), ...comunicados()}">
 
-<?php if (empty($estacionId)): ?>
+    <?php if (empty($estacionId)): ?>
 
-    <div id="sasisopa-empty-message"
-         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
-        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
-    </div>
-
-<?php else: ?>
-
-    <div id="sasisopa-content">
-
-
-<div class="d-flex justify-content-end mb-3">
-                <button class="btn bg-primary-subtle text-primary" @click="openModalComunicado()"><i class="ti ti-plus"></i> Nuevo</button>
+        <div id="sasisopa-empty-message"
+            class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+            Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
         </div>
-<div class="table-responsive">
-<table class="table table-bordered table-striped  mb-0 pb-0">
 
-        <thead>
+    <?php else: ?>
 
-            <tr>
-                <th class="text-center align-middle ">
-                    #
-                </th>
-                <th class="text-center align-middle ">
-                    Fecha
-                </th>
-                <th class="text-center align-middle ">
-                    Tema
-                </th>
-                <th class="text-center align-middle ">
-                    Detalle
-                </th>
-                <th class="text-center align-middle ">
-                    Dirigido a
-                </th>
-                <th
-                    width="35"
-                    class="text-center align-middle ">
-                    <i class="ti ti-dots-vertical fs-6"></i>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            <template
-                x-if="comunicados.length === 0">
-                <tr>
-                    <td
-                        colspan="7"
-                        class="text-center text-primary">
-                       
-                            No se encontró información
-                     
-                    </td>
-                </tr>
-            </template>
-            <template
-                x-for="item in comunicados"
-                :key="item.id">
-                <tr>
-                    <td
-                        class="text-center align-middle fw-bolder"
-                        x-text="item.id">
-                    </td>
-                    <td
-                        class="text-center align-middle"
-                        x-text="item.fecha_larga">
-                    </td>
-                    <td
-                        class="text-center align-middle"
-                        x-text="item.tema">
-                    </td>
-                    <td
-                        class="text-center align-middle"
-                        x-text="item.detalle">
-                    </td>
-
-                    <td class="text-center align-middle pb-0">
-
-                    <template
-                        x-for="puesto in item.dirigidoa"
-                        :key="puesto.id">
-
-                        <span
-                            class="badge rounded-pill text-bg-info me-2 mb-3"
-                            x-text="puesto.puesto">
-                        </span>
-
-                    </template>
-
-                    </td>
-
-                     <td
-                        class="text-center align-middle">
-
-                        <div class="dropdown dropstart">
-                    <a href="javascript:void(0)" data-bs-toggle="dropdown">
-                         <i class="ti ti-dots-vertical fs-6"></i>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                            href="javascript:void(0)"
-                            @click="verDetalle(item)">
-                            <i class="fs-4 ti ti-eye"></i>Detalle
-                            </a>
-                            </li>
-                        <li>
-                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                            :href="item.archivo" download>
-                            <i class="fs-4 ti ti-download"></i>Descargar
-                            </a>
-                            </li>
-                            <li>
-                            <a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3"
-                            @click="eliminar(item)">
-                            <i class="fs-4 ti ti-trash"></i>Eliminar
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                    </td>
-
-                </tr>
-
-            </template>
-
-        </tbody>
-
-    </table>
-    </div>                
- 
+        <div id="sasisopa-content">
 
 
-<div
-class="modal fade"
-id="modalComunicado"
-tabindex="-1">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn bg-primary-subtle text-primary" @click="openModalComunicado()"><i class="ti ti-plus"></i> Nuevo</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped  mb-0 pb-0">
 
-<div class="modal-dialog modal-lg modal-dialog-centered">
+                    <thead>
 
-<div class="modal-content">
+                        <tr>
+                            <th class="text-center align-middle ">
+                                #
+                            </th>
+                            <th class="text-center align-middle ">
+                                Fecha
+                            </th>
+                            <th class="text-center align-middle ">
+                                Tema
+                            </th>
+                            <th class="text-center align-middle ">
+                                Detalle
+                            </th>
+                            <th class="text-center align-middle ">
+                                Dirigido a
+                            </th>
+                            <th
+                                width="35"
+                                class="text-center align-middle ">
+                                <i class="ti ti-dots-vertical fs-6"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template
+                            x-if="comunicados.length === 0">
+                            <tr>
+                                <td
+                                    colspan="7"
+                                    class="text-center text-primary">
 
-<div class="modal-header modal-colored-header bg-primary text-white">
+                                    No se encontró información
 
-<h4 class="modal-title text-white">
-<i class="ti ti-bubble-plus"></i>    
-Nuevo comunicado</h4>
+                                </td>
+                            </tr>
+                        </template>
+                        <template
+                            x-for="item in comunicados"
+                            :key="item.id">
+                            <tr>
+                                <td
+                                    class="text-center align-middle fw-bolder"
+                                    x-text="item.id">
+                                </td>
+                                <td
+                                    class="text-center align-middle"
+                                    x-text="item.fecha_larga">
+                                </td>
+                                <td
+                                    class="text-center align-middle"
+                                    x-text="item.tema">
+                                </td>
+                                <td
+                                    class="text-center align-middle"
+                                    x-text="item.detalle">
+                                </td>
 
-<button
-class="btn-close btn-close-white"
-data-bs-dismiss="modal">
-</button>
+                                <td class="text-center align-middle pb-0">
 
-</div>
+                                    <template
+                                        x-for="puesto in item.dirigidoa"
+                                        :key="puesto.id">
 
-<div class="modal-body">
+                                        <span
+                                            class="badge rounded-pill text-bg-info me-2 mb-3"
+                                            x-text="puesto.puesto">
+                                        </span>
 
-<div class="mb-3">
+                                    </template>
 
-<label class="form-label fw-bolder">* Tema:</label>
+                                </td>
 
-<input
-class="form-control"
-x-model="comunicado.tema"
-:class="errors.tema ? 'is-invalid' : ''"
-@input="errors.tema = false">
+                                <td
+                                    class="text-center align-middle">
 
-</div>
+                                    <div class="dropdown dropstart">
+                                        <a class="pointer" data-bs-toggle="dropdown">
+                                            <i class="ti ti-dots-vertical fs-6"></i>
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
+                                                    @click="verDetalle(item)">
+                                                    <i class="fs-4 ti ti-eye"></i>Detalle
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
+                                                    :href="item.archivo" download>
+                                                    <i class="fs-4 ti ti-download"></i>Descargar
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
+                                                    @click="eliminar(item)">
+                                                    <i class="fs-4 ti ti-trash"></i>Eliminar
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
 
-<div class="mb-3">
+                                </td>
 
-<label class="form-label fw-bolder">* Detalle:</label>
+                            </tr>
 
-<textarea
-class="form-control"
-rows="5"
-x-model="comunicado.detalle"
-:class="errors.detalle ? 'is-invalid' : ''"
-@input="errors.detalle = false">
+                        </template>
+
+                    </tbody>
+
+                </table>
+            </div>
+
+
+
+            <div
+                class="modal fade"
+                id="modalComunicado"
+                tabindex="-1">
+
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+
+                    <div class="modal-content">
+
+                        <div class="modal-header modal-colored-header bg-primary text-white">
+
+                            <h4 class="modal-title text-white">
+                                <i class="ti ti-bubble-plus"></i>
+                                Nuevo comunicado
+                            </h4>
+
+                            <button
+                                class="btn-close btn-close-white"
+                                data-bs-dismiss="modal">
+                            </button>
+
+                        </div>
+
+                        <div class="modal-body">
+
+                            <div class="mb-3">
+
+                                <label class="form-label fw-bolder">* Tema:</label>
+
+                                <input
+                                    class="form-control"
+                                    x-model="comunicado.tema"
+                                    :class="errors.tema ? 'is-invalid' : ''"
+                                    @input="errors.tema = false">
+
+                            </div>
+
+                            <div class="mb-3">
+
+                                <label class="form-label fw-bolder">* Detalle:</label>
+
+                                <textarea
+                                    class="form-control"
+                                    rows="5"
+                                    x-model="comunicado.detalle"
+                                    :class="errors.detalle ? 'is-invalid' : ''"
+                                    @input="errors.detalle = false">
 </textarea>
 
-</div>
+                            </div>
 
-<div class="mb-3">
+                            <div class="mb-3">
 
-    <label class="form-label fw-bolder">Dirigido a:</label>
-    <div class="select2-modal-field is-select2-pending"
-    x-ref="dirigidoaWrapper"
-    :class="errors.dirigidoa ? 'is-invalid' : ''">
+                                <label class="form-label fw-bolder">Dirigido a:</label>
+                                <div class="select2-modal-field is-select2-pending"
+                                    x-ref="dirigidoaWrapper"
+                                    :class="errors.dirigidoa ? 'is-invalid' : ''">
 
-    <select id="dirigidoa"
-    x-ref="selectDirigidoa"
-    multiple>
+                                    <select id="dirigidoa"
+                                        x-ref="selectDirigidoa"
+                                        multiple>
 
-    <template x-for="puesto in puestos" :key="puesto.id">
+                                        <template x-for="puesto in puestos" :key="puesto.id">
 
-    <option :value="puesto.id"
-     x-text="puesto.tipo_puesto">
-    </option>
+                                            <option :value="puesto.id"
+                                                x-text="puesto.tipo_puesto">
+                                            </option>
 
-    </template>
+                                        </template>
 
-    </select>
-    </div>
+                                    </select>
+                                </div>
 
-</div>
+                            </div>
 
-<div class="mb-3">
+                            <div class="mb-3">
 
-<label class="form-label fw-bolder">Archivo:</label>
+                                <label class="form-label fw-bolder">Archivo:</label>
 
-<input
-type="file"
-class="form-control"
-id="archivoComunicado"
+                                <input
+                                    type="file"
+                                    class="form-control"
+                                    id="archivoComunicado"
 
-@change="
+                                    @change="
 comunicado.archivo =
 $event.target.files[0]
 ">
 
-</div>
+                            </div>
 
-</div>
+                        </div>
 
-<div class="modal-footer">
+                        <div class="modal-footer">
 
-                <button
-                    class="btn bg-danger-subtle text-danger"
-                    data-bs-dismiss="modal">
+                            <button
+                                class="btn bg-danger-subtle text-danger"
+                                data-bs-dismiss="modal">
 
-                    <i class="ti ti-x"></i> Cancelar
+                                <i class="ti ti-x"></i> Cancelar
 
-                </button>
+                            </button>
 
-                <button
-                class="btn btn-success"
-                @click="guardarComunicado()">
+                            <button
+                                class="btn btn-success"
+                                @click="guardarComunicado()">
 
-                <i class="ti ti-check"></i> Guardar
+                                <i class="ti ti-check"></i> Guardar
 
-                </button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="modal fade"
-     id="modalDetalleComunicado"
-     tabindex="-1">
-
-    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
-
-        <div class="modal-content">
-
-            <div class="modal-header modal-colored-header bg-primary text-white">
-
-                <h5 class="modal-title text-white">
-                    <i class="ti ti-eye"></i>
-                    Detalle del comunicado
-                </h5>
-
-                <button
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal">
-                </button>
-
-            </div>
-
-            <div class="modal-body">
-
-                <div class="row mb-2">
-
-                    <div class="col-md-6">
-
-                        <label class="form-label mb-1">
-                            Fecha:
-                        </label>
-
-                        <div  x-text="detalleComunicado.fecha_larga"></div>
-
-                    </div>
-
-                    <div class="col-md-6">
-
-                        <label class="form-label mb-1">
-                            Tema:
-                        </label>
-
-                        <div x-text="detalleComunicado.tema"></div>
-
-                    </div>
-
-                </div>
-
-                <div class="mb-2">
-
-                    <label class="form-label mb-1">
-                        Dirigido a:
-                    </label>
-
-                    <div>
-
-                        <template
-                            x-for="puesto in detalleComunicado.dirigidoa"
-                            :key="puesto.id">
-
-                            <span
-                                class="badge rounded-pill text-bg-info me-2 mb-3"
-                                x-text="puesto.puesto">
-                            </span>
-
-                        </template>
-
-                    </div>
-
-                </div>
-
-                <div class="mb-2">
-
-                    <label class="form-label mb-1">
-                        Detalle:
-                    </label>
-
-                    <div 
-                         style="white-space:pre-wrap;"
-                         x-text="detalleComunicado.detalle">
-                    </div>
-
-                </div>
-
-                <template x-if="detalleComunicado.archivo">
-
-                    <div class="mb-2">
-
-                        <label class="form-label mb-1">
-                            Archivo:
-                        </label>
-
-                        <div>
-
-                            <a
-                                :href="detalleComunicado.archivo"
-                                target="_blank"
-                                class="btn btn-outline-primary">
-
-                                <i class="ti ti-file-download"></i>
-
-                                Descargar 
-
-                            </a>
+                            </button>
 
                         </div>
 
                     </div>
 
-                </template>
+                </div>
 
             </div>
-<div class="modal-footer">
-     <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
-                        <i class="ti ti-x"></i> Cerrar
-                    </button>
 
-</div>
+            <div class="modal fade"
+                id="modalDetalleComunicado"
+                tabindex="-1">
+
+                <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+
+                    <div class="modal-content">
+
+                        <div class="modal-header modal-colored-header bg-primary text-white">
+
+                            <h5 class="modal-title text-white">
+                                <i class="ti ti-eye"></i>
+                                Detalle del comunicado
+                            </h5>
+
+                            <button
+                                class="btn-close btn-close-white"
+                                data-bs-dismiss="modal">
+                            </button>
+
+                        </div>
+
+                        <div class="modal-body">
+
+                            <div class="row mb-2">
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label mb-1">
+                                        Fecha:
+                                    </label>
+
+                                    <div x-text="detalleComunicado.fecha_larga"></div>
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label mb-1">
+                                        Tema:
+                                    </label>
+
+                                    <div x-text="detalleComunicado.tema"></div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="mb-2">
+
+                                <label class="form-label mb-1">
+                                    Dirigido a:
+                                </label>
+
+                                <div>
+
+                                    <template
+                                        x-for="puesto in detalleComunicado.dirigidoa"
+                                        :key="puesto.id">
+
+                                        <span
+                                            class="badge rounded-pill text-bg-info me-2 mb-3"
+                                            x-text="puesto.puesto">
+                                        </span>
+
+                                    </template>
+
+                                </div>
+
+                            </div>
+
+                            <div class="mb-2">
+
+                                <label class="form-label mb-1">
+                                    Detalle:
+                                </label>
+
+                                <div
+                                    style="white-space:pre-wrap;"
+                                    x-text="detalleComunicado.detalle">
+                                </div>
+
+                            </div>
+
+                            <template x-if="detalleComunicado.archivo">
+
+                                <div class="mb-2">
+
+                                    <label class="form-label mb-1">
+                                        Archivo:
+                                    </label>
+
+                                    <div>
+
+                                        <a
+                                            :href="detalleComunicado.archivo"
+                                            target="_blank"
+                                            class="btn btn-outline-primary">
+
+                                            <i class="ti ti-file-download"></i>
+
+                                            Descargar
+
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+                            </template>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+                                <i class="ti ti-x"></i> Cerrar
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
-
-    </div>
-
-    </div>
-
-    </div>
 
     <?php endif; ?>
 

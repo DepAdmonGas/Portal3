@@ -81,7 +81,7 @@ var count = row.num_comentarios || 0;
 var badge = count > 0
 ? '<span class="badge-historico position-absolute top-0 start-100 translate-middle">' + count + '</span>'
 : '';
-return '<a href="javascript:void(0)" class="btn-comentarios btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center cd-btn-comentarios" data-id="' + row.id + '" data-nombre="' + row.nombre_completo + '" title="Comentarios">'
+return '<a class="btn-comentarios pointer btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center cd-btn-comentarios" data-id="' + row.id + '" data-nombre="' + row.nombre_completo + '" title="Comentarios">'
 + '<i class="ti ti-message fs-7"></i>' + badge + '</a>';
 }
 
@@ -89,7 +89,7 @@ var docCampos = ['requisicion','curriculum','ine','acta_nacimiento','c_domicilio
 var docTitulos = ['RP','CV','IO','AN','CD','CAI','CE','CR','CURP','ARI','CSF','CANP','Contrato'];
 
 function renderAccionesActivas(row) {
-var html = '<div class="dropdown dropstart"><a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
+var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
 html += '<a class="dropdown-item pointer cd-btn-asistencia" data-id="' + row.id + '"><i class="ti ti-clock me-1"></i> Asistencia</a>';
 html += '<a class="dropdown-item pointer cd-btn-acceso" data-id="' + row.id + '" data-nombre="' + row.nombre_completo + '"><i class="ti ti-key me-1"></i> Acceso</a>';
 html += '<a class="dropdown-item pointer cd-btn-editar" data-id="' + row.id + '"><i class="ti ti-pencil me-1"></i> Editar informacion</a>';
@@ -101,7 +101,7 @@ return html;
 }
 
 function renderAccionesInactivas(row) {
-var html = '<div class="dropdown dropstart"><a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
+var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
 if (row.baja && row.baja.id_baja) {
 html += '<a class="dropdown-item pointer cd-btn-detalle-baja" data-id-baja="' + row.baja.id_baja + '"><i class="ti ti-eye me-1"></i> Detalle de baja</a>';
 }
