@@ -28,5 +28,30 @@ class PedidoPinturasComplementos extends Model
         'status' => 'integer'
     ];
 
+    public function estacion()
+    {
+        return $this->belongsTo(\App\Models\Estacion::class, 'id_estacion', 'id');
+    }
+
+    public function personal()
+    {
+        return $this->belongsTo(\App\Models\Usuario::class, 'id_personal', 'id');
+    }
+
+    public function detalle()
+    {
+        return $this->hasMany(PedidoPinturasDetalle::class, 'id_pedido', 'id');
+    }
+
+    public function firmas()
+    {
+        return $this->hasMany(PedidoPinturasComplementosFirma::class, 'id_pedido', 'id');
+    }
+
+    public function token()
+    {
+        return $this->hasMany(PedidoPinturasComplementosToken::class, 'id_pedido', 'id');
+    }
+
 }
 
