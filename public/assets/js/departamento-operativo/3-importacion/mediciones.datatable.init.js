@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderAcciones(row) {
  
-        return '<a href="javascript:void(0)" class="text-danger pointer" data-action="eliminar-medicion" data-id="' + row.id + '" data-name="Medición #' + row.id + '">' +
+        return '<a class="text-danger pointer" data-action="eliminar-medicion" data-id="' + row.id + '" data-name="Medición #' + row.id + '">' +
 '<i class="ti ti-trash fs-6 text-danger"></i>' +
 '</a>';
     }

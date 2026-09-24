@@ -21,7 +21,7 @@ $(document).ready(function () {
         var badge = conteo > 0
             ? '<span class="badge-historico position-absolute top-0 start-100 translate-middle">' + conteo + '</span>'
             : '';
-        return '<a href="javascript:void(0)" class="btn-comentarios btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center" data-action="comentarios" data-id="' + row.id + '" title="Comentarios">' +
+        return '<a class="btn-comentarios pointer btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center" data-action="comentarios" data-id="' + row.id + '" title="Comentarios">' +
             '<i class="ti ti-message fs-7"></i>' + badge + '</a>';
     }
 

@@ -45,7 +45,7 @@ return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
 <div class="dropdown dropstart">
 
-<a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown" data-bs-display="static">
+<a class="text-muted pointer" data-bs-toggle="dropdown" data-bs-display="static">
 <i class="ti ti-dots-vertical fs-6"></i>
 </a> 
 
@@ -54,7 +54,6 @@ return `
 <!-- EDITAR -->
 <li>
 <a 
-href="javascript:void(0)"
 class="dropdown-item pointer d-flex align-items-center gap-2 ${!noEdit ? 'disabled opacity-50 pointer-events-none' : ''}"
 ${!noEdit 
 ? ''
@@ -67,7 +66,6 @@ ${!noEdit
 <!-- ELIMINAR -->
 <li>
 <a 
-href="javascript:void(0)"
 class="dropdown-item pointer d-flex align-items-center gap-2 ${!noDelete ? 'disabled opacity-50 pointer-events-none' : ''}"
 ${!noDelete 
 ? '' 

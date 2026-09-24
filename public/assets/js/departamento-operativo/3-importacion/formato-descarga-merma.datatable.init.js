@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var puedeEditar = getPuedeEditar();
         var puedeEliminar = getPuedeEliminar();
         var html = '<div class="dropdown">';
-        html += '<a href="javascript:void(0)" data-bs-toggle="dropdown" data-bs-popper-config=\'{"strategy":"fixed"}\' aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots-vertical fs-6"></i></a>';
+        html += '<a class="pointer" data-bs-toggle="dropdown" data-bs-popper-config=\'{"strategy":"fixed"}\' aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots-vertical fs-6"></i></a>';
         html += '<div class="dropdown-menu dropdown-menu-end">';
         html += '<a class="dropdown-item pointer" href="/departamento-operativo/importacion/formato-descarga-merma-detalle/' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
         html += '<a class="dropdown-item pointer" href="/departamento-operativo/importacion/formato-descarga-merma/pdf/' + row.id + '" target="_blank"><i class="ti ti-file-type-pdf me-1"></i> Descargar PDF</a>';

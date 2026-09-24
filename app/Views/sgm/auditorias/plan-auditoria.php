@@ -105,7 +105,6 @@
                                     <small x-text="responsable.nombre"></small>
 
                                     <a
-                                        href="javascript:void(0)"
                                         class="pointer"
                                         @click="eliminarResponsable(responsable.id)"
                                         title="Eliminar responsable">
@@ -590,7 +589,6 @@
                         <td class="text-center align-middle">
 
                             <a
-                                href="javascript:void(0)"
                                 class="pointer"
                                 title="Eliminar agenda"
                                 @click="eliminarAgenda(item.id)">

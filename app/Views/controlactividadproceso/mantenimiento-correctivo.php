@@ -1,614 +1,614 @@
 <div id="container" class="mb-4"
-x-data="{ ...actions(), ...mantenimientoCorrectivo()}"
-data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
-data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+    x-data="{ ...actions(), ...mantenimientoCorrectivo()}"
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
-<?php if (empty($estacionId)): ?>
- 
-    <div id="sasisopa-empty-message"
-         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
-        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
-    </div>
+    <?php if (empty($estacionId)): ?>
 
-<?php else: ?>
+        <div id="sasisopa-empty-message"
+            class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+            Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
+        </div>
 
-<div class="text-end">
-    <div class="btn-group">
-        <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="ti ti-dots-vertical fs-4"></i>
-        </button>
-        <ul class="dropdown-menu animated rubberBand">
-          <li><a class="dropdown-item pointer"  href="javascript:void(0)" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
-          <li>
-              <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
-          </li>
-        </ul>
-    </div>
-</div>
+    <?php else: ?>
 
-  <div class="datatables">
-        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-      <table id="table-mantenimiento-correctivo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
-        <thead>
-          <tr>
-           <th class="text-center align-middle">Folio</th>
-            <th class="text-center align-middle">Fecha</th>
-            <th class="text-center align-middle">Hora</th>
-            <th class="text-center align-middle">Nombre del equipo o área donde se detecta la no conformidad</th>
-            <th class="text-center align-middle">Descripción breve del hallazgo detectado que requiere mantenimiento</th>
-          <th class="text-center align-middle" width="48px">
-          <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
-          </th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-
-  <!-- MODAL BUSCAR -->
-<div
-    class="modal fade"
-    id="ModalBuscar"
-    tabindex="-1"
-    aria-hidden="true">
-
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-
-        <div class="modal-content">
-            <div class="modal-header modal-colored-header bg-primary text-white">
-
-                <h4 class="modal-title text-white">
-                <i class="ti ti-search"></i>   
-                Buscar
-                </h4>
-
-                <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal"
-                    @click="limpiarBuscar()">
+        <div class="text-end">
+            <div class="btn-group">
+                <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="ti ti-dots-vertical fs-4"></i>
                 </button>
-
+                <ul class="dropdown-menu animated rubberBand">
+                    <li><a class="dropdown-item pointer" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
+                    <li>
+                        <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+                    </li>
+                </ul>
             </div>
+        </div>
 
-            <!-- BODY -->
-            <div class="modal-body">
+        <div class="datatables">
+            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+                <table id="table-mantenimiento-correctivo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                    <thead>
+                        <tr>
+                            <th class="text-center align-middle">Folio</th>
+                            <th class="text-center align-middle">Fecha</th>
+                            <th class="text-center align-middle">Hora</th>
+                            <th class="text-center align-middle">Nombre del equipo o área donde se detecta la no conformidad</th>
+                            <th class="text-center align-middle">Descripción breve del hallazgo detectado que requiere mantenimiento</th>
+                            <th class="text-center align-middle" width="48px">
+                                <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
 
-  
-                    <!-- YEAR -->                
-                    
-                    <label class="form-label mt-2">* Año:</label>
-                    <select
-                        class="form-select mb-3"
-                        x-model="filtro.year"
-                        :class="errorsBuscar.year ? 'is-invalid' : ''"
-                        @input="errorsBuscar.year = false">
 
-                        <option value="">
-                            Selecciona una opción...
-                        </option>
+        <!-- MODAL BUSCAR -->
+        <div
+            class="modal fade"
+            id="ModalBuscar"
+            tabindex="-1"
+            aria-hidden="true">
 
-                        <template x-for="year in years">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
 
-                            <option
-                                :value="year"
-                                x-text="year">
+                <div class="modal-content">
+                    <div class="modal-header modal-colored-header bg-primary text-white">
+
+                        <h4 class="modal-title text-white">
+                            <i class="ti ti-search"></i>
+                            Buscar
+                        </h4>
+
+                        <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            @click="limpiarBuscar()">
+                        </button>
+
+                    </div>
+
+                    <!-- BODY -->
+                    <div class="modal-body">
+
+
+                        <!-- YEAR -->
+
+                        <label class="form-label mt-2">* Año:</label>
+                        <select
+                            class="form-select mb-3"
+                            x-model="filtro.year"
+                            :class="errorsBuscar.year ? 'is-invalid' : ''"
+                            @input="errorsBuscar.year = false">
+
+                            <option value="">
+                                Selecciona una opción...
                             </option>
 
-                        </template>
+                            <template x-for="year in years">
 
-                    </select>
+                                <option
+                                    :value="year"
+                                    x-text="year">
+                                </option>
 
-                    <!-- MES -->
-                    <label class="form-label mt-2">Mes:</label>
+                            </template>
 
-                    <select
-                        class="form-select"
-                        x-model="filtro.mes">
+                        </select>
 
-                        <option value="">
-                            Todos
-                        </option>
+                        <!-- MES -->
+                        <label class="form-label mt-2">Mes:</label>
 
-                        <option value="1">Enero</option>
-                        <option value="2">Febrero</option>
-                        <option value="3">Marzo</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Mayo</option>
-                        <option value="6">Junio</option>
-                        <option value="7">Julio</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Septiembre</option>
-                        <option value="10">Octubre</option>
-                        <option value="11">Noviembre</option>
-                        <option value="12">Diciembre</option>
+                        <select
+                            class="form-select"
+                            x-model="filtro.mes">
 
-                    </select>
+                            <option value="">
+                                Todos
+                            </option>
 
-            </div>
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
 
-            <!-- FOOTER -->
-              <div class="modal-footer">
+                        </select>
 
-                <button
-                class="btn bg-danger-subtle text-danger"
-                data-bs-dismiss="modal"
-                @click="limpiarBuscar()">
-                    <i class="ti ti-x"></i> Cancelar
-                </button>
+                    </div>
 
-                <button
-                class="btn btn-success"
-                @click="buscar()">
-                    <i class="ti ti-search"></i></i> Buscar
-                </button>
+                    <!-- FOOTER -->
+                    <div class="modal-footer">
+
+                        <button
+                            class="btn bg-danger-subtle text-danger"
+                            data-bs-dismiss="modal"
+                            @click="limpiarBuscar()">
+                            <i class="ti ti-x"></i> Cancelar
+                        </button>
+
+                        <button
+                            class="btn btn-success"
+                            @click="buscar()">
+                            <i class="ti ti-search"></i></i> Buscar
+                        </button>
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
 
-    </div>
+        <!-- MODAL DETALLE -->
+        <div
+            class="modal fade"
+            id="ModalDetalle"
+            tabindex="-1"
+            aria-hidden="true">
 
-</div>
+            <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
 
-<!-- MODAL DETALLE -->
-<div
-    class="modal fade"
-    id="ModalDetalle"
-    tabindex="-1"
-    aria-hidden="true">
+                <div class="modal-content">
 
-    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+                    <div class="modal-header modal-colored-header bg-primary text-white">
 
-        <div class="modal-content">
+                        <h4 class="modal-title text-white">
+                            <i class="ti ti-eye"></i>
+                            Detalle de Mantenimiento Correctivo
+                        </h4>
 
-            <div class="modal-header modal-colored-header bg-primary text-white">
-
-                <h4 class="modal-title text-white">
-                    <i class="ti ti-eye"></i>
-                    Detalle de Mantenimiento Correctivo
-                </h4>
-
-                <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal">
-                </button>
-
-            </div>
-
-            <div class="modal-body">
-
-                <!-- INFORMACION -->
-                <div class="row">
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label fw-bolder">
-                            Folio:
-                        </label>
-
-                        <div
-                            x-text="detalle.folio">
-                        </div>
+                        <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal">
+                        </button>
 
                     </div>
 
-                    <div class="col-md-4 mb-3">
+                    <div class="modal-body">
 
-                        <label class="form-label fw-bolder">
-                            Fecha:
-                        </label>
+                        <!-- INFORMACION -->
+                        <div class="row">
 
-                        <div
-                            x-text="detalle.fechacreacion">
-                        </div>
+                            <div class="col-md-4 mb-3">
 
-                    </div>
+                                <label class="form-label fw-bolder">
+                                    Folio:
+                                </label>
 
-                    <div class="col-md-4 mb-3">
+                                <div
+                                    x-text="detalle.folio">
+                                </div>
 
-                        <label class="form-label fw-bolder">
-                            Hora:
-                        </label>
+                            </div>
 
-                        <div
-                            x-text="detalle.horacreacion">
-                        </div>
+                            <div class="col-md-4 mb-3">
 
-                    </div>
+                                <label class="form-label fw-bolder">
+                                    Fecha:
+                                </label>
 
-                    <div class="col-md-12 mb-3">
+                                <div
+                                    x-text="detalle.fechacreacion">
+                                </div>
 
-                        <label class="form-label fw-bolder">
-                            Equipo o Área:
-                        </label>
+                            </div>
 
-                        <div
-                            x-text="detalle.nombre_equipo">
-                        </div>
+                            <div class="col-md-4 mb-3">
 
-                    </div>
+                                <label class="form-label fw-bolder">
+                                    Hora:
+                                </label>
 
-                    <div class="col-md-12 mb-3">
+                                <div
+                                    x-text="detalle.horacreacion">
+                                </div>
 
-                        <label class="form-label fw-bolder">
-                            Hallazgo Detectado:
-                        </label>
+                            </div>
 
-                        <div
-                            x-text="detalle.descripcion_hallazgo">
-                        </div>
+                            <div class="col-md-12 mb-3">
 
-                    </div>
+                                <label class="form-label fw-bolder">
+                                    Equipo o Área:
+                                </label>
 
-                    <div class="col-md-12 mb-3">
+                                <div
+                                    x-text="detalle.nombre_equipo">
+                                </div>
 
-                        <label class="form-label fw-bolder">
-                            Actividad Realizada:
-                        </label>
+                            </div>
 
-                        <div
-                            x-text="detalle.descripcion_actividad">
-                        </div>
+                            <div class="col-md-12 mb-3">
 
-                    </div>
+                                <label class="form-label fw-bolder">
+                                    Hallazgo Detectado:
+                                </label>
 
-                    <div class="col-md-12 mb-4">
+                                <div
+                                    x-text="detalle.descripcion_hallazgo">
+                                </div>
 
-                        <label class="form-label fw-bolder">
-                            Herramienta Utilizada:
-                        </label>
+                            </div>
 
-                        <div
-                            x-text="detalle.herramienta">
-                        </div>
+                            <div class="col-md-12 mb-3">
 
-                    </div>
+                                <label class="form-label fw-bolder">
+                                    Actividad Realizada:
+                                </label>
 
-                </div>
+                                <div
+                                    x-text="detalle.descripcion_actividad">
+                                </div>
 
-                <!-- TITULO EVIDENCIAS -->
-                <div class="d-flex align-items-center mb-3">
+                            </div>
 
-                    <h5 class="mb-0">
-                        Evidencias
-                    </h5>
+                            <div class="col-md-12 mb-4">
 
-                    <span
-                        class="badge bg-primary ms-2"
-                        x-text="detalle.evidencias.length">
-                    </span>
+                                <label class="form-label fw-bolder">
+                                    Herramienta Utilizada:
+                                </label>
 
-                </div>
-
-                <!-- SIN EVIDENCIAS -->
-                <div
-                    class="text-center py-5 border rounded"
-                    x-show="detalle.evidencias.length <= 0">
-
-                    <i class="ti ti-photo-off fs-7 text-muted"></i>
-
-                    <div class="mt-2 text-muted">
-                        No hay evidencias registradas
-                    </div>
-
-                </div>
-
-                <!-- EVIDENCIAS -->
-                <div
-                    class="row"
-                    x-show="detalle.evidencias.length > 0">
-
-                    <template
-                        x-for="item in detalle.evidencias"
-                        :key="item.id">
-
-                        <div class="col-md-3 mb-3">
-
-                            <div class="card shadow-sm overflow-hidden h-100">
-
-                                <a
-                                    :href="item.url"
-                                    target="_blank"
-                                    class="d-block">
-
-                                    <img
-                                        :src="item.url"
-                                        class="w-100"
-                                        style="
-                                            height:240px;
-                                            object-fit:cover;
-                                        ">
-
-                                </a>
+                                <div
+                                    x-text="detalle.herramienta">
+                                </div>
 
                             </div>
 
                         </div>
 
-                    </template>
+                        <!-- TITULO EVIDENCIAS -->
+                        <div class="d-flex align-items-center mb-3">
+
+                            <h5 class="mb-0">
+                                Evidencias
+                            </h5>
+
+                            <span
+                                class="badge bg-primary ms-2"
+                                x-text="detalle.evidencias.length">
+                            </span>
+
+                        </div>
+
+                        <!-- SIN EVIDENCIAS -->
+                        <div
+                            class="text-center py-5 border rounded"
+                            x-show="detalle.evidencias.length <= 0">
+
+                            <i class="ti ti-photo-off fs-7 text-muted"></i>
+
+                            <div class="mt-2 text-muted">
+                                No hay evidencias registradas
+                            </div>
+
+                        </div>
+
+                        <!-- EVIDENCIAS -->
+                        <div
+                            class="row"
+                            x-show="detalle.evidencias.length > 0">
+
+                            <template
+                                x-for="item in detalle.evidencias"
+                                :key="item.id">
+
+                                <div class="col-md-3 mb-3">
+
+                                    <div class="card shadow-sm overflow-hidden h-100">
+
+                                        <a
+                                            :href="item.url"
+                                            target="_blank"
+                                            class="d-block">
+
+                                            <img
+                                                :src="item.url"
+                                                class="w-100"
+                                                style="
+                                            height:240px;
+                                            object-fit:cover;
+                                        ">
+
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+                            </template>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button
+                            class="btn bg-danger-subtle text-danger"
+                            data-bs-dismiss="modal">
+
+                            <i class="ti ti-x"></i> Cerrar
+                        </button>
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <div class="modal-footer">
-
-                <button
-                    class="btn bg-danger-subtle text-danger"
-                    data-bs-dismiss="modal">
-
-                    <i class="ti ti-x"></i> Cerrar
-                </button>
-
-            </div>
-
         </div>
 
-    </div>
+        <!-- MODAL EDITAR -->
+        <div
+            class="modal fade"
+            id="ModalEditar"
+            tabindex="-1"
+            aria-hidden="true">
 
-</div>
+            <div class="modal-dialog modal-lg modal-dialog-centered">
 
-<!-- MODAL EDITAR -->
-<div
-    class="modal fade"
-    id="ModalEditar"
-    tabindex="-1"
-    aria-hidden="true">
+                <div class="modal-content">
 
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-header modal-colored-header bg-primary text-white">
 
-        <div class="modal-content">
+                        <h4 class="modal-title text-white">
+                            <i class="ti ti-edit"></i>
+                            Editar Mantenimiento Correctivo
+                        </h4>
 
-            <div class="modal-header modal-colored-header bg-primary text-white">
+                        <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal">
+                        </button>
 
-                <h4 class="modal-title text-white">
-                    <i class="ti ti-edit"></i>
-                    Editar Mantenimiento Correctivo
-                </h4>
+                    </div>
 
-                <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal">
-                </button>
+                    <div class="modal-body">
 
-            </div>
+                        <label class="form-label">
+                            * Nombre del equipo:
+                        </label>
 
-            <div class="modal-body">
+                        <input
+                            type="text"
+                            class="form-control mb-3"
+                            x-model="form.nombre_equipo">
 
-                <label class="form-label">
-                    * Nombre del equipo:
-                </label>
+                        <label class="form-label">
+                            * Hallazgo detectado:
+                        </label>
 
-                <input
-                    type="text"
-                    class="form-control mb-3"
-                    x-model="form.nombre_equipo">
-
-                <label class="form-label">
-                    * Hallazgo detectado:
-                </label>
-
-                <textarea
-                    class="form-control mb-3"
-                    rows="3"
-                    x-model="form.descripcion_hallazgo">
+                        <textarea
+                            class="form-control mb-3"
+                            rows="3"
+                            x-model="form.descripcion_hallazgo">
                 </textarea>
 
-                <label class="form-label">
-                    * Actividad realizada:
-                </label>
+                        <label class="form-label">
+                            * Actividad realizada:
+                        </label>
 
-                <textarea
-                    class="form-control mb-3"
-                    rows="3"
-                    x-model="form.descripcion_actividad">
+                        <textarea
+                            class="form-control mb-3"
+                            rows="3"
+                            x-model="form.descripcion_actividad">
                 </textarea>
 
-                <label class="form-label">
-                    * Herramienta utilizada:
-                </label>
+                        <label class="form-label">
+                            * Herramienta utilizada:
+                        </label>
 
-                <textarea
-                    class="form-control"
-                    rows="4"
-                    x-model="form.herramienta">
+                        <textarea
+                            class="form-control"
+                            rows="4"
+                            x-model="form.herramienta">
                 </textarea>
 
-            </div>
+                    </div>
 
-            <div class="modal-footer">
+                    <div class="modal-footer">
 
-                <button
-                    class="btn bg-danger-subtle text-danger"
-                    data-bs-dismiss="modal">
+                        <button
+                            class="btn bg-danger-subtle text-danger"
+                            data-bs-dismiss="modal">
 
-                    <i class="ti ti-x"></i> Cancelar
-                </button>
+                            <i class="ti ti-x"></i> Cancelar
+                        </button>
 
-                <button
-                    class="btn btn-success"
-                    @click="guardarEditar()">
+                        <button
+                            class="btn btn-success"
+                            @click="guardarEditar()">
 
-                    <i class="ti ti-check"></i> Actualizar
-                </button>
+                            <i class="ti ti-check"></i> Actualizar
+                        </button>
 
-            </div>
+                    </div>
 
-        </div>
-
-    </div>
-
-</div>
-
-<!-- MODAL EVIDENCIAS -->
-<div
-    class="modal fade"
-    id="ModalEvidencia"
-    tabindex="-1"
-    aria-hidden="true">
-
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-
-        <div class="modal-content">
-
-            <div class="modal-header modal-colored-header bg-primary text-white">
-
-                <h4 class="modal-title text-white">
-                    <i class="ti ti-camera"></i>
-                    Evidencias
-                </h4>
-
-                <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal">
-                </button>
-
-            </div>
-
-            <div class="modal-body">
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-                        * Imágenes:
-                    </label>
-
-                    <input
-                        type="file"
-                        class="form-control"
-                        accept="image/*"
-                        multiple
-                        @change="handleFiles($event)">
                 </div>
 
-                <!-- PREVIEW -->
-<div
-    class="row"
-    x-show="previewImages.length > 0">
+            </div>
 
-    <template
-        x-for="(img,index) in previewImages"
-        :key="index">
+        </div>
 
-        <div class="col-md-3 mb-3">
+        <!-- MODAL EVIDENCIAS -->
+        <div
+            class="modal fade"
+            id="ModalEvidencia"
+            tabindex="-1"
+            aria-hidden="true">
 
-            <div class="card shadow-sm border border-warning position-relative overflow-hidden">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
 
-                <!-- BADGE -->
-                <span
-                    class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">
-                    Nueva
-                </span>
+                <div class="modal-content">
 
-                <img
-                    :src="img"
-                    class="w-100"
-                    style="
+                    <div class="modal-header modal-colored-header bg-primary text-white">
+
+                        <h4 class="modal-title text-white">
+                            <i class="ti ti-camera"></i>
+                            Evidencias
+                        </h4>
+
+                        <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal">
+                        </button>
+
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                * Imágenes:
+                            </label>
+
+                            <input
+                                type="file"
+                                class="form-control"
+                                accept="image/*"
+                                multiple
+                                @change="handleFiles($event)">
+                        </div>
+
+                        <!-- PREVIEW -->
+                        <div
+                            class="row"
+                            x-show="previewImages.length > 0">
+
+                            <template
+                                x-for="(img,index) in previewImages"
+                                :key="index">
+
+                                <div class="col-md-3 mb-3">
+
+                                    <div class="card shadow-sm border border-warning position-relative overflow-hidden">
+
+                                        <!-- BADGE -->
+                                        <span
+                                            class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">
+                                            Nueva
+                                        </span>
+
+                                        <img
+                                            :src="img"
+                                            class="w-100"
+                                            style="
                         height:220px;
                         object-fit:cover;
                     ">
 
-                <div class="card-body p-2">
+                                        <div class="card-body p-2">
 
-                    <button
-                        class="btn btn-danger btn-sm w-100"
-                        @click="removePreview(index)">
+                                            <button
+                                                class="btn btn-danger btn-sm w-100"
+                                                @click="removePreview(index)">
 
-                        <i class="ti ti-x"></i>
-                        Eliminar
-                    </button>
+                                                <i class="ti ti-x"></i>
+                                                Eliminar
+                                            </button>
 
-                </div>
+                                        </div>
 
-            </div>
+                                    </div>
 
-        </div>
+                                </div>
 
-    </template>
+                            </template>
 
-</div>
+                        </div>
 
-<!-- EVIDENCIAS -->
-<div class="row mt-4">
+                        <!-- EVIDENCIAS -->
+                        <div class="row mt-4">
 
-    <template
-        x-for="(item,index) in evidencias"
-        :key="item.id">
+                            <template
+                                x-for="(item,index) in evidencias"
+                                :key="item.id">
 
-        <div class="col-md-3 mb-3">
+                                <div class="col-md-3 mb-3">
 
-            <div class="card shadow-sm position-relative overflow-hidden">
+                                    <div class="card shadow-sm position-relative overflow-hidden">
 
-                <!-- BADGE -->
-                <span
-                    class="badge bg-success position-absolute top-0 end-0 m-2">
-                    Guardada
-                </span>
+                                        <!-- BADGE -->
+                                        <span
+                                            class="badge bg-success position-absolute top-0 end-0 m-2">
+                                            Guardada
+                                        </span>
 
-                <a
-                    :href="item.url"
-                    target="_blank"
-                    class="d-block w-100">
+                                        <a
+                                            :href="item.url"
+                                            target="_blank"
+                                            class="d-block w-100">
 
-                    <img
-                        :src="item.url"
-                        class="w-100"
-                        style="
+                                            <img
+                                                :src="item.url"
+                                                class="w-100"
+                                                style="
                             height:220px;
                             object-fit:cover;
                         ">
-                </a>
+                                        </a>
 
-                <div class="card-body p-2">
+                                        <div class="card-body p-2">
 
-                    <button
-                        class="btn btn-danger btn-sm w-100"
-                        @click="eliminarEvidencia(item.id,index)">
+                                            <button
+                                                class="btn btn-danger btn-sm w-100"
+                                                @click="eliminarEvidencia(item.id,index)">
 
-                        <i class="ti ti-trash"></i>
-                        Eliminar
-                    </button>
+                                                <i class="ti ti-trash"></i>
+                                                Eliminar
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </template>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button
+                            class="btn bg-danger-subtle text-danger"
+                            data-bs-dismiss="modal">
+
+                            <i class="ti ti-x"></i> Cerrar
+                        </button>
+
+                        <button
+                            class="btn btn-success"
+                            @click="guardarEvidencias()">
+
+                            <i class="ti ti-check"></i> Guardar
+                        </button>
+
+                    </div>
 
                 </div>
 
             </div>
 
         </div>
-
-    </template>
-
-</div>
-
-            </div>
-
-            <div class="modal-footer">
-
-                <button
-                    class="btn bg-danger-subtle text-danger"
-                    data-bs-dismiss="modal">
-
-                    <i class="ti ti-x"></i> Cerrar
-                </button>
-
-                <button
-                    class="btn btn-success"
-                    @click="guardarEvidencias()">
-
-                    <i class="ti ti-check"></i> Guardar
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-<?php endif; ?>
+    <?php endif; ?>
 
 </div>

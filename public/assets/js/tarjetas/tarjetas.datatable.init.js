@@ -97,7 +97,7 @@ return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
 <div class="dropdown dropstart">
 
-<a href="javascript:void(0)"
+<a class="pointer"
 data-bs-toggle="dropdown">
 <i class="ti ti-dots-vertical fs-6"></i>
 </a>
@@ -107,8 +107,7 @@ data-bs-toggle="dropdown">
 <!-- DETALLE -->
 <li>
 <a 
-href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disableDetail}"
+class="dropdown-item pointer d-flex align-items-center gap-2 ${disableDetail}"
 ${!permisos.disableDetail ? `
 @click="goTo('/solicitud-tarjetas/detalle/${row.idEstacionReal}/${row.no_solicitud}')"
 ` : ''}>
@@ -119,8 +118,7 @@ ${!permisos.disableDetail ? `
 <!-- EDITAR -->
 <li>
 <a 
-href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledEdit}"
+class="dropdown-item d-flex pointer align-items-center gap-2 ${disabledEdit}"
 ${!permisos.disabledEdit ? `
 @click="goTo('/solicitud-tarjetas/formulario/${row.idEstacionReal}/${row.no_solicitud}')"
 ` : ''}>
@@ -131,8 +129,7 @@ ${!permisos.disabledEdit ? `
 <!-- ELIMINAR -->
 <li>
 <a 
-href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledDelete}"
+class="dropdown-item d-flex pointer align-items-center gap-2 ${disabledDelete}"
 ${!permisos.disabledDelete ? `
 @click="async () => {
 await deleteAction({

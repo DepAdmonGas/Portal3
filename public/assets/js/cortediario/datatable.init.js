@@ -339,10 +339,9 @@ document.addEventListener(
                                         <div class="dropdown dropstart">
 
                                             <a
-                                                href="javascript:void(0)"
                                                 data-bs-toggle="dropdown"
                                                 aria-expanded="false"
-                                                class="text-muted"
+                                                class="text-muted pointer"
                                             >
                                                 <i
                                                     class="ti ti-dots-vertical fs-6"
@@ -355,7 +354,6 @@ document.addEventListener(
                                                 <li>
 
                                                     <a
-                                                        href="javascript:void(0)"
                                                         class="dropdown-item pointer d-flex align-items-center gap-3 btn-activate"
                                                         data-id="${row.id}"
                                                     >
@@ -389,10 +387,9 @@ document.addEventListener(
                                     <div class="dropdown dropstart">
 
                                         <a
-                                            href="javascript:void(0)"
                                             data-bs-toggle="dropdown"
                                             aria-expanded="false"
-                                            class="text-muted"
+                                            class="text-muted pointer"
                                         >
                                             <i
                                                 class="ti ti-dots-vertical fs-6"
@@ -405,7 +402,6 @@ document.addEventListener(
                                             <li>
 
                                                 <a
-                                                    href="javascript:void(0)"
                                                     class="dropdown-item pointer d-flex align-items-center gap-3 btn-finalize"
                                                     data-id="${row.id}"
                                                 >

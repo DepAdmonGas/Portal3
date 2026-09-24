@@ -51,8 +51,8 @@ contenedor.innerHTML = `
 Descargar archivo:
 </h6>
 
-<a href="javascript:void(0)" 
-class="hstack gap-3 file-chat-hover justify-content-between text-nowrap mb-2"
+<a 
+class="hstack gap-3 file-chat-hover justify-content-between text-nowrap mb-2 pointer"
 @click="download('solicitud-tarjetas','${archivo}')">
 
 <div class="d-flex align-items-center gap-3">

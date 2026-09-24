@@ -1,214 +1,143 @@
 <div id="container" class="mb-4"
-data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
-data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
-x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
+    data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
+    x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
 
-<?php if (empty($estacionId)): ?>
+    <?php if (empty($estacionId)): ?>
 
-    <div id="sasisopa-empty-message"
-         class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
-        Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
-    </div>
-
-<?php else: ?>
-
-    <div id="sasisopa-content">
-
-<div  class="container-fluid mt-3">
-
-    <template
-        x-if="loading">
-
-        <div class="text-center">
-
-            <div class="spinner-border text-primary"></div>
-
+        <div id="sasisopa-empty-message"
+            class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
+            Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
         </div>
 
-    </template>
+    <?php else: ?>
 
-    <template
-        x-for="mes in meses"
-        :key="mes.id">
+        <div id="sasisopa-content">
 
-        <div class="card">
+            <div class="container-fluid mt-3">
 
-            <div class="card-header card-colored-header bg-primary p-3">
+                <template
+                    x-if="loading">
 
-                <h5
-                    class="mb-0 text-white"
-                    x-text="mes.nombre + ' ' + mes.year">
-                </h5>
+                    <div class="text-center">
 
-            </div>
+                        <div class="spinner-border text-primary"></div>
 
-            <div class="card-body p-3">
+                    </div>
 
-                <div class="row">
+                </template>
 
-                    <template
-                        x-for="etapa in etapas"
-                        :key="etapa.id">
+                <template
+                    x-for="mes in meses"
+                    :key="mes.id">
 
-                        <div class="col-xl-4">
+                    <div class="card">
 
-                            <div class="card mb-0">
+                        <div class="card-header card-colored-header bg-primary p-3">
 
-                                <div class="card-header bg-light text-center p-2">
-
-                                    <strong
-                                        x-text="etapa.titulo">
-                                    </strong>
-
-                                </div>
-
-                                <div class="table-responsive overflow-x-auto overflow-hidden">
-
-                                    <table class="table table-sm table-bordered align-middle mb-0 pb-0">
-
-                                        <thead>
-
-                                            <tr>
-                                                <template
-                                                    x-for="producto in productos"
-                                                    :key="producto.id">
-                                                    <th
-                                                        class="text-center"
-                                                        x-text="producto.nombre">
-                                                    </th>
-                                                </template>
-                                                <th width="36"></th>
-                                            </tr>
-
-                                        </thead>
-
-                                        <tbody>
-
-                                            <tr>
-
-                                                <template
-                                                    x-for="producto in productos"
-                                                    :key="producto.id">
-
-                                                    <td class="text-center">
-
-                                                        <template
-                                                            x-if="obtenerArchivo(mes,etapa,producto)">
-
-                                                            <a
-                                                                :href="'/uploads/'+obtenerArchivo(mes,etapa,producto)"
-                                                                target="_blank">
-
-                                                                <i class="ti ti-file-type-pdf text-danger fs-7"></i>
-
-                                                            </a>
-
-                                                        </template>
-
-                                                        <template
-                                                            x-if="!obtenerArchivo(mes,etapa,producto)">
-
-                                                            <i class="ti ti-x text-secondary fs-7"></i>
-
-                                                        </template>
-
-                                                    </td>
-
-                                                </template>
-
-                                                <td class="text-center">
-
-                                                <a href="javascript:void(0)" @click="abrirModal(mes,etapa)"><i class="ti ti-plus fs-7"></i></a>
-                                           
-
-                                                </td>
-
-                                            </tr>
-
-                                        </tbody>
-
-                                    </table>
-
-</div>
-
-</div>
+                            <h5
+                                class="mb-0 text-white"
+                                x-text="mes.nombre + ' ' + mes.year">
+                            </h5>
 
                         </div>
 
-                    </template>
+                        <div class="card-body p-3">
 
-                </div>
+                            <div class="row">
 
-            </div>
+                                <template
+                                    x-for="etapa in etapas"
+                                    :key="etapa.id">
 
-        </div>
+                                    <div class="col-xl-4">
 
-    </template>
+                                        <div class="card mb-0">
 
-</div>
+                                            <div class="card-header bg-light text-center p-2">
 
-<div class="modal fade"
-     id="modalFacturas"
-     tabindex="-1">
+                                                <strong
+                                                    x-text="etapa.titulo">
+                                                </strong>
 
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+                                            </div>
 
-        <div class="modal-content border-0 shadow">
+                                            <div class="table-responsive overflow-x-auto overflow-hidden">
 
-            <div class="modal-header modal-colored-header bg-primary text-white">
+                                                <table class="table table-sm table-bordered align-middle mb-0 pb-0">
 
-                     <h4 class="modal-title text-white">
-<i class="ti ti-file-dollar"></i>
-                        Nuevas facturas
+                                                    <thead>
 
-                    </h4>
+                                                        <tr>
+                                                            <template
+                                                                x-for="producto in productos"
+                                                                :key="producto.id">
+                                                                <th
+                                                                    class="text-center"
+                                                                    x-text="producto.nombre">
+                                                                </th>
+                                                            </template>
+                                                            <th width="36"></th>
+                                                        </tr>
 
-                <button
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal">
-                </button>
+                                                    </thead>
 
-            </div>
+                                                    <tbody>
 
-            <div class="modal-body">
+                                                        <tr>
 
-            <span
-                class="form-label"
-                x-text="modal.mes?.nombre + ' ' + modal.mes?.year +':'">
-            </span>
+                                                            <template
+                                                                x-for="producto in productos"
+                                                                :key="producto.id">
 
-                <div class="alert alert-primary mt-2">
-                    <strong>Periodo:</strong>
-                    <span x-text="modal.etapa?.titulo"></span>
-                </div>
+                                                                <td class="text-center">
 
-                <template
-                    x-for="producto in productos"
-                    :key="producto.id">
+                                                                    <template
+                                                                        x-if="obtenerArchivo(mes,etapa,producto)">
 
-                    <div class="mb-3">
+                                                                        <a
+                                                                            :href="'/uploads/'+obtenerArchivo(mes,etapa,producto)"
+                                                                            target="_blank">
 
-                        <div>
+                                                                            <i class="ti ti-file-type-pdf text-danger fs-7"></i>
 
-                            <h6
-                                class="fw-bolder mb-1"
-                                x-text="'* '+producto.nombre +':'">
-                            </h6>
+                                                                        </a>
 
-                            <input
-                            type="file"
-                            accept=".pdf"
+                                                                    </template>
 
-                            class="form-control"
+                                                                    <template
+                                                                        x-if="!obtenerArchivo(mes,etapa,producto)">
 
-                            :class="{
-                                'is-invalid': errores[producto.id]
-                            }"
+                                                                        <i class="ti ti-x text-secondary fs-7"></i>
 
-                            @change="
-                                archivos[producto.id]=$event.target.files[0];
-                                errores[producto.id]=false;
-                            ">
+                                                                    </template>
+
+                                                                </td>
+
+                                                            </template>
+
+                                                            <td class="text-center">
+
+                                                                <a class="pointer" @click="abrirModal(mes,etapa)"><i class="ti ti-plus fs-7"></i></a>
+
+
+                                                            </td>
+
+                                                        </tr>
+
+                                                    </tbody>
+
+                                                </table>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </template>
+
+                            </div>
 
                         </div>
 
@@ -218,52 +147,123 @@ x-data="{ ...actions(), ...facturas(<?= $idReporteCre ?>, <?= $year ?>) }">
 
             </div>
 
-            <div class="modal-footer">
+            <div class="modal fade"
+                id="modalFacturas"
+                tabindex="-1">
 
-                <button
-                    class="btn bg-danger-subtle text-danger"
-                    data-bs-dismiss="modal">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
 
-                    <i class="ti ti-x"></i> Cancelar
+                    <div class="modal-content border-0 shadow">
 
-                </button>
+                        <div class="modal-header modal-colored-header bg-primary text-white">
 
-                <button
-                    class="btn btn-success"
+                            <h4 class="modal-title text-white">
+                                <i class="ti ti-file-dollar"></i>
+                                Nuevas facturas
 
-                    @click="guardarFacturas()"
+                            </h4>
 
-                    :disabled="guardando">
+                            <button
+                                class="btn-close btn-close-white"
+                                data-bs-dismiss="modal">
+                            </button>
 
-                    <i class="ti ti-check"></i>
+                        </div>
 
-                    <span
-                        x-show="!guardando">
+                        <div class="modal-body">
 
-                        Guardar
+                            <span
+                                class="form-label"
+                                x-text="modal.mes?.nombre + ' ' + modal.mes?.year +':'">
+                            </span>
 
-                    </span>
+                            <div class="alert alert-primary mt-2">
+                                <strong>Periodo:</strong>
+                                <span x-text="modal.etapa?.titulo"></span>
+                            </div>
 
-                    <span
-                        x-show="guardando">
+                            <template
+                                x-for="producto in productos"
+                                :key="producto.id">
 
-                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                <div class="mb-3">
 
-                        Guardando...
+                                    <div>
 
-                    </span>
+                                        <h6
+                                            class="fw-bolder mb-1"
+                                            x-text="'* '+producto.nombre +':'">
+                                        </h6>
 
-                </button>
+                                        <input
+                                            type="file"
+                                            accept=".pdf"
+
+                                            class="form-control"
+
+                                            :class="{
+                                'is-invalid': errores[producto.id]
+                            }"
+
+                                            @change="
+                                archivos[producto.id]=$event.target.files[0];
+                                errores[producto.id]=false;
+                            ">
+
+                                    </div>
+
+                                </div>
+
+                            </template>
+
+                        </div>
+
+                        <div class="modal-footer">
+
+                            <button
+                                class="btn bg-danger-subtle text-danger"
+                                data-bs-dismiss="modal">
+
+                                <i class="ti ti-x"></i> Cancelar
+
+                            </button>
+
+                            <button
+                                class="btn btn-success"
+
+                                @click="guardarFacturas()"
+
+                                :disabled="guardando">
+
+                                <i class="ti ti-check"></i>
+
+                                <span
+                                    x-show="!guardando">
+
+                                    Guardar
+
+                                </span>
+
+                                <span
+                                    x-show="guardando">
+
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+
+                                    Guardando...
+
+                                </span>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
         </div>
-
-    </div>
-
-</div>
-
-    </div>
 
     <?php endif; ?>
 

@@ -99,8 +99,8 @@ return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
 <div class="dropdown dropstart">
 
-<a href="javascript:void(0)"
-class="text-muted"
+<a
+class="text-muted pointer"
 data-bs-toggle="dropdown"
 data-bs-display="static">
 <i class="ti ti-dots-vertical fs-6"></i>
@@ -111,7 +111,6 @@ data-bs-display="static">
 <!-- DETALLE -->
 <li>
 <a 
-href="javascript:void(0)"
 class="dropdown-item pointer d-flex align-items-center gap-2 ${disableDetail}"
 ${!permisos.disableDetail ? `@click="goTo('/solicitud-gafetes/detalle/${row.idEstacionReal}/${row.no_reporte}')"` : ''}>
 <i class="fs-4 ti ti-eye"></i> Detalle
@@ -121,7 +120,6 @@ ${!permisos.disableDetail ? `@click="goTo('/solicitud-gafetes/detalle/${row.idEs
 <!-- EDITAR -->
 <li>
 <a 
-href="javascript:void(0)"
 class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledEdit}"
 ${!permisos.disabledEdit ? `@click="goTo('/solicitud-gafetes/formulario/${row.idEstacionReal}/${row.no_reporte}')"` : ''}>
 <i class="fs-4 ti ti-edit"></i> Editar
@@ -130,7 +128,7 @@ ${!permisos.disabledEdit ? `@click="goTo('/solicitud-gafetes/formulario/${row.id
 
 <!-- ELIMINAR -->
 <li>
-<a href="javascript:void(0)"
+<a
 class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledDelete}"
 ${permisos.disabledDelete ? '' : `
 @click="async () => {
