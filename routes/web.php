@@ -918,6 +918,12 @@ return function (RouteCollector $r) {
 
         //----- 5.1 Pedido de Pinturas
         $r->addRoute('GET', '/comercializadora/pedido-pinturas', Route::auth(['PedidoPinturasController', 'index']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/catalogo', Route::auth(['PedidoPinturasController', 'catalogo']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/inventario', Route::auth(['PedidoPinturasController', 'inventario']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/reporte', Route::auth(['PedidoPinturasController', 'reporte']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/reporte/{id:\d+}', Route::auth(['PedidoPinturasController', 'reporteDetalle']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/{id:\d+}', Route::auth(['PedidoPinturasController', 'pedido']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas-firma/{id:\d+}', Route::auth(['PedidoPinturasController', 'firma']));
         $r->addRoute('GET', '/comercializadora/pedido-pinturas/get-data', Route::auth(['PedidoPinturasController', 'getData']));
         $r->addRoute('GET', '/comercializadora/pedido-pinturas/get-pendientes', Route::auth(['PedidoPinturasController', 'getPendingCountsEndpoint']));
         $r->addRoute('GET', '/comercializadora/pedido-pinturas/detalle', Route::auth(['PedidoPinturasController', 'getDetalle']));
@@ -926,10 +932,9 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/editar-piezas', Route::auth(['PedidoPinturasController', 'editarPiezas']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/editar-detalle', Route::auth(['PedidoPinturasController', 'editarDetalle']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/editar-observaciones', Route::auth(['PedidoPinturasController', 'editarObservaciones']));
-        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-item', Route::auth(['PedidoPinturasController', 'eliminarItem']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/eliminar-item', Route::auth(['PedidoPinturasController', 'eliminarItem']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/finalizar', Route::auth(['PedidoPinturasController', 'finalizar']));
-        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar', Route::auth(['PedidoPinturasController', 'eliminar']));
-        $r->addRoute('POST', '/comercializadora/pedido-pinturas/entregar', Route::auth(['PedidoPinturasController', 'entregar']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/eliminar', Route::auth(['PedidoPinturasController', 'eliminar']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/crear-token', Route::auth(['PedidoPinturasController', 'crearToken']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/firmar-vobo', Route::auth(['PedidoPinturasController', 'firmarVoBo']));
         $r->addRoute('GET', '/comercializadora/pedido-pinturas/pdf/{id:\d+}', Route::auth(['PedidoPinturasController', 'pdf']));
@@ -937,23 +942,75 @@ return function (RouteCollector $r) {
         //----- 5.1 Catálogo de pinturas
         $r->addRoute('GET', '/comercializadora/pedido-pinturas/catalogos', Route::auth(['PedidoPinturasController', 'getCatalogos']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/guardar-producto', Route::auth(['PedidoPinturasController', 'guardarProducto']));
-        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-producto', Route::auth(['PedidoPinturasController', 'eliminarProducto']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/eliminar-producto', Route::auth(['PedidoPinturasController', 'eliminarProducto']));
 
         //----- 5.1 Inventario de pinturas
-        $r->addRoute('GET', '/comercializadora/pedido-pinturas/inventario', Route::auth(['PedidoPinturasController', 'getInventario']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/inventario/data', Route::auth(['PedidoPinturasController', 'getInventario']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/agregar-inventario', Route::auth(['PedidoPinturasController', 'agregarInventario']));
-        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-inventario-item', Route::auth(['PedidoPinturasController', 'eliminarInventarioItem']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/eliminar-inventario-item', Route::auth(['PedidoPinturasController', 'eliminarInventarioItem']));
 
         //----- 5.1 Reportes de pinturas
         $r->addRoute('GET', '/comercializadora/pedido-pinturas/reportes', Route::auth(['PedidoPinturasController', 'getReportes']));
-        $r->addRoute('GET', '/comercializadora/pedido-pinturas/reporte', Route::auth(['PedidoPinturasController', 'getReporte']));
+        $r->addRoute('GET', '/comercializadora/pedido-pinturas/reporte/data', Route::auth(['PedidoPinturasController', 'getReporte']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/crear-reporte', Route::auth(['PedidoPinturasController', 'crearReporte']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/guardar-reporte-datos', Route::auth(['PedidoPinturasController', 'guardarReporteDatos']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/agregar-producto-reporte', Route::auth(['PedidoPinturasController', 'agregarProductoReporte']));
-        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-producto-reporte', Route::auth(['PedidoPinturasController', 'eliminarProductoReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/eliminar-producto-reporte', Route::auth(['PedidoPinturasController', 'eliminarProductoReporte']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/aprobar-reporte', Route::auth(['PedidoPinturasController', 'aprobar']));
-        $r->addRoute('DELETE', '/comercializadora/pedido-pinturas/eliminar-reporte', Route::auth(['PedidoPinturasController', 'eliminarReporte']));
-    });
+        $r->addRoute('POST', '/comercializadora/pedido-pinturas/eliminar-reporte', Route::auth(['PedidoPinturasController', 'eliminarReporte']));
+
+        //----- 5.2 Pedido de Artículos de Limpieza
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza', Route::auth(['PedidoArticulosLimpiezaController', 'index']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/catalogo', Route::auth(['PedidoArticulosLimpiezaController', 'catalogo']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/inventario', Route::auth(['PedidoArticulosLimpiezaController', 'inventario']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/reporte', Route::auth(['PedidoArticulosLimpiezaController', 'reporte']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/reporte/{id:\d+}', Route::auth(['PedidoArticulosLimpiezaController', 'reporteDetalle']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/{id:\d+}', Route::auth(['PedidoArticulosLimpiezaController', 'pedido']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza-firma/{id:\d+}', Route::auth(['PedidoArticulosLimpiezaController', 'firma']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/get-data', Route::auth(['PedidoArticulosLimpiezaController', 'getData']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/get-pendientes', Route::auth(['PedidoArticulosLimpiezaController', 'getPendingCountsEndpoint']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/detalle', Route::auth(['PedidoArticulosLimpiezaController', 'getDetalle']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/crear', Route::auth(['PedidoArticulosLimpiezaController', 'crear']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/agregar-producto', Route::auth(['PedidoArticulosLimpiezaController', 'agregarProducto']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/editar-piezas', Route::auth(['PedidoArticulosLimpiezaController', 'editarPiezas']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/eliminar-item', Route::auth(['PedidoArticulosLimpiezaController', 'eliminarItem']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/finalizar', Route::auth(['PedidoArticulosLimpiezaController', 'finalizar']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/entregar', Route::auth(['PedidoArticulosLimpiezaController', 'entregar']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/eliminar', Route::auth(['PedidoArticulosLimpiezaController', 'eliminar']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/crear-token', Route::auth(['PedidoArticulosLimpiezaController', 'crearToken']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/firmar-vobo', Route::auth(['PedidoArticulosLimpiezaController', 'firmarVoBo']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/pdf/{id:\d+}', Route::auth(['PedidoArticulosLimpiezaController', 'pdf']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/catalogos', Route::auth(['PedidoArticulosLimpiezaController', 'getCatalogos']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/guardar-producto', Route::auth(['PedidoArticulosLimpiezaController', 'guardarProducto']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/eliminar-producto', Route::auth(['PedidoArticulosLimpiezaController', 'eliminarProducto']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/inventario/data', Route::auth(['PedidoArticulosLimpiezaController', 'getInventario']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/agregar-inventario', Route::auth(['PedidoArticulosLimpiezaController', 'agregarInventario']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/eliminar-inventario-item', Route::auth(['PedidoArticulosLimpiezaController', 'eliminarInventarioItem']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/reportes', Route::auth(['PedidoArticulosLimpiezaController', 'getReportes']));
+        $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/reporte/data', Route::auth(['PedidoArticulosLimpiezaController', 'getReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/crear-reporte', Route::auth(['PedidoArticulosLimpiezaController', 'crearReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/guardar-reporte-datos', Route::auth(['PedidoArticulosLimpiezaController', 'guardarReporteDatos']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/agregar-producto-reporte', Route::auth(['PedidoArticulosLimpiezaController', 'agregarProductoReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/eliminar-producto-reporte', Route::auth(['PedidoArticulosLimpiezaController', 'eliminarProductoReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/aprobar-reporte', Route::auth(['PedidoArticulosLimpiezaController', 'aprobar']));
+        $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/eliminar-reporte', Route::auth(['PedidoArticulosLimpiezaController', 'eliminarReporte']));
+   
+   
+   
+   
+//----- 5.5 Camioneta Saveiro
+$r->addGroup('/comercializadora/camioneta-saveiro', function (RouteCollector $r) {
+    $r->addRoute('GET', '', Route::auth(['CamionetaSaveiroController', 'index']));
+    $r->addRoute('GET', '/data', Route::auth(['CamionetaSaveiroController', 'getData']));
+    $r->addRoute('POST', '/store', Route::auth(['CamionetaSaveiroController', 'store']));
+    $r->addRoute('POST', '/update', Route::auth(['CamionetaSaveiroController', 'update']));
+    $r->addRoute('POST', '/delete', Route::auth(['CamionetaSaveiroController', 'destroy']));
+    $r->addRoute('GET', '/comentarios', Route::auth(['CamionetaSaveiroController', 'getComentarios']));
+    $r->addRoute('POST', '/comentarios/store', Route::auth(['CamionetaSaveiroController', 'storeComentario']));
+});
+   
+   
+        });
 
     //----------------- Lista de asistencia ------------
 

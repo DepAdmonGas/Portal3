@@ -4,15 +4,11 @@ namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CamionetaSaveiroDocumentacion extends Model
+class CamionetaSaveiroDocumento extends Model
 {
     protected $table = 'op_camioneta_saveiro_documentacion';
-
     protected $primaryKey = 'id';
-    public $incrementing = true;
-    protected $keyType = 'int';
-
-    public $timestamps = false; // No tiene created_at ni updated_at
+    public $timestamps = false;
 
     protected $fillable = [
         'tipo',
@@ -22,7 +18,13 @@ class CamionetaSaveiroDocumentacion extends Model
     ];
 
     protected $casts = [
-        'fecha' => 'date',
+        'id'    => 'integer',
+        'fecha' => 'date:Y-m-d'
     ];
-}
 
+    public function comentarios()
+    {
+        return $this->hasMany(CamionetaSaveiroComentario::class, 'id_documento', 'id')
+                    ->orderBy('id', 'asc');
+    }
+}
