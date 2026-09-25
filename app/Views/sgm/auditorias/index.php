@@ -1,11 +1,11 @@
 <div id="container" data-elemento="110" data-herramienta="2" data-id="0">
-    <div class="card mt-4">
-        <div class="card-body">
+
+    
             <div x-data="{ ...actions(), ...auditorias() }">
-                <table class="table table-bordered table-striped table-hover table-sm mb-0">
+                <table class="table table-striped table-bordered text-nowrap align-middle mb-4 mt-4">
                     <thead>
                         <tr>
-                            <th class="text-center">#</th>
+                            <th class="text-center" width="96px">#</th>
                             <th class="text-center">Año</th>
 
                             <th colspan="2" class="text-center">
@@ -48,7 +48,7 @@
                                     <a
                                         class="pointer"
                                         @click="editar(item.id, 18)">
-                                        <i class="ti ti-edit fs-7"></i>
+                                        <i class="ti ti-edit fs-7 text-warning text-warning"></i>
                                     </a>
                                 </td>
 
@@ -62,7 +62,7 @@
                                     </template>
 
                                     <template x-if="!item.plan18.pdf">
-                                        <i class="ti ti-x text-muted fs-7"></i>
+                                        <i class="ti ti-x text-muted fs-7 "></i>
                                     </template>
                                 </td>
 
@@ -71,7 +71,7 @@
                                     <a
                                         class="pointer"
                                         @click="editar(item.id, 19)">
-                                        <i class="ti ti-edit fs-7"></i>
+                                        <i class="ti ti-edit fs-7 text-warning"></i>
                                     </a>
                                 </td>
 
@@ -94,7 +94,7 @@
                                     <a
                                         class="pointer"
                                         @click="editar(item.id, 20)">
-                                        <i class="ti ti-edit fs-7"></i>
+                                        <i class="ti ti-edit fs-7 text-warning"></i>
                                     </a>
                                 </td>
 
@@ -130,29 +130,30 @@
 
                 </table>
             </div>
-        </div>
-    </div>
+     
+ 
 
     <div class="row">
         <div class="col-md-6">
 
             <div class="card">
                 <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-                    <div class="card-body">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
 
-                        <div class="float-end">
                             <?=
                             !empty($permisos['crear']) ?
-                                '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+                                '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>'
                                 : ''
                             ?>
-                        </div>
+              
 
-                        <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
 
-                        <div class="datatables mt-4">
+                    </div>
+                    <div class="card-body">
+                        <div class="datatables">
                             <div class="table-responsive">
                                 <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
                                     <thead>

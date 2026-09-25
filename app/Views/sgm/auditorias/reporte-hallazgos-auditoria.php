@@ -1,33 +1,39 @@
 <div class="pb-4" x-data="{...actions(), ...reporte(<?= $id ?>)}">
 
+   <div class="text-end">
 
-    <div class="bg-white mt-4">
+            <button
+                class="btn btn-success"
+                @click="window.history.back()">
+                <i class="ti ti-check"></i>
+                Finalizar Reporte
+            </button>
 
-        <div class="table-responsive">
+        </div>
 
-            <table class="table table-bordered table-sm align-middle mb-0">
+    <div class="mt-4">
+        <div class="card">
+            <div class="card-header bg-primary">
+                <span class="card-title text-white">
+                                I. DATOS GENERALES DEL PERMISIONARIO
+                </span>
+
+            </div>
+            <div class="card-body p-0">
+      <div class="table-responsive">
+
+            <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
                 <tbody>
-
-                    <tr>
-                        <td
-                            colspan="3"
-                            class="bg-muted text-white">
-                            <b>
-                                I. DATOS GENERALES DEL PERMISIONARIO
-                            </b>
-                        </td>
-                    </tr>
-
                     <tr>
                         <td class="bg-light text-center fw-bolder">
-                            NOMBRE, DENOMINACIÓN O RAZÓN SOCIAL:
+                            Nombre, denominación o razón social
                         </td>
                         <td class="bg-light text-center fw-bolder">
-                            PERMISO CRE:
+                            Permiso CRE
                         </td>
                         <td class="bg-light text-center fw-bolder">
-                            FECHA DE ELABORACIÓN:
+                            Fecha de elaboración
                         </td>
                     </tr>
                     <tr>
@@ -50,18 +56,16 @@
 
                         <td
                             class="bg-light text-center fw-bolder align-middle">
-                            NOMBRES DEL RESPONSABLE DEL SGM:
+                            Nombres del responsable del SGM:
                         </td>
 
-                        <td
-                            colspan="2"
-                            class="p-0 m-0">
+                       <td colspan="2" class="p-0 m-0 bg-light">
 
                             <select
-                                class="form-select border rounded-0"
+                                class="form-select border rounded-0 text-start"
                                 x-model="usuarioResponsable"
                                 @change="agregarResponsable()">
-                                <option value="">Seleccione un usuario</option>
+                                <option value="">Seleccione una opcion...</option>
 
                                 <template
                                     x-for="usuario in usuariosDisponibles"
@@ -77,16 +81,17 @@
                                 <template
                                     x-for="responsable in responsables"
                                     :key="responsable.id">
-                                    <li
-                                        class="list-group-item d-flex justify-content-between align-items-center p-2">
-
-                                        <small x-text="responsable.nombre"></small>
+                                  <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center p-2">
+                                    
+                                  <span 
+                                        class="flex-grow-1 text-start"
+                                        x-text="responsable.nombre"></span>
 
                                         <a
                                             class="pointer"
                                             @click="eliminarResponsable(responsable.id)"
                                             title="Eliminar responsable">
-                                            <i class="ti ti-trash fs-4 text-danger"></i>
+                                            <i class="ti ti-trash fs-6 text-danger"></i>
                                         </a>
 
                                     </li>
@@ -103,32 +108,35 @@
             </table>
 
         </div>
+            </div>
+  
+        </div>
+
+
 
     </div>
 
     <div class="bg-white mt-3">
-
-        <table class="table table-sm table-bordered mb-0">
+        <div class="card">
+            <div class="card-header bg-primary">
+   <span class="card-title text-white">
+       I. DATOS DE LA AUDITORÍA
+   </span>
+    
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsve">
+ <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
             <tbody>
 
-                <tr>
-
-                    <td
-                        colspan="2"
-                        class="bg-muted text-white">
-                        <b>
-                            I. DATOS DE LA AUDITORÍA
-                        </b>
-                    </td>
-
-                </tr>
+   
 
 
                 <tr>
 
                     <td class="bg-light fw-bolder">
-                        FECHA Y UBICACIÓN DE LA AUDITORÍA:
+                        Fecha y ubicación de la auditoría:
                     </td>
 
                     <td class="p-0 m-0">
@@ -147,7 +155,7 @@
                 <tr>
 
                     <td class="bg-light fw-bolder">
-                        OBJETIVO DE LA AUDITORÍA:
+                        Objetivo de la auditoría:
                     </td>
 
                     <td class="p-0 m-0">
@@ -166,7 +174,7 @@
                 <tr>
 
                     <td class="bg-light fw-bolder">
-                        ALCANCE DE LA AUDITORÍA:
+                        Alcance de la auditoría:
                     </td>
 
                     <td class="p-0 m-0">
@@ -185,57 +193,68 @@
 
         </table>
 
+                </div>
+            </div>
+        </div>
+
+       
     </div>
 
     <!-- -- PERSONAL ENTREVISTADO -- -->
     <div class="bg-white mt-3">
+        <div class="card">
+            <div class="card-header bg-primary">
 
-        <div class="text-end">
+ <div class="row align-items-center">
 
-            <button
-                type="button"
-                class="btn btn-info"
-                @click="abrirEntrevistador()">
-                <i class="ti ti-plus"></i>
-                Nuevo
-            </button>
+    <div class="col-md-8">
+        <span class="card-title text-white mb-0">
+            <i class="ti ti-user-question"></i>
+            PERSONAL ENTREVISTADO
+        </span>
+    </div>
 
-        </div>
+    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+        <button
+            type="button"
+            class="btn bg-success text-white"
+            @click="abrirEntrevistador()">
+            <i class="ti ti-plus"></i>
+            Nuevo personal
+        </button>
+    </div>
 
-        <div class="mt-3">
+</div>
 
-            <table class="table table-sm table-bordered mb-0">
 
+
+            </div>
+
+
+            <div class="card-body p-0">
+            <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
                 <tbody>
 
-                    <tr>
-
-                        <td
-                            colspan="4"
-                            class="bg-muted text-white text-start fw-bolder">
-                            PERSONAL ENTREVISTADO
-                        </td>
-
-                    </tr>
+                
 
                     <tr>
 
-                        <td class="text-center fw-bolder bg-light">
-                            NOMBRE
+                        <td class="text-start fw-bolder bg-light">
+                            Nombre
                         </td>
 
                         <td class="text-center fw-bolder bg-light">
-                            PUESTO
+                            Puesto
                         </td>
 
                         <td class="text-center fw-bolder bg-light">
-                            ÁREA DE ADSCRIPCIÓN
+                            Área de adquisisión
                         </td>
 
                         <td
                             class="text-center fw-bolder bg-light"
                             width="32">
-                            <i class="ti ti-trash fs-6 text-muted"></i>
+                            <i class="ti ti-trash fs-6 text-danger"></i>
                         </td>
 
                     </tr>
@@ -266,7 +285,7 @@
                         <tr>
 
                             <td
-                                class="align-middle text-center fw-bold"
+                                class="align-middle text-start fw-bold"
                                 x-text="entrevistado.nombre">
                             </td>
 
@@ -301,61 +320,69 @@
 
             </table>
 
+            </div>
         </div>
+
+
+
+
+     
 
     </div>
     <!-- -- PERSONAL ENTREVISTADO -- -->
 
     <!-- -- EQUIPO AUDITOR -- -->
     <div class="bg-white mt-3">
+<div class="card">
+    <div class="card-header bg-primary">
+           
 
-        <div class="text-end mt-3 mb-3">
+               <div class="row align-items-center">
 
-            <button
+    <div class="col-md-8">
+        <span class="card-title text-white">
+            <i class="ti ti-users-group"></i>    
+
+EQUIPO AUDITOR
+        </span>
+    </div>
+
+    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+   <button
                 type="button"
-                class="btn btn-info"
+                class="btn bg-success text-white"
                 @click="abrirEquipoAuditor()">
                 <i class="ti ti-plus"></i>
-                Nuevo
+                Nuevo equipo
             </button>
 
-        </div>
+    </div>
 
-        <div class="bg-white mt-3">
+</div>
 
+    </div>
+    <div class="card-body p-0">
             <div class="table-responsive">
 
-                <table class="table table-sm table-bordered mb-0">
+                <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
                     <tbody>
 
-                        <tr>
-
-                            <td
-                                colspan="3"
-                                class="bg-muted text-white text-center fw-bolder">
-
-                                EQUIPO AUDITOR
-
-                            </td>
-
-                        </tr>
-
 
                         <tr>
 
-                            <td class="text-center fw-bolder bg-light">
-                                NOMBRE
+                            <td class="text-start fw-bolder bg-light">
+                                Nombre
                             </td>
 
                             <td class="text-center fw-bolder bg-light">
-                                ROL (AUDITOR LÍDER, AUDITOR EXPERTO TÉCNICO, AUDITOR ESPECIALISTA)
+                                Rol (auditor líder, auditor experto técnico, auditor especialista)
                             </td>
 
                             <td
                                 width="32"
                                 class="text-center bg-light">
-                                <i class="ti ti-trash fs-6 text-muted"></i>
+                                <i class="ti ti-trash fs-6 text-danger"></i>
                             </td>
 
                         </tr>
@@ -368,7 +395,7 @@
                             <tr>
 
                                 <td
-                                    class="align-middle text-center fw-bold"
+                                    class="align-middle text-start fw-bold"
                                     x-text="auditor.nombre">
                                 </td>
 
@@ -417,34 +444,34 @@
                 </table>
 
             </div>
-
-        </div>
+    </div>
+</div>
 
     </div>
     <!-- -- EQUIPO AUDITOR -- -->
 
+
+
+
+
+
     <!-- -- RESULTADO DE LA AUDITORÍA -- -->
     <div class="bg-white mt-3">
+        <div class="card">
+            <div class="card-header bg-primary">
 
-        <div class="table-responsive">
+               <span class="card-title text-white">
+     II. RESULTADO DE LA AUDITORÍA
+               </span>
+                           
+            </div>
+            <div class="card-body p-0">
+<div class="table-responsive">
 
-            <table class="table table-sm table-bordered mb-0">
+            <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
                 <tbody>
 
-                    <tr>
-
-                        <td
-                            colspan="3"
-                            class="bg-muted text-white">
-
-                            <b>
-                                II. RESULTADO DE LA AUDITORÍA
-                            </b>
-
-                        </td>
-
-                    </tr>
 
                     <tr>
 
@@ -475,16 +502,16 @@
 
                         </td>
 
-                        <td class="align-middle fw-bolder">
+                        <td class="align-middle fw-bolder text-start">
 
-                            CRITERIO:
+                            Criterio
 
                         </td>
 
                         <td
                             class="text-center align-middle fw-bolder">
 
-                            RESULTADO:
+                            Resultado
 
                         </td>
 
@@ -504,7 +531,7 @@
 
 
                             <td
-                                class="align-middle"
+                                class="align-middle text-start"
                                 x-text="resultado.criterio">
                             </td>
 
@@ -512,12 +539,12 @@
                             <td class="m-0 p-0">
 
                                 <select
-                                    class="form-select rounded-0 border-0"
+                                    class="form-select rounded-0 border-0 text-center"
                                     x-model="resultado.resultado"
                                     @change="editarResultado(resultado)">
 
                                     <option value="">
-                                        Seleccionar
+                                        Seleccionar una opcion...
                                     </option>
 
                                     <option value="C">
@@ -565,41 +592,53 @@
             </table>
 
         </div>
+            </div>
+        </div>
+
+        
 
     </div>
     <!-- -- RESULTADO DE LA AUDITORÍA -- -->
 
+
+
+
+
     <!-- -- III. DOCUMENTACIÓN DE LOS HALLAZGOS NO CONFORMES -- -->
     <div class="bg-white mt-3">
+        <div class="card">
+            <div class="card-header bg-primary">
+ 
+            <div class="row align-items-center">
 
-        <div class="text-end mt-3">
+    <div class="col-md-8">
+        <span class="card-title text-white">
+             III. DOCUMENTACIÓN DE LOS HALLAZGOS NO CONFORMES
+        </span>
+    </div>
 
-            <button
+    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+         <button
                 type="button"
-                class="btn btn-info"
+                class="btn bg-success text-white"
                 @click="abrirConforme()">
                 <i class="ti ti-plus"></i>
-                Nuevo
+                Nueva documentación
             </button>
 
-        </div>
+    </div>
 
-        <div class="table-responsive mt-3">
+</div>
+       
 
-            <table class="table table-bordered table-sm">
+    
+            </div>
+            <div class="card-body p-0">
+ <div class="table-responsive">
+
+            <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
                 <tbody>
-
-                    <tr>
-                        <td
-                            colspan="5"
-                            class="bg-muted text-white">
-                            <b>
-                                III. DOCUMENTACIÓN DE LOS HALLAZGOS NO CONFORMES
-                            </b>
-                        </td>
-                    </tr>
-
 
                     <tr>
 
@@ -611,21 +650,21 @@
 
                         <td
                             class="text-center align-middle fw-bolder bg-light">
-                            DESCRIPCIÓN DEL HALLAZGO
+                            Descripción del hallazgo
                         </td>
 
                         <td
                             class="text-center align-middle fw-bolder bg-light">
-                            EVIDENCIA
+                            Evidencia
                         </td>
 
                         <td
                             class="text-center align-middle fw-bolder bg-light">
-                            CRITERIO
+                            Criterio
                         </td>
 
-                        <td width="32" class="text-center align-middle bg-light">
-                            <i class="ti ti-trash fs-6 text-muted"></i>
+                        <td width="48px" class="text-center align-middle bg-light">
+                            <i class="ti ti-trash fs-6 text-danger"></i>
                         </td>
 
                     </tr>
@@ -694,45 +733,51 @@
             </table>
 
         </div>
+            </div>
+        </div>
+
+       
 
     </div>
     <!-- -- III. DOCUMENTACIÓN DE LOS HALLAZGOS NO CONFORMES -- -->
 
+
+
+
+
     <!-- -- IV. OPORTUNIDADES DE MEJORA/OBSERVACIONES -- -->
+
     <div class="bg-white mt-3">
+<div class="card">
+    <div class="card-header bg-primary">
+<div class="row align-items-center">
 
-        <div class="text-end">
+    <div class="col-md-8">
+        <span class="card-title text-white">
+            IV. OPORTUNIDADES DE MEJORA/OBSERVACIONES
+        </span>
+    </div>
 
-            <button
-                type="button"
-                class="btn btn-info"
-                @click="abrirMejoras()">
-                <i class="ti ti-plus"></i>
-                Nuevo
-            </button>
+    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+        <button
+            type="button"
+            class="btn bg-success text-white"
+            @click="abrirMejoras()">
+            <i class="ti ti-plus"></i>
+            Nueva descripción
+        </button>
+    </div>
 
-        </div>
+</div>
+       
+    </div>
+    <div class="card-body p-0">
 
         <div class="table-responsive">
 
-            <table class="table table-bordered table-sm mt-3">
+            <table class="table table-striped table-bordered align-middle mb-0">
 
                 <tbody>
-
-                    <tr>
-
-                        <td
-                            colspan="3"
-                            class="bg-muted text-white">
-
-                            <b>
-                                IV. OPORTUNIDADES DE MEJORA/OBSERVACIONES
-                            </b>
-
-                        </td>
-
-                    </tr>
-
 
                     <tr>
 
@@ -747,12 +792,12 @@
                         <td
                             class="text-start align-middle fw-bolder bg-light">
 
-                            DESCRIPCIÓN
+                            Descripción
 
                         </td>
 
                         <td width="48px" class="text-center bg-light">
-                            <i class="ti ti-trash fs-6 text-muted"></i>
+                            <i class="ti ti-trash fs-6 text-danger"></i>
                         </td>
 
                     </tr>
@@ -770,7 +815,7 @@
                             </td>
 
                             <td
-                                class="text-center align-middle"
+                                class="text-start align-middle"
                                 x-text="mejora.descripcion">
                             </td>
 
@@ -813,30 +858,28 @@
         </div>
 
     </div>
+</div>
+     
+    </div>
     <!-- -- IV. OPORTUNIDADES DE MEJORA/OBSERVACIONES -- -->
+
+
+
 
     <!-- -- V. COMENTARIOS -- -->
     <div class="bg-white mt-3">
-
+<div class="card">
+    <div class="card-header bg-primary">
+        <span class="card-title text-white">
+                                V. COMENTARIOS
+        </span>
+    </div>
+    <div class="card-body p-0">
         <div class="table-responsive">
 
-            <table class="table table-bordered table-sm">
+            <table class="table table-striped table-bordered align-middle mb-0">
 
-                <tbody>
-
-                    <tr>
-
-                        <td
-                            colspan="2"
-                            class="bg-muted text-white">
-                            <b>
-                                V. COMENTARIOS
-                            </b>
-                        </td>
-
-                    </tr>
-
-
+                <tbody>                
                     <tr>
 
                         <td
@@ -857,13 +900,14 @@
 
                         <td
                             colspan="2"
-                            class="bg-light">
-                            NOTA: EN CASO DE QUE DURANTE LA AUDITORÍA,
-                            EL EQUIPO AUDITOR DETECTE UNA SITUACIÓN DE
-                            RIESGO PARA LA SEGURIDAD INDUSTRIAL,
-                            SEGURIDAD OPERATIVA O PARA EL MEDIO AMBIENTE
-                            EN LAS INSTALACIONES DEL REGULADO, DEBERÁ
-                            REPORTARLA EN ESTA SECCIÓN.
+                            class="bg-light form-label">
+                            Nota: en caso de que durante la auditoría,
+                            el equipo auditor detecte una situación de
+                            riesgo para la seguridad industrial,
+                            seguridad operativa o para el medio ambiente
+                            en las instalaciones del regulado, deberá
+                            reportarla en esta sección.
+
                         </td>
 
                     </tr>
@@ -889,9 +933,10 @@
 
                         <td
                             colspan="2"
-                            class="bg-light">
-                            MOTIVOS DE FINALIZACIÓN DE AUDITORÍA
-                            ANTES DE TIEMPO (SI APLICA):
+                            class="bg-light form-label">
+                            Motivos de finalización de auditoría
+                            antes de tiempo (si aplica):
+
                         </td>
 
                     </tr>
@@ -913,23 +958,45 @@
                     </tr>
 
 
-                    <tr>
+               
 
-                        <td
-                            colspan="2"
-                            class="bg-muted text-white">
-                            <b>
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+</div>
+
+
+    </div>
+    <!-- -- V. COMENTARIOS -- -->
+
+
+
+    <!-- -- VI. CONCLUSIONES -- -->
+    <div class="bg-white mt-3">
+<div class="card">
+    <div class="card-header bg-primary">
+ <span class="card-title text-white">
                                 VI. CONCLUSIONES
-                            </b>
-                        </td>
+ </span>
 
-                    </tr>
+                         
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+
+            <table class="table table-striped table-bordered align-middle mb-0">
+
+                <tbody>
+
 
 
                     <tr>
 
                         <td
-                            colspan="2"
+                            colspan="3"
                             class="p-0 m-0">
 
                             <textarea
@@ -941,23 +1008,6 @@
 
                     </tr>
 
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-    <!-- -- V. COMENTARIOS -- -->
-
-    <!-- -- VI. CONCLUSIONES -- -->
-    <div class="bg-white mt-3">
-
-        <div class="table-responsive">
-
-            <table class="table table-sm table-bordered">
-
-                <tbody>
 
                     <tr>
 
@@ -1048,18 +1098,11 @@
 
         </div>
 
+    </div>
+</div>
 
-        <div class="text-end">
 
-            <button
-                class="btn btn-success"
-                @click="window.history.back()">
-                <i class="ti ti-check"></i>
-                Finalizar Reporte de Hallazgos de Auditoria
-            </button>
-
-        </div>
-
+     
     </div>
     <!-- -- VI. CONCLUSIONES -- -->
 
@@ -1079,6 +1122,7 @@
                 <div class="modal-header bg-primary head-modal">
 
                     <h5 class="modal-title text-white">
+                        <i class="ti ti-user-question"></i>
                         PERSONAL ENTREVISTADO
                     </h5>
 
@@ -1093,20 +1137,20 @@
 
                 <div class="modal-body">
 
-                    <div class="mb-3">
+                  
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Nombre:
                         </label>
 
                         <select
-                            class="form-select"
+                            class="form-select mb-3"
                             x-model="formEntrevistador.id_usuario"
                             @change="errorsEntrevistador.id_usuario = false"
                             :class="errorsEntrevistador.id_usuario ? 'is-invalid' : ''">
 
                             <option value="">
-                                Selecciona un usuario...
+                                Selecciona una opcion...
                             </option>
 
                             <template
@@ -1122,12 +1166,11 @@
 
                         </select>
 
-                    </div>
 
 
-                    <div class="mb-3">
+                 
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Área de descripción:
                         </label>
 
@@ -1139,7 +1182,7 @@
                             :class="errorsEntrevistador.area_descripcion ? 'is-invalid' : ''">
                     </textarea>
 
-                    </div>
+      
 
                 </div>
 
@@ -1192,6 +1235,7 @@
                 <div class="modal-header bg-primary head-modal">
 
                     <h5 class="modal-title text-white">
+                        <i class="ti ti-users-group"></i>
                         EQUIPO AUDITOR
                     </h5>
 
@@ -1208,14 +1252,14 @@
 
                     <!-- PERSONAL EXTERNO -->
 
-                    <div class="mb-3">
+                   
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Nombre (Personal Externo):
                         </label>
 
                         <textarea
-                            class="form-control"
+                            class="form-control mb-3"
                             rows="2"
                             x-model="formEquipoAuditor.nombre"
                             @input="
@@ -1229,17 +1273,14 @@
                             :disabled="!!formEquipoAuditor.id_usuario">
                     </textarea>
 
-                    </div>
+                
 
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Rol (auditor líder, auditor experto técnico, auditor especialista):
                         </label>
 
                         <textarea
-                            class="form-control"
+                            class="form-control mb-3"
                             rows="2"
                             x-model="formEquipoAuditor.rol"
                             @input="
@@ -1253,7 +1294,6 @@
                             :disabled="!!formEquipoAuditor.id_usuario">
                     </textarea>
 
-                    </div>
 
 
                     <div class="text-center my-3">
@@ -1267,9 +1307,9 @@
 
                     <!-- PERSONAL INTERNO -->
 
-                    <div class="mb-3">
+          
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Nombre (Personal Interno):
                         </label>
 
@@ -1294,7 +1334,7 @@
                         ">
 
                             <option value="">
-                                Selecciona un usuario...
+                                Selecciona una opcion...
                             </option>
 
                             <template
@@ -1315,7 +1355,7 @@
 
                         </select>
 
-                    </div>
+                 
 
                 </div>
 
@@ -1382,14 +1422,14 @@
 
                 <div class="modal-body">
 
-                    <div class="mb-3">
+               
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Descripción del hallazgo:
                         </label>
 
                         <textarea
-                            class="form-control rounded-0"
+                            class="form-control rounded-0 mb-3"
                             rows="3"
                             x-model="formConforme.descripcion"
                             @input="errorsConforme.descripcion = false"
@@ -1400,17 +1440,17 @@
                         ">
                     </textarea>
 
-                    </div>
+                 
 
 
-                    <div class="mb-3">
+            
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Evidencia:
                         </label>
 
                         <textarea
-                            class="form-control rounded-0"
+                            class="form-control rounded-0 mb-3"
                             rows="3"
                             x-model="formConforme.evidencia"
                             @input="errorsConforme.evidencia = false"
@@ -1421,12 +1461,11 @@
                         ">
                     </textarea>
 
-                    </div>
+              
 
 
-                    <div class="mb-3">
-
-                        <label class="form-label">
+              
+                        <label class="form-label mb-1">
                             * Criterio:
                         </label>
 
@@ -1442,7 +1481,7 @@
                         ">
                     </textarea>
 
-                    </div>
+           
 
                 </div>
 
@@ -1510,9 +1549,8 @@
 
                 <div class="modal-body">
 
-                    <div class="mb-3">
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Descripción:
                         </label>
 
@@ -1528,7 +1566,7 @@
                         ">
                     </textarea>
 
-                    </div>
+            
 
                 </div>
 
