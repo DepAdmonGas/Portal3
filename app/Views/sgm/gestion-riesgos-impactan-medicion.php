@@ -16,13 +16,17 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
     <div class="row mt-4">
         <div class="col-md-6">
    
-            <div class="card">
-                <div class="card-body">
+        <div class="row">
 
-                    <div class="d-flex align-items-center">
-                        <h4 class="card-title mb-0">Dispensadores de Combustible</h4>
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary">
+<h4 class="card-title text-white mb-0">
+<i class="ti ti-gas-station"></i>    
+Dispensadores de Combustible</h4>
                     </div>
-                    <div class="mt-3">
+                    <div class="card-body">
+ 
                         Calibración regular y revisión técnica semestral o de acuerdo a lo que indique el proveedor y la normatividad para los medidores de flujo, garantizando mediciones precisas y confiables.
 
                         Inspecciones mensuales y reemplazo preventivo cada 5 años (o de acuerdo a lo que indique el proveedor y la normatividad) de mangueras y boquillas para prevenir fugas y riesgos de seguridad.
@@ -30,50 +34,82 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
                         Mantenimiento preventivo y mejoras en la protección contra el clima para pantallas y teclados, reduciendo fallos operativos.
 
                         Actualizaciones automáticas y auditorías de software anuales para el sistema de control electrónico, asegurando operaciones sin interrupciones y seguridad de datos.
-                        <hr>
+                    
                     </div>
-                    <h4 class="card-title mb-0">Tanques de Almacenamiento</h4>
-                    <div class="mt-3">
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary">
+ <h4 class="card-title text-white mb-0">
+ <i class="ti ti-wash"></i>   
+ Tanques de Almacenamiento</h4>
+                    </div>
+                    <div class="card-body">
+ 
                         Calibración regular e inspecciones trimestrales (o de acuerdo a lo que indique el proveedor y la normatividad) de sensores de nivel para mantener un inventario preciso y prevenir sobrellenados.
 
                         Limpieza semestral y revisión de integridad estructural del sistema de ventilación para evitar presiones excesivas y riesgos de explosión.
 
                         Revisión y mantenimiento anual y actualización tecnológica cada 10 años (o de acuerdo a lo que indique el proveedor y la normatividad) del sistema de recuperación de vapores para cumplir con regulaciones ambientales y reducir emisiones.
-                        <hr>
+                    
+                
                     </div>
-                    <h4 class="card-title mb-0">Sistema de Software de Gestión</h4>
-                    <div class="mt-3">
-                        Backups diarios y sistemas de seguridad cibernética robustos para proteger la base de datos de transacciones contra corrupción de datos y ataques cibernéticos.
-
-                        Pruebas de usuario continuas y actualizaciones basadas en feedback para mejorar la interfaz de usuario y asegurar eficiencia operativa.
-                    </div>
-
                 </div>
+     
             </div>
 
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary">
+<h4 class="card-title text-white mb-0">
+<i class="ti ti-device-desktop-check"></i>    
+Sistema de Software de Gestión</h4>
+                    </div>
+ <div class="card-body">
+         Backups diarios y sistemas de seguridad cibernética robustos para proteger la base de datos de transacciones contra corrupción de datos y ataques cibernéticos.
+
+                        Pruebas de usuario continuas y actualizaciones basadas en feedback para mejorar la interfaz de usuario y asegurar eficiencia operativa.
+                    
+ </div>
+                 
+                </div>
+
+        </div>
+            </div>
+
+
+
+                   
+
+                
         </div>
 
         <div class="col-md-6">
 
             <div class="card">
                 <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-                    <div class="card-body">
-
-                        <div class="float-end">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+<h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
                             <?=
                             !empty($permisos['crear']) ?
-                                '<button type="button" class="btn btn-primary" @click="crearAsistencia()">
+                                '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>'
                                 : ''
                             ?>
-                        </div>
+                       
 
-                        <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+                        
+                    </div>
+                    <div class="card-body">
 
-                        <div class="datatables mt-4">
-                            <div class="table-responsive">
-                                <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                        
+
+                        <div class="datatables ">
+                            <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+                                <table id="table-lista-asistencia" class="table table-striped table-bordered  text-nowrap align-middle">
                                     <thead>
                                         <tr>
                                             <th>#</th>

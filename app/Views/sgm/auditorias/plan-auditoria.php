@@ -1,32 +1,38 @@
 <div
     x-data="{...actions(), ...planauditoria(<?= $id ?>)}">
 
-    <div class="bg-white p-3 mt-3">
+        <div class="text-end">
+            <button class="btn btn-success mt-3" @click="finalizar"><i class="ti ti-check"></i> Finalizar Auditoria</button>
+        </div>
+
+
+    <div class="bg-white  mt-3">
 
         <!-- PLAN -->
+<div class="card mb-4">
+    <div class="card-header bg-primary">
+                    <span class="card-title text-white">
+                        I. DATOS GENERALES DEL PERMISIONARIO
+                    </span>
+                
+    </div>
 
-        <table class="table table-bordered table-sm mb-1">
+<div class="card-body p-0">
+    <div class="table-responsive">
+<table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
             <tbody>
-
-                <tr>
-                    <td colspan="3" class="bg-muted text-white">
-                        <b>I. DATOS GENERALES DEL PERMISIONARIO</b>
-                    </td>
-                </tr>
-
                 <tr>
 
                     <td class="bg-light text-center fw-bolder">
-                        NOMBRE, DENOMINACIÓN O RAZÓN SOCIAL:
+Nombre, denominación o razón social                    </td>
+
+                    <td class="bg-light text-center fw-bolder">
+                        Permiso CRE
                     </td>
 
                     <td class="bg-light text-center fw-bolder">
-                        Permiso CRE:
-                    </td>
-
-                    <td class="bg-light text-center fw-bolder">
-                        FECHA DE ELABORACIÓN:
+                        Fecha de elaboración
                     </td>
 
                 </tr>
@@ -45,7 +51,7 @@
 
                         <input
                             type="date"
-                            class="form-control border-0"
+                            class="form-control border-0 text-center"
                             x-model="plan.fecha"
                             @change="editar('fecha')">
 
@@ -55,15 +61,15 @@
 
                 <tr>
 
-                    <td class="bg-light fw-bolder">
-                        NOMBRE DEL DIRECTOR (ALTA DIRECCIÓN):
+                    <td class="bg-light fw-bolder text-center">
+                        Nombre del director (alta dirección):
                     </td>
 
                     <td colspan="2" class="p-0">
 
                         <input
                             type="text"
-                            class="form-control border-0"
+                            class="form-control border-0 text-center"
                             x-model="plan.nom_director"
                             @change="editar('nom_director')">
 
@@ -73,17 +79,17 @@
 
                 <tr>
 
-                    <td class="bg-light fw-bolder align-middle">
-                        NOMBRE DEL(LOS) RESPONSABLE DEL SGM:
+                    <td class="bg-light fw-bolder align-middle text-center">
+                        Nombre del(los) responsable del sgm:
                     </td>
 
                     <td colspan="2" class="p-0">
 
                         <select
-                            class="form-select border rounded-0"
+                            class="form-select border rounded-0 text-center "
                             x-model="usuarioResponsable"
                             @change="agregarResponsable()">
-                            <option value="">Seleccione un usuario</option>
+                            <option value="">Seleccione una opcion...</option>
 
                             <template
                                 x-for="usuario in usuariosDisponibles"
@@ -94,7 +100,7 @@
                             </template>
                         </select>
 
-                        <ul class="list-group list-group-flush">
+                        <ul>
 
                             <template
                                 x-for="responsable in responsables"
@@ -102,14 +108,16 @@
                                 <li
                                     class="list-group-item d-flex justify-content-between align-items-center p-2">
 
-                                    <small x-text="responsable.nombre"></small>
+                                    <span 
+                                    class="flex-grow-1 text-center"
+                                    x-text="responsable.nombre"></span>
 
                                     <a
                                         href="javascript:void(0)"
                                         class="pointer"
                                         @click="eliminarResponsable(responsable.id)"
                                         title="Eliminar responsable">
-                                        <i class="ti ti-trash fs-4 text-danger"></i>
+                                        <i class="ti ti-trash fs-6 text-danger"></i>
                                     </a>
 
                                 </li>
@@ -123,15 +131,15 @@
 
                 <tr>
 
-                    <td class="bg-light fw-bolder">
-                        UBICACIÓN DE LA INSTALACIÓN:
+                    <td class="bg-light fw-bolder text-center">
+                        Ubicación de la instalación:
                     </td>
 
                     <td colspan="2" class="p-0">
 
                         <input
                             type="text"
-                            class="form-control border-0"
+                            class="form-control border-0 text-center"
                             x-model="plan.ubicacion_instalacion"
                             @change="editar('ubicacion_instalacion')">
 
@@ -142,48 +150,61 @@
             </tbody>
 
         </table>
+    </div>
+ 
+</div>
+      
+
+</div>
+ 
+
+                
+<!---------termina la primera card----->
 
         <!-- AUDITORES -->
+<div class="card mb-4">
 
-        <div class="text-end mt-3 mb-3">
+    <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+                    <span class="card-title text-white">
+                        II. DATOS DEL AUDITOR
+                    </span>
 
-            <button
+            
+
+   <button
                 type="button"
-                class="btn btn-info"
+                class="btn bg-success text-white"
                 @click="abrirAuditor()">
                 <i class="ti ti-plus"></i>
-                Agregar auditor
+                Nuevo auditor
             </button>
+    </div>
+ 
 
-        </div>
 
-        <table class="table table-bordered table-sm">
+<div class="card-body p-0">
+    <div class="table-responsive">
+<table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
             <tbody>
 
-                <tr class="bg-secondary text-white">
-
-                    <td colspan="4" class="bg-muted text-white">
-                        <b>II. DATOS DEL AUDITOR</b>
-                    </td>
-
-                </tr>
+                
 
                 <tr>
 
-                    <td class="fw-bolder bg-light">
+                    <td class="fw-bolder bg-light text-center">
                         Equipo auditor
                     </td>
 
-                    <td class="fw-bolder bg-light">
-                        Nombre
+                    <td class="fw-bolder bg-light text-center">
+                        Nombre del auditor
                     </td>
 
-                    <td class="fw-bolder bg-light">
-                        Área/proceso/actividad que audita:
+                    <td class="fw-bolder bg-light text-center">
+                        Área/proceso/actividad que audita
                     </td>
 
-                    <td class="text-center bg-light" width="35"><i class="ti ti-trash fs-6 text-muted"></i></td>
+                    <td class="text-center bg-light" width="48px"><i class="ti ti-trash fs-6 text-danger"></i></td>
 
                 </tr>
 
@@ -193,11 +214,11 @@
 
                     <tr>
 
-                        <td class="align-middle" x-text="auditor.categoria"></td>
+                        <td class="align-middle text-center" x-text="auditor.categoria"></td>
 
-                        <td class="align-middle" x-text="auditor.nombre"></td>
+                        <td class="align-middle text-center" x-text="auditor.nombre"></td>
 
-                        <td class="align-middle" x-text="auditor.area_actividad"></td>
+                        <td class="align-middle text-center" x-text="auditor.area_actividad"></td>
 
                         <td class="text-center">
 
@@ -230,46 +251,54 @@
             </tbody>
 
         </table>
+    </div>
+  
+</div>  
+</div>
+      
+
+<!-------termina la segunda card----->
+
+
 
         <!-- AUXILIARES -->
+         <div class="card mb-4">
+            <div class="card-header bg-primary d-flex justify-content-between align-items-center">
 
-        <div class="text-end mb-3">
+
+                    <span class="card-title text-white">
+                            III. DATOS DEL EQUIPO AUXILIAR DEL AUDITOR
+                        
+                    </span>
+
+              
+
 
             <button
                 type="button"
-                class="btn btn-info"
+                class="btn bg-success text-white"
                 @click="abrirAuxiliar()">
                 <i class="ti ti-plus"></i>
-                Agregar auxiliar
+                Nuevo auxiliar
             </button>
-
-        </div>
-
-        <table class="table table-bordered table-sm align-middle">
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+<table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
             <tbody>
 
-                <tr class="bg-secondary text-white">
+                <tr>
 
-                    <td colspan="3" class="bg-muted text-white">
-                        <b>
-                            III. DATOS DEL EQUIPO AUXILIAR DEL AUDITOR
-                        </b>
-                    </td>
-
-                </tr>
-
-                <tr class="bg-light">
-
-                    <td class="fw-bolder bg-light">
+                    <td class="fw-bolder bg-light text-center">
                         Equipo auditor
                     </td>
 
-                    <td class="fw-bolder bg-light">
-                        Nombre
+                    <td class="fw-bolder bg-light text-center">
+                        Nombre del auxiliar
                     </td>
 
-                    <td class="text-center bg-light" width="35"><i class="ti ti-trash fs-6 text-muted"></i></td>
+                    <td class="text-center bg-light" width="48px"><i class="ti ti-trash fs-6 text-danger"></i></td>
 
                 </tr>
 
@@ -279,9 +308,13 @@
 
                     <tr>
 
-                        <td x-text="auxiliar.categoria"></td>
+                        <td 
+                        class="text-center"
+                        x-text="auxiliar.categoria"></td>
 
-                        <td x-text="auxiliar.nombre"></td>
+                        <td 
+                        class="text-center"
+                        x-text="auxiliar.nombre"></td>
 
                         <td class="text-center">
 
@@ -316,25 +349,38 @@
             </tbody>
 
         </table>
+                </div>
+  
+            </div>
+         </div>
+
+
+<!--------termina la tercera card----->
+
 
 
         <!-- AUDITORÍA -->
+<div class="card mb-4">
+    <div class="card-header bg-primary">
 
-        <table class="table table-bordered table-sm">
+
+                    <span class="card-title text-white">
+                      IV. AUDITORÍA
+                    </span>
+
+          
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+<table class="table table-striped table-bordered text-nowrap align-middle mb-0">
 
             <tbody>
 
-                <tr>
-
-                    <td colspan="3" class="bg-muted text-white">
-                        <b>IV. AUDITORÍA</b>
-                    </td>
-
-                </tr>
+               
 
                 <tr>
                     <td colspan="3" class="bg-light fw-bolder">
-                        OBJETIVOS DE LA AUDITORÍA
+                        Objetivos de la auditoría:
                     </td>
                 </tr>
 
@@ -351,7 +397,7 @@
 
                 <tr>
                     <td colspan="3" class="bg-light fw-bolder">
-                        ALCANCE DE LA AUDITORÍA
+                        Alcance de la auditoría:
                     </td>
                 </tr>
 
@@ -368,7 +414,7 @@
 
                 <tr>
                     <td colspan="3" class="bg-light fw-bolder">
-                        FECHA PROGRAMADA DE AUDITORÍA
+                        Fecha programada de auditoría:
                     </td>
                 </tr>
 
@@ -386,7 +432,7 @@
 
                 <tr>
                     <td colspan="3" class="bg-light fw-bolder">
-                        SITIO
+                        Sitio:
                     </td>
                 </tr>
 
@@ -404,7 +450,7 @@
 
                 <tr>
                     <td colspan="3" class="bg-light fw-bolder">
-                        MÉTODOS DE AUDITORÍA
+                        Métodos de auditoría:
                     </td>
                 </tr>
 
@@ -421,7 +467,7 @@
 
                 <tr>
                     <td colspan="3" class="bg-light fw-bolder">
-                        AJUSTES AL PLAN
+                        Ajustes al plan:
                     </td>
                 </tr>
 
@@ -438,7 +484,7 @@
 
                 <tr>
                     <td colspan="3" class="bg-light fw-bolder">
-                        ASIGNACIÓN DE RECURSOS APROPIADOS
+                        Asignación de recursos apropiados:
                     </td>
                 </tr>
 
@@ -455,7 +501,7 @@
 
                 <tr>
                     <td colspan="3" class="bg-light fw-bolder">
-                        PREPARATIVOS LOGÍSTICOS Y DE COMUNICACIONES
+                        Preparativos logísticos y de comunicaciones:
                     </td>
                 </tr>
 
@@ -472,7 +518,7 @@
 
                 <tr>
                     <td colspan="3" class="bg-light fw-bolder">
-                        ACCIONES DE SEGUIMIENTO
+                        Acciones de seguimiento:
                     </td>
                 </tr>
 
@@ -490,56 +536,71 @@
             </tbody>
 
         </table>
-
-        <!-- AGENDA -->
-
-        <div class="text-end mt-3 mb-3">
-
-            <button
-                type="button"
-                class="btn btn-info"
-                @click="abrirAgenda()">
-                <i class="ti ti-plus"></i>
-                Agregar agenda
-            </button>
-
         </div>
 
-        <table class="table table-bordered table-striped table-sm">
+    </div>
+</div>
+        
+        <!-------aqui termina la cuarta card---->
+
+
+
+
+        <!-- AGENDA -->
+<div class="card mb-4">
+    <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+<div class="d-flex flex-column">
+    <span class="card-title text-white pb-0 mb-0">               
+    V. Agenda
+    </span>
+    <small class="text-white">Nota: Elaborar una agenda para cada sitio a ser auditado.</small>
+    
+</div>
+ <button
+                type="button"
+                class="btn bg-success text-white"
+                @click="abrirAgenda()">
+                <i class="ti ti-plus"></i>
+                Nueva agenda
+            </button>
+
+      
+    </div>
+    <div class="card-body p-0">
+
+<div class="table-responsive">
+        <table class="table table-striped table-bordered  align-middle mb-0">
 
             <thead>
 
-                <tr>
-                    <th colspan="6" class="bg-muted text-white">V. AGENDA.<br>
-                        Nota: Elaborar una Agenda para cada sitio a ser auditado.</th>
-                </tr>
+               
 
                 <tr>
 
                     <th class="text-center align-middle bg-light">
-                        HORARIO
+                        Horario
                     </th>
 
                     <th class="text-center align-middle bg-light">
-                        PROCESO
+                        Proceso
                     </th>
 
                     <th class="text-center align-middle bg-light">
-                        ELEMENTO DEL SISTEMA DE GESTIÓN DE MEDICIÓN
+                        Elemento del sistema de gestion de meición
                     </th>
 
                     <th class="text-center align-middle bg-light">
-                        NOMBRE Y ROL DEL AUDITOR
+                        Nombre y rol del auditor
                     </th>
 
                     <th class="text-center align-middle bg-light">
-                        GUÍA
+                        Guía
                     </th>
 
                     <th
                         class="text-center align-middle bg-light"
-                        width="32">
-                        <i class="ti ti-trash fs-5 text-muted"></i>
+                        width="48px">
+                        <i class="ti ti-trash fs-5 text-danger"></i>
                     </th>
 
                 </tr>
@@ -627,11 +688,13 @@
             </tbody>
 
         </table>
+</div>
 
-        <div class="text-end">
-            <button class="btn btn-success" @click="finalizar"><i class="ti ti-check"></i> Finalizar Plan de Auditoria</button>
-        </div>
-
+    </div>
+</div>
+        
+<!---------aqio termina la quinta y ultima card------->
+    
     </div>
 
     <!-- Modal -->
@@ -645,6 +708,9 @@
 
             <div class="modal-content">
 
+
+
+
                 <!-- AUDITOR -->
 
                 <template x-if="modalTipo === 'auditor'">
@@ -654,7 +720,7 @@
                         <div class="modal-header bg-primary head-modal">
 
                             <h4 class="modal-title text-white">
-                                II. DATOS DEL AUDITOR
+                                II.  Nuevo auditor
                             </h4>
 
                             <button
@@ -669,18 +735,18 @@
 
                             <div class="mb-2">
 
-                                <label class="form-label">
+                                <label class="form-label mb-1">
                                     * Equipo auditor:
                                 </label>
 
                                 <select
-                                    class="form-select"
+                                    class="form-select mb-3"
                                     x-model="formAuditor.categoria"
                                     @change="errors.categoria = false"
                                     :class="errors.categoria ? 'is-invalid' : ''">
 
                                     <option value="">
-                                        Selecciona...
+                                        Selecciona una opcion...
                                     </option>
 
                                     <option value="AUDITOR LÍDER">
@@ -698,13 +764,13 @@
 
                             <div class="mb-2">
 
-                                <label class="form-label">
+                                <label class="form-label mb-2">
                                     * Nombre del auditor:
                                 </label>
 
                                 <input
                                     type="text"
-                                    class="form-control"
+                                    class="form-control mb-3"
                                     x-model="formAuditor.nombre"
                                     @input="limpiarAuditorInterno()"
                                     @change="errors.nombre = false"
@@ -715,18 +781,18 @@
 
                             <div class="mb-2">
 
-                                <label class="form-label">
+                                <label class="form-label mb-1">
                                     * Nombre (Auditor Interno):
                                 </label>
 
                                 <select
-                                    class="form-select"
+                                    class="form-select mb-3"
                                     x-model="formAuditor.auditorInterno"
                                     @change="limpiarNombreAuditor()"
                                     :disabled="tieneNombreAuditor">
 
                                     <option value="">
-                                        Seleccione un usuario
+                                        Seleccione una opcion...
                                     </option>
 
                                     <template
@@ -742,20 +808,19 @@
                             </div>
 
 
-                            <div class="mb-2">
 
-                                <label class="form-label">
+                                <label class="form-label mb-1">
                                     * Área/proceso/actividad que audita:
                                 </label>
 
                                 <textarea
-                                    class="form-control"
+                                    class="form-control mb-3"
                                     x-model="formAuditor.area_actividad"
                                     @change="errors.area_actividad = false"
                                     :class="errors.area_actividad ? 'is-invalid' : ''">
                             </textarea>
 
-                            </div>
+                            
 
                         </div>
 
@@ -796,7 +861,7 @@
                         <div class="modal-header bg-primary head-modal">
 
                             <h5 class="modal-title text-white">
-                                III. DATOS DEL EQUIPO AUXILIAR DEL AUDITOR
+                                III. Nuevo auxiliar
                             </h5>
 
                             <button
@@ -809,20 +874,20 @@
 
                         <div class="modal-body">
 
-                            <div class="mb-2">
+                          
 
-                                <label class="form-label">
+                                <label class="form-label mb-1">
                                     * Equipo auditor:
                                 </label>
 
                                 <select
-                                    class="form-select"
+                                    class="form-select mb-3"
                                     x-model="formAuxiliar.categoria"
                                     @change="errors.categoria = false"
                                     :class="errors.categoria ? 'is-invalid' : ''">
 
                                     <option value="">
-                                        Selecciona...
+                                        Selecciona una opcion...
                                     </option>
 
                                     <option value="GUÍAS">
@@ -839,23 +904,21 @@
 
                                 </select>
 
-                            </div>
+                        
 
 
-                            <div class="mb-2">
 
-                                <label class="form-label">
-                                    * Nombre:
+                                <label class="form-label mb-1">
+                                    * Nombre del auxiliar:
                                 </label>
 
                                 <textarea
-                                    class=" form-control"
+                                    class=" form-control mb-3"
                                     x-model="formAuxiliar.nombre"
                                     @change="errors.nombre = false"
                                     :class="errors.nombre ? 'is-invalid' : ''">
                                     </textarea>
 
-                            </div>
 
                         </div>
 
@@ -906,7 +969,8 @@
                 <div class="modal-header bg-primary head-modal">
 
                     <h5 class="modal-title text-white">
-                        V. AGENDA
+                       
+                         V. Nueva agenda
                     </h5>
 
                     <button
@@ -922,15 +986,15 @@
 
                     <div class="row">
 
-                        <div class="col-md-6 mb-2">
+                        <div class="col-md-6">
 
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 * Hora inicio:
                             </label>
 
                             <input
                                 type="time"
-                                class="form-control"
+                                class="form-control mb-3"
                                 x-model="formAgenda.hora_inicio"
                                 @change="errors.hora_inicio = false"
                                 :class="errors.hora_inicio ? 'is-invalid' : ''">
@@ -938,15 +1002,15 @@
                         </div>
 
 
-                        <div class="col-md-6 mb-2">
+                        <div class="col-md-6">
 
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 * Hora término:
                             </label>
 
                             <input
                                 type="time"
-                                class="form-control"
+                                class="form-control mb-3"
                                 x-model="formAgenda.hora_termino"
                                 @change="errors.hora_termino = false"
                                 :class="errors.hora_termino ? 'is-invalid' : ''">
@@ -956,31 +1020,31 @@
                     </div>
 
 
-                    <div class="mb-2">
+                 
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Proceso:
                         </label>
 
                         <textarea
-                            class="form-control"
+                            class="form-control mb-3"
                             rows="2"
                             x-model="formAgenda.proceso"
                             @change="errors.proceso = false"
                             :class="errors.proceso ? 'is-invalid' : ''">
             </textarea>
 
-                    </div>
+           
 
 
                     <div class="mb-2">
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Elemento del sistema de gestión de medición:
                         </label>
 
                         <select
-                            class="form-select"
+                            class="form-select mb-3"
                             x-model="formAgenda.elemento_sistema"
                             @change="errors.elemento_sistema = false"
                             :class="errors.elemento_sistema ? 'is-invalid' : ''">
@@ -1005,31 +1069,30 @@
                     </div>
 
 
-                    <div class="mb-2">
+                   
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             * Nombre y rol del auditor:
                         </label>
 
                         <textarea
-                            class="form-control"
+                            class="form-control  mb-3"
                             rows="2"
                             x-model="formAgenda.nombre_rol"
                             @change="errors.nombre_rol = false"
                             :class="errors.nombre_rol ? 'is-invalid' : ''">
             </textarea>
 
-                    </div>
 
 
                     <div class="mb-2">
 
-                        <label class="form-label">
+                        <label class="form-label mb-1">
                             Guía:
                         </label>
 
                         <textarea
-                            class="form-control"
+                            class="form-control mb-3"
                             rows="2"
                             x-model="formAgenda.guia">
             </textarea>

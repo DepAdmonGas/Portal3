@@ -96,7 +96,9 @@ x-init="
             if ($asistencia->realizadopor !=0) { ?>
 <div class="card">
     <div class="card-header card-colored-header bg-primary">
-         <h5 class="card-title text-white pb-0 mb-0 ">Evidencia</h5>
+         <h5 class="card-title text-white pb-0 mb-0 ">
+         <i class="ti ti-camera"></i>   
+         Evidencia</h5>
 
                 <small class="text-white">Agrega la evidencia del elemento lista de asistencia, un máximo de 3 imágenes</small>
     </div>
@@ -123,7 +125,7 @@ x-init="
                 x-text="error"
             ></small>
 
-              <div class="mt-3 text-end">
+              <div class="mt-3 text-end mb-3">
 
                   <button
                       class="btn bg-info-subtle text-info"
