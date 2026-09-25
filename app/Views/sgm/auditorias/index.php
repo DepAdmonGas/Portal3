@@ -138,17 +138,25 @@
 
             <div class="card">
                 <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+                    <div class="card-header bg-primary">
+                       
+               <div class="row align-items-center">
 
-                            <?=
+    <div class="col-md-8">
+             <h4 class="card-title text-white mb-0">Fo.SGM.001 Lista de asistencia</h4>
+    </div>
+
+    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+           <?=
                             !empty($permisos['crear']) ?
-                                '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
+                                '<button type="button" class="btn bg-success text-white" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>'
                                 : ''
                             ?>
-              
+    </div>
+
+</div>
 
 
                     </div>
