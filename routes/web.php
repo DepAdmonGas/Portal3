@@ -584,7 +584,17 @@ return function (RouteCollector $r) {
         //----- 2. Recursos Humanos
         $r->addRoute('GET', '/recursos-humanos', Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
 
-        //----- Organigrama
+ //----- Recibo de nomina 
+$r->addRoute('GET', '/recursos-humanos/recibos-nomina/{idYear:\d+}', Route::auth(['RecibosNominaController', 'index']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/data/{idYear:\d+}', Route::auth(['RecibosNominaController', 'data']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios', Route::auth(['RecibosNominaController', 'getComentarios']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios/guardar', Route::auth(['RecibosNominaController', 'guardarComentario']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/editar', Route::auth(['RecibosNominaController', 'guardarEdicion']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/eliminar', Route::auth(['RecibosNominaController', 'eliminarUsuario']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/finalizar', Route::auth(['RecibosNominaController', 'finalizarActividad']));
+        
+
+//----- Organigrama
         $r->addRoute('GET', '/recursos-humanos/organigrama', Route::auth(['OrganigramaController', 'index']));
         $r->addRoute('GET', '/recursos-humanos/organigrama/get-versions', Route::auth(['OrganigramaController', 'getVersions']));
         $r->addRoute('POST', '/recursos-humanos/organigrama/add', Route::auth(['OrganigramaController', 'add']));
@@ -959,6 +969,47 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/aprobar-reporte', Route::auth(['PedidoPinturasController', 'aprobar']));
         $r->addRoute('POST', '/comercializadora/pedido-pinturas/eliminar-reporte', Route::auth(['PedidoPinturasController', 'eliminarReporte']));
 
+        //----- 5.1 Pedido de Papelería
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria', Route::auth(['PedidoPapeleriaController', 'index']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/catalogo', Route::auth(['PedidoPapeleriaController', 'catalogo']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/inventario', Route::auth(['PedidoPapeleriaController', 'inventario']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/reporte', Route::auth(['PedidoPapeleriaController', 'reporte']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/reporte/{id:\d+}', Route::auth(['PedidoPapeleriaController', 'reporteDetalle']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/{id:\d+}', Route::auth(['PedidoPapeleriaController', 'pedido']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria-firma/{id:\d+}', Route::auth(['PedidoPapeleriaController', 'firma']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/get-data', Route::auth(['PedidoPapeleriaController', 'getData']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/get-pendientes', Route::auth(['PedidoPapeleriaController', 'getPendingCountsEndpoint']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/detalle', Route::auth(['PedidoPapeleriaController', 'getDetalle']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/crear', Route::auth(['PedidoPapeleriaController', 'crear']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/agregar-producto', Route::auth(['PedidoPapeleriaController', 'agregarProducto']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/editar-piezas', Route::auth(['PedidoPapeleriaController', 'editarPiezas']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/eliminar-item', Route::auth(['PedidoPapeleriaController', 'eliminarItem']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/finalizar', Route::auth(['PedidoPapeleriaController', 'finalizar']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/eliminar', Route::auth(['PedidoPapeleriaController', 'eliminar']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/crear-token', Route::auth(['PedidoPapeleriaController', 'crearToken']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/firmar-vobo', Route::auth(['PedidoPapeleriaController', 'firmarVoBo']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/pdf/{id:\d+}', Route::auth(['PedidoPapeleriaController', 'pdf']));
+
+        //----- 5.1 Catálogo de papelería
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/catalogos', Route::auth(['PedidoPapeleriaController', 'getCatalogos']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/guardar-producto', Route::auth(['PedidoPapeleriaController', 'guardarProducto']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/eliminar-producto', Route::auth(['PedidoPapeleriaController', 'eliminarProducto']));
+
+        //----- 5.1 Inventario de papelería
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/inventario/data', Route::auth(['PedidoPapeleriaController', 'getInventario']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/agregar-inventario', Route::auth(['PedidoPapeleriaController', 'agregarInventario']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/eliminar-inventario-item', Route::auth(['PedidoPapeleriaController', 'eliminarInventarioItem']));
+
+        //----- 5.1 Reportes de papelería
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/reportes', Route::auth(['PedidoPapeleriaController', 'getReportes']));
+        $r->addRoute('GET', '/comercializadora/pedido-papeleria/reporte/data', Route::auth(['PedidoPapeleriaController', 'getReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/crear-reporte', Route::auth(['PedidoPapeleriaController', 'crearReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/guardar-reporte-datos', Route::auth(['PedidoPapeleriaController', 'guardarReporteDatos']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/agregar-producto-reporte', Route::auth(['PedidoPapeleriaController', 'agregarProductoReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/eliminar-producto-reporte', Route::auth(['PedidoPapeleriaController', 'eliminarProductoReporte']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/aprobar-reporte', Route::auth(['PedidoPapeleriaController', 'aprobar']));
+        $r->addRoute('POST', '/comercializadora/pedido-papeleria/eliminar-reporte', Route::auth(['PedidoPapeleriaController', 'eliminarReporte']));
+
         //----- 5.2 Pedido de Artículos de Limpieza
         $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza', Route::auth(['PedidoArticulosLimpiezaController', 'index']));
         $r->addRoute('GET', '/comercializadora/pedido-articulos-limpieza/catalogo', Route::auth(['PedidoArticulosLimpiezaController', 'catalogo']));
@@ -994,6 +1045,29 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/eliminar-producto-reporte', Route::auth(['PedidoArticulosLimpiezaController', 'eliminarProductoReporte']));
         $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/aprobar-reporte', Route::auth(['PedidoArticulosLimpiezaController', 'aprobar']));
         $r->addRoute('POST', '/comercializadora/pedido-articulos-limpieza/eliminar-reporte', Route::auth(['PedidoArticulosLimpiezaController', 'eliminarReporte']));
+
+        //----- 5.3 Pedido de Aditivo
+        $r->addRoute('GET', '/comercializadora/pedido-aditivo', Route::auth(['PedidoAditivoController', 'index']));
+        $r->addRoute('GET', '/comercializadora/pedido-aditivo/{id:\d+}', Route::auth(['PedidoAditivoController', 'pedido']));
+        $r->addRoute('GET', '/comercializadora/pedido-aditivo/get-data', Route::auth(['PedidoAditivoController', 'getData']));
+        $r->addRoute('GET', '/comercializadora/pedido-aditivo/get-pendientes', Route::auth(['PedidoAditivoController', 'getPendingCountsEndpoint']));
+        $r->addRoute('GET', '/comercializadora/pedido-aditivo/detalle', Route::auth(['PedidoAditivoController', 'getDetalle']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/crear', Route::auth(['PedidoAditivoController', 'crear']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/guardar-datos', Route::auth(['PedidoAditivoController', 'guardarDatos']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/agregar-tambo', Route::auth(['PedidoAditivoController', 'agregarTambo']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/editar-tambo', Route::auth(['PedidoAditivoController', 'editarTambo']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/eliminar-tambo', Route::auth(['PedidoAditivoController', 'eliminarTambo']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/finalizar', Route::auth(['PedidoAditivoController', 'finalizar']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/eliminar', Route::auth(['PedidoAditivoController', 'eliminar']));
+        $r->addRoute('GET', '/comercializadora/pedido-aditivo-firma/{id:\d+}', Route::auth(['PedidoAditivoController', 'firma']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/crear-token', Route::auth(['PedidoAditivoController', 'crearToken']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/firmar-vobo', Route::auth(['PedidoAditivoController', 'firmarVoBo']));
+        $r->addRoute('GET', '/comercializadora/pedido-aditivo/pdf/{id:\d+}', Route::auth(['PedidoAditivoController', 'pdf']));
+        $r->addRoute('GET', '/comercializadora/pedido-aditivo/documentos', Route::auth(['PedidoAditivoController', 'getDocumentos']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/subir-documento', Route::auth(['PedidoAditivoController', 'subirDocumento']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/eliminar-documento', Route::auth(['PedidoAditivoController', 'eliminarDocumento']));
+        $r->addRoute('GET', '/comercializadora/pedido-aditivo/comentarios', Route::auth(['PedidoAditivoController', 'getComentarios']));
+        $r->addRoute('POST', '/comercializadora/pedido-aditivo/comentario-store', Route::auth(['PedidoAditivoController', 'addComentario']));
    
    
    

@@ -34,7 +34,13 @@
   border-color: var(--bs-form-invalid-border-color, #dc3545);
 }
 
-.modal .select2-dropdown {
-  z-index: 1060;
+.modal .select2-dropdown,
+.modal .select2-container--open {
+  z-index: 2000;
+}
+
+.modal .select2-results__options {
+  max-height: 320px;
+  overflow-y: auto;
 }
 

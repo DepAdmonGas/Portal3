@@ -24,9 +24,11 @@ class PedidoLimpiezaFirma extends Model
         'id' => 'integer',
         'id_pedido' => 'integer',
         'id_usuario' => 'integer',
-        'fecha' => 'datetime',
-        'tipo_firma' => 'string',
-        'firma' => 'string'
+        'fecha' => 'datetime'
     ];
-}
 
+    public function pedido()
+    {
+        return $this->belongsTo(PedidoLimpieza::class, 'id_pedido', 'id');
+    }
+}

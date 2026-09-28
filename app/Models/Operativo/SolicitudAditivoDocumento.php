@@ -4,22 +4,22 @@ namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
-class LimpiezaLista extends Model
+class SolicitudAditivoDocumento extends Model
 {
-    protected $table = 'op_limpieza_lista';
+    protected $table = 'op_solicitud_aditivo_documento';
     protected $primaryKey = 'id';
-    public $incrementing = true;
-    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'unidad',
-        'producto',
-        'estatus'
+        'id_reporte',
+        'fecha',
+        'nombre',
+        'documento'
     ];
 
     protected $casts = [
         'id' => 'integer',
-        'estatus' => 'integer'
+        'id_reporte' => 'integer',
+        'fecha' => 'datetime'
     ];
 }
