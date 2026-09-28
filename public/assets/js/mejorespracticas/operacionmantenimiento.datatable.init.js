@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
              {
         data: null,
+          className: 'text-center align-middle',
         render: function (data, type, row, meta) {
                 return meta.row + meta.settings._iDisplayStart + 1;
             }

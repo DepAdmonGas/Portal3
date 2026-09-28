@@ -38,10 +38,10 @@
             <th>G Premium</th>
             <th>G Diesel</th>
             <th class="text-center">
-            <a class="text-muted"><i class="ti ti-trash fs-7"></i></a>
+            <a class="text-danger"><i class="ti ti-trash fs-6"></i></a>
             </th>
             <th class="text-center">
-            <a class="text-muted"><i class="ti ti-check fs-7"></i></a>
+            <a class="text-muted"><i class="ti ti-check fs-6"></i></a>
             </th>
             </tr>
           </thead>

@@ -34,7 +34,7 @@ x-data="{ ...actions(), ...dispensario()}">
             <th class="text-center align-middle">Mangueras G PREMIUM</th>
             <th class="text-center align-middle">Mangueras G DIESEL</th>
           <th class="text-center" width="48px">
-          <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
+          <a class="text-danger"><i class="ti ti-trash fs-6"></i></a>
           </th>
           </tr>
         </thead>

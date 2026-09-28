@@ -72,7 +72,8 @@ Finalizar
 <!-- card -->
 <div class="card">
     <div class="card-header card-colored-header bg-primary">
- <h4 class="card-title text-white mb-0" x-text="categoria"></h4>
+        <i class="ti ti-zoom-question fs-6 text-white"></i>
+ <span class="card-title text-white mb-0" x-text="categoria"></span>
     </div>
       <div class="card-body">
     <div class="row">
@@ -86,7 +87,7 @@ Finalizar
         <div class="col-12 mb-3">
     
 
-                <label class="form-label" x-text="item.pregunta"></label>
+                <label class="form-label" x-text="item.pregunta "></label>
 
                 <textarea
                     class="form-control"

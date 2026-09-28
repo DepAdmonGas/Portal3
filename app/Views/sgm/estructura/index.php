@@ -6,23 +6,30 @@
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
 
-<div class="card-header d-flex justify-content-between align-items-center">
-    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
-        <?= 
+<div class="card-header">
+  <div class="row align-items-center">
+    <div class="col-12 col-md-9">
+<h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+    </div>
+<div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+<?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
         ?>    
+</div>
 
+  </div>
+    
 </div>
 
   <div class="card-body">
 
    
 
-  <div class="datatables mt-4">
+  <div class="datatables ">
     <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
       <table id="table-lista-asistencia" class="table table-striped table-bordered text-nowrap align-middle">
         <thead>
@@ -49,22 +56,28 @@
 
 <div class="card">
   <div x-data="{ ...actions(), ...revision() }">
-    <div class="card-header d-flex justify-content-between align-items-center">
-<h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
 
-       <?= 
+    <div class="card-header">
+      <div class="row align-items-center">
+<div class="col-12 col-md-9">
+    <h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
+  
+</div>    
+<div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+     <?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearRevision()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
         ?>        
-
+</div>
+</div>
 
     </div>
   <div class="card-body">
 
-  <div class="datatables mt-4">
+  <div class="datatables">
     <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
       <table id="table-revision-sgm" class="table table-striped table-bordered text-nowrap align-middle">
         <thead>

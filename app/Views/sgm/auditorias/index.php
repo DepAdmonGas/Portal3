@@ -138,18 +138,18 @@
 
             <div class="card">
                 <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-                    <div class="card-header bg-primary">
+                    <div class="card-header">
                        
                <div class="row align-items-center">
 
-    <div class="col-md-8">
-             <h4 class="card-title text-white mb-0">Fo.SGM.001 Lista de asistencia</h4>
+    <div class="col-md-9">
+             <h4 class="card-title  mb-0">Fo.SGM.001 Lista de asistencia</h4>
     </div>
 
-    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
            <?=
                             !empty($permisos['crear']) ?
-                                '<button type="button" class="btn bg-success text-white" @click="crearAsistencia()">
+                                '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>'
                                 : ''
@@ -162,7 +162,7 @@
                     </div>
                     <div class="card-body">
                         <div class="datatables">
-                            <div class="table-responsive">
+                            <div class="table-responsive overflow-x-auto overflow-y-hidden p-1">
                                 <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
                                     <thead>
                                         <tr>

@@ -85,9 +85,11 @@ Descargar
 
 <div class="card">
     <div class="card-header">
-<div class="d-flex align-items-center">
+<div class="row align-items-center">
+    <div class="col-12 col-md-9">
 <h4 class="card-title mb-0">Quejas y sugerencias</h4>
-<div class="ms-auto">
+    </div>
+<div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
 <?= 
 !empty($permisos['crear']) ? 
 '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalQS()"  >
@@ -382,7 +384,7 @@ data-bs-dismiss="modal">
 <button class="btn btn-success"
 @click="guardarEvidencia()">
 <i class="ti ti-check"></i>
-Agregar 
+Guardar
 </button>
 
 

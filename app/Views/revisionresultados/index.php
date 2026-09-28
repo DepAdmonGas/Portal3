@@ -39,7 +39,7 @@
         </div>
         <!-- Implementación del SA -->
         <div class="card">
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
                         <tbody>
@@ -220,7 +220,7 @@
         <!-- Ventas -->
         <!-- Capacitación -->
         <div class="card">
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
                         <tbody>
@@ -289,7 +289,7 @@
         <!-- Capacitación -->
         <!-- Satisfacción del cliente -->
         <div class="card">
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
 
@@ -414,7 +414,7 @@
         <!-- Satisfacción del cliente -->
         <!-- Incidentes y accidentes -->
         <div class="card">
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-responsive table-striped table-bordered mb-0 align-middle">
 
@@ -529,7 +529,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-responsive table-striped table-bordered mb-0 text-nowrap align-middle">
 

@@ -6,7 +6,7 @@ x-data="{ ...actions(), ...detectorHumo()}">
   <div class="text-end">
       <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn bg-primary-subtle texte-primary" @click="modalopen()">
+        '<button type="button" class="btn bg-primary-subtle text-primary" @click="modalopen()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 

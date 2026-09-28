@@ -23,11 +23,11 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
     </div>
 
 <div class="datatables">
-    <div class="table-responsive mb-3 overflow-x-auto overflow-hidden">
+    <div class="table-responsive pb-2 overflow-x-auto overflow-hidden">
 
         <table
             id="tablaAuditorias"
-            class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+            class="table table-striped table-bordered text-nowrap align-middle">
 
             <thead>
 
@@ -65,7 +65,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
                         Anexos
                     </th>
                     <th class="align-middle text-center">
-                       <i class="ti ti-trash text-danger fs-7"></i>
+                       <i class="ti ti-trash text-danger fs-6"></i>
                     </th>
                 </tr>
 

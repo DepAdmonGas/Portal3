@@ -20,20 +20,31 @@
                 <div class="col-md-6">
 
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h4 class="card-title mb-0">Fo.SGM.007 Designación de responsable SGM</h4>
-                            <div class="text-nowrap">
-                                <?=
-                                !empty($permisos['crear']) ?
-                                    '<button type="button" class="btn bg-primary-subtle text-primary" @click="openNuevo()">
-                            <i class="ti ti-plus"></i> Nuevo
-                            </button>'
-                                    : ''
-                                ?>
 
-                            </div>
 
-                        </div>
+<div class="card-header">
+    <div class="row align-items-center">
+
+        <div class="col-12 col-md-9">
+            <h4 class="card-title mb-0">
+                Fo.SGM.007 Designación de responsable SGM
+            </h4>
+        </div>
+
+        <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+
+            <?= !empty($permisos['crear']) ?
+                '<button type="button" class="btn bg-primary-subtle text-primary" @click="openNuevo()">
+                    <i class="ti ti-plus"></i> Nuevo
+                </button>'
+                : ''
+            ?>
+
+        </div>
+
+    </div>
+</div>
+
                         <div class="card-body p-0">
 
                             <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
@@ -128,36 +139,49 @@
 
                 </div>
 
-                <div class="col-md-6 d-flex align-items-stretch mb-4">
-                    <a href="/personal/SGM"
-                        class="card h-75 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+     <div
+    class="col-md-6 d-flex align-items-stretch mb-4"
+    x-data="{ mobile: window.innerWidth < 768 }"
+    x-init="window.addEventListener('resize', () => mobile = window.innerWidth < 768)"
+>
+    <a
+        href="/personal/SGM"
+        class="card w-100 text-decoration-none card-hover overflow-hidden position-relative"
+        :class="mobile ? 'h-100' : 'h-75'"
+    >
 
-                        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <!-- Icono circular -->
-                                <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
-                                    style="width: 60px; height: 60px;">
-                                    <i class="ti ti-user text-white display-6"></i>
-                                </div>
+        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+            <div class="d-flex align-items-center gap-3">
 
-                                <!-- Título a la derecha -->
-                                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
-                                    <h4 class="fw-bold text-dark mb-0 lh-sm">
-                                        Fo.SGM.008 Lista de personal
-                                    </h4>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Pie de la tarjeta -->
-                        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
-                            <span class="small">Ver personal</span>
-                            <div class="icon-transition">
-                                <i class="ti ti-arrow-narrow-right fs-5"></i>
-                            </div>
-                        </div>
-                    </a>
+                <!-- Icono circular -->
+                <div
+                    class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                    style="width: 60px; height: 60px;"
+                >
+                    <i class="ti ti-user text-white display-6"></i>
                 </div>
+
+                <!-- Título a la derecha -->
+                <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">
+                        Fo.SGM.008 Lista de personal
+                    </h4>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Pie de la tarjeta -->
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+            <span class="small">Ver personal</span>
+
+            <div class="icon-transition">
+                <i class="ti ti-arrow-narrow-right fs-5"></i>
+            </div>
+        </div>
+
+    </a>
+</div>
 
 
 

@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `
                     <a class="pointer"
                     onclick="cambioprecio.eliminar(${row.id})">
-                    <i class="ti ti-trash fs-7 text-danger"></i>
+                    <i class="ti ti-trash fs-6 text-danger"></i>
                     </a>
                     `;
             }
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             orderable: false,
             searchable: false,
             render: function (estado) {
-                return `<i class="ti ${estado.icon} ${estado.color_css} fs-7"></i>`;
+                return `<i class="ti ${estado.icon} ${estado.color_css} fs-6"></i>`;
             }
         },
     

@@ -14,7 +14,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
   <div class="text-end">
       <?= 
         !empty($permisos['crear']) ? 
-        '<button type="button" class="btn bg-primary-subtle texte-primary" @click="modalNuevoOpen()">
+        '<button type="button" class="btn bg-primary-subtle text-primary" @click="modalNuevoOpen()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
@@ -31,7 +31,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
                 <th>Puesto</th>
                 <th>Trabajador Autorizado</th>
                 <th class="text-center">
-                <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
+                <a class="text-danger"><i class="ti ti-trash fs-6"></i></a>
                 </th>
             </tr>
             </thead>

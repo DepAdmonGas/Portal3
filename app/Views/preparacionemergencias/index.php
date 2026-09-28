@@ -18,12 +18,14 @@
                 <div class="card">
                     <div class="card-header">
 
-                        <div class="d-flex align-items-center">
-                            <h4 class="card-title mb-0">
+                        <div class="row allign-items-center">
+                            <div class="col-12 col-md-9">
+  <h4 class="card-title mb-0">
 
                                 Protocolo de respuesta a emergencias
                             </h4>
-                            <div class="ms-auto">
+                            </div>
+                            <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
                                 <button type="button" class="btn bg-primary-subtle text-primary"
                                     @click="nuevoProtocolo()">
                                     <i class="ti ti-plus"></i>
@@ -977,7 +979,7 @@ btn bg-primary-subtle text-primary"
                                             width="60"
                                             class="text-center">
 
-                                            <i class="ti ti-trash text-muted fs-7"></i>
+                                            <i class="ti ti-trash text-danger fs-6"></i>
 
                                         </th>
 
@@ -1021,7 +1023,7 @@ btn bg-primary-subtle text-primary"
                                                     class="pointer"
                                                     @click="eliminarPersonal(item.id)">
 
-                                                    <i class="ti ti-trash text-danger fs-7"></i>
+                                                    <i class="ti ti-trash text-danger fs-6"></i>
 
                                                 </a>
 

@@ -163,20 +163,27 @@ Nombre, denominación o razón social                    </td>
         <!-- AUDITORES -->
 <div class="card mb-4">
 
-    <div class="card-header bg-primary d-flex justify-content-between align-items-center">
-                    <span class="card-title text-white">
+    <div class="card-header bg-primary">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-10">
+    <span class="card-title text-white">
                         II. DATOS DEL AUDITOR
                     </span>
-
-            
-
-   <button
+            </div>
+            <div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
+ <button
                 type="button"
                 class="btn bg-success text-white"
                 @click="abrirAuditor()">
                 <i class="ti ti-plus"></i>
                 Nuevo auditor
             </button>
+            </div>
+        </div>
+                
+            
+
+  
     </div>
  
 
@@ -262,16 +269,16 @@ Nombre, denominación o razón social                    </td>
 
         <!-- AUXILIARES -->
          <div class="card mb-4">
-            <div class="card-header bg-primary d-flex justify-content-between align-items-center">
-
+            <div class="card-header bg-primary">
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-10">
 
                     <span class="card-title text-white">
                             III. DATOS DEL EQUIPO AUXILIAR DEL AUDITOR
                         
                     </span>
-
-              
-
+                    </div>
+                    <div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
 
             <button
                 type="button"
@@ -280,6 +287,8 @@ Nombre, denominación o razón social                    </td>
                 <i class="ti ti-plus"></i>
                 Nuevo auxiliar
             </button>
+                    </div>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -547,15 +556,20 @@ Nombre, denominación o razón social                    </td>
 
         <!-- AGENDA -->
 <div class="card mb-4">
-    <div class="card-header bg-primary d-flex justify-content-between align-items-center">
-<div class="d-flex flex-column">
+    <div class="card-header bg-primary">
+        <div class="row align-items-center">
+
+<div class="col-12 col-md-9">
     <span class="card-title text-white pb-0 mb-0">               
     V. Agenda
     </span>
-    <small class="text-white">Nota: Elaborar una agenda para cada sitio a ser auditado.</small>
+  
+   <small class="text-white d-block">Nota: Elaborar una agenda para cada sitio a ser auditado.</small>
+
     
 </div>
- <button
+<div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+<button
                 type="button"
                 class="btn bg-success text-white"
                 @click="abrirAgenda()">
@@ -563,6 +577,9 @@ Nombre, denominación o razón social                    </td>
                 Nueva agenda
             </button>
 
+</div>
+ 
+        </div>
       
     </div>
     <div class="card-body p-0">

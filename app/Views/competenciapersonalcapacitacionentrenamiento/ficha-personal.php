@@ -148,11 +148,14 @@
 
     <!-- 2. Datos de familiares -->
 
-    <div class="card">
+    <div class="card mt-4">
         <div class="card-header">
-            <div class="d-flex align-items-center">
-                <h4 class="card-title mb-0">2. Datos de familiares</h4>
-                <div class="ms-auto">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-10">
+ <h4 class="card-title mb-0">2. Datos de familiares</h4>
+                </div>
+               
+                <div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
                     <?=
                     !empty($permisos['crear']) ?
                         '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalFamiliar()">
@@ -163,17 +166,17 @@
                 </div>
             </div>
         </div>
-        <div class="card-body pb-2">
+        <div class="card-body p-0">
 
             <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                <table class="table table-bordered table-striped table-sm">
+                <table class="table table-bordered table-striped mb-0">
                     <thead>
                         <tr class="text-center align-middle">
                             <th>Nombre</th>
                             <th>Parentesco</th>
                             <th>Dirección</th>
                             <th>Teléfono</th>
-                            <th><a class="text-muted"><i class="ti ti-trash fs-6"></i></a></th>
+                            <th><a class="text-muted"><i class="ti ti-trash text-danger fs-6"></i></a></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -191,7 +194,7 @@
                                 <td x-text="f.parentesco"></td>
                                 <td x-text="f.domicilio"></td>
                                 <td x-text="f.telefono"></td>
-                                <td width="40px">
+                                <td width="48px">
                                     <a class="pointer"
                                         @click="eliminarFamiliar(f.id, f.nombrecompleto)">
                                         <i class="ti ti-trash text-danger fs-6"></i>
@@ -210,9 +213,11 @@
 
     <div class="card">
         <div class="card-header">
-            <div class="d-flex align-items-center">
-                <h4 class="card-title mb-0">3. Formación académica</h4>
-                <div class="ms-auto">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-10">
+<h4 class="card-title">3. Formación académica</h4>
+                </div>   
+                <div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
                     <?=
                     !empty($permisos['crear']) ?
                         '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalFormacion()">
@@ -224,17 +229,17 @@
                 </div>
             </div>
         </div>
-        <div class="card-body pb-2">
+        <div class="card-body p-0">
 
 
 
             <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                <table class="table table-bordered table-striped table-sm">
+                <table class="table table-bordered table-striped mb-0">
                     <thead class="navbar-bg">
                         <tr class="text-center align-middle">
                             <th>Nivel</th>
                             <th>Institución</th>
-                            <th class="text-center"><a class="text-muted"><i class="ti ti-trash fs-6"></i></a></th>
+                            <th class="text-center"><a class="text-muted"><i class="ti ti-trash text-danger fs-6"></i></a></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -250,7 +255,7 @@
                             <tr class="text-center align-middle">
                                 <td x-text="fa.nivel"></td>
                                 <td x-text="fa.detalle"></td>
-                                <td width="40px">
+                                <td width="48px">
                                     <a class="pointer"
                                         @click="eliminarFormacion(fa.id, fa.nivel)">
                                         <i class="ti ti-trash text-danger fs-6"></i>
@@ -269,10 +274,12 @@
 
     <div class="card">
         <div class="card-header">
-
-            <div class="d-flex align-items-center">
-                <h4 class="card-title mb-0">4. Experiencia laboral</h4>
-                <div class="ms-auto">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-10">
+                <h4 class="card-title mb-2">4. Experiencia laboral</h4>
+                 <h5 >4.1 En otras empresas</h5>
+                </div>
+                <div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
                     <?=
                     !empty($permisos['crear']) ?
                         '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalExperiencia()">
@@ -283,13 +290,13 @@
                 </div>
             </div>
 
-            <h5>4.1 En otras empresas</h5>
+           
         </div>
-        <div class="card-body pb-2">
+        <div class="card-body p-0">
 
 
             <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                <table class="table table-bordered table-striped table-sm">
+                <table class="table table-bordered table-striped mb-0">
                     <tbody>
 
                         <template x-if="experiencias.length === 0">
@@ -304,7 +311,7 @@
                             <tr>
                                 <td x-text="exp.detalle"></td>
 
-                                <td class="align-middle text-center" width="40px">
+                                <td class="align-middle text-center" width="48px">
                                     <a class="pointer"
                                         @click="eliminarExperiencia(exp.id, exp.detalle)">
                                         <i class="ti ti-trash text-danger fs-6"></i>
@@ -324,9 +331,11 @@
 
     <div class="card">
         <div class="card-header">
-            <div class="d-flex align-items-center">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-10">
                 <h4 class="card-title mb-0">4.2 En la empresa </h4>
-                <div class="ms-auto">
+                </div>
+                <div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
                     <?=
                     !empty($permisos['crear']) ?
                         '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalEmpresa()">
@@ -337,12 +346,12 @@
                 </div>
             </div>
         </div>
-        <div class="card-body pb-2">
+        <div class="card-body p-0">
 
 
 
             <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                <table class="table table-bordered table-striped table-sm">
+                <table class="table table-bordered table-striped mb-0">
                     <thead>
 
                         <tr>
@@ -353,8 +362,8 @@
                         <tr>
                             <th class="text-center">Inicio</th>
                             <th class="text-center">Termino</th>
-                            <th width="40px" class="text-center"><a class="text-muted"><i class="ti ti-edit fs-6"></i></a></th>
-                            <th width="40px" class="text-center"><a class="text-muted"><i class="ti ti-trash fs-6"></i></a></th>
+                            <th width="48px" class="text-center"><a class="text-warning"><i class="ti ti-edit fs-6"></i></a></th>
+                            <th width="48px" class="text-center"><a class="text-danger"><i class="ti ti-trash fs-6"></i></a></th>
                         </tr>
                     </thead>
 
@@ -367,12 +376,12 @@
                                 <td x-text="formatearFecha(e.periodo_fin)"></td>
                                 <td>
                                     <a @click="editarEmpresa(e.id)">
-                                        <i class="ti ti-edit fs-7 pointer"></i>
+                                        <i class="ti ti-edit text-warning fs-6 pointer"></i>
                                     </a>
                                 </td>
                                 <td>
                                     <a @click="eliminarEmpresa(e.id, e.razon_social)">
-                                        <i class="ti ti-trash text-danger fs-7 pointer"></i>
+                                        <i class="ti ti-trash text-danger fs-6 pointer"></i>
                                     </a>
                                 </td>
                             </tr>

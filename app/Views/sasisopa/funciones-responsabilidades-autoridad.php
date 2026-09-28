@@ -20,7 +20,7 @@
           <i class="ti ti-sitemap me-2"></i>Organigrama
         </h4>
       </div>
-      <div class="card-body">
+      <div class="card-body p-0">
         <?php if (!empty($organigrama)): ?>
           <img src="<?= $organigrama ?>" class="w-100" alt="Organigrama">
         <?php else: ?>
@@ -113,14 +113,14 @@
     <div class="card">
       <div class="card-header">
 
-      <div class="row">
+      <div class="row alignd-items-center">
 
-      <div class="col-9">
+      <div class="col-12 col-md-9">
         <h4 class="card-title mb-0">Formato de asignación de representante técnico</h4>
 
       </div>
 
-          <div class="col-3">
+          <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
         <?= 
               !empty($permisos['crear']) ? 
               '<button type="button"  class="btn bg-primary-subtle text-primary float-end" @click="openNuevo()">
@@ -226,8 +226,12 @@
 
 <div class="card">
   <div class="card-header">
-   <div class="float-end">
-      <div x-data="{ ...actions(), ...listaasistenciaForm() }">
+   <div class="row align-items-center">
+    <div class="col-12 col-md-9">
+    <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+    </div>
+      <div x-data="{ ...actions(), ...listaasistenciaForm() }"
+      class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
         <?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
@@ -238,7 +242,6 @@
       </div>  
     </div>
 
-    <h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
       
 
   </div>
@@ -367,7 +370,7 @@
                   <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
-<i class="ti ti-x"></i> Cancelar
+<i class="ti ti-x"></i> Cerrar
 </button>
 
                  </div>  
@@ -429,7 +432,7 @@ data-bs-dismiss="modal">
           <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
-<i class="ti ti-x"></i> Cancelar
+<i class="ti ti-x"></i> Cerrar
 </button>
 
          </div>          
@@ -479,7 +482,7 @@ referente al SA</td>
                 <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
-<i class="ti ti-x"></i> Cancelar
+<i class="ti ti-x"></i> Cerrar
 </button>
 
                </div>    
@@ -530,7 +533,7 @@ referente al SA</td>
                     <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
-<i class="ti ti-x"></i> Cancelar
+<i class="ti ti-x"></i> Cerrar
 </button>
 
                    </div>
@@ -580,7 +583,7 @@ referente al SA</td>
           <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
-<i class="ti ti-x"></i> Cancelar
+<i class="ti ti-x"></i> Cerrar
 </button>
 
          </div>          
@@ -631,7 +634,7 @@ referente al SA</td>
                 <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
-<i class="ti ti-x"></i> Cancelar
+<i class="ti ti-x"></i> Cerrar
 </button>
 
                </div>    
@@ -684,7 +687,7 @@ al SA</td>
             <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
-<i class="ti ti-x"></i> Cancelar
+<i class="ti ti-x"></i> Cerrar
 </button>
 
           </div>

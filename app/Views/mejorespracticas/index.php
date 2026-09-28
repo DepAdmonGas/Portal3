@@ -29,7 +29,7 @@
             <?= 
               !empty($permisos['crear']) ? 
               '<li>
-                <button type="button" class="dropdown-item pointer" @click="openModalDC()"><i class="ti ti-plus"></i> Agregar</button>
+                <button type="button" class="dropdown-item pointer" @click="openModalDC()"><i class="ti ti-plus"></i> Nuevo</button>
               </li>
               <li>' 
               : '' 
@@ -64,7 +64,7 @@
           <th style="max-width:48%; white-space:normal; word-break:break-word;">Código, estándar, normatividad o práctica de ingeniería.</th>
           <th style="max-width:48%; white-space:normal; word-break:break-word;">Área, maquinaria, equipo o instalación a la que aplica. 	</th>
           <th class="text-center">
-          <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
+          <a class="text-muted"><i class="ti ti-trash text-danger fs-6"></i></a>
           </th>
           </tr>
         </thead>
@@ -94,7 +94,7 @@
               <?= 
               !empty($permisos['crear']) ? 
               '<li>
-                <button type="button" class="dropdown-item pointer" @click="openModalOM()"><i class="ti ti-plus"></i> Agregar</button>
+                <button type="button" class="dropdown-item pointer" @click="openModalOM()"><i class="ti ti-plus"></i> Nuevo</button>
               </li>
               <li>' 
               : '' 
@@ -122,13 +122,13 @@
       <table id="table-operacion-mantenimiento" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
-           <th>#</th>
+           <th class="text-center">#</th>
             <th>Fecha</th>
             <th>Norma</th>
             <th>Nombre</th>
             <th>Link</th>
           <th class="text-center">
-          <a class="text-muted"><i class="ti ti-trash fs-6"></i></a>
+          <a class="text-muted"><i class="ti ti-trash text-danger fs-6"></i></a>
           </th>
           </tr>
         </thead>
