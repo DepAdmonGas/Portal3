@@ -79,6 +79,7 @@ class DownloadController
             'formato-descarga-merma'               => dirname(__DIR__, 2) . '/public/uploads/archivos/formato-descarga-merma/',
             'formato-descarga-merma-firma'         => dirname(__DIR__, 2) . '/public/uploads/archivos/formato-descarga-merma-firmas/',
             'camioneta-saveiro'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/camioneta-saveiro/',
+            'pedido-aditivo'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/pedido-aditivo/',
         ];
 
         // 1. Si es un documento confidencial del personal, se valida con el servicio sensible

@@ -4,32 +4,31 @@ namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
-class InventarioLimpieza extends Model
+class LimpiezaReporteDetalle extends Model
 {
-    protected $table = 'op_inventario_limpieza';
+    protected $table = 'op_limpieza_reporte_detalle';
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_estacion',
+        'id_reporte',
         'id_producto',
-        'piezas',
-        'status'
+        'unidad',
+        'observaciones'
     ];
 
     protected $casts = [
         'id' => 'integer',
-        'id_estacion' => 'integer',
+        'id_reporte' => 'integer',
         'id_producto' => 'integer',
-        'piezas' => 'integer',
-        'status' => 'integer'
+        'unidad' => 'integer'
     ];
 
-    public function estacion()
+    public function reporte()
     {
-        return $this->belongsTo(\App\Models\Estacion::class, 'id_estacion', 'id');
+        return $this->belongsTo(LimpiezaReporte::class, 'id_reporte', 'id');
     }
 
     public function producto()

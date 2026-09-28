@@ -4,36 +4,35 @@ namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PedidoLimpiezaDetalle extends Model
+class ReportePapeleriaDetalle extends Model
 {
-    protected $table = 'op_pedido_limpieza_detalle';
+    protected $table = 'op_papeleria_reporte_detalle';
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_pedido',
+        'id_reporte',
         'id_producto',
-        'producto',
         'unidad',
-        'piezas'
+        'observaciones'
     ];
 
     protected $casts = [
         'id' => 'integer',
-        'id_pedido' => 'integer',
+        'id_reporte' => 'integer',
         'id_producto' => 'integer',
-        'piezas' => 'integer'
+        'unidad' => 'integer'
     ];
 
-    public function pedido()
+    public function reporte()
     {
-        return $this->belongsTo(PedidoLimpieza::class, 'id_pedido', 'id');
+        return $this->belongsTo(ReportePapeleria::class, 'id_reporte', 'id');
     }
 
     public function producto()
     {
-        return $this->belongsTo(LimpiezaLista::class, 'id_producto', 'id');
+        return $this->belongsTo(PapeleriaLista::class, 'id_producto', 'id');
     }
 }

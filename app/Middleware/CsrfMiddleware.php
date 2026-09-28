@@ -34,7 +34,8 @@ class CsrfMiddleware
                 echo json_encode([
                     'success' => false,
                     'type' => 'csrf_expired',
-                    'message' => 'Token de seguridad expirado. Por favor actualice la página e intente de nuevo.'
+                    'message' => 'Token de seguridad expirado. Por favor actualice la página e intente de nuevo.',
+                    'new_token' => CsrfToken::refresh()
                 ]);
                 exit;
             }

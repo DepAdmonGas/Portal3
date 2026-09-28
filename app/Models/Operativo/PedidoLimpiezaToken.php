@@ -26,5 +26,9 @@ class PedidoLimpiezaToken extends Model
         'fecha_creacion' => 'datetime',
         'token' => 'integer'
     ];
-}
 
+    public function pedido()
+    {
+        return $this->belongsTo(PedidoLimpieza::class, 'id_pedido', 'id');
+    }
+}
