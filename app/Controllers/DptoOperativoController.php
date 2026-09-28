@@ -71,7 +71,8 @@ $routeSuffix = [
 'bitacora-rrhh'   => "/{$idYear}/{$idMes}",
 'formato-descarga-merma'         => "/{$idYear}/{$idMes}",
 'analisis-compra'         => "/{$idYear}/{$idMes}",
-'inventarios-diarios'         => "/{$idYear}/{$idMes}"
+'inventarios-diarios'         => "/{$idYear}/{$idMes}",
+'recibos-nomina'         => "/{$idYear}",
 ];
 
 foreach ($submenus as &$submenu) {

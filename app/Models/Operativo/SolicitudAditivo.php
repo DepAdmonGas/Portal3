@@ -27,8 +27,7 @@ class SolicitudAditivo extends Model
         'orden_compra' => 'integer',
         'id_personal' => 'integer',
         'status' => 'integer',
-        'fecha' => 'date',
-        'fecha_entrega' => 'date'
+        'fecha' => 'date'
     ];
 }
 
