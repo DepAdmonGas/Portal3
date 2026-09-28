@@ -24,7 +24,7 @@
             @click="finalizar()"
         >
 <i class="ti ti-check"></i>
-            Guardar
+            Finalizar
 
         </button>
 
@@ -363,37 +363,36 @@
 <div class="card-body ">
   
 
-<div class="d-flex align-items-start gap-2">
+<div class="d-flex align-items-stretch">
 
     <div class="flex-grow-1">
         <select
             x-ref="usuarios"
             class="select2 form-control"
-            multiple
-        >
+            multiple>
+
             <template
                 x-for="usuario in usuarios"
-                :key="usuario.id"
-            >
+                :key="usuario.id">
+
                 <option
                     :value="usuario.id"
-                    x-text="usuario.nombre"
-                ></option>
+                    x-text="usuario.nombre">
+                </option>
+
             </template>
         </select>
     </div>
 
     <button
         type="button"
-        class="btn bg-primary-subtle text-primary"
-        @click="agregarAsistentes()"
-    >
-    <i class="ti ti-plus"></i>
+        class="btn bg-primary-subtle text-primary rounded-start-0"
+        @click="agregarAsistentes()">
+        <i class="ti ti-plus"></i>
         Nuevo
     </button>
 
 </div>
- 
 <!------grup---->
 
 
@@ -406,7 +405,8 @@
                 <th class="text-center">
                     Firma
                 </th>
-                <th width="40"></th>
+                <th width="40"> <i class="ti ti-trash fs-6 text-danger"></i>
+</th>
             </tr>
         </thead>
         <tbody>
@@ -442,7 +442,7 @@ No se encontro informacion                     </td>
                     <td class="text-center align-middle">
 
                         <a class="pointer" @click="eliminarAsistente(asistente.id)">
-                            <i class="ti ti-trash fs-7 text-danger"></i>
+                            <i class="ti ti-trash fs-6 text-danger"></i>
                         </a>
 
                     </td>

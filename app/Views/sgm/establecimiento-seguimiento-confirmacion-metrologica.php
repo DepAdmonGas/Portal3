@@ -117,17 +117,21 @@ ESPECIFICACIONES METROLÓGICAS </span>
 
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
-
+    <div class="card-header">
+      <div class="row align-items-center">
+        <div class="col-12 col-md-9">
+ <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+        </div>
+        <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
         <?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
-        ?>    
-  
+        ?> 
+        </div>
+      </div>   
 
     </div>
   <div class="card-body">
@@ -135,7 +139,7 @@ ESPECIFICACIONES METROLÓGICAS </span>
   
 
   <div class="datatables">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
       <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>

@@ -81,16 +81,19 @@ x-model="tipo_auditoria"
 <div class="card">
 
 <div class="card-header">
-<div class="d-flex justify-content-between align-items-center mt-0">
-
+<div class="row align-items-center">
+<div class="col-12 col-md-10">
 <h5 class="modal-title">Hallazgos</h5>
+</div>
 
+<div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
 <button
 class="btn bg-primary-subtle text-primary"
 @click="abrirModal()">
 <i class="ti ti-plus"></i>
 Nuevo
 </button>
+</div>
 
 </div>
 </div>

@@ -274,9 +274,13 @@
 
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-    <div class="card-header d-flex align-items-center">
-      <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
-<div class="ms-auto">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-9">
+<h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+            </div>
+  
+<div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
     
   <?= 
           !empty($permisos['crear']) ? 
@@ -288,6 +292,8 @@
 </div>
 
 
+        </div>
+            
           
    
     </div>

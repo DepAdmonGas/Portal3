@@ -15,9 +15,11 @@
         <div class="card mt-4">
 
             <div class="card-header">
-                <div class="d-flex align-items-center">
-                    <h4 class="card-title mb-0">Informe de Evaluación de Desempeño (IED)</h4>
-                    <div class="ms-auto">
+                <div class="row aling-items-center">
+                    <div class="col-10">
+<h4 class="card-title">Informe de Evaluación de Desempeño (IED)</h4>
+                    </div>
+                    <div class="col-2 text-end">
                         <div class="dropdown center">
                             <button type="button" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="ti ti-dots-vertical fs-4"></i>
@@ -88,36 +90,41 @@
                                         class="text-center"
                                         x-text="item.usuario">
                                     </td>
-                                    <td
-                                        class="text-center align-middle">
+                               <td class="text-center align-middle position-relative">
 
-                                        <div class="dropdown dropstart">
-                                            <a class="pointer" data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical fs-6"></i>
-                                            </a>
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                        @click="editarEvaluacion(item)">
-                                                        <i class="fs-4 ti ti-edit"></i>Editar
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                        :href="item.archivo" download>
-                                                        <i class="fs-4 ti ti-download"></i>Descargar
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="pointer" class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                        @click="eliminarEvaluacion(item.id)">
-                                                        <i class="fs-4 ti ti-trash"></i>Eliminar
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
+    <div class="dropdown dropstart">
+        <a class="pointer" data-bs-toggle="dropdown">
+            <i class="ti ti-dots-vertical fs-6"></i>
+        </a>
 
-                                    </td>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item pointer d-flex align-items-center gap-3"
+                    @click="editarEvaluacion(item)">
+                    <i class="fs-4 ti ti-edit"></i>
+                    Editar
+                </a>
+            </li>
+
+            <li>
+                <a class="dropdown-item pointer d-flex align-items-center gap-3"
+                    :href="item.archivo" download>
+                    <i class="fs-4 ti ti-download"></i>
+                    Descargar
+                </a>
+            </li>
+
+            <li>
+                <a class="dropdown-item pointer d-flex align-items-center gap-3"
+                    @click="eliminarEvaluacion(item.id)">
+                    <i class="fs-4 ti ti-trash"></i>
+                    Eliminar
+                </a>
+            </li>
+        </ul>
+    </div>
+
+</td>
 
                                 </tr>
 
@@ -132,9 +139,11 @@
 
         <div class="card">
             <div class="card-header">
-                <div class="d-flex align-items-center">
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-10">
                     <h4 class="card-title mb-0">Control de la implementación de los procedimientos del SASISOPA (Fo.ADMONGAS.029)</h4>
-                    <div class="ms-auto">
+                    </div>
+                    <div class="col-12 col-md-2 d-grid txt-end mt-3 mt-md-0">
 
                         <button class="btn bg-primary-subtle text-primary">
                             <a class="dropdown-item pointer" @click="createImplementacion()"><i class="ti ti-plus"></i> Nuevo</a>
@@ -201,16 +210,16 @@
                                                 </a>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item d-flex align-items-center gap-3"
-                                                    :href="`/sasisopa/informes-desempeno/implementacion/pdf/${item.id}`" download>
-                                                    <i class="fs-4 ti ti-download"></i>Descargar
-                                                </a>
-                                            </li>
-                                            <li>
                                                 <a class="dropdown-item pointer d-flex align-items-center gap-3"
 
                                                     @click="editarImplementacion(item.id)">
                                                     <i class="fs-4 ti ti-edit"></i>Editar
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center gap-3"
+                                                    :href="`/sasisopa/informes-desempeno/implementacion/pdf/${item.id}`" download>
+                                                    <i class="fs-4 ti ti-download"></i>Descargar
                                                 </a>
                                             </li>
                                             <li>

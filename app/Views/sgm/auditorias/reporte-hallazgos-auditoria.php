@@ -207,14 +207,14 @@
 
  <div class="row align-items-center">
 
-    <div class="col-md-8">
-        <span class="card-title text-white mb-0">
+    <div class="col-12 col-md-9">
+        <span class="card-title text-white">
             <i class="ti ti-user-question"></i>
             PERSONAL ENTREVISTADO
         </span>
     </div>
 
-    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
         <button
             type="button"
             class="btn bg-success text-white"
@@ -232,7 +232,8 @@
 
 
             <div class="card-body p-0">
-            <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
+                <div class="table-responsive">
+   <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
                 <tbody>
 
                 
@@ -319,6 +320,8 @@
                 </tbody>
 
             </table>
+                </div>
+         
 
             </div>
         </div>
@@ -339,7 +342,7 @@
 
                <div class="row align-items-center">
 
-    <div class="col-md-8">
+    <div class="col-md-9">
         <span class="card-title text-white">
             <i class="ti ti-users-group"></i>    
 
@@ -347,7 +350,7 @@ EQUIPO AUDITOR
         </span>
     </div>
 
-    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
    <button
                 type="button"
                 class="btn bg-success text-white"
@@ -611,13 +614,13 @@ EQUIPO AUDITOR
  
             <div class="row align-items-center">
 
-    <div class="col-md-8">
+    <div class="col-md-9">
         <span class="card-title text-white">
              III. DOCUMENTACIÓN DE LOS HALLAZGOS NO CONFORMES
         </span>
     </div>
 
-    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
          <button
                 type="button"
                 class="btn bg-success text-white"
@@ -752,13 +755,13 @@ EQUIPO AUDITOR
     <div class="card-header bg-primary">
 <div class="row align-items-center">
 
-    <div class="col-md-8">
+    <div class="col-md-9">
         <span class="card-title text-white">
             IV. OPORTUNIDADES DE MEJORA/OBSERVACIONES
         </span>
     </div>
 
-    <div class="col-12 col-md-4 d-grid d-md-block text-end">
+    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
         <button
             type="button"
             class="btn bg-success text-white"
@@ -977,22 +980,17 @@ EQUIPO AUDITOR
     <!-- -- VI. CONCLUSIONES -- -->
     <div class="bg-white mt-3">
 <div class="card">
-    <div class="card-header bg-primary">
+<div class="card-header bg-primary">
  <span class="card-title text-white">
                                 VI. CONCLUSIONES
- </span>
-
-                         
+ </span>                   
     </div>
+
     <div class="card-body p-0">
         <div class="table-responsive">
-
-            <table class="table table-striped table-bordered align-middle mb-0">
-
-                <tbody>
-
-
-
+ <table class="table table-striped table-bordered align-middle mb-0">
+<tbody>
+                   
                     <tr>
 
                         <td
@@ -1006,8 +1004,21 @@ EQUIPO AUDITOR
 
                         </td>
 
-                    </tr>
+                    </tr> 
+                </tbody>
+            </table>
+        </div>
+           
 
+    </div>
+
+</div>
+     </div>
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+<table class="table table-striped table-bordered align-middle mb-0">
+<tbody>
 
                     <tr>
 
@@ -1047,7 +1058,7 @@ EQUIPO AUDITOR
                                 @change="editar('auditor_lider')">
 
                                 <option value="0">
-                                    Seleccionar
+                                    Seleccione una opcion...
                                 </option>
 
                                 <template
@@ -1073,7 +1084,7 @@ EQUIPO AUDITOR
                                 @change="editar('responsable_sgm')">
 
                                 <option value="0">
-                                    Seleccionar
+                                    Seleccione una opcion
                                 </option>
 
                                 <template
@@ -1092,18 +1103,17 @@ EQUIPO AUDITOR
 
                     </tr>
 
-                </tbody>
+</tbody>
 
             </table>
-
         </div>
 
     </div>
 </div>
-
+           
 
      
-    </div>
+   
     <!-- -- VI. CONCLUSIONES -- -->
 
 

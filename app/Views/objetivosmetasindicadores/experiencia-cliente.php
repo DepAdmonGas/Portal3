@@ -18,7 +18,7 @@
              <i class="ti ti-dots-vertical fs-4"></i>
           </button>
             <ul class="dropdown-menu animated rubberBand">
-              <li><a class="dropdown-item pointer"  @click="nuevo()"><i class="ti ti-plus"></i> Agregar</a></li>
+              <li><a class="dropdown-item pointer"  @click="nuevo()"><i class="ti ti-plus"></i> Nuevo</a></li>
               <?= 
                 !empty($permisos['descargar']) 
                 ? '<li>

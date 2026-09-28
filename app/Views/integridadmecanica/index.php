@@ -115,7 +115,7 @@ x-data="{ ...actions(), ...equipoCritico()}">
              <?= 
               !empty($permisos['crear']) ? 
               '<li>
-                    <button type="button" class="dropdown-item pointer" @click="openModal()"><i class="ti ti-plus"></i> Agregar</button>
+                    <button type="button" class="dropdown-item pointer" @click="openModal()"><i class="ti ti-plus"></i> Nuevo</button>
                 </li>' 
               : '' 
               ?>   
@@ -163,7 +163,7 @@ x-data="{ ...actions(), ...equipoCritico()}">
     <div class="modal-header modal-colored-header bg-primary text-white">
         <h4 class="modal-title text-white">
          <i class="ti ti-device-desktop-plus"></i>
-        Agregar equipo critico
+        Nuevo equipo critico
       </h4>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="closeModal()"></button>
     </div>

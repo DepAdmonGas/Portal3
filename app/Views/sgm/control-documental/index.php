@@ -19,20 +19,29 @@
 
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-<div class="card-header d-flex justify-content-between align-items-center">
-      <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
-  <?= 
+
+
+<div class="card-header">
+  <div class="row align-items-center">
+    <div class="col-12 col-md-9">
+ <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+    </div>
+    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+<?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
-        ?>  
+        ?>
+    </div>
+  </div>
+  
 </div>
 
   <div class="card-body">
 
-  <div class="datatables mt-4">
+  <div class="datatables">
     <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
       <table id="table-lista-asistencia" class="table table-striped table-bordered  text-nowrap align-middle">
         <thead>
@@ -59,20 +68,25 @@
 
 <div class="card">
   <div x-data="{ ...actions(), ...revision() }">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header">
+      <div class="row align-items-center">
+        <div class="col-12 col-md-9">
 <h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
-
-       <?= 
+        </div>
+        <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+<?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearRevision()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
-        ?> 
+        ?>
+        </div>
+      </div> 
     </div>
   <div class="card-body">
 
-  <div class="datatables mt-4">
+  <div class="datatables">
     <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
       <table id="table-revision-sgm" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
@@ -103,10 +117,12 @@
 <div class="card-header">
 
 
-   <div class="d-flex justify-content-between align-items-center">
-    <h4 class="card-title mb-0">Fo. SGM.003 Control documental del SGM</h4>
-    
-      <div class="ms-auto">
+   <div class="row align-items-center">
+    <div class="col-12 col-md-9">
+<h4 class="card-title mb-0">Fo. SGM.003 Control documental del SGM</h4>
+    </div>
+
+      <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
       <a type="button" class="btn bg-primary-subtle text-primary" href="/sgm/control-documental-sistema-gestion-medicion/pdf">
         Descargar
         <i class="ti ti-download"></i>
@@ -168,7 +184,8 @@
   <template x-for="seccion in [1,2]">
 <div class="card">
   <div class="card-header card-colored-header bg-primary">
-    <h5 class="card-title text-white" x-text="titulo(seccion)"></h5>
+    <i class="ti ti-checklist fs-6 text-white"></i>
+    <span class="card-title text-white" x-text="titulo(seccion)"></span>
   </div>
 
     <div class="card-body p-0">

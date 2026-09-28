@@ -431,7 +431,7 @@
                                             <th>Fecha vencimiento</th>
                                             <th>Acuse</th>
                                             <th>Requisito legal</th>
-                                            <th width="48px"><a class="text-muted"><i class="ti ti-edit fs-6 text-primary"></i></a></th>
+                                            <th width="48px"><a class="text-muted"><i class="ti ti-edit fs-6 text-warning"></i></a></th>
                                             <th width="48px"><a class="text-muted"><i class="ti ti-trash fs-6 text-danger"></i></a></th>
                                         </tr>
                                     </thead>
@@ -455,7 +455,7 @@
                                                     <template x-if="row.requisitolegalpdf">
                                                         <a class="pointer"
                                                             @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
-                                                            <i class="ti ti-download text-success fs-6"></i>
+                                                            <i class="ti ti-download text-primary fs-6"></i>
                                                         </a>
                                                     </template>
                                                     <template x-if="!row.requisitolegalpdf">
@@ -463,7 +463,7 @@
                                                     </template>
                                                 </td>
                                                 <td>
-                                                    <a @click="editHistorialRow(row)"><i class="ti ti-edit fs-6 text-primary pointer"></i></a>
+                                                    <a @click="editHistorialRow(row)"><i class="ti ti-edit fs-6 text-warning pointer"></i></a>
                                                 </td>
                                                 <td><a @click="deleteHistorialRow(row)"><i class="ti ti-trash text-danger fs-6 pointer"></i></a></td>
                                             </tr>

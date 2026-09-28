@@ -13,21 +13,17 @@
 
 <div id="sgm-content" x-data="capacitacion()">
 
-    <div class="text-end mt-2">
-        <div class="btn-group">
-            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="ti ti-dots-vertical fs-4"></i>
-            </button>
-            <ul class="dropdown-menu animated rubberBand">
-                <li>
-                    <a class="dropdown-item"
-                        :href="'/sgm/gestion-recursos/programa-capacitacion-induccion/pdf'" download>
-                        <i class="ti ti-download"></i> Descargar</a>
-                </li>
-            </ul>
-        </div>
-    </div>
 
+       
+           <div class="d-flex justify-content-end">
+    <a
+        class="btn bg-primary-subtle text-primary"
+        :href="'/sgm/gestion-recursos/programa-capacitacion-induccion/pdf'"
+        download
+    >
+        <i class="ti ti-download"></i> Descargar
+    </a>
+</div>
     <div class="datatables mt-3">
         <div class="table-responsive overflow-x-auto overflow-y-hidden mb-3">
             <table id="table-capacitacion-induccion" class="table table-striped table-bordered align-middle">

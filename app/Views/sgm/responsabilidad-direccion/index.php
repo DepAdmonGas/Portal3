@@ -38,12 +38,13 @@
 <div class="card">
   <div class="card-header">
 
- <div class="d-flex align-items-center">
+ <div class="row align-items-center">
+  <div class="col-12 col-md-8">
     <h4 class="mb-0 card-title ">
       
     POLÍTICA</h4>
-
-      <div class="ms-auto">
+  </div>
+      <div class="col-12 col-md-4 d-grid text-end mt-3 mt-md-0">
       <a type="button" class="btn bg-primary-subtle text-primary " href="/sgm/responsabilidades-direccion/politica-sgm">
         <i class="ti ti-edit fs-6"></i>
         Editar
@@ -126,12 +127,12 @@
 
 <div class="col-md-7">
 <div class="card">
-  <div class="card-header card-colored-header bg-primary">
+  <div class="card-header">
     
 <h4 class="mb-0">
-  <i class="ti ti-calendar-event fs-6 text-white"></i>
+  <i class="ti ti-calendar-event fs-6"></i>
   <span
-class="card-title text-white"
+class="card-title"
 x-text="politica.fecha">
 </span>
 </h4>
@@ -196,17 +197,22 @@ Representante Legal
 
 <div class="card">
   <div x-data="{ ...actions(), ...listaasistenciaForm() }">
-    <div class="card-header d-flex justify-content-between align-items-center">
-    <h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
-  
-        <?= 
+    <div class="card-header">
+      <div class="row align-items-center">
+        <div class="col-md-9">
+<h4 class="card-title mb-0">Fo.SGM.001 Lista de asistencia</h4>
+        </div>
+      
+      <div class="col-md-3 d-grid text-end mt-3 mt-md-0">
+<?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
-        ?>    
-   
+        ?>  
+        </div>  
+      </div>
 
     </div>
   <div class="card-body">
@@ -215,8 +221,8 @@ Representante Legal
 
 
 
-  <div class="datatables mt-4">
-    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+  <div class="datatables">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-1">
       <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -242,10 +248,13 @@ Representante Legal
 
 <div class="card">
   <div x-data="{ ...actions(), ...revision() }">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header">
+      <div class="row align-items-center">
+<div class="col-12 col-md-9">
 <h4 class="card-title mb-0">Fo.SGM.002 Revisión del SGM, procedimientos y registros</h4>
-
-       <?= 
+</div>
+<div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+     <?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearRevision()">
           <i class="ti ti-plus"></i> Nuevo
@@ -253,6 +262,9 @@ Representante Legal
           : '' 
         ?>        
 
+  
+</div>
+      </div>
 
     </div>
   <div class="card-body">
@@ -260,7 +272,7 @@ Representante Legal
   
 
 
-  <div class="datatables mt-4">
+  <div class="datatables">
     <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
       <table id="table-revision-sgm" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>

@@ -23,11 +23,11 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
     </div>
 
     <div class="datatables">
-    <div class="table-responsive mb-3 overflow-x-auto overflow-hidden">
+    <div class="table-responsive pb-1 overflow-x-auto overflow-y-hidden">
 
         <table
             id="tablaAuditoriasExternas"
-           class="table table-striped table-bordered mt-3 text-nowrap align-middle">
+           class="table table-striped table-bordered  text-nowrap align-middle">
 
             <thead>
 
@@ -62,7 +62,7 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
                         ASEA
                     </th>
                     <th class="text-center align-middle">
-                       <i class="ti ti-trash text-danger fs-7"></i>
+                       <i class="ti ti-trash text-danger fs-6"></i>
                     </th>
                 </tr>
 
@@ -407,7 +407,7 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
             <button class="btn btn-success"
                     @click="guardarAsea">
                     <i class="ti ti-check"></i>
-                Agregar
+                Guardar
             </button>
         </div>
 <div class="table-responsive mt-3">
@@ -416,7 +416,7 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
                 <th class="text-center">#</th>
                 <th class="text-center">Fecha</th>
                 <th class="text-center">Comentario</th>
-                <th><i class="ti ti-file-type-pdf text-muted fs-7" width="36"></i></th>
+                <th><i class="ti ti-file-type-pdf text-danger fs-7" width="36"></i></th>
             </thead>
             <tbody>
 

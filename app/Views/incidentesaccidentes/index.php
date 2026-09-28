@@ -25,7 +25,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                     <div class="ms-auto">
                         <div class="dropdown dropcenter">
                             <button type="button" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="ti ti-dots-vertical fs-6"></i>
+                                <i class="ti ti-dots-vertical fs-4"></i>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                 <li>
@@ -329,11 +329,14 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
         <div class="card">
             <div class="card-header">
-                <div class="d-flex align-items-center">
-                    <h4>
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-10">
+                 <h4>
 
                         Sin accidentes a la fecha</h4>
-                    <div class="ms-auto">
+   
+                    </div>
+                    <div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
                         <button type="button" class="btn bg-primary-subtle text-primary">
                             <a class="dropdown-item pointer" @click="openModalNoAccidentes()"><i class="ti ti-plus"></i> Nuevo</a>
                         </button>
@@ -798,14 +801,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
 
 
-                        <div class="text-end">
-                            <button class="btn btn-success"
-                                @click="guardarPersonal()">
-                                <i class="ti ti-check"></i>
-                                Guardar
-                            </button>
-                        </div>
-
+                  
                         <table class="table table-striped table-bordered text-nowrap align-middle mb-0 mt-3">
                             <thead>
                                 <th class="text-center">#</th>
@@ -838,6 +834,14 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
                     </div>
                     <div class="modal-footer">
+                              <div class="text-end">
+                            <button class="btn btn-success"
+                                @click="guardarPersonal()">
+                                <i class="ti ti-check"></i>
+                                Guardar
+                            </button>
+                        </div>
+
                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">

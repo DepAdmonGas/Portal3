@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${row.formato15
                         ? 'ti-edit text-success'
                         : 'ti-plus text-success'}
-                    fs-6">
+                    fs-7">
                     </i>
 
                 </a>`;
