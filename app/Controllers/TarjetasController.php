@@ -550,7 +550,7 @@ $datosUsuario = Auth::user();
 $idPuesto = $datosUsuario->id_puesto;
 
 $datosEstacion = Estacion::find($idEstacion);
-$title = 'Solicitud de Tarjetas Formulario (' . $datosEstacion->nombre . ')';
+$title = 'Solicitud de Tarjetas Formulario (#' . $noSolicitud. ')';
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Solicitud de Tarjetas', '/solicitud-tarjetas');
@@ -1009,7 +1009,7 @@ $datosUsuario = Auth::user();
 $idPuesto = $datosUsuario->id_puesto;
 
 $datosEstacion = Estacion::find($idEstacion);
-$title = 'Detalle Solicitud de Tarjetas (' . $datosEstacion->nombre . ')';
+$title = 'Detalle Solicitud de Tarjetas (#' . $noSolicitud . ')';
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Solicitud de Tarjetas', '/solicitud-tarjetas');

@@ -1,8 +1,7 @@
 <div class="mb-4" x-data="{ ...actions(), ...seguimientoForm() }"
 x-init="init()" id="container" data-estacion="<?= $idEstacion ?>"  data-reporte="<?= $noReporte ?>" data-puesto="<?= $utilitiesUser['idPuestoUser'] ?>">
  
-<div class="row">
-<div class="col-12 mt-3 mb-3 "> <span class="badge rounded-pill bg-success">No. de Solicitud: <?=$noReporte?></span></div>
+<div class="row mt-3">
 
 <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
 <div class="card">
@@ -25,8 +24,8 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>"  data-reporte=
 </div>
 <div class="card-body">
 <div class="datatables">
-<div class="table-responsive overflow-x-auto overflow-hidden">
-<table id="table-gafetes-detalle" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<div class="table-responsive pb-2 overflow-x-auto overflow-hidden">
+<table id="table-gafetes-detalle" class="table table-striped table-bordered text-nowrap align-middle">
 <tbody></tbody>
 </table>
 </div>
