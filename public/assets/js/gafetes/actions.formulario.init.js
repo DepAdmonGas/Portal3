@@ -50,11 +50,11 @@ ocultarBoton = "";
 }
 
 contenedor.innerHTML = `
-<li class="${ocultarBoton}"
+<span class="${ocultarBoton}"
 :disabled="loadingSeguimiento"
 @click="submitSeguimiento(${siguiente})">
 <a class="dropdown-item pointer"> <i class="ti ti-check"></i> Finalizar</a>
-</li>
+</span>
 `;
 }
 
