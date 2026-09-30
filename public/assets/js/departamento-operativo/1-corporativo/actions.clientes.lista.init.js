@@ -76,7 +76,7 @@ this.formRfc = '';
 
 _renderDocIcon(val) {
 return val
-? '<div x-data="actions()"><a href="javascript:void(0)" @click="download(\'comprobantes-clientes\', \'' + val + '\')"><i class="ti ti-file-check text-success fs-6"></i></a></div>'
+? '<div x-data="actions()"><a class="pointer" @click="download(\'comprobantes-clientes\', \'' + val + '\')"><i class="ti ti-file-check text-success fs-6"></i></a></div>'
 : '<i class="ti ti-file-off text-muted fs-6"></i>';
 },
 
@@ -88,15 +88,15 @@ return '<span class="badge rounded-pill bg-danger">Deshabilitado</span>';
 
 _renderToggle(row) {
 let s = '<div class="dropdown dropstart">';
-s += '<a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>';
+s += '<a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>';
 s += '<ul class="dropdown-menu">';
-s += '<li class="pointer"><a class="dropdown-item pointer d-flex align-items-center gap-3 btn-edit-cliente" data-id="' + row.id + '"><i class="fs-4 ti ti-edit"></i>Editar</a></li>';
+s += '<li><a class="dropdown-item pointer d-flex align-items-center gap-3 btn-edit-cliente" data-id="' + row.id + '"><i class="fs-4 ti ti-edit"></i>Editar</a></li>';
 if (row.estado == 1) {
 s += '<li><hr class="dropdown-divider"></li>';
-s += '<li class="pointer"><a class="dropdown-item pointer d-flex align-items-center gap-3 btn-toggle-cliente" data-id="' + row.id + '" data-idtipo="1"><i class="fs-4 ti ti-toggle-left"></i>Deshabilitar</a></li>';
+s += '<li><a class="dropdown-item pointer d-flex align-items-center gap-3 btn-toggle-cliente" data-id="' + row.id + '" data-idtipo="1"><i class="fs-4 ti ti-toggle-left"></i>Deshabilitar</a></li>';
 } else {
 s += '<li><hr class="dropdown-divider"></li>';
-s += '<li class="pointer"><a class="dropdown-item pointer d-flex align-items-center gap-3 btn-toggle-cliente" data-id="' + row.id + '" data-idtipo="0"><i class="fs-4 ti ti-toggle-right"></i>Habilitar</a></li>';
+s += '<li><a class="dropdown-item pointer d-flex align-items-center gap-3 btn-toggle-cliente" data-id="' + row.id + '" data-idtipo="0"><i class="fs-4 ti ti-toggle-right"></i>Habilitar</a></li>';
 }
 s += '</ul></div>';
 return s;

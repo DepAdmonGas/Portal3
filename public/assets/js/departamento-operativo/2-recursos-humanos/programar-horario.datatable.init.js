@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         var esPendiente = row.estado == 0;
 
         var html = '<div class="dropdown dropstart">';
-        html += '<a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a>';
+        html += '<a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a>';
         html += '<div class="dropdown-menu">';
 
         html += '<a class="dropdown-item pointer btn-detalle" data-id="' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';

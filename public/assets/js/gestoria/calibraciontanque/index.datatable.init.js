@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="dropdown dropstart">
 
                             <a
-                                href="javascript:void(0)"
+                                class="pointer"
                                 data-bs-toggle="dropdown"
                                 aria-expanded="false"
                             >
@@ -131,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <li>
 
                                     <a
-                                        href="javascript:void(0)"
                                         class="dropdown-item pointer d-flex align-items-center gap-2"
                                         onclick="window.calibracionTanques.editar(${row.id})"
                                     >
@@ -150,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <li>
 
                                     <a
-                                        href="javascript:void(0)"
                                         class="dropdown-item pointer d-flex align-items-center gap-2 text-danger"
                                         onclick="window.calibracionTanques.eliminar(${row.id})"
                                     >

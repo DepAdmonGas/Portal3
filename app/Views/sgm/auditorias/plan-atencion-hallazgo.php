@@ -264,7 +264,6 @@
                                         <small x-text="responsable.nombre"></small>
 
                                         <a
-                                            href="javascript:void(0)"
                                             class="pointer"
                                             @click="eliminarResponsable(responsable.id)"
                                             title="Eliminar responsable">

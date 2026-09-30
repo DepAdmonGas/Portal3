@@ -41,17 +41,17 @@ document.addEventListener('DOMContentLoaded', function () {
         if (row.puedeEditar) {
             editar = '<a class="dropdown-item" href="/departamento-operativo/importacion/cuenta-litros-formato/' + row.id + '"><i class="ti ti-pencil fs-6"></i> Editar</a>';
         } else if (row.puedeHabilitar) {
-            editar = '<a href="javascript:void(0)" class="dropdown-item" data-action="cuenta-litros-habilitar" data-id="' + row.id + '" data-name="' + row.id + '"><i class="ti ti-pencil fs-6"></i> Editar</a>';
+            editar = '<a class="dropdown-item pointer" data-action="cuenta-litros-habilitar" data-id="' + row.id + '" data-name="' + row.id + '"><i class="ti ti-pencil fs-6"></i> Editar</a>';
         } else {
             editar = '<a class="dropdown-item disabled"><i class="ti ti-pencil fs-6"></i> Editar</a>';
         }
 
         var eliminar = row.puedeEliminar
-            ? '<a href="javascript:void(0)" class="dropdown-item" data-action="cuenta-litros-eliminar" data-id="' + row.id + '" data-name="#' + row.id + '"><i class="ti ti-trash fs-6"></i> Eliminar</a>'
+            ? '<a class="dropdown-item pointer" data-action="cuenta-litros-eliminar" data-id="' + row.id + '" data-name="#' + row.id + '"><i class="ti ti-trash fs-6"></i> Eliminar</a>'
             : '';
 
         return '<div class="dropdown dropstart">' +
-            '<a href="javascript:void(0)" data-bs-toggle="dropdown">' +
+            '<a class="pointer" data-bs-toggle="dropdown">' +
             '<i class="ti ti-dots-vertical fs-6"></i>' +
             '</a>' +
             '<div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">' +

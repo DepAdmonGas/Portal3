@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: '48px',
                 render: function (data, type, row) {
                     return `
-                        <a href="javascript:void(0)"
+                        <a class="pointer"
                            @click="window.auditoriasInterna.subir024(${row.id})">
                             <i class="ti ti-file-upload text-success fs-7"></i>
                         </a>
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: '48px',
                 render: function (data, type, row) {
                     return `
-                        <a href="javascript:void(0)"
+                        <a class="pointer"
                            @click="window.auditoriasInterna.subir025(${row.id})">
                             <i class="ti ti-file-upload text-success fs-7"></i>
                         </a>

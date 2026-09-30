@@ -699,6 +699,24 @@
 - Focused CSP regression: 15 PASS / 0 FAIL / 0 SKIPPED. Security suite: 166 PASS / 0 FAIL / 0 SKIPPED. Remaining JavaScript URL inventory: 118.
 - Excluded residual dropdown candidates remain documented for later bounded review; status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL` pending checkpoint and remote verification.
 
+## SEC-CSP-012-BATCH-OTHER-SAFE-ACTIONS
+
+- Migrated 6 safe static Alpine action controls across 3 application views, removing obsolete `javascript:void(0)` attributes while preserving actions and permission gates.
+- Residual `javascript:void(0)` inventory reduced from 53 to 47. Remaining categories are `DATATABLES_DYNAMIC`, `MIXED_COMPLEXITY`, and `REAL_NAVIGATION`.
+- `SEC-CSP-012` remains open; `AUTHZ-TENANT-007` remains deferred and production has not been verified.
+
+## CSP-HIGHLIGHT-MERGE-REGRESSION-FIX
+
+- Reconciled the PR #204 merge regression in `app/Views/layouts/sasisopa.php` by removing the redundant inline highlight initialization while retaining the external `highlight-init.js` loader.
+- The existing CSP regression now passes: 15 PASS / 0 FAIL / 0 SKIPPED. `SEC-CSP-012` remains `PARTIAL_HARDENING_LOCAL_RECONCILIATION` pending remote verification.
+- Main response-policy reconciliation and concurrent `AUTHZ-TENANT-007` work remain separate/pending; no production verification was performed.
+
+## MAIN-RESPONSE-POLICY-RECONCILIATION
+
+- Removed the duplicate inline Axios/fetch/jQuery response-policy blocks reintroduced by the PR #204 merge in `app/Views/layouts/main.php`.
+- `public/assets/js/core/main-response-policy.js` remains the sole response-policy owner. Targeted regression: 4 PASS / 0 FAIL / 0 SKIPPED; CSP regression: 15 PASS / 0 FAIL / 0 SKIPPED.
+- The full suite reports 164 PASS / 3 FAIL / 0 SKIPPED; the remaining failures are the deferred AUTHZ-TENANT-007 SolicitudCheque cases. No production verification was performed.
+
 ## DOC-001-REMOTE-VERIFICATION-RECONCILIATION
 
 - Original scope: audit and security documents mixed prior results, TODOs, and stale figures, creating documentation drift; the audit explicitly required consolidation after remediation without deleting history.
@@ -706,3 +724,23 @@
 - `6448939` is an ancestor of current `HEAD` `2e3bad2c89b353ebef9d8df0e15f7927b6ae54da`; therefore the documentation remediation is present on `origin/Silvino`.
 - Current status matrices are consistent with the reconciled states, including deferred findings and the documented CSP/production residuals. `DOC-001` is `CLOSED_WITH_EVIDENCE`; the Security workflow is supporting evidence only, not the primary documentation proof.
 - Reopen if the matrix drifts materially from implementation, security decisions lack records, pre-deployment status changes are undocumented, or operational guidance becomes contradictory.
+
+## SEC-CSP-012-MEJORES-PRACTICAS-STATIC-MODAL-ACTIONS
+
+- Converted exactly two `javascript:void(0)` modal-action anchors in `app/Views/mejorespracticas/index.php` to semantic `button type="button"` controls: `openModalDC()` and `openModalOM()`.
+- Preserved Alpine expressions, permission gates, classes, labels, icons, dropdown structure, and modal behavior. DataTables actions, dynamic rows, JavaScript, CSP policy, and `departamento-operativo` were not changed.
+- Added focused structural regression coverage. Targeted CSP regression passes; the full suite retains only the known deferred `AUTHZ-TENANT-007` SolicitudCheque failures. No production verification was performed.
+- Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; this slice does not close the finding.
+
+## SEC-CSP-012-BATCH-SAFE-JAVASCRIPT-VOID-CLEANUP
+
+- Converted 8 mechanically safe static Alpine action anchors across 5 non-deferred view files to semantic `button type="button"` controls.
+- The batch covered modal/search actions in Integridad Mecánica, Objetivos/Metas/Indicadores, SGM Normatividad, and SGM annual calibration/verification pages. Dynamic/DataTables, generated HTML, navigation, and uncertain ownership cases were excluded.
+- Added compact manifest-based CSP regression coverage. `SEC-CSP-012` remains open; `AUTHZ-TENANT-007` remains deferred concurrent, and production was not verified.
+
+## SEC-CSP-012-COMUNICACION-PARTICIPACION-CONSULTA-SAFE-ACTIONS
+
+- Converted exactly three static `javascript:void(0)` Alpine action controls in `app/Views/comunicacionparticipacionconsulta/index.php` to semantic `button type="button"` controls: `openModalComunicacion()`, `openModalBuscar()`, and `openModalQS()`.
+- Preserved Alpine ownership, modal targets, labels, icons, classes, station visibility, and the existing create permission gates. DataTables-generated actions, navigation links, custom JavaScript, CSP policy, and `departamento-operativo` were not changed.
+- Added focused structural regression coverage. The targeted CSP regression passes; the full suite retains only the known deferred `AUTHZ-TENANT-007` SolicitudCheque failures. No production verification was performed.
+- Status remains `SEC-CSP-012: PARTIAL_HARDENING_LOCAL`; this slice does not close the finding.

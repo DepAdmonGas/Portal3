@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function (data, type, row) {
 
                 return `
-                    <a href="javascript:void(0)"
+                    <a class="pointer"
                     @click='window.seguridadContratistas.openModalFormato12(${JSON.stringify(row)})'>
                         <i class="ti ${
                             row.formato12
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function (data, type, row) {
 
                 return `
-                    <a href="javascript:void(0)"
+                    <a class="pointer"
                     @click='window.seguridadContratistas.modalFormato14(${row.id})'>
                         <i class="ti ${
                             row.formato14
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function(data, type, row) {
 
                 return `
-                <a href="javascript:void(0)"
+                <a class="pointer"
                 @click="window.seguridadContratistas.modalFormato15(${row.id})">
 
                     <i class="ti
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function (data, type, row) {
 
                 return `
-                    <a href="javascript:void(0)"
+                    <a class="pointer"
                     @click="window.seguridadContratistas.openCartaResponsiva(${row.id})">
                         <i class="ti ${
                             row.carta_responsiva
@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
             <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                 <div class="dropdown dropstart">
-                    <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                    <a class="pointer" data-bs-toggle="dropdown">
                         <i class="ti ti-dots-vertical fs-6"></i>
                     </a>
                     <ul class="dropdown-menu">

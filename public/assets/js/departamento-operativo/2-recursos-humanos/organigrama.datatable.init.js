@@ -33,7 +33,7 @@ return '/departamento-operativo/recursos-humanos/organigrama/get-versions?id_est
 function cls(enabled) { return enabled ? '' : ' disabled'; }
 
 function renderAcciones(row) {
-var html = '<div class="dropdown dropstart"><a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
+var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
 html += '<a class="dropdown-item pointer btn-org-ver" data-archivo="' + row.archivo + '"><i class="ti ti-eye me-1"></i> Ver imagen</a>';
 html += '<a class="dropdown-item pointer btn-org-eliminar' + cls(puedeEliminar) + '" data-id="' + row.id + '" data-version="' + row.version + '"><i class="ti ti-trash me-1"></i> Eliminar</a>';
 html += '</div></div>';

@@ -147,7 +147,7 @@ x-text="registro.cumplimiento">
 <td class="text-center">
 
 <div class="dropdown dropstart">
-<a href="javascript:void(0)"data-bs-toggle="dropdown">
+<a class="pointer" data-bs-toggle="dropdown">
 <i class="ti ti-dots-vertical fs-6"></i>
 </a>
 
@@ -155,20 +155,20 @@ x-text="registro.cumplimiento">
 <ul class="dropdown-menu">
 
 <li>
-<a class="dropdown-item pointer d-flex align-items-center gap-3"
-href="javascript:void(0)" @click="abrirModalEvidencia(registro.id)">
+<a class="dropdown-item pointer d-flex align-items-center gap-3 pointer"
+ @click="abrirModalEvidencia(registro.id)">
 <i class="ti ti-camera-plus"></i>Evidencia
 </a>
 </li>
 <li>
-<a class="dropdown-item pointer d-flex align-items-center gap-3"
-href="javascrip:void(0)" @click="editar(registro)">
+<a class="dropdown-item pointer d-flex align-items-center gap-3 pointer"
+ @click="editar(registro)">
 <i class="ti ti-edit"></i>Editar
 </a> 
 </li>
 <li>
-<a class="dropdown-item pointer d-flex align-items-center gap-3"
-href="javascript:void(0)" @click="eliminar(registro.id)">
+<a class="dropdown-item pointer d-flex align-items-center gap-3 pointer"
+ @click="eliminar(registro.id)">
 <i class="ti ti-trash"></i> Eliminar
 </a>
 </li>

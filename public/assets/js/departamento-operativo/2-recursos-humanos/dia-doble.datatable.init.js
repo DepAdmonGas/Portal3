@@ -56,19 +56,19 @@ function comentariosIcon(row) {
 
         var html = '<div class="d-flex gap-1 justify-content-center">';
         html += '<div class="dropdown dropstart">';
-        html += '<a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>';
+        html += '<a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>';
         html += '<ul class="dropdown-menu">';
 
-        html += '<li><a class="dropdown-item d-flex align-items-center gap-3' + cls(puedeDetalle) + '" href="javascript:void(0)" data-action="detalle" data-id="' + row.id + '">';
+        html += '<li><a class="dropdown-item pointer d-flex align-items-center gap-3' + cls(puedeDetalle) + '" data-action="detalle" data-id="' + row.id + '">';
         html += '<i class="ti ti-eye me-1"></i>Detalle</a></li>';
 
-        html += '<li><a class="dropdown-item d-flex align-items-center gap-3' + cls(puedePdf) + '" href="javascript:void(0)" data-action="pdf-direccion" data-id="' + row.id + '">';
+        html += '<li><a class="dropdown-item pointer d-flex align-items-center gap-3' + cls(puedePdf) + '" data-action="pdf-direccion" data-id="' + row.id + '">';
         html += '<i class="ti ti-file-text me-1"></i>Descargar PDF</a></li>';
 
-        html += '<li><a class="dropdown-item d-flex align-items-center gap-3' + cls(puedeEditar) + '" href="javascript:void(0)" data-action="editar" data-id="' + row.id + '">';
+        html += '<li><a class="dropdown-item pointer d-flex align-items-center gap-3' + cls(puedeEditar) + '" data-action="editar" data-id="' + row.id + '">';
         html += '<i class="ti ti-pencil me-1"></i>Editar</a></li>';
 
-        html += '<li><a class="dropdown-item d-flex align-items-center gap-3 ' + cls(puedeEliminar) + '" href="javascript:void(0)" data-action="eliminar" data-id="' + row.id + '" data-name="Reporte #' + row.id + '">';
+        html += '<li><a class="dropdown-item pointer d-flex align-items-center gap-3 ' + cls(puedeEliminar) + '" data-action="eliminar" data-id="' + row.id + '" data-name="Reporte #' + row.id + '">';
         html += '<i class="ti ti-trash me-1"></i>Eliminar</a></li>';
 
         html += '</ul></div></div>';

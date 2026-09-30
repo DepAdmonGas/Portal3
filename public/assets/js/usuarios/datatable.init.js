@@ -199,9 +199,9 @@ document.addEventListener(
                                     >
 
                                         <a
-                                            href="javascript:void(0)"
+                                        
                                             data-bs-toggle="dropdown"
-                                            class="text-muted"
+                                            class="text-muted pointer"
                                             aria-expanded="false"
                                         >
                                             <i
@@ -217,7 +217,7 @@ document.addEventListener(
                                             <li>
 
                                                 <a
-                                                    href="javascript:void(0)"
+                                                  
                                                     class="dropdown-item pointer d-flex align-items-center gap-3 btn-edit"
                                                     data-id="${row.id}"
                                                 >
@@ -238,7 +238,7 @@ document.addEventListener(
                                                         <li>
 
                                                             <a
-                                                                href="javascript:void(0)"
+                                                                
                                                                 class="dropdown-item pointer d-flex align-items-center gap-3 btn-delete"
                                                                 data-id="${row.id}"
                                                                 data-nombre="${nombre}"

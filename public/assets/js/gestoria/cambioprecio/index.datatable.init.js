@@ -317,7 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         return `
                             <a
-                                href="javascript:void(0)"
                                 class="pointer"
                                 onclick="window.cambioPrecio.actualiza(${row.id})"
                                 title="Pendiente en actualizar"

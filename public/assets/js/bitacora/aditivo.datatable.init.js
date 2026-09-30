@@ -100,12 +100,12 @@ columns: (function () {
                 return `
                 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                 <div class="dropdown dropstart">
-                <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                <a class="pointer" data-bs-toggle="dropdown">
                 <i class="ti ti-dots-vertical fs-6"></i>
                 </a>
                 <ul class="dropdown-menu">
                 <li>
-                <a href="javascript:void(0)"
+                <a
                 class="dropdown-item pointer ${noEdit ? 'disabled' : ''}"
                 ${noEdit ? '' : `
                     @click='\$dispatch("open-edit", {
@@ -122,7 +122,7 @@ columns: (function () {
                 </a>
                 </li>
                 <li>
-                <a href="javascript:void(0)"
+                <a
                 class="dropdown-item pointer ${noDelete ? 'disabled' : ''}"
                 ${noDelete ? '' : `
                     @click='async () => {

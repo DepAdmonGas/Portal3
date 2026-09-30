@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             searchable: false,
             render: function (data, type, row) {
                 return `
-                    <a href="javascript:void(0)"
+                    <a class="pointer"
                     onclick="cambioprecio.eliminar(${row.id})">
                     <i class="ti ti-trash fs-7 text-danger"></i>
                     </a>

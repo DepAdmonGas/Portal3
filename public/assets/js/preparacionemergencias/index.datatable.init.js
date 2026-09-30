@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function (data, type, row) {
 
                 return `
-                    <a href="javascript:void(0)"
+                    <a class="pointer"
                      @click='window.preparacionEmergencias.abrirPersonal(${row.id})'>
                         <i class="ti ti-plus text-info fs-7"></i>
                     </a>
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     return `
                         <div class="dropdown dropstart">
-                            <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                            <a class="pointer" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">

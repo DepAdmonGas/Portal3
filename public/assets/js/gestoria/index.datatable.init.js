@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
               render: function (data, type, row) {
                   return `
                       <a
-                          href="javascript:void(0)"
                           class="pointer btn-menu-estacion"
                           data-estacion-id="${row.id}"
                           data-estacion-nombre="${row.nombre}"

@@ -191,8 +191,7 @@ document.addEventListener(
                             return `
                                 <div class="dropdown dropstart">
 
-                                    <a
-                                        href="javascript:void(0)"
+                                    <a class="pointer"
                                         data-bs-toggle="dropdown"
                                     >
                                         <i

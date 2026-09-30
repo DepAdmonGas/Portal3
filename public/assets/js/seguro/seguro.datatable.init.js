@@ -129,7 +129,7 @@ return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
 
 <div class="dropdown dropstart">
-<a href="javascript:void(0)" data-bs-toggle="dropdown">
+<a class="pointer" data-bs-toggle="dropdown">
 <i class="ti ti-dots-vertical fs-6"></i>
 </a>
 
@@ -138,8 +138,7 @@ return `
 <!-- DESCARGAR -->
 <li>
 <a 
-href="javascript:void(0)"
-class="dropdown-item ${disabledDesc ? 'disabled' : ''}"
+class="dropdown-item pointer ${disabledDesc ? 'disabled' : ''}"
 ${!disabledDesc ? `@click="download('poliza-seguro','${row.archivo}')"` : ''}
 >
 <i class="ti ti-file-download"></i> Descargar
@@ -148,8 +147,8 @@ ${!disabledDesc ? `@click="download('poliza-seguro','${row.archivo}')"` : ''}
 
 <!-- ELIMINAR -->
 <li>
-<a href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledDelete ? 'disabled' : ''}"
+<a
+class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledDelete ? 'disabled' : ''}"
 ${!disabledDelete ? `
 @click="async () => {
 await deleteAction({
@@ -305,7 +304,7 @@ return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
 
 <div class="dropdown dropstart">
-<a href="javascript:void(0)" data-bs-toggle="dropdown">
+<a class="pointer" data-bs-toggle="dropdown">
 <i class="ti ti-dots-vertical fs-6"></i>
 </a>
 
@@ -314,8 +313,7 @@ return `
 <!-- DESCARGAR -->
 <li>
 <a 
-href="javascript:void(0)"
-class="dropdown-item ${disabledDesc ? 'disabled' : ''}"
+class="dropdown-item pointer ${disabledDesc ? 'disabled' : ''}"
 ${!disabledDesc ? `@click="download('poliza-seguro','${row.archivo}')"` : ''}
 >
 <i class="ti ti-file-download"></i> Descargar
@@ -324,8 +322,8 @@ ${!disabledDesc ? `@click="download('poliza-seguro','${row.archivo}')"` : ''}
 
 <!-- ELIMINAR -->
 <li>
-<a href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledDelete ? 'disabled' : ''}"
+<a 
+class="dropdown-item pointer d-flex align-items-center gap-2 ${disabledDelete ? 'disabled' : ''}"
 ${!disabledDelete ? `
 @click="async () => {
 await deleteAction({

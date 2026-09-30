@@ -44,7 +44,7 @@ var puedeDel = puedeEliminar;
 var puedeEdi = true;
 var puedeVer = true;
 
-var html = '<div class="dropdown dropstart"><a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
+var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
 html += '<a class="dropdown-item pointer btn-fm-detalle" data-id="' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
 html += '<a class="dropdown-item pointer btn-fm-editar' + cls(puedeEdi) + '" data-id="' + row.id + '"><i class="ti ti-pencil me-1"></i> Editar</a>';
 html += '<a class="dropdown-item pointer btn-fm-eliminar' + cls(puedeDel) + '" data-id="' + row.id + '" data-nombre="Folio ' + row.folio_display + '"><i class="ti ti-trash me-1"></i> Eliminar</a>';

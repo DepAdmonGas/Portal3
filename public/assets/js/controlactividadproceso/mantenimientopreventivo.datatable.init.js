@@ -90,7 +90,7 @@ const year = new Date().getFullYear();
                 return `
                     <div class="d-flex gap-1 justify-content-center">
                         <div class="dropdown dropstart">
-                            <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                            <a class="pointer" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
 
@@ -98,7 +98,6 @@ const year = new Date().getFullYear();
 
                                 <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                    href="javascript:void(0)"
                                     @click='window.mantenimientoPreventivo.openModalDetalle(${JSON.stringify(row)})'>
                                         <i class="ti ti-eye"></i>Detalle
                                     </a>
@@ -107,7 +106,6 @@ const year = new Date().getFullYear();
                                 <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3
                                     ${bloqueado ? 'disabled text-muted' : ''}"
-                                    href="javascript:void(0)"
                                     ${bloqueado ? '' : `@click='window.mantenimientoPreventivo.evidencia(${JSON.stringify(row)})'`}>
                                         <i class="ti ti-camera"></i>Evidencia
                                     </a>

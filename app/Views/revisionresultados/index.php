@@ -514,12 +514,12 @@
                 <div class="d-flex align-items-center ">
                     <div class="ms-auto">
                         <div class="dropdown center">
-                            <a href="javascript:void(0)" class="btn bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="btn bg-primary-subtle text-primary dropdown-toggle pointer" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="ti ti-dots-vertical fs-4"></i>
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                 <li>
-                                    <a class="dropdown-item pointer" href="javascript:void(0)" @click="openModalRevisionResultado()"><i class="ti ti-plus"></i> Nuevo</a>
+                                    <a class="dropdown-item pointer" @click="openModalRevisionResultado()"><i class="ti ti-plus"></i> Nuevo</a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.027.docx" download><i class="ti ti-download"></i> Descargar</a>
@@ -585,7 +585,7 @@
                                         class="text-center align-middle">
 
                                         <div class="dropdown dropstart ">
-                                            <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                                            <a class="pointer" data-bs-toggle="dropdown">
                                                 <i class="ti ti-dots-vertical fs-6"></i>
                                             </a>
                                             <ul class="dropdown-menu">
@@ -602,7 +602,7 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="javascript:void(0)" class="dropdown-item pointer d-flex align-items-center gap-3"
+                                                    <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                                         @click="eliminar(item.id)">
                                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                                     </a>

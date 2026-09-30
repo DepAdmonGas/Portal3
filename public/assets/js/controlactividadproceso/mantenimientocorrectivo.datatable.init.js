@@ -68,28 +68,25 @@ document.addEventListener('DOMContentLoaded', () => {
                         return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                         <div class="dropdown dropstart">
-                            <a href="javascript:void(0)" data-bs-toggle="dropdown">
+                            <a class="pointer" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
                               
                             <li>
                                 <a class="dropdown-item pointer d-flex align-items-center gap-3" 
-                                href="javascript:void(0)"
                                 @click='window.mantenimientoCorrectivo.openModalDetalle(${JSON.stringify(row)})'>
                                 <i class="ti ti-eye"></i>Detalle
                                 </a>    
                                </li>  
                                 <li>
                                 <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEditar ? 'disabled' : ''}" 
-                                href="javascript:void(0)"
                                 ${!noEditar ? '' : `@click='window.mantenimientoCorrectivo.openModalEditar(${JSON.stringify(row)})'`}>
                                 <i class="ti ti-edit"></i>Editar
                                 </a>    
                                </li>  
                                 <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3" 
-                                    href="javascript:void(0)"
                                     @click='window.mantenimientoCorrectivo.evidencia(${JSON.stringify(row)})'>
                                         <i class="ti ti-camera"></i>Evidencia
                                     </a>

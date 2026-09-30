@@ -40,15 +40,14 @@ return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
 <div class="dropdown dropstart">
 
-<a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown" data-bs-display="static"><i class="ti ti-dots-vertical fs-6"></i></a>
+<a class="text-muted pointer" data-bs-toggle="dropdown" data-bs-display="static"><i class="ti ti-dots-vertical fs-6"></i></a>
 
 <ul class="dropdown-menu">
 
 <!-- EDITAR -->
 <li>
 <a
-href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledEdit}"
+class="dropdown-item d-flex align-items-center gap-2 pointer ${disabledEdit}"
 ${!permisos.disabledEdit
 ? `@click='$dispatch("open-edit", ${JSON.stringify(row)})'` : ''}>
 <i class="fs-4 ti ti-edit"></i> Editar
@@ -57,8 +56,8 @@ ${!permisos.disabledEdit
 
 <!-- ELIMINAR -->
 <li>
-<a href="javascript:void(0)"
-class="dropdown-item d-flex align-items-center gap-2 ${disabledDelete}"
+<a
+class="dropdown-item d-flex align-items-center gap-2 pointer ${disabledDelete}"
 ${permisos.disabledDelete ? '' : `
 @click="async () => {
 await deleteAction({

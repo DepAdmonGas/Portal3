@@ -99,7 +99,7 @@ className: 'align-middle text-center',
 orderable: false,
 searchable: false,
 render: function (d) {
-return d ? '<div x-data="actions()"><a href="javascript:void(0)" @click="download(\'comprobantes-clientes\', \'' + d + '\')"><i class="ti ti-file-text text-success fs-6"></i></a></div>' : '<span class="text-muted">N/A</span>';
+return d ? '<div x-data="actions()"><a class="pointer" @click="download(\'comprobantes-clientes\', \'' + d + '\')"><i class="ti ti-file-text text-success fs-6"></i></a></div>' : '<span class="text-muted">N/A</span>';
 }
 },
 {
@@ -120,7 +120,7 @@ orderable: false,
 searchable: false,
 visible: this.puedeBorrar,
 render: function (id, type, row) {
-return '<div x-data="actions()"><a href="javascript:void(0)" class="text-danger" @click="await deleteAction({url: \'/departamento-operativo/clientes/eliminar\', id: ' + id + ', name: \'' + id + ' - ' + row.cliente + '\'}); cargarDatos();"><i class="ti ti-trash fs-6"></i></a></div>';
+return '<div x-data="actions()"><a class="text-danger pointer" @click="await deleteAction({url: \'/departamento-operativo/clientes/eliminar\', id: ' + id + ', name: \'' + id + ' - ' + row.cliente + '\'}); cargarDatos();"><i class="ti ti-trash fs-6"></i></a></div>';
 }
 },
 ];

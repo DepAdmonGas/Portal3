@@ -98,10 +98,10 @@ var deleteClick = p.disabledDelete ? '' : '@click="async () => { await deleteAct
 
 return '<div x-data="actions()" class="d-flex gap-1 justify-content-center">'
 + '<div class="dropdown dropstart">'
-+ '<a href="javascript:void(0)" class="text-muted" data-bs-toggle="dropdown" data-bs-display="static"><i class="ti ti-dots-vertical fs-6"></i></a>'
++ '<a class="text-muted pointer" data-bs-toggle="dropdown" data-bs-display="static"><i class="ti ti-dots-vertical fs-6"></i></a>'
 + '<ul class="dropdown-menu">'
-+ '<li><a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2 ' + disabledEdit + '" ' + editClick + '><i class="fs-4 ti ti-edit"></i> Editar</a></li>'
-+ '<li><a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2 ' + disabledDelete + '" ' + deleteClick + '><i class="fs-4 ti ti-trash"></i> Eliminar</a></li>'
++ '<li><a class="dropdown-item d-flex align-items-center gap-2 pointer ' + disabledEdit + '" ' + editClick + '><i class="fs-4 ti ti-edit"></i> Editar</a></li>'
++ '<li><a class="dropdown-item d-flex align-items-center gap-2 pointer ' + disabledDelete + '" ' + deleteClick + '><i class="fs-4 ti ti-trash"></i> Eliminar</a></li>'
 + '</ul>'
 + '</div>'
 + '</div>';

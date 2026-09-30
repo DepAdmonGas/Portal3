@@ -119,7 +119,7 @@ document.addEventListener(
                           <div class="dropdown dropstart">
 
                               <a
-                                  href="javascript:void(0)"
+                                  class="pointer"
                                   data-bs-toggle="dropdown"
                                   aria-expanded="false"
                               >
@@ -140,7 +140,6 @@ document.addEventListener(
 
                                   <li>
                                       <a
-                                          href="javascript:void(0)"
                                           class="dropdown-item pointer d-flex align-items-center gap-3 btn-edit"
                                           data-id="${row.id}"
                                       >
@@ -154,7 +153,6 @@ document.addEventListener(
                                           ? `
                                               <li>
                                                   <a
-                                                      href="javascript:void(0)"
                                                       class="dropdown-item pointer d-flex align-items-center gap-3 btn-delete"
                                                       data-id="${row.id}"
                                                       data-nombre="${nombre}"
