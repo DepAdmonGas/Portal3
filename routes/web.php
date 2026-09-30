@@ -587,11 +587,27 @@ return function (RouteCollector $r) {
  //----- Recibo de nomina 
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina/{idYear:\d+}', Route::auth(['RecibosNominaController', 'index']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/data/{idYear:\d+}', Route::auth(['RecibosNominaController', 'data']));
+
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/periodos/{idYear:\d+}', Route::auth(['RecibosNominaController', 'periodos']));
+
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios', Route::auth(['RecibosNominaController', 'getComentarios']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios/guardar', Route::auth(['RecibosNominaController', 'guardarComentario']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/editar', Route::auth(['RecibosNominaController', 'guardarEdicion']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/eliminar', Route::auth(['RecibosNominaController', 'eliminarUsuario']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/finalizar', Route::auth(['RecibosNominaController', 'finalizarActividad']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/personal-faltantes', Route::auth(['RecibosNominaController', 'personalFaltantes']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/personal/guardar', Route::auth(['RecibosNominaController', 'guardarPersonal']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses', Route::auth(['RecibosNominaController', 'getAcuses']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses/guardar', Route::auth(['RecibosNominaController', 'guardarAcuse']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses/eliminar', Route::auth(['RecibosNominaController', 'eliminarAcuse']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuse-mexdesa/guardar', Route::auth(['RecibosNominaController', 'subirAcuseMexdesa']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/aguinaldo/guardar', Route::auth(['RecibosNominaController', 'subirAguinaldo']));
+$r->addRoute('POST', '/recursos-humanos/recibos-nomina/aguinaldo/finalizar', Route::auth(['RecibosNominaController', 'finalizarAguinaldo']));
+$r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/{idYear:\d+}', Route::auth(['RecibosNominaController', 'revision']));
+$r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/excel', Route::auth(['RecibosNominaController', 'excelDespachadores']));
+$r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacion']));
+$r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacionData']));
+
         
 
 //----- Organigrama
@@ -922,6 +938,43 @@ $r->addRoute('POST', '/recursos-humanos/recibos-nomina/finalizar', Route::auth([
 
 //----- 4. Almacen
         $r->addRoute('GET', '/almacen', Route::auth(['DptoOperativoController', 'almacenIndex']));
+    
+    
+    
+// --- ORDEN DE COMPRA ---
+        $r->addRoute('GET', '/almacen/orden-compra/{idYear:\d+}/{idMes:\d+}', Route::auth(['OrdenCompraController', 'index']));
+        $r->addRoute('POST', '/almacen/orden-compra/data/{idYear:\d+}/{idMes:\d+}', Route::auth(['OrdenCompraController', 'data']));
+        $r->addRoute('POST', '/almacen/orden-compra/crear/{idYear:\d+}/{idMes:\d+}', Route::auth(['OrdenCompraController', 'crearOrden']));
+        $r->addRoute('GET', '/almacen/orden-compra-formulario/{id:\d+}', Route::auth(['OrdenCompraController', 'formulario']));
+        $r->addRoute('GET', '/almacen/orden-compra-detalle/{id:\d+}', Route::auth(['OrdenCompraController', 'detalle']));
+        $r->addRoute('GET', '/almacen/orden-compra-firmar/{id:\d+}', Route::auth(['OrdenCompraController', 'firmarView']));
+        $r->addRoute('POST', '/almacen/orden-compra/guardar-estacion', Route::auth(['OrdenCompraController', 'guardarEstacion']));
+        $r->addRoute('POST', '/almacen/orden-compra/editar-formato', Route::auth(['OrdenCompraController', 'editarFormato']));
+        $r->addRoute('POST', '/almacen/orden-compra/finalizar-pad', Route::auth(['OrdenCompraController', 'finalizarPad']));
+        $r->addRoute('POST', '/almacen/orden-compra/crear-token', Route::auth(['OrdenCompraController', 'crearToken']));
+        $r->addRoute('POST', '/almacen/orden-compra/firmar-token', Route::auth(['OrdenCompraController', 'firmarToken']));
+        $r->addRoute('POST', '/almacen/orden-compra/eliminar', Route::auth(['OrdenCompraController', 'destroy']));
+        $r->addRoute('POST', '/almacen/orden-compra/agregar-proveedor', Route::auth(['OrdenCompraController', 'agregarProveedor']));
+        $r->addRoute('POST', '/almacen/orden-compra/editar-proveedor', Route::auth(['OrdenCompraController', 'editarProveedor']));
+        $r->addRoute('POST', '/almacen/orden-compra/eliminar-proveedor', Route::auth(['OrdenCompraController', 'eliminarProveedor']));
+        $r->addRoute('POST', '/almacen/orden-compra/seleccionar-proveedor', Route::auth(['OrdenCompraController', 'seleccionarProveedor']));
+        $r->addRoute('POST', '/almacen/orden-compra/actualizar-costos-proveedor', Route::auth(['OrdenCompraController', 'actualizarCostosProveedor']));
+        $r->addRoute('GET', '/almacen/orden-compra/detalle-data/{id:\d+}', Route::auth(['OrdenCompraController', 'getDetalleData']));
+        $r->addRoute('POST', '/almacen/orden-compra/agregar-articulo', Route::auth(['OrdenCompraController', 'agregarArticulo']));
+        $r->addRoute('POST', '/almacen/orden-compra/eliminar-articulo', Route::auth(['OrdenCompraController', 'eliminarArticulo']));
+        $r->addRoute('POST', '/almacen/orden-compra/agregar-refacturacion', Route::auth(['OrdenCompraController', 'agregarRefacturacion']));
+        $r->addRoute('POST', '/almacen/orden-compra/eliminar-refacturacion', Route::auth(['OrdenCompraController', 'eliminarRefacturacion']));
+        $r->addRoute('GET', '/almacen/proveedores', Route::auth(['ProveedoresController', 'index']));
+        $r->addRoute('POST', '/almacen/proveedores/data', Route::auth(['ProveedoresController', 'data']));
+        $r->addRoute('GET', '/almacen/proveedores-nuevo', Route::auth(['ProveedoresController', 'crear']));
+        $r->addRoute('POST', '/almacen/proveedores/guardar', Route::auth(['ProveedoresController', 'store']));
+        $r->addRoute('GET', '/almacen/proveedores-editar/{id:\d+}', Route::auth(['ProveedoresController', 'editar']));
+        $r->addRoute('POST', '/almacen/proveedores/editar-guardar/{id:\d+}', Route::auth(['ProveedoresController', 'update']));
+        $r->addRoute('POST', '/almacen/proveedores/detalle', Route::auth(['ProveedoresController', 'detalle']));
+        $r->addRoute('POST', '/almacen/proveedores/actualizar-archivo', Route::auth(['ProveedoresController', 'actualizarArchivo']));
+        $r->addRoute('POST', '/almacen/proveedores/eliminar', Route::auth(['ProveedoresController', 'destroy']));
+        $r->addRoute('GET', '/almacen/orden-compra-descargar-pdf/{id:\d+}', Route::auth(['OrdenCompraController', 'downloadPdf']));
+
 
         //----- 5. Comercializadora
         $r->addRoute('GET', '/comercializadora', Route::auth(['DptoOperativoController', 'comercializadoraIndex']));
