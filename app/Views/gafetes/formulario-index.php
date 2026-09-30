@@ -9,10 +9,10 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-reporte="
 <i class="ti ti-plus"></i> Nuevo </button>
 </div>' : '' ?>
 
-<div class="col-12 col-md-auto d-grid  mb-mt-0">
-<button class="btn bg-success text-white" id="botonSeguimiento">
+<div class="col-12 col-md-auto d-grid  mt-3 mt-md-0">
+<div id="botonSeguimiento" class="d-grid">
 
-</button>
+</div>
 </div>
 
 

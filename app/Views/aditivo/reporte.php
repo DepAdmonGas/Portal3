@@ -13,16 +13,28 @@
 <div id="aditivo-reporte-content">
 <?php endif; ?>
 
-    <div class="d-flex align-items-center justify-content-end gap-2 mb-4">
-        <a href="<?= $baseUrl ?>" class="btn bg-danger-subtle text-danger">
+  
+    <div class="row d-flex justify-content-end align-items-center mb-3 mt-3">
+        <div class="col-12 col-md-auto d-grid">
+
+    <a href="<?= $baseUrl ?>" class="btn bg-danger-subtle text-danger">
             <i class="ti ti-arrow-left"></i> Regresar
         </a>
-        <?= (!$esImportacion && $capacidades['puedeCrear']) ? '<button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Nuevo </button>' : '' ?>
+        </div>
+    
+
+<div class="col-12 col-md-auto ms-md-auto d-grid  mt-3 mt-md-0">
+    <?= (!$esImportacion && $capacidades['puedeCrear']) ? '<button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Nuevo </button>' : '' ?>
+  
+</div>
+     
+   
     </div>
+ 
 
   <div class="datatables">
 
-      <div class="table-responsive">
+      <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
         <table id="table-aditivo-reporte" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
           <thead>
 
