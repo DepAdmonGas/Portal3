@@ -10,12 +10,10 @@
 
 <div id="sgm-content">
 
-<div class="card mt-4">
-  <div class="card-body">
 
   <div class="datatables mt-3">
     <div class="table-responsive">
-      <table id="table-evaluacion-cumplimiento" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <table id="table-evaluacion-cumplimiento" class="table table-striped table-bordered text-nowrap align-middle mb-0">
         <thead>
           <tr>
           <th>#</th>
@@ -31,8 +29,6 @@
       </table>
     </div>
   </div>
-	 </div>
-</div>
 
 <!-- ------------------------- -->
 <!-- inicio offcanvas -------- -->

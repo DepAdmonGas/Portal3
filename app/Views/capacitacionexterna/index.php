@@ -166,18 +166,20 @@
 
                         </div>
 
-                        <table class="table table-bordered mb-0">
+                        <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th class="text-center">#</th>
                                     <th>Nombre</th>
-                                    <th class="text-center"><a class="text-muted"><i class="ti ti-trash fs-6"></i></a></th>
+                                    <th class="text-center"><a class="text-danger"><i class="ti ti-trash fs-6"></i></a></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template x-for="(item, index) in personal" :key="item.id">
                                     <tr>
-                                        <td x-text="index + 1"></td>
+                                        <td
+                                        class="text-center"
+                                        x-text="index + 1"></td>
                                         <td x-text="item.nombre"></td>
                                         <td class="text-center">
                                             <a class="text-muted pointer"

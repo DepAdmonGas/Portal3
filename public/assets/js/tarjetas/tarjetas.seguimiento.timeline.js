@@ -67,9 +67,9 @@ ${nombre}
 </div>
 </div>
 
-<span class="position-relative nav-icon-hover download-file">
+<butt class="position-relative nav-icon-hover download-file">
 <i class="ti ti-download text-dark fs-6"></i>
-</span>
+</butt>
 
 </a>
 </div>

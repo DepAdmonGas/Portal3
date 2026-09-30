@@ -587,7 +587,9 @@ return function (RouteCollector $r) {
  //----- Recibo de nomina 
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina/{idYear:\d+}', Route::auth(['RecibosNominaController', 'index']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/data/{idYear:\d+}', Route::auth(['RecibosNominaController', 'data']));
+
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/periodos/{idYear:\d+}', Route::auth(['RecibosNominaController', 'periodos']));
+
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios', Route::auth(['RecibosNominaController', 'getComentarios']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios/guardar', Route::auth(['RecibosNominaController', 'guardarComentario']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/editar', Route::auth(['RecibosNominaController', 'guardarEdicion']));
@@ -605,6 +607,7 @@ $r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/{idYear:\d+}', Ro
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/excel', Route::auth(['RecibosNominaController', 'excelDespachadores']));
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacion']));
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacionData']));
+
         
 
 //----- Organigrama

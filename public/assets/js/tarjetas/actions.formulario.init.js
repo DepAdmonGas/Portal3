@@ -51,11 +51,12 @@ ocultarBoton = "";
 }
 
 contenedor.innerHTML = `
-<li class="${ocultarBoton}"
+<button class="btn bg-success text-white mt-3 mt-md-0 ${ocultarBoton}"
 :disabled="loadingSeguimiento"
 @click="submitSeguimiento(${siguiente})">
-<a class="dropdown-item"> <i class="ti ti-check"></i> Finalizar</a>
-</li>
+<i class="ti ti-check"></i> Finalizar</a>
+</button>
+
 `;
 }
 
@@ -68,11 +69,11 @@ contenedor.innerHTML = '';
 const noDesc = !archivo;
 
 contenedor.innerHTML = `
-<li>
-<a class="dropdown-item d-flex align-items-center gap-1 pointer ${noDesc ? 'disabled' : ''}" ${noDesc ? '' : `@click="download('solicitud-tarjetas','${archivo}')"`}>
-<i class="ti ti-file-download"></i> Descargar archivo
-</a>
-</li>`;
+
+<button class="btn bg-primary text-white w-100 d-flex justify-content-center align-items-center gap-1 ${noDesc ? 'disabled' : ''}" ${noDesc ? '' : `@click="download('solicitud-tarjetas','${archivo}')"`}>
+<i class="ti ti-file-download me-1"></i> Descargar archivo
+</button>
+`;
 }
 
 /*

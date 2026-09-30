@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}" 
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}" 
                                     ${!noDelete ? '' : `@click='revision.eliminar(${row.id})'`}>
                                         <i class="fs-4 ti ti-trash"></i>Eliminar
                                     </a>

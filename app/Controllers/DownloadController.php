@@ -85,6 +85,7 @@ class DownloadController
             'recibos-aguinaldo'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/aguinaldo/',
             'recibos-mexdesa'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/recibos-mexdesa/',
             'recibos-nomina-acuse'                 => dirname(__DIR__, 2) . '/public/uploads/archivos/recibo-nomina-acuse/',
+
         ];
 
         // 1. Si es un documento confidencial del personal, se valida con el servicio sensible

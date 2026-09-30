@@ -76,6 +76,7 @@ $routeSuffix = [
 'cuenta-litros'          => "/{$idYear}/{$idMes}",
 'precios-diarios-combustible'          => "/{$idYear}/{$idMes}",
 'orden-compra'          => "/{$idYear}/{$idMes}",
+
 ];
 
 foreach ($submenus as &$submenu) {

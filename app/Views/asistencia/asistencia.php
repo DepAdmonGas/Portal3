@@ -96,7 +96,9 @@ x-init="
             if ($asistencia->realizadopor !=0) { ?>
 <div class="card">
     <div class="card-header card-colored-header bg-primary">
-         <h5 class="card-title text-white pb-0 mb-0 ">Evidencia</h5>
+         <h5 class="card-title text-white pb-0 mb-0 ">
+         <i class="ti ti-camera"></i>   
+         Evidencia</h5>
 
                 <small class="text-white">Agrega la evidencia del elemento lista de asistencia, un máximo de 3 imágenes</small>
     </div>
@@ -123,7 +125,7 @@ x-init="
                 x-text="error"
             ></small>
 
-              <div class="mt-3 text-end">
+              <div class="mt-3 text-end mb-3">
 
                   <button
                       class="btn bg-info-subtle text-info"
@@ -136,7 +138,7 @@ x-init="
               </div>
 
 <div class="table-responsive">
-    <table class="table table-bordered table-striped  text-nowrap align-middle mb-3">
+    <table class="table table-bordered table-striped  text-nowrap align-middle mb-0">
 
         <thead>
 
@@ -146,8 +148,8 @@ x-init="
 
             <th class="text-center align-middle">Evidencia</th>
 
-            <th class="text-center" width="40">
-              <i class="ti ti-trash fs-7 text-muted"></i>
+            <th class="text-center" width="48px">
+              <i class="ti ti-trash fs-6 text-danger"></i>
             </th>
 
         </tr>
@@ -195,7 +197,7 @@ x-init="
                         @click="eliminar(item.id)"
                     >
 
-                        <i class="ti ti-trash text-danger fs-7"></i>
+                        <i class="ti ti-trash text-danger fs-6"></i>
 
                     </div>
 
@@ -255,7 +257,7 @@ x-init="
         </div>
 
         <div class="datatables">
-            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+            <div class="table-responsive overflow-x-auto overflow-y-hidden">
                 <table id="table-lista-asistencia-firma" class="table table-bordered table-striped  text-nowrap align-middle">
                     <thead>
                     <tr>

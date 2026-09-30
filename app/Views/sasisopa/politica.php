@@ -105,7 +105,11 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <div class="float-end">
+                    <div class="row align-items-center">
+<div class="col-12 col-md-9">
+     <h4 class="card-title mb-0">Fo.ADMONGAS.001 (Lista de comprobación)</h4>
+</div>
+  <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
                         <?=
                         !empty($permisos['crear']) ?
 
@@ -115,8 +119,10 @@
                             : ''
                         ?>
                     </div>
+                    </div>
+                  
 
-                    <h4 class="card-title mb-0">Fo.ADMONGAS.001 (Lista de comprobación)</h4>
+                   
 
                 </div>
                 <div class="card-body pb-0">
@@ -124,7 +130,7 @@
                     <div class="datatables">
 
                         <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-                            <table id="table-lista-comprobacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                            <table id="table-lista-comprobacion" class="table table-striped table-bordered text-nowrap align-middle">
                                 <thead>
 
                                     <tr>
@@ -153,10 +159,13 @@
             <div class="card">
 
                 <div class="card-header">
+                    <div class=" row align-items-center">
+<div class="col-12 col-md-9">
+<h4 class="card-title mb-0 ">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+</div>
+    <div x-data="{ ...actions(), ...listaasistenciaForm() }"
+    class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
 
-
-<div class="d-flex aling-items-center float-end">
-<div x-data="{ ...actions(), ...listaasistenciaForm() }">
 <?= 
 !empty($permisos['crear']) ? 
 '<button type="button" class="btn bg-primary-subtle text-primary"  @click="crearAsistencia()">
@@ -165,14 +174,11 @@
 </button>'
                                 : ''
                             ?>
-                        </div>
+                        
+
                     </div>
 
-
-<h4 class="card-title mb-0 ">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
-
-
-
+                </div>
                 </div>
 
 
@@ -182,7 +188,7 @@
 
                     <div class="datatables">
                         <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-                            <table id="table-lista-asistencia" class="table table-bordered table-striped  text-nowrap align-middle">
+                            <table id="table-lista-asistencia" class="table table-bordered table-striped mb-0  text-nowrap align-middle">
                                 <thead>
                                     <tr>
                                         <th>#</th>

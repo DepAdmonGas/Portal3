@@ -39,7 +39,7 @@
       <tr>
       <th class="text-center">#</th>
       <th class="text-center">Fecha</th>
-      <th class="text-center text-danger"><i class="ti ti-trash  fs-6"></i></th>
+      <th class="text-center"><i class="ti ti-trash  fs-6 text-danger"></i></th>
       </tr>
       </thead>
       <tbody>
@@ -97,8 +97,8 @@
 
 <div class="col-md-7">
 <div class="card">
-  <div class="card-header card-colored-header bg-primary">
-<h5 class="mb-0 card-title text-white">
+  <div class="card-header">
+<h5 class="mb-0 card-title">
 <i class="ti ti-target"></i>  
 Objetivos generales</h5>
   </div>
@@ -151,13 +151,13 @@ x-html="DOMPurify.sanitize(objetivo.detalle)"
 
     <div class="card-header">
 <div class="row align-items-center">
-    <div class="col-9">
+    <div class="col-md-9">
         <h4 class="card-title mb-0">
             Fo.SGM.001 Lista de asistencia
         </h4>
     </div>
 
-    <div class="col-3 text-end">
+    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
         <?= 
             !empty($permisos['crear']) ? 
             '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearAsistencia()">
@@ -167,19 +167,11 @@ x-html="DOMPurify.sanitize(objetivo.detalle)"
         ?>
     </div>
 </div>
-   
-     
     </div>
   <div class="card-body">
 
-  
-        
-   
-
-  
-
-  <div class="datatables mt-4">
-    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+  <div class="datatables">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-1">
       <table id="table-lista-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>
           <tr>
@@ -210,10 +202,10 @@ x-html="DOMPurify.sanitize(objetivo.detalle)"
  
 
   <div class="row align-items-center">
-    <div class="col-9">
+    <div class="col-md-9">
  <h4 class="card-title mb-0">Fo.SGM.004 Seguimiento de objetivos e indicadores </h4>
     </div>
-    <div class="col-3 text-end">
+    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
       <?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary text-nowrap" @click="crearSeguimiento()">
@@ -237,7 +229,7 @@ x-html="DOMPurify.sanitize(objetivo.detalle)"
 
 
 
-  <div class="datatables mt-4">
+  <div class="datatables">
     <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
       <table id="table-seguimiento-objetivos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
         <thead>

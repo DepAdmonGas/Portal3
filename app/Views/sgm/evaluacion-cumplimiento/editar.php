@@ -9,8 +9,22 @@
 <?php else: ?>
 
 <div id="sgm-content" x-data="{ ...actions(), ...evaluacionForm(<?= $id ?>) }">
+<div class="text-end mt-3">
 
-<table class="table table-sm table-bordered mt-4">
+<button class="btn btn-success" @click="finalizar()"><i class="ti ti-check"></i> Finalizar</button>
+
+</div>
+
+
+<div class="card mt-3">
+    <div class="card-header bg-primary">
+        <span class="card-title text-white">
+            <i class="ti ti-clipboard-data fs-6"></i>
+            Informacion de Cumplimiento de objetivos 
+        </span>
+    </div>
+    <div class="card-body p-0">
+<table class="table table-striped table-bordered text-nowrap align-middle mb-0">
     <tr>
         <td class="fw-bolder align-middle fs-3">Fecha:</td>
         <td class="p-0">
@@ -65,6 +79,10 @@
         </td>
     </tr>
 </table>
+    </div>
+</div>
+
+
 
 
 <template
@@ -73,13 +91,17 @@
 
     <div class="card mb-3">
 
-        <div class="card-header fs-5">
-            <strong x-text="detalle.categoria"></strong>
+        <div class="card-header bg-primary">
+        <i class="ti ti-progress-alert fs-6 text-white"></i>    
+        <span 
+            class="card-title text-white"
+            x-text="detalle.categoria">
+        </span>
         </div>
 
-        <div class="card-body">
-
-        <table class="table table-sm table-bordered pb-0 mb-0">
+        <div class="card-body p-0">
+<div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle mb-0">
             <tr>
                 <td class="fw-bolder align-middle fs-3"
                 x-text="
@@ -88,10 +110,10 @@
                         : 'Meta: 100%'
                 ">
             </td>
-                <td class="fw-bolder align-middle fs-3">Resultado</td>
+                <td class="fw-bolder align-middle fs-3">Resultado:</td>
                 <td class="p-0">
                     <input
-                    class="form-control border-0"
+                    class="form-control border-0 text-center"
                     x-model="detalle.resultado1"
                     @input.debounce.600ms="guardarCampo()">
                 </td>
@@ -101,7 +123,7 @@
                 <td class="fw-bolder align-middle fs-3">Comentarios y observaciones:</td>
                 <td class="p-0" colspan="2">
                     <textarea
-                        class="form-control border-0"
+                        class="form-control border-0 text-center"
                         x-model="detalle.resultado2"
                         @input.debounce.600ms="guardarCampo()">
                     </textarea>
@@ -112,7 +134,7 @@
                 <td class="fw-bolder align-middle fs-3">Acciones a tomar para mejorar o mantener el resultado:</td>
                 <td class="p-0" colspan="2">
                     <textarea
-                        class="form-control border-0"
+                        class="form-control border-0 text-center"
                         x-model="detalle.resultado3"
                         @input.debounce.600ms="guardarCampo()">
                     </textarea>
@@ -123,7 +145,7 @@
                 <td class="fw-bolder align-middle fs-3">Responsable de realizar las acciones a tomar para mejorar o mantener los resultados:</td>
                 <td class="p-0" colspan="2">
                     <textarea
-                        class="form-control border-0"
+                        class="form-control border-0 text-center"
                         x-model="detalle.resultado4"
                         @input.debounce.600ms="guardarCampo()">
                     </textarea>
@@ -134,7 +156,7 @@
                 <td class="fw-bolder align-middle fs-3">Recursos necesarios para ejecutar las acciones a tomar para mejorar o mantener los resultados:</td>  
                 <td class="p-0" colspan="2">
                     <textarea
-                        class="form-control border-0"
+                        class="form-control border-0 text-center"
                         x-model="detalle.resultado5"
                         @input.debounce.600ms="guardarCampo()">
                     </textarea>
@@ -144,6 +166,8 @@
 
         </table>
 
+</div>
+
 
         </div>
 
@@ -151,60 +175,60 @@
 
 </template>
 
-<div class="row">
-    <div class="col-md-7">
-    <h5 class="mt-4 bg-light p-3">
+
+
+<!---------inicio de la card asistentes------>
+
+<div class="card">
+    <div class="card-header bg-primary">
+  <span class="card-title text-white">
+    <i class="ti ti-user-plus"></i>
         Asistentes
-    </h5>
+    </span>
     </div>
-    </div>
+    
+<div class="card-body pb-2">
+  <div class="d-flex align-items-stretch">
 
-    <div class="row">
-
-        <div class="col-md-6">
-
+    <div class="flex-grow-1">
         <select
             x-ref="usuarios"
             class="select2 form-control"
-            multiple
-        >
+            multiple>
+
             <template
                 x-for="usuario in usuariosDisponibles"
-                :key="usuario.id"
-            >
+                :key="usuario.id">
+
                 <option
                     :value="usuario.id"
                     x-text="usuario.nombre">
                 </option>
+
             </template>
         </select>
-
-        </div>
-
-        <div class="col-md-1 d-grid">
-
-            <button
-                class="btn btn-info"
-                @click="agregarAsistentes()"
-            >
-                Agregar
-            </button>
-
-        </div>
-
     </div>
 
-    <div class="row">
-    <div class="col-md-7">
-    <table class="table table-sm table-bordered table-sm mt-3">
+    <button
+        type="button"
+        class="btn bg-primary-subtle text-primary text-nowrap"
+        @click="agregarAsistentes()">
+        <i class="ti ti-plus"></i>
+        Nuevo
+    </button>
+
+</div>
+      
+<div class="table responsive">
+      <table class="table table-striped table-bordered  align-middle mb-0 mt-3">
         <thead>
             <tr>
-                <th>#</th>
+                <th whidth="96px" class="text-center">#</th>
                 <th>Nombre</th>
                 <th class="text-center">
                     Firma
                 </th>
-                <th width="40" class="text-center"><i class="ti ti-trash fs-7 text-muted"></i></th>
+                <th width="48px" class="text-center"><i class="ti ti-trash fs-6 text-danger"></i></th>
             </tr>
         </thead>
         <tbody>
@@ -225,7 +249,7 @@
                 :key="asistente.id"
             >
                 <tr>
-                    <td class="align-middle"
+                    <td class="align-middle text-center"
                         x-text="index+1"
                     ></td>
                     <td class="align-middle"
@@ -241,7 +265,7 @@
                     <td class="text-center align-middle">
 
                         <a  @click="eliminarAsistente(asistente.id)">
-                            <i class="ti ti-trash fs-7 text-danger"></i>
+                            <i class="ti ti-trash fs-6 pointer text-danger"></i>
                         </a>
 
                     </td>
@@ -253,15 +277,12 @@
         </tbody>
 
     </table>
-    </div>
-    </div>
+</div>
 
-
-<div class="text-end mt-3">
-
-<button class="btn btn-success" @click="finalizar()"><i class="ti ti-check"></i> Finalizar</button>
 
 </div>
+</div>
+
 
 </div>
 <?php endif; ?>

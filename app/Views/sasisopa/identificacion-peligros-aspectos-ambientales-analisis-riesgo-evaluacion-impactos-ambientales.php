@@ -119,8 +119,13 @@
 <div class="card">
 
 <div class="card-header">
-<div class="d-flex aling-items-center float-end">
-<div x-data="{ ...actions(), ...listaasistenciaForm() }">
+<div class="row align-items-center">
+<div class="col-12 col-md-9">
+<h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
+
+</div>
+<div x-data="{ ...actions(), ...listaasistenciaForm() }"
+class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
 <?= 
 !empty($permisos['crear']) ? 
 '<button type="button" class="btn bg-primary-subtle text-primary" @click="crearAsistencia()">
@@ -131,9 +136,6 @@
 
 </div>  
 </div>
-
-<h4 class="card-title mb-0">Fo.ADMONGAS.010 (Registro de la atención y el seguimiento a la comunicación interna y externa.)</h4>
-
 </div>
 
 <div class="card-body pb-0">

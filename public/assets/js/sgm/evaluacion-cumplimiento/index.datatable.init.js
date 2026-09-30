@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
             {
                 data: null,
-                width: '60px',
+                width: '96px',
                 className: 'text-center',
                 render: function (data, type, row, meta) {
                     return meta.row + 1;
@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             {
             data: 'fecha',
+            className: 'text-center',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -63,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
          {
             data: 'hora',
+            className: 'text-center',
             render: function (data, type) {
 
                 if (!data) return '';
@@ -122,12 +124,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
                         <div class="dropdown dropstart">
-                            <a class="pointer" data-bs-toggle="dropdown">
+                            <a class="pointer" whidth="48px" data-bs-toggle="dropdown">
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     ${!noEdit ? '' : `
                                     @click='async () => {
                                     const res = await goTo("/sgm/evaluacion-cumplimiento-objetivos-revision-direccion/editar/${row.id}");

@@ -530,7 +530,7 @@ $datosUsuario = Auth::user();
 $idPuesto = $datosUsuario->id_puesto;
 
 $datosEstacion = Estacion::find($idEstacion);
-$title = 'Solicitud de Gafetes Formulario (' . $datosEstacion->nombre . ')';
+$title = 'Solicitud de Gafetes Formulario (#' . $noReporte. ')';
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Solicitud de Gafetes', '/solicitud-gafetes');
@@ -822,7 +822,7 @@ $datosUsuario = Auth::user();
 $idPuesto = $datosUsuario->id_puesto;
 
 $datosEstacion = Estacion::find($idEstacion);
-$title = 'Detalle Solicitud de Gafetes (' . $datosEstacion->nombre . ')';
+$title = 'Detalle Solicitud de Gafetes (#' .  $noReporte  . ')';
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Solicitud de Gafetes', '/solicitud-gafetes');

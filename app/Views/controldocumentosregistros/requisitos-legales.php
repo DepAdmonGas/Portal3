@@ -22,8 +22,8 @@
 <div class="card mt-3">
     <div class="card-header bg-primary">
           <div class="mb-0 card-title text-white">
-            <i class="ti ti-label"></i>
-        Nivel de gobierno <b><?= $titulo ?></b>
+            <i class="ti ti-gavel"></i>
+        Nivel de gobierno: <b><?= $titulo ?></b>
     </div> 
     </div>
 <div class="card-body p-0">
@@ -34,8 +34,8 @@
             <tr>
 
                 <th class="text-center">Dependencia</th>
-                <th class="text-center">Permiso</th>
-                <th class="text-center">Fundamento</th>
+                <th class="text-start">Permiso</th>
+                <th class="text-start">Fundamento</th>
             </tr>
 </thead>
 
@@ -58,7 +58,7 @@
                         <b>
                             <?= $item->requisito->permiso ?? $item->requisito_legal ?>
                         </b>
-                    </td class="align-middle">
+                    </td>
 
                     <td class="align-middle">
                         <?= $item->requisito->fundamento ?? 'S/I' ?>

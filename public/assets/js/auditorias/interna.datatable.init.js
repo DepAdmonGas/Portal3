@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 render: function () {
                     return `
                         <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" download>
-                            <i class="ti ti-file-download text-info fs-7"></i>
+                            <i class="ti ti-file-download text-info fs-6"></i>
                         </a>
                     `;
                 }
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `
                         <a class="pointer"
                            @click="window.auditoriasInterna.subir024(${row.id})">
-                            <i class="ti ti-file-upload text-success fs-7"></i>
+                            <i class="ti ti-file-upload text-success fs-6"></i>
                         </a>
                     `;
                 }
@@ -72,11 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     return row.formato024.existe
                         ? `
                             <a href="/uploads/${row.formato024.archivo}" download>
-                                <i class="ti ti-download text-danger fs-7"></i>
+                                <i class="ti ti-download text-danger fs-6"></i>
                             </a>
                         `
                         : `
-                            <i class="ti ti-x fs-7"></i>
+                            <i class="ti ti-x fs-6"></i>
                         `;
                 }
             },
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 render: function (data, type, row) {
                     return `
                         <a @click="window.auditoriasInterna.abrirAnexos(${row.id}, 24)">
-                            <i class="pointer ti ti-paperclip text-primary fs-7"></i>
+                            <i class="pointer ti ti-paperclip text-primary fs-6"></i>
                         </a>
                     `;
                 }
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 render: function () {
                     return `
                         <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" download>
-                            <i class="ti ti-file-download text-info fs-7"></i>
+                            <i class="ti ti-file-download text-info fs-6"></i>
                         </a>
                     `;
                 }
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `
                         <a class="pointer"
                            @click="window.auditoriasInterna.subir025(${row.id})">
-                            <i class="ti ti-file-upload text-success fs-7"></i>
+                            <i class="ti ti-file-upload text-success fs-6"></i>
                         </a>
                     `;
                 }
@@ -137,11 +137,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     return row.formato025.existe
                         ? `
                             <a href="/uploads/${row.formato025.archivo}" download>
-                                <i class="ti ti-download text-danger fs-7"></i>
+                                <i class="ti ti-download text-danger fs-6"></i>
                             </a>
                         `
                         : `
-                            <i class="ti ti-x fs-7"></i>
+                            <i class="ti ti-x fs-6"></i>
                         `;
                 }
             },
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 render: function (data, type, row) {
                     return `
                         <a @click="window.auditoriasInterna.abrirAnexos(${row.id}, 25)">
-                            <i class="pointer ti ti-paperclip text-primary fs-7"></i>
+                            <i class="pointer ti ti-paperclip text-primary fs-6"></i>
                         </a>
                     `;
                 }
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 render: function (data, type, row) {
                     return `
                         <a @click="window.auditoriasInterna.eliminar(${row.id})">
-                            <i class="pointer ti ti-trash text-danger fs-7"></i>
+                            <i class="pointer ti ti-trash text-danger fs-6"></i>
                         </a>
                     `;
                 }
