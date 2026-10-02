@@ -603,7 +603,7 @@ $r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses/eliminar', Route::
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuse-mexdesa/guardar', Route::auth(['RecibosNominaController', 'subirAcuseMexdesa']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/aguinaldo/guardar', Route::auth(['RecibosNominaController', 'subirAguinaldo']));
 $r->addRoute('POST', '/recursos-humanos/recibos-nomina/aguinaldo/finalizar', Route::auth(['RecibosNominaController', 'finalizarAguinaldo']));
-$r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/{idYear:\d+}', Route::auth(['RecibosNominaController', 'revision']));
+$r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'revision']));
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/excel', Route::auth(['RecibosNominaController', 'excelDespachadores']));
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacion']));
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacionData']));
