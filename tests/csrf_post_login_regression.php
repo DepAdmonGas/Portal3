@@ -62,10 +62,10 @@ $login = csrf_post_login_request('POST', '/login', $sessionPath, $anonymousForm[
 $authenticatedForm = csrf_post_login_request('GET', '/authenticated-form', $sessionPath, $login['jar']);
 $authenticatedToken = json_decode($authenticatedForm['body'], true, 512, JSON_THROW_ON_ERROR)['csrf_token'];
 $validMutation = csrf_post_login_request('POST', '/mutation', $sessionPath, $authenticatedForm['jar'], $authenticatedToken);
+$secondValidMutation = csrf_post_login_request('POST', '/mutation', $sessionPath, $authenticatedForm['jar'], $authenticatedToken);
 $missingMutation = csrf_post_login_request('POST', '/mutation', $sessionPath, $authenticatedForm['jar']);
 $invalidMutation = csrf_post_login_request('POST', '/mutation', $sessionPath, $authenticatedForm['jar'], str_repeat('0', 64));
 $anonymousMutation = csrf_post_login_request('POST', '/mutation', $sessionPath, $authenticatedForm['jar'], $anonymousToken);
-$secondValidMutation = csrf_post_login_request('POST', '/mutation', $sessionPath, $authenticatedForm['jar'], $authenticatedToken);
 
 $tests = [
     'anonymous and authenticated CSRF tokens are both issued and differ after login' => static function () use ($anonymousForm, $authenticatedForm, $anonymousToken, $authenticatedToken): void {

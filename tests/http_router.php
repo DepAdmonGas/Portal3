@@ -56,7 +56,7 @@ if (!$schema->hasTable('tb_usuarios')) {
     Capsule::table('tb_modulos_config')->insert(['id' => 1, 'modulo_key' => 'control-documentos-personal', 'tipo' => 'stations', 'estaciones_soportadas' => '[101,202]', 'tipo_departamento' => 'puestos', 'activo' => 1]);
     Capsule::table('op_rh_personal')->insert([['id' => 1, 'id_estacion' => 101, 'ine' => 'tenant-a-ine.pdf'], ['id' => 2, 'id_estacion' => 202, 'ine' => 'tenant-b-ine.pdf']]);
     Capsule::table('op_token_telegram')->insert(['id' => 1, 'id_usuario' => 2, 'token' => 'b-token', 'chat_id' => 222, 'fecha_creacion' => '2026-09-11 00:00:00', 'estatus' => 1]);
-    Capsule::table('tb_modulos_config')->insert(['id' => 2, 'modulo_key' => 'solicitud-cheque', 'tipo' => 'stations', 'estaciones_soportadas' => '[101,202]', 'tipo_departamento' => 'puestos', 'activo' => 1]);
+    Capsule::table('tb_modulos_config')->insert(['id' => 2, 'modulo_key' => 'solicitud-cheques', 'tipo' => 'stations', 'estaciones_soportadas' => '[101,202]', 'tipo_departamento' => 'puestos', 'activo' => 1]);
     Capsule::table('tb_modulos_config')->insert(['id' => 3, 'modulo_key' => 'sgm', 'tipo' => 'stations', 'estaciones_soportadas' => '[101]', 'tipo_departamento' => 'puestos', 'activo' => 1]);
     Capsule::table('tb_modulos_config')->insert(['id' => 4, 'modulo_key' => 'sasisopa', 'tipo' => 'stations', 'estaciones_soportadas' => '[101]', 'tipo_departamento' => 'puestos', 'activo' => 1]);
     Capsule::table('op_solicitud_cheque')->insert([['id' => 11, 'id_estacion' => 101], ['id' => 22, 'id_estacion' => 202]]);
