@@ -3,10 +3,14 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimien
   
 <div class="row mt-3 mb-3 align-items-center">
 <div class="col-12 col-md-auto d-grid  mb-4 mb-md-0">
-<button class="btn bg-primary text-white d-flex justify-content-center" id="botonDescargaFile"></button>
+
+<div id="botonDescargaFile"></div>
 
 </div>
-<div class="col-12 col-md-auto ms-md-auto d-grid">
+
+
+<div class="col-12 col-md-auto ms-md-auto ">
+
             <div class="d-flex flex-column flex-md-row gap-2">
 <?= !empty($permisos['crear']) ? ' 
 <button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
@@ -15,14 +19,16 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimien
 
 
 
-<button class="btn bg-success text-white mt-3 mt-md-0" id="botonSeguimiento"></button>
+<div id="botonSeguimiento" class="d-grid">
+
+</div>
 </div>
 
 </div>
 </div>
 
 <div class="datatables">
-<div class="table-responsive overflow-x-auto overflow-y-hidden">
+<div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
 <table id="table-tarjetas-formulario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>

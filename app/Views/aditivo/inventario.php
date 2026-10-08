@@ -13,6 +13,20 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
 <div id="aditivo-inventario-content">
 <?php endif; ?>
 
+    
+    <div class="row aling-items-center d-flex justify-content-end mt-3">
+
+        <div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
+        <a href="<?= $baseUrl ?>" class="btn bg-danger-subtle text-danger">
+            <i class="ti ti-arrow-left"></i> Regresar
+        </a>
+         </div>
+        <div class="col-12 col-md-auto ms-md-auto d-grid mt-3 mt-md-0">
+<?= (!$esImportacion && $capacidades['puedeCrear']) ? '<button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Nuevo </button>' : '' ?>
+        </div>
+       
+
+    </div>
 
 
 <div class="row mt-4 mb-4">
@@ -27,22 +41,13 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
         <span class="badge rounded-pill text-bg-info fs-1" id="inv-diesel"><?= $inventario['diesel'] ?> Galones </span>
         </div>
     </div>
-    <div class="col-md-6 order-1 order-md-2">
-
-        <div class="d-flex align-items-center justify-content-end gap-2">
-        <a href="<?= $baseUrl ?>" class="btn bg-danger-subtle text-danger">
-            <i class="ti ti-arrow-left"></i> Regresar
-        </a>
-        <?= (!$esImportacion && $capacidades['puedeCrear']) ? '<button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Nuevo </button>' : '' ?>
-    </div>
-
-    </div>
 </div>
+
 
   <div class="datatables">
 
-      <div class="table-responsive">
-        <table id="table-aditivo-inventario" class="table table-md table-striped table-bordered mb-0 text-nowrap align-middle">
+      <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
+        <table id="table-aditivo-inventario" class="table table-md table-striped table-bordered text-nowrap align-middle">
           <thead>
 
             <tr>

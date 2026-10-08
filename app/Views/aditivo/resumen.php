@@ -3,23 +3,26 @@
 
 <div class="row mt-4 mb-4">
     <?php if ($esImportacion): ?>
-    <div class="col-12 text-end">
-        <div class="d-flex align-items-center justify-content-end gap-2">
+    <div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
+        
         <a href="<?= $baseUrl ?>" class="btn bg-danger-subtle text-danger">
             <i class="ti ti-arrow-left"></i> Regresar
         </a>
+             </div>
+       
+         <div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
         <a href="<?= $baseUrl ?>/resumen/pdf" class="btn btn-success">
             <i class="ti ti-file-download"></i> Descargar PDF
         </a>
-        </div>
-    </div>
+     </div>
+   
     <?php endif; ?>
 </div>
 
   <div class="datatables">
 
-      <div class="table-responsive">
-        <table id="table-aditivo-resumen" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+      <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
+        <table id="table-aditivo-resumen" class="table table-striped table-bordered text-nowrap align-middle">
           <thead>
 
             <tr>

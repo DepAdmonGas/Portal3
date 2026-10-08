@@ -56,7 +56,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 
 
 <div class="datatables">
-    <div class="table-responsive">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
       <table id="table-aditivo" class="table table-md table-striped table-bordered mb-0 w-100 text-nowrap align-middle">
         <thead>
 
