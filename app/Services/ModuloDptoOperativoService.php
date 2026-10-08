@@ -143,6 +143,67 @@ $data = self::getPermisos($usuario_id, $clave);
 return $data[$clave] ?? [];
 }
 
+/**
+ * Resolve Temporary Access permissions from the database on every call.
+ * This intentionally preserves the existing global user-over-role precedence
+ * without relying on the session permission cache.
+ */
+public static function getTemporaryAccessPermissions(int $usuarioId, string $clave = 'acceso-temporal'): array
+{
+$denied = [
+    'leer' => 0,
+    'crear' => 0,
+    'editar' => 0,
+    'eliminar' => 0,
+    'descargar' => 0,
+];
+
+try {
+    $usuario = Usuario::query()
+        ->where('id', $usuarioId)
+        ->where('estatus', 0)
+        ->first();
+
+    if (!$usuario) {
+        return $denied;
+    }
+
+    $modulo = ModuloDptoOperativo::query()
+        ->where('clave', $clave)
+        ->where('activo', 1)
+        ->first();
+
+    if (!$modulo) {
+        return $denied;
+    }
+
+    $tienePermisosUsuario = ModuloDptoOperativo::whereHas(
+        'usuarios',
+        static function ($query) use ($usuarioId): void {
+            $query->where('id_usuario', $usuarioId);
+        }
+    )->exists();
+
+    $grant = $tienePermisosUsuario
+        ? $modulo->usuarios()->where('id_usuario', $usuarioId)->first()
+        : $modulo->roles()->where('id_puesto', $usuario->id_puesto)->first();
+
+    if (!$grant || !$grant->pivot) {
+        return $denied;
+    }
+
+    $flags = [];
+    foreach (array_keys($denied) as $flag) {
+        $flags[$flag] = (int) ($grant->pivot->{$flag} ?? 0) === 1 ? 1 : 0;
+    }
+
+    return $flags;
+} catch (\Throwable $exception) {
+    // Dependency failures must never turn into an allow decision.
+    return $denied;
+}
+}
+
 
 /* ---------- GUARDAR PERMISOS EN SESION ----------*/
 public static function guardarEnSesion($usuario_id)

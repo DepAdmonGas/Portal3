@@ -20,6 +20,7 @@ $tests = [
     'authz_dl_002_requisitos_legales_private_storage_regression.php',
     'authz_dl_002_requisitos_legales_migration_tool_regression.php',
     'authz_dl_002_gestoria_requisitos_legales_regression.php',
+    'sec_l03_authorization_regression.php',
 ];
 
 $passed = $failed = $skipped = 0;
