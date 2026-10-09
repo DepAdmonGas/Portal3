@@ -85,6 +85,13 @@ class DownloadController
             'recibos-aguinaldo'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/aguinaldo/',
             'recibos-mexdesa'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/recibos-mexdesa/',
             'recibos-nomina-acuse'                 => dirname(__DIR__, 2) . '/public/uploads/archivos/recibo-nomina-acuse/',
+            'calibracion-dispensarios'              => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'mantenimiento-preventivo'               => dirname(__DIR__, 2) . '/public/uploads/archivos/mantenimiento-preventivo/',
+            'prueba-eficiencia'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/prueba-eficiencia/',
+            'maquinaria-equipo'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/maquinaria-equipo/',
+            'maquinaria-mantenimiento'               => dirname(__DIR__, 2) . '/public/uploads/archivos/maquinaria-mantenimiento/',
+            'maquinaria-mantenimiento-evidencias'    => dirname(__DIR__, 2) . '/public/uploads/archivos/maquinaria-mantenimiento/',
+            'maquinaria-mantenimiento-firmas'        => dirname(__DIR__, 2) . '/public/uploads/firmas/maquinaria-mantenimiento/',
 
         ];
 

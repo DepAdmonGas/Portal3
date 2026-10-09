@@ -19,6 +19,8 @@ class MantenimientoPreventivo extends Model
         'fecha',
         'fecha2',
         'orden_servicio',
+        'tipo_mantenimiento',
+        'costo',
         'observaciones',
         'status',
     ];
@@ -28,9 +30,11 @@ class MantenimientoPreventivo extends Model
         'id_estacion' => 'integer',
         'folio' => 'integer',
         'id_encargado' => 'integer',
-        'fecha' => 'date',
-        'fecha2' => 'date',
+        'fecha' => 'string',
+        'fecha2' => 'string',
         'orden_servicio' => 'string',
+        'tipo_mantenimiento' => 'integer',
+        'costo' => 'float',
         'observaciones' => 'string',
         'status' => 'integer',
     ];
