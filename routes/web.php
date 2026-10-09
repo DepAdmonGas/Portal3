@@ -938,6 +938,25 @@ $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d
 
 //----- 4. Almacen
         $r->addRoute('GET', '/almacen', Route::auth(['DptoOperativoController', 'almacenIndex']));
+$r->addRoute('GET', '/almacen/mantenimiento', Route::auth(['DptoOperativoController', 'almacenMantenimientoIndex']));
+
+// --- MANTENIMIENTO PREVENTIVO ---
+$r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMantenimientoPreventivoController', 'index']));
+        $r->addRoute('GET', '/almacen/mantenimiento-preventivo/{idYear:\d+}', Route::auth(['AlmacenMantenimientoPreventivoController', 'index']));
+        $r->addRoute('GET', '/almacen/mantenimiento-preventivo/calendario', Route::auth(['AlmacenMantenimientoPreventivoController', 'calendario']));
+        $r->addRoute('GET', '/almacen/mantenimiento-preventivo/calendario/eventos', Route::auth(['AlmacenMantenimientoPreventivoController', 'calendarioEventos']));
+        $r->addRoute('GET', '/almacen/mantenimiento-preventivo/calendario/dia', Route::auth(['AlmacenMantenimientoPreventivoController', 'calendarioDia']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/data/{idYear:\d+}', Route::auth(['AlmacenMantenimientoPreventivoController', 'data']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/store', Route::auth(['AlmacenMantenimientoPreventivoController', 'store']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/detalle', Route::auth(['AlmacenMantenimientoPreventivoController', 'detalle']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/update', Route::auth(['AlmacenMantenimientoPreventivoController', 'update']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/destroy', Route::auth(['AlmacenMantenimientoPreventivoController', 'destroy']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/actualizar-status', Route::auth(['AlmacenMantenimientoPreventivoController', 'actualizarStatus']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/encargados', Route::auth(['AlmacenMantenimientoPreventivoController', 'encargados']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/tipos', Route::auth(['AlmacenMantenimientoPreventivoController', 'tipos']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/archivo-prueba/data/{idYear:\d+}', Route::auth(['AlmacenMantenimientoPreventivoController', 'dataArchivosPrueba']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/archivo-prueba/{idYear:\d+}', Route::auth(['AlmacenMantenimientoPreventivoController', 'guardarArchivoPrueba']));
+        $r->addRoute('POST', '/almacen/mantenimiento-preventivo/archivo-prueba/eliminar', Route::auth(['AlmacenMantenimientoPreventivoController', 'eliminarArchivoPrueba']));
     
     
     
@@ -973,9 +992,79 @@ $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d
         $r->addRoute('POST', '/almacen/proveedores/detalle', Route::auth(['ProveedoresController', 'detalle']));
         $r->addRoute('POST', '/almacen/proveedores/actualizar-archivo', Route::auth(['ProveedoresController', 'actualizarArchivo']));
         $r->addRoute('POST', '/almacen/proveedores/eliminar', Route::auth(['ProveedoresController', 'destroy']));
+       
         $r->addRoute('GET', '/almacen/orden-compra-descargar-pdf/{id:\d+}', Route::auth(['OrdenCompraController', 'downloadPdf']));
+$r->addRoute('GET', '/almacen/calibracion-dispensarios', Route::auth(['AlmacenCalibracionDispensarioController', 'index']));
+$r->addRoute('POST', '/almacen/calibracion-dispensarios/data', Route::auth(['AlmacenCalibracionDispensarioController', 'data']));
+$r->addRoute('POST', '/almacen/calibracion-dispensarios/guardar', Route::auth(['AlmacenCalibracionDispensarioController', 'store']));
+$r->addRoute('POST', '/almacen/calibracion-dispensarios/detalle', Route::auth(['AlmacenCalibracionDispensarioController', 'detalle']));
+$r->addRoute('POST', '/almacen/calibracion-dispensarios/editar', Route::auth(['AlmacenCalibracionDispensarioController', 'update']));
+$r->addRoute('POST', '/almacen/calibracion-dispensarios/eliminar', Route::auth(['AlmacenCalibracionDispensarioController', 'destroy']));
 
+// --- MEDICIÓN NIVEL DE EXPLOSIVIDAD ---
+$r->addRoute('GET', '/almacen/medicion-nivel-explosividad', Route::auth(['AlmacenMedicionNivelExplosividadController', 'index']));
+$r->addRoute('POST', '/almacen/medicion-nivel-explosividad/data', Route::auth(['AlmacenMedicionNivelExplosividadController', 'data']));
+$r->addRoute('GET', '/almacen/medicion-nivel-explosividad/nuevo', Route::auth(['AlmacenMedicionNivelExplosividadController', 'crear']));
+$r->addRoute('GET', '/almacen/medicion-nivel-explosividad-formulario/{id:\d+}', Route::auth(['AlmacenMedicionNivelExplosividadController', 'editar']));
+$r->addRoute('GET', '/almacen/medicion-nivel-explosividad-detalle/{id:\d+}', Route::auth(['AlmacenMedicionNivelExplosividadController', 'detalle']));
+$r->addRoute('POST', '/almacen/medicion-nivel-explosividad/guardar', Route::auth(['AlmacenMedicionNivelExplosividadController', 'store']));
+$r->addRoute('POST', '/almacen/medicion-nivel-explosividad/eliminar', Route::auth(['AlmacenMedicionNivelExplosividadController', 'destroy']));
+$r->addRoute('POST', '/almacen/medicion-nivel-explosividad/pozo/guardar', Route::auth(['AlmacenMedicionNivelExplosividadController', 'agregarPozo']));
+$r->addRoute('POST', '/almacen/medicion-nivel-explosividad/pozo/eliminar', Route::auth(['AlmacenMedicionNivelExplosividadController', 'eliminarPozo']));
 
+// --- MAQUINARIA Y EQUIPOS ---
+$r->addRoute('GET', '/almacen/maquinaria-equipos', Route::auth(['AlmacenMaquinariaEquiposController', 'index']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos/data', Route::auth(['AlmacenMaquinariaEquiposController', 'data']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos/guardar', Route::auth(['AlmacenMaquinariaEquiposController', 'store']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos/detalle', Route::auth(['AlmacenMaquinariaEquiposController', 'detalle']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos/editar', Route::auth(['AlmacenMaquinariaEquiposController', 'update']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos/eliminar', Route::auth(['AlmacenMaquinariaEquiposController', 'destroy']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos/comentarios', Route::auth(['AlmacenMaquinariaEquiposController', 'comentarios']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos/comentario-store', Route::auth(['AlmacenMaquinariaEquiposController', 'comentarioStore']));
+
+// --- MAQUINARIA Y EQUIPOS - BITÁCORA ---
+// Calendario + registros del día; cada acción del flujo tiene su propia
+// pantalla (nuevo / detalle / editar / mantenimiento / firma), igual que el legacy.
+$r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/{idEquipo:\d+}', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'index']));
+$r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora-nuevo/{idEquipo:\d+}', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'nuevoPage']));
+$r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora-detalle/{idOcurrencia:\d+}', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'detallePage']));
+$r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora-mantenimiento/{idOcurrencia:\d+}', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'mantenimientoPage']));
+$r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora-firma/{idOcurrencia:\d+}', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'firmaPage']));
+
+// Lectura (calendario + listado del día + detalle)
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/calendario', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'calendario']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/actividades', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'actividades']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/detalle', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'detalleRegistro']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/checklist-preview', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'checklistPreview']));
+
+// Mantenimiento
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/crear', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'crearMantenimiento']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/editar-costo', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'editarCosto']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/completar', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'completar']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/estatus', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'actualizarEstatus']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/eliminar-registro', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'eliminarRegistro']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/eliminar-mantenimiento', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'eliminarMantenimiento']));
+
+// Checklist
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/actividad/guardar', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'guardarActividad']));
+
+// Firmas (A dibujo, B dibujo/token, C token)
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/firmar-elaboro', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'firmarElaboro']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/firmar-vobo', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'firmarVoboSignature']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/token/solicitar', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'solicitarToken']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/token/validar', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'validarToken']));
+
+// Evidencias
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/evidencias/subir', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'evidenciaSubir']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/evidencias/eliminar', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'evidenciaEliminar']));
+
+// Comentarios
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/comentarios', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'comentarios']));
+$r->addRoute('POST', '/almacen/maquinaria-equipos-bitacora/comentarios/agregar', Route::auth(['AlmacenMaquinariaEquiposBitacoraController', 'comentarioAgregar']));
+
+// PDFs
+$r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/registro/{id:\d+}', Route::auth(['AlmacenMaquinariaEquiposBitacoraPdfController', 'indexRegistro']));
+$r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/general/{id:\d+}', Route::auth(['AlmacenMaquinariaEquiposBitacoraPdfController', 'general']));
         //----- 5. Comercializadora
         $r->addRoute('GET', '/comercializadora', Route::auth(['DptoOperativoController', 'comercializadoraIndex']));
 
