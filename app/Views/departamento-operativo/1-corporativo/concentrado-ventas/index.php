@@ -37,7 +37,7 @@ x-data="concentradoVentasComponent()">
 
 <thead>
 <tr>
-<th class="text-center align-middle" rowspan="2">FECHA</th>
+<th class="text-center align-middle" rowspan="2">Fecha</th>
 
 <?php foreach ($productosList as $i => $prod): ?>
 <th class="text-center align-middle fw-semibold text-white" style="background-color: <?= $colores[$i] ?>;" colspan="2">

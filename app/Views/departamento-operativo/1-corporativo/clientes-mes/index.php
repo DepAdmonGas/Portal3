@@ -20,7 +20,7 @@ x-data="clientesMesComponent()">
 
 <template x-if="finalizado">
 <span class="badge bg-success d-flex align-items-center px-3">
-<i class="ti ti-check-circle me-1"></i> Resumen Finalizado
+<i class="ti ti-circle-check me-1"></i> Resumen Finalizado
 </span>
 </template>
 
@@ -71,8 +71,8 @@ x-data="clientesMesComponent()">
 </div>
 <div class="card-body">
 <div class="datatables">
-<div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table id="tablaCredito" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
+<table id="tablaCredito" class="table table-striped table-bordered text-nowrap align-middle">
 <tbody>
 </tbody>
 </table>
@@ -87,8 +87,8 @@ x-data="clientesMesComponent()">
 </div>
 <div class="card-body">
 <div class="datatables">
- <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table id="tablaDebito" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+ <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
+<table id="tablaDebito" class="table table-striped table-bordered text-nowrap align-middle">
 <tbody>
 </tbody>
 </table>

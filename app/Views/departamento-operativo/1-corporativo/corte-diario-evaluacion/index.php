@@ -24,10 +24,11 @@ style="display: none;"></div>
 </div>
 
 <div x-show="!cargando" x-cloak>
-<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
-<div></div>
-<button type="button" class="btn btn-primary" @click="abrirInfoEvaluacion()">
+<div class="row justify-content-end">
+<div class="col-12 col-md-auto d-grid mb-3 mt-3">
+<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirInfoEvaluacion()">
 <i class="ti ti-info-circle me-1"></i>Forma de evaluación
+</div>
 </button>
 </div>
 
@@ -90,13 +91,21 @@ style="display: none;"></div>
 <div class="modal fade" id="modalInfoEvaluacion" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Forma de Evaluación (Apertura de Cortes Diarios)</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-clipboard-check"></i>
+Forma de Evaluación (Apertura de Cortes Diarios)</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body" x-html="DOMPurify.sanitize(data.info)"></div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+<div class="row w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<i class="ti ti-x"></i>    
+Cerrar</button>
+    </div>
+</div>
 </div>
 </div>
 </div>

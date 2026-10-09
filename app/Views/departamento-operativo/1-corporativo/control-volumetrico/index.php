@@ -26,7 +26,7 @@
             <div class="row">
 
                 <!-- CARDS DE PRODUCTOS -->
-                <div class="col-md-8">
+                <div class="col-md-7">
 
                     <!-- PRODUCTOS -->
                     <template x-for="p in productos" :key="p.id">
@@ -216,7 +216,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
 
                                     <div class="card-header bg-primary d-flex align-items-center gap-2">
                                         <i class="ti ti-eye text-white fs-6"></i>
-                                        <h5 class="mb-0 text-white">OBSERVACIONES</h5>
+                                        <h5 class="mb-0 text-white">Observaciones</h5>
                                     </div>
 
                                     <div class="card-body p-0">
@@ -241,7 +241,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                             <div class="card ">
                                 <div class="card-header bg-primary d-flex align-items-center gap-2">
                                     <i class="ti ti-droplet text-white fs-6"></i>
-                                    <h5 class="mb-0 text-white">ACEITES</h5>
+                                    <h5 class="mb-0 text-white">Aceites</h5>
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="table-responsive">
@@ -281,7 +281,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                             <div class="card">
                                 <div class="card-header bg-primary d-flex align-items-center gap-2">
                                     <i class="ti ti-calculator text-white fs-6"></i>
-                                    <h5 class="mb-0 text-white">GRAN TOTAL</h5>
+                                    <h5 class="mb-0 text-white">Gran total</h5>
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
@@ -342,7 +342,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                 </div>
 
 
-                <div class="col-md-4">
+                <div class="col-md-5">
 
                     <div class="row">
 
@@ -351,9 +351,9 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                             <div class="card">
                                 <div class="card-header text-bg-primary">
                                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                        <h5 class="mb-0 text-white"><i class="ti ti-file me-2"></i>ANEXOS</h5>
+                                        <h5 class="mb-0 text-white"><i class="ti ti-file me-2"></i>Anexos</h5>
                                         <button type="button" class="btn btn-success" @click="abrirModalDocumento()">
-                                            <i class="ti ti-plus"></i> Nuevo Anexo
+                                            <i class="ti ti-plus"></i> Nuevo 
                                         </button>
                                     </div>
                                 </div>
@@ -364,7 +364,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                 <tr>
                                                     <th class="text-center">Fecha</th>
                                                     <th class="text-center">Anexos</th>
-                                                    <th class="text-center" style="width: 40px;"><i class="ti ti-dots-vertical fs-6"></i></th>
+                                                    <th class="text-center" style="width: 48px;"><i class="ti ti-dots-vertical fs-6"></i></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -395,7 +395,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                                     </li>
                                                                     <li>
                                                                         <span x-data="actions()">
-                                                                            <a class="dropdown-item pointer d-flex align-items-center gap-2 text-danger"
+                                                                            <a class="dropdown-item pointer d-flex align-items-center gap-2"
                                                                                 href="#"
                                                                                 @click.prevent="async () => { const r = await deleteAction({url: '/departamento-operativo/control-volumetrico/eliminar-documento', id: d.id, name: d.anexos}); if (r && r.success) cargarDatos(); }">
                                                                                 <i class="ti ti-trash fs-5"></i> Eliminar
@@ -419,7 +419,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                             <div class="card">
                                 <div class="card-header bg-primary d-flex align-items-center gap-2">
                                     <i class="ti ti-tag text-white fs-6"></i>
-                                    <h5 class="mb-0 text-white">PREFIJOS</h5>
+                                    <h5 class="mb-0 text-white">Prefijos</h5>
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
@@ -510,7 +510,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                         </div>
 
                                         <div>
-                                            <h5 class="mb-1 text-white">COMENTARIOS</h5>
+                                            <h5 class="mb-1 text-white">Comentarios</h5>
                                             <p class="mb-0 text-white opacity-75">Conversación activa</p>
                                         </div>
 
@@ -615,19 +615,21 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
         </template>
 
         <!-- Modal Subir Documento -->
-        <div class="modal fade" id="modalDocumento" tabindex="-1">
+        <div class="modal fade" id="modalDocumento" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-LG">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Agregar anexos</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="modal-header bg-primary">
+                        <h5 class="modal-title text-white">
+                            <i class="ti ti-clipboard-text"></i>
+                        Nuevo anexo</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <h6 class="mb-1">* Fecha:</h6>
-                        <input type="date" id="docFecha" class="form-control">
+                        <h6 class="mb-1 form-label">* Fecha:</h6>
+                        <input type="date" id="docFecha" class="form-control mb-3">
 
-                        <h6 class="mb-1 mt-3">* Nombre del Anexo:</h6>
-                        <div class="select2-modal-field is-select2-pending" x-ref="anexosWrapper">
+                        <h6 class="mb-1 form-label">* Nombre del Anexo:</h6>
+                        <div class="select2-modal-field is-select2-pending mb-3" x-ref="anexosWrapper">
                             <select id="docAnexos" data-width="100%">
                                 <option></option>
                                 <template x-for="opt in anexosOpciones" :key="opt">
@@ -636,14 +638,28 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                             </select>
                         </div>
 
-                        <h6 class="mb-1 mt-3">* Documento</h6>
+                        <h6 class="mb-1 form-label">* Documento:</h6>
                         <input class="form-control" type="file" id="docFile">
                     </div>
+
+
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-success" @click="guardarDocumento()" :disabled="subiendoDocumento">
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+  <div class="col-12 col-md-auto d-grid">
+
+                    <button type="button" class="btn bg-danger-subtle text-danger me-0 me-md-2" data-bs-dismiss="modal">
+                        <i class="ti ti-x"></i>    
+                        Cancelar</button>
+                        
+  </div>
+  <div class="col-12 col-md-auto d-grid">
+                        <button type="button" class="btn btn-success mt-2 mt-md-0" @click="guardarDocumento()" :disabled="subiendoDocumento">
+                            <i class="ti ti-check"></i>
                             <span x-text="subiendoDocumento ? 'Subiendo...' : 'Guardar'"></span>
                         </button>
+    
+  </div>
+                    </div>
                     </div>
                 </div>
             </div>

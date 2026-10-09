@@ -30,12 +30,15 @@ x-data="aceitesMesComponent()"
 <div class="d-flex gap-2">
 <template x-if="!finalizado">
 <template x-if="!multiestacion">
-<button class="btn btn-success" @click="finalizarInventario()" :disabled="loading"> Finalizar Resumen</button>
+<button class="btn btn-success" @click="finalizarInventario()" :disabled="loading">
+<i class="ti ti-check"></i>    
+Finalizar Resumen</button>
 </template>
 </template>
 <template x-if="finalizado">
 <span class="badge bg-success d-flex align-items-center px-3">
-<i class="ti ti-check-circle me-1"></i> Resumen Finalizado
+<i class="ti ti-circle-check me-1"></i>
+ Resumen Finalizado
 </span>
 </template>
 
@@ -301,15 +304,17 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <div class="modal fade" id="modalDocumentos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalDocumentos">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Documentos de Aceites</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+<i class="ti ti-clipboard-text"></i>    
+Documentos de Aceites</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 
 <div class="row">
 <div class="col-12 mb-3">
-<h6>Ficha Depósito:</h6>
+<h6 class="form-label">Ficha Depósito:</h6>
 <template x-if="documentoEditId && documentoEdit.ficha_deposito">
 <div class="mt-1">
 <span x-data="actions()"><a href="" @click.prevent="download('aceites-documentos', documentoEdit.ficha_deposito)" class="text-primary">
@@ -321,7 +326,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </div>
 
 <div class="col-12 mb-3">
-<h6>Imagen Bodega:</h6>
+<h6 class="form-label">Imagen Bodega:</h6>
 <template x-if="documentoEditId && documentoEdit.imagen_bodega">
 <div class="mt-1">
 <span x-data="actions()"><a href="" @click.prevent="download('aceites-documentos', documentoEdit.imagen_bodega)" class="text-primary">
@@ -333,7 +338,7 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </div>
 
 <div class="col-12 mb-3">
-<h6>Factura Venta:</h6>
+<h6 class="form-label">Factura Venta:</h6>
 <template x-if="documentoEditId && documentoEdit.factura_venta">
 <div class="mb-1">
 <span x-data="actions()">
@@ -348,11 +353,19 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <input type="file" class="form-control mt-1" @change="documentoFiles.factura_venta = $event.target.files[0]">
 </div>
 
-<div class="col-12 mb-3" x-show="!documentoEditId">
-<button class="btn btn-success float-end" @click="subirDocumento" :disabled="subiendoDocumento">
-<span x-show="subiendoDocumento" class="spinner-border spinner-border-sm me-1"></span>
-<i x-show="!subiendoDocumento"></i>
-<span x-text="documentoEditId ? 'Actualizar' : 'Guardar'"></span>
+<div class="col-12 col-md-auto d-grid ms-md-auto mb-3" x-show="!documentoEditId">
+<button
+    class="btn btn-success"
+    @click="subirDocumento"
+    :disabled="subiendoDocumento"
+    x-show="!documentoEditId">
+
+    <span x-show="subiendoDocumento" class="spinner-border spinner-border-sm me-1"></span>
+    <i x-show="!subiendoDocumento"></i>
+
+    <span>
+    <i class="ti ti-check"></i>    
+    Guardar</span>
 </button>
 </div>
 
@@ -422,14 +435,33 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 </div>
 
 </div>
+
+<!----------------------------- Modal Footer ----------------->
 <div class="modal-footer">
-<button class="btn btn-secondary" x-show="documentoEditId" @click="cancelarEdicionDocumento()">Regresar</button>
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid mb-2">
+<button class="btn bg-primary-subtle text-primary me-0 me-md-2" x-show="documentoEditId" @click="cancelarEdicionDocumento()">
+  <i class="ti ti-arrow-left"></i>  
+Regresar</button>
+    </div>
+
+<div class="col-12 col-md-auto d-grid mb-2">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <i class="ti ti-x"></i>
+Cancelar</button>
+    </div>
+
+
+<div class="col-12 col-md-auto d-grid mb-2 ms-2">
 <button class="btn btn-success float-end" @click="subirDocumento" :disabled="subiendoDocumento" x-show="documentoEditId">
 <span x-show="subiendoDocumento" class="spinner-border spinner-border-sm me-1"></span>
+
 <i x-show="!subiendoDocumento"></i>
+<i class="ti ti-check"></i>
 <span x-text="documentoEditId ? 'Actualizar' : 'Guardar'"></span>
 </button>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -439,20 +471,22 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <div class="modal fade" id="modalFacturas" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalFacturas">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Archivos Aceites</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+<i class="ti ti-archive"></i>   
+Archivos Aceites</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 
 <div class="row">
-<div class="col-12 mb-3">
-<h6>* Fecha:</h6>
-<input type="date" class="form-control mt-1" x-model="facturaForm.fecha">
+<div class="col-12">
+<h6 class="mb-1 form-label" >* Fecha:</h6>
+<input type="date" class="form-control mb-3" x-model="facturaForm.fecha">
 </div>
-<div class="col-12 mb-3">
-<h6>* Concepto:</h6>
-<select class="form-select mt-1" x-model="facturaForm.concepto">
+<div class="col-12">
+<h6 class="mb-1 form-label">* Concepto:</h6>
+<select class="form-select mb-3" x-model="facturaForm.concepto">
 <option value="">Selecciona una opción...</option>
 <option value="Nota de remisión QUAKER STATE">Nota de remisión QUAKER STATE</option>
 <option value="Factura QUAKER STATE">Factura QUAKER STATE</option>
@@ -462,32 +496,35 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 <option value="Factura BARDAHL">Factura BARDAHL</option>
 </select>
 </div>
-<div class="col-12 mb-3">
-<h6>* Archivo:</h6>
-<input type="file" class="form-control" @change="facturaArchivo = $event.target.files[0]">
+<div class="col-12">
+<h6 class="mb-1 form-label">* Archivo:</h6>
+<input type="file" class="form-control mb-3" @change="facturaArchivo = $event.target.files[0]">
 </div>
-<div class="col-12 mb-3">
-<button class="btn btn-success float-end" @click="subirFactura" :disabled="subiendoFactura">
+
+<div class="col-12 col-md-auto d-grid ms-md-auto">
+<button class="btn btn-success" @click="subirFactura" :disabled="subiendoFactura">
 <span x-show="subiendoFactura" class="spinner-border spinner-border-sm me-1"></span>
-<i x-show="!subiendoFactura"></i> Guardar
+<i x-show="!subiendoFactura"></i>
+<i class="ti ti-check"></i>
+Guardar
 </button>
 </div>
 </div>
 
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mt-3 text-nowrap align-middle">
 <thead>
 <tr>
-<th class="text-start align-middle">Fecha</th>
+<th class="text-center align-middle">Fecha</th>
 <th class="text-center align-middle">Concepto</th>
-<th class="text-center align-middle" width="60px"><i class="ti ti-download text-info fs-5"></i></th>
-<th class="text-center align-middle" width="60px"><i class="ti ti-trash text-danger fs-5"></i></th>
+<th class="text-center align-middle" width="48px"><i class="ti ti-download text-info fs-5"></i></th>
+<th class="text-center align-middle" width="48px"><i class="ti ti-trash text-danger fs-5"></i></th>
 </tr>
 </thead>
 <tbody>
 <template x-for="fac in facturas" :key="fac.id">
 <tr>
-<td class="text-start align-middle" x-text="fac.fecha_formateada"></td>
+<td class="text-center align-middle" x-text="fac.fecha_formateada"></td>
 <td class="text-center align-middle" x-text="fac.nombre_anexo"></td>
 <td class="text-center align-middle">
 <template x-if="fac.archivo">
@@ -521,7 +558,15 @@ x-model="tempValues[row.id].factura_venta_mostrador"
 
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+    <div class="row w-100 g-0 ms-auto justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+ <i class="ti ti-x"></i>   
+Cancelar
+</button>
+        </div>
+    </div>
+
 </div>
 </div>
 </div>
