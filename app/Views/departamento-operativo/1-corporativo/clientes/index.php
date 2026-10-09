@@ -13,21 +13,24 @@ x-data="clientesComponent()">
 <p class="text-muted">Cargando clientes...</p>
 </div>
 
-<div class="row" x-show="!loading">
+<div class="row d-flex justify-content-end align-items-center g-2" x-show="!loading">
 
-<div class="col-12 mb-4">
-<button x-show="puedeAgregar" type="button" class="btn btn-primary float-end" @click="abrirModalAgregar()">
+<div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
+<button x-show="puedeAgregar" type="button" class="btn bg-primary-subtle text-primary float-end" @click="abrirModalAgregar()">
 <i class="ti ti-plus"></i> Nuevo
 </button>
-<button type="button" class="btn btn-primary float-end me-3" @click="abrirListaClientes()">
+</div>
+<div class="col-12 col-md-auto d-grid mt-3 mt-md-0 mb-3 mb-md-0">
+<button type="button" class="btn btn-success" @click="abrirListaClientes()">
 <i class="ti ti-users"></i> Lista de Clientes
 </button>
 </div>
 
+
 <div class="col-12">
 <div class="datatables">
-<div class="table-responsive pb-5" style="overflow-x: auto; overflow-y: hidden;">
-<table id="tablaClientes" class="table table-striped table-bordered mb-0 text-nowrap align-middle" width="100%">
+<div class="table-responsive overflow-x-auto overflow-y-hidden pb-2" >
+<table id="tablaClientes" class="table table-striped table-bordered text-nowrap align-middle" >
 <tbody></tbody>
 </table>
 </div>
@@ -39,7 +42,7 @@ x-data="clientesComponent()">
 
 <div class="card">
 <div class="card-header text-bg-primary">
-<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
 <h5 class="mb-0 text-white"><i class="ti ti-calculator me-2"></i>TOTALES</h5>
 </div>
 </div>
@@ -65,7 +68,7 @@ x-data="clientesComponent()">
 <td class="text-end" x-text="'$ ' + formatNum(resumen.cp)"></td>
 </tr>
 <tr>
-<th class="text-center">Total</th>
+<th class="text-center form-label">Total</th>
 <td class="text-end"><strong x-text="'$ ' + formatNum(resumen.total_consumo)"></strong></td>
 <td class="text-end"><strong x-text="'$ ' + formatNum(resumen.total_pago)"></strong></td>
 </tr>
@@ -83,19 +86,21 @@ x-data="clientesComponent()">
 
 </div>
 
-<div class="modal fade" id="modalAgregar" tabindex="-1" x-ref="modalAgregar">
+<div class="modal fade" id="modalAgregar" tabindex="-1" x-ref="modalAgregar" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Consumos y Pagos</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+<i class="ti ti-cash-register"></i>    
+Nuevos consumos y pagos</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <div class="mb-1">
-<h6>* Nombre del cliente:</h6> 
-<div class="select2-modal-field is-select2-pending" x-ref="clienteWrapper">
+<h6 class="mb-1 form-label">* Nombre del cliente:</h6> 
+<div class="select2-modal-field is-select2-pending mb-3" x-ref="clienteWrapper">
 <select id="selectCliente" x-ref="selectCliente" data-width="100%">
-<option value="">Selecciona un cliente...</option>
+<option value="">Selecciona una opción...</option>
 <template x-for="cliente in clientes" :key="cliente.id">
 <option :value="cliente.id" x-text="cliente.cliente + ' (' + cliente.cuenta + ')'"></option>
 </template>
@@ -103,25 +108,25 @@ x-data="clientesComponent()">
 </div>
 </div>
 
-<div class="mt-4 mb-1">
-<h6>* Total:</h6>
+<div class="mb-3">
+<h6 class="mb-1 form-label">* Total:</h6>
 <input type="number" class="form-control" min="0" step="0.01" x-ref="totalInput" x-model="modalTotal">
 </div>
 
-<div class="mb-1 mt-4">
-<h6>* Consumo o Pago:</h6>
+<div class="mb-3">
+<h6 class="mb-1 form-label">* Consumo o Pago:</h6>
 <select class="form-select" x-ref="tipoSelect" x-model="modalTipo">
-<option value="">Selecciona una opción:</option>
+<option value="">Selecciona una opción...</option>
 <option value="Consumo">Consumo</option>
 <option value="Pago">Pago</option>
 </select>
 </div>
 
 <div x-cloak x-show="modalTipo === 'Pago'">
-<hr>
-<div class="mb-1">
-* Forma de pago
-</div>
+
+<h6 class="mb-1 form-label">
+* Forma de pago:
+</h6>
 <select class="form-select" x-ref="formaPagoSelect" x-model="modalFormaPago">
 <option value="">Forma de pago</option>
 <option value="Efectivo">Efectivo</option>
@@ -131,16 +136,27 @@ x-data="clientesComponent()">
 <option value="Monederos">Monederos</option>
 </select>
 <div x-cloak x-show="modalFormaPago === 'Tarjeta' || modalFormaPago === 'Transferencia'">
-<div class="mb-1 mt-4">* Voucher</div>
+<h6 class="mb-1 mt-3 form-label">* Voucher:</h6>
 <input class="form-control" type="file" id="Comprobante" @change="modalComprobante = $event.target.files[0] || null">
 </div>
 </div>
 </div>
 <div class="modal-footer">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid mb-2 me-0 me-md-2">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <i class="ti ti-x"></i>    
+    Cancelar</button>
+        </div>
+        <div class="col-12 col-md-auto d-grid mb-2">
 <button type="button" class="btn btn-labeled2 btn-success" @click="guardar()" :disabled="guardando">
+    <i class="ti ti-check"></i>
 <span x-show="!guardando">Guardar</span>
 <span x-show="guardando"><span class="spinner-border spinner-border-sm me-1"></span> Guardando...</span>
 </button>
+        </div>
+    </div>
+    
 </div>
 </div>
 </div>

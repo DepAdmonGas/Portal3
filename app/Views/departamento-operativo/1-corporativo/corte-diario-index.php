@@ -95,7 +95,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 </div>
 
 <div class="datatables">
-<div class="table-responsive overflow-x-auto overflow-hidden">
+<div class="table-responsive overflow-x-auto overflow-hidden pb-2">
 <table id="table-corte-diario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <tbody></tbody>
 </table>
@@ -108,9 +108,11 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 <div class="modal fade" id="modalEditarCorte" tabindex="-1" x-data="editarCorteComponent()">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Activar Corte Diario (<span x-text="fecha" class="fw-normal"></span>)</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+<i class="ti ti-cash-register"></i>    
+Activar Corte Diario (<span x-text="fecha" class="fw-normal"></span>)</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
 <template x-if="loading">
@@ -126,7 +128,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 <div>
 <div class="modal-body">
 <div class="text-end mb-3">
-<button type="button" class="btn btn-primary" @click="step = 'activate'">
+<button type="button" class="btn bg-primary-subtle text-primary" @click="step = 'activate'">
 <i class="ti ti-lock-open"></i> Activar corte diario
 </button>
 </div>
@@ -168,16 +170,30 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 <div>
 <div class="modal-body">
 <div class="mb-3">
-<label class="text-secondary mb-1">* Motivo:</label>
+<h6 class="text-label">* Motivo:</h6>
 <textarea class="form-control" x-model="motivo" rows="3"></textarea>
 </div>
 </div>
+
+
+
 <div class="modal-footer">
-<button type="button" class="btn btn-secondary" @click="step = 'history'">Cancelar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid mb-2 mb-md-0">
+<button type="button" class="btn bg-danger-subtle text-danger" @click="step = 'history'">
+<i class="ti ti-x"></i>    
+Cancelar</button>
+</div>
+
+<div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
 <button type="button" class="btn btn-success" @click="submitActivacion" :disabled="saving">
 <span x-show="saving" class="spinner-border spinner-border-sm me-1"></span>
+<i class="ti ti-check"></i>
 Activar
 </button>
+
+</div>
+</div>
 </div>
 </div>
 </template>

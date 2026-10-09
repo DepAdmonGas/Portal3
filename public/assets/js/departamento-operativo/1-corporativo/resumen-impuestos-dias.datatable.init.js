@@ -38,7 +38,7 @@ columns: [
 {
 title: 'Fecha',
 data: 'fecha_formateada',
-className: 'text-start align-middle fw-normal'
+className: 'text-center align-middle fw-normal'
 },
 {
 title: '<i class="ti ti-eye text-primary fs-6"></i>',
@@ -54,7 +54,7 @@ return '<a class="btn-detalle" data-id-dia="' +
 data.id_dia + 
 '" data-fecha="' + 
 $('<span>').text(data.fecha_formateada).html() + 
-'"><i class="ti ti-eye text-primary fs-6"></i></a>';
+'"><i class="ti ti-eye text-primary fs-6 pointer"></i></a>';
 }
 }
 ]

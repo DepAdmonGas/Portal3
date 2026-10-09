@@ -202,13 +202,18 @@ No hay registros para este mes
 </template>
 
 <!-- MODAL FACTURAS -->
-<div class="modal fade" id="modalFacturas" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalFacturas" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-xl">
 <div class="modal-content">
 
-<div class="modal-header">
-<h4 class="modal-title" x-text="modalFacturaTitulo"></h4>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+    <h4 class="modal-title text-white  gap-0"> 
+    <i class="ti ti-file-text fs-6 me-0 text-white"></i>
+<span
+x-text="modalFacturaTitulo">
+</span>
+</h4>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
 <div class="modal-body mb-0">
@@ -221,7 +226,7 @@ No hay registros para este mes
 <tr>
 <th class="text-center align-middle">Fecha</th>
 <th class="text-center align-middle">Monedero</th>
-<th class="text-center align-middle text-end">Diferencia</th>
+<th class="text-center align-middle">Diferencia</th>
 <th class="text-center align-middle" width="48px"><i class="ti ti-file-type-pdf text-danger fs-6"></i></th>
 <th class="text-center align-middle" width="48px"><i class="ti ti-file-type-xml text-primary fs-6"></i></th>
 <th class="text-center align-middle" width="48px" x-show="multiestacion || idPuesto != 6"><i class="ti ti-file-spreadsheet text-success fs-6"></i></th>
@@ -237,7 +242,7 @@ No hay registros para este mes
 <template x-for="doc in documentos" :key="doc.id">
 <tr>
 <td class="align-middle text-center fw-semibold" x-text="doc.fecha"></td>
-<td class="align-middle text-center" x-text="doc.monedero"></td>
+<td class="align-middle text-center " x-text="doc.monedero"></td>
 <td class="align-middle text-end" x-text="'$ ' + formato(doc.diferencia)"></td>
 <td class="align-middle text-center">
 <template x-if="doc.pdf">
@@ -303,19 +308,20 @@ No hay registros para este mes
 
 <template x-if="modalFacturaVista === 'form'">
 <div class="row">
-<div class="col-12 mb-3">
+<div class="col-12">
 <label class="form-label mb-1">* Fecha:</label>
 <template x-if="multiestacion">
-<input type="date" class="form-control" x-model="facturaForm.fecha">
+<input type="date" class="form-control mb-3" x-model="facturaForm.fecha">
 </template>
 <template x-if="!multiestacion">
-<div class="form-control-plaintext py-1" x-text="facturaForm.fecha"></div>
+<div class="form-control-plaintext p-0 mb-3" x-text="facturaForm.fecha"></div>
 </template>
 </div>
-<div class="col-12 mb-3">
+
+<div class="col-12">
 <label class="form-label mb-1">* Monedero:</label>
 <template x-if="multiestacion">
-<select class="form-select" x-model="facturaForm.monedero">
+<select class="form-select mb-3" x-model="facturaForm.monedero">
 <option value="">Selecciona una opción...</option>
 <option>Edenred</option>
 <option>Efectivale</option>
@@ -326,7 +332,7 @@ No hay registros para este mes
 </select>
 </template>
 <template x-if="!multiestacion">
-<div class="form-control-plaintext py-1" x-text="facturaForm.monedero"></div>
+<div class="form-control-plaintext p-0 mb-3" x-text="facturaForm.monedero"></div>
 </template>
 </div>
 <div class="col-12 mb-3">
@@ -365,17 +371,18 @@ No hay registros para este mes
 </select>
 </div>
 
-<div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
+<div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
 <label class="form-label mb-1">* PDF:</label>
-<input class="form-control" type="file" id="ediPDF">
+<input class="form-control mb-3" type="file" id="ediPDF">
 </div>
-<div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
+<div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 ">
 <label class="form-label mb-1">* XML:</label>
-<input class="form-control" type="file" id="ediXML">
+<input class="form-control mb-3" type="file" id="ediXML">
 </div>
 
-<div class="col-12 text-end mb-3">
+<div class="col-12 col-md-auto d-grid ms-auto mb-3">
 <button type="button" class="btn btn-success" @click="guardarEdi()" :disabled="guardandoEdi">
+    <i class="ti ti-check"></i>
 <span x-text="guardandoEdi ? 'Guardando...' : 'Guardar'"></span>
 </button>
 </div>
@@ -400,7 +407,7 @@ No hay registros para este mes
 <i class="ti ti-file-off text-muted fs-6"></i>
 </template>
 <template x-if="edi.pdf">
-<span x-data="actions()"><i class="ti ti-file-type-pdf text-danger fs-5 pointer" @click.prevent="download('monedero-documentos', edi.pdf)"></i></span>
+<span x-data="actions()"><i class="ti ti-file-type-pdf text-danger fs-6 pointer" @click.prevent="download('monedero-documentos', edi.pdf)"></i></span>
 </template>
 </td>
 <td class="text-center">
@@ -408,15 +415,15 @@ No hay registros para este mes
 <i class="ti ti-file-off text-muted fs-6"></i>
 </template>
 <template x-if="edi.xml">
-<span x-data="actions()"><i class="ti ti-file-type-xml text-primary fs-5 pointer" @click.prevent="download('monedero-documentos', edi.xml)"></i></span>
+<span x-data="actions()"><i class="ti ti-file-type-xml text-primary fs-6 pointer" @click.prevent="download('monedero-documentos', edi.xml)"></i></span>
 </template>
 </td>
 <td class="text-center">
 <template x-if="puedeEliminarDoc">
-<span x-data="actions()"><i class="ti ti-trash text-danger fs-5 pointer" @click="deleteAction({url: '/departamento-operativo/resumen-monedero/eliminar-edi', id: edi.id, name: edi.complemento, table: null}).then(r => r?.success && abrirEdi(ediForm.idDocumento))"></i></span>
+<span x-data="actions()"><i class="ti ti-trash text-danger fs-6 pointer" @click="deleteAction({url: '/departamento-operativo/resumen-monedero/eliminar-edi', id: edi.id, name: edi.complemento, table: null}).then(r => r?.success && abrirEdi(ediForm.idDocumento))"></i></span>
 </template>
 <template x-if="!puedeEliminarDoc">
-<i class="ti ti-trash text-muted fs-5"></i>
+<i class="ti ti-trash text-muted fs-6"></i>
 </template>
 </td>
 </tr>
@@ -440,14 +447,18 @@ No hay registros para este mes
 <label class="form-label mb-1">* Documento (PDF o XLSX):</label>
 <input class="form-control mb-3" type="file" id="docArchivoPDF">
 
-<div class="text-end">
-<button type="button" class="btn btn-success mb-3" @click="guardarDocumentacion()" :disabled="guardandoDoc">
+
+<div class="row">
+<div class="tcol-12 col-md-auto d-grid ms-auto mb-3 ">
+<button type="button" class="btn btn-success" @click="guardarDocumentacion()" :disabled="guardandoDoc">
+    <i class="ti ti-check"></i>
 <span x-text="guardandoDoc ? 'Guardando...' : 'Guardar'"></span>
 </button>
 </div>
+</div>
 
 <div class="table-responsive">
-<table class="table table-striped table-bordered mt-2">
+<table class="table table-striped table-bordered">
 <thead>
 <tr>
 <th class="align-middle text-center" width="96px">No.</th>
@@ -471,7 +482,7 @@ No hay registros para este mes
 <span x-data="actions()"><i class="ti ti-trash fs-6 text-danger pointer" @click="deleteAction({url: '/departamento-operativo/resumen-monedero/eliminar-lista-documento', id: docItem.id, name: docItem.descripcion, table: null}).then(r => r?.success && abrirDocumentacion(docForm.idMonedero))"></i></span>
 </template>
 <template x-if="!puedeEliminarDoc">
-<i class="ti ti-trash text-muted fs-5"></i>
+<i class="ti ti-trash text-muted fs-6"></i>
 </template>
 </td>
 </tr>
@@ -488,28 +499,67 @@ No hay registros para este mes
 </template>
 
 </div>
+
+
+
+
+<!-------------------inicia el footer de resumen mondero-------------------->
 <div class="modal-footer">
-<div x-show="multiestacion">
-<template  x-if="modalFacturaVista === 'lista'">
-<button type="button" class="btn btn-primary" @click="nuevaFactura()">
-<i class="ti ti-plus"></i> Nueva factura
-</button>
-</template>
+<div class="row w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid">
+        <template x-if="multiestacion && modalFacturaVista === 'lista'">
+            <button type="button" class="btn bg-primary-subtle text-primary" @click="nuevaFactura()">
+                <i class="ti ti-plus"></i> Nueva factura
+            </button>
+        </template>
+    </div>
 </div>
-<template x-if="modalFacturaVista === 'form'">
-<div class="d-flex gap-2">
-<button type="button" class="btn btn-danger" @click="cancelarFormulario()">Cancelar</button>
-<button type="button" class="btn btn-success" @click="guardarFactura()" :disabled="guardandoFactura">
-<span x-text="guardandoFactura ? 'Guardando...' : 'Guardar'"></span>
-</button>
+
+<div class="row ms-auto w-100 justify-content-end g-0">
+    <template x-if="modalFacturaVista === 'form'">
+        <div class="col-12 col-md-auto d-grid me-0 me-md-2">
+            <button type="button" class="btn bg-danger-subtle text-danger" @click="cancelarFormulario()">
+                <i class="ti ti-x"></i> Cancelar
+            </button>
+        </div>
+    </template>
+
+    <template x-if="modalFacturaVista === 'form'">
+        <div class="col-12 col-md-auto d-grid mt-2 mt-md-0">
+            <button type="button" class="btn btn-success" @click="guardarFactura()" :disabled="guardandoFactura">
+                <i class="ti ti-check"></i>
+                <span x-text="guardandoFactura ? 'Guardando...' : 'Guardar'"></span>
+            </button>
+        </div>
+    </template>
 </div>
-</template>
+
+
+<div class="row ms-auto w-100 justify-content-end g-0">
+    <div class="col-12 col-md-auto d-grid">
 <template x-if="modalFacturaVista === 'edi'">
-<button type="button" class="btn btn-danger" @click="volverListaFacturas()">Regresar</button>
+<button type="button" class="btn bg-danger-subtle text-danger" @click="volverListaFacturas()">
+<i class="ti ti-arrow-narrow-left"></i>    
+Regresar</button>
 </template>
+    </div>
+</div>
+
+
+
+<div class="row ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid">
 <template x-if="modalFacturaVista === 'documentacion'">
-<button type="button" class="btn btn-danger" @click="volverListaFacturas()">Regresar</button>
+<button type="button" class="btn bg-danger-subtle text-danger" @click="volverListaFacturas()">
+<i class="ti ti-arrow-narrow-left"></i>    
+Regresar</button>
 </template>
+
+</div>
+</div>
+
+
+
 </div>
 </div>
 </div>
