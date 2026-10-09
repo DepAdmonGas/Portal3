@@ -121,6 +121,70 @@ public function almacenIndex()
 $this->renderModulo('almacen', 'Almacén');
 }
 
+/**
+ * Hub de Mantenimiento (Almacén).
+ *
+ * El legacy llegaba a esta pantalla desde el apartado Mantenimiento y no desde
+ * Almacén: por eso el breadcrumb de Calibración de Dispensarios cambia según el puesto.
+ * Reutiliza la vista de cards submodulos-index.
+ */
+public function almacenMantenimientoIndex()
+{
+$title = 'Mantenimiento';
+
+Breadcrumb::add('Home', '/home');
+Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+Breadcrumb::add('Almacén', '/departamento-operativo/almacen');
+Breadcrumb::add($title, '');
+
+if (!ModuloDptoOperativoService::validaPermiso('almacen', 'leer')) {
+View::render('errors/404', [], 'departamento-operativo');
+return;
+}
+
+$usuario = Auth::user();
+
+$modulo = ModuloDptoOperativoService::getPermiso($usuario->id, 'almacen');
+
+/*
+* La card se lee de modulos_sub_dpto_operativo por clave para que nombre e icono
+* se mantengan sincronizados con Configuración, sin duplicarlos en el código.
+*/
+$cards = \App\Models\ModuloSubDptoOperativo::whereIn('clave', [
+    'calibracion-dispensarios',
+    'medicion-nivel-explosividad',
+    'maquinaria-equipos',
+    'mantenimiento-preventivo'
+])
+->where('id_modulo', 4)
+->where('activo', 1)
+->get();
+
+$submenus = [];
+foreach ($cards as $c) {
+    if ($c->ruta) {
+        $submenus[] = [
+            'id_sub_modulo' => $c->id,
+            'nombre'        => $c->nombre,
+            'clave'         => $c->clave,
+            'ruta'          => $c->ruta,
+            'icono'         => $c->icono ?: 'ti ti-flame',
+        ];
+    }
+}
+
+View::render('departamento-operativo/submodulos-index', [
+'title' => $title,
+'permisos' => $modulo,
+'submenus' => $submenus,
+'modulo' => 'almacen',
+'links' => [],
+'scripts' => [],
+'help' => false,
+'ocultarSelectorEstacion' => true,
+], 'departamento-operativo');
+}
+
 public function comercializadoraIndex()
 {
 $this->renderModulo('comercializadora', 'Comercializadora');

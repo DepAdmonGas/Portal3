@@ -4,9 +4,9 @@ namespace App\Models\Operativo;
 
 use Illuminate\Database\Eloquent\Model;
 
-class NivelExplosividad extends Model
+class MantenimientoPreventivoDocumento extends Model
 {
-    protected $table = 'op_nivel_explosividad';
+    protected $table = 'op_mantenimiento_preventivo_documentos';
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
@@ -14,18 +14,16 @@ class NivelExplosividad extends Model
 
     protected $fillable = [
         'id_estacion',
-        'folio',
         'fecha',
-        'estado',
+        'descripcion',
+        'archivo',
     ];
 
-    // 'fecha' va sin cast date: el legacy guarda los borradores en '0000-00-00' y
-    // Carbon lanza excepción al leerlo. formatearFecha() ya normaliza ese centinela.
     protected $casts = [
         'id' => 'integer',
         'id_estacion' => 'integer',
-        'folio' => 'integer',
-        'estado' => 'integer',
+        'fecha' => 'string',
+        'descripcion' => 'string',
+        'archivo' => 'string',
     ];
 }
-
