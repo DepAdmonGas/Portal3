@@ -46,15 +46,17 @@ style="display: none;"></div>
 <template x-if="tipoCargado">
 <div>
 
-<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
-
-<button class="btn btn-danger" @click="volverOpciones()">
+<div class="row g-0 w-100 justify-content-between">
+<div class="col-12 col-md-auto d-grid mb-2 mt-2 mt-md-2">
+<button class="btn bg-danger-subtle text-danger" @click="volverOpciones()">
 <i class="ti ti-arrow-left me-1"></i>Cambiar evaluación
 </button>
-
-<button type="button" class="btn btn-primary" @click="abrirInfoEvaluacion()">
+</div>
+<div class="col-12 col-md-auto d-grid mb-2 mt-0 mt-md-2">
+<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirInfoEvaluacion()">
 <i class="ti ti-info-circle me-1"></i>Forma de evaluación
 </button>
+</div>
 </div>
 
 <div x-show="cargando" class="text-center py-5">
@@ -127,13 +129,22 @@ style="display: none;"></div>
 <div class="modal fade" id="modalInfoEvaluacion" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title" x-text="'Forma de Evaluación (' + data.titulo + ')'"></h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+<i class="ti ti-clipboard-check"></i>
+<span x-text="'Forma de Evaluación (' + data.titulo + ')'"></span>
+</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body" x-html="DOMPurify.sanitize(data.info)"></div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+<div class="row ms-auto w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<i class="ti ti-x"></i>    
+Cerrar</button>
+    </div>
+</div>
 </div>
 </div>
 </div>

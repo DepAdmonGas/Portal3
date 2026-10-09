@@ -16,12 +16,11 @@ data-origen="<?= $origen ?>"
 x-data="{ ...actions(), ...embarquesComponent() }">
 
 <div class="row mb-3">
-<div class="col-12">
-<div class="float-end">
-<div class="d-flex gap-2">
+<div class="col-12 col-md-auto d-grid ms-md-auto">
+
 
 <?php if ($esEncargadoAsistente): ?>
-<button type="button" class="btn btn-primary" @click="abrirModalAgregar()">
+<button type="button" class="btn bg-primary-subtle text-primary " @click="abrirModalAgregar()">
 <i class="ti ti-plus"></i> Nuevo
 </button>
 <?php endif; ?>
@@ -54,12 +53,11 @@ x-data="{ ...actions(), ...embarquesComponent() }">
 <?php endif; ?>
 <?php endif; ?>
 
-</div>
-</div>
+
 </div>
 </div>
 
-<div class="table-responsive pb-5" style="overflow-y: hidden; overflow-x: auto;">
+<div class="table-responsive pb-5" overflow-x-auto overflow-y-hidden>
 <table id="tabla-embarques" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 </table>
 </div>
@@ -68,21 +66,23 @@ x-data="{ ...actions(), ...embarquesComponent() }">
 <div class="modal fade" id="modalEmbarque" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalEmbarque">
 <div class="modal-dialog modal-xl">
 <div class="modal-content">
-<div class="modal-header">
-<h4 class="modal-title" x-text="editando ? 'Editar embarque' : 'Agregar embarque'"></h4>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+    <h4 class="mb-0 modal-title text-white">
+<i class="ti" :class="editando ? 'ti-edit' : 'ti-truck'"></i>
+    <span  x-text="editando ? 'Editar embarque' : 'Nuevo   embarque'"></span>
+    </h4>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
-<div class="modal-body">
 
-<div class="alert bg-primary fw-semibold d-flex align-items-center mb-0" role="alert">
-<i class="ti ti-file-description me-2 text-white"></i>
-<h5 class="mb-0 text-white">
+
+<div class="modal-body">
+<h5>
 ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 </h5>
-</div>
+
 
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle mt-3">
+<table class="table table-striped table-bordered mb-0 align-middle mt-3 mb-3">
 <tbody>
 <tr><td class="text-start"><h6 class="fw-semibold ">La estación de servicio debe recabar la siguiente documentación:</h6></td></tr>
 <tr><td class="text-start"><span class="badge bg-primary me-2">1</span>Hoja 1 <strong>"Acta de Balance (Estación)"</strong></td></tr>
@@ -95,8 +95,6 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 </tbody>
 </table>
 </div>
-
-<hr>
 
 <div class="row g-2">
 
@@ -147,7 +145,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 
 <div class="col-md-4 mb-3">
 <label class="form-label">TAD:</label>
-<select class="form-select" x-model="form.tad">
+<select class="form-select mb-1" x-model="form.tad">
 <option value="">Selecciona una opción...</option>
 <option value="906 Tizayuca">906 Tizayuca</option>
 <option value="904 Tuxpan">904 Tuxpan</option>
@@ -161,7 +159,6 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 
 </div>
 
-<hr>
 
 <div x-show="form.embarque === 'Pick Up'">
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
@@ -197,12 +194,12 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 </tbody>
 </table>
 </div>
-<hr>
+
 </div>
 
-<div class="row g-2">
+<div class="row">
 <div class="col-md-6 mb-3">
-<label class="form-label">* Chofer:</label>
+<label class="form-label mb-1">* Chofer:</label>
 <div class="select2-modal-field is-select2-pending" x-ref="choferWrapper">
 <select class="form-select" x-ref="choferSelect" data-width="100%">
 <option value="">Selecciona una opción...</option>
@@ -211,7 +208,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 </div>
 
 <div class="col-md-6 mb-3">
-<label class="form-label">* Unidad:</label>
+<label class="form-label mb-1">* Unidad:</label>
 <div class="select2-modal-field is-select2-pending" x-ref="unidadWrapper">
 <select class="form-select" x-ref="unidadSelect" data-width="100%">
 <option value="">Selecciona una opción...</option>
@@ -221,7 +218,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 </div>
 
 <div x-show="form.embarque === 'Pick Up' || form.embarque === 'Delivery'">
-<hr>
+
 <div class="row g-2">
 <div class="col-md-6 mb-3">
 <label class="form-label">Merma:</label>
@@ -240,10 +237,24 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid me-0 me-md-2 mb-2 mb-md-0">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <i class="ti ti-x"></i>
+    Cancelar</button>
+</div>
+
+<div class="col-12 col-md-auto d-grid">
 <button type="button" class="btn btn-success" @click="guardar()" :disabled="guardando">
+    <i class="ti ti-check"></i>
 <span x-text="guardando ? 'Guardando...' : 'Guardar'"></span>
 </button>
+</div>
+    </div>
+
+
+
+
 </div>
 </div>
 </div>

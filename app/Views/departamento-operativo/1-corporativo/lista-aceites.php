@@ -1,11 +1,11 @@
 <div class="row mb-5" x-data="listaAceitesComponent()">
-<div class="col-12">
-<button type="button" class="btn btn-primary float-end " @click="nuevoAceite()" :disabled="creando">
+<div class="col-12 col-md-auto ms-md-auto d-grid mt-2">
+<button type="button" class="btn bg-primary-subtle text-primary" @click="nuevoAceite()" :disabled="creando">
 <i class="ti ti-plus me-1"></i>Nuevo
 </button>
 </div>
 
-<div class="col-12 mt-3">
+<div class="col-12 mt-2">
 <div class="table-responsive overflow-x-auto overflow-hidden">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>

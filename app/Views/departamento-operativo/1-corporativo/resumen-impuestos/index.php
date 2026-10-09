@@ -24,15 +24,17 @@ style="display: none;"></div>
 </div>
 
 <div x-show="!cargando" x-cloak>
-<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
-<div></div>
+<div class="row d-flex justify-content-end mt-3 mb-3">
+<div class="col-12 col-md-auto d-grid">
 <button type="button" class="btn btn-success" @click="abrirTotales()">
-<i class="ti ti-hand-holding-dollar me-1"></i>Impuestos Totales
+<i class="ti ti ti-file-dollar me-1"></i>Impuestos Totales
 </button>
+
+</div>
 </div>
 
 <div class="datatables">
-    <div class="table-responsive overflow-x-auto overflow-y-hidden">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
 <table id="tabla-resumen-impuestos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
 <tbody>
@@ -46,11 +48,14 @@ style="display: none;"></div>
 <div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-xl">
 <div class="modal-content">
-<div class="modal-header">
-<h4 class="modal-title" x-text="'Detalle (' + detalleFecha + ')'"></h4>
-<button type="button" class="btn-close" data-bs-dismiss="modal" @click="detalleData = null"></button>
+<div class="modal-header bg-primary mb-0">
+<h4 class="modal-title text-white">  
+<i class="ti ti-eye"></i>
+<span x-text="'Detalle (' + detalleFecha + ')'"></span>
+</h4>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="detalleData = null"></button>
 </div>
-<div class="modal-body">
+<div class="modal-body p-0">
 <template x-if="detalleCargando">
 <div class="text-center py-3">
 <div class="spinner-border text-primary" style="width: 2rem; height: 2rem;" role="status"></div>
@@ -123,7 +128,11 @@ style="display: none;"></div>
 </template>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="detalleData = null">Cerrar</button>
+    <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="detalleData = null">
+    <i class="ti ti-x"></i> 
+Cerrar</button>
+    </div>
 </div>
 </div>
 </div>
@@ -132,11 +141,13 @@ style="display: none;"></div>
 <div class="modal fade" id="modalTotales" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-xl">
 <div class="modal-content">
-<div class="modal-header">
-<h4 class="modal-title">Resumen de Impuestos Totales</h4>
-<button type="button" class="btn-close" data-bs-dismiss="modal" @click="totalesData = null"></button>
+<div class="modal-header bg-primary">
+<h4 class="modal-title text-white">
+<i class="ti ti-presentation"></i>    
+Resumen de Impuestos Totales</h4>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="totalesData = null"></button>
 </div>
-<div class="modal-body">
+<div class="modal-body p-0">
 <template x-if="totalesCargando">
 <div class="text-center py-3">
 <div class="spinner-border text-primary" style="width: 2rem; height: 2rem;" role="status"></div>
@@ -209,7 +220,13 @@ style="display: none;"></div>
 </template>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="totalesData = null">Cerrar</button>
+        <div class="col-12 col-md-auto d-grid ms-md-auto mb-2">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="totalesData = null">
+   <i class="ti ti-x"></i> 
+Cerrar</button>
+        </div>
+
+
 </div>
 </div>
 </div>
