@@ -245,7 +245,7 @@ $record->update([
 'estatus' => 1,
 ]);
 
-return $this->sendMessage($chatId, "¡AUTENTICACIÓN EXITOSA!\nAhora puedes generar los token para firmar las solicitudes en el portal.");
+return $this->sendMessage($chatId, "✅ *¡Autenticación exitosa!*\n\nAhora puedes recibir notificaciones internas de Portal 3 y generar tus tokens para autorizar solicitudes.");
 }
 
 public function processUpdate(array $update): bool
