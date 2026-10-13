@@ -105,7 +105,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 </div>
 
 <?php if ($puedeEditarCorte ?? false): ?>
-<div class="modal fade" id="modalEditarCorte" tabindex="-1" x-data="editarCorteComponent()">
+<div class="modal fade" id="modalEditarCorte" tabindex="-1" x-data="editarCorteComponent()" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header bg-primary">

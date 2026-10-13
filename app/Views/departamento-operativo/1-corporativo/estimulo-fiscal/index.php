@@ -58,7 +58,7 @@
                             <th class="text-center" colspan="3">Periodo</th>
                             <th class="text-center" colspan="2">Pago</th>
                             <th class="text-center" colspan="2">Complemento</th>
-                            <th class="text-center" width="48px"><i class="fas fa-ellipsis-v"></i></th>
+                            <th class="text-center" width="48px"><i class="ti ti-dots-vertical fs-6"></i></th>
 
                         </tr>
                         <tr>
@@ -127,7 +127,7 @@
                                     <div x-data="{}">
                                         <div class="dropdown dropstart">
                                             <a class="pointer" data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical fs-5 text-muted"></i>
+                                                <i class="ti ti-dots-vertical fs-6"></i>
                                             </a>
                                             <div class="dropdown-menu pointer">
                                                 <a class="dropdown-item pointer" @click="$dispatch('estimulo-fiscal:editar', {id: p.id})">
@@ -160,9 +160,11 @@
     <div class="modal fade" id="modal-buscar" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Buscar Reporte</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white">
+                        <i class="ti ti-search"></i>
+                    Buscar Reporte</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
@@ -177,98 +179,137 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" :disabled="loading">Cerrar</button>
-                    <button type="button" class="btn btn-primary" @click="buscarReporte" :disabled="loading">Buscar</button>
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                        <div class="col-12 col-md-auto d-grid mb-2 mb-md-0 me-0 me-md-2">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="loading">
+<i class="ti ti-x"></i>    
+Cerrar</button>
+                        </div>
+                        <div class="col-12 col-md-auto d-grid">
+ <button type="button" class="btn bg-primary-subtle text-primary" @click="buscarReporte" :disabled="loading">
+ <i class="ti ti-search"></i>   
+ Buscar</button>
+                   
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modal-agregar" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal fade" id="modal-agregar" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Nuevo comprobante de pago</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white">
+                    <i class="ti ti-receipt-2"></i>    
+                    Nuevo comprobante de pago</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <h5 class="fw-bold">PERIODO</h5>
+                    <h5 class="fw-bold">Periodo</h5>
                     <div class="row">
-                        <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
-                            <label class="form-label">* Fecha Inicio:</label>
-                            <input type="date" class="form-control" x-model="form.fecha_inicio">
+                        <div class="col-xl-6 col-lg-6 col-md-6">
+                            <label class="form-label mb-1">* Fecha Inicio:</label>
+                            <input type="date" class="form-control mb-3" x-model="form.fecha_inicio">
                         </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
-                            <label class="form-label">* Fecha Termino:</label>
-                            <input type="date" class="form-control" x-model="form.fecha_termino">
+                        <div class="col-xl-6 col-lg-6 col-md-6">
+                            <label class="form-label mb-1">* Fecha Termino:</label>
+                            <input type="date" class="form-control mb-3" x-model="form.fecha_termino">
                         </div>
                     </div>
-                    <hr>
                     <div class="row">
-                        <div class="col-12 mb-3">
-                            <label class="form-label">* Agregar Factura PDF:</label>
-                            <input type="file" class="form-control" x-ref="EPDF_file_input">
+                        <div class="col-12">
+                            <label class="form-label mb-1">* Factura PDF:</label>
+                            <input type="file" class="form-control mb-3" x-ref="EPDF_file_input">
                         </div>
-                        <div class="col-12 mb-3">
-                            <label class="form-label">* Agregar Factura XML:</label>
-                            <input type="file" class="form-control" x-ref="EXML_file_input">
+                        <div class="col-12">
+                            <label class="form-label mb-1">* Factura XML:</label>
+                            <input type="file" class="form-control mb-3" x-ref="EXML_file_input">
                         </div>
                     </div>
                     <div class="text-danger mt-3 small">NOTA: USO DEL CFDI ES GASTOS EN GENERAL Y LA FORMA DE PAGO ES PPD</div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" :disabled="loading">Cancelar</button>
-                    <button type="button" class="btn btn-success" @click="guardarPago" :disabled="loading">Guardar</button>
-                </div>
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                        <div class="col-12 col-md-auto d-grid mb-2 me-0 me-md-2">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="loading">
+<i class="ti ti-x"></i>    
+Cancelar</button>
+                        </div>
+<div class="col-12 col-md-auto d-grid mb-2">
+                <button type="button" class="btn btn-success" @click="guardarPago" :disabled="loading">
+                <i class="ti ti-check"></i>    
+                Guardar</button>
+</div>
+                
+                    </div>
+                    </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modal-editar" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal fade" id="modal-editar" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar comprobante de pago</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white">
+                        <i class="ti ti-pencil-dollar"></i>
+                    Editar comprobante de pago</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <h5 class="fw-bold">PERIODO</h5>
+                    <h5 class="fw-bold">Periodo</h5>
                     <div class="row">
-                        <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
-                            <label class="form-label">* Fecha Inicio:</label>
-                            <input type="date" class="form-control" x-model="editForm.fecha_inicio">
+                        <div class="col-xl-6 col-lg-6 col-md-6">
+                            <label class="form-label mb-1">* Fecha Inicio:</label>
+                            <input type="date" class="form-control mb-3" x-model="editForm.fecha_inicio">
                         </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
-                            <label class="form-label">* Fecha Termino:</label>
-                            <input type="date" class="form-control" x-model="editForm.fecha_termino">
+                        <div class="col-xl-6 col-lg-6 col-md-6">
+                            <label class="form-label mb-1">* Fecha Termino:</label>
+                            <input type="date" class="form-control mb-3" x-model="editForm.fecha_termino">
                         </div>
                     </div>
-                    <hr>
+ 
                     <div class="row">
-                        <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
-                            <label class="form-label">Agregar Factura PDF:</label>
-                            <input type="file" class="form-control" x-ref="edit_EPDF_file_input">
+                        <div class="col-xl-6 col-lg-6 col-md-6">
+                            <label class="form-label mb-1"> Factura PDF:</label>
+                            <input type="file" class="form-control mb-3" x-ref="edit_EPDF_file_input">
                         </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
-                            <label class="form-label">Agregar Factura XML:</label>
-                            <input type="file" class="form-control" x-ref="edit_EXML_file_input">
+                        <div class="col-xl-6 col-lg-6 col-md-6">
+                            <label class="form-label mb-1"> Factura XML:</label>
+                            <input type="file" class="form-control mb-3" x-ref="edit_EXML_file_input">
                         </div>
                     </div>
-                    <hr>
+ 
                     <div class="row">
-                        <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
-                            <label class="form-label">Agregar Complemento PDF:</label>
-                            <input type="file" class="form-control" x-ref="edit_CPDF_file_input">
+                        <div class="col-xl-6 col-lg-6 col-md-6">
+                            <label class="form-label mb-1"> Complemento PDF:</label>
+                            <input type="file" class="form-control mb-3" x-ref="edit_CPDF_file_input">
                         </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
-                            <label class="form-label">Agregar Complemento XML:</label>
-                            <input type="file" class="form-control" x-ref="edit_CXML_file_input">
+                        <div class="col-xl-6 col-lg-6 col-md-6">
+                            <label class="form-label mb-1"> Complemento XML:</label>
+                            <input type="file" class="form-control mb-3" x-ref="edit_CXML_file_input">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" :disabled="loading">Cancelar</button>
-                    <button type="button" class="btn btn-success" @click="editarPago" :disabled="loading">Guardar</button>
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                        <div class="col-12 col-md-auto d-grid mb-2 mb-md-0 me-0 me-md-2">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="loading">
+<i class="ti ti-x"></i>    
+Cancelar</button>
+                        </div>
+<div class="col-12 col-md-auto d-grid">
+
+                    <button type="button" class="btn btn-success" @click="editarPago" :disabled="loading">
+                    <i class="ti ti-check"></i>    
+                    Guardar</button>
+                   
+</div>
+ </div>
+                    
                 </div>
             </div>
         </div>

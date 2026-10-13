@@ -47,8 +47,8 @@ Debes de seleccionar una estación del menú superior para poder visualizar el C
 
 <template x-if="esDireccionOperaciones">
 <div class="dropdown d-inline float-end ms-2">
-<button type="button" class="btn dropdown-toggle btn-primary" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-tools"></i>
+<button type="button" class="btn btn-light dropdown-toggle  text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+<i class="ti ti-dots-vertical"></i>
 </button>
 <ul class="dropdown-menu">
 <li><a class="dropdown-item pointer" @click="descargarExcel()"><i class="ti ti-file-spreadsheet"></i> Descargar Excel</a></li>
@@ -66,7 +66,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar el C
 </div>
 </div>
 
-<div class="table-responsive mb-4" style="overflow-y: hidden; overflow-x: auto;">
+<div class="table-responsive mb-4 overflow-x-auto overflow-y-hidden">
 <table id="tabla-comparativo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -226,38 +226,39 @@ x-init="$el.value = formatInput(cell.valor)"
 <div class="card ">
 
 <div class="card-header text-bg-primary">
-<div class="d-flex align-items-center justify-content-between">
+    <div class="d-flex flex-wrap align-items-center gap-2">
 
-<div class="d-flex align-items-center">
-<i class="ti ti-calendar-month fs-5 me-2"></i>
-<h5 class="mb-0 text-white" x-text="month.nombre"></h5>
-</div>
+        <!-- Mes -->
+        <div class="d-flex align-items-center me-auto">
+            <i class="ti ti-calendar-month fs-5 me-2"></i>
+            <h5 class="mb-0 text-white" x-text="month.nombre"></h5>
+        </div>
 
-<div class="d-flex align-items-center gap-2">
 
-<button
-type="button"
-class="btn btn-light position-relative"
-@click="abrirModalComentarios(month.mes)">
+        <button
+            type="button"
+            class="btn btn-light position-relative"
+            @click="abrirModalComentarios(month.mes)">
 
-<template x-if="month.comment_count > 0">
-<span class="badge-historico position-absolute top-0 start-100 translate-middle"
-x-text="month.comment_count"></span>
-</template>
+            <template x-if="month.comment_count > 0">
+                <span class="badge-historico position-absolute top-0 start-100 translate-middle"
+                      x-text="month.comment_count"></span>
+            </template>
 
-<i class="ti ti-message text-primary"></i> 
-</button>
+            <i class="ti ti-message text-primary"></i>
+        </button>
 
-<button
-type="button"
-class="btn btn-success ms-2"
-@click="abrirModalDocumentos(month.mes)">
-<i class="ti ti-plus"></i> Nuevo Anexo
-</button>
 
-</div>
+        <div class="col-12 col-md-auto d-grid">
+            <button
+                type="button"
+                class="btn btn-success"
+                @click="abrirModalDocumentos(month.mes)">
+                <i class="ti ti-plus"></i> Nuevo
+            </button>
+        </div>
 
-</div>
+    </div>
 </div>
 
 <div class="card-body p-0">
@@ -400,29 +401,37 @@ Guardar Comentario
 
 </div>
 
-<div class="modal fade" id="modalDocumentos" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+<div class="modal fade" id="modalDocumentos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title" x-text="'Anexos (' + mesActualNombre + ' <?= $idYear ?>)'"></h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-copy"></i>
+<span x-text="'Anexos (' + mesActualNombre + ' <?= $idYear ?>)'"></span>   
+</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <template x-if="canEdit">
-<div class="row">
-<div class="col-12 mb-3">
-<label class="form-label">* Anexo:</label>
-<input class="form-control " type="text" x-model="nuevoAnexo" placeholder="Nombre del anexo" id="anexoInput">
-</div>
-<div class="col-12 mb-3">
-<label class="form-label">* Archivo:</label>
-<input class="form-control" type="file" x-ref="fileInput" id="docFile">
-</div>
-<div class="col-12 mb-3 text-end">
-<button type="button" class="btn btn-success" @click="guardarDocumento()" :disabled="guardandoDocumento">
-<span x-text="guardandoDocumento ? 'Guardando...' : 'Guardar'"></span>
-</button>
-</div>
+<div class="row justify-content-end">
+    <div class="col-12 mb-3">
+        <label class="form-label mb-1">* Anexo:</label>
+        <input class="form-control" type="text" x-model="nuevoAnexo"
+               placeholder="Nombre del anexo" id="anexoInput">
+    </div>
+
+    <div class="col-12 mb-3">
+        <label class="form-label mb-1">* Archivo:</label>
+        <input class="form-control" type="file" x-ref="fileInput" id="docFile">
+    </div>
+
+    <div class="col-12 col-md-auto d-grid mb-2">
+        <button type="button" class="btn btn-success"
+                @click="guardarDocumento()" :disabled="guardandoDocumento">
+            <i class="ti ti-check"></i>
+            <span x-text="guardandoDocumento ? 'Guardando...' : 'Guardar'"></span>
+        </button>
+    </div>
 </div>
 </template>
 
@@ -465,7 +474,14 @@ Guardar Comentario
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+    <div class="row ms-auto g-0 w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<i class="ti ti-x"></i>    
+Cerrar</button>
+        </div>
+    </div>
+
 </div>
 </div>
 </div>
