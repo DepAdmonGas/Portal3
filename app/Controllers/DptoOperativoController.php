@@ -154,7 +154,8 @@ $cards = \App\Models\ModuloSubDptoOperativo::whereIn('clave', [
     'calibracion-dispensarios',
     'medicion-nivel-explosividad',
     'maquinaria-equipos',
-    'mantenimiento-preventivo'
+    'mantenimiento-preventivo',
+    'terminales-punto-venta'
 ])
 ->where('id_modulo', 4)
 ->where('activo', 1)
@@ -168,7 +169,7 @@ foreach ($cards as $c) {
             'nombre'        => $c->nombre,
             'clave'         => $c->clave,
             'ruta'          => $c->ruta,
-            'icono'         => $c->icono ?: 'ti ti-flame',
+            'icono'         => $c->icono ?: 'ti ti ti-layout-grid',
         ];
     }
 }
