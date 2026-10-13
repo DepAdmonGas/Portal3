@@ -7,10 +7,10 @@ x-data="ingresosFacturacionComponent()"
 data-id-year="<?= $idYear ?>"
 data-id-estacion="<?= $idEstacion ?>">
 
-<div class="row mb-3">
-<div class="col-12">
-<button type="button" class="btn btn-primary float-end" @click="abrirEntregables()">
-<i class="ti ti-file-pen me-1"></i>Entregables
+<div class="row ms-auto g-0 w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid mb-3 mt-3">
+<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirEntregables()">
+<i class="ti ti-file-pencil me-1"></i>Entregables
 </button>
 </div>
 </div>
@@ -150,16 +150,23 @@ x-init="$el.value = formatInput(row[m])"
 <div class="modal fade" id="modalEntregables" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Entregables</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-file-pencil"></i>
+    Entregables</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
-<label class="form-label">* Archivo:</label>
-<input class="form-control" type="file" id="archivoInput">
-<div class="text-end mt-3">
-<button type="button" class="btn btn-success" @click="guardarArchivo()" :disabled="guardando">Guardar</button>
+<label class="form-label mb-1">* Archivo:</label>
+<input class="form-control mb-3" type="file" id="archivoInput">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn btn-success" @click="guardarArchivo()" :disabled="guardando">
+<i class="ti ti-check"></i>    
+Guardar</button>
 </div>
+</div>
+
 <div class="table-responsive mt-3">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
@@ -200,6 +207,16 @@ x-init="$el.value = formatInput(row[m])"
 </table>
 </div>
 </div>
+<div class="modal-footer">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid mb-2 mb-md-0">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<i class="ti ti-x"></i>    
+Cancelar</button>
+</div>    
+    </div>
+</div>
+
 </div>
 </div>
 </div>

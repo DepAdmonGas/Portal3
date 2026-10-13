@@ -11,9 +11,9 @@ data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
 data-get-data-url="/departamento-operativo/corporativo/solicitud-vales/get-data"
 x-data="solicitudValesComponent()">
 
-<div class="row mb-2">
-<div class="col-12">
-<a href="/departamento-operativo/corporativo/solicitud-vales-nuevo/<?= $idYear ?>/<?= $idMes ?>/<?= $idEstacion ?>" class="btn btn-primary float-end"> <i class="ti ti-plus me-1"></i> Nuevo</a>
+<div class="row w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid mb-2">
+<a href="/departamento-operativo/corporativo/solicitud-vales-nuevo/<?= $idYear ?>/<?= $idMes ?>/<?= $idEstacion ?>" class="btn bg-primary-subtle text-primary"> <i class="ti ti-plus me-1"></i> Nuevo</a>
 </div>
 </div>
 
@@ -22,80 +22,82 @@ x-data="solicitudValesComponent()">
 </div>
 
 <!-- Modal Detalle -->
-<div class="modal fade" id="modalDetalle" tabindex="-1">
+<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Detalle de Solicitud de Vale</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-eye"></i>
+Detalle de Solicitud</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
-<div class="row g-3">
+<div class="row g-0">
 
 <div class="col-md-4">
-<label class="form-label">Folio:</label>
-<p x-text="'00' + detalle.folio"></p>
+<label class="form-label mb-1">Folio:</label>
+<p class="mb-2" x-text="'00' + detalle.folio"></p>
 </div>
 
 <div class="col-md-4">
-<label class="form-label">Fecha y hora:</label>
-<p x-text="detalle.fecha + ', ' + detalle.hora"></p>
+<label class="form-label mb-1">Fecha y hora:</label>
+<p class="mb-2" x-text="detalle.fecha + ', ' + detalle.hora"></p>
 </div>
 
 <div class="col-md-4">
-<label class="form-label">Monto y moneda:</label>
-<p x-text="'$' + detalle.monto + ' ' + detalle.moneda"></p>
+<label class="form-label mb-1">Monto y moneda:</label>
+<p class="mb-2" x-text="'$' + detalle.monto + ' ' + detalle.moneda"></p>
 </div>
 
 <div class="col-md-4">
-<label class="form-label">Concepto:</label>
-<p x-text="detalle.concepto"></p>
+<label class="form-label mb-1">Concepto:</label>
+<p class="mb-2" x-text="detalle.concepto"></p>
 </div>
 
 <div class="col-md-4">
-<label class="form-label">Nombre del solicitante:</label>
-<p x-text="detalle.solicitante"></p>
+<label class="form-label mb-1">Nombre del solicitante:</label>
+<p class="mb-3" x-text="detalle.solicitante"></p>
 </div>
 
-<div class="col-12 mt-3">
+<div class="col-12">
 
-<h5 class="fw-semibold">Cargo a cuenta</h5>
+<h5 class="form-label mb-2">Cargo a cuenta</h5>
 </div>
 
 <template x-if="detalle.id_estacion > 0">
 <div class="col-md-4">
-<label class="form-label">Estación:</label>
-<p x-text="detalle.estacion_nombre"></p>
+<label class="form-label mb-1">Estación:</label>
+<p class="mb-2" x-text="detalle.estacion_nombre"></p>
 </div>
 </template>
 
 <template x-if="detalle.cuenta && detalle.cuenta !== ''">
 <div class="col-md-4">
-<label class="form-label">Cuenta:</label>
-<p x-text="detalle.cuenta"></p>
+<label class="form-label mb-1">Cuenta:</label>
+<p class="mb-2" x-text="detalle.cuenta"></p>
 </div>
 </template>
 
 <div class="col-md-4">
-<label class="form-label">Autorizado por:</label>
-<p x-text="detalle.autorizado_por"></p>
+<label class="form-label mb-1">Autorizado por:</label>
+<p class="mb-2" x-text="detalle.autorizado_por"></p>
 </div>
 
 <div class="col-md-4">
-<label class="form-label">Método de autorización:</label>
-<p x-text="detalle.metodo_autorizacion"></p>
+<label class="form-label mb-1">Método de autorización:</label>
+<p class="mb-2" x-text="detalle.metodo_autorizacion"></p>
 </div>
 
 <template x-if="detalle.observaciones">
 <div class="col-12">
-<label class="form-label">Observaciones:</label>
-<p class="mb-0" x-text="detalle.observaciones"></p>
+<label class="form-label mb-1">Observaciones:</label>
+<p class="mb-2" x-text="detalle.observaciones"></p>
 </div>
 </template>
 
 <div class="col-12 mt-3">
 
-<h6 class="fw-semibold">Documentación:</h6>
+<h6 class="form-label mb-2">Documentación:</h6>
    
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-striped table-bordered mt-2 mb-0">
@@ -128,7 +130,13 @@ x-data="solicitudValesComponent()">
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<i class="ti ti-x"></i>    
+Cerrar</button>
+        </div>
+    </div>
 </div>
 </div>
 </div>
@@ -270,36 +278,42 @@ type="button"
 </div>
 
 <!-- Modal Documentos -->
-<div class="modal fade" id="modalDocumentos" tabindex="-1">
+<div class="modal fade" id="modalDocumentos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Documentación</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-clipboard-text"></i>
+Documentación</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 
 <div class="row">
 
-<div class="col-12 mb-3">
-<select class="form-select" x-model="documentoForm.nombre">
-<option value="">Selecciona una opción...</option>
-<option value="VALE">VALE</option>
-<option value="RECIBO">RECIBO</option>
-<option value="FACTURA">FACTURA</option>
-<option value="PDF">PDF</option>
-<option value="XML">XML</option>
-</select>
+<div class="mb-3">
+    <select class="form-select" x-model="documentoForm.nombre">
+        <option value="">Selecciona una opción...</option>
+        <option value="VALE">VALE</option>
+        <option value="RECIBO">RECIBO</option>
+        <option value="FACTURA">FACTURA</option>
+        <option value="PDF">PDF</option>
+        <option value="XML">XML</option>
+    </select>
 </div>
 
-<div class="col-12 mb-3">
-<div class="d-flex align-items-center gap-2 mb-3">
-<input type="file" class="form-control flex-grow-1" id="fileDocumento">
-<button type="button" class="btn btn-success text-nowrap" @click="agregarDocumento()" :disabled="subiendoDocumento">
-<i class="ti ti-plus me-1"></i> Agregar
-</button>
+<div class="input-group mb-3">
+    <input type="file" class="form-control" id="fileDocumento">
+
+    <button type="button"
+            class="btn btn-success text-nowrap"
+            @click="agregarDocumento()"
+            :disabled="subiendoDocumento">
+        <i class="ti ti-plus me-1"></i> Agregar
+    </button>
 </div>
-</div>
+
+
 
 <div class="col-12">
 <div class="table-responsive">
@@ -332,6 +346,18 @@ type="button"
 </div>
 
 </div>
+<div class="modal-footer">
+        <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<i class="ti ti-x"></i>    
+Cerrar</button>
+        </div>
+    </div>
+</div>
+
+
+
 </div>
 </div>
 </div>

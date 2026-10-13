@@ -10,8 +10,8 @@ Visualizaciones Comparativo XML
 </h5>
 </div>
 <div class="card-body">
-<div class="table-responsive" style="overflow-y: hidden; overflow-x: hidden;">
-<table id="tabla-accesos"  class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
+<table id="tabla-accesos"  class="table table-striped table-bordered  text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center">#</th>
@@ -36,7 +36,7 @@ Comparativo XML
 </h5>
 </div>
 <div class="card-body">
-<div class="table-responsive" style="overflow-y: hidden; overflow-x: hidden;">
+<div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
 <table id="tabla-edits" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -65,7 +65,7 @@ Comparativo SAT / Despachos
 </h5>
 </div>
 <div class="card-body">
-<div class="table-responsive" style="overflow-y: hidden; overflow-x: hidden;">
+<div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
 <table id="tabla-sat-edits" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>

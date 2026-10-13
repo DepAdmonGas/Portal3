@@ -25,39 +25,59 @@ x-data="{ ...actions(), ...aclaracionVoucherComponent() }">
 <span id="av-pendientes-data" style="display:none"><?= json_encode($pendientesData) ?></span>
 
 <template id="av-tools-tmpl">
-<?php if ($puedeCrear): ?><div id="av-tools-wrapper" class="d-flex justify-content-end">
-<button type="button" class="btn btn-primary" @click="abrirModalAgregar()"> <i class="ti ti-plus me-1"></i> Nuevo</button>
-</div><?php endif; ?>
+    <?php if ($puedeCrear): ?>
+        <div id="av-tools-wrapper">
+            <div class="row g-0 ms-auto w-100 justify-content-end">
+                <div class="col-12 col-md-auto d-grid">
+                    <button
+                        type="button"
+                        class="btn bg-primary-subtle text-primary"
+                        @click="abrirModalAgregar()">
+                        <i class="ti ti-plus me-1"></i> Nuevo
+                    </button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 </template>
 
-<div class="table-responsive pb-5" style="overflow-y: hidden; overflow-x: auto;">
+<div class="table-responsive pb-3 overflow-x-auto overflow-y-hidden">
 <table id="tabla-aclaracion-voucher" class="table table-striped table-bordered"></table>
 </div>
 
 <!-- Modal Aclaración (Agregar / Editar) -->
-<div class="modal fade" id="modalAclaracion" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalAclaracion" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title" x-text="editando ? 'Editar aclaración' : 'Nueva aclaración'"></h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+<div class="modal-header bg-primary">
+    <h5 class="modal-title text-white">
+        <i :class="editando ? 'ti ti-edit' : 'ti ti-message-plus'"></i>
+        <span x-text="editando ? 'Editar aclaración' : 'Nueva aclaración'"></span>
+    </h5>
+
+    <button type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="modal">
+    </button>
 </div>
+
 <div class="modal-body">
 <div class="row">
 <div class="col-12">
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 align-middle mb-4">
+<table class="table table-striped table-bordered mb-0 align-middle mb-3">
 <thead>
 <tr>
 <td class="text-start">
-<h6 class="fw-semibold mb-0">
+<h6 class="form-label mb-0">
 Información para llevar a cabo la Aclaración de Voucher
 </h6>
 </td>
 </tr>
 </thead>
 <tbody>
-<tbody>
+
 <tr>
 <td class="align-middle">
 <div class="d-flex align-items-start align-items-center">
@@ -105,138 +125,158 @@ observaciones adicionales.
 </td>
 </tr>
 </tbody>
-</tbody>
+
 </table>
 </div>
 </div>
 <template x-if="editando">
-<div class="col-xl-6 col-lg-6 mb-3">
-<label class="form-label pb-0">Nombre del solicitante:</label>
-<p class="mt-0" x-text="form.solicitante_nombre"></p>
+<div class="col-xl-6 col-lg-6">
+<label class="form-label mb-1">Nombre del solicitante:</label>
+<p class="mb-3" x-text="form.solicitante_nombre"></p>
 </div>
 </template>
 <template x-if="editando">
-<div class="col-xl-6 col-lg-6 mb-3">
-<label class="form-label pb-0">Fecha de solicitud:</label>
-<p class="mt-0" x-text="form.fecha_creacion"></p>
+<div class="col-xl-6 col-lg-6">
+<label class="form-label mb-1">Fecha de solicitud:</label>
+<p class="mb-3" x-text="form.fecha_creacion"></p>
 </div>
 </template>
-<div class="col-12 mb-3">
-<label class="form-label pb-0">* Ticket a solicitar:</label>
-<input type="text" class="form-control" x-model="form.nombre_ticket" :class="{'is-invalid': errors.nombre_ticket}">
+<div class="col-12">
+<label class="form-label mb-1">* Ticket a solicitar:</label>
+<input type="text" class="form-control mb-3" x-model="form.nombre_ticket" :class="{'is-invalid': errors.nombre_ticket}">
 </div>
-<div class="col-xl-9 col-lg-9 mb-3">
-<label class="form-label pb-0">* Fecha:</label>
-<input type="date" class="form-control" x-model="form.fecha" :class="{'is-invalid': errors.fecha}">
+<div class="col-xl-9 col-lg-9">
+<label class="form-label mb-1">* Fecha:</label>
+<input type="date" class="form-control mb-3" x-model="form.fecha" :class="{'is-invalid': errors.fecha}">
 </div>
-<div class="col-xl-3 col-lg-3 mb-3">
-<label class="form-label pb-0">* Hora:</label>
-<input type="time" class="form-control" x-model="form.hora" :class="{'is-invalid': errors.hora}">
+<div class="col-xl-3 col-lg-3">
+<label class="form-label mb-1">* Hora:</label>
+<input type="time" class="form-control mb-3" x-model="form.hora" :class="{'is-invalid': errors.hora}">
 </div>
-<div class="col-xl-9 col-lg-9 mb-3">
-<label class="form-label pb-0">* Valera:</label>
-<input type="text" class="form-control" x-model="form.valera" :class="{'is-invalid': errors.valera}">
+<div class="col-xl-9 col-lg-9">
+<label class="form-label mb-1">* Valera:</label>
+<input type="text" class="form-control mb-3" x-model="form.valera" :class="{'is-invalid': errors.valera}">
 </div>
-<div class="col-xl-3 col-lg-3 mb-3">
-<label class="form-label pb-0">* Importe:</label>
-<input type="number" step="0.01" class="form-control" x-model="form.importe" :class="{'is-invalid': errors.importe}">
+<div class="col-xl-3 col-lg-3">
+<label class="form-label mb-1">* Importe:</label>
+<input type="number" step="0.01" class="form-control mb-3" x-model="form.importe" :class="{'is-invalid': errors.importe}">
 </div>
-<div class="col-12 mb-3">
-<label class="form-label pb-0">* Número de aclaración:</label>
-<input type="text" class="form-control" x-model="form.numero_aclaracion" :class="{'is-invalid': errors.numero_aclaracion}">
+<div class="col-12">
+<label class="form-label mb-1">* Número de aclaración:</label>
+<input type="text" class="form-control mb-3" x-model="form.numero_aclaracion" :class="{'is-invalid': errors.numero_aclaracion}">
 </div>
 <template x-if="editando">
-<div class="col-12 mb-3">
-<label class="form-label pb-0">* Estado del ticket:</label>
-<div class="form-check">
+<div class="col-12">
+<label class="form-label mb-1">* Estado del ticket:</label>
+<div class="form-check mb-1">
 <input class="form-check-input" type="radio" id="TicketNoPagado" value="0" x-model="form.pagado">
 <label class="form-check-label" for="TicketNoPagado">El ticket no ha sido pagado</label>
 </div>
-<div class="form-check">
+
+<div class="form-check mb-3">
 <input class="form-check-input" type="radio" id="TicketPagado" value="1" x-model="form.pagado">
 <label class="form-check-label" for="TicketPagado">El ticket ha sido pagado</label>
 </div>
 </div>
 </template>
-<div class="col-xl-6 col-lg-6 mb-3">
-<label class="form-label pb-0">* Ticket:</label>
-<input type="file" class="form-control" id="fileTicket" accept=".pdf,.jpg,.jpeg,.png">
+<div class="col-xl-6 col-lg-6">
+<label class="form-label mb-1">* Ticket:</label>
+<input type="file" class="form-control mb-3" id="fileTicket" accept=".pdf,.jpg,.jpeg,.png">
 </div>
-<div class="col-xl-6 col-lg-6 mb-3">
-<label class="form-label pb-0">* Voucher:</label>
-<input type="file" class="form-control" id="fileVoucher" accept=".pdf,.jpg,.jpeg,.png">
+<div class="col-xl-6 col-lg-6">
+<label class="form-label mb-1">* Voucher:</label>
+<input type="file" class="form-control mb-3" id="fileVoucher" accept=".pdf,.jpg,.jpeg,.png">
 </div>
 </div>
 </div>
+
+
+
+
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-<button type="button" class="btn btn-labeled2 btn-success" @click="guardar()" :disabled="guardando">
-<span x-text="editando ? 'Editar' : 'Guardar'"></span>
-</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+           <div class="col-12 col-md-auto d-grid me-0 me-md-2 mb-1 mb-md-0">
 <template x-if="editando">
-<button type="button" class="btn btn-labeled2 btn-primary" @click="finalizarSolicitud()">Finalizar</button>
+<button type="button" class="btn bg-primary-subtle text-primary" @click="finalizarSolicitud()">
+    <i class="ti ti-circle-check"></i>
+Finalizar</button>
 </template>
+        </div>
+        <div class="col-12 col-md-auto d-grid me-0 me-md-2">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <i class="ti ti-x"></i>
+Cancelar</button>
+        </div>
+        <div class="col-12 col-md-auto d-grid mt-1 mt-md-0 mb-1 mb-md-0">
+<button type="button" class="btn btn-success" @click="guardar()" :disabled="guardando">
+    <i class="ti ti-check"></i>
+<span x-text="editando ? 'Guardar' : 'Guardar'"></span>
+</button>
+        </div>
+    </div>
 </div>
 </div>
 </div>
 </div>
 
 <!-- Modal Detalle -->
-<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Detalle de aclaración</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-eye"></i>
+Detalle de aclaración</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 
 <template x-if="detalle">
 <div class="row"> 
 
-<div class="col-xl-6 col-lg-6 mb-3">
-<label class="form-label pb-0">Nombre del solicitante:</label>
-<p class="mt-0" x-text="detalle.solicitante_nombre"></p>
+<div class="col-xl-6 col-lg-6">
+<label class="form-label mb-1">Nombre del solicitante:</label>
+<p class="mb-3" x-text="detalle.solicitante_nombre"></p>
 </div>
 
-<div class="col-xl-6 col-lg-6 mb-3">
-<label class="form-label pb-0">Fecha de solicitud:</label>
-<p class="mt-0" x-text="detalle.fecha_creacion"></p>
+<div class="col-xl-6 col-lg-6">
+<label class="form-label mb-1">Fecha de solicitud:</label>
+<p class="mb-3" x-text="detalle.fecha_creacion"></p>
 </div>
 
-<div class="col-12 mb-3">
-<label class="form-label pb-0">Ticket a solicitar:</label>
-<p class="mt-0" x-text="detalle.nombre_ticket"></p>
+<div class="col-12">
+<label class="form-label mb-1">Ticket a solicitar:</label>
+<p class="mb-3" x-text="detalle.nombre_ticket"></p>
 </div>
 
-<div class="col-xl-9 col-lg-9 mb-3">
-<label class="form-label pb-0">Fecha:</label>
-<p class="mt-0" x-text="detalle.fecha"></p>
+<div class="col-xl-9 col-lg-9">
+<label class="form-label mb-1">Fecha:</label>
+<p class="mb-3" x-text="detalle.fecha"></p>
 </div>
 
-<div class="col-xl-3 col-lg-3 mb-3">
-<label class="form-label pb-0">Hora:</label>
-<p class="mt-0" x-text="detalle.hora"></p>
+<div class="col-xl-3 col-lg-3">
+<label class="form-label mb-1">Hora:</label>
+<p class="mb-3" x-text="detalle.hora"></p>
 </div>
 
-<div class="col-xl-9 col-lg-9 mb-3">
-<label class="form-label pb-0">Valera:</label>
-<p class="mt-0" x-text="detalle.valera"></p>
+<div class="col-xl-9 col-lg-9">
+<label class="form-label mb-1">Valera:</label>
+<p class="mb-3" x-text="detalle.valera"></p>
 </div>
 
-<div class="col-xl-3 col-lg-3 mb-3">
-<label class="form-label pb-0">Importe:</label>
-<p class="mt-0" x-text="'$ ' + detalle.importe"></p>
+<div class="col-xl-3 col-lg-3">
+<label class="form-label mb-1">Importe:</label>
+<p class="mb-3" x-text="'$ ' + detalle.importe"></p>
 </div>
 
-<div class="col-12 mb-3">
-<label class="form-label pb-0">Número de aclaración:</label>
-<p class="mt-0" x-text="detalle.numero_aclaracion"></p>
+<div class="col-12">
+<label class="form-label mb-1">Número de aclaración:</label>
+<p class="mb-3" x-text="detalle.numero_aclaracion"></p>
 </div>
 
-<div class="col-12 mb-3">
-<label class="form-label pb-0">Estado del ticket:</label>
-<p class="mt-0" x-text="detalle.pagado == 1 ? 'Pagado' : 'No pagado'"></p>
+<div class="col-12">
+<label class="form-label mb-1">Estado del ticket:</label>
+<p class="mb-3" x-text="detalle.pagado == 1 ? 'Pagado' : 'No pagado'"></p>
 </div>
 
 <div class="col-12">
@@ -275,7 +315,13 @@ observaciones adicionales.
 </template>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+    <div class="row ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <i class="ti ti-x"></i>
+Cerrar</button>
+        </div>
+    </div>
 </div>
 </div>
 </div>
@@ -371,12 +417,14 @@ type="button"
 </div>
 
 <!-- Modal Anexos -->
-<div class="modal fade" id="modalAnexos" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalAnexos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Anexos de la aclaración</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+<i class="ti ti-folder"></i>    
+Anexos de la aclaración</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <!-- <template x-if="puedeEditar"> -->
@@ -385,15 +433,18 @@ type="button"
 <label class="form-label pb-0">* Descripción:</label>
 <input type="text" class="form-control" x-model="anexoForm.descripcion">
 </div>
-<div class="col-10 mt-2">
-<label class="form-label pb-0">* Archivo:</label>
+
+<div class="mt-2">
+<label class="form-label">* Archivo:</label>
+<div class="input-group">
 <input type="file" class="form-control" id="fileAnexo">
-</div>
-<div class="col-2 mt-2 d-flex align-items-end">
-<button type="button" class="btn btn-labeled2 btn-success w-100" @click="agregarAnexo()" :disabled="subiendoAnexo">
+
+<button type="button" class="btn btn-labeled2 btn-success" @click="agregarAnexo()" :disabled="subiendoAnexo">
 <span class="btn-label2"><i class="ti ti-plus"></i></span> Agregar
 </button>
 </div>
+    </div>
+
 </div>
 <!-- </template> -->
 
@@ -438,6 +489,14 @@ type="button"
 </table>
 </div>
 </div>
+<div class="modal-footer">
+         <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <i class="ti ti-x"></i>
+Cancelar</button>
+        </div>
+</div>
+
 </div>
 </div>
 </div>
