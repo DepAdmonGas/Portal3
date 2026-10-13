@@ -960,6 +960,31 @@ $r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMa
     
     
     
+// --- TERMINALES PUNTO DE VENTA ---
+        $r->addRoute('GET', '/almacen/terminales-punto-venta', Route::auth(['AlmacenTerminalesPuntoVentaController', 'index']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta/data', Route::auth(['AlmacenTerminalesPuntoVentaController', 'data']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta/store', Route::auth(['AlmacenTerminalesPuntoVentaController', 'store']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta/update', Route::auth(['AlmacenTerminalesPuntoVentaController', 'update']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta/detalle', Route::auth(['AlmacenTerminalesPuntoVentaController', 'detalle']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta/destroy', Route::auth(['AlmacenTerminalesPuntoVentaController', 'destroy']));
+
+        // --- FALLAS DE TERMINALES PUNTO DE VENTA ---
+        // El id de la terminal viaja en la ruta, igual que el resto del módulo.
+        $r->addRoute('GET', '/almacen/terminales-punto-venta-fallas', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'index']));
+        $r->addRoute('GET', '/almacen/terminales-punto-venta-fallas/{id:\d+}', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'terminal']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/data', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'data']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/detalle', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'detalle']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/store', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'store']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/update', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'update']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/finalizar', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'finalizar']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/destroy', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'destroy']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/documentacion', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'documentacion']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/anexos', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'anexos']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/anexos/guardar', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'storeAnexo']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/anexos/eliminar', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'destroyAnexo']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/comentarios', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'comentarios']));
+        $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/comentarios/guardar', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'storeComentario']));
+
 // --- ORDEN DE COMPRA ---
         $r->addRoute('GET', '/almacen/orden-compra/{idYear:\d+}/{idMes:\d+}', Route::auth(['OrdenCompraController', 'index']));
         $r->addRoute('POST', '/almacen/orden-compra/data/{idYear:\d+}/{idMes:\d+}', Route::auth(['OrdenCompraController', 'data']));
