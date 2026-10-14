@@ -251,6 +251,15 @@ return function (RouteCollector $r) {
         //----- 1. Corporativo
         $r->addRoute('GET', '/corporativo', Route::auth(['DptoOperativoController', 'corporativoIndex']));
 
+        //----- Reporte Estadístico de la CRE
+        $r->addRoute('GET', '/reporte-estadistico-cre', Route::auth(['ReporteEstadisticoCreController', 'redirect']));
+        $r->addRoute('GET', '/reporte-estadistico-cre/{idYear:\d+}/{idMes:\d+}', Route::auth(['ReporteEstadisticoCreController', 'index']));
+        $r->addRoute('GET', '/reporte-estadistico-cre/data', Route::auth(['ReporteEstadisticoCreController', 'data']));
+        $r->addRoute('GET', '/reporte-estadistico-cre/anual', Route::auth(['ReporteEstadisticoCreController', 'anual']));
+        $r->addRoute('GET', '/reporte-estadistico-cre/mensajes', Route::auth(['ReporteEstadisticoCreController', 'mensajes']));
+        $r->addRoute('POST', '/reporte-estadistico-cre/mensajes/create', Route::auth(['ReporteEstadisticoCreController', 'crearMensaje']));
+        $r->addRoute('GET', '/reporte-estadistico-cre/facturas', Route::auth(['ReporteEstadisticoCreController', 'descargarFacturas']));
+
         //----- Corte Diario
         $r->addRoute('GET', '/corporativo/corte-diario', Route::auth(['CorporativoController', 'corteDiarioRedirect']));
         $r->addRoute('GET', '/corporativo/corte-diario/{idYear:\d+}/{idMes:\d+}', Route::auth(['CorporativoController', 'corteDiarioIndex']));

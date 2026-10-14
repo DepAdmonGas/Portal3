@@ -94,6 +94,7 @@ class DownloadController
             'maquinaria-mantenimiento-firmas'        => dirname(__DIR__, 2) . '/public/uploads/firmas/maquinaria-mantenimiento/',
             'tpv'                                    => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'tpv-anexos'                             => dirname(__DIR__, 2) . '/public/uploads/archivos/tpv/anexos/',
+            'cre'                                    => dirname(__DIR__, 2) . '/public/uploads/archivos/cre/',
 
         ];
 
