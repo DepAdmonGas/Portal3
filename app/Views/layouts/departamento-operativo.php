@@ -56,9 +56,11 @@
                 <a class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none pointer"><i class="ti ti-x"></i></a>
             </div>
 
-            <nav class="sidebar-nav scroll-sidebar" data-simplebar>
+            <nav class="sidebar-nav scroll-sidebar" data-simplebar x-data="menuDoApp()" x-init="init()">
+
                 <ul id="sidebarnav" class="mt-3">
 
+                    <!-- HOME -->
                     <li class="sidebar-item">
                         <a class="sidebar-link" href="/home" aria-expanded="false">
                             <span>
@@ -68,112 +70,34 @@
                         </a>
                     </li>
 
-                    <!---------- DIRECCION DE OPERACIONES ---------->
-                    <li class="nav-small-cap"><i class="ti ti-dots nav-small-cap-icon fs-4"></i><span class="hide-menu">DIRECCIÓN DE OPERACIONES</span></li>
+                    <!-- GRUPOS Y ELEMENTOS (vienen de /menu-do) -->
+                    <template x-for="grupo in menus" :key="grupo.nombre">
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/corporativo/corte-diario" aria-expanded="false">
-                            <span><i class="ti ti-report-money"></i></span>
-                            <span class="hide-menu">Corte Diario</span>
-                        </a>
-                    </li>
+                        <div>
+                            <!-- CATEGORÍA -->
+                            <li class="nav-small-cap">
+                                <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                                <span class="hide-menu" x-text="grupo.nombre"></span>
+                            </li>
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/solicitud-cheques" aria-expanded="false">
-                            <span><i class="ti ti-file-check"></i></span>
-                            <span class="hide-menu">Solicitud de Cheques</span>
-                        </a>
-                    </li>
+                            <!-- ELEMENTOS -->
+                            <template x-for="item in grupo.items" :key="item.id">
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link"
+                                       :href="item.ruta"
+                                       aria-expanded="false">
+                                        <span><i :class="item.icono"></i></span>
+                                        <span class="hide-menu" x-text="item.nombre"></span>
+                                    </a>
+                                </li>
+                            </template>
+                        </div>
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/recibos-nomina" aria-expanded="false">
-                            <span><i class="ti ti-receipt"></i></span>
-                            <span class="hide-menu">Recibos de Nomina</span>
-                        </a>
-                    </li>
+                    </template>
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/organigrama" aria-expanded="false">
-                            <span><i class="ti ti-sitemap"></i></span>
-                            <span class="hide-menu">Organigrama</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/control-documentos-personal" aria-expanded="false">
-                            <span><i class="ti ti-id"></i></span>
-                            <span class="hide-menu">Control Documentos Personal</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/horario-personal" aria-expanded="false">
-                            <span><i class="ti ti-calendar-clock"></i></span>
-                            <span class="hide-menu">Horario Personal</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/programar-horario" aria-expanded="false">
-                            <span><i class="ti ti-calendar-event"></i></span>
-                            <span class="hide-menu">Programar Horario</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/biometricos" aria-expanded="false">
-                            <span><i class="ti ti-fingerprint"></i></span>
-                            <span class="hide-menu">Biométricos</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/rol-comodines" aria-expanded="false">
-                            <span><i class="ti ti-users-group"></i></span>
-                            <span class="hide-menu">Rol de Comodines</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/lista-negra" aria-expanded="false">
-                            <span><i class="ti ti-user-x"></i></span>
-                            <span class="hide-menu">Lista Negra</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/bitacora-rrhh/<?= date('Y') ?>/<?= date('n') ?>" aria-expanded="false">
-                            <span><i class="ti ti-book-2"></i></span>
-                            <span class="hide-menu">Bitácora RRHH</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/importacion/descarga-merma" aria-expanded="false">
-                            <span><i class="ti ti-trash"></i></span>
-                            <span class="hide-menu">Descarga de merma</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/importacion/precios-diarios-combustible" aria-expanded="false">
-                            <span><i class="ti ti-gas-station"></i></span>
-                            <span class="hide-menu">Precios diarios combustible</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/importacion/cuenta-litros" aria-expanded="false">
-                            <span><i class="ti ti-droplet"></i></span>
-                            <span class="hide-menu">Cuenta Litros</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/almacen/orden-mantenimiento" aria-expanded="false">
-                            <span><i class="ti ti-tool"></i></span>
-                            <span class="hide-menu">Orden de Mantenimiento</span>
-                        </a>
+                    <li class="nav-small-cap" x-show="!loading && menus.length === 0">
+                        <i class="ti ti-alert-circle nav-small-cap-icon fs-4"></i>
+                        <span class="hide-menu">Sin accesos configurados</span>
                     </li>
 
                 </ul>
@@ -377,6 +301,8 @@
     <div class="dark-transparent sidebartoggler"></div>
     <!-- Import Js Files -->
     <script src="<?= asset('js/home/actions-home.init.js?v=1.2') ?>"></script>
+    <!-- Menú lateral de Departamento Operativo -->
+    <script src="<?= asset('js/departamento-operativo/menu-do.init.js?v=1.0') ?>"></script>
 
     <script src="<?= asset('js/loader.min.js') ?>"></script>
     <script src="<?= asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') ?>"></script>
