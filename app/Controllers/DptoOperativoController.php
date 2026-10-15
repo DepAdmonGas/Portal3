@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloDptoOperativoService;
+use App\Services\DptoOperativoPresentacionService;
 use App\Services\ModuloService;
 use App\Core\Auth;
 use App\Services\ModuleStationService;
@@ -27,10 +28,18 @@ $permisos = ModuloService::getPermisos($usuario->id);
 // Buscar menu / modulo del departamento
 $elementos = ModuloDptoOperativoService::getPermisos($usuario->id);
 
+/*
+ * Accesos a pintar en esta pantalla. La decisión de mostrar la tarjeta del
+ * módulo o sus submódulos como accesos directos la toma el servicio de
+ * presentación; aquí solo se pasa el resultado a la vista.
+ */
+$accesos = DptoOperativoPresentacionService::paraModulos($elementos);
+
 $data = [
 'title' => $title,
 'permisos' => $permisos,
 'elementos' => $elementos,
+'accesos' => $accesos,
 'links' =>[],
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time()
@@ -57,31 +66,13 @@ $submenus = $modulo['submenus'] ?? [];
 $idYear = date('Y');
 $idMes  = date('n');
 
-$routeSuffix = [
-'corte-diario'      => "/{$idYear}/{$idMes}",
-'embarques'         => "/{$idYear}/{$idMes}",
-'solicitud-cheque'  => "/{$idYear}/{$idMes}",
-'ingresos-facturacion' => "/{$idYear}",
-'despacho-ventas'   => "/{$idYear}/{$idMes}",
-'comparativo-xml'   => "/{$idYear}",
-'aclaracion-voucher'   => "/{$idYear}/{$idMes}",
-'solicitud-vales'   => "/{$idYear}/{$idMes}",
-'factura-monedero'   => "/{$idYear}/{$idMes}",
-'incidencias-nomina'   => "/{$idYear}",
-'bitacora-rrhh'   => "/{$idYear}/{$idMes}",
-'formato-descarga-merma'         => "/{$idYear}/{$idMes}",
-'analisis-compra'         => "/{$idYear}/{$idMes}",
-'inventarios-diarios'         => "/{$idYear}/{$idMes}",
-'recibos-nomina'         => "/{$idYear}",
-'cuenta-litros'          => "/{$idYear}/{$idMes}",
-'precios-diarios-combustible'          => "/{$idYear}/{$idMes}",
-'orden-compra'          => "/{$idYear}/{$idMes}",
-
-];
-
+/*
+ * Las rutas con año y mes se resuelven con el mismo mapa que usan los
+ * accesos directos de /departamento-operativo, para que ambos caminos
+ * generen exactamente la misma URL.
+ */
 foreach ($submenus as &$submenu) {
-$suffix = $routeSuffix[$submenu['clave']] ?? '';
-$submenu['ruta'] .= $suffix;
+$submenu['ruta'] = ModuloDptoOperativoService::resolverRutaSubmodulo($submenu);
 }
 unset($submenu);
 
