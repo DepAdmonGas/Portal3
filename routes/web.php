@@ -2170,6 +2170,26 @@ $r->addGroup('/comercializadora/camioneta-saveiro', function (RouteCollector $r)
         $r->addRoute('GET', '/calendario/data', Route::auth(['SalaJuntasController', 'dataCalendario']));
         $r->addRoute('GET', '/calendario/dia', Route::auth(['SalaJuntasController', 'diaCalendario']));
         $r->addRoute('GET', '/calendario/detalle/{id:\d+}', Route::auth(['SalaJuntasController', 'detalleCalendario']));
+
+        // Formulario de alta y edicion
+        $r->addRoute('GET', '/calendario/nuevo', Route::auth(['SalaJuntasController', 'nuevo']));
+        $r->addRoute('GET', '/calendario/horas', Route::auth(['SalaJuntasController', 'horas']));
+        $r->addRoute('GET', '/calendario/editable/{id:\d+}', Route::auth(['SalaJuntasController', 'editable']));
+
+        // Operaciones sobre juntas
+        $r->addRoute('POST', '/calendario/create', Route::auth(['SalaJuntasController', 'crear']));
+        $r->addRoute('POST', '/calendario/update/{id:\d+}', Route::auth(['SalaJuntasController', 'actualizar']));
+        $r->addRoute('POST', '/calendario/delete/{id:\d+}', Route::auth(['SalaJuntasController', 'eliminar']));
+
+        // Solicitud de uso de la sala de juntas
+        $r->addRoute('GET', '/calendario/solicitud/{id:\d+}', Route::auth(['SalaJuntasController', 'nuevoSolicitud']));
+        $r->addRoute('POST', '/calendario/solicitud/{id:\d+}', Route::auth(['SalaJuntasController', 'crearSolicitud']));
+        $r->addRoute('GET', '/calendario/solicitud-pendiente/{id:\d+}', Route::auth(['SalaJuntasController', 'verSolicitud']));
+        $r->addRoute('POST', '/calendario/responder-solicitud/{id:\d+}', Route::auth(['SalaJuntasController', 'responderSolicitud']));
+
+        // Comentarios
+        $r->addRoute('GET', '/calendario/{id:\d+}/comentarios', Route::auth(['SalaJuntasController', 'comentarios']));
+        $r->addRoute('POST', '/calendario/{id:\d+}/comentarios/create', Route::auth(['SalaJuntasController', 'crearComentario']));
     });
 
     //----------------------------------------------------------------
