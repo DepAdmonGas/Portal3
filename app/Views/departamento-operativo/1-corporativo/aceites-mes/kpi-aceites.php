@@ -47,12 +47,12 @@ style="display: none;"></div>
 <div>
 
 <div class="row g-0 w-100 justify-content-between">
-<div class="col-12 col-md-auto d-grid mb-2 mt-2 mt-md-2">
+<div class="col-12 col-md-auto d-grid mb-1 mb-md-3 mt-2 mt-md-3">
 <button class="btn bg-danger-subtle text-danger" @click="volverOpciones()">
 <i class="ti ti-arrow-left me-1"></i>Cambiar evaluación
 </button>
 </div>
-<div class="col-12 col-md-auto d-grid mb-2 mt-0 mt-md-2">
+<div class="col-12 col-md-auto d-grid mb-3 mb-md-3 mt-0 mt-md-3">
 <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirInfoEvaluacion()">
 <i class="ti ti-info-circle me-1"></i>Forma de evaluación
 </button>

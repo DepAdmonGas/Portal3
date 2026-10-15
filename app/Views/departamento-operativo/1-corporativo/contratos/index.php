@@ -150,7 +150,7 @@ x-text="modalTitle"></span>
 
 <div class="modal-footer" x-show="modo === 'agregar' || modo === 'editar'">
   <div class="row g-0 ms-auto w-100 justify-content-end">
-    <div class="col-12 col-md-auto d-grid mb-2 mb-md-0">
+    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 <button type="button" class="btn bg-danger-subtle text-danger" @click="cerrarModal" :disabled="loading">
   <i class="ti ti-x"></i>
 Cancelar</button>

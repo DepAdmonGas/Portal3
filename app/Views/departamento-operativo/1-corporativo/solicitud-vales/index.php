@@ -12,7 +12,7 @@ data-get-data-url="/departamento-operativo/corporativo/solicitud-vales/get-data"
 x-data="solicitudValesComponent()">
 
 <div class="row w-100 justify-content-end">
-<div class="col-12 col-md-auto d-grid mb-2">
+<div class="col-12 col-md-auto d-grid mb-3">
 <a href="/departamento-operativo/corporativo/solicitud-vales-nuevo/<?= $idYear ?>/<?= $idMes ?>/<?= $idEstacion ?>" class="btn bg-primary-subtle text-primary"> <i class="ti ti-plus me-1"></i> Nuevo</a>
 </div>
 </div>
@@ -351,7 +351,7 @@ Documentación</h5>
         <div class="col-12 col-md-auto d-grid">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x"></i>    
-Cerrar</button>
+Cancelar</button>
         </div>
     </div>
 </div>

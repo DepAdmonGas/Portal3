@@ -11,31 +11,28 @@ data-es-comercializadora="<?= $esComercializadora ? 'true' : 'false' ?>"
 data-es-mes-actual="<?= $esMesActual ? 'true' : 'false' ?>"
 data-module-station-key="aclaracion-voucher"
 x-data="{ ...actions(), ...aclaracionVoucherComponent() }">
-
-<div id="av-tools-header" class="d-flex align-items-center justify-content-between mb-2 gap-2 mb-3">
-<div id="av-pending-wrapper" class="d-flex align-items-center gap-1">
-<span class="badge rounded-pill bg-danger-subtle text-danger-emphasis d-inline-flex align-items-center gap-1 px-3 py-2 fs-2 fw-semibold">
-<i class="ti ti-alert-circle"></i>
-<span>Pendientes: <span id="av-pending-count">0</span></span>
-</span>
-</div>
-<div id="av-tools-anchor" class="d-flex"></div>
+<div id="av-tools-header" class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between mb-3 gap-2">
+    <div id="av-pending-wrapper" class="d-flex align-items-center gap-1">
+        <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis d-inline-flex align-items-center gap-1 px-3 py-2 fs-2 fw-semibold">
+            <i class="ti ti-alert-circle"></i>
+            <span>Pendientes: <span id="av-pending-count">0</span></span>
+        </span>
+    </div>
+    <div id="av-tools-anchor" class="w-100 w-md-auto"></div>
 </div>
 
 <span id="av-pendientes-data" style="display:none"><?= json_encode($pendientesData) ?></span>
 
 <template id="av-tools-tmpl">
     <?php if ($puedeCrear): ?>
-        <div id="av-tools-wrapper">
-            <div class="row g-0 ms-auto w-100 justify-content-end">
-                <div class="col-12 col-md-auto d-grid">
-                    <button
-                        type="button"
-                        class="btn bg-primary-subtle text-primary"
-                        @click="abrirModalAgregar()">
-                        <i class="ti ti-plus me-1"></i> Nuevo
-                    </button>
-                </div>
+        <div id="av-tools-wrapper" class="w-100">
+            <div class="d-grid d-md-flex justify-content-md-end mb-3 mt-3">
+                <button
+                    type="button"
+                    class="btn bg-primary-subtle text-primary"
+                    @click="abrirModalAgregar()">
+                    <i class="ti ti-plus me-1"></i> Nuevo
+                </button>
             </div>
         </div>
     <?php endif; ?>
@@ -315,7 +312,7 @@ Detalle de aclaración</h5>
 </template>
 </div>
 <div class="modal-footer">
-    <div class="row ms-auto w-100 justify-content-end">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
         <div class="col-12 col-md-auto d-grid">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
     <i class="ti ti-x"></i>

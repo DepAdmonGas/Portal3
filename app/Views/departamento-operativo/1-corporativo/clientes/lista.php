@@ -136,7 +136,7 @@ Nuevo Cliente</h5>
 
 <div class="modal-footer">
 <div class="row g-0 ms-auto w-100 justify-content-end">
-    <div class="col-12 col-md-auto d-grid mb-2 mb-md-0 me-0 me-md-2">
+    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2">
     
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x"></i>
@@ -225,7 +225,7 @@ Editar Cliente</h5>
 <!--------------footer-------->
 <div class="modal-footer">
 <div class="row g-0 ms-auto w-100 justify-content-end">
-    <div class="col-12 col-md-auto d-grid mb-2 mb-md-0 me-0 me-md-2">
+    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x"></i>
 Cancelar</button>

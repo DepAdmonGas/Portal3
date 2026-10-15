@@ -127,11 +127,15 @@ Activar Corte Diario (<span x-text="fecha" class="fw-normal"></span>)</h5>
 <template x-if="!loading && step === 'history'">
 <div>
 <div class="modal-body">
-<div class="text-end mb-3">
+
+<div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid mb-3">
 <button type="button" class="btn bg-primary-subtle text-primary" @click="step = 'activate'">
 <i class="ti ti-lock-open"></i> Activar corte diario
 </button>
 </div>
+</div>
+
 <div class="table-responsive overflow-x-auto overflow-hidden">
 
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
@@ -179,7 +183,7 @@ Activar Corte Diario (<span x-text="fecha" class="fw-normal"></span>)</h5>
 
 <div class="modal-footer">
 <div class="row g-0 ms-auto w-100 justify-content-end">
-<div class="col-12 col-md-auto d-grid mb-2 mb-md-0">
+<div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 <button type="button" class="btn bg-danger-subtle text-danger" @click="step = 'history'">
 <i class="ti ti-x"></i>    
 Cancelar</button>

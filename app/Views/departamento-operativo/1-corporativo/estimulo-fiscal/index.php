@@ -157,7 +157,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modal-buscar" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal fade" id="modal-buscar" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-primary">
@@ -180,10 +180,10 @@
                 </div>
                 <div class="modal-footer">
                     <div class="row g-0 ms-auto w-100 justify-content-end">
-                        <div class="col-12 col-md-auto d-grid mb-2 mb-md-0 me-0 me-md-2">
+                        <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="loading">
 <i class="ti ti-x"></i>    
-Cerrar</button>
+Cancelar</button>
                         </div>
                         <div class="col-12 col-md-auto d-grid">
  <button type="button" class="btn bg-primary-subtle text-primary" @click="buscarReporte" :disabled="loading">
@@ -233,7 +233,7 @@ Cerrar</button>
                 </div>
                 <div class="modal-footer">
                     <div class="row g-0 ms-auto w-100 justify-content-end">
-                        <div class="col-12 col-md-auto d-grid mb-2 me-0 me-md-2">
+                        <div class="col-12 col-md-auto d-grid mb-1 me-0 me-md-2">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="loading">
 <i class="ti ti-x"></i>    
 Cancelar</button>

@@ -439,20 +439,20 @@ Documentos de Aceites</h5>
 <!----------------------------- Modal Footer ----------------->
 <div class="modal-footer">
 <div class="row g-0 ms-auto w-100 justify-content-end">
-<div class="col-12 col-md-auto d-grid mb-2">
+<div class="col-12 col-md-auto d-grid mb-1">
 <button class="btn bg-primary-subtle text-primary me-0 me-md-2" x-show="documentoEditId" @click="cancelarEdicionDocumento()">
   <i class="ti ti-arrow-left"></i>  
 Regresar</button>
     </div>
 
-<div class="col-12 col-md-auto d-grid mb-2">
+<div class="col-12 col-md-auto d-grid mb-1">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
     <i class="ti ti-x"></i>
 Cancelar</button>
     </div>
 
 
-<div class="col-12 col-md-auto d-grid mb-2 ms-2">
+<div class="col-12 col-md-auto d-grid mb-1 ms-2">
 <button class="btn btn-success float-end" @click="subirDocumento" :disabled="subiendoDocumento" x-show="documentoEditId">
 <span x-show="subiendoDocumento" class="spinner-border spinner-border-sm me-1"></span>
 

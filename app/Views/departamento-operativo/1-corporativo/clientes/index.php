@@ -67,8 +67,8 @@ x-data="clientesComponent()">
 <td class="text-end" x-text="'$ ' + formatNum(resumen.cc)"></td>
 <td class="text-end" x-text="'$ ' + formatNum(resumen.cp)"></td>
 </tr>
-<tr>
-<th class="text-center form-label">Total</th>
+<tr class="table-dark">
+<th class="text-center form-label text-white">Total</th>
 <td class="text-end"><strong x-text="'$ ' + formatNum(resumen.total_consumo)"></strong></td>
 <td class="text-end"><strong x-text="'$ ' + formatNum(resumen.total_pago)"></strong></td>
 </tr>
@@ -143,12 +143,12 @@ Nuevos consumos y pagos</h5>
 </div>
 <div class="modal-footer">
     <div class="row g-0 ms-auto w-100 justify-content-end">
-        <div class="col-12 col-md-auto d-grid mb-2 me-0 me-md-2">
+        <div class="col-12 col-md-auto d-grid mb-1 me-0 me-md-2">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
     <i class="ti ti-x"></i>    
     Cancelar</button>
         </div>
-        <div class="col-12 col-md-auto d-grid mb-2">
+        <div class="col-12 col-md-auto d-grid ">
 <button type="button" class="btn btn-labeled2 btn-success" @click="guardar()" :disabled="guardando">
     <i class="ti ti-check"></i>
 <span x-show="!guardando">Guardar</span>

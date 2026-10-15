@@ -12,18 +12,29 @@
     data-es-vobo="<?= $esVoBo ? 'true' : 'false' ?>"
     x-data="ventasComponent()">
 
- <div class="row w-100 g-0 justify-content-between">
-          <div class="col-12 col-md-auto d-grid mb-2">
-             <button type="button" class="btn btn-danger" @click="downloadPdf"><i class="ti ti-file-type-pdf me-1"></i>Descargar PDF</button>
-        </div>
 
-                <div class="col-12 col-md-auto d-grid mb-2">
-                   
-                    <template x-if="!multiestacion && estado == 0">
-                        <button type="button" class="btn btn-success" @click="abrirModalFirma"><i class="ti ti-check me-1"></i> Finalizar</button>
-                    </template>
-                </div>
- </div>
+<div class="row w-100 g-0 mb-3 mt-3"
+     :class="(!multiestacion && estado == 0)
+        ? 'justify-content-between'
+        : 'justify-content-end'">
+
+    <!-- Descargar PDF -->
+    <div class="col-12 col-md-auto d-grid mb-1">
+        <button type="button" class="btn bg-danger-subtle text-danger" @click="downloadPdf">
+            <i class="ti ti-file-type-pdf me-1"></i> Descargar PDF
+        </button>
+    </div>
+
+    <!-- Finalizar -->
+    <template x-if="!multiestacion && estado == 0">
+        <div class="col-12 col-md-auto d-grid mb-1">
+            <button type="button" class="btn btn-success" @click="abrirModalFirma">
+                <i class="ti ti-check me-1"></i> Finalizar
+            </button>
+        </div>
+    </template>
+
+</div>
 
 
 
@@ -53,7 +64,7 @@
 
                                             <thead>
                                                 <tr>
-                                                    <th class="text-center align-middle">Producto</th>
+                                                    <th class="text-start align-middle">Producto</th>
                                                     <th class="text-center align-middle">Litros</th>
                                                     <th class="text-center align-middle">Jarras</th>
                                                     <th class="text-center align-middle">Total Litros</th>
@@ -125,7 +136,7 @@
                                                     </tr>
                                                 </template>
 
-                                                <tr id="trSubTotales" x-show="ventas_dia.length > 0">
+                                                <tr  id="trSubTotale" x-show="ventas_dia.length > 0">
                                                     <td><strong>A SUB-TOTAL (1+2+3)</strong></td>
                                                     <td class="align-middle text-end"><strong x-text="formatNum(totales_ventas.subTLitros)"></strong></td>
                                                     <td class="align-middle text-end"><strong x-text="formatNum(totales_ventas.subJarras)"></strong></td>
@@ -166,8 +177,8 @@
                                                     </tr>
                                                 </template>
 
-                                                <tr id="trTotales" x-show="ventas_dia_otros.length > 0">
-                                                    <th colspan="5" class="text-end">B TOTAL (A+4+5+6)</th>
+                                                <tr class="table-dark text-white" id="trTotales" x-show="ventas_dia_otros.length > 0">
+                                                    <th colspan="5" class="text-end text-white">B TOTAL (A+4+5+6)</th>
                                                     <td class="align-middle text-end "><strong x-text="'$ ' + formatNum(totales_ventas.totalNeto)"></strong></td>
                                                 </tr>
                                             </tbody>
@@ -200,7 +211,7 @@
                                                     <th class="align-middle text-center">Concepto</th>
                                                     <th class="align-middle text-center">Cantidad</th>
                                                     <th class="align-middle text-center">Precio Unitario</th>
-                                                    <td class="align-middle text-center">Importe</td>
+                                                    <th class="align-middle text-center">Importe</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -374,9 +385,9 @@
                                                         </td>
                                                     </tr>
                                                 </template>
-                                                <tr>
-                                                    <th class="text-center" colspan="2">TOTAL 1</th>
-                                                    <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales1234.total1)"></strong></td>
+                                                <tr class="table-dark">
+                                                    <th class="text-center text-white" colspan="2">TOTAL 1</th>
+                                                    <td class="align-middle text-end text-white"><strong x-text="'$ ' + formatNum(totales1234.total1)"></strong></td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -431,9 +442,9 @@
                                                         </template>
                                                     </tr>
                                                 </template>
-                                                <tr>
-                                                    <th class="text-center" colspan="2">TOTAL 2</th>
-                                                    <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales1234.total2)"></strong></td>
+                                                <tr class="table-dark">
+                                                    <th class="text-center text-white" colspan="2">TOTAL 2</th>
+                                                    <td class="align-middle text-end text-white"><strong x-text="'$ ' + formatNum(totales1234.total2)"></strong></td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -496,8 +507,8 @@
                                                         </td>
                                                     </tr>
                                                 </template>
-                                                <tr>
-                                                    <th class="text-center">TOTAL 3</th>
+                                                <tr class="table-dark">
+                                                    <th class="text-center text-white">TOTAL 3</th>
                                                     <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(pago_total)"></strong></td>
                                                     <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales1234.total3)"></strong></td>
                                                 </tr>
@@ -581,8 +592,8 @@
                                                         </td>
                                                     </tr>
                                                 </template>
-                                                <tr>
-                                                    <th class="text-center">TOTAL 4</th>
+                                                <tr class="table-dark">
+                                                    <th class="text-center text-white">TOTAL 4</th>
                                                     <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(total_pago_clientes)"></strong></td>
                                                     <td class="align-middle text-end"></td>
                                                 </tr>

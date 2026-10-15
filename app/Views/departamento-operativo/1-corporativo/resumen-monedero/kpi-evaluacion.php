@@ -23,7 +23,7 @@ style="display: none;"></div>
 </div>
 
 <div x-show="!cargando" x-cloak>
-<div class="row  w-100 justify-content-end">
+<div class="row g-0 w-100 justify-content-end">
 <div class="col-12 col-md-auto d-grid mb-3 mt-3">
 <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirInfoEvaluacion()">
 <i class="ti ti-info-circle me-1"></i>Forma de evaluación

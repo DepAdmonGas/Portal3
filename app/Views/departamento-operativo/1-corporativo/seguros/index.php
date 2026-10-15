@@ -25,7 +25,7 @@
         </div>
 
         <div class="table-responsive pb-5 overflow-x-auto overflow-y-hidden" >
-            <table id="tabla-seguros" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+            <table id="tabla-seguros" class="table table-striped table-bordered mb-0 align-middle">
                 <tbody></tbody>
             </table>
         </div>
@@ -86,6 +86,7 @@
                         </template>
                    
                 </div>
+
                 <div class="modal-footer">
                     <div class="row g-0 ms-auto w-100 justify-content-end">
                         <div class="col-12 col-md-auto d-grid">
@@ -96,6 +97,11 @@
                     </div>
                 </div>
             </div>
+
+
+
+
+
         </div>
     </div>
 
@@ -177,29 +183,7 @@ Cancelar</button>
                     <label class="form-label fw-semibold">* Documento:</label>
                     <input type="file" class="form-control mb-3" x-ref="polizaFileInput">
 
-                    <div class="row g-0 ms-auto w-100 justify-content-end">
-                        <div class="col-12 col-md-auto d-grid me-0 me-md-2">
-    <button
-                            type="button"
-                            class="btn bg-danger-subtle text-danger"
-                            @click="cancelarEdicionPoliza"
-                            x-show="polizaModo === 'editar'"
-                            :disabled="loading">
-                            <i class="ti ti-x"></i>
-                            Cancelar
-                        </button>
-                        </div>
-                    <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
- <button
-                            type="button"
-                            class="btn btn-success"
-                            @click="guardarPoliza"
-                            :disabled="loading">
-                            <i class="ti ti-check"></i>
-                            <span x-text="polizaModo === 'editar' ? 'Guardar cambios' : 'Guardar'"></span>
-                        </button>
-                    </div>
-                    </div>
+             
 
                     <div x-show="polizaModo !== 'editar'" class="table-responsive overflow-x-auto overflow-y-hidden">
                         <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mt-3">
@@ -247,6 +231,37 @@ Cancelar</button>
 
 
 <div class="modal-footer">
+
+
+
+
+       <div class="row g-0 ms-auto w-100 justify-content-end">
+                        <div class="col-12 col-md-auto d-grid me-0 me-md-2">
+    <button
+                            type="button"
+                            class="btn bg-danger-subtle text-danger"
+                            @click="cancelarEdicionPoliza"
+                            x-show="polizaModo === 'editar'"
+                            :disabled="loading">
+                            <i class="ti ti-x"></i>
+                            Cancelar
+                        </button>
+                        </div>
+                    <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
+ <button
+                            type="button"
+                            class="btn btn-success"
+                            @click="guardarPoliza"
+                            :disabled="loading"
+                                 x-show="polizaModo === 'editar'">
+                            <i class="ti ti-check"></i>
+                            <span x-text="polizaModo === 'editar' ? 'Guardar' : 'Guardar'"></span>
+                        </button>
+                    </div>
+                    </div>
+
+
+
     <div class="row g-0 ms-auto w-100 justify-content-end">
         <div class="col-12 col-md-auto d-grid">
    <button
