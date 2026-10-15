@@ -115,14 +115,22 @@ class Breadcrumb
             return $items;
         }
 
-        // Ya tiene la forma corta (Home / DO / destino).
+        /*
+         * Los desplegables de mes y año van DESPUÉS del título y no son
+         * niveles de navegación: son controles de la página. Se conservan
+         * para que el usuario pueda cambiar el periodo desde el breadcrumb
+         * aunque haya entrado por un acceso directo del sidebar.
+         */
+        $cola = array_slice($items, $titulo);
+
+        // Ya tiene la forma corta: no hay nada que recortar.
         if ($titulo - $indiceDo <= 1) {
             return $items;
         }
 
         return array_merge(
             array_slice($items, 0, $indiceDo + 1),
-            [$items[$titulo]]
+            $cola
         );
     }
 

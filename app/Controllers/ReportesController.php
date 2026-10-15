@@ -37,7 +37,7 @@ class ReportesController extends BaseController
 
     public function index()
     {
-        $title = 'Reportes Estación';
+        $title = 'Reporte Anual';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add($title, '');

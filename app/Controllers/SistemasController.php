@@ -14,7 +14,7 @@ class SistemasController extends BaseController
 
     public function index()
     {
-        $title = 'Sistemas';
+        $title = 'Sistemas (Soporte de Apartados)';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add($title, '');

@@ -26,6 +26,9 @@ return function (RouteCollector $r) {
 
     $r->addRoute('GET', '/menu', Route::auth(['MenuController', 'index']));
 
+    // Menú lateral de Departamento Operativo
+    $r->addRoute('GET', '/menu-do', Route::auth(['MenuDoController', 'index']));
+
     // ---------------- PERSONAL ----------------
     $r->addGroup('/personal', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['PersonalController', 'index']));

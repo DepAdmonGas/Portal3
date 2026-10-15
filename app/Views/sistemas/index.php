@@ -1,268 +1,185 @@
 <div class="row g-3 mt-3">
 
     <!-- 1. Estaciones -->
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-
-        <a
-            href="/estaciones"
-            class="card h-100 border-0 shadow-sm text-decoration-none text-body cursor-pointer">
-            <div class="card-body">
-
-                <div class="d-flex align-items-center">
-
-                    <div
-                        class="bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center me-3"
-                        style="width:48px; height:48px; min-width:48px;">
-                        <i class="ti ti-gas-station fs-6"></i>
+    <div class="col-xl-4 col-lg-6 mb-4 d-flex align-items-stretch">
+        <a href="/estaciones" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-gas-station text-white display-6"></i> 
                     </div>
-
-                    <div class="w-100">
-                        <h5 class="fw-semibold mb-1">
+                    <div class="flex-grow-1 d-flex align-items-center" style="min-height: 60px;">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm text-end w-100">
                             Estaciones
-                        </h5>
-
-                        <p class="text-muted mb-0 small">
-                            Administración de estaciones
-                        </p>
+                        </h4>
                     </div>
-
-                    <div class="ms-2 text-muted">
-                        <i class="ti ti-chevron-right fs-5"></i>
-                    </div>
-
                 </div>
-
+            </div>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver elemento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
             </div>
         </a>
-
     </div>
-
 
     <!-- 2. Puestos -->
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-
-        <a
-            href="/puestos"
-            class="card h-100 border-0 shadow-sm text-decoration-none text-body cursor-pointer">
-            <div class="card-body">
-
-                <div class="d-flex align-items-center">
-
-                    <div
-                        class="bg-success-subtle text-success rounded-3 d-flex align-items-center justify-content-center me-3"
-                        style="width:48px; height:48px; min-width:48px;">
-                        <i class="ti ti-users-group fs-6"></i>
+    <div class="col-xl-4 col-lg-6 mb-4 d-flex align-items-stretch">
+        <a href="/puestos" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-users-group text-white display-6"></i> 
                     </div>
-
-                    <div class="w-100">
-                        <h5 class="fw-semibold mb-1">
+                    <div class="flex-grow-1 d-flex align-items-center" style="min-height: 60px;">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm text-end w-100">
                             Puestos
-                        </h5>
-
-                        <p class="text-muted mb-0 small">
-                            Catálogo de puestos
-                        </p>
+                        </h4>
                     </div>
-
-                    <div class="ms-2 text-muted">
-                        <i class="ti ti-chevron-right fs-5"></i>
-                    </div>
-
                 </div>
-
+            </div>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver elemento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
             </div>
         </a>
-
     </div>
 
-
-    <!-- 3. Personal -->
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-
-        <a
-            href="/usuarios"
-            class="card h-100 border-0 shadow-sm text-decoration-none text-body cursor-pointer">
-            <div class="card-body">
-
-                <div class="d-flex align-items-center">
-
-                    <div
-                        class="bg-warning-subtle text-warning rounded-3 d-flex align-items-center justify-content-center me-3"
-                        style="width:48px; height:48px; min-width:48px;">
-                        <i class="ti ti-user-cog fs-6"></i>
+    <!-- 3. Usuarios -->
+    <div class="col-xl-4 col-lg-6 mb-4 d-flex align-items-stretch">
+        <a href="/usuarios" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-user-cog text-white display-6"></i> 
                     </div>
-
-                    <div class="w-100">
-                        <h5 class="fw-semibold mb-1">
+                    <div class="flex-grow-1 d-flex align-items-center" style="min-height: 60px;">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm text-end w-100">
                             Usuarios
-                        </h5>
-
-                        <p class="text-muted mb-0 small">
-                            Gestión del personal
-                        </p>
+                        </h4>
                     </div>
-
-                    <div class="ms-2 text-muted">
-                        <i class="ti ti-chevron-right fs-5"></i>
-                    </div>
-
                 </div>
-
+            </div>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver elemento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
             </div>
         </a>
-
     </div>
-
 
     <!-- 4. Cursos -->
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-
-        <a
-            href="/cursos"
-            class="card h-100 border-0 shadow-sm text-decoration-none text-body cursor-pointer">
-            <div class="card-body">
-
-                <div class="d-flex align-items-center">
-
-                    <div
-                        class="bg-info-subtle text-info rounded-3 d-flex align-items-center justify-content-center me-3"
-                        style="width:48px; height:48px; min-width:48px;">
-                        <i class="ti ti-school fs-6"></i>
+    <div class="col-xl-4 col-lg-6 mb-4 d-flex align-items-stretch">
+        <a href="/cursos" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-school text-white display-6"></i> 
                     </div>
-
-                    <div class="w-100">
-                        <h5 class="fw-semibold mb-1">
+                    <div class="flex-grow-1 d-flex align-items-center" style="min-height: 60px;">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm text-end w-100">
                             Cursos
-                        </h5>
-
-                        <p class="text-muted mb-0 small">
-                            Capacitación y seguimiento
-                        </p>
+                        </h4>
                     </div>
-
-                    <div class="ms-2 text-muted">
-                        <i class="ti ti-chevron-right fs-5"></i>
-                    </div>
-
                 </div>
-
+            </div>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver elemento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
             </div>
         </a>
-
     </div>
-
 
     <!-- 5. Corte Diario -->
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-
-        <a
-            href="/corte-diario"
-            class="card h-100 border-0 shadow-sm text-decoration-none text-body cursor-pointer">
-            <div class="card-body">
-
-                <div class="d-flex align-items-center">
-
-                    <div
-                        class="bg-danger-subtle text-danger rounded-3 d-flex align-items-center justify-content-center me-3"
-                        style="width:48px; height:48px; min-width:48px;">
-                        <i class="ti ti-report-analytics fs-6"></i>
+    <div class="col-xl-4 col-lg-6 mb-4 d-flex align-items-stretch">
+        <a href="/corte-diario" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-report-analytics text-white display-6"></i> 
                     </div>
-
-                    <div class="w-100">
-                        <h5 class="fw-semibold mb-1">
+                    <div class="flex-grow-1 d-flex align-items-center" style="min-height: 60px;">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm text-end w-100">
                             Corte Diario
-                        </h5>
-
-                        <p class="text-muted mb-0 small">
-                            Operación y cierre diario
-                        </p>
+                        </h4>
                     </div>
-
-                    <div class="ms-2 text-muted">
-                        <i class="ti ti-chevron-right fs-5"></i>
-                    </div>
-
                 </div>
-
+            </div>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver elemento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
             </div>
         </a>
-
     </div>
-
 
     <!-- 6. Solicitud de Cheques -->
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-
-        <a
-            href="/solicitud-cheques"
-            class="card h-100 border-0 shadow-sm text-decoration-none text-body cursor-pointer">
-            <div class="card-body">
-
-                <div class="d-flex align-items-center">
-
-                    <div
-                        class="bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center me-3"
-                        style="width:48px; height:48px; min-width:48px;">
-                        <i class="ti ti-cash-banknote fs-6"></i>
+    <div class="col-xl-4 col-lg-6 mb-4 d-flex align-items-stretch">
+        <a href="/solicitud-cheques" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-cash-banknote text-white display-6"></i> 
                     </div>
-
-                    <div class="w-100">
-                        <h5 class="fw-semibold mb-1">
+                    <div class="flex-grow-1 d-flex align-items-center" style="min-height: 60px;">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm text-end w-100">
                             Solicitud de Cheques
-                        </h5>
-
-                        <p class="text-muted mb-0 small">
-                            Gestión de solicitudes
-                        </p>
+                        </h4>
                     </div>
-
-                    <div class="ms-2 text-muted">
-                        <i class="ti ti-chevron-right fs-5"></i>
-                    </div>
-
                 </div>
-
+            </div>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver elemento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
             </div>
         </a>
-
     </div>
 
-
     <!-- 7. Solicitud de Vales -->
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-
-        <a
-            href="/solicitud-vales"
-            class="card h-100 border-0 shadow-sm text-decoration-none text-body cursor-pointer">
-            <div class="card-body">
-
-                <div class="d-flex align-items-center">
-
-                    <div
-                        class="bg-secondary-subtle text-secondary rounded-3 d-flex align-items-center justify-content-center me-3"
-                        style="width:48px; height:48px; min-width:48px;">
-                        <i class="ti ti-ticket fs-6"></i>
+    <div class="col-xl-4 col-lg-6 mb-4 d-flex align-items-stretch">
+        <a href="/solicitud-vales" 
+           class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-ticket text-white display-6"></i> 
                     </div>
-
-                    <div class="w-100">
-                        <h5 class="fw-semibold mb-1">
+                    <div class="flex-grow-1 d-flex align-items-center" style="min-height: 60px;">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm text-end w-100">
                             Solicitud de Vales
-                        </h5>
-
-                        <p class="text-muted mb-0 small">
-                            Control de vales
-                        </p>
+                        </h4>
                     </div>
-
-                    <div class="ms-2 text-muted">
-                        <i class="ti ti-chevron-right fs-5"></i>
-                    </div>
-
                 </div>
-
+            </div>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Ver elemento</span>
+                <div class="icon-transition">
+                    <i class="ti ti-arrow-right fs-5"></i>
+                </div>
             </div>
         </a>
-
     </div>
 
 </div>
