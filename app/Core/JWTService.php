@@ -214,7 +214,7 @@ class JWTService
         }
 
         return [
-            'iss' => $_ENV['APP_URL'] ?? 'portal3',
+            'iss' => 'portal3_auth',
             'iat' => time(),
             'sub' => $userId,
             'nombre' => $user['nombre'] ?? '',
