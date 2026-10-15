@@ -653,7 +653,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                         
   </div>
   <div class="col-12 col-md-auto d-grid">
-                        <button type="button" class="btn btn-success mt-2 mt-md-0" @click="guardarDocumento()" :disabled="subiendoDocumento">
+                        <button type="button" class="btn btn-success mt-1 mt-md-0" @click="guardarDocumento()" :disabled="subiendoDocumento">
                             <i class="ti ti-check"></i>
                             <span x-text="subiendoDocumento ? 'Subiendo...' : 'Guardar'"></span>
                         </button>

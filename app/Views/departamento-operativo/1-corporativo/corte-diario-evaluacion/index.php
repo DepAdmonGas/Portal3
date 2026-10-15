@@ -99,7 +99,7 @@ Forma de Evaluación (Apertura de Cortes Diarios)</h5>
 </div>
 <div class="modal-body" x-html="DOMPurify.sanitize(data.info)"></div>
 <div class="modal-footer">
-<div class="row w-100 justify-content-end">
+<div class="row g-0 w-100 justify-content-end">
     <div class="col-12 col-md-auto d-grid">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x"></i>    

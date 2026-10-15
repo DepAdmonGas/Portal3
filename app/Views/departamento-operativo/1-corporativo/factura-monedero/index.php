@@ -170,7 +170,7 @@ title="Descargar comprobante">
 </div>
 <div class="modal-footer">
     <div class="row g-0 ms-auto w-100 justify-content-end">
-        <div class="col-12 col-md-auto d-grid mb-2 mb-md-0">
+        <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x"></i>    
 Cancelar</button>

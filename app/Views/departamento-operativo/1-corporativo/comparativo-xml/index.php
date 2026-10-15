@@ -66,7 +66,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar el C
 </div>
 </div>
 
-<div class="table-responsive mb-4 overflow-x-auto overflow-y-hidden">
+<div class="table-responsive mb-5 overflow-x-auto overflow-y-hidden">
 <table id="tabla-comparativo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
@@ -425,7 +425,7 @@ Guardar Comentario
         <input class="form-control" type="file" x-ref="fileInput" id="docFile">
     </div>
 
-    <div class="col-12 col-md-auto d-grid mb-2">
+    <div class="col-12 col-md-auto d-grid mb-3 mt-2">
         <button type="button" class="btn btn-success"
                 @click="guardarDocumento()" :disabled="guardandoDocumento">
             <i class="ti ti-check"></i>
@@ -478,7 +478,7 @@ Guardar Comentario
         <div class="col-12 col-md-auto d-grid">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x"></i>    
-Cerrar</button>
+Cancelar</button>
         </div>
     </div>
 

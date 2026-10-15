@@ -1,5 +1,5 @@
 <div class="row mb-5" x-data="listaAceitesComponent()">
-<div class="col-12 col-md-auto ms-md-auto d-grid mt-2">
+<div class="col-12 col-md-auto ms-md-auto d-grid mt-3 mb-3">
 <button type="button" class="btn bg-primary-subtle text-primary" @click="nuevoAceite()" :disabled="creando">
 <i class="ti ti-plus me-1"></i>Nuevo
 </button>

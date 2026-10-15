@@ -115,8 +115,8 @@ style="display: none;"></div>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(detalleData.aceites_iva)"></td>
 <td colspan="2" class="align-middle text-end" x-text="'$ ' + formatNum(detalleData.aceites_total)"></td>
 </tr>
-<tr x-show="detalleData.items.length > 0">
-<th colspan="6" class="align-middle text-end">Total del día</th>
+<tr class="table-dark" x-show="detalleData.items.length > 0">
+<th colspan="6" class="align-middle text-end text-white">Total del día</th>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(detalleData.total_dia.importe_sin_iva)"></strong></td>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(detalleData.total_dia.iva)"></strong></td>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(detalleData.total_dia.ieps)"></strong></td>
@@ -207,8 +207,8 @@ Resumen de Impuestos Totales</h4>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(totalesData.aceites.iva)"></td>
 <td colspan="2" class="align-middle text-end" x-text="'$ ' + formatNum(totalesData.aceites.total)"></td>
 </tr>
-<tr x-show="totalesData.items.length > 0">
-<th colspan="6" class="align-middle text-end">Total del mes</th>
+<tr class="table-dark" x-show="totalesData.items.length > 0">
+<th colspan="6" class="align-middle text-end text-white">Total del mes</th>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totalesData.total.importe_sin_iva)"></strong></td>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totalesData.total.iva)"></strong></td>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totalesData.total.ieps)"></strong></td>

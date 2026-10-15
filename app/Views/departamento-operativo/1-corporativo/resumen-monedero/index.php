@@ -525,7 +525,7 @@ x-text="modalFacturaTitulo">
     </template>
 
     <template x-if="modalFacturaVista === 'form'">
-        <div class="col-12 col-md-auto d-grid mt-2 mt-md-0">
+        <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
             <button type="button" class="btn btn-success" @click="guardarFactura()" :disabled="guardandoFactura">
                 <i class="ti ti-check"></i>
                 <span x-text="guardandoFactura ? 'Guardando...' : 'Guardar'"></span>
@@ -535,7 +535,7 @@ x-text="modalFacturaTitulo">
 </div>
 
 
-<div class="row ms-auto w-100 justify-content-end g-0">
+<div class="row g-0 ms-auto w-100 justify-content-end">
     <div class="col-12 col-md-auto d-grid">
 <template x-if="modalFacturaVista === 'edi'">
 <button type="button" class="btn bg-danger-subtle text-danger" @click="volverListaFacturas()">
@@ -547,7 +547,7 @@ Regresar</button>
 
 
 
-<div class="row ms-auto w-100 justify-content-end">
+<div class="row g-0 ms-auto w-100 justify-content-end">
 <div class="col-12 col-md-auto d-grid">
 <template x-if="modalFacturaVista === 'documentacion'">
 <button type="button" class="btn bg-danger-subtle text-danger" @click="volverListaFacturas()">

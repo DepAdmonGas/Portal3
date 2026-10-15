@@ -139,8 +139,8 @@ class="ti ti-circle-x text-danger fs-6" title="Pendiente"></i>
 </td>
 </tr>
 </template>
-<tr>
-<th class="align-middle text-center">TOTAL</th>
+<tr class="table-dark">
+<th class="align-middle text-center text-white">TOTAL</th>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totalesEmpresa(empresa).total_importe)"></strong></td>
 <td class="align-middle text-center"><strong x-text="totalesEmpresa(empresa).total_ticket"></strong></td>
 <td></td>
