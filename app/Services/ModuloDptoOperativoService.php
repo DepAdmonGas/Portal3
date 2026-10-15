@@ -8,6 +8,54 @@ use App\Models\ModuloDptoOperativo;
 class ModuloDptoOperativoService
 {
 
+/*
+|--------------------------------------------------------------------------
+| RUTAS DE SUBMÓDULOS
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * Ruta navegable de un submódulo.
+ *
+ * Varios submódulos necesitan el año (y el mes) al final de su ruta: la que
+ * se guarda en modulos_sub_dpto_operativo no es navegable tal cual. Este
+ * mapa vivía dentro de DptoOperativoController::renderModulo(); se movió
+ * aquí para que el menú de cada módulo y los accesos directos de
+ * /departamento-operativo generen exactamente la misma URL.
+ *
+ * @param array $submenu Submódulo con al menos 'clave' y 'ruta'.
+ */
+public static function resolverRutaSubmodulo(array $submenu)
+{
+$idYear = date('Y');
+$idMes  = date('n');
+
+$sufijos = [
+'corte-diario'      => "/{$idYear}/{$idMes}",
+'embarques'         => "/{$idYear}/{$idMes}",
+'solicitud-cheque'  => "/{$idYear}/{$idMes}",
+'ingresos-facturacion' => "/{$idYear}",
+'despacho-ventas'   => "/{$idYear}/{$idMes}",
+'comparativo-xml'   => "/{$idYear}",
+'aclaracion-voucher'   => "/{$idYear}/{$idMes}",
+'solicitud-vales'   => "/{$idYear}/{$idMes}",
+'factura-monedero'   => "/{$idYear}/{$idMes}",
+'incidencias-nomina'   => "/{$idYear}",
+'bitacora-rrhh'   => "/{$idYear}/{$idMes}",
+'formato-descarga-merma'         => "/{$idYear}/{$idMes}",
+'analisis-compra'         => "/{$idYear}/{$idMes}",
+'inventarios-diarios'         => "/{$idYear}/{$idMes}",
+'recibos-nomina'         => "/{$idYear}",
+'cuenta-litros'          => "/{$idYear}/{$idMes}",
+'precios-diarios-combustible'          => "/{$idYear}/{$idMes}",
+'orden-compra'          => "/{$idYear}/{$idMes}",
+];
+
+$sufijo = $sufijos[$submenu['clave']] ?? '';
+
+return (string)($submenu['ruta'] ?? '') . $sufijo;
+}
+
 /* ---------- VOBTENER TODOS LOS MODULOS O UNO EN ESPECIFICO ----------*/
 public static function getPermisos($usuario_id, $clave = null)
 {
