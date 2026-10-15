@@ -21,6 +21,12 @@ $tests = [
     'authz_dl_002_requisitos_legales_migration_tool_regression.php',
     'authz_dl_002_gestoria_requisitos_legales_regression.php',
     'sec_l03_authorization_regression.php',
+    'checador_access_foundation_regression.php',
+    'checador_p03_daily_read_regression.php',
+    'checador_p3h_presentation_projection_regression.php',
+    'checador_p3ga_administrative_read_regression.php',
+    'checador_p3gc_lifecycle_regression.php',
+    'checador_p3gd_administrative_evaluation_regression.php',
 ];
 
 $passed = $failed = $skipped = 0;

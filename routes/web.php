@@ -583,6 +583,12 @@ return function (RouteCollector $r) {
 
         //----- 2. Recursos Humanos
         $r->addRoute('GET', '/recursos-humanos', Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
+        $r->addRoute('GET', '/departamento-operativo/recursos-humanos/checador', Route::auth(['ChecadorController', 'index']));
+        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/incidencias/{uuidIncidencia}/resolve', Route::auth(['ChecadorController', 'lifecycleResolve']));
+        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/incidencias/{uuidIncidencia}/authorize', Route::auth(['ChecadorController', 'lifecycleAuthorize']));
+        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/incidencias/{uuidIncidencia}/reject', Route::auth(['ChecadorController', 'lifecycleReject']));
+        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/incidencias/{uuidIncidencia}/revoke', Route::auth(['ChecadorController', 'lifecycleRevoke']));
+        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/evaluations/evaluate', Route::auth(['ChecadorController', 'administrativeEvaluation']));
 
  //----- Recibo de nomina 
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina/{idYear:\d+}', Route::auth(['RecibosNominaController', 'index']));
