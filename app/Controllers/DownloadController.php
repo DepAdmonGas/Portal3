@@ -95,6 +95,7 @@ class DownloadController
             'tpv'                                    => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'tpv-anexos'                             => dirname(__DIR__, 2) . '/public/uploads/archivos/tpv/anexos/',
             'cre'                                    => dirname(__DIR__, 2) . '/public/uploads/archivos/cre/',
+            'sala-juntas'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/sala-juntas/',
 
         ];
 
