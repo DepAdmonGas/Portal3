@@ -8,8 +8,9 @@ x-init="
         tema='<?= htmlspecialchars($asistencia->tema) ?>';
         finalidad='<?= htmlspecialchars($asistencia->finalidad) ?>';
      ">
-            <div class="text-end mt-3 mb-3">
-                 <?= 
+            <div class="row g-0 ms-auto w-100 justify-content-end">
+                <div class="col-12 col-md-auto d-grid mb-3">
+      <?= 
           !empty($permisos['crear']) ? 
           '<button class="btn btn-success"
                     @click="actualizar('.$idListaAsistencia.')"
@@ -21,6 +22,8 @@ x-init="
             </button>' 
           : '' 
         ?>   
+                </div>
+           
         </div>
 
 <!----------inicio de primera card------->

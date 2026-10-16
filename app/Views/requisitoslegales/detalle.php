@@ -76,7 +76,8 @@
         id="nuevo"
         x-ref="modalNuevo"
         x-init="getPermisos()"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static" data-bs-keyboard="false">
 
         <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -238,7 +239,8 @@
     <div class="modal fade"
         id="modalDetalle"
         @hidden.bs.modal="detalle = {}; matriz = []; renovacion = []"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static" data-bs-keyboard="false">
 
         <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
             <div class="modal-content">
