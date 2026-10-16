@@ -34,7 +34,7 @@ return d.getDate() + ' de ' + meses[d.getMonth()] + ' del ' + d.getFullYear();
 },
 
 init() {
-const c = document.getElementById('container');
+const c = document.getElementById('embarques-content');
 if (!c) return;
 
 this.puedeAgregarComentarios = c.dataset.puedeAgregarComentarios === 'true';
@@ -96,7 +96,7 @@ new bootstrap.Modal(document.getElementById('modalEmbarque')).show();
 },
 
 async abrirModalEditar(id) {
-const c = document.getElementById('container');
+const c = document.getElementById('embarques-content');
 const resp = await fetch('/departamento-operativo/embarques/data/' + c.dataset.idYear + '/' + c.dataset.idMes);
 const json = await resp.json();
 if (!json.success) { if (window.Notify) Notify.error('Error al obtener datos'); return; }
@@ -189,7 +189,7 @@ if (!this.form.unidad) { if (window.Notify) Notify.error('* Unidad requerida'); 
 
 this.guardando = true;
 try {
-const c = document.getElementById('container');
+const c = document.getElementById('embarques-content');
 const fd = new FormData();
 const endpoint = this.editando
 ? '/departamento-operativo/embarques/update'
@@ -340,7 +340,7 @@ this.guardandoComentario = false;
 },
 
 abrirAnalisisCompras() {
-const c = document.getElementById('container');
+const c = document.getElementById('embarques-content');
 window.location.href = '/departamento-operativo/analisis-compra/' + c.dataset.idYear + '/' + c.dataset.idMes;
 },
 }));

@@ -154,6 +154,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 <option value="901 Vopack">901 Vopack</option>
 <option value="908 Monterra">908 Monterra</option>
 <option value="907 Puebla">907 Puebla</option>
+<option value="907 Puebla">693 Tula, Hidalgo</option>
 </select>
 </div>
 

@@ -20,27 +20,35 @@ $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
 
-$idEstacion = $this->estacionId();
-$multiEstacion = $this->isMultiEs();
+$idEstacion = AnalisisCompraService::getEstacionContexto();
+    $multiEstacion = $this->isMultiEs();
 
-$puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer')
-|| ModuloDptoOperativoService::validaPermiso('personal-general', 'leer');
-if (!$puedeLeer) {
-View::render('errors/403', [], 'departamento-operativo');
-return;
-}
+    $puedeLeer = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer')
+    || ModuloDptoOperativoService::validaPermiso('personal-general', 'leer');
+    if (!$puedeLeer) {
+    View::render('errors/403', [], 'departamento-operativo');
+    return;
+    }
 
-$permisos = AnalisisCompraService::getPermisos();
+    // Una estación fuera del módulo no debe mostrarse aunque quede en el contexto.
+    if ($idEstacion !== null && !AnalisisCompraService::puedeEstacion($idEstacion)) {
+    $idEstacion = null;
+    }
 
-$rows = [];
-$totals = [];
+    $permisos = AnalisisCompraService::getPermisos();
 
-if ($idEstacion && !($multiEstacion && $idEstacion === 8)) {
-$rows = AnalisisCompraService::getDatos($idEstacion, $idYear, $idMes);
-$totals = AnalisisCompraService::getTotals($rows);
-}
+    $rows = [];
+    $totals = [];
+    $nombreEstacion = '';
 
-$title = 'Análisis de Compras (' . nombremes($idMes) . ' ' . $idYear . ')';
+    if ($idEstacion) {
+    $rows = AnalisisCompraService::getDatos($idEstacion, $idYear, $idMes);
+    $totals = AnalisisCompraService::getTotals($rows);
+    $nombreEstacion = AnalisisCompraService::getEstacionNombre($idEstacion);
+    }
+
+$tituloEstacion = $nombreEstacion !== '' ? ' ' . $nombreEstacion : '';
+    $title = 'Análisis de Compras (' . nombremes($idMes) . ' ' . $idYear . ')';
 
 Breadcrumb::add('Home', '/home');
 Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
@@ -63,7 +71,7 @@ Breadcrumb::add('Importación', '/departamento-operativo/importacion');
 Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
 }
 
-Breadcrumb::add('Resumen Embarques (' . nombremes($idMes) . ' ' . $idYear . ')', '/departamento-operativo/embarques/' . $idYear . '/' . $idMes);
+Breadcrumb::add('Resumen Embarques' . $tituloEstacion . ' (' . nombremes($idMes) . ' ' . $idYear . ')', '/departamento-operativo/embarques/' . $idYear . '/' . $idMes);
 Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
 Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
 Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
@@ -71,22 +79,29 @@ Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '')
 $yearMesTemplate = '/departamento-operativo/analisis-compra/{year}/{mes}';
 
 $data = [
-'title' => $title,
-'idYear' => $idYear,
-'idMes' => $idMes,
-'idEstacion' => $idEstacion,
-'multiestacion' => $multiEstacion,
-'yearMesTemplate' => $yearMesTemplate,
-'rows' => $rows,
-'totals' => $totals,
-'puedeEditar' => $permisos['puede_editar'],
-'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
-'esContabilidad' => $permisos['es_contabilidad'],
-'esComercializadora' => $permisos['es_comercializadora'],
-'help' => false,
+    'title' => $title,
+    'idYear' => $idYear,
+    'idMes' => $idMes,
+    'idEstacion' => $idEstacion,
+    'nombreEstacion' => $nombreEstacion,
+    'multiestacion' => $multiEstacion,
+    'yearMesTemplate' => $yearMesTemplate,
+    'rows' => $rows,
+    'totals' => $totals,
+    'puedeEditar' => $permisos['puede_editar'],
+    'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
+    'esContabilidad' => $permisos['es_contabilidad'],
+    'esComercializadora' => $permisos['es_comercializadora'],
+    // Monta el selector de estaciones del módulo (tb_modulos_config: analisis-compra)
+    'moduleStationKey' => AnalisisCompraService::MODULE_KEY,
+    'pendientesData' => [],
+    'help' => false,
 'scripts' => [
-'/assets/js/departamento-operativo/1-corporativo/analisis-compra.init.js?v=' . time(),
-],
+    // Sin este script no se enlaza el evento change del selector de
+    // estaciones y el <select> no cambia nada al elegir una opcion.
+    '/assets/js/core/module-station-selector.js?v=' . time(),
+    '/assets/js/departamento-operativo/1-corporativo/analisis-compra.init.js?v=' . time(),
+    ],
 ];
 
 View::render('departamento-operativo/1-corporativo/analisis-compra/index', $data, 'departamento-operativo');
@@ -137,12 +152,12 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
-$idEstacion = $this->estacionId();
-if (!$idEstacion || ($this->isMultiEs() && $idEstacion === 8)) {
-header('Content-Type: text/html; charset=utf-8');
-echo '<script>alert("Selecciona una estación antes de descargar."); window.close();</script>';
-exit;
-}
+$idEstacion = AnalisisCompraService::getEstacionContexto();
+    if ($idEstacion === null || !AnalisisCompraService::puedeEstacion($idEstacion)) {
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<script>alert("Selecciona una estación antes de descargar."); window.close();</script>';
+    exit;
+    }
 
 $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
