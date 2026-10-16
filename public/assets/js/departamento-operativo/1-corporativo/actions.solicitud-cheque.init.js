@@ -10,12 +10,14 @@ if (esGestoria) {
 scId = '8';
 scDepu = '5';
 } else if (esMultiestacion) {
+/*
+* Sin estacion elegida no hay respaldo posible: el servidor envia 0 porque
+* la eleccion vive en sessionStorage.
+*/
 scId = sessionStorage.getItem('sc_estacion') || '';
 scDepu = sessionStorage.getItem('sc_depto') || '';
-if (!scId && !scDepu) {
-scId = c.dataset.idEstacion || '';
-scDepu = c.dataset.idPuesto || '';
-}
+if (scId === '0') scId = '';
+if (scDepu === '0') scDepu = '';
 } else {
 scId = c.dataset.idEstacion || '';
 scDepu = c.dataset.idPuesto || '';
@@ -129,14 +131,8 @@ this.puedeGestionarTelcel = c.dataset.puedeGestionarTelcel === 'true';
 window.addEventListener('load', () => {
 this.cargarFacturaStatus();
 
-var est = sessionStorage.getItem('sc_estacion') || '';
-var dep = sessionStorage.getItem('sc_depto') || '';
-var select = document.getElementById('sc-selector-estacion');
-if (select) {
-if (dep) select.value = 'depto_' + dep;
-else if (est) select.value = 'estacion_' + est;
-else select.value = 'all';
-}
+restaurarSelectorEstacion();
+
 if (typeof actualizarBadgeTexto === 'function') {
 actualizarBadgeTexto();
 }
@@ -184,7 +180,7 @@ if (esGestoria) {
 est = '8';
 } else if (esMultiestacion) {
 est = sessionStorage.getItem('sc_estacion') || '';
-if (!est) est = c.dataset.idEstacion || '';
+if (est === '0') est = '';
 } else {
 est = c.dataset.idEstacion || '';
 }
@@ -625,6 +621,60 @@ if (json2.success) this.telcelGlobal = json2.telcel || [];
 });
 
 // Global functions for solicitud-cheque
+
+/**
+ * Select de estacion/departamento visible en la pagina.
+ *
+ * Hay dos ids segun como se monte el selector: el propio del modulo
+ * (#sc-selector-estacion) o el generico (#module-station-selector-<clave>).
+ */
+function obtenerSelectorEstacion() {
+return document.getElementById('sc-selector-estacion')
+|| document.getElementById('module-station-selector-solicitud-cheques');
+}
+
+/**
+ * Estacion/departamento elegido AHORA, tal y como se ve en el selector.
+ *
+ * Es la unica fuente fiable: el servidor envia data-id-estacion=0 mientras
+ * no se ha elegido nada, y sessionStorage puede conservar un valor viejo
+ * porque el selector no se restaura al recargar. Sin esto, el selector
+ * mostraba 'Todas las estaciones y departamentos' y el menu de acciones
+ * aparecia al mismo tiempo.
+ */
+function leerSeleccionVisible() {
+var sel = obtenerSelectorEstacion();
+if (!sel) return null;
+var val = sel.value || '';
+if (!val || val === 'all') return { est: '', dep: '' };
+if (val.indexOf('depto_') === 0) return { est: '', dep: val.replace('depto_', '') };
+if (val.indexOf('estacion_') === 0) return { est: val.replace('estacion_', ''), dep: '' };
+return { est: '', dep: '' };
+}
+
+/**
+ * Devuelve el selector a la estacion/departamento que guarda sessionStorage.
+ * Sin esto, tras cualquier recarga el selector volvia a 'Todas' aunque
+ * Internamente se siguiera filtrando por la estacion elegida.
+ */
+function restaurarSelectorEstacion() {
+var sel = obtenerSelectorEstacion();
+if (!sel) return;
+var est = sessionStorage.getItem('sc_estacion') || '';
+var dep = sessionStorage.getItem('sc_depto') || '';
+if (dep) sel.value = 'depto_' + dep;
+else if (est) sel.value = 'estacion_' + est;
+else sel.selectedIndex = 0;
+
+// El badge del selector generico tambien debe reflejar la restauracion.
+try {
+if (typeof ModuleStationSelector !== 'undefined') {
+var inst = ModuleStationSelector._instances && ModuleStationSelector._instances['solicitud-cheques'];
+if (inst && typeof inst.updateBadge === 'function') inst.updateBadge();
+}
+} catch (e) {}
+}
+
 function cambiarEstacion(sel) {
 var val = sel.value;
 if (val === 'all') {
@@ -721,10 +771,22 @@ sessionStorage.setItem('sc_depto', '5');
 var esMultiestacion = c.dataset.multiestacion === 'true';
 var est = sessionStorage.getItem('sc_estacion') || '';
 var dep = sessionStorage.getItem('sc_depto') || '';
-if (!est && !dep) {
+/*
+* Si hay selector en pantalla, manda lo que se ve: 'Todas las estaciones y
+* departamentos' significa est='' dep='' y el menu se oculta. Solo si no
+* hay selector se recurre a la sesion, y en ese caso un usuario de una
+* sola estacion conserva la suya desde data-id-estacion.
+*/
+var selVisible = leerSeleccionVisible();
+if (selVisible) {
+est = selVisible.est;
+dep = selVisible.dep;
+} else if (!esMultiestacion && !est && !dep) {
 est = c.dataset.idEstacion || '';
 dep = c.dataset.idDepto || '';
 }
+if (est === '0') est = '';
+if (dep === '0') dep = '';
 var esContextoDepartamento = parseInt(dep) > 0;
 var esSeleccionEspecifica = (est !== '' && est !== '0') || (dep !== '' && dep !== '0');
 
@@ -778,13 +840,15 @@ dep = '5';
 } else if (esMultiestacion) {
 est = sessionStorage.getItem('sc_estacion') || '';
 dep = sessionStorage.getItem('sc_depto') || '';
+if (est === '0') est = '';
+if (dep === '0') dep = '';
 } else {
 est = c.dataset.idEstacion || '';
 dep = c.dataset.idDepto || '';
 }
 var url = '/departamento-operativo/solicitud-cheque-crear/' + year + '/' + mes;
 if (dep && dep !== '0') url += '/8/' + dep;
-else if (est) url += '/' + est;
+else if (est && est !== '0') url += '/' + est;
 window.location.href = url;
 }
 
@@ -802,9 +866,8 @@ dep = '5';
 } else if (esMultiestacion) {
 est = sessionStorage.getItem('sc_estacion') || '';
 dep = sessionStorage.getItem('sc_depto') || '';
-if (!est) {
-est = c.dataset.idEstacion || '';
-}
+if (est === '0') est = '';
+if (dep === '0') dep = '';
 } else {
 est = c.dataset.idEstacion || '';
 dep = c.dataset.idDepto || '';
@@ -834,13 +897,15 @@ dep = '5';
 } else if (esMultiestacion) {
 est = sessionStorage.getItem('sc_estacion') || '';
 dep = sessionStorage.getItem('sc_depto') || '';
+if (est === '0') est = '';
+if (dep === '0') dep = '';
 } else {
 est = c.dataset.idEstacion || '';
 dep = c.dataset.idDepto || '';
 }
 var params = [];
-if (est) params.push('estacion=' + est);
-if (dep) params.push('depto=' + dep);
+if (est && est !== '0') params.push('estacion=' + est);
+if (dep && dep !== '0') params.push('depto=' + dep);
 var qs = params.join('&');
 window.location.href = '/departamento-operativo/solicitud-cheque/excel/' + year + '/' + mes + (qs ? '?' + qs : '');
 }

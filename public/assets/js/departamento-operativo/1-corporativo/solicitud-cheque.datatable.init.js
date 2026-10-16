@@ -94,7 +94,7 @@ searchable: false,
 render: (d) => iconoFirma(d)
 },
 {
-title: '<i class="ti ti-message fs-5"></i>',
+title: '<i class="ti ti-message fs-7"></i>',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
