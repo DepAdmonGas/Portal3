@@ -18,14 +18,14 @@
                 <div class="card">
                     <div class="card-header">
 
-                        <div class="row allign-items-center">
-                            <div class="col-12 col-md-9">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
+                        
   <h4 class="card-title mb-0">
 
                                 Protocolo de respuesta a emergencias
                             </h4>
-                            </div>
-                            <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+                           
+                           <div class="d-grid d-md-block">
                                 <button type="button" class="btn bg-primary-subtle text-primary"
                                     @click="nuevoProtocolo()">
                                     <i class="ti ti-plus"></i>
@@ -286,7 +286,9 @@
 
         <div class="modal fade"
             id="modalProtocolo"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-dialog-centered">
 
@@ -350,16 +352,18 @@ errors.protocolo.archivo = false;
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
 
                             <i class="ti ti-x"></i> Cancelar
 
                         </button>
-
-                        <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                             class="btn btn-success"
                             @click="guardarProtocolo()">
                             <i class="ti ti-check"></i>
@@ -372,6 +376,8 @@ errors.protocolo.archivo = false;
                             </span>
 
                         </button>
+                    </div>
+                  </div>
 
                     </div>
 
@@ -385,7 +391,9 @@ errors.protocolo.archivo = false;
         <div
             class="modal fade"
             id="modalAnexos"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -435,15 +443,20 @@ anexo.archivo = $event.target.files[0];
 errors.anexo.archivo = false;
 ">
 
-                        <div class="mt-3 mb-3 text-end">
-                            <button
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+                      <button
                                 class="btn btn-success"
                                 @click="guardarAnexo()">
 
                                 <i class="ti ti-check"></i> Guardar
 
                             </button>
-                        </div>
+                    </div>
+                  </div>
+
+                            
+                   
 
 
                         <table
@@ -533,11 +546,17 @@ errors.anexo.archivo = false;
 
                     </div>
                     <div class="modal-footer">
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      
                         <button type="button"
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i> Cancelar
                         </button>
+                    </div>
+                  </div>
+
                     </div>
                 </div>
 
@@ -548,7 +567,9 @@ errors.anexo.archivo = false;
         <!-- Modal  Teléfonos de emergencias --->
         <div class="modal fade"
             id="modalTelefonosEmergencia"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -571,9 +592,9 @@ errors.anexo.archivo = false;
 
                     <div class="modal-body pb-0">
 
-                        <div class="text-end ">
-
-                            <button
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                       <button
                                 class="btn bg-primary-subtle text-primary"
                                 @click="nuevoTelefono()" x-show="!mostrarFormulario">
 
@@ -581,8 +602,9 @@ errors.anexo.archivo = false;
                                 Nuevo
 
                             </button>
-
-                        </div>
+                    </div>
+                  </div>
+                 
 
                         <!-- FORMULARIO -->
 
@@ -733,49 +755,49 @@ errors.anexo.archivo = false;
 
 
                     <div class="modal-footer">
-
+                   <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                     
                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal" x-show="!mostrarFormulario"
                             x-transition>
 
                             <i class="ti ti-x"></i> Cerrar
-                        </button>
-
-
-                        <div x-show="mostrarFormulario"
-                            x-transition>
-
-                            <button
-                                class="btn bg-danger-subtle text-danger"
-                                @click="cancelarTelefono()">
-
-                                <i class="ti ti-x"></i> Cancelar
-
-                            </button>
-
-                            <button
-                                class="btn btn-success"
-                                @click="guardarTelefono()">
-
-                                <i class="ti ti-check"></i>
-
-                                <span x-show="modoTelefono == 'create'">
-                                    Guardar
-                                </span>
-
-                                <span x-show="modoTelefono == 'edit'">
-                                    Actualizar
-                                </span>
-
-                            </button>
-
-                        </div>
-
-
+                        </button> 
                     </div>
+                  </div>
 
+                 <div class="row g-0 ms-auto w-100 justify-content-end"
+     x-show="mostrarFormulario"
+     x-transition>
 
+    <div class="col-12 col-md-auto d-grid mb-2 mb-md-0 me-0 me-md-2">
+        <button type="button"
+                class="btn bg-danger-subtle text-danger"
+                @click="cancelarTelefono()">
+            <i class="ti ti-x"></i> Cancelar
+        </button>
+    </div>
+
+    <div class="col-12 col-md-auto d-grid">
+        <button type="button"
+                class="btn btn-success"
+                @click="guardarTelefono()">
+            <i class="ti ti-check"></i>
+
+            <span x-show="modoTelefono == 'create'">
+                Guardar
+            </span>
+
+            <span x-show="modoTelefono == 'edit'">
+                Actualizar
+            </span>
+        </button>
+    </div>
+
+</div>
+                    </div>
                 </div>
 
             </div>
@@ -786,7 +808,9 @@ errors.anexo.archivo = false;
         <div
             class="modal fade"
             id="modalPrograma"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-dialog-centered">
 
@@ -866,18 +890,18 @@ errors.anexo.archivo = false;
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i>
                             Cancelar
 
                         </button>
-
-
-
-                        <button
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                             type="button"
                             class="btn btn-success"
                             @click="guardarPrograma()">
@@ -887,10 +911,10 @@ errors.anexo.archivo = false;
                                 x-text="modoPrograma === 'create'
 ? 'Guardar'
 : 'Actualizar'"></span>
-
-
-
                         </button>
+                    </div>
+                  </div>
+
 
                     </div>
 
@@ -904,7 +928,9 @@ errors.anexo.archivo = false;
         <div
             class="modal fade"
             id="modalPersonal"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -1041,11 +1067,15 @@ btn bg-primary-subtle text-primary"
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button"
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button"
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i> Cancelar
                         </button>
+                    </div>
+                  </div>               
                     </div>
                 </div>
 
@@ -1057,7 +1087,9 @@ btn bg-primary-subtle text-primary"
         <div
             class="modal fade"
             id="modalResumen"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg">
 
@@ -1098,8 +1130,9 @@ btn bg-primary-subtle text-primary"
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
 
@@ -1107,14 +1140,18 @@ btn bg-primary-subtle text-primary"
 
                         </button>
 
-                        <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                             type="button"
                             class="btn btn-success"
                             @click="guardarResumen()">
 
                             <i class="ti ti-check"></i> Actualizar
 
-                        </button>
+                        </button> 
+                    </div>
+                  </div>
 
                     </div>
 
@@ -1128,7 +1165,9 @@ btn bg-primary-subtle text-primary"
         <div
             class="modal fade"
             id="modalEvaluacion"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-dialog-centered">
 
@@ -1186,7 +1225,8 @@ errors.evaluacion.archivo = false;
                     </div>
 
                     <div class="modal-footer">
-
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
@@ -1194,8 +1234,9 @@ errors.evaluacion.archivo = false;
                             <i class="ti ti-x"></i> Cancelar
 
                         </button>
-
-                        <button
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                         <button
                             type="button"
                             class="btn btn-success"
                             @click="guardarEvaluacion()">
@@ -1204,6 +1245,9 @@ errors.evaluacion.archivo = false;
 
                         </button>
 
+                    </div>
+                  </div>
+                     
                     </div>
 
                 </div>
@@ -1217,7 +1261,9 @@ errors.evaluacion.archivo = false;
             class="modal fade"
             id="ModalBuscar"
             tabindex="-1"
-            aria-hidden="true">
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -1290,19 +1336,23 @@ errors.evaluacion.archivo = false;
 
                     <!-- FOOTER -->
                     <div class="modal-footer">
-
-                        <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
                             @click="limpiarBuscar()">
                             <i class="ti ti-x"></i> Cancelar
                         </button>
-
-                        <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                             class="btn btn-success"
                             @click="buscar()">
                             <i class="ti ti-search"></i> Buscar
                         </button>
+                    </div>
+                  </div>
                     </div>
 
                 </div>

@@ -156,7 +156,7 @@ x-data="{ ...actions(), ...equipoCritico()}">
 </div>
 
 
-    <div class="modal fade" id="modalEquipo" tabindex="-1">
+    <div class="modal fade" id="modalEquipo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
@@ -206,9 +206,16 @@ x-data="{ ...actions(), ...equipoCritico()}">
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
-        <button class="btn btn-success" @click="guardar()"><i class="ti ti-check"></i> Guardar
+        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                 <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
+                    </div>
+                        <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button class="btn btn-success" @click="guardar()"><i class="ti ti-check"></i> Guardar
         </button>
+                    </div>
+                  </div>
+
     </div>
 
     </div>

@@ -69,7 +69,10 @@
             class="modal fade"
             id="ModalNuevo"
             tabindex="-1"
-            aria-hidden="true">
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
+
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header modal-colored-header bg-primary text-white">
@@ -290,22 +293,26 @@
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
 
                             <i class="ti ti-x"></i> Cancelar
 
                         </button>
-
-                        <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                             class="btn btn-success"
                             @click="guardar()">
 
                             <i class="ti ti-check"></i> Guardar
 
                         </button>
+                    </div>
+                  </div>
 
                     </div>
 
@@ -320,7 +327,9 @@
             class="modal fade"
             id="ModalBuscar"
             tabindex="-1"
-            aria-hidden="true">
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -402,7 +411,8 @@
 
                     <!-- FOOTER -->
                     <div class="modal-footer">
-
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
@@ -410,11 +420,17 @@
                             <i class="ti ti-x"></i> Cancelar
                         </button>
 
-                        <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-ms-2">
+                       <button
                             class="btn btn-success"
                             @click="buscar()">
                             <i class="ti ti-search"></i> Buscar
                         </button>
+                    </div>
+                  </div>
+
+                       
                     </div>
 
                 </div>
@@ -429,7 +445,9 @@
             class="modal fade"
             id="ModalDetalle"
             tabindex="-1"
-            aria-hidden="true">
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content">
@@ -452,7 +470,8 @@
 
                         <!-- FECHA -->
 
-                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
+                        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+                            <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
 
                             <thead>
 
@@ -507,10 +526,11 @@
                             </tbody>
 
                         </table>
+                        </div>
 
                         <!-- DISPENSARIO -->
-
-                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
+<div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
 
                             <thead>
 
@@ -583,10 +603,12 @@
                             </tbody>
 
                         </table>
+</div>
+                        
 
                         <!-- MOTIVO -->
-
-                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
+<div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+     <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
 
                             <thead>
 
@@ -614,8 +636,10 @@
 
                         </table>
 
+</div>
+                       
                         <!-- DETALLE -->
-
+<div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
                         <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-3">
 
                             <thead>
@@ -644,15 +668,23 @@
                             </tbody>
 
                         </table>
+</div>
+
 
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button"
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button"
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i> Cerrar
                         </button>
+                    </div>
+                  </div>
+
+                        
                     </div>
                 </div>
 

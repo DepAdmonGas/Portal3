@@ -74,8 +74,7 @@
                 id="nuevo"
                 x-ref="modalNuevo"
                 x-init="getPermisos()"
-                tabindex="-1"
-                data-bs-backdrop="static" data-bs-keyboard="false">
+                tabindex="-1">
 
                 <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
                     <div class="modal-content">
@@ -420,7 +419,7 @@
                                 <div class="d-flex justify-content-end mb-3">
                                     <button class="btn bg-primary-subtle text-primary"
                                         @click="showHistorialForm = true; resetHistorialForm()">
-                                        <i class="ti ti-plus"></i> Nuevoaaaaaaaaaaaaaaa
+                                        <i class="ti ti-plus"></i> Nuevo
                                     </button>
                                 </div>
 
