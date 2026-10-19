@@ -13,19 +13,18 @@
 
 <div id="sgm-content" x-data="{ ...actions(), ...evaluacion()}">
 
-    <div class="text-end mt-2">
-       
-            
-            
-                <button class="btn bg-primary-subtle text-primary">
+       <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3">
+                      <button type="button"
+        class="btn bg-primary-subtle text-primary"
+        @click="openNuevo()">
+    <i class="ti ti-plus"></i> Nuevo
+</button>
+                    </div>
+                  </div>
 
-                    <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
-                </button>
-            
-      
-    </div>
 
-    <div class="table-responsive mt-4">
+    <div class="table-responsive mt-4 overflow-x-auto overflow-y-hidden">
         <table class="table table-striped table-bordered mb-0  align-middle">
             <thead>
                 <tr>
@@ -200,7 +199,9 @@
     <div
         class="modal fade"
         id="modalNuevo"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
         <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
 
@@ -259,30 +260,28 @@
                 </div>
 
                 <div class="modal-footer">
-
-                    <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
                         Cancelar
-
                     </button>
-
-                    <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                         class="btn btn-success"
                         @click="guardarRegistro()">
-
                         <i class="ti ti-check"></i>
-
                         <span
                             x-text="modo=='create'
                         ? 'Guardar'
                         : 'Actualizar'">
                         </span>
-
                     </button>
+                    </div>
+                  </div>
 
                 </div>
 
@@ -297,7 +296,9 @@
     <div
         class="modal fade"
         id="modalDetalle"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 
@@ -390,17 +391,19 @@
                 </div>
 
                 <div class="modal-footer">
-
-                    <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
-                        Cancelar
-
+                        Cerrar
                     </button>
 
+                    </div>
+                  </div>
+
+                    
                 </div>
 
             </div>
@@ -414,7 +417,9 @@
     <div
         class="modal fade"
         id="modalEvaluacion"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
 
@@ -612,25 +617,25 @@
                 </div>
 
                 <div class="modal-footer">
-
-                    <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
                         Cancelar
-
                     </button>
-
-                    <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                         class="btn btn-success"
                         @click="guardarEvaluacion()">
-
                         <i class="ti ti-check"></i>
                         Guardar
-
                     </button>
+
+                    </div>
+                  </div>
 
                 </div>
 
@@ -642,7 +647,7 @@
     <!-- Modal Editar Proveedor -->
 
     <!-- Modal Detalle Evaluación -->
-    <div class="modal fade" id="modalDetalleEvaluacion" tabindex="-1">
+    <div class="modal fade" id="modalDetalleEvaluacion" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
 
@@ -812,13 +817,18 @@
 
                 </div>
                 <div class="modal-footer">
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
                       <button
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
 
-                        <i class="ti ti-x"></i> Cancelar
-
+                        <i class="ti ti-x"></i> Cerrar
                     </button>
+                    </div>
+                  </div>
+
+                      
                 </div>
 
             </div>

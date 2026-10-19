@@ -19,15 +19,15 @@
 <div class="col-md-5">
 <div class="card">
   <div class="card-header">
-  <div class="d-flex align-items-center">
-    
-      <div class="ms-auto">
-      <a type="button" class="btn bg-primary-subtle text-primary" href="/sgm/establecimiento-objetivos-enfocados-cliente/objetivo-cliente">
+
+      <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <a type="button" class="btn bg-primary-subtle text-primary" href="/sgm/establecimiento-objetivos-enfocados-cliente/objetivo-cliente">
         <i class="ti ti-edit fs-6"></i>
         Editar
         </a>
-      </div>
-  </div>
+                    </div>
+                  </div>
 
   </div>
   <div class="card-body p-0">

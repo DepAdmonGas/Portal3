@@ -2,7 +2,8 @@
 
     
             <div x-data="{ ...actions(), ...auditorias() }">
-                <table class="table table-striped table-bordered text-nowrap align-middle mb-4 mt-4">
+                <div class="table-responsive overflow-x-auto overflow-y-hidden">
+<table class="table table-striped table-bordered text-nowrap align-middle mb-4 mt-4">
                     <thead>
                         <tr>
                             <th class="text-center" width="96px">#</th>
@@ -129,6 +130,8 @@
                     </tbody>
 
                 </table>
+                </div>
+                
             </div>
      
  

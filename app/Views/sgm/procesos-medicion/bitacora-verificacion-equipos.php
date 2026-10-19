@@ -37,7 +37,9 @@
         class="modal fade"
         id="modalDetalleBitacora"
         tabindex="-1"
-        aria-hidden="true">
+        aria-hidden="true"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false">
 
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
 
@@ -438,12 +440,16 @@
 
                 </div>
                 <div class="modal-footer">
-   <button class="btn bg-danger-subtle text-danger"
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                   <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                     <i class="ti ti-x"></i> Cerrar
+                </button>   
+                    </div>
+                  </div>
 
-                </button>
+   
 
                 </div>
              

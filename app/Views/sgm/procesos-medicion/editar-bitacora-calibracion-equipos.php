@@ -14,20 +14,22 @@
 <div id="sgm-content" x-data="{ ...actions(), ...editarBitacoraCalibracion(<?= $id ?>) }">
 
 
-    <div class="text-end">
-
-        <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button
 
             class="btn btn-success mt-3"
-
             @click="finalizar()">
             <i class="ti ti-check"></i>
-
-            Finalizar bitácora
+            Finalizar 
 
         </button>
+                    </div>
+                  </div>
 
-    </div>
+        
+
+  
 
 
     <table class="table table-striped table-bordered text-nowrap align-middle mb-4 mt-3">
