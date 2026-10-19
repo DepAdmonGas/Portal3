@@ -55,7 +55,9 @@
     <div
         class="modal fade"
         id="modalNuevo"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 
@@ -316,30 +318,32 @@
                 </div>
 
                 <div class="modal-footer">
-
-                    <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
                         Cancelar
-
                     </button>
-
-                    <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                         class="btn btn-success"
                         @click="guardarRegistro()">
-
                         <i class="ti ti-check"></i>
-
                         <span
                             x-text="modo=='create'
                         ? 'Guardar'
                         : 'Actualizar'">
                         </span>
-
                     </button>
+                    </div>
+                  </div>
+
+                    
+
+                    
 
                 </div>
 
@@ -353,7 +357,9 @@
     <div
         class="modal fade"
         id="modalManuales"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
         <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -408,96 +414,75 @@
 
 
                     </div>
-
-                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
-
+<div class="table-responsive">
+<table class="table table-striped table-bordered mb-0 align-middle">
                         <thead>
-
                             <tr>
-
                                 <th  class="text-center">
                                     #
                                 </th>
-
                                 <th class="text-center">
                                     Fecha
                                 </th>
-
                                 <th>
                                     Archivo
                                 </th>
-
                             </tr>
-
                         </thead>
-
                         <tbody>
-
                             <template
                                 x-if="manuales.lista.length==0">
-
                                 <tr>
-
                                     <td
                                         colspan="3"
                                         class="text-center text-muted">
-
                                         No se encontraron manuales.
-
                                     </td>
-
                                 </tr>
-
                             </template>
-
                             <template
                                 x-for="(manual,index) in manuales.lista"
                                 :key="manual.id">
-
                                 <tr>
-
                                     <td
                                     class="text-center"
                                     whidth="96 px"
                                         x-text="index+1">
                                     </td>
-
                                     <td
                                     class="text-center"
                                         x-text="manual.fecha_hora">
                                     </td>
-
                                     <td>
-
                                         <a
                                             :href="manual.url"
                                             target="_blank"
                                             x-text="manual.archivo">
                                         </a>
-
-                                    </td>
-
+                                </td>
                                 </tr>
-
                             </template>
-
                         </tbody>
-
                     </table>
+</div>
+                    
 
                 </div>
 
                 <div class="modal-footer">
-
-                    <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                          <button
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
                         Cerrar
-
                     </button>
+                    </div>
+                  </div>
+
+                
+
                 </div>
 
             </div>

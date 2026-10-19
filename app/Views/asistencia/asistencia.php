@@ -128,17 +128,22 @@ x-init="
                 x-text="error"
             ></small>
 
-              <div class="mt-3 text-end mb-3">
-
-                  <button
+ <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+                      <button
                       class="btn bg-info-subtle text-info"
                       @click="subir()"
                   >
                       <i class="ti ti-upload me-1"></i>
                       Nueva evidencia
                   </button>
+                    </div>
+                  </div>
 
-              </div>
+
+                  
+
+            
 
 <div class="table-responsive">
     <table class="table table-bordered table-striped  text-nowrap align-middle mb-0">

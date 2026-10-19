@@ -144,7 +144,9 @@
 <div
     class="modal fade"
     id="modalNormatividad"
-    tabindex="-1">
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary">
@@ -244,19 +246,27 @@
             </div>
 
             <div class="modal-footer">
-
-            <button type="button"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button"
             class="btn bg-danger-subtle text-danger"
             data-bs-dismiss="modal">
             <i class="ti ti-x"></i> Cancelar
             </button>
-
-                <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                     class="btn btn-success"
                     @click="guardarNormatividad()"
                 >
                   <i class="ti ti-check"></i> Guardar
                 </button>
+                    </div>
+                  </div>
+
+            
+
+                
 
             </div>
 

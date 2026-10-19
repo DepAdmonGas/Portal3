@@ -2,7 +2,7 @@
 x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimiento="<?= $noSolicitud ?>" data-puesto="<?= $utilitiesUser['idPuestoUser'] ?>">
   
 <div class="row mt-3 mb-3 align-items-center">
-<div class="col-12 col-md-auto d-grid  mb-4 mb-md-0">
+<div class="col-12 col-md-auto d-grid  mb-3 mb-md-0">
 
 <div id="botonDescargaFile"></div>
 
@@ -19,7 +19,7 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimien
 
 
 
-<div id="botonSeguimiento" class="d-grid">
+<div id="botonSeguimiento" class="d-grid ">
 
 </div>
 </div>
