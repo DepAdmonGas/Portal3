@@ -14,8 +14,8 @@ x-data="monitoreoEvaluacion()">
 
 <div x-data="monitoreoEvaluacion">
 
-<div class="row mt-3 mb-3">
-<div class="col-6">
+<div class="row mt-3 mb-3 g-0 w-100 justify-content-between">
+<div class="col-12 col-md-6 d-grid mb-3 mb-md-0">
             <!-- <label class="form-label">Año</label> -->
             <select
                 class="form-select"
@@ -29,12 +29,15 @@ x-data="monitoreoEvaluacion()">
             </select>
 </div>
 
-<div class="col-6">
-    <div class="text-end">
-   <button type="button" class="btn bg-primary-subtle text-primary">
-                    <a class="dropdown-item pointer " :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
-</button>
-</div>
+<div class="col-12 col-md-auto d-grid">
+
+ <a class="btn bg-primary-subtle text-primary"
+   :href="pdfUrl"
+   target="_blank"
+   rel="noopener noreferrer">
+    <i class="ti ti-download"></i> Descargar
+</a>
+
 </div>
 </div>
 
@@ -93,7 +96,13 @@ x-data="monitoreoEvaluacion()">
 </div>
 </div>
 <div class="card-footer">
-        <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="implementacionDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                              <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="implementacionDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
+
+                    </div>
+                  </div>
+
 
 </div>
 </div>
@@ -223,7 +232,12 @@ x-data="monitoreoEvaluacion()">
     
     </div>
     <div class="card-footer">
-<button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="VentasDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
+        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="VentasDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
+                    </div>
+                  </div>
+
     </div>
 </div>
 </div>
@@ -297,7 +311,12 @@ x-data="monitoreoEvaluacion()">
         </div>
 </div>
 <div class="card-footer">
-<button type="button" class="btn bg-primary-subtle text-primary float-end" data-bs-toggle="modal" data-bs-target="#modal-capacitacion"><i class="ti ti-eye"></i> Ver detalle</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                   <button type="button" class="btn bg-primary-subtle text-primary float-end" data-bs-toggle="modal" data-bs-target="#modal-capacitacion"><i class="ti ti-eye"></i> Ver detalle</button>   
+                    </div>
+                  </div>
+
 </div>
 </div>
 
@@ -426,7 +445,12 @@ x-data="monitoreoEvaluacion()">
 </div>
 </div>
 <div class="card-footer">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
 <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="satisfaccionClientes()"><i class="ti ti-eye"></i> Ver detalle</button>
+                    </div>
+                  </div>
+
 </div>
 
 </div>
@@ -531,7 +555,13 @@ x-data="monitoreoEvaluacion()">
 </table>
     </div>
 <div class="card-footer">
-    <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="IncidentesAccidentes()"><i class="ti ti-eye"></i> Ver detalle</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                 <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="IncidentesAccidentes()"><i class="ti ti-eye"></i> Ver detalle</button>
+         
+                    </div>
+                  </div>
+
 </div>
 </div>
 

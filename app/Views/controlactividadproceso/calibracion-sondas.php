@@ -18,10 +18,12 @@ JSON_HEX_QUOT
 ) ?>
 </script>
 
-<div class="text-end mt-3 mb-3">
+
 
 <template x-if="calibracion.estado == 0">
-
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                      
 <button
 type="button"
 class="btn btn-success"
@@ -32,12 +34,16 @@ class="btn btn-success"
 <i class="ti ti-check"></i> Finalizar
 
 </button>
+                    </div>
+                  </div>
+
 
 </template>
 
 <template x-if="calibracion.estado == 1">
-
-<button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                      <button
 type="button"
 class="btn btn-success"
 @click="window.history.back()">
@@ -45,10 +51,14 @@ class="btn btn-success"
 <i class="ti ti-check"></i> Finalizar
 
 </button>
+                    </div>
+                  </div>
+
+
 
 </template>
 
-</div>
+
 
 
 <div class="card">

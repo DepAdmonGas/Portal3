@@ -12,8 +12,8 @@
 
     <?php else: ?>
 
-        <div class="row p-3 mb-3">
-            <div class="col-6">
+        <div class="row g-0 ms-auto w-100 justify-content-between mb-3 mt-3">
+            <div class="col-12 col-md-6 d-grid">
                 <select
                     class="form-select"
                     x-model.number="year"
@@ -26,17 +26,19 @@
                 </select>
             </div>
 
-            <div class="col-6">
-                <div class="text-end">
-                    <div class="btn-group">
-                        <button class="btn bg-primary-subtle text-primary">
-                            <a class="dropdown-item pointer" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
-                        </button>
+            <div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
+             
+                     <a class="btn bg-primary-subtle text-primary"
+   :href="pdfUrl"
+   target="_blank">
+    <i class="ti ti-download"></i> Descargar
+</a>
 
-                    </div>
-                </div>
             </div>
         </div>
+
+
+
         <!-- Implementación del SA -->
         <div class="card">
             <div class="card-body p-0">
@@ -627,7 +629,9 @@
         <div
             class="modal fade"
             id="modalRevisionResultado"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -707,28 +711,31 @@
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2">
+                       <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
 
                             <i class="ti ti-x"></i> Cancelar
 
                         </button>
+                    </div>
 
+                    <template x-if="modoRevision === 'edit' && revision.archivo_actual">
+    <div class="col-12 col-md-auto d-grid mb-2 mb-md-0 me-0 me-md-2">
+        <a class="btn bg-primary-subtle text-primary"
+           :href="revision.archivo_actual"
+           target="_blank">
 
-                        <a class="btn bg-primary-subtle text-primary"
-                            :href="`${revision.archivo_actual}`"
-                            target="_blank">
+            <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+            Ver archivo actual
 
-                            <i class="ti ti-file-type-pdf text-danger fs-6"></i>
-
-                            Ver archivo actual
-
-                        </a>
-
-
-                        <button
+        </a>
+    </div>
+</template>
+                    <div class="col-12 col-md-auto d-grid">
+                      <button
                             class="btn btn-success"
                             @click="guardarRevisionResultado()">
 
@@ -743,7 +750,9 @@
                             </span>
 
                         </button>
-
+                    </div>
+                  </div>
+                        
                     </div>
 
                 </div>

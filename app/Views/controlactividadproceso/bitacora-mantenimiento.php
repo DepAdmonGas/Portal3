@@ -26,7 +26,11 @@
     </div>
     </div>
     <div class="card-footer">
-<a type="button" href="/sasisopa/control-actividades-procesos/bitacora-mantenimiento-quincenal" class="btn bg-primary-subtle text-primary float-end"> <i class="ti ti-tool"></i> Mantenimiento Quincenal</a>
+      <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <a type="button" href="/sasisopa/control-actividades-procesos/bitacora-mantenimiento-quincenal" class="btn bg-primary-subtle text-primary float-end"> <i class="ti ti-tool"></i> Mantenimiento Quincenal</a>
+                    </div>
+                  </div>
         </div>
   </div>
   </div>

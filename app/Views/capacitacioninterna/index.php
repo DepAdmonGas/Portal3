@@ -15,29 +15,30 @@
 <?php else: ?>
 
 
-    <div class="row mt-3 d-flex justify-content-between align-items-center">
+   <div class="row mb-3 mt-3 align-items-center g-2">
 
-        <div class="col-12 mb-3">
-    <div class="text-end">
+    <template x-if="htmlReporte">
+        <div class="col-12 col-md-auto d-grid d-md-block">
+            <button type="button"
+                    class="btn bg-danger-subtle text-danger"
+                    @click="limpiarBusqueda()">
+                <i class="ti ti-arrow-left"></i> Regresar
+            </button>
+        </div>
+    </template>
     
-        <a type="button" class="btn bg-primary-subtle text-primary" @click="openModalBuscar()">
-        <i class="ti ti-search"></i> Buscar</a>
-
-
+    <div class="col-12 col-md-auto d-grid d-md-block ms-md-auto">
+        <a type="button"
+           class="btn bg-primary-subtle text-primary"
+           @click="openModalBuscar()">
+            <i class="ti ti-search"></i> Buscar
+        </a>
     </div>
-</div>
-    
 
-        <template x-if="htmlReporte">
-            <div class="mt-0 d-flex justify-content-end mb-2">
-                <button type="button" class="btn bg-danger-subtle text-danger" @click="limpiarBusqueda()">
-                    <i class="ti ti-arrow-left"></i> Regresar
-                </button>
-            </div>
-        </template>
-        <div class="mt-0" x-html="DOMPurify.sanitize(htmlReporte)"></div>
-        
+
 </div>
+
+<div class="mt-0" x-html="DOMPurify.sanitize(htmlReporte)"></div>
    
 
 <div class="row mt-3">
@@ -86,7 +87,7 @@
 </div>
 
     <!-- MODAL -->
-    <div class="modal fade" id="modalBuscar" tabindex="-1">
+    <div class="modal fade" id="modalBuscar" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content">
 
@@ -104,10 +105,16 @@
                 </div>
 
                 <div class="modal-footer">
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
                     <button class="btn bg-danger-subtle text-danger" @click="closeModal('buscar')"><i class="ti ti-x"></i> Cancelar</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
                     <button class="btn btn-success" @click="buscar()"><i class="ti ti-search"></i> Buscar</button>
-                </div>
 
+                    </div>
+                  </div>
+                </div>
             </div>
         </div>
     </div>

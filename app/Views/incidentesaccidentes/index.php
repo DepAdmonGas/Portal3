@@ -328,21 +328,25 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
         </div>
 
         <div class="card">
-            <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col-12 col-md-10">
-                 <h4>
+         
+<div class="card-header">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
 
-                        Sin accidentes a la fecha</h4>
-   
-                    </div>
-                    <div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
-                        <button type="button" class="btn bg-primary-subtle text-primary">
-                            <a class="dropdown-item pointer" @click="openModalNoAccidentes()"><i class="ti ti-plus"></i> Nuevo</a>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <h4 class="mb-0">
+            Sin accidentes a la fecha
+        </h4>
+
+        <div class="d-grid d-md-block">
+            <button type="button"
+                    class="btn bg-primary-subtle text-primary"
+                    @click="openModalNoAccidentes()">
+                <i class="ti ti-plus"></i> Nuevo
+            </button>
+        </div>
+
+    </div>
+</div>
+
             <div class="card-body p-0">
 
                 <div class="datatables">
@@ -441,7 +445,9 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
         <!-- Modal Investigacion -->
         <div class="modal fade"
             id="modalInvestigacion"
-            tabindex="-1">
+            tabindex="-1"   
+data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg">
 
@@ -729,16 +735,18 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i>
                             Cancelar
 
                         </button>
-
-                        <button
+                    </div>
+                       <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                             type="button"
                             class="btn btn-success"
                             @click="guardarInvestigacion()">
@@ -746,6 +754,13 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                             Guardar
 
                         </button>
+                    </div>
+                  </div>
+
+
+                       
+
+                       
 
                     </div>
 
@@ -757,7 +772,9 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
         <!-- Modal Grupo interdiciplinario -->
 
-        <div class="modal fade" id="modalGrupo" tabindex="-1">
+        <div class="modal fade" id="modalGrupo" tabindex="-1"
+        data-bs-backdrop="static"
+    data-bs-keyboard="false">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
 
@@ -834,15 +851,9 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
                     </div>
                     <div class="modal-footer">
-                              <div class="text-end">
-                            <button class="btn btn-success"
-                                @click="guardarPersonal()">
-                                <i class="ti ti-check"></i>
-                                Guardar
-                            </button>
-                        </div>
-
-                        <button
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i>
@@ -850,6 +861,19 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
                         </button>
                     </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button class="btn btn-success"
+                                @click="guardarPersonal()">
+                                <i class="ti ti-check"></i>
+                                Guardar
+                            </button>
+                    </div>
+                  </div>
+
+
+                       
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -858,7 +882,9 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
         <div
             class="modal fade"
             id="modal026"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -902,16 +928,17 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i>
                             Cancelar
-
                         </button>
-
-                        <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                             type="button"
                             class="btn btn-success"
                             @click="guardar026()">
@@ -919,6 +946,8 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                             Guardar
 
                         </button>
+                    </div>
+                  </div>
 
                     </div>
 
@@ -933,7 +962,9 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
         <div
             class="modal fade"
             id="modalTercero"
-            tabindex="-1">
+            tabindex="-1"
+data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -1055,13 +1086,17 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
 
                     </div>
                     <div class="modal-footer">
-                        <button
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i>
                             Cancelar
 
                         </button>
+                    </div>
+                  </div>
                     </div>
                 </div>
 
@@ -1072,7 +1107,9 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
         <!-- Modal No Accidentes -->
         <div class="modal fade"
             id="modalNoAccidentes"
-            tabindex="-1">
+            tabindex="-1"
+data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg">
 
@@ -1158,16 +1195,18 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i>
                             Cancelar
 
                         </button>
-
-                        <button
+                    </div>
+                      <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                             type="button"
                             class="btn btn-success"
                             @click="guardarNoAccidentes()">
@@ -1181,6 +1220,8 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                             </span>
 
                         </button>
+                    </div>
+                  </div>
 
                     </div>
 
