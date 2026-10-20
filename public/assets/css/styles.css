@@ -56026,21 +56026,32 @@ object-fit: contain;
 }
 
 .badge-historico{
-position:absolute;
-top:-8px;
-right:10px;
-width:18px;
+margin-left:auto;
+flex-shrink:0;
+min-width:18px;
 height:18px;
+padding:0 6px;
 display:flex;
 align-items:center;
 justify-content:center;
-border-radius:50%;
+border-radius:999px;
 background:#dc3545;
-color:#fff;
+color:#fff !important;
 font-size:10px;
 font-weight:bold;
-box-shadow:0 0 0 2px #fff;
+line-height:1;
 animation:pulseBadge 1.5s infinite;
+}
+
+/* El badge conserva su estilo propio y no hereda el hover del sidebar. */
+.sidebar-nav .sidebar-link:hover .badge-historico,
+.sidebar-nav .sidebar-item:hover .badge-historico,
+[data-bs-theme="light"] .sidebar-nav .sidebar-link:hover .badge-historico,
+[data-bs-theme="light"] .sidebar-nav .sidebar-item:hover .badge-historico,
+[data-bs-theme="dark"] .sidebar-nav .sidebar-link:hover .badge-historico,
+[data-bs-theme="dark"] .sidebar-nav .sidebar-item:hover .badge-historico{
+background:#dc3545 !important;
+color:#fff !important;
 }
 
 .btn-badge-historico{

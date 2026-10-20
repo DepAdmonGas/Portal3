@@ -14,6 +14,28 @@ class ModuleStationService
 public static bool $isBlocked = false;
 
 /**
+ * Módulos que deben excluir "Autolavado" (op_rh_localidades.id = 9).
+ *
+ * Existe un bloque legacy que siempre ofrece Autolavado al usuario con
+ * id_gas = 2 cuando el módulo trabaja en el espacio de localidades. Es el
+ * comportamiento histórico y se conserva para todos los módulos salvo los
+ * que se registren aquí, de modo que esta excepción no altera a los demás.
+ *
+ * @var array<int, string>
+ */
+public static array $sinAutoLavado = [];
+
+/**
+ * Un módulo excluye Autolavado del selector.
+ */
+public static function excluirAutoLavado(string $moduleKey): void
+{
+if (!in_array($moduleKey, self::$sinAutoLavado, true)) {
+self::$sinAutoLavado[] = $moduleKey;
+}
+}
+
+/**
  * Config de módulos memoizada por request (tb_modulos_config es casi estática).
  */
 private static array $configCache = [];
@@ -205,7 +227,10 @@ if ($allowed === null || empty($allowed)) return [];
 
 
 // Legacy: no multiestacion config
-if (self::getIdGas() === 2 && $tipoDept === 'localidades') {
+if (self::getIdGas() === 2
+&& $tipoDept === 'localidades'
+&& !in_array($moduleKey, self::$sinAutoLavado, true)
+) {
 $autoLavado = RhLocalidad::where('id', 9)->first(['id', 'localidad as nombre']);
 return $autoLavado ? [$autoLavado->toArray()] : [];
 }
