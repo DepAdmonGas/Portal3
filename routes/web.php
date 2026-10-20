@@ -2311,6 +2311,71 @@ $r->addGroup('/comercializadora/camioneta-saveiro', function (RouteCollector $r)
     $r->addRoute('POST', '/token-telegram/revoke', Route::auth(['TokenTelegramController', 'revoke']));
     $r->addRoute('POST', '/token-telegram/test-notification', Route::auth(['TokenTelegramController', 'testNotification']));
 
+    // ---------------- CONSTANCIA DE SITUACION FISCAL ----------------
+    // El listado va por GET: el DataTable usa jQuery y el layout 'main' sólo
+    // inyecta el token CSRF en axios (http-security.js), igual que
+    // /solicitud-tarjetas y /solicitud-gafetes.
+    // El contexto de estación lo administra el selector compartido:
+    // ModuleStationService + POST /api/module-context/set
+    $r->addGroup('/constancia-situacion-fiscal', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['ConstanciaSituacionFiscalController', 'index']));
+        $r->addRoute('GET', '/data', Route::auth(['ConstanciaSituacionFiscalController', 'data']));
+        $r->addRoute('POST', '/store', Route::auth(['ConstanciaSituacionFiscalController', 'store']));
+        $r->addRoute('POST', '/delete', Route::auth(['ConstanciaSituacionFiscalController', 'destroy']));
+    });
+
+    // ---------------- INCIDENCIAS ----------------
+    $r->addGroup('/incidencias', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['IncidenciasController', 'index']));
+        $r->addRoute('GET', '/data', Route::auth(['IncidenciasController', 'data']));
+        $r->addRoute('GET', '/show', Route::auth(['IncidenciasController', 'show']));
+        $r->addRoute('POST', '/store', Route::auth(['IncidenciasController', 'store']));
+        $r->addRoute('POST', '/update', Route::auth(['IncidenciasController', 'update']));
+        $r->addRoute('POST', '/delete', Route::auth(['IncidenciasController', 'destroy']));
+    });
+
+    // ---------------- COMUNICADOS ----------------
+    // Módulo global del Departamento Operativo (tb_comunicados_do +
+    // tb_comunicados_grte). Independiente de /sasisopa/comunicados.
+    $r->addGroup('/comunicados', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['ComunicadosDoController', 'index']));
+        $r->addRoute('GET', '/data', Route::auth(['ComunicadosDoController', 'data']));
+        $r->addRoute('GET', '/show', Route::auth(['ComunicadosDoController', 'show']));
+        $r->addRoute('POST', '/store', Route::auth(['ComunicadosDoController', 'store']));
+        $r->addRoute('POST', '/update', Route::auth(['ComunicadosDoController', 'update']));
+        $r->addRoute('POST', '/delete', Route::auth(['ComunicadosDoController', 'destroy']));
+        $r->addRoute('POST', '/acuse', Route::auth(['ComunicadosDoController', 'acuse']));
+    });
+    // ---------------- ACUSES DE RECEPCION ----------------
+    // Módulo global del Departamento Operativo (op_acuse_recepcion +
+    // op_acuse_recepcion_documentos). Sin contexto de estación.
+    $r->addGroup('/acuses-recepcion', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['AcusesRecepcionController', 'index']));
+        $r->addRoute('GET', '/data', Route::auth(['AcusesRecepcionController', 'data']));
+        $r->addRoute('GET', '/show', Route::auth(['AcusesRecepcionController', 'show']));
+        $r->addRoute('GET', '/documentos', Route::auth(['AcusesRecepcionController', 'documentos']));
+        $r->addRoute('GET', '/empresas', Route::auth(['AcusesRecepcionController', 'empresas']));
+        $r->addRoute('POST', '/store', Route::auth(['AcusesRecepcionController', 'store']));
+        $r->addRoute('POST', '/empresa', Route::auth(['AcusesRecepcionController', 'guardarEmpresa']));
+        $r->addRoute('POST', '/documento', Route::auth(['AcusesRecepcionController', 'agregarDocumento']));
+        $r->addRoute('POST', '/documento/delete', Route::auth(['AcusesRecepcionController', 'eliminarDocumento']));
+        $r->addRoute('POST', '/finalizar', Route::auth(['AcusesRecepcionController', 'finalizar']));
+        $r->addRoute('POST', '/delete', Route::auth(['AcusesRecepcionController', 'destroy']));
+    });
+
+    // ---------------- MISELANEA 30, 31 ----------------
+    // Proceso de inspección del Anexo 30 y 31 de la RMF (op_miselanea_*).
+    // Módulo del Home con contexto de estación y ejercicio (desde 2022).
+    $r->addGroup('/miselanea-30-31', function (RouteCollector $r) {
+        $r->addRoute('GET', '', Route::auth(['MiselaneaController', 'redirect']));
+        $r->addRoute('GET', '/{slug:documental|certificacion}/{year:\d+}', Route::auth(['MiselaneaController', 'etapa']));
+        $r->addRoute('GET', '/{year:\d+}', Route::auth(['MiselaneaController', 'index']));
+        $r->addRoute('GET', '/data', Route::auth(['MiselaneaController', 'data']));
+        $r->addRoute('GET', '/documentos', Route::auth(['MiselaneaController', 'documentos']));
+        $r->addRoute('POST', '/agregar', Route::auth(['MiselaneaController', 'agregar']));
+        $r->addRoute('POST', '/eliminar', Route::auth(['MiselaneaController', 'eliminar']));
+    });
+
     // ---------------- RUTA FINAL ----------------
     //$r->addRoute('GET', '/{url:.+}', Route::auth(['ModuloController', 'RutasModulos']));
 };

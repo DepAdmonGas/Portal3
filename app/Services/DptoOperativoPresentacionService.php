@@ -28,7 +28,7 @@ class DptoOperativoPresentacionService
      * de Departamento Operativo. A partir de esta cantidad conviene más
      * conservar la tarjeta del módulo y entrar a su menú.
      */
-    public const MAX_DIRECTOS = 1;
+    public const MAX_DIRECTOS = 2;
 
     /**
      * Convierte los módulos permitidos en la lista plana de accesos a pintar.

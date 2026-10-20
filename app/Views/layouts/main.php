@@ -10,7 +10,7 @@
     <!-- Favicon icon-->
     <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/icono-web.png') ?>" />
     <!-- Core Css -->
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
+    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/css/styles.css') ?: 1 ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
 
     <!-- Scripts por vista -->
@@ -81,10 +81,13 @@
                             <template x-for="item in grupo.items" :key="item.id">
                                 <li class="sidebar-item">
 
-                                    <a class="sidebar-link" :class="{'has-arrow': item.children.length > 0}" :href="item.children.length ? '#' : item.ruta"
+                                    <a class="sidebar-link position-relative" :class="{'has-arrow': item.children.length > 0}" :href="item.children.length ? '#' : item.ruta"
                                         @click="if(item.children.length){ $event.preventDefault(); toggle(item); }">
                                         <span class="d-flex"><i :class="item.icono"></i></span>
                                         <span class="hide-menu" x-text="item.nombre"></span>
+                                        <template x-if="item.badge > 0">
+                                            <span class="badge-historico" x-text="item.badge"></span>
+                                        </template>
                                     </a>
 
                                     <!-- SUBMENÚ -->
@@ -245,9 +248,11 @@
 
                     <?= $moduleStationSelector ?? '' ?>
 
-                    <h4 class="fw-semibold mt-3"><?= $title; ?></h4>
-                    <?php \App\Core\Breadcrumb::render(); ?>
-                    <?= $content ?>
+                    <div x-data="yearMesComponent()" data-year-mes-template="<?= htmlspecialchars($yearMesTemplate ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                        <h4 class="fw-semibold mt-3"><?= $title; ?></h4>
+                        <?php \App\Core\Breadcrumb::render(); ?>
+                        <?= $content ?>
+                    </div>
                 </div>
             </div>
 

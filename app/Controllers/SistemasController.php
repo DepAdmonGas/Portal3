@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Models\Usuario;
 
 class SistemasController extends BaseController
 {
@@ -14,6 +15,14 @@ class SistemasController extends BaseController
 
     public function index()
     {
+
+        $usuario = Usuario::find($this->userId());
+
+        if (!$usuario || (int) $usuario->id_puesto !== 25) {
+            header('Location: /home');
+            exit;
+        }
+
         $title = 'Sistemas (Soporte de Apartados)';
 
         Breadcrumb::add('Home', '/home');
