@@ -15,9 +15,16 @@
         <div id="sasisopa-content">
 
 
-            <div class="d-flex justify-content-end mb-3">
-                <button class="btn bg-primary-subtle text-primary" @click="openModalComunicado()"><i class="ti ti-plus"></i> Nuevo</button>
-            </div>
+      
+        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                                  <button class="btn bg-primary-subtle text-primary" @click="openModalComunicado()"><i class="ti ti-plus"></i> Nuevo</button>
+    
+                    </div>
+                  </div>
+
+    
+
             <div class="table-responsive">
                 <table class="table table-bordered table-striped  mb-0 pb-0">
 
@@ -140,7 +147,9 @@
             <div
                 class="modal fade"
                 id="modalComunicado"
-                tabindex="-1">
+                tabindex="-1"
+                data-bs-backdrop="static"
+                data-bs-keyboard="false">
 
                 <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -231,22 +240,26 @@ $event.target.files[0]
                         </div>
 
                         <div class="modal-footer">
-
-                            <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                          <button
                                 class="btn bg-danger-subtle text-danger"
                                 data-bs-dismiss="modal">
-
                                 <i class="ti ti-x"></i> Cancelar
-
                             </button>
-
-                            <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                                 class="btn btn-success"
                                 @click="guardarComunicado()">
-
                                 <i class="ti ti-check"></i> Guardar
-
                             </button>
+                    </div>
+                  </div>
+
+                        
+
+                            
 
                         </div>
 
@@ -258,7 +271,9 @@ $event.target.files[0]
 
             <div class="modal fade"
                 id="modalDetalleComunicado"
-                tabindex="-1">
+                tabindex="-1"
+                data-bs-backdrop="static"
+                data-bs-keyboard="false">
 
                 <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
 
@@ -348,20 +363,22 @@ $event.target.files[0]
                                         Archivo:
                                     </label>
 
-                                    <div>
-
-                                        <a
-                                            :href="detalleComunicado.archivo"
+                                 <div class="row g-0 ms-auto w-100 justify-content-start">
+                    <div class="col-12 col-md-auto d-grid">
+                      <a
+                                          :href="detalleComunicado.archivo"
                                             target="_blank"
                                             class="btn btn-outline-primary">
-
                                             <i class="ti ti-file-download"></i>
-
                                             Descargar
-
                                         </a>
+                    </div>
+                  </div>
 
-                                    </div>
+
+                                        
+
+                                   
 
                                 </div>
 
@@ -369,9 +386,15 @@ $event.target.files[0]
 
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+                            <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
                                 <i class="ti ti-x"></i> Cerrar
                             </button>
+                    </div>
+                  </div>
+
+                            
 
                         </div>
                     </div>

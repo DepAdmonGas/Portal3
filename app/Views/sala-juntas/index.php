@@ -7,75 +7,71 @@
 
     <div class="calender-sidebar app-calendar mt-3">
 
-        <div class="d-flex flex-wrap justify-content-between align-items-center my-3 gap-2">
+       
+<div class="d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-md-center gap-3">
 
-            <!-- Totales del rango visible -->
-            <div class="d-flex align-items-center">
+    <!-- Totales -->
+    <div class="d-flex align-items-center">
 
-                <div class="border-end pe-3">
-                    <label class="text-muted fw-normal mb-1">
-                        Programadas
-                    </label>
-
-                    <b
-                        class="text-success fs-5"
-                        x-text="totales.programadas"></b>
-                </div>
-
-                <div class="ms-5 border-end pe-3">
-                    <label class="text-muted fw-normal mb-1">
-                        Solicitudes
-                    </label>
-
-                    <b
-                        class="text-warning fs-5"
-                        x-text="totales.solicitudes"></b>
-                </div>
-
-                <div class="ms-5">
-                    <label class="text-muted fw-normal mb-1">
-                        Total
-                    </label>
-
-                    <b
-                        class="fs-5"
-                        x-text="totales.total"></b>
-                </div>
-
-            </div>
-
-            <!-- Acciones: arriba a la derecha del calendario -->
-            <div class="d-flex align-items-center gap-2">
-
-                <button
-                    type="button"
-                    class="btn bg-primary-subtle text-primary"
-                    @click="abrirModalNuevaJunta()"
-                    :title="permisos.crear ? 'Agregar una nueva junta' : 'No tienes permiso para agregar juntas'">
-                    <i class="ti ti-plus"></i>
-                    Nuevo
-                </button>
-
-                <button
-                    type="button"
-                    class="btn btn-outline-danger d-flex align-items-center gap-2"
-                    @click="descargarManual()">
-                    <i class="ti ti-file-type-pdf fs-5"></i>
-                    Descargar Manual
-                </button>
-
-            </div>
-
+        <div class="border-end pe-3">
+            <label class="text-muted fw-normal mb-1">
+                Programadas
+            </label>
+            <b class="text-success fs-5"
+               x-text="totales.programadas"></b>
         </div>
 
-        <div class="text-capitalize" id="calendar"></div>
+        <div class="ms-3 ms-md-5 border-end pe-3">
+            <label class="text-muted fw-normal mb-1">
+                Solicitudes
+            </label>
+            <b class="text-warning fs-5"
+               x-text="totales.solicitudes"></b>
+        </div>
+
+        <div class="ms-3 ms-md-5">
+            <label class="text-muted fw-normal mb-1">
+                Total
+            </label>
+            <b class="fs-5"
+               x-text="totales.total"></b>
+        </div>
+
+    </div>
+
+    <!-- Botones -->
+    <div class="d-grid d-md-flex gap-2 ms-md-auto">
+
+        <button
+            type="button"
+            class="btn bg-primary-subtle text-primary"
+            @click="abrirModalNuevaJunta()"
+            :title="permisos.crear ? 'Agregar una nueva junta' : 'No tienes permiso para agregar juntas'">
+            <i class="ti ti-plus"></i>
+            Nuevo
+        </button>
+
+        <button
+            type="button"
+            class="btn btn-outline-danger"
+            @click="descargarManual()">
+            <i class="ti ti-file-type-pdf fs-5"></i>
+            Descargar Manual
+        </button>
+
+    </div>
+
+</div>
+
+
+        <div class="text-capitalize " id="calendar"></div>
 
     </div>
 
 
 
 <!---------- JUNTAS DEL DIA --------->
-<div class="modal fade" id="modalDia" tabindex="-1">
+<div class="modal fade" id="modalDia" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 
 <div class="modal-content">
@@ -159,9 +155,16 @@ No existen juntas programadas para este día.
 </div>
 
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
-<i class="ti ti-x"></i> Cerrar
-</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+            <button
+                type="button"
+                class="btn bg-danger-subtle text-danger"
+                data-bs-dismiss="modal">
+                <i class="ti ti-x"></i> Cerrar
+            </button>
+        </div>
+    </div>
 </div>
 
 </div>
@@ -171,7 +174,7 @@ No existen juntas programadas para este día.
 
 
 <!---------- MODAL DETALLE DE LA JUNTA ---------->
-<div class="modal fade" id="modalJunta" tabindex="-1" aria-labelledby="modalJuntaLabel" aria-hidden="true">
+<div class="modal fade" id="modalJunta" tabindex="-1" aria-labelledby="modalJuntaLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 <div class="modal-content">
 
@@ -230,7 +233,7 @@ No existen juntas programadas para este día.
 </div>
 
 <div class="col-12 mb-2">
-<h5 class="text-primary fw-semibold">Dirigido a:</h5>
+<h5 class="form-label">Dirigido a:</h5>
 </div>
 
 <!-- Listado agrupado por puesto / estacion -->
@@ -263,68 +266,77 @@ x-text="'(' + grupo.estacion + ')'"></span>
 </div>
 </div>
 
+
 <div class="modal-footer">
+    <div class="row g-2 w-100 justify-content-end align-items-center">
 
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
-<i class="ti ti-x me-1"></i> Cerrar
-</button>
+        <!-- Cerrar -->
+        <div class="col-12 col-md-auto d-grid">
+            <button
+                type="button"
+                class="btn bg-danger-subtle text-danger"
+                data-bs-dismiss="modal">
+                <i class="ti ti-x me-1"></i>
+                Cerrar
+            </button>
+        </div>
 
-<template x-if="!juntaSeleccionada?.tieneSolicitudPendiente">
-<div class="d-flex flex-wrap gap-2">
+        <!-- Acciones de la junta -->
+        <template x-if="!juntaSeleccionada?.tieneSolicitudPendiente">
+            <div class="row g-2 col-12 col-md-auto">
 
-<button
-type="button"
-class="btn bg-danger-subtle text-danger"
-@click="eliminarJunta(juntaSeleccionada.id, juntaSeleccionada.descripcion)"
-:disabled="!juntaSeleccionada?.puedeEliminar"
-:title="juntaSeleccionada?.puedeEliminar
-? 'Cancelar la junta'
-: 'Solo quien la creó puede cancelarla'">
-<i class="ti ti-trash"></i>
-Cancelar junta
-</button>
+                <div class="col-12 col-md-auto d-grid">
+                    <button
+                        type="button"
+                        class="btn bg-danger-subtle text-danger"
+                        @click="eliminarJunta(juntaSeleccionada.id, juntaSeleccionada.descripcion)"
+                        :disabled="!juntaSeleccionada?.puedeEliminar">
+                        <i class="ti ti-trash me-1"></i>
+                        Cancelar junta
+                    </button>
+                </div>
 
-<button
-type="button"
-class="btn bg-warning-subtle text-warning"
-@click="abrirModalEditar(juntaSeleccionada.id)"
-:disabled="!juntaSeleccionada?.puedeEditar"
-:title="juntaSeleccionada?.puedeEditar
-? 'Editar la junta'
-: 'Solo quien la creó puede editarla'">
-<i class="ti ti-edit"></i>
-Editar
-</button>
+                <div class="col-12 col-md-auto d-grid">
+                    <button
+                        type="button"
+                        class="btn bg-warning-subtle text-warning"
+                        @click="abrirModalEditar(juntaSeleccionada.id)"
+                        :disabled="!juntaSeleccionada?.puedeEditar">
+                        <i class="ti ti-edit me-1"></i>
+                        Editar
+                    </button>
+                </div>
 
-<button
-type="button"
-class="btn btn-primary"
-@click="abrirComentarios(juntaSeleccionada)"
-:disabled="!juntaSeleccionada?.puedeComentar"
-:title="juntaSeleccionada?.puedeComentar
-? 'Ver y agregar comentarios'
-: 'No se pueden agregar comentarios'">
-<i class="ti ti-message-circle me-1"></i>
-Comentarios
-</button>
+                <div class="col-12 col-md-auto d-grid">
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        @click="abrirComentarios(juntaSeleccionada)"
+                        :disabled="!juntaSeleccionada?.puedeComentar">
+                        <i class="ti ti-message-circle me-1"></i>
+                        Comentarios
+                    </button>
+                </div>
 
+                <div class="col-12 col-md-auto d-grid">
+                    <button
+                        type="button"
+                        class="btn btn-success text-white"
+                        @click="abrirSolicitudHorario(juntaSeleccionada.id)"
+                        :disabled="!juntaSeleccionada?.puedeSolicitar">
+                        <i class="ti ti-clock me-1"></i>
+                        Solicitar horario
+                    </button>
+                </div>
 
-<button
-type="button"
-class="btn btn-success text-white"
-@click="abrirSolicitudHorario(juntaSeleccionada.id)"
-:disabled="!juntaSeleccionada?.puedeSolicitar"
-:title="juntaSeleccionada?.puedeSolicitar
-? 'Solicitar el horario de esta junta'
-: 'Disponible solo si no eres quien creó la junta'">
-<i class="ti ti-clock me-1"></i>
-Solicitar horario
-</button>
+            </div>
+        </template>
 
+    </div>
 </div>
-</template>
 
-</div>
+
+
 
 </div>
 </div>
@@ -459,7 +471,8 @@ class="modal fade"
 id="modalNuevaJunta"
 tabindex="-1"
 aria-labelledby="modalNuevaJuntaLabel"
-aria-hidden="true">
+aria-hidden="true"
+data-bs-backdrop="static" data-bs-keyboard="false">
 
 <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 <div class="modal-content">
@@ -596,7 +609,7 @@ No existen horarios disponibles para esta fecha.
 
 <!-- Departamentos -->
 <div class="col-12">
-<h5 class="text-primary fw-semibold">Dirigido a:</h5>
+<h5 class="form-label">Dirigido a:</h5>
 
 <label class="form-label mb-1">* Departamento / Estación:</label>
 <select id="dirigidoa" class="form-select"
@@ -617,18 +630,20 @@ No existen horarios disponibles para esta fecha.
 
 <!-- FOOTER -->
 <div class="modal-footer">
-
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                     <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cancelar
-</button>
-
-<button type="button" class="btn btn-success" @click="guardarJunta()"
+</button> 
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarJunta()"
 :disabled="guardandoJunta">
 
 <span x-show="!guardandoJunta">
 
 <i class="ti ti-check"></i>
-<span x-text="idJuntaEditando > 0 ? 'Guardar cambios' : 'Guardar'"></span>
+<span x-text="idJuntaEditando > 0 ? 'Actualizar' : 'Guardar'"></span>
 
 </span>
 
@@ -638,6 +653,13 @@ Guardando...
 </span>
 
 </button>
+                    </div>
+                  </div>
+
+
+
+
+
 
 </div>
 
@@ -795,8 +817,8 @@ Mientras exista no se puede editar, cancelar ni comentar esta junta.
 <div x-text="respuestaSolicitud?.solicitante ?? ''"></div>
 </div>
 
-<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
-<label class="form-label mb-1">Tema de la reunión:</label>
+<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 ">
+<label class="form-label mb-0">Tema de la reunión:</label>
 <div x-text="respuestaSolicitud?.tema ?? ''"></div>
 </div>
 

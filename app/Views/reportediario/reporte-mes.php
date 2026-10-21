@@ -125,26 +125,40 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
         <td class="text-center align-middle">
 
-         <div class="dropdown dropstart">
-            <button type="button" data-bs-toggle="dropdown">
-                <i class="ti ti-dots-vertical fs-6"></i>
-            </button>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                       @click="detalle(row)">
-                        <i class="fs-4 ti ti-eye"></i>Detalle
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                        @click="editar(row)">
-                            <i class="fs-4 ti ti-edit"></i>Editar
-                        </a>
-                    </li>
-                 </ul>
-            </div>
+      <div class="dropdown dropstart">
 
+    <!-- Botón de tres puntos -->
+    <button type="button"
+            class="p-0 border-0"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+
+        <i class="ti ti-dots-vertical fs-6"></i>
+    </button>
+
+    <!-- Menú desplegable -->
+    <ul class="dropdown-menu">
+
+        <li>
+            <a class="dropdown-item pointer d-flex align-items-center gap-3"
+               @click="detalle(row)">
+
+                <i class="fs-4 ti ti-eye"></i>
+                Detalle
+            </a>
+        </li>
+
+        <li>
+            <a class="dropdown-item pointer d-flex align-items-center gap-3"
+               @click="editar(row)">
+
+                <i class="fs-4 ti ti-edit"></i>
+                Editar
+            </a>
+        </li>
+
+    </ul>
+</div>
         </td>
 
     </tr>
@@ -182,7 +196,9 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
     class="modal fade"
     id="modalDetalleReporte"
     tabindex="-1"
-    aria-hidden="true">
+    aria-hidden="true"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
     <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
 
@@ -440,13 +456,17 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
             </div>
 
             <div class="modal-footer">
-
-               <button class="btn bg-danger-subtle text-danger"
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                        <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                     <i class="ti ti-x"></i> Cerrar
-
                 </button>
+                    </div>
+                  </div>
+
+
+             
 
             </div>
 
@@ -465,7 +485,9 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
 <div class="modal fade"
      id="modalMensajes"
-     tabindex="-1">
+     tabindex="-1"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
 
     <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
 
