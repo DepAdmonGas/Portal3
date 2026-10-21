@@ -96,6 +96,10 @@ class DownloadController
             'tpv-anexos'                             => dirname(__DIR__, 2) . '/public/uploads/archivos/tpv/anexos/',
             'cre'                                    => dirname(__DIR__, 2) . '/public/uploads/archivos/cre/',
             'sala-juntas'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/sala-juntas/',
+            'constancia-fiscal'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/constancia-situacion-es/',
+            'incidencias'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/incidencias/',
+            'comunicados'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/comunicados/',
+            'miselanea'                             => dirname(__DIR__, 2) . '/public/uploads/archivos/miselanea/',
 
         ];
 

@@ -97,7 +97,7 @@
 
                     <li class="nav-small-cap" x-show="!loading && menus.length === 0">
                         <i class="ti ti-alert-circle nav-small-cap-icon fs-4"></i>
-                        <span class="hide-menu">Sin accesos configurados</span>
+                        <span class="hide-menu"></span>
                     </li>
 
                 </ul>

@@ -36,9 +36,7 @@ class AlmacenTerminalesPuntoVentaFallasController extends BaseController
     $title = 'Fallas Terminales Punto de Venta' . ($idTpv !== null ? " (#{$idTpv})" : '');
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
-        Breadcrumb::add('Almacén', '/departamento-operativo/almacen');
-        Breadcrumb::add('Terminales Punto de Venta', Service::BASE_URL);
-        Breadcrumb::add($title, '');
+        Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
 
         $permisos = Service::getPermisos();
 

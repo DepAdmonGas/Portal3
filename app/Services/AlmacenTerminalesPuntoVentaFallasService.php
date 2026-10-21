@@ -100,6 +100,58 @@ class AlmacenTerminalesPuntoVentaFallasService
     /** Personal de ControlUx que puede atender una falla (legacy: 635, 650). */
     private const IDS_PERSONAL_CONTROLUX = [635, 650];
 
+    /**
+     * Texto que identifica las terminales de este personal.
+     * Se busca sin distinguir mayúsculas y con espacios tolerantes, porque
+     * en la base conviven "CONTROL VOLUMETRICO", "T.CONTROLUX T 3",
+     * "SOPORTE CONTROLUX" y variantes con espacios al final.
+     */
+    private const PATRONES_CONTROLUX = ['CONTROLUX', 'VOLUMETRICO'];
+
+    /** Columnas de la terminal donde puede aparecer ese texto. */
+    private const COLUMNAS_CONTROLUX = ['tpv', 'no_afiliacion', 'telefono'];
+
+    /**
+     * ¿El usuario en sesión es parte del personal de ControlUx?
+     * Solo a ellos se les restringe el listado de terminales.
+     */
+    public static function esPersonalControlux(): bool
+    {
+        $sessionUsuario = Session::get('usuario');
+        $idUsuario = (int)($sessionUsuario['id'] ?? 0);
+
+        return in_array($idUsuario, self::IDS_PERSONAL_CONTROLUX, true);
+    }
+
+    /**
+     * Aplica el filtro de terminales al query, solo si el usuario es de
+     * ControlUx. Se invoca sobre queries de op_terminales_tpv o sobre un
+     * query que ya la une con alias "t".
+     *
+     * @param \Illuminate\Database\Query\Builder $query
+     * @param string $alias Alias de la tabla de terminales ("t" por defecto).
+     * @return \Illuminate\Database\Query\Builder
+     */
+    private static function aplicarFiltroControlux($query, string $alias = 't')
+    {
+        if (!self::esPersonalControlux()) {
+            return $query;
+        }
+
+        $columnas = [];
+        foreach (self::COLUMNAS_CONTROLUX as $col) {
+            $columnas[] = $alias . '.' . $col;
+        }
+
+        return $query->where(function ($q) use ($columnas) {
+            foreach (self::PATRONES_CONTROLUX as $patron) {
+                foreach ($columnas as $col) {
+                    $q->orWhere($col, 'LIKE', '%' . $patron . '%');
+                }
+            }
+        });
+    }
+
     /* ------------------------------------------------------------------ */
     /* Permisos                                                            */
     /* ------------------------------------------------------------------ */
@@ -230,9 +282,13 @@ class AlmacenTerminalesPuntoVentaFallasService
             return null;
         }
 
-        return TerminalesTpv::where('id', $idTpv)
-            ->whereIn('id_estacion', array_keys($disponibles))
-            ->first();
+        $query = TerminalesTpv::where('id', $idTpv)
+            ->whereIn('id_estacion', array_keys($disponibles));
+
+        // El personal de ControlUx solo alcanza las terminales de su texto.
+        self::aplicarFiltroControlux($query, (new TerminalesTpv())->getTable());
+
+        return $query->first();
     }
 
     /** Falla que pertenece a una terminal autorizada; null si no existe o no se puede ver. */
@@ -342,6 +398,9 @@ class AlmacenTerminalesPuntoVentaFallasService
             // sobrescribiría la de la falla y el id devuelto sería el equivocado.
             ->select('r.*', 't.tpv as tpv', 't.no_serie as no_serie')
             ->where('t.id_estacion', $idEstacion);
+
+        // El personal de ControlUx solo ve fallas de terminales de su texto.
+        self::aplicarFiltroControlux($query, 't');
 
         if ($idTpv !== null) {
             $query->where('r.id_tpv', $idTpv);

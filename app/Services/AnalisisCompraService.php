@@ -5,10 +5,80 @@ namespace App\Services;
 use App\Models\Operativo\AnalisisCompra;
 use App\Core\Auth;
 use App\Core\Session;
+use App\Models\Estacion;
 use Illuminate\Database\Capsule\Manager as DB;
 
 class AnalisisCompraService
 {
+/**
+ * Clave del módulo en tb_modulos_config. Define qué estaciones aparecen
+ * en el selector y cuál es la estación activa del contexto.
+ */
+public const MODULE_KEY = 'analisis-compra';
+
+/**
+ * Estaciones que el usuario puede ver en el selector.
+ */
+public static function getEstacionesPermitidas(): array
+{
+$stations = ModuleStationService::getAvailableStations(self::MODULE_KEY);
+return array_values(array_column($stations, 'id'));
+}
+
+/**
+ * Estaciones del módulo con su nombre, para pintar el selector.
+ */
+public static function getEstaciones(): array
+{
+return ModuleStationService::getAvailableStations(self::MODULE_KEY);
+}
+
+public static function puedeEstacion(int $idEstacion): bool
+{
+return in_array($idEstacion, self::getEstacionesPermitidas(), true);
+}
+
+/**
+ * Módulo desde el que se entra normalmente a esta pantalla.
+ * El selector de Embarques guarda la estación bajo su propia clave, así que
+ * sin esteyasgo la estación elegida se perdería al llegar aquí.
+ */
+public const MODULO_ORIGEN = 'corte-diario';
+
+/**
+ * Estación elegida en el selector del módulo.
+ *
+ * Si esta pantalla todavía no tiene selección propia, hereda la del módulo
+ * de origen y la fija, de modo que la estación se mantenga al navegar entre
+ * Resumen Embarques y Análisis de Compras.
+ */
+public static function getEstacionContexto(): ?int
+{
+$ctx = ModuleStationService::getContext(self::MODULE_KEY);
+$idEstacion = $ctx['id_estacion'] !== null ? (int)$ctx['id_estacion'] : null;
+
+if ($idEstacion !== null && self::puedeEstacion($idEstacion)) {
+return $idEstacion;
+}
+
+// Sin selección propia (o inválida): se hereda la del módulo de origen.
+$origen = ModuleStationService::getContext(self::MODULO_ORIGEN);
+$heredada = $origen['id_estacion'] !== null ? (int)$origen['id_estacion'] : null;
+
+if ($heredada !== null && self::puedeEstacion($heredada)) {
+ModuleStationService::setContext(self::MODULE_KEY, $heredada);
+return $heredada;
+}
+
+return $idEstacion;
+}
+
+public static function getEstacionNombre(int $idEstacion): string
+{
+$estacion = Estacion::find($idEstacion);
+return $estacion ? (string)$estacion->nombre : 'Estación #' . $idEstacion;
+}
+
 public static function getPermisos(): array
 {
 $usuario = Auth::user();
