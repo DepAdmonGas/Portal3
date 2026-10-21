@@ -17,12 +17,12 @@
     <?php else: ?>
 
         <div id="sasisopa-content">
-            <div class="row mt-3">
+            <div class="row g-3 ms-auto w-100 justify-content-between mb-3 mt-3">
 
 
-                <div class="col-md-6">
+                <div class="col-12 col-md-6 d-grid">
 
-                    <div class="input-group mb-3">
+                    <div class="input-group">
                         <span class="input-group-text fw-bolder">Fecha:</span>
                         <input
                             type="date"
@@ -33,19 +33,16 @@
                             :class="{ 'is-invalid': errors.fecha }"
                             @input="errors.fecha = false">
                     </div>
-
                 </div>
-                <div class="col-md-6">
-                    <div class="text-end mb-3">
+
+                <div class="col-12 col-md-auto d-grid">
                         <button
                             class="btn btn-success"
                             @click="submit()"
                             :disabled="loading">
                             <i class="ti ti-check"></i>
                             Finalizar
-
                         </button>
-                    </div>
                 </div>
 
 
@@ -176,18 +173,16 @@
                             <div class="col-md-12">
                                 <div class="card">
                                     <div class="card-header bg-primary">
-                                        <div class="row  align-items-center">
+                                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
 
 
-                                            <div class="col-9">
                                                 <h5 class="mb-0 text-white"> <i class="ti ti-truck me-1"></i>
                                                     2. Agregar el volumen de las compras de pipas.</h5>
 
-                                            </div>
+                                          
 
-
-                                            <div class="col-3 text-end">
-                                                <a class="btn bg-success-subtle text-success pointer"
+                                            <div class="d-grid d-md-block">
+                                                <a class="btn btn-success text-white pointer"
                                                     @click="agregarPipa(producto)">
                                                     <i class="ti ti-plus"></i> Nuevo
                                                 </a>
@@ -239,7 +234,7 @@
                                                         </th>
 
                                                         <th class="text-center align-middle">
-                                                            <i class="ti ti-trash fs-6"></i>
+                                                            <i class="ti ti-trash text-danger fs-6"></i>
                                                         </th>
 
                                                     </tr>

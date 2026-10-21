@@ -14,10 +14,10 @@ x-data="{ ...actions(), ...corteDiario() }">
 
     <div id="sasisopa-content">
 
-<div class="row mt-2">
+<div class="row g-2 ms-auto w-100 justify-content-between">
                    
         
-    <div class="col-5">
+    <div class="col-12 col-md-6 d-grid mt-3">
         <select
             class="form-select"
             x-model.number="year"
@@ -31,11 +31,11 @@ x-data="{ ...actions(), ...corteDiario() }">
     </div>
 
 
-    <div class="col-7 text-end">
-   <button class="btn bg-primary-subtle text-primary">
-                    <a class="dropdown-item pointer" :href="url"><i class="ti ti-file-dollar"></i> Facturas</a>
-            
-            </button>
+    <div class="col-12 col-md-auto d-grid mt-3">
+   <a class="btn bg-primary-subtle text-primary"
+   :href="url">
+    <i class="ti ti-file-dollar"></i> Facturas
+</a>
             </div>
     
 </div>
