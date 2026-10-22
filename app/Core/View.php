@@ -85,8 +85,12 @@ class View
             // Indica si el selector de estación debe ocultarse.
             $ocultarSelector = !empty($viewData['ocultarSelectorEstacion']);
 
+            // Texto opcional del badge (por ejemplo, la estación o
+            // departamento del ticket que se está viendo).
+            $nombreBadge = (string)($viewData['nombreBadgeEstacion'] ?? '');
+
             // Genera el HTML del selector y valida si el módulo está disponible.
-            $html = ModuleStationService::render($moduleKey, $pendientesData, !$ocultarSelector);
+            $html = ModuleStationService::render($moduleKey, $pendientesData, !$ocultarSelector, $nombreBadge);
 
             // Si el módulo está bloqueado (Para id_gas = 8), solo muestra el mensaje de bloqueo.
             if (ModuleStationService::$isBlocked) {

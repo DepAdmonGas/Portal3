@@ -23,7 +23,7 @@ class SistemasController extends BaseController
             exit;
         }
 
-        $title = 'Sistemas (Soporte de Apartados)';
+        $title = 'Soporte (Apartados)';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add($title, '');

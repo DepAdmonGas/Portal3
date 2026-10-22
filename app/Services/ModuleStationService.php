@@ -246,7 +246,7 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         return !empty($stations) || !empty($depts);
     }
 
-    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true): string
+    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true, string $nombreBadge = ''): string
     {
         $cfg = self::getConfig($moduleKey);
         if (!$cfg) {
@@ -273,17 +273,19 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
 
 }
 
-self::$isBlocked = false;
+        self::$isBlocked = false;
 
-$hasSelection = $idEstacion !== null || $idDepto !== null;
-$hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
-$showSelector = $showSelector && ($multiestacion || $hasChoices);
+        // Se puede forzar el texto del badge (por ejemplo, con la estación
+        // o departamento del ticket que se está viendo) sin el selector.
+        $hasSelection = $nombreBadge !== '' || $idEstacion !== null || $idDepto !== null;
+        $hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
+        $showSelector = $showSelector && ($multiestacion || $hasChoices);
 
-$html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
+        $html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
 
-$badgeHidden = $hasSelection ? '' : ' style="display:none"';
-$badgeText = $hasSelection ? ($currentName ?: "\u{2014}") : '';
-$html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
+        $badgeHidden = $hasSelection ? '' : ' style="display:none"';
+        $badgeText = $nombreBadge !== '' ? $nombreBadge : ($hasSelection ? ($currentName ?: "\u{2014}") : '');
+        $html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
 
 if ($showSelector) {
 $placeholder = $cfg['placeholder'] ?? 'Selecciona una estación...';
@@ -350,23 +352,37 @@ $idGas = $userObj ? (int)$userObj->id_gas : null;
 return $idGas;
 }
 
-private static function buildPuestos(array $ids): array
-{
-$nombres = [
-4 => 'Comercializadora',
-5 => 'Gestoría',
-18 => 'Quitarga',
-19 => 'Operación servicio y mantenimiento de personal',
-23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
-];
-$result = [];
-foreach ($ids as $id) {
-if (isset($nombres[$id])) {
-$result[] = ['id' => $id, 'nombre' => $nombres[$id]];
-}
-}
-return $result;
-}
+    private static function buildPuestos(array $ids): array
+    {
+        $nombres = self::nombresPuestos();
+        $result = [];
+        foreach ($ids as $id) {
+            if (isset($nombres[$id])) {
+                $result[] = ['id' => $id, 'nombre' => $nombres[$id]];
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Catálogo de nombres de los puestos (departamentos) del selector.
+     * Es aditivo: los ids que no estén aquí no se muestran como
+     * departamento en los módulos configurados con tipo_departamento
+     * 'puestos' (hoy sólo solicitud-cheques y sistemas-estaciones).
+     */
+    private static function nombresPuestos(): array
+    {
+        return [
+            3 => 'Dirección',
+            4 => 'Comercializadora',
+            5 => 'Gestoría',
+            13 => 'Dirección de operaciones',
+            18 => 'Quitarga',
+            19 => 'Operación servicio y mantenimiento de personal',
+            23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
+        ];
+    }
+
 
 private static function resolveName(string $moduleKey, $idEstacion, $idDepto): string
 {
@@ -390,17 +406,11 @@ if ($idEstacion !== null && $idDepto === null) {
 $est = Estacion::find($idEstacion);
 return $est ? $est->nombre : 'Estación #' . $idEstacion;
 }
-if ($idDepto !== null) {
-$deptNames = [
-4 => 'Comercializadora',
-5 => 'Gestoría',
-18 => 'Quitarga',
-19 => 'Operación servicio y mantenimiento de personal',
-23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
-];
-return $deptNames[$idDepto] ?? 'Depto #' . $idDepto;
-}
-return '';
-}
+        if ($idDepto !== null) {
+            $deptNames = self::nombresPuestos();
+            return $deptNames[$idDepto] ?? 'Depto #' . $idDepto;
+        }
+        return '';
+    }
 
 }
