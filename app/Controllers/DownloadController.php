@@ -100,6 +100,8 @@ class DownloadController
             'incidencias'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/incidencias/',
             'comunicados'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/comunicados/',
             'miselanea'                             => dirname(__DIR__, 2) . '/public/uploads/archivos/miselanea/',
+            'soporte-actividades'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/soporte/actividades/',
+            'soporte-evidencias'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/soporte/evidencias/',
 
         ];
 
