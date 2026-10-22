@@ -1507,7 +1507,7 @@ $r->addGroup('/comercializadora/camioneta-saveiro', function (RouteCollector $r)
         $r->addRoute('GET', '/control-actividades-procesos/get-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'getProgramaMantenimiento']));
         $r->addRoute('POST', '/control-actividades-procesos/update-programa-anual-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'updateProgramaMantenimiento']));
         $r->addRoute('GET', '/control-actividades-procesos/pdf-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'pdfProgramaMantenimiento']));
-
+ 
         //--- Configuracion Bitacoras
         $r->addRoute('GET', '/control-actividades-procesos/configuracion-bitacora', Route::auth(['ConfiguracionBitacoraController', 'index']));
         $r->addRoute('GET', '/control-actividades-procesos/datatable-configuracion-bitacora', Route::auth(['ConfiguracionBitacoraController', 'datatableConfiguracionBitacora']));
@@ -2205,7 +2205,65 @@ $r->addGroup('/comercializadora/camioneta-saveiro', function (RouteCollector $r)
     // ---------------- DEPARTAMENTO DE SISTEMAS ----------------
     $r->addGroup('/sistemas', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['SistemasController', 'index']));
-        $r->addRoute('GET', '/soporte', Route::auth(['SoporteController', 'index']));
+$r->addRoute('GET', '/soporte', Route::auth(['SoporteController', 'index']));
+$r->addRoute('GET', '/soporte-formulario/{id:\d+}', Route::auth(['SoporteController', 'formulario']));
+$r->addRoute('GET', '/soporte/data', Route::auth(['SoporteController', 'data']));
+$r->addRoute('GET', '/soporte/show', Route::auth(['SoporteController', 'show']));
+$r->addRoute('GET', '/soporte/comentarios', Route::auth(['SoporteController', 'comentarios']));
+$r->addRoute('GET', '/soporte/actividades', Route::auth(['SoporteController', 'actividades']));
+        $r->addRoute('POST', '/soporte/nuevo-folio', Route::auth(['SoporteController', 'nuevoFolio']));
+        $r->addRoute('POST', '/soporte/editar-prioridad', Route::auth(['SoporteController', 'editarPrioridad']));
+        $r->addRoute('POST', '/soporte/editar-descripcion', Route::auth(['SoporteController', 'editarDescripcion']));
+        $r->addRoute('POST', '/soporte/agregar-actividad', Route::auth(['SoporteController', 'agregarActividad']));
+        $r->addRoute('POST', '/soporte/agregar-evidencia', Route::auth(['SoporteController', 'agregarEvidencia']));
+        $r->addRoute('POST', '/soporte/eliminar-actividad', Route::auth(['SoporteController', 'eliminarActividad']));
+        $r->addRoute('POST', '/soporte/eliminar-evidencia', Route::auth(['SoporteController', 'eliminarEvidencia']));
+        $r->addRoute('POST', '/soporte/editar-actividad', Route::auth(['SoporteController', 'editarActividad']));
+        $r->addRoute('POST', '/soporte/editar-registro', Route::auth(['SoporteController', 'editarRegistro']));
+        $r->addRoute('POST', '/soporte/finalizar-registro', Route::auth(['SoporteController', 'finalizarRegistro']));
+        $r->addRoute('POST', '/soporte/finalizar-soporte', Route::auth(['SoporteController', 'finalizarSoporte']));
+        $r->addRoute('POST', '/soporte/cancelar-ticket', Route::auth(['SoporteController', 'cancelarTicket']));
+        $r->addRoute('POST', '/soporte/guardar-comentario', Route::auth(['SoporteController', 'guardarComentario']));
+        $r->addRoute('POST', '/soporte/validar-solicitud', Route::auth(['SoporteController', 'validarSolicitud']));
+        $r->addRoute('POST', '/soporte/solicitar-revision', Route::auth(['SoporteController', 'solicitarRevision']));
+
+        // Actividades (Sistemas): actividades internas del area de Sistemas.
+        $r->addRoute('GET', '/actividades', Route::auth(['SoporteActividadesController', 'index']));
+        $r->addRoute('GET', '/actividades/nueva/{id:\d+}', Route::auth(['SoporteActividadesController', 'nueva']));
+        $r->addRoute('GET', '/actividades/seguimiento/{id:\d+}', Route::auth(['SoporteActividadesController', 'seguimiento']));
+        $r->addRoute('GET', '/actividades/data', Route::auth(['SoporteActividadesController', 'data']));
+        $r->addRoute('GET', '/actividades/show', Route::auth(['SoporteActividadesController', 'show']));
+    $r->addRoute('GET', '/actividades/actividades', Route::auth(['SoporteActividadesController', 'actividades']));
+        $r->addRoute('GET', '/actividades/comentarios', Route::auth(['SoporteActividadesController', 'comentarios']));
+        $r->addRoute('POST', '/actividades/nuevo-folio', Route::auth(['SoporteActividadesController', 'nuevoFolio']));
+        $r->addRoute('POST', '/actividades/editar-descripcion', Route::auth(['SoporteActividadesController', 'editarDescripcion']));
+        $r->addRoute('POST', '/actividades/editar-prioridad', Route::auth(['SoporteActividadesController', 'editarPrioridad']));
+        $r->addRoute('POST', '/actividades/asignar-responsable', Route::auth(['SoporteActividadesController', 'asignarResponsable']));
+        $r->addRoute('POST', '/actividades/agregar-actividad', Route::auth(['SoporteActividadesController', 'agregarActividad']));
+        $r->addRoute('POST', '/actividades/eliminar-actividad', Route::auth(['SoporteActividadesController', 'eliminarActividad']));
+        $r->addRoute('POST', '/actividades/finalizar-registro', Route::auth(['SoporteActividadesController', 'finalizarRegistro']));
+        $r->addRoute('POST', '/actividades/guardar-seguimiento', Route::auth(['SoporteActividadesController', 'guardarSeguimiento']));
+        $r->addRoute('POST', '/actividades/editar-actividad', Route::auth(['SoporteActividadesController', 'editarActividad']));
+        $r->addRoute('POST', '/actividades/finalizar-soporte', Route::auth(['SoporteActividadesController', 'finalizarSoporte']));
+$r->addRoute('POST', '/actividades/solicitar-revision', Route::auth(['SoporteActividadesController', 'solicitarRevision']));
+        $r->addRoute('POST', '/actividades/guardar-comentario', Route::auth(['SoporteActividadesController', 'guardarComentario']));
+        $r->addRoute('POST', '/actividades/cancelar-ticket', Route::auth(['SoporteActividadesController', 'cancelarTicket']));
+
+        // Soporte (Estaciones): vista del area de Sistemas sobre los tickets
+        // de todas las estaciones y departamentos, con selector de contexto.
+        $r->addRoute('GET', '/estaciones', Route::auth(['SoporteEstacionesController', 'index']));
+        $r->addRoute('GET', '/estaciones/seguimiento/{id:\d+}', Route::auth(['SoporteEstacionesController', 'seguimiento']));
+        $r->addRoute('GET', '/estaciones/data', Route::auth(['SoporteEstacionesController', 'data']));
+        $r->addRoute('GET', '/estaciones/show', Route::auth(['SoporteEstacionesController', 'show']));
+    $r->addRoute('GET', '/estaciones/actividades', Route::auth(['SoporteEstacionesController', 'actividades']));
+        $r->addRoute('GET', '/estaciones/comentarios', Route::auth(['SoporteEstacionesController', 'comentarios']));
+        $r->addRoute('POST', '/estaciones/guardar-comentario', Route::auth(['SoporteEstacionesController', 'guardarComentario']));
+        $r->addRoute('POST', '/estaciones/asignar-responsable', Route::auth(['SoporteEstacionesController', 'asignarResponsable']));
+        $r->addRoute('POST', '/estaciones/editar-registro', Route::auth(['SoporteEstacionesController', 'editarRegistro']));
+        $r->addRoute('POST', '/estaciones/editar-actividad', Route::auth(['SoporteEstacionesController', 'editarActividad']));
+        $r->addRoute('POST', '/estaciones/guardar-seguimiento', Route::auth(['SoporteEstacionesController', 'guardarSeguimiento']));
+        $r->addRoute('POST', '/estaciones/finalizar-soporte', Route::auth(['SoporteEstacionesController', 'finalizarSoporte']));
+        $r->addRoute('POST', '/estaciones/cancelar-ticket', Route::auth(['SoporteEstacionesController', 'cancelarTicket']));
     });
 
     // ---------------- CONFIGURACION SISTEMAS ----------------

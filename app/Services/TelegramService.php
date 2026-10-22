@@ -111,7 +111,20 @@ $record = TokenTelegram::where('id_usuario', $idUsuario)
 ->orderBy('fecha_creacion', 'desc')
 ->first();
 
-return $record ? (int) $record->chat_id : 0;
+if ($record && (int) $record->chat_id > 0) {
+return (int) $record->chat_id;
+}
+
+// El bot externo guarda el chat_id cuando el usuario inicia la
+// conversación, pero hay registros que quedaron sin marcar como
+// verificados (estatus 0). Si el chat existe se usa igual para no
+// perder la notificación.
+$respaldo = TokenTelegram::where('id_usuario', $idUsuario)
+->where('chat_id', '>', 0)
+->orderBy('fecha_creacion', 'desc')
+->first();
+
+return $respaldo ? (int) $respaldo->chat_id : 0;
 }
 
 public function getUserIdsByStation(int $idEstacion, int $excludeUserId): array
