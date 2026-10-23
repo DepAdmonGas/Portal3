@@ -77,7 +77,6 @@ return json.data || [];
 columns: [
 { title: '#', data: 'id', width: '60px', className: 'text-center align-middle' },
 { title: 'Usuario', data: 'usuario', className: 'align-middle text-start' },
-{ title: 'Contraseña', data: 'password', className: 'align-middle text-start' },
 {
 title: '<a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>',
 data: null,

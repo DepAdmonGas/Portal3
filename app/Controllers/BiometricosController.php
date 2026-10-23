@@ -68,11 +68,10 @@ View::render('departamento-operativo/2-recursos-humanos/biometricos/index', [
 
 public function configuracion()
 {
-$permisos = BiometricosService::getPermisos();
-
-if (!$permisos['multiestacion']) {
-header('Location: /departamento-operativo/recursos-humanos/biometricos');
-exit;
+if (!BiometricosService::hasActionPermission(BiometricosService::MODULE_KEY, 'leer')) {
+http_response_code(403);
+View::renderPartial('errors/403');
+return;
 }
 
 $title = 'Configuración Biométrico';
@@ -95,13 +94,6 @@ View::render('departamento-operativo/2-recursos-humanos/biometricos/configuracio
 
 public function configuracionModulo(string $modulo)
 {
-$permisos = BiometricosService::getPermisos();
-
-if (!$permisos['multiestacion']) {
-header('Location: /departamento-operativo/recursos-humanos/biometricos');
-exit;
-}
-
 $modulos = [
 'perfil'                     => 'Perfil de aplicación',
 'puestos'                    => 'Puestos',
@@ -111,6 +103,14 @@ $modulos = [
 if (!isset($modulos[$modulo])) {
 header('Location: /departamento-operativo/recursos-humanos/biometricos/configuracion');
 exit;
+}
+
+$canReadConfiguration = BiometricosService::hasActionPermission(BiometricosService::MODULE_KEY, 'leer');
+$canReadPositions = BiometricosService::hasActionPermission('recursos-humanos', 'leer');
+if (!$canReadConfiguration || ($modulo === 'puestos' && !$canReadPositions)) {
+http_response_code(403);
+View::renderPartial('errors/403');
+return;
 }
 
 $title = 'Configuración Biométrico (' . $modulos[$modulo] . ')';
@@ -150,7 +150,7 @@ if ($modulo === 'perfil') {
 $ctx = ModuleStationService::getContext('biometricos');
 $estacionId = $ctx['id_estacion'];
 
-$permisosCrud = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
+$permisosCrud = BiometricosService::getConfigurationPermissions();
 View::render('departamento-operativo/2-recursos-humanos/biometricos/configuracion-perfil', [
 'title'             => $title,
 'help'              => false,
@@ -176,7 +176,7 @@ if ($modulo === 'retardo-horarios-incidencias') {
 $ctx = ModuleStationService::getContext('biometricos');
 $estacionId = $ctx['id_estacion'];
 
-$permisosCrud = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
+$permisosCrud = BiometricosService::getConfigurationPermissions();
 View::render('departamento-operativo/2-recursos-humanos/biometricos/configuracion-retardos', [
 'title'             => $title,
 'help'              => false,
@@ -206,6 +206,10 @@ View::render('departamento-operativo/2-recursos-humanos/biometricos/configuracio
 
 public function datatablePuestos()
 {
+if (!BiometricosService::hasActionPermission('biometricos', 'leer')
+    || !BiometricosService::hasActionPermission('recursos-humanos', 'leer')) {
+JsonResponse::forbidden('No tienes permiso para consultar el catálogo institucional de puestos.');
+}
 $data = BiometricosService::datatablePuestos();
 JsonResponse::custom(['success' => true, 'data' => $data]);
 }
@@ -264,24 +268,27 @@ JsonResponse::custom($result);
 
 public function datatablePerfil()
 {
-$idEstacion = Request::filled('id_estacion') ? (int) Request::input('id_estacion', 0) : null;
+$this->requireBiometricosAction('leer');
+$selectorStationId = Request::filled('id_estacion') ? (int) Request::input('id_estacion', 0) : 0;
+$idEstacion = $selectorStationId > 0 ? BiometricosService::resolveAuthorizedLegacyStationId($selectorStationId) : null;
+if ($selectorStationId > 0 && $idEstacion === null) {
+JsonResponse::forbidden('La estación solicitada está fuera de tu alcance.');
+}
 $data = BiometricosService::datatablePerfil($idEstacion);
 JsonResponse::custom(['success' => true, 'data' => $data]);
 }
 
 public function createPerfil()
 {
-$permisos = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
-if (empty($permisos['crear'])) {
-JsonResponse::custom(['success' => false, 'message' => 'No tienes permisos para crear.']);
-}
+$this->requireBiometricosAction('crear');
 
-$idEstacion = (int) Request::input('id_estacion', 0);
+$selectorStationId = (int) Request::input('id_estacion', 0);
+$idEstacion = BiometricosService::resolveAuthorizedLegacyStationId($selectorStationId);
 $usuario = trim((string) Request::input('usuario', ''));
 $password = trim((string) Request::input('password', ''));
 
-if ($idEstacion <= 0) {
-JsonResponse::custom(['success' => false, 'message' => 'Selecciona una estación.']);
+if ($idEstacion === null) {
+JsonResponse::forbidden('Selecciona una estación autorizada.');
 }
 if ($usuario === '') {
 JsonResponse::custom(['success' => false, 'message' => 'El usuario es obligatorio.']);
@@ -296,10 +303,7 @@ JsonResponse::custom($result);
 
 public function updatePerfil()
 {
-$permisos = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
-if (empty($permisos['editar'])) {
-JsonResponse::custom(['success' => false, 'message' => 'No tienes permisos para editar.']);
-}
+$this->requireBiometricosAction('editar');
 
 $id = (int) Request::input('id', 0);
 $usuario = trim((string) Request::input('usuario', ''));
@@ -318,10 +322,7 @@ JsonResponse::custom($result);
 
 public function deletePerfil()
 {
-$permisos = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
-if (empty($permisos['eliminar'])) {
-JsonResponse::custom(['success' => false, 'message' => 'No tienes permisos para eliminar.']);
-}
+$this->requireBiometricosAction('eliminar');
 
 $id = (int) Request::input('id', 0);
 if ($id <= 0) {
@@ -336,9 +337,11 @@ JsonResponse::custom($result);
 
 public function getRetardoIncidencia()
 {
-$idEstacion = (int) Request::input('id_estacion', 0);
-if ($idEstacion <= 0) {
-JsonResponse::custom(['success' => false, 'message' => 'Selecciona una estación.']);
+$this->requireBiometricosAction('leer');
+$selectorStationId = (int) Request::input('id_estacion', 0);
+$idEstacion = BiometricosService::resolveAuthorizedLegacyStationId($selectorStationId);
+if ($idEstacion === null) {
+JsonResponse::forbidden('Selecciona una estación autorizada.');
 }
 
 $data = BiometricosService::getRetardoIncidencia($idEstacion);
@@ -347,18 +350,17 @@ JsonResponse::custom(['success' => true, 'data' => $data]);
 
 public function updateRetardoIncidencia()
 {
-$permisos = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
-if (empty($permisos['editar'])) {
-JsonResponse::custom(['success' => false, 'message' => 'No tienes permisos para editar.']);
-}
+$this->requireBiometricosAction('editar');
 
-$idEstacion = (int) Request::input('id_estacion', 0);
+$selectorStationId = (int) Request::input('id_estacion', 0);
+$idEstacion = BiometricosService::resolveAuthorizedLegacyStationId($selectorStationId);
 $retardo = (int) Request::input('retardo', 0);
 $incidencia = (int) Request::input('incidencia', 0);
 
-if ($idEstacion <= 0) {
-JsonResponse::custom(['success' => false, 'message' => 'Selecciona una estación.']);
+if ($idEstacion === null) {
+JsonResponse::forbidden('Selecciona una estación autorizada.');
 }
+if ($retardo < 0 || $incidencia < 0) JsonResponse::validation('Los valores deben ser cero o mayores.');
 
 $result = BiometricosService::updateRetardoIncidencia($idEstacion, $retardo, $incidencia);
 JsonResponse::custom($result);
@@ -366,30 +368,32 @@ JsonResponse::custom($result);
 
 public function datatableHorarios()
 {
+$this->requireBiometricosAction('leer');
 $idEstacion = (int) Request::input('id_estacion', 0);
 if ($idEstacion <= 0) {
 JsonResponse::custom(['success' => true, 'data' => []]);
 return;
 }
 
-$data = BiometricosService::datatableHorarios($idEstacion);
+$physicalStationId = BiometricosService::resolveAuthorizedLegacyStationId($idEstacion);
+if ($physicalStationId === null) JsonResponse::forbidden('La estación solicitada está fuera de tu alcance.');
+
+$data = BiometricosService::datatableHorarios($physicalStationId);
 JsonResponse::custom(['success' => true, 'data' => $data]);
 }
 
 public function createHorario()
 {
-$permisos = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
-if (empty($permisos['crear'])) {
-JsonResponse::custom(['success' => false, 'message' => 'No tienes permisos para crear.']);
-}
+$this->requireBiometricosAction('crear');
 
-$idEstacion = (int) Request::input('id_estacion', 0);
+$selectorStationId = (int) Request::input('id_estacion', 0);
+$idEstacion = BiometricosService::resolveAuthorizedLegacyStationId($selectorStationId);
 $titulo = trim((string) Request::input('titulo', ''));
 $horaEntrada = trim((string) Request::input('hora_entrada', ''));
 $horaSalida = trim((string) Request::input('hora_salida', ''));
 
-if ($idEstacion <= 0) {
-JsonResponse::custom(['success' => false, 'message' => 'Selecciona una estación.']);
+if ($idEstacion === null) {
+JsonResponse::forbidden('Selecciona una estación autorizada.');
 }
 
 $result = BiometricosService::createHorario($idEstacion, $titulo, $horaEntrada, $horaSalida);
@@ -398,10 +402,7 @@ JsonResponse::custom($result);
 
 public function updateHorario()
 {
-$permisos = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
-if (empty($permisos['editar'])) {
-JsonResponse::custom(['success' => false, 'message' => 'No tienes permisos para editar.']);
-}
+$this->requireBiometricosAction('editar');
 
 $id = (int) Request::input('id', 0);
 $titulo = trim((string) Request::input('titulo', ''));
@@ -418,10 +419,7 @@ JsonResponse::custom($result);
 
 public function deleteHorario()
 {
-$permisos = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
-if (empty($permisos['eliminar'])) {
-JsonResponse::custom(['success' => false, 'message' => 'No tienes permisos para eliminar.']);
-}
+$this->requireBiometricosAction('eliminar');
 
 $id = (int) Request::input('id', 0);
 if ($id <= 0) {
@@ -820,5 +818,12 @@ return $nombre;
 }
 
 return null;
+}
+
+private function requireBiometricosAction(string $action): void
+{
+    if (!BiometricosService::hasActionPermission(BiometricosService::MODULE_KEY, $action)) {
+        JsonResponse::forbidden('No tienes permiso para realizar esta operación de configuración.');
+    }
 }
 }

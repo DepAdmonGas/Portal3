@@ -64,7 +64,7 @@ autocomplete="off">
 
 <!-- CONTRASENA -->
 <label class="form-label mt-3"><span x-text="mode === 'edit' ? 'Contraseña (dejar vacío para mantener la actual):' : '* Contraseña:'"></span></label>
-<input type="text" class="form-control rounded-0 mb-2" x-model="password"
+<input type="password" class="form-control rounded-0 mb-2" x-model="password"
 @input="onPasswordInput()"
 :class="passwordBorderClass"
 autocomplete="off"
