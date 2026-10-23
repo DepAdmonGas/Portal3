@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/support/portal3_autoload.php';
 
 use App\Models\Usuario;
 use App\Services\ChecadorDailyReadService;
@@ -28,8 +29,7 @@ $base = 'https://checador.test/';
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-journeys.php');
-$contractPath = getenv('CHECADOR_JOURNEY_V1_1_CONTRACT') ?: '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/v2/CHECADOR_V2_JOURNEY_ON_DEMAND_API_CONTRACT_V1.1.md';
-$expectedHash = '7f71372d9deceb6820e6e71e1be38dadd12e87cd5bb4a5f69bcd250ee85c6f3f';
+$freezePath = __DIR__ . '/../docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
 
 $events = [
     ['event_uuid' => 'ev-001', 'id_dispositivo' => 4, 'ocurrido_at_utc' => '2026-10-12 13:55:00', 'metodo_captura' => 'BIOMETRIC', 'pairing_role' => 'UNMATCHED', 'segment_ordinal' => null],
@@ -109,7 +109,7 @@ $data = $evaluated['data'] ?? [];
 $provenance = is_array($data['provenance'] ?? null) ? $data['provenance'] : [];
 $auditEvents = $data['evaluated_raw_events'] ?? null;
 
-$assert(is_file($contractPath) && hash_file('sha256', $contractPath) === $expectedHash, 'P3F01 V1.1 contract hash matches');
+$assert(is_file($freezePath) && hash_file('sha256', $freezePath) === '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df5c5295304fd85', 'P3F01 Portal3 Architecture Freeze hash matches');
 $assert(str_contains($serviceSource, 'journey_status') && str_contains($serviceSource, 'source_evidence') && str_contains($serviceSource, 'pairing') && str_contains($serviceSource, 'calculation'), 'P3F02 V1.0 compatibility preserved');
 $assert(($data['context']['id_personal'] ?? 0) === 1, 'P3F03 worker provenance preserved');
 $assert(($data['context']['id_estacion'] ?? 0) === 1, 'P3F04 workplace provenance preserved');

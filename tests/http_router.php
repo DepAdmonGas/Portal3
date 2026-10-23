@@ -25,6 +25,7 @@ if (!str_starts_with($database, '/tmp/portal3-p0-regression-')
 }
 ini_set('session.save_path', $sessionPath);
 require dirname(__DIR__) . '/vendor/autoload.php';
+require_once __DIR__ . '/support/portal3_autoload.php';
 
 if (!function_exists('base_path')) {
     function base_path(string $path = ''): string
@@ -39,6 +40,10 @@ $capsule->setAsGlobal();
 $capsule->bootEloquent();
 $schema = $capsule->schema();
 if (!$schema->hasTable('tb_usuarios')) {
+    // SolicitudChequeService resolves Usuario::puesto while calculating the
+    // current authorization scope. Keep the SQLite fixture aligned with that
+    // production relationship without introducing operational data.
+    $schema->create('tb_puestos', static function ($table): void { $table->integer('id')->primary(); $table->string('tipo_puesto')->nullable(); $table->integer('estatus')->default(0); });
     $schema->create('tb_usuarios', static function ($table): void { $table->integer('id')->primary(); $table->string('nombre'); $table->integer('id_gas'); $table->integer('id_puesto'); $table->integer('estatus')->default(0); });
     $schema->create('tb_estaciones', static function ($table): void { $table->integer('id')->primary(); $table->string('nombre'); $table->string('razonsocial')->nullable(); $table->integer('estatus')->default(0); });
     $schema->create('tb_multiestacion_usuario', static function ($table): void { $table->integer('id')->primary(); $table->integer('id_usuario'); $table->text('estaciones')->nullable(); $table->text('departamentos_puestos')->nullable(); $table->text('departamentos_localidades')->nullable(); $table->boolean('activo')->default(true); });
@@ -50,6 +55,10 @@ if (!$schema->hasTable('tb_usuarios')) {
     $schema->create('op_solicitud_cheque_documento', static function ($table): void { $table->integer('id')->primary(); $table->integer('id_solicitud'); $table->string('nombre'); });
     $schema->create('rl_requisitos_legales_calendario', static function ($table): void { $table->integer('id')->primary(); $table->integer('id_estacion'); });
     $schema->create('rl_requisitos_legales_matriz', static function ($table): void { $table->integer('id')->primary(); $table->integer('idcalendario'); $table->string('acusepdf')->nullable(); $table->string('requisitolegalpdf')->nullable(); });
+    Capsule::table('tb_puestos')->insert([
+        ['id' => 10, 'tipo_puesto' => 'Tenant A test', 'estatus' => 0],
+        ['id' => 20, 'tipo_puesto' => 'Tenant B test', 'estatus' => 0],
+    ]);
     Capsule::table('tb_estaciones')->insert([['id' => 101, 'nombre' => 'Tenant A', 'razonsocial' => 'A SA', 'estatus' => 0], ['id' => 202, 'nombre' => 'Tenant B', 'razonsocial' => 'B SA', 'estatus' => 0]]);
     Capsule::table('tb_usuarios')->insert([['id' => 1, 'nombre' => 'Usuario A', 'id_gas' => 101, 'id_puesto' => 10, 'estatus' => 0], ['id' => 2, 'nombre' => 'Usuario B', 'id_gas' => 202, 'id_puesto' => 20, 'estatus' => 0]]);
     Capsule::table('tb_multiestacion_usuario')->insert(['id' => 1, 'id_usuario' => 1, 'estaciones' => '[101]', 'activo' => 1]);

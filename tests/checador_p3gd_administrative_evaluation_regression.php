@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/support/portal3_autoload.php';
 
 use App\Models\Usuario;
 use App\Services\ChecadorDailyReadService;
@@ -37,8 +38,7 @@ $extractPublicMethod = static function (string $source, string $method): string 
 };
 $evaluationControllerMethodSource = $extractPublicMethod($controllerSource, 'administrativeEvaluation');
 $evaluationServiceMethodSource = $extractPublicMethod($serviceSource, 'executeAdministrativeEvaluation');
-$apiContract = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/v2/CHECADOR_V2_P3G_ADMINISTRATIVE_API_BOUNDARY_CONTRACT_V1.0.md';
-$freeze = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
+$freeze = __DIR__ . '/../docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
 $portalContract = __DIR__ . '/../docs/v2/CHECADOR_V2_PORTAL3_P3G_INCIDENCE_ADMINISTRATIVE_CONTRACT_V1.0.md';
 
 $postPayload = static function (string $status = 'REVIEW_REQUIRED'): array {
@@ -107,7 +107,8 @@ $normalBody = json_decode((string) $normalRequest->getBody(), true);
 $faltaRequest = $history[2]['request'];
 $faltaBody = json_decode((string) $faltaRequest->getBody(), true);
 
-$assert(hash_file('sha256', $apiContract) === 'e418687501fbdfdf89bcc6f11aab60e49226f265411c4590a39a5fa7799c374a' && hash_file('sha256', $freeze) === '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df5c5295304fd85' && hash_file('sha256', $portalContract) === 'e26e888015b27f9f1023e19cf4e005795836a99fd81a98c5638589fde5ca234d', 'P3GPD01 canonical contracts and freeze hashes match');
+$assert(is_file($freeze) && hash_file('sha256', $freeze) === '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df5c5295304fd85', 'P3GPD01 Portal3 Architecture Freeze hash matches');
+$assert(is_file($portalContract) && hash_file('sha256', $portalContract) === 'e26e888015b27f9f1023e19cf4e005795836a99fd81a98c5638589fde5ca234d', 'P3GPD01A Portal3 P3G contract hash matches');
 $assert(str_contains($serviceSource, 'executeAdministrativeEvaluation') && str_contains($controllerSource, 'administrativeEvaluation'), 'P3GPD02 Portal3 exposes a dedicated server-side evaluation command');
 $assert(!str_contains($viewSource, 'fetch(') && !str_contains($viewSource, 'axios') && !str_contains($viewSource, 'api/v2/'), 'P3GPD03 browser does not call the API directly');
 $assert(!preg_match('/Device[-_ ]?Auth|X-Device|device[_-]credential|Id-Dispositivo/i', $serviceSource . $controllerSource . $viewSource), 'P3GPD04 Device Auth is absent');

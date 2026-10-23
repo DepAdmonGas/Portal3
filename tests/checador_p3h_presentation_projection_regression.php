@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/support/portal3_autoload.php';
 
 use App\Models\Usuario;
 use App\Services\ChecadorDailyReadService;
@@ -21,10 +22,8 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
 };
 
 $portal3Contract = __DIR__ . '/../docs/v2/CHECADOR_V2_PORTAL3_P3H_PRESENTATION_PROJECTION_CONTRACT_V1.1.md';
-$apiContract = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/v2/CHECADOR_V2_P3H_EVENT_CLASSIFICATION_PUBLIC_PAYLOAD_CONTRACT_V1.1.md';
 $architectureFreeze = __DIR__ . '/../docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
 $expectedPortal3Hash = '5a830862043f2ad317d504b47feb157584870852c6fba0067546a67f9c51a82b';
-$expectedApiHash = 'df6b0bec7c6977cb0c12bf5409c8243528af145036474aa3adcf237b21f4711c';
 $expectedArchitectureHash = '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df5c5295304fd85';
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
@@ -41,7 +40,6 @@ if (preg_match('/<details[^>]*id="journey-audit-detail-<\?= \(int\) \$workerId \
     $auditDetailSource = $auditDetailMatches[1];
 }
 $contractSource = file_get_contents($portal3Contract);
-$apiSource = file_get_contents($apiContract);
 
 $events = [
     ['event_uuid' => 'p3h-1', 'id_dispositivo' => 1, 'ocurrido_at_utc' => '2026-10-12 14:00:00', 'metodo_captura' => 'BIOMETRIC', 'pairing_role' => 'ENTRY', 'segment_ordinal' => 1],
@@ -109,10 +107,9 @@ $projection = \App\Services\ChecadorAttendanceProjection::workerRow(
 $extraEventIds = array_map(static fn(array $event): string => (string) ($event['event_uuid'] ?? ''), $projection['additional_events'] ?? []);
 $requestCheck = $make([new Response(200, [], json_encode($payload($events), JSON_THROW_ON_ERROR))]);
 
-$assert(is_file($apiContract) && hash_file('sha256', $apiContract) === $expectedApiHash, 'P3HP01 API V1.1 contract hash');
-$assert(is_file($portal3Contract) && hash_file('sha256', $portal3Contract) === $expectedPortal3Hash, 'P3HP02 Portal3 V1.1 contract hash');
-$assert(is_file($architectureFreeze) && hash_file('sha256', $architectureFreeze) === $expectedArchitectureHash, 'P3HP03 Architecture Freeze hash');
-$assert(str_contains($apiSource, 'POST /api/v2/journeys/evaluate') && str_contains($serviceSource, "'POST', 'api/v2/journeys/evaluate"), 'P3HP04 canonical POST endpoint parity');
+$assert(is_file($portal3Contract) && hash_file('sha256', $portal3Contract) === $expectedPortal3Hash, 'P3HP01 Portal3 V1.1 contract hash');
+$assert(is_file($architectureFreeze) && hash_file('sha256', $architectureFreeze) === $expectedArchitectureHash, 'P3HP02 Architecture Freeze hash');
+$assert(str_contains($serviceSource, "'POST', 'api/v2/journeys/evaluate"), 'P3HP03 Portal3 uses the canonical journey evaluation route');
 $assert(($result['ok'] ?? false) === true, 'P3HP05 authoritative payload accepted');
 $assert(($projection['slots']['ENTRY:1']['event']['event_uuid'] ?? '') === 'p3h-1' && str_contains($viewSource, 'Entrada 1'), 'P3HP06 Entrada 1 uses ordinal 1 and ENTRY');
 $assert(($projection['slots']['EXIT:1']['event']['event_uuid'] ?? '') === 'p3h-3' && str_contains($viewSource, 'Salida 1'), 'P3HP07 Salida 1 uses ordinal 1 and EXIT');

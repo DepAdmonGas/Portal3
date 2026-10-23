@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/support/portal3_autoload.php';
 
 use App\Models\Usuario;
 use App\Services\ChecadorDailyReadService;
@@ -30,8 +31,7 @@ $accessSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorAccessServ
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php');
 $routesSource = file_get_contents(__DIR__ . '/../routes/web.php');
-$contractPath = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/v2/CHECADOR_V2_P3G_ADMINISTRATIVE_API_BOUNDARY_CONTRACT_V1.0.md';
-$freezePath = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
+$freezePath = __DIR__ . '/../docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
 
 $response = static function (string $status): Response {
     return new Response(200, [], json_encode(['status' => 'success', 'data' => [
@@ -65,7 +65,7 @@ $revoke = $service->lifecycleAction($user, 'inc-1', 'revoke', 2, 'idem-revoke-1'
 $firstRequest = $history[0]['request'];
 $firstBody = json_decode((string) $firstRequest->getBody(), true);
 
-$assert(hash_file('sha256', $contractPath) === 'e418687501fbdfdf89bcc6f11aab60e49226f265411c4590a39a5fa7799c374a' && hash_file('sha256', $freezePath) === '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df5c5295304fd85', 'P3GPC01 canonical API and Architecture Freeze hashes match');
+$assert(is_file($freezePath) && hash_file('sha256', $freezePath) === '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df5c5295304fd85', 'P3GPC01 Portal3 Architecture Freeze hash matches');
 $assert(str_contains($serviceSource, 'lifecycleAction') && str_contains($controllerSource, 'handleLifecycle'), 'P3GPC02 lifecycle uses the server-side Portal3 client');
 $assert(!str_contains($viewSource, 'fetch(') && !str_contains($viewSource, 'axios') && !str_contains($viewSource, 'api/v2/'), 'P3GPC03 browser does not call Checador API directly');
 $assert(!preg_match('/Device[-_ ]?Auth|X-Device|device[_-]credential|Id-Dispositivo/i', $serviceSource . $controllerSource . $viewSource), 'P3GPC04 Device Auth is never used');
