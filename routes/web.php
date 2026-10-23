@@ -609,40 +609,54 @@ return function (RouteCollector $r) {
 
         //----- 2. Recursos Humanos
         $r->addRoute('GET', '/recursos-humanos', Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
-        $r->addRoute('GET', '/departamento-operativo/recursos-humanos/checador', Route::auth(['ChecadorController', 'index']));
-        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/incidencias/{uuidIncidencia}/resolve', Route::auth(['ChecadorController', 'lifecycleResolve']));
-        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/incidencias/{uuidIncidencia}/authorize', Route::auth(['ChecadorController', 'lifecycleAuthorize']));
-        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/incidencias/{uuidIncidencia}/reject', Route::auth(['ChecadorController', 'lifecycleReject']));
-        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/incidencias/{uuidIncidencia}/revoke', Route::auth(['ChecadorController', 'lifecycleRevoke']));
-        $r->addRoute('POST', '/departamento-operativo/recursos-humanos/checador/evaluations/evaluate', Route::auth(['ChecadorController', 'administrativeEvaluation']));
+        $r->addRoute('GET', '/recursos-humanos/checador', Route::auth(['ChecadorController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/checador/asistencia', Route::auth(['ChecadorController', 'dailyAttendance']));
+        $r->addRoute('GET', '/recursos-humanos/checador/jornadas', Route::auth(['ChecadorController', 'journeys']));
+        $r->addRoute('GET', '/recursos-humanos/checador/incidencias', Route::auth(['ChecadorController', 'incidences']));
+        $r->addRoute('GET', '/recursos-humanos/checador/ajustes', Route::auth(['ChecadorController', 'adjustments']));
+        $r->addRoute('GET', '/recursos-humanos/checador/acceso-temporal', Route::auth(['ChecadorController', 'temporaryAccess']));
+        $r->addRoute('GET', '/recursos-humanos/checador/configuracion', Route::auth(['ChecadorController', 'configuration']));
+        $r->addRoute('POST', '/recursos-humanos/checador/programacion-semanal/asignar', Route::auth(['ChecadorController', 'createScheduleAssignment']));
+        $r->addRoute('GET', '/recursos-humanos/checador/reporte', Route::auth(['ChecadorController', 'punchReport']));
+        $r->addRoute('GET', '/recursos-humanos/checador/reporte/data', Route::auth(['ChecadorController', 'punchReportData']));
+        $r->addRoute('GET', '/recursos-humanos/checador/comparacion-nomina', Route::auth(['ChecadorController', 'payrollComparison']));
+        $r->addRoute('POST', '/recursos-humanos/checador/incidencias/crear', Route::auth(['ChecadorController', 'createIncidence']));
+        $r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia}/resolve', Route::auth(['ChecadorController', 'lifecycleResolve']));
+        $r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia}/authorize', Route::auth(['ChecadorController', 'lifecycleAuthorize']));
+        $r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia}/reject', Route::auth(['ChecadorController', 'lifecycleReject']));
+        $r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia}/revoke', Route::auth(['ChecadorController', 'lifecycleRevoke']));
+        $r->addRoute('POST', '/recursos-humanos/checador/evaluations/evaluate', Route::auth(['ChecadorController', 'administrativeEvaluation']));
+        $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/authorize', Route::auth(['ChecadorController', 'temporaryAccessAuthorize']));
+        $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/reject', Route::auth(['ChecadorController', 'temporaryAccessReject']));
+        $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/cancel', Route::auth(['ChecadorController', 'temporaryAccessCancel']));
 
- //----- Recibo de nomina 
-$r->addRoute('GET', '/recursos-humanos/recibos-nomina/{idYear:\d+}', Route::auth(['RecibosNominaController', 'index']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/data/{idYear:\d+}', Route::auth(['RecibosNominaController', 'data']));
+        //----- Recibo de nomina
+        $r->addRoute('GET', '/recursos-humanos/recibos-nomina/{idYear:\d+}', Route::auth(['RecibosNominaController', 'index']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/data/{idYear:\d+}', Route::auth(['RecibosNominaController', 'data']));
 
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/periodos/{idYear:\d+}', Route::auth(['RecibosNominaController', 'periodos']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/periodos/{idYear:\d+}', Route::auth(['RecibosNominaController', 'periodos']));
 
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios', Route::auth(['RecibosNominaController', 'getComentarios']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios/guardar', Route::auth(['RecibosNominaController', 'guardarComentario']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/editar', Route::auth(['RecibosNominaController', 'guardarEdicion']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/eliminar', Route::auth(['RecibosNominaController', 'eliminarUsuario']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/finalizar', Route::auth(['RecibosNominaController', 'finalizarActividad']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/personal-faltantes', Route::auth(['RecibosNominaController', 'personalFaltantes']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/personal/guardar', Route::auth(['RecibosNominaController', 'guardarPersonal']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses', Route::auth(['RecibosNominaController', 'getAcuses']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses/guardar', Route::auth(['RecibosNominaController', 'guardarAcuse']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses/eliminar', Route::auth(['RecibosNominaController', 'eliminarAcuse']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuse-mexdesa/guardar', Route::auth(['RecibosNominaController', 'subirAcuseMexdesa']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/aguinaldo/guardar', Route::auth(['RecibosNominaController', 'subirAguinaldo']));
-$r->addRoute('POST', '/recursos-humanos/recibos-nomina/aguinaldo/finalizar', Route::auth(['RecibosNominaController', 'finalizarAguinaldo']));
-$r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'revision']));
-$r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/excel', Route::auth(['RecibosNominaController', 'excelDespachadores']));
-$r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacion']));
-$r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacionData']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios', Route::auth(['RecibosNominaController', 'getComentarios']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/comentarios/guardar', Route::auth(['RecibosNominaController', 'guardarComentario']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/editar', Route::auth(['RecibosNominaController', 'guardarEdicion']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/eliminar', Route::auth(['RecibosNominaController', 'eliminarUsuario']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/finalizar', Route::auth(['RecibosNominaController', 'finalizarActividad']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/personal-faltantes', Route::auth(['RecibosNominaController', 'personalFaltantes']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/personal/guardar', Route::auth(['RecibosNominaController', 'guardarPersonal']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses', Route::auth(['RecibosNominaController', 'getAcuses']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses/guardar', Route::auth(['RecibosNominaController', 'guardarAcuse']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuses/eliminar', Route::auth(['RecibosNominaController', 'eliminarAcuse']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/acuse-mexdesa/guardar', Route::auth(['RecibosNominaController', 'subirAcuseMexdesa']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/aguinaldo/guardar', Route::auth(['RecibosNominaController', 'subirAguinaldo']));
+        $r->addRoute('POST', '/recursos-humanos/recibos-nomina/aguinaldo/finalizar', Route::auth(['RecibosNominaController', 'finalizarAguinaldo']));
+        $r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'revision']));
+        $r->addRoute('GET', '/recursos-humanos/recibos-nomina-revision/excel', Route::auth(['RecibosNominaController', 'excelDespachadores']));
+        $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacion']));
+        $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d+}/{idMes:\d+}', Route::auth(['RecibosNominaController', 'evaluacionData']));
 
-        
 
-//----- Organigrama
+
+        //----- Organigrama
         $r->addRoute('GET', '/recursos-humanos/organigrama', Route::auth(['OrganigramaController', 'index']));
         $r->addRoute('GET', '/recursos-humanos/organigrama/get-versions', Route::auth(['OrganigramaController', 'getVersions']));
         $r->addRoute('POST', '/recursos-humanos/organigrama/add', Route::auth(['OrganigramaController', 'add']));
@@ -768,14 +782,14 @@ $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d
         $r->addRoute('POST', '/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/delete-horario', Route::auth(['BiometricosController', 'deleteHorario']));
 
 
-        //----- Incidencias de NÃ³mina
+        //----- Incidencias de Nomina
         $r->addRoute('GET', '/recursos-humanos/incidencias-nomina/{idYear:\d+}', Route::auth(['IncidenciasNominaController', 'index']));
         $r->addRoute('GET', '/recursos-humanos/incidencias-nomina/{idYear:\d+}/data', Route::auth(['IncidenciasNominaController', 'data']));
         $r->addRoute('GET', '/recursos-humanos/incidencias-nomina/{idYear:\d+}/pdf-estaciones', Route::auth(['IncidenciasNominaController', 'pdfEstaciones']));
         $r->addRoute('GET', '/recursos-humanos/incidencias-nomina/{idYear:\d+}/pdf-individual', Route::auth(['IncidenciasNominaController', 'pdfIndividual']));
         $r->addRoute('POST', '/recursos-humanos/incidencias-nomina/guardar-contexto', Route::auth(['IncidenciasNominaController', 'guardarContexto']));
 
-        //----- DÃ­a Doble
+        //----- Di­a Doble
         $r->addRoute('GET', '/recursos-humanos/dia-doble/{idYear:\d+}', Route::auth(['DiaDobleController', 'index']));
         $r->addRoute('GET', '/recursos-humanos/dia-doble/{idYear:\d+}/data', Route::auth(['DiaDobleController', 'getData']));
         $r->addRoute('GET', '/recursos-humanos/dia-doble/{idYear:\d+}/data-estaciones', Route::auth(['DiaDobleController', 'getDataEstaciones']));
@@ -812,7 +826,7 @@ $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d
         $r->addRoute('GET', '/recursos-humanos/rol-comodines/pdf', Route::auth(['RolComodinesController', 'pdf']));
         $r->addRoute('GET', '/recursos-humanos/rol-comodines/pdf/{id}', Route::auth(['RolComodinesController', 'pdf']));
 
-        //----- BitÃ¡cora RRHH
+        //----- Bitácora RRHH
         $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/formulario/{id:\d+}', Route::auth(['BitacoraRrhhController', 'editar']));
         $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/{idYear:\d+}/{idMes:\d+}', Route::auth(['BitacoraRrhhController', 'index']));
         $r->addRoute('GET', '/recursos-humanos/bitacora-rrhh/data', Route::auth(['BitacoraRrhhController', 'getData']));
@@ -968,7 +982,7 @@ $r->addRoute('GET', '/recursos-humanos/recibos-nomina-evaluacion/data/{idYear:\d
         $r->addRoute('POST', '/importacion/analisis-compra/update', Route::auth(['AnalisisCompraImportacionController', 'update']));
         $r->addRoute('GET', '/importacion/analisis-compra/{year:\d+}/{mes:\d+}', Route::auth(['AnalisisCompraImportacionController', 'index']));
 
-//----- 4. Almacen
+        //----- 4. Almacen
         $r->addRoute('GET', '/almacen', Route::auth(['DptoOperativoController', 'almacenIndex']));
 $r->addRoute('GET', '/almacen/mantenimiento', Route::auth(['DptoOperativoController', 'almacenMantenimientoIndex']));
 
@@ -989,9 +1003,9 @@ $r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMa
         $r->addRoute('POST', '/almacen/mantenimiento-preventivo/archivo-prueba/data/{idYear:\d+}', Route::auth(['AlmacenMantenimientoPreventivoController', 'dataArchivosPrueba']));
         $r->addRoute('POST', '/almacen/mantenimiento-preventivo/archivo-prueba/{idYear:\d+}', Route::auth(['AlmacenMantenimientoPreventivoController', 'guardarArchivoPrueba']));
         $r->addRoute('POST', '/almacen/mantenimiento-preventivo/archivo-prueba/eliminar', Route::auth(['AlmacenMantenimientoPreventivoController', 'eliminarArchivoPrueba']));
-    
-    
-    
+
+
+
 // --- TERMINALES PUNTO DE VENTA ---
         $r->addRoute('GET', '/almacen/terminales-punto-venta', Route::auth(['AlmacenTerminalesPuntoVentaController', 'index']));
         $r->addRoute('POST', '/almacen/terminales-punto-venta/data', Route::auth(['AlmacenTerminalesPuntoVentaController', 'data']));
@@ -1017,7 +1031,6 @@ $r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMa
         $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/comentarios', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'comentarios']));
         $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/comentarios/guardar', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'storeComentario']));
 
-// --- ORDEN DE COMPRA ---
         $r->addRoute('GET', '/almacen/orden-compra/{idYear:\d+}/{idMes:\d+}', Route::auth(['OrdenCompraController', 'index']));
         $r->addRoute('POST', '/almacen/orden-compra/data/{idYear:\d+}/{idMes:\d+}', Route::auth(['OrdenCompraController', 'data']));
         $r->addRoute('POST', '/almacen/orden-compra/crear/{idYear:\d+}/{idMes:\d+}', Route::auth(['OrdenCompraController', 'crearOrden']));
@@ -1049,7 +1062,7 @@ $r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMa
         $r->addRoute('POST', '/almacen/proveedores/detalle', Route::auth(['ProveedoresController', 'detalle']));
         $r->addRoute('POST', '/almacen/proveedores/actualizar-archivo', Route::auth(['ProveedoresController', 'actualizarArchivo']));
         $r->addRoute('POST', '/almacen/proveedores/eliminar', Route::auth(['ProveedoresController', 'destroy']));
-       
+
         $r->addRoute('GET', '/almacen/orden-compra-descargar-pdf/{id:\d+}', Route::auth(['OrdenCompraController', 'downloadPdf']));
 $r->addRoute('GET', '/almacen/calibracion-dispensarios', Route::auth(['AlmacenCalibracionDispensarioController', 'index']));
 $r->addRoute('POST', '/almacen/calibracion-dispensarios/data', Route::auth(['AlmacenCalibracionDispensarioController', 'data']));
@@ -1267,23 +1280,21 @@ $r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/general/{id:\d+}',
         $r->addRoute('POST', '/comercializadora/pedido-aditivo/eliminar-documento', Route::auth(['PedidoAditivoController', 'eliminarDocumento']));
         $r->addRoute('GET', '/comercializadora/pedido-aditivo/comentarios', Route::auth(['PedidoAditivoController', 'getComentarios']));
         $r->addRoute('POST', '/comercializadora/pedido-aditivo/comentario-store', Route::auth(['PedidoAditivoController', 'addComentario']));
-   
-   
-   
-   
-//----- 5.5 Camioneta Saveiro
-$r->addGroup('/comercializadora/camioneta-saveiro', function (RouteCollector $r) {
-    $r->addRoute('GET', '', Route::auth(['CamionetaSaveiroController', 'index']));
-    $r->addRoute('GET', '/data', Route::auth(['CamionetaSaveiroController', 'getData']));
-    $r->addRoute('POST', '/store', Route::auth(['CamionetaSaveiroController', 'store']));
-    $r->addRoute('POST', '/update', Route::auth(['CamionetaSaveiroController', 'update']));
-    $r->addRoute('POST', '/delete', Route::auth(['CamionetaSaveiroController', 'destroy']));
-    $r->addRoute('GET', '/comentarios', Route::auth(['CamionetaSaveiroController', 'getComentarios']));
-    $r->addRoute('POST', '/comentarios/store', Route::auth(['CamionetaSaveiroController', 'storeComentario']));
-});
-   
-   
+
+
+
+
+        //----- 5.5 Camioneta Saveiro
+        $r->addGroup('/comercializadora/camioneta-saveiro', function (RouteCollector $r) {
+            $r->addRoute('GET', '', Route::auth(['CamionetaSaveiroController', 'index']));
+            $r->addRoute('GET', '/data', Route::auth(['CamionetaSaveiroController', 'getData']));
+            $r->addRoute('POST', '/store', Route::auth(['CamionetaSaveiroController', 'store']));
+            $r->addRoute('POST', '/update', Route::auth(['CamionetaSaveiroController', 'update']));
+            $r->addRoute('POST', '/delete', Route::auth(['CamionetaSaveiroController', 'destroy']));
+            $r->addRoute('GET', '/comentarios', Route::auth(['CamionetaSaveiroController', 'getComentarios']));
+            $r->addRoute('POST', '/comentarios/store', Route::auth(['CamionetaSaveiroController', 'storeComentario']));
         });
+    });
 
     //----------------- Lista de asistencia ------------
 
@@ -1521,7 +1532,7 @@ $r->addGroup('/comercializadora/camioneta-saveiro', function (RouteCollector $r)
         $r->addRoute('GET', '/control-actividades-procesos/get-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'getProgramaMantenimiento']));
         $r->addRoute('POST', '/control-actividades-procesos/update-programa-anual-mantenimiento', Route::auth(['ControlActividadesProcesosController', 'updateProgramaMantenimiento']));
         $r->addRoute('GET', '/control-actividades-procesos/pdf-programa-anual-mantenimiento/{id:\d+}', Route::auth(['ControlActividadesProcesosController', 'pdfProgramaMantenimiento']));
- 
+
         //--- Configuracion Bitacoras
         $r->addRoute('GET', '/control-actividades-procesos/configuracion-bitacora', Route::auth(['ConfiguracionBitacoraController', 'index']));
         $r->addRoute('GET', '/control-actividades-procesos/datatable-configuracion-bitacora', Route::auth(['ConfiguracionBitacoraController', 'datatableConfiguracionBitacora']));

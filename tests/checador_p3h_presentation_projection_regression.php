@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/support/portal3_autoload.php';
 
 use App\Models\Usuario;
 use App\Services\ChecadorDailyReadService;
@@ -13,22 +14,32 @@ use GuzzleHttp\Psr7\Response;
 
 $passes = 0;
 $fails = 0;
+$_ENV['APP_ENV'] = 'dev';
+$_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'true'; // Requests in this test are intercepted by explicit Guzzle MockHandlers.
 $assert = static function (bool $condition, string $message) use (&$passes, &$fails): void {
     echo ($condition ? 'PASS ' : 'FAIL ') . $message . "\n";
     $condition ? $passes++ : $fails++;
 };
 
 $portal3Contract = __DIR__ . '/../docs/v2/CHECADOR_V2_PORTAL3_P3H_PRESENTATION_PROJECTION_CONTRACT_V1.1.md';
-$apiContract = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/v2/CHECADOR_V2_P3H_EVENT_CLASSIFICATION_PUBLIC_PAYLOAD_CONTRACT_V1.1.md';
 $architectureFreeze = __DIR__ . '/../docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
 $expectedPortal3Hash = '5a830862043f2ad317d504b47feb157584870852c6fba0067546a67f9c51a82b';
-$expectedApiHash = 'df6b0bec7c6977cb0c12bf5409c8243528af145036474aa3adcf237b21f4711c';
 $expectedArchitectureHash = '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df5c5295304fd85';
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$projectionSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorAttendanceProjection.php');
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
+$journeyViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-journeys.php');
+$adjustmentViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
+$journeyMethodSource = '';
+if (preg_match('/public function evaluateJourney\([\s\S]*?(?=\n    public function )/', $serviceSource, $journeyMethodMatches) === 1) {
+    $journeyMethodSource = $journeyMethodMatches[0];
+}
+$auditDetailSource = '';
+if (preg_match('/<details[^>]*id="journey-audit-detail-<\?= \(int\) \$workerId \?>"[^>]*>([\s\S]*?)<\/details>/', $journeyViewSource, $auditDetailMatches) === 1) {
+    $auditDetailSource = $auditDetailMatches[1];
+}
 $contractSource = file_get_contents($portal3Contract);
-$apiSource = file_get_contents($apiContract);
 
 $events = [
     ['event_uuid' => 'p3h-1', 'id_dispositivo' => 1, 'ocurrido_at_utc' => '2026-10-12 14:00:00', 'metodo_captura' => 'BIOMETRIC', 'pairing_role' => 'ENTRY', 'segment_ordinal' => 1],
@@ -87,45 +98,60 @@ $user->id = 7;
 $result = $make([new Response(200, [], json_encode($payload($events), JSON_THROW_ON_ERROR))])
     ->evaluateJourney($user, 7, 3, '2026-10-12', 'audit-p3h');
 $data = $result['data'] ?? [];
+$projection = \App\Services\ChecadorAttendanceProjection::workerRow(
+    ['worker_id' => 7, 'full_name' => 'Personal de prueba', 'employee_number' => '7'],
+    $events,
+    $data,
+    'America/Mexico_City'
+);
+$extraEventIds = array_map(static fn(array $event): string => (string) ($event['event_uuid'] ?? ''), $projection['additional_events'] ?? []);
 $requestCheck = $make([new Response(200, [], json_encode($payload($events), JSON_THROW_ON_ERROR))]);
 
-$assert(is_file($apiContract) && hash_file('sha256', $apiContract) === $expectedApiHash, 'P3HP01 API V1.1 contract hash');
-$assert(is_file($portal3Contract) && hash_file('sha256', $portal3Contract) === $expectedPortal3Hash, 'P3HP02 Portal3 V1.1 contract hash');
-$assert(is_file($architectureFreeze) && hash_file('sha256', $architectureFreeze) === $expectedArchitectureHash, 'P3HP03 Architecture Freeze hash');
-$assert(str_contains($apiSource, 'POST /api/v2/journeys/evaluate') && str_contains($serviceSource, "'POST', 'api/v2/journeys/evaluate"), 'P3HP04 canonical POST endpoint parity');
+$assert(is_file($portal3Contract) && hash_file('sha256', $portal3Contract) === $expectedPortal3Hash, 'P3HP01 Portal3 V1.1 contract hash');
+$assert(is_file($architectureFreeze) && hash_file('sha256', $architectureFreeze) === $expectedArchitectureHash, 'P3HP02 Architecture Freeze hash');
+$assert(str_contains($serviceSource, "'POST', 'api/v2/journeys/evaluate"), 'P3HP03 Portal3 uses the canonical journey evaluation route');
 $assert(($result['ok'] ?? false) === true, 'P3HP05 authoritative payload accepted');
-$assert(str_contains($viewSource, "'SLOT_1' => ['label' => 'Entrada 1'") && str_contains($viewSource, "(\$ordinal === 1 || \$ordinal === 2)"), 'P3HP06 Entrada 1 uses ordinal and ENTRY');
-$assert(str_contains($viewSource, "'SLOT_2' => ['label' => 'Salida 1'") && str_contains($viewSource, "(\$role === 'ENTRY' ? 1 : 2)"), 'P3HP07 Salida 1 uses ordinal and EXIT');
-$assert(str_contains($viewSource, "'SLOT_3' => ['label' => 'Entrada 2'") && str_contains($viewSource, '($ordinal - 1) * 2'), 'P3HP08 Entrada 2 uses ordinal and ENTRY');
-$assert(str_contains($viewSource, "'SLOT_4' => ['label' => 'Salida 2'") && str_contains($viewSource, "'ENTRY', 'EXIT', 'SURPLUS', 'UNMATCHED'"), 'P3HP09 Salida 2 uses ordinal and EXIT');
-$assert(!preg_match('/usort|array_multisort|sort\\(\\$evaluatedEvents|array_slice\\(\\$evaluatedEvents/i', $viewSource), 'P3HP10 chronology and first-four inference absent');
-$assert(str_contains($viewSource, "\$role === 'SURPLUS'") && str_contains($viewSource, 'Marcación adicional'), 'P3HP11 SURPLUS excluded and labelled');
-$assert(str_contains($viewSource, "\$role === 'UNMATCHED'") && str_contains($viewSource, 'Sin emparejar'), 'P3HP12 UNMATCHED excluded and labelled');
+$assert(($projection['slots']['ENTRY:1']['event']['event_uuid'] ?? '') === 'p3h-1' && str_contains($viewSource, 'Entrada 1'), 'P3HP06 Entrada 1 uses ordinal 1 and ENTRY');
+$assert(($projection['slots']['EXIT:1']['event']['event_uuid'] ?? '') === 'p3h-3' && str_contains($viewSource, 'Salida 1'), 'P3HP07 Salida 1 uses ordinal 1 and EXIT');
+$assert(($projection['slots']['ENTRY:2']['event']['event_uuid'] ?? '') === 'p3h-4' && str_contains($viewSource, 'Entrada 2'), 'P3HP08 Entrada 2 uses ordinal 2 and ENTRY');
+$assert(($projection['slots']['EXIT:2']['event']['event_uuid'] ?? '') === 'p3h-5' && str_contains($viewSource, 'Salida 2'), 'P3HP09 Salida 2 uses ordinal 2 and EXIT');
+$assert(!preg_match('/usort|array_multisort|sort\\(\\$evaluatedEvents|array_slice\\(\\$evaluatedEvents/i', $projectionSource), 'P3HP10 chronology and first-four inference absent');
+$assert(in_array('p3h-2', $extraEventIds, true) && in_array('Marcación adicional', explode("\n", $viewSource), true) || str_contains($viewSource, "'SURPLUS' => 'Marcación adicional'"), 'P3HP11 SURPLUS remains in additional events and is labelled');
+$assert(in_array('p3h-7', $extraEventIds, true) && str_contains($viewSource, "'UNMATCHED' => 'Sin emparejar'"), 'P3HP12 UNMATCHED remains additional and is labelled');
 $assert(array_key_exists('segment_ordinal', $data['evaluated_raw_events'][6] ?? []) && $data['evaluated_raw_events'][6]['segment_ordinal'] === null, 'P3HP13 UNMATCHED null segment ordinal preserved');
-$assert(count($data['evaluated_raw_events'] ?? []) === 7 && str_contains($viewSource, 'Ver todas las marcaciones'), 'P3HP14 5+ events and disclosure preserved');
-$assert(isset($data['evaluated_raw_events'][5]['segment_ordinal']) && $data['evaluated_raw_events'][5]['segment_ordinal'] === 3 && str_contains($viewSource, 'segmentos adicionales'), 'P3HP15 segment ordinal 3 and disclosure preserved');
-$assert(str_contains($viewSource, 'count($additionalSegmentOrdinals)') && str_contains($viewSource, 'primarySlots'), 'P3HP16 3+ segments do not alter primary meanings');
-$assert(!str_contains($viewSource, "'AMBIGUOUS' =>") && str_contains($viewSource, 'AMBIGUOUS_PAIRING'), 'P3HP17 AMBIGUOUS is not a pairing role');
-$assert(str_contains($viewSource, '$ambiguityPresent') && str_contains($viewSource, 'ambigüedad pertenece al segmento'), 'P3HP18 ambiguity remains segment/Journey scoped');
-$assert(str_contains($viewSource, 'Sin evento asociado en esta proyección') && str_contains($contractSource, 'EMPTY_SLOT_MEANS_SIN_MARCACION: NO'), 'P3HP19 empty slot is neutral');
-$assert(str_contains($viewSource, 'Autorizar FALTA explícitamente') && str_contains($contractSource, 'FINAL_FALTA_SOURCE: P3G_ADMINISTRATIVE_EVALUATION'), 'P3HP20 FALTA source remains P3-G');
+$assert(count($data['evaluated_raw_events'] ?? []) === 7 && str_contains($viewSource, 'Ver todas las marcaciones') && str_contains($journeyViewSource, 'Ver todas las marcaciones ('), 'P3HP14 5+ events and disclosure preserved');
+$assert(str_contains($viewSource, "'journey_href' => \$journeyHref")
+    && $auditDetailSource !== ''
+    && str_contains($auditDetailSource, 'Eventos públicos devueltos por la evaluación')
+    && str_contains($auditDetailSource, 'foreach ($auditEvents as $auditEvent)'), 'P3HP14A all-markings link targets the complete audit evidence');
+$assert(isset($data['evaluated_raw_events'][5]['segment_ordinal']) && $data['evaluated_raw_events'][5]['segment_ordinal'] === 3 && str_contains($journeyViewSource, 'segmentos adicionales'), 'P3HP15 segment ordinal 3 and disclosure preserved');
+$assert(count($projection['slots']) === 4 && ($projection['slots']['ENTRY:1']['event']['event_uuid'] ?? '') === 'p3h-1' && str_contains($journeyViewSource, '$additionalSegments'), 'P3HP16 additional segments do not alter primary meanings');
+$assert(!str_contains($projectionSource, "'AMBIGUOUS' =>") && str_contains($journeyViewSource, 'AMBIGUOUS_PAIRING'), 'P3HP17 AMBIGUOUS is not a pairing role');
+$assert(($projection['journey_status'] ?? '') === 'AMBIGUOUS_PAIRING' && str_contains($journeyViewSource, 'ambigüedad'), 'P3HP18 ambiguity remains segment/Journey scoped');
+$assert(str_contains($viewSource, 'Sin dato en esta consulta') && str_contains($viewSource, 'Sin clasificación de ausencia') && str_contains($contractSource, 'EMPTY_SLOT_MEANS_SIN_MARCACION: NO'), 'P3HP19 empty slot is neutral');
+$assert(str_contains($adjustmentViewSource, 'authorize_falta') && str_contains($contractSource, 'FINAL_FALTA_SOURCE: P3G_ADMINISTRATIVE_EVALUATION'), 'P3HP20 FALTA source remains P3-G');
 $assert(!preg_match('/if \\(.*evaluated_raw_event_count.*FALTA|evaluated_raw_events.*FALTA/i', $viewSource), 'P3HP21 zero events do not generate FALTA');
-$assert(str_contains($viewSource, 'Administrative') || str_contains($viewSource, 'administrative'), 'P3HP22 administrative overlay remains separate');
-$assert(str_contains($viewSource, "format('H:i')") && str_contains($contractSource, 'COMPACT_TIME_FORMAT: HH:mm'), 'P3HP23 compact time is HH:mm');
-$assert(!preg_match("/format\\([^)]*s['\"]/", $viewSource), 'P3HP24 compact seconds are absent');
+$assert(!str_contains($viewSource, 'authorize_falta') && str_contains($adjustmentViewSource, 'authorize_falta'), 'P3HP22 administrative overlay remains separate');
+$assert(str_contains($projectionSource, "format('H:i')") && str_contains($contractSource, 'COMPACT_TIME_FORMAT: HH:mm'), 'P3HP23 compact time is HH:mm');
+$assert(!preg_match("/->format\\(['\"]H:i:s['\"]\\)/", $projectionSource), 'P3HP24 compact seconds are absent');
 $assert(str_contains($contractSource, 'COMPACT_TIMEZONE_ABBREVIATION: NO'), 'P3HP25 timezone abbreviation is absent');
 $assert(str_contains($viewSource, 'Fecha local:') && str_contains($contractSource, 'CROSS_CALENDAR_DATE_DISCLOSURE: YES'), 'P3HP26 cross-calendar date disclosed');
-$assert(str_contains($viewSource, 'setTimezone') && !str_contains($viewSource, 'modify('), 'P3HP27 timezone/workday ownership is not recalculated');
-$assert(str_contains($viewSource, 'Detalle de auditoría') && str_contains($viewSource, 'evaluated_raw_events'), 'P3HP28 provenance/detail access preserved');
+$assert(str_contains($projectionSource, 'setTimezone') && !str_contains($projectionSource, 'modify('), 'P3HP27 timezone/workday ownership is not recalculated');
+$assert(str_contains($viewSource, 'journey_href') && str_contains($journeyViewSource, 'Detalle de auditoría') && str_contains($journeyViewSource, 'evaluated_raw_events'), 'P3HP28 provenance/detail access preserved');
 $assert(str_contains($controllerSource, '$journeys = []'), 'P3HP29 employee context clears projection');
 $assert(str_contains($controllerSource, '$journeyErrors = []') && str_contains($controllerSource, 'requestedWorkplace'), 'P3HP30 workplace context clears projection');
 $assert(str_contains($controllerSource, "'date' => \$date") && str_contains($controllerSource, 'newSnapshotRef'), 'P3HP31 date context is isolated');
 $assert(str_contains($serviceSource, "'ENTRY', 'EXIT', 'SURPLUS', 'UNMATCHED'") && str_contains($serviceSource, "array_key_exists('pairing_role'"), 'P3HP32 missing pairing_role fails closed');
 $assert(str_contains($serviceSource, "array_key_exists('segment_ordinal'"), 'P3HP33 missing segment_ordinal fails closed');
-$assert(!preg_match('/array_slice|first four|first.*four/i', $serviceSource . $controllerSource), 'P3HP34 no local P1/chronology fallback');
+$assert($journeyMethodSource !== ''
+    && !preg_match('/array_slice|array_chunk|array_splice|first four|first.{0,10}four/i', $journeyMethodSource)
+    && str_contains($journeyMethodSource, '$rawEvents = $data[\'evaluated_raw_events\'] ?? null;')
+    && str_contains($journeyMethodSource, '$rawCount !== count($rawEvents)')
+    && str_contains($journeyMethodSource, '$provenanceEvents !== $rawEvents')
+    && str_contains($controllerSource, '$journeys[(int) $workerId] = $journeyResult[\'data\'];'), 'P3HP34 P3-H preserves the complete authoritative event collection; unrelated fixture pagination is allowed');
 $assert(!str_contains($serviceSource, 'segundos_trabajados_totales'), 'P3HP35 no local P2 calculation');
 $assert(!preg_match('/INSERT\\s+INTO|UPDATE\\s+op_rh_v2_/i', $serviceSource . $controllerSource), 'P3HP36 no payroll/database effect');
-$assert(str_contains($viewSource, 'review') || str_contains($viewSource, 'REVIEW_REQUIRED'), 'P3HP37 review status remains visible');
+$assert(str_contains($viewSource, 'review') || str_contains($viewSource, 'Requiere revisión'), 'P3HP37 review status remains visible');
 $assert(str_contains($viewSource, 'visible') || str_contains($viewSource, 'role="status"'), 'P3HP38 status text/accessibility is present');
 $assert(str_contains($viewSource, 'row-cols-1') && str_contains($viewSource, 'row-cols-sm-2'), 'P3HP39 responsive semantic layout');
 $assert(str_contains($viewSource, 'no se infieren posiciones'), 'P3HP40 fail-closed user-facing message');

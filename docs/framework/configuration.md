@@ -44,6 +44,9 @@ Variables de `.env`, configuración de PHP, configuración de MySQL, configuraci
 | Variable | Descripción | Referenciada en |
 |---|---|---|
 | `JWT_SECRET` | Clave secreta para firmar JWT | `JWTService.php` |
+| `CHECADOR_API_JWT_SECRET` | Clave exclusiva para firmar JWT servidor a servidor de Checador API V2; mínimo 32 bytes, sin fallback a `JWT_SECRET` | `ChecadorApiJwtService.php` |
+
+`CHECADOR_API_JWT_SECRET` debe coincidir byte por byte con la clave configurada en el verificador de API V2 (actualmente `JWT_SECRET` en ese servicio). Configure el valor sólo mediante el gestor/canal privado de secretos del entorno; no lo agregue al repositorio. La autenticación normal de Portal3 continúa usando `JWT_SECRET`.
 
 #### Logging
 

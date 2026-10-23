@@ -51,6 +51,116 @@ return [
 ];
 }
 
+/** Resolve a current, action-specific ACL from the server-side identity. */
+public static function hasActionPermission(string $moduleKey, string $action): bool
+{
+    if (!in_array($action, ['leer', 'crear', 'editar', 'eliminar', 'descargar'], true)) {
+        return false;
+    }
+    $user = Auth::user();
+    if (!$user || (int) $user->id < 1) {
+        return false;
+    }
+    $grant = ModuloDptoOperativoService::getPermiso((int) $user->id, $moduleKey);
+    return (int) ($grant[$action] ?? 0) === 1;
+}
+
+/** Capability flags for the legacy biometric configuration UI; missing grants remain false. */
+public static function getConfigurationPermissions(): array
+{
+    return [
+        'leer' => self::hasActionPermission(self::MODULE_KEY, 'leer'),
+        'crear' => self::hasActionPermission(self::MODULE_KEY, 'crear'),
+        'editar' => self::hasActionPermission(self::MODULE_KEY, 'editar'),
+        'eliminar' => self::hasActionPermission(self::MODULE_KEY, 'eliminar'),
+        'descargar' => self::hasActionPermission(self::MODULE_KEY, 'descargar'),
+    ];
+}
+
+/**
+ * Legacy biometric tables store tb_estaciones IDs. Resolve the module's
+ * configured station context without assuming that locality and station IDs
+ * are numerically equal. Department contexts are deliberately not converted.
+ *
+ * @return list<int> physical tb_estaciones IDs
+ */
+public static function authorizedLegacyStationIds(): array
+{
+    try {
+        $available = ModuleStationService::getAvailableStations(self::MODULE_KEY);
+        $contextIds = array_values(array_unique(array_filter(array_map(
+            static fn(array $station): int => (int) ($station['id'] ?? 0),
+            $available
+        ), static fn(int $id): bool => $id > 0)));
+        if ($contextIds === []) {
+            return [];
+        }
+
+        if (MultiestacionService::getIdSpaceForModule(self::MODULE_KEY) === MultiestacionService::TABLA_ESTACIONES) {
+            return array_values(array_unique(array_filter($contextIds, static fn(int $id): bool => Estacion::query()->where('id', $id)->exists())));
+        }
+
+        $physicalIds = [];
+        foreach ($contextIds as $localityId) {
+            $locality = RhLocalidad::query()->where('id', $localityId)->first(['id', 'numlista']);
+            if (!$locality || (int) $locality->numlista < 1) {
+                continue;
+            }
+            $stations = Estacion::query()->where('numlista', (int) $locality->numlista)->get(['id']);
+            if ($stations->count() === 1) {
+                $physicalIds[] = (int) $stations->first()->id;
+            }
+        }
+        return array_values(array_unique($physicalIds));
+    } catch (\Throwable) {
+        return [];
+    }
+}
+
+/** Convert an authorized selector value to the physical station key stored by legacy tables. */
+public static function resolveAuthorizedLegacyStationId(int $selectorStationId): ?int
+{
+    if ($selectorStationId < 1) {
+        return null;
+    }
+    try {
+        $availableIds = array_map('intval', array_column(ModuleStationService::getAvailableStations(self::MODULE_KEY), 'id'));
+        if (!in_array($selectorStationId, $availableIds, true)) {
+            return null;
+        }
+        if (MultiestacionService::getIdSpaceForModule(self::MODULE_KEY) === MultiestacionService::TABLA_ESTACIONES) {
+            return in_array($selectorStationId, self::authorizedLegacyStationIds(), true) ? $selectorStationId : null;
+        }
+
+        $locality = RhLocalidad::query()->where('id', $selectorStationId)->first(['id', 'numlista']);
+        if (!$locality || (int) $locality->numlista < 1) {
+            return null;
+        }
+        $stations = Estacion::query()->where('numlista', (int) $locality->numlista)->get(['id']);
+        if ($stations->count() !== 1) {
+            return null;
+        }
+        $physicalId = (int) $stations->first()->id;
+        return in_array($physicalId, self::authorizedLegacyStationIds(), true) ? $physicalId : null;
+    } catch (\Throwable) {
+        return null;
+    }
+}
+
+private static function legacyStationIsAuthorized(int $physicalStationId): bool
+{
+    return $physicalStationId > 0 && in_array($physicalStationId, self::authorizedLegacyStationIds(), true);
+}
+
+private static function authorizedLegacyResourceQuery(string $modelClass): mixed
+{
+    $stationIds = self::authorizedLegacyStationIds();
+    if ($stationIds === []) {
+        return $modelClass::query()->whereRaw('1 = 0');
+    }
+    return $modelClass::query()->whereIn('id_estacion', $stationIds);
+}
+
 public static function getContexto(): array
 {
 $ctx = ModuleStationService::getContext(self::MODULE_KEY);
@@ -803,6 +913,9 @@ return [
 
 public static function datatablePuestos(): array
 {
+if (!self::hasActionPermission('recursos-humanos', 'leer')) {
+return [];
+}
 $permisoEditar   = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
 $editar = !empty($permisoEditar['editar']);
 $eliminar = !empty($permisoEditar['eliminar']);
@@ -826,19 +939,25 @@ return $data;
 
 public static function createPuesto(string $nombre): array
 {
+if (!self::hasActionPermission('recursos-humanos', 'crear')) {
+return ['success' => false, 'message' => 'No tienes permisos para crear puestos.'];
+}
 try {
 RhPuestos::create([
 'puesto' => $nombre,
 'status' => 1,
 ]);
 return ['success' => true, 'message' => 'Puesto creado correctamente.'];
-} catch (\Exception $e) {
-return ['success' => false, 'message' => 'Error al crear el puesto: ' . $e->getMessage()];
+} catch (\Throwable) {
+return ['success' => false, 'message' => 'No se pudo crear el puesto.'];
 }
 }
 
 public static function updatePuesto(int $id, string $nombre): array
 {
+if (!self::hasActionPermission('recursos-humanos', 'editar')) {
+return ['success' => false, 'message' => 'No tienes permisos para editar puestos.'];
+}
 $puesto = RhPuestos::find($id);
 if (!$puesto) {
 return ['success' => false, 'message' => 'Puesto no encontrado.'];
@@ -848,13 +967,16 @@ try {
 $puesto->puesto = $nombre;
 $puesto->save();
 return ['success' => true, 'message' => 'Puesto actualizado correctamente.'];
-} catch (\Exception $e) {
-return ['success' => false, 'message' => 'Error al actualizar el puesto: ' . $e->getMessage()];
+} catch (\Throwable) {
+return ['success' => false, 'message' => 'No se pudo actualizar el puesto.'];
 }
 }
 
 public static function deletePuesto(int $id): array
 {
+if (!self::hasActionPermission('recursos-humanos', 'eliminar')) {
+return ['success' => false, 'message' => 'No tienes permisos para desactivar puestos.'];
+}
 $puesto = RhPuestos::find($id);
 if (!$puesto) {
 return ['success' => false, 'message' => 'Puesto no encontrado.'];
@@ -864,8 +986,8 @@ try {
 $puesto->status = 0;
 $puesto->save();
 return ['success' => true, 'message' => 'Puesto eliminado correctamente.'];
-} catch (\Exception $e) {
-return ['success' => false, 'message' => 'Error al eliminar el puesto: ' . $e->getMessage()];
+} catch (\Throwable) {
+return ['success' => false, 'message' => 'No se pudo desactivar el puesto.'];
 }
 }
 
@@ -904,22 +1026,25 @@ return $result;
 
 public static function datatablePerfil(?int $idEstacion = null): array
 {
-if ($idEstacion === null || $idEstacion <= 0) {
+if (!self::hasActionPermission(self::MODULE_KEY, 'leer')
+    || $idEstacion === null || !self::legacyStationIsAuthorized($idEstacion)) {
 return [];
 }
 
-$query = RhLocalidadesPerfil::where('status', 1)
+$query = self::authorizedLegacyResourceQuery(RhLocalidadesPerfil::class)->where('status', 1)
 ->where('id_estacion', $idEstacion);
 
 $registros = $query->orderBy('id')->get();
-$permisos = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
+$permisos = [
+    'editar' => self::hasActionPermission(self::MODULE_KEY, 'editar'),
+    'eliminar' => self::hasActionPermission(self::MODULE_KEY, 'eliminar'),
+];
 $result = [];
 
 foreach ($registros as $r) {
 $result[] = [
-'id' => $r->id,
+'id' => (int) $r->id,
 'usuario' => self::decrypt($r->usuario),
-'password' => self::decrypt($r->password),
 'id_estacion' => (int)$r->id_estacion,
 'nombre_estacion' => '',
 'permisos' => [
@@ -934,7 +1059,10 @@ return $result;
 
 public static function createPerfil(int $idEstacion, string $usuario, string $password): array
 {
-if ($idEstacion <= 0) {
+if (!self::hasActionPermission(self::MODULE_KEY, 'crear')) {
+return ['success' => false, 'message' => 'No tienes permisos para crear perfiles.'];
+}
+if (!self::legacyStationIsAuthorized($idEstacion)) {
 return ['success' => false, 'message' => 'Estación requerida.'];
 }
 if ($usuario === '' || $password === '') {
@@ -962,14 +1090,17 @@ RhLocalidadesPerfil::create([
 'status' => 1,
 ]);
 return ['success' => true, 'message' => 'Perfil agregado correctamente.'];
-} catch (\Exception $e) {
-return ['success' => false, 'message' => 'Error al agregar el perfil: ' . $e->getMessage()];
+} catch (\Exception) {
+return ['success' => false, 'message' => 'No se pudo agregar el perfil.'];
 }
 }
 
 public static function updatePerfil(int $id, string $usuario, string $password): array
 {
-$perfil = RhLocalidadesPerfil::find($id);
+if (!self::hasActionPermission(self::MODULE_KEY, 'editar')) {
+return ['success' => false, 'message' => 'No tienes permisos para editar perfiles.'];
+}
+$perfil = self::authorizedLegacyResourceQuery(RhLocalidadesPerfil::class)->where('status', 1)->where('id', $id)->first();
 if (!$perfil) {
 return ['success' => false, 'message' => 'Perfil no encontrado.'];
 }
@@ -985,14 +1116,17 @@ $perfil->password = self::encrypt($password);
 }
 $perfil->save();
 return ['success' => true, 'message' => 'Perfil actualizado correctamente.'];
-} catch (\Exception $e) {
-return ['success' => false, 'message' => 'Error al actualizar el perfil: ' . $e->getMessage()];
+} catch (\Throwable) {
+return ['success' => false, 'message' => 'No se pudo actualizar el perfil.'];
 }
 }
 
 public static function deletePerfil(int $id): array
 {
-$perfil = RhLocalidadesPerfil::find($id);
+if (!self::hasActionPermission(self::MODULE_KEY, 'eliminar')) {
+return ['success' => false, 'message' => 'No tienes permisos para desactivar perfiles.'];
+}
+$perfil = self::authorizedLegacyResourceQuery(RhLocalidadesPerfil::class)->where('status', 1)->where('id', $id)->first();
 if (!$perfil) {
 return ['success' => false, 'message' => 'Perfil no encontrado.'];
 }
@@ -1001,8 +1135,8 @@ try {
 $perfil->status = 0;
 $perfil->save();
 return ['success' => true, 'message' => 'Perfil eliminado correctamente.'];
-} catch (\Exception $e) {
-return ['success' => false, 'message' => 'Error al eliminar el perfil: ' . $e->getMessage()];
+} catch (\Throwable) {
+return ['success' => false, 'message' => 'No se pudo desactivar el perfil.'];
 }
 }
 
@@ -1010,17 +1144,19 @@ return ['success' => false, 'message' => 'Error al eliminar el perfil: ' . $e->g
 
 public static function getRetardoIncidencia(int $idEstacion): array
 {
-$registro = RhLocalidadesRetardoIncidencia::where('id_estacion', $idEstacion)->first();
-
-if (!$registro) {
-$registro = RhLocalidadesRetardoIncidencia::create([
-'id_estacion' => $idEstacion,
-'retardo' => 0,
-'incidencia' => 0,
-]);
+if (!self::hasActionPermission(self::MODULE_KEY, 'leer') || !self::legacyStationIsAuthorized($idEstacion)) {
+return ['available' => false, 'configured' => false, 'retardo' => null, 'incidencia' => null];
 }
 
+$registro = RhLocalidadesRetardoIncidencia::query()
+    ->whereIn('id_estacion', self::authorizedLegacyStationIds())
+    ->where('id_estacion', $idEstacion)
+    ->first();
+if (!$registro) return ['available' => true, 'configured' => false, 'retardo' => 0, 'incidencia' => 0];
+
 return [
+'available' => true,
+'configured' => true,
 'retardo' => (int)$registro->retardo,
 'incidencia' => (int)$registro->incidencia,
 ];
@@ -1028,7 +1164,15 @@ return [
 
 public static function updateRetardoIncidencia(int $idEstacion, int $retardo, int $incidencia): array
 {
-$registro = RhLocalidadesRetardoIncidencia::where('id_estacion', $idEstacion)->first();
+if (!self::hasActionPermission(self::MODULE_KEY, 'editar')) {
+return ['success' => false, 'message' => 'No tienes permisos para modificar reglas legacy.'];
+}
+if (!self::legacyStationIsAuthorized($idEstacion)) {
+return ['success' => false, 'message' => 'La estación solicitada está fuera de tu alcance.'];
+}
+$registro = RhLocalidadesRetardoIncidencia::query()
+    ->whereIn('id_estacion', self::authorizedLegacyStationIds())
+    ->where('id_estacion', $idEstacion)->first();
 
 if (!$registro) {
 $registro = RhLocalidadesRetardoIncidencia::create([
@@ -1047,11 +1191,15 @@ return ['success' => true, 'message' => 'Configuración actualizada correctament
 
 public static function datatableHorarios(int $idEstacion): array
 {
-$registros = RhLocalidadesHorario::where('id_estacion', $idEstacion)
+if (!self::hasActionPermission(self::MODULE_KEY, 'leer') || !self::legacyStationIsAuthorized($idEstacion)) return [];
+$registros = self::authorizedLegacyResourceQuery(RhLocalidadesHorario::class)->where('id_estacion', $idEstacion)
 ->orderBy('id')
 ->get();
 
-$permisos = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
+$permisos = [
+    'editar' => self::hasActionPermission(self::MODULE_KEY, 'editar'),
+    'eliminar' => self::hasActionPermission(self::MODULE_KEY, 'eliminar'),
+];
 $result = [];
 
 foreach ($registros as $r) {
@@ -1072,6 +1220,12 @@ return $result;
 
 public static function createHorario(int $idEstacion, string $titulo, string $horaEntrada, string $horaSalida): array
 {
+if (!self::hasActionPermission(self::MODULE_KEY, 'crear')) {
+return ['success' => false, 'message' => 'No tienes permisos para crear horarios legacy.'];
+}
+if (!self::legacyStationIsAuthorized($idEstacion)) {
+return ['success' => false, 'message' => 'La estación solicitada está fuera de tu alcance.'];
+}
 if ($titulo === '') {
 return ['success' => false, 'message' => 'El título es obligatorio.'];
 }
@@ -1090,14 +1244,17 @@ RhLocalidadesHorario::create([
 'hora_salida' => $horaSalida,
 ]);
 return ['success' => true, 'message' => 'Horario agregado correctamente.'];
-} catch (\Exception $e) {
-return ['success' => false, 'message' => 'Error al agregar el horario: ' . $e->getMessage()];
+} catch (\Throwable) {
+return ['success' => false, 'message' => 'No se pudo agregar el horario legacy.'];
 }
 }
 
 public static function updateHorario(int $id, string $titulo, string $horaEntrada, string $horaSalida): array
 {
-$horario = RhLocalidadesHorario::find($id);
+if (!self::hasActionPermission(self::MODULE_KEY, 'editar')) {
+return ['success' => false, 'message' => 'No tienes permisos para editar horarios legacy.'];
+}
+$horario = self::authorizedLegacyResourceQuery(RhLocalidadesHorario::class)->where('id', $id)->first();
 if (!$horario) {
 return ['success' => false, 'message' => 'Horario no encontrado.'];
 }
@@ -1118,14 +1275,17 @@ $horario->hora_entrada = $horaEntrada;
 $horario->hora_salida = $horaSalida;
 $horario->save();
 return ['success' => true, 'message' => 'Horario actualizado correctamente.'];
-} catch (\Exception $e) {
-return ['success' => false, 'message' => 'Error al actualizar el horario: ' . $e->getMessage()];
+} catch (\Throwable) {
+return ['success' => false, 'message' => 'No se pudo actualizar el horario legacy.'];
 }
 }
 
 public static function deleteHorario(int $id): array
 {
-$horario = RhLocalidadesHorario::find($id);
+if (!self::hasActionPermission(self::MODULE_KEY, 'eliminar')) {
+return ['success' => false, 'message' => 'No tienes permisos para eliminar horarios legacy.'];
+}
+$horario = self::authorizedLegacyResourceQuery(RhLocalidadesHorario::class)->where('id', $id)->first();
 if (!$horario) {
 return ['success' => false, 'message' => 'Horario no encontrado.'];
 }
@@ -1133,8 +1293,8 @@ return ['success' => false, 'message' => 'Horario no encontrado.'];
 try {
 $horario->delete();
 return ['success' => true, 'message' => 'Horario eliminado correctamente.'];
-} catch (\Exception $e) {
-return ['success' => false, 'message' => 'Error al eliminar el horario: ' . $e->getMessage()];
+} catch (\Throwable) {
+return ['success' => false, 'message' => 'No se pudo eliminar el horario legacy.'];
 }
 }
 }

@@ -13,7 +13,21 @@ if (!function_exists('base_url')) {
 if (!function_exists('asset')) {
     function asset(string $path): string
     {
-        return base_url() . '/assets/' . ltrim($path, '/');
+        $assetOrigin = '';
+        $base = base_url();
+        if ($base !== '') {
+            $parts = parse_url($base);
+            if (is_array($parts)
+                && isset($parts['scheme'], $parts['host'])
+                && in_array(strtolower((string) $parts['scheme']), ['http', 'https'], true)) {
+                $assetOrigin = strtolower((string) $parts['scheme']) . '://' . $parts['host'];
+                if (isset($parts['port'])) {
+                    $assetOrigin .= ':' . (int) $parts['port'];
+                }
+            }
+        }
+
+        return $assetOrigin . '/assets/' . ltrim($path, '/');
     }
 }
 
