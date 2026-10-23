@@ -149,7 +149,9 @@
 
             <div class="modal fade"
                 id="modalFacturas"
-                tabindex="-1">
+                tabindex="-1"
+data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
                 <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -219,42 +221,36 @@
                         </div>
 
                         <div class="modal-footer">
-
-                            <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button
                                 class="btn bg-danger-subtle text-danger"
                                 data-bs-dismiss="modal">
-
                                 <i class="ti ti-x"></i> Cancelar
-
                             </button>
-
-                            <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                                 class="btn btn-success"
-
                                 @click="guardarFacturas()"
-
                                 :disabled="guardando">
-
                                 <i class="ti ti-check"></i>
-
                                 <span
                                     x-show="!guardando">
-
                                     Guardar
-
                                 </span>
-
                                 <span
                                     x-show="guardando">
-
                                     <span class="spinner-border spinner-border-sm me-2"></span>
-
                                     Guardando...
-
                                 </span>
-
                             </button>
+                    </div>
+                  </div>
 
+                           
+
+                            
                         </div>
 
                     </div>

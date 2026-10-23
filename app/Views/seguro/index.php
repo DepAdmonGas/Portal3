@@ -36,6 +36,7 @@
             </div>
         </div>
 
+
         <div class="col-12 col-lg-6">
             <div class="card">
                 <div class="card-header text-bg-primary">
@@ -154,4 +155,7 @@
             </div>
         </div>
     </div>
+
+</div>
+
 </div>

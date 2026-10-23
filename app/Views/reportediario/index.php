@@ -15,12 +15,14 @@ x-data="corteDiario">
 
     <div id="sasisopa-content">
 
+
 <div class="row mt-2 justify-content-end">
     <div class="col-12 text-end">
    <button class="btn bg-primary-subtle text-primary">
                     <a class="dropdown-item pointer" :href="url"><i class="ti ti-file-dollar"></i> Facturas</a>
             
             </button>
+
             </div>
     
 </div>

@@ -112,6 +112,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
     </a>
 </td>
 
+
         <td class="text-center align-middle" width="48px">
             <div class="dropdown dropstart">
                 <a class="pointer text-decoration-none" data-bs-toggle="dropdown" aria-label="Opciones">
@@ -132,6 +133,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                     </li>
                 </ul>
             </div>
+
         </td>
 
     </tr>
@@ -169,7 +171,9 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
     class="modal fade"
     id="modalDetalleReporte"
     tabindex="-1"
-    aria-hidden="true">
+    aria-hidden="true"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
     <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
 
@@ -427,13 +431,17 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
             </div>
 
             <div class="modal-footer">
-
-               <button class="btn bg-danger-subtle text-danger"
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                        <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                     <i class="ti ti-x"></i> Cerrar
-
                 </button>
+                    </div>
+                  </div>
+
+
+             
 
             </div>
 
@@ -454,6 +462,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
      id="modalMensajes"
      tabindex="-1"
      style="width:480px;max-width:100vw;max-height:100dvh;overflow:hidden;">
+
 
         <div class="d-flex flex-column h-100 border-0 shadow">
 
