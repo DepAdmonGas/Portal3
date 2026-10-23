@@ -102,6 +102,7 @@ class DownloadController
             'miselanea'                             => dirname(__DIR__, 2) . '/public/uploads/archivos/miselanea/',
             'soporte-actividades'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/soporte/actividades/',
             'soporte-evidencias'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/soporte/evidencias/',
+            'procedimientos-modulos'                => dirname(__DIR__, 2) . '/public/uploads/archivos/procedimientos-modulos/',
 
         ];
 

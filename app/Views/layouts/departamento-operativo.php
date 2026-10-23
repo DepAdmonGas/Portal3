@@ -70,6 +70,39 @@
                         </a>
                     </li>
 
+<?php $esPuestoProcedimientos = in_array((int) ($user->id_puesto ?? 0), [3, 13], true); ?>                    <?php if ($esPuestoProcedimientos || $solicitudesFirmaAutorizado): ?>
+                    <!-- HERRAMIENTAS -->
+                    <li class="nav-small-cap">
+                        <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                        <span class="hide-menu">HERRAMIENTAS</span>
+                    </li>
+
+                    <?php if ($esPuestoProcedimientos): ?>
+                    <!-- PROCEDIMIENTOS -->
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="/departamento-operativo/procedimientos" aria-expanded="false">
+                            <span>
+                                <i class="ti ti-files"></i>
+                            </span>
+                            <span class="hide-menu">Procedimientos</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
+                    <?php if ($solicitudesFirmaAutorizado): ?>
+                    <!-- SOLICITUDES PENDIENTES (FIRMA) -->
+                    <li class="sidebar-item">
+                        <a class="sidebar-link pointer" href="#" data-solicitudes-firma="true" aria-expanded="false">
+                            <span>
+                                <i class="ti ti-signature"></i>
+                            </span>
+                            <span class="hide-menu">Solicitudes pendientes (Firma)</span>
+                            <span class="badge-historico<?= ((int) $solicitudesFirmaPendientes) > 0 ? '' : ' d-none' ?>" id="solicitudes-firma-do-badge"><?= (int) $solicitudesFirmaPendientes ?></span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php endif; ?>
+
                     <!-- GRUPOS Y ELEMENTOS (vienen de /menu-do) -->
                     <template x-for="grupo in menus" :key="grupo.nombre">
 
@@ -299,6 +332,10 @@
     </div>
 
     <div class="dark-transparent sidebartoggler"></div>
+
+    <?php if ($solicitudesFirmaAutorizado): ?>
+        <?php require __DIR__ . '/../partials/_solicitudes-firma-do-offcanvas.php'; ?>
+    <?php endif; ?>
     <!-- Import Js Files -->
     <script src="<?= asset('js/home/actions-home.init.js?v=1.2') ?>"></script>
     <!-- Menú lateral de Departamento Operativo -->
@@ -319,6 +356,11 @@
     <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
     <script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script>
     <script src="<?= asset('js/core/actions.alpine.js?v=1.4') ?>"></script>
+
+    <?php if ($solicitudesFirmaAutorizado): ?>
+    <!-- Solicitudes pendientes (Firma) - Departamento Operativo -->
+    <script src="<?= asset('js/departamento-operativo/solicitudes-firma/solicitudes-firma-do.init.js?v=1.0') ?>"></script>
+    <?php endif; ?>
 
     <!-- Scripts por vista -->
     <?php if (!empty($scripts)): ?>

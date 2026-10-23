@@ -19,6 +19,7 @@ public $timestamps = false;
 protected $fillable = [
 'descripcion',
 'id_tipo',
+'archivo',
 'estatus'
 ];
 

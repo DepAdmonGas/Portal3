@@ -7,24 +7,20 @@ document.addEventListener('alpine:init', () => {
         url: '',
 
         init() {
-
-            this.url = '/sasisopa/reporte-diario/facturas/' + this.year;
-
-        this.year = Number(
-            localStorage.getItem('reporteDiarioYear')
-            ?? new Date().getFullYear()
-        );
-
-        this.$watch('year', value => {
-
-            localStorage.setItem(
-                'reporteDiarioYear',
-                value
+            this.year = Number(
+                localStorage.getItem('reporteDiarioYear')
+                ?? this.$el.dataset.year
+                ?? new Date().getFullYear()
             );
+            this.year = Math.min(new Date().getFullYear(), Math.max(2019, this.year));
+            this.url = '/sasisopa/reporte-diario/facturas/' + this.year;
+            this.actualizarYearBreadcrumb();
 
-        });
+            this.$watch('year', value => {
+                localStorage.setItem('reporteDiarioYear', value);
+            });
 
-        this.buscar();
+            this.buscar();
 
         },
 
@@ -58,6 +54,21 @@ document.addEventListener('alpine:init', () => {
             
         },
 
+        seleccionarYear(year) {
+            const seleccionado = Number(year);
+            if (!Number.isInteger(seleccionado) || seleccionado < 2019 || seleccionado > new Date().getFullYear()) return;
+
+            this.year = seleccionado;
+            this.url = '/sasisopa/reporte-diario/facturas/' + this.year;
+            this.actualizarYearBreadcrumb();
+            this.buscar();
+        },
+
+        actualizarYearBreadcrumb() {
+            const etiqueta = document.getElementById('reporte-diario-year-label');
+            if (etiqueta) etiqueta.textContent = this.year;
+        },
+
         abrir(item){
 
             if(!item.habilitado){
@@ -72,4 +83,19 @@ document.addEventListener('alpine:init', () => {
         }
 
     }));
+
+    document.addEventListener('click', event => {
+        const opcion = event.target.closest('[data-reporte-diario-year]');
+        if (!opcion) return;
+
+        event.preventDefault();
+
+        const contenedor = document.getElementById('container');
+        if (!contenedor) return;
+
+        const componente = Alpine.$data(contenedor);
+        if (componente && typeof componente.seleccionarYear === 'function') {
+            componente.seleccionarYear(opcion.dataset.reporteDiarioYear);
+        }
+    });
 });

@@ -168,7 +168,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             axios.post('/api/module-context/set', {
-                module_key: 'sasisopa',
+                module_key: 'sgm',
                 id_estacion: this.estacionId,
                 id_depto: null
             }).then(() => {

@@ -53,7 +53,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
         </template>
 
         <th class="text-center align-middle" rowspan="2">
-            <i class="ti ti-message-2 text-muted fs-6"></i>
+            <i class="ti ti-message text-muted fs-7"></i>
         </th>
 
         <th class="text-center align-middle" rowspan="2">
@@ -104,47 +104,34 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
         </template>
 
 <td class="text-center align-middle">
-
-    <button
-        type="button"
-        class="btn btn-sm position-relative mt-2 p-0 bg-transparent border-0"
-        @click="abrirMensajes(row)"
-        aria-label="Ver mensajes">
-
-        <i class="ti ti-message-2 fs-5"></i>
-
-        <span
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger px-1 py-0"
-            x-show="row.mensajes.total > 0"
-            x-text="row.mensajes.total">
-        </span>
-
-    </button>
-
+    <a href="#" class="btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center"
+       title="Comentarios" @click.prevent="abrirMensajes(row)">
+        <i class="ti ti-message fs-7"></i>
+        <span class="badge-historico position-absolute top-0 start-100 translate-middle"
+              x-show="row.mensajes.total > 0" x-text="row.mensajes.total"></span>
+    </a>
 </td>
 
-        <td class="text-center align-middle">
-
-         <div class="dropdown dropstart">
-            <button type="button" data-bs-toggle="dropdown">
-                <i class="ti ti-dots-vertical fs-6"></i>
-            </button>
+        <td class="text-center align-middle" width="48px">
+            <div class="dropdown dropstart">
+                <a class="pointer text-decoration-none" data-bs-toggle="dropdown" aria-label="Opciones">
+                    <i class="ti ti-dots-vertical fs-6"></i>
+                </a>
                 <ul class="dropdown-menu">
                     <li>
-                        <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                       @click="detalle(row)">
-                        <i class="fs-4 ti ti-eye"></i>Detalle
+                        <a class="dropdown-item pointer d-flex align-items-center gap-3" href="#"
+                           @click.prevent="detalle(row)">
+                            <i class="fs-4 ti ti-eye"></i>Detalle
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                        @click="editar(row)">
+                        <a class="dropdown-item pointer d-flex align-items-center gap-3" href="#"
+                           @click.prevent="editar(row)">
                             <i class="fs-4 ti ti-edit"></i>Editar
                         </a>
                     </li>
-                 </ul>
+                </ul>
             </div>
-
         </td>
 
     </tr>
@@ -463,45 +450,45 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
 
 
-<div class="modal fade"
+<div class="offcanvas offcanvas-end d-flex flex-column"
      id="modalMensajes"
-     tabindex="-1">
+     tabindex="-1"
+     style="width:480px;max-width:100vw;max-height:100dvh;overflow:hidden;">
 
-    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
-
-        <div class="modal-content border-0 shadow">
+        <div class="d-flex flex-column h-100 border-0 shadow">
 
             <!-- Header -->
 
-            <div class="modal-header modal-colored-header bg-primary text-white">
+            <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary flex-shrink-0">
 
-                    <h4 class="modal-title text-white">
-                        <i class="ti ti-message-circle"></i>
-                        Mensaje
-                    </h4>
+                    <div class="hstack gap-3">
+                        <div class="rounded-circle bg-white d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                            <i class="ti ti-message-circle text-primary fs-7"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 text-white">COMENTARIOS</h5>
+                            <p class="mb-0 text-white opacity-75">Reporte diario CRE (<span x-text="mensajeRow ? mensajeRow.fecha_larga : ''"></span>)</p>
+                        </div>
+                    </div>
 
-                <button class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="offcanvas">
                 </button>
 
             </div>
 
             <!-- Body -->
 
-            <div class="modal-body bg-light"
-                 style="height:550px;overflow-y:auto;">
+            <div class="d-flex flex-column flex-grow-1 overflow-hidden bg-light" style="min-height:0;">
+            <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height:0;">
+            <div class="chat-box-inner p-3 flex-grow-1 overflow-auto" style="min-height:0;overscroll-behavior:contain;" x-ref="chatContainer">
 
                 <template x-if="mensajes.length==0">
 
-                    <div class="text-center mt-5">
+                    <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height:380px;">
 
-                        <i class="ti ti-message-off fs-7 text-secondary"></i>
-
-                        <div class="mt-2 text-muted">
-
-                            No existen mensajes.
-
-                        </div>
+                        <i class="ti ti-message-off text-muted mb-2" style="font-size:55px;"></i>
+                        <p class="text-muted mb-0 fs-5">Sin comentarios</p>
 
                     </div>
 
@@ -511,162 +498,48 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                     x-for="item in mensajes"
                     :key="item.id">
 
-                    <div class="mb-4">
-
-                        <div class="d-flex"
-                             :class="item.propio
-                                ? 'justify-content-end'
-                                : 'justify-content-start'">
-
-                            <!-- Usuario -->
+                    <div class="d-flex mb-3" :class="item.propio ? 'justify-content-end' : 'justify-content-start'">
 
                             <template x-if="!item.propio">
-
-                                <div class="d-flex">
-
-                                    <div class="rounded-circle
-                                                bg-secondary
-                                                text-white
-                                                fw-bold
-                                                d-flex
-                                                align-items-center
-                                                justify-content-center"
-                                         style="width:42px;height:42px;">
-
-                                        <span x-text="item.inicial"></span>
-
+                                <div class="d-flex gap-3 align-items-start">
+                                    <div class="flex-shrink-0"><div class="rounded-circle bg-dark d-flex align-items-center justify-content-center" style="width:45px;height:45px;"><i class="ti ti-user text-white fs-5"></i></div></div>
+                                    <div>
+                                        <h6 class="fw-semibold mb-1" x-text="item.usuario || 'Usuario'"></h6>
+                                        <div class="fs-3 text-muted mb-1" x-text="item.fechaFormateada"></div>
+                                        <div class="p-3 text-bg-success rounded-3 text-white mt-2" style="max-width:420px;white-space:pre-wrap;" x-text="item.mensaje"></div>
                                     </div>
-
-                                    <div class="ms-2">
-
-                                        <div class="fw-semibold small">
-
-                                            <span x-text="item.usuario"></span>
-
-                                        </div>
-
-                                        <div class="rounded-4
-                                                    bg-white
-                                                    border
-                                                    shadow-sm
-                                                    px-3
-                                                    py-2
-                                                    mt-1">
-
-                                            <div style="white-space:pre-wrap"
-                                                 x-text="item.mensaje">
-                                            </div>
-
-                                        </div>
-
-                                        <div class="small text-muted mt-1">
-
-                                            <i class="ti ti-calendar"></i>
-
-                                            <span x-text="item.fecha"></span>
-
-                                            &nbsp;
-
-                                            <i class="ti ti-clock-hour-4"></i>
-
-                                            <span x-text="item.hora"></span>
-
-                                        </div>
-
-                                    </div>
-
                                 </div>
-
                             </template>
-
-                            <!-- Yo -->
-
                             <template x-if="item.propio">
-
-                                <div class="d-flex">
-
-                                    <div class="me-2 text-end">
-
-                                        <div class="fw-semibold
-                                                    small
-                                                    text-primary">
-
-                                            <span x-text="item.usuario"></span>
-
-                                        </div>
-
-                                        <div class="rounded-4
-                                                    text-white
-                                                    px-3
-                                                    py-2
-                                                    mt-1"
-                                             style="background:#2563eb;">
-
-                                            <div style="white-space:pre-wrap"
-                                                 x-text="item.mensaje">
-                                            </div>
-
-                                        </div>
-
-                                        <div class="small text-muted mt-1">
-
-                                            <i class="ti ti-calendar"></i>
-
-                                            <span x-text="item.fecha"></span>
-
-                                            &nbsp;
-
-                                            <i class="ti ti-clock-hour-4"></i>
-
-                                            <span x-text="item.hora"></span>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div class="rounded-circle
-                                                text-white
-                                                fw-bold
-                                                d-flex
-                                                align-items-center
-                                                justify-content-center"
-                                         style="width:42px;
-                                                height:42px;
-                                                background:#2563eb;">
-
-                                        <span x-text="item.inicial"></span>
-
-                                    </div>
-
+                                <div class="d-flex flex-column align-items-end">
+                                    <div class="fs-3 text-muted mb-1 text-end" x-text="item.fechaFormateada"></div>
+                                    <div class="p-3 bg-primary text-white rounded-3 mt-2" style="max-width:420px;white-space:pre-wrap;" x-text="item.mensaje"></div>
                                 </div>
-
                             </template>
-
                         </div>
-
                     </div>
 
                 </template>
 
-            </div>
+            </div></div></div>
 
             <!-- Footer -->
 
-            <div class="modal-footer">
+            <div class="px-3 py-3 border-top bg-white flex-shrink-0">
 
-                <div class="input-group">
+                <div class="d-flex align-items-center gap-2">
 
-                    <textarea class="form-control"
-                              rows="2"
-                              placeholder="Escribe un mensaje..."
-                              x-model="nuevoMensaje">
+                    <div class="flex-grow-1"><textarea class="form-control border-0 bg-light rounded-pill px-3 py-2"
+                              rows="1" placeholder="Escribe un comentario..." style="resize:none;"
+                              x-model="nuevoMensaje" @keydown.enter.prevent="enviarMensaje()">
                     </textarea>
+                    </div>
 
-                    <button class="btn btn-primary px-4"
-                            @click="enviarMensaje()">
-
-                        <i class="ti ti-send"></i>
-
+                    <button class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center"
+                            style="width:44px;height:44px;" type="button" @click="enviarMensaje()"
+                            :disabled="enviandoMensaje || !nuevoMensaje.trim()">
+                        <template x-if="!enviandoMensaje"><i class="ti ti-send fs-5"></i></template>
+                        <template x-if="enviandoMensaje"><span class="spinner-border spinner-border-sm"></span></template>
                     </button>
 
                 </div>
@@ -676,8 +549,6 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
         </div>
 
     </div>
-
-</div>
 
     </div>
 

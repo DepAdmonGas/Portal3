@@ -7,6 +7,8 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
+use App\Services\MultiestacionService;
 use DateTimeImmutable;
 use Throwable;
 use Dompdf\Dompdf;
@@ -37,66 +39,87 @@ class ReportesController extends BaseController
 
     public function index()
     {
-        $title = 'Reporte Anual';
+        $yearActual = (int) date('Y');
+        $title = 'Reporte Anual ' . $yearActual;
 
         Breadcrumb::add('Home', '/home');
-        Breadcrumb::add($title, '');
+        Breadcrumb::add('Reporte', '');
+        Breadcrumb::add($this->dropdownMesReportes(0), '');
+        Breadcrumb::add($this->dropdownYearReportes($yearActual), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
-
+        $mostrarSelectorEstaciones = !empty(ModuleStationService::getAvailableStations('reportes'));
         $data = [
             'title' => $title,
+            'pageTitleId' => 'reportes-page-title',
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'year' => $yearActual,
+            'mes' => 0,
+            'moduleStationKey' => $mostrarSelectorEstaciones ? 'reportes' : null,
+            'moduleStationPlaceholder' => 'Todas las estaciones y departamentos',
+            'moduleStationExtraDepartments' => [
+                ['id' => 9, 'nombre' => 'Autolavado'],
+            ],
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
+                $mostrarSelectorEstaciones ? '/js/core/module-station-selector.js?v=2.0.0' : null,
                 '/js/reportes/index.actions.init.js?v=' . time()
             ],
             'help' => false
         ];
 
+        $data['scripts'] = array_values(array_filter($data['scripts']));
+
         View::render('reportes/index', $data, 'main');
     }
 
-    public function estaciones(): void
+    private function dropdownMesReportes(int $mesSeleccionado): string
     {
-        try {
+        $opciones = [
+            0 => 'Todo el año',
+            1 => 'Enero',
+            2 => 'Febrero',
+            3 => 'Marzo',
+            4 => 'Abril',
+            5 => 'Mayo',
+            6 => 'Junio',
+            7 => 'Julio',
+            8 => 'Agosto',
+            9 => 'Septiembre',
+            10 => 'Octubre',
+            11 => 'Noviembre',
+            12 => 'Diciembre',
+        ];
 
-            $estaciones = RhLocalidad::query()
-                ->select([
-                    'id',
-                    'localidad',
-                    'numlista'
-                ])
-                ->where(function ($query) {
+        $actual = htmlspecialchars($opciones[$mesSeleccionado] ?? 'Todo el año', ENT_QUOTES, 'UTF-8');
+        $html = '<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">'
+            . '<i class="ti ti-calendar-stats"></i> <span class="ms-1" id="reportes-mes-label">' . $actual . '</span></a>'
+            . '<ul class="dropdown-menu animated rubberBand">';
 
-                    $query
-                        ->where('numlista', '<=', 8)
-                        ->orWhere('numlista', 10);
-                })
-                ->orderBy('numlista')
-                ->get()
-                ->map(function (RhLocalidad $estacion) {
-
-                    return [
-                        'id' => (int) $estacion->id,
-                        'nombre' => $estacion->localidad,
-                    ];
-                })
-                ->values();
-
-            JsonResponse::custom([
-                'success' => true,
-                'data' => $estaciones->all()
-            ]);
-        } catch (Throwable $e) {
-
-            JsonResponse::error(
-                'No fue posible cargar las estaciones.'
-            );
+        foreach ($opciones as $mes => $nombre) {
+            $clase = ($mes > (int) date('n')) ? ' class="d-none"' : '';
+            $html .= '<li data-reportes-month-option="' . $mes . '"' . $clase . '><a class="dropdown-item pointer" href="#" data-reportes-month="' . $mes . '">'
+                . '<i class="ti ti-calendar-stats me-1"></i>' . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . '</a></li>';
         }
+
+        return $html . '</ul>';
+    }
+
+    private function dropdownYearReportes(int $yearSeleccionado): string
+    {
+        $html = '<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">'
+            . '<i class="ti ti-calendar"></i> <span class="ms-1" id="reportes-year-label">' . $yearSeleccionado . '</span></a>'
+            . '<ul class="dropdown-menu animated rubberBand">';
+
+        for ($year = (int) date('Y'); $year >= 2021; $year--) {
+            $html .= '<li><a class="dropdown-item pointer" href="#" data-reportes-year="' . $year . '">'
+                . '<i class="ti ti-calendar me-1"></i>' . $year . '</a></li>';
+        }
+
+        return $html . '</ul>';
     }
 
     public function data(): void
@@ -107,12 +130,12 @@ class ReportesController extends BaseController
                 ? (int) $_GET['idEstacion']
                 : 0;
 
+            $idDepartamento = isset($_GET['idDepartamento'])
+                ? (int) $_GET['idDepartamento']
+                : 0;
+
             $year = isset($_GET['year'])
                 ? trim((string) $_GET['year'])
-                : '';
-
-            $dia = isset($_GET['dia'])
-                ? trim((string) $_GET['dia'])
                 : '';
 
             $mes = isset($_GET['mes'])
@@ -156,22 +179,25 @@ class ReportesController extends BaseController
                 return;
             }
 
-            if ($dia !== '') {
+            if ($idDepartamento !== 0) {
+                if ($idEstacion !== 0 || $idDepartamento !== 9) {
+                    JsonResponse::error('El departamento seleccionado no es válido.');
+                    return;
+                }
 
-                $fecha = DateTimeImmutable::createFromFormat(
-                    'Y-m-d',
-                    $dia
+                // Autolavado es un departamento/localidad del catálogo RH.
+                $idEstacion = $idDepartamento;
+            } elseif ($idEstacion !== 0) {
+                // El selector multiestación usa IDs de tb_estaciones; los reportes
+                // operativos consultan op_rh_localidades. Convierte por numlista.
+                $localidades = MultiestacionService::convertIds(
+                    [$idEstacion],
+                    MultiestacionService::TABLA_ESTACIONES,
+                    MultiestacionService::TABLA_RH_LOCALIDADES
                 );
-
-                if (
-                    !$fecha
-                    || $fecha->format('Y-m-d') !== $dia
-                ) {
-
-                    JsonResponse::error(
-                        'La fecha seleccionada no es válida.'
-                    );
-
+                $idEstacion = $localidades[0] ?? 0;
+                if ($idEstacion === 0) {
+                    JsonResponse::error('No se encontró la estación.');
                     return;
                 }
             }
@@ -179,7 +205,6 @@ class ReportesController extends BaseController
             $estacion = null;
 
             if ($idEstacion !== 0) {
-
                 $estacion = RhLocalidad::query()
                     ->select([
                         'id',
@@ -199,19 +224,11 @@ class ReportesController extends BaseController
 
             if ($year !== '') {
 
-                $nombreReporte =
-                    'Anual ' . $year;
+                $nombreReporte = $mes > 0
+                    ? 'Mensual ' . nombremes($mes) . ' ' . $year
+                    : 'Anual ' . $year;
 
-                $tipoReporte =
-                    'anual';
-            } elseif ($dia !== '') {
-
-                $nombreReporte =
-                    'Diario '
-                    . $this->formatearFecha($dia);
-
-                $tipoReporte =
-                    'diario';
+                $tipoReporte = 'anual';
             } else {
 
                 $nombreReporte =
@@ -233,7 +250,6 @@ class ReportesController extends BaseController
                 $this->generarReportes(
                     $idEstacion,
                     $year,
-                    $dia,
                     $mes,
                     $tipoReporte
                 );
@@ -246,7 +262,6 @@ class ReportesController extends BaseController
                     'filtros' => [
                         'idEstacion' => $idEstacion,
                         'year' => $year,
-                        'dia' => $dia,
                         'mes' => $mes,
                     ],
 
@@ -393,39 +408,19 @@ class ReportesController extends BaseController
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Autolavado diario
-    |--------------------------------------------------------------------------
-    */
-
     public function autolavadoDiario(): void
     {
         try {
+            $dia = trim((string) ($_GET['dia'] ?? ''));
+            $fecha = DateTimeImmutable::createFromFormat('!Y-m-d', $dia);
 
-            $dia = isset($_GET['dia'])
-                ? trim((string) $_GET['dia'])
-                : '';
+            if (!$fecha || $fecha->format('Y-m-d') !== $dia) {
+                JsonResponse::error('La fecha seleccionada no es válida.');
+                return;
+            }
 
-            $idEstacion = isset($_GET['idEstacion'])
-                ? (int) $_GET['idEstacion']
-                : 0;
-
-            $fecha = DateTimeImmutable::createFromFormat(
-                'Y-m-d',
-                $dia
-            );
-
-            if (
-                !$fecha
-                || $fecha->format('Y-m-d') !== $dia
-            ) {
-
-                JsonResponse::error(
-                    'La fecha seleccionada no es válida.'
-                );
-
+            if ((int) $fecha->format('Y') < 2021 || $fecha > new DateTimeImmutable('today')) {
+                JsonResponse::error('La fecha seleccionada está fuera del periodo disponible.');
                 return;
             }
 
@@ -436,34 +431,20 @@ class ReportesController extends BaseController
                     '=',
                     'op_ventas_dia_otros.idreporte_dia'
                 )
-                ->where(
-                    'op_ventas_dia_otros.concepto',
-                    '5 AUTOLAVADO'
-                )
-                ->whereDate(
-                    'op_corte_dia.fecha',
-                    $dia
-                )
-                ->sum(
-                    'op_ventas_dia_otros.importe'
-                );
+                ->where('op_ventas_dia_otros.concepto', '5 AUTOLAVADO')
+                ->whereDate('op_corte_dia.fecha', $dia)
+                ->sum('op_ventas_dia_otros.importe');
 
             JsonResponse::custom([
                 'success' => true,
-
                 'data' => [
-                    'idEstacion' => $idEstacion,
                     'dia' => $dia,
-                    'dia_formateado' =>
-                    $this->formatearFecha($dia),
+                    'dia_formateado' => $fecha->format('d/m/Y'),
                     'total' => (float) $total,
-                ]
+                ],
             ]);
         } catch (Throwable $e) {
-
-            JsonResponse::error(
-                'No fue posible cargar el reporte diario de autolavado.'
-            );
+            JsonResponse::error('No fue posible cargar el concentrado diario de autolavado.');
         }
     }
 
@@ -477,7 +458,6 @@ class ReportesController extends BaseController
     private function generarReportes(
         int $idEstacion,
         string $year,
-        string $dia,
         int $mes,
         string $tipoReporte
     ): array {
@@ -824,56 +804,37 @@ class ReportesController extends BaseController
             ]);
 
 
-        $reportes[] = [
-            'id' =>
-            'tesoreria',
+        if ($idEstacion !== 9) {
+            $reportes[] = [
+                'id' =>
+                'tesoreria',
 
-            'nombre' =>
-            'Tesorería',
+                'nombre' =>
+                'Tesorería',
 
-            'icono' =>
-            'ti-building-bank',
+                'icono' =>
+                'ti-building-bank',
 
-            'acciones' => [
-                [
-                    'tipo' =>
-                    'pdf',
+                'acciones' => [
+                    [
+                        'tipo' =>
+                        'pdf',
 
-                    'nombre' =>
-                    'PDF',
+                        'nombre' =>
+                        'PDF',
 
-                    'icono' =>
-                    'ti-file-type-pdf',
+                        'icono' =>
+                        'ti-file-type-pdf',
 
-                    'url' =>
-                    $urlTesoreria,
+                        'url' =>
+                        $urlTesoreria,
+                    ]
                 ]
-            ]
-        ];
+            ];
+        }
 
 
         return $reportes;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Formato fecha
-    |--------------------------------------------------------------------------
-    */
-
-    private function formatearFecha(
-        string $fecha
-    ): string {
-
-        $date =
-            DateTimeImmutable::createFromFormat(
-                'Y-m-d',
-                $fecha
-            );
-
-        return $date
-            ? $date->format('d/m/Y')
-            : $fecha;
     }
 
     //----------------------------------
