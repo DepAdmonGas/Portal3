@@ -47,6 +47,41 @@ $ctx = $allCtx[$moduleKey] ?? [];
 $idEstacion = $ctx['id_estacion'] ?? null;
 $idDepto = $ctx['id_depto'] ?? null;
 
+// Checador stores its selected context in canonical op_rh_localidades IDs.
+// Its authoritative scope is narrower than the shared multi-station config,
+// so never infer a Checador context from id_gas or a global station context.
+if ($moduleKey === ChecadorAccessService::MODULE_KEY) {
+    $access = ChecadorAccessService::authorize();
+    if (!($access['allowed'] ?? false)) {
+        return ['id_estacion' => null, 'id_depto' => null, 'nombre' => ''];
+    }
+
+    $stationById = self::indexWorkplaces($access['station_workplaces'] ?? []);
+    $departmentById = self::indexWorkplaces($access['department_workplaces'] ?? []);
+
+    if (($idEstacion !== null && $idDepto !== null)
+        || ($idEstacion !== null && !array_key_exists((int) $idEstacion, $stationById))
+        || ($idDepto !== null && !array_key_exists((int) $idDepto, $departmentById))) {
+        $idEstacion = null;
+        $idDepto = null;
+    }
+    if ($idEstacion === null && $idDepto === null && count($stationById) + count($departmentById) === 1) {
+        if ($stationById !== []) {
+            $idEstacion = (int) array_key_first($stationById);
+        } else {
+            $idDepto = (int) array_key_first($departmentById);
+        }
+    }
+
+    $selectedId = $idDepto ?? $idEstacion;
+    $selectedGroup = $idDepto !== null ? $departmentById : $stationById;
+    return [
+        'id_estacion' => $idEstacion === null ? null : (int) $idEstacion,
+        'id_depto' => $idDepto === null ? null : (int) $idDepto,
+        'nombre' => $selectedId === null ? '' : ($selectedGroup[(int) $selectedId] ?? ''),
+    ];
+}
+
 if (!$hasExplicit && !$idEstacion && !$idDepto) {
 $multiestacion = MultiestacionService::isEnabled();
 if (!$multiestacion) {
@@ -80,6 +115,22 @@ $idEstacion = !empty($converted) ? $converted[0] : null;
         $cfg = self::getConfig($moduleKey);
         if (!$cfg) return;
 
+        if ($moduleKey === ChecadorAccessService::MODULE_KEY) {
+            if ($idEstacion !== null && $idDepto !== null) return;
+            if ($idEstacion !== null
+                && !in_array((int) $idEstacion, array_column(self::getAvailableStations($moduleKey), 'id'), true)) return;
+            if ($idDepto !== null
+                && !in_array((int) $idDepto, array_column(self::getAvailableDepartments($moduleKey), 'id'), true)) return;
+
+            $ctx = Session::get('module_context') ?? [];
+            $ctx[$moduleKey] = [
+                'id_estacion' => $idEstacion !== null ? (int) $idEstacion : null,
+                'id_depto' => $idDepto !== null ? (int) $idDepto : null,
+            ];
+            Session::set('module_context', $ctx);
+            return;
+        }
+
         if ($idEstacion !== null) {
             $available = self::getAvailableStations($moduleKey);
             if (!empty($available) && !in_array((int)$idEstacion, array_column($available, 'id'))) {
@@ -105,6 +156,11 @@ $idEstacion = !empty($converted) ? $converted[0] : null;
 
 public static function getAvailableStations(string $moduleKey): array
 {
+if ($moduleKey === ChecadorAccessService::MODULE_KEY) {
+    $access = ChecadorAccessService::authorize();
+    return !empty($access['allowed']) ? ($access['station_workplaces'] ?? []) : [];
+}
+
 $mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
 if (!$mc) return [];
 
@@ -172,6 +228,11 @@ $config = MultiestacionService::getConfig($user);
 
     public static function getAvailableDepartments(string $moduleKey): array
     {
+        if ($moduleKey === ChecadorAccessService::MODULE_KEY) {
+            $access = ChecadorAccessService::authorize();
+            return !empty($access['allowed']) ? ($access['department_workplaces'] ?? []) : [];
+        }
+
         $mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
         if (!$mc || $mc->tipo !== 'stations_and_departments') return [];
 
@@ -234,7 +295,6 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         $idDepto = $ctx['id_depto'];
         $currentName = $ctx['nombre'];
 
-        $multiestacion = MultiestacionService::isEnabled();
         $stations = self::getAvailableStations($moduleKey);
         $depts = self::getAvailableDepartments($moduleKey);
 
@@ -252,7 +312,9 @@ self::$isBlocked = false;
 
 $hasSelection = $idEstacion !== null || $idDepto !== null;
 $hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
-$showSelector = $showSelector && ($multiestacion || $hasChoices);
+        $showSelector = $moduleKey === ChecadorAccessService::MODULE_KEY
+    ? ($showSelector && count($stations) + count($depts) > 1)
+    : ($showSelector && (MultiestacionService::isEnabled() || $hasChoices));
 
 $html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
 
@@ -262,6 +324,9 @@ $html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounde
 
 if ($showSelector) {
 $placeholder = $cfg['placeholder'] ?? 'Selecciona una estación...';
+if ($moduleKey === ChecadorAccessService::MODULE_KEY && !empty($depts)) {
+    $placeholder = 'Selecciona una estación o departamento...';
+}
 if (empty($depts) && $cfg['type'] === 'stations_and_departments') {
 $placeholder = $cfg['allow_all'] ? 'Todas las estaciones y departamentos' : 'Selecciona una estación...';
 }
@@ -298,6 +363,7 @@ $sel = ($d['id'] == $idDepto) ? ' selected' : '';
 $pend = isset($pendientes['depto_' . $d['id']]) ? ' (' . $pendientes['depto_' . $d['id']] . ')' : '';
 $html .= '<option value="depto_' . $d['id'] . '"' . $sel . '>' . htmlspecialchars($d['nombre'], ENT_QUOTES, 'UTF-8') . $pend . '</option>';
 }
+
 $html .= '</optgroup>';
 }
 
@@ -307,6 +373,37 @@ $html .= '</select></div>';
 $html .= '</div>';
 
 return $html;
+}
+
+/** Persist the canonical Checador workplace using the selector's correct group. */
+public static function setChecadorWorkplaceContext(int $localityId): bool
+{
+    $access = ChecadorAccessService::authorize($localityId);
+    if (empty($access['allowed'])) return false;
+
+    $stationIds = array_map('intval', array_column($access['station_workplaces'] ?? [], 'id'));
+    $departmentIds = array_map('intval', array_column($access['department_workplaces'] ?? [], 'id'));
+
+    if (in_array($localityId, $stationIds, true)) {
+        self::setContext(ChecadorAccessService::MODULE_KEY, $localityId, null);
+        return true;
+    }
+    if (in_array($localityId, $departmentIds, true)) {
+        self::setContext(ChecadorAccessService::MODULE_KEY, null, $localityId);
+        return true;
+    }
+    return false;
+}
+
+/** @param array<int,array{id:int,nombre:string}> $workplaces @return array<int,string> */
+private static function indexWorkplaces(array $workplaces): array
+{
+    $indexed = [];
+    foreach ($workplaces as $workplace) {
+        $id = (int) ($workplace['id'] ?? 0);
+        if ($id > 0) $indexed[$id] = (string) ($workplace['nombre'] ?? '');
+    }
+    return $indexed;
 }
 
 public static function resetAllContexts(): void
