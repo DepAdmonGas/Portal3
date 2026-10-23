@@ -46,7 +46,10 @@ if (isset(self::$configCache[$moduleKey])) {
     return self::$configCache[$moduleKey];
 }
 
-$mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
+// Reportes usa el catálogo y las estaciones autorizadas de Gestoría, pero
+// conserva su propio contexto de selección para no alterar ese módulo.
+$configModuleKey = $moduleKey === 'reportes' ? 'gestoria' : $moduleKey;
+$mc = ModuloConfig::where('modulo_key', $configModuleKey)->where('activo', true)->first();
 if (!$mc) return null;
 
 return self::$configCache[$moduleKey] = [
@@ -54,6 +57,8 @@ return self::$configCache[$moduleKey] = [
 'allow_all'         => (bool)$mc->allow_all,
 'placeholder'       => $mc->placeholder,
 'tipo_departamento' => $mc->tipo_departamento,
+'estaciones_soportadas' => $mc->estaciones_soportadas ?? [],
+'departamentos_soportados' => $mc->departamentos_soportados ?? [],
 ];
 }
 
@@ -127,11 +132,11 @@ $idEstacion = !empty($converted) ? $converted[0] : null;
 
 public static function getAvailableStations(string $moduleKey): array
 {
-$mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
-if (!$mc) return [];
+$cfg = self::getConfig($moduleKey);
+if (!$cfg) return [];
 
 
-        $supported = $mc->estaciones_soportadas ?? [];
+        $supported = $cfg['estaciones_soportadas'] ?? [];
         if (empty($supported)) return [];
 
 
@@ -246,7 +251,7 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         return !empty($stations) || !empty($depts);
     }
 
-    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true, string $nombreBadge = ''): string
+    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true, string $nombreBadge = '', ?string $placeholderOverride = null, array $stationLabelOverrides = [], array $extraDepartments = []): string
     {
         $cfg = self::getConfig($moduleKey);
         if (!$cfg) {
@@ -258,10 +263,23 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         $idEstacion = $ctx['id_estacion'];
         $idDepto = $ctx['id_depto'];
         $currentName = $ctx['nombre'];
+        if ($idEstacion !== null && isset($stationLabelOverrides[(int)$idEstacion])) {
+            $currentName = $stationLabelOverrides[(int)$idEstacion];
+        }
 
         $multiestacion = MultiestacionService::isEnabled();
         $stations = self::getAvailableStations($moduleKey);
         $depts = self::getAvailableDepartments($moduleKey);
+        foreach ($extraDepartments as $department) {
+            $departmentId = (int) ($department['id'] ?? 0);
+            $departmentName = trim((string) ($department['nombre'] ?? ''));
+            if ($departmentId > 0 && $departmentName !== '') {
+                $depts[] = ['id' => $departmentId, 'nombre' => $departmentName];
+                if ($idDepto !== null && (int) $idDepto === $departmentId) {
+                    $currentName = $departmentName;
+                }
+            }
+        }
 
         if (empty($stations) && empty($depts)) {
             self::$isBlocked = true;
@@ -288,7 +306,7 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         $html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
 
 if ($showSelector) {
-$placeholder = $cfg['placeholder'] ?? 'Selecciona una estación...';
+$placeholder = $placeholderOverride ?? ($cfg['placeholder'] ?? 'Selecciona una estación...');
 if (empty($depts) && $cfg['type'] === 'stations_and_departments') {
 $placeholder = $cfg['allow_all'] ? 'Todas las estaciones y departamentos' : 'Selecciona una estación...';
 }
@@ -312,7 +330,8 @@ $html .= '<optgroup label="' . $estLabel . '">';
 foreach ($stations as $s) {
 $sel = ($s['id'] == $idEstacion && !$idDepto) ? ' selected' : '';
 $pend = isset($pendientes['estacion_' . $s['id']]) ? ' (' . $pendientes['estacion_' . $s['id']] . ')' : '';
-$html .= '<option value="estacion_' . $s['id'] . '"' . $sel . '>' . htmlspecialchars($s['nombre'], ENT_QUOTES, 'UTF-8') . $pend . '</option>';
+$stationName = $stationLabelOverrides[(int)$s['id']] ?? $s['nombre'];
+$html .= '<option value="estacion_' . $s['id'] . '"' . $sel . '>' . htmlspecialchars($stationName, ENT_QUOTES, 'UTF-8') . $pend . '</option>';
 }
 $html .= '</optgroup>';
 }

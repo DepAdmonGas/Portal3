@@ -45,12 +45,18 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['ProcedimientosController', 'index']));
         $r->addRoute('GET', '/actividades-tecnicas/datatable', Route::auth(['ProcedimientosController', 'datatableActividadesTec']));
         $r->addRoute('GET', '/visita-estacion/datatable', Route::auth(['ProcedimientosController', 'datatableVisitaES']));
+        $r->addRoute('POST', '/create', Route::auth(['ProcedimientosController', 'create']));
+        $r->addRoute('POST', '/update', Route::auth(['ProcedimientosController', 'update']));
+        $r->addRoute('POST', '/delete', Route::auth(['ProcedimientosController', 'delete']));
     });
 
     // ---------------- EMPRESA ----------------
     $r->addGroup('/empresa', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['EmpresaController', 'index']));
         $r->addRoute('GET', '/datatable', Route::auth(['EmpresaController', 'datatableEmpresa']));
+        $r->addRoute('POST', '/create', Route::auth(['EmpresaController', 'create']));
+        $r->addRoute('POST', '/update', Route::auth(['EmpresaController', 'update']));
+        $r->addRoute('POST', '/delete', Route::auth(['EmpresaController', 'delete']));
     });
 
     // ---------------- SEGURO ----------------
@@ -250,6 +256,14 @@ return function (RouteCollector $r) {
     $r->addGroup('/departamento-operativo', function (RouteCollector $r) {
 
         $r->addRoute('GET', '', Route::auth(['DptoOperativoController', 'index']));
+        $r->addRoute('GET', '/solicitudes-firma/data', Route::auth(['SolicitudesFirmaDoController', 'data']));
+
+        //----- Procedimientos
+        $r->addRoute('GET', '/procedimientos', Route::auth(['ProcedimientosDoController', 'index']));
+        $r->addRoute('GET', '/procedimientos/{modulo:[a-z]+}', Route::auth(['ProcedimientosDoController', 'modulo']));
+        $r->addRoute('GET', '/procedimientos/{modulo:[a-z]+}/data', Route::auth(['ProcedimientosDoController', 'data']));
+        $r->addRoute('POST', '/procedimientos/{modulo:[a-z]+}/create', Route::auth(['ProcedimientosDoController', 'create']));
+        $r->addRoute('POST', '/procedimientos/delete', Route::auth(['ProcedimientosDoController', 'delete']));
 
         //----- 1. Corporativo
         $r->addRoute('GET', '/corporativo', Route::auth(['DptoOperativoController', 'corporativoIndex']));
@@ -2148,10 +2162,13 @@ $r->addGroup('/comercializadora/camioneta-saveiro', function (RouteCollector $r)
         $r->addRoute('GET', '/analisis-riesgo/{idEstacion}/{id}/data', Route::auth(['GestoriaAnalisisRiesgoController', 'editData']));
         $r->addRoute('POST', '/analisis-riesgo/{idEstacion}/{id}/update', Route::auth(['GestoriaAnalisisRiesgoController', 'update']));
 
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/{idYear:\d+}/{idMes:\d+}', Route::auth(['GestoriaReporteCreController', 'index']));
         $r->addRoute('GET', '/reporte-cre/{idEstacion}', Route::auth(['GestoriaReporteCreController', 'index']));
         $r->addRoute('GET', '/reporte-cre/{idEstacion}/data', Route::auth(['GestoriaReporteCreController', 'data']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/anual', Route::auth(['GestoriaReporteCreController', 'anual']));
         $r->addRoute('GET', '/reporte-cre/{idEstacion}/mensajes', Route::auth(['GestoriaReporteCreController', 'mensajes']));
         $r->addRoute('POST', '/reporte-cre/{idEstacion}/mensajes/create', Route::auth(['GestoriaReporteCreController', 'createMensaje']));
+        $r->addRoute('GET', '/reporte-cre/{idEstacion}/facturas', Route::auth(['GestoriaReporteCreController', 'facturas']));
         $r->addRoute('GET', '/reporte-cre/{idEstacion}/facturas/anual', Route::auth(['GestoriaReporteCreController', 'descargarFacturasAnual']));
 
         $r->addRoute('GET', '/cambio-precio/{idEstacion}', Route::auth(['GestoriaCambioPrecioController', 'index']));
@@ -2299,7 +2316,6 @@ $r->addRoute('POST', '/actividades/solicitar-revision', Route::auth(['SoporteAct
     $r->addGroup('/reportes', function (RouteCollector $r) {
 
         $r->addRoute('GET', '', Route::auth(['ReportesController', 'index']));
-        $r->addRoute('GET', '/estaciones', Route::auth(['ReportesController', 'estaciones']));
         $r->addRoute('GET', '/data', Route::auth(['ReportesController', 'data']));
         $r->addRoute('GET', '/autolavado/anual', Route::auth(['ReportesController', 'autolavadoAnual']));
         $r->addRoute('GET', '/autolavado/diario', Route::auth(['ReportesController', 'autolavadoDiario']));

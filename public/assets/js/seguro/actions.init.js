@@ -84,6 +84,8 @@ modal.hide();
 
 } catch (error) {
 this.notify('error', 'Error al guardar');
+} finally {
+this.loading = false;
 }
 
 }
@@ -108,7 +110,7 @@ cobertura: false
 // CAPTURAR POLIZA
 handleFile(e) {
 this.cobertura = e.target.files[0];
-this.errors.poliza = false;
+this.errors.cobertura = false;
 },
 
 // VALIDACIÓN
@@ -177,6 +179,8 @@ modal.hide();
 
 } catch (error) {
 this.notify('error', 'Error al guardar');
+} finally {
+this.loading = false;
 }
 
 }
@@ -185,4 +189,3 @@ this.notify('error', 'Error al guardar');
 
 
 });
- 

@@ -527,9 +527,11 @@ default => 'Desconocido',
 };
 }
 
-public static function getDetalle(int $id): ?array
+public static function getDetalle(int $id, bool $respetarAlcance = true): ?array
 {
-$row = self::findAuthorizedSolicitudCheque($id);
+$row = $respetarAlcance
+? self::findAuthorizedSolicitudCheque($id)
+: SolicitudCheque::whereKey($id)->first();
 if (!$row) return null;
 
 $firmas = SolicitudChequeFirma::with('usuario:id,nombre')
@@ -1299,6 +1301,33 @@ if (!$permisos['es_gestoria']) return true;
 $solicitud = SolicitudCheque::find($idSolicitud);
 if (!$solicitud) return false;
 return (int)$solicitud->id_estacion === 8 && (int)$solicitud->depto === 5;
+}
+
+/**
+ * Indica si el usuario tiene una firma pendiente sobre la solicitud, aunque
+ * ésta quede fuera de su alcance habitual de estación/departamento.
+ *
+ * La pantalla de firma usa esta validación para no bloquear a los firmantes
+ * designados (Vo.Bo. y Autorización) con un 404.
+ */
+public static function puedeFirmarPendiente(int $idSolicitud, ?int $idUsuario = null): bool
+{
+$solicitud = SolicitudCheque::find($idSolicitud);
+if (!$solicitud) return false;
+
+$permisos = self::getPermisos();
+$idUsuario = $idUsuario ?? (int)$permisos['id_usuario'];
+$status = (int)$solicitud->status;
+
+if ($status === 0) {
+return $idUsuario === 19 || !empty($permisos['es_user_30']);
+}
+
+if ($status === 1) {
+return $idUsuario === 2 || $idUsuario === 22;
+}
+
+return false;
 }
 
 public static function firmar(int $idSolicitud, string $tipoFirma, int $token, int $idUsuario, string $nameEstacion): array

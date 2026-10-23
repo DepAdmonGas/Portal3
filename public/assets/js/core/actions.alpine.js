@@ -88,8 +88,8 @@ document.addEventListener('alpine:init', () => {
                 this.mes = container.dataset.mes || container.dataset.idMes || null;
             }
         },
-        cambiarYearMes(year, mes) {
-            const tmpl = this.yearMesTemplate;
+        cambiarYearMes(year, mes, template = null) {
+            const tmpl = template || this.yearMesTemplate;
             if (!tmpl) return;
             const url = tmpl.replace(/\{year\}/g, year).replace(/\{mes\}/g, mes);
             history.replaceState({ year, mes }, '', url);

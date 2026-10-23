@@ -174,7 +174,24 @@ class ReporteEstadisticoCreService
         }
 
         $reporte = ReporteCreMes::query()
-            ->with(['productos.pipas', 'mensajes'])
+            ->select([
+                'id', 'id_estacion', 'year', 'mes',
+                'f_producto_uno', 'f_producto_dos', 'f_producto_tres',
+                'fi_producto_uno', 'fi_producto_dos', 'fi_producto_tres',
+                'ff_producto_uno', 'ff_producto_dos', 'ff_producto_tres',
+            ])
+            ->with(['productos' => static function ($query) {
+                $query->select([
+                    'id', 'id_re_mes', 'fecha', 'producto',
+                    'volumen_inicial', 'volumen_venta', 'volumen_final',
+                ])->with(['pipas' => static function ($query) {
+                    $query->select([
+                        'id', 'id_re_producto', 'pipa_numero', 'volumen',
+                        'precio_litro', 'costo_flete',
+                        'nombre_razonsocial', 'importe_total',
+                    ]);
+                }]);
+            }])
             ->where('id_estacion', $idEstacion)
             ->where('year', $year)
             ->where('mes', $mes)
@@ -185,6 +202,7 @@ class ReporteEstadisticoCreService
         }
 
         $catalogo = self::productosEstacion($idEstacion);
+        $conteosMensajes = self::conteoMensajesPorFecha([(int)$reporte->id]);
 
         $datos = $reporte->productos->groupBy(
             static fn ($producto) => $producto->fecha?->format('Y-m-d')
@@ -222,7 +240,7 @@ class ReporteEstadisticoCreService
                 'id_fecha'      => $idFecha,
                 'dia'           => 'Día ' . (int)date('j', strtotime($fecha)),
                 'fecha_label'   => formatearFecha($fecha),
-                'total_mensajes' => $reporte->mensajes->where('id_fecha', $idFecha)->count(),
+                'total_mensajes' => $conteosMensajes[(int)$reporte->id][$idFecha] ?? 0,
                 'productos'     => $celdas,
             ];
         }
@@ -263,6 +281,28 @@ class ReporteEstadisticoCreService
             : strtolower($texto);
     }
 
+    /** Conteo liviano de comentarios por reporte y día, sin leer sus textos. */
+    private static function conteoMensajesPorFecha(array $idsReporte): array
+    {
+        if ($idsReporte === []) {
+            return [];
+        }
+
+        $salida = [];
+        $conteos = ReporteCreMensaje::query()
+            ->select(['id_reporte', 'id_fecha'])
+            ->selectRaw('COUNT(*) AS total')
+            ->whereIn('id_reporte', $idsReporte)
+            ->groupBy('id_reporte', 'id_fecha')
+            ->get();
+
+        foreach ($conteos as $conteo) {
+            $salida[(int)$conteo->id_reporte][(int)$conteo->id_fecha] = (int)$conteo->total;
+        }
+
+        return $salida;
+    }
+
     /** Fila de volúmenes + tabla de pipas de un producto en un día. */
     private static function celdaProducto(object $registro): array
     {
@@ -291,7 +331,6 @@ class ReporteEstadisticoCreService
                 'volumen'            => (float)$pipa->volumen,
                 'precio_litro'       => (float)$pipa->precio_litro,
                 'costo_flete'        => (float)$pipa->costo_flete,
-                'no_factura'         => $pipa->no_factura,
                 'nombre_razonsocial' => $pipa->nombre_razonsocial,
                 'importe_total'      => (float)$pipa->importe_total,
             ])->values()->all(),
@@ -321,7 +360,6 @@ class ReporteEstadisticoCreService
                 'total_venta'   => $totalVenta,
                 'total_compra'  => $totalCompra,
                 'total_importe' => $totalImporte,
-                'facturas'      => $facturas[$producto['numero']] ?? [],
                 'documentos'    => self::documentosFactura($facturas[$producto['numero']] ?? [], $reporte),
             ];
         }
@@ -394,6 +432,136 @@ class ReporteEstadisticoCreService
     //======================================================================
     // RESUMEN ANUAL
     //======================================================================
+
+    /**
+     * Reporte anual con el mismo detalle por día que la vista mensual.
+     * Cada día conserva el id del reporte mensual para que los comentarios
+     * sigan apuntando al registro correcto.
+     */
+    public static function reporteAnualDetallado(int $idEstacion, int $year): ?array
+    {
+        $estacion = self::estacion($idEstacion);
+
+        if (!$estacion) {
+            return null;
+        }
+
+        $reportes = ReporteCreMes::query()
+            ->select([
+                'id', 'id_estacion', 'year', 'mes',
+                'f_producto_uno', 'f_producto_dos', 'f_producto_tres',
+                'fi_producto_uno', 'fi_producto_dos', 'fi_producto_tres',
+                'ff_producto_uno', 'ff_producto_dos', 'ff_producto_tres',
+            ])
+            ->with(['productos' => static function ($query) {
+                $query->select([
+                    'id', 'id_re_mes', 'fecha', 'producto',
+                    'volumen_inicial', 'volumen_venta', 'volumen_final',
+                ])->with(['pipas' => static function ($query) {
+                    $query->select([
+                        'id', 'id_re_producto', 'pipa_numero', 'volumen',
+                        'precio_litro', 'costo_flete',
+                        'nombre_razonsocial', 'importe_total',
+                    ]);
+                }]);
+            }])
+            ->where('id_estacion', $idEstacion)
+            ->where('year', $year)
+            ->orderBy('mes')
+            ->get();
+
+        if ($reportes->isEmpty()) {
+            return null;
+        }
+
+        $catalogo = self::productosEstacion($idEstacion);
+        $conteosMensajes = self::conteoMensajesPorFecha($reportes->modelKeys());
+        $dias = [];
+        $totales = [];
+
+        foreach ($catalogo as $producto) {
+            $totales[$producto['numero']] = [
+                'total_venta' => 0.0,
+                'total_compra' => 0.0,
+                'total_importe' => 0.0,
+            ];
+        }
+
+        foreach ($reportes as $reporte) {
+            foreach ($catalogo as $producto) {
+                $registros = $reporte->productos->filter(
+                    static fn ($p) => self::normalizar((string)$p->producto) === self::normalizar($producto['nombre'])
+                );
+
+                $totales[$producto['numero']]['total_venta'] += (float)$registros->sum('volumen_venta');
+                $totales[$producto['numero']]['total_compra'] += (float)$registros->sum(
+                    static fn ($p) => (float)$p->pipas->sum('volumen')
+                );
+                $totales[$producto['numero']]['total_importe'] += (float)$registros->sum(
+                    static fn ($p) => (float)$p->pipas->sum('importe_total')
+                );
+            }
+
+            $porFecha = $reporte->productos->groupBy(
+                static fn ($producto) => $producto->fecha?->format('Y-m-d')
+            );
+
+            foreach ($porFecha as $fecha => $productosDia) {
+                if (!$fecha) {
+                    continue;
+                }
+
+                $idFecha = strtotime($fecha);
+                $celdas = [];
+
+                foreach ($catalogo as $productoCatalogo) {
+                    $registro = self::productoDelDia($productosDia, $productoCatalogo['nombre']);
+
+                    if ($registro) {
+                        $celdas[] = self::celdaProducto($registro);
+                    }
+                }
+
+                $dias[] = [
+                    'id_reporte' => (int)$reporte->id,
+                    'fecha' => $fecha,
+                    'id_fecha' => $idFecha,
+                    'dia' => 'Día ' . (int)date('j', strtotime($fecha)),
+                    'fecha_label' => formatearFecha($fecha),
+                    'total_mensajes' => $conteosMensajes[(int)$reporte->id][$idFecha] ?? 0,
+                    'productos' => $celdas,
+                ];
+            }
+        }
+
+        usort($dias, static fn ($a, $b) => strcmp($b['fecha'], $a['fecha']));
+
+        $productos = [];
+        foreach ($catalogo as $producto) {
+            $facturas = self::facturasDelAnio($reportes, $producto['numero'], $year);
+            $productos[] = array_merge($producto, $totales[$producto['numero']], [
+                'documentos' => array_map(static fn (array $factura) => [
+                    'periodo' => $factura['periodo'],
+                    'titulo' => $factura['titulo'],
+                    'archivo' => $factura['archivo'],
+                    'mes' => $factura['mes'],
+                    'mes_nombre' => $factura['mes_nombre'],
+                    'year' => $factura['year'],
+                    'existe' => $factura['existe'],
+                ], $facturas),
+            ]);
+        }
+
+        return [
+            'id' => null,
+            'estacion' => $estacion->nombre,
+            'year' => $year,
+            'mes' => null,
+            'mes_nombre' => 'Todo el año',
+            'productos' => $productos,
+            'dias' => $dias,
+        ];
+    }
 
     /**
      * Totales del año por producto. Es la vista que el módulo anterior

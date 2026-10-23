@@ -249,7 +249,7 @@
                     <?= $moduleStationSelector ?? '' ?>
 
                     <div x-data="yearMesComponent()" data-year-mes-template="<?= htmlspecialchars($yearMesTemplate ?? '', ENT_QUOTES, 'UTF-8') ?>">
-                        <h4 class="fw-semibold mt-3"><?= $title; ?></h4>
+                        <h4 class="fw-semibold mt-3"<?= !empty($pageTitleId) ? ' id="' . htmlspecialchars($pageTitleId, ENT_QUOTES, 'UTF-8') . '"' : '' ?>><?= $title; ?></h4>
                         <?php \App\Core\Breadcrumb::render(); ?>
                         <?= $content ?>
                     </div>

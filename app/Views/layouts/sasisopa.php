@@ -396,10 +396,17 @@
 
                     <?= $moduleStationSelector ?? '' ?>
 
+                    <?php if (!empty($yearMesTemplate)): ?>
+                    <div x-data="yearMesComponent()" data-year-mes-template="<?= htmlspecialchars($yearMesTemplate, ENT_QUOTES, 'UTF-8') ?>">
+                    <?php endif; ?>
 
                     <h4 class="fw-semibold mt-3"><?= $title; ?></h4>
                     <?php \App\Core\Breadcrumb::render(); ?>
                     <?= $content ?>
+
+                    <?php if (!empty($yearMesTemplate)): ?>
+                    </div>
+                    <?php endif; ?>
 
 
                 </div>

@@ -1,7 +1,8 @@
 <div id="container" class="mb-4"
 data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
 data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
-x-data="{ ...actions(), ...corteDiario() }">
+data-year="<?= (int) ($year ?? date('Y')) ?>"
+x-data="corteDiario">
 
 <?php if (empty($estacionId)): ?>
 
@@ -14,28 +15,14 @@ x-data="{ ...actions(), ...corteDiario() }">
 
     <div id="sasisopa-content">
 
-<div class="row g-2 ms-auto w-100 justify-content-between">
-                   
-        
-    <div class="col-12 col-md-6 d-grid mt-3">
-        <select
-            class="form-select"
-            x-model.number="year"
-            @change="buscar()">
-            <?php for($i = date('Y'); $i >= 2019; $i--): ?>
-                <option value="<?= $i ?>">
-                    <?= $i ?>
-                </option>
-            <?php endfor; ?>
-        </select>
-    </div>
 
+<div class="row mt-2 justify-content-end">
+    <div class="col-12 text-end">
+   <button class="btn bg-primary-subtle text-primary">
+                    <a class="dropdown-item pointer" :href="url"><i class="ti ti-file-dollar"></i> Facturas</a>
+            
+            </button>
 
-    <div class="col-12 col-md-auto d-grid mt-3">
-   <a class="btn bg-primary-subtle text-primary"
-   :href="url">
-    <i class="ti ti-file-dollar"></i> Facturas
-</a>
             </div>
     
 </div>

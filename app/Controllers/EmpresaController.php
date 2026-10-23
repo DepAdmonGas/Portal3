@@ -1,75 +1,107 @@
 <?php
+
+declare(strict_types=1);
+
 namespace App\Controllers;
-use App\Core\View;
+
 use App\Core\Breadcrumb;
-use App\Models\Empresa;
-use App\Services\ModuloService;
-use App\Core\Auth;
+use App\Core\JsonResponse;
+use App\Core\Request;
+use App\Core\View;
+use App\Services\EmpresaService;
 
-class EmpresaController extends BaseController{
-protected string $modulo = 'empresa';
+final class EmpresaController extends BaseController
+{
+    public function index(): void
+    {
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('Empresa', '');
 
-public function index(){
+        View::render('empresa/index', [
+            'title' => 'Empresa',
+            'modulo' => 'empresa',
+            'filtro_usuario' => $this->filtro_usuario,
+            'puedeAdministrarEmpresa' => EmpresaService::puedeAdministrar(),
+            'links' => ['/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'],
+            'scripts' => [
+                '/js/vendor.min.js?v=' . time(),
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/empresa/empresa.datatable.init.js?v=' . time(),
+            ],
+            'help' => false,
+        ], 'main');
+    }
 
-$title = 'Empresa';
-Breadcrumb::add('Home', '/home');
-Breadcrumb::add($title, '');
+    public function datatableEmpresa(): never
+    {
+        if (!EmpresaService::puedeConsultar()) {
+            JsonResponse::unauthorized();
+        }
 
-// Buscar permisos de los modulos
-$permisos = ModuloService::permisosSesion($this->modulo);
+        JsonResponse::custom([
+            'data' => EmpresaService::listar(),
+            'tipos' => EmpresaService::tipos(),
+            'permisos' => [
+                'administrar' => EmpresaService::puedeAdministrar(),
+                'descargar' => true,
+            ],
+        ]);
+    }
 
-$data = [
-'title' => $title,
-'permisos' => $permisos,
-'modulo' => $this->modulo,
-'filtro_usuario' => $this->filtro_usuario,
-'links' =>[
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
-],
-'scripts' => [
-'/assets/js/vendor.min.js?v=' . time(),
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-'/assets/js/empresa/empresa.datatable.init.js?v=' . time()
-],
-'help' => false
-];
+    public function create(): never
+    {
+        $this->validarAdministrador();
+        if (!Request::isPost()) {
+            JsonResponse::error('Método no permitido.', 405);
+        }
 
-View::render('empresa/index', $data,'main');
-}
+        $this->responderResultado(EmpresaService::crear(Request::post(), $_FILES['archivo'] ?? null));
+    }
 
-public function datatableEmpresa(){
+    public function update(): never
+    {
+        $this->validarAdministrador();
+        if (!Request::isPost()) {
+            JsonResponse::error('Método no permitido.', 405);
+        }
 
-$permisoDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
+        $this->responderResultado(EmpresaService::actualizar(
+            (int) Request::input('id', 0),
+            Request::post(),
+            $_FILES['archivo'] ?? null
+        ));
+    }
 
-$actividades = Empresa::select([
-'id',
-'descripcion',
-'id_tipo',
-'archivo',
-'estatus'
-])
-->with([
-'tipoPuesto:id,tipo,estatus'
-])
-->orderBy('id_tipo', 'asc')
-->get()
-->map(fn ($e) => [
-'id' => $e->id,
-'descripcion' => $e->descripcion,
-'tipo' => $e->tipoPuesto->tipo ?? null,
-'archivo' => $e->archivo,
-'estatus' => $e->estatus,
-'estatus_tipo' => $e->tipoPuesto->estatus ?? null
-]);
+    public function delete(): never
+    {
+        $this->validarAdministrador();
+        if (!Request::isPost()) {
+            JsonResponse::error('Método no permitido.', 405);
+        }
 
-echo json_encode([
-"data" => $actividades,
-"permisos" => [
-"descargar" => $permisoDescargar
-]
-]);
+        $this->responderResultado(EmpresaService::eliminar((int) Request::input('id', 0)));
+    }
 
-exit;
-}
+    private function validarAdministrador(): void
+    {
+        if (!EmpresaService::puedeAdministrar()) {
+            JsonResponse::forbidden('Solo los usuarios del puesto 25 pueden administrar la información de Empresa.');
+        }
+    }
 
+    private function responderResultado(array $resultado): never
+    {
+        if ($resultado['ok']) {
+            JsonResponse::success($resultado['message']);
+        }
+
+        if (($resultado['status'] ?? 500) === 422) {
+            JsonResponse::validation($resultado['message'], $resultado['errors'] ?? []);
+        }
+        if (($resultado['status'] ?? 500) === 404) {
+            JsonResponse::notFound($resultado['message']);
+        }
+
+        JsonResponse::error($resultado['message'], (int) ($resultado['status'] ?? 500));
+    }
 }
