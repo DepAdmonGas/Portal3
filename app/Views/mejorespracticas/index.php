@@ -145,7 +145,7 @@
 </div>
 
 
-    <div class="modal fade" id="modalDC" tabindex="-1">
+    <div class="modal fade" id="modalDC" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
@@ -172,15 +172,21 @@
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModalDC()">
+      <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                          <button class="btn bg-danger-subtle text-danger" @click="closeModalDC()">
           <i class="ti ti-x"></i> 
         Cancelar
       </button>
-        <button class="btn btn-success" @click="guardarDC()">
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                          <button class="btn btn-success" @click="guardarDC()">
           <i class="ti ti-check">
 
         </i> Guardar
         </button>
+                    </div>
+                  </div>
     </div>
 
     </div>
@@ -189,7 +195,7 @@
 
     <!--- Modal OM -->
 
-    <div class="modal fade" id="modalOM" tabindex="-1">
+    <div class="modal fade" id="modalOM" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
@@ -225,8 +231,15 @@
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModalOM()"><i class="ti ti-x"></i> Cancelar</button>
+      <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+          <button class="btn bg-danger-subtle text-danger" @click="closeModalOM()"><i class="ti ti-x"></i> Cancelar</button>           
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
         <button class="btn btn-success" @click="guardarOM()"><i class="ti ti-check"></i> Guardar
+                    </div>
+                  </div>
+
         </button>
     </div>
 

@@ -293,16 +293,18 @@
                 <!-- FOOTER -->
 
                 <div class="modal-footer">
-
-                    <button class="btn bg-danger-subtle text-danger"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         @click="resetModal()">
 
                         <i class="ti ti-x"></i> Cancelar
 
                     </button>
-
-                    <button class="btn btn-success"
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                        <button class="btn btn-success"
                         @click="submit()"
                         :disabled="loading">
 
@@ -326,6 +328,12 @@
                         </span>
 
                     </button>
+                    </div>
+                  </div>
+
+                    
+
+                  
 
                 </div>
 

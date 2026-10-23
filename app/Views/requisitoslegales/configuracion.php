@@ -12,14 +12,16 @@
 
 <?php else: ?>
     
-  <div class="text-end">
-        <?= 
+  <div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+   <?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
           <i class="ti ti-plus"></i> Nuevo
           </button>' 
           : '' 
-        ?>  
+        ?>
+    </div>
     </div>
 
   <div class="datatables">
@@ -52,9 +54,12 @@
      x-ref="modalNuevo"
      x-data="{ ...actions(), ...requisitosLegalesForm()}"
      x-init="getDependencias()"
-     tabindex="-1">
+     tabindex="-1"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     >
 
-    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered" >
         <div class="modal-content">
 
             <!-- HEADER -->
@@ -124,14 +129,16 @@
 
             <!-- FOOTER -->
             <div class="modal-footer">
-
-                <button type="button"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+  <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+  <button type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
                     <i class="ti ti-x"></i> Cancelar
                 </button>
-
-                <button type="button"
+  </div>
+  <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+<button type="button"
                         class="btn btn-success"
                         @click="submit()"
                         :disabled="loading">
@@ -142,6 +149,10 @@
                     <span x-show="loading">Guardando...</span>
 
                 </button>
+  </div>
+</div>
+              
+                
 
             </div>
 

@@ -30,15 +30,20 @@ class="pb-4"
 <div
     x-data="{ ...actions(), ...politicaForm() }"  
 >
-    <div class="text-end mb-3">
-            <button
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+                      <button
                 class="btn btn-success"
-                @click="guardar"
-            >
+                @click="guardar">
+
             <i class="ti ti-check"></i>
                 Actualizar
             </button>
-        </div>
+                    </div>
+                  </div>
+
+            
+      
 
 <div class="class="card mt-4">
 <div class="card-body">

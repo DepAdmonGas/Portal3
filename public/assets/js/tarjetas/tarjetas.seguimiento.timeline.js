@@ -47,7 +47,7 @@ const nombre = archivo.split('/').pop();
 
 contenedor.innerHTML = `
 <div class="files-chat mb-4">
-<h6 class="fw-semibold mb-3 text-nowrap">
+<h6 class="mb-3 text-nowrap">
 Descargar archivo:
 </h6>
 

@@ -15,7 +15,8 @@
 
 <?php else: ?>
 
-    <div class="text-end mt-2">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid mb-3 mt-3">
           <?= 
           !empty($permisos['crear']) ? 
           '<button type="button" class="btn bg-primary-subtle text-primary" @click="openNuevo()">
@@ -23,6 +24,8 @@
           </button>' 
           : '' 
           ?>   
+
+        </div>
     </div>
 
       <div class="datatables">
@@ -76,7 +79,8 @@
         id="nuevo"
         x-ref="modalNuevo"
         x-init="getPermisos()"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static" data-bs-keyboard="false">
 
         <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -207,15 +211,17 @@
 
                 <!-- FOOTER -->
                 <div class="modal-footer">
-
-                    <button type="button"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+     <button type="button"
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
                             @click="resetModal()">
                         <i class="ti ti-x"></i> Cancelar
                     </button>
-
-                    <button type="button"
+</div>
+<div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+  <button type="button"
                             class="btn btn-success"
                             @click="submit()"
                             :disabled="loading">
@@ -226,6 +232,9 @@
                         <span x-show="loading">Guardando...</span>
 
                     </button>
+</div>   
+</div>
+               
 
                 </div>
 
@@ -238,7 +247,8 @@
     <div class="modal fade"
         id="modalDetalle"
         @hidden.bs.modal="detalle = {}; matriz = []; renovacion = []"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static" data-bs-keyboard="false">
 
         <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -391,12 +401,17 @@
 
                 <!-- FOOTER -->
                 <div class="modal-footer">
-                    <button type="button"
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                        <div class="col-12 col-md-auto d-grid">
+  <button type="button"
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
                             @click="resetModal()">
                         <i class="ti ti-x"></i> Cerrar
                     </button>
+                        </div>
+                    </div>
+                  
                 </div>
 
             </div>
@@ -408,7 +423,9 @@
         id="modalHistorial"
         x-ref="modalHistorial"
         @hidden.bs.modal="resetHistorialModal()"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-backdrop="static" 
+        data-bs-keyboard="false">
 
         <div class="modal-dialog modal-dialog-scrollable modal-xl modal-dialog-centered">
             <div class="modal-content">
@@ -427,11 +444,13 @@
                     
                     <div class="table-responsive" x-show="!showHistorialForm" x-transition>
 
-                <div class="d-flex justify-content-end mb-3">
-                <button class="btn bg-primary-subtle text-primary"
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3">
+ <button class="btn bg-primary-subtle text-primary"
                         @click="showHistorialForm = true; resetHistorialForm()">
                     <i class="ti ti-plus"></i> Nuevo
                 </button>
+                    </div>
             </div>
                         
                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
@@ -525,13 +544,15 @@
                                 <div x-show="showHistorialForm" x-transition>
                     
                     <div class="modal-footer">
-
-                    <button type="button"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+<button type="button"
                             class="btn bg-danger-subtle text-danger"
                             @click="showHistorialForm = false; resetHistorialForm()">
                         <i class="ti ti-x"></i> Cancelar
                     </button>
-
+</div>
+<div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
                     <button type="button"
                             class="btn btn-success"
                             @click="submitHistorial()"
@@ -539,6 +560,9 @@
                             <i class="ti ti-check"></i>
                         <span x-text="historialForm.id ? 'Actualizar' : 'Guardar'"></span>
                     </button>
+</div>
+</div>
+               
                 </div>
                 </div>
 

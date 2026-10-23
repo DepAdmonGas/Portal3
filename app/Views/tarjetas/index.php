@@ -85,14 +85,20 @@ Nuevo registro</h4>
 
 <!-- FOOTER -->
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="resetForm()">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid me-0 me-md-2">
+            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="resetForm()">
 <i class="ti ti-x"></i>    
 Cancelar</button>
+        </div>
+        <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
 <button type="button" class="btn btn-success" @click="submit()" :disabled="loading">
     <i class="ti ti-check"></i>
 <span x-show="!loading">Guardar</span>
 <span x-show="loading">Guardando...</span>
 </button>
+        </div>
+    </div>
 </div>
 
 </div>
