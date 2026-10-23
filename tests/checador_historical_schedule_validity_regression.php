@@ -154,7 +154,9 @@ $assert(str_contains($view, 'Desde (incl.)') && str_contains($view, 'Hasta (excl
     && str_contains($view, 'la API no entrega un total') && str_contains($view, 'no demuestra por sí solo que no exista'), 'V8C18 UI explains half-open validity and non-authoritative empty pages');
 $assert(str_contains($view, 'dia_offset_fin') && str_contains($view, 'Zona horaria laboral contractual'), 'V8C18A overnight end-day offset and contract timezone are preserved for display');
 $assert(str_contains($view, 'moduleStationKey') || str_contains($controller, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY"), 'V8C19 existing institutional station selector context is preserved');
-$assert(str_contains($mainView, 'schedule_history') && str_contains($mainView, 'Vigencias de horario'), 'V8C20 main Checador screen links to historical schedule lookup');
+$assert(str_contains($controller, "'schedule_history' => '1'")
+    && str_contains($mainView, 'data-checador-module-card')
+    && str_contains($mainView, '$href'), 'V8C20 main Checador directory links to historical schedule lookup');
 $assert(str_contains($view, 'historyItems') && str_contains($view, 'effectiveScheduleError'), 'V8C21 assignment history remains independently displayable if resolver fails');
 
 $renderData = [

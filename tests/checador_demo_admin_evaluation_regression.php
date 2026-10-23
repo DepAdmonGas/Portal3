@@ -152,7 +152,7 @@ $wrongTuple = $makeService('evaluation_pending_review')->executeAdministrativeEv
 $assert(($wrongTuple['error']['kind'] ?? '') === 'api_authorization', 'station/locality identifiers are not equated; only canonical demo locality 14 is accepted');
 
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $routeSource = file_get_contents(__DIR__ . '/../routes/web.php');
 $evaluationGuardPosition = strpos($controllerSource, 'ChecadorAccessService::authorizeEvaluation($workplaceId)');
@@ -170,7 +170,7 @@ $assert(str_contains($viewSource, 'name="_csrf_token"')
     && str_contains($viewSource, "!empty(\$evaluationPermissions['authorize_falta'])")
     && str_contains($viewSource, 'Demostración sintética: la respuesta está predefinida'),
     'demo forms retain CSRF, separate real ACL gates, confirmation and Spanish synthetic disclosure');
-$assert(str_contains($routeSource, "'/departamento-operativo/recursos-humanos/checador/evaluations/evaluate'")
+$assert(str_contains($routeSource, "'/recursos-humanos/checador/evaluations/evaluate'")
     && str_contains($serviceSource, "'api/v2/administrative-evaluations/evaluate'")
     && !str_contains($serviceSource, 'evaluateCalculation'),
     'the existing P3-G-D route is reused without introducing a local evaluation engine');

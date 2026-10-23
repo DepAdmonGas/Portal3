@@ -106,8 +106,9 @@ $assert(($resolved[0] ?? null) === \FastRoute\Dispatcher::FOUND
 $assert(str_contains($controller, 'ChecadorPayrollComparisonReadService')
     && str_contains($controller, 'comparisonReader->authorization($workplaceId)')
     && str_contains($controller, 'View::renderPartial(\'errors/403\')'), 'controller independently revalidates combined locality access before rendering');
-$assert(str_contains($indexView, "require __DIR__ . '/index.php'")
-    && str_contains($controller, "'/comparacion-nomina'"), 'comparison is reachable from the existing Checador screen without a parallel module menu');
+$assert(str_contains($controller, '$this->renderModuleDirectory();')
+    && str_contains($controller, "'/comparacion-nomina'")
+    && str_contains($indexView, 'data-checador-module-card'), 'comparison is reachable from the existing Checador directory without a parallel module menu');
 $assert(str_contains($view, 'method="get"')
     && str_contains($view, 'No se interpreta como ausencia')
     && str_contains($view, 'No verificada por Portal3')

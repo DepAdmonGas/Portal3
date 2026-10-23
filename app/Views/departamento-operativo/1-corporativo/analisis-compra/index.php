@@ -35,14 +35,19 @@ No se encontraron registros para el período seleccionado.
 <div id="container-analisis-compra" class="mb-4"
 x-data="analisisCompra()">
 
-<div class="row mb-3">
-<div class="col-12">
-<div class="float-end">
-<a href="/departamento-operativo/analisis-compra/<?= $idYear ?>/<?= $idMes ?>/excel" class="btn btn-success">
-<i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel
-</a>
-</div>
-</div>
+<div class="row mt-2 mb-3 align-items-center">
+    <!-- Texto de la izquierda -->
+    <div class="col-12 col-md-auto">
+        <h4 class="text-primary mb-0">Pick up G500 Network</h4>
+    </div>
+    
+    <!-- Botón de la derecha -->
+    <div class="col-12 col-md-auto ms-md-auto">
+        <a href="/departamento-operativo/analisis-compra/<?= (int)$idYear ?>/<?= (int)$idMes ?>/excel"
+           class="btn btn-success" title="Descargar el análisis de <?= htmlspecialchars($nombreEstacion, ENT_QUOTES, 'UTF-8') ?>">
+            <i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel
+        </a>
+    </div>
 </div>
 
 <div class="table-responsive pb-5" style="overflow-y: hidden; overflow-x: auto;">
@@ -91,9 +96,9 @@ x-data="analisisCompra()">
 <td class="text-end"><?= number_format($r['merma_cuenta_litros'], 2) ?></td>
 <td class="text-end"><?= number_format($r['tolerancia'], 2) ?></td>
 <td class="text-center"><?= $r['producto'] ?></td>
-<td><?= $r['transporte'] ?></td>
-<td><?= $r['unidad'] ?></td>
-<td><?= $r['chofer'] ?></td>
+<td class="text-center"><?= $r['transporte'] ?></td>
+<td class="text-center"><?= $r['unidad'] ?></td>
+<td class="text-center"><?= $r['chofer'] ?></td>
 <td class="text-end">$ <?= number_format($r['importe_facturado'], 2) ?></td>
 <td class="text-end">$ <?= number_format($r['importe_transporte'], 2) ?></td>
 <td class="text-end">$ <?= number_format($r['precio_pickup'], 2) ?></td>
@@ -106,7 +111,7 @@ x-data="analisisCompra()">
 
 <td class="col-notac p-0">
 <?php if ($puedeEditar): ?>
-<input type="text" placeholder="Ingresa aqui tu nota..." class="form-control form-control-sm border-0 text-center p-3" value="<?= $r['notac'] ?>"
+<input type="text" placeholder="Ingresa aqui tu nota..." class="form-control border-0 text-start p-3" value="<?= $r['notac'] ?>"
 x-on:change="guardarNotac($event, '<?= $r['fecha'] ?>', '<?= $r['no_factura'] ?>')">
 <?php else: ?>
 <?= $r['notac'] ?>
@@ -120,7 +125,7 @@ x-on:change="guardarNotac($event, '<?= $r['fecha'] ?>', '<?= $r['no_factura'] ?>
 
 <td class="col-status p-0">
 <?php if ($puedeEditar): ?>
-<select class="form-select form-select-sm border-0 p-3" x-on:change="guardarStatus($event, '<?= $r['fecha'] ?>', '<?= $r['no_factura'] ?>')">
+<select class="form-select border-0 p-3" x-on:change="guardarStatus($event, '<?= $r['fecha'] ?>', '<?= $r['no_factura'] ?>')">
 <option value="">Selecciona una opción...</option>
 <option value="Pendiente"<?= $r['status'] === 'Pendiente' ? ' selected' : '' ?>>Pendiente</option>
 <option value="Pagada"<?= $r['status'] === 'Pagada' ? ' selected' : '' ?>>Pagada</option>

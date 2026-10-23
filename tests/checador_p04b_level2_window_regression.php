@@ -30,7 +30,8 @@ $user->id = 999;
 $base = 'https://checador.test/';
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
+$administrativeViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $p04aSource = file_get_contents(__DIR__ . '/checador_p04_level1_snapshot_regression.php');
 
 $make = static function (array $responses, ?array &$history = null, ?string &$token = null) use ($base): ChecadorDailyReadService {
@@ -117,7 +118,7 @@ $assert(($unknownWithVerifiedDimension['data']['window_level2_status'] ?? '') ==
 // P3B15-P3B20: zero events/completeness are not attendance or payroll conclusions.
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P3B15 zero events + UNKNOWN does not produce SIN MARCACIÓN');
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P3B16 zero events + INCOMPLETE does not produce SIN MARCACIÓN');
-$assert(str_contains($viewSource, 'Nunca se activa automáticamente'), 'P3B17 zero events + VERIFIED does not produce automatic FALTA');
+$assert(str_contains($administrativeViewSource, 'nunca se activa automáticamente'), 'P3B17 zero events + VERIFIED does not produce automatic FALTA');
 $assert(!str_contains($viewSource, 'has_zero_governed_events') || !str_contains($viewSource, 'AUSENTE'), 'P3B18 has_zero_governed_events does not produce absence');
 $assert(!str_contains($viewSource, 'RETARDO'), 'P3B19 no RETARDO inference is rendered');
 $assert(!preg_match('/n[oó]mina|payroll|descuento/i', $viewSource), 'P3B20 no payroll conclusion is rendered');

@@ -14,16 +14,20 @@
 <div id="sgm-content" x-data="capacitacion()">
 
 
-       
-           <div class="d-flex justify-content-end">
-    <a
+       <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                       <a
         class="btn bg-primary-subtle text-primary"
         :href="'/sgm/gestion-recursos/programa-capacitacion-induccion/pdf'"
-        download
-    >
+        download>
         <i class="ti ti-download"></i> Descargar
     </a>
-</div>
+                    </div>
+                  </div>
+
+
+   
+
     <div class="datatables mt-3">
         <div class="table-responsive overflow-x-auto overflow-y-hidden mb-3">
             <table id="table-capacitacion-induccion" class="table table-striped table-bordered align-middle">

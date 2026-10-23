@@ -10,6 +10,7 @@ $attendanceRows = is_array($attendanceRows ?? null) ? $attendanceRows : [];
 $administrativeIncidences = is_array($administrativeIncidences ?? null) ? $administrativeIncidences : [];
 $administrativeErrors = is_array($administrativeErrors ?? null) ? $administrativeErrors : [];
 $baseUrl = '/departamento-operativo/recursos-humanos/checador/asistencia';
+$reportBaseUrl = '/departamento-operativo/recursos-humanos/checador/reporte';
 $contextParams = [
     'workplace_id' => $selectedWorkplaceId,
     'date' => $selectedDate !== '' ? $selectedDate : null,
@@ -134,9 +135,26 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
     }
 
     $status = $statusPresentation((string) ($attendanceRow['status'] ?? 'unknown'));
+    $evaluatedRawEvents = is_array($attendanceRow['evaluated_raw_events'] ?? null)
+        ? $attendanceRow['evaluated_raw_events'] : null;
+    $evaluatedRawEventCount = is_int($attendanceRow['evaluated_raw_event_count'] ?? null)
+        ? $attendanceRow['evaluated_raw_event_count'] : null;
+    $evaluatedRawEventsComplete = ($attendanceRow['evaluated'] ?? null) === true
+        && $evaluatedRawEvents !== null
+        && $evaluatedRawEventCount !== null
+        && $evaluatedRawEventCount === count($evaluatedRawEvents);
     $workerParams = $contextParams + ['worker_id' => $workerId];
     $journeyHref = $buildWorkspaceUrl($journeyBaseUrl, $workerParams);
     $incidenceHref = $buildWorkspaceUrl($incidenceBaseUrl, $workerParams);
+    $reportHref = $selectedWorkplaceId !== null
+        && $selectedWorkplaceId > 0
+        && preg_match('/^\\d{4}-\\d{2}-\\d{2}$/D', $selectedDate) === 1
+        ? $buildWorkspaceUrl($reportBaseUrl, [
+            'source_workplace_id' => $selectedWorkplaceId,
+            'source_work_date' => $selectedDate,
+            'source_worker_id' => $workerId,
+        ])
+        : null;
     $incidenceList = is_array($administrativeIncidences[$workerId] ?? null) ? $administrativeIncidences[$workerId] : null;
     $incidenceError = array_key_exists($workerId, $administrativeErrors);
     $canCreateIncidence = ($incidenceCreateAllowed ?? false) === true
@@ -150,6 +168,9 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         'schedule' => $scheduleText,
         'slots' => $slots,
         'evidence' => $evidence,
+        'evaluated_raw_event_count' => $evaluatedRawEventCount,
+        'evaluated_raw_events' => $evaluatedRawEvents,
+        'evaluated_raw_events_complete' => $evaluatedRawEventsComplete,
         'status' => $status,
         'incidence_count' => is_int($attendanceRow['incidence_count'] ?? null) ? $attendanceRow['incidence_count'] : null,
         'incidences' => $incidenceList,
@@ -157,6 +178,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         'can_create_incidence' => $canCreateIncidence,
         'journey_href' => $journeyHref,
         'incidence_href' => $incidenceHref,
+        'report_href' => $reportHref,
         'modal_id' => 'daily-attendance-detail-' . $workerId . '-' . (int) $rowIndex,
     ];
 }
@@ -189,6 +211,10 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
             </a>
         </div>
     </header>
+
+    <?php if (($realApiPostOperationsEnabled ?? false) !== true && ($demoMode ?? false) !== true): ?>
+        <div class="alert alert-info py-2" role="status">Las operaciones POST reales de Checador están deshabilitadas mientras se valida el ambiente y la integración del servicio.</div>
+    <?php endif; ?>
 
     <section class="card mb-3" aria-label="Filtros activos">
         <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
@@ -254,7 +280,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                                             <?php elseif ($time !== null): ?>
                                                 <time datetime="<?= $esc((string) ($time['utc'] ?? '')) ?>" title="Hora local<?= (($time['date'] ?? $selectedDate) !== $selectedDate) ? ' · ' . $esc((string) ($time['date'] ?? '')) : '' ?>">
                                                     <?= $esc((string) ($time['time'] ?? '—')) ?>
-                                                    <?php if (($time['date'] ?? $selectedDate) !== $selectedDate): ?><span class="d-block small text-muted"><?= $esc((string) $time['date']) ?></span><?php endif; ?>
+                                                    <?php if (($time['date'] ?? $selectedDate) !== $selectedDate): ?><span class="d-block small text-muted">Fecha local: <?= $esc((string) $time['date']) ?></span><?php endif; ?>
                                                 </time>
                                             <?php elseif (is_array($slot['event'])): ?>
                                                 <span class="text-muted">Hora local no disponible</span>
@@ -275,6 +301,9 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                                             </button>
                                             <a class="btn btn-sm btn-outline-secondary" href="<?= $esc($viewRow['journey_href']) ?>">Jornada</a>
                                             <a class="btn btn-sm btn-outline-secondary" href="<?= $esc($viewRow['incidence_href']) ?>">Incidencias</a>
+                                            <?php if ($viewRow['report_href'] !== null): ?>
+                                                <a class="btn btn-sm btn-outline-secondary" href="<?= $esc($viewRow['report_href']) ?>">Marcaciones</a>
+                                            <?php endif; ?>
                                             <?php if ($viewRow['can_create_incidence']): ?>
                                                 <a class="btn btn-sm btn-outline-primary" href="<?= $esc($viewRow['incidence_href']) ?>">Registrar incidencia</a>
                                             <?php endif; ?>
@@ -308,23 +337,46 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                         </div>
 
                         <h3 class="h6">Posiciones de marcación</h3>
-                        <p class="small text-muted">Las posiciones Entrada 1, Salida 1, Entrada 2 y Salida 2 conservan la clasificación recibida. Un espacio sin dato no representa una ausencia.</p>
-                        <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2 mb-4">
-                            <table class="table table-sm table-bordered align-middle mb-0">
-                                <thead><tr><th scope="col">Posición</th><th scope="col">Hora local</th><th scope="col">Referencia UTC</th><th scope="col">Situación</th></tr></thead>
-                                <tbody>
-                                    <?php foreach ($viewRow['slots'] as $slot): ?>
-                                        <?php $slotValue = $slot['value']; $local = $slot['time_local']; $event = $slot['event']; ?>
-                                        <tr>
-                                            <th scope="row"><?= $esc($slot['label']) ?></th>
-                                            <td><?php if ($local !== null): ?><?= $esc((string) ($local['date'] ?? '')) ?> <?= $esc((string) ($local['time'] ?? '')) ?><?php elseif ($event !== null): ?>No disponible<?php else: ?>Sin dato en esta consulta<?php endif; ?></td>
-                                            <td><?= $event !== null ? $esc((string) ($event['ocurrido_at_utc'] ?? 'No disponible')) : '—' ?></td>
-                                            <td><?= ($slotValue['ambiguous'] ?? false) === true ? 'Emparejamiento por revisar' : ($event !== null ? 'Registro observado' : 'Sin clasificación de ausencia') ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                        <p class="small text-muted">Las posiciones Entrada 1, Salida 1, Entrada 2 y Salida 2 conservan la clasificación recibida; no se infieren posiciones ni ausencias a partir del orden de captura. Un espacio sin dato no representa una ausencia.</p>
+                        <div class="row row-cols-1 row-cols-sm-2 g-2 mb-4" aria-label="Cuatro posiciones de marcación en orden contractual">
+                            <?php foreach ($viewRow['slots'] as $slot): ?>
+                                <?php $slotValue = $slot['value']; $local = $slot['time_local']; $event = $slot['event']; ?>
+                                <div class="col"><div class="border rounded p-3 h-100">
+                                    <strong class="d-block"><?= $esc($slot['label']) ?></strong>
+                                    <span class="d-block"><?php if (($slotValue['ambiguous'] ?? false) === true): ?>Requiere revisión<?php elseif ($local !== null): ?><?= $esc((string) ($local['date'] ?? '')) ?> <?= $esc((string) ($local['time'] ?? '')) ?><?php elseif ($event !== null): ?>Hora local no disponible<?php else: ?>Sin dato en esta consulta<?php endif; ?></span>
+                                    <span class="small text-muted"><?= ($slotValue['ambiguous'] ?? false) === true ? 'Clasificación ambigua informada por la Jornada' : ($event !== null ? 'Registro observado' : 'Sin clasificación de ausencia') ?></span>
+                                </div></div>
+                            <?php endforeach; ?>
                         </div>
+
+                        <?php if ($viewRow['evaluated_raw_events_complete']): ?>
+                            <?php $evaluatedCount = (int) $viewRow['evaluated_raw_event_count']; ?>
+                            <details class="mb-4" id="attendance-evaluated-events-<?= (int) $viewRow['worker_id'] ?>">
+                                <summary><?= $evaluatedCount > 4 ? 'Ver todas las marcaciones (' . $evaluatedCount . ')' : 'Marcaciones evaluadas (' . $evaluatedCount . ')' ?></summary>
+                                <p class="small text-muted mt-2">Conjunto y cantidad informados por la evaluación; no se infiere ausencia si está vacío.</p>
+                                <?php if ($viewRow['evaluated_raw_events'] === []): ?>
+                                    <p class="text-muted">La evaluación no incluyó marcaciones para esta consulta.</p>
+                                <?php else: ?>
+                                    <div class="table-responsive overflow-x-auto overflow-y-hidden mt-2">
+                                        <table class="table table-sm table-striped table-bordered align-middle mb-0">
+                                            <caption class="visually-hidden">Todas las marcaciones evaluadas por el servicio para personal <?= (int) $viewRow['worker_id'] ?></caption>
+                                            <thead><tr><th scope="col">Clasificación</th><th scope="col">Evento</th><th scope="col">Fecha y hora UTC</th><th scope="col">Dispositivo</th><th scope="col">Método</th></tr></thead>
+                                            <tbody><?php foreach ($viewRow['evaluated_raw_events'] as $evaluatedEvent): if (!is_array($evaluatedEvent)) continue; ?>
+                                                <tr>
+                                                    <th scope="row"><?= $esc(match ((string) ($evaluatedEvent['pairing_role'] ?? '')) { 'ENTRY' => 'Entrada', 'EXIT' => 'Salida', 'SURPLUS' => 'Marcación adicional', 'UNMATCHED' => 'Sin emparejar', default => 'Clasificación no disponible' }) ?></th>
+                                                    <td class="text-break"><code><?= $esc($evaluatedEvent['event_uuid'] ?? 'No disponible') ?></code></td>
+                                                    <td><?= $esc($evaluatedEvent['ocurrido_at_utc'] ?? 'No disponible') ?></td>
+                                                    <td><?= is_int($evaluatedEvent['id_dispositivo'] ?? null) && $evaluatedEvent['id_dispositivo'] > 0 ? (int) $evaluatedEvent['id_dispositivo'] : 'No disponible' ?></td>
+                                                    <td><?= $esc(\App\Services\ChecadorPresentationFormatter::captureMethodLabel($evaluatedEvent['metodo_captura'] ?? null)) ?></td>
+                                                </tr>
+                                            <?php endforeach; ?></tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                            </details>
+                        <?php elseif ($viewRow['evaluated_raw_event_count'] !== null || $viewRow['evaluated_raw_events'] !== null): ?>
+                            <p class="alert alert-warning py-2" role="status">El conjunto de marcaciones evaluadas no pudo confirmarse; consulta la trazabilidad de la Jornada.</p>
+                        <?php endif; ?>
 
                         <h3 class="h6">Marcaciones originales y trazabilidad</h3>
                         <?php if ($viewRow['evidence'] === []): ?>

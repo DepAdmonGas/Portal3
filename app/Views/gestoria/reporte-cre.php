@@ -1,1068 +1,377 @@
-<div
-    id="container"
-    class="pb-4"
-    x-data="{ ...actions(), ...reporteCre(<?= $idEstacion ?>) }"
-    data-idestacion="<?= $idEstacion ?>">
-
-    <div
-        class="d-flex flex-wrap align-items-end gap-3 mt-3 mb-3">
-
-        <!-- Año -->
-        <div style="min-width: 150px;">
-
-            <label
-                class="form-label fw-semibold mb-1">
-                Año
-            </label>
-
-            <select
-                class="form-select"
-                x-model.number="filtros.year"
-                @change="cambiarYear()"
-                :disabled="cargando">
-
-                <template
-                    x-for="year in years"
-                    :key="year">
-
-                    <option
-                        :value="year"
-                        x-text="year">
-                    </option>
-
-                </template>
-
-            </select>
-
-        </div>
-
-
-        <!-- Mes -->
-        <div style="min-width: 190px;">
-
-            <label
-                class="form-label fw-semibold mb-1">
-                Mes
-            </label>
-
-            <select
-                class="form-select"
-                x-model.number="filtros.mes"
-                @change="cambiarMes()"
-                :disabled="cargando">
-
-                <template
-                    x-for="mes in meses"
-                    :key="mes.id">
-
-                    <option
-                        :value="mes.id"
-                        x-text="mes.nombre">
-                    </option>
-
-                </template>
-
-            </select>
-
-        </div>
-
-
-        <!-- Periodo -->
-        <div
-            class="text-muted small pb-2"
-            x-show="!cargando">
-
-            <span
-                x-text="periodoTexto">
-            </span>
-
-        </div>
-
-        <!-- Descargar facturas del año -->
-        <div
-            class="pb-1"
-            x-show="
-            !cargando &&
-            reporte &&
-            Number(filtros.mes) === 0"
-            x-cloak>
-
-            <button
-                type="button"
-                class="btn btn-primary"
-                @click="descargarFacturasAnual()">
-
-                <i
-                    class="ti ti-file-zip me-1">
-                </i>
-
-                Descargar facturas del año
-
-            </button>
-
-        </div>
-
-        <!-- Loading -->
-        <div
-            class="pb-2"
-            x-show="cargando">
-
-            <span
-                class="spinner-border spinner-border-sm text-primary me-1"
-                role="status">
-            </span>
-
-            <span class="text-muted small">
-                Cargando...
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <!-- ====================================================== -->
-    <!-- SIN REPORTE                                            -->
-    <!-- ====================================================== -->
-
-    <div
-        class="text-center py-5"
-        x-show="!cargando && buscado && !reporte"
-        x-cloak>
-
-        <i
-            class="ti ti-file-off fs-8 text-muted">
-        </i>
-
-        <div class="mt-2 text-muted">
-
-            No se encontraron reportes para
-
-            <strong
-                x-text="periodoTexto">
-            </strong>.
-
-        </div>
-
-    </div>
-
-
-    <!-- ====================================================== -->
-    <!-- REPORTE                                                -->
-    <!-- ====================================================== -->
-
-    <div
-        x-show="!cargando && reporte"
-        x-cloak>
-
-
-        <!-- ================================================== -->
-        <!-- RESUMEN POR PRODUCTO                               -->
-        <!-- ================================================== -->
-
-        <div class="row mb-4">
-
-            <template
-                x-for="producto in reporte?.productos ?? []"
-                :key="producto.numero">
-
-                <div
-                    class="col-xl-4 col-lg-4 col-md-6 col-12 mb-3">
-
-                    <div class="card">
-
-
-                        <!-- ================================== -->
-                        <!-- PRODUCTO                           -->
-                        <!-- ================================== -->
-
-                        <div
-                            class="card-header text-white"
-                            :style="
-                                `background-color: ${producto.color};`
-                            ">
-
-                            <div
-                                class="d-flex justify-content-between align-items-center gap-2">
-
-                                <div
-                                    class="fw-semibold"
-                                    x-text="producto.nombre">
-                                </div>
-
-
-                                <!-- Total documentos -->
-                                <span
-                                    class="badge bg-white text-dark"
-                                    x-show="
-                                        (producto.documentos?.length ?? 0) > 0
-                                    "
-                                    x-text="
-                                        producto.documentos?.length ?? 0
-                                    ">
-                                </span>
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- ================================== -->
-                        <!-- TOTALES                            -->
-                        <!-- ================================== -->
-
-                        <div class="card-body p-2">
-
-                            <div class="row">
-
-                                <!-- Venta -->
-                                <div class="col-12 col-sm-4">
-
-                                    <div
-                                        class="text-muted small mb-1">
-                                        Total venta
-                                    </div>
-
-                                    <div
-                                        class="fw-semibold fs-4"
-                                        x-text="
-                                            formatearNumero(
-                                                producto.total_venta
-                                            ) + ' Lt'
-                                        ">
-                                    </div>
-
-                                </div>
-
-
-                                <!-- Compra -->
-                                <div class="col-12 col-sm-4">
-
-                                    <div
-                                        class="text-muted small mb-1">
-                                        Total compra
-                                    </div>
-
-                                    <div
-                                        class="fw-semibold fs-5"
-                                        x-text="
-                                            formatearNumero(
-                                                producto.total_compra
-                                            ) + ' Lt'
-                                        ">
-                                    </div>
-
-                                </div>
-
-
-                                <!-- Importe -->
-                                <div class="col-12 col-sm-4">
-
-                                    <div
-                                        class="text-muted small mb-1">
-                                        Total importe
-                                    </div>
-
-                                    <div
-                                        class="fw-semibold fs-5"
-                                        x-text="
-                                            formatearMoneda(
-                                                producto.total_importe
-                                            )
-                                        ">
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- ================================== -->
-                            <!-- FACTURAS                           -->
-                            <!-- ================================== -->
-
-                            <div
-                                class="border-top mt-3 pt-2"
-                                x-show="
-                                    (producto.documentos?.length ?? 0) > 0
-                                ">
-
-                                <div
-                                    class="text-muted small fw-semibold mb-2">
-
-                                    <i
-                                        class="ti ti-file-invoice me-1">
-                                    </i>
-
-                                    Facturas
-
-                                </div>
-
-
-                                <div
-                                    class="d-flex flex-wrap gap-2">
-
-                                    <template
-                                        x-for="
-                                            documento in producto.documentos ?? []
-                                        "
-                                        :key="
-                                            documento.mes +
-                                            '-' +
-                                            documento.tipo +
-                                            '-' +
-                                            documento.archivo
-                                        ">
-
-                                        <a
-                                            :href="documento.url"
-                                            download
-                                            class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-                                            :title="
-                                                'Descargar ' +
-                                                documento.nombre
-                                            ">
-
-                                            <i
-                                                class="ti ti-download fs-5">
-                                            </i>
-
-
-                                            <!-- Mes -->
-                                            <span
-                                                x-show="
-                                                    Number(
-                                                        reporte.mes
-                                                    ) === 0
-                                                "
-                                                x-text="
-                                                    nombreMes(
-                                                        documento.mes
-                                                    )
-                                                ">
-                                            </span>
-
-
-                                            <!-- Tipo -->
-                                            <span
-                                                x-text="
-                                                    documento.nombre
-                                                ">
-                                            </span>
-
-                                        </a>
-
-                                    </template>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- Sin facturas -->
-                            <div
-                                class="border-top mt-3 pt-2 text-muted small"
-                                x-show="
-                                    (producto.documentos?.length ?? 0) === 0
-                                ">
-
-                                <i
-                                    class="ti ti-file-off me-1">
-                                </i>
-
-                                Sin facturas
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </template>
-
-        </div>
-
-
-        <!-- ================================================== -->
-        <!-- SIN MOVIMIENTOS                                    -->
-        <!-- ================================================== -->
-
-        <div
-            class="text-center text-muted py-5"
-            x-show="
-                reporte &&
-                (reporte.dias?.length ?? 0) === 0
-            ">
-
-            <i
-                class="ti ti-database-off fs-8">
-            </i>
-
-            <div class="mt-2">
-
-                No hay movimientos registrados para este periodo.
-
+<?php
+/**
+ * Toda la configuración del componente viaja en un solo atributo JSON.
+ * Así la vista no necesitabucles ni condicionales: el JS resuelve las listas.
+ */
+$configCre = [
+    'baseUrl'      => $baseUrl ?? '',
+    'yearMesTemplate' => $yearMesTemplate ?? '',
+    'moduleStationKey' => $moduleStationKey ?? '',
+    'year'         => (int) $idYear,
+    'month'        => (int) $idMes,
+    'estacionId'   => (int) ($idEstacion ?? 0),
+    'estacion'     => $estacion ?? '',
+    'anios'        => $anios ?? [],
+    'productos'    => $productos ?? [],
+    'meses'        => $mesesDisponibles ?? [],
+    'puedeDescargar' => !empty($puedeDescargar),
+];
+
+$tieneEstacion = (int) ($configCre['estacionId'] ?? 0) > 0;
+?>
+<div id="container" class="mt-3 mb-3"
+data-cre-config="<?= htmlspecialchars(json_encode($configCre, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
+data-base-url="<?= htmlspecialchars($configCre['baseUrl'], ENT_QUOTES, 'UTF-8') ?>"
+data-year-mes-template="<?= htmlspecialchars($configCre['yearMesTemplate'], ENT_QUOTES, 'UTF-8') ?>"
+data-module-station-key="<?= htmlspecialchars($configCre['moduleStationKey'], ENT_QUOTES, 'UTF-8') ?>"
+data-id-year="<?= $configCre['year'] ?>"
+data-id-mes="<?= $configCre['month'] ?>"
+data-id-estacion="<?= $configCre['estacionId'] ?>"
+data-estacion="<?= htmlspecialchars($configCre['estacion'], ENT_QUOTES, 'UTF-8') ?>"
+data-anios="<?= htmlspecialchars(json_encode($configCre['anios'], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
+data-productos="<?= htmlspecialchars(json_encode($configCre['productos'], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
+data-meses="<?= htmlspecialchars(json_encode($configCre['meses'], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
+data-puede-descargar="<?= $configCre['puedeDescargar'] ? 'true' : 'false' ?>"
+x-data="{ ...actions(), ...reporteEstadisticoCreComponent() }">
+
+<!-- ============ SIN ESTACIÓN SELECCIONADA ============ -->
+<div id="cre-sin-estacion" class="alert alert-secondary border-0 text-center text-muted py-4 mt-4" style="<?= $tieneEstacion ? 'display: none;' : '' ?>">
+    Debes de seleccionar una estación del menú superior para poder visualizar el Reporte Estadístico de la CRE.
+</div>
+
+<!-- ============ CONTENIDO ============ -->
+<div id="cre-contenido" style="<?= $tieneEstacion ? '' : 'display: none;' ?>">
+
+<!---------- Barra de herramientas ---------->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+
+<h4 class="mb-0" x-text="vistaAnual ? 'Reporte anual' : 'Reporte mensual'"></h4>
+
+<div class="d-flex align-items-center gap-2">
+<button type="button" class="btn bg-success text-white" @click="descargarFacturas()" x-show="puedeDescargar" :disabled="descargando">
+<template x-if="!descargando"><i class="ti ti-file-zip me-1"></i></template>
+<template x-if="descargando"><span class="spinner-border spinner-border-sm me-1"></span></template>
+<span x-text="descargando ? 'Generando...' : 'Descargar facturas del año'"></span>
+</button>
+<button type="button" class="btn bg-primary-subtle text-primary" @click="cambiarVistaAnual()" :disabled="cargando">
+<i class="ti ti-chart-pie me-1"></i>
+<span x-text="vistaAnual ? 'Detalle mensual' : 'Detalle Anual'"></span>
+</button>
+</div>
+</div>
+
+<!-- ============ DETALLE MENSUAL / ANUAL ============ -->
+<div>
+
+<!-- Facturas por producto -->
+<div class="row g-3 mb-4">
+<template x-if="reporte">
+<template x-for="p in reporte.productos" :key="p.numero">
+<div :class="reporte.productos.length === 2 ? 'col-md-6' : 'col-md-4'">
+<div class="card h-100">
+<!-- Card Header con el color dinámico del producto -->
+<div class="card-header text-white" :class="'bg-' + p.color">
+<div class="d-flex align-items-center justify-content-between">
+<h5 class="mb-0 text-white fs-6">
+<i class="ti ti-file-description fs-5"></i>
+<span x-text="p.nombre"></span>
+</h5>
+</div>
+</div>
+
+<!-- Card Body -->
+<div class="card-body pb-3">
+<div class="row g-3">
+<template x-for="d in p.documentos" :key="d.mes + '-' + d.periodo">
+<div class="col-4">
+<a class="btn bg-primary-subtle text-primary border d-flex flex-column align-items-center justify-content-center py-2 w-100 h-100 gap-1"
+x-show="d.existe"
+:href="'/download?tipo=cre&file=' + encodeURIComponent(d.archivo) + '&view=1'"
+target="_blank"
+:title="d.titulo + ' · ' + d.archivo">
+<i class="ti ti-file-description fs-5"></i>
+<span class="small text-truncate w-100" x-text="etiquetaDocumentoFactura(d)"></span>
+</a>
+</div>
+</template>
+</div>
+
+<!-- Mensaje si no hay facturas -->
+<div class="alert alert-warning mt-3 mb-0 text-center" role="alert" x-show="p.documentos.length === 0">
+    <i class="ti ti-file-off me-1"></i> No hay facturas disponibles
+</div>
+</div>
+</div>
+</div>
+</template>
+</template>
+</div>
+
+        <!-- Loader -->
+        <template x-if="cargando">
+            <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <span class="text-muted fw-semibold">Consultando el reporte...</span>
             </div>
-
-        </div>
-
-
-        <!-- ================================================== -->
-        <!-- DÍAS                                               -->
-        <!-- ================================================== -->
-
-        <template
-            x-for="dia in reporte?.dias ?? []"
-            :key="dia.fecha">
-
-            <div class="card">
-
-
-                <!-- ========================================== -->
-                <!-- ENCABEZADO DEL DÍA                         -->
-                <!-- ========================================== -->
-
-                <div class="card-header">
-
-                    <div
-                        class="d-flex justify-content-between align-items-center">
-
-                        <div
-                            class="d-flex align-items-center gap-2">
-
-                            <i
-                                class="ti ti-calendar-event">
-                            </i>
-
-                            <strong>
-
-                                Día
-
-                                <span
-                                    x-text="dia.dia">
-                                </span>
-
-                            </strong>
-
-                        </div>
-
-
-                        <!-- Mensajes -->
-                        <div>
-
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-light position-relative"
-                                @click="abrirChat(dia)">
-
-                                <i
-                                    class="ti ti-messages fs-6">
-                                </i>
-
-                                <span
-                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary fs-1"
-                                    x-show="
-                                        Number(
-                                            dia.total_mensajes
-                                        ) > 0
-                                    "
-                                    x-text="
-                                        dia.total_mensajes
-                                    ">
-                                </span>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <!-- ========================================== -->
-                <!-- PRODUCTOS DEL DÍA                          -->
-                <!-- ========================================== -->
-
-                <div class="card-body p-2">
-
-                    <div class="row">
-
-                        <template
-                            x-for="
-                                producto in dia.productos ?? []
-                            "
-                            :key="producto.id">
-
-                            <div
-                                class="col-xl-4 col-lg-6 col-md-12 col-12">
-
-                                <div class="card">
-
-
-                                    <!-- Producto -->
-                                    <div
-                                        class="card-header text-white"
-                                        :style="
-                                            `background-color: ${producto.color};`
-                                        ">
-
-                                        <strong
-                                            x-text="
-                                                producto.producto
-                                            ">
-                                        </strong>
-
-                                    </div>
-
-
-                                    <div
-                                        class="card-body p-2">
-
-
-                                        <!-- ================== -->
-                                        <!-- VOLÚMENES          -->
-                                        <!-- ================== -->
-
-                                        <div
-                                            class="table-responsive">
-
-                                            <table
-                                                class="table table-sm table-bordered align-middle">
-
-                                                <thead>
-
-                                                    <tr>
-
-                                                        <th
-                                                            class="text-center">
-                                                            Vo. inicial
-                                                        </th>
-
-                                                        <th
-                                                            class="text-center">
-                                                            Vo. venta
-                                                        </th>
-
-                                                        <th
-                                                            class="text-center">
-                                                            Vo. final
-                                                        </th>
-
-                                                        <th
-                                                            class="text-center">
-                                                            Merma
-                                                        </th>
-
-                                                    </tr>
-
-                                                </thead>
-
-
-                                                <tbody>
-
-                                                    <tr>
-
-                                                        <td
-                                                            class="text-center"
-                                                            x-text="
-                                                                formatearNumero(
-                                                                    producto.volumen_inicial
-                                                                )
-                                                            ">
-                                                        </td>
-
-                                                        <td
-                                                            class="text-center"
-                                                            x-text="
-                                                                formatearNumero(
-                                                                    producto.volumen_venta
-                                                                )
-                                                            ">
-                                                        </td>
-
-                                                        <td
-                                                            class="text-center"
-                                                            x-text="
-                                                                formatearNumero(
-                                                                    producto.volumen_final
-                                                                )
-                                                            ">
-                                                        </td>
-
-                                                        <td
-                                                            class="text-center text-danger fw-semibold"
-                                                            x-text="
-                                                                formatearNumero(
-                                                                    producto.merma
-                                                                )
-                                                            ">
-                                                        </td>
-
-                                                    </tr>
-
-                                                </tbody>
-
-                                            </table>
-
-                                        </div>
-
-
-                                        <!-- ================== -->
-                                        <!-- PIPAS              -->
-                                        <!-- ================== -->
-
-                                        <div
-                                            class="table-responsive">
-
-                                            <table
-                                                class="table table-sm table-bordered table-striped align-middle pb-0 mb-0">
-
-                                                <thead>
-
-                                                    <tr>
-
-                                                        <th
-                                                            class="text-center">
-                                                            Pipa
-                                                        </th>
-
-                                                        <th
-                                                            class="text-center">
-                                                            Volumen
-                                                        </th>
-
-                                                        <th
-                                                            class="text-center">
-                                                            Precio litro
-                                                        </th>
-
-                                                        <th
-                                                            class="text-center">
-                                                            Flete
-                                                        </th>
-
-                                                        <th>
-                                                            Razón social
-                                                        </th>
-
-                                                    </tr>
-
-                                                </thead>
-
-
-                                                <tbody>
-
-                                                    <!-- Sin pipas -->
-                                                    <tr
-                                                        x-show="
-                                                            !producto.pipas ||
-                                                            producto.pipas.length === 0
-                                                        ">
-
-                                                        <td
-                                                            colspan="5"
-                                                            class="text-center text-muted">
-
-                                                            No hay pipas registradas.
-
-                                                        </td>
-
-                                                    </tr>
-
-
-                                                    <!-- Pipas -->
-                                                    <template
-                                                        x-for="
-                                                            pipa in producto.pipas ?? []
-                                                        "
-                                                        :key="pipa.id">
-
-                                                        <tr>
-
-                                                            <td
-                                                                class="text-center"
-                                                                x-text="
-                                                                    pipa.pipa_numero
-                                                                ">
-                                                            </td>
-
-                                                            <td
-                                                                class="text-end"
-                                                                x-text="
-                                                                    formatearNumero(
-                                                                        pipa.volumen
-                                                                    )
-                                                                ">
-                                                            </td>
-
-                                                            <td
-                                                                class="text-end"
-                                                                x-text="
-                                                                    formatearMoneda(
-                                                                        pipa.precio_litro
-                                                                    )
-                                                                ">
-                                                            </td>
-
-                                                            <td
-                                                                class="text-end"
-                                                                x-text="
-                                                                    formatearMoneda(
-                                                                        pipa.costo_flete
-                                                                    )
-                                                                ">
-                                                            </td>
-
-                                                            <td
-                                                                x-text="
-                                                                    pipa.nombre_razonsocial
-                                                                    || 'S/I'
-                                                                ">
-                                                            </td>
-
-                                                        </tr>
-
-                                                    </template>
-
-                                                </tbody>
-
-
-                                                <tfoot>
-
-                                                    <tr
-                                                        class="fw-semibold">
-
-                                                        <td>
-                                                            Total
-                                                        </td>
-
-                                                        <td
-                                                            class="text-end"
-                                                            x-text="
-                                                                formatearNumero(
-                                                                    producto.total_compra
-                                                                )
-                                                            ">
-                                                        </td>
-
-                                                        <td
-                                                            class="text-end"
-                                                            x-text="
-                                                                formatearMoneda(
-                                                                    producto.total_importe
-                                                                )
-                                                            ">
-                                                        </td>
-
-                                                        <td
-                                                            colspan="2">
-                                                        </td>
-
-                                                    </tr>
-
-                                                </tfoot>
-
-                                            </table>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </template>
-
-                    </div>
-
-                </div>
-
-            </div>
-
         </template>
 
+        <!-- Sin reporte -->
+        <template x-if="!cargando && !reporte">
+            <div class="text-center text-muted py-5">
+                <i class="ti ti-calendar-off d-block mb-2" style="font-size: 48px;"></i>
+                No se encontraron reportes
+            </div>
+        </template>
+
+<!---------- Días ---------->
+<template x-if="!cargando && reporte">
+<div>
+<template x-for="dia in reporte.dias" :key="dia.fecha">
+<div class="card mb-4">
+
+<!-- Card Header del Día -->
+<div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
+<div class="d-flex align-items-center gap-2">
+<i class="ti ti-calendar-stats fs-5"></i>
+<strong x-text="dia.dia"></strong>
+</div>
+<span class="opacity-75 small" x-text="dia.fecha_label"></span>
+</div>
+
+<!-- Card Body: Grid de Productos -->
+<div class="card-body">
+<div class="row g-3">
+
+<template x-for="celda in dia.productos" :key="celda.id">
+<div :class="reporte.productos.length === 2 ? 'col-md-6' : 'col-md-4'">
+<div class="card h-100">
+<!-- Header del Producto con Color Dinámico -->
+<div class="card-header text-white" :class="'bg-' + colorProducto(celda.producto)">
+<i class="ti ti-gas-station fs-6"></i>
+<span x-text="celda.producto"></span>
+</div>
+
+<div class="card-body">
+<!-- Tabla de Volúmenes -->
+<div class="table-responsive mb-3">
+<table class="table table-striped table-bordered mb-0 align-middle">
+<thead>
+<tr>
+<th class="text-center align-middle">Vo. (Lt) inicial</th>
+<th class="text-center align-middle">Vo. (Lt) venta</th>
+<th class="text-center align-middle">Vo. (Lt) final</th>
+<th class="text-center align-middle">Merma</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="text-center align-middle" x-text="formatearNumero(celda.volumen_inicial)"></td>
+<td class="text-center align-middle" x-text="formatearNumero(celda.volumen_venta)"></td>
+<td class="text-center align-middle" x-text="formatearNumero(celda.volumen_final)"></td>
+<td class="text-center align-middle text-danger fw-bold" x-text="formatearNumero(celda.merma)"></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- Tabla de Pipas Registradas -->
+<div x-show="celda.pipas.length > 0">
+<div class="table-responsive">
+<table class="table table-striped table-bordered mb-0 align-middle">
+<thead>
+<tr>
+<th class="text-center align-middle">Pipa</th>
+<th class="text-center align-middle">Volumen</th>
+<th class="text-center align-middle">Precio Lt</th>
+<th class="text-center align-middle">Flete</th>
+<th class="text-start align-middle">Razón Social</th>
+</tr>
+</thead>
+<tbody>
+<template x-for="pipa in celda.pipas" :key="pipa.id">
+<tr>
+<td class="text-center align-middle" x-text="pipa.pipa_numero"></td>
+<td class="text-center align-middle" x-text="formatearNumero(pipa.volumen)"></td>
+<td class="text-center align-middle" x-text="formatearNumero(pipa.precio_litro)"></td>
+<td class="text-center align-middle" x-text="formatearNumero(pipa.costo_flete)"></td>
+<td class="text-start align-middle" x-text="pipa.nombre_razonsocial" :title="pipa.nombre_razonsocial"></td>
+</tr>
+</template>
+
+<tr class="table-dark fw-semibold">
+<td class="text-center align-middle">Total</td>
+<td class="text-center align-middle" x-text="formatearNumero(celda.total_compra)"></td>
+<td class="text-center align-middle" x-text="'$' + formatearNumero(celda.total_importe)"></td>
+<td colspan="2"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Mensaje sin pipas -->
+<div class="alert alert-warning mb-0 text-center" role="alert" x-show="celda.pipas.length === 0">
+    <i class="ti ti-truck-off me-1"></i> Sin pipas registradas
+</div>
+</div>
+</div>
+</div>
+</template>
+</div>
+
+</div>
+
+<!-- Footer / Botón de Comentarios del Día -->
+<div class="card-footer">
+<button type="button" class="btn bg-primary-subtle text-primary float-end btn-badge-historico" @click="abrirComentarios(dia)">
+<template x-if="dia.total_mensajes > 0">
+<span class="badge-historico position-absolute top-0 start-100 translate-middle" x-text="dia.total_mensajes"></span>
+</template>
+<i class="ti ti-message-2 me-1"></i> Comentarios
+</button>
+</div>
+
+
+</div>
+</template>
+</div>
+</template>
+
+
+<!---------- Totales del periodo ---------->
+<template x-if="!cargando && reporte && reporte.productos.length > 0">
+<div class="row g-3 mt-1">
+<template x-for="p in reporte.productos" :key="'tot-' + p.numero">
+<div :class="reporte.productos.length === 2 ? 'col-md-6' : 'col-md-4'">
+<div class="card h-100 shadow-sm">
+<!-- Card Header con el color dinámico del producto -->
+<div class="card-header text-white" :class="'bg-' + p.color">
+<div class="d-flex align-items-center justify-content-between">
+<h5 class="mb-0 text-white fs-6">
+<i class="ti ti-chart-bar fs-5 me-1"></i>
+<span x-text="p.nombre"></span>
+</h5>
+</div>
+</div>
+
+<!-- Card Body con los totales -->
+<div class="card-body">
+<div class="d-flex flex-column gap-2">
+<div class="d-flex justify-content-between align-items-center border-bottom pb-3">
+<span x-text="vistaAnual ? 'Total venta anual' : 'Total venta'"></span>
+<strong class="fw-semibold" x-text="formatearNumero(p.total_venta)"></strong>
+</div>
+<div class="d-flex justify-content-between align-items-center border-bottom pb-3">
+<span x-text="vistaAnual ? 'Total compra anual' : 'Total compra'"></span>
+<strong class="fw-semibold" x-text="formatearNumero(p.total_compra)"></strong>
+</div>
+<div class="d-flex justify-content-between align-items-center">
+<span x-text="vistaAnual ? 'Total importe anual' : 'Total importe'"></span>
+<strong class="fw-semibold" x-text="'$' + formatearNumero(p.total_importe)"></strong>
+</div>
+</div>
+</div>
+</div>
+</div>
+</template>
+</div>
+</template>
+</div>
+
+</div>
+
+<!-- ============ OFF-CANVAS COMENTARIOS (dentro del scope Alpine) ============ -->
+<div class="offcanvas offcanvas-end d-flex flex-column" tabindex="-1" id="offcanvasComentariosCre" style="width: min(480px, 100vw); height: 100dvh; max-height: 100dvh;">
+    <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary flex-shrink-0">
+        <div class="hstack gap-3">
+            <div class="rounded-circle bg-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:48px; height:48px;">
+                <i class="ti ti-message-circle text-primary fs-7"></i>
+            </div>
+            <div class="overflow-hidden">
+                <h5 class="mb-1 text-white">COMENTARIOS</h5>
+                <p class="mb-0 text-white opacity-75 text-truncate" x-text="etiquetaDiaComentarios()"></p>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white flex-shrink-0" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
     </div>
 
+    <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
+        <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height: 0; overflow: hidden;">
+            <div class="chat-box-inner p-3 flex-grow-1" style="min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;" x-ref="chatCre">
 
-    <!-- ====================================================== -->
-    <!-- OFFCANVAS CHAT                                         -->
-    <!-- ====================================================== -->
-
-    <div
-        class="offcanvas offcanvas-end"
-        tabindex="-1"
-        id="offcanvasReporteChat"
-        aria-labelledby="offcanvasReporteChatLabel"
-        style="width: 420px;">
-
-
-        <!-- Header -->
-        <div
-            class="offcanvas-header border-bottom">
-
-            <div>
-
-                <h5
-                    class="offcanvas-title mb-1"
-                    id="offcanvasReporteChatLabel">
-
-                    <i
-                        class="ti ti-messages me-1">
-                    </i>
-
-                    Mensajes del reporte
-
-                </h5>
-
-
-                <div
-                    class="text-muted small"
-                    x-show="chat.dia">
-
-                    <span
-                        x-text="
-                            chat.dia
-                                ? 
-                                    chat.dia.dia
-                                
-                                : ''
-                        ">
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <button
-                type="button"
-                class="btn-close"
-                data-bs-dismiss="offcanvas"
-                aria-label="Cerrar">
-            </button>
-
-        </div>
-
-
-        <!-- Body -->
-        <div
-            class="offcanvas-body d-flex flex-column p-0"
-            style="height: calc(100vh - 73px);">
-
-
-            <!-- ============================================== -->
-            <!-- MENSAJES                                      -->
-            <!-- ============================================== -->
-
-            <div
-                class="flex-grow-1 overflow-auto p-3"
-                x-ref="chatMensajes">
-
-
-                <!-- Cargando -->
-                <div
-                    class="text-center py-5"
-                    x-show="chat.cargando">
-
-                    <div
-                        class="spinner-border spinner-border-sm text-primary mb-2">
+                <template x-if="cargandoComentarios">
+                    <div class="d-flex flex-column align-items-center justify-content-center text-center h-100">
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <p class="text-muted mb-0">Cargando comentarios...</p>
                     </div>
+                </template>
 
-                    <div
-                        class="text-muted small">
-
-                        Cargando mensajes...
-
+                <template x-if="!cargandoComentarios && comentarios.length === 0">
+                    <div class="d-flex flex-column align-items-center justify-content-center text-center h-100">
+                        <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
+                        <p class="text-muted mb-0 fs-5">Sin comentarios</p>
                     </div>
+                </template>
 
-                </div>
-
-
-                <!-- Sin mensajes -->
-                <div
-                    class="text-center text-muted py-5"
-                    x-show="
-                        !chat.cargando &&
-                        chat.mensajes.length === 0
-                    ">
-
-                    <i
-                        class="ti ti-message-off fs-7 d-block mb-2">
-                    </i>
-
-                    No hay mensajes para este reporte.
-
-                </div>
-
-
-                <!-- Lista -->
-                <template
-                    x-for="
-                        mensaje in chat.mensajes
-                    "
-                    :key="mensaje.id">
-
-                    <div class="mb-3">
-
-                        <div
-                            class="d-flex"
-                            :class="
-                                mensaje.es_mio
-                                    ? 'justify-content-end'
-                                    : 'justify-content-start'
-                            ">
-
-                            <div
-                                class="rounded-3 px-3 py-2"
-                                style="max-width: 80%;"
-                                :class="
-                                    mensaje.es_mio
-                                        ? 'bg-primary text-white'
-                                        : 'bg-light'
-                                ">
-
-
-                                <!-- Usuario -->
-                                <div
-                                    class="small fw-semibold mb-1"
-                                    x-show="
-                                        !mensaje.es_mio
-                                    "
-                                    x-text="
-                                        mensaje.usuario
-                                        ?? 'Usuario'
-                                    ">
-                                </div>
-
-
-                                <!-- Mensaje -->
-                                <div
-                                    style="
-                                        white-space: pre-wrap;
-                                    "
-                                    x-text="
-                                        mensaje.mensaje
-                                    ">
-                                </div>
-
-
-                                <!-- Fecha -->
-                                <div
-                                    class="small mt-1"
-                                    :class="
-                                        mensaje.es_mio
-                                            ? 'text-white-50'
-                                            : 'text-muted'
-                                    "
-                                    x-text="
-                                        mensaje.fecha_formateada
-                                        ?? mensaje.fecha
-                                        ?? ''
-                                    ">
-                                </div>
-
+                <template x-if="!cargandoComentarios">
+                    <div class="chat-list active-chat p-2">
+                        <template x-for="c in comentarios" :key="c.id">
+                            <div class="d-flex mb-3" :class="c.es_propio ? 'justify-content-end' : 'justify-content-start'">
+                                <template x-if="!c.es_propio">
+                                    <div class="d-flex gap-3 align-items-start" style="max-width: 88%;">
+                                        <div class="flex-shrink-0">
+                                            <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center" style="width:45px; height:45px;">
+                                                <i class="ti ti-user text-white fs-5"></i>
+                                            </div>
+                                        </div>
+                                        <div class="overflow-hidden">
+                                            <h6 class="fw-semibold mb-1 text-truncate" x-text="c.nombre"></h6>
+                                            <div class="fs-3 text-muted mb-1">
+                                                <span x-text="c.fecha_label"></span><span x-show="c.hora_label" x-text="', ' + c.hora_label"></span>
+                                            </div>
+                                            <div class="p-3 text-bg-success rounded-3 text-white mt-2" style="overflow-wrap: anywhere;" x-text="c.comentario"></div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="c.es_propio">
+                                    <div class="d-flex flex-column align-items-end" style="max-width: 88%;">
+                                        <div class="fs-3 text-muted mb-1 text-end">
+                                            <span x-text="c.fecha_label"></span><span x-show="c.hora_label" x-text="', ' + c.hora_label"></span>
+                                        </div>
+                                        <div class="p-3 bg-primary text-white rounded-3 mt-2" style="overflow-wrap: anywhere;" x-text="c.comentario"></div>
+                                    </div>
+                                </template>
                             </div>
-
-                        </div>
-
+                        </template>
                     </div>
-
                 </template>
 
             </div>
-
-
-            <!-- ============================================== -->
-            <!-- FORMULARIO                                    -->
-            <!-- ============================================== -->
-
-            <div
-                class="border-top p-3">
-
-                <form
-                    @submit.prevent="
-                        enviarMensaje()
-                    ">
-
-                    <div
-                        class="d-flex align-items-end gap-2">
-
-                        <div
-                            class="flex-grow-1">
-
-                            <textarea
-                                class="form-control"
-                                rows="1"
-                                placeholder="Escribe un mensaje..."
-                                x-model.trim="
-                                    chat.mensaje
-                                "
-                                @keydown.enter="
-                                    if (!$event.shiftKey) {
-                                        $event.preventDefault();
-                                        enviarMensaje();
-                                    }
-                                "
-                                :disabled="
-                                    chat.enviando
-                                ">
-                            </textarea>
-
-                        </div>
-
-
-                        <button
-                            type="submit"
-                            class="btn btn-primary"
-                            :disabled="
-                                chat.enviando ||
-                                !chat.mensaje.trim()
-                            ">
-
-                            <span
-                                x-show="
-                                    !chat.enviando
-                                ">
-
-                                <i
-                                    class="ti ti-send">
-                                </i>
-
-                            </span>
-
-                            <span
-                                x-show="
-                                    chat.enviando
-                                ">
-
-                                <span
-                                    class="spinner-border spinner-border-sm">
-                                </span>
-
-                            </span>
-
-                        </button>
-
-                    </div>
-
-
-                    <div
-                        class="text-muted small mt-2">
-
-                        Enter para enviar · Shift + Enter para nueva línea
-
-                    </div>
-
-                </form>
-
-            </div>
-
         </div>
 
+<div class="px-3 py-3 border-top bg-white flex-shrink-0">
+<div class="d-flex align-items-center gap-2">
+<div class="flex-grow-1">
+<textarea class="form-control border-0 bg-light rounded-pill"
+rows="1"
+placeholder="Escribe un comentario..."
+style="resize:none;"
+x-model="formComentario"
+@keydown.enter.prevent="guardarComentario()"></textarea>
+</div>
+<div class="flex-shrink-1">
+<button class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center"
+style="width:44px; height:44px;" type="button"
+title="Guardar comentario"
+@click="guardarComentario()"
+:disabled="guardandoComentario || !formComentario.trim()">
+<template x-if="!guardandoComentario"><i class="ti ti-send fs-5"></i></template>
+<template x-if="guardandoComentario"><span class="spinner-border spinner-border-sm"></span></template>
+</button>
+</div>
+</div>
+</div>
     </div>
+</div>
 
 </div>

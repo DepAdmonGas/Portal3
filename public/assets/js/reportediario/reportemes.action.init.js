@@ -25,19 +25,18 @@ document.addEventListener('alpine:init', () => {
         nuevoMensaje: '',
         mensajeRow: null,
         loadingMensajes: false,
+        enviandoMensaje: false,
+        offcanvasMensajes: null,
 
         init(){
 
-            if (!document.getElementById('modalDetalleReporte')) {
-                return;
-            }
-
             this.buscar();
 
-              this.$nextTick(() => {
-                this.modalDetalle = new bootstrap.Modal(
-                    document.getElementById('modalDetalleReporte')
-                );
+            this.$nextTick(() => {
+                const modalDetalle = document.getElementById('modalDetalleReporte');
+                if (modalDetalle) this.modalDetalle = bootstrap.Modal.getOrCreateInstance(modalDetalle);
+                const offcanvas = document.getElementById('modalMensajes');
+                if (offcanvas) this.offcanvasMensajes = bootstrap.Offcanvas.getOrCreateInstance(offcanvas);
             });
 
             this.pdfUrl = '/sasisopa/reporte-diario/pdf?idMes=' + this.mes + '&idYear=' + this.year;
@@ -177,56 +176,69 @@ document.addEventListener('alpine:init', () => {
 
          //Mensaje
 
-         async abrirMensajes(row){
-
+          async abrirMensajes(row){
             this.mensajeRow = row;
+            this.mensajes = [];
+            this.nuevoMensaje = '';
             this.loadingMensajes = true;
-
             try {
-
                 await this.cargarMensajes(row);
-
-                new bootstrap.Modal(
-                    document.getElementById('modalMensajes')
-                ).show();
-
+                this.$nextTick(() => {
+                    this.offcanvasMensajes = bootstrap.Offcanvas.getOrCreateInstance(
+                        document.getElementById('modalMensajes')
+                    );
+                    this.offcanvasMensajes.show();
+                });
+            } catch (error) {
+                this.notify('error', error.response?.data?.message || error.message || 'No fue posible cargar los comentarios.');
             } finally {
                 this.loadingMensajes = false;
             }
         },
 
         async cargarMensajes(row){
+            const {data} = await axios.get(
+                `/sasisopa/reporte-diario/mensajes/${row.id}/${row.id_fecha}`
+            );
+            if (!data.success) throw new Error(data.message || 'No fue posible cargar los comentarios.');
+            this.mensajes = (data.data || []).map(item => ({
+                ...item,
+                fechaFormateada: [item.fecha, item.hora].filter(Boolean).join(' ')
+            }));
+            this.scrollChatToBottom();
+        },
 
-        const {data} = await axios.get(
-            `/sasisopa/reporte-diario/mensajes/${row.id}/${row.id_fecha}`
-        );
-
-        if(data.success){
-            this.mensajes = data.data;
-        }
-    },
+        scrollChatToBottom(){
+            this.$nextTick(() => {
+                const chat = this.$refs.chatContainer;
+                if (chat) chat.scrollTop = chat.scrollHeight;
+            });
+        },
 
         async enviarMensaje(){
-
-    if(this.nuevoMensaje.trim()===''){
-        return;
-    }
-
-    const {data} = await axios.post(
-        '/sasisopa/reporte-diario/mensajes/create',
-        {
-            idReporte : this.mensajeRow.id,
-            fecha     : this.mensajeRow.id_fecha,
-            mensaje   : this.nuevoMensaje
+            const mensaje = this.nuevoMensaje.trim();
+            if (this.enviandoMensaje || !mensaje || !this.mensajeRow) return;
+            this.enviandoMensaje = true;
+            try {
+                const {data} = await axios.post(
+                    '/sasisopa/reporte-diario/mensajes/create',
+                    {
+                        idReporte: this.mensajeRow.id,
+                        fecha: this.mensajeRow.id_fecha,
+                        mensaje
+                    }
+                );
+                if (!data.success) throw new Error(data.message || 'No fue posible agregar el comentario.');
+                this.nuevoMensaje = '';
+                await this.cargarMensajes(this.mensajeRow);
+                this.mensajeRow.mensajes.total = data.total;
+                this.notify('success', 'Comentario agregado.');
+            } catch (error) {
+                this.notify('error', error.response?.data?.message || error.message || 'No fue posible agregar el comentario.');
+            } finally {
+                this.enviandoMensaje = false;
+            }
         }
-    );
-
-    if(data.success){
-        this.nuevoMensaje = '';
-        await this.cargarMensajes(this.mensajeRow);
-        this.mensajeRow.mensajes.total = data.total;
-    }
-}
 
     }));
 

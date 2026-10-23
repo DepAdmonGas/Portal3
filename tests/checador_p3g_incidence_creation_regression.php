@@ -186,8 +186,8 @@ $root = dirname(__DIR__);
 $controller = file_get_contents($root . '/app/Controllers/ChecadorController.php') ?: '';
 $access = file_get_contents($root . '/app/Services/ChecadorAccessService.php') ?: '';
 $routes = file_get_contents($root . '/routes/web.php') ?: '';
-$view = file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/index.php') ?: '';
-$assert(str_contains($routes, "'/departamento-operativo/recursos-humanos/checador/incidencias/crear'")
+$view = file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php') ?: '';
+$assert(str_contains($routes, "'/recursos-humanos/checador/incidencias/crear'")
     && str_contains($routes, "['ChecadorController', 'createIncidence']"), 'authenticated POST route is registered for creation');
 $assert(str_contains($access, "INCIDENCE_MODULE_KEY = 'checador-v2-incidencias'")
     && str_contains($access, 'empty($permissions[\'crear\'])')

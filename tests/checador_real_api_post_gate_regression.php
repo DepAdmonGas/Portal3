@@ -116,7 +116,7 @@ try {
 
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php') ?: '';
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php') ?: '';
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php') ?: '';
 $assert(strpos($serviceSource, "if (strtoupper(\$method) === 'POST' && !self::realApiPostOperationsEnabled())") !== false
     && str_contains($controllerSource, "'api_post_disabled' =>")
     && str_contains($viewSource, 'Las operaciones POST reales de Checador están deshabilitadas'),

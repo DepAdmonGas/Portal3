@@ -140,7 +140,7 @@
                     <a href="/sasisopa/control-actividades-procesos/bitacora-dispensario" 
                        class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none waves-effect waves-light">
                         <span class="d-flex align-items-center fw-medium">
-                            <i class="ti ti-clipboard-text fs-5 me-2"></i>Bitácora PROFECO
+                            <i class="ti ti-clipboard-text fs-5 me-2"></i>Bitácora de registro de eventos (PROFECO)
                         </span>
                         <i class="ti ti-chevron-right fs-6"></i>
                     </a>

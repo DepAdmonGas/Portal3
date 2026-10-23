@@ -2,20 +2,22 @@
 
 
 
-  <div class="text-end mt-3">
-
-                <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3">
+                      <button
                     type="button"
                     class="btn btn-success"
                     @click="finalizar">
-
                     <i class="ti ti-check"></i>
-                    Finalizar Plan
-
+                    Finalizar
                 </button>
+                    </div>
+                  </div>
 
-            </div>
 
+                
+
+        
     <!-- ===================================================== -->
     <!-- I. DATOS GENERALES -->
     <!-- ===================================================== -->

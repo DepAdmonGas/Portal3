@@ -109,16 +109,17 @@ $assert(str_contains($viewSource, 'UNSCHEDULED_DAY') && str_contains($viewSource
     && str_contains($viewSource, "'UNSCHEDULED' => 'Sin asignación informada'"), 'P4D13 UNSCHEDULED is rendered distinctly in its Journey workspace');
 $assert(!str_contains($viewSource, "'UNSCHEDULED' => 'Descanso programado'"), 'P4D14 UNSCHEDULED does not become DAY_OFF');
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P4D15 UNSCHEDULED does not become SIN MARCACIÓN');
-$assert(!str_contains($viewSource, 'FALTA'), 'P4D16 Journey view does not turn UNSCHEDULED into FALTA');
+$assert(!preg_match('/(?:journey_status|estado_jornada)\s*[^\n]{0,80}FALTA|FALTA\s*(?:=>|\?)/', $viewSource)
+    && str_contains($viewSource, 'Nunca se activa automáticamente'), 'P4D16 Journey view keeps FALTA non-automatic and does not classify UNSCHEDULED as FALTA');
 $assert(str_contains($viewSource, 'Descanso programado'), 'P4D17 DAY_OFF has distinct wording');
-$assert(str_contains($viewSource, 'events') && str_contains($viewSource, 'foreach ($events'), 'P4D18 observed events remain visible on DAY_OFF');
+$assert(str_contains($viewSource, 'evaluated_raw_events') && str_contains($viewSource, 'foreach ($auditEvents as $auditEvent)'), 'P4D18 observed events remain visible on DAY_OFF');
 $unknown = $make([new Response(200, [], json_encode($journeyPayload('UNKNOWN', 'UNKNOWN', false), JSON_THROW_ON_ERROR))])->evaluateJourney($user, 1, 1, '2026-10-12');
 $incomplete = $make([new Response(200, [], json_encode($journeyPayload('SCHEDULED', 'INCOMPLETE', false), JSON_THROW_ON_ERROR))])->evaluateJourney($user, 1, 1, '2026-10-12');
 $assert(($unknown['data']['journey_status'] ?? '') === 'UNKNOWN_SCHEDULE', 'P4D19 UNKNOWN stays non-final');
 $assert(($incomplete['data']['source_evidence']['window_level2_status'] ?? '') === 'INCOMPLETE', 'P4D20 INCOMPLETE stays non-final');
 $assert(str_contains($serviceSource, 'window_level2_status'), 'P4D21 aggregate source status is preserved');
-$assert(str_contains($viewSource, 'foreach ($events as $event)'), 'P4D22 all returned events are rendered');
-$assert(str_contains($viewSource, 'foreach ($events as $event)') && !str_contains($viewSource, 'array_slice($events'), 'P4D23 5+ events are not truncated');
+$assert(str_contains($viewSource, 'foreach ($auditEvents as $auditEvent)'), 'P4D22 all returned events are rendered');
+$assert(str_contains($viewSource, 'foreach ($auditEvents as $auditEvent)') && !str_contains($viewSource, 'array_slice($auditEvents'), 'P4D23 5+ events are not truncated');
 $assert(str_contains($viewSource, 'pairing') && str_contains($serviceSource, 'pairing'), 'P4D24 unmatched pairing evidence can be preserved');
 $assert(str_contains($viewSource, 'journey_status') && str_contains($serviceSource, 'journey_status'), 'P4D25 ambiguous/review status is preserved');
 $assert(str_contains($scheduleHistoryViewSource, 'segmentos')

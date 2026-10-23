@@ -14,6 +14,28 @@ class ModuleStationService
 public static bool $isBlocked = false;
 
 /**
+ * Módulos que deben excluir "Autolavado" (op_rh_localidades.id = 9).
+ *
+ * Existe un bloque legacy que siempre ofrece Autolavado al usuario con
+ * id_gas = 2 cuando el módulo trabaja en el espacio de localidades. Es el
+ * comportamiento histórico y se conserva para todos los módulos salvo los
+ * que se registren aquí, de modo que esta excepción no altera a los demás.
+ *
+ * @var array<int, string>
+ */
+public static array $sinAutoLavado = [];
+
+/**
+ * Un módulo excluye Autolavado del selector.
+ */
+public static function excluirAutoLavado(string $moduleKey): void
+{
+if (!in_array($moduleKey, self::$sinAutoLavado, true)) {
+self::$sinAutoLavado[] = $moduleKey;
+}
+}
+
+/**
  * Config de módulos memoizada por request (tb_modulos_config es casi estática).
  */
 private static array $configCache = [];
@@ -24,7 +46,10 @@ if (isset(self::$configCache[$moduleKey])) {
     return self::$configCache[$moduleKey];
 }
 
-$mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
+// Reportes usa el catálogo y las estaciones autorizadas de Gestoría, pero
+// conserva su propio contexto de selección para no alterar ese módulo.
+$configModuleKey = $moduleKey === 'reportes' ? 'gestoria' : $moduleKey;
+$mc = ModuloConfig::where('modulo_key', $configModuleKey)->where('activo', true)->first();
 if (!$mc) return null;
 
 return self::$configCache[$moduleKey] = [
@@ -32,6 +57,8 @@ return self::$configCache[$moduleKey] = [
 'allow_all'         => (bool)$mc->allow_all,
 'placeholder'       => $mc->placeholder,
 'tipo_departamento' => $mc->tipo_departamento,
+'estaciones_soportadas' => $mc->estaciones_soportadas ?? [],
+'departamentos_soportados' => $mc->departamentos_soportados ?? [],
 ];
 }
 
@@ -161,11 +188,11 @@ if ($moduleKey === ChecadorAccessService::MODULE_KEY) {
     return !empty($access['allowed']) ? ($access['station_workplaces'] ?? []) : [];
 }
 
-$mc = ModuloConfig::where('modulo_key', $moduleKey)->where('activo', true)->first();
-if (!$mc) return [];
+$cfg = self::getConfig($moduleKey);
+if (!$cfg) return [];
 
 
-        $supported = $mc->estaciones_soportadas ?? [];
+        $supported = $cfg['estaciones_soportadas'] ?? [];
         if (empty($supported)) return [];
 
 
@@ -266,7 +293,10 @@ if ($allowed === null || empty($allowed)) return [];
 
 
 // Legacy: no multiestacion config
-if (self::getIdGas() === 2 && $tipoDept === 'localidades') {
+if (self::getIdGas() === 2
+&& $tipoDept === 'localidades'
+&& !in_array($moduleKey, self::$sinAutoLavado, true)
+) {
 $autoLavado = RhLocalidad::where('id', 9)->first(['id', 'localidad as nombre']);
 return $autoLavado ? [$autoLavado->toArray()] : [];
 }
@@ -282,7 +312,7 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         return !empty($stations) || !empty($depts);
     }
 
-    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true): string
+    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true, string $nombreBadge = '', ?string $placeholderOverride = null, array $stationLabelOverrides = [], array $extraDepartments = []): string
     {
         $cfg = self::getConfig($moduleKey);
         if (!$cfg) {
@@ -294,9 +324,23 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         $idEstacion = $ctx['id_estacion'];
         $idDepto = $ctx['id_depto'];
         $currentName = $ctx['nombre'];
+        if ($idEstacion !== null && isset($stationLabelOverrides[(int)$idEstacion])) {
+            $currentName = $stationLabelOverrides[(int)$idEstacion];
+        }
 
+        $multiestacion = MultiestacionService::isEnabled();
         $stations = self::getAvailableStations($moduleKey);
         $depts = self::getAvailableDepartments($moduleKey);
+        foreach ($extraDepartments as $department) {
+            $departmentId = (int) ($department['id'] ?? 0);
+            $departmentName = trim((string) ($department['nombre'] ?? ''));
+            if ($departmentId > 0 && $departmentName !== '') {
+                $depts[] = ['id' => $departmentId, 'nombre' => $departmentName];
+                if ($idDepto !== null && (int) $idDepto === $departmentId) {
+                    $currentName = $departmentName;
+                }
+            }
+        }
 
         if (empty($stations) && empty($depts)) {
             self::$isBlocked = true;
@@ -308,23 +352,25 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
 
 }
 
-self::$isBlocked = false;
+        self::$isBlocked = false;
 
-$hasSelection = $idEstacion !== null || $idDepto !== null;
-$hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
+        // Se puede forzar el texto del badge (por ejemplo, con la estación
+        // o departamento del ticket que se está viendo) sin el selector.
+        $hasSelection = $nombreBadge !== '' || $idEstacion !== null || $idDepto !== null;
+        $hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
         $showSelector = $moduleKey === ChecadorAccessService::MODULE_KEY
-    ? ($showSelector && count($stations) + count($depts) > 1)
-    : ($showSelector && (MultiestacionService::isEnabled() || $hasChoices));
+            ? ($showSelector && count($stations) + count($depts) > 1)
+            : ($showSelector && ($multiestacion || $hasChoices));
 
-$html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
+        $html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
 
-$badgeHidden = $hasSelection ? '' : ' style="display:none"';
-$badgeText = $hasSelection ? ($currentName ?: "\u{2014}") : '';
-$html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
+        $badgeHidden = $hasSelection ? '' : ' style="display:none"';
+        $badgeText = $nombreBadge !== '' ? $nombreBadge : ($hasSelection ? ($currentName ?: "\u{2014}") : '');
+        $html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
 
 if ($showSelector) {
-$placeholder = $cfg['placeholder'] ?? 'Selecciona una estación...';
-if ($moduleKey === ChecadorAccessService::MODULE_KEY && !empty($depts)) {
+$placeholder = $placeholderOverride ?? ($cfg['placeholder'] ?? 'Selecciona una estación...');
+if ($moduleKey === ChecadorAccessService::MODULE_KEY && !empty($depts) && $placeholderOverride === null) {
     $placeholder = 'Selecciona una estación o departamento...';
 }
 if (empty($depts) && $cfg['type'] === 'stations_and_departments') {
@@ -350,7 +396,8 @@ $html .= '<optgroup label="' . $estLabel . '">';
 foreach ($stations as $s) {
 $sel = ($s['id'] == $idEstacion && !$idDepto) ? ' selected' : '';
 $pend = isset($pendientes['estacion_' . $s['id']]) ? ' (' . $pendientes['estacion_' . $s['id']] . ')' : '';
-$html .= '<option value="estacion_' . $s['id'] . '"' . $sel . '>' . htmlspecialchars($s['nombre'], ENT_QUOTES, 'UTF-8') . $pend . '</option>';
+$stationName = $stationLabelOverrides[(int)$s['id']] ?? $s['nombre'];
+$html .= '<option value="estacion_' . $s['id'] . '"' . $sel . '>' . htmlspecialchars($stationName, ENT_QUOTES, 'UTF-8') . $pend . '</option>';
 }
 $html .= '</optgroup>';
 }
@@ -422,23 +469,37 @@ $idGas = $userObj ? (int)$userObj->id_gas : null;
 return $idGas;
 }
 
-private static function buildPuestos(array $ids): array
-{
-$nombres = [
-4 => 'Comercializadora',
-5 => 'Gestoría',
-18 => 'Quitarga',
-19 => 'Operación servicio y mantenimiento de personal',
-23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
-];
-$result = [];
-foreach ($ids as $id) {
-if (isset($nombres[$id])) {
-$result[] = ['id' => $id, 'nombre' => $nombres[$id]];
-}
-}
-return $result;
-}
+    private static function buildPuestos(array $ids): array
+    {
+        $nombres = self::nombresPuestos();
+        $result = [];
+        foreach ($ids as $id) {
+            if (isset($nombres[$id])) {
+                $result[] = ['id' => $id, 'nombre' => $nombres[$id]];
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Catálogo de nombres de los puestos (departamentos) del selector.
+     * Es aditivo: los ids que no estén aquí no se muestran como
+     * departamento en los módulos configurados con tipo_departamento
+     * 'puestos' (hoy sólo solicitud-cheques y sistemas-estaciones).
+     */
+    private static function nombresPuestos(): array
+    {
+        return [
+            3 => 'Dirección',
+            4 => 'Comercializadora',
+            5 => 'Gestoría',
+            13 => 'Dirección de operaciones',
+            18 => 'Quitarga',
+            19 => 'Operación servicio y mantenimiento de personal',
+            23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
+        ];
+    }
+
 
 private static function resolveName(string $moduleKey, $idEstacion, $idDepto): string
 {
@@ -462,17 +523,11 @@ if ($idEstacion !== null && $idDepto === null) {
 $est = Estacion::find($idEstacion);
 return $est ? $est->nombre : 'Estación #' . $idEstacion;
 }
-if ($idDepto !== null) {
-$deptNames = [
-4 => 'Comercializadora',
-5 => 'Gestoría',
-18 => 'Quitarga',
-19 => 'Operación servicio y mantenimiento de personal',
-23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
-];
-return $deptNames[$idDepto] ?? 'Depto #' . $idDepto;
-}
-return '';
-}
+        if ($idDepto !== null) {
+            $deptNames = self::nombresPuestos();
+            return $deptNames[$idDepto] ?? 'Depto #' . $idDepto;
+        }
+        return '';
+    }
 
 }

@@ -56,6 +56,137 @@ const DEPARTMENTS = [
 23 => 'BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016',
 ];
 
+/**
+ * La estación 8 (Gestoría) no está en tb_modulos_config.estaciones_soportadas
+ * del módulo, pero sí opera solicitudes: se expone a través de los
+ * departamentos (los demás puestos no la ven en el selector de estación).
+ * Estas constantes son la única fuente de ese número.
+ */
+const ESTACION_GESTORIA = 8;
+const DEPARTAMENTO_GESTORIA = 5;
+
+/**
+ * Departamento que la estación 14 también puede ver.
+ */
+const DEPARTAMENTO_BANCAMIFEL = 23;
+
+/**
+ * Alcance de solicitudes que el usuario actual puede ver.
+ *
+ * Fuente única de verdad: la usan el listado (getData) y el detalle
+ * (findAuthorizedSolicitudCheque). Antes cada uno calculaba su propio
+ * filtro y por eso el listado mostraba solicitudes que el detalle
+ * rechazaba con 'Solicitud no encontrada'.
+ *
+ * Devuelve uno de estos alcances:
+ *   ['modo' => 'filtro', 'estacion' => int, 'depto' => int]
+ *   ['modo' => 'sesion', 'estacion' => int, 'depto' => int]
+ *   ['modo' => 'multi',  'estaciones' => int[], 'deptos' => int[]]
+ *
+ * @param int|null $estacionFilter Estación elegida en el selector (0 = ninguna).
+ * @param int|null $deptoFilter    Departamento elegido en el selector (0 = ninguno).
+ */
+private static function alcanceSolicitudes(?int $estacionFilter = null, ?int $deptoFilter = null): array
+{
+$permisos = self::getPermisos();
+
+$idEstacion = (int) $permisos['id_estacion'];
+$multiEstacion = (bool) $permisos['multiestacion'];
+$esGestoria = (bool) $permisos['es_gestoria'];
+
+// El selector usa 0 para 'sin elige'; se trata como null.
+if ($estacionFilter === 0) $estacionFilter = null;
+if ($deptoFilter === 0) $deptoFilter = null;
+
+// Gestoría opera siempre sobre su estación y su departamento.
+if ($esGestoria) {
+if ($estacionFilter === null) $estacionFilter = self::ESTACION_GESTORIA;
+if ($deptoFilter === null) $deptoFilter = self::DEPARTAMENTO_GESTORIA;
+}
+
+if ($estacionFilter !== null || $deptoFilter !== null) {
+return [
+'modo' => 'filtro',
+'estacion' => (int) $estacionFilter,
+'depto' => (int) $deptoFilter,
+];
+}
+
+// Usuario de una sola estación: solo la suya.
+if (!$multiEstacion) {
+return [
+'modo' => 'sesion',
+'estacion' => $idEstacion,
+'depto' => 0,
+];
+}
+
+// Multiestación: sus estaciones más la de Gestoría por departamento.
+return [
+'modo' => 'multi',
+'estaciones' => self::getAllowedStationIds(),
+'deptos' => self::getAllowedDeptIds(),
+];
+}
+
+/**
+ * Aplica el alcance a una consulta de SolicitudCheque.
+ */
+private static function aplicarAlcance($query, array $alcance)
+{
+$modo = $alcance['modo'];
+
+if ($modo === 'filtro') {
+
+$query->where(function ($q) use ($alcance) {
+if ($alcance['estacion'] > 0) {
+$q->where('id_estacion', $alcance['estacion']);
+}
+if ($alcance['depto'] > 0) {
+$q->where('depto', $alcance['depto']);
+}
+});
+
+return $query;
+}
+
+if ($modo === 'sesion') {
+
+$idEstacion = $alcance['estacion'];
+
+if ($idEstacion === 14) {
+return $query->where(function ($q) use ($idEstacion) {
+$q->where('id_estacion', $idEstacion)
+->orWhere('depto', self::DEPARTAMENTO_BANCAMIFEL);
+});
+}
+
+return $query->where('id_estacion', $idEstacion);
+}
+
+$estaciones = $alcance['estaciones'];
+$deptos = $alcance['deptos'];
+
+if (empty($estaciones) && empty($deptos)) {
+return $query;
+}
+
+return $query->where(function ($q) use ($estaciones, $deptos) {
+
+if (!empty($estaciones)) {
+$q->whereIn('id_estacion', $estaciones);
+}
+
+if (!empty($deptos)) {
+$or = empty($estaciones) ? 'where' : 'orWhere';
+$q->$or(function ($q3) use ($deptos) {
+$q3->where('id_estacion', self::ESTACION_GESTORIA)
+->whereIn('depto', $deptos);
+});
+}
+});
+}
+
 public static function getPermisos(): array
 {
 $usuario = Auth::user();
@@ -233,57 +364,13 @@ public static function getData(int $idYear, int $idMes, ?int $estacionFilter = n
 {
 $permisos = self::getPermisos();
 $idUsuario = $permisos['id_usuario'];
-$idEstacion = $permisos['id_estacion'];
-$idPuesto = $permisos['id_puesto'];
 $esGestoria = $permisos['es_gestoria'];
-$multiEstacion = $permisos['multiestacion'];
 
 $query = SolicitudCheque::where('id_year', $idYear)
 ->where('id_mes', $idMes);
 
-// Safety: treat 0 as null (no filter)
-if ($estacionFilter !== null && $estacionFilter === 0) $estacionFilter = null;
-if ($deptoFilter !== null && $deptoFilter === 0) $deptoFilter = null;
-
-    if ($esGestoria) {
-if ($estacionFilter === null) $estacionFilter = 8;
-if ($deptoFilter === null) $deptoFilter = 5;
-}
-
-if ($estacionFilter !== null || $deptoFilter !== null) {
-if ($estacionFilter !== null && $estacionFilter > 0) {
-$query->where('id_estacion', $estacionFilter);
-}
-if ($deptoFilter !== null && $deptoFilter > 0) {
-$query->where('depto', $deptoFilter);
-}
-} elseif (!$multiEstacion) {
-if ($idEstacion === 14) {
-$query->where(function ($q) use ($idEstacion) {
-$q->where('id_estacion', $idEstacion)
-->orWhere('depto', 23);
-});
-} else {
-$query->where('id_estacion', $idEstacion);
-}
-} else {
-$stationIds = self::getAllowedStationIds();
-$deptIds = self::getAllowedDeptIds();
-if (!empty($stationIds) || !empty($deptIds)) {
-$query->where(function ($q) use ($stationIds, $deptIds) {
-if (!empty($stationIds)) {
-$q->whereIn('id_estacion', $stationIds);
-}
-if (!empty($deptIds)) {
-$orType = empty($stationIds) ? 'where' : 'orWhere';
-$q->$orType(function ($q3) use ($deptIds) {
-$q3->where('id_estacion', 8)
-->whereIn('depto', $deptIds);
-});
-}
-});
-}
-}
+// Un solo filtro define el alcance: el que usa también el detalle.
+self::aplicarAlcance($query, self::alcanceSolicitudes($estacionFilter, $deptoFilter));
 
 $rows = $query->orderBy('fecha', 'desc')
 ->orderBy('id', 'desc')
@@ -440,9 +527,11 @@ default => 'Desconocido',
 };
 }
 
-public static function getDetalle(int $id): ?array
+public static function getDetalle(int $id, bool $respetarAlcance = true): ?array
 {
-$row = self::findAuthorizedSolicitudCheque($id);
+$row = $respetarAlcance
+? self::findAuthorizedSolicitudCheque($id)
+: SolicitudCheque::whereKey($id)->first();
 if (!$row) return null;
 
 $firmas = SolicitudChequeFirma::with('usuario:id,nombre')
@@ -552,13 +641,17 @@ return [
 ];
 }
 
+/**
+ * Recupera una solicitud solo si el usuario actual tiene alcance sobre ella.
+ *
+ * Usa el mismo alcance que el listado. Antes solo comparaba contra las
+ * estaciones del módulo, y como la estación 8 no está en
+ * tb_modulos_config.estaciones_soportadas, toda solicitud de Gestoría
+ * quedaba rechazada con 'Solicitud no encontrada'.
+ */
 public static function findAuthorizedSolicitudCheque(int $id): ?SolicitudCheque
 {
-$stations = ModuleStationService::getAvailableStations('solicitud-cheques');
-$ids = array_map(static fn (array $station): int => (int) $station['id'], $stations);
-if (empty($ids)) return null;
-
-return SolicitudCheque::whereIn('id_estacion', $ids)->where('id', $id)->first();
+return self::aplicarAlcance(SolicitudCheque::whereKey($id), self::alcanceSolicitudes())->first();
 }
 
 public static function store(array $data, array $files): array
@@ -1208,6 +1301,33 @@ if (!$permisos['es_gestoria']) return true;
 $solicitud = SolicitudCheque::find($idSolicitud);
 if (!$solicitud) return false;
 return (int)$solicitud->id_estacion === 8 && (int)$solicitud->depto === 5;
+}
+
+/**
+ * Indica si el usuario tiene una firma pendiente sobre la solicitud, aunque
+ * ésta quede fuera de su alcance habitual de estación/departamento.
+ *
+ * La pantalla de firma usa esta validación para no bloquear a los firmantes
+ * designados (Vo.Bo. y Autorización) con un 404.
+ */
+public static function puedeFirmarPendiente(int $idSolicitud, ?int $idUsuario = null): bool
+{
+$solicitud = SolicitudCheque::find($idSolicitud);
+if (!$solicitud) return false;
+
+$permisos = self::getPermisos();
+$idUsuario = $idUsuario ?? (int)$permisos['id_usuario'];
+$status = (int)$solicitud->status;
+
+if ($status === 0) {
+return $idUsuario === 19 || !empty($permisos['es_user_30']);
+}
+
+if ($status === 1) {
+return $idUsuario === 2 || $idUsuario === 22;
+}
+
+return false;
 }
 
 public static function firmar(int $idSolicitud, string $tipoFirma, int $token, int $idUsuario, string $nameEstacion): array

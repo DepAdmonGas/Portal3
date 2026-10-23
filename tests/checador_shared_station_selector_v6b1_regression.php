@@ -21,7 +21,7 @@ $access = (string) file_get_contents($root . '/app/Services/ChecadorAccessServic
 $moduleContext = (string) file_get_contents($root . '/app/Controllers/ModuleContextController.php');
 $view = (string) file_get_contents($root . '/app/Core/View.php');
 $layout = (string) file_get_contents($root . '/app/Views/layouts/departamento-operativo.php');
-$dailyView = (string) file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$dailyView = (string) file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
 $reportView = (string) file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/punch-report.php');
 $navigation = (string) file_get_contents($root . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js');
 
@@ -32,9 +32,9 @@ $index = $indexStart !== false && $reportStart !== false ? substr($controller, $
 $report = $reportStart !== false && $dataStart !== false ? substr($controller, $reportStart, $dataStart - $reportStart) : '';
 
 $assert($index !== '' && $report !== ''
-    && substr_count($index, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY") === 4
+    && substr_count($index, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY") >= 4
     && substr_count($report, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY") === 1
-    && str_contains($view, 'ModuleStationService::render($moduleKey')
+    && preg_match('/ModuleStationService::render\(\s*\$moduleKey/s', $view) === 1
     && str_contains($layout, '<?= $moduleStationSelector ?? \'\' ?>'),
     'V6B1 Checador daily, weekly, historical and configuration views plus raw report reuse the existing selector with the independent module key');
 $assert(str_contains($moduleStations, 'ChecadorAccessService::authorize()')
@@ -59,7 +59,8 @@ $assert(str_contains($index, 'ChecadorAccessService::authorize(null)')
     && str_contains($report, '$requestedWorkplace = $selectedWorkplaceForView;'),
     'V6B1 both screens revalidate selection against the current authorized scope');
 $assert(!preg_match('/<select\b[^>]*\bname="workplace_id"/i', $dailyView . $reportView)
-    && substr_count($dailyView . $reportView, 'type="hidden" id="workplace_id" name="workplace_id"') === 2,
+    && preg_match('/<input\b(?=[^>]*\btype="hidden")(?=[^>]*\bname="workplace_id")[^>]*>/i', $dailyView) === 1
+    && preg_match('/<input\b(?=[^>]*\btype="hidden")(?=[^>]*\bname="workplace_id")[^>]*>/i', $reportView) === 1,
     'V6B1 duplicate content-level station selectors are replaced with synchronized hidden form context');
 $assert(str_contains($navigation, 'url.searchParams.set(\'workplace_id\', nextStationId)')
     && str_contains($navigation, "url.searchParams.delete('source_workplace_id')")

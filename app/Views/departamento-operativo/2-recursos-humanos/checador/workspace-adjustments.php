@@ -49,6 +49,12 @@ $reviewStatusLabel = static fn(string $status): string => match ($status) {
                 $evaluation = is_array($result['evaluation'] ?? null) ? $result['evaluation'] : null;
                 $adjustments = is_array($evaluation['linked_adjustments'] ?? null) ? $evaluation['linked_adjustments'] : [];
                 $evaluationExists = ($result['evaluation_exists'] ?? false) === true && $evaluation !== null;
+                $policyRuleVersionLabel = $evaluation !== null && array_key_exists('policy_rule_version', $evaluation)
+                    ? ($evaluation['policy_rule_version'] === null
+                        ? 'No aplica'
+                        : (is_string($evaluation['policy_rule_version']) && trim($evaluation['policy_rule_version']) !== ''
+                            ? (string) $evaluation['policy_rule_version'] : 'No disponible'))
+                    : 'No disponible';
                 $evaluationKeySet = is_array($evaluationKeys[$workerId] ?? null) ? $evaluationKeys[$workerId] : [];
                 $expectedCalculationId = (int) ($evaluationKeySet['expected_calculation_revision_id'] ?? 0);
                 $canEvaluate = !empty($evaluationPermissions['evaluate']) && is_string($evaluationKeySet['evaluate'] ?? null);
@@ -74,11 +80,13 @@ $reviewStatusLabel = static fn(string $status): string => match ($status) {
                                     <td class="text-break"><code><?= $esc($adjustment['uuid_ajuste_logico'] ?? 'No disponible') ?></code></td>
                                 </tr><?php endforeach; ?>
                             </tbody></table></div>
+                            <p class="small text-muted mt-2 mb-0">Estas referencias muestran únicamente los ajustes enlazados que devolvió la evaluación; no entrega aquí el historial completo de revisiones de cada ajuste.</p>
                         <?php endif; ?>
                         <details class="mt-2"><summary class="small">Procedencia de la evaluación</summary><dl class="row small mt-2 mb-0">
-                            <dt class="col-sm-4">Identificador de cálculo</dt><dd class="col-sm-8 text-break"><code><?= $esc($evaluation['associated_calculation_revision_id'] ?? 'No disponible') ?></code></dd>
+                            <dt class="col-sm-4">Referencia de cálculo</dt><dd class="col-sm-8 text-break"><code><?= $esc($evaluation['associated_calculation_revision_id'] ?? 'No disponible') ?></code></dd>
                             <dt class="col-sm-4">Creada (UTC)</dt><dd class="col-sm-8"><?= $esc($evaluation['created_at_utc'] ?? 'No disponible') ?></dd>
                             <dt class="col-sm-4">Versión de reglas</dt><dd class="col-sm-8 text-break"><?= $esc($evaluation['algorithm_version'] ?? 'No disponible') ?> · <?= $esc($evaluation['policy_version'] ?? 'No disponible') ?></dd>
+                            <dt class="col-sm-4">Regla de política</dt><dd class="col-sm-8 text-break"><?= $esc($policyRuleVersionLabel) ?></dd>
                         </dl></details>
                     <?php endif; ?>
 

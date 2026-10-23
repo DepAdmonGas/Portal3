@@ -131,7 +131,7 @@ $assert(($serverError['error']['kind'] ?? '') === 'api_unavailable', 'P3GA18 API
 $malformed = $make([new Response(200, [], json_encode(['status' => 'success', 'data' => ['worker_id' => 1]], JSON_THROW_ON_ERROR))])->readApplicableIncidences($user, 1, 1, '2026-10-12', '2026-10-12');
 $assert(($malformed['error']['kind'] ?? '') === 'administrative_unavailable', 'P3GA19 malformed administrative envelope fails closed');
 $assert(str_contains($serviceSource, 'API-owned') && !str_contains($serviceSource, 'applyIncidence'), 'P3GA20 no local incidence engine or precedence exists');
-$assert(str_contains($adjustmentViewSource, 'Nunca se activa automáticamente')
+$assert(str_contains($adjustmentViewSource, 'nunca se activa automáticamente')
     && str_contains($adjustmentViewSource, 'Autorizar FALTA explícitamente')
     && str_contains($adjustmentViewSource, 'if ($canAuthorizeFalta)'), 'P3GA21 FALTA is only exposed as an explicit separately authorized action');
 $assert(str_contains($viewSource, 'Incidencias e historial') || str_contains($viewSource, 'current_status'), 'P3GA22 read-only administrative context is rendered');

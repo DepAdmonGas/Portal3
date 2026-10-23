@@ -139,16 +139,19 @@
 
         <div class="card">
             <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col-12 col-md-10">
+
+
+                <div class="d-flex flex-column flex-md-row aling-items-ms-center justify-content-between w-100 gap-2">
+                  
                     <h4 class="card-title mb-0">Control de la implementación de los procedimientos del SASISOPA (Fo.ADMONGAS.029)</h4>
-                    </div>
-                    <div class="col-12 col-md-2 d-grid txt-end mt-3 mt-md-0">
+                   
+                    <div class="d-grid d-md-block">
 
-                        <button class="btn bg-primary-subtle text-primary">
-                            <a class="dropdown-item pointer" @click="createImplementacion()"><i class="ti ti-plus"></i> Nuevo</a>
-                        </button>
-
+                       <button type="button"
+        class="btn bg-primary-subtle text-primary"
+        @click="createImplementacion()">
+    <i class="ti ti-plus"></i> Nuevo
+</button>
 
                     </div>
                 </div>
@@ -248,7 +251,9 @@
         <div
             class="modal fade"
             id="modalEvaluacion"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -314,7 +319,8 @@
                     </div>
 
                     <div class="modal-footer">
-
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2">
                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
@@ -322,13 +328,15 @@
                             <i class="ti ti-x"></i> Cancelar
 
                         </button>
-                        <template
+                    </div>
+              
+                      <template
                             x-if="
                         modoEvaluacion === 'edit'
                         && evaluacion.archivo_actual
                     ">
 
-                            <div>
+                            <div  class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2">
 
                                 <a class="btn bg-primary-subtle text-primary"
                                     :href="`${evaluacion.archivo_actual}`"
@@ -344,8 +352,9 @@
 
                         </template>
 
-
-                        <button
+                  
+                    <div class="col-12 col-md-auto d-grid">
+                       <button
                             class="btn btn-success"
                             @click="guardarEvaluacion()">
 
@@ -359,6 +368,9 @@
                             </span>
 
                         </button>
+                    </div>
+                  </div>
+                       
 
                     </div>
 
@@ -372,7 +384,9 @@
         <div
             class="modal fade"
             id="modalDetalleImplementacion"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
             <div class="modal-dialog modal-fullscreen">
 
@@ -575,6 +589,9 @@
                     </div>
 
                     <div class="modal-footer">
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      
                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
@@ -582,6 +599,9 @@
                             <i class="ti ti-x"></i> Cancelar
 
                         </button>
+                    </div>
+                  </div>
+
                     </div>
                 </div>
 

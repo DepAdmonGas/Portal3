@@ -160,11 +160,11 @@ $assert($evaluationControllerMethodSource !== '' && $evaluationServiceMethodSour
     && !preg_match('/RecibosNominaService|OpReciboNominaV2/i', $evaluationPathSource)
     && !preg_match($payrollResultFields, $evaluationPathSource . $viewSource), 'P3GPD33 evaluation path uses no payroll reader and renders no payroll result fields');
 $assert(str_contains($viewSource, 'REVIEW_REQUIRED') || str_contains($viewSource, 'human_review_status'), 'P3GPD34 review states remain renderable');
-$assert(str_contains($viewSource, 'policyRuleVersion === null ?') && str_contains($viewSource, 'Referencia de cálculo'), 'P3GPD35 provenance display preserves nullable policy and calculation reference');
+$assert(str_contains($viewSource, "\$evaluation['policy_rule_version'] === null") && str_contains($viewSource, 'No aplica') && str_contains($viewSource, 'Referencia de cálculo'), 'P3GPD35 provenance display preserves nullable policy and calculation reference');
 $assert(str_contains($controllerSource, '$administrativeEvaluations = []') && str_contains($controllerSource, '$evaluationPermissions = ['), 'P3GPD36 worker/date evaluation state starts empty per request');
 $assert(str_contains($controllerSource, 'expectedCalculationId') && str_contains($controllerSource, 'calculation_id'), 'P3GPD37 selected Journey calculation reference is used without recomputation');
-$assert(str_contains($routesSource, "'POST', '/departamento-operativo/recursos-humanos/checador/evaluations/evaluate'"), 'P3GPD38 Portal3 exposes one authenticated POST route');
-$assert(str_contains($viewSource, 'name="authorize_falta" value="1"') && str_contains($viewSource, 'Nunca se activa automáticamente'), 'P3GPD39 explicit FALTA control is never automatic');
+$assert(str_contains($routesSource, "'POST', '/recursos-humanos/checador/evaluations/evaluate'"), 'P3GPD38 Portal3 exposes one authenticated POST route under the departamento-operativo group');
+$assert(str_contains($viewSource, 'name="authorize_falta" value="1"') && str_contains($viewSource, 'nunca se activa automáticamente'), 'P3GPD39 explicit FALTA control is never automatic');
 $assert(!preg_match('/op_rh_personal_asistencia|op_rh_personal_asistencia_incidencia|op_rh_v2_/', $serviceSource . $controllerSource), 'P3GPD40 no legacy or direct V2 table writes are introduced');
 
 printf("CHECADOR_P3GD_ADMINISTRATIVE_EVALUATION_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);

@@ -89,8 +89,8 @@ html += '<a class="dropdown-item pointer" @click="download(\'seguros-incidencias
 html += '<a class="dropdown-item pointer grayscale">'
 + '<i class="ti ti-download me-1"></i> Descargar archivo</a>';
 }
-html += '<a class="dropdown-item" @click="$dispatch(\'seguros:editar\', { id: ' + d.id + ' })">'
-+ '<i class="ti ti-pencil me-1"></i> Editar</a>'
+html += '<a class="dropdown-item pointer" @click="$dispatch(\'seguros:editar\', { id: ' + d.id + ' })">'
++ '<i class="ti ti-edit me-1"></i> Editar</a>'
 + '<a class="dropdown-item pointer" @click="$dispatch(\'seguros:eliminar\', { id: ' + d.id + ' })">'
 + '<i class="ti ti-trash me-1"></i> Eliminar</a>'
 + '</div></div></div>';

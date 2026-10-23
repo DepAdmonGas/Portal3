@@ -14,6 +14,9 @@ $categoryLabel = static fn(string $category): string => match ($category) {
         <div class="card-header"><h2 class="h5 mb-0" id="incidence-workspace-heading">Incidencias e historial</h2></div>
         <div class="card-body">
             <p class="text-muted">Consulta los registros y su historial. Las acciones disponibles dependen de los permisos de este perfil y se confirman mediante la lectura autorizada.</p>
+            <?php if (($demoMode ?? false) === true): ?>
+                <div class="alert alert-info" role="status">Demostración sintética: estas acciones sólo cambian el historial local. No se modifica información operativa real.</div>
+            <?php endif; ?>
             <?php if (is_array($lifecycleFeedback ?? null)): ?>
                 <div class="alert alert-<?= ($lifecycleFeedback['type'] ?? '') === 'success' ? 'success' : 'warning' ?>" role="status">
                     <?= $esc($lifecycleFeedback['message'] ?? 'No fue posible confirmar la acción.') ?>

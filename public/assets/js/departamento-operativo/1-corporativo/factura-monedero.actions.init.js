@@ -417,7 +417,7 @@ return false;
 }
 });
 }
-if (window.Notify) Notify.success('Comentario agregado');
+if (window.Notify) /*Notify.success('Comentario agregado')*/;
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
 }

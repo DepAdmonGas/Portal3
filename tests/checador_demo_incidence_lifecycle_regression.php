@@ -202,7 +202,7 @@ $unavailable = $make('incidence_service_unavailable')->lifecycleAction(
 $assert(($unavailable['error']['kind'] ?? '') === 'api_unavailable', 'simulated service outage fails without applying an action');
 
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php');
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $formatterSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorPresentationFormatter.php');
 $authGuardAt = strpos($controllerSource, 'ChecadorAccessService::authorizeLifecycle($workplaceId, $action)');

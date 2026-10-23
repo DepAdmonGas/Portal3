@@ -125,7 +125,7 @@ return d.status_label;
 }
 },
 {
-title: '<i class="fas fa-ellipsis-v"></i>',
+title: '<i class="ti ti-dots-vertical fs-5"></i>',
 data: null,
 className: 'align-middle text-center',
 orderable: false,

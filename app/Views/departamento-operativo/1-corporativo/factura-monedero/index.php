@@ -53,51 +53,54 @@ data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 </div>
 </template>
 
-<div class="table-responsive pb-5" style="overflow-y: hidden; overflow-x: auto;">
+<div class="table-responsive pb-5 overflow-x-auto overflow-y-hidden">
 <table id="tabla-factura-monedero" class="table table-striped table-bordered w-100"></table>
 </div>
 
 <!-- Modal Nuevo/Editar -->
-<div class="modal fade" id="modalFacturaMonedero" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalFacturaMonedero" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title" x-text="editando ? 'Editar factura' : 'Nueva factura'"></h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti":class="editando ? 'ti-edit' : 'ti-receipt-2'"></i>
+    <span x-text="editando ? 'Editar factura' : 'Nueva factura'"></span>
+</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <div class="row">
 
 <template x-if="editando">
 <div class="col-12 mb-3">
-<label class="form-label pb-0">Folio:</label>
+<label class="form-label mb-0">Folio:</label>
 <p class="mt-0 fw-bold" x-text="'00' + form.folio"></p>
 </div>
 </template>
 
 <template x-if="editando">
 <div class="col-12 mb-3">
-<label class="form-label pb-0">Fecha de creación:</label>
+<label class="form-label mb-1">Fecha de creación:</label>
 <p class="mt-0" x-text="form.fecha_creacion"></p>
 </div>
 </template>
 
 <div class="col-md-6 mb-3">
-<label class="form-label pb-0">* No. Factura:</label>
+<label class="form-label mb-1">* No. Factura:</label>
 <input type="text" class="form-control" x-model="form.no_factura" :class="{'is-invalid': errors.no_factura}">
 </div>
 
 <div class="col-md-6 mb-3">
-<label class="form-label pb-0">* Monto:</label>
+<label class="form-label mb-1">* Monto:</label>
 <input type="number" min="0" step="0.01" class="form-control" x-model="form.monto" :class="{'is-invalid': errors.monto}">
 </div>
 
 <div class="col-12">
-<h5 class="mt-2 mb-3">Documentación:</h5>
+<h5 class="mt-2 mb-3 form-label">Documentación:</h5>
 </div>
 
 <div class="col-md-6 mb-3">
-<label class="form-label">Factura (PDF):</label>
+<label class="form-label mb-1">Factura (PDF):</label>
 
 <div class="input-group">
 <input
@@ -119,7 +122,7 @@ title="Descargar factura">
 </div>
 
 <div class="col-md-6 mb-3">
-<label class="form-label">Factura (XML):</label>
+<label class="form-label mb-1">Factura (XML):</label>
 
 <div class="input-group">
 <input
@@ -131,7 +134,7 @@ accept=".xml">
 <template x-if="editando && form.archivo_factura_xml">
 <button
 type="button"
-class="btn btn-outline-success"
+class="btn btn-outline-primary"
 @click="downloadFile('factura-monedero', form.archivo_factura_xml)"
 title="Descargar XML">
 <i class="ti ti-download"></i>
@@ -166,49 +169,62 @@ title="Descargar comprobante">
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-<button type="button" class="btn btn-labeled2 btn-success" @click="guardar()" :disabled="guardando">
-<span x-text="editando ? 'Editar' : 'Guardar'"></span>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<i class="ti ti-x"></i>    
+Cancelar</button>
+        </div>
+        <div class="col-12 col-md-auto d-grid ms-0 ms-md-1">
+<button type="button" class="btn btn-success" @click="guardar()" :disabled="guardando">
+    <i class="ti ti-check"></i>
+<span x-text="editando ? 'Finalizar' : 'Guardar'"></span>
 </button>
+        </div>
+    </div>
+
+
 </div>
 </div>
 </div>
 </div>
 
 <!-- Modal Detalle -->
-<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Detalle de factura monedero</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+<i class="ti ti-eye"></i>    
+Detalle de factura monedero</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <template x-if="detalle">
 <div class="row">
 
-<div class="col-xl-5 col-lg-5 col-md-12 col-sm-12 mb-3">
-<label class="form-label pb-0">No. de folio:</label>
+<div class="col-xl-5 col-lg-5 col-md-12 col-sm-12">
+<label class="form-label mb-1">No. de folio:</label>
 <p x-text="'00' + detalle.folio"></p>
 </div>
 
-<div class="col-xl-5 col-lg-5 col-md-12 col-sm-12 mb-3">
-<label class="form-label pb-0">Monto:</label>
+<div class="col-xl-5 col-lg-5 col-md-12 col-sm-12">
+<label class="form-label mb-1">Monto:</label>
 <p x-text="'$' + Number(detalle.monto).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></p>
 </div>
 
-<div class="col-xl-5 col-lg-5 col-md-12 col-sm-12 mb-3">
-<label class="form-label pb-0">No. de factura:</label>
+<div class="col-xl-5 col-lg-5 col-md-12 col-sm-12 ">
+<label class="form-label mb-1">No. de factura:</label>
 <p x-text="detalle.no_factura || '-'"></p>
 </div>
 
-<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
-<label class="form-label pb-0">Fecha de solicitud:</label>
+<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+<label class="form-label mb-1">Fecha de solicitud:</label>
 <p x-text="detalle.fecha_creacion_format || detalle.fecha_creacion || '-'"></p>
 </div>
 
-<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
-<label class="form-label pb-0">Estado del factura:</label>
+<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+<label class="form-label mb-1">Estado del factura:</label>
 <p>
 <template x-if="detalle.estado == 1"><span class="badge bg-success">Finalizado</span></template>
 <template x-if="detalle.estado != 1"><span class="badge bg-warning text-dark">Pendiente</span></template>
@@ -216,7 +232,7 @@ title="Descargar comprobante">
 </div>
 
 <div class="col-12">
-<label class="form-label pb-0">Documentos:</label>
+<label class="form-label mb-2">Documentos:</label>
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table class="table table-bordered mb-0 text-nowrap align-middle">
 <thead>
@@ -262,7 +278,13 @@ title="Descargar comprobante">
 </template>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+    <div class="row ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <i class="ti ti-x"></i>
+Cerrar</button>
+        </div>
+    </div>
 </div>
 </div>
 </div>

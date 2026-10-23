@@ -1,6 +1,6 @@
 # Checador V2 — desarrollo con datos sintéticos
 
-Fecha: 2026-10-21  
+Fecha: 2026-10-21
 Alcance: únicamente el reporte MVP de marcaciones crudas en Portal3 local.
 
 ## Destino y aislamiento

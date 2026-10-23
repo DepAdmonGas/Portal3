@@ -5,7 +5,7 @@
             <div class="col-12">
 
                 <div class="dropdown float-end">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"><i class="ti ti-tools"></i></button>
+                    <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item pointer" @click.prevent="abrirModalDirectorio()"><i class="ti ti-address-book me-1"></i> Directorio</a></li>
                         <li><a class="dropdown-item pointer" @click.prevent="abrirModalFacturaTelcel()"><i class="ti ti-file-plus me-1"></i> Factura</a></li>
@@ -165,9 +165,14 @@
         <div class="modal fade" id="modalDirectorio" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" x-text="editandoDirectorio ? 'Editar directorio' : 'Nuevo directorio'"></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" :disabled="guardando"></button>
+                    <div class="modal-header bg-primary">
+                        
+<h5 class="modal-title text-white">
+    <i class="ti" :class="editandoDirectorio ? 'ti-edit' : 'ti-folder'"></i>
+    <span x-text="editandoDirectorio ? 'Editar directorio' : 'Nuevo directorio'"></span>
+</h5>
+
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" :disabled="guardando"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
@@ -184,9 +189,19 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" :disabled="guardando">Cancelar</button>
-                        <button type="button" class="btn btn-success" @click="guardarDirectorio" :disabled="guardando">Guardar</button>
-                    </div>
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                            <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-1">
+ <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="guardando">
+    <i class="ti ti-x"></i>
+ Cancelar</button>
+                            </div>
+                            <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn btn-success" @click="guardarDirectorio" :disabled="guardando">
+    <i class="ti ti-check"></i>
+Guardar</button>
+                            </div>
+                        </div>
+                        </div>
                 </div>
             </div>
         </div>
@@ -194,13 +209,15 @@
         <div class="modal fade" id="modalFacturaTelcel" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Nuevo documento</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" :disabled="guardando"></button>
+                    <div class="modal-header bg-primary">
+                        <h5 class="modal-title text-white">
+                            <i class="ti ti-clipboard-text"></i>
+                        Nuevo documento</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" :disabled="guardando"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">* Detalle:</label>
+                            <label class="form-label mb-1">* Detalle:</label>
                             <select class="form-select" x-model="formDetalle">
                                 <option value="">Selecciona una opción...</option>
                                 <option value="Factura">Factura</option>
@@ -212,14 +229,24 @@
                             </select>
                         </div>
                         <div>
-                            <label class="form-label">* Documento:</label>
+                            <label class="form-label mb-1">* Documento:</label>
                             <input type="file" class="form-control" x-ref="facturaFileInput" accept=".pdf,.jpg,.png">
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" :disabled="guardando">Cancelar</button>
-                        <button type="button" class="btn btn-success" @click="guardarFacturaTelcel" :disabled="guardando">Guardar</button>
-                    </div>
+                        <div class="row g-0 w-100 justify-content-end">
+                            <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-1">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="guardando">
+  <i class="ti ti-x"></i>  
+Cancelar</button>
+                            </div>
+                            <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn btn-success" @click="guardarFacturaTelcel" :disabled="guardando">
+    <i class="ti ti-check"></i>
+Guardar</button>
+                            </div>
+                        </div>
+                        </div>
                 </div>
             </div>
         </div>

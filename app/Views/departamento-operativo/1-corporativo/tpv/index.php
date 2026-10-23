@@ -1,8 +1,8 @@
 <div class="row mb-3">
 <?php if ($puedeDescargar): ?>
 <div class="dropdown mt-2 text-end">
-<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel
+<button type="button" class="btn btn-light dropdown-toggle text-dark|" data-bs-toggle="dropdown" aria-expanded="false">
+<i class="ti ti-dots-vertical"></i>
 </button>
 
 <ul class="dropdown-menu dropdown-menu-end">
@@ -58,7 +58,7 @@ x-data="tpvComponent()">
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
 <h5 class="mb-0 text-white"><i class="ti ti-building me-2"></i><span x-text="empresa === 'G500 FLETT' ? 'TICKETCARD+' : empresa"></span></h5>
 <template x-if="!multiestacion && puedeEditar && !finalizado">
-<button type="button" class="btn btn-success btn-sm" @click="agregarCierre(empresa)" :disabled="saving">
+<button type="button" class="btn btn-success " @click="agregarCierre(empresa)" :disabled="saving">
 <i class="ti ti-plus"></i> Nuevo
 </button>
 </template>
@@ -139,8 +139,8 @@ class="ti ti-circle-x text-danger fs-6" title="Pendiente"></i>
 </td>
 </tr>
 </template>
-<tr>
-<th class="align-middle text-center">TOTAL</th>
+<tr class="table-dark">
+<th class="align-middle text-center text-white">TOTAL</th>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totalesEmpresa(empresa).total_importe)"></strong></td>
 <td class="align-middle text-center"><strong x-text="totalesEmpresa(empresa).total_ticket"></strong></td>
 <td></td>
