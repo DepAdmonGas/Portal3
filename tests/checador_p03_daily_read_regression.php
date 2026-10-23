@@ -29,7 +29,9 @@ $user->id = 123;
 $base = 'https://checador.test/';
 $sourceController = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $sourceService = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
-$sourceView = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$sourceDailyView = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
+$sourceView = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/punch-report.php');
+$sourceTableScript = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.datatable.init.js');
 $sourceRoute = file_get_contents(__DIR__ . '/../routes/web.php');
 
 $make = static function (array $responses, ?array &$history = null, ?string &$token = null) use ($base): ChecadorDailyReadService {
@@ -110,7 +112,17 @@ $unresolvedService->resolveWorkplaceLocalDay($user, 1, '2026-10-11');
 $assert(count($unresolvedHistory) === 1, 'P309 timezone unresolved prevents Punch Read');
 $assert(str_contains($secondUri, 'from=2026-10-12T06%3A00%3A00Z') || str_contains($secondUri, 'from=2026-10-12T06:00:00Z'), 'P310 API from_utc is used exactly');
 $assert(str_contains($secondUri, 'to=2026-10-13T06%3A00%3A00Z') || str_contains($secondUri, 'to=2026-10-13T06:00:00Z'), 'P311 API to_utc is used exactly');
-$assert(!str_contains($sourceService, 'DateTimeZone') && !str_contains($sourceService, '+ 24') && !str_contains($sourceService, "modify('+1 day'"), 'P312 Portal3 performs no local UTC/DST recalculation');
+$timezoneMethodStart = strpos($sourceService, 'public function resolveWorkplaceLocalDay(');
+$timezoneMethodEnd = $timezoneMethodStart === false
+    ? false
+    : strpos($sourceService, 'public function readObservedPunches(', $timezoneMethodStart);
+$timezoneMethodSource = $timezoneMethodStart !== false && $timezoneMethodEnd !== false
+    ? substr($sourceService, $timezoneMethodStart, $timezoneMethodEnd - $timezoneMethodStart)
+    : '';
+$assert($timezoneMethodSource !== ''
+    && !str_contains($timezoneMethodSource, 'DateTimeZone')
+    && !str_contains($timezoneMethodSource, '+ 24')
+    && !str_contains($timezoneMethodSource, "modify('+1 day'"), 'P312 production timezone flow trusts the API UTC window; local conversion is confined to the guarded demo provider');
 $assert(str_contains($secondUri, 'station_id=1'), 'P313 station_id equals the canonical authorized workplace ID');
 $assert(str_contains($secondUri, 'page=1') && str_contains($secondUri, 'per_page=50') && str_contains($secondUri, 'from=') && str_contains($secondUri, 'to='), 'P314 Punch Read uses the frozen parameter names');
 
@@ -123,14 +135,20 @@ $unavailable = $service->resolveWorkplaceLocalDay($user, 1, '2026-10-12');
 $assert(($unavailable['error']['kind'] ?? '') === 'api_unavailable', 'P316 API timeout/500 becomes an unavailable state');
 
 // P317-P324: observed-only UI and no browser/API credential boundary.
-$assert(str_contains($sourceView, 'No se observaron marcaciones en este conjunto consultado.') || str_contains($sourceView, 'No se devolvieron marcaciones observadas'), 'P317 successful empty results are rendered as observed-empty');
+$assert(str_contains($sourceTableScript, 'No se devolvieron marcaciones observadas para este periodo consultado.'), 'P317 successful empty results are rendered as observed-empty');
 $assert(!str_contains($sourceView, 'SIN MARCACIÓN'), 'P318 successful empty results do not render SIN MARCACIÓN or FALTA');
-$assert(!preg_match('/n[oó]mina|payroll|descuento/i', $sourceView), 'P319 no payroll conclusion is rendered');
-$assert(str_contains($sourceView, "['integrity']['status']") || str_contains($sourceView, "['integrity']['status'] ??"), 'P320 integrity status is preserved for display');
-$assert(str_contains($sourceView, 'paginationLinks') && str_contains($sourceController, 'current_page'), 'P321 pagination metadata is respected');
-$assert(!preg_match('/fetch\(|axios\.|XMLHttpRequest|api\/v2/i', $sourceView), 'P322 browser-direct API requests are absent');
-$assert(!str_contains($sourceView, 'X-Device-Id') && !str_contains($sourceView, 'X-Credential-Key') && !str_contains($sourceView, 'Bearer '), 'P323 privileged credentials are absent from rendered HTML');
-$assert(str_contains($sourceRoute, '/departamento-operativo/recursos-humanos/checador') && str_contains($sourceView, 'Checador'), 'P324 existing Checador shell behavior is preserved');
+$assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $sourceView), 'P319 raw dashboard does not render payroll amounts or document data');
+$assert(str_contains($sourceView, 'punch-detail-integrity')
+    && str_contains($sourceTableScript, "setDetailText('punch-detail-integrity'")
+    && str_contains($sourceController, "'integrity' => ChecadorPresentationFormatter::integrityLabel()"), 'P320 raw-event integrity label is explicitly preserved in the detail view');
+$assert(str_contains($sourceView, 'data-endpoint="/departamento-operativo/recursos-humanos/checador/reporte/data"')
+    && str_contains($sourceTableScript, 'serverSide: true')
+    && str_contains($sourceController, "'recordsFiltered' => (int) \$result['records_filtered']"), 'P321 server-side pagination metadata is respected by the raw report');
+$assert(!preg_match('/fetch\(|axios\.|XMLHttpRequest|api\/v2/i', $sourceDailyView . $sourceView), 'P322 browser-direct API requests are absent');
+$assert(!str_contains($sourceDailyView . $sourceView, 'X-Device-Id') && !str_contains($sourceDailyView . $sourceView, 'X-Credential-Key') && !str_contains($sourceDailyView . $sourceView, 'Bearer '), 'P323 privileged credentials are absent from rendered HTML');
+$assert(str_contains($sourceRoute, "'/recursos-humanos/checador/asistencia'")
+    && str_contains($sourceController, "renderDashboardWorkspace('daily-attendance')")
+    && str_contains($sourceDailyView, 'Asistencia del día'), 'P324 the operational attendance view remains available through its separate authenticated route');
 
 // P325-P329: temporal fail-closed states and successful empty/error distinction.
 $service = $make([new Response(404, [], json_encode(['status' => 'WORKPLACE_TIMEZONE_UNRESOLVED'], JSON_THROW_ON_ERROR))]);

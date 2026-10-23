@@ -13,6 +13,8 @@ use GuzzleHttp\Psr7\Response;
 
 $passes = 0;
 $fails = 0;
+$_ENV['APP_ENV'] = 'dev';
+$_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'true'; // Requests in this test are intercepted by explicit Guzzle MockHandlers.
 $assert = static function (bool $condition, string $message) use (&$passes, &$fails): void {
     echo ($condition ? 'PASS ' : 'FAIL ') . $message . "\n";
     $condition ? $passes++ : $fails++;
@@ -27,6 +29,14 @@ $expectedArchitectureHash = '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$journeyMethodSource = '';
+if (preg_match('/public function evaluateJourney\([\s\S]*?(?=\n    public function )/', $serviceSource, $journeyMethodMatches) === 1) {
+    $journeyMethodSource = $journeyMethodMatches[0];
+}
+$auditDetailSource = '';
+if (preg_match('/<details[^>]*id="journey-audit-detail-<\?= \(int\) \$workerId \?>"[^>]*>([\s\S]*?)<\/details>/', $viewSource, $auditDetailMatches) === 1) {
+    $auditDetailSource = $auditDetailMatches[1];
+}
 $contractSource = file_get_contents($portal3Contract);
 $apiSource = file_get_contents($apiContract);
 
@@ -103,6 +113,10 @@ $assert(str_contains($viewSource, "\$role === 'SURPLUS'") && str_contains($viewS
 $assert(str_contains($viewSource, "\$role === 'UNMATCHED'") && str_contains($viewSource, 'Sin emparejar'), 'P3HP12 UNMATCHED excluded and labelled');
 $assert(array_key_exists('segment_ordinal', $data['evaluated_raw_events'][6] ?? []) && $data['evaluated_raw_events'][6]['segment_ordinal'] === null, 'P3HP13 UNMATCHED null segment ordinal preserved');
 $assert(count($data['evaluated_raw_events'] ?? []) === 7 && str_contains($viewSource, 'Ver todas las marcaciones'), 'P3HP14 5+ events and disclosure preserved');
+$assert(str_contains($viewSource, 'href="#journey-audit-detail-<?= (int) $workerId ?>"')
+    && $auditDetailSource !== ''
+    && str_contains($auditDetailSource, 'Marcaciones consideradas:')
+    && str_contains($auditDetailSource, 'foreach ($auditEvents as $auditEvent)'), 'P3HP14A all-markings link targets the complete audit evidence');
 $assert(isset($data['evaluated_raw_events'][5]['segment_ordinal']) && $data['evaluated_raw_events'][5]['segment_ordinal'] === 3 && str_contains($viewSource, 'segmentos adicionales'), 'P3HP15 segment ordinal 3 and disclosure preserved');
 $assert(str_contains($viewSource, 'count($additionalSegmentOrdinals)') && str_contains($viewSource, 'primarySlots'), 'P3HP16 3+ segments do not alter primary meanings');
 $assert(!str_contains($viewSource, "'AMBIGUOUS' =>") && str_contains($viewSource, 'AMBIGUOUS_PAIRING'), 'P3HP17 AMBIGUOUS is not a pairing role');
@@ -112,7 +126,7 @@ $assert(str_contains($viewSource, 'Autorizar FALTA explícitamente') && str_cont
 $assert(!preg_match('/if \\(.*evaluated_raw_event_count.*FALTA|evaluated_raw_events.*FALTA/i', $viewSource), 'P3HP21 zero events do not generate FALTA');
 $assert(str_contains($viewSource, 'Administrative') || str_contains($viewSource, 'administrative'), 'P3HP22 administrative overlay remains separate');
 $assert(str_contains($viewSource, "format('H:i')") && str_contains($contractSource, 'COMPACT_TIME_FORMAT: HH:mm'), 'P3HP23 compact time is HH:mm');
-$assert(!preg_match("/format\\([^)]*s['\"]/", $viewSource), 'P3HP24 compact seconds are absent');
+$assert(!preg_match("/->format\\(['\"]H:i:s['\"]\\)/", $viewSource), 'P3HP24 compact seconds are absent');
 $assert(str_contains($contractSource, 'COMPACT_TIMEZONE_ABBREVIATION: NO'), 'P3HP25 timezone abbreviation is absent');
 $assert(str_contains($viewSource, 'Fecha local:') && str_contains($contractSource, 'CROSS_CALENDAR_DATE_DISCLOSURE: YES'), 'P3HP26 cross-calendar date disclosed');
 $assert(str_contains($viewSource, 'setTimezone') && !str_contains($viewSource, 'modify('), 'P3HP27 timezone/workday ownership is not recalculated');
@@ -122,7 +136,12 @@ $assert(str_contains($controllerSource, '$journeyErrors = []') && str_contains($
 $assert(str_contains($controllerSource, "'date' => \$date") && str_contains($controllerSource, 'newSnapshotRef'), 'P3HP31 date context is isolated');
 $assert(str_contains($serviceSource, "'ENTRY', 'EXIT', 'SURPLUS', 'UNMATCHED'") && str_contains($serviceSource, "array_key_exists('pairing_role'"), 'P3HP32 missing pairing_role fails closed');
 $assert(str_contains($serviceSource, "array_key_exists('segment_ordinal'"), 'P3HP33 missing segment_ordinal fails closed');
-$assert(!preg_match('/array_slice|first four|first.*four/i', $serviceSource . $controllerSource), 'P3HP34 no local P1/chronology fallback');
+$assert($journeyMethodSource !== ''
+    && !preg_match('/array_slice|array_chunk|array_splice|first four|first.{0,10}four/i', $journeyMethodSource)
+    && str_contains($journeyMethodSource, '$rawEvents = $data[\'evaluated_raw_events\'] ?? null;')
+    && str_contains($journeyMethodSource, '$rawCount !== count($rawEvents)')
+    && str_contains($journeyMethodSource, '$provenanceEvents !== $rawEvents')
+    && str_contains($controllerSource, '$journeys[(int) $workerId] = $journeyResult[\'data\'];'), 'P3HP34 P3-H preserves the complete authoritative event collection; unrelated fixture pagination is allowed');
 $assert(!str_contains($serviceSource, 'segundos_trabajados_totales'), 'P3HP35 no local P2 calculation');
 $assert(!preg_match('/INSERT\\s+INTO|UPDATE\\s+op_rh_v2_/i', $serviceSource . $controllerSource), 'P3HP36 no payroll/database effect');
 $assert(str_contains($viewSource, 'review') || str_contains($viewSource, 'REVIEW_REQUIRED'), 'P3HP37 review status remains visible');

@@ -14,6 +14,9 @@ use GuzzleHttp\Psr7\Response;
 
 $passes = 0;
 $fails = 0;
+$_ENV['APP_ENV'] = 'dev';
+$_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
+$_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'true'; // The API client below is fully intercepted by Guzzle MockHandler.
 $assert = static function (bool $condition, string $message) use (&$passes, &$fails): void {
     echo ($condition ? 'PASS ' : 'FAIL ') . $message . "\n";
     $condition ? $passes++ : $fails++;
@@ -25,8 +28,15 @@ $base = 'https://checador.test/';
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $accessSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorAccessService.php');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $routesSource = file_get_contents(__DIR__ . '/../routes/web.php');
+$extractPublicMethod = static function (string $source, string $method): string {
+    $pattern = '/    public function ' . preg_quote($method, '/')
+        . '\\([\\s\\S]*?(?=\\n    (?:public|protected|private) function |\\n})/';
+    return preg_match($pattern, $source, $matches) === 1 ? $matches[0] : '';
+};
+$evaluationControllerMethodSource = $extractPublicMethod($controllerSource, 'administrativeEvaluation');
+$evaluationServiceMethodSource = $extractPublicMethod($serviceSource, 'executeAdministrativeEvaluation');
 $apiContract = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/v2/CHECADOR_V2_P3G_ADMINISTRATIVE_API_BOUNDARY_CONTRACT_V1.0.md';
 $freeze = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
 $portalContract = __DIR__ . '/../docs/v2/CHECADOR_V2_PORTAL3_P3G_INCIDENCE_ADMINISTRATIVE_CONTRACT_V1.0.md';
@@ -44,7 +54,7 @@ $postPayload = static function (string $status = 'REVIEW_REQUIRED'): array {
         'created_at_utc' => '2026-10-14T10:00:00Z',
     ]];
 };
-$readPayload = static function (string $status = 'REVIEW_REQUIRED'): array {
+$readPayload = static function (string $status = 'REVIEW_REQUIRED', array $linkedAdjustments = []): array {
     return ['status' => 'success', 'data' => [
         'worker_id' => 41,
         'workplace_id' => 7,
@@ -61,7 +71,7 @@ $readPayload = static function (string $status = 'REVIEW_REQUIRED'): array {
             'associated_calculation_revision_id' => 55,
             'created_at_utc' => '2026-10-14T10:00:00Z',
             'linked_incidences' => [],
-            'linked_adjustments' => [],
+            'linked_adjustments' => $linkedAdjustments,
         ],
     ]];
 };
@@ -77,9 +87,16 @@ $make = static function (array $responses, ?array &$history = null) use ($base):
 };
 
 $history = [];
+$linkedAdjustmentFixture = [
+    'uuid_ajuste' => 'ADJ_V8F_PHYSICAL_1',
+    'uuid_ajuste_logico' => 'ADJ_V8F_LOGICAL_1',
+    'adjustment_type' => 'INTERPRETED_ENTRY_TIME',
+    'revision_number' => 2,
+    'adjustment_status' => 'ACTIVE',
+];
 $service = $make([
     new Response(200, [], json_encode($postPayload(), JSON_THROW_ON_ERROR)),
-    new Response(200, [], json_encode($readPayload(), JSON_THROW_ON_ERROR)),
+    new Response(200, [], json_encode($readPayload('REVIEW_REQUIRED', [$linkedAdjustmentFixture]), JSON_THROW_ON_ERROR)),
     new Response(200, [], json_encode($postPayload('FALTA'), JSON_THROW_ON_ERROR)),
 ], $history);
 $normal = $service->executeAdministrativeEvaluation($user, 41, 7, '2026-10-13', 'eval-normal-1', 55);
@@ -108,6 +125,13 @@ $assert($normalRequest->getMethod() === 'POST' && $normalRequest->getHeaderLine(
 $assert(($normal['ok'] ?? false) === true && ($normal['data']['administrative_status'] ?? '') === 'REVIEW_REQUIRED', 'P3GPD16 authoritative REVIEW_REQUIRED result is preserved');
 $assert(($falta['ok'] ?? false) === true && ($falta['data']['administrative_status'] ?? '') === 'FALTA', 'P3GPD17 authoritative explicit FALTA result is preserved');
 $assert(($readback['ok'] ?? false) === true && ($readback['data']['evaluation']['associated_calculation_revision_id'] ?? 0) === 55, 'P3GPD18 canonical readback preserves calculation provenance');
+$assert(($readback['data']['evaluation']['linked_adjustments'][0] ?? null) === $linkedAdjustmentFixture, 'P3GPD41 read-only adjustment projection preserves the five contract fields');
+$assert(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentTypeLabel('INTERPRETED_ENTRY_TIME') === 'Hora de entrada administrativa interpretada', 'P3GPD42 known adjustment type is presented in Spanish');
+$assert(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentStatusLabel('SUPERSEDED') === 'Sustituido por revisión posterior', 'P3GPD43 known adjustment revision status is presented in Spanish');
+$assert(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentTypeLabel('UNRECOGNIZED') === 'Tipo de ajuste no reconocido', 'P3GPD44 unknown adjustment type fails to a generic Spanish label');
+$assert(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentStatusLabel('UNRECOGNIZED') === 'Estado del ajuste no reconocido', 'P3GPD45 unknown adjustment state fails to a generic Spanish label');
+$assert(str_contains($viewSource, 'administrativeAdjustmentTypeLabel') && str_contains($viewSource, 'administrativeAdjustmentStatusLabel') && str_contains($viewSource, 'uuid_ajuste_logico') && str_contains($viewSource, 'no entrega aquí el historial completo'), 'P3GPD46 view renders only the linked adjustment projection and states its history limit');
+$assert(!str_contains($routesSource, '/ajustes/') && !str_contains($viewSource, 'name="adjustment_type"'), 'P3GPD47 no unsupported adjustment command route or form is exposed');
 $assert(array_key_exists('policy_rule_version', $readback['data']['evaluation']) && $readback['data']['evaluation']['policy_rule_version'] === null, 'P3GPD19 null policy_rule_version is not fabricated');
 $assert(str_contains($controllerSource, 'readAdministrativeEvaluation($user, $workerId, $workplaceId, $date)'), 'P3GPD20 successful POST triggers canonical GET readback');
 $assert(str_contains($controllerSource, 'retry_idempotency_key') && str_contains($evaluationFeedbackSource = $controllerSource, 'evaluationFeedback'), 'P3GPD21 transport retry retains the same idempotency identity');
@@ -130,7 +154,11 @@ $assert(($server['error']['kind'] ?? '') === 'api_unavailable', 'P3GPD29 timeout
 $assert(!str_contains($serviceSource, 'INSERT INTO') && !str_contains($controllerSource, 'INSERT INTO'), 'P3GPD30 no direct Portal3 database write exists');
 $assert(!str_contains($serviceSource, 'evaluateCalculation') && !str_contains($controllerSource, 'evaluateCalculation'), 'P3GPD31 no local P1/P2 calculation engine is added');
 $assert(!str_contains($controllerSource, 'raw PunchEvent') && !str_contains($controllerSource, 'incidencePrecedence'), 'P3GPD32 no raw membership or incidence precedence logic is added');
-$assert(!preg_match('/RecibosNomina|descuento/i', $viewSource . $controllerSource . $serviceSource), 'P3GPD33 no payroll effect is introduced');
+$payrollResultFields = '/\\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\\b/i';
+$evaluationPathSource = $evaluationControllerMethodSource . $evaluationServiceMethodSource;
+$assert($evaluationControllerMethodSource !== '' && $evaluationServiceMethodSource !== ''
+    && !preg_match('/RecibosNominaService|OpReciboNominaV2/i', $evaluationPathSource)
+    && !preg_match($payrollResultFields, $evaluationPathSource . $viewSource), 'P3GPD33 evaluation path uses no payroll reader and renders no payroll result fields');
 $assert(str_contains($viewSource, 'REVIEW_REQUIRED') || str_contains($viewSource, 'human_review_status'), 'P3GPD34 review states remain renderable');
 $assert(str_contains($viewSource, 'policyRuleVersion === null ?') && str_contains($viewSource, 'Referencia de cálculo'), 'P3GPD35 provenance display preserves nullable policy and calculation reference');
 $assert(str_contains($controllerSource, '$administrativeEvaluations = []') && str_contains($controllerSource, '$evaluationPermissions = ['), 'P3GPD36 worker/date evaluation state starts empty per request');

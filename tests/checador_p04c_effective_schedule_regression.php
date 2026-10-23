@@ -30,10 +30,18 @@ $user->id = 999;
 $base = 'https://checador.test/';
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/schedule-history.php');
+$attendanceViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
+$adjustmentsViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $p04aSource = file_get_contents(__DIR__ . '/checador_p04_level1_snapshot_regression.php');
 $p04bSource = file_get_contents(__DIR__ . '/checador_p04b_level2_window_regression.php');
 $p03Source = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
+$extractPublicMethod = static function (string $source, string $method): string {
+    $pattern = '/    public function ' . preg_quote($method, '/')
+        . '\\([\\s\\S]*?(?=\\n    (?:public|protected|private) function |\\n})/';
+    return preg_match($pattern, $source, $matches) === 1 ? $matches[0] : '';
+};
+$effectiveScheduleMethodSource = $extractPublicMethod($serviceSource, 'getEffectiveSchedule');
 
 $make = static function (array $responses, ?array &$history = null) use ($base): ChecadorDailyReadService {
     $mock = new MockHandler($responses);
@@ -103,8 +111,14 @@ $assert(!preg_match('/Intl\.DateTimeFormat|resolvedOptions\(\)\.timeZone|navigat
 $assert(($scheduled['data']['estado_jornada'] ?? '') === 'SCHEDULED'
     && ($scheduled['data']['horario_local']['timezone'] ?? '') === 'America/Mexico_City', 'P4C09 effective schedule response is parsed exactly');
 $assert(($scheduled['data']['origen']['version_plantilla'] ?? 0) === 3, 'P4C10 schedule provenance and version are preserved');
-$assert(($scheduled['data']['horario_local']['segmentos'][0]['dia_offset_fin'] ?? 0) === 1 && str_contains($viewSource, 'dia_offset_fin'), 'P4C11 overnight end_day_offset is preserved');
-$assert(!preg_match('/\bDATE\s*\(|ocurrido_at_utc.*\bDATE\(ocurrido_at_utc/i', $controllerSource . $serviceSource . $viewSource), 'P4C12 local workday is not derived from UTC DATE');
+$assert(($scheduled['data']['horario_local']['segmentos'][0]['dia_offset_fin'] ?? 0) === 1
+    && str_contains($viewSource, 'dia_offset_fin') && str_contains($attendanceViewSource, 'dia_offset_fin'), 'P4C11 overnight end_day_offset is preserved');
+$invalidTimezonePayload = json_decode((string) $schedulePayload()->getBody(), true, 512, JSON_THROW_ON_ERROR);
+$invalidTimezonePayload['data']['horario_local']['timezone'] = 'CST';
+$invalidTimezoneSchedule = $make([new Response(200, ['Content-Type' => 'application/json'], json_encode($invalidTimezonePayload, JSON_THROW_ON_ERROR))])
+    ->getEffectiveSchedule($user, 105, 12, '2026-11-02');
+$assert(($invalidTimezoneSchedule['error']['kind'] ?? '') === 'schedule_unavailable', 'invalid non-IANA schedule timezone fails closed');
+$assert(!preg_match('/\bDATE\s*\(\s*ocurrido_at_utc\s*\)/i', $controllerSource . $serviceSource . $viewSource), 'P4C12 local workday is not derived from UTC DATE(ocurrido_at_utc)');
 
 $dayOff = $make([$schedulePayload('DAY_OFF')])->getEffectiveSchedule($user, 105, 12, '2026-11-02');
 $unknown = $make([$schedulePayload('UNKNOWN')])->getEffectiveSchedule($user, 105, 12, '2026-11-02');
@@ -118,14 +132,19 @@ $twoSegments = $make([$schedulePayload('SCHEDULED', [
     ['ordinal' => 2, 'tipo' => 'WORK', 'hora_inicio_local' => '13:00:00', 'hora_fin_local' => '17:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
 ])])->getEffectiveSchedule($user, 105, 12, '2026-11-02');
 $assert(count($twoSegments['data']['horario_local']['segmentos'] ?? []) === 2, 'P4C17 all returned segments are preserved');
-$assert(!preg_match('/Salida comida|Regreso comida/i', $viewSource) && str_contains($viewSource, 'primarySlots'), 'P4C18 schedule labels remain separate from P3-H projection');
+$assert(!preg_match('/Salida comida|Regreso comida/i', $attendanceViewSource)
+    && str_contains($attendanceViewSource, "'ENTRY:1'")
+    && str_contains($attendanceViewSource, "'EXIT:1'")
+    && str_contains($attendanceViewSource, '$segments'), 'P4C18 schedule labels remain separate from P3-H projection');
 $assert(!preg_match('/first.*punch|last.*punch|pair(?:Punch|Event|Slot|ingAlgorithm)/i', $controllerSource . $serviceSource), 'P4C19 punch pairing calculation is not implemented locally');
-$assert(!preg_match('/laten|retardo/i', $controllerSource . $serviceSource . $viewSource), 'P4C20 lateness is not calculated');
-$assert(!preg_match('/early.?departure|salida anticipada/i', $controllerSource . $serviceSource . $viewSource), 'P4C21 early departure is not calculated');
+$assert($effectiveScheduleMethodSource !== ''
+    && !preg_match('/laten|retardo/i', $effectiveScheduleMethodSource), 'P4C20 effective-schedule client does not calculate lateness');
+$assert($effectiveScheduleMethodSource !== ''
+    && !preg_match('/early.?departure|salida anticipada/i', $effectiveScheduleMethodSource), 'P4C21 effective-schedule client does not calculate early departure');
 $assert(!preg_match('/overtime|tiempo extra|horas extra/i', $controllerSource . $serviceSource . $viewSource), 'P4C22 overtime is not calculated');
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P4C23 SIN MARCACIÓN is not inferred');
-$assert(str_contains($viewSource, 'Nunca se activa automáticamente') && str_contains($controllerSource, 'authorizeFalta'), 'P4C24 FALTA is not inferred');
-$assert(!preg_match('/RecibosNomina|descuento/i', $controllerSource . $serviceSource . $viewSource), 'P4C25 payroll conclusions are not rendered');
+$assert(str_contains($adjustmentsViewSource, 'Nunca se activa automáticamente') && str_contains($controllerSource, 'authorizeFalta'), 'P4C24 FALTA is not inferred');
+$assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $effectiveScheduleMethodSource . $viewSource), 'P4C25 schedule view does not render payroll amounts or document data');
 $assert(str_contains($controllerSource, 'getLevel2WindowStatus') && str_contains($controllerSource, '$level2Meta'), 'P4C26 P04B Level 2 remains authoritative and separate');
 $assert(str_contains($p04aSource, 'createDailyPunchSnapshot'), 'P4C27 P04A snapshot behavior remains intact');
 $assert(str_contains($p03Source, 'readObservedPunches'), 'P4C28 P03 raw-read behavior remains intact');

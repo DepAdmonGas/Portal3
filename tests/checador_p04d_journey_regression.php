@@ -15,6 +15,8 @@ use Psr\Http\Message\RequestInterface;
 
 $passes = 0;
 $fails = 0;
+$_ENV['APP_ENV'] = 'dev';
+$_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'true'; // Requests in this test are intercepted by explicit Guzzle MockHandlers.
 $assert = static function (bool $condition, string $message) use (&$passes, &$fails): void {
     echo ($condition ? 'PASS ' : 'FAIL ') . $message . "\n";
     $condition ? $passes++ : $fails++;
@@ -24,9 +26,20 @@ $user = new Usuario();
 $user->id = 999;
 $base = 'https://checador.test/';
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
+$formatterSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorPresentationFormatter.php');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-journeys.php');
+$attendanceViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
+$scheduleHistoryViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/schedule-history.php');
+$incidenceViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php');
+$adjustmentViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $routeSource = file_get_contents(__DIR__ . '/../routes/web.php');
+$extractPublicMethod = static function (string $source, string $method): string {
+    $pattern = '/    public function ' . preg_quote($method, '/')
+        . '\\([\\s\\S]*?(?=\\n    (?:public|protected|private) function |\\n})/';
+    return preg_match($pattern, $source, $matches) === 1 ? $matches[0] : '';
+};
+$journeyMethodSource = $extractPublicMethod($serviceSource, 'evaluateJourney');
 
 $journeyPayload = static function (string $status = 'SCHEDULED', string $level2 = 'VERIFIED', bool $evaluated = true): array {
     $events = $evaluated ? [
@@ -92,10 +105,11 @@ $assert(!preg_match('/fetch\(|axios\.|XMLHttpRequest|api\/v2\/journeys/i', $view
 $assert($request instanceof RequestInterface && str_contains((string) $request->getUri(), '/api/v2/journeys/evaluate'), 'P4D10 exact contract endpoint is used');
 $assert(($body['id_estacion'] ?? 0) === 1 && ($body['fecha_local'] ?? '') === '2026-10-12' && ($body['snapshot_audit_ref'] ?? '') === 'audit-1', 'P4D11 exact request payload is used');
 $assert(($result['data']['calculation']['segundos_trabajados_totales'] ?? null) === 28800 && !str_contains($serviceSource, 'segundos_trabajados_totales'), 'P4D12 response is parsed without local recalculation');
-$assert(str_contains($viewSource, 'UNSCHEDULED') && str_contains($viewSource, 'Sin horario efectivo asignado'), 'P4D13 UNSCHEDULED is rendered distinctly');
+$assert(str_contains($viewSource, 'UNSCHEDULED_DAY') && str_contains($viewSource, 'Sin horario asignado')
+    && str_contains($viewSource, "'UNSCHEDULED' => 'Sin asignación informada'"), 'P4D13 UNSCHEDULED is rendered distinctly in its Journey workspace');
 $assert(!str_contains($viewSource, "'UNSCHEDULED' => 'Descanso programado'"), 'P4D14 UNSCHEDULED does not become DAY_OFF');
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P4D15 UNSCHEDULED does not become SIN MARCACIÓN');
-$assert(str_contains($viewSource, 'Nunca se activa automáticamente'), 'P4D16 UNSCHEDULED does not become automatic FALTA');
+$assert(!str_contains($viewSource, 'FALTA'), 'P4D16 Journey view does not turn UNSCHEDULED into FALTA');
 $assert(str_contains($viewSource, 'Descanso programado'), 'P4D17 DAY_OFF has distinct wording');
 $assert(str_contains($viewSource, 'events') && str_contains($viewSource, 'foreach ($events'), 'P4D18 observed events remain visible on DAY_OFF');
 $unknown = $make([new Response(200, [], json_encode($journeyPayload('UNKNOWN', 'UNKNOWN', false), JSON_THROW_ON_ERROR))])->evaluateJourney($user, 1, 1, '2026-10-12');
@@ -107,22 +121,36 @@ $assert(str_contains($viewSource, 'foreach ($events as $event)'), 'P4D22 all ret
 $assert(str_contains($viewSource, 'foreach ($events as $event)') && !str_contains($viewSource, 'array_slice($events'), 'P4D23 5+ events are not truncated');
 $assert(str_contains($viewSource, 'pairing') && str_contains($serviceSource, 'pairing'), 'P4D24 unmatched pairing evidence can be preserved');
 $assert(str_contains($viewSource, 'journey_status') && str_contains($serviceSource, 'journey_status'), 'P4D25 ambiguous/review status is preserved');
-$assert(str_contains($viewSource, 'segmentos') && str_contains($serviceSource, 'schedule'), 'P4D26 multi-segment Journey data is preserved');
-$assert(str_contains($viewSource, 'dia_offset_fin'), 'P4D27 night-shift local workday context is preserved');
+$assert(str_contains($scheduleHistoryViewSource, 'segmentos')
+    && str_contains($attendanceViewSource, 'segmentos')
+    && str_contains($serviceSource, 'schedule'), 'P4D26 multi-segment schedule data is preserved in schedule views');
+$assert(str_contains($viewSource, "context['fecha_local']")
+    && str_contains($viewSource, "context['timezone']"), 'P4D27 Journey displays the API-owned local workday and timezone context');
+$invalidTimezoneJourney = $journeyPayload();
+$invalidTimezoneJourney['data']['context']['timezone'] = 'CST';
+$invalidTimezoneResult = $make([new Response(200, [], json_encode($invalidTimezoneJourney, JSON_THROW_ON_ERROR))])
+    ->evaluateJourney($user, 1, 1, '2026-10-12');
+$assert(($invalidTimezoneResult['error']['kind'] ?? '') === 'journey_unavailable', 'Journey with invalid non-IANA workplace timezone fails closed');
 $assert(!preg_match('/first.*punch|last.*punch|emparej.*local/i', $serviceSource . $controllerSource), 'P4D28 Portal3 does not pair punches');
 $assert(!preg_match('/worked.*minute|segundos.*trabajados.*\+|strtotime.*ocurrido/i', $serviceSource . $controllerSource), 'P4D29 Portal3 does not calculate worked time');
-$assert(!preg_match('/laten|retardo/i', $serviceSource . $controllerSource . $viewSource), 'P4D30 Portal3 does not calculate lateness');
-$assert(!preg_match('/early.?departure|salida anticipada/i', $serviceSource . $controllerSource . $viewSource), 'P4D31 Portal3 does not calculate early departure');
+$assert($journeyMethodSource !== ''
+    && !preg_match('/laten|retardo/i', $journeyMethodSource), 'P4D30 Journey client does not calculate lateness');
+$assert($journeyMethodSource !== ''
+    && !preg_match('/early.?departure|salida anticipada/i', $journeyMethodSource), 'P4D31 Journey client does not calculate early departure');
 $assert(!preg_match('/overtime|tiempo extra|horas extra/i', $serviceSource . $controllerSource . $viewSource), 'P4D32 Portal3 does not calculate overtime');
-$assert(str_contains($viewSource, 'Autorizar FALTA explícitamente') && str_contains($controllerSource, 'authorizeFalta'), 'P4D33 Portal3 does not infer FALTA locally');
-$assert(!preg_match('/n[oó]mina|payroll|descuento/i', $viewSource), 'P4D34 Portal3 does not produce payroll conclusion');
+$assert(str_contains($adjustmentViewSource, 'Autorizar FALTA explícitamente') && str_contains($controllerSource, 'authorizeFalta'), 'P4D33 final FALTA authorization remains an explicit administrative action');
+$assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $viewSource), 'P4D34 Journey view does not render payroll amounts or document data');
 $failed = $make([new Response(500, [], json_encode(['status' => 'SERVER_ERROR'], JSON_THROW_ON_ERROR))])->evaluateJourney($user, 1, 1, '2026-10-12');
 $assert(($failed['error']['kind'] ?? '') === 'api_unavailable', 'P4D35 HTTP failure is distinct from Journey UNKNOWN');
 $assert(str_contains($controllerSource, '$journeys = []') && str_contains($controllerSource, '$journeyErrors = []'), 'P4D36 stale Journey is cleared before refresh');
 $assert(str_contains($controllerSource, 'getEffectiveSchedule') && str_contains($serviceSource, 'api/v2/workers/'), 'P4D37 P04C schedule integration is preserved');
 $assert(str_contains($controllerSource, 'getLevel2WindowStatus'), 'P4D38 P04B Level 2 integration is preserved');
 $assert(str_contains($controllerSource, 'createDailyPunchSnapshot') && str_contains($serviceSource, 'readDailyPunchSnapshotPage'), 'P4D39 P04A/P03 behavior is preserved');
-$assert(!preg_match('/JWT|Authorization|snapshot_token|secret/i', $viewSource), 'P4D40 internal JWT/secrets are absent from rendered view');
+$administrativeStateCode = 'RESOLVED_PENDING_AUTHORIZATION';
+$assert(!str_contains($incidenceViewSource, $administrativeStateCode)
+    && str_contains($incidenceViewSource, 'ChecadorPresentationFormatter::incidenceStatusLabel')
+    && str_contains($formatterSource, "'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta; pendiente de autorización'")
+    && !preg_match('/\\bJWT\\b|\\bAuthorization\\b|snapshot_token|\\bsecret\\b/i', $incidenceViewSource), 'P4D40 administrative state is rendered through its Spanish formatter and credential names remain absent from the view template');
 
 printf("CHECADOR_P04D_JOURNEY_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

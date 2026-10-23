@@ -24,7 +24,8 @@ $user->id = 999;
 $base = 'https://checador.test/';
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php');
+$adjustmentViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $portalContract = __DIR__ . '/../docs/v2/CHECADOR_V2_PORTAL3_P3G_INCIDENCE_ADMINISTRATIVE_CONTRACT_V1.0.md';
 $apiContract = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/v2/CHECADOR_V2_P3G_ADMINISTRATIVE_API_BOUNDARY_CONTRACT_V1.0.md';
 
@@ -130,10 +131,12 @@ $assert(($serverError['error']['kind'] ?? '') === 'api_unavailable', 'P3GA18 API
 $malformed = $make([new Response(200, [], json_encode(['status' => 'success', 'data' => ['worker_id' => 1]], JSON_THROW_ON_ERROR))])->readApplicableIncidences($user, 1, 1, '2026-10-12', '2026-10-12');
 $assert(($malformed['error']['kind'] ?? '') === 'administrative_unavailable', 'P3GA19 malformed administrative envelope fails closed');
 $assert(str_contains($serviceSource, 'API-owned') && !str_contains($serviceSource, 'applyIncidence'), 'P3GA20 no local incidence engine or precedence exists');
-$assert(str_contains($viewSource, 'Nunca se activa automáticamente') && str_contains($viewSource, 'Autorizar FALTA explícitamente'), 'P3GA21 FALTA is only exposed as explicit authorized action');
-$assert(str_contains($viewSource, 'REVIEW_REQUIRED') || str_contains($viewSource, 'incidencias administrativas'), 'P3GA22 read-only administrative context is rendered');
-$assert(str_contains($viewSource, 'evaluations/evaluate') && str_contains($serviceSource, 'administrative-evaluations/evaluate'), 'P3GA23 administrative evaluation command is reserved for the P3G-D client boundary');
-$assert(!preg_match('/n[oó]mina|payroll|descuento/i', $viewSource), 'P3GA24 no payroll or deduction conclusion is rendered');
+$assert(str_contains($adjustmentViewSource, 'Nunca se activa automáticamente')
+    && str_contains($adjustmentViewSource, 'Autorizar FALTA explícitamente')
+    && str_contains($adjustmentViewSource, 'if ($canAuthorizeFalta)'), 'P3GA21 FALTA is only exposed as an explicit separately authorized action');
+$assert(str_contains($viewSource, 'Incidencias e historial') || str_contains($viewSource, 'current_status'), 'P3GA22 read-only administrative context is rendered');
+$assert(str_contains($adjustmentViewSource, 'evaluations/evaluate') && str_contains($serviceSource, 'administrative-evaluations/evaluate'), 'P3GA23 administrative evaluation command is reserved for the P3G-D client boundary');
+$assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $viewSource . $adjustmentViewSource), 'P3GA24 administrative read views do not render payroll amounts or document data');
 $assert(!preg_match('/INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE/i', $serviceSource . $controllerSource), 'P3GA25 no DB/schema mutation is introduced');
 
 printf("CHECADOR_P3GA_ADMINISTRATIVE_READ_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
