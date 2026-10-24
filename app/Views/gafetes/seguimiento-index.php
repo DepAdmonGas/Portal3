@@ -11,7 +11,6 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>"  data-reporte=
 <div class="card-body">
 <ul id="timeline-seguimiento" class="timeline-widget mb-0 position-relative mb-n4"></ul>
 </div>
-
 <div class="card-footer"></div>
 
 </div>

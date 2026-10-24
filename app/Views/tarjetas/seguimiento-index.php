@@ -10,7 +10,7 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>"  data-solicitu
 <div class="card">
 <div class="card-header text-bg-primary">
 <h5 class="mb-0 text-white"><i class="fs-4 ti ti-message"></i> Comentarios</h5></div>
-<div id="DivComentariosBody" class="card-body p-3"></div>
+<div id="DivComentariosBody" class="card-body p-3"><p class="mb-0"><?= htmlspecialchars((string)$comentarios, ENT_QUOTES, 'UTF-8') ?></p></div>
 <div id="DivComentariosFooter" class="card-footer"></div>
 </div>
 </div>

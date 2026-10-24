@@ -4,26 +4,26 @@ cargarTimeline(estacion, solicitud, Number(puesto));
 });
 
 const pasos = {
-1: 'Creo la solicitud de tarjetas',
-2: 'Termino el proceso de elaboración las tarjetas',
-3: 'Las tarjetas han sido entregadas'
+1: 'La solicitud pasó a En proceso',
+2: 'La solicitud quedó Finalizada',
+3: 'La entrega quedó finalizada'
 };
 
 const pasosPendiente = {
-1: 'La solicitud ha sido creada, pero no ha sido finalizada',
-2: 'Las tarjetas se encuentran en proceso de elaboración',
-3: 'Las tarjetas no han sido entregadas'
+1: 'Pendiente de iniciar el proceso',
+2: 'Pendiente de finalizar el proceso',
+3: 'Pendiente de finalizar la entrega'
 };
 
 function cargarTimeline(idEstacion, noSolicitud, idPuesto) {
 fetch(`/solicitud-tarjetas/seguimiento/timeline/${idEstacion}/${noSolicitud}`)
 .then(r => r.json())
-.then(({ data, comentarios }) => {
+.then(({ data, comentarios, siguientePaso, puedeActualizar, estatus }) => {
  
 const map = Object.fromEntries(data.map(i => [i.seguimiento, i]));
 
 renderTimeline(map);
-actualizarFooter(map, idPuesto);
+actualizarFooter(map, idPuesto, siguientePaso, puedeActualizar, estatus);
 actualizarComentarios(map, idPuesto, comentarios);
 });
 
@@ -137,18 +137,18 @@ ${data ? `<br><small class="text-muted">${fecha}</small>` : ''}
 document.getElementById('timeline-seguimiento').innerHTML = html;
 }
 
-function actualizarFooter(map, idPuesto) {
+function actualizarFooter(map, idPuesto, siguienteAutorizado, puedeActualizar, estatus) {
 
 const pasosExistentes = Object.keys(map).map(Number).sort((a,b) => a-b);
 const ultimoPaso = pasosExistentes.at(-1) || 0;
-const siguiente = ultimoPaso + 1;
+const siguiente = siguienteAutorizado;
 const footer = document.querySelector('#seguimientoFooter');
 if (!footer) return;
 
-if (ultimoPaso >= 3) {
+if (!puedeActualizar || !siguiente) {
 footer.innerHTML = `
 <div class="text-success text-end fw-bold">
-<i class="ti ti-circle-check"></i> Proceso completado
+<i class="ti ti-circle-check"></i> ${Number(estatus) === 4 ? 'Entrega finalizada' : 'No hay acciones disponibles para este estatus'}
 </div>
 `;
 return;
@@ -156,15 +156,7 @@ return;
 
 let ocultarBoton = "d-none";
 
-if (siguiente === 1 && idPuesto === 6) {
 ocultarBoton = "";
-} 
-else if (siguiente === 2 && idPuesto === 13) {
-ocultarBoton = "";
-} 
-else if (siguiente === 3 && idPuesto === 6) {
-ocultarBoton = "";
-}
 
 footer.innerHTML = `
 <button class="btn btn-success float-end ${ocultarBoton}"
@@ -191,14 +183,9 @@ body.innerHTML = '';
 footer.innerHTML = '';
 footer.classList.remove('d-none');
 
-const btnComentario = (siguiente === 2 && idPuesto === 13 && ultimoPaso < 3);
-
-if (btnComentario) {
-body.innerHTML = `<textarea class="form-control" id="comentarioInput" rows="4">${texto}</textarea>`;
-footer.innerHTML = `<button class="btn btn-success float-end" @click="submitComentario()"><i class="ti ti-check"></i> Guardar</button>`;
-return;
-}
-
-body.innerHTML = `<p class="mb-0 ${ultimoPaso < 3 ? 'text-muted' : ''}">${texto}</p>`;
+const comentarioTexto = document.createElement('p');
+comentarioTexto.className = `mb-0 ${ultimoPaso < 3 ? 'text-muted' : ''}`;
+comentarioTexto.textContent = texto;
+body.replaceChildren(comentarioTexto);
 footer.classList.add('d-none');
 }

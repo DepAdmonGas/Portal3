@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+const escapeCell = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+
 let filas_mostrar = {};
 let mostrarFilaEstacion = true;
 
@@ -24,9 +26,10 @@ return json.data;
 
 columns: [
 { title: '#', data: 'idSolicitud', width: '60px', className: 'text-center align-middle' },
+{ title: 'Estación', data: 'nombre_estacion', className: 'text-center align-middle', visible: mostrarFilaEstacion },
 { title: 'No. Solicitud', data: 'no_solicitud', width: '100px', className: 'text-center align-middle'},
 { title: 'Fecha', data: 'fecha_solicitud', className: 'text-center align-middle',
-render: function (data, type) {
+render: function (data, type, row) {
 
 if (!data || data === 'S/I') return 'S/I';
 
@@ -43,7 +46,7 @@ year: 'numeric'
 
 
 if (type === 'display' || type === 'filter') {
-return fechaFormateada;
+return row.fecha_solicitud_formateada || fechaFormateada;
 }
 
 return data;
@@ -57,13 +60,8 @@ render: function (data, type) {
 if (!data) return 'S/I';  
 return data;
 }
-},            
-{ title: 'Estación', data: 'nombre_estacion', className: 'text-center align-middle', visible: mostrarFilaEstacion,
-render: function (data, type) {
-if (!data) return 'S/I';  
-return data;
-}
-},   
+},
+{ title: 'Comentarios', data: 'comentarios', className: 'text-center align-middle', render: data => escapeCell(data || 'Sin comentarios') },
 { title: 'Estatus', data: 'estatus', width: '140px', className: 'text-center align-middle',
 render: function (data) {
 const estatus = Number(data);
@@ -115,6 +113,14 @@ ${!permisos.disableDetail ? `
 </a>
 </li>
 
+<!-- ACTUALIZAR ESTATUS -->
+<li>
+<a class="dropdown-item pointer d-flex align-items-center gap-2 ${permisos.puedeActualizar ? '' : 'opacity-50 pointer-events-none'}"
+${permisos.puedeActualizar ? `onclick="actualizarEstatusTarjetas(${row.idEstacionReal}, ${row.no_solicitud}, ${row.siguientePaso})"` : ''}>
+<i class="fs-4 ti ti-refresh"></i> Actualizar estatus
+</a>
+</li>
+
 <!-- EDITAR -->
 <li>
 <a 
@@ -156,7 +162,23 @@ table.on('xhr', function () {
 const json = table.ajax.json();
 
 if (json && json.filas_mostrar) {
-table.column(4).visible(json.filas_mostrar.mostrar_fila_estacion);
+table.column(1).visible(json.filas_mostrar.mostrar_fila_estacion);
+}
+if (json?.pendientesData) {
+    const selector = document.getElementById('module-station-selector-solicitud-tarjetas');
+    if (selector) Array.from(selector.options).forEach(option => {
+        const key = option.value.startsWith('estacion_') ? option.value : 'total';
+        const count = json.pendientesData[key] ?? 0;
+        const label = option.textContent.replace(/\s*\(\d+\)\s*$/, '').trim();
+        option.textContent = `${label} (${count})`;
+    });
+    const badge = document.getElementById('module-station-badge-solicitud-tarjetas');
+    if (badge && selector) {
+        const option = selector.options[selector.selectedIndex];
+        const label = option.textContent.replace(/\s*\(\d+\)\s*$/, '').trim();
+        badge.textContent = `${label}: ${json.pendientesContexto} pendiente(s)`;
+        badge.style.display = '';
+    }
 }
 
 });
@@ -171,5 +193,39 @@ $(this).addClass("selected");
 });
 
 ModuleStationSelector.init('solicitud-tarjetas');
+
+const container = document.getElementById('container');
+if (container?.dataset.puedeCrear === '1') {
+    document.getElementById('tarjetas-toolbar').innerHTML = `<div class="col-12 col-md-auto d-grid mt-4 mb-3"><button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Nuevo</button></div>`;
+    const selector = document.getElementById('module-station-selector-solicitud-tarjetas');
+    const toolbar = document.getElementById('tarjetas-toolbar');
+    const syncCreateButton = () => { toolbar.classList.toggle('d-none', !!selector && !selector.value); };
+    syncCreateButton();
+    selector?.addEventListener('change', syncCreateButton);
+}
+
+window.actualizarEstatusTarjetas = async (idEstacion, noSolicitud, paso) => {
+    const statusLabel = ({1: 'En proceso', 2: 'Finalizada', 3: 'Entrega finalizada'})[paso];
+    const currentLabel = ({1: 'Pendiente', 2: 'En proceso', 3: 'Finalizada'})[paso];
+    const config = { title: 'Actualizar estatus', text: `La solicitud cambiará de ${currentLabel} a ${statusLabel}.`, icon: 'question', showCancelButton: true, confirmButtonText: 'Sí, actualizar', cancelButtonText: 'Cancelar', confirmButtonColor: '#198754' };
+    if (paso === 2) {
+        config.input = 'textarea';
+        config.inputPlaceholder = 'Comentario (opcional)';
+        config.inputAttributes = { maxlength: 2000, 'aria-label': 'Comentario (opcional)' };
+    }
+    const result = await Swal.fire(config);
+    if (!result.isConfirmed) return;
+    Swal.fire({ title: 'Actualizando estatus...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const response = await fetch('/solicitud-tarjetas/seguimiento/update', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken}, body: JSON.stringify({ idEstacion, no_reporte: noSolicitud, idSeguimiento: paso, comentarios: paso === 2 ? String(result.value || '').trim() : '' }) });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) { Swal.fire('No se pudo actualizar', payload.message || 'Revisa el estatus y tus permisos.', 'error'); return; }
+        Swal.fire('Estatus actualizado', payload.message || 'Se guardó el cambio.', 'success');
+        table.ajax.reload(null, false);
+    } catch (error) {
+        Swal.fire('No se pudo actualizar', 'Ocurrió un error de comunicación.', 'error');
+    }
+};
 
 });

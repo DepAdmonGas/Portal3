@@ -11,6 +11,9 @@ use App\Services\ModuleStationService;
 use App\Core\Session;
 use App\Models\Estacion;
 use App\Core\Auth;
+use App\Core\Request;
+use App\Core\JsonResponse;
+use App\Services\SolicitudTarjetasService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class TarjetasController extends BaseController{
@@ -20,7 +23,7 @@ private const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 private function validateTarjetaUpload(?array $file): array
 {
-    if ($file === null) {
+    if ($file === null || ($file['error'] ?? null) === UPLOAD_ERR_NO_FILE) {
         return ['valid' => true, 'extension' => null];
     }
 
@@ -59,19 +62,12 @@ private function validateTarjetaUpload(?array $file): array
 
 private function tarjetaJsonPayload(): array
 {
-    try {
-        $payload = json_decode(file_get_contents('php://input') ?: '', true, 512, JSON_THROW_ON_ERROR);
-    } catch (\JsonException) {
-        http_response_code(422);
-        echo json_encode(['success' => false, 'errors' => ['json' => 'El cuerpo JSON no es válido.']]);
-        return [];
-    }
+    $payload = Request::json();
+    if ($payload === []) JsonResponse::validation('El cuerpo JSON no es válido.', ['json' => 'Envía un objeto JSON válido.']);
 
     $allowed = ['id', 'razon_social', 'nombre_usuario', 'vehiculo', 'placas', 'no_unidad', 'tarjeta', 'tipo_tarjeta'];
     if (!is_array($payload) || array_diff(array_keys($payload), $allowed)) {
-        http_response_code(422);
-        echo json_encode(['success' => false, 'errors' => ['json' => 'La estructura JSON no es válida.']]);
-        return [];
+        JsonResponse::validation('La estructura JSON no es válida.', ['json' => 'La estructura contiene campos no permitidos.']);
     }
 
     $rules = [
@@ -107,9 +103,7 @@ private function tarjetaJsonPayload(): array
         }
     }
     if ($errors) {
-        http_response_code(422);
-        echo json_encode(['success' => false, 'errors' => $errors]);
-        return [];
+        JsonResponse::validation('Revisa los campos enviados.', $errors);
     }
 
     foreach (array_keys($rules) as $field) {
@@ -133,24 +127,12 @@ Breadcrumb::add($title, '');
 if (!$this->guardModuleAccess('solicitud-tarjetas', $title, 'main')) {
 return;
 }
+if (!SolicitudTarjetasService::puedeLeer()) { http_response_code(403); View::render('errors/404', [], 'main'); return; }
 
 $permisos = ModuloService::permisosSesion($this->modulo);
 
 // Compute pending counts per station for the selector
-$pendingStations = SolicitudTarjetas::selectRaw('COUNT(*) as total, id_estacion')
-->where('estatus', 0)
-->groupBy('id_estacion')
-->get()
-->keyBy('id_estacion');
-
-$allStationIds = ModuleStationService::getAvailableStations('solicitud-tarjetas');
-$pendientesMap = [];
-foreach ($allStationIds as $s) {
-$count = isset($pendingStations[$s['id']]) ? (int)$pendingStations[$s['id']]->total : 0;
-$pendientesMap['estacion_' . $s['id']] = $count;
-}
-$pendientesMap['total'] = array_sum($pendientesMap);
-$pendientesData = $pendientesMap;
+$pendientesData = SolicitudTarjetasService::contarPendientesPorEstacion();
 
 $data = [
 'title' => $title,
@@ -158,6 +140,7 @@ $data = [
 'modulo' => $this->modulo,
 'moduleStationKey' => 'solicitud-tarjetas',
 'pendientesData' => $pendientesData,
+'puedeCrear' => SolicitudTarjetasService::puedeAgregar(),
 'filtro_usuario' => $this->filtro_usuario,
 'utilitiesUser' =>[
 'idPuestoUser' => $idPuesto
@@ -178,155 +161,69 @@ View::render('tarjetas/index', $data, 'main');
 }
 
 public function datatableTarjetas(){
-
-$ctx = ModuleStationService::getContext('solicitud-tarjetas');
-$idEstacion = $ctx['id_estacion'];
-
-$permisoEditar   = ModuloService::validaPermiso($this->modulo, 'editar');
-$permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
-$mostrar_fila_estacion = ((int)$idEstacion === 8);
-
-$query = SolicitudTarjetas::from('tb_solicitud_tarjetas as g')
-->leftJoin('tb_estaciones as e', 'g.id_estacion', '=', 'e.nombre')
-->select('g.*', 'e.id as id_estacion_real')
-->groupBy('g.no_solicitud');
-
-// Filtro si la sesion de la estacion no es 8
-if (!empty($idEstacion) && (int)$idEstacion !== 8) {
-$estacion = Estacion::find($idEstacion);
-
-if ($estacion) {
-$query->where('g.id_estacion', $estacion->nombre);
-}
-}
-
-$rows = $query->orderBy('g.id', 'desc')->get()->toArray();
-$data = [];
-
-$estatus = [
-"titulo" => '',
-"color_badge" => '',
-"color_css" => '',
-"color_hexa" => ''
-];
-
-foreach ($rows as $row) {
-$idSolicitud = $row['id'];
-$idEstacionReal = $row['id_estacion_real'];
-$no_solicitud = $row['no_solicitud'];
-$fecha_solicitud = $row['fecha'];
-$nombre_usuario = $row['id_usuario'];
-$nombre_estacion = $row['id_estacion'];
-$estatus_solicitud = $row['estatus'];
-
-$disableDetail = false;
-$disabledEdit = false;
-$disabledDelete = false;
-
-if (empty($row['fecha']) || $row['fecha'] === '0000-00-00' || $row['fecha'] === '-0001-11-30') {
-$fecha_solicitud = 'S/I';
-} else {
-$fecha_solicitud = date('Y-m-d', strtotime($row['fecha']));
-}
-
-if ($estatus_solicitud == 0) {
-$estatus = [
-"titulo" => 'Sin atender',
-"color_badge" => 'bg-danger',
-"color_css" => 'text-bg-danger',
-"color_hexa" => '#ffb6af'
-];
-
-}else if ($estatus_solicitud == 1) {
-$estatus = [
-"titulo" => 'En proceso',
-"color_badge" => 'bg-warning',
-"color_css" => 'text-bg-warning',
-"color_hexa" => '#fcfcda'
-];
-
-}else if ($estatus_solicitud == 2) {
-$estatus = [
-"titulo" => 'Finalizado',
-"color_badge" => 'bg-success',
-"color_css" => 'text-bg-warning',
-"color_hexa" => '#fcfcda'
-];
-
-}else if ($estatus_solicitud == 3 || $estatus_solicitud == 4) {
-$estatus = [
-"titulo" => 'Entregada',
-"color_badge" => 'bg-info',
-"color_css" => 'text-bg-success',
-"color_hexa" => '#b0f2c2'
-];
-
-}
-
-//---------- PERMISOS ----------
-$disableDetail = ($estatus_solicitud == 0);
-$disabledEdit = (!$permisoEditar || in_array($estatus_solicitud, [1,2,3,4]));
-$disabledDelete = (!$permisoEliminar || $estatus_solicitud != 0);
-
-if (empty($nombre_estacion) || $nombre_estacion == "Administrador") {
-$disableDetail = true;
-$disabledEdit = true;
-$disabledDelete = true;
-}
-
-$data[] = [
-"idSolicitud" => $idSolicitud,
-"idEstacionReal" => $idEstacionReal,
-"no_solicitud" => $no_solicitud,
-"fecha_solicitud" => $fecha_solicitud,
-"nombre_usuario" => $nombre_usuario,
-"nombre_estacion" => $nombre_estacion,
-"estatus_solicitud" => $estatus_solicitud,
-"estatus" =>$estatus,
-
-"permisos" => [
-"disableDetail" => $disableDetail,
-"disabledEdit" => $disabledEdit,
-"disabledDelete" => $disabledDelete
-]
-
-];
-
-}
-
-echo json_encode([
-"data" => $data,
-"filas_mostrar" => [
-"mostrar_fila_estacion" => $mostrar_fila_estacion
-]
-]);
-
-exit;
+    if (!SolicitudTarjetasService::puedeLeer()) JsonResponse::forbidden('No tienes permiso para consultar Solicitud de Tarjetas.');
+    $ctx = SolicitudTarjetasService::contexto();
+    if (!$ctx['allowed']) JsonResponse::forbidden('No tienes estaciones autorizadas para este módulo.');
+    $stations = ModuleStationService::getAvailableStations($this->modulo);
+    $names = array_column($stations, 'nombre');
+    $query = SolicitudTarjetas::query()->whereIn('id_estacion', $names)
+        ->whereNotIn('id_estacion', ['', 'Administrador', 'Todas']);
+    if (!$ctx['all']) $query->where('id_estacion', $ctx['station']->nombre);
+    $rows = $query->orderByDesc('id')->get()->groupBy(fn($r) => $r->id_estacion . '|' . $r->no_solicitud)
+        ->map(fn($group) => $group->sortByDesc('estatus')->first());
+    $data = [];
+    foreach ($rows as $row) {
+        $status = (int)$row->estatus;
+        $statusInfo = match (true) {
+            $status === 0 => ['Sin atender', 'bg-danger'],
+            $status === 1 => ['En proceso', 'bg-warning'],
+            in_array($status, [2, 3], true) => ['Finalizada', 'bg-success'],
+            $status === 4 => ['Entregada', 'bg-info'],
+            default => ['Sin estatus', 'bg-secondary'],
+        };
+        $station = Estacion::where('nombre', $row->id_estacion)->first();
+        $fechaRaw = $row->fecha ? date('Y-m-d', strtotime((string)$row->fecha)) : 'S/I';
+        $data[] = [
+            'idSolicitud' => (int)$row->id,
+            'idEstacionReal' => (int)($station->id ?? 0),
+            'no_solicitud' => (int)$row->no_solicitud,
+            'fecha_solicitud' => $fechaRaw,
+            'fecha_solicitud_formateada' => $fechaRaw === 'S/I' ? 'S/I' : formatearFecha($fechaRaw),
+            'nombre_usuario' => $row->id_usuario ?: 'S/I',
+            'nombre_estacion' => $row->id_estacion,
+            'comentarios' => trim((string)$row->comentarios) ?: 'Sin comentarios',
+            'estatus_solicitud' => $status,
+            'estatus' => ['titulo' => $statusInfo[0], 'color_badge' => $statusInfo[1]],
+'siguientePaso' => SolicitudTarjetasService::siguientePaso($status),
+            'permisos' => [
+                'disableDetail' => false,
+                'disabledEdit' => !SolicitudTarjetasService::puedeEditar($status),
+                'disabledDelete' => !SolicitudTarjetasService::puedeEliminar($status),
+                'puedeActualizar' => SolicitudTarjetasService::siguientePaso($status) !== null,
+            ],
+        ];
+    }
+    $pendingCounts = SolicitudTarjetasService::contarPendientesPorEstacion();
+    $pendingContext = $ctx['all'] ? $pendingCounts['total'] : ($pendingCounts['estacion_' . (int)$ctx['station']->id] ?? 0);
+    JsonResponse::custom(['data' => $data, 'filas_mostrar' => ['mostrar_fila_estacion' => $ctx['all']], 'pendientesData' => $pendingCounts, 'pendientesContexto' => $pendingContext]);
 }
 
 public function createReporte()
 {
 
-header('Content-Type: application/json; charset=utf-8');
-$data = json_decode(file_get_contents('php://input'), true);
-
-if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
-echo json_encode([
-'success' => false,
-'message' => 'No tienes permiso para crear'
-]);
-exit;
+if (!SolicitudTarjetasService::puedeAgregar()) {
+JsonResponse::forbidden('No tienes permiso para crear solicitudes.');
 }
 
-$id = sanitize_input($_POST['id'] ?? null, 'int');
+$id = sanitize_input(Request::input('id'), 'int');
 $file  = $_FILES['archivo'] ?? null;
-$razon_social = sanitize_input($_POST['razon_social'] ?? null, 'string');
-$nombre_usuario = sanitize_input($_POST['nombre_usuario'] ?? null, 'string');
-$vehiculo = sanitize_input($_POST['vehiculo'] ?? null, 'string');
-$placas = sanitize_input($_POST['placas'] ?? null, 'string');
-$no_unidad = sanitize_input($_POST['no_unidad'] ?? null, 'string');
-$tarjeta = sanitize_input($_POST['tarjeta'] ?? null, 'string');
-$tipo_tarjeta = sanitize_input($_POST['tipo_tarjeta'] ?? null, 'string');
+$razon_social = sanitize_input(Request::input('razon_social'), 'string');
+$nombre_usuario = sanitize_input(Request::input('nombre_usuario'), 'string');
+$vehiculo = sanitize_input(Request::input('vehiculo'), 'string');
+$placas = sanitize_input(Request::input('placas'), 'string');
+$no_unidad = sanitize_input(Request::input('no_unidad'), 'string');
+$tarjeta = sanitize_input(Request::input('tarjeta'), 'string');
+$tipo_tarjeta = sanitize_input(Request::input('tipo_tarjeta'), 'string');
 $comentarios = '';
 $status = 0;
 
@@ -342,20 +239,15 @@ $errors = validate_input($_POST, [
 ]);
 
 if (!empty($errors)) {
-echo json_encode(['success' => false, 'errors' => $errors]);
-exit;
+JsonResponse::validation('Completa los campos obligatorios.', $errors);
 }
 
 if (!$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
-echo json_encode([
-'success' => false,
-'message' => 'Datos incompletos incompletos'
-]);
-exit;
+JsonResponse::validation('Completa los campos obligatorios.', ['solicitud' => 'Faltan datos requeridos.']);
 }
 
 // CONFIG RUTA
-$carpeta = __DIR__ . '../../../public/uploads/archivos/solicitud-tarjetas/';
+$carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/';
 // SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
 if (!file_exists($carpeta)) {
 mkdir_safe($carpeta, true);
@@ -366,9 +258,7 @@ try {
 
 $upload = $this->validateTarjetaUpload($file);
 if (!$upload['valid']) {
-http_response_code(422);
-echo json_encode(['success' => false, 'errors' => ['archivo' => $upload['message']]]);
-return;
+JsonResponse::validation('El archivo no es válido.', ['archivo' => $upload['message']]);
 }
 
 // SUBIR ARCHIVO (opcional)
@@ -387,9 +277,13 @@ $idUsuario = $this->userId();
 $datosUsuario = Usuario::find($idUsuario);
 
 // Obtener la estacion desde el contexto del módulo
-$ctx = ModuleStationService::getContext('solicitud-tarjetas');
-$idEstacion = $ctx['id_estacion'];
-$datosEstacion = Estacion::find($idEstacion);
+$ctx = SolicitudTarjetasService::contexto();
+$datosEstacion = $ctx['all'] ? null : ($ctx['station'] ?? null);
+if (!$ctx['allowed'] || !$datosEstacion) {
+    if ($nombreArchivo && is_file($carpeta . $nombreArchivo)) unlink($carpeta . $nombreArchivo);
+    JsonResponse::forbidden('Selecciona una estación autorizada para crear la solicitud.');
+}
+$idEstacion = (int)$datosEstacion->id;
 
 // Obtener el max(no_solicitud) por estación
 $maxSolicitud = SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
@@ -430,12 +324,9 @@ SolicitudTarjetasImagen::create([
 
 Capsule::commit();
 
-echo json_encode([
-'success' => true,
-'message' => 'Solicitud guardada correctamente',
-'idEstacion' => $idEstacion,
-'no_solicitud' => $no_solicitud
-]);
+SolicitudTarjetasService::notificar('agregar', $idEstacion, (int)$no_solicitud);
+
+JsonResponse::success('Solicitud guardada correctamente', ['idEstacion' => $idEstacion, 'no_solicitud' => $no_solicitud]);
 
 } catch (\Throwable $e) {
 // Si falla BD, borrar archivo
@@ -443,47 +334,31 @@ if ($nombreArchivo && file_exists($carpeta . $nombreArchivo)) {
 unlink($carpeta . $nombreArchivo);
 }
 
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage(),
-'idEstacion' => 0,
-'no_solicitud' => 0
-]);
+Capsule::rollBack();
+JsonResponse::error('No se pudo guardar la solicitud.', 500);
 }
 
 } catch (\Exception $e) {
 Capsule::rollBack();
 
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
+JsonResponse::error('No se pudo procesar la solicitud.', 500);
 
 }
 }
 
 public function deleteReporte(){
-header('Content-Type: application/json; charset=utf-8');
-$data = json_decode(file_get_contents('php://input'), true);
+$data = Request::json();
 $id = $data['id'] ?? null;
 
-if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
-echo json_encode([
-'success' => false,
-'message' => 'No tienes permiso para eliminar'
-]);
-exit;
-}
-
-if (!$id) {
-echo json_encode(['success' => false,'message' => 'ID requerido']);
-exit;
-}
+if (!$id) JsonResponse::validation('Falta el identificador de la solicitud.', ['id' => 'Campo requerido.']);
 
 $solicitud_principal = SolicitudTarjetas::find($id);
-if (!$solicitud_principal) {
-echo json_encode(['success' => false, 'message' => 'No. de solicitud no encontrado']);
-exit;
+if (!$solicitud_principal) JsonResponse::notFound('La solicitud no existe o ya fue eliminada.');
+$stationId = (int)(Estacion::where('nombre', $solicitud_principal->id_estacion)->value('id') ?? 0);
+$ctx = SolicitudTarjetasService::contexto();
+if (!$ctx['allowed'] || (!$ctx['all'] && (int)$ctx['station']->id !== $stationId)
+    || !SolicitudTarjetasService::puedeEliminar((int)$solicitud_principal->estatus)) {
+JsonResponse::forbidden('No tienes permiso para eliminar esta solicitud en su estatus actual.');
 }
 
 try {
@@ -493,14 +368,11 @@ $solicitudes = SolicitudTarjetas::where('id_estacion', $solicitud_principal->id_
 ->get();
 
 if ($solicitudes->isEmpty()) {
-echo json_encode([
-'success' => false,
-'message' => 'Registro no encontrado'
-]);
-exit;
+JsonResponse::notFound('La solicitud no existe.');
 }
 
-$rutaBase = __DIR__ . '/../../../public/uploads/archivos/solicitud-tarjetas/';
+$rutaBase = dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/';
+$archivosEliminar = [];
 
 Capsule::beginTransaction();
 
@@ -510,10 +382,8 @@ $imagenes = SolicitudTarjetasImagen::where('no_solicitud', $solicitud_principal-
 
 foreach ($imagenes as $img) {
 
-$rutaArchivo = $rutaBase . $img->ruta;
-if (file_exists($rutaArchivo)) {
-unlink($rutaArchivo);
-}
+$rutaArchivo = $rutaBase . basename((string)$img->ruta);
+$archivosEliminar[] = $rutaArchivo;
 
 SolicitudTarjetasImagen::where('id', $img->id)->delete();
 }
@@ -524,19 +394,19 @@ SolicitudTarjetas::where('id', $solicitud->id)->delete();
 
 Capsule::commit();
 
-echo json_encode([
-'success' => true,
-'message' => 'Reporte e imágenes eliminados correctamente'
-]);
+foreach ($archivosEliminar as $rutaArchivo) {
+if (is_file($rutaArchivo)) @unlink($rutaArchivo);
+}
+
+SolicitudTarjetasService::notificar('eliminar', $stationId, (int)$solicitud_principal->no_solicitud);
+
+JsonResponse::success('Solicitud e imágenes eliminadas correctamente.');
 
 } catch (\Throwable $e) {
 
 Capsule::rollBack();
 
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
+JsonResponse::error('No se pudo eliminar la solicitud.', 500);
 }
 
 }
@@ -545,6 +415,11 @@ echo json_encode([
 //---------- FORMULARIO DEL NO. DE REPORTE ----------//
 //---------------------------------------------------//
 public function formularioReporte($idEstacion, $noSolicitud){
+
+if (!SolicitudTarjetasService::puedeLeer()) { http_response_code(403); View::render('errors/404', [], 'main'); return; }
+
+$solicitud = SolicitudTarjetasService::solicitud((int)$idEstacion, (int)$noSolicitud);
+if (!$solicitud) { header('Location: /home'); exit; }
 
 $datosUsuario = Auth::user();
 $idPuesto = $datosUsuario->id_puesto;
@@ -565,6 +440,7 @@ $data = [
 'modulo' => $this->modulo,
 'idEstacion' => $idEstacion,
 'noSolicitud' => $noSolicitud,
+'puedeAgregarDetalle' => SolicitudTarjetasService::puedeAgregar() && in_array((int)$solicitud->estatus, [0, 1], true),
 'utilitiesUser' =>[
 'idPuestoUser' => $idPuesto
 ],
@@ -586,42 +462,26 @@ View::render('tarjetas/formulario-index', $data,'main');
 
 public function datatableTarjetasFormulario($idEstacion, $noSolicitud)
 {
-
-// permisos
-$permisoEditar = ModuloService::validaPermiso($this->modulo, 'editar');
-$permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
-
-// Obtener la estacion 
-$datosEstacion = Estacion::find($idEstacion);
-$query = SolicitudTarjetas::query();
-
-$tarjetas = $query
-->where('id_estacion', $datosEstacion->nombre)
-->where('no_solicitud', $noSolicitud)
-->get();
-
-echo json_encode([
-"data" => $tarjetas,
-"permisos" => [
-"editar" => $permisoEditar,
-"eliminar" => $permisoEliminar
-]
-]);
-
-exit;
+    if (!SolicitudTarjetasService::puedeLeer()) JsonResponse::forbidden('No tienes permiso para consultar este detalle.');
+    $solicitud = SolicitudTarjetasService::solicitud((int)$idEstacion, (int)$noSolicitud);
+    if (!$solicitud) JsonResponse::notFound('La solicitud no existe o no está autorizada.');
+    $status = (int)$solicitud->estatus;
+    $tarjetas = SolicitudTarjetas::where('id_estacion', $solicitud->id_estacion)
+        ->where('no_solicitud', $noSolicitud)->get()->map(function ($row) use ($status) {
+            $row->acciones = [
+                'editar' => SolicitudTarjetasService::puedeEditar($status),
+                'eliminar' => SolicitudTarjetasService::puedeEliminar($status),
+            ];
+            return $row;
+        });
+    JsonResponse::custom(['data' => $tarjetas, 'permisos' => ['editar' => SolicitudTarjetasService::puedeEditar($status), 'eliminar' => SolicitudTarjetasService::puedeEliminar($status), 'crear' => SolicitudTarjetasService::puedeAgregar() && in_array($status, [0,1], true)]]);
 }
 
 public function createReporteFormulario(){
+$data = Request::json();
 
-header('Content-Type: application/json; charset=utf-8');
-$data = json_decode(file_get_contents('php://input'), true);
-
-if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
-echo json_encode([
-'success' => false,
-'message' => 'No tienes permiso para crear'
-]);
-exit;
+if (!SolicitudTarjetasService::puedeAgregar()) {
+JsonResponse::forbidden('No tienes permiso para agregar tarjetas a la solicitud.');
 }
 
 $no_solicitud = sanitize_input($data['no_solicitud'] ?? null, 'int');
@@ -646,17 +506,10 @@ $errors = validate_input($data, [
 'tipo_tarjeta' => 'required|max:50'
 ]);
 
-if (!empty($errors)) {
-echo json_encode(['success' => false, 'errors' => $errors]);
-exit;
-}
+if (!empty($errors)) JsonResponse::validation('Completa los campos obligatorios.', $errors);
 
 if (!$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
-echo json_encode([
-'success' => false,
-'message' => 'Datos incompletos incompletos'
-]);
-exit;
+JsonResponse::validation('Completa los campos obligatorios.', ['solicitud' => 'Faltan datos requeridos.']);
 }
 
 try {
@@ -666,7 +519,9 @@ $idUsuario = $this->userId();
 $datosUsuario = Usuario::find($idUsuario);
 
 // Obtener la estacion 
-$datosEstacion = Estacion::find($idEstacion);
+$solicitud = SolicitudTarjetasService::solicitud((int)$idEstacion, (int)$no_solicitud);
+if (!$solicitud || !in_array((int)$solicitud->estatus, [0,1], true)) JsonResponse::forbidden('No se pueden agregar tarjetas a esta solicitud.');
+$datosEstacion = Estacion::where('nombre', $solicitud->id_estacion)->first();
 
 Capsule::beginTransaction();
 
@@ -686,34 +541,28 @@ SolicitudTarjetas::create([
 'tarjeta' => $tarjeta,
 'tipo_tarjeta' => $tipo_tarjeta,  
 //'comentarios' => $comentarios,
-'estatus' => $status,
+'estatus' => (int)$solicitud->estatus,
 ]);
 
 Capsule::commit();
 
-echo json_encode([
-'success' => true,
-'message' => 'Solicitud guardada correctamente'
-]);
+SolicitudTarjetasService::notificar('agregar', (int)$idEstacion, (int)$no_solicitud, 'Se agregó una tarjeta solicitada');
+
+JsonResponse::success('Tarjeta agregada correctamente.');
 
 
 
 } catch (\Throwable $e) {
 
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
+Capsule::rollBack();
+JsonResponse::error('No se pudo agregar la tarjeta.', 500);
 }
 
 } catch (\Exception $e) {
 
 Capsule::rollBack();
 
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
+JsonResponse::error('No se pudo procesar la solicitud.', 500);
 
 }
 
@@ -721,12 +570,7 @@ echo json_encode([
 
 
 public function updateReporteFormulario(){
-
-header('Content-Type: application/json');
 $data = $this->tarjetaJsonPayload();
-if ($data === []) {
-return;
-}
 
 $id = $data['id'];
 $razon_social = $data['razon_social'] ?? null;
@@ -737,22 +581,19 @@ $no_unidad = $data['no_unidad'] ?? null;
 $tarjeta = $data['tarjeta'] ?? null;
 $tipo_tarjeta = $data['tipo_tarjeta'] ?? null;
 
-if (!$id || !$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) {
-echo json_encode([
-'success' => false,
-'message' => 'Datos incompletos incompletos'
-]);
-exit;
-}
+if (!$id || !$razon_social || !$nombre_usuario || !$vehiculo || !$placas || !$no_unidad || !$tarjeta || !$tipo_tarjeta) JsonResponse::validation('Completa los campos obligatorios.', ['registro' => 'Faltan datos requeridos.']);
 
 $registro = SolicitudTarjetas::find($id);
 
 if (!$registro) {
-echo json_encode([
-'success' => false,
-'message' => 'Registro no encontrado'
-]);
-return;
+JsonResponse::notFound('El registro no existe.');
+}
+
+$stationId = (int)(Estacion::where('nombre', $registro->id_estacion)->value('id') ?? 0);
+$ctx = SolicitudTarjetasService::contexto();
+if (!$ctx['allowed'] || (!$ctx['all'] && (int)$ctx['station']->id !== $stationId)
+    || !SolicitudTarjetasService::puedeEditar((int)$registro->estatus)) {
+    JsonResponse::forbidden('Solo se pueden editar registros pendientes desde una estación autorizada.');
 }
 
 $registro->razon_social = $razon_social;
@@ -764,60 +605,66 @@ $registro->tarjeta = $tarjeta;
 $registro->tipo_tarjeta = $tipo_tarjeta;
 $registro->save();
 
-echo json_encode([
-'success' => true,
-'message' => 'Registro actualizado correctamente'
-]);
+SolicitudTarjetasService::notificar('editar', $stationId, (int)$registro->no_solicitud, 'Se editaron los datos de una tarjeta solicitada');
+
+JsonResponse::success('Registro actualizado correctamente.');
 
 }
 
 public function deleteReporteFormulario(){
-header('Content-Type: application/json; charset=utf-8');
-$data = json_decode(file_get_contents('php://input'), true);
+$data = Request::json();
 $id = $data['id'] ?? null;
 
-if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
-echo json_encode([
-'success' => false,
-'message' => 'No tienes permiso para eliminar'
-]);
-exit;
-}
-
-if (!$id) {
-echo json_encode(['success' => false,'message' => 'ID requerido']);
-exit;
-}
+if (!$id) JsonResponse::validation('Falta el identificador del registro.', ['id' => 'Campo requerido.']);
 
 try {
 // Buscar registro
 $registro_reporte = SolicitudTarjetas::find($id);
 
 if (!$registro_reporte) {
-echo json_encode(['success' => false, 'message' => 'Registro no encontrado']);
-exit;
+JsonResponse::notFound('El registro no existe.');
+}
+
+$stationId = (int)(Estacion::where('nombre', $registro_reporte->id_estacion)->value('id') ?? 0);
+$ctx = SolicitudTarjetasService::contexto();
+if (!$ctx['allowed'] || (!$ctx['all'] && (int)$ctx['station']->id !== $stationId)
+    || !SolicitudTarjetasService::puedeEliminar((int)$registro_reporte->estatus)) {
+    JsonResponse::forbidden('No tienes permiso para eliminar este registro en su estatus actual.');
 }
 
 // TRANSACCIÓN
 Capsule::beginTransaction();
 
-// Eliminar registro (puedes usar delete o estado = 0)
+$noSolicitud = (int)$registro_reporte->no_solicitud;
+$nombreEstacion = (string)$registro_reporte->id_estacion;
 $registro_reporte->delete();
+$remaining = SolicitudTarjetas::where('id_estacion', $nombreEstacion)
+    ->where('no_solicitud', $noSolicitud)->count();
+$archivosEliminar = [];
+if ($remaining === 0) {
+    SolicitudTarjetasSeguimiento::where('id_estacion', $stationId)
+        ->where('no_reporte', $noSolicitud)->delete();
+    $imagenes = SolicitudTarjetasImagen::where('estacion', $nombreEstacion)
+        ->where('no_solicitud', $noSolicitud)->get();
+    foreach ($imagenes as $imagen) {
+        $archivosEliminar[] = dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/' . basename((string)$imagen->ruta);
+        $imagen->delete();
+    }
+}
 Capsule::commit();
 
-echo json_encode([
-'success' => true,
-'message' => 'Registro eliminado correctamente'
-]);
+foreach ($archivosEliminar as $archivoEliminar) {
+    if (is_file($archivoEliminar)) @unlink($archivoEliminar);
+}
+
+SolicitudTarjetasService::notificar('eliminar', $stationId, $noSolicitud, 'Se eliminó un registro de tarjeta');
+
+JsonResponse::success('Registro eliminado correctamente.', ['remaining' => $remaining]);
 
 } catch (\Throwable $e) {
 Capsule::rollBack();
 
-echo json_encode([
-'success' => false,
-'message' => 'Error al eliminar',
-'error'   => $e->getMessage()
-]);
+JsonResponse::error('No se pudo eliminar el registro.', 500);
 }
 
 exit;
@@ -827,6 +674,8 @@ exit;
 //---------- SEGUIMIENTO DE LA SOLICITUD ----------//
 public function timelineSeguimiento($idEstacion, $noReporte)
 {
+$solicitudAutorizada = SolicitudTarjetasService::solicitud((int)$idEstacion, (int)$noReporte);
+if (!$solicitudAutorizada) JsonResponse::notFound('La solicitud no existe o no está autorizada.');
 
 $seguimientos = SolicitudTarjetasSeguimiento::with('usuario')
 ->where('id_estacion', $idEstacion)
@@ -850,13 +699,16 @@ $pasos = [0];
 break;
 
 case 1:
-case 2:
 $pasos = [0, 1];
 break;
 
+case 2:
 case 3:
-case 4:
 $pasos = [0, 1, 2];
+break;
+
+case 4:
+$pasos = [0, 1, 2, 3];
 break;
 
 default:
@@ -876,77 +728,63 @@ return (object)[
 }
 }
 
-echo json_encode([
+JsonResponse::custom([
 'data' => $seguimientos->map(function($data){
 return [
 'seguimiento' => $data->seguimiento,
 'fecha_hora' => $data->fecha_hora,
 'usuario' => $data->usuario->nombre ?? 'Sistema'
 ];
-})
+}),
+'comentarios' => trim((string)$solicitudAutorizada->comentarios) ?: 'Sin comentarios',
+'estatus' => (int)$solicitudAutorizada->estatus,
+'siguientePaso' => SolicitudTarjetasService::siguientePaso((int)$solicitudAutorizada->estatus),
+'puedeActualizar' => SolicitudTarjetasService::siguientePaso((int)$solicitudAutorizada->estatus) !== null
 ]);
 }
 
 //---------- ACTUALIZAR SEGUIMIENTO DE LA SOLICITUD ----------//
 public function updateSeguimientoTarjetas()
 {
-header('Content-Type: application/json; charset=utf-8');
-$data = json_decode(file_get_contents('php://input'), true);
+$data = Request::json();
 
 $idEstacion = $data['idEstacion'] ?? null;
 $no_reporte = $data['no_reporte'] ?? null;
-$idSeguimiento = $data['idSeguimiento'] ?? null;
+$idSeguimiento = (int)($data['idSeguimiento'] ?? 0);
+$comentario = trim((string)($data['comentarios'] ?? ''));
 
-if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
-echo json_encode([
-'success' => false,
-'message' => 'Sin permisos'
-]);
-return;
-}
-
-if (!$idEstacion || !$no_reporte || !$idSeguimiento) {
-echo json_encode([
-'success' => false,
-'message' => 'Datos incompletos'
-]);
-exit;
-}
-
-$datosEstacion = Estacion::find($idEstacion);
+$solicitud = SolicitudTarjetasService::solicitud((int)$idEstacion, (int)$no_reporte);
+if (!$solicitud || !$idSeguimiento) JsonResponse::notFound('La solicitud no existe o los datos no son válidos.');
+$status = (int)$solicitud->estatus;
+if (SolicitudTarjetasService::siguientePaso($status) !== $idSeguimiento) JsonResponse::forbidden('El estatus actual no permite este cambio.');
+$datosEstacion = Estacion::where('nombre', $solicitud->id_estacion)->first();
 
 try {
+
+Capsule::beginTransaction();
+$solicitudBloqueada = SolicitudTarjetas::where('id_estacion', $solicitud->id_estacion)
+    ->where('no_solicitud', $no_reporte)->lockForUpdate()->orderByDesc('estatus')->first();
+if (!$solicitudBloqueada || SolicitudTarjetasService::siguientePaso((int)$solicitudBloqueada->estatus) !== $idSeguimiento) {
+    Capsule::rollBack();
+    JsonResponse::conflict('El estatus cambió; actualiza la pantalla e inténtalo de nuevo.');
+}
+$status = (int)$solicitudBloqueada->estatus;
 
 $registro_existente = SolicitudTarjetasSeguimiento::where('id_estacion', $idEstacion)
 ->where('no_reporte', $no_reporte)
 ->where('seguimiento', $idSeguimiento)
 ->exists();
 
-if ($registro_existente) {
-echo json_encode([
-'success' => false,
-'message' => 'Este seguimiento ya fue registrado'
-]);
-exit;
-}
+if ($registro_existente) { Capsule::rollBack(); JsonResponse::conflict('Este cambio de estatus ya fue registrado.'); }
 
 $ultimo_seguimiento = SolicitudTarjetasSeguimiento::where('id_estacion', $idEstacion)
 ->where('no_reporte', $no_reporte)
 ->max('seguimiento');
 
-$ultimo_seguimiento = $ultimo_seguimiento ?? 0;
+$ultimo_seguimiento = (int)($ultimo_seguimiento ?? 0);
 
-/*
-if ($idSeguimiento != ($ultimo_seguimiento + 1)) {
-echo json_encode([
-'success' => false,
-'message' => 'El seguimiento no es válido en el orden'
-]);
-exit;
-}
-*/
-
-Capsule::beginTransaction();
+$pasoEsperado = $status === 0 ? 1 : ($status === 1 ? 2 : 3);
+if ($idSeguimiento !== $pasoEsperado || ($ultimo_seguimiento > 0 && $idSeguimiento !== $ultimo_seguimiento + 1)) { Capsule::rollBack(); JsonResponse::conflict('El proceso debe continuar en orden.'); }
 
 try {
 
@@ -964,7 +802,7 @@ SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
 }else if($idSeguimiento == 2){
 SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
 ->where('no_solicitud', $no_reporte)
-->update(['estatus' => 2]);
+->update(['estatus' => 2, 'comentarios' => $comentario]);
 }else if($idSeguimiento == 3){
 SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
 ->where('no_solicitud', $no_reporte)
@@ -973,29 +811,22 @@ SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
 
 Capsule::commit();
 
-echo json_encode([
-'success' => true,
-'message' => 'Seguimiento guardado correctamente'
-]);
+SolicitudTarjetasService::notificar($idSeguimiento === 2 ? 'finalizar' : 'estatus', (int)$idEstacion, (int)$no_reporte, $idSeguimiento === 2 ? $comentario : 'Nuevo estatus: ' . ($idSeguimiento === 1 ? 'En proceso' : 'Entrega finalizada'));
+
+JsonResponse::success('El estatus de la solicitud se actualizó correctamente.');
 
 } catch (\Throwable $e) {
 
 Capsule::rollBack();
 
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
+JsonResponse::error('No se pudo actualizar el estatus.', 500);
 }
 
 } catch (\Throwable $e) {
 
 Capsule::rollBack();
 
-echo json_encode([
-'success' => false,
-'message' => $e->getMessage()
-]);
+JsonResponse::error('No se pudo actualizar el estatus.', 500);
 }
 
 }
@@ -1005,10 +836,16 @@ echo json_encode([
 //-------------------------------------------------//
 public function formularioSeguimiento($idEstacion, $noSolicitud){
 
+if (!SolicitudTarjetasService::puedeLeer()) { http_response_code(403); View::render('errors/404', [], 'main'); return; }
+
+$solicitud = SolicitudTarjetasService::solicitud((int)$idEstacion, (int)$noSolicitud);
+if (!$solicitud) { http_response_code(404); View::render('errors/404', [], 'main'); return; }
+
 $datosUsuario = Auth::user();
 $idPuesto = $datosUsuario->id_puesto;
 
 $datosEstacion = Estacion::find($idEstacion);
+ModuleStationService::setContext($this->modulo, (int) $datosEstacion->id);
 $title = 'Detalle Solicitud de Tarjetas (#' . $noSolicitud . ')';
 
 Breadcrumb::add('Home', '/home');
@@ -1021,8 +858,12 @@ $data = [
 'title' => $title,
 'permisos' => $permisos,
 'modulo' => $this->modulo,
+'moduleStationKey' => $this->modulo,
+'ocultarSelectorEstacion' => true,
+'nombreBadgeEstacion' => (string) $datosEstacion->nombre,
 'idEstacion' => $idEstacion,
 'noSolicitud' => $noSolicitud,
+'comentarios' => trim((string)$solicitud->comentarios) ?: 'Sin comentarios',
 'utilitiesUser' =>[
 'idPuestoUser' => $idPuesto
 ],
@@ -1042,76 +883,24 @@ $data = [
 View::render('tarjetas/seguimiento-index', $data,'main');
 }
 
-function updateComentarioTarjetas(){
-
-header('Content-Type: application/json; charset=utf-8');
-$data = json_decode(file_get_contents('php://input'), true);
-
-$idEstacion   = $data['id_estacion'] ?? null;
-$no_solicitud = $data['no_solicitud'] ?? null;
-$comentarios  = $data['comentarios'] ?? null;
-
-if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
-echo json_encode([
-'success' => false,
-'message' => 'Sin permisos'
-]);
-return;
+public function updateComentarioTarjetas(){
+    JsonResponse::forbidden('Los comentarios solo se agregan al cambiar de En proceso a Finalizada.');
 }
-
-if (!$idEstacion || !$no_solicitud) {
-echo json_encode([
-'success' => false,
-'message' => 'Datos incompletos'
-]);
-exit;
-}
-
-$datosEstacion = Estacion::find($idEstacion);
-
-try {
-
-$actualizados = SolicitudTarjetas::where('id_estacion', $datosEstacion->nombre)
-->where('no_solicitud', $no_solicitud)
-->update([
-'comentarios' => $comentarios
-]);
-
-if ($actualizados === 0) {
-echo json_encode([
-'success' => false,
-'message' => 'No se encontraron registros para actualizar'
-]);
-return;
-}
-
-echo json_encode([
-'success' => true,
-'message' => 'Comentario actualizado correctamente'
-]);
-
-} catch (\Exception $e) {
-
-echo json_encode([
-'success' => false,
-'message' => 'Error al actualizar comentario',
-]);
-}
-}
-
 
 public function obtenerArchivoTarjeta($idEstacion, $noSolicitud)
 {
-header('Content-Type: application/json');
-$datosEstacion = Estacion::find($idEstacion);
+$solicitud = SolicitudTarjetasService::solicitud((int)$idEstacion, (int)$noSolicitud);
+if (!$solicitud || !SolicitudTarjetasService::puedeDescargar()) JsonResponse::forbidden('No tienes permiso para consultar este archivo.');
+$datosEstacion = Estacion::where('nombre', $solicitud->id_estacion)->first();
 $archivo = SolicitudTarjetasImagen::where('estacion', $datosEstacion->nombre)
 ->where('no_solicitud', $noSolicitud)
 ->orderBy('id', 'desc')
 ->first();
+$archivoDisponible = $archivo && is_file(dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/' . basename((string)$archivo->ruta));
 
-echo json_encode([
+JsonResponse::custom([
 'success' => true,
-'archivo' => $archivo ? $archivo->ruta : null
+'archivo' => $archivoDisponible ? basename((string)$archivo->ruta) : null
 ]);
 }
 

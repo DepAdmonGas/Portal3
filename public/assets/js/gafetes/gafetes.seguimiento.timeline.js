@@ -15,7 +15,7 @@ const pasosPendiente = {
 3: 'Los gafetes no han sido entregados'
 };
 
-function cargarTimeline(idEstacion, noReporte, idPuesto) {
+function cargarTimeline(idEstacion, noReporte, puesto) {
 fetch(`/solicitud-gafetes/seguimiento/timeline/${idEstacion}/${noReporte}`)
 .then(r => r.json())
 .then(({ data }) => {
@@ -23,7 +23,7 @@ fetch(`/solicitud-gafetes/seguimiento/timeline/${idEstacion}/${noReporte}`)
 const map = Object.fromEntries(data.map(i => [i.seguimiento, i]));
 
 renderTimeline(map);
-actualizarFooter(map, idPuesto);
+actualizarFooter(map, puesto);
 });
 }
 
@@ -85,11 +85,10 @@ ${data ? `<br><small class="text-muted">${fecha}</small>` : ''}
 document.getElementById('timeline-seguimiento').innerHTML = html;
 }
 
-function actualizarFooter(map, idPuesto) {
+function actualizarFooter(map, puesto) {
 
 const pasosExistentes = Object.keys(map).map(Number).sort((a,b) => a-b);
 const ultimoPaso = pasosExistentes.at(-1) || 0;
-const siguiente = ultimoPaso + 1;
 const footer = document.querySelector('.card-footer');
 
 if (!footer) return;
@@ -103,23 +102,16 @@ footer.innerHTML = `
 return;
 }
 
-let ocultarBoton = "d-none";
-
-if (siguiente === 1 && idPuesto === 6) {
-ocultarBoton = "";
-} 
-else if (siguiente === 2 && idPuesto === 13) {
-ocultarBoton = "";
-} 
-else if (siguiente === 3 && idPuesto === 6) {
-ocultarBoton = "";
-}
+const siguiente = ultimoPaso + 1;
+const puestoPermitido = siguiente === 2 ? [13, 1].includes(puesto) : [6, 7].includes(puesto);
+const ocultarBoton = puestoPermitido ? '' : 'd-none';
+const texto = siguiente === 1 ? 'Iniciar proceso' : siguiente === 2 ? 'Finalizar proceso' : 'Finalizar entrega';
 
 footer.innerHTML = `
 <button class="btn btn-success float-end ${ocultarBoton}"
 :disabled="loadingSeguimiento"
 @click="submitSeguimiento(${siguiente})">
-<i class="ti ti-refresh"></i> Seguimiento
+<i class="ti ti-check"></i> ${texto}
 </button>
 `;
 }

@@ -149,6 +149,7 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/formulario/{idEstacion}/{noReporte}', Route::auth(['GafetesController', 'formularioReporte']));
         $r->addRoute('GET', '/datatable-formulario/{idEstacion}/{noReporte}', Route::auth(['GafetesController', 'datatableGafetesFormulario']));
         $r->addRoute('POST', '/create-reporte-formulario', Route::auth(['GafetesController', 'createReporteFormulario']));
+        $r->addRoute('POST', '/update-reporte-formulario', Route::auth(['GafetesController', 'updateReporteFormulario']));
         $r->addRoute('POST', '/delete-reporte-registro-formulario', Route::auth(['GafetesController', 'deleteReporteFormulario']));
 
 
@@ -176,7 +177,6 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/seguimiento/update', Route::auth(['TarjetasController', 'updateSeguimientoTarjetas']));
 
         $r->addRoute('GET', '/detalle/{idEstacion}/{noSolicitud}', Route::auth(['TarjetasController', 'formularioSeguimiento']));
-        $r->addRoute('POST', '/comentarios/update', Route::auth(['TarjetasController', 'updateComentarioTarjetas']));
     });
 
 

@@ -1,18 +1,12 @@
-<div id="container" class="mt-4 mb-4">
+<div id="container" class="mt-4 mb-4" data-puede-administrar="<?= $puedeAdministrarGafetes ?>" data-puesto="<?= (int) ($utilitiesUser['idPuestoUser'] ?? 0) ?>">
 
-<?php
-if ($utilitiesUser['idPuestoUser'] == "6") {
-echo !empty($permisos['crear']) ? '
-<div class="row d-flex justify-content-end">
+<div class="row d-flex justify-content-end gafetes-admin-only d-none">
 <div class="col-12 col-md-auto d-grid mb-4">
-<button class="btn bg-primary-subtle text-primary float-end" data-bs-toggle="modal" data-bs-target="#nuevo">
-<i class="ti ti-plus"></i> Nuevo
+<button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
+<i class="ti ti-plus me-1"></i> Nuevo
 </button>
 </div>
 </div>
-' : '';
-}
-?>
   
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-hidden pb-2">

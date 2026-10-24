@@ -1,5 +1,5 @@
 <div class="mb-4" x-data="{ ...actions(), ...seguimientoForm() }"
-x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimiento="<?= $noSolicitud ?>" data-puesto="<?= $utilitiesUser['idPuestoUser'] ?>">
+x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimiento="<?= $noSolicitud ?>" data-puesto="<?= $utilitiesUser['idPuestoUser'] ?>" data-puede-crear-detalle="<?= !empty($puedeAgregarDetalle) ? '1' : '0' ?>">
   
 <div class="row mt-3 mb-3 align-items-center">
 <div class="col-12 col-md-auto d-grid  mb-3 mb-md-0">
@@ -12,10 +12,7 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimien
 <div class="col-12 col-md-auto ms-md-auto ">
 
             <div class="d-flex flex-column flex-md-row gap-2">
-<?= !empty($permisos['crear']) ? ' 
-<button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
-<i class="ti ti-plus"></i> Nuevo </button>
-' : '' ?>
+<div id="botonNuevoRegistro"></div>
 
 
 

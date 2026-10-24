@@ -8,6 +8,8 @@
                 <div class="col-lg-4 col-md-6 col-12">
                     <a href="<?= $mimodulo['ruta'] ?>" class="text-decoration-none">
                         <div class="card body-container-do overflow-hidden card-hover shadow-sm">
+                            <?php $rutaModuloHome = rtrim((string) ($mimodulo['ruta'] ?? ''), '/'); ?>
+                            <?php $conteoBadge = (int) ($conteoSolicitudesHome[$rutaModuloHome] ?? 0); ?>
 
                             <div class="d-flex flex-row align-items-center">
 
@@ -24,8 +26,12 @@
                                 </div>
 
                                 <div class="align-self-center me-4 ms-auto text-end">
-                                    <h4 class="text-white mb-0">
+                                    <h4 class="text-white mb-0 d-flex justify-content-end">
+                                        <?php if ($conteoBadge > 0): ?>
+                                            <span class="badge-historico badge-solicitud-home"><?= $conteoBadge ?></span>
+                                        <?php else: ?>
                                         <i class="ti ti-arrow-right fs-8"></i>
+                                        <?php endif; ?>
                                     </h4>
                                 </div>
 
