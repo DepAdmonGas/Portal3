@@ -24,8 +24,8 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 <template x-if="puedeCrear">
 <div class="col-12 mb-3">
 <div class="dropdown float-end">
-<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-<i class="ti ti-tools"></i>
+<button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+<i class="ti ti-dots-vertical"></i>
 </button>
 <ul class="dropdown-menu">
 <li><a class="dropdown-item pointer" @click="abrirModalAgregar()"><i class="ti ti-plus me-1"></i> Agregar Personal</a></li>
@@ -159,13 +159,16 @@ PERSONAL ACTIVO
 
 
 <!---------- MODAL AGREGAR PERSONAL ---------->
-<div class="modal fade" id="modalAgregarPersonal" x-ref="modalAgregarPersonal" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalAgregarPersonal" x-ref="modalAgregarPersonal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-xl modal-dialog-scrollable">
 <div class="modal-content">
 
-<div class="modal-header">
-<h5 class="modal-title" x-text="nombreEstacionActual ? (modoForm === 'agregar' ? 'Agregar Personal (' + nombreEstacionActual + ')' : 'Editar Personal (' + nombreEstacionActual + ')') : (modoForm === 'agregar' ? 'Agregar Personal' : 'Editar Personal')"></h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+    <span>
+        <i class="ti fs-6 text-white me-1" :class="modoForm === 'agregar' ? 'ti-user-plus': 'ti-edit'"></i>
+    </span>
+<h5 class="modal-title text-white" x-text="nombreEstacionActual ? (modoForm === 'agregar' ? 'Agregar Personal (' + nombreEstacionActual + ')' : 'Editar Personal (' + nombreEstacionActual + ')') : (modoForm === 'agregar' ? 'Agregar Personal' : 'Editar Personal')"></h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
 <div class="modal-body">
@@ -354,11 +357,31 @@ style="width:28px;height:28px;">11</span>
 </div>
 
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-<button type="button" class="btn btn-success" @click="guardarPersonal()" :disabled="guardando">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid  mb-1 mb-md-0">
+                     <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+Cancelar
+</button> 
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+class="btn btn-success" 
+@click="guardarPersonal()" 
+:disabled="guardando">
+
 <template x-if="guardando"><span class="spinner-border spinner-border-sm me-1"></span></template>
-<span x-text="guardando ? 'Guardando...' : (modoForm === 'agregar' ? 'Guardar' : 'Editar')"></span>
+<i class="ti ti-check"></i>
+<span x-text="guardando ? 'Guardando...' : (modoForm === 'agregar' ? 'Guardar' : 'Actualizar')"></span>
 </button>
+                    </div>
+                  </div>
+
+
+
+
 </div>
 
 </div>
@@ -447,12 +470,14 @@ style="width:44px; height:44px;" type="button"
 </div>
 
 <!---------- MODAL BAJA DEL PERSONAL ---------->
-<div class="modal fade" id="modalBajaPersonal" x-ref="modalBajaPersonal" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalBajaPersonal" x-ref="modalBajaPersonal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Baja de Personal (<span x-text="bajaPersonalNombre"></span>)</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-user-minus"></i>
+Baja de Personal (<span x-text="bajaPersonalNombre"></span>)</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <div class="row g-3">
@@ -490,21 +515,45 @@ style="width:44px; height:44px;" type="button"
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-<button type="button" class="btn btn-success" @click="guardarBaja()" :disabled="guardando">Guardar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+Cancelar
+</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+class="btn btn-success" 
+@click="guardarBaja()" 
+:disabled="guardando">
+<i class="ti ti-check"></i>
+Guardar
+</button>
+                    </div>
+                  </div>
+
+
+
+
+
 </div>
 </div>
 </div>
 </div>
 
 <!---------- MODAL ACCESO PERSONAL ---------->
-<div class="modal fade" id="modalAccesoPersonal" x-ref="modalAccesoPersonal" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalAccesoPersonal" x-ref="modalAccesoPersonal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-md">
 <div class="modal-content">
 
-<div class="modal-header">
-<h5 class="modal-title">Acceso del Personal (<span x-text="accesoPersonalNombre"></span>)</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-user-shield"></i>
+    Acceso del Personal (<span x-text="accesoPersonalNombre"></span>)</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
 <div class="modal-body p-4">
@@ -606,10 +655,33 @@ x-text="accesoPinError">
 </div>
 
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
-<template x-if="!showEditPin && !accesoSoloLectura">
-<button type="button" class="btn btn-primary" @click="toggleEditPin()">Editar PIN</button>
+
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger"
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+Cancelar
+</button>
+                    </div>
+    <template x-if="!showEditPin && !accesoSoloLectura">
+    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+        <button type="button"
+                class="btn bg-primary-subtle text-primary"
+                @click="toggleEditPin()">
+                <i class="ti ti-lock-password"></i>
+            Editar PIN
+        </button>
+    </div>
 </template>
+                  </div>
+
+
+
+
+
+
 </div>
 
 </div>

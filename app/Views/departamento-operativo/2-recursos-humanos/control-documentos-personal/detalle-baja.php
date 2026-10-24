@@ -18,29 +18,43 @@ x-cloak>
 </div>
 </div>
 <div class="card-body">
-<div class="row g-3">
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">No. de Colaborador:</label>
-<div class="mt-1"><?= htmlspecialchars($baja['no_colaborador']) ?></div>
+<!---------inicio de los col-informacion personal------>
+
+<div class="row">
+<div class="col-xl-4 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">No. de Colaborador:</label>
+<div class="mb-3"><?= htmlspecialchars($baja['no_colaborador']) ?></div>
 </div>
-<div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">Nombre Completo:</label>
-<div class="mt-1"><?= htmlspecialchars($baja['nombre_completo']) ?></div>
+
+
+<div class="col-xl-4 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">Nombre Completo:</label>
+<div class="mb-3"><?= htmlspecialchars($baja['nombre_completo']) ?></div>
 </div>
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">Puesto:</label>
-<div class="mt-1"><?= htmlspecialchars($baja['puesto']) ?></div>
+
+
+<div class="col-xl-4 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">Puesto:</label>
+<div class="mb-3"><?= htmlspecialchars($baja['puesto']) ?></div>
 </div>
-<div class="col-xl-2 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">Fecha de Ingreso:</label>
-<div class="mt-1"><?= htmlspecialchars($baja['fecha_ingreso']) ?></div>
+
+
+<div class="col-xl-4 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">Fecha de Ingreso:</label>
+<div class="mb-3"><?= htmlspecialchars($baja['fecha_ingreso']) ?></div>
 </div>
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">Estación / Departamento:</label>
-<div class="mt-1"><?= htmlspecialchars($baja['nombre_estacion']) ?></div>
+
+
+<div class="col-xl-4 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">Estación / Departamento:</label>
+<div class="mb-3"><?= htmlspecialchars($baja['nombre_estacion']) ?></div>
+</div>
+
+
 </div>
 </div>
-</div>
+
+
 </div>
 
 <!---------- INFORMACIÓN DE BAJA ---------->
@@ -51,31 +65,41 @@ x-cloak>
 </div>
 </div>
 <div class="card-body">
-<div class="row g-3">
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">Fecha de Baja:</label>
-<div class="fw-semibold mt-1"><?= htmlspecialchars($baja['fecha_baja']) ?></div>
+
+<div class="row">
+
+<!---------inicio de los col-informacion de baja------>
+
+<div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">Fecha de Baja:</label>
+<div class="mb-3"><?= htmlspecialchars($baja['fecha_baja']) ?></div>
 </div>
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">Motivo:</label>
-<div class="fw-semibold mt-1"><?= htmlspecialchars($baja['motivo']) ?></div>
+
+<div class="col-xl-4 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">Motivo:</label>
+<div class=" mb-3"><?= htmlspecialchars($baja['motivo']) ?></div>
 </div>
-<div class="col-xl-6 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">Detalle:</label>
-<div class="fw-semibold mt-1"><?= htmlspecialchars($baja['detalle']) ?: 'S/I' ?></div>
+
+<div class="col-xl-5 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">Detalle:</label>
+<div class=" mb-3"><?= htmlspecialchars($baja['detalle']) ?: 'S/I' ?></div>
 </div>
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">Proceso de Baja:</label>
-<div class="fw-semibold mt-1"><?= htmlspecialchars($baja['proceso']) ?: 'Pendiente' ?></div>
+
+<div class="col-xl-4 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">Proceso de Baja:</label>
+<div class="mb-3"><?= htmlspecialchars($baja['proceso']) ?: 'Pendiente' ?></div>
 </div>
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-<label class="form-label">Estatus:</label>
-<div class="mt-1"><span class="badge <?= $baja['badge_class'] ?>"><?= $baja['badge_label'] ?></span></div>
+
+<div class="col-xl-4 col-lg-4 col-md-6 col-sm-6">
+<label class="form-label mb-1">Estatus:</label>
+<div class="mb-3"><span class="badge <?= $baja['badge_class'] ?>"><?= $baja['badge_label'] ?></span></div>
 </div>
-<div class="col-xl-6 col-lg-4 col-md-6 col-sm-12" x-show="baja.has_solucion" x-cloak>
-<label class="form-label">Solución:</label>
-<div class="fw-semibold mt-1" x-text="baja.solucion || ''"></div>
+
+<div class="col-xl-4 col-lg-4 col-md-6 col-sm-6" x-show="baja.has_solucion" x-cloak>
+<label class="form-label mb-1">Solución:</label>
+<div class="mb-3" x-text="baja.solucion || ''"></div>
 </div>
+
 </div>
 </div>
 </div>
@@ -136,12 +160,21 @@ x-cloak>
 <!---------- ARCHIVOS DE BAJA ---------->
 <div class="card mb-4">
 <div class="card-header bg-primary">
-<div class="d-flex align-items-center justify-content-between">
+
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
+
 <h5 class="mb-0 text-white"><i class="ti ti-paperclip me-2"></i>ARCHIVOS DE BAJA</h5>
+
+<div class="d-grid d-md-block">
 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalSubirArchivoBaja">
 <i class="ti ti-plus me-1"></i> Nuevo
 </button>
 </div>
+
+
+</div>
+
+
 </div>
 <div class="card-body p-0">
 <div class="table-responsive">
@@ -286,11 +319,13 @@ type="button" @click="agregarComentario()" :disabled="guardandoComentario || !nu
 
 </div>
 <!---------- MODAL SUBIR ARCHIVO BAJA ---------->
-<div class="modal fade" id="modalSubirArchivoBaja" tabindex="-1" aria-labelledby="modalSubirArchivoBajaLabel" aria-hidden="true">
+<div class="modal fade" id="modalSubirArchivoBaja" tabindex="-1" aria-labelledby="modalSubirArchivoBajaLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title" id="modalSubirArchivoBajaLabel">Nuevo archivo de baja</h5>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white" id="modalSubirArchivoBajaLabel">
+<i class="ti ti-clipboard-text"></i>    
+Nuevo archivo de baja</h5>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 <div class="modal-body">
@@ -310,13 +345,31 @@ x-model="bajaForm.descripcion">
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-<button type="button" class="btn btn-success"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+Cancelar
+</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+class="btn btn-success"
 @click="subirArchivoBaja()"
 :disabled="subiendoArchivo || !bajaForm.descripcion.trim()">
+<i class="ti ti-check"></i>
 <template x-if="!subiendoArchivo"><span> Guardar</span></template>
 <template x-if="subiendoArchivo"><span class="spinner-border spinner-border-sm"></span></template>
 </button>
+                    </div>
+                  </div>
+
+
+
+
+
 </div>
 </div>
 </div>

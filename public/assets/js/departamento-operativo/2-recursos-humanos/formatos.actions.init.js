@@ -199,8 +199,10 @@ return;
 const d = json.detalle;
 const firmas = json.firmas || [];
 const title = document.getElementById('modalDetalleFormatoTitle');
-if (title) title.textContent = d.formato_nombre + ' (# 00' + d.id + ')';
 
+if (title) {
+    title.innerHTML = `<i class="ti ti-eye me-0"></i>${d.formato_nombre} (# 00${d.id})`;
+}
 const esc = this._esc.bind(this);
 let html = '';
 

@@ -61,34 +61,39 @@
     <!---------- SECCION: ESTACIONES -->
     <div id="dd-section-estaciones" style="display:none;">
 
-        <div class="row mb-3 align-items-end g-3">
-            <!-- Columna Izquierda: Título y Selector -->
-            <div class="col-md-6">
-                <h4 class="fw-bold mb-2">Estaciones</h4>
-                <div class="d-flex align-items-center gap-2">
-                    <select class="form-select form-select-sm shadow-sm" id="dd-semana-selector" style="max-width: 220px;">
-                        <option value="">Selecciona una semana...</option>
-                        <?php foreach ($weeks as $w): ?>
-                            <option value="<?= $w['numero'] ?>" <?= $w['numero'] == $currentWeek ? 'selected' : '' ?>>
-                                Semana <?= $w['numero'] ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
+       <div class="row mb-3 align-items-end g-3">
+    <!-- Columna Izquierda: Título y Selector -->
 
-            <!-- Columna Derecha: Botones de Acción -->
-            <div class="col-md-6">
-                <div class="d-flex align-items-center justify-content-md-end gap-2 flex-wrap">
-                    <button type="button" class="btn btn-outline-danger d-inline-flex align-items-center" @click="showCards()">
-                        <i class="ti ti-arrow-left me-1"></i> Regresar
-                    </button>
-                    <a class="pointer" id="btn-dd-pdf-estaciones" class="btn btn-success d-inline-flex align-items-center">
-                        <i class="ti ti-download me-1"></i> Descargar PDF
-                    </a>
-                </div>
+    <div class="col-12 col-md-6">
+        <h4 class="fw-bold mb-2">Estaciones</h4>
+        <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm shadow-sm" id="dd-semana-selector" style="max-width: 220px;">
+                <option value="">Selecciona una semana...</option>
+                <?php foreach ($weeks as $w): ?>
+                    <option value="<?= $w['numero'] ?>" <?= $w['numero'] == $currentWeek ? 'selected' : '' ?>>
+                        Semana <?= $w['numero'] ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+    </div>
+
+    <!-- Columna Derecha: Botones de Acción -->
+    <div class="col-12 col-md-6">
+        <div class="row g-2 justify-content-md-end">
+            <div class="col-12 col-md-auto d-grid">
+                <button type="button" class="btn bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center" @click="showCards()">
+                    <i class="ti ti-arrow-left me-1"></i> Regresar
+                </button>
+            </div>
+            <div class="col-12 col-md-auto d-grid">
+                <a class="pointer btn bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center" id="btn-dd-pdf-estaciones">
+                    <i class="ti ti-download me-1"></i> Descargar PDF
+                </a>
             </div>
         </div>
+    </div>
+</div>
 
 
         <div class="row">
@@ -119,26 +124,30 @@
     <!-- SECCION: DIRECCION DE OPERACIONES -->
     <div id="dd-section-direccion" style="display:none;">
 
-        <div class="row align-items-center">
-            <div class="col-12 col-md-7">
-                <h4 class="mb-0">Dirección de Operaciones</h4>
+       <div class="row align-items-center g-2">
+    <div class="col-12 col-md-7">
+        <h4 class="mb-0">Dirección de Operaciones</h4>
+    </div>
+
+    <div class="col-12 col-md-5">
+        <div class="row g-2 justify-content-md-end">
+            <div class="col-12 col-md-auto d-grid">
+                <button type="button" class="btn bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center" @click="showCards()">
+                    <i class="ti ti-arrow-left me-1"></i> Regresar
+                </button>
             </div>
 
-            <div class="col-12 col-md-5 text-start text-md-end mt-2 mt-md-0">
-                <div class="d-inline-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-outline-danger d-inline-flex align-items-center" @click="showCards()">
-                        <i class="ti ti-arrow-left me-1"></i> Regresar
+            <?php if ($puedeCrear): ?>
+                <div class="col-12 col-md-auto d-grid mb-3 mb-md-0">
+                    <button type="button" class="btn bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center" @click="crearReporte()" :disabled="creando">
+                        <template x-if="!creando"><span class="d-inline-flex align-items-center"><i class="ti ti-plus me-1"></i> Nuevo</span></template>
+                        <template x-if="creando"><span class="d-inline-flex align-items-center"><span class="spinner-border spinner-border-sm me-1" role="status"></span> Procesando...</span></template>
                     </button>
-
-                    <?php if ($puedeCrear): ?>
-                        <button type="button" class="btn bg-primary-subtle text-primary d-inline-flex align-items-center" @click="crearReporte()" :disabled="creando">
-                            <template x-if="!creando"><span class="d-inline-flex align-items-center"><i class="ti ti-plus me-1"></i> Nuevo</span></template>
-                            <template x-if="creando"><span class="d-inline-flex align-items-center"><span class="spinner-border spinner-border-sm me-1" role="status"></span> Procesando...</span></template>
-                        </button>
-                    <?php endif; ?>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
+    </div>
+</div>
 
         <div class="datatables">
             <div class="table-responsive overflow-x-auto pb-4">
@@ -151,7 +160,7 @@
     </div>
 
     <!-- MODAL DETALLE -->
-    <div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content" id="modalDetalleBody">
             </div>

@@ -8,13 +8,28 @@
      data-personal='<?= htmlspecialchars(json_encode($personal ?? [], JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>'
      data-detalle='<?= !empty($detalle) ? htmlspecialchars(json_encode($detalle, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') : '' ?>'>
 
-    <div class="d-flex justify-content-end gap-2 mb-3">
-        <button type="button" class="btn btn-success" @click="guardar()" :disabled="guardando">
-            <template x-if="!guardando"><i class="ti ti-check fs-5 me-1"></i></template>
-            <template x-if="guardando"><span class="spinner-border spinner-border-sm me-1"></span></template>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                        <button type="button" 
+        class="btn btn-success" 
+        @click="guardar()" 
+        :disabled="guardando">
+
+            <template x-if="!guardando">
+                <i class="ti ti-check fs-5 me-1"></i>
+            </template>
+
+            <template x-if="guardando">
+                <span class="spinner-border spinner-border-sm me-1"></span>
+            </template>
+
             <span x-text="esNuevo ? 'Guardar' : 'Actualizar'"></span>
         </button>
-    </div>
+                    </div>
+                  </div>
+
+      
+
 
     <div class="row align-items-stretch">
 
@@ -79,7 +94,7 @@
 
                         <div class="col-12 mb-3">
                             <label class="form-label mb-1">Observaciones:</label>
-                            <textarea class="form-control" rows="4" x-model="observaciones"></textarea>
+                            <textarea class="form-control" placeholder="Ecribe tus observaciones aqui..." rows="4" x-model="observaciones"></textarea>
                         </div>
 
                         <!-- 

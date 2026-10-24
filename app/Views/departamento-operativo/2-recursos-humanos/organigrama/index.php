@@ -71,7 +71,7 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 
 <div class="card-body">
 <div class="datatables">
-<div class="table-responsive">
+<div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
 <table id="tabla-organigrama-versions" class="table table-striped table-bordered mb-0 text-nowrap align-middle"></table>
 </div>
 </div>
@@ -301,12 +301,14 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 </div>
 </div>
 
-<div class="modal fade" id="modalAgregarOrganigrama" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalAgregarOrganigrama" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Nuevo organigrama</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+<i class="ti ti-hierarchy-3"></i>    
+Nuevo organigrama</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <div class="mb-3">
@@ -315,25 +317,50 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 </div>
 <div class="mb-3">
 <label class="form-label">Observaciones:</label>
-<textarea class="form-control" x-model="form.observaciones" rows="3"></textarea>
+<textarea class="form-control" placeholder="Escribe tus observaciones" x-model="form.observaciones" rows="3"></textarea>
 </div>
 </div>
+
+
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-<button type="button" class="btn btn-success" @click="guardarOrganigrama()" :disabled="guardando">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+Cancelar
+</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+class="btn btn-success" 
+@click="guardarOrganigrama()" 
+:disabled="guardando">
+<i class="ti ti-check"></i>
 <span x-text="guardando ? 'Guardando...' : 'Guardar'"></span>
 </button>
+
+                    </div>
+                  </div>
+
+
+
+
 </div>
 </div>
 </div>
 </div>
 
-<div class="modal fade" id="modalDocumento" tabindex="-1" data-bs-backdrop="static">
+
+
+<div class="modal fade" id="modalDocumento" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title" x-text="(documentoModo === 'editar' ? 'Editar documento' : 'Agregar documento') + ' (' + (documentoTipo === 'perfil' ? 'Perfil' : 'Contrato') + ')'"></h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+   <span class="modal-title text-white"><i class="ti fs-6 me-1" :class="documentoModo=== 'editar' ? 'ti-edit' :'ti-clipboard-text'"></i></span> 
+<h5 class="modal-title text-white" x-text="(documentoModo === 'editar' ? 'Editar documento' : 'Agregar documento') + ' (' + (documentoTipo === 'perfil' ? 'Perfil' : 'Contrato') + ')'"></h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <div class="mb-3">
@@ -342,8 +369,31 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-<button type="button" class="btn btn-success" @click="guardarDocumento()" :disabled="guardando">Guardar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+Cancelar
+</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+class="btn btn-success"
+ @click="guardarDocumento()" 
+ :disabled="guardando">
+ <i class="ti ti-check"></i>
+ Guardar
+</button>
+                    </div>
+                  </div>
+
+
+
+
+
+
 </div>
 </div>
 </div>

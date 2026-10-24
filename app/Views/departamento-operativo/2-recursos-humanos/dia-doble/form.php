@@ -22,10 +22,15 @@
                         <li><a class="dropdown-item pointer" @click="abrirModalEditarQuincena()"><i class="ti ti-calendar me-1"></i> Editar Quincena</a></li>
                     </ul>
                 </div>
-
-                <button type="button" class="btn btn-success float-end me-2" @click="finalizarFormato()" :disabled="guardando">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                     <button type="button" class="btn btn-success float-end me-2" @click="finalizarFormato()" :disabled="guardando">
                     <i class="ti ti-check me-1"></i> <span x-text="guardando ? 'Guardando...' : 'Finalizar'"></span>
-                </button>
+                </button> 
+                    </div>
+                  </div>
+
+                
 
             </div>
         </div>
@@ -177,16 +182,26 @@ touch-action: none;">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button"
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         @click="resetModal()">
                         <i class="ti ti-x"></i> Cancelar
                     </button>
-                    <button type="button" class="btn btn-success" @click="guardarPersonal()" :disabled="guardandoPersonal">
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarPersonal()" :disabled="guardandoPersonal">
                         <template x-if="!guardandoPersonal"><span><i class="ti ti-check me-1"></i>Guardar</span></template>
                         <template x-if="guardandoPersonal"><span class="d-inline-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm"></span> Guardando...</span></template>
                     </button>
+                    </div>
+                  </div>
+
+                    
+
+                    
                 </div>
             </div>
         </div>
@@ -212,16 +227,24 @@ touch-action: none;">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                        <button type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         @click="resetModal()">
                         <i class="ti ti-x"></i> Cancelar
                     </button>
-                    <button type="button" class="btn btn-success" @click="guardarQuincena()" :disabled="guardandoQuincena">
+
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button type="button" class="btn btn-success" @click="guardarQuincena()" :disabled="guardandoQuincena">
                         <template x-if="!guardandoQuincena"><span><i class="ti ti-check me-1"></i>Guardar</span></template>
                         <template x-if="guardandoQuincena"><span class="d-inline-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm"></span> Guardando...</span></template>
                     </button>
+                    </div>
+                  </div>
+
                 </div>
             </div>
         </div>

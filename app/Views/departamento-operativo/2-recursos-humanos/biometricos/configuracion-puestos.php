@@ -4,13 +4,16 @@ data-puede-editar="<?= !empty($permisos['editar']) ? 'true' : 'false' ?>"
 data-puede-eliminar="<?= !empty($permisos['eliminar']) ? 'true' : 'false' ?>">
 
 <?php if (!empty($permisos['crear'])): ?>
-<div class="row">
-<div class="col-12 mb-4">
-<button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#nuevo">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3">
+                    <button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
 <i class="ti ti-plus"></i> Nuevo
 </button>
-</div>
-</div>
+  
+                    </div>
+                  </div>
+
+
 <?php endif; ?>
 
 <div class="datatables">
@@ -50,11 +53,35 @@ placeholder="Ej. Encargado, Despachador, etc.">
 
 <!-- FOOTER -->
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="resetForm()"><i class="ti ti-x"></i> Cancelar</button>
-<button type="button" class="btn btn-success" @click="submit()" :disabled="loading">
-<span x-show="!loading"><i class="ti ti-check"></i> Guardar</span>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal" 
+@click="resetForm()"><i class="ti ti-x"></i> 
+Cancelar
+</button>
+
+                    </div>
+
+
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+class="btn btn-success"
+ @click="submit()" 
+ :disabled="loading">
+<span x-show="!loading">
+    <i class="ti ti-check"></i>
+<span x-text="mode === 'create' ?'Guardar':'Actualizar'"></span>
+</span>
 <span x-show="loading">Guardando...</span>
 </button>
+                    </div>
+                  </div>
+
+
+
+
 </div>
 
 </div>
