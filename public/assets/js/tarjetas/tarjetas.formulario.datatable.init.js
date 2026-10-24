@@ -5,6 +5,9 @@ let permisos = {};
 const container = document.getElementById('container');
 const idEstacion = container.dataset.estacion;
 const noSeguimiento = container.dataset.seguimiento;
+if (container.dataset.puedeCrearDetalle === '1') {
+    document.getElementById('botonNuevoRegistro').innerHTML = `<button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo"><i class="ti ti-plus"></i> Nuevo</button>`;
+}
 
 const table = $('#table-tarjetas-formulario').DataTable({
 processing: true,
@@ -47,8 +50,8 @@ className: 'text-center align-middle td-small',
 render: function (data, type, row) {
 
 const disabled = 'disabled opacity-50 pointer-events-none';
-const noEdit = !permisos.editar;
-const noDelete = !permisos.eliminar;
+const noEdit = !row.acciones?.editar;
+const noDelete = !row.acciones?.eliminar;
 
 return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -73,12 +76,13 @@ return `
 class="dropdown-item d-flex align-items-center gap-1 pointer ${noDelete ? disabled : ''}"
 ${noDelete ? '' : `
 @click="async () => {
-await deleteAction({
+const result = await deleteAction({
 url: '/solicitud-tarjetas/delete-reporte-formulario',
 id: ${row.id},
 name: '${row.id}',
 table: '#table-tarjetas-formulario'
 });
+if (result && Number(result.remaining) === 0) window.location.href = '/solicitud-tarjetas';
 }"
 `}
 >
@@ -107,4 +111,4 @@ $(this).addClass("selected");
 });
 
 
-});   
+});

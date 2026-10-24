@@ -56043,6 +56043,15 @@ line-height:1;
 animation:pulseBadge 1.5s infinite;
 }
 
+.badge-historico.badge-solicitud-home{
+position:static;
+margin:0;
+min-width:24px;
+height:24px;
+padding:0 8px;
+font-size:12px;
+}
+
 /* El badge conserva su estilo propio y no hereda el hover del sidebar. */
 .sidebar-nav .sidebar-link:hover .badge-historico,
 .sidebar-nav .sidebar-item:hover .badge-historico,

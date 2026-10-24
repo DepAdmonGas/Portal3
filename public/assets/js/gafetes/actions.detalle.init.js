@@ -46,14 +46,24 @@ if (this.loadingSeguimiento) return;
 if (!this.validate(noSeguimiento)) return;
 
 // 🔥 CONFIRMACIÓN DIRECTA
+const esFinalizacion = Number(noSeguimiento) === 2;
 const result = await Swal.fire({
-title: '¿Actualizar seguimiento?',
-text: `El No. de solicitud: ${this.reporte} sera actualizado`,
+title: '¿Actualizar estatus?',
+text: esFinalizacion
+? `La solicitud #${this.reporte} cambiará de En proceso a Finalizada.`
+: Number(noSeguimiento) === 1
+? `La solicitud #${this.reporte} cambiará de Pendiente a En proceso.`
+: `La solicitud #${this.reporte} cambiará de Finalizada a Entregada.`,
 icon: 'warning',
 showCancelButton: true,
-confirmButtonText: 'Sí, actualizar',
+confirmButtonText: 'Sí, actualizar estatus',
 cancelButtonText: 'Cancelar',
-confirmButtonColor: '#198754'
+confirmButtonColor: '#198754',
+...(esFinalizacion ? {
+input: 'textarea',
+inputPlaceholder: 'Comentario (opcional)',
+inputAttributes: { maxlength: 2000, 'aria-label': 'Comentario de finalización' }
+} : {})
 });
 
 if (!result.isConfirmed) return;
@@ -63,7 +73,8 @@ this.loadingSeguimiento = true;
 const payload = {
 idEstacion: this.estacion,
 no_reporte: this.reporte,
-idSeguimiento: noSeguimiento
+idSeguimiento: noSeguimiento,
+...(esFinalizacion ? { comentario: result.value || '' } : {})
 };
 
 try {
@@ -89,7 +100,7 @@ this.notify('error', 'Error al guardar');
 }
 
 this.loadingSeguimiento = false;
-}
+},
 
 }));
 

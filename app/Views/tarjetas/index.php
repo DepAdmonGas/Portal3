@@ -1,21 +1,8 @@
-<div id="container" class="mb-4">
-
-<?php
-if ($utilitiesUser['idPuestoUser'] == "6") {
-echo !empty($permisos['crear']) ? '
-<div class="row d-flex justify-content-end">
-<div class="col-12 col-md-auto d-grid  mt-4 mb-3">
-<button class="btn bg-primary-subtle text-primary float-end" data-bs-toggle="modal" data-bs-target="#nuevo">
-<i class="ti ti-plus"></i> Nuevo
-</button>
-</div>
-</div>
-' : '';
-}
-?>
+<div id="container" class="mb-4" data-puede-crear="<?= !empty($puedeCrear) ? '1' : '0' ?>">
+<div id="tarjetas-toolbar" class="row d-flex justify-content-end"></div>
 
 <div class="datatables">
- <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
+ <div class="table-responsive mt-3 overflow-x-auto overflow-y-hidden pb-2">
 <table id="table-tarjetas" class="table table-striped table-bordered  text-nowrap align-middle">
 <tbody></tbody>
 </table>

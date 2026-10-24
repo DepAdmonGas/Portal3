@@ -7,7 +7,7 @@ const { estacion, reporte, puesto } = container.dataset;
 cargarTimeline(estacion, reporte, Number(puesto));
 }
 
-function cargarTimeline(idEstacion, noReporte, idPuesto) {
+function cargarTimeline(idEstacion, noReporte, puesto) {
 
 fetch(`/solicitud-gafetes/seguimiento/timeline/${idEstacion}/${noReporte}`)
 .then(r => r.json())
@@ -17,7 +17,7 @@ const map = Object.fromEntries(
 data.map(i => [i.seguimiento, i])
 );
 
-actualizarBotonSeguimiento(map, idPuesto);
+actualizarBotonSeguimiento(map, puesto);
 
 })
 .catch(error => {
@@ -26,14 +26,13 @@ console.error('Error timeline:', error);
 
 }
 
-function actualizarBotonSeguimiento(map, idPuesto) {
+function actualizarBotonSeguimiento(map, puesto) {
 
 const pasosExistentes = Object.keys(map)
 .map(Number)
 .sort((a, b) => a - b);
 
 const ultimoPaso = pasosExistentes.at(-1) || 0;
-const siguiente = ultimoPaso + 1;
 const contenedor = document.getElementById('botonSeguimiento');
 
 if (!contenedor) return;
@@ -43,18 +42,17 @@ contenedor.innerHTML = `<li><a class="dropdown-item pointer"> <i class="ti ti-ci
 return;
 }
 
-let ocultarBoton = "d-none";
-
-if (siguiente === 1 && idPuesto === 6) {
-ocultarBoton = "";
-}
+const siguiente = ultimoPaso + 1;
+const puestoPermitido = siguiente === 2 ? [13, 1].includes(Number(puesto)) : [6, 7].includes(Number(puesto));
+const ocultarBoton = puestoPermitido ? '' : 'd-none';
+const texto = siguiente === 1 ? 'Iniciar proceso' : siguiente === 2 ? 'Finalizar proceso' : 'Finalizar entrega';
 
 contenedor.innerHTML = `
 
 <button class="btn bg-success text-white  ${ocultarBoton}"
 :disabled="loadingSeguimiento"
 @click="submitSeguimiento(${siguiente})">
- <i class="ti ti-check"></i> Finalizar
+ <i class="ti ti-check"></i> ${texto}
 </button>
 `;
 }
@@ -75,12 +73,25 @@ Alpine.data('gafetesForm', () => ({
 clave: '',
 nombre_g: '',
 foto: null,
+modo: 'nuevo',
+idRegistro: null,
 loading: false,
 
 errors: {
 clave: false,
 nombre_g: false,
 foto: false
+},
+
+openEdit(data) {
+this.modo = 'editar';
+this.idRegistro = Number(data.id);
+this.clave = data.clave || '';
+this.nombre_g = data.nombre_g || '';
+this.foto = null;
+this.errors = { clave: false, nombre_g: false, foto: false };
+if (this.$refs.foto) this.$refs.foto.value = null;
+bootstrap.Modal.getOrCreateInstance(document.getElementById('nuevo')).show();
 },
 
 handleFile(e) {
@@ -92,7 +103,7 @@ validate() {
 
 this.errors.clave = !this.clave;
 this.errors.nombre_g = !this.nombre_g;
-this.errors.foto = !this.foto;
+this.errors.foto = this.modo === 'nuevo' && !this.foto;
 
 if (
 this.errors.clave ||
@@ -115,6 +126,8 @@ resetForm() {
 this.clave = '';
 this.nombre_g = '';
 this.foto = null;
+this.modo = 'nuevo';
+this.idRegistro = null;
 
 this.errors = {
 clave: false,
@@ -138,12 +151,14 @@ formData.append('no_reporte', noReporte);
 formData.append('idEstacion', idEstacion);
 formData.append('clave', this.clave);
 formData.append('nombre_g', this.nombre_g);
-formData.append('foto', this.foto);
+if (this.foto) formData.append('foto', this.foto);
+const editar = this.modo === 'editar';
+if (editar) formData.append('id', this.idRegistro);
 
 try {
 
 const res = await this.createAction({
-url: '/solicitud-gafetes/create-reporte-formulario',
+url: editar ? '/solicitud-gafetes/update-reporte-formulario' : '/solicitud-gafetes/create-reporte-formulario',
 data: formData,
 table: '#table-gafetes-formulario'
 });
@@ -176,10 +191,7 @@ modal.hide();
 
 } catch (error) {
 
-this.notify(
-'error',
-'Error al guardar'
-);
+this.notify('error', error?.message || 'Error al guardar');
 
 }
 
@@ -241,14 +253,24 @@ async submitSeguimiento(noSeguimiento) {
 if (this.loadingSeguimiento) return;
 if (!this.validate(noSeguimiento)) return;
 
+const esFinalizacion = Number(noSeguimiento) === 2;
 const result = await Swal.fire({
-title: '¿Finalizar solicitud?',
-text: `El No. de solicitud: ${this.reporte} será finalizado`,
+title: '¿Actualizar estatus?',
+text: esFinalizacion
+? `La solicitud #${this.reporte} cambiará de En proceso a Finalizada.`
+: Number(noSeguimiento) === 1
+? `La solicitud #${this.reporte} cambiará de Pendiente a En proceso.`
+: `La solicitud #${this.reporte} cambiará de Finalizada a Entregada.`,
 icon: 'warning',
 showCancelButton: true,
-confirmButtonText: 'Sí, finalizar',
+confirmButtonText: 'Sí, actualizar estatus',
 cancelButtonText: 'Cancelar',
-confirmButtonColor: '#198754'
+confirmButtonColor: '#198754',
+...(esFinalizacion ? {
+input: 'textarea',
+inputPlaceholder: 'Comentario (opcional)',
+inputAttributes: { maxlength: 2000, 'aria-label': 'Comentario de finalización' }
+} : {})
 });
 
 if (!result.isConfirmed) return;
@@ -258,7 +280,8 @@ this.loadingSeguimiento = true;
 const payload = {
 idEstacion: this.estacion,
 no_reporte: this.reporte,
-idSeguimiento: noSeguimiento
+idSeguimiento: noSeguimiento,
+...(esFinalizacion ? { comentario: result.value || '' } : {})
 };
 
 try {
@@ -272,12 +295,16 @@ if (res && res.success) {
 
 await Swal.fire({
 icon: 'success',
-title: 'Proceso completado',
-text: 'La solicitud ha finalizado correctamente',
+title: 'Estatus actualizado',
+text: Number(noSeguimiento) === 1
+? 'La solicitud quedó En proceso.'
+: Number(noSeguimiento) === 2
+? 'La solicitud quedó Finalizada.'
+: 'La entrega quedó finalizada y el proceso está completo.',
 confirmButtonColor: '#198754'
 });
 
-window.location.href = '/solicitud-gafetes';
+window.location.reload();
 
 return;
 }
@@ -291,7 +318,7 @@ this.notify('error', 'Error al guardar');
 
 this.loadingSeguimiento = false;
 
-}
+},
 
 }));
 
