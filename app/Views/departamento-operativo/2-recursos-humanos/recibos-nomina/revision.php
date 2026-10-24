@@ -14,28 +14,40 @@ Selecciona una estación o departamento del menú superior.
 
 <!-- EXCEL DE DESPACHADORES -->
 <template x-if="revision.mostrar_excel">
-<div class="mb-3 clearfix">
-<a class="btn btn-success float-end d-inline-flex align-items-center gap-2 shadow-sm" :href="revision.excel_url">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3">
+                      <a class="btn btn-success" :href="revision.excel_url">
 <i class="ti ti-file-spreadsheet fs-4"></i>
 <span>Descargar Excel (Despachadores)</span>
 </a>
-</div>
+                    </div>
+                  </div>
+
+
+
 </template>
 
 <!-- BLOQUES POR PERIODO -->
 <template x-for="bloque in revision.bloques" :key="bloque.periodo">
 <div class="card mb-4">
-<div class="card-header bg-primary d-flex justify-content-between align-items-center">
-<div class="d-flex align-items-center gap-2">
-<i class="ti ti-calendar-event text-white fs-6"></i>
-<h5 class="mb-0 text-white d-flex flex-column">
-<span x-text="bloque.titulo"></span>
-<small class="text-white mt-1" x-text="bloque.rango_fechas"></small>
-</h5>
-</div>
-<div class="d-flex align-items-center gap-2">
+
+
+<div class="card-header bg-primary ">
+
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
+
+        <!-- Icono y textos -->
+        <div class="d-flex align-items-center gap-2">
+            <i class="ti ti-calendar-event text-white fs-6"></i>
+
+            <h5 class="mb-0 text-white d-flex flex-column">
+                <span x-text="bloque.titulo"></span>
+                <small class="text-white mt-1" x-text="bloque.rango_fechas"></small>
+            </h5>
+        </div>
+<div class="d-grid d-md-flex">
 <template x-if="bloque.puede_finalizar">
-<button type="button" class="btn btn-success d-flex align-items-center gap-1" @click="finalizarOperativo(bloque)">
+<button type="button" class="btn btn-success d-flex align-items-center gap-100" @click="finalizarOperativo(bloque)">
 <i class="ti ti-check fs-5"></i> Finalizar actividad
 </button>
 </template>
@@ -43,7 +55,10 @@ Selecciona una estación o departamento del menú superior.
 <span class="badge rounded-pill" :class="bloque.estado_badge.clase" x-text="bloque.estado_badge.texto"></span>
 </template>
 </div>
+
 </div>
+</div>
+
 <div class="card-body p-0">
 <div class="table-responsive">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100">

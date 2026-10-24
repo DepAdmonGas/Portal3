@@ -15,13 +15,17 @@ x-cloak>
 </div>
 
 <!-- MODAL DETALLE INCIDENCIA (solo lectura) -->
-<div class="modal fade" id="modalDetalleIncidencia" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalDetalleIncidencia" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-scrollable">
 <div class="modal-content">
 
-<div class="modal-header">
-<h5 class="modal-title" x-text="'Incidencia (' + modalIncidencia.fecha + ')'"></h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white"> 
+<i class="ti ti-eye"></i>
+<span x-text="'Incidencia (' + modalIncidencia.fecha + ')'">
+</span> 
+</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
 <div class="modal-body">
@@ -34,27 +38,27 @@ x-cloak>
 
 <template x-if="!modalIncidencia.cargando && !modalIncidencia.existe">
 <div class="text-center py-3">
-<p class="fs-6 fw-light text-muted mb-0">No se encontró información de incidencias en el sistema</p>
+<p>No se encontró información de incidencias en el sistema</p>
 </div>
 </template>
 
 <template x-if="!modalIncidencia.cargando && modalIncidencia.existe">
 <div>
 <div class="mb-3">
-<small class="text-secondary fw-bold">Fecha:</small>
-<div class="fs-6 fw-light" x-text="modalIncidencia.fecha || '—'"></div>
+<small class="text-secondary fw-bold mb-1">Fecha:</small>
+<div x-text="modalIncidencia.fecha || '—'"></div>
 </div>
 <div class="mb-3">
-<small class="text-secondary fw-bold">Incidencia:</small>
-<div class="fs-6 fw-light" x-text="modalIncidencia.incidencia || '—'"></div>
+<small class="text-secondary fw-bold mb-1">Incidencia:</small>
+<div  x-text="modalIncidencia.incidencia || '—'"></div>
 </div>
 <div class="mb-3">
-<small class="text-secondary fw-bold">Comentario:</small>
-<div class="fs-6 fw-light" x-text="modalIncidencia.comentario || '—'"></div>
+<small class="text-secondary fw-bold mb-1">Comentario:</small>
+<div x-text="modalIncidencia.comentario || '—'"></div>
 </div>
 <div class="mb-3">
-<small class="text-secondary fw-bold">Sueldo día:</small>
-<div class="fs-6 fw-light" x-text="modalIncidencia.puntos ?? '—'"></div>
+<small class="text-secondary fw-bold mb-1">Sueldo día:</small>
+<div x-text="modalIncidencia.puntos ?? '—'"></div>
 </div>
 <div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documento">
 <hr class="my-2">
@@ -90,9 +94,13 @@ class="btn btn-sm btn-outline-danger">
 </div>
 
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x me-1"></i>Cerrar
 </button>
+                    </div>
+                  </div>
 </div>
 
 </div>
@@ -100,13 +108,17 @@ class="btn btn-sm btn-outline-danger">
 </div>
 
 <!-- MODAL AGREGAR INCIDENCIA -->
-<div class="modal fade" id="modalAgregarIncidencia" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalAgregarIncidencia" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-scrollable">
 <div class="modal-content">
 
-<div class="modal-header">
-<h5 class="modal-title" x-text="'Incidencia (' + modalIncidencia.fecha + ')'"></h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-clipboard-list"></i>
+<span x-text="'Incidencia (' + modalIncidencia.fecha + ')'"> 
+</span>
+</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
 <div class="modal-body">
@@ -120,16 +132,16 @@ class="btn btn-sm btn-outline-danger">
 <template x-if="!modalIncidencia.cargando && modalIncidencia.existe">
 <div>
 <div class="mb-3">
-<label class="form-label">Fecha:</label>
-<div class="fs-6 fw-light" x-text="modalIncidencia.fecha || '—'"></div>
+<label class="form-label mb-1">Fecha:</label>
+<div x-text="modalIncidencia.fecha || '—'"></div>
 </div>
 <div class="mb-3">
-<label class="form-label">Incidencia:</label>
-<div class="fs-6 fw-light" x-text="modalIncidencia.incidencia || '—'"></div>
+<label class="form-label mb-1">Incidencia:</label>
+<div  x-text="modalIncidencia.incidencia || '—'"></div>
 </div>
 <div class="mb-3">
-<label class="form-label">Comentario:</label>
-<div class="fs-6 fw-light" x-text="modalIncidencia.comentario || '—'"></div>
+<label class="form-label mb-1">Comentario:</label>
+<div x-text="modalIncidencia.comentario || '—'"></div>
 </div>
 <div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documento">
 <hr class="my-2">
@@ -141,12 +153,12 @@ class="btn btn-sm btn-outline-danger">
 <div class="row g-2 mt-1">
 <div class="col-md-6">
 <label class="form-label">* Fecha Inicio:</label>
-<input type="date" class="form-control" x-model="modalIncidencia.fechaInicio">
+<input type="date" class="form-control mb-2" x-model="modalIncidencia.fechaInicio">
 </div>
 <div class="col-md-6">
 <label class="form-label">* Fecha Fin:</label>
 <input type="date"
-class="form-control"
+class="form-control mb-2"
 x-model="modalIncidencia.fechaFin">
 </div>
 </div>
@@ -156,17 +168,22 @@ x-model="modalIncidencia.fechaFin">
 </div>
 </div>
 <div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento">
-<hr class="my-2">
 <label class="form-label">Documento:</label>
-<div>
-<a
+
+<div class="row g-0 ms-auto w-100 justify-content-start">
+                    <div class="col-12 col-md-auto d-grid">
+                      <a
 href=""
 @click.prevent="download('docs-personal-incidencias', modalIncidencia.documento)"
-class="btn btn-danger rounded-pill px-4">
+class="btn bg-primary-subtle text-primary ">
 <i class="ti ti-download me-2"></i>
 Descargar documento
 </a>
-</div>
+                    </div>
+                  </div>
+
+
+
 </div>
 </div>
 </template>
@@ -241,22 +258,66 @@ x-model="modalIncidencia.sueldoDia">
 </div>
 
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
-<template x-if="!modalIncidencia.cargando && !modalIncidencia.existe">
-<button type="button" class="btn btn-success" @click="guardarIncidencia()" :disabled="modalIncidencia.guardando">
-<template x-if="modalIncidencia.guardando"><span class="spinner-border spinner-border-sm me-1"></span></template>
-<span x-text="modalIncidencia.guardando ? 'Guardando...' : 'Guardar'"></span>
+
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid me-0 me-md-2">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+Cancelar
 </button>
+                    </div>
+
+<!-- Botón para guardar una incidencia nueva -->
+<template x-if="!modalIncidencia.cargando && !modalIncidencia.existe">
+    <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
+        <button
+            type="button"
+            class="btn btn-success"
+            @click="guardarIncidencia()"
+            :disabled="modalIncidencia.guardando">
+
+            <span x-show="modalIncidencia.guardando"
+                  class="spinner-border spinner-border-sm me-1"></span>
+
+            <i class="ti ti-check"></i>
+
+            <span x-text="modalIncidencia.guardando ? 'Guardando...' : 'Guardar'"></span>
+        </button>
+    </div>
 </template>
 
+<!-- Botón para guardar una incidencia existente -->
 <template x-if="!modalIncidencia.cargando && modalIncidencia.existe">
-<button type="button" class="btn btn-success" @click="guardarDocumentoIncidenciaExistente()" :disabled="modalIncidencia.guardando">
-<template x-if="modalIncidencia.guardando">
-<span class="spinner-border spinner-border-sm me-1"></span>
+    <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
+        <button
+            type="button"
+            class="btn btn-success"
+            @click="guardarDocumentoIncidenciaExistente()"
+            :disabled="modalIncidencia.guardando">
+
+            <span x-show="modalIncidencia.guardando"
+                  class="spinner-border spinner-border-sm me-1"></span>
+
+            <i class="ti ti-check"></i>
+
+            <span x-text="modalIncidencia.guardando ? 'Guardando...' : 'Guardar'"></span>
+        </button>
+    </div>
 </template>
-<span x-text="modalIncidencia.guardando ? 'Guardando...' : 'Guardar'"></span>
-</button>
-</template>
+                  </div>
+
+
+
+
+
+
+<!-----------boton de guardar de incidencia editar------->
+
+
+
+
 </div>
 
 </div>

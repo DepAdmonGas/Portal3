@@ -158,14 +158,14 @@ Selecciona una estación o departamento del menú superior.
 </template>
 
 <!-- RECIBOS DE NÓMINA (Lado Derecho) -->
-<div class="d-flex align-items-center gap-2 flex-wrap">
+<div class="d-flex align-items-center gap-2 flex-wrap mt-2 mt-md-0">
 
 <!-- Último período: dropdown con recibos de nómina y de aguinaldo (paridad legacy) -->
-<div class="dropdown" style="display: none;" x-show="resumenInfo && resumenInfo.es_ultimo_periodo && puedeDescargar">
+<div class="dropdown" d-md-inline-block w-100 style="display: none;" x-show="resumenInfo && resumenInfo.es_ultimo_periodo && puedeDescargar">
 <button class="btn btn-success dropdown-toggle" type="button" id="dropdownDescargasNomina" data-bs-toggle="dropdown" aria-expanded="false">
 <i class="ti ti-download me-1"></i> Descargar información
 </button>
-<ul class="dropdown-menu dropdown-menu-end shadow-sm">
+<ul class="dropdown-menu dropdown-menu-end">
 <li>
 <a class="dropdown-item" :class="resumenInfo && resumenInfo.doc_nomina_acuse ? 'pointer' : 'disabled'" :href="resumenInfo && resumenInfo.doc_nomina_acuse ? '/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.doc_nomina_acuse) : null" :aria-disabled="!(resumenInfo && resumenInfo.doc_nomina_acuse)">
 <i class="ti ti-file-text me-1"></i> Descargar Recibos de Nómina del Personal
@@ -236,7 +236,7 @@ Selecciona una estación o departamento del menú superior.
 </div>
 
 <!---------- MODAL EDITAR INFORMACIÓN ---------->
-<div class="modal fade" id="modalEditarNomina" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalEditarNomina" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-centered">
 <div class="modal-content">
 
@@ -307,8 +307,15 @@ Selecciona una estación o departamento del menú superior.
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
-<button type="button" class="btn btn-success" @click="guardarEdicion()" :disabled="guardandoEdicion"><i class="ti ti-check me-1"></i> Guardar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarEdicion()" :disabled="guardandoEdicion"><i class="ti ti-check me-1"></i> Guardar</button>
+                    </div>
+                  </div>
+
 </div>
 </div>
 </div>
@@ -446,7 +453,7 @@ type="button"
 </div>
 
 <!---------- MODAL AGREGAR PERSONAL ---------->
-<div class="modal fade" id="modalAgregarPersonal" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalAgregarPersonal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-centered">
 <div class="modal-content">
 <div class="modal-header modal-colored-header bg-primary">
@@ -473,19 +480,44 @@ type="button"
 
 </div>
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
-<button type="button" class="btn btn-success" @click="guardarPersonal()" :disabled="guardandoPersonal"><i class="ti ti-check"></i> Guardar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> 
+Cancelar
+</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button"
+ class="btn btn-success" 
+ @click="guardarPersonal()" 
+ :disabled="guardandoPersonal">
+ <i class="ti ti-check"></i> 
+ Guardar
+</button>
+                    </div>
+                  </div>
+
+
+
+
+
+
 </div>
 </div>
 </div>
 </div>
 
 <!-- MODAL ACUSE DE NÓMINA (PERIODO) -->
-<div class="modal fade" id="modalAcusePeriodo" tabindex="-1">
+<div class="modal fade" id="modalAcusePeriodo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-centered">
 <div class="modal-content">
 <div class="modal-header modal-colored-header bg-primary">
-<h5 class="modal-title text-white">Acuse de nómina <small class="text-white" x-text="resumenInfo ? '(del ' + resumenInfo.rango_fechas + ')' : ''"></small></h5>
+<h5 class="modal-title text-white">
+<i class="ti ti-file-upload"></i>     
+Acuse de nómina <small class="text-white" x-text="resumenInfo ? '(del ' + resumenInfo.rango_fechas + ')' : ''"></small></h5>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body pb-0">
@@ -551,15 +583,25 @@ No se encontro información
 
 </div>
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
-<button type="button" class="btn btn-success" @click="guardarAcusePeriodo()" :disabled="subiendoAcusePeriodo" x-show="puedeEditar || puedeCrear"><i class="ti ti-check"></i> Guardar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
+
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarAcusePeriodo()" :disabled="subiendoAcusePeriodo" x-show="puedeEditar || puedeCrear"><i class="ti ti-check"></i> Guardar</button>
+                    </div>
+                  </div>
+
+
+
 </div>
 </div>
 </div>
 </div>
 
 <!---------- MODAL RECIBOS DE NÓMINA (MEXDESA) ---------->
-<div class="modal fade" id="modalMexdesa" tabindex="-1">
+<div class="modal fade" id="modalMexdesa" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-centered">
 <div class="modal-content"> 
 <div class="modal-header modal-colored-header bg-primary">
@@ -576,19 +618,35 @@ No se encontro información
 
 <!-- Estado: Recibos subidos correctamente -->
 <template x-if="resumenInfo && resumenInfo.doc_nomina_acuse">
-<div class="alert alert-success border-0 bg-success bg-opacity-10 d-flex flex-column flex-md-row justify-content-between align-items-md-center p-3 rounded-3 gap-3 shadow-sm">
-<div class="d-flex align-items-center gap-3">
-<i class="ti ti-file-check fs-7 text-success flex-shrink-0"></i>
-<div>
-<span class="fw-semibold d-block text-success">Recibos de nómina subidos</span>
-<span class="small text-muted">El archivo de acuse está listo para su descarga.</span>
-</div>
-</div>
-<a :href="'/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.doc_nomina_acuse)" 
-target="_blank" 
-class="btn btn-success text-nowrap align-self-start align-self-md-center shadow-sm">
-<i class="ti ti-download me-1"></i>Descargar PDF
-</a>
+<div class="alert alert-success border-0 bg-success bg-opacity-10
+            d-flex flex-column flex-md-row
+            justify-content-between align-items-md-center
+            p-3 rounded-3 gap-3 shadow-sm">
+
+    <!-- Textos -->
+    <div class="d-flex align-items-center gap-3">
+        <i class="ti ti-file-check fs-7 text-success flex-shrink-0"></i>
+
+        <div>
+            <span class="fw-semibold d-block text-success">
+                Recibos de nómina subidos
+            </span>
+            <span class="small text-muted">
+                El archivo de acuse está listo para su descarga.
+            </span>
+        </div>
+    </div>
+
+    <!-- Botón -->
+    <div class="d-grid d-md-block">
+        <a :href="'/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.doc_nomina_acuse)"
+           target="_blank"
+           class="btn btn-success text-nowrap shadow-sm">
+            <i class="ti ti-download me-1"></i>
+            Descargar PDF
+        </a>
+    </div>
+
 </div>
 </template>
 
@@ -615,20 +673,29 @@ class="btn btn-success text-nowrap align-self-start align-self-md-center shadow-
 </div>
 
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cerrar</button>
-<button type="button" class="btn btn-success" @click="guardarAcuseMexdesa()" :disabled="subiendoAcuseMexdesa" x-show="esMexdesa && resumenInfo && !resumenInfo.finalizado_mexdesa">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2 mb-1 mb-md-0">
+                      <button type="button" class="btn btn-success" @click="guardarAcuseMexdesa()" :disabled="subiendoAcuseMexdesa" x-show="esMexdesa && resumenInfo && !resumenInfo.finalizado_mexdesa">
 <i class="ti ti-check me-1"></i> Guardar
 </button>
-<button type="button" class="btn btn-primary" @click="finalizarMexdesa()" x-show="esMexdesa && resumenInfo && resumenInfo.doc_nomina_acuse && !resumenInfo.finalizado_mexdesa">
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-primary" @click="finalizarMexdesa()" x-show="esMexdesa && resumenInfo && resumenInfo.doc_nomina_acuse && !resumenInfo.finalizado_mexdesa">
 <i class="ti ti-circle-check me-1"></i> Finalizar
 </button>
+                    </div>
+                  </div>
+
 </div>
 </div>
 </div>
 </div>
 
 <!-- MODAL AGUINALDOS -->
-<div class="modal fade" id="modalAguinaldo" tabindex="-1">
+<div class="modal fade" id="modalAguinaldo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-centered">
 <div class="modal-content">
 <div class="modal-header modal-colored-header bg-primary">
@@ -685,13 +752,29 @@ class="btn btn-success text-nowrap align-self-start align-self-md-center shadow-
 <template x-if="resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.status === 1">
 <span class="badge rounded-pill bg-success py-2 px-3">Aguinaldos finalizados</span>
 </template>
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1"></i> Cerrar</button>
-<button type="button" class="btn btn-success" @click="guardarAguinaldo()" :disabled="subiendoAguinaldo" x-show="esMexdesa && !(resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.status === 1)">
+
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                     <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1"></i> Cancelar</button>
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2 mb-1 mb-md-0">
+                      <button type="button" class="btn btn-success" @click="guardarAguinaldo()" :disabled="subiendoAguinaldo" x-show="esMexdesa && !(resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.status === 1)">
 <i class="ti ti-upload me-1"></i> Subir / Reemplazar documento
 </button>
-<button type="button" class="btn btn-primary" @click="finalizarAguinaldoOp()" x-show="esMexdesa && resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.doc && resumenInfo.aguinaldo.status === 0">
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-primary" @click="finalizarAguinaldoOp()" x-show="esMexdesa && resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.doc && resumenInfo.aguinaldo.status === 0">
 <i class="ti ti-circle-check me-1"></i> Finalizar
 </button>
+                    </div>
+
+                  </div>
+
+
+
+
+
+
 </div>
 </div>
 </div>

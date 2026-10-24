@@ -8,13 +8,16 @@ x-data="{ ...actions(), ...rolComodinesForm() }">
 
 
 <?php if ($puedeEditar && $detail['status'] == 0): ?>
-<div class="row mb-4 ">
-<div class="col-12 text-end">
-<button type="button" class="btn btn-success" @click="finalizarRol()" :disabled="finalizando">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3">
+                     <button type="button" class="btn btn-success" @click="finalizarRol()" :disabled="finalizando">
 <i class="ti ti-check me-1"></i> <span x-text="finalizando ? 'Guardando...' : 'Finalizar'"></span>
-</button>
-</div>
-</div>
+</button> 
+                    </div>
+                  </div>
+
+
+
 <?php endif; ?>
 
 

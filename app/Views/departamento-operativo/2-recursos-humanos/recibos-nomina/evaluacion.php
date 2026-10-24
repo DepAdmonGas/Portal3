@@ -29,11 +29,16 @@ style="display: none;"></div>
 
 <div x-show="!cargando" x-cloak>
 
-<div class="d-flex justify-content-end mt-3 mb-3">
-<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirInfoEvaluacion()">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+                      <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirInfoEvaluacion()">
 <i class="ti ti-info-circle me-1"></i>Forma de evaluación
 </button>
-</div>
+
+                    </div>
+                  </div>
+
+
 
 <!---------- CARD DE RESUMEN ANUAL ---------->
 <div class="col-12" x-show="data?.es_anual">
@@ -121,7 +126,19 @@ No hay periodos de evaluación disponibles para el mes seleccionado.
 </div>
 <div class="modal-body text-dark" x-html="DOMPurify.sanitize(data.info)"></div>
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cerrar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> 
+Cerrar
+</button>
+                    </div>
+                  </div>
+
+
+
 </div>
 </div>
 </div>

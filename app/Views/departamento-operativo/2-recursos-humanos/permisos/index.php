@@ -10,18 +10,19 @@
      data-total-pendientes="<?= (int)($totalPendientes ?? 0) ?>"
      x-data="{ ...actions(), ...permisosComponent() }">
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <div class="d-flex align-items-center gap-2">
+    <div class="d-flex flex-column flex-md-row aling-itemas-md justify-content-between w-100 gap-2 mb-3 mt-3">
+      
             <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis d-inline-flex align-items-center gap-1 px-3 py-2 fs-2 fw-semibold">
                 <i class="ti ti-alert-circle fs-4"></i>
                 <span>Pendientes: <span id="permisos-pending-count"><?= (int)($totalPendientes ?? 0) ?></span></span>
             </span>
-        </div>
-        <a href="/departamento-operativo/recursos-humanos/permisos-nuevo"
+ <div class="d-grid d-md-block">
+    <a href="/departamento-operativo/recursos-humanos/permisos-nuevo"
            class="btn bg-primary-subtle text-primary"
            x-show="contextoEspecifico && puedeCrear">
             <i class="ti ti-plus"></i> Nuevo
         </a>
+ </div>
     </div>
 
     <div class="datatables">
@@ -33,7 +34,7 @@
     </div>
 
 <!-- Modal Detalle -->
-<div class="modal fade" id="modalDetallePermiso" tabindex="-1">
+<div class="modal fade" id="modalDetallePermiso" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header modal-colored-header bg-primary text-white d-flex align-items-center">
@@ -50,9 +51,13 @@
                 <div class="text-end py-4"><div class="spinner-border text-primary" role="status"></div></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
                     <i class="ti ti-x"></i> Cerrar
                 </button>
+                    </div>
+                  </div>
             </div>
         </div>
     </div>

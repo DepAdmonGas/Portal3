@@ -16,16 +16,19 @@ Selecciona una estación del menú superior para consultar la información corre
 <div id="perfil-content">
 <?php endif; ?>
 
-<div class="row">
-<div class="col-12 text-end" x-data="actions()">
-<button type="button" class="btn btn-primary"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3" x-data="actions()">
+                      <button type="button" class="btn bg-primary-subtle text-primary"
 id="btn-agregar-perfil"
 style="display:none"
 @click="$dispatch('open-perfil-create')">
 <i class="ti ti-plus"></i> Agregar
 </button>
-</div>
-</div>
+                    </div>
+                  </div>
+
+
+
 
 <div class="datatables">
 <div class="table-responsive">
@@ -47,7 +50,7 @@ x-data="{ ...actions(), ...perfilForm() }" @open-perfil-edit.window="openEdit($e
 <!-- HEADER -->
 <div class="modal-header bg-primary ">
 <h4 class="modal-title d-flex align-items-center gap-2 text-white">
-<i class="ti ti-photo-sensor fs-6"></i>
+<i class="ti ti-fingerprint-scan"></i>
 <span x-text="mode === 'create' ? 'Agregar (Sensor de huella)' : 'Editar (Sensor de huella)'"></span>
 </h4>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar" @click="resetForm()"></button>
@@ -96,11 +99,28 @@ autocomplete="off">
 
 <!-- FOOTER -->
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="resetForm()"><i class="ti ti-x"></i>  Cancelar</button>
-<button type="button" class="btn btn-success" @click="submit()" :disabled="loading">
-<span x-show="!loading"><i class="ti ti-check"></i> Guardar</span>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal" 
+@click="resetForm()"><i class="ti ti-x"></i> 
+ Cancelar
+</button>
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+class="btn btn-success" 
+@click="submit()" :disabled="loading">
+<span x-show="!loading">
+    <i class="ti ti-check"></i> 
+<span x-text="mode ==='create' ? 'Guardar':'Actualizar'"></span>
+</span>
 <span x-show="loading">Guardando...</span>
 </button>
+                    </div>
+                  </div>
+
 </div>
 
 </div>

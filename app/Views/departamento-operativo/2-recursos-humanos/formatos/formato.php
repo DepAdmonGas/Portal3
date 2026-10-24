@@ -13,13 +13,17 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 <div class="row">
 
 <template x-if="esMultiempleado">
-<div class="col-12">
-<div class="float-end mb-4">
-<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirModal">
+
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                     <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirModal">
 <i class="ti ti-plus me-1"></i> Nuevo
-</button>
-</div>
-</div>
+</button> 
+                    </div>
+                  </div>
+
+
+
 </template>
 
 </div>
@@ -62,8 +66,8 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 
 <!---------- FORMATOS MULTI-EMPLEADO (1 A 5) ---------->
 <template x-if="esMultiempleado">
-<div class="table-responsive mb-3">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<div class="table-responsive overflow-x-auto overflow-y-hidden mb-3">
+<table class="table table-striped table-bordered mb-0  align-middle">
 
 <thead>
 <tr>
@@ -110,11 +114,11 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 <td class="text-center" x-show="formato === 5" x-text="fila.salario_ajustado !== '' && fila.salario_ajustado != null ? '$' + formatNum(fila.salario_ajustado) : '—'"></td>
 <td class="text-center" x-show="formato === 5" x-text="fila.fecha_aplicacion || '—'"></td>
 <td class="text-center">
+
+
 <span x-data="actions()">
-<i
-class="ti ti-trash text-danger fs-6 pointer"
-@click="
-deleteAction({
+<i class="ti ti-trash text-danger fs-6 pointer"
+@click="deleteAction({
 url: '/departamento-operativo/recursos-humanos/formatos/eliminar-fila',
 id: detalleId,
 name: formato === 1 ? (fila.nombre || '—') : nombrePersonal(fila.id_personal),
@@ -122,16 +126,12 @@ table: null,
 data: {
 formato: formato,
 fila_id: fila.id
-}
-}).then(r => {
+}}).then(r => {
 if (r?.success) {
-filas.splice(i, 1);
-}
-})
-"
-title="Quitar empleado"
-></i>
+filas.splice(i, 1);}})"
+title="Quitar empleado"></i>
 </span>
+
 </td>
 </tr>
 </template>
@@ -150,12 +150,12 @@ title="Quitar empleado"
 <template x-if="formato === 6">
 <div class="col-12">
 <div class="table-responsive mb-3">
-<table class="table table-bordered mb-0 align-middle">
+<table class="table table-striped table-bordered text-nowrap align-middle">
 
 <tr>
-<th class=" bg-primary text-white text-center">Área o Departamento</th>
-<th class=" bg-primary text-white text-center">Nombre del empleado</th>
-<th class=" bg-primary text-white text-center">Número de días a disfrutar</th>
+<th class="text-center">Área o Departamento</th>
+<th class="text-center">Nombre del empleado</th>
+<th class="text-center">Número de días a disfrutar</th>
 </tr>
 
 <tr>
@@ -176,9 +176,9 @@ title="Quitar empleado"
 </tr>
 
 <tr>
-<th class="bg-primary text-white text-center">Del:</th>
-<th class="bg-primary text-white text-center">Al:</th>
-<th class="bg-primary text-white text-center">Regresando el:</th>
+<th class="text-center">Del:</th>
+<th class="text-center">Al:</th>
+<th class="text-center">Regresando el:</th>
 </tr>
 <tr>
 <td class="text-center align-middle p-0">
@@ -192,11 +192,11 @@ title="Quitar empleado"
 </td>
 </tr>
 <tr>
-<th class="bg-primary text-white" colspan="3">Observaciones:</th>
+<th  colspan="3">Observaciones:</th>
 </tr>
 <tr>
 <td colspan="3" class="p-0">
-<textarea name="observaciones" class="form-control border-0" rows="5" x-text="valores.observaciones || ''"></textarea>
+<textarea name="observaciones" class="form-control border-0" placeholder="Escriba sus observaciones aqui" rows="5" x-text="valores.observaciones || ''"></textarea>
 </td>
 </tr>
 </table>
@@ -213,6 +213,7 @@ title="Quitar empleado"
 <th class="text-center align-middle">Nombre del empleado</th>
 <th class="text-center align-middle">Fecha de ingreso</th>
 <th class="text-center align-middle">Estación / Departamento</th>
+
 </tr>
 </thead>
 <tbody>
@@ -241,7 +242,12 @@ title="Quitar empleado"
 </div>
 
 <div class="card-footer">
-<button type="button" class="btn btn-success float-end" @click="guardar()" :disabled="guardando"><i class="ti ti-check me-1"></i> <?= $esEdicion ? 'Guardar' : 'Actualizar' ?></button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button" class="btn btn-success float-end" @click="guardar()" :disabled="guardando"><i class="ti ti-check me-1"></i> <?= $esEdicion ? 'Guardar' : 'Actualizar' ?></button>
+                    </div>
+                  </div>
+
 </div>
 
 </div>
@@ -297,8 +303,10 @@ title="Quitar empleado"
 </div>
 
 <template x-if="esMultiempleado">
+
+
 <!---------- MODAL AGREGAR EMPLEADO (FORMATOS 1 A 5) ---------->
-<div class="modal fade" id="modalAgregarFila" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalAgregarFila" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"  data-bs-keyboard="false">
 <div class="modal-dialog modal-dialog-centered modal-lg">
 <div class="modal-content">
 
@@ -360,11 +368,11 @@ title="Quitar empleado"
 </div>
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Fecha de aplicación de baja:</label>
+<label class="form-label fw-semibold mb-1">* Fecha de aplicación de baja:</label>
 <input type="date" class="form-control" x-model="fila.fecha_baja" data-campo="fecha_baja">
 </div>
 <div class="col-12 mb-3">
-<label class="form-label fw-semibold">* Causa:</label>
+<label class="form-label fw-semibold mb-1">* Causa:</label>
 <input type="text" class="form-control" list="motivosBaja" x-model="fila.motivo" data-campo="motivo">
 <datalist id="motivosBaja">
 <template x-for="m in motivos" :key="m">
@@ -373,14 +381,14 @@ title="Quitar empleado"
 </datalist>
 </div>
 <div class="col-12 mb-3">
-<label class="form-label fw-semibold">* Motivo:</label>
+<label class="form-label fw-semibold mb-1">* Motivo:</label>
 <textarea class="form-control" rows="3" x-model="fila.detalle"></textarea>
 </div>
 </div>
 
 <div class="row" x-show="formato === 3" data-formato-fila="3">
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Nombre del empleado:</label>
+<label class="form-label fw-semibold mb-1">* Nombre del empleado:</label>
 <div class="select2-modal-field is-select2-pending" x-ref="f3PersonalWrapper">
 <select class="form-select" x-ref="f3PersonalSelect" data-campo="id_personal">
 <option value="">Selecciona un empleado...</option>
@@ -391,14 +399,15 @@ title="Quitar empleado"
 </div>
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Día faltante:</label>
+<label class="form-label fw-semibold mb-1">* Día faltante:</label>
 <input type="date" class="form-control" x-model="fila.dias_falta" data-campo="dias_falta">
 </div>
 </div>
 
 <div class="row" x-show="formato === 4" data-formato-fila="4">
+
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Nombre del empleado:</label>
+<label class="form-label fw-semibold mb-0">* Nombre del empleado:</label>
 <div class="select2-modal-field is-select2-pending" x-ref="f4PersonalWrapper">
 <select class="form-select" x-ref="f4PersonalSelect" data-campo="id_personal">
 <option value="">Selecciona un empleado...</option>
@@ -408,8 +417,10 @@ title="Quitar empleado"
 </select>
 </div>
 </div>
+
+
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Cambio a:</label>
+<label class="form-label fw-semibold mb-0">* Cambio a:</label>
 <div class="select2-modal-field is-select2-pending" x-ref="f4EstacionWrapper">
 <select class="form-select" x-ref="f4EstacionSelect" data-campo="id_estacion_cambio">
 <option value="">Selecciona una localidad...</option>
@@ -420,14 +431,14 @@ title="Quitar empleado"
 </div>
 </div>
 <div class="col-12 mb-3">
-<label class="form-label fw-semibold">* Fecha de aplicación:</label>
+<label class="form-label fw-semibold mb-1">* Fecha de aplicación:</label>
 <input type="date" class="form-control" x-model="fila.fecha" data-campo="fecha">
 </div>
 </div>
 
 <div class="row" x-show="formato === 5" data-formato-fila="5">
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Nombre del empleado:</label>
+<label class="form-label fw-semibold mb-0">* Nombre del empleado:</label>
 <div class="select2-modal-field is-select2-pending" x-ref="f5PersonalWrapper">
 <select class="form-select" x-ref="f5PersonalSelect" data-campo="id_personal">
 <option value="">Selecciona un empleado...</option>
@@ -438,27 +449,51 @@ title="Quitar empleado"
 </div>
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Salario actual:</label>
+<label class="form-label fw-semibold mb-1">* Salario actual:</label>
 <input type="number" step="0.01" min="0" class="form-control" x-model="fila.salario_actual" data-campo="salario_actual" disabled>
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Ajuste a:</label>
+<label class="form-label fw-semibold mb-1">* Ajuste a:</label>
 <input type="number" step="0.01" min="0" class="form-control" x-model="fila.salario_ajustado" data-campo="salario_ajustado">
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Aplicar a parte del:</label>
+<label class="form-label fw-semibold mb-1">* Aplicar a parte del:</label>
 <input type="date" class="form-control" x-model="fila.fecha_aplicacion" data-campo="fecha_aplicacion">
 </div>
 </div>
 
 </div>
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
-<button type="button" class="btn btn-success" @click="agregarFila()" :disabled="guardandoFila">
-<template x-if="guardandoFila"><span class="spinner-border spinner-border-sm me-1"></span></template>
-<template x-if="!guardandoFila"><i class="ti ti-check me-1"></i></template>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i> 
+Cancelar
+</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button"
+ class="btn btn-success"
+  @click="agregarFila()" 
+  :disabled="guardandoFila">
+<template x-if="guardandoFila">
+    <span class="spinner-border spinner-border-sm me-1">
+    </span>
+</template>
+<template x-if="!guardandoFila">
+    <i class="ti ti-check me-1"></i>
+</template>
 Guardar
 </button>
+                    </div>
+                  </div>
+
+
+
+
+
 </div>
 </div>
 </div>
@@ -467,7 +502,7 @@ Guardar
 
 <template x-if="formato === 1">
 <!---------- MODAL ARCHIVOS POR EMPLEADO (FORMATO 1) ---------->
-<div class="modal fade" id="modalArchivosEmpleado" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalArchivosEmpleado" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"  data-bs-keyboard="false">
 <div class="modal-dialog modal-dialog-centered modal-lg">
 <div class="modal-content">
 

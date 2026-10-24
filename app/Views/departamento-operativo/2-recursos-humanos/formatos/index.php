@@ -28,7 +28,7 @@ x-data="{ ...actions(), ...formatosComponent() }">
 <div id="fmt-tools-anchor" class="d-flex">
 <template x-if="puedeAcceso && hayContexto">
 <div class="dropdown d-inline-block" id="formatos-dropdown-wrap">
-<button id="formatos-dropdown-btn" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+<button id="formatos-dropdown-btn" type="button" class="btn bg-primary-subtle text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
 <i class="ti ti-tools me-1"></i> Formatos
 </button>
 <ul class="dropdown-menu dropdown-menu-end">
@@ -65,16 +65,23 @@ x-data="{ ...actions(), ...formatosComponent() }">
 </div>
 
 <!---------- MODAL DETALLE ---------->
-<div class="modal fade" id="modalDetalleFormato" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalDetalleFormato" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-dialog-centered modal-xl">
 <div class="modal-content">
 <div class="modal-header bg-primary">
-<h4 class="modal-title text-white d-flex align-items-center gap-2" id="modalDetalleFormatoTitle">Detalle del formato</h4>
+<h4 class="modal-title text-white d-flex align-items-center gap-2" id="modalDetalleFormatoTitle">
+<i class="ti ti-eye"></i>    
+Detalle del formato</h4>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 </div>
 <div class="modal-body" id="modalDetalleFormatoBody"></div>
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cerrar</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cerrar</button>
+                    </div>
+                  </div>
+
 </div>
 </div>
 </div>

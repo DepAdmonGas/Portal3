@@ -34,7 +34,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 <label for="inputRetardo" class="form-label mb-0 fw-bold text-dark fs-6">
 Retardo
 </label>
-<div class="text-muted small" style="font-size: 0.75rem;">Agregar retardo en minuros</div>
+<div class="text-muted small" style="font-size: 0.75rem;">Agregar retardo en minutos</div>
 </div>
 </div>
 
@@ -124,14 +124,23 @@ title="Guardar cambios">
 <div class="row">
 <div class="col-12">
 <div class="card">
-<div class="card-header d-flex justify-content-between align-items-center">
+
+
+<div class="card-header d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
+
+
 <h5 class="mb-0"><i class="ti ti-clock"></i> Horarios</h5>
 <?php if (!empty($permisos['crear'])): ?>
-<button type="button" class="btn btn-primary"
+
+<div class="d-grid d-md-block">
+<button type="button" class="btn bg-primary-subtle text-primary"
 id="btn-agregar-horario"
 @click="$dispatch('open-horario-create')">
 <i class="ti ti-plus"></i> Nuevo
 </button>
+</div>
+
+
 <?php endif; ?>
 </div>
 <div class="card-body mb-0">
@@ -162,7 +171,7 @@ x-data="{ ...actions(), ...horarioForm() }"
 <div class="modal-header bg-primary">
 <h4 class="modal-title text-white d-flex align-items-center gap-2">
 <i class="ti ti-clock"></i>
-<span x-text="mode === 'create' ? 'Agregar Horario' : 'Editar Horario'"></span>
+<span x-text="mode === 'create' ? 'Nuevo Horario' : 'Editar Horario'"></span>
 </h4>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 </div>
@@ -193,11 +202,34 @@ autocomplete="off">
 
 <!-- FOOTER -->
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="resetForm()"><i class="ti ti-x"></i>  Cancelar</button>
-<button type="button" class="btn btn-success" @click="submit()" :disabled="loading">
-<span x-show="!loading"><i class="ti ti-check"></i> Guardar</span>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal" 
+@click="resetForm()"><i class="ti ti-x"></i>  
+Cancelar
+</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+class="btn btn-success"
+@click="submit()" 
+:disabled="loading">
+
+<span x-show="!loading"><i class="ti ti-check"></i> 
+<span x-text="mode === 'create' ? 'Guardar':'Actualizar'"></span>
+</span>
+
 <span x-show="loading">Guardando...</span>
 </button>
+                    </div>
+                  </div>
+
+
+
+
+
 </div>
 
 </div>

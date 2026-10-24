@@ -57,7 +57,7 @@ x-cloak>
 </div>
 
 <!-- MODAL DETALLE INCIDENCIA (solo lectura) -->
-<div class="modal fade" id="modalDetalleIncidenciaBiometricos" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalDetalleIncidenciaBiometricos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-scrollable">
 <div class="modal-content">
 
@@ -88,24 +88,24 @@ x-cloak>
 <template x-if="!modalIncidencia.cargando && modalIncidencia.existe">
 <div>
 <div class="mb-3">
-<label class="form-label">Fecha:</label>
+<label class="form-label mb-1">Fecha:</label>
 <div class="" x-text="modalIncidencia.fecha || '—'"></div>
 </div>
 <div class="mb-3">
-<label class="form-label">Incidencia:</label>
+<label class="form-label mb-1">Incidencia:</label>
 <div class="" x-text="modalIncidencia.incidencia || '—'"></div>
 </div>
 <div class="mb-3">
-<label class="form-label">Comentario:</label>
+<label class="form-label mb-1">Comentario:</label>
 <div class="" x-text="modalIncidencia.comentario || '—'"></div>
 </div>
-<div class="">
-<label class="form-label">Sueldo día:</label>
+<div class="mb-3">
+<label class="form-label mb-1">Sueldo día:</label>
 <div class="" x-text="modalIncidencia.puntos ?? '—'"></div>
 </div>
 
 <div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documento">
-<hr class="my-2">
+
 <label class="form-label">Documento:</label>
 <input type="file" class="form-control mt-1" accept=".pdf" id="bioFileDetalleIncidencia">
 <div class="text-end mt-2">
@@ -122,10 +122,10 @@ class="btn btn-success btn-sm"
 </div>
 
 <div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento">
-<hr class="my-2">
+
 <label class="form-label">Documento:</label>
 <div class="mt-1">
-<a href="" @click.prevent="download('docs-personal-incidencias', modalIncidencia.documento)" class="btn btn-primary">
+<a href="" @click.prevent="download('docs-personal-incidencias', modalIncidencia.documento)" class="btn bg-primary-subtle text-primary">
 <i class="ti ti-file-text me-1"></i>Descargar PDF
 </a>
 </div>
@@ -136,9 +136,13 @@ class="btn btn-success btn-sm"
 
 <!-- FOOTER (Ahora al mismo nivel de header y body) -->
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cerrar
 </button>
+                    </div>
+                  </div>
 </div>
 
 </div> 
@@ -146,7 +150,7 @@ class="btn btn-success btn-sm"
 </div> 
 
 <!-- MODAL AGREGAR INCIDENCIA -->
-<div class="modal fade" id="modalAgregarIncidenciaBiometricos" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalAgregarIncidenciaBiometricos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-scrollable">
 <div class="modal-content">
 
@@ -171,50 +175,55 @@ class="btn btn-success btn-sm"
 <template x-if="!modalIncidencia.cargando && modalIncidencia.existe">
 <div>
 <div class="mb-3">
-<label class="form-label">Fecha:</label>
+<label class="form-label mb-1">Fecha:</label>
 <div class="" x-text="modalIncidencia.fecha || '—'"></div>
 </div>
 <div class="mb-3">
-<label class="form-label">Incidencia:</label>
+<label class="form-label mb-1">Incidencia:</label>
 <div class="" x-text="modalIncidencia.incidencia || '—'"></div>
 </div>
 <div class="mb-3">
-<label class="form-label">Comentario:</label>
+<label class="form-label mb-1">Comentario:</label>
 <div class="" x-text="modalIncidencia.comentario || '—'"></div>
 </div>
 <div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documento">
-<hr class="my-2">
-<label class="form-label">* Documento:</label>
+
+<label class="form-label mb-1">* Documento:</label>
 <input type="file" class="form-control mt-1" accept=".pdf" id="bioFileIncidenciaExistente">
 <div class="mt-4">
 <label class="form-label">Fecha de inicio y termino de la incapacidad:</label>
 </div>
 <div class="row g-2 mt-1">
 <div class="col-md-6">
-<label class="form-label">* Fecha Inicio:</label>
+<label class="form-label mb-1">* Fecha Inicio:</label>
 <input type="date" class="form-control" x-model="modalIncidencia.fechaInicio">
 </div>
 <div class="col-md-6">
-<label class="form-label">* Fecha Fin:</label>
+<label class="form-label mb-1">* Fecha Fin:</label>
 <input type="date" class="form-control" x-model="modalIncidencia.fechaFin">
 </div>
 </div>
 <div class="mt-2">
-<label class="form-label">* Sueldo día:</label>
+<label class="form-label mb-1">* Sueldo día:</label>
 <input type="number" step="0.01" min="0" class="form-control" x-model="modalIncidencia.sueldoDia">
 </div>
 </div>
 <div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento">
-<hr class="my-2">
-<label class="form-label">Documento:</label>
-<div>
-<a href=""
+
+<label class="form-label mb-1">Documento:</label>
+<div class="row g-0 ms-auto w-100 justify-content-start">
+                    <div class="col-12 col-md-auto d-grid ">
+                      <a href=""
 @click.prevent="download('docs-personal-incidencias', modalIncidencia.documento)"
-class="btn btn-primary px-4">
+class="btn bg-primary-subtle text-primary px-4">
 <i class="ti ti-download me-2"></i>
 Descargar documento
 </a>
-</div>
+                    </div>
+                  </div>
+
+
+
 </div>
 </div>
 </template>
@@ -249,7 +258,7 @@ x-model="modalIncidencia.comentario"></textarea>
 
 <template x-if="requiereDocumento">
 <div class="mt-3 p-3 border rounded bg-light">
-<hr class="my-2">
+
 <div class="mb-2">
 <label class="form-label fw-semibold">Documento</label>
 <input type="file"
@@ -289,10 +298,17 @@ x-model="modalIncidencia.sueldoDia">
 </div>
 
 <div class="modal-footer">
-<button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
 
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button class="btn bg-danger-subtle text-danger mb-1 mb-md-0" 
+data-bs-dismiss="modal"><i class="ti ti-x"></i> 
+Cancelar
+</button>
+                    </div>
 <template x-if="!modalIncidencia.cargando && !modalIncidencia.existe">
-<button type="button" class="btn btn-success" @click="guardarIncidencia()" :disabled="modalIncidencia.guardando">
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarIncidencia()" :disabled="modalIncidencia.guardando">
 <!-- Spinner cuando está guardando -->
 <template x-if="modalIncidencia.guardando">
 <span class="spinner-border spinner-border-sm me-1"></span>
@@ -305,10 +321,11 @@ x-model="modalIncidencia.sueldoDia">
 
 <span x-text="modalIncidencia.guardando ? 'Guardando...' : 'Guardar'"></span>
 </button>
-</template>
-
+                    </div>
+                </template>
 <template x-if="!modalIncidencia.cargando && modalIncidencia.existe">
-<button type="button" class="btn btn-success" @click="guardarDocumentoIncidenciaExistente()" :disabled="modalIncidencia.guardando">
+       <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarDocumentoIncidenciaExistente()" :disabled="modalIncidencia.guardando">
 <!-- Spinner cuando está guardando -->
 <template x-if="modalIncidencia.guardando">
 <span class="spinner-border spinner-border-sm me-1"></span>
@@ -321,7 +338,22 @@ x-model="modalIncidencia.sueldoDia">
 
 <span x-text="modalIncidencia.guardando ? 'Guardando...' : 'Guardar'"></span>
 </button>
+                    </div>
 </template>
+
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+
 </div>
 
 </div>
@@ -369,11 +401,30 @@ x-model="modalIncidencia.sueldoDia">
 </div>
 
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger"><i class="ti ti-x"></i> Cancelar</button>
-<button type="button" class="btn btn-primary" @click="buscarReporte()" :disabled="reporte.cargando">
-<template x-if="reporte.cargando"><span class="spinner-border spinner-border-sm me-1"></span></template>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" 
+data-bs-dismiss="modal"
+class="btn bg-danger-subtle text-danger">
+<i class="ti ti-x"></i> 
+Cancelar
+</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+class="btn btn-success" 
+@click="buscarReporte()" 
+:disabled="reporte.cargando">
+<template x-if="reporte.cargando">
+    <span class="spinner-border spinner-border-sm me-1"></span></template>
 <i class="ti ti-search me-1"></i>Buscar
 </button>
+                    </div>
+                  </div>
+
+
+
+
 </div>
 
 </div>
@@ -382,14 +433,19 @@ x-model="modalIncidencia.sueldoDia">
 
 <!-- CONTENIDO DEL REPORTE -->
 <div id="DivBusquedaReporte" class="mt-4" x-show="vistaReporte" x-cloak>
-<div class="d-flex justify-content-between align-items-center mb-3">
-<div>
+
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2 mb-3">
+
 <h5 class="fw-semibold mb-1" x-text="'Reporte de asistencias (' + nombreMesReporte() + ' ' + reporte.year + ')'"></h5>
-</div>
-<button type="button" class="btn btn-sm btn-danger" @click="regresarListado()">
+
+<div class="d-grid d-md-block">
+<button type="button" class="btn bg-danger-subtle text-danger" @click="regresarListado()">
 <i class="ti ti-arrow-left me-1"></i>Regresar al listado
 </button>
 </div>
+</div>
+
+
 <div id="contenido-reporte-biometricos" x-html="DOMPurify.sanitize(reporte.html)"></div>
 </div>
 

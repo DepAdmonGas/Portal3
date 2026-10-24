@@ -11,11 +11,16 @@ x-data="{ ...actions(), ...horarioPersonalComponent() }">
 <div class="row">
 
 <template x-if="puedeDescargar">
-<div class="col-12 mb-4">
-<a href="/departamento-operativo/recursos-humanos/horario-personal/pdf" target="_blank" class="btn bg-primary-subtle text-primary float-end">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3">
+                     <a href="/departamento-operativo/recursos-humanos/horario-personal/pdf" target="_blank" class="btn bg-primary-subtle text-primary float-end">
 <i class="ti ti-file-text me-1"></i> Descargar PDF
 </a>
-</div>
+ 
+                    </div>
+                  </div>
+
+
 </template>
 
 <div class="datatables">

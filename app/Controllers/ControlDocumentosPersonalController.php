@@ -461,7 +461,7 @@ return;
             exit;
         }
 
-        $title = 'Asistencia (' . $data['nombre_completo'] . ')';
+        $title = 'Asistencia ('. $data['nombre_completo'] . ')';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');

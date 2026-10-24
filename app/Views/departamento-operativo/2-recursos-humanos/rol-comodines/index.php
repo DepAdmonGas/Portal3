@@ -5,15 +5,21 @@ data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
 data-id-usuario="<?= $idUsuario ?>"
 x-data="{ ...actions(), ...rolComodinesComponent() }">
 
-<div class="row mb-3 align-items-center">
-<div class="col-12 text-end">
+
 <template x-if="puedeCrear">
-<button type="button" class="btn btn-primary" @click="agregarRol()">
-<i class="ti ti-plus me-1"></i> Agregar
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+                     <button type="button" class="btn bg-primary-subtle text-primary" @click="agregarRol()">
+<i class="ti ti-plus me-1"></i> Nuevo
 </button>
+ 
+                    </div>
+                  </div>
+
+
+
 </template>
-</div>
-</div>
+
 
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
@@ -24,12 +30,14 @@ x-data="{ ...actions(), ...rolComodinesComponent() }">
 </div>
 
 <!-- Modal Detalle -->
-<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" aria-hidden="true" data-bs-keyboard="false">
 <div class="modal-dialog modal-dialog-scrollable modal-xl">
 <div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Detalle Rol de Comodines</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal-header bg-primary">
+<h5 class="modal-title text-white">
+    <i class="ti ti-eye"></i>
+Detalle Rol de Comodines</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 <div class="modal-body" id="modalDetalleBody">
 <div class="text-center py-4">
@@ -37,7 +45,12 @@ x-data="{ ...actions(), ...rolComodinesComponent() }">
 </div>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+ <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>   
+                    </div>
+                  </div>
+
 </div>
 </div>
 </div>
