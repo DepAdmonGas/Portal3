@@ -42,9 +42,16 @@ class MenuDptoOperativoService
      * @return array [ ['nombre' => string, 'items' => [...]], ... ]
      *                Cada item: id, nombre, ruta, icono, tipo.
      */
-    public static function paraUsuario(int $usuarioId): array
+    public static function paraUsuario(int $usuarioId, bool $soloLectura = false): array
     {
         $modulosPermitidos = ModuloDptoOperativoService::getPermisos($usuarioId);
+
+        if ($soloLectura) {
+            $modulosPermitidos = array_filter(
+                $modulosPermitidos,
+                static fn (array $modulo): bool => (int)($modulo['leer'] ?? 0) === 1
+            );
+        }
 
         if (empty($modulosPermitidos)) {
             return [];
@@ -178,6 +185,7 @@ class MenuDptoOperativoService
                 'ruta'   => self::resolverRutaSidebar($sub),
                 'icono'  => (string)($cfg['icono'] ?? '')
                     ?: (string)($sub['icono'] ?: 'ti ti-layout-grid'),
+                'clave'  => (string)($sub['clave'] ?? ''),
                 'tipo'   => 'submodulo',
                 'padre'  => (string)($modulo['nombre'] ?? ''),
             ];

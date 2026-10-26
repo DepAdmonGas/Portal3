@@ -200,6 +200,21 @@ class SoporteService
         return !empty(self::getPermisos()[$accion]);
     }
 
+    /** Solicitudes propias en proceso, creadas durante el año actual. */
+    public static function getContadorHome(): int
+    {
+        $idUsuario = self::idUsuario();
+        if ($idUsuario <= 0 || !self::puede('crear')) {
+            return 0;
+        }
+
+        return Soporte::query()
+            ->where('id_personal', $idUsuario)
+            ->where('estado', self::ESTADO_EN_PROCESO)
+            ->whereYear('fecha_creacion', (int) date('Y'))
+            ->count();
+    }
+
     /* ------------------------------------------------------------------ */
     /* Listado de tickets                                                  */
     /* ------------------------------------------------------------------ */

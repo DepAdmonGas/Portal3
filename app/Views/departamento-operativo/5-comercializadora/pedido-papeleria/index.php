@@ -24,7 +24,7 @@ x-data="{ ...actions(), ...pedidoPapeleriaComponent() }">
 <div class="d-flex align-items-center gap-1">
 <span id="pedidos-pendientes-badge" class="badge rounded-pill bg-danger-subtle text-danger-emphasis d-inline-flex align-items-center gap-1 px-3 py-2 fs-2 fw-semibold">
 <i class="ti ti-alert-circle fs-4"></i>
-<span>Pendientes: <span id="pedidos-pendientes-total">0</span></span>
+<span><?= (int)$idUsuario === 19 ? 'Pendientes de firma:' : 'Pendientes:' ?> <span id="pedidos-pendientes-total">0</span></span>
 </span>
 </div>
 

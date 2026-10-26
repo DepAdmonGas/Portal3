@@ -65,8 +65,26 @@ foreach ($accesos as $acceso):
 </div>
 
 <div class="align-self-center me-4 ms-auto text-end">
-<h4 class="text-white mb-0">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if (($acceso['clave'] ?? '') === 'solicitud-cheque' && (int)($pendientesFirmaSolicitudCheque ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaSolicitudCheque ?></span>
+<?php elseif (($acceso['clave'] ?? '') === 'aclaracion-voucher' && (int)($pendientesAclaracionVoucher ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesAclaracionVoucher ?></span>
+<?php elseif (($acceso['clave'] ?? '') === 'formatos' && (int)($pendientesFirmaFormatos ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaFormatos ?></span>
+<?php elseif (($acceso['clave'] ?? '') === 'bitacora-rrhh' && (int)($pendientesBitacoraRrhh ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesBitacoraRrhh ?></span>
+<?php elseif (($acceso['clave'] ?? '') === 'pedido-pinturas' && (int)($pendientesFirmaPedidoPinturas ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoPinturas ?></span>
+<?php elseif (($acceso['clave'] ?? '') === 'pedido-papeleria' && (int)($pendientesFirmaPedidoPapeleria ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoPapeleria ?></span>
+<?php elseif (($acceso['clave'] ?? '') === 'pedido-articulos-limpieza' && (int)($pendientesFirmaPedidoArticulosLimpieza ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoArticulosLimpieza ?></span>
+<?php elseif (($acceso['clave'] ?? '') === 'pedido-aditivo' && (int)($pendientesFirmaPedidoAditivo ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoAditivo ?></span>
+<?php else: ?>
 <i class="ti ti-arrow-right fs-8"></i>
+<?php endif; ?>
 </h4>
 </div>
 

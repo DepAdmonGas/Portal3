@@ -735,7 +735,11 @@ sessionStorage.setItem('sc_depto', '5');
 }
 var esMultiestacion = c.dataset.multiestacion === 'true';
 var key, est, dep;
-if (esMultiestacion) {
+var selVisible = leerSeleccionVisible();
+if (selVisible) {
+est = selVisible.est;
+dep = selVisible.dep;
+} else if (esMultiestacion) {
 est = sessionStorage.getItem('sc_estacion') || '';
 dep = sessionStorage.getItem('sc_depto') || '';
 } else {

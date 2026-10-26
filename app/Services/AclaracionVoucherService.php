@@ -9,6 +9,7 @@ use App\Models\Estacion;
 use App\Core\Auth;
 use App\Core\Session;
 use App\Services\ModuloDptoOperativoService;
+use App\Services\ModuleStationService;
 use Carbon\Carbon;
 
 class AclaracionVoucherService
@@ -89,6 +90,30 @@ $pendientes['estacion_' . $id] = $count;
 $pendientes['total'] += $count;
 }
 return $pendientes;
+}
+
+/** Total de registros no finalizados del mes actual en estaciones visibles. */
+public static function getPendientesMesActual(): int
+{
+    $permisos = self::getPermisos();
+    if ($permisos['multiestacion']) {
+        $stations = ModuleStationService::getAvailableStations('aclaracion-voucher');
+        $stationIds = array_map('intval', array_column($stations, 'id'));
+    } else {
+        $stationIds = array_map('intval', self::getAllowedStationIds());
+    }
+
+    if ($stationIds === []) return 0;
+
+    $now = Carbon::now();
+
+    return AclaracionVoucher::where('year', (int) $now->year)
+        ->where('mes', (int) $now->month)
+        ->whereIn('id_estacion', $stationIds)
+        ->where(function ($query) {
+            $query->whereNull('estado')->orWhere('estado', '!=', 1);
+        })
+        ->count();
 }
 
 public static function getRecord(int $id): ?array

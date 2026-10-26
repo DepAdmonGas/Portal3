@@ -22,8 +22,6 @@ class BitacoraRrhhService
 
     private const UPLOAD_DIR = __DIR__ . '/../../public/uploads/archivos/bitacora-rrhh/';
 
-    private const NOMBRE_DIRECCION = 'Dirección de operaciones';
-
     public static function getPermisos(): array
     {
         $usuario = Auth::user();
@@ -35,9 +33,6 @@ class BitacoraRrhhService
         $nombrePuesto = $usuario->puesto->tipo_puesto ?? '';
 
         $permisosDb = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
-
-        $esDireccion = ($nombrePuesto === self::NOMBRE_DIRECCION);
-
         return [
             'id_usuario'     => $idUsuario,
             'id_estacion'    => $idEstacion,
@@ -45,13 +40,14 @@ class BitacoraRrhhService
             'nombre_puesto'  => $nombrePuesto,
             'multiestacion'  => $multiestacion,
             'puedeCrear'     => !empty($permisosDb['crear']),
-            'puedeEditar'    => !empty($permisosDb['editar']),
-            'puedeEliminar'  => !empty($permisosDb['eliminar']),
+            // Las acciones de la tabla están habilitadas para quienes tienen
+            // acceso al módulo; el alcance por estación se valida por registro.
+            'puedeEditar'    => true,
+            'puedeEliminar'  => true,
             'puedeDescargar' => !empty($permisosDb['descargar']),
-            // Solo Dirección de operaciones puede finalizar y eliminar documentos
-            'puedeFinalizar'   => $esDireccion,
-            'puedeEliminarDoc' => $esDireccion,
-            'puedeVerVisualizaciones' => ($idPuesto === 13),
+            'puedeFinalizar'   => true,
+            'puedeEliminarDoc' => true,
+            'puedeVerVisualizaciones' => true,
         ];
     }
 
@@ -251,7 +247,7 @@ class BitacoraRrhhService
         }
 
         $r = BitacoraRH::find($id);
-        if (!$r || (int)$r->estatus === 1) {
+        if (!$r || !self::puedeVerLocalidad((int)$r->id_estacion) || (int)$r->estatus === 1) {
             return false;
         }
 
@@ -264,6 +260,11 @@ class BitacoraRrhhService
 
     public static function eliminar(int $id): bool
     {
+        $registro = BitacoraRH::find($id);
+        if (!$registro || !self::puedeVerLocalidad((int)$registro->id_estacion)) {
+            return false;
+        }
+
         BitacoraRHComentario::where('id_bitacora', $id)->delete();
         BitacoraRHDocumento::where('id_bitacora', $id)->delete();
         BitacoraRHRegistro::where('id_bitacora', $id)->delete();
@@ -369,13 +370,13 @@ class BitacoraRrhhService
 
     public static function eliminarDocumento(int $idDocumento): bool
     {
-        $permisos = self::getPermisos();
-        if (!$permisos['puedeEliminarDoc']) {
-            return false;
-        }
-
         $doc = BitacoraRHDocumento::find($idDocumento);
         if (!$doc) return false;
+
+        $bitacora = BitacoraRH::find((int)$doc->id_bitacora);
+        if (!$bitacora || !self::puedeVerLocalidad((int)$bitacora->id_estacion)) {
+            return false;
+        }
 
         $ruta = self::UPLOAD_DIR . $doc->archivo;
         if (is_file($ruta)) {
@@ -410,6 +411,11 @@ class BitacoraRrhhService
 
     public static function registrarVisualizacion(int $idBitacora, int $idUsuario): bool
     {
+        $bitacora = BitacoraRH::find($idBitacora);
+        if (!$bitacora || !self::puedeVerLocalidad((int)$bitacora->id_estacion)) {
+            return false;
+        }
+
         BitacoraRHRegistro::create([
             'id_bitacora' => $idBitacora,
             'id_usuario'  => $idUsuario,
@@ -488,6 +494,22 @@ class BitacoraRrhhService
         }
 
         return (int)$q->count();
+    }
+
+    /** Pendientes de la bitácora del mes actual en las localidades visibles. */
+    public static function getPendientesCardMesActual(): int
+    {
+        $allowed = self::getAllowedLocalidadIds();
+        if ($allowed === []) {
+            return 0;
+        }
+
+        return (int)BitacoraRH::query()
+            ->whereIn('id_estacion', $allowed)
+            ->where('year', (int)date('Y'))
+            ->where('mes', (int)date('n'))
+            ->where('estatus', 0)
+            ->count();
     }
 
     // ---------------- TELEGRAM ----------------

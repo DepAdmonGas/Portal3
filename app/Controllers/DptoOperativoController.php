@@ -7,6 +7,14 @@ use App\Services\DptoOperativoPresentacionService;
 use App\Services\ModuloService;
 use App\Core\Auth;
 use App\Services\ModuleStationService;
+use App\Services\SolicitudChequeService;
+use App\Services\AclaracionVoucherService;
+use App\Services\FormatosService;
+use App\Services\BitacoraRrhhService;
+use App\Services\PedidoPinturasService;
+use App\Services\PedidoPapeleriaService;
+use App\Services\PedidoArticulosLimpiezaService;
+use App\Services\PedidoAditivoService;
 
 class DptoOperativoController extends BaseController{
 protected string $modulo = 'departamento-operativo';
@@ -40,6 +48,14 @@ $data = [
 'permisos' => $permisos,
 'elementos' => $elementos,
 'accesos' => $accesos,
+'pendientesFirmaSolicitudCheque' => SolicitudChequeService::getPendientesFirmaCard(),
+'pendientesAclaracionVoucher' => AclaracionVoucherService::getPendientesMesActual(),
+'pendientesFirmaFormatos' => FormatosService::getPendientesFirmaCard(),
+'pendientesBitacoraRrhh' => BitacoraRrhhService::getPendientesCardMesActual(),
+'pendientesFirmaPedidoPinturas' => PedidoPinturasService::getPendientesFirmaVoBoCard(),
+'pendientesFirmaPedidoPapeleria' => PedidoPapeleriaService::getPendientesFirmaVoBoCard(),
+'pendientesFirmaPedidoArticulosLimpieza' => PedidoArticulosLimpiezaService::getPendientesFirmaVoBoCard(),
+'pendientesFirmaPedidoAditivo' => PedidoAditivoService::getPendientesFirmaVoBoCard(),
 'links' =>[],
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time()
@@ -80,6 +96,14 @@ $data = [
 'title' => $title,
 'permisos' => $permisos,
 'submenus' => $submenus,
+'pendientesFirmaSolicitudCheque' => $slug === 'corporativo' ? SolicitudChequeService::getPendientesFirmaCard() : 0,
+'pendientesAclaracionVoucher' => $slug === 'corporativo' ? AclaracionVoucherService::getPendientesMesActual() : 0,
+'pendientesFirmaFormatos' => $slug === 'recursos-humanos' ? FormatosService::getPendientesFirmaCard() : 0,
+'pendientesBitacoraRrhh' => $slug === 'recursos-humanos' ? BitacoraRrhhService::getPendientesCardMesActual() : 0,
+'pendientesFirmaPedidoPinturas' => $slug === 'comercializadora' ? PedidoPinturasService::getPendientesFirmaVoBoCard() : 0,
+'pendientesFirmaPedidoPapeleria' => $slug === 'comercializadora' ? PedidoPapeleriaService::getPendientesFirmaVoBoCard() : 0,
+'pendientesFirmaPedidoArticulosLimpieza' => $slug === 'comercializadora' ? PedidoArticulosLimpiezaService::getPendientesFirmaVoBoCard() : 0,
+'pendientesFirmaPedidoAditivo' => $slug === 'comercializadora' ? PedidoAditivoService::getPendientesFirmaVoBoCard() : 0,
 'modulo' => $this->modulo,
 'idYear' => $idYear,
 'idMes' => $idMes,

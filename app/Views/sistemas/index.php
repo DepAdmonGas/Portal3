@@ -149,9 +149,13 @@
             </div>
             <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
                 <span class="small">Ver elemento</span>
-                <div class="icon-transition">
-                    <i class="ti ti-arrow-right fs-5"></i>
-                </div>
+                <?php if ((int)($pendientesAutorizacionCheques ?? 0) > 0): ?>
+                    <span class="badge-historico badge-solicitud-home"><?= (int)$pendientesAutorizacionCheques ?></span>
+                <?php else: ?>
+                    <div class="icon-transition">
+                        <i class="ti ti-arrow-right fs-5"></i>
+                    </div>
+                <?php endif; ?>
             </div>
         </a>
     </div>

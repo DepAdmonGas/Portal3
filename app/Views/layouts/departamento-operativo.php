@@ -70,12 +70,17 @@
                         </a>
                     </li>
 
-<?php $esPuestoProcedimientos = in_array((int) ($user->id_puesto ?? 0), [3, 13], true); ?>                    <?php if ($esPuestoProcedimientos || $solicitudesFirmaAutorizado): ?>
-                    <!-- HERRAMIENTAS -->
-                    <li class="nav-small-cap">
-                        <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-                        <span class="hide-menu">HERRAMIENTAS</span>
-                    </li>
+<?php 
+$esPuestoProcedimientos = in_array((int) ($user->id_puesto ?? 0), [3, 13], true); 
+$idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
+?>
+
+<?php if (($esPuestoProcedimientos || $solicitudesFirmaAutorizado) && !$idExcluido): ?>
+    <!-- HERRAMIENTAS -->
+    <li class="nav-small-cap">
+        <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+        <span class="hide-menu">HERRAMIENTAS</span>
+    </li>
 
                     <?php if ($esPuestoProcedimientos): ?>
                     <!-- PROCEDIMIENTOS -->
@@ -121,6 +126,10 @@
                                        aria-expanded="false">
                                         <span><i :class="item.icono"></i></span>
                                         <span class="hide-menu" x-text="item.nombre"></span>
+                                        <span class="badge-historico"
+                                              x-show="Number(item.badge_count || 0) > 0"
+                                              x-text="item.badge_count"
+                                              x-cloak></span>
                                     </a>
                                 </li>
                             </template>
@@ -305,10 +314,12 @@
                                 </div>
                             <?php endif; ?>
                         </div>
-                        <span id="sc-pendientes-data" style="display:none;"><?= $pendientesJson ?? '{}' ?></span>
                     <?php endif; ?>
 
                     <?= $moduleStationSelector ?? '' ?>
+                    <?php if (isset($pendientesJson)): ?>
+                        <span id="sc-pendientes-data" style="display:none;"><?= htmlspecialchars($pendientesJson, ENT_QUOTES, 'UTF-8') ?></span>
+                    <?php endif; ?>
 
                     <?php
                     $badgeText = $nombreContexto ?? '';
@@ -339,7 +350,7 @@
     <!-- Import Js Files -->
     <script src="<?= asset('js/home/actions-home.init.js?v=1.2') ?>"></script>
     <!-- Menú lateral de Departamento Operativo -->
-    <script src="<?= asset('js/departamento-operativo/menu-do.init.js?v=1.0') ?>"></script>
+    <script src="<?= asset('js/departamento-operativo/menu-do.init.js?v=1.1') ?>"></script>
 
     <script src="<?= asset('js/loader.min.js') ?>"></script>
     <script src="<?= asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') ?>"></script>

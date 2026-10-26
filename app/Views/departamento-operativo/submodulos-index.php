@@ -17,6 +17,71 @@
 <?= $i . '. ' . $submenu['nombre'] ?>
 </h5>
 </div>
+<?php if ($submenu['clave'] === 'solicitud-cheque'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesFirmaSolicitudCheque ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaSolicitudCheque ?></span>
+<?php endif; ?>
+</h4>
+</div>
+<?php elseif ($submenu['clave'] === 'aclaracion-voucher'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesAclaracionVoucher ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesAclaracionVoucher ?></span>
+<?php endif; ?>
+</h4>
+</div>
+<?php elseif ($submenu['clave'] === 'formatos'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesFirmaFormatos ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaFormatos ?></span>
+<?php endif; ?>
+</h4>
+</div>
+<?php elseif ($submenu['clave'] === 'bitacora-rrhh'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesBitacoraRrhh ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesBitacoraRrhh ?></span>
+<?php endif; ?>
+</h4>
+</div>
+<?php elseif ($submenu['clave'] === 'pedido-pinturas'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesFirmaPedidoPinturas ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoPinturas ?></span>
+<?php endif; ?>
+</h4>
+</div>
+<?php elseif ($submenu['clave'] === 'pedido-papeleria'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesFirmaPedidoPapeleria ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoPapeleria ?></span>
+<?php endif; ?>
+</h4>
+</div>
+<?php elseif ($submenu['clave'] === 'pedido-articulos-limpieza'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesFirmaPedidoArticulosLimpieza ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoArticulosLimpieza ?></span>
+<?php endif; ?>
+</h4>
+</div>
+<?php elseif ($submenu['clave'] === 'pedido-aditivo'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesFirmaPedidoAditivo ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoAditivo ?></span>
+<?php endif; ?>
+</h4>
+</div>
+<?php endif; ?>
 </div>
 </div>
 </a>

@@ -159,6 +159,45 @@ $ids[] = (int)$d['id'];
 return array_values(array_unique($ids));
 }
 
+/** Estado que espera la firma del usuario actual, o null para el conteo general. */
+private static function getPendingSignatureStatus(): ?int
+{
+    $idUsuario = (int)(Session::get('usuario')['id'] ?? 0);
+
+    return match ($idUsuario) {
+        self::FIRMANTES['B'] => 1, // Visto Bueno
+        self::FIRMANTES['C'] => 2, // Autorización
+        self::FIRMANTES['D'] => 3, // Verificación
+        default => null,
+    };
+}
+
+/** Limita un conteo a la etapa de firma pendiente para el usuario actual. */
+private static function aplicarFiltroFirmaPendiente($query)
+{
+    $status = self::getPendingSignatureStatus();
+    return $status === null
+        ? $query->where('status', '<', 3)
+        : $query->where('status', $status);
+}
+
+/** Contador de la tarjeta Formatos para los firmantes designados. */
+public static function getPendientesFirmaCard(): int
+{
+    $status = self::getPendingSignatureStatus();
+    if ($status === null) return 0;
+
+    $allowed = self::getAllowedLocalidadIds();
+    if ($allowed === []) return 0;
+
+    return RhFormatos::query()
+        ->whereIn('formato', array_keys(self::FORMATOS))
+        ->where('status', $status)
+        ->whereYear('fecha', '=', (int)date('Y'))
+        ->whereIn('id_localidad', $allowed)
+        ->count();
+}
+
 /**
 * ¿El usuario actual puede gestionar (editar/eliminar) registros de la
 * localidad indicada? Se respeta el conjunto de estaciones/departamentos
@@ -192,8 +231,8 @@ return $nombre ?: 'Localidad #' . $idLocalidad;
 }
 
 /**
-* Conteo de pendientes (status 0, 1 y 2) en el formato plano que usa
-* ModuleStationService::render() para pintar los contadores del selector.
+* Conteo del año actual en el formato plano que usa ModuleStationService::render().
+* Para los firmantes designados, cuenta solo la etapa que deben firmar.
 */
 public static function getPendingCountsFlat(): array
 {
@@ -215,12 +254,11 @@ $allowed = array_values(array_unique(array_merge($estacionIds, $deptoIds)));
 
 $counts = RhFormatos::query()
 ->whereIn('formato', array_keys(self::FORMATOS))
-->where('status', '<', 3)
-->whereYear('fecha', '>=', (int)date('Y'));
+->whereYear('fecha', '=', (int)date('Y'));
+$counts = self::aplicarFiltroFirmaPendiente($counts);
 
-if (!empty($allowed)) {
+if ($allowed === []) return $pendientes;
 $counts->whereIn('id_localidad', $allowed);
-}
 
 $counts->groupBy('id_localidad')->selectRaw('id_localidad, COUNT(*) as total');
 
@@ -234,10 +272,7 @@ $pendientes['total'] += (int)$row->total;
 return $pendientes;
 }
 
-/**
-* Conteo de pendientes (status < 3) según la selección actual del contexto
-* (estación específica, departamento específico o todas las permitidas).
-*/
+/** Conteo de firma pendiente del contexto seleccionado para el año actual. */
 public static function getPendingCountsActual(): int
 {
 $ctx = ModuleStationService::getContext(self::MODULE_KEY);
@@ -246,8 +281,8 @@ $idDepto = $ctx['id_depto'];
 
 $q = RhFormatos::query()
 ->whereIn('formato', array_keys(self::FORMATOS))
-->where('status', '<', 3)
-->whereYear('fecha', '>=', (int)date('Y'));
+->whereYear('fecha', '=', (int)date('Y'));
+$q = self::aplicarFiltroFirmaPendiente($q);
 
 if ($idDepto && !$idEstacion) {
 $q->where('id_localidad', $idDepto);
@@ -255,8 +290,10 @@ $q->where('id_localidad', $idDepto);
 $q->where('id_localidad', $idEstacion);
 } else {
 $allowed = self::getAllowedLocalidadIds();
-if (!empty($allowed)) {
+if ($allowed !== []) {
 $q->whereIn('id_localidad', $allowed);
+} else {
+$q->whereRaw('1 = 0');
 }
 }
 
@@ -280,11 +317,13 @@ $q->where('id_localidad', $idEstacion);
 $allowed = self::getAllowedLocalidadIds();
 if (!empty($allowed)) {
 $q->whereIn('id_localidad', $allowed);
+} else {
+$q->whereRaw('1 = 0');
 }
 }
 
 $q->whereIn('formato', array_keys(self::FORMATOS))
-->whereYear('fecha', '>=', (int)date('Y'))
+->whereYear('fecha', '=', (int)date('Y'))
 ->orderBy('id', 'asc');
 
 $data = [];

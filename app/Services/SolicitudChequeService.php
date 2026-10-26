@@ -252,16 +252,29 @@ return [
 * Station IDs the current user is permitted to see.
 * Matches getOpcionesSelector() visibility rules.
 */
-public static function getAllowedStationIds(): array
+public static function getAllowedStationIds(?Usuario $usuario = null): array
 {
-    if (MultiestacionService::isEnabled()) {
-        $stations = ModuleStationService::getAvailableStations('solicitud-cheques');
-        return array_column($stations, 'id');
+    if (MultiestacionService::isEnabled($usuario)) {
+        if ($usuario === null) {
+            $stations = ModuleStationService::getAvailableStations('solicitud-cheques');
+            return array_map('intval', array_column($stations, 'id'));
+        }
+
+        $moduleConfig = ModuleStationService::getConfig('solicitud-cheques');
+        $supported = array_map('intval', $moduleConfig['estaciones_soportadas'] ?? []);
+        $allowed = MultiestacionService::getAllowedStations($usuario);
+        if ($supported === [] || $allowed === null || $allowed === []) return [];
+        return array_values(array_intersect($supported, array_map('intval', $allowed)));
     }
 
-    $permisos = self::getPermisos();
-$idUsuario = $permisos['id_usuario'];
-$nombrePuesto = $permisos['nombre_puesto'];
+    if ($usuario !== null) {
+        $idUsuario = (int) $usuario->id;
+        $nombrePuesto = (string) ($usuario->puesto->tipo_puesto ?? '');
+    } else {
+        $permisos = self::getPermisos();
+        $idUsuario = $permisos['id_usuario'];
+        $nombrePuesto = $permisos['nombre_puesto'];
+    }
 
 if ($idUsuario == 419) {
 return [14];
@@ -290,16 +303,26 @@ return $allowed;
 /**
  * Department (puesto) IDs the current user is permitted to see.
  */
-public static function getAllowedDeptIds(): array
+public static function getAllowedDeptIds(?Usuario $usuario = null): array
 {
-    $allowedDepts = MultiestacionService::getAllowedDepartmentsForModule('solicitud-cheques', Auth::user());
+    $allowedDepts = MultiestacionService::getAllowedDepartmentsForModule('solicitud-cheques', $usuario ?? Auth::user());
     if ($allowedDepts !== null) {
-        return $allowedDepts;
+        if ($usuario === null) return array_map('intval', $allowedDepts);
+
+        $moduleConfig = ModuleStationService::getConfig('solicitud-cheques');
+        $supported = array_map('intval', $moduleConfig['departamentos_soportados'] ?? array_keys(self::DEPARTMENTS));
+        if ($supported === [] || $allowedDepts === []) return [];
+        return array_values(array_intersect($supported, array_map('intval', $allowedDepts)));
     }
 
-    $permisos = self::getPermisos();
-$nombrePuesto = $permisos['nombre_puesto'];
-$idUsuario = $permisos['id_usuario'];
+    if ($usuario !== null) {
+        $nombrePuesto = (string) ($usuario->puesto->tipo_puesto ?? '');
+        $idUsuario = (int) $usuario->id;
+    } else {
+        $permisos = self::getPermisos();
+        $nombrePuesto = $permisos['nombre_puesto'];
+        $idUsuario = $permisos['id_usuario'];
+    }
 $deptIds = array_keys(self::DEPARTMENTS);
 
 $allowed = [];
@@ -1827,6 +1850,8 @@ $esPeriodoVencido = $idYear < $now->year || ($idYear === $now->year && $idMes < 
 
 $allowedStationIds = self::getAllowedStationIds();
 $allowedDeptIds = self::getAllowedDeptIds();
+$idUsuario = (int)(Session::get('usuario')['id'] ?? 0);
+$statusPendienteFirma = $idUsuario === 2 ? 1 : 0;
 
 $stations = Estacion::where('numlista', '<=', 8)
 ->orderBy('numlista', 'asc')
@@ -1839,7 +1864,7 @@ $count = 0;
 if ($mostrar && !$esPeriodoVencido) {
 $q = SolicitudCheque::where('id_year', $idYear)
 ->where('id_mes', $idMes)
-->where('status', 0)
+->where('status', $statusPendienteFirma)
 ->where('id_estacion', $est->id);
 if ($est->id == 8) {
 $q->where(function ($q2) {
@@ -1864,7 +1889,7 @@ $count = 0;
 if ($mostrar && !$esPeriodoVencido) {
 $count = SolicitudCheque::where('id_year', $idYear)
 ->where('id_mes', $idMes)
-->where('status', 0)
+->where('status', $statusPendienteFirma)
 ->where('id_estacion', 8)
 ->where('depto', $did)
 ->count();
@@ -1880,6 +1905,97 @@ return [
 'stations' => $stationCounts,
 'departments' => $deptCounts,
 ];
+}
+
+/** Conteo de firmas pendientes para la card de Solicitud de Cheques. */
+public static function getPendientesFirmaCard(): int
+{
+$idUsuario = (int)(Session::get('usuario')['id'] ?? 0);
+if (!in_array($idUsuario, [2, 19, 30], true)) return 0;
+
+$now = Carbon::now();
+$query = SolicitudCheque::query()
+->where('id_year', $now->year)
+->where('id_mes', $now->month);
+
+if ($idUsuario === 19) {
+return self::aplicarAlcanceFirmaCard($query->where('status', 0))->count();
+}
+
+if ($idUsuario === 30) {
+return $query->where('status', 0)
+->where('id_estacion', self::ESTACION_GESTORIA)
+->where('depto', self::DEPARTAMENTO_GESTORIA)
+->count();
+}
+
+// El usuario 2 autoriza solicitudes de todas las estaciones y departamentos.
+return self::aplicarAlcanceFirmaCard($query->where('status', 1))->count();
+}
+
+/**
+ * Conteo de autorizaciones pendientes del alcance de un usuario objetivo.
+ * Se usa cuando otro perfil necesita mostrar el contador de autorización
+ * manteniendo las estaciones y departamentos que puede consultar ese usuario.
+ */
+public static function getPendientesAutorizacionDeUsuario(int $idUsuario): int
+{
+    $usuario = Usuario::with('puesto')->find($idUsuario);
+    if (!$usuario) return 0;
+
+    $now = Carbon::now();
+    $query = SolicitudCheque::query()
+        ->where('id_year', $now->year)
+        ->where('id_mes', $now->month)
+        ->where('status', 1);
+
+    return self::aplicarAlcanceFirmaCard(
+        $query,
+        self::getAllowedStationIds($usuario),
+        self::getAllowedDeptIds($usuario)
+    )->count();
+}
+
+/** Limita el contador a las estaciones y departamentos autorizados del usuario. */
+private static function aplicarAlcanceFirmaCard($query, ?array $stationIds = null, ?array $departmentIds = null)
+{
+$estaciones = array_map('intval', $stationIds ?? self::getAllowedStationIds());
+$departamentos = array_map('intval', $departmentIds ?? self::getAllowedDeptIds());
+
+if ($estaciones === [] && $departamentos === []) {
+return $query->whereRaw('1 = 0');
+}
+
+$gestoriaEstacionPermitida = in_array(self::ESTACION_GESTORIA, $estaciones, true);
+$estacionesDirectas = array_values(array_filter(
+$estaciones,
+static fn(int $id): bool => $id !== self::ESTACION_GESTORIA
+));
+
+return $query->where(function ($alcance) use ($estacionesDirectas, $gestoriaEstacionPermitida, $departamentos) {
+$tieneAlcance = false;
+if ($estacionesDirectas !== []) {
+$alcance->whereIn('id_estacion', $estacionesDirectas);
+$tieneAlcance = true;
+}
+if ($gestoriaEstacionPermitida) {
+$metodo = $tieneAlcance ? 'orWhere' : 'where';
+$alcance->$metodo(function ($estacionGestoria) {
+$estacionGestoria->where('id_estacion', self::ESTACION_GESTORIA)
+->where(function ($sinDepartamento) {
+$sinDepartamento->whereNull('depto')->orWhere('depto', 0);
+});
+});
+$tieneAlcance = true;
+}
+if ($departamentos !== []) {
+$metodo = $tieneAlcance ? 'orWhere' : 'where';
+$alcance->$metodo(function ($gestoria) use ($departamentos) {
+$gestoria->where('id_estacion', self::ESTACION_GESTORIA)
+->whereIn('depto', $departamentos);
+});
+}
+});
 }
 
 public static function getFacturaStatus(int $idYear, int $idMes, int $idEstacion, int $depto): array

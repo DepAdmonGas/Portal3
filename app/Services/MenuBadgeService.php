@@ -13,10 +13,23 @@ class MenuBadgeService
     /** Id del menú de Comunicados en el Home. */
     private const MENU_COMUNICADOS = 9;
 
-    public static function contar(int $menuId, int $idUsuario): ?int
+    public static function contar(int|string $menuId, int $idUsuario): ?int
     {
         if ($idUsuario <= 0) {
             return null;
+        }
+
+        if (is_string($menuId)) {
+            $cantidad = match ($menuId) {
+                'solicitud-cheque' => SolicitudChequeService::getPendientesFirmaCard(),
+                'pedido-pinturas' => PedidoPinturasService::getPendientesFirmaVoBoCard(),
+                'pedido-papeleria' => PedidoPapeleriaService::getPendientesFirmaVoBoCard(),
+                'pedido-articulos-limpieza' => PedidoArticulosLimpiezaService::getPendientesFirmaVoBoCard(),
+                'pedido-aditivo' => PedidoAditivoService::getPendientesFirmaVoBoCard(),
+                default => 0,
+            };
+
+            return $cantidad > 0 ? (int)$cantidad : null;
         }
 
         if ($menuId === self::MENU_COMUNICADOS) {

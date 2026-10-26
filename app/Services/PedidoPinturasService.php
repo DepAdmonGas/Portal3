@@ -102,6 +102,34 @@ class PedidoPinturasService
         return array_values(array_unique($ids));
     }
 
+    private static function queryPendientesFirmaVoBoActual(array $stationIds)
+    {
+        if ($stationIds === []) {
+            return null;
+        }
+
+        return PedidoPinturasComplementos::query()
+            ->whereIn('id_estacion', $stationIds)
+            ->where('status', 1)
+            ->whereYear('fecha', (int)date('Y'))
+            ->whereDoesntHave('firmas', function ($query): void {
+                $query->where('tipo_firma', 'B');
+            });
+    }
+
+    /** Pendientes de Vo.Bo. del año actual para el firmante asignado. */
+    public static function getPendientesFirmaVoBoCard(): int
+    {
+        $permisos = self::getPermisos();
+        if ($permisos['id_usuario'] !== self::FIRMANTE_VOBO) {
+            return 0;
+        }
+
+        $allowed = self::getAllowedStationIds();
+        $query = self::queryPendientesFirmaVoBoActual($allowed);
+        return $query ? (int)$query->count() : 0;
+    }
+
     public static function getNombreEstacion(int $idEstacion): string
     {
         $estacion = Estacion::find($idEstacion);
@@ -131,6 +159,19 @@ class PedidoPinturasService
         $ctx = ModuleStationService::getContext(self::MODULE_KEY);
         $idEstacion = $ctx['id_estacion'];
 
+        if ((int)(Session::get('usuario')['id'] ?? 0) === self::FIRMANTE_VOBO) {
+            $allowed = self::getAllowedStationIds();
+            if ($idEstacion) {
+                if (!in_array((int)$idEstacion, $allowed, true)) {
+                    return 0;
+                }
+                $allowed = [(int)$idEstacion];
+            }
+
+            $query = self::queryPendientesFirmaVoBoActual($allowed);
+            return $query ? (int)$query->count() : 0;
+        }
+
         $q = PedidoPinturasComplementos::query()
             ->where('status', '>', 0)
             ->where('status', '<=', 1);
@@ -149,6 +190,7 @@ class PedidoPinturasService
 
     public static function getPendingCountsFlat(): array
     {
+        $esFirmanteVoBo = (int)(Session::get('usuario')['id'] ?? 0) === self::FIRMANTE_VOBO;
         $pendientes = ['total' => 0];
         $ids = [];
         foreach (ModuleStationService::getAvailableStations(self::MODULE_KEY) as $s) {
@@ -158,13 +200,20 @@ class PedidoPinturasService
         }
 
         if (!empty($ids)) {
-            $rows = PedidoPinturasComplementos::query()
+            $query = PedidoPinturasComplementos::query()
                 ->selectRaw('id_estacion, COUNT(*) as total')
                 ->whereIn('id_estacion', $ids)
                 ->where('status', '>', 0)
-                ->where('status', '<=', 1)
-                ->groupBy('id_estacion')
-                ->get();
+                ->where('status', '<=', 1);
+
+            if ($esFirmanteVoBo) {
+                $query->whereYear('fecha', (int)date('Y'))
+                    ->whereDoesntHave('firmas', function ($firmaQuery): void {
+                        $firmaQuery->where('tipo_firma', 'B');
+                    });
+            }
+
+            $rows = $query->groupBy('id_estacion')->get();
 
             foreach ($rows as $row) {
                 $key = 'estacion_' . (int)$row->id_estacion;

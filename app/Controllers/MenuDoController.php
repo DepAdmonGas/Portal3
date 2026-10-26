@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Services\MenuDptoOperativoService;
+use App\Services\MenuBadgeService;
 use App\Core\Auth;
 
 /**
@@ -33,9 +34,21 @@ class MenuDoController
                 return;
             }
 
+            $menus = MenuDptoOperativoService::paraUsuario((int)$user->id);
+            foreach ($menus as &$grupo) {
+                foreach ($grupo['items'] ?? [] as &$item) {
+                    $cantidad = MenuBadgeService::contar((string)($item['clave'] ?? ''), (int)$user->id);
+                    if ($cantidad !== null) {
+                        $item['badge_count'] = $cantidad;
+                    }
+                }
+                unset($item);
+            }
+            unset($grupo);
+
             echo json_encode([
                 'success' => true,
-                'data'    => MenuDptoOperativoService::paraUsuario((int)$user->id),
+                'data'    => $menus,
             ]);
 
         } catch (\Throwable $e) {
