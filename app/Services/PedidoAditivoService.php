@@ -148,6 +148,37 @@ class PedidoAditivoService
         ];
     }
 
+    private static function queryPendientesFirmaVoBoActual(array $stationIds)
+    {
+        $stationIds = array_values(array_unique(array_filter(
+            array_map('intval', $stationIds),
+            static fn(int $id): bool => $id > 0
+        )));
+        if ($stationIds === []) {
+            return null;
+        }
+
+        return SolicitudAditivo::query()
+            ->whereIn('id_estacion', $stationIds)
+            ->where('status', 1)
+            ->whereYear('fecha', (int)date('Y'))
+            ->whereDoesntHave('firmas', function ($query): void {
+                $query->where('tipo_firma', 'B');
+            });
+    }
+
+    /** Pendientes de Vo.Bo. del año actual para el usuario firmante. */
+    public static function getPendientesFirmaVoBoCard(): int
+    {
+        $permisos = self::getPermisos();
+        if ($permisos['id_usuario'] !== self::FIRMANTE_VOBO) {
+            return 0;
+        }
+
+        $query = self::queryPendientesFirmaVoBoActual(self::getAllowedStationIds());
+        return $query ? (int)$query->count() : 0;
+    }
+
     private static function formatearFechaHora($fecha): string
     {
         if ($fecha instanceof \DateTimeInterface) {
@@ -170,6 +201,19 @@ class PedidoAditivoService
         $ctx = ModuleStationService::getContext(self::MODULE_KEY);
         $idEstacion = $ctx['id_estacion'];
 
+        if ((int)(Session::get('usuario')['id'] ?? 0) === self::FIRMANTE_VOBO) {
+            $allowed = self::getAllowedStationIds();
+            if ($idEstacion) {
+                if (!in_array((int)$idEstacion, $allowed, true)) {
+                    return 0;
+                }
+                $allowed = [(int)$idEstacion];
+            }
+
+            $query = self::queryPendientesFirmaVoBoActual($allowed);
+            return $query ? (int)$query->count() : 0;
+        }
+
         $q = SolicitudAditivo::query()
             ->where('status', 1);
 
@@ -187,6 +231,7 @@ class PedidoAditivoService
 
     public static function getPendingCountsFlat(): array
     {
+        $esFirmanteVoBo = (int)(Session::get('usuario')['id'] ?? 0) === self::FIRMANTE_VOBO;
         $pendientes = ['total' => 0];
         $ids = [];
         foreach (ModuleStationService::getAvailableStations(self::MODULE_KEY) as $s) {
@@ -196,12 +241,19 @@ class PedidoAditivoService
         }
 
         if (!empty($ids)) {
-            $rows = SolicitudAditivo::query()
+            $query = SolicitudAditivo::query()
                 ->selectRaw('id_estacion, COUNT(*) as total')
                 ->whereIn('id_estacion', $ids)
-                ->where('status', 1)
-                ->groupBy('id_estacion')
-                ->get();
+                ->where('status', 1);
+
+            if ($esFirmanteVoBo) {
+                $query->whereYear('fecha', (int)date('Y'))
+                    ->whereDoesntHave('firmas', function ($firmaQuery): void {
+                        $firmaQuery->where('tipo_firma', 'B');
+                    });
+            }
+
+            $rows = $query->groupBy('id_estacion')->get();
 
             foreach ($rows as $row) {
                 $key = 'estacion_' . (int)$row->id_estacion;

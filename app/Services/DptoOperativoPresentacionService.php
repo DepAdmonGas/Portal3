@@ -150,6 +150,7 @@ class DptoOperativoPresentacionService
         return [
             'tipo'   => 'submodulo',
             'id'     => (int)($submodulo['id_sub_modulo'] ?? 0),
+            'clave'  => (string)($submodulo['clave'] ?? ''),
             'nombre' => (string)($submodulo['nombre'] ?? ''),
             'ruta'   => ModuloDptoOperativoService::resolverRutaSubmodulo($submodulo),
             'icono'  => (string)($submodulo['icono'] ?: 'ti ti-layout-grid'),

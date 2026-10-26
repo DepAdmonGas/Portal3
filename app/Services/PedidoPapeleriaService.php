@@ -187,11 +187,85 @@ class PedidoPapeleriaService
         return ModuleStationService::getContext(self::MODULE_KEY);
     }
 
+    private static function queryPendientesFirmaVoBoActual(array $stationIds, array $departmentIds)
+    {
+        $stationIds = array_values(array_unique(array_filter(
+            array_map('intval', $stationIds),
+            static fn(int $id): bool => $id > 0 && $id !== self::ID_ESTACION_DEPARTAMENTOS
+        )));
+        $departmentIds = array_values(array_unique(array_map('intval', $departmentIds)));
+        if ($stationIds === [] && $departmentIds === []) {
+            return null;
+        }
+
+        return PedidoPapeleria::query()
+            ->where('status', 1)
+            ->whereYear('fecha', (int)date('Y'))
+            ->whereDoesntHave('firmas', function ($query): void {
+                $query->where('tipo_firma', 'B');
+            })
+            ->where(function ($scope) use ($stationIds, $departmentIds): void {
+                if ($stationIds !== []) {
+                    $scope->whereIn('id_estacion', $stationIds);
+                }
+                if ($departmentIds !== []) {
+                    $method = $stationIds !== [] ? 'orWhere' : 'where';
+                    $scope->{$method}(function ($departmentScope) use ($departmentIds): void {
+                        $departmentScope->where('id_estacion', self::ID_ESTACION_DEPARTAMENTOS)
+                            ->whereIn('depto', $departmentIds);
+                    });
+                }
+            });
+    }
+
+    /** Pendientes de firma de Vo.Bo. del año actual para el usuario firmante. */
+    public static function getPendientesFirmaVoBoCard(): int
+    {
+        $permisos = self::getPermisos();
+        if ($permisos['id_usuario'] !== self::FIRMANTE_VOBO) {
+            return 0;
+        }
+
+        $stationIds = self::getAllowedStationIds();
+        $departmentIds = array_map(
+            static fn(array $department): int => (int)$department['id'],
+            ModuleStationService::getAvailableDepartments(self::MODULE_KEY)
+        );
+        $query = self::queryPendientesFirmaVoBoActual($stationIds, $departmentIds);
+        return $query ? (int)$query->count() : 0;
+    }
+
     public static function getPendingCountsActual(): int
     {
         $ctx = self::getContextoEfectivo();
         $idEstacion = $ctx['id_estacion'];
         $idDepto = $ctx['id_depto'];
+
+        if ((int)(Session::get('usuario')['id'] ?? 0) === self::FIRMANTE_VOBO) {
+            $stationIds = self::getAllowedStationIds();
+            $departmentIds = array_map(
+                static fn(array $department): int => (int)$department['id'],
+                ModuleStationService::getAvailableDepartments(self::MODULE_KEY)
+            );
+
+            if ($idDepto) {
+                if (!in_array((int)$idDepto, $departmentIds, true)) {
+                    return 0;
+                }
+                $stationIds = [];
+                $departmentIds = [(int)$idDepto];
+            } elseif ($idEstacion) {
+                $stationId = self::estacionDesdeLocalidad((int)$idEstacion);
+                if (!$stationId || !in_array($stationId, $stationIds, true)) {
+                    return 0;
+                }
+                $stationIds = [$stationId];
+                $departmentIds = [];
+            }
+
+            $query = self::queryPendientesFirmaVoBoActual($stationIds, $departmentIds);
+            return $query ? (int)$query->count() : 0;
+        }
 
         $q = PedidoPapeleria::query()
             ->where('status', '>', 0)
@@ -218,6 +292,7 @@ class PedidoPapeleriaService
 
     public static function getPendingCountsFlat(): array
     {
+        $esFirmanteVoBo = (int)(Session::get('usuario')['id'] ?? 0) === self::FIRMANTE_VOBO;
         $pendientes = ['total' => 0];
         $ids = [];
         $mapaEstacionALocalidad = [];
@@ -237,19 +312,26 @@ class PedidoPapeleriaService
 
             foreach ($ids as $i => $rhId) {
                 $estId = isset($convertidos[$i]) ? (int)$convertidos[$i] : 0;
-                if ($estId) {
+                if ($estId && $estId !== self::ID_ESTACION_DEPARTAMENTOS) {
                     $mapaEstacionALocalidad[$estId] = $rhId;
                 }
             }
 
             if (!empty($mapaEstacionALocalidad)) {
-                $rows = PedidoPapeleria::query()
+                $query = PedidoPapeleria::query()
                     ->selectRaw('id_estacion, COUNT(*) as total')
                     ->whereIn('id_estacion', array_keys($mapaEstacionALocalidad))
                     ->where('status', '>', 0)
-                    ->where('status', '<=', 1)
-                    ->groupBy('id_estacion')
-                    ->get();
+                    ->where('status', '<=', 1);
+
+                if ($esFirmanteVoBo) {
+                    $query->whereYear('fecha', (int)date('Y'))
+                        ->whereDoesntHave('firmas', function ($firmaQuery): void {
+                            $firmaQuery->where('tipo_firma', 'B');
+                        });
+                }
+
+                $rows = $query->groupBy('id_estacion')->get();
 
                 foreach ($rows as $row) {
                     $key = 'estacion_' . $mapaEstacionALocalidad[(int)$row->id_estacion];
@@ -261,12 +343,20 @@ class PedidoPapeleriaService
 
         foreach (ModuleStationService::getAvailableDepartments(self::MODULE_KEY) as $d) {
             $idDepto = (int)$d['id'];
-            $pendientes['depto_' . $idDepto] = (int)PedidoPapeleria::query()
+            $query = PedidoPapeleria::query()
                 ->where('id_estacion', self::ID_ESTACION_DEPARTAMENTOS)
                 ->where('depto', $idDepto)
                 ->where('status', '>', 0)
-                ->where('status', '<=', 1)
-                ->count();
+                ->where('status', '<=', 1);
+
+            if ($esFirmanteVoBo) {
+                $query->whereYear('fecha', (int)date('Y'))
+                    ->whereDoesntHave('firmas', function ($firmaQuery): void {
+                        $firmaQuery->where('tipo_firma', 'B');
+                    });
+            }
+
+            $pendientes['depto_' . $idDepto] = (int)$query->count();
             $pendientes['total'] += $pendientes['depto_' . $idDepto];
         }
 

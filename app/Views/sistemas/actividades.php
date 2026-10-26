@@ -43,7 +43,7 @@
         <div id="se-pending-wrapper" class="d-flex align-items-center gap-1">
             <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis d-inline-flex align-items-center gap-1 px-3 py-2 fs-2 fw-semibold">
                 <i class="ti ti-alert-circle fs-4"></i>
-                <span>Pendientes: <span id="se-pending-count"><?= (int) $pendientesContexto ?></span></span>
+                <span>Pendientes / En Proceso: <span id="se-pending-count"><?= (int) $pendientesContexto ?></span></span>
             </span>
         </div>
 

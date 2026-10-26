@@ -133,6 +133,7 @@ document.addEventListener('alpine:init', () => {
             const valor = Number(estado);
 
             if (valor === 3) return 'badge bg-success text-white';
+             if (valor === 2) return 'badge bg-warning text-white';
             if (valor === 0) return 'badge bg-warning text-white';
 
             return 'badge bg-danger text-white';

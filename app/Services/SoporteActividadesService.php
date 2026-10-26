@@ -240,9 +240,9 @@ class SoporteActividadesService
      * Total de actividades pendientes (Pendiente + En proceso) del alcance
      * del usuario. Es el contador que se muestra en el badge.
      */
-    public static function getPendientes(?int $idResponsable = null): int
+    public static function getPendientes(?int $idResponsable = null, ?int $year = null): int
     {
-        return count(self::ticketsPendientes($idResponsable));
+        return count(self::ticketsPendientes($idResponsable, $year));
     }
 
     /**
@@ -278,10 +278,14 @@ class SoporteActividadesService
     /**
      * @return array<int, Soporte>
      */
-    private static function ticketsPendientes(?int $idResponsable = null): array
+    private static function ticketsPendientes(?int $idResponsable = null, ?int $year = null): array
     {
         $query = Soporte::whereIn('estado', [SoporteService::ESTADO_PENDIENTE, SoporteService::ESTADO_EN_PROCESO])
             ->whereIn('id_personal', self::solicitantesPermitidos());
+
+        if ($year !== null) {
+            $query->whereYear('fecha_creacion', $year);
+        }
 
         if ($idResponsable !== null && $idResponsable > 0) {
             $query->where('id_personal_soporte', $idResponsable);

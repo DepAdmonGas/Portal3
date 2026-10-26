@@ -209,7 +209,9 @@ class BitacoraRrhhController extends BaseController
         $input = json_decode(file_get_contents('php://input'), true);
         $id = (int)($input['id'] ?? $_POST['id'] ?? 0);
 
-        BitacoraRrhhService::eliminar($id);
+        if (!BitacoraRrhhService::eliminar($id)) {
+            JsonResponse::error('No tienes acceso al registro o ya no existe');
+        }
 
         JsonResponse::custom([
             'success' => true,
@@ -249,9 +251,14 @@ class BitacoraRrhhController extends BaseController
     public function getDocumentos()
     {
         $id = (int)($_GET['id'] ?? 0);
+        $detalle = BitacoraRrhhService::getDetalle($id);
+        if (!$detalle || !BitacoraRrhhService::puedeVerLocalidad((int)$detalle['id_estacion'])) {
+            JsonResponse::forbidden('No tienes acceso a este registro');
+        }
+
         JsonResponse::custom([
             'success'    => true,
-            'detalle'    => BitacoraRrhhService::getDetalle($id),
+            'detalle'    => $detalle,
             'documentos' => BitacoraRrhhService::getDocumentos($id),
         ]);
     }
@@ -289,12 +296,12 @@ class BitacoraRrhhController extends BaseController
 
     public function getRegistros()
     {
-        $permisos = BitacoraRrhhService::getPermisos();
-        if (!$permisos['puedeVerVisualizaciones']) {
-            JsonResponse::forbidden('No tienes permiso para ver visualizaciones');
+        $id = (int)($_GET['id'] ?? 0);
+        $detalle = BitacoraRrhhService::getDetalle($id);
+        if (!$detalle || !BitacoraRrhhService::puedeVerLocalidad((int)$detalle['id_estacion'])) {
+            JsonResponse::forbidden('No tienes acceso a este registro');
         }
 
-        $id = (int)($_GET['id'] ?? 0);
         JsonResponse::custom([
             'success'   => true,
             'registros' => BitacoraRrhhService::getRegistros($id),
@@ -303,16 +310,13 @@ class BitacoraRrhhController extends BaseController
 
     public function registrarVisualizacion()
     {
-        $permisos = BitacoraRrhhService::getPermisos();
-        if (!$permisos['puedeVerVisualizaciones']) {
-            JsonResponse::forbidden('No tienes permiso para registrar visualizaciones');
-        }
-
         $input = json_decode(file_get_contents('php://input'), true);
         $id = (int)($input['id'] ?? $_POST['id'] ?? 0);
         $idUsuario = (int)(Session::get('usuario')['id'] ?? 0);
 
-        BitacoraRrhhService::registrarVisualizacion($id, $idUsuario);
+        if (!BitacoraRrhhService::registrarVisualizacion($id, $idUsuario)) {
+            JsonResponse::forbidden('No tienes acceso a este registro');
+        }
 
         JsonResponse::custom([
             'success' => true,

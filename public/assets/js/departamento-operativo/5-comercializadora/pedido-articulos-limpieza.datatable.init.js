@@ -43,8 +43,8 @@ var EMPTY_URL_PEDIDOS = BASE + '/get-data?id_estacion=0';
 
 function estatusPedidoBadge(status) {
 if (status === 0) return '<span class="badge bg-danger">Pendiente</span>';
-if (status === 1) return '<span class="badge bg-warning text-white">Finalizado</span>';
-if (status === 2) return '<span class="badge bg-success">Firmado</span>';
+if (status === 1) return '<span class="badge bg-warning text-white">En proceso</span>';
+if (status === 2) return '<span class="badge bg-success">Finalizado</span>';
 if (status === 3) return '<span class="badge bg-secondary">Entregado</span>';
 return '<span class="badge bg-secondary">Desconocido</span>';
 }

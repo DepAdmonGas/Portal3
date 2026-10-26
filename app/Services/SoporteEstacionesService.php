@@ -112,6 +112,38 @@ class SoporteEstacionesService
         return $cache;
     }
 
+    /** Contador del home: solicitudes asignadas abiertas o solicitudes propias en proceso. */
+    public static function getContadorHome(): int
+    {
+        $idUsuario = self::idUsuario();
+        if ($idUsuario <= 0) {
+            return 0;
+        }
+
+        $usuario = Usuario::find($idUsuario);
+        if (!$usuario) {
+            return 0;
+        }
+
+        $year = (int) date('Y');
+        if ((int)$usuario->id_puesto === self::PUESTO_SISTEMAS) {
+            return Soporte::query()
+                ->where('id_personal_soporte', $idUsuario)
+                ->whereIn('estado', [SoporteService::ESTADO_PENDIENTE, SoporteService::ESTADO_EN_PROCESO])
+                ->whereYear('fecha_creacion', $year)
+                ->count();
+        }
+
+        if (!self::puede('crear')) {
+            return 0;
+        }
+
+        return Soporte::where('id_personal', $idUsuario)
+            ->where('estado', SoporteService::ESTADO_EN_PROCESO)
+            ->whereYear('fecha_creacion', $year)
+            ->count();
+    }
+
     /** @return array<string, bool> */
     private static function sinPermisos(): array
     {

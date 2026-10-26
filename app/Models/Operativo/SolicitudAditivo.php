@@ -29,5 +29,10 @@ class SolicitudAditivo extends Model
         'status' => 'integer',
         'fecha' => 'date'
     ];
+
+    public function firmas()
+    {
+        return $this->hasMany(SolicitudAditivoFirma::class, 'id_reporte', 'id');
+    }
 }
 

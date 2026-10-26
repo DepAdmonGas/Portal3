@@ -64,11 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const texto = (row.estado_texto || '').trim() || 'S/I';
 
         if (estado === 3) {
-            return '<span class="badge bg-success text-white">' + texto + '</span>';
+        return '<span class="badge bg-success text-white">' + texto + '</span>';
+        }
+
+        if (estado === 2) {
+        return '<span class="badge bg-warning text-white">' + texto + '</span>';
         }
 
         if (estado === 0) {
-            return '<span class="badge bg-warning text-white">' + texto + '</span>';
+        return '<span class="badge bg-warning text-white">' + texto + '</span>';
         }
 
         return '<span class="badge bg-danger text-white">' + texto + '</span>';

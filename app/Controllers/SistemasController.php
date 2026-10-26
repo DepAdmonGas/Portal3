@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\SolicitudChequeService;
 use App\Models\Usuario;
 
 class SistemasController extends BaseController
@@ -35,6 +36,7 @@ class SistemasController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
+            'pendientesAutorizacionCheques' => SolicitudChequeService::getPendientesAutorizacionDeUsuario(2),
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js'
