@@ -950,9 +950,9 @@ if ($row) {
 $valores = [
 'id_personal' => (int)$row->id_usuario,
 'num_dias'    => (int)$row->num_dias,
-'fecha_inicio' => $row->fecha_inicio ? formatearFecha($row->fecha_inicio->format('Y-m-d')) : '',
-'fecha_termino' => $row->fecha_termino ? formatearFecha($row->fecha_termino->format('Y-m-d')) : '',
-'fecha_regreso' => $row->fecha_regreso ? formatearFecha($row->fecha_regreso->format('Y-m-d')) : '',
+'fecha_inicio' => $row->fecha_inicio ? $row->fecha_inicio->format('Y-m-d') : '',
+'fecha_termino' => $row->fecha_termino ? $row->fecha_termino->format('Y-m-d') : '',
+'fecha_regreso' => $row->fecha_regreso ? $row->fecha_regreso->format('Y-m-d') : '',
 'observaciones' => $row->observaciones,
 ];
 }
@@ -970,6 +970,75 @@ break;
 }
 
 return ['valores' => $valores, 'detalle_rows' => $detalleRows];
+}
+
+/** Guarda el borrador de Vacaciones sin exigir que el formulario esté completo. */
+public static function guardarBorradorVacaciones(int $id, array $data): array
+{
+    $formato = RhFormatos::find($id);
+    if (!$formato || (int)$formato->formato !== 6) {
+        return ['success' => false, 'message' => 'Formato de vacaciones no encontrado.'];
+    }
+    if ((int)$formato->status !== 0) {
+        return ['success' => false, 'message' => 'El formato ya no admite cambios.'];
+    }
+    if (!self::puedeGestionarLocalidad((int)$formato->id_localidad)) {
+        return ['success' => false, 'message' => 'No tienes permiso para modificar este formato.'];
+    }
+
+    $idPersonal = (int)($data['id_personal'] ?? 0);
+    if ($idPersonal > 0 && !RhPersonal::where('id', $idPersonal)
+        ->where('id_estacion', (int)$formato->id_localidad)
+        ->where('estado', 1)
+        ->exists()) {
+        return ['success' => false, 'message' => 'El empleado no pertenece al área o departamento del formato.'];
+    }
+
+    $fechas = [];
+    foreach (['fecha_inicio', 'fecha_termino', 'fecha_regreso'] as $campo) {
+        $valor = trim((string)($data[$campo] ?? ''));
+        if ($valor !== '') {
+            $partes = [];
+            $fechaValida = preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $valor, $partes)
+                && checkdate((int)$partes[2], (int)$partes[3], (int)$partes[1]);
+            if (!$fechaValida) {
+                return ['success' => false, 'message' => 'La fecha capturada no es válida.'];
+            }
+        }
+        $fechas[$campo] = $valor !== '' ? $valor : null;
+    }
+
+    $diasCapturados = trim((string)($data['num_dias'] ?? ''));
+    if ($diasCapturados !== '' && (!ctype_digit($diasCapturados) || (int)$diasCapturados < 0)) {
+        return ['success' => false, 'message' => 'El número de días no es válido.'];
+    }
+
+    if ($idPersonal <= 0 || $diasCapturados === '' || (int)$diasCapturados <= 0
+        || $fechas['fecha_inicio'] === null || $fechas['fecha_termino'] === null || $fechas['fecha_regreso'] === null) {
+        return [
+            'success' => true,
+            'guardado' => false,
+            'message' => 'Completa empleado, días y las tres fechas para guardar automáticamente.',
+        ];
+    }
+
+    try {
+        RhFormatosVacaciones::updateOrCreate(
+            ['id_formulario' => $id],
+            [
+                'id_usuario' => $idPersonal,
+                'num_dias' => $diasCapturados === '' ? 0 : (int)$diasCapturados,
+                'fecha_inicio' => $fechas['fecha_inicio'],
+                'fecha_termino' => $fechas['fecha_termino'],
+                'fecha_regreso' => $fechas['fecha_regreso'],
+                'observaciones' => mb_substr((string)($data['observaciones'] ?? ''), 0, 5000),
+            ]
+        );
+        return ['success' => true, 'message' => 'Borrador guardado.'];
+    } catch (\Throwable $e) {
+        error_log('Error al guardar borrador de Vacaciones: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'No se pudieron guardar los cambios del formato.'];
+    }
 }
 
 /**
@@ -1423,6 +1492,12 @@ return ['success' => false, 'message' => 'Agrega al menos un empleado al formato
 $error = self::validarFormatoSimple($formato, $data);
 if ($error !== '') {
 return ['success' => false, 'message' => $error];
+}
+if ($formato === 6 && !RhPersonal::where('id', (int)($data['id_personal'] ?? 0))
+    ->where('id_estacion', $idLocalidad)
+    ->where('estado', 1)
+    ->exists()) {
+return ['success' => false, 'message' => 'El empleado no pertenece al área o departamento del formato.'];
 }
 }
 
@@ -2034,7 +2109,7 @@ $valores = [
 'fecha_regreso' => $data['fecha_regreso'] ?? null,
 'observaciones' => $data['observaciones'] ?? '',
 ];
-RhFormatosVacaciones::where('id_formulario', $id)->update($valores);
+RhFormatosVacaciones::updateOrCreate(['id_formulario' => $id], $valores);
 break;
 
 case 7:

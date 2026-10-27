@@ -320,6 +320,18 @@ $result = FormatosService::editarFormato($formato, $id, $_POST, $_FILES);
 JsonResponse::custom($result, $result['success'] ? 200 : 400);
 }
 
+public function guardarBorradorVacaciones()
+{
+    $permisos = FormatosService::getPermisos();
+    if (!$permisos['puedeCrear'] && !$permisos['puedeEditar']) {
+        JsonResponse::forbidden('No tienes permiso para modificar formatos.');
+    }
+
+    $id = (int)($_POST['id'] ?? 0);
+    $result = FormatosService::guardarBorradorVacaciones($id, $_POST);
+    JsonResponse::custom($result, $result['success'] ? 200 : 422);
+}
+
 public function firmarPage($id)
 {
 $id = (int)$id;

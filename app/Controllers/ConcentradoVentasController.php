@@ -28,9 +28,11 @@ $data = [
 'idMes'    => $idMes,
 'idEstacion' => 0,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
 'multiestacion' => false,
 'help' => false,
+'scripts' => [
+'/assets/js/core/module-station-selector.js?v=' . time(),
+],
 ];
 View::render('departamento-operativo/1-corporativo/concentrado-ventas/index', $data, 'departamento-operativo');
 return;
@@ -62,7 +64,6 @@ $data = [
 'idMes'      => $idMes,
 'idEstacion' => $idEstacion,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
 'yearMesTemplate' => '/departamento-operativo/concentrado-ventas/{year}/{mes}',
 'multiestacion'   => $permisos['multiestacion'],
 'puedeDescargar'  => $permisos['puedeDescargar'],
@@ -75,6 +76,7 @@ $data = [
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/select2/dist/js/select2.full.min.js',
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.concentrado-ventas.init.js?v=' . time(),
 ],
 'help' => false,

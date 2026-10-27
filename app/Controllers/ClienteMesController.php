@@ -36,11 +36,13 @@ View::render('departamento-operativo/1-corporativo/clientes-mes/index', [
 'idMes' => $idMes,
 'idEstacion' => 0,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
 'multiestacion' => false,
 'esDireccionOperaciones' => $esDireccionOperaciones,
 'puestoExcluido' => $puestoExcluido,
 'help' => false,
+'scripts' => [
+'/assets/js/core/module-station-selector.js?v=' . time(),
+],
 ], 'departamento-operativo');
 return;
 }
@@ -88,7 +90,6 @@ $data = [
 'idMes' => $idMes,
 'idEstacion' => $idEstacion,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
 'idReporte' => $idReporte,
 'finalizado' => $finalizado,
 'multiestacion' => $multiEstacion,
@@ -107,6 +108,7 @@ $data = [
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/clientes-mes.datatable.init.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.clientes-mes.init.js?v=' . time(),
 ],

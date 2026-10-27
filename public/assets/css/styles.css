@@ -56115,11 +56115,12 @@ transform: translate3d(0, 0, 0);
 }
 
 .bg-footer-do {
-position: absolute;
-bottom: -38px;
+position: relative;
+bottom: auto;
 left: 0;
 right: 0;
 padding: 6px;
+flex: 0 0 auto;
 }
 
 .user-info {
@@ -56136,6 +56137,38 @@ overflow-wrap: anywhere;
 #sidebarnav {
 flex: 1 1 auto;
 overflow-y: auto;
+}
+
+/* Sidebar vertical: un solo scroll para el menú y perfil reservado al pie. */
+.left-sidebar:has(> .bg-footer-do) {
+display: flex;
+flex-direction: column;
+height: 100vh;
+}
+
+.left-sidebar:has(> .bg-footer-do) > .brand-logo {
+flex: 0 0 auto;
+}
+
+.left-sidebar:has(> .bg-footer-do) > .scroll-sidebar {
+flex: 1 1 0%;
+height: auto;
+min-height: 0;
+overflow: visible;
+}
+
+.left-sidebar:has(> .bg-footer-do) > .scroll-sidebar .simplebar-content-wrapper {
+min-height: 0;
+overflow-y: auto;
+}
+
+.left-sidebar:has(> .bg-footer-do) > .bg-footer-do .fixed-profile {
+margin-bottom: 0.5rem !important;
+}
+
+.left-sidebar:has(> .bg-footer-do) #sidebarnav {
+flex: 0 0 auto;
+overflow: visible;
 }
 
 .fixed-profile {

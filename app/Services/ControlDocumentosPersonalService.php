@@ -19,6 +19,8 @@ use App\Models\Estacion;
 
 class ControlDocumentosPersonalService
 {
+const BAJAS_MODULE_KEY = 'bajas-personal';
+
 const DOCUMENT_TYPES = [
 'requisicion'      => ['label' => 'Requisición del Personal',       'folder' => 'requisicion',              'prefix' => 'Requisicion'],
 'curriculum'       => ['label' => 'Curriculum Vitae',               'folder' => 'curriculum',               'prefix' => 'Curriculum'],
@@ -57,9 +59,11 @@ return [
 'id_puesto'     => $idPuesto,
 'nombre_puesto' => $nombrePuesto,
 'multiestacion' => $multiestacion,
+'puedeLeer'     => !empty($permisosDb['leer']),
 'puedeCrear'    => $multiestacion && $tienePermisoCrear,
 'puedeEditar'   => $tienePermisoEditar,
 'puedeEliminar' => $multiestacion && $tienePermisoEliminar,
+'puedeEliminarBaja' => $tienePermisoEliminar,
 'puedeDescargar'=> $tienePermisoDescargar,
 ];
 }
@@ -76,6 +80,153 @@ foreach ($depts as $d) {
 $ids[] = (int)$d['id'];
 }
 return array_values(array_unique($ids));
+}
+
+/** Alcance independiente del módulo de bajas, sin alterar Control de Documentos. */
+private static function getAllowedBajaIds(): array
+{
+$stations = ModuleStationService::getAvailableStations(self::BAJAS_MODULE_KEY);
+$depts = ModuleStationService::getAvailableDepartments(self::BAJAS_MODULE_KEY);
+$ids = [];
+foreach ($stations as $s) $ids[] = (int)$s['id'];
+foreach ($depts as $d) $ids[] = (int)$d['id'];
+return array_values(array_unique($ids));
+}
+
+/** Conteos de bajas no finalizadas, limitados al alcance autorizado del usuario. */
+public static function getBajasPendientes(): array
+{
+    if (!self::getPermisos()['puedeLeer']) return ['total' => 0];
+    $ids = self::getAllowedBajaIds();
+    $data = ['total' => 0];
+    if ($ids === []) return $data;
+
+    foreach ($ids as $id) {
+        $count = self::bajasQuery([$id])->where(function ($query): void {
+            $query->whereNull('b.estado_proceso')->orWhere('b.estado_proceso', '<>', 2);
+        })->count();
+        $data['estacion_' . $id] = $count;
+        $data['depto_' . $id] = $count;
+        $data['total'] += $count;
+    }
+    return $data;
+}
+
+/** Registros de baja del contexto seleccionado; un contexto inválido falla cerrado. */
+public static function getBajasList(): array
+{
+    if (!self::getPermisos()['puedeLeer']) return [];
+    $allowed = self::getAllowedBajaIds();
+    if ($allowed === []) return [];
+
+    $selected = self::selectedBajaContextId();
+    if ($selected < 0) return [];
+    if ($selected > 0 && !in_array($selected, $allowed, true)) return [];
+    $scope = $selected > 0 ? [$selected] : $allowed;
+
+    $rows = self::bajasQuery($scope)
+        ->orderByDesc('b.fecha_baja')
+        ->orderByDesc('b.id')
+        ->get();
+
+    $data = [];
+    foreach ($rows as $row) {
+        $state = (int)($row->estado_proceso ?? 0);
+        $data[] = [
+            'id' => (int)$row->id,
+            'id_personal' => (int)$row->id_personal,
+            'id_estacion' => (int)$row->id_estacion,
+            'nombre_estacion' => self::resolveNombreEstacion((int)$row->id_estacion),
+            'nombre_completo' => (string)($row->nombre_completo ?? ''),
+            'puesto' => (string)($row->nombre_puesto ?? ''),
+            'fecha_baja' => formatearFecha($row->fecha_baja) ?: 'S/I',
+            'motivo' => (string)($row->motivo ?? ''),
+            'detalle' => (string)($row->detalle ?? ''),
+            'proceso' => (string)($row->proceso ?? ''),
+            'estado_proceso' => $state,
+            'estado_label' => $state === 0 ? 'Pendiente' : ($state === 1 ? 'En Proceso' : 'Finalizado'),
+            'num_comentarios' => RhPersonalBajaComentarios::where('id_baja', (int)$row->id)->count(),
+        ];
+    }
+    return $data;
+}
+
+private static function bajasQuery(array $ids): \Illuminate\Database\Eloquent\Builder
+{
+    return RhPersonalBaja::query()
+        ->from('op_rh_personal_baja as b')
+        ->join('op_rh_personal as p', 'p.id', '=', 'b.id_personal')
+        ->leftJoin('op_rh_puestos as pu', 'pu.id', '=', 'p.puesto')
+        ->where('p.estado', 0)
+        ->whereIn('p.id_estacion', $ids)
+        ->select([
+            'b.id', 'b.id_personal', 'b.fecha_baja', 'b.motivo', 'b.detalle',
+            'b.proceso', 'b.estado_proceso', 'p.id_estacion',
+            'p.nombre_completo', 'pu.puesto as nombre_puesto',
+        ]);
+}
+
+public static function getBajaPendienteCountActual(): int
+{
+    if (!self::getPermisos()['puedeLeer']) return 0;
+    $allowed = self::getAllowedBajaIds();
+    if ($allowed === []) return 0;
+    $selected = self::selectedBajaContextId();
+    if ($selected < 0) return 0;
+    if ($selected > 0 && !in_array($selected, $allowed, true)) return 0;
+    return self::bajasQuery($selected > 0 ? [$selected] : $allowed)
+        ->where(function ($query): void {
+            $query->whereNull('b.estado_proceso')->orWhere('b.estado_proceso', '<>', 2);
+        })->count();
+}
+
+private static function findAuthorizedBaja(int $idBaja): ?RhPersonalBaja
+{
+    if (!self::getPermisos()['puedeLeer']) return null;
+    $allowed = self::getAllowedBajaIds();
+    if ($allowed === []) return null;
+    $baja = RhPersonalBaja::find($idBaja);
+    if (!$baja) return null;
+    $personal = RhPersonal::where('id', (int)$baja->id_personal)
+        ->whereIn('id_estacion', $allowed)->first();
+    $selected = self::selectedBajaContextId();
+    if (!$personal || $selected < 0 || ($selected > 0 && (int)$personal->id_estacion !== $selected)) return null;
+    return $baja;
+}
+
+private static function selectedBajaContextId(): int
+{
+    return self::selectedContextId(self::BAJAS_MODULE_KEY);
+}
+
+private static function selectedContextId(string $moduleKey): int
+{
+    $ctx = ModuleStationService::getContext($moduleKey);
+    $station = (int)($ctx['id_estacion'] ?? 0);
+    $department = (int)($ctx['id_depto'] ?? 0);
+    if ($station > 0 && $department > 0) return -1;
+    return $department > 0 ? $department : $station;
+}
+
+public static function updateBajaProceso(int $idBaja, string $proceso, int $estado): bool
+{
+    $permisos = self::getPermisos();
+    if (!$permisos['puedeLeer'] || !$permisos['puedeEditar'] || !in_array($estado, [0, 1, 2], true)) return false;
+    $baja = self::findAuthorizedBaja($idBaja);
+    if (!$baja || (int)$baja->estado_proceso === 2) return false;
+    $updated = $baja->update([
+        'proceso' => trim($proceso),
+        'estado_proceso' => $estado,
+    ]);
+    if ($updated) {
+        $personal = RhPersonal::find((int)$baja->id_personal);
+        if ($personal) self::notify((int)$personal->id_estacion, 'actualizó el proceso de baja', [
+            'nombre' => $personal->nombre_completo ?? '',
+            'proceso' => trim($proceso),
+            'estado' => $estado === 0 ? 'Pendiente' : ($estado === 1 ? 'En Proceso' : 'Finalizado'),
+        ]);
+    }
+    return $updated;
 }
 
 /** Resolve a personnel resource only within the caller's authorized stations. */
@@ -522,33 +673,37 @@ return "/download?tipo={$downloadTipo}&file=" . urlencode($archivo);
 
 public static function addBajaPersonal(int $idPersonal, array $input, array $files): bool
 {
-$record = RhPersonal::find($idPersonal);
+$permisos = self::getPermisos();
+    if (!$permisos['puedeLeer'] || !$permisos['puedeEliminar']) return false;
+$record = self::findAuthorizedPersonal($idPersonal);
 if (!$record) return false;
+$selected = self::selectedContextId('control-documentos-personal');
+if ($selected < 0 || ($selected > 0 && (int)$record->id_estacion !== $selected)) return false;
 
-$sessionUsuario = Session::get('usuario');
-$idUsuario = (int)($sessionUsuario['id'] ?? 0);
+$fechaBaja = normalizarFecha($input['fecha_baja'] ?? '');
+$motivo = trim((string)($input['motivo'] ?? ''));
+if (!$fechaBaja || $motivo === '') return false;
 
 $baja = RhPersonalBaja::create([
 'id_personal'     => $idPersonal,
-'fecha_baja'      => normalizarFecha($input['fecha_baja'] ?? ''),
-'motivo'          => $input['motivo'] ?? '',
+'fecha_baja'      => $fechaBaja,
+'motivo'          => $motivo,
 'detalle'         => $input['detalle'] ?? '',
 'solucion'        => '',
 'proceso'         => '',
 'estado_proceso'  => 0,
 ]);
 
-$uploadDir = self::getUploadDir() . 'solicitud-baja/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
+$uploadDir = self::getBajaUploadDir();
 
 $bajaDocs = ['acta_hechos' => 'Acta de hechos', 'carta_renuncia' => 'Carta de Renuncia', 'finiquito' => 'Finiquito'];
 foreach ($bajaDocs as $key => $label) {
-if (!empty($files[$key]) && $files[$key]['error'] === 0) {
+if (!empty($files[$key]) && (int)($files[$key]['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
 $aleatorio1 = rand(1, 1000000);
 $aleatorio2 = rand(1000, 9999);
 $ext = pathinfo($files[$key]['name'], PATHINFO_EXTENSION);
-$filename = $aleatorio1 . '-' . $label . '-' . $aleatorio2 . '.' . $ext;
-move_uploaded_file($files[$key]['tmp_name'], $uploadDir . $filename);
+$filename = $aleatorio1 . '-' . $label . '-' . $aleatorio2 . '.' . preg_replace('/[^a-zA-Z0-9]+/', '', $ext);
+if (!move_uploaded_file($files[$key]['tmp_name'], $uploadDir . $filename)) continue;
 
 RhPersonalBajaArchivos::create([
 'id_baja'     => $baja->id,
@@ -595,6 +750,7 @@ $iconos = [
 'eliminó personal'         => '🗑',
 'comentó personal'         => '💭',
 'dió de baja'              => '👎',
+'actualizó el proceso de baja' => '🔄',
 'subió archivo de baja'    => '📎',
 'eliminó archivo de baja'  => '🗑',
 'agregó comentario en baja'=> '💬',
@@ -628,6 +784,12 @@ $detalle .= '📅 <b>Fecha de baja:</b> ' . formatearFecha($extra['fecha']) . PH
 }
 if (isset($extra['motivo'])) {
 $detalle .= '📋 <b>Motivo:</b> ' . $extra['motivo'] . PHP_EOL;
+}
+if (isset($extra['proceso'])) {
+$detalle .= '🔄 <b>Proceso:</b> ' . $extra['proceso'] . PHP_EOL;
+}
+if (isset($extra['estado'])) {
+$detalle .= '📌 <b>Estatus:</b> ' . $extra['estado'] . PHP_EOL;
 }
 if (isset($extra['descripcion'])) {
 $detalle .= '📝 <b>Descripción:</b> ' . $extra['descripcion'] . PHP_EOL;
@@ -674,6 +836,8 @@ return [
 
 public static function getArchivosBaja(int $idBaja): array
 {
+$baja = self::findAuthorizedBaja($idBaja);
+if (!$baja) return [];
 $archivos = RhPersonalBajaArchivos::where('id_baja', $idBaja)
 ->orderBy('id', 'asc')
 ->get();
@@ -692,13 +856,14 @@ return $data;
 
 public static function uploadBajaArchivo(int $idBaja, string $descripcion, array $file): bool
 {
-$baja = RhPersonalBaja::find($idBaja);
+$permisos = self::getPermisos();
+if (!$permisos['puedeLeer'] || !$permisos['puedeEditar']) return false;
+$baja = self::findAuthorizedBaja($idBaja);
 if (!$baja) return false;
 
 if (empty($file) || $file['error'] !== 0) return false;
 
-$uploadDir = self::getUploadDir() . 'solicitud-baja/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
+$uploadDir = self::getBajaUploadDir();
 
 $personal = RhPersonal::find($baja->id_personal);
 $nombrePersonal = $personal ? $personal->nombre_completo : 'personal';
@@ -706,9 +871,10 @@ $nombrePersonal = $personal ? $personal->nombre_completo : 'personal';
 $aleatorio1 = rand(1, 1000000);
 $aleatorio2 = rand(1000, 9999);
 $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-$filename = $aleatorio1 . '-' . ($descripcion ?: 'archivo') . '-' . $aleatorio2 . '.' . $ext;
+$nombreSeguro = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $descripcion ?: 'archivo');
+$filename = $aleatorio1 . '-' . trim((string)$nombreSeguro, '-') . '-' . $aleatorio2 . '.' . preg_replace('/[^a-zA-Z0-9]+/', '', $ext);
 
-move_uploaded_file($file['tmp_name'], $uploadDir . $filename);
+if (!move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) return false;
 
 RhPersonalBajaArchivos::create([
 'id_baja'     => $idBaja,
@@ -726,6 +892,8 @@ return true;
 
 public static function getComentariosBaja(int $idBaja): array
 {
+$baja = self::findAuthorizedBaja($idBaja);
+if (!$baja) return [];
 $sessionUsuario = Session::get('usuario');
 $idUsuarioActual = (int)($sessionUsuario['id'] ?? 0);
 
@@ -752,7 +920,7 @@ public static function addComentarioBaja(int $idBaja, string $comentario): bool
 $sessionUsuario = Session::get('usuario');
 $idUsuario = (int)($sessionUsuario['id'] ?? 0);
 
-$baja = RhPersonalBaja::find($idBaja);
+$baja = self::findAuthorizedBaja($idBaja);
 if (!$baja) return false;
 
 $personal = RhPersonal::find($baja->id_personal);
@@ -776,10 +944,13 @@ return true;
 
 public static function deleteBajaArchivo(int $idArchivo): bool
 {
+$permisos = self::getPermisos();
+if (!$permisos['puedeLeer'] || !$permisos['puedeEliminarBaja']) return false;
 $archivo = RhPersonalBajaArchivos::find($idArchivo);
 if (!$archivo) return false;
 
-$baja = RhPersonalBaja::find($archivo->id_baja);
+$baja = self::findAuthorizedBaja((int)$archivo->id_baja);
+if (!$baja) return false;
 $descripcion = $archivo->descripcion ?? '';
 $idEstacion = 0;
 $nombrePersonal = '';
@@ -791,15 +962,11 @@ $nombrePersonal = $personal->nombre_completo ?? '';
 }
 }
 
-if (!empty($archivo->archivo)) {
-$dir = self::getUploadDir() . 'solicitud-baja/';
-$fullPath = $dir . $archivo->archivo;
-if (file_exists($fullPath)) {
-unlink($fullPath);
-}
-}
-
-$archivo->delete();
+$fullPath = !empty($archivo->archivo)
+    ? self::getBajaUploadDir() . basename((string)$archivo->archivo)
+    : '';
+if (!$archivo->delete()) return false;
+if ($fullPath !== '' && is_file($fullPath)) @unlink($fullPath);
 
 if ($idEstacion) {
 self::notify($idEstacion, 'eliminó archivo de baja', [
@@ -813,7 +980,7 @@ return true;
 
 public static function getBajaDetalle(int $idBaja): ?array
 {
-$baja = RhPersonalBaja::find($idBaja);
+$baja = self::findAuthorizedBaja($idBaja);
 if (!$baja) return null;
 
 $personal = RhPersonal::find($baja->id_personal);
@@ -902,6 +1069,13 @@ return [
 'comentarios'       => $comentariosData,
 'total_comentarios' => count($comentariosData),
 ];
+}
+
+private static function getBajaUploadDir(): string
+{
+    $dir = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/solicitud-baja/';
+    if (!is_dir($dir)) mkdir($dir, 0750, true);
+    return $dir;
 }
 
 public static function getAsistenciaPersonal(int $idPersonal): ?array

@@ -11,6 +11,7 @@ use App\Models\ModuloPuestoDptoOperativo;
 use App\Models\ModuloPuestoSubDptoOperativo;
 use App\Models\ModuloUsuarioDptoOperativo;
 use App\Models\ModuloUsuarioSubDptoOperativo;
+use App\Models\ModuloSubUsuarioConfigDptoOperativo;
 use App\Core\Breadcrumb;
 use App\Models\Usuario;
 use App\Services\ModuloService;
@@ -2300,6 +2301,7 @@ $data[] = [
 'idModuloUsuario' => $permisos->id,
 'idModulo' => $modulo->id,
 'nombre_modulo' =>$modulo->nombre,
+'modo_submodulos' => $this->modoSubmodulosUsuario((int) $idUsuario, (int) $modulo->id),
 
 'no_submodulos' => [
 'total_submodulos' =>
@@ -2350,9 +2352,14 @@ $sub->where('id_usuario', $idUsuario);
 });
 }
 
-$data = $query->select('id', 'nombre')
+$data = $query->select('id', 'nombre', 'clave')
 ->orderBy('nombre', 'asc')
 ->get();
+
+$data->transform(static function ($modulo) {
+    $modulo->configurable_submodulos = $modulo->clave !== 'acceso-temporal';
+    return $modulo;
+});
 
 echo json_encode($data);
 exit;
@@ -2426,6 +2433,8 @@ $detalle = [
 'editar'      => $rol->pivot->editar,
 'eliminar'    => $rol->pivot->eliminar,
 'descargar'   => $rol->pivot->descargar,
+'modo_submodulos' => $this->modoSubmodulosUsuario($rol->pivot->id_usuario, $modulo->id),
+'configurable_submodulos' => $modulo->clave !== 'acceso-temporal',
 ];
 
 echo json_encode([
@@ -2457,6 +2466,7 @@ $editar     = (int) ($_POST['editar'] ?? 0);
 $eliminar   = (int) ($_POST['eliminar'] ?? 0);
 $descargar  = (int) ($_POST['descargar'] ?? 0);
 $submodulos = $_POST['submodulos'] ?? [];
+$modoSubmodulos = $_POST['modo_submodulos'] ?? 'actual';
 
 if (!$idUsuario || !$modulo_id) {
 echo json_encode([
@@ -2482,6 +2492,12 @@ exit;
 
 Capsule::beginTransaction();
 
+$modulo = ModuloDptoOperativo::find($modulo_id);
+if (!$modulo) {
+    throw new \InvalidArgumentException('El módulo seleccionado no existe.');
+}
+$configurableSubmodulos = $modulo->clave !== 'acceso-temporal';
+
 /* ---------- 1) Crear módulo por puesto ----------*/
 ModuloUsuarioDptoOperativo::create([
 'id_usuario' => $idUsuario,
@@ -2493,10 +2509,21 @@ ModuloUsuarioDptoOperativo::create([
 'descargar' => $descargar
 ]);
 
-/* ---------- 2) Insertar submódulos ----------*/
-if (!empty($submodulos)) {
+/* ---------- 2) Guardar modo de submódulos ----------*/
+$this->guardarModoSubmodulosUsuario((int) $idUsuario, (int) $modulo_id, $modulo->clave, $modoSubmodulos);
 
-foreach ($submodulos as $idSub) {
+/* ---------- 3) Guardar submódulos personalizados ----------*/
+if ((!$configurableSubmodulos || $modoSubmodulos === 'personalizar') && !empty($submodulos)) {
+
+$submodulosPermitidos = ModuloSubDptoOperativo::query()
+    ->where('id_modulo', $modulo_id)
+    ->where('activo', 1)
+    ->whereIn('id', $submodulos)
+    ->pluck('id')
+    ->map(static fn ($id) => (int) $id)
+    ->all();
+
+foreach ($submodulosPermitidos as $idSub) {
 
 $existe = ModuloUsuarioSubDptoOperativo::where('id_sub_modulo',$idSub)
 ->where('id_usuario',$idUsuario)
@@ -2550,6 +2577,7 @@ $editar     = (int) ($_POST['editar'] ?? 0);
 $eliminar   = (int) ($_POST['eliminar'] ?? 0);
 $descargar  = (int) ($_POST['descargar'] ?? 0);
 $submodulos = $_POST['submodulos'] ?? [];
+$modoSubmodulos = $_POST['modo_submodulos'] ?? 'actual';
 
 if (!is_array($submodulos)) {
 $submodulos = [];
@@ -2567,6 +2595,17 @@ exit;
 try {
 
 Capsule::beginTransaction();
+
+$registroModulo = ModuloUsuarioDptoOperativo::find($id);
+if (!$registroModulo || (int) $registroModulo->id_usuario !== (int) $idUsuario) {
+    throw new \InvalidArgumentException('No se encontró la asignación del módulo para este usuario.');
+}
+
+$modulo = ModuloDptoOperativo::find($modulo_id);
+if (!$modulo) {
+    throw new \InvalidArgumentException('El módulo seleccionado no existe.');
+}
+$configurableSubmodulos = $modulo->clave !== 'acceso-temporal';
 
 /*---------- 1) Actualizar módulo ----------*/
 ModuloUsuarioDptoOperativo::where('id', $id)
@@ -2589,6 +2628,27 @@ $actuales = ModuloUsuarioSubDptoOperativo::where('id_usuario', $idUsuario)
 ->whereIn('id_sub_modulo', $submodulosDelModulo)
 ->pluck('id_sub_modulo')
 ->toArray();
+
+/*---------- Guardar el modo explícito de resolución ----------*/
+$this->guardarModoSubmodulosUsuario((int) $idUsuario, (int) $modulo_id, $modulo->clave, $modoSubmodulos);
+
+if ($configurableSubmodulos && $modoSubmodulos !== 'personalizar') {
+    Capsule::commit();
+
+    echo json_encode([
+        'success' => true,
+        'message' => 'Registro actualizado correctamente'
+    ]);
+    return;
+}
+
+$submodulos = ModuloSubDptoOperativo::query()
+    ->where('id_modulo', $modulo_id)
+    ->where('activo', 1)
+    ->whereIn('id', $submodulos)
+    ->pluck('id')
+    ->map(static fn ($id) => (int) $id)
+    ->all();
 
 /* Determinar nuevos */
 $nuevos = array_diff($submodulos, $actuales);
@@ -2628,6 +2688,40 @@ echo json_encode([
 
 }
 
+}
+
+private function modoSubmodulosUsuario(int $idUsuario, int $idModulo): string
+{
+    $model = new ModuloSubUsuarioConfigDptoOperativo();
+    if (!$model->getConnection()->getSchemaBuilder()->hasTable($model->getTable())) {
+        return 'actual';
+    }
+
+    return (string) (ModuloSubUsuarioConfigDptoOperativo::query()
+        ->where('id_usuario', $idUsuario)
+        ->where('id_modulo', $idModulo)
+        ->value('modo') ?? 'actual');
+}
+
+private function guardarModoSubmodulosUsuario(int $idUsuario, int $idModulo, string $claveModulo, string $modo): void
+{
+    if (!in_array($modo, ['actual', 'heredar', 'personalizar'], true)) {
+        throw new \InvalidArgumentException('El modo de submódulos seleccionado no es válido.');
+    }
+
+    if ($claveModulo === 'acceso-temporal') {
+        return;
+    }
+
+    $model = new ModuloSubUsuarioConfigDptoOperativo();
+    if (!$model->getConnection()->getSchemaBuilder()->hasTable($model->getTable())) {
+        throw new \RuntimeException('Falta aplicar la migración de configuración de submódulos por usuario.');
+    }
+
+    ModuloSubUsuarioConfigDptoOperativo::query()->updateOrCreate(
+        ['id_usuario' => $idUsuario, 'id_modulo' => $idModulo],
+        ['modo' => $modo]
+    );
 }
 
 public function deleteModulosDptoOperativUsuarios()

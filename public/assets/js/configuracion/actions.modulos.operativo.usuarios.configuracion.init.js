@@ -5,6 +5,8 @@ modulos: [],
 modulo_id: '',
 submodulos: [],
 submodulosSeleccionados: [],
+modoSubmodulos: 'actual',
+moduleConfigurable: true,
 
 mode: 'create',
 editId: null,
@@ -38,6 +40,11 @@ return true;
 this.$watch('modulo_id', async value => {
 if (value) {
 this.errors.modulo = false;
+const moduloSeleccionado = this.modulos.find(modulo => String(modulo.id) === String(value));
+this.moduleConfigurable = moduloSeleccionado?.configurable_submodulos !== false;
+if (!this.moduleConfigurable) {
+this.modoSubmodulos = 'actual';
+}
 await this.getSubmodulos(value);
 
 } else {
@@ -143,6 +150,8 @@ resetForm() {
 this.modulo_id = '';
 this.submodulos = [];
 this.submodulosSeleccionados = [];
+this.modoSubmodulos = 'actual';
+this.moduleConfigurable = true;
 
 const el = $(this.$refs.selectModulo);
 el.val(null).trigger('change');
@@ -190,6 +199,8 @@ return;
 const d = data.detalle;
 this.mode = 'edit';
 this.editId = d.id;
+this.modoSubmodulos = d.modo_submodulos || 'actual';
+this.moduleConfigurable = d.configurable_submodulos !== false;
 
 await this.getModulosOperativo(
 d.modulo_id
@@ -240,6 +251,7 @@ const formData = new FormData();
 
 formData.append('idUsuario', idUsuario);
 formData.append('modulo_id', this.modulo_id);
+formData.append('modo_submodulos', this.moduleConfigurable ? this.modoSubmodulos : 'actual');
 
 formData.append('leer', this.$refs.check_leer.checked ? '1' : '0');
 formData.append('crear', this.$refs.check_crear.checked ? '1' : '0');

@@ -24,7 +24,7 @@ x-data="aceitesMesComponent()"
 @refresh-documentos.window="cargarDocumentos()"
 @refresh-facturas.window="cargarFacturas()">
 
-<div class="col-12 mt-3 mb-4">
+<div x-show="!loading && rows.length === 0" class="col-12 mt-3 mb-4">
 <div class="float-end ">
 
 <div class="d-flex gap-2">
@@ -110,9 +110,8 @@ Finalizar Resumen</button>
 <p class="mt-2 text-muted">Cargando datos...</p>
 </div>
 
-<div x-show="!loading && rows.length === 0" class="text-center py-5 text-muted">
-<i class="ti ti-droplet-off" style="font-size:3rem;"></i>
-<p class="mt-2">No hay registros de aceites para este mes</p>
+<div x-show="!loading && rows.length === 0" class="alert alert-secondary border-0 text-center text-muted py-4 ">
+No hay registros de aceites para este mes
 </div>
 
 <div class="table-responsive" x-show="!loading && rows.length > 0" style="overflow-x:auto;">

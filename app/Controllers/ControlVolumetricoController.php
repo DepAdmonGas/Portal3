@@ -29,10 +29,12 @@ $data = [
 'idMes' => $idMes,
 'idEstacion' => 0,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
 'multiestacion' => false,
 'esDireccionOperaciones' => false,
 'help' => false,
+'scripts' => [
+'/assets/js/core/module-station-selector.js?v=' . time(),
+],
 ];
 View::render('departamento-operativo/1-corporativo/control-volumetrico/index', $data, 'departamento-operativo');
 return;
@@ -79,7 +81,6 @@ $data = [
 'idMesDb' => $idMesDb,
 'idEstacion' => $idEstacion,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
 'estado' => $estado,
 'yearMesTemplate' => '/departamento-operativo/control-volumetrico/{year}/{mes}',
 'multiestacion' => $permisos['multiestacion'],
@@ -92,6 +93,7 @@ $data = [
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time(),
 '/assets/libs/select2/dist/js/select2.full.min.js',
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.control.volumetrico.init.js?v=' . time(),
 ],
 'help' => false,

@@ -199,7 +199,7 @@ $firmaDRec = current(array_filter($firmas, fn($f) => $f['tipo_firma'] === 'D')) 
 ?>
 
 <!-- Card A: ELABORÓ -->
-<div class="col-xl-3 col-lg-6 col-md-12 col-sm-12 mb-4">
+<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-4">
 <?php if ($firmaARec): ?>
 <div class="card border h-100">
 <div class="card-header bg-primary text-white py-3 border-0">
@@ -246,7 +246,7 @@ $firmaDRec = current(array_filter($firmas, fn($f) => $f['tipo_firma'] === 'D')) 
 </div>
 
 <!-- Card B: VOBO -->
-<div class="col-xl-3 col-lg-6 col-md-12 col-sm-12 mb-4">
+<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-4">
 <?php if ($firmaBRec): ?>
 <div class="card border h-100">
 <div class="card-header bg-primary text-white py-3 border-0">
@@ -332,7 +332,7 @@ Firmar formato
 </div>
 
 <!-- Card C: AUTORIZACIÓN -->
-<div class="col-xl-3 col-lg-6 col-md-12 col-sm-12 mb-4">
+<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-4">
 <?php if ($firmaCRec): ?>
 <div class="card border h-100">
 <div class="card-header bg-primary text-white py-3 border-0">
@@ -418,7 +418,7 @@ Firmar formato
 </div>
 
 <!-- Card D: VERIFICACIÓN -->
-<div class="col-xl-3 col-lg-6 col-md-12 col-sm-12 mb-4">
+<div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-4">
 <?php if ($firmaDRec): ?>
 <div class="card border h-100">
 <div class="card-header bg-primary text-white py-3 border-0">
@@ -441,29 +441,60 @@ Firmar formato
 </div>
 </div>
 <?php elseif ($detalle['status'] === 3 && $permisos['puedeFirmarVerificacion']): ?>
-<div class="card border h-100">
-<div class="card-header text-bg-primary py-3 border-0">
-<div class="d-flex align-items-center justify-content-between">
-<div class="d-flex align-items-center">
-<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
-<i class="ti ti-pencil fs-6"></i>
-</div>
-<div class="ms-3"><h6 class="mb-0 text-white">FIRMA DE VERIFICACIÓN</h6></div>
-</div>
-<button type="button" class="btn btn-sm bg-danger text-white" @click="limpiarFirma"><i class="ti ti-eraser me-1"></i> Limpiar</button>
-</div>
-</div>
-<div class="card-body p-0">
-<div id="signature-pad" class="signature-pad border-0" style="cursor:crosshair;">
-<div class="signature-pad--body">
-<canvas id="canvas" style="width:100%;height:200px;"></canvas>
-</div>
-</div>
-</div>
-<div class="card-footer bg-light text-center">
-<button type="button" class="btn btn-primary w-100" @click="firmarVerificacion()" :disabled="firmandoVerificacion">
-<i class="ti ti-writing me-1"></i> Firmar verificación
-</button>
+<div class="card border-0 bg-white w-100 d-flex flex-column h-100">
+
+    <!-- Encabezado con ícono circular -->
+    <div class="card-header text-bg-primary py-3 border-0 flex-shrink-0">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:45px;height:45px;">
+                    <i class="ti ti-pencil fs-6"></i>
+                </div>
+                <div class="ms-3">
+                    <h5 class="mb-0 text-white">FIRMA DE VERIFICACIÓN</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cuerpo adaptable que ocupa todo el alto restante con borde punteado -->
+    <div class="card-body p-3 flex-fill d-flex flex-column">
+        <div id="signature-pad" class="signature-pad-wrapper flex-fill d-flex" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+            <div class="signature-pad--body w-100 h-100 d-flex">
+                <canvas 
+                    id="canvas" 
+                    style="
+                        width: 100%; 
+                        height: 100%; 
+                        min-height: 0; 
+                        display: block; 
+                        touch-action: none;
+                    ">
+                </canvas>
+            </div>
+        </div>
+        <input type="hidden" name="firma_verificacion" id="firma_verificacion" value="">
+    </div>
+<!-- Footer con botones al 50% cada uno y sin separación en medio -->
+<div class="card-footer bg-white border-top p-0 flex-shrink-0 d-flex align-items-center">
+    
+    <!-- Botón de limpiar firma (Mitad izquierda) -->
+    <button 
+        type="button" 
+        class="btn bg-danger-subtle text-danger w-50 rounded-0" 
+        @click="limpiarFirma()">
+        <i class="ti ti-eraser me-1"></i> Limpiar firma
+    </button>
+
+    <!-- Botón de acción principal para firmar (Mitad derecha) -->
+    <button 
+        type="button" 
+        class="btn btn-primary w-50 rounded-0" 
+        @click="firmarVerificacion()" 
+        :disabled="firmandoVerificacion">
+        <i class="ti ti-writing me-1"></i> Firmar verificación
+    </button>
+
 </div>
 </div>
 <?php else: ?>

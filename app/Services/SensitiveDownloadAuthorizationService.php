@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Core\Auth;
 use App\Models\Operativo\RhPersonal;
+use App\Models\Operativo\RhPersonalBajaArchivos;
 
 /** Resolves and authorizes sensitive downloads as domain resources, not paths. */
 class SensitiveDownloadAuthorizationService
@@ -28,6 +29,20 @@ class SensitiveDownloadAuthorizationService
     /** @return array{path:string,base:string}|null */
     public static function resolve(string $tipo, string $file): ?array
     {
+        if ($tipo === 'docs-personal-baja') {
+            if (!Auth::check() || basename($file) !== $file
+                || !ModuloDptoOperativoService::validaPermiso('recursos-humanos', 'descargar')) return null;
+            $permissions = ControlDocumentosPersonalService::getPermisos();
+            if (empty($permissions['puedeLeer']) || empty($permissions['puedeDescargar'])) return null;
+
+            $archivo = RhPersonalBajaArchivos::where('archivo', $file)->first();
+            if (!$archivo) return null;
+            $detalle = ControlDocumentosPersonalService::getBajaDetalle((int)$archivo->id_baja);
+            if (!$detalle || !self::isAuthorizedForPersonal((int)$detalle['id_estacion'])) return null;
+
+            $base = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/solicitud-baja/';
+            return ['path' => $base . basename($file), 'base' => $base];
+        }
         if (!Auth::check() || !isset(self::PERSONAL_DOCUMENTS[$tipo])) return null;
 
         [$column, $folder] = self::PERSONAL_DOCUMENTS[$tipo];

@@ -447,17 +447,18 @@ class PreciosCombustibleService
         bool $ocultarVopak
     ): array {
         $vopakClass = $ocultarVopak ? 'd-none' : '';
-        $colspanTB = $ocultarVopak ? 9 : 13;
+        $colspanTB = $ocultarVopak ? 5 : 7;
+        $colspanPickup = $ocultarVopak ? 8 : 10;
 
         return [
             'transporte' => self::buildTablaTransporte($transporte, $modo, $editable),
-            'detalle'    => self::buildTablaDetalle($detalle, $modo, $editable, $vopakClass, $colspanTB),
+            'detalle'    => self::buildTablaDetalle($detalle, $modo, $editable, $vopakClass, $colspanTB, $colspanPickup),
         ];
     }
 
     private static function buildTablaTransporte(array $transporte, string $modo, bool $editable): string
     {
-        $html = '<div class="table-responsive">';
+        $html = '';
         $html .= '<table class="table table-striped table-bordered mb-3 text-nowrap align-middle">';
         $html .= '<thead>';
         $html .= '<tr>'
@@ -496,7 +497,7 @@ class PreciosCombustibleService
             $html .= '</tr>';
         }
 
-        $html .= '</tbody></table></div>';
+        $html .= '</tbody></table>';
         return $html;
     }
 
@@ -505,14 +506,15 @@ class PreciosCombustibleService
         string $modo,
         bool $editable,
         string $vopakClass,
-        int $colspanTB
+        int $colspanTB,
+        int $colspanPickup
     ): string {
-        $html = '<div class="table-responsive"> <table class="table table-bordered mb-3 text-nowrap align-middle">';
+        $html = '<table class="table table-bordered mb-3 text-nowrap align-middle table-precios-combustible">';
         $html .= '<thead>';
         $html .= '<tr>'
             . '<th class="text-center align-middle"></th>'
             . '<th class="text-center align-middle" colspan="' . $colspanTB . '">Delivery</th>'
-            . '<th class="text-center align-middle" colspan="13">Pick Up</th>'
+            . '<th class="text-center align-middle" colspan="' . $colspanPickup . '">Pick Up</th>'
             . '</tr>';
         $html .= '<tr>'
             . '<th class="text-center align-middle">Producto</th>'

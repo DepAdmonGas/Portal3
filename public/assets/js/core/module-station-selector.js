@@ -4,6 +4,7 @@ class ModuleStationSelector {
         'solicitud-gafetes': '#table-gafetes',
         'solicitud-tarjetas': '#table-tarjetas',
         'corte-diario': '#table-corte-diario',
+        'bajas-personal': '#table-bajas-personal',
     };
 
     constructor(moduleKey) {
