@@ -311,6 +311,22 @@ $data[] = [
 return $data;
 }
 
+public static function getComentarioDetalle(int $idAclaracion): ?array
+{
+$record = AclaracionVoucher::find($idAclaracion);
+if (!$record) return null;
+
+$solicitante = Usuario::find($record->id_solicitante);
+
+return [
+'id' => (int)$record->id,
+'fecha_solicitud' => $record->fecha_creacion ? formatearFecha($record->fecha_creacion->format('Y-m-d')) : '',
+'solicitante' => $solicitante ? $solicitante->nombre : 'Desconocido',
+'ticket' => (string)($record->nombre_ticket ?? ''),
+'importe' => (float)($record->importe ?? 0),
+];
+}
+
 public static function addComentario(int $idAclaracion, string $comentario, int $idUsuario): bool
 {
 AclaracionBaucherComentario::create([

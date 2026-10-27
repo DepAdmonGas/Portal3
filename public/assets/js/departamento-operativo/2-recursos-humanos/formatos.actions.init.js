@@ -15,6 +15,7 @@ hayContexto: false,
 comentarios: [],
 comentarioFormatoId: null,
 comentarioFormatoNombre: '',
+detalleComentarioFormato: null,
 nuevoComentario: '',
 guardandoComentario: false,
 
@@ -106,6 +107,7 @@ if (el) el.scrollTop = el.scrollHeight;
 
 async abrirComentarios(id, nombre, formato, formatoNombre) {
     this.comentarioFormatoId = id;
+    this.detalleComentarioFormato = null;
     this.comentarioFormatoNombre = (formatoNombre || 'Formato') + ' # 00' + id + (nombre ? ' (' + nombre + ')' : '');
 this.nuevoComentario = '';
 this.comentarios = [];
@@ -121,6 +123,7 @@ try {
 const resp = await fetch('/departamento-operativo/recursos-humanos/formatos/comentarios?id=' + id);
 const json = await resp.json();
 if (json.success) {
+self.detalleComentarioFormato = json.detalle || null;
 self.comentarios = json.comentarios || [];
 self.scrollChatToBottom();
 }
@@ -152,6 +155,7 @@ this.nuevoComentario = '';
 const resp2 = await fetch('/departamento-operativo/recursos-humanos/formatos/comentarios?id=' + formatoId);
 const json2 = await resp2.json();
 if (json2.success) {
+this.detalleComentarioFormato = json2.detalle || this.detalleComentarioFormato;
 this.comentarios = json2.comentarios || [];
 this.scrollChatToBottom();
 }
@@ -167,7 +171,6 @@ return false;
 });
 dt.draw(false);
 }
-if (window.Notify) Notify.success('Comentario agregado correctamente.');
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario.');
 }

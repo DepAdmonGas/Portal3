@@ -48,10 +48,33 @@ document.addEventListener(
                     function (json) {
 
                         if (!json.success) {
+                            window.solicitudesPendientesAutorizacion = [];
+                            actualizarBotonFirmarTodas();
                             return [];
                         }
 
-                        return json.data;
+                        const rows = Array.isArray(json.data)
+                            ? json.data
+                            : [];
+
+                        window.solicitudesPendientesAutorizacion = rows
+                            .filter(row => {
+                                const firmas = Number(row.firmas || 0);
+                                return Number(row.status) === 1 && (firmas === 1 || firmas === 2);
+                            })
+                            .map(row => ({
+                                id: Number(row.id),
+                                opcion: Number(row.firmas) === 1 ? 1 : 2
+                            }))
+                            .filter(solicitud => Number.isInteger(solicitud.id) && solicitud.id > 0);
+
+                        window.solicitudChequesDataReady = true;
+                        actualizarBotonFirmarTodas();
+                        document.dispatchEvent(
+                            new CustomEvent('solicitud-cheques:datatable-loaded')
+                        );
+
+                        return rows;
                     }
 
             },
@@ -82,15 +105,16 @@ document.addEventListener(
                         'fecha',
 
                     width:
-                        '90px',
+                        '155px',
 
                     className:
-                        'text-center',
+                        'align-middle text-center',
 
                     render:
                         function (
                             data,
-                            type
+                            type,
+                            row
                         ) {
 
                             if (!data) {
@@ -103,29 +127,11 @@ document.addEventListener(
                                 || type === 'type'
                             ) {
 
-                                return data;
+                                return row.fecha_raw || '';
                             }
 
-
-                            return formatearFecha(
-                                data
-                            );
+                            return data;
                         }
-                },
-
-
-                /*
-                 * HORA
-                 */
-                {
-                    data:
-                        'hora',
-
-                    width:
-                        '80px',
-
-                    className:
-                        'text-center'
                 },
 
 
@@ -422,7 +428,7 @@ document.addEventListener(
                                 return `
                                     <button
                                         type="button"
-                                        class="btn btn-sm btn-primary btn-sign"
+                                        class="btn btn-sm p-0 border-0 bg-transparent text-primary btn-sign"
 
                                         data-id="${row.id}"
                                         data-opcion="1"
@@ -430,7 +436,7 @@ document.addEventListener(
                                         title="Firmar solicitud"
                                     >
                                         <i
-                                            class="ti ti-signature fs-5"
+                                            class="ti ti-writing text-primary fs-8"
                                         ></i>
                                     </button>
                                 `;
@@ -447,7 +453,7 @@ document.addEventListener(
                                 return `
                                     <button
                                         type="button"
-                                        class="btn btn-sm btn-warning btn-sign"
+                                        class="btn btn-sm p-0 border-0 bg-transparent text-primary btn-sign"
 
                                         data-id="${row.id}"
                                         data-opcion="2"
@@ -455,7 +461,7 @@ document.addEventListener(
                                         title="Firmar solicitud"
                                     >
                                         <i
-                                            class="ti ti-signature fs-5"
+                                            class="ti ti-writing text-primary fs-8"
                                         ></i>
                                     </button>
                                 `;
@@ -475,13 +481,14 @@ document.addEventListener(
                                 return `
                                     <button
                                         type="button"
-                                        class="btn btn-sm btn-light"
+                                        class="btn btn-sm p-0 border-0 bg-transparent text-primary"
                                         disabled
 
                                         title="Firmas completadas"
                                     >
                                         <i
-                                            class="ti ti-signature-off fs-5"
+                                            class="ti ti-writing text-primary fs-8"
+                                            style="opacity:.5;cursor:default;"
                                         ></i>
                                     </button>
                                 `;
@@ -574,41 +581,19 @@ document.addEventListener(
 );
 
 
-/*
- * 2025-12-19T06:00:00.000000Z
- *
- * ->
- *
- * 19/12/2025
- */
-function formatearFecha(value) {
+function actualizarBotonFirmarTodas() {
 
-    if (!value) {
-        return '';
+    const button = document.getElementById('btn-firmar-todas');
+    const count = document.getElementById('firmar-todas-count');
+    const total = (window.solicitudesPendientesAutorizacion || []).length;
+
+    if (!button || !count) {
+        return;
     }
 
-
-    const fecha =
-        String(value)
-            .substring(
-                0,
-                10
-            );
-
-
-    const partes =
-        fecha.split('-');
-
-
-    if (
-        partes.length !== 3
-    ) {
-
-        return value;
-    }
-
-
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    count.textContent = total > 0 ? String(total) : '';
+    button.classList.toggle('d-none', total < 2);
+    button.disabled = total < 2;
 }
 
 

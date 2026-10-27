@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Core\JsonResponse;
+use App\Core\Session;
 
 use App\Models\Usuario;
 use App\Models\Estacion;
@@ -22,23 +23,28 @@ class UsuarioController extends BaseController
             exit;
         }
 
-        $idestacion = isset($_GET['idEstacion'])
-            && is_numeric($_GET['idEstacion'])
-            ? (int) $_GET['idEstacion']
-            : null;
+        // Compatibilidad con enlaces antiguos: conserva el filtro y limpia la URL.
+        if (array_key_exists('idEstacion', $_GET)) {
+            $legacyStationId = $_GET['idEstacion'];
+            $selectedStationId = is_numeric($legacyStationId) && (int)$legacyStationId > 0
+                ? (int)$legacyStationId
+                : null;
 
-        /**
-         * Si llega una estación por GET,
-         * validamos que realmente exista.
-         */
-        if ($idestacion) {
-
-            $existe = Estacion::where('id', $idestacion)
-                ->exists();
-
-            if (!$existe) {
-                $idestacion = null;
+            if ($selectedStationId !== null
+                && !Estacion::where('id', $selectedStationId)->exists()) {
+                $selectedStationId = null;
             }
+
+            Session::set($this->filtroEstacionSessionKey(), $selectedStationId);
+            header('Location: /usuarios', true, 303);
+            exit;
+        }
+
+        $idestacion = Session::get($this->filtroEstacionSessionKey());
+        if ($idestacion !== null
+            && !Estacion::where('id', (int)$idestacion)->exists()) {
+            Session::set($this->filtroEstacionSessionKey(), null);
+            $idestacion = null;
         }
 
         /**
@@ -74,6 +80,8 @@ class UsuarioController extends BaseController
             'title' => $title,
 
             'idestacion' => $idestacion,
+
+            'pageTopControls' => 'usuarios-estaciones',
 
             'estaciones' => $estaciones,
 
@@ -119,10 +127,8 @@ class UsuarioController extends BaseController
 
         try {
 
-            $idestacion = isset($_GET['idestacion'])
-                && is_numeric($_GET['idestacion'])
-                ? (int) $_GET['idestacion']
-                : null;
+            $idestacion = Session::get($this->filtroEstacionSessionKey());
+            $idestacion = $idestacion !== null ? (int)$idestacion : null;
 
             $usuarios = Usuario::select([
                 'id',
@@ -192,6 +198,47 @@ class UsuarioController extends BaseController
                 'data' => []
             ]);
         }
+    }
+
+    /** Guarda el filtro de estación sin añadirlo a la URL del navegador. */
+    public function actualizarFiltroEstacion(): void
+    {
+        if (!$this->tieneAccesoUsuarios()) {
+            JsonResponse::custom([
+                'success' => false,
+                'message' => 'No autorizado.',
+            ], 403);
+            return;
+        }
+
+        $data = $this->requestData();
+        $valor = $data['idEstacion'] ?? $data['idestacion'] ?? $data['id_estacion'] ?? null;
+
+        if ($valor === null || $valor === '') {
+            Session::set($this->filtroEstacionSessionKey(), null);
+            JsonResponse::custom(['success' => true, 'idEstacion' => null]);
+            return;
+        }
+
+        if (!is_numeric($valor) || (int)$valor <= 0) {
+            JsonResponse::custom([
+                'success' => false,
+                'message' => 'La estación seleccionada no es válida.',
+            ], 422);
+            return;
+        }
+
+        $idEstacion = (int)$valor;
+        if (!Estacion::where('id', $idEstacion)->exists()) {
+            JsonResponse::custom([
+                'success' => false,
+                'message' => 'La estación seleccionada no existe.',
+            ], 422);
+            return;
+        }
+
+        Session::set($this->filtroEstacionSessionKey(), $idEstacion);
+        JsonResponse::custom(['success' => true, 'idEstacion' => $idEstacion]);
     }
 
 
@@ -728,6 +775,11 @@ class UsuarioController extends BaseController
                 25
             )
             ->exists();
+    }
+
+    private function filtroEstacionSessionKey(): string
+    {
+        return 'usuarios_filtro_estacion_' . (int)$this->userId();
     }
 
 

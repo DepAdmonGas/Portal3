@@ -284,6 +284,21 @@ return EmbarquesComentario::where('id_embarques', $idEmbarque)
 ->toArray();
 }
 
+public static function getComentarioResumen(int $idEmbarque): ?array
+{
+$embarque = Embarque::find($idEmbarque);
+if (!$embarque) {
+return null;
+}
+
+return [
+'id' => (int)$embarque->id,
+'fecha' => $embarque->fecha ? formatearFecha($embarque->fecha->format('Y-m-d')) : '',
+'embarque' => (string)($embarque->embarque ?? ''),
+'producto' => (string)($embarque->producto ?? ''),
+];
+}
+
 public static function storeComentario(int $idEmbarque, string $comentario): array
 {
 $usuario = Auth::user();

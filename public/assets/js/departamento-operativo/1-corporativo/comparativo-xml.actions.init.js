@@ -503,7 +503,6 @@ body: JSON.stringify(params)
 const data = await resp.json();
 this.guardandoComentario = false;
 if (data.success == 1) {
-/*window.alerts.success('Comentario agregado exitosamente');*/
 this.nuevoComentario = '';
 await this.cargarComentarios(this.mesActual);
 await this.cargarSatData(this.idEstacion, this.idYear);
@@ -543,9 +542,7 @@ body: JSON.stringify(params)
 .then(r => r.json())
 .then(data => {
 window.loader.hide();
-if (data.success == 1) {
-window.alerts.success('Comentario guardado exitosamente.');
-} else {
+if (data.success != 1) {
 window.alerts.error('Error al guardar el comentario');
 }
 })

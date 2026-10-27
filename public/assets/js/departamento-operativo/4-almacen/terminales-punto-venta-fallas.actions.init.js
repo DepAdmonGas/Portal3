@@ -36,6 +36,7 @@ document.addEventListener('alpine:init', () => {
         anexos: [],
         comentarios: [],
         comentarioId: 0,
+        detalleComentarioFalla: null,
 
         docs: { cotizacion: null, factura: null },
         formAnexo: { descripcion: '', archivo: null },
@@ -529,6 +530,7 @@ document.addEventListener('alpine:init', () => {
 
         async abrirComentarios(id) {
             this.comentarioId = id;
+            this.detalleComentarioFalla = null;
             this.comentarios = [];
             this.formComentario = '';
             this.erroresComentario = false;
@@ -542,6 +544,7 @@ document.addEventListener('alpine:init', () => {
 
                 if (resp.data && resp.data.success) {
                     this.comentarios = resp.data.data || [];
+                    this.detalleComentarioFalla = resp.data.detalle || null;
                 } else {
                     this.notify('error', (resp.data && resp.data.message) || 'No se pudieron obtener los comentarios.');
                 }
@@ -578,7 +581,6 @@ document.addEventListener('alpine:init', () => {
                 });
 
                 if (resp.data && resp.data.success) {
-                    this.notify('success', resp.data.message);
                     this.formComentario = '';
                     await this.cargarComentarios();
                     this.reloadTable();
@@ -598,6 +600,7 @@ document.addEventListener('alpine:init', () => {
                 const resp = await axios.post(this.BASE_URL + '/comentarios', { id: this.comentarioId });
                 if (resp.data && resp.data.success) {
                     this.comentarios = resp.data.data || [];
+                    this.detalleComentarioFalla = resp.data.detalle || this.detalleComentarioFalla;
                 }
             } catch (e) {
                 console.error(e);

@@ -2,54 +2,13 @@
     id="container"
     x-data="{
         ...actions(),
-        ...corteDiario()
+        ...corteDiario(<?= json_encode($idEstacion ? (int) $idEstacion : null) ?>)
     }">
 
     <!-- =====================================================
     CABECERA / FILTRO
     ====================================================== -->
-    <div
-        class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
-
-        <div
-            class="w-100"
-            style="max-width: 420px;">
-
-            <label
-                for="filtroEstacion"
-                class="form-label fw-semibold">
-                Estación
-            </label>
-
-            <select
-                id="filtroEstacion"
-                class="form-select"
-                x-model="idEstacion"
-                @change="cambiarEstacion()">
-
-                <option value="">
-                    Selecciona una estación
-                </option>
-
-                <?php foreach ($estaciones as $estacion): ?>
-
-                    <option
-                        value="<?= (int) $estacion->id ?>">
-                        <?= htmlspecialchars(
-                            $estacion->razonsocial
-                                ?: $estacion->nombre,
-                            ENT_QUOTES,
-                            'UTF-8'
-                        ) ?>
-                    </option>
-
-                <?php endforeach; ?>
-
-            </select>
-
-        </div>
-
-
+    <div class="d-flex justify-content-end mb-4">
         <div
             x-show="idEstacion"
             x-cloak>
@@ -75,39 +34,11 @@
     SIN ESTACIÓN
     ====================================================== -->
     <div
-        class="card"
+        id="corte-diario-empty-message"
+        class="alert alert-secondary border-0 text-center text-muted py-4 mt-4"
         x-show="!idEstacion"
         x-cloak>
-
-        <div class="card-body">
-
-            <div
-                class="text-center py-5">
-
-                <div
-                    class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                    style="
-                        width: 64px;
-                        height: 64px;
-                    ">
-
-                    <i
-                        class="ti ti-gas-station fs-7"></i>
-
-                </div>
-
-                <h5 class="fw-semibold">
-                    Selecciona una estación
-                </h5>
-
-                <p class="text-muted mb-0">
-                    Selecciona una estación para consultar sus cortes diarios.
-                </p>
-
-            </div>
-
-        </div>
-
+        Debes de seleccionar una estación del menú superior para poder visualizar la información del Corte Diario.
     </div>
 
 

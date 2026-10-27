@@ -212,7 +212,8 @@ header('Content-Type: application/json; charset=utf-8');
 $idFactura = (int)($_GET['id'] ?? 0);
 if (!$idFactura) { echo json_encode(['success' => false, 'data' => []]); exit; }
 $data = FacturaMonederoService::getComentarios($idFactura);
-echo json_encode(['success' => true, 'data' => $data]);
+$detalle = FacturaMonederoService::getComentarioDetalle($idFactura);
+echo json_encode(['success' => true, 'data' => $data, 'detalle' => $detalle]);
 exit;
 }
 

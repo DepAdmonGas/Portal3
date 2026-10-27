@@ -217,7 +217,6 @@ function diaDobleComponent() {
                     }
                     self.scrollChatToBottom();
                     if (typeof diaDobleReload === 'function') diaDobleReload();
-                    Notify.success('Comentario agregado.');
                 } else {
                     Notify.error(json.message || 'Error al agregar comentario.');
                 }

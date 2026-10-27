@@ -79,6 +79,14 @@ document.addEventListener('alpine:init', () => {
                         );
                 }
 
+                const stationSelector = document.getElementById('filtroEstacion');
+                if (stationSelector) {
+                    stationSelector.addEventListener('change', () => {
+                        this.filtroEstacion = stationSelector.value;
+                        this.cambiarEstacion();
+                    });
+                }
+
                 this.$nextTick(() => {
 
                     this.inicializarEventosTabla();
@@ -93,33 +101,35 @@ document.addEventListener('alpine:init', () => {
              * ----------------------------------------------------
              */
             cambiarEstacion() {
+                const selector = document.getElementById('filtroEstacion');
+                if (selector) selector.disabled = true;
 
-                const url =
-                    new URL(
-                        window.location.href
-                    );
+                axios.post('/usuarios/filtro-estacion', {
+                    idEstacion: this.filtroEstacion || null
+                }).then(({ data }) => {
+                    if (!data?.success) {
+                        throw new Error(data?.message || 'No se pudo guardar la estación.');
+                    }
 
-                if (this.filtroEstacion) {
+                    const badge = document.getElementById('filtroEstacionBadge');
+                    if (badge) {
+                        if (this.filtroEstacion && selector) {
+                            badge.textContent = selector.options[selector.selectedIndex].textContent.trim();
+                            badge.style.display = '';
+                        } else {
+                            badge.textContent = '';
+                            badge.style.display = 'none';
+                        }
+                    }
 
-                    url.searchParams.set(
-                        'idEstacion',
-                        this.filtroEstacion
-                    );
-
-                } else {
-
-                    url.searchParams.delete(
-                        'idEstacion'
-                    );
-                }
-
-                window.history.replaceState(
-                    {},
-                    '',
-                    url
-                );
-
-                this.recargarTabla();
+                    this.recargarTabla();
+                }).catch(error => {
+                    console.error(error);
+                    this.notify('error', error.response?.data?.message || error.message || 'No se pudo cambiar la estación.');
+                    window.location.reload();
+                }).finally(() => {
+                    if (selector) selector.disabled = false;
+                });
             },
 
 

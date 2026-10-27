@@ -224,7 +224,8 @@ class ControlDocumentosPersonalController extends BaseController
             return;
         }
         $data = ControlDocumentosPersonalService::getComentarios($idPersonal);
-        echo json_encode(['success' => true, 'data' => $data]);
+        $detalle = ControlDocumentosPersonalService::getComentarioResumen($idPersonal);
+        echo json_encode(['success' => true, 'data' => $data, 'detalle' => $detalle]);
         return;
     }
 

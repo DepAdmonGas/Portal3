@@ -25,7 +25,7 @@
                             <div class="p-4 flex-grow-1">
                                 <h5 class="text-white mb-0">Estaciones</h5>
                             </div>
-                            <!-- 
+                            <!--
 <div class="align-self-center me-4 ms-auto text-end">
 <h4 class="text-white mb-0"><i class="ti ti-arrow-right fs-8"></i></h4>
 </div>
@@ -45,7 +45,7 @@
                             <div class="p-4 flex-grow-1">
                                 <h5 class="text-white mb-0">Dirección de Operaciones</h5>
                             </div>
-                            <!-- 
+                            <!--
 <div class="align-self-center me-4 ms-auto text-end">
 <h4 class="text-white mb-0"><i class="ti ti-arrow-right fs-8"></i></h4>
 </div>
@@ -186,13 +186,14 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
 
+        <?php \App\Core\View::renderPartial('partials/_chat-request-summary.php', ['contextoComentarioExpression' => 'comentarioReporteId']); ?>
         <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
             <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height: 0;">
                 <div class="chat-box-inner p-3 flex-grow-1 overflow-auto"
                     style="min-height: 0; overscroll-behavior: contain;"
                     x-ref="chatContainer">
 
-                    <template x-if="comentarios.length === 0 && !cargandoComentarios">
+                    <template x-if="comentarios.length === 0 && !cargandoComentarios && !guardandoComentario">
                         <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 380px;">
                             <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
                             <p class="text-muted mb-0 fs-5">Sin comentarios</p>
@@ -207,7 +208,7 @@
                     </template>
 
                     <div class="chat-list active-chat p-2">
-                        <template x-for="c in comentarios" :key="c.id">
+                <template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
                             <div class="d-flex mb-3"
                                 :class="c.esMio ? 'justify-content-end' : 'justify-content-start'">
                                 <template x-if="!c.esMio">
@@ -233,9 +234,15 @@
                             </div>
                         </template>
                     </div>
-                </div>
+
+</div>
             </div>
         </div>
+        <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+
+
+
+
 
         <div class="px-3 py-3 border-top bg-white flex-shrink-0">
             <div class="d-flex align-items-center gap-2">

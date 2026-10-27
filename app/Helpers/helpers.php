@@ -13,6 +13,8 @@ if (!function_exists('base_url')) {
 if (!function_exists('asset')) {
     function asset(string $path): string
     {
+        static $assetVersions = [];
+
         $assetOrigin = '';
         $base = base_url();
         if ($base !== '') {
@@ -27,7 +29,25 @@ if (!function_exists('asset')) {
             }
         }
 
-        return $assetOrigin . '/assets/' . ltrim($path, '/');
+        $assetPath = (string) (parse_url($path, PHP_URL_PATH) ?: $path);
+        $assetPath = ltrim($assetPath, '/');
+        $assetFile = PUBLIC_PATH . '/assets/' . $assetPath;
+        $query = (string) (parse_url($path, PHP_URL_QUERY) ?? '');
+
+        if (is_file($assetFile)) {
+            if (!isset($assetVersions[$assetFile])) {
+                $assetVersions[$assetFile] = (string) filemtime($assetFile);
+            }
+
+            $queryParams = [];
+            if ($query !== '') {
+                parse_str($query, $queryParams);
+            }
+            $queryParams['v'] = $assetVersions[$assetFile];
+            $query = http_build_query($queryParams, '', '&', PHP_QUERY_RFC3986);
+        }
+
+        return $assetOrigin . '/assets/' . $assetPath . ($query !== '' ? '?' . $query : '');
     }
 }
 

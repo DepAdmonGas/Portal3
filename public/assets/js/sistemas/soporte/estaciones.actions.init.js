@@ -348,11 +348,13 @@ document.addEventListener('alpine:init', () => {
         /* Comentarios                                                     */
         /* -------------------------------------------------------------- */
 
-        async verComentarios(idTicket) {
-            this.comentariosData = null;
-            this.comentariosCargados = false;
-            this.nuevoComentario = '';
-            this.mostrarOffcanvas('modalComentarios');
+        async verComentarios(idTicket, conservarContenido = false) {
+            if (!conservarContenido) {
+                this.comentariosData = null;
+                this.comentariosCargados = false;
+                this.nuevoComentario = '';
+                this.mostrarOffcanvas('modalComentarios');
+            }
 
             try {
                 const resp = await axios.get(this.endpoint + '/comentarios', { params: { id_ticket: idTicket } });
@@ -393,12 +395,14 @@ document.addEventListener('alpine:init', () => {
             try {
                 const resp = await this.createAction({
                     url: this.endpoint + '/guardar-comentario',
-                    data: { id_ticket: idTicket, comentario: this.nuevoComentario }
+                    data: { id_ticket: idTicket, comentario: this.nuevoComentario },
+                    notifySuccess: false
                 });
 
                 if (resp && resp.success) {
                     this.nuevoComentario = '';
-                    await this.verComentarios(idTicket);
+                    if (resp.data) this.comentariosData = resp.data;
+                    this.$nextTick(() => this.scrollComentariosAlFondo());
                     this.cargarTabla();
                 }
             } catch (e) {

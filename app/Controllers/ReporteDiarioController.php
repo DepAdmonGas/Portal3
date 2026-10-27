@@ -196,6 +196,7 @@ class ReporteDiarioController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
+                '/js/core/chat-comments.js?v=' . time(),
                 '/js/reportediario/reportemes.action.init.js?v=' . time(),
             ],
             'help' => false

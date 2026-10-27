@@ -793,10 +793,6 @@ class SoporteActividadesService
             return ['success' => false, 'message' => 'El comentario es obligatorio.'];
         }
 
-        if (!SoporteService::puedeComentarTicket($ticket)) {
-            return ['success' => false, 'message' => 'El ticket ya no admite comentarios.'];
-        }
-
         try {
             SoporteComentario::create([
                 'id_ticket' => $idTicket,
@@ -811,7 +807,11 @@ class SoporteActividadesService
         self::activarModulo();
         SoporteService::notificarComentario($ticket, $comentario);
 
-        return ['success' => true, 'message' => 'Comentario guardado.'];
+        return [
+            'success' => true,
+            'message' => 'Comentario guardado.',
+            'data' => SoporteService::comentariosDeTicket($ticket),
+        ];
     }
 
     /** Cancela la actividad. */

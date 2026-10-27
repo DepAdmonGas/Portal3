@@ -371,6 +371,21 @@ $data[] = [
 return $data;
 }
 
+public static function getComentarioResumen(int $idPersonal): ?array
+{
+$personal = RhPersonal::find($idPersonal);
+if (!$personal) return null;
+
+$puesto = RhPuestos::find($personal->puesto);
+
+return [
+'id' => (int)$personal->id,
+'nombre_completo' => (string)($personal->nombre_completo ?? ''),
+'puesto' => $puesto ? (string)$puesto->puesto : '',
+'sd' => (float)($personal->sd ?? 0),
+];
+}
+
 public static function addComentario(int $idPersonal, string $comentario): bool
 {
 $sessionUsuario = Session::get('usuario');

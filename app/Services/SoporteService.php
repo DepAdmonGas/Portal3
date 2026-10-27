@@ -419,19 +419,27 @@ class SoporteService
     public static function comentariosDeTicket(Soporte $ticket): array
     {
         $idTicket = (int)$ticket->id_ticket;
+        $idUsuarioActual = self::idUsuario();
 
-        $comentarios = SoporteComentario::where('id_ticket', $idTicket)
+        $filas = SoporteComentario::where('id_ticket', $idTicket)
             ->orderBy('id', 'desc')
-            ->get()
-            ->map(function (SoporteComentario $c) {
+            ->get();
+
+        $idsPersonal = $filas->pluck('id_personal')->map(static fn ($id): int => (int)$id)->unique()->values();
+        $nombresPersonal = $idsPersonal->isEmpty()
+            ? collect()
+            : Usuario::whereIn('id', $idsPersonal)->pluck('nombre', 'id');
+
+        $comentarios = $filas->map(function (SoporteComentario $c) use ($idUsuarioActual, $nombresPersonal) {
                 $idPersonal = (int)$c->id_personal;
+                $nombre = $nombresPersonal->get($idPersonal);
 
                 return [
                     'id' => (int)$c->id,
                     'comentario' => (string)$c->comentario,
                     'id_personal' => $idPersonal,
-                    'nombre' => self::nombreUsuario($idPersonal),
-                    'es_propio' => $idPersonal === self::idUsuario(),
+                    'nombre' => $nombre !== null && $nombre !== '' ? (string)$nombre : 'Sistemas',
+                    'es_propio' => $idPersonal === $idUsuarioActual,
                     'fecha' => self::formatearFechaHora($c->fecha_hora),
                 ];
             })
@@ -442,10 +450,13 @@ class SoporteService
                 'id_ticket' => $idTicket,
                 'descripcion' => (string)$ticket->descripcion,
                 'prioridad' => (string)$ticket->prioridad,
+                'responsable' => (int)$ticket->id_personal_soporte > 0
+                    ? self::nombreUsuario((int)$ticket->id_personal_soporte)
+                    : '',
                 'porcentaje' => (int)$ticket->porcentaje,
             ],
             'comentarios' => $comentarios,
-            'puede_comentar' => self::puedeComentar($ticket),
+            'puede_comentar' => true,
         ];
     }
 
@@ -475,11 +486,6 @@ class SoporteService
             return ['success' => false, 'message' => 'El comentario es obligatorio.'];
         }
 
-        /*
-        if (!self::puedeComentar($ticket)) {
-            return ['success' => false, 'message' => 'El ticket ya no admite comentarios.'];
-        }
-            */
         try {
             SoporteComentario::create([
                 'id_ticket' => $idTicket,
@@ -494,7 +500,11 @@ class SoporteService
             self::notificarComentario($ticket, $comentario);
         }
 
-        return ['success' => true, 'message' => 'Comentario guardado.'];
+        return [
+            'success' => true,
+            'message' => 'Comentario guardado.',
+            'data' => self::comentariosDeTicket($ticket),
+        ];
     }
 
     /* ------------------------------------------------------------------ */
@@ -1561,35 +1571,6 @@ class SoporteService
         }
 
         return $query->first();
-    }
-
-    private static function puedeComentar(Soporte $ticket): bool
-    {
-        return self::puedeComentarTicket($ticket);
-    }
-
-    /**
-     * Regla heredada: el ticket admite comentarios mientras no esté
-     * finalizado/cancelado, o dentro de los 3 días siguientes al término.
-     */
-    public static function puedeComentarTicket(Soporte $ticket): bool
-    {
-        $estado = (int)$ticket->estado;
-
-        // Mientras el ticket no esté finalizado/cancelado se puede comentar.
-        if ($estado !== self::ESTADO_FINALIZADO && $estado !== self::ESTADO_CANCELADO) {
-            return true;
-        }
-
-        $fechaTermino = (string)$ticket->fecha_termino_real;
-
-        if ($fechaTermino === '' || str_starts_with($fechaTermino, '0000-00-00')) {
-            return false;
-        }
-
-        $cierre = strtotime(date('Y-m-d', strtotime($fechaTermino . ' + 3 days')));
-
-        return $cierre >= strtotime(date('Y-m-d'));
     }
 
     private static function puedeFinalizarSoporte(Soporte $ticket): bool

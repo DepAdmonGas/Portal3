@@ -303,15 +303,61 @@ para cerrar tu solicitud.
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
 
-        <!-- Descripción del ticket -->
-        <div class="px-3 py-2 border-bottom bg-light flex-shrink-0" x-show="comentariosData">
-            <div class="d-flex justify-content-between flex-wrap gap-2 mb-1 small">
-                <div><b>Prioridad:</b> <span x-text="comentariosData ? valorCampo(comentariosData.ticket.prioridad) : 'S/I'"></span></div>
-                <div><b>Porcentaje:</b> <span x-text="comentariosData ? valorCampo(comentariosData.ticket.porcentaje) : 'S/I'"></span> %</div>
-            </div>
-            <div class="small">
-                <b>Descripción:</b>
-                <span x-text="comentariosData ? valorCampo(comentariosData.ticket.descripcion) : 'S/I'"></span>
+        <style>
+            #modalComentarios .actividad-ticket-field {
+                min-height: 62px;
+                background: var(--bs-body-bg);
+                font-size: .82rem;
+            }
+        </style>
+        <div class="px-3 pt-3 pb-3 border-bottom flex-shrink-0"
+             x-show="comentariosData && comentariosData.ticket"
+             x-cloak>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-hash fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0"># ticket:</div>
+                            <div x-text="comentariosData && comentariosData.ticket ? comentariosData.ticket.id_ticket : ''"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-warning-subtle text-warning flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-bolt fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Prioridad:</div>
+                            <div x-text="comentariosData && comentariosData.ticket && comentariosData.ticket.prioridad ? comentariosData.ticket.prioridad : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-info-subtle text-info flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-user-cog fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Responsable:</div>
+                            <div x-text="comentariosData && comentariosData.ticket && comentariosData.ticket.responsable ? comentariosData.ticket.responsable : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-start gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-success-subtle text-success flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-align-left fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1">
+                            <div class="form-label small mb-0">Descripción:</div>
+                            <div style="white-space:pre-wrap;" x-text="comentariosData && comentariosData.ticket ? valorCampo(comentariosData.ticket.descripcion) : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -327,7 +373,7 @@ para cerrar tu solicitud.
                         </div>
                     </template>
 
-                    <template x-if="comentariosCargados && comentariosData && comentariosData.comentarios.length === 0">
+                    <template x-if="comentariosCargados && comentariosData && comentariosData.comentarios.length === 0 && !guardandoComentario">
                         <div class="d-flex flex-column align-items-center justify-content-center text-center"
                              style="min-height: 380px;">
                             <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
@@ -336,7 +382,7 @@ para cerrar tu solicitud.
                     </template>
 
                     <div class="chat-list active-chat p-2">
-                        <template x-for="c in (comentariosData ? comentariosData.comentarios : [])" :key="c.id">
+            <template x-for="c in ordenarComentariosChat(comentariosData ? comentariosData.comentarios : [])" :key="c.id">
                             <div class="d-flex mb-3"
                                  :class="c.es_propio ? 'justify-content-end' : 'justify-content-start'">
 
@@ -368,9 +414,15 @@ para cerrar tu solicitud.
                             </div>
                         </template>
                     </div>
-                </div>
+
+</div>
             </div>
         </div>
+        <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+
+
+
+
 
         <div class="px-3 py-3 border-top bg-white flex-shrink-0"
              x-show="comentariosData && comentariosData.puede_comentar">

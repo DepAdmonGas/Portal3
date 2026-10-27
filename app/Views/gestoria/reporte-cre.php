@@ -295,6 +295,7 @@ target="_blank"
         <button type="button" class="btn-close btn-close-white flex-shrink-0" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
     </div>
 
+    <?php \App\Core\View::renderPartial('partials/_cre-comment-summary'); ?>
     <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
         <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height: 0; overflow: hidden;">
             <div class="chat-box-inner p-3 flex-grow-1" style="min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;" x-ref="chatCre">
@@ -306,7 +307,7 @@ target="_blank"
                     </div>
                 </template>
 
-                <template x-if="!cargandoComentarios && comentarios.length === 0">
+                <template x-if="!cargandoComentarios && comentarios.length === 0 && !guardandoComentario">
                     <div class="d-flex flex-column align-items-center justify-content-center text-center h-100">
                         <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
                         <p class="text-muted mb-0 fs-5">Sin comentarios</p>
@@ -315,7 +316,7 @@ target="_blank"
 
                 <template x-if="!cargandoComentarios">
                     <div class="chat-list active-chat p-2">
-                        <template x-for="c in comentarios" :key="c.id">
+            <template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
                             <div class="d-flex mb-3" :class="c.es_propio ? 'justify-content-end' : 'justify-content-start'">
                                 <template x-if="!c.es_propio">
                                     <div class="d-flex gap-3 align-items-start" style="max-width: 88%;">
@@ -346,8 +347,11 @@ target="_blank"
                     </div>
                 </template>
 
-            </div>
+
+</div>
         </div>
+
+    <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
 
 <div class="px-3 py-3 border-top bg-white flex-shrink-0">
 <div class="d-flex align-items-center gap-2">

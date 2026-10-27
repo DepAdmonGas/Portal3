@@ -264,7 +264,8 @@ header('Content-Type: application/json; charset=utf-8');
 $idAclaracion = (int)($_GET['id'] ?? 0);
 if (!$idAclaracion) { echo json_encode(['success' => false, 'data' => []]); exit; }
 $data = AclaracionVoucherService::getComentarios($idAclaracion);
-echo json_encode(['success' => true, 'data' => $data]);
+$detalle = AclaracionVoucherService::getComentarioDetalle($idAclaracion);
+echo json_encode(['success' => true, 'data' => $data, 'detalle' => $detalle]);
 exit;
 }
 

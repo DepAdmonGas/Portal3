@@ -21,6 +21,7 @@ unidad: '',
 
 comentarios: [],
 comentarioEmbarqueId: null,
+detalleComentarioEmbarque: null,
 nuevoComentario: '',
 guardandoComentario: false,
 puedeAgregarComentarios: false,
@@ -261,6 +262,7 @@ if (el) el.scrollTop = el.scrollHeight;
 
 async abrirComentarios(id) {
 this.comentarioEmbarqueId = id;
+this.detalleComentarioEmbarque = null;
 this.nuevoComentario = '';
 this.comentarios = [];
 
@@ -268,6 +270,7 @@ try {
 const resp = await fetch('/departamento-operativo/embarques/comentarios?id_embarque=' + id);
 const json = await resp.json();
 if (json.success) {
+this.detalleComentarioEmbarque = json.detalle || null;
 this.comentarios = (json.comentarios || []).map(c => ({
 ...c,
 esMio: c.id_usuario === this.idUsuario,
@@ -306,6 +309,7 @@ const json = await resp.json();
                     const resp2 = await fetch('/departamento-operativo/embarques/comentarios?id_embarque=' + this.comentarioEmbarqueId);
                     const json2 = await resp2.json();
                     if (json2.success) {
+                        this.detalleComentarioEmbarque = json2.detalle || this.detalleComentarioEmbarque;
                         this.comentarios = (json2.comentarios || []).map(c => ({
                             ...c,
                             esMio: c.id_usuario === this.idUsuario,
@@ -327,7 +331,6 @@ const json = await resp.json();
                             }
                         });
                     }
-                    if (window.Notify) Notify.success('Comentario agregado');
                 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
 }

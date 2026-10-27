@@ -147,7 +147,10 @@ class ListaNegraController extends BaseController
         }
 
         $data = ListaNegraService::getComentarios($id);
-        JsonResponse::success('OK', ['data' => $data]);
+        JsonResponse::success('OK', [
+            'data' => $data,
+            'detalle' => ListaNegraService::getComentarioResumen($id),
+        ]);
     }
 
     public function addComentario()

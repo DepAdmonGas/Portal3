@@ -178,6 +178,7 @@ class AlmacenMaquinariaEquiposController extends BaseController
 
         JsonResponse::custom([
             'success'    => true,
+            'detalle'    => Service::getDetalle($id),
             'comentarios'=> Service::getComentarios($id),
         ]);
     }

@@ -90,7 +90,6 @@ const json = await resp.json();
 if (json.success) {
 this.nuevoComentario = '';
 await this.recargarComentarios();
-if (window.Notify) Notify.success(json.message || 'Comentario agregado.');
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario.');
 }

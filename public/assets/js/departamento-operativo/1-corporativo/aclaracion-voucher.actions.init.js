@@ -89,6 +89,7 @@ comentarios: [],
 nuevoComentario: '',
 guardandoComentario: false,
 comentarioSolicitudId: null,
+detalleComentario: null,
 
 anexos: [],
 anexoForm: { descripcion: '' },
@@ -284,12 +285,14 @@ if (el) el.scrollTop = el.scrollHeight;
 
 async abrirComentarios(id) {
 this.comentarioSolicitudId = id;
+this.detalleComentario = null;
 this.nuevoComentario = '';
 this.comentarios = [];
 try {
 var resp = await fetch('/departamento-operativo/corporativo/aclaracion-voucher/get-comentarios?id=' + id);
 var json = await resp.json();
 if (json.success) {
+this.detalleComentario = json.detalle || null;
 this.comentarios = json.data || [];
 this.scrollChatToBottom();
 }
@@ -316,6 +319,7 @@ this.nuevoComentario = '';
 var resp2 = await fetch('/departamento-operativo/corporativo/aclaracion-voucher/get-comentarios?id=' + this.comentarioSolicitudId);
 var json2 = await resp2.json();
 if (json2.success) {
+this.detalleComentario = json2.detalle || this.detalleComentario;
 this.comentarios = json2.data || [];
 this.scrollChatToBottom();
 }
@@ -332,7 +336,6 @@ return false;
 }
 });
 }
-if (window.Notify) /*Notify.success('Comentario agregado')*/;
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
 }

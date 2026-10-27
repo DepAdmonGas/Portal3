@@ -1429,6 +1429,8 @@ $detalle =
 '📋 <b>Solicitante:</b> ' . ($solicitud->solicitante ?: 'N/A') . PHP_EOL .
 '🔖 <b>No. de factura:</b> ' . ($solicitud->no_factura ?: 'N/A') . PHP_EOL . PHP_EOL .
 
+'🔔 Ya puedes realizar la firma de autorización de esta solicitud.' . PHP_EOL . PHP_EOL .
+
 '👤 <b>Responsable:</b> ' . $nombreFirmo . PHP_EOL .
 $nombreES_Token;
 
@@ -1462,6 +1464,89 @@ return ['success' => true, 'message' => 'Solicitud firmada exitosamente.'];
 } catch (\Exception $e) {
 return ['success' => false, 'message' => 'Error al firmar: ' . $e->getMessage()];
 }
+}
+
+/**
+ * Notifica la autorización simulada por el usuario 2 desde el módulo de Sistemas.
+ * Se invoca solo después de que la firma y el cambio de estatus quedaron guardados.
+ */
+public static function notificarAutorizacionDesdeSistemas(int $idSolicitud, int $idFirmante): void
+{
+    try {
+        $solicitud = SolicitudCheque::find($idSolicitud);
+        if (!$solicitud || (int) $solicitud->status !== 2) {
+            return;
+        }
+
+        $usuario = Usuario::find($idFirmante);
+        $nombreFirmante = $usuario?->nombre ?? 'Desconocido';
+        $idEstacion = (int) $solicitud->id_estacion;
+        $idDepto = (int) ($solicitud->depto ?? 0);
+        $nombreMes = nombremes((int) $solicitud->id_mes);
+
+        if ($idEstacion === self::ESTACION_GESTORIA) {
+            $nombreDepartamento = self::DEPARTMENTS[$idDepto] ?? 'Desconocido';
+            $nombreContexto = '🏢 Departamento: ' . $nombreDepartamento;
+        } else {
+            $estacion = Estacion::find($idEstacion);
+            $nombreContexto = '⛽ Estación: ' . ($estacion?->nombre ?? 'Desconocida');
+        }
+
+        $mensaje =
+            '✅ Se ha <b>autorizado</b> una <b>Solicitud de Cheque</b>, correspondiente al periodo de <b>'
+            . $nombreMes . ' ' . $solicitud->id_year . '</b>:' . PHP_EOL . PHP_EOL .
+            '📋 <b>No. de Solicitud:</b> #' . $idSolicitud . PHP_EOL .
+            '🗓️ <b>Fecha de solicitud:</b> ' . formatearFecha($solicitud->fecha) . PHP_EOL .
+            '🏦 <b>Beneficiario:</b> ' . ($solicitud->beneficiario ?: 'N/A') . PHP_EOL .
+            '🗒 <b>Concepto:</b> ' . ($solicitud->concepto ?: 'N/A') . PHP_EOL .
+            '💰 <b>Monto:</b> $' . number_format((float) $solicitud->monto, 2) . ' ' . ($solicitud->moneda ?: '') . PHP_EOL .
+            '📋 <b>Solicitante:</b> ' . ($solicitud->solicitante ?: 'N/A') . PHP_EOL .
+            '🔖 <b>No. de factura:</b> ' . ($solicitud->no_factura ?: 'N/A') . PHP_EOL . PHP_EOL .
+            '👤 <b>Responsable:</b> ' . $nombreFirmante . PHP_EOL .
+            $nombreContexto;
+
+        $telegram = new TelegramService();
+        $destinatarios = [];
+
+        if ($idEstacion === self::ESTACION_GESTORIA) {
+            if ($idDepto === self::DEPARTAMENTO_GESTORIA) {
+                $destinatarios = $telegram->getUserIdsGestoria($idFirmante);
+                $telegram->sendToken(30, $mensaje);
+            } else {
+                $destinatarios = Usuario::query()
+                    ->where('id_gas', self::ESTACION_GESTORIA)
+                    ->where('id_puesto', $idDepto)
+                    ->where('estatus', 0)
+                    ->where('id', '!=', $idFirmante)
+                    ->pluck('id')
+                    ->map(static fn($id): int => (int) $id)
+                    ->all();
+                $telegram->sendToken(19, $mensaje);
+            }
+        } else {
+            $destinatarios = $telegram->getUserIdsByStation($idEstacion, $idFirmante);
+            $telegram->sendToken(19, $mensaje);
+
+            if (in_array($idEstacion, [6, 7], true)) {
+                $destinatarios = array_merge(
+                    $destinatarios,
+                    $telegram->getUserIdsComercializadora($idFirmante)
+                );
+            } elseif (in_array($idEstacion, [1, 2, 3, 4, 5, 14], true)) {
+                $destinatarios = array_merge(
+                    $destinatarios,
+                    $telegram->getUserIdsContabilidad($idFirmante)
+                );
+            }
+        }
+
+        $destinatarios = array_values(array_unique(array_map('intval', $destinatarios)));
+        if ($destinatarios !== []) {
+            $telegram->sendMessageToMultiple($destinatarios, $mensaje);
+        }
+    } catch (\Throwable $e) {
+        error_log('Error en notificarAutorizacionDesdeSistemas: ' . $e->getMessage());
+    }
 }
 
 public static function getTelcel(int $idSolicitud): array

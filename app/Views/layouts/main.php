@@ -241,10 +241,15 @@
             <div class="body-wrapper">
                 <div class="container-fluid">
 
-                    <div class="d-flex align-items-center">
-                        <?php include __DIR__ . '/../partials/_global-badge.php'; ?>
+                    <?php if (($pageTopControls ?? '') !== 'usuarios-estaciones'): ?>
+                        <div class="d-flex align-items-center">
+                            <?php include __DIR__ . '/../partials/_global-badge.php'; ?>
+                        </div>
+                    <?php endif; ?>
 
-                    </div>
+                    <?php if (($pageTopControls ?? '') === 'usuarios-estaciones'): ?>
+                        <?php include __DIR__ . '/../partials/_usuarios-estacion-selector.php'; ?>
+                    <?php endif; ?>
 
                     <?= $moduleStationSelector ?? '' ?>
 
@@ -278,6 +283,7 @@
     <script src="<?= asset('js/highlights/highlight.min.js') ?>"></script>
     <script src="<?= asset('libs/sweetalert2/dist/sweetalert2.min.js') ?>"></script>
     <script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script>
+    <script src="<?= asset('js/core/chat-comments.js?v=1.2') ?>"></script>
     <script src="<?= asset('js/core/actions.alpine.js?v=1.2') ?>"></script>
     <script src="<?= asset('js/core/inline-handler-remediation.js') ?>"></script>
     <script src="<?= asset('js/core/main-response-policy.js') ?>"></script>

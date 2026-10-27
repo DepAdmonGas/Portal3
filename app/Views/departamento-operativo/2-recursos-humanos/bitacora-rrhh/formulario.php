@@ -36,7 +36,7 @@
         <label class="form-label">Fecha y hora:</label>
         <div><?= htmlspecialchars($detalle['fecha'] ?? 'Sin información', ENT_QUOTES, 'UTF-8') ?></div>
     </div>
-    
+
     <div class="col-md-4 mb-1">
         <label class="form-label">Nombre del solicitante:</label>
         <div><?= htmlspecialchars($detalle['nombre_solicitante'] ?? 'Sin información', ENT_QUOTES, 'UTF-8') ?></div>
@@ -138,7 +138,7 @@
                 <div class="chat-box-inner p-3" style="max-height: 420px; overflow-y: auto;" x-ref="chatContainer">
 
                     <!-- SIN COMENTARIOS -->
-                    <template x-if="comentarios.length === 0">
+                    <template x-if="comentarios.length === 0 && !guardandoComentario">
                         <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 380px;">
                             <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
                             <p class="text-muted mb-0 fs-5">No se encontraron comentarios.</p>
@@ -147,7 +147,7 @@
 
                     <!-- COMENTARIOS -->
                     <div class="chat-list active-chat p-2">
-                        <template x-for="c in comentarios" :key="c.id">
+                <template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
                             <div class="d-flex mb-4" :class="c.esPropio ? 'justify-content-end' : 'justify-content-start'">
 
                                 <!-- MENSAJES OTROS -->
@@ -179,9 +179,11 @@
                             </div>
                         </template>
                     </div>
-                </div>
+                                <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+</div>
 
                 <!-- FOOTER -->
+
                 <div class="px-3 py-3 border-top chat-send-message-footer bg-white">
                     <div class="d-flex align-items-center gap-2">
                         <div class="flex-grow-1">

@@ -25,6 +25,7 @@ document.addEventListener('alpine:init', () => {
         guardandoEdicion: false,
 
         comentarioIdActual: 0,
+        detalleComentarioNomina: null,
         comentarios: [],
         nuevoComentario: '',
         guardandoComentario: false,
@@ -446,6 +447,7 @@ document.addEventListener('alpine:init', () => {
 
         async abrirModalComentarios(idReporte) {
             this.comentarioIdActual = idReporte;
+            this.detalleComentarioNomina = null;
             this.nuevoComentario = '';
             this.comentarios = [];
 
@@ -457,6 +459,7 @@ document.addEventListener('alpine:init', () => {
                     window.alerts.error(resp.data.message || 'No se pudieron cargar los comentarios');
                     return;
                 }
+                this.detalleComentarioNomina = resp.data.detalle || null;
                 this.comentarios = (resp.data.data || []).map(c => ({
                     ...c,
                     esMio: c.es_propio === true,
@@ -502,6 +505,7 @@ document.addEventListener('alpine:init', () => {
                 }
                 this.nuevoComentario = '';
                 const respC = await axios.post(`${this.baseUrl}/comentarios`, { idReporte: this.comentarioIdActual });
+                this.detalleComentarioNomina = respC.data.detalle || this.detalleComentarioNomina;
                 this.comentarios = (respC.data.data || []).map(c => ({
                     ...c,
                     esMio: c.es_propio === true,

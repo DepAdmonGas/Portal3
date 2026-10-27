@@ -101,6 +101,7 @@ $id = (int)($_GET['id'] ?? 0);
 JsonResponse::custom([
 'success'    => true,
 'comentarios' => FormatosService::getComentarios($id),
+'detalle' => FormatosService::getComentarioResumen($id),
 ]);
 }
 

@@ -232,6 +232,7 @@ async deleteAction({ url, id, name, table, data = {} }) {
     method = 'POST',
     headers = {},
     notify = true, 
+    notifySuccess = true,
     onSuccess = null,
     onError = null
 }) {
@@ -275,7 +276,7 @@ async deleteAction({ url, id, name, table, data = {} }) {
                 $(table).DataTable().ajax.reload(null, false);
             }
 
-            if (notify && res.message) {
+            if (notify && notifySuccess && res.message) {
                 this.notify('success', res.message);
             }
 

@@ -76,58 +76,6 @@ document.addEventListener(
                         false,
 
 
-                    data:
-                        function (
-                            data
-                        ) {
-
-                            /*
-                             * Primero intentamos obtener el valor
-                             * directamente del select.
-                             */
-                            const select =
-                                document.getElementById(
-                                    'filtroEstacion'
-                                );
-
-
-                            let idEstacion =
-                                '';
-
-
-                            if (
-                                select
-                                && select.value
-                            ) {
-
-                                idEstacion =
-                                    select.value;
-
-                            } else {
-
-                                /*
-                                 * Respaldo:
-                                 * sessionStorage.
-                                 */
-                                idEstacion =
-                                    sessionStorage.getItem(
-                                        'idEstacion'
-                                    ) || '';
-                            }
-
-
-                            data.idEstacion =
-                                idEstacion;
-
-
-                            /*
-                             * Evita cache del navegador.
-                             */
-                            data._ =
-                                Date.now();
-                        },
-
-
                     dataSrc:
                         function (
                             json
@@ -164,7 +112,7 @@ document.addEventListener(
                             'id',
 
                         width:
-                            '70px',
+                            '96px',
 
                         className:
                             'text-center fw-semibold'
@@ -184,7 +132,8 @@ document.addEventListener(
                         render:
                             function (
                                 data,
-                                type
+                                type,
+                                row
                             ) {
 
                                 if (!data) {
@@ -204,9 +153,7 @@ document.addEventListener(
                                 }
 
 
-                                return formatearFecha(
-                                    data
-                                );
+                                return row.fecha_formateada || '';
                             }
                     },
 
@@ -219,7 +166,7 @@ document.addEventListener(
                             'finalizado',
 
                         width:
-                            '130px',
+                            '100px',
 
                         className:
                             'text-center align-middle',
@@ -263,10 +210,6 @@ document.addEventListener(
                                         <span
                                             class="badge text-bg-success"
                                         >
-                                            <i
-                                                class="ti ti-circle-check me-1"
-                                            ></i>
-
                                             Finalizado
                                         </span>
                                     `;
@@ -280,10 +223,6 @@ document.addEventListener(
                                     <span
                                         class="badge text-bg-warning"
                                     >
-                                        <i
-                                            class="ti ti-clock me-1"
-                                        ></i>
-
                                         Activo
                                     </span>
                                 `;
@@ -429,45 +368,3 @@ document.addEventListener(
 
     }
 );
-
-
-/**
- * =========================================================
- * FORMATEAR FECHA
- * =========================================================
- */
-function formatearFecha(
-    value
-) {
-
-    if (!value) {
-        return '';
-    }
-
-
-    const fecha =
-        String(
-            value
-        )
-            .substring(
-                0,
-                10
-            );
-
-
-    const partes =
-        fecha.split(
-            '-'
-        );
-
-
-    if (
-        partes.length !== 3
-    ) {
-
-        return value;
-    }
-
-
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}

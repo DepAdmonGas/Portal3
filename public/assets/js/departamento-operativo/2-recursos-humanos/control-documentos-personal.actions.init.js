@@ -36,6 +36,7 @@ estaciones: [],
 
 comentarioPersonalId: 0,
 comentarioPersonalNombre: '',
+detalleComentarioPersonal: null,
 comentarios: [],
 nuevoComentario: '',
 
@@ -385,6 +386,7 @@ if (el) el.scrollTop = el.scrollHeight;
 async abrirComentarios(id, nombre) {
 this.comentarioPersonalId = id;
 this.comentarioPersonalNombre = nombre;
+this.detalleComentarioPersonal = null;
 this.nuevoComentario = '';
 this.comentarios = [];
 
@@ -399,6 +401,7 @@ try {
 var resp = await fetch('/departamento-operativo/recursos-humanos/control-documentos-personal/get-comentarios?id_personal=' + id);
 var json = await resp.json();
 if (json.success) {
+self.detalleComentarioPersonal = json.detalle || null;
 self.comentarios = json.data || [];
 self.scrollChatToBottom();
 }
@@ -429,6 +432,7 @@ this.nuevoComentario = '';
 var resp2 = await fetch('/departamento-operativo/recursos-humanos/control-documentos-personal/get-comentarios?id_personal=' + personalId);
 var json2 = await resp2.json();
 if (json2.success) {
+this.detalleComentarioPersonal = json2.detalle || this.detalleComentarioPersonal;
 this.comentarios = json2.data || [];
 this.scrollChatToBottom();
 }
@@ -444,7 +448,6 @@ return false;
 });
 dt.draw(false);
 }
-if (window.Notify) Notify.success('Comentario agregado correctamente.');
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario.');
 }

@@ -232,7 +232,6 @@ document.addEventListener('alpine:init', () => {
                 this.nuevoMensaje = '';
                 await this.cargarMensajes(this.mensajeRow);
                 this.mensajeRow.mensajes.total = data.total;
-                this.notify('success', 'Comentario agregado.');
             } catch (error) {
                 this.notify('error', error.response?.data?.message || error.message || 'No fue posible agregar el comentario.');
             } finally {
