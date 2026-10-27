@@ -14,7 +14,7 @@ x-data="monitoreoEvaluacion()">
 
 <div x-data="monitoreoEvaluacion">
 
-<div class="row mt-3 mb-3 g-0 w-100 justify-content-between">
+<div class="row mt-3 mb-3 w-100 justify-content-between">
 <div class="col-12 col-md-6 d-grid mb-3 mb-md-0">
             <!-- <label class="form-label">Año</label> -->
             <select
@@ -96,9 +96,9 @@ x-data="monitoreoEvaluacion()">
 </div>
 </div>
 <div class="card-footer">
-    <div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="row justify-content-end">
                     <div class="col-12 col-md-auto d-grid">
-                              <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="implementacionDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
+                              <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end ms-auto w-100" @click="implementacionDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
 
                     </div>
                   </div>
@@ -232,9 +232,9 @@ x-data="monitoreoEvaluacion()">
     
     </div>
     <div class="card-footer">
-        <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="row justify-content-end">
                     <div class="col-12 col-md-auto d-grid">
-                      <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="VentasDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
+                      <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end ms-auto w-100" @click="VentasDetalle()"><i class="ti ti-eye"></i> Ver detalle</button>
                     </div>
                   </div>
 
@@ -311,7 +311,7 @@ x-data="monitoreoEvaluacion()">
         </div>
 </div>
 <div class="card-footer">
-    <div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="row justify-content-end">
                     <div class="col-12 col-md-auto d-grid">
                    <button type="button" class="btn bg-primary-subtle text-primary float-end" data-bs-toggle="modal" data-bs-target="#modal-capacitacion"><i class="ti ti-eye"></i> Ver detalle</button>   
                     </div>
@@ -445,9 +445,9 @@ x-data="monitoreoEvaluacion()">
 </div>
 </div>
 <div class="card-footer">
-    <div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="row justify-content-end">
                     <div class="col-12 col-md-auto d-grid">
-<button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="satisfaccionClientes()"><i class="ti ti-eye"></i> Ver detalle</button>
+<button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end ms-auto w-100" @click="satisfaccionClientes()"><i class="ti ti-eye"></i> Ver detalle</button>
                     </div>
                   </div>
 
@@ -463,7 +463,7 @@ x-data="monitoreoEvaluacion()">
 <div class="card">
     <div class="card-body p-0">
 
-
+    <div class="table-responsive">
 <table class="table table-striped mb-0 text-nowrap align-middle">
 
     <tbody>
@@ -482,7 +482,7 @@ x-data="monitoreoEvaluacion()">
             </td>
 
             <td>
-                No total de accidentes e incidentes ocurridos VS
+                No. total de accidentes e incidentes ocurridos VS
                 número total de accidentes e incidentes atendidos
             </td>
         </tr>
@@ -553,11 +553,12 @@ x-data="monitoreoEvaluacion()">
     </tbody>
 
 </table>
+</div>
     </div>
 <div class="card-footer">
-    <div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="row justify-content-end">
                     <div class="col-12 col-md-auto d-grid">
-                 <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end" @click="IncidentesAccidentes()"><i class="ti ti-eye"></i> Ver detalle</button>
+                 <button type="button" class="btn waves-effect waves-light btn-rounded bg-info-subtle text-info float-end ms-auto w-100" @click="IncidentesAccidentes()"><i class="ti ti-eye"></i> Ver detalle</button>
          
                     </div>
                   </div>

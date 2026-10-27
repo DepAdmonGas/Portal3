@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         processing: true,
         serverSide: false,
         ajax: {
-            type: 'POST',
+            type: 'GET',
             url: prefix + '/data/' + idYear,
             data: function (d) {
                 const rn = window.rnComponentInstance;

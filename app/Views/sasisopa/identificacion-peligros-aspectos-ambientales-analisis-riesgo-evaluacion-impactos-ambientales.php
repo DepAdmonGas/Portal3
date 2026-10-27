@@ -87,12 +87,12 @@
 </div>
 
 
-<div class="card-body mb-0">
+<div class="card-body pb-2">
 
 
 
-<div class="datatables ">
-<div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+<div class="datatables">
+<div class="table-responsive overflow-y-hidden overflow-x-auto">
 <table id="table-lista-analisis-riesgo" class="table table-striped table-bordered text-nowrap align-middle">
 <thead>
 <tr>
@@ -138,10 +138,10 @@ class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
 </div>
 </div>
 
-<div class="card-body pb-0">
+<div class="card-body pb-2">
 <!----------------HEADER DE FO ADMONGAS 010 (REGISTRO DE LA ATENCION Y EL SEGUIMIENTO)---------->
 <div class="datatables">
-<div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+<div class="table-responsive overflow-x-auto overflow-y-hidden">
 <table id="table-lista-asistencia" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
 <thead>
 <tr>

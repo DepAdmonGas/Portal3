@@ -153,7 +153,7 @@ $table.DataTable({
 processing: true,
 serverSide: false,
 ajax: {
-type: 'POST',
+type: 'GET',
 url: ajaxBase,
 data: function(d) {
 if (c.dataset.esGestoria === 'true') {

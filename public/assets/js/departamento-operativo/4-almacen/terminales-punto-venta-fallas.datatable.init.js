@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         serverSide: false,
         ajax: {
             url: BASE_URL + '/data',
-            type: 'POST',
+            type: 'GET',
             data: function (d) {
                 if (idTpv > 0) {
                     d.id_tpv = idTpv;

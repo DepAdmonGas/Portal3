@@ -286,7 +286,7 @@
     <script src="<?= asset('js/core/chat-comments.js?v=1.2') ?>"></script>
     <script src="<?= asset('js/core/actions.alpine.js?v=1.2') ?>"></script>
     <script src="<?= asset('js/core/inline-handler-remediation.js') ?>"></script>
-    <script src="<?= asset('js/core/main-response-policy.js') ?>"></script>
+    <script src="<?= asset('js/core/main-response-policy.js?v=' . time()) ?>"></script>
 
 
     <!-- Scripts por vista -->
@@ -295,6 +295,8 @@
             <script src="<?= asset($script) ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
+
+    <script src="<?= asset('js/core/datatables-scroll-isolation.js') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/js/core/datatables-scroll-isolation.js') ?: 1 ?>"></script>
 
 </body>
 

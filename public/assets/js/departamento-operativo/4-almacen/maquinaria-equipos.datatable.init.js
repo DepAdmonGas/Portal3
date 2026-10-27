@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         serverSide: false,
         ajax: {
             url: BASE_URL + '/data',
-            type: 'POST',
+            type: 'GET',
             dataSrc: function (json) {
                 return json && json.success ? (json.data || []) : [];
             }

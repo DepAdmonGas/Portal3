@@ -633,6 +633,7 @@ return function (RouteCollector $r) {
 
         //----- Recibo de nomina
         $r->addRoute('GET', '/recursos-humanos/recibos-nomina/{idYear:\d+}', Route::auth(['RecibosNominaController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/recibos-nomina/data/{idYear:\d+}', Route::auth(['RecibosNominaController', 'data']));
         $r->addRoute('POST', '/recursos-humanos/recibos-nomina/data/{idYear:\d+}', Route::auth(['RecibosNominaController', 'data']));
 
         $r->addRoute('POST', '/recursos-humanos/recibos-nomina/periodos/{idYear:\d+}', Route::auth(['RecibosNominaController', 'periodos']));
@@ -993,6 +994,7 @@ $r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMa
         $r->addRoute('GET', '/almacen/mantenimiento-preventivo/calendario', Route::auth(['AlmacenMantenimientoPreventivoController', 'calendario']));
         $r->addRoute('GET', '/almacen/mantenimiento-preventivo/calendario/eventos', Route::auth(['AlmacenMantenimientoPreventivoController', 'calendarioEventos']));
         $r->addRoute('GET', '/almacen/mantenimiento-preventivo/calendario/dia', Route::auth(['AlmacenMantenimientoPreventivoController', 'calendarioDia']));
+        $r->addRoute('GET', '/almacen/mantenimiento-preventivo/data/{idYear:\d+}', Route::auth(['AlmacenMantenimientoPreventivoController', 'data']));
         $r->addRoute('POST', '/almacen/mantenimiento-preventivo/data/{idYear:\d+}', Route::auth(['AlmacenMantenimientoPreventivoController', 'data']));
         $r->addRoute('POST', '/almacen/mantenimiento-preventivo/store', Route::auth(['AlmacenMantenimientoPreventivoController', 'store']));
         $r->addRoute('POST', '/almacen/mantenimiento-preventivo/detalle', Route::auth(['AlmacenMantenimientoPreventivoController', 'detalle']));
@@ -1009,6 +1011,7 @@ $r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMa
 
 // --- TERMINALES PUNTO DE VENTA ---
         $r->addRoute('GET', '/almacen/terminales-punto-venta', Route::auth(['AlmacenTerminalesPuntoVentaController', 'index']));
+        $r->addRoute('GET', '/almacen/terminales-punto-venta/data', Route::auth(['AlmacenTerminalesPuntoVentaController', 'data']));
         $r->addRoute('POST', '/almacen/terminales-punto-venta/data', Route::auth(['AlmacenTerminalesPuntoVentaController', 'data']));
         $r->addRoute('POST', '/almacen/terminales-punto-venta/store', Route::auth(['AlmacenTerminalesPuntoVentaController', 'store']));
         $r->addRoute('POST', '/almacen/terminales-punto-venta/update', Route::auth(['AlmacenTerminalesPuntoVentaController', 'update']));
@@ -1019,6 +1022,7 @@ $r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMa
         // El id de la terminal viaja en la ruta, igual que el resto del módulo.
         $r->addRoute('GET', '/almacen/terminales-punto-venta-fallas', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'index']));
         $r->addRoute('GET', '/almacen/terminales-punto-venta-fallas/{id:\d+}', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'terminal']));
+        $r->addRoute('GET', '/almacen/terminales-punto-venta-fallas/data', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'data']));
         $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/data', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'data']));
         $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/detalle', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'detalle']));
         $r->addRoute('POST', '/almacen/terminales-punto-venta-fallas/store', Route::auth(['AlmacenTerminalesPuntoVentaFallasController', 'store']));
@@ -1066,6 +1070,7 @@ $r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMa
 
         $r->addRoute('GET', '/almacen/orden-compra-descargar-pdf/{id:\d+}', Route::auth(['OrdenCompraController', 'downloadPdf']));
 $r->addRoute('GET', '/almacen/calibracion-dispensarios', Route::auth(['AlmacenCalibracionDispensarioController', 'index']));
+$r->addRoute('GET', '/almacen/calibracion-dispensarios/data', Route::auth(['AlmacenCalibracionDispensarioController', 'data']));
 $r->addRoute('POST', '/almacen/calibracion-dispensarios/data', Route::auth(['AlmacenCalibracionDispensarioController', 'data']));
 $r->addRoute('POST', '/almacen/calibracion-dispensarios/guardar', Route::auth(['AlmacenCalibracionDispensarioController', 'store']));
 $r->addRoute('POST', '/almacen/calibracion-dispensarios/detalle', Route::auth(['AlmacenCalibracionDispensarioController', 'detalle']));
@@ -1074,6 +1079,7 @@ $r->addRoute('POST', '/almacen/calibracion-dispensarios/eliminar', Route::auth([
 
 // --- MEDICIÓN NIVEL DE EXPLOSIVIDAD ---
 $r->addRoute('GET', '/almacen/medicion-nivel-explosividad', Route::auth(['AlmacenMedicionNivelExplosividadController', 'index']));
+$r->addRoute('GET', '/almacen/medicion-nivel-explosividad/data', Route::auth(['AlmacenMedicionNivelExplosividadController', 'data']));
 $r->addRoute('POST', '/almacen/medicion-nivel-explosividad/data', Route::auth(['AlmacenMedicionNivelExplosividadController', 'data']));
 $r->addRoute('GET', '/almacen/medicion-nivel-explosividad/nuevo', Route::auth(['AlmacenMedicionNivelExplosividadController', 'crear']));
 $r->addRoute('GET', '/almacen/medicion-nivel-explosividad-formulario/{id:\d+}', Route::auth(['AlmacenMedicionNivelExplosividadController', 'editar']));
@@ -1085,6 +1091,7 @@ $r->addRoute('POST', '/almacen/medicion-nivel-explosividad/pozo/eliminar', Route
 
 // --- MAQUINARIA Y EQUIPOS ---
 $r->addRoute('GET', '/almacen/maquinaria-equipos', Route::auth(['AlmacenMaquinariaEquiposController', 'index']));
+$r->addRoute('GET', '/almacen/maquinaria-equipos/data', Route::auth(['AlmacenMaquinariaEquiposController', 'data']));
 $r->addRoute('POST', '/almacen/maquinaria-equipos/data', Route::auth(['AlmacenMaquinariaEquiposController', 'data']));
 $r->addRoute('POST', '/almacen/maquinaria-equipos/guardar', Route::auth(['AlmacenMaquinariaEquiposController', 'store']));
 $r->addRoute('POST', '/almacen/maquinaria-equipos/detalle', Route::auth(['AlmacenMaquinariaEquiposController', 'detalle']));

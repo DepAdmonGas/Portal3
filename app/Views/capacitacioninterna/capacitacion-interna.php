@@ -31,7 +31,7 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
     </select>
 </div>
 
-    <div class="datatables">
+    <div class="datatables mt-4">
         <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
       <table id="table-capacitacion-interna" class="table table-bordered table-striped mb-0 text-nowrap align-middle">
         <thead>

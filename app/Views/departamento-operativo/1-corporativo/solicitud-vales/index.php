@@ -11,10 +11,13 @@ data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
 data-get-data-url="/departamento-operativo/corporativo/solicitud-vales/get-data"
 x-data="solicitudValesComponent()">
 
-<div class="row w-100 justify-content-end">
-<div class="col-12 col-md-auto d-grid mb-3">
-<a href="/departamento-operativo/corporativo/solicitud-vales-nuevo/<?= $idYear ?>/<?= $idMes ?>/<?= $idEstacion ?>" class="btn bg-primary-subtle text-primary"> <i class="ti ti-plus me-1"></i> Nuevo</a>
-</div>
+<div class="row mb-3">
+    <div class="col-12 col-md-auto ms-auto">
+        <a href="/departamento-operativo/corporativo/solicitud-vales-nuevo/<?= $idYear ?>/<?= $idMes ?>/<?= $idEstacion ?>" 
+           class="btn bg-primary-subtle text-primary d-block d-md-inline-block w-100 w-md-auto">
+            <i class="ti ti-plus me-1"></i> Nuevo
+        </a>
+    </div>
 </div>
 
 <div class="table-responsive pb-5" style="overflow-y: hidden; overflow-x: auto;">

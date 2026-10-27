@@ -1,8 +1,8 @@
 <div id="container" class="mb-4" data-puede-crear="<?= !empty($puedeCrear) ? '1' : '0' ?>">
 <div id="tarjetas-toolbar" class="row d-flex justify-content-end"></div>
 
-<div class="datatables">
- <div class="table-responsive mt-3 overflow-x-auto overflow-y-hidden pb-2">
+<div class="datatables mt-3 mb-3">
+<div class="table-responsive mb-2 overflow-x-auto overflow-y-hidden pb-3">
 <table id="table-tarjetas" class="table table-striped table-bordered  text-nowrap align-middle">
 <tbody></tbody>
 </table>
