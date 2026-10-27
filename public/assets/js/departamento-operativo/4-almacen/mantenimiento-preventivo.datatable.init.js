@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         serverSide: false,
         ajax: {
             url: BASE_URL + '/data/' + YEAR,
-            type: 'POST',
+            type: 'GET',
             data: function (d) {
                 if (moduleStationKey && typeof ModuleStationSelector !== 'undefined') {
                     const instancia = ModuleStationSelector._instances[moduleStationKey];

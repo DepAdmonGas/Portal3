@@ -151,7 +151,7 @@ $data = [
 'scripts' => [
 '/js/vendor.min.js?v=' . time(),
 '/libs/datatables.net/js/jquery.dataTables.min.js',
-'/js/core/module-station-selector.js',
+'/js/core/module-station-selector.js?v=' . time(),
 '/js/tarjetas/tarjetas.datatable.init.js?v=' . time(),
 '/js/tarjetas/actions.init.js?v=' . time()
 ]

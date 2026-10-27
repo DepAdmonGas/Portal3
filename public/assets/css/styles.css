@@ -35012,7 +35012,7 @@ margin-top: 0 !important;
 margin-bottom: 0 !important;
 }
 .my-1 {
-margin-top: 0.25rem !important;
+margin-top: 1.5rem !important;
 margin-bottom: 0.25rem !important;
 }
 .my-2 {
@@ -35020,12 +35020,12 @@ margin-top: 0.5rem !important;
 margin-bottom: 0.5rem !important;
 }
 .my-3 {
-margin-top: 1rem !important;
+margin-top: 0.25rem !important;
 margin-bottom: 1rem !important;
 }
 .my-4 {
 margin-top: 1.5rem !important;
-margin-bottom: 1.5rem !important;
+margin-bottom: 3rem !important;
 }
 .my-5 {
 margin-top: 3rem !important;
@@ -53184,32 +53184,137 @@ display: none;
 overflow-x: clip;
 }
 }
-.table-responsive .dataTables_wrapper .dataTables_length select {
-padding-top: 0.25rem;
-padding-bottom: 0.25rem;
-padding-left: 0.5rem;
-padding-right: 0.625rem;
-font-size: 0.765625rem;
+.dataTables_wrapper .dataTables_length select {
+box-sizing: border-box;
+width: 60px;
+height: 28px;
+padding: 0.25rem 1.5rem 0.25rem 0.5rem;
+font-size: 0.875rem !important;
+line-height: 1.25;
+color: var(--bs-body-color);
+background-color: var(--bs-body-bg) !important;
+border: 1px solid var(--bs-border-color);
 border-radius: 5px;
-border-color: var(--bs-border-color);
 }
-.table-responsive .dataTables_wrapper .dataTables_filter {
-margin-bottom: 25px;
+.dataTables_wrapper .dataTables_length label {
+font-size: 0.875rem !important;
 }
-.table-responsive .dataTables_wrapper .dataTables_filter input {
+.dataTables_wrapper:not(.dt-bootstrap5) {
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+}
+.dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_length {
+flex: 0 0 50%;
+width: 50%;
+max-width: 50%;
+}
+.dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_filter {
+flex: 0 0 100%;
+width: 100%;
+max-width: 100%;
+}
+.dataTables_wrapper:not(.dt-bootstrap5):has(> .dataTables_length) > .dataTables_filter {
+flex: 0 0 50%;
+width: 50%;
+max-width: 50%;
+}
+.dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_length {
+float: none;
+margin: 0 0 1rem;
+text-align: left;
+}
+.dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_filter {
+float: none;
+margin-bottom: 1rem;
+text-align: right;
+}
+.dataTables_wrapper > .table-responsive {
+flex: 0 0 100%;
+width: 100%;
+max-width: 100%;
+overflow-x: auto;
+padding-bottom: 0 !important;
+}
+.card-body:has(.dataTables_wrapper) {
+padding-bottom: 0.5rem !important;
+}
+.dataTables_wrapper:not(.dt-bootstrap5) > .table-responsive {
+width: 100%;
+}
+.dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_info,
+.dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_paginate {
+flex: 0 0 50%;
+width: 50%;
+max-width: 50%;
+}
+.dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_paginate {
+text-align: right;
+}
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+display: flex;
+align-items: center;
+margin-top: 1rem !important;
+margin-bottom: 1rem !important;
+min-height: 2.25rem;
+}
+.dataTables_wrapper .dataTables_paginate {
+justify-content: flex-end;
+}
+div.dataTables_wrapper:not(.dt-bootstrap5) > div.dataTables_info {
+padding-top: 0 !important;
+}
+div.dataTables_wrapper:not(.dt-bootstrap5) > div.dataTables_info {
+font-size: 0.875rem !important;
+}
+div.dataTables_wrapper:not(.dt-bootstrap5) > div.dataTables_paginate {
+padding-top: 0 !important;
+}
+.dataTables_wrapper .dataTables_paginate .pagination {
+align-items: center;
+margin: 0 !important;
+}
+.dataTables_wrapper.dt-bootstrap5 > .row:first-child > div:has(> .dataTables_length) {
+flex: 0 0 50%;
+width: 50%;
+max-width: 50%;
+}
+.dataTables_wrapper.dt-bootstrap5 > .row:first-child > div:has(> .dataTables_filter) {
+flex: 0 0 100%;
+width: 100%;
+max-width: 100%;
+}
+.dataTables_wrapper.dt-bootstrap5 > .row:first-child:has(> div > .dataTables_length) > div:has(> .dataTables_filter) {
+flex: 0 0 50%;
+width: 50%;
+max-width: 50%;
+}
+.dataTables_wrapper.dt-bootstrap5 > .row:first-child > div:has(> .dataTables_length) {
+text-align: left;
+}
+.dataTables_wrapper.dt-bootstrap5 > .row:first-child > div:has(> .dataTables_filter) {
+text-align: right;
+}
+.dataTables_wrapper.dt-bootstrap5 > .row:first-child {
+margin-bottom: 1rem;
+}
+.dataTables_wrapper .dataTables_filter {
+text-align: right;
+}
+.dataTables_wrapper .dataTables_filter input {
 padding: 0.25rem 0.5rem;
 font-size: 0.765625rem;
 border-radius: 5px;
 border: 1px solid var(--bs-border-color);
 }
-.table-responsive .dataTables_wrapper .dataTables_paginate .paginate_button {
+.dataTables_wrapper .dataTables_paginate .paginate_button {
 cursor: pointer;
 padding: 6px 12px;
 border: 1px solid var(--bs-border-color);
 border-radius: var(--bs-border-radius);
 margin: 0 3px;
 }
-.table-responsive
 .dataTables_wrapper
 .dataTables_paginate
 .paginate_button
@@ -53217,13 +53322,64 @@ margin: 0 3px;
 border-radius: 7px 0 0 7px;
 background-color: var(--bs-gray-200);
 }
-.table-responsive
 .dataTables_wrapper
 .dataTables_paginate
 .paginate_button.current {
 color: #fff;
 background-color: var(--bs-primary);
 border-color: var(--bs-primary);
+}
+@media (max-width: 767.98px) {
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_info,
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_paginate {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_info {
+    order: 1;
+    white-space: nowrap;
+  }
+
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_paginate {
+    order: 2;
+  }
+
+  .dataTables_wrapper.dt-bootstrap5 > .row:last-child > div:has(> .dataTables_info),
+  .dataTables_wrapper.dt-bootstrap5 > .row:last-child > div:has(> .dataTables_paginate) {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .dataTables_wrapper.dt-bootstrap5 > .row:last-child > div:has(> .dataTables_info) {
+    text-align: left;
+  }
+
+  .dataTables_wrapper.dt-bootstrap5 > .row:last-child > div:has(> .dataTables_paginate) {
+    text-align: right;
+  }
+
+  .dataTables_wrapper .dataTables_paginate .pagination {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+  }
+
+  .dataTables_wrapper .dataTables_info {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  .dataTables_wrapper .dataTables_paginate {
+    margin-top: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .dataTables_wrapper .dataTables_paginate .paginate_button {
+    margin: 0 2px;
+    padding: 5px 8px;
+  }
 }
 .wizard {
 display: block;
@@ -56083,4 +56239,24 @@ box-shadow:0 0 0 8px rgba(220,53,69,0);
 transform:scale(1);
 box-shadow:0 0 0 0 rgba(220,53,69,0);
 }
+}
+
+/* Los botones de acción en headers SGM/SASISOPA siguen el ancho responsive de Anexos. */
+@media (max-width: 767.98px) {
+  body.layout-sgm .card-header .row > .d-grid,
+  body.layout-sasisopa .card-header .row > .d-grid {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  body.layout-sgm .card-header .row > .d-grid,
+  body.layout-sasisopa .card-header .row > .d-grid {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
+    margin-left: auto;
+  }
 }

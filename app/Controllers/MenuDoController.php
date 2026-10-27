@@ -18,6 +18,8 @@ class MenuDoController
     public function index(): void
     {
         header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
 
         try {
 
@@ -35,16 +37,7 @@ class MenuDoController
             }
 
             $menus = MenuDptoOperativoService::paraUsuario((int)$user->id);
-            foreach ($menus as &$grupo) {
-                foreach ($grupo['items'] ?? [] as &$item) {
-                    $cantidad = MenuBadgeService::contar((string)($item['clave'] ?? ''), (int)$user->id);
-                    if ($cantidad !== null) {
-                        $item['badge_count'] = $cantidad;
-                    }
-                }
-                unset($item);
-            }
-            unset($grupo);
+            $menus = MenuBadgeService::aplicarContadores($menus, (int)$user->id, 'badge_count');
 
             echo json_encode([
                 'success' => true,

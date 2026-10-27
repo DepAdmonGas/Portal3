@@ -17,6 +17,7 @@ class MenuService
         $menus = self::menusAsignados($usuario_id, $usuario, $modulo);
         $grupos = self::formatearMenu($menus, $usuario_id);
         $grupos = array_merge($grupos, self::gruposPorPermisos($usuario_id));
+        $grupos = MenuBadgeService::aplicarContadores($grupos, $usuario_id, 'badge');
 
         return self::ordenarGrupos($grupos);
     }
@@ -194,10 +195,6 @@ class MenuService
                 $item['id'] = 'do-' . (string)($item['id'] ?? $index);
                 $item['padre_id'] = null;
                 $item['orden'] = $index + 1;
-                $item['badge'] = MenuBadgeService::contar(
-                    (string)($item['clave'] ?? ''),
-                    $usuarioId
-                );
                 $items[] = $item;
             }
             self::agregarGrupo($grupos, 'Dirección de Operaciones', $items);

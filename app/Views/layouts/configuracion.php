@@ -10,7 +10,7 @@
     <!-- Favicon icon-->
     <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/icono-web.png') ?>" />
     <!-- Core Css -->
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
+    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/css/styles.css') ?: 1 ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
 
 
@@ -285,6 +285,7 @@
             <script src="<?= $script ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
+    <script src="<?= asset('js/core/datatables-scroll-isolation.js') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/js/core/datatables-scroll-isolation.js') ?: 1 ?>"></script>
 
 </body>
 
