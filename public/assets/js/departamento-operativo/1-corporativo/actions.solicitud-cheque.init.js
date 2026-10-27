@@ -67,6 +67,7 @@ Alpine.data('solicitudChequeComponent', () => ({
 detalle: null,
 comentarios: [],
 comentarioSolicitudId: null,
+comentarioSolicitud: null,
 nuevoComentario: '',
 guardandoComentario: false,
 puedeAgregarComentarios: false,
@@ -156,7 +157,7 @@ model: 'nuevoDocumento.tipo',
 options: { placeholder: 'Selecciona...', allowClear: true }
 });
 
-document.addEventListener('abrir-comentarios', (e) => { this.abrirComentarios(e.detail.id); });
+document.addEventListener('abrir-comentarios', (e) => { this.abrirComentarios(e.detail.id, e.detail.solicitud); });
 document.addEventListener('ver-detalle', (e) => { this.abrirDetalle(e.detail.id); });
 document.addEventListener('eliminar-solicitud', (e) => { this.confirmarEliminar(e.detail.id); });
 document.addEventListener('ver-documentos', (e) => { this.abrirModalArchivos(e.detail.id); });
@@ -210,8 +211,9 @@ if (el) el.scrollTop = el.scrollHeight;
 });
 },
 
-async abrirComentarios(id) {
+async abrirComentarios(id, solicitud = null) {
 this.comentarioSolicitudId = id;
+this.comentarioSolicitud = solicitud;
 this.nuevoComentario = '';
 this.comentarios = [];
 
@@ -278,7 +280,6 @@ return false;
 }
 });
 }
-if (window.Notify) /*Notify.success('Comentario agregado')*/;
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
 }

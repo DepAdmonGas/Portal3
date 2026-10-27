@@ -143,6 +143,13 @@ Cerrar</button>
 </div>
 
 <!-- Offcanvas Comentarios -->
+<style>
+    #offcanvasComentarios .actividad-ticket-field {
+        min-height: 62px;
+        background: var(--bs-body-bg);
+        font-size: .82rem;
+    }
+</style>
 <div class="offcanvas offcanvas-end d-flex flex-column"
 tabindex="-1"
 id="offcanvasComentarios"
@@ -171,6 +178,67 @@ class="btn-close btn-close-white"
 data-bs-dismiss="offcanvas"></button>
 </div>
 
+<div class="px-3 pt-3 pb-3 border-bottom flex-shrink-0"
+     x-show="detalleComentario"
+     x-cloak>
+    <div class="row g-2">
+        <div class="col-5">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-hash fs-5"></i>
+                </span>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="form-label small mb-0"># de solicitud:</div>
+                    <div x-text="detalleComentario ? detalleComentario.id : comentarioIdActual"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-7">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-calendar-event fs-5"></i>
+                </span>
+                <div class="flex-grow-1">
+                    <div class="form-label small mb-0">Fecha y hora:</div>
+                    <div x-text="detalleComentario ? [detalleComentario.fecha_formateada, detalleComentario.hora].filter(Boolean).join(' · ') || 'S/I' : 'S/I'"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-info-subtle text-info flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-file-text fs-5"></i>
+                </span>
+                <div class="flex-grow-1">
+                    <div class="form-label small mb-0">Concepto:</div>
+                    <div x-text="detalleComentario && detalleComentario.concepto ? detalleComentario.concepto : 'S/I'"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-success-subtle text-success flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-currency-dollar fs-5"></i>
+                </span>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="form-label small mb-0">Monto:</div>
+                    <div x-text="detalleComentario && detalleComentario.monto !== null && detalleComentario.monto !== undefined ? Number(detalleComentario.monto).toLocaleString('es-MX', { style: 'currency', currency: detalleComentario.moneda || 'MXN' }) : 'S/I'"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-warning-subtle text-warning flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-building-bank fs-5"></i>
+                </span>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="form-label small mb-0">Cargo a cuenta:</div>
+                    <div x-text="detalleComentario ? (detalleComentario.cargo_cuenta_display || (Number(detalleComentario.id_estacion) > 0 ? detalleComentario.estacion_nombre : detalleComentario.cuenta) || 'S/I') : 'S/I'"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
 <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height: 0;">
 
@@ -178,7 +246,7 @@ data-bs-dismiss="offcanvas"></button>
 style="min-height: 0; overscroll-behavior: contain;"
 x-ref="chatContainer">
 
-<template x-if="comentarios.length === 0">
+<template x-if="comentarios.length === 0 && !guardandoComentario">
 <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 380px;">
 <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
 <p class="text-muted mb-0 fs-5">Sin comentarios</p>
@@ -187,7 +255,7 @@ x-ref="chatContainer">
 
 <div class="chat-list active-chat p-2">
 
-<template x-for="c in comentarios" :key="c.id">
+<template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
 
 <div class="d-flex mb-4"
 :class="c.esMio ? 'justify-content-end' : 'justify-content-start'">
@@ -236,9 +304,15 @@ x-text="c.comentario"></div>
 
 </div>
 
+
 </div>
 </div>
 </div>
+<?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+
+
+
+
 
 <div class="px-3 py-3 border-top bg-white flex-shrink-0">
 

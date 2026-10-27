@@ -8,51 +8,14 @@
         )
     }">
 
-    <div
-        class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4 mt-3">
-
-        <div class="w-100" style="max-width: 420px;">
-
-            <select
-                id="filtroEstacion"
-                class="form-select"
-                x-model="filtroEstacion"
-                @change="cambiarEstacion()">
-
-                <option value="">
-                    Todas las estaciones
-                </option>
-
-                <?php foreach ($estaciones as $estacion): ?>
-
-                    <option
-                        value="<?= (int) $estacion->id ?>">
-                        <?= htmlspecialchars(
-                            $estacion->razonsocial
-                                ?: $estacion->nombre,
-                            ENT_QUOTES,
-                            'UTF-8'
-                        ) ?>
-                    </option>
-
-                <?php endforeach; ?>
-
-            </select>
-
-        </div>
-
-        <div>
-
-            <button
-                type="button"
-                class="btn btn-primary"
-                @click="openModalCrear()">
-                <i class="ti ti-user-plus me-1"></i>
-                Nuevo
-            </button>
-
-        </div>
-
+    <div class="d-flex justify-content-end mt-3 mb-4">
+        <button
+            type="button"
+            class="btn btn-primary text-nowrap"
+            @click="openModalCrear()">
+            <i class="ti ti-user-plus me-1"></i>
+            Nuevo
+        </button>
     </div>
 
     <div class="datatables">

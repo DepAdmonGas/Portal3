@@ -473,6 +473,22 @@ $data[] = [
 return $data;
 }
 
+public static function getComentarioResumen(int $id): ?array
+{
+$formatoRow = RhFormatos::find($id);
+if (!$formatoRow) return null;
+
+$formato = (int)$formatoRow->formato;
+$fecha = $formatoRow->fecha;
+
+return [
+'no_control' => '00' . (int)$formatoRow->id,
+'fecha_hora' => $fecha ? formatearFecha($fecha) . ', ' . $fecha->format('g:i a') : '',
+'nombre_empleado' => self::resolveNombreEmpleado($formato, (int)$formatoRow->id),
+'formato_nombre' => self::FORMATOS[$formato] ?? '',
+];
+}
+
 public static function storeComentario(int $id, int $idUsuario, string $comentario): array
 {
 $comentario = trim($comentario);

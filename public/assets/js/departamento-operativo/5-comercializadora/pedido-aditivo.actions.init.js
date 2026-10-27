@@ -29,6 +29,7 @@ guardandoComentario: false,
 errorComentario: false,
 solicitudComentariosId: 0,
 solicitudComentariosFolio: '',
+solicitudComentariosDetalle: null,
 
 BASE: '/departamento-operativo/comercializadora/pedido-aditivo',
 
@@ -293,9 +294,10 @@ if (window.Notify) Notify.error(e.response?.data?.message || 'Error al eliminar 
 
 /* ================= COMENTARIOS ================= */
 
-async abrirModalComentarios(id) {
+async abrirModalComentarios(id, solicitud = null) {
 this.solicitudComentariosId = id;
 this.solicitudComentariosFolio = 'Solicitud #00' + id;
+this.solicitudComentariosDetalle = solicitud || null;
 this.nuevoComentario = '';
 this.comentarios = [];
 this.errorComentario = false;
@@ -348,7 +350,6 @@ if (json.success) {
 this.nuevoComentario = '';
 this.errorComentario = false;
 await this.cargarComentarios();
-if (window.Notify) Notify.success(json.message || 'Comentario agregado correctamente');
 if (window.tablaPedidos) window.tablaPedidos.ajax.reload(null, false);
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar el comentario');

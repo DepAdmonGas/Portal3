@@ -191,8 +191,11 @@ window.pedidoAditivoComponentInstance.abrirModalPagos(id);
 $('#tabla-pedidos').on('click', '.pa-btn-comentarios', function (e) {
 e.preventDefault();
 var id = parseInt(this.dataset.id);
+var solicitud = window.tablaPedidos
+? window.tablaPedidos.rows().data().toArray().find(function (row) { return parseInt(row.id, 10) === id; })
+: null;
 if (window.pedidoAditivoComponentInstance && window.pedidoAditivoComponentInstance.abrirModalComentarios) {
-window.pedidoAditivoComponentInstance.abrirModalComentarios(id);
+window.pedidoAditivoComponentInstance.abrirModalComentarios(id, solicitud || null);
 }
 });
 

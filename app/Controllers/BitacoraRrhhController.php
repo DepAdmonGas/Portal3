@@ -225,6 +225,7 @@ class BitacoraRrhhController extends BaseController
         JsonResponse::custom([
             'success'    => true,
             'comentarios' => BitacoraRrhhService::getComentarios($id),
+            'detalle' => BitacoraRrhhService::getDetalle($id),
         ]);
     }
 

@@ -335,6 +335,21 @@ $data[] = [
 return $data;
 }
 
+public static function getComentarioDetalle(int $idFactura): ?array
+{
+$record = FacturaMonederosPago::find($idFactura);
+if (!$record) return null;
+
+return [
+'folio_display' => str_pad((string)$record->folio, 3, '0', STR_PAD_LEFT),
+'fecha_creacion_format' => $record->fecha_creacion
+    ? formatearFecha($record->fecha_creacion->format('Y-m-d')) . ', ' . $record->fecha_creacion->format('g:i a')
+    : '-',
+'no_factura' => $record->no_factura ?? '',
+'monto' => (float)($record->monto ?? 0),
+];
+}
+
 public static function addComentario(int $idFactura, string $comentario, int $idUsuario): bool
 {
 FacturaMonederoComentario::create([

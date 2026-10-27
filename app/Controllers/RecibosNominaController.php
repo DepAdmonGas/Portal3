@@ -241,7 +241,10 @@ class RecibosNominaController extends BaseController
 
 
 
-        JsonResponse::success('OK', ['data' => $comentarios->toArray()]);
+        JsonResponse::success('OK', [
+            'data' => $comentarios->toArray(),
+            'detalle' => RecibosNominaService::getComentarioResumen($idReporte),
+        ]);
     }
 
     public function guardarComentario(): void

@@ -16,6 +16,7 @@ document.addEventListener('alpine:init', () => {
         nuevoComentario: '',
         guardandoComentario: false,
         comentarioIdActual: null,
+        detalleComentarioListaNegra: null,
 
         archivos: [],
         archivoForm: { descripcion: '' },
@@ -156,6 +157,7 @@ document.addEventListener('alpine:init', () => {
         // ---------- COMENTARIOS ----------
         async abrirComentarios(id) {
             this.comentarioIdActual = id;
+            this.detalleComentarioListaNegra = null;
             this.nuevoComentario = '';
             this.comentarios = [];
 
@@ -163,6 +165,7 @@ document.addEventListener('alpine:init', () => {
                 const resp = await fetch('/departamento-operativo/recursos-humanos/lista-negra/get-comentarios?id=' + id);
                 const json = await resp.json();
                 if (json.success) {
+                    this.detalleComentarioListaNegra = json.detalle || null;
                     this.comentarios = (json.data || []).map(c => ({
                         ...c,
                         esMio: c.esPropio,
@@ -199,6 +202,7 @@ document.addEventListener('alpine:init', () => {
                     const resp2 = await fetch('/departamento-operativo/recursos-humanos/lista-negra/get-comentarios?id=' + listaId);
                     const json2 = await resp2.json();
                     if (json2.success) {
+                        this.detalleComentarioListaNegra = json2.detalle || this.detalleComentarioListaNegra;
                         this.comentarios = (json2.data || []).map(c => ({
                             ...c,
                             esMio: c.esPropio,
@@ -219,7 +223,6 @@ document.addEventListener('alpine:init', () => {
                             }
                         });
                     }
-                    if (window.Notify) Notify.success('Comentario agregado');
                 } else {
                     if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
                 }

@@ -4,14 +4,14 @@
         <!-- BARRA SUPERIOR: SELECTOR DE TIPO Y BOTÓN AGREGAR -->
         <div class="col-12 mb-3">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
- 
+
 <div class="d-inline-flex align-items-center bg-light border rounded-pill px-4 py-1 gap-4">
     <span class="text-muted fw-semibold text-nowrap d-flex align-items-center gap-1">
         <i class="ti ti-filter fs-4 text-primary"></i> Filtrar por:
     </span>
-    <select class="form-select form-select-sm border-0 bg-transparent fw-semibold w-auto" 
-            id="selectTipoDoc" 
-            x-model="tipoActual" 
+    <select class="form-select form-select-sm border-0 bg-transparent fw-semibold w-auto"
+            id="selectTipoDoc"
+            x-model="tipoActual"
             @change="cambiarTipo()">
         <option value="Todos los documentos">Todos los documentos</option>
         <option value="Documentos Generales">Documentos Generales</option>
@@ -25,9 +25,9 @@
 </div>
 
                 <div>
-                    <button type="button" 
-                            class="btn bg-primary-subtle text-primary" 
-                            x-show="tipoActual !== 'Todos los documentos'" 
+                    <button type="button"
+                            class="btn bg-primary-subtle text-primary"
+                            x-show="tipoActual !== 'Todos los documentos'"
                             x-cloak
                             @click="abrirModalCrear()">
                         <i class="ti ti-plus me-1"></i> Nuevo
@@ -83,8 +83,8 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">* Fecha:</label>
-                        <input type="date" 
-                               class="form-control" 
+                        <input type="date"
+                               class="form-control"
                                x-model="form.fecha"
                                :style="errors.fecha ? 'border: 2px solid #A52525 !important;' : ''"
                                @input="errors.fecha = false">
@@ -92,8 +92,8 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">* Descripción:</label>
-                        <input type="text" 
-                               class="form-control" 
+                        <input type="text"
+                               class="form-control"
                                x-model="form.descripcion"
                                :style="errors.descripcion ? 'border: 2px solid #A52525 !important;' : ''"
                                @input="errors.descripcion = false">
@@ -108,8 +108,8 @@
             Deja el campo vacío para conservar el archivo existente.
         </small>
     </label>
-    <input type="file" 
-           class="form-control" 
+    <input type="file"
+           class="form-control"
            id="inputArchivo"
            @change="seleccionarArchivo($event)"
            :style="errors.archivo ? 'border: 2px solid #A52525 !important;' : ''">
@@ -118,7 +118,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i>  Cancelar</button>
                     <button type="button" class="btn btn-success" @click="guardarDocumento()" :disabled="guardando">
-    
+
                         <template x-if="!guardando"><i class="ti ti-check"></i></template>
                         <template x-if="guardando"><span class="spinner-border spinner-border-sm me-1"></span></template>
                         <span x-text="guardando ? 'Guardando...' : (editando ? 'Editar' : 'Guardar')"></span>
@@ -145,10 +145,67 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
 
+        <style>
+            #modalComentarios .actividad-ticket-field {
+                min-height: 62px;
+                background: var(--bs-body-bg);
+                font-size: .82rem;
+            }
+        </style>
+        <div class="px-3 pt-3 pb-3 border-bottom flex-shrink-0"
+             x-show="documentoSeleccionado"
+             x-cloak>
+            <div class="row g-2">
+                <div class="col-4">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-hash fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">#:</div>
+                            <div x-text="documentoSeleccionado ? documentoSeleccionado.id : ''"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-8">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-info-subtle text-info flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-calendar-event fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Fecha:</div>
+                            <div x-text="documentoSeleccionado && documentoSeleccionado.fecha ? documentoSeleccionado.fecha : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-warning-subtle text-warning flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-file-type-doc fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Tipo de documento:</div>
+                            <div x-text="documentoSeleccionado && documentoSeleccionado.tipo ? documentoSeleccionado.tipo : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-success-subtle text-success flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-align-left fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1">
+                            <div class="form-label small mb-0">Descripción:</div>
+                            <div x-text="documentoSeleccionado && documentoSeleccionado.descripcion ? documentoSeleccionado.descripcion : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
             <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height: 0;">
                 <div class="chat-box-inner p-3 flex-grow-1 overflow-auto" style="min-height: 0; overscroll-behavior: contain;" x-ref="chatContainer">
-                    <template x-if="comentarios.length === 0 && !cargandoComentarios">
+                    <template x-if="comentarios.length === 0 && !cargandoComentarios && !guardandoComentario">
                         <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 380px;">
                             <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
                             <p class="text-muted mb-0 fs-5">Sin comentarios</p>
@@ -156,7 +213,7 @@
                     </template>
 
                     <div class="chat-list active-chat p-2">
-                        <template x-for="c in comentarios" :key="c.id">
+<template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
                             <div class="d-flex mb-3" :class="c.esPropio ? 'justify-content-end' : 'justify-content-start'">
                                 <template x-if="!c.esPropio">
                                     <div class="d-flex gap-3 align-items-start">
@@ -181,14 +238,20 @@
                             </div>
                         </template>
                     </div>
-                </div>
+
+</div>
             </div>
         </div>
+        <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+
+
+
+
 
         <div class="px-3 py-3 border-top bg-white flex-shrink-0">
             <div class="d-flex align-items-center gap-2">
                 <div class="flex-grow-1">
-<input type="text" 
+<input type="text"
        class="form-control border-0 bg-light rounded-pill"
        placeholder="Escribe un comentario..."
        x-model="nuevoComentario"
@@ -198,7 +261,7 @@
                 </div>
                 <div class="flex-shrink-0">
                     <button class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center"
-                            style="width:44px; height:44px;" 
+                            style="width:44px; height:44px;"
                             type="button"
                             @click="agregarComentario()"
                             :disabled="guardandoComentario || !nuevoComentario.trim()">

@@ -499,6 +499,74 @@ class="btn btn-success"
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
 </div>
 
+<style>
+    #modalComentarios .actividad-ticket-field {
+        min-height: 62px;
+        background: var(--bs-body-bg);
+        font-size: .82rem;
+    }
+</style>
+<div class="px-3 pt-3 pb-3 border-bottom flex-shrink-0"
+     x-show="detalleComentario"
+     x-cloak>
+    <div class="row g-2">
+        <div class="col-3">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-hash fs-5"></i>
+                </span>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="form-label small mb-0">#:</div>
+                    <div x-text="detalleComentario ? detalleComentario.id : ''"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-9">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-info-subtle text-info flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-tool fs-5"></i>
+                </span>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="form-label small mb-0">Maquinaria:</div>
+                    <div x-text="detalleComentario && detalleComentario.maquinaria_label ? detalleComentario.maquinaria_label : 'S/I'"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-warning-subtle text-warning flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-align-left fs-5"></i>
+                </span>
+                <div class="flex-grow-1">
+                    <div class="form-label small mb-0">Descripción:</div>
+                    <div x-text="detalleComentario && detalleComentario.descripcion_label ? detalleComentario.descripcion_label : 'S/I'"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-success-subtle text-success flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-building-factory-2 fs-5"></i>
+                </span>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="form-label small mb-0">Marca:</div>
+                    <div x-text="detalleComentario && detalleComentario.marca_label ? detalleComentario.marca_label : 'S/I'"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-settings fs-5"></i>
+                </span>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="form-label small mb-0">Modelo:</div>
+                    <div x-text="detalleComentario && detalleComentario.modelo_label ? detalleComentario.modelo_label : 'S/I'"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
 <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height: 0;">
 <div class="chat-box-inner p-3 flex-grow-1 overflow-auto" style="min-height: 0; overscroll-behavior: contain;" x-ref="chatContainer">
@@ -510,7 +578,7 @@ class="btn btn-success"
 </div>
 </template>
 
-<template x-if="!cargandoComentarios && comentarios.length === 0">
+<template x-if="!cargandoComentarios && comentarios.length === 0 && !guardandoComentario">
 <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 380px;">
 <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
 <p class="text-muted mb-0 fs-5">Sin comentarios</p>
@@ -519,7 +587,7 @@ class="btn btn-success"
 
 <template x-if="!cargandoComentarios">
 <div class="chat-list active-chat p-2">
-<template x-for="c in comentarios" :key="c.id">
+<template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
 <div class="d-flex mb-3" :class="c.es_propio ? 'justify-content-end' : 'justify-content-start'">
 <template x-if="!c.es_propio">
 <div class="d-flex gap-3 align-items-start">
@@ -546,9 +614,15 @@ class="btn btn-success"
 </div>
 </template>
 
+
 </div>
 </div>
 </div>
+<?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+
+
+
+
 
 <div class="px-3 py-3 border-top bg-white flex-shrink-0">
 <div class="d-flex align-items-center gap-2">

@@ -13,6 +13,7 @@ use App\Models\Operativo\SolicitudChequeToken;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Core\JsonResponse;
+use App\Services\SolicitudChequeService;
 
 class SistemasSolicitudChequeController extends BaseController
 {
@@ -73,7 +74,6 @@ class SistemasSolicitudChequeController extends BaseController
                     'op_solicitud_cheque.id_estacion',
                     'op_solicitud_cheque.status',
                     'op_solicitud_cheque.fecha',
-                    'op_solicitud_cheque.hora',
                     'op_solicitud_cheque.beneficiario',
                     'op_solicitud_cheque.monto',
                     'op_solicitud_cheque.no_factura',
@@ -144,6 +144,10 @@ class SistemasSolicitudChequeController extends BaseController
                 ->map(
                     function ($cheque) use ($firmasPorSolicitud) {
 
+                        $fechaRaw = $cheque->fecha instanceof \DateTimeInterface
+                            ? $cheque->fecha->format('Y-m-d')
+                            : substr((string) $cheque->fecha, 0, 10);
+
                         /*
                          * Regla existente:
                          *
@@ -185,10 +189,10 @@ class SistemasSolicitudChequeController extends BaseController
                             (int) $cheque->status,
 
                             'fecha' =>
-                            $cheque->fecha,
+                            formatearFecha($fechaRaw),
 
-                            'hora' =>
-                            $cheque->hora,
+                            'fecha_raw' =>
+                            $fechaRaw,
 
                             'beneficiario' =>
                             $cheque->beneficiario,
@@ -418,6 +422,14 @@ class SistemasSolicitudChequeController extends BaseController
     {
         try {
 
+            if (!$this->usuarioPuedeAcceder()) {
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => 'No autorizado.'
+                ], 403);
+            }
+
             $data =
                 $this->requestData();
 
@@ -494,6 +506,26 @@ class SistemasSolicitudChequeController extends BaseController
                 ->count();
 
 
+            // Una recarga puede reintentar la solicitud cuyo resultado no alcanzó al navegador.
+            // Si esa misma firma ya quedó registrada, confirmamos el resultado sin duplicarla.
+            if (
+                ($opcion === 1 && $totalFirmas >= 2)
+                || (
+                    $opcion === 2
+                    && ($totalFirmas >= 3 || (int) $cheque->status === 2)
+                )
+            ) {
+
+                JsonResponse::custom([
+                    'success' => true,
+                    'type' => 'success',
+                    'message' => 'La firma de esta solicitud ya estaba registrada.'
+                ]);
+
+                return;
+            }
+
+
             /*
              * Conservamos la secuencia del frontend legacy:
              *
@@ -540,6 +572,24 @@ class SistemasSolicitudChequeController extends BaseController
                     'success' => false,
                     'type' => 'warning',
                     'message' => 'La solicitud ya cuenta con sus firmas correspondientes.'
+                ]);
+
+                return;
+            }
+
+
+            if (
+                $opcion === 2
+                && (
+                    $totalFirmas !== 2
+                    || (int) $cheque->status !== 1
+                )
+            ) {
+
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'warning',
+                    'message' => 'La solicitud ya no está pendiente de autorización.'
                 ]);
 
                 return;
@@ -628,6 +678,10 @@ class SistemasSolicitudChequeController extends BaseController
                 );
 
 
+            if ($opcion === 2) {
+                SolicitudChequeService::notificarAutorizacionDesdeSistemas($id, 2);
+            }
+
             JsonResponse::custom([
                 'success' => true,
                 'type' => 'success',
@@ -641,6 +695,14 @@ class SistemasSolicitudChequeController extends BaseController
                 'message' => 'No fue posible firmar la solicitud.'
             ]);
         }
+    }
+
+
+    private function usuarioPuedeAcceder(): bool
+    {
+        return Usuario::where('id', $this->userId())
+            ->where('id_puesto', 25)
+            ->exists();
     }
 
 

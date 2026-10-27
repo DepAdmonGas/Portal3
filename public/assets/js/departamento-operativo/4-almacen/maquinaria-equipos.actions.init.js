@@ -51,6 +51,7 @@ document.addEventListener('alpine:init', () => {
         // Comentarios
         cargandoComentarios: false,
         comentarios: [],
+        detalleComentario: null,
         nuevoComentario: '',
         guardandoComentario: false,
         comentarioId: 0,
@@ -327,6 +328,7 @@ document.addEventListener('alpine:init', () => {
             this.comentarioId = id;
             this.nuevoComentario = '';
             this.comentarios = [];
+            this.detalleComentario = null;
             this.cargandoComentarios = true;
 
             const offcanvasEl = document.getElementById('modalComentarios');
@@ -339,6 +341,7 @@ document.addEventListener('alpine:init', () => {
 
                 if (resp.data && resp.data.success) {
                     this.comentarios = resp.data.comentarios || [];
+                    this.detalleComentario = resp.data.detalle || null;
                     this.scrollChatToBottom();
                 }
             } catch (err) {
@@ -368,6 +371,7 @@ document.addEventListener('alpine:init', () => {
                     const resp2 = await axios.post(this.BASE_URL + '/comentarios', { id: id });
                     if (resp2.data && resp2.data.success) {
                         this.comentarios = resp2.data.comentarios || [];
+                        this.detalleComentario = resp2.data.detalle || this.detalleComentario;
                         this.scrollChatToBottom();
                     }
 
@@ -382,7 +386,6 @@ document.addEventListener('alpine:init', () => {
                     });
                     dt.draw(false);
 
-                    this.notify('success', 'Comentario agregado correctamente.');
                 } else {
                     this.notify('error', (resp.data && resp.data.message) || 'Error al agregar comentario.');
                 }

@@ -500,6 +500,11 @@ document.addEventListener('alpine:init', () => {
                                   this.abrirComentarios({
                                       id: info.event.id,
                                       descripcion: info.event.title,
+                                      convoca: info.event.extendedProps?.convoca || '',
+                                      fecha: info.event.extendedProps?.fecha || '',
+                                      fecha_label: info.event.extendedProps?.fecha_label || '',
+                                      hora_inicio: info.event.extendedProps?.hora_inicio || '',
+                                      hora_termino: info.event.extendedProps?.hora_termino || '',
                                       puedeComentar: true
                                   });
 
@@ -2710,6 +2715,10 @@ document.addEventListener('alpine:init', () => {
             this.juntaComentarios = {
                 id: junta.id,
                 tema: junta.descripcion || '',
+                convoca: junta.convoca || '',
+                fecha: junta.fecha_label || junta.fecha || '',
+                hora_inicio: junta.hora_inicio || '',
+                hora_termino: junta.hora_termino || '',
                 puedeComentar: junta.puedeComentar !== false
             };
 
@@ -2797,11 +2806,11 @@ document.addEventListener('alpine:init', () => {
 
         },
 
-        async cargarComentarios() {
+        async cargarComentarios(silencioso = false) {
 
             if (!this.juntaComentarios) return;
 
-            this.comentariosCargados = false;
+            if (!silencioso) this.comentariosCargados = false;
 
             try {
 
@@ -2822,7 +2831,7 @@ document.addEventListener('alpine:init', () => {
 
                     this.scrollChatToBottom();
 
-                } else {
+                } else if (!silencioso) {
 
                     this.comentarios = [];
 
@@ -2835,7 +2844,7 @@ document.addEventListener('alpine:init', () => {
                     error.response?.data ?? error
                 );
 
-                this.comentarios = [];
+                if (!silencioso) this.comentarios = [];
 
             } finally {
 
@@ -2843,7 +2852,7 @@ document.addEventListener('alpine:init', () => {
                  * El flag se limpia siempre en finally: si la peticion se
                  * queda colgada, el panel no muestra un spinner eterno.
                  */
-                this.comentariosCargados = true;
+                if (!silencioso) this.comentariosCargados = true;
 
             }
 
@@ -2880,9 +2889,7 @@ document.addEventListener('alpine:init', () => {
                 }
 
                 this.nuevoComentario = '';
-                this.notify('success', resp.data.message || 'Comentario agregado.');
-
-                await this.cargarComentarios();
+                await this.cargarComentarios(true);
 
             } catch (error) {
 

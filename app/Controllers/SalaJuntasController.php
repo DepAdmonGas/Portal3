@@ -142,6 +142,10 @@ class SalaJuntasController extends BaseController
 
                     'fecha' => $fecha,
 
+                    'fecha_label' => $junta->fecha
+                        ? formatearFecha($junta->fecha)
+                        : 'S/I',
+
                     'hora_inicio' =>
                     $junta->hora_inicio?->format('H:i'),
 

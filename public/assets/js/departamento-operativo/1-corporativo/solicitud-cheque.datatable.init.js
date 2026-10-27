@@ -232,7 +232,12 @@ this.visible(showRazonNow);
 $table.on('click', '.btn-comentarios', function (e) {
 e.preventDefault();
 const id = parseInt(this.dataset.id);
-const event = new CustomEvent('abrir-comentarios', { detail: { id } });
+const tabla = $table.DataTable();
+const fila = $(this).closest('tr');
+const solicitud = tabla.row(fila).data()
+    || (fila.hasClass('child') ? tabla.row(fila.prev()).data() : null)
+    || null;
+const event = new CustomEvent('abrir-comentarios', { detail: { id, solicitud: solicitud ? { ...solicitud } : { id } } });
 document.dispatchEvent(event);
 });
 

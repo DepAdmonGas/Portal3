@@ -293,7 +293,11 @@ exit;
 }
 
 $comentarios = EmbarquesService::getComentarios($idEmbarque);
-echo json_encode(['success' => true, 'comentarios' => $comentarios]);
+echo json_encode([
+    'success' => true,
+    'comentarios' => $comentarios,
+    'detalle' => EmbarquesService::getComentarioResumen($idEmbarque),
+]);
 exit;
 }
 

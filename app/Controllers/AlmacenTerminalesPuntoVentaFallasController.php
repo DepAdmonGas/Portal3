@@ -166,6 +166,7 @@ class AlmacenTerminalesPuntoVentaFallasController extends BaseController
         JsonResponse::custom([
             'success' => true,
             'data'    => Service::getComentarios((int)Request::input('id', 0)),
+            'detalle' => Service::getDetalle((int)Request::input('id', 0)),
         ]);
     }
 

@@ -2,9 +2,6 @@
 
 namespace App\Controllers;
 
-use Illuminate\Database\Capsule\Manager as DB;
-
-use App\Models\Estacion;
 use App\Models\Usuario;
 use App\Models\Operativo\CorteDia;
 use App\Models\Operativo\CorteDiaHist;
@@ -12,6 +9,7 @@ use App\Models\Operativo\CorteDiaHist;
 use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Core\JsonResponse;
+use App\Services\ModuleStationService;
 
 class SistemasCorteDiarioController extends BaseController
 {
@@ -24,14 +22,15 @@ class SistemasCorteDiarioController extends BaseController
             exit;
         }
 
-        $estaciones = Estacion::select([
-            'id',
-            'nombre',
-            'razonsocial'
-        ])
-            ->where('estatus', 1)
-            ->orderBy('nombre')
-            ->get();
+        $estacionesAutorizadas = ModuleStationService::getAvailableStations('corte-diario');
+        $contexto = ModuleStationService::getContext('corte-diario');
+        $idEstacion = $contexto['id_estacion'] ?? null;
+        $idsAutorizados = array_map('intval', array_column($estacionesAutorizadas, 'id'));
+
+        if ($idEstacion !== null && !in_array((int) $idEstacion, $idsAutorizados, true)) {
+            ModuleStationService::setContext('corte-diario', null, null);
+            $idEstacion = null;
+        }
 
         $title = 'Corte Diario';
 
@@ -40,7 +39,9 @@ class SistemasCorteDiarioController extends BaseController
 
         $data = [
             'title' => $title,
-            'estaciones' => $estaciones,
+            'idEstacion' => $idEstacion,
+            'moduleStationKey' => 'corte-diario',
+            'moduleStationPlaceholder' => 'Selecciona una estación',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'
             ],
@@ -48,6 +49,7 @@ class SistemasCorteDiarioController extends BaseController
             'scripts' => [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/js/core/module-station-selector.js?v=' . time(),
                 '/js/cortediario/datatable.init.js?v=' . time(),
                 '/js/cortediario/index.actions.init.js?v=' . time()
             ]
@@ -63,14 +65,17 @@ class SistemasCorteDiarioController extends BaseController
     public function datatable(): void
     {
         try {
+            if (!$this->usuarioPuedeAcceder()) {
+                JsonResponse::custom([
+                    'success' => false,
+                    'message' => 'No autorizado.',
+                    'data' => []
+                ], 403);
+            }
 
-            $idEstacion = isset($_GET['idEstacion'])
-                && is_numeric($_GET['idEstacion'])
-                ? (int) $_GET['idEstacion']
-                : 0;
+            $idEstacion = $this->estacionSeleccionadaAutorizada();
 
-
-            if ($idEstacion <= 0) {
+            if ($idEstacion === null) {
 
                 JsonResponse::custom([
                     'success' => true,
@@ -139,6 +144,8 @@ class SistemasCorteDiarioController extends BaseController
 
                             'fecha' => $corte->fecha,
 
+                            'fecha_formateada' => formatearFecha($corte->fecha),
+
                             'ventas' => (int) $corte->ventas,
 
                             'tpv' => (int) $corte->tpv,
@@ -190,6 +197,8 @@ class SistemasCorteDiarioController extends BaseController
     {
         try {
 
+            $idEstacion = $this->validarContextoOperacion();
+
             $data = $this->requestData();
 
 
@@ -207,6 +216,14 @@ class SistemasCorteDiarioController extends BaseController
                 ]);
 
                 return;
+            }
+
+            if (!$this->cortePerteneceAEstacion($id, $idEstacion)) {
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => 'El corte no pertenece a la estación seleccionada.'
+                ], 403);
             }
 
 
@@ -309,6 +326,8 @@ class SistemasCorteDiarioController extends BaseController
     {
         try {
 
+            $idEstacion = $this->validarContextoOperacion();
+
             $data = $this->requestData();
 
 
@@ -326,6 +345,14 @@ class SistemasCorteDiarioController extends BaseController
                 ]);
 
                 return;
+            }
+
+            if (!$this->cortePerteneceAEstacion($id, $idEstacion)) {
+                JsonResponse::custom([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => 'El corte no pertenece a la estación seleccionada.'
+                ], 403);
             }
 
 
@@ -384,6 +411,66 @@ class SistemasCorteDiarioController extends BaseController
                 'message' => 'No fue posible finalizar el corte.'
             ]);
         }
+    }
+
+
+    private function usuarioPuedeAcceder(): bool
+    {
+        return Usuario::where('id', $this->userId())
+            ->where('id_puesto', 25)
+            ->exists();
+    }
+
+
+    private function estacionSeleccionadaAutorizada(): ?int
+    {
+        $idEstacion = ModuleStationService::getContext('corte-diario')['id_estacion'] ?? null;
+        if ($idEstacion === null) {
+            return null;
+        }
+
+        $idsAutorizados = array_map(
+            'intval',
+            array_column(ModuleStationService::getAvailableStations('corte-diario'), 'id')
+        );
+
+        return in_array((int) $idEstacion, $idsAutorizados, true)
+            ? (int) $idEstacion
+            : null;
+    }
+
+
+    private function validarContextoOperacion(): int
+    {
+        if (!$this->usuarioPuedeAcceder()) {
+            JsonResponse::custom([
+                'success' => false,
+                'type' => 'error',
+                'message' => 'No autorizado.'
+            ], 403);
+        }
+
+        $idEstacion = $this->estacionSeleccionadaAutorizada();
+        if ($idEstacion === null) {
+            JsonResponse::custom([
+                'success' => false,
+                'type' => 'warning',
+                'message' => 'Selecciona una estación autorizada.'
+            ], 422);
+        }
+
+        return $idEstacion;
+    }
+
+
+    private function cortePerteneceAEstacion(int $idCorte, int $idEstacion): bool
+    {
+        return CorteDia::query()
+            ->join('op_corte_mes', 'op_corte_dia.id_mes', '=', 'op_corte_mes.id')
+            ->join('op_corte_year', 'op_corte_mes.id_year', '=', 'op_corte_year.id')
+            ->where('op_corte_dia.id', $idCorte)
+            ->where('op_corte_year.id_estacion', $idEstacion)
+            ->exists();
     }
 
 

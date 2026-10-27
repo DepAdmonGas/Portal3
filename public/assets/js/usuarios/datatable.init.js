@@ -35,23 +35,6 @@ document.addEventListener(
                     type:
                         'GET',
 
-
-                    data: function (d) {
-
-                        const filtro =
-                            document.getElementById(
-                                'filtroEstacion'
-                            );
-
-
-                        d.idestacion =
-                            filtro
-                                ? filtro.value
-                                : '';
-
-                    },
-
-
                     dataSrc:
                         function (json) {
 

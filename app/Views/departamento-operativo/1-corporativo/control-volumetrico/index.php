@@ -526,7 +526,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                         <div class="chat-box-inner p-3" style="max-height: 420px; overflow-y: auto;" x-ref="chatContainer">
 
                                             <!-- SIN COMENTARIOS -->
-                                            <template x-if="comentarios.length === 0">
+                                            <template x-if="comentarios.length === 0 && !guardandoComentario">
                                                 <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 380px;">
                                                     <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
                                                     <p class="text-muted mb-0 fs-5">Sin comentarios</p>
@@ -536,7 +536,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                             <!-- COMENTARIOS -->
                                             <div class="chat-list active-chat p-2">
 
-                                                <template x-for="c in comentarios" :key="c.id">
+<template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
                                                     <div class="d-flex mb-4" :class="c.es_mio ? 'justify-content-end' : 'justify-content-start'">
 
                                                         <!-- MENSAJES OTROS -->
@@ -571,8 +571,11 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                     </div>
                                                 </template>
 
+
+
                                             </div>
-                                        </div>
+                                                                                <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+</div>
 
                                         <!-- FOOTER -->
                                         <div class="px-3 py-3 border-top chat-send-message-footer bg-white">
@@ -650,14 +653,14 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                     <button type="button" class="btn bg-danger-subtle text-danger me-0 me-md-2" data-bs-dismiss="modal">
                         <i class="ti ti-x"></i>    
                         Cancelar</button>
-                        
+
   </div>
   <div class="col-12 col-md-auto d-grid">
                         <button type="button" class="btn btn-success mt-1 mt-md-0" @click="guardarDocumento()" :disabled="subiendoDocumento">
                             <i class="ti ti-check"></i>
                             <span x-text="subiendoDocumento ? 'Subiendo...' : 'Guardar'"></span>
                         </button>
-    
+
   </div>
                     </div>
                     </div>

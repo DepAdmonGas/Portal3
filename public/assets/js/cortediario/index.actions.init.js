@@ -1,40 +1,28 @@
 document.addEventListener('alpine:init', () => {
 
-    Alpine.data('corteDiario', () => ({
+    Alpine.data('corteDiario', (initialStationId = null) => ({
 
-        idEstacion: '',
+        idEstacion: initialStationId ? String(initialStationId) : '',
 
         init() {
 
-            const idEstacion = sessionStorage.getItem('idEstacion');
+            if (typeof ModuleStationSelector !== 'undefined') {
+                ModuleStationSelector.init('corte-diario', {
+                    customReload: selector => {
+                        const selectedStation = selector.getValue().id_estacion;
+                        this.idEstacion = selectedStation ? String(selectedStation) : '';
 
-            if (idEstacion) {
-                this.idEstacion = idEstacion;
+                        const table = $('#table-corte-diario').DataTable();
+                        if (selectedStation) {
+                            table.ajax.reload(null, false);
+                        } else {
+                            table.clear().draw();
+                        }
+                    }
+                });
             }
 
             this.inicializarEventos();
-        },
-
-        cambiarEstacion() {
-
-            if (this.idEstacion) {
-
-                sessionStorage.setItem(
-                    'idEstacion',
-                    this.idEstacion
-                );
-
-            } else {
-
-                sessionStorage.removeItem(
-                    'idEstacion'
-                );
-            }
-
-            $('#table-corte-diario')
-                .DataTable()
-                .ajax
-                .reload();
         },
 
         inicializarEventos() {

@@ -7,6 +7,7 @@ document.addEventListener('alpine:init', () => {
 
         comentarioIdActual: 0,
         comentarioFolio: '',
+        detalleComentarioMerma: null,
         comentarios: [],
         nuevoComentario: '',
         guardandoComentario: false,
@@ -36,6 +37,7 @@ document.addEventListener('alpine:init', () => {
 
         async abrirComentarios(id) {
             this.comentarioIdActual = id;
+            this.detalleComentarioMerma = null;
             this.nuevoComentario = '';
             this.comentarios = [];
 
@@ -46,6 +48,13 @@ document.addEventListener('alpine:init', () => {
             if (res && res.success) {
                 this.comentarios = res.comentarios || [];
                 this.comentarioFolio = res.folio || '';
+                this.detalleComentarioMerma = {
+                    id,
+                    folio: res.folio || '',
+                    fecha_hora: res.fecha_hora_llegada || '',
+                    responsable: res.responsable || '',
+                    producto: res.producto || ''
+                };
             }
 
             bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasComentarios')).show();

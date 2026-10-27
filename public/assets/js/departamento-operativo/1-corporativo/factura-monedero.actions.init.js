@@ -94,6 +94,7 @@ guardando: false,
 editando: false,
 editandoId: 0,
 comentarioSolicitudId: null,
+detalleComentario: null,
 comentarios: [],
 nuevoComentario: '',
 guardandoComentario: false,
@@ -356,6 +357,7 @@ if (el) el.scrollTop = el.scrollHeight;
 
 async abrirComentarios(id) {
 this.comentarioSolicitudId = id;
+this.detalleComentario = null;
 this.nuevoComentario = '';
 this.comentarios = [];
 
@@ -363,6 +365,7 @@ try {
 const resp = await fetch('/departamento-operativo/corporativo/factura-monedero/get-comentarios?id=' + id);
 const json = await resp.json();
 if (json.success) {
+this.detalleComentario = json.detalle || null;
 this.comentarios = (json.data || []).map(c => ({
 ...c,
 usuario_nombre: c.usuario_nombre || 'Sistema',
@@ -398,6 +401,7 @@ this.nuevoComentario = '';
 const resp2 = await fetch('/departamento-operativo/corporativo/factura-monedero/get-comentarios?id=' + facturaId);
 const json2 = await resp2.json();
 if (json2.success) {
+this.detalleComentario = json2.detalle || this.detalleComentario;
 this.comentarios = (json2.data || []).map(c => ({
 ...c,
 usuario_nombre: c.usuario_nombre || 'Sistema',
@@ -417,7 +421,6 @@ return false;
 }
 });
 }
-if (window.Notify) /*Notify.success('Comentario agregado')*/;
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
 }

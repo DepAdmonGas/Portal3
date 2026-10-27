@@ -15,7 +15,7 @@
      x-data="{ ...actions(), ...bitacoraRrhhComponent() }">
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
- 
+
     <!-- Indicador a la izquierda -->
     <div class="d-flex align-items-center gap-2">
         <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis d-inline-flex align-items-center gap-1 px-3 py-2 fs-2 fw-semibold">
@@ -31,7 +31,7 @@
 
 
 </div>
- 
+
 
     <div class="datatables">
         <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
@@ -72,6 +72,13 @@
     </div>
 
     <!-- Offcanvas Comentarios -->
+    <style>
+        #offcanvasComentarios .actividad-ticket-field {
+            min-height: 62px;
+            background: var(--bs-body-bg);
+            font-size: .82rem;
+        }
+    </style>
     <div class="offcanvas offcanvas-end d-flex flex-column" tabindex="-1" id="offcanvasComentarios" style="width: 480px; max-height: 100dvh; overflow: hidden;">
         <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary flex-shrink-0">
             <div class="hstack gap-3">
@@ -85,17 +92,67 @@
             </div>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
+        <div class="px-3 pt-3 pb-3 border-bottom flex-shrink-0"
+             x-show="detalleComentarioBitacora"
+             x-cloak>
+            <div class="row g-2">
+                <div class="col-3">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-hash fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">#:</div>
+                            <div x-text="detalleComentarioBitacora ? detalleComentarioBitacora.id : ''"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-9">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-calendar-event fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1">
+                            <div class="form-label small mb-0">Fecha:</div>
+                            <div x-text="detalleComentarioBitacora && detalleComentarioBitacora.fecha ? detalleComentarioBitacora.fecha : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-info-subtle text-info flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-user fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1">
+                            <div class="form-label small mb-0">Solicitante:</div>
+                            <div x-text="detalleComentarioBitacora && detalleComentarioBitacora.nombre_solicitante ? detalleComentarioBitacora.nombre_solicitante : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-warning-subtle text-warning flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-align-left fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1">
+                            <div class="form-label small mb-0">Descripción:</div>
+                            <div x-text="detalleComentarioBitacora && detalleComentarioBitacora.descripcion ? detalleComentarioBitacora.descripcion : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
             <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height: 0;">
                 <div class="chat-box-inner p-3 flex-grow-1 overflow-auto" style="min-height: 0; overscroll-behavior: contain;" x-ref="chatContainer">
-                    <template x-if="comentarios.length === 0">
+                    <template x-if="comentarios.length === 0 && !guardandoComentario">
                         <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 380px;">
                             <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
                             <p class="text-muted mb-0 fs-5">Sin comentarios</p>
                         </div>
                     </template>
                     <div class="chat-list active-chat p-2">
-                        <template x-for="c in comentarios" :key="c.id">
+                <template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
                             <div class="d-flex mb-4" :class="c.esMio ? 'justify-content-end' : 'justify-content-start'">
                                 <template x-if="!c.esMio">
                                     <div class="d-flex gap-3 align-items-start">
@@ -120,9 +177,15 @@
                             </div>
                         </template>
                     </div>
-                </div>
+
+</div>
             </div>
         </div>
+        <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+
+
+
+
         <div class="px-3 py-3 border-top bg-white flex-shrink-0">
             <div class="d-flex align-items-center gap-2">
                 <div class="flex-grow-1">
@@ -156,17 +219,17 @@
         <label class="form-label">Fecha y hora:</label>
         <div x-text="detalle ? (detalle.fecha || 'Sin información') : '...'"></div>
     </div>
-    
+
     <div class="col-md-5 mb-1">
         <label class="form-label">Nombre del solicitante:</label>
         <div x-text="detalle ? (detalle.nombre_solicitante || 'Sin información') : '...'"></div>
     </div>
-    
+
     <div class="col-md-7 mb-1">
         <label class="form-label">Estación / Departamento:</label>
         <div x-text="detalle ? (detalle.estacion || 'Sin información') : '...'"></div>
     </div>
-    
+
     <div class="col-12 mb-1">
         <label class="form-label">Descripción:</label>
         <div x-text="detalle ? (detalle.descripcion || 'Sin información') : '...'"></div>

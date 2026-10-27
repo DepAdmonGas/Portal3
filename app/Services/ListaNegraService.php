@@ -166,6 +166,41 @@ class ListaNegraService
         return $data;
     }
 
+    public static function getComentarioResumen(int $idListaNegra): ?array
+    {
+        $record = RhPersonalListaNegra::join(
+            'op_rh_personal',
+            'op_rh_personal_lista_negra.id_personal',
+            '=',
+            'op_rh_personal.id'
+        )
+            ->join('op_rh_puestos', 'op_rh_personal.puesto', '=', 'op_rh_puestos.id')
+            ->select(
+                'op_rh_personal_lista_negra.id',
+                'op_rh_personal_lista_negra.fecha',
+                'op_rh_personal_lista_negra.motivo',
+                'op_rh_personal.nombre_completo',
+                'op_rh_personal.id_estacion',
+                'op_rh_puestos.puesto'
+            )
+            ->where('op_rh_personal_lista_negra.id', $idListaNegra)
+            ->first();
+
+        if (!$record) {
+            return null;
+        }
+
+        $estacion = RhLocalidad::find((int)$record->id_estacion);
+
+        return [
+            'nombre_completo' => (string)($record->nombre_completo ?? ''),
+            'puesto' => (string)($record->puesto ?? ''),
+            'estacion' => $estacion?->localidad ?? 'S/I',
+            'fecha_baja' => $record->fecha ? formatearFecha($record->fecha) : '---',
+            'motivo' => (string)($record->motivo ?? ''),
+        ];
+    }
+
     public static function addComentario(int $idListaNegra, string $comentario, int $idUsuario): bool
     {
         RhListaNegraComentario::create([

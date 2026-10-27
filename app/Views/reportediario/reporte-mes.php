@@ -185,7 +185,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
                 <i class="ti ti-eye"></i>
                     Detalle del Reporte Diario (<label class="text-white" x-text="detalleFecha"></label>)
-                     
+
                 </h4>
 
                 <button
@@ -198,7 +198,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
             <div class="modal-body">
 
-  
+
                 <template
                     x-for="(producto,index) in detalleProductos"
                     :key="index">
@@ -208,7 +208,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                             <!-- TITULO -->
                             <!-- =========================== -->
 
-                            
+
 
                                 <label>
                                     <b x-text="producto.nombre"></b>
@@ -226,7 +226,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 <div class="card">
 <div class="card-header card-colored-header bg-primary">
             <h5  class="card-title text-white mb-0">
-              <i class="ti ti-cash me-1"></i>                          
+              <i class="ti ti-cash me-1"></i>
             1.
                                         Volúmenes registrados
 
@@ -238,7 +238,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                                        <!-- VOLUMEN -->
                         <!-- ======================================= -->
 
-                               
+
 
 
                                     <div class="table-responsive">
@@ -290,7 +290,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                                 <!-- PIPAS -->
                                 <!-- ======================================= -->
 
-                                 
+
 
                                     <div class="table-responsive">
 
@@ -374,8 +374,8 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 </div>
 
                                </div>
-                               
-                   </div>             
+
+                   </div>
 <!---------aqui termina el body-card------->
 
 
@@ -420,9 +420,9 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                             </div>
         </div>
 
-                          
 
-                  
+
+
 
                     </div>
 
@@ -441,7 +441,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                   </div>
 
 
-             
+
 
             </div>
 
@@ -489,6 +489,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
             <!-- Body -->
 
             <div class="d-flex flex-column flex-grow-1 overflow-hidden bg-light" style="min-height:0;">
+            <?php \App\Core\View::renderPartial('partials/_chat-request-summary.php', ['contextoComentarioExpression' => 'mensajeRow']); ?>
             <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height:0;">
             <div class="chat-box-inner p-3 flex-grow-1 overflow-auto" style="min-height:0;overscroll-behavior:contain;" x-ref="chatContainer">
 
@@ -504,7 +505,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                 </template>
 
                 <template
-                    x-for="item in mensajes"
+                    x-for="item in ordenarComentariosChat(mensajes)"
                     :key="item.id">
 
                     <div class="d-flex mb-3" :class="item.propio ? 'justify-content-end' : 'justify-content-start'">
@@ -526,13 +527,17 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                                 </div>
                             </template>
                         </div>
-                    </div>
 
                 </template>
 
-            </div></div></div>
+            </div></div>
+            <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'enviandoMensaje']); ?>
+
+
+</div>
 
             <!-- Footer -->
+
 
             <div class="px-3 py-3 border-top bg-white flex-shrink-0">
 

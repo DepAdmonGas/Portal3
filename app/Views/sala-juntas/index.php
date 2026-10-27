@@ -7,7 +7,7 @@
 
     <div class="calender-sidebar app-calendar mt-3">
 
-       
+
 <div class="d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-md-center gap-3">
 
     <!-- Totales -->
@@ -77,7 +77,7 @@
 <div class="modal-content">
 
 <div class="modal-header bg-primary">
-<h5 class="modal-title text-white"> 
+<h5 class="modal-title text-white">
 <i class="ti ti-calendar-user me-1"></i> Juntas del <span x-text="fechaSeleccionada"></span></h5>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
@@ -368,6 +368,74 @@ x-text="'(' + grupo.estacion + ')'"></span>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
 
+        <style>
+            #modalComentariosJunta .actividad-ticket-field {
+                min-height: 62px;
+                background: var(--bs-body-bg);
+                font-size: .82rem;
+            }
+        </style>
+        <div class="px-3 pt-3 pb-3 border-bottom flex-shrink-0"
+             x-show="juntaComentarios"
+             x-cloak>
+            <div class="row g-2">
+                <div class="col-12">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-message-2 fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Tema de la reunión:</div>
+                            <div x-text="juntaComentarios && juntaComentarios.tema ? juntaComentarios.tema : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-info-subtle text-info flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-user fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Persona que convoca:</div>
+                            <div x-text="juntaComentarios && juntaComentarios.convoca ? juntaComentarios.convoca : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-success-subtle text-success flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-calendar-event fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Fecha programada:</div>
+                            <div x-text="juntaComentarios && juntaComentarios.fecha ? juntaComentarios.fecha : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-warning-subtle text-warning flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-clock-hour-4 fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Hora de inicio:</div>
+                            <div x-text="juntaComentarios && juntaComentarios.hora_inicio ? juntaComentarios.hora_inicio : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-danger-subtle text-danger flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-clock-hour-8 fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Hora de término:</div>
+                            <div x-text="juntaComentarios && juntaComentarios.hora_termino ? juntaComentarios.hora_termino : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
             <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height: 0;">
                 <div class="chat-box-inner p-3 flex-grow-1 overflow-auto"
@@ -380,7 +448,7 @@ x-text="'(' + grupo.estacion + ')'"></span>
                         </div>
                     </template>
 
-                    <template x-if="comentariosCargados && comentarios.length === 0">
+                    <template x-if="comentariosCargados && comentarios.length === 0 && !guardandoComentario">
                         <div class="d-flex flex-column align-items-center justify-content-center text-center"
                             style="min-height: 380px;">
                             <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
@@ -389,7 +457,7 @@ x-text="'(' + grupo.estacion + ')'"></span>
                     </template>
 
                     <div class="chat-list active-chat p-2">
-                        <template x-for="c in comentarios" :key="c.id">
+<template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
                             <div class="d-flex mb-3"
                                 :class="c.esMio ? 'justify-content-end' : 'justify-content-start'">
 
@@ -421,11 +489,16 @@ x-text="'(' + grupo.estacion + ')'"></span>
                             </div>
                         </template>
                     </div>
-                </div>
+
+</div>
             </div>
         </div>
+        <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
 
-        <!-- Regresar al detalle de la junta 
+
+
+
+        <!-- Regresar al detalle de la junta
         <div class="px-3 pt-2 border-top bg-white flex-shrink-0" x-show="volverAlDetalle">
             <button type="button" class="btn btn-outline-secondary btn-sm w-100"
                 @click="regresarAlDetalle()">
@@ -434,7 +507,8 @@ x-text="'(' + grupo.estacion + ')'"></span>
             </button>
         </div>
 -->
-        
+
+
         <div class="px-3 py-3 border-top bg-white flex-shrink-0" x-show="juntaComentarios?.puedeComentar">
             <div class="d-flex align-items-center gap-2">
                 <div class="flex-grow-1">
@@ -634,7 +708,7 @@ No existen horarios disponibles para esta fecha.
                     <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cancelar
-</button> 
+</button>
                     </div>
                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
                       <button type="button" class="btn btn-success" @click="guardarJunta()"

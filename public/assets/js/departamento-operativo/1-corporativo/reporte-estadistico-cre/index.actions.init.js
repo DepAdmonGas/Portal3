@@ -32,6 +32,7 @@ function reporteEstadisticoCreComponent() {
         guardandoComentario: false,
         formComentario: '',
         contextoMensaje: { idReporte: 0, idFecha: 0, etiqueta: '' },
+        resumenDiaComentario: null,
 
         //------------------------------------------------------------------
         init() {
@@ -251,6 +252,13 @@ function reporteEstadisticoCreComponent() {
                     + (dia.fecha_label || '') + ' · '
                     + ((m ? m.nombre : '') + ' ' + this.year)
             };
+            this.resumenDiaComentario = {
+                ...dia,
+                idReporte: dia.id_reporte,
+                fechaEtiqueta: dia.dia || dia.fecha || '',
+                periodo: this.etiquetaPeriodo(),
+                estacion: this.estacionNombre
+            };
             this.formComentario = '';
 
             const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasComentariosCre'));
@@ -320,7 +328,6 @@ function reporteEstadisticoCreComponent() {
                 this.formComentario = '';
                 this.scrollChat();
                 this.actualizarContadores();
-                this.notify('success', 'Comentario agregado exitosamente.');
             } catch (err) {
                 const respuesta = err.response;
                 const cuerpo = respuesta && respuesta.data ? respuesta.data : {};

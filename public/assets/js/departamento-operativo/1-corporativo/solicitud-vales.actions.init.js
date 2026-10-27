@@ -56,6 +56,7 @@ window.open(`/download?tipo=${tipo}&file=${encodeURIComponent(archivo)}`, '_blan
             nuevoComentario: '',
             guardandoComentario: false,
             comentarioIdActual: null,
+            detalleComentario: null,
             idUsuario: 0,
 
 detalle: {},
@@ -98,6 +99,7 @@ if (el) el.scrollTop = el.scrollHeight;
 
 async abrirComentarios(id) {
 this.comentarioIdActual = id;
+this.detalleComentario = null;
 this.nuevoComentario = '';
 this.comentarios = [];
 
@@ -105,6 +107,7 @@ try {
 const resp = await fetch('/departamento-operativo/corporativo/solicitud-vales/get-comentarios?id=' + id);
 const json = await resp.json();
 if (json.success) {
+this.detalleComentario = json.detalle || null;
 this.comentarios = (json.data || []).map(c => ({
 ...c,
 esMio: c.esPropio,
@@ -215,7 +218,6 @@ return false;
 }
 });
 }
-if (window.Notify) /*Notify.success('Comentario agregado')*/;
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
 }

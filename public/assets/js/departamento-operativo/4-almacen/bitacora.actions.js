@@ -45,6 +45,7 @@ document.addEventListener('alpine:init', () => {
         comentarios: [],
         comentarioRegistroId: 0,
         comentarioRegistroLabel: '',
+        comentarioRegistro: {},
         nuevoComentario: '',
         guardandoComentario: false,
 
@@ -361,6 +362,7 @@ document.addEventListener('alpine:init', () => {
         async abrirComentarios(item) {
             this.comentarioRegistroId = item.id;
             this.comentarioRegistroLabel = String(parseInt(item.orden || '0', 10) || '0').padStart(2, '0');
+            this.comentarioRegistro = item || {};
             this.nuevoComentario = '';
             this.comentarios = [];
 

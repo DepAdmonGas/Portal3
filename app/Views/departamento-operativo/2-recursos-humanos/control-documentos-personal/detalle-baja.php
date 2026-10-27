@@ -243,7 +243,7 @@ x-cloak>
 <div class="chat-box-inner p-3" style="max-height: 650px; overflow-y: auto;" x-ref="chatContainer">
 
 <!-- SIN COMENTARIOS -->
-<template x-if="comentarios.length === 0">
+<template x-if="comentarios.length === 0 && !guardandoComentario">
 <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 650px;">
 <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
 <p class="text-muted mb-0 fs-5">Sin comentarios</p>
@@ -253,7 +253,7 @@ x-cloak>
 <!-- COMENTARIOS -->
 <div class="chat-list active-chat p-2">
 
-<template x-for="c in comentarios" :key="c.id">
+<template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
 <div class="d-flex mb-4" :class="c.esPropio ? 'justify-content-end' : 'justify-content-start'">
 
 <!-- MENSAJES OTROS -->
@@ -289,9 +289,11 @@ x-cloak>
 </template>
 
 </div>
+<?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
 </div>
 
 <!-- FOOTER -->
+
 <div class="px-3 py-3 border-top chat-send-message-footer bg-white">
 <div class="d-flex align-items-center gap-2">
 

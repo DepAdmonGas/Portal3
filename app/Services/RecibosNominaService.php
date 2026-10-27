@@ -856,6 +856,25 @@ $periodos = [];
         ];
     }
 
+    public static function getComentarioResumen(int $idReporte): ?array
+    {
+        $registro = OpReciboNominaV2::with('personal')->find($idReporte);
+        if (!$registro) {
+            return null;
+        }
+
+        $personal = $registro->personal;
+        $puesto = $personal ? RhPuestos::find((int)$personal->puesto) : null;
+
+        return [
+            'tipo_periodo' => (string)($registro->descripcion ?? ''),
+            'numero_periodo' => (int)($registro->no_semana_quincena ?? 0),
+            'no_colaborador' => $personal?->no_colaborador ?: 'S/I',
+            'puesto' => $puesto?->puesto ?? 'S/I',
+            'nombre_personal' => $personal?->nombre_completo ?? 'Sin nombre',
+        ];
+    }
+
     /**
      * Finaliza la actividad replicando el puntaje por fechas del módulo legacy.
      */

@@ -67,13 +67,70 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
 
+        <style>
+            #offcanvasComentarios .actividad-ticket-field {
+                min-height: 62px;
+                background: var(--bs-body-bg);
+                font-size: .82rem;
+            }
+        </style>
+        <div class="px-3 pt-3 pb-3 border-bottom flex-shrink-0"
+             x-show="detalleComentarioMerma"
+             x-cloak>
+            <div class="row g-2">
+                <div class="col-4">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-hash fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Folio:</div>
+                            <div x-text="detalleComentarioMerma ? '00' + detalleComentarioMerma.folio : ''"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-8">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-calendar-event fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1">
+                            <div class="form-label small mb-0">Fecha y hora:</div>
+                            <div x-text="detalleComentarioMerma && detalleComentarioMerma.fecha_hora ? detalleComentarioMerma.fecha_hora : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-8">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-info-subtle text-info flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-user fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1">
+                            <div class="form-label small mb-0">Responsable:</div>
+                            <div x-text="detalleComentarioMerma && detalleComentarioMerma.responsable ? detalleComentarioMerma.responsable : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-success-subtle text-success flex-shrink-0" style="width:34px;height:34px;">
+                            <i class="ti ti-gas-station fs-5"></i>
+                        </span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="form-label small mb-0">Producto:</div>
+                            <div x-text="detalleComentarioMerma && detalleComentarioMerma.producto ? detalleComentarioMerma.producto : 'S/I'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
             <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height: 0;">
                 <div class="chat-box-inner p-3 flex-grow-1 overflow-auto"
                      style="min-height: 0; overscroll-behavior: contain;"
                      x-ref="chatContainer">
 
-                    <template x-if="comentarios.length === 0">
+                    <template x-if="comentarios.length === 0 && !guardandoComentario">
                         <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 360px;">
                             <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
                             <p class="text-muted mb-0 fs-5">Sin comentarios</p>
@@ -81,7 +138,7 @@
                     </template>
 
                     <div class="chat-list active-chat p-2">
-                        <template x-for="c in comentarios" :key="c.id">
+                <template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
                             <div class="d-flex mb-3"
                                  :class="c.esPropio ? 'justify-content-end' : 'justify-content-start'">
                                 <template x-if="!c.esPropio">
@@ -107,9 +164,15 @@
                             </div>
                         </template>
                     </div>
-                </div>
+
+</div>
             </div>
         </div>
+        <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+
+
+
+
 
         <div class="px-3 py-3 border-top bg-white flex-shrink-0">
             <div class="d-flex align-items-center gap-2">

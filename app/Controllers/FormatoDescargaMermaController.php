@@ -479,6 +479,8 @@ class FormatoDescargaMermaController extends BaseController
             'comentarios' => FormatoDescargaMermaService::getComentarios($id),
             'count'       => FormatoDescargaMermaService::getComentarioCount($id),
             'folio'       => $registro['folio'],
+            'fecha_hora_llegada' => $registro['fecha_hora_llegada'],
+            'responsable' => $registro['responsable'],
             'producto'    => $registro['producto'],
         ]);
     }

@@ -503,17 +503,34 @@ Cancelar</button>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
 </div>
 
+<div class="px-3 pt-3 pb-3 border-bottom flex-shrink-0"
+     x-show="mesActualNombre && idYear"
+     x-cloak>
+    <div class="row g-2">
+        <div class="col-12">
+            <div class="border rounded-2 bg-body px-2 py-2 d-flex align-items-center gap-2" style="font-size:.82rem;">
+                <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
+                    <i class="ti ti-calendar-event fs-5"></i>
+                </span>
+                <div class="flex-grow-1">
+                    <div class="form-label small mb-0">Periodo:</div>
+                    <div x-text="mesActualNombre + ' ' + idYear"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0;">
 <div class="w-100 flex-grow-1 d-flex flex-column" style="min-height: 0;">
 <div class="p-3 flex-grow-1 overflow-auto" style="min-height: 0; overscroll-behavior: contain;" x-ref="chatContainer">
-<template x-if="comentarios.length === 0">
+<template x-if="comentarios.length === 0 && !guardandoComentario">
 <div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 380px;">
 <i class="ti ti-message-off text-muted mb-2" style="font-size: 55px;"></i>
 <p class="text-muted mb-0 fs-5">Sin comentarios</p>
 </div>
 </template>
 <div class="p-2">
-<template x-for="c in comentarios" :key="c.id">
+<template x-for="c in ordenarComentariosChat(comentarios)" :key="c.id">
 <div class="d-flex mb-4" :class="c.esMio ? 'justify-content-end' : 'justify-content-start'">
 <template x-if="!c.esMio">
 <div class="d-flex gap-3 align-items-start">
@@ -538,9 +555,15 @@ Cancelar</button>
 </div>
 </template>
 </div>
+
 </div>
 </div>
 </div>
+<?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
+
+
+
+
 
 <div class="px-3 py-3 border-top bg-white flex-shrink-0">
 <div class="d-flex align-items-center gap-2">

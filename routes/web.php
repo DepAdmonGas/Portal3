@@ -108,6 +108,7 @@ return function (RouteCollector $r) {
     $r->addGroup('/usuarios', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['UsuarioController', 'index']));
         $r->addRoute('GET', '/datatable', Route::auth(['UsuarioController', 'datatableUsuarios']));
+        $r->addRoute('POST', '/filtro-estacion', Route::auth(['UsuarioController', 'actualizarFiltroEstacion']));
         $r->addRoute('GET', '/detail', Route::auth(['UsuarioController', 'obtenerUsuario']));
         $r->addRoute('POST', '/create', Route::auth(['UsuarioController', 'crearUsuario']));
         $r->addRoute('POST', '/update', Route::auth(['UsuarioController', 'actualizarUsuario']));

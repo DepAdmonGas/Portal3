@@ -21,6 +21,7 @@ document.addEventListener('alpine:init', () => {
         nuevoComentario: '',
         guardandoComentario: false,
         comentarioIdActual: null,
+        detalleComentarioBitacora: null,
 
         documentos: [],
         docForm: { nombre: '' },
@@ -189,6 +190,7 @@ document.addEventListener('alpine:init', () => {
         // ---------- COMENTARIOS ----------
         async abrirComentarios(id) {
             this.comentarioIdActual = id;
+            this.detalleComentarioBitacora = null;
             this.nuevoComentario = '';
             this.comentarios = [];
 
@@ -196,6 +198,7 @@ document.addEventListener('alpine:init', () => {
                 const resp = await fetch('/departamento-operativo/recursos-humanos/bitacora-rrhh/comentarios?id=' + id);
                 const json = await resp.json();
                 if (json.success) {
+                    this.detalleComentarioBitacora = json.detalle || null;
                     this.comentarios = (json.comentarios || []).map(c => ({
                         ...c,
                         esMio: c.esPropio,
@@ -239,6 +242,7 @@ document.addEventListener('alpine:init', () => {
                     const resp2 = await fetch('/departamento-operativo/recursos-humanos/bitacora-rrhh/comentarios?id=' + id);
                     const json2 = await resp2.json();
                     if (json2.success) {
+                        this.detalleComentarioBitacora = json2.detalle || this.detalleComentarioBitacora;
                         this.comentarios = (json2.comentarios || []).map(c => ({
                             ...c,
                             esMio: c.esPropio,
@@ -258,7 +262,6 @@ document.addEventListener('alpine:init', () => {
                             }
                         });
                     }
-                    if (window.Notify) Notify.success('Comentario agregado');
                 } else {
                     if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
                 }
@@ -557,7 +560,6 @@ document.addEventListener('alpine:init', () => {
                 if (json.success) {
                     this.nuevoComentario = '';
                     await this.cargarComentarios();
-                    if (window.Notify) Notify.success('Comentario agregado');
                 } else {
                     if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
                 }

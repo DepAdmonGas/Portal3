@@ -29,6 +29,7 @@ document.addEventListener('alpine:init', () => {
 
         documentoSeleccionadoId: 0,
         documentoSeleccionadoDescripcion: '',
+        documentoSeleccionado: null,
         cargandoComentarios: false,
         guardandoComentario: false,
         comentarios: [],
@@ -67,7 +68,7 @@ init() {
     });
     window.addEventListener('saveiro:editar', (e) => this.abrirModalEditar(e.detail));
     window.addEventListener('saveiro:eliminar', (e) => this.eliminarRegistro(e.detail.id, e.detail.descripcion));
-    window.addEventListener('saveiro:comentarios', (e) => this.abrirModalComentarios(e.detail.id, e.detail.descripcion));
+    window.addEventListener('saveiro:comentarios', (e) => this.abrirModalComentarios(e.detail.id, e.detail.documento));
 },
         cambiarTipo() {
             sessionStorage.setItem('camioneta_saveiro_tipo', this.tipoActual);
@@ -187,8 +188,13 @@ init() {
             tableEl.off('click', '.btn-comentario').on('click', '.btn-comentario', function (e) {
                 e.preventDefault();
                 const id = parseInt(this.dataset.id, 10);
-                const descripcion = this.dataset.descripcion;
-                window.dispatchEvent(new CustomEvent('saveiro:comentarios', { detail: { id, descripcion } }));
+                const instance = window.camionetaSaveiroInstance;
+                const documento = instance?.tablaDt
+                    ? instance.tablaDt.row($(this).closest('tr')).data()
+                    : null;
+                window.dispatchEvent(new CustomEvent('saveiro:comentarios', {
+                    detail: { id, documento: documento || { id, descripcion: this.dataset.descripcion || '' } }
+                }));
             });
         },
 
@@ -293,9 +299,10 @@ init() {
             });
         },
 
-        async abrirModalComentarios(id, descripcion) {
+        async abrirModalComentarios(id, documento = null) {
             this.documentoSeleccionadoId = id;
-            this.documentoSeleccionadoDescripcion = descripcion || '';
+            this.documentoSeleccionado = documento || null;
+            this.documentoSeleccionadoDescripcion = documento?.descripcion || '';
             this.nuevoComentario = '';
             this.comentarios = [];
             this.errorComentario = false;
@@ -341,7 +348,6 @@ init() {
 
                 if (resp.data?.success) {
                     this.nuevoComentario = '';
-                    this.notify('success', 'Comentario agregado exitosamente');
                     await this.cargarComentarios();
                     this.tablaDt.ajax.reload(null, false);
                 } else {

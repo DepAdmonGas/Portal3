@@ -224,6 +224,7 @@ async agregarComentario() {
 if (this.guardandoComentario) return;
 if (!this.nuevoComentario.trim()) return;
 this.guardandoComentario = true;
+this.scrollChatToBottom();
 try {
 const resp = await fetch('/departamento-operativo/control-volumetrico/agregar-comentario', {
 method: 'POST',
@@ -234,7 +235,6 @@ const json = await resp.json();
 if (json.success) {
 this.nuevoComentario = '';
 await this.recargarComentarios();
-if (window.Notify) Notify.success('Comentario agregado');
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar comentario');
 }
