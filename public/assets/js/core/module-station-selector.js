@@ -60,10 +60,31 @@ class ModuleStationSelector {
 
     saveContext() {
         var v = this.getValue();
-        return axios.post('/api/module-context/set', {
+        var payload = {
             module_key: this.moduleKey,
             id_estacion: v.id_estacion,
             id_depto: v.id_depto
+        };
+
+        return axios.post('/api/module-context/set', payload).catch((error) => {
+            var response = error && error.response;
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            var newToken = response && response.status === 419
+                ? (response.data && response.data.new_token)
+                : null;
+
+            if (!newToken || !meta) {
+                return Promise.reject(error);
+            }
+
+            meta.setAttribute('content', newToken);
+            if (axios.defaults && axios.defaults.headers && axios.defaults.headers.common) {
+                axios.defaults.headers.common['X-CSRF-TOKEN'] = newToken;
+            }
+
+            // Guardar el contexto es idempotente; reintenta una vez con el
+            // token renovado para evitar que venza durante una sesión larga.
+            return axios.post('/api/module-context/set', payload);
         });
     }
 

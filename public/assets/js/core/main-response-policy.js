@@ -21,7 +21,19 @@
         },
         function (error) {
             if (error.response && error.response.status === 419) {
-                window.location.reload();
+                const requestUrl = error.config && error.config.url;
+                let requestPath = '';
+                try {
+                    requestPath = new URL(requestUrl, window.location.href).pathname;
+                } catch (e) {
+                    requestPath = '';
+                }
+
+                // El selector administra su propio reintento seguro al renovar
+                // el token. Las demás peticiones conservan la recarga existente.
+                if (requestPath !== '/api/module-context/set') {
+                    window.location.reload();
+                }
             }
             return Promise.reject(error);
         }

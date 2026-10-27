@@ -168,17 +168,10 @@ if (json?.pendientesData) {
     const selector = document.getElementById('module-station-selector-solicitud-tarjetas');
     if (selector) Array.from(selector.options).forEach(option => {
         const key = option.value.startsWith('estacion_') ? option.value : 'total';
-        const count = json.pendientesData[key] ?? 0;
+        const count = Number(json.pendientesData[key] ?? 0);
         const label = option.textContent.replace(/\s*\(\d+\)\s*$/, '').trim();
-        option.textContent = `${label} (${count})`;
+        option.textContent = count > 0 ? `${label} (${count})` : label;
     });
-    const badge = document.getElementById('module-station-badge-solicitud-tarjetas');
-    if (badge && selector) {
-        const option = selector.options[selector.selectedIndex];
-        const label = option.textContent.replace(/\s*\(\d+\)\s*$/, '').trim();
-        badge.textContent = `${label}: ${json.pendientesContexto} pendiente(s)`;
-        badge.style.display = '';
-    }
 }
 
 });

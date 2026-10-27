@@ -11,7 +11,7 @@
     <!-- Favicon icon-->
     <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/icono-web.png') ?>" />
     <!-- Core Css -->
-    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
+    <link rel="stylesheet" href="<?= asset('css/styles.css') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/css/styles.css') ?: 1 ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
 
 
@@ -113,7 +113,7 @@
 
 </head>
 
-<body class="link-sidebar">
+<body class="link-sidebar layout-sasisopa">
 
     <!-- Pantalla de carga (Loader) -->
     <div class="loader-admongas">
@@ -465,6 +465,7 @@
     </script>
 
     <script src="<?= asset('js/core/highlight-init.js') ?>"></script>
+    <script src="<?= asset('js/core/datatables-scroll-isolation.js') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/js/core/datatables-scroll-isolation.js') ?: 1 ?>"></script>
 
 
 </body>
