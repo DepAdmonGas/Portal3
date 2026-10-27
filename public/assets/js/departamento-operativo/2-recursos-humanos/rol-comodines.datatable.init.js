@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+    var origenQuery = new URLSearchParams(window.location.search).get('origen') === 'incidencias-nomina'
+        ? '?origen=incidencias-nomina'
+        : '';
+
     var permisos = {};
 
     function cls(enabled) { return enabled ? '' : ' disabled'; }
@@ -25,7 +29,7 @@ function renderAcciones(row) {
     html += '<li><a class="dropdown-item d-flex align-items-center gap-3 ' + (noEdit ? 'disabled text-muted' : '') + '" ';
     html += 'data-id="' + row.id + '" ';
     html += '@click="$dispatch(\'open-edit\', ' + row.id + ')" ';
-    html += 'href="' + (noEdit ? 'javascript:void(0)' : '/departamento-operativo/recursos-humanos/rol-comodines/' + row.id) + '">';
+    html += 'href="' + (noEdit ? 'javascript:void(0)' : '/departamento-operativo/recursos-humanos/rol-comodines/' + row.id + origenQuery) + '">';
     html += '<i class="fs-4 ti ti-edit"></i>Editar</a></li>';
 
     html += '<li><a class="dropdown-item d-flex align-items-center pointer gap-3' + cls(!esBorrador) + '" data-action="pdf" data-id="' + row.id + '">';

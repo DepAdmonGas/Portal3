@@ -18,11 +18,14 @@ class RolComodinesController extends BaseController
         $permisos = RolComodinesService::getPermisos();
 
         $title = 'Rol de Comodines';
+        $origenIncidencias = Request::get('origen') === 'incidencias-nomina';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
         Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
-        Breadcrumb::add('Incidencias de Nómina', '/departamento-operativo/recursos-humanos/incidencias-nomina/' . date('Y'));
+        if ($origenIncidencias) {
+            Breadcrumb::add('Incidencias de Nómina', '/departamento-operativo/recursos-humanos/incidencias-nomina/' . date('Y'));
+        }
         Breadcrumb::add($title, '');
 
         View::render('departamento-operativo/2-recursos-humanos/rol-comodines/index', [
@@ -49,6 +52,7 @@ class RolComodinesController extends BaseController
     public function form(int $idReporte)
     {
         $idReporte = (int)$idReporte;
+        $origenIncidencias = Request::get('origen') === 'incidencias-nomina';
         if ($idReporte <= 0) {
             http_response_code(404);
             echo 'ID no válido';
@@ -70,8 +74,12 @@ class RolComodinesController extends BaseController
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
         Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
-        Breadcrumb::add('Incidencias de Nómina', '/departamento-operativo/recursos-humanos/incidencias-nomina/' . date('Y'));
-        Breadcrumb::add('Rol de Comodines', '/departamento-operativo/recursos-humanos/rol-comodines');
+        if ($origenIncidencias) {
+            Breadcrumb::add('Incidencias de Nómina', '/departamento-operativo/recursos-humanos/incidencias-nomina/' . date('Y'));
+        }
+        $urlLista = '/departamento-operativo/recursos-humanos/rol-comodines'
+            . ($origenIncidencias ? '?origen=incidencias-nomina' : '');
+        Breadcrumb::add('Rol de Comodines', $urlLista);
         Breadcrumb::add($title, '');
 
         View::render('departamento-operativo/2-recursos-humanos/rol-comodines/form', [

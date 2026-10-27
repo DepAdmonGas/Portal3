@@ -58,7 +58,7 @@
                     </li>
 
                     <li>
-                        <a class="dropdown-item" href="/departamento-operativo/recursos-humanos/rol-comodines">
+                        <a class="dropdown-item" href="/departamento-operativo/recursos-humanos/rol-comodines?origen=incidencias-nomina">
                             <i class="ti ti-users-group me-2"></i> Rol de Comodines
                         </a>
                     </li>

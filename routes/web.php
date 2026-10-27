@@ -610,6 +610,17 @@ return function (RouteCollector $r) {
 
         //----- 2. Recursos Humanos
         $r->addRoute('GET', '/recursos-humanos', Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
+        $r->addRoute('GET', '/recursos-humanos/vacaciones', Route::auth(['VacacionesController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/vacaciones/{idYear:\d+}', Route::auth(['VacacionesController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/vacaciones/data/{idYear:\d+}', Route::auth(['VacacionesController', 'data']));
+        $r->addRoute('GET', '/recursos-humanos/vacaciones/pendientes/{idYear:\d+}', Route::auth(['VacacionesController', 'pendientes']));
+        $r->addRoute('GET', '/recursos-humanos/vacaciones/detalle', Route::auth(['VacacionesController', 'detalle']));
+        $r->addRoute('GET', '/recursos-humanos/vacaciones/historial', Route::auth(['VacacionesController', 'historial']));
+        $r->addRoute('GET', '/recursos-humanos/vacaciones/comentarios', Route::auth(['VacacionesController', 'comentarios']));
+        $r->addRoute('POST', '/recursos-humanos/vacaciones/comentarios/guardar', Route::auth(['VacacionesController', 'guardarComentario']));
+        $r->addRoute('POST', '/recursos-humanos/vacaciones/eliminar', Route::auth(['VacacionesController', 'eliminar']));
+        $r->addRoute('GET', '/recursos-humanos/vacaciones/nuevo/{idLocalidad:\d+}', Route::auth(['VacacionesController', 'nuevo']));
+        $r->addRoute('GET', '/recursos-humanos/vacaciones/editar/{idFormulario:\d+}', Route::auth(['VacacionesController', 'editar']));
         $r->addRoute('GET', '/recursos-humanos/checador', Route::auth(['ChecadorController', 'index']));
         $r->addRoute('GET', '/recursos-humanos/checador/asistencia', Route::auth(['ChecadorController', 'dailyAttendance']));
         $r->addRoute('GET', '/recursos-humanos/checador/jornadas', Route::auth(['ChecadorController', 'journeys']));
@@ -677,6 +688,9 @@ return function (RouteCollector $r) {
 
         //----- Control de Documentos del Personal
         $r->addRoute('GET', '/recursos-humanos/control-documentos-personal', Route::auth(['ControlDocumentosPersonalController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/bajas-personal', Route::auth(['ControlDocumentosPersonalController', 'bajasPersonal']));
+        $r->addRoute('GET', '/recursos-humanos/bajas-personal/get-data', Route::auth(['ControlDocumentosPersonalController', 'getBajasData']));
+        $r->addRoute('POST', '/recursos-humanos/bajas-personal/update', Route::auth(['ControlDocumentosPersonalController', 'updateBaja']));
         $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-data', Route::auth(['ControlDocumentosPersonalController', 'getData']));
         $r->addRoute('GET', '/recursos-humanos/control-documentos-personal/get-data-inactivos', Route::auth(['ControlDocumentosPersonalController', 'getDataInactivos']));
         $r->addRoute('POST', '/recursos-humanos/control-documentos-personal/add', Route::auth(['ControlDocumentosPersonalController', 'add']));
@@ -725,6 +739,7 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/recursos-humanos/formatos/eliminar-fila', Route::auth(['FormatosController', 'eliminarFila']));
         $r->addRoute('GET', '/recursos-humanos/formatos-editar/{id:\d+}', Route::auth(['FormatosController', 'editar']));
         $r->addRoute('POST', '/recursos-humanos/formatos/update', Route::auth(['FormatosController', 'update']));
+        $r->addRoute('POST', '/recursos-humanos/formatos/autosave-vacaciones', Route::auth(['FormatosController', 'guardarBorradorVacaciones']));
         $r->addRoute('GET', '/recursos-humanos/formatos/firmar/{id:\d+}', Route::auth(['FormatosController', 'firmarPage']));
         $r->addRoute('POST', '/recursos-humanos/formatos/crear-token', Route::auth(['FormatosController', 'crearToken']));
         $r->addRoute('POST', '/recursos-humanos/formatos/firmar', Route::auth(['FormatosController', 'firmar']));

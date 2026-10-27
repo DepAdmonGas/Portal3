@@ -82,6 +82,7 @@ class DownloadController
             'pedido-aditivo'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/pedido-aditivo/',
             'recibos-nomina'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/acuses/',
             'recibos-nomina-firma'                 => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/firmados/',
+            'vacaciones'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/vacaciones/',
             'recibos-aguinaldo'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/aguinaldo/',
             'recibos-mexdesa'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/recibos-mexdesa/',
             'recibos-nomina-acuse'                 => dirname(__DIR__, 2) . '/public/uploads/archivos/recibo-nomina-acuse/',

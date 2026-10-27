@@ -72,7 +72,17 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 <thead>
 <tr>
 <template x-for="(col, ci) in columnas" :key="'col-' + ci">
-<th :class="ci === 1 ? 'text-start' : 'text-center'" x-text="col"></th>
+<th :class="ci === 1 ? 'text-start' : 'text-center'">
+<template x-if="col.includes('ti-file-text')">
+<i class="ti ti-file-text text-primary fs-5"></i>
+</template>
+<template x-if="col.includes('ti-trash')">
+<i class="ti ti-trash text-danger fs-5"></i>
+</template>
+<template x-if="!col.includes('ti-file-text') && !col.includes('ti-trash')">
+<span x-text="col"></span>
+</template>
+</th>
 </template>
 </tr>
 </thead>
@@ -242,11 +252,11 @@ title="Quitar empleado"></i>
 </div>
 
 <div class="card-footer">
-    <div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
                     <div class="col-12 col-md-auto d-grid">
                       <button type="button" class="btn btn-success float-end" @click="guardar()" :disabled="guardando"><i class="ti ti-check me-1"></i> <?= $esEdicion ? 'Guardar' : 'Actualizar' ?></button>
                     </div>
-                  </div>
+    </div>
 
 </div>
 
@@ -327,7 +337,7 @@ title="Quitar empleado"></i>
 </div>
 <div class="col-md-6 mb-3">
 <label class="form-label fw-semibold">* Puesto:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="f1PuestoWrapper">
+<div class="select2-modal-field select2-form-bordered is-select2-pending" x-ref="f1PuestoWrapper">
 <select class="form-select" x-ref="f1PuestoSelect" data-campo="puesto">
 <option value="">Selecciona un puesto...</option>
 <template x-for="p in puestos" :key="p.id">

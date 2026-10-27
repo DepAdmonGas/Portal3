@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Usuario;
 use App\Models\ModuloDptoOperativo;
+use App\Models\ModuloSubDptoOperativo;
+use App\Models\ModuloSubUsuarioConfigDptoOperativo;
 
 class ModuloDptoOperativoService
 {
@@ -32,6 +34,8 @@ $idMes  = date('n');
 
 $sufijos = [
 'corte-diario'      => "/{$idYear}/{$idMes}",
+'aceites-mes'        => "/{$idYear}/{$idMes}",
+'resumen-monedero'   => "/{$idYear}/{$idMes}",
 'embarques'         => "/{$idYear}/{$idMes}",
 'solicitud-cheque'  => "/{$idYear}/{$idMes}",
 'ingresos-facturacion' => "/{$idYear}",
@@ -73,6 +77,55 @@ $q->where('id_usuario', $usuario_id);
 }
 )->exists();
 
+// La configuración explícita resuelve submódulos por módulo. Acceso Temporal
+// conserva su resolver independiente y el permiso principal de Recursos
+// Humanos se mantiene en el esquema legado para no alterar Checador.
+$modosPorModulo = [];
+$modulosProtegidos = ModuloDptoOperativo::query()
+    ->where('clave', 'acceso-temporal')
+    ->pluck('id')
+    ->map(static fn ($id) => (int) $id)
+    ->all();
+$configModel = new ModuloSubUsuarioConfigDptoOperativo();
+if ($configModel->getConnection()->getSchemaBuilder()->hasTable($configModel->getTable())) {
+    $configuraciones = ModuloSubUsuarioConfigDptoOperativo::query()
+        ->where('id_usuario', $usuario_id)
+        ->get(['id_modulo', 'modo']);
+
+    if ($configuraciones->isNotEmpty()) {
+        foreach ($configuraciones as $configuracion) {
+            $idModuloConfigurado = (int) $configuracion->id_modulo;
+            if (!in_array($idModuloConfigurado, $modulosProtegidos, true)) {
+                $modosPorModulo[$idModuloConfigurado] = $configuracion->modo;
+            }
+        }
+    }
+}
+
+// Una asignación individual de submódulo ya expresa una selección personal.
+// Si no hay modo explícito, se toma como personalizada para ese módulo;
+// el modo actual permite conservar de forma intencional la regla histórica.
+$idsConSubmodulosUsuario = ModuloSubDptoOperativo::query()
+    ->whereHas('usuarios', static function ($query) use ($usuario_id) {
+        $query->where('id_usuario', $usuario_id);
+    })
+    ->pluck('id_modulo')
+    ->map(static fn ($id) => (int) $id)
+    ->unique()
+    ->all();
+
+foreach ($idsConSubmodulosUsuario as $idModuloConfigurado) {
+    if (!in_array($idModuloConfigurado, $modulosProtegidos ?? [], true)
+        && !array_key_exists($idModuloConfigurado, $modosPorModulo)) {
+        $modosPorModulo[$idModuloConfigurado] = 'personalizar';
+    }
+}
+
+$modulosConModoEspecifico = array_keys(array_filter(
+    $modosPorModulo,
+    static fn ($modo) => in_array($modo, ['heredar', 'personalizar'], true)
+));
+
 $query = ModuloDptoOperativo::with([
 
 'roles' => function ($q) use ($usuario) {
@@ -100,25 +153,30 @@ $query->where('clave', $clave);
 }
 
 /* ---------- APLICAR LA PRIORIDAD ----------*/
-if ($tienePermisosUsuario) {
+$query->where(function ($accessQuery) use ($tienePermisosUsuario, $usuario_id, $usuario, $modosPorModulo, $modulosConModoEspecifico) {
+    if ($tienePermisosUsuario) {
+        $accessQuery->whereHas('usuarios', function ($q) use ($usuario_id) {
+            $q->where('id_usuario', $usuario_id);
+        });
+    } else {
+        $accessQuery->whereHas('roles', function ($q) use ($usuario) {
+            $q->where('id_puesto', $usuario->id_puesto);
+        });
+    }
 
-$query->whereHas(
-'usuarios',
-function ($q) use ($usuario_id) {
-$q->where('id_usuario', $usuario_id);
-}
-);
-
-} else {
-
-$query->whereHas(
-'roles',
-function ($q) use ($usuario) {
-$q->where('id_puesto', $usuario->id_puesto);
-}
-);
-
-}
+    if ($modulosConModoEspecifico !== []) {
+        $accessQuery->orWhere(function ($configuredQuery) use ($modulosConModoEspecifico, $usuario_id, $usuario) {
+            $configuredQuery->whereIn('id', $modulosConModoEspecifico)
+                ->where(function ($grantQuery) use ($usuario_id, $usuario) {
+                    $grantQuery->whereHas('usuarios', function ($q) use ($usuario_id) {
+                        $q->where('id_usuario', $usuario_id);
+                    })->orWhereHas('roles', function ($q) use ($usuario) {
+                        $q->where('id_puesto', $usuario->id_puesto);
+                    });
+                });
+        });
+    }
+});
 
 $modulos = $query->orderBy('id', 'asc')->get();
 $resultado = [];
@@ -127,15 +185,40 @@ foreach ($modulos as $modulo) {
 
 $rol  = $modulo->roles->first();
 $user = $modulo->usuarios->first();
+$modoConfigurado = $modulosProtegidos !== []
+    && in_array((int) $modulo->id, $modulosProtegidos, true)
+        ? null
+        : ($modosPorModulo[$modulo->id] ?? null);
+$modoSubmodulos = in_array($modoConfigurado, ['heredar', 'personalizar'], true)
+    ? $modoConfigurado
+    : null;
+
+// Los módulos con modo explícito resuelven el permiso principal por módulo:
+// usuario, si existe; de lo contrario, puesto. Sin modo se conserva la regla
+// global histórica para no cambiar asignaciones existentes.
+$permisoModulo = $modulo->clave !== 'recursos-humanos' && $modoSubmodulos !== null
+    ? ($user ?: $rol)
+    : ($tienePermisosUsuario ? $user : $rol);
+
+if ($modoSubmodulos !== null && !$permisoModulo) {
+    continue;
+}
 
 /* ---------- SUBMENUS ----------*/
 $submenus = [];
 
 foreach ($modulo->submenus as $submenu) {
 
-$permisoSub = $tienePermisosUsuario
-? $submenu->usuarios->isNotEmpty()
-: $submenu->roles->isNotEmpty();
+$esSubmoduloProtegido = in_array($submenu->clave, ['checador', 'acceso-temporal'], true);
+$permisoSub = $esSubmoduloProtegido
+    ? ($tienePermisosUsuario ? $submenu->usuarios->isNotEmpty() : $submenu->roles->isNotEmpty())
+    : match ($modoSubmodulos) {
+        'personalizar' => $submenu->usuarios->isNotEmpty(),
+        'heredar' => $submenu->roles->isNotEmpty(),
+        default => $tienePermisosUsuario
+            ? $submenu->usuarios->isNotEmpty()
+            : $submenu->roles->isNotEmpty(),
+    };
 
 if (!$permisoSub) {
 continue;
@@ -162,20 +245,15 @@ $resultado[$modulo->clave] = [
 
 
 /* ---------- 🔒 Permisos (usuario > puesto > 0) ----------*/
-'leer' => $user && $user->pivot ? $user->pivot->leer
-: ($rol && $rol->pivot ? $rol->pivot->leer : 0),
+'leer' => $permisoModulo && $permisoModulo->pivot ? $permisoModulo->pivot->leer : 0,
 
-'crear' => $user && $user->pivot? $user->pivot->crear
-: ($rol && $rol->pivot? $rol->pivot->crear : 0),
+'crear' => $permisoModulo && $permisoModulo->pivot ? $permisoModulo->pivot->crear : 0,
 
-'editar' => $user && $user->pivot? $user->pivot->editar
-: ($rol && $rol->pivot ? $rol->pivot->editar : 0),
+'editar' => $permisoModulo && $permisoModulo->pivot ? $permisoModulo->pivot->editar : 0,
 
-'eliminar' => $user && $user->pivot? $user->pivot->eliminar
-: ($rol && $rol->pivot ? $rol->pivot->eliminar : 0),
+'eliminar' => $permisoModulo && $permisoModulo->pivot ? $permisoModulo->pivot->eliminar : 0,
 
-'descargar' => $user && $user->pivot? $user->pivot->descargar
-: ($rol && $rol->pivot ? $rol->pivot->descargar : 0),
+'descargar' => $permisoModulo && $permisoModulo->pivot ? $permisoModulo->pivot->descargar : 0,
 
 'submenus' => $submenus
 ];

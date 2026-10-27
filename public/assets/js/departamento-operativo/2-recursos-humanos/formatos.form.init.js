@@ -25,6 +25,8 @@ archivosEmpleadoNombre: '',
 signaturePad: null,
 guardandoFila: false,
 guardando: false,
+autosaveTimer: null,
+autosavePromise: null,
 
 init() {
 const c = this.$el;
@@ -64,7 +66,77 @@ this.fila.salario_actual = p.sd;
 
 this.initSelect2();
 
+const camposVacaciones = ['id_personal', 'num_dias', 'fecha_inicio', 'fecha_termino', 'fecha_regreso', 'observaciones'];
+this.$el.addEventListener('input', (event) => {
+if (this.formato === 6 && this.esEdicion && camposVacaciones.includes(event.target.name)) {
+this.programarAutosaveVacaciones();
+}
+});
+this.$el.addEventListener('change', (event) => {
+if (this.formato === 6 && this.esEdicion && camposVacaciones.includes(event.target.name)) {
+this.programarAutosaveVacaciones(0);
+}
+});
+if (window.jQuery) {
+window.jQuery(this.$el).on('change.formatosVacacionesAutosave select2:select.formatosVacacionesAutosave', '#card-formato select[name="id_personal"]', () => {
+if (this.formato === 6 && this.esEdicion) this.programarAutosaveVacaciones(0);
+});
+}
+
 this.$nextTick(() => this.initSignaturePad());
+},
+
+programarAutosaveVacaciones(delay = 500) {
+if (this.autosaveTimer) window.clearTimeout(this.autosaveTimer);
+this.autosaveTimer = window.setTimeout(() => {
+this.autosaveTimer = null;
+this.guardarBorradorVacaciones();
+}, delay);
+},
+
+async guardarBorradorVacaciones() {
+if (this.formato !== 6 || !this.esEdicion || !this.detalleId) return true;
+if (this.autosaveTimer) {
+window.clearTimeout(this.autosaveTimer);
+this.autosaveTimer = null;
+}
+
+const anterior = this.autosavePromise;
+const solicitud = (anterior || Promise.resolve()).catch(() => false).then(async () => {
+const leerCampo = (nombre) => {
+const campo = this.$el.querySelector('#card-formato [name="' + nombre + '"]');
+return campo ? campo.value : '';
+};
+const datos = new FormData();
+datos.append('id', this.detalleId);
+datos.append('id_personal', leerCampo('id_personal'));
+datos.append('num_dias', leerCampo('num_dias'));
+datos.append('fecha_inicio', leerCampo('fecha_inicio'));
+datos.append('fecha_termino', leerCampo('fecha_termino'));
+datos.append('fecha_regreso', leerCampo('fecha_regreso'));
+datos.append('observaciones', leerCampo('observaciones'));
+
+try {
+const respuesta = await fetch('/departamento-operativo/recursos-humanos/formatos/autosave-vacaciones', {
+method: 'POST',
+body: datos,
+credentials: 'same-origin'
+});
+const json = await respuesta.json();
+if (!respuesta.ok || json.success !== true) {
+throw new Error(json.message || 'No se pudieron guardar los cambios.');
+}
+return json.guardado !== false;
+} catch (error) {
+console.error('Error al guardar borrador de Vacaciones:', error);
+return false;
+}
+});
+
+this.autosavePromise = solicitud;
+const resultado = await solicitud;
+if (this.autosavePromise === solicitud) this.autosavePromise = null;
+return resultado;
 },
 
 initSelect2() {
@@ -426,6 +498,10 @@ return;
 }
 
 this.guardando = true;
+
+if (this.formato === 6) {
+await this.guardarBorradorVacaciones();
+}
 
 const url = '/departamento-operativo/recursos-humanos/formatos/update';
 

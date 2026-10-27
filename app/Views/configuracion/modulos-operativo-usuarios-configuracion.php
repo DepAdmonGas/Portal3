@@ -89,10 +89,25 @@ echo !empty($permisos['crear']) ? '
 
 <!-- SUBMODULOS -->
 <div x-show="modulo_id" x-transition>
-<label class="form-label mt-1 mb-3">Submódulos:</label>
+<div class="mb-3" x-show="moduleConfigurable">
+<label class="form-label" for="modoSubmodulos">Acceso a submódulos:</label>
+<select id="modoSubmodulos" class="form-select" x-model="modoSubmodulos">
+<option value="actual">Conservar configuración actual</option>
+<option value="heredar">Heredar los submódulos habilitados para el puesto</option>
+<option value="personalizar">Personalizar para este usuario</option>
+</select>
+<div class="form-text" x-show="modoSubmodulos === 'personalizar'">
+Solo se mostrarán los submódulos seleccionados para este usuario.
+</div>
+<div class="form-text" x-show="modoSubmodulos === 'heredar'">
+Se mostrarán los submódulos habilitados para el puesto del usuario.
+</div>
+</div>
+
+<label class="form-label mt-1 mb-3" x-show="!moduleConfigurable || modoSubmodulos === 'personalizar'">Submódulos:</label>
 
 <!-- LISTA DE SUBMODULOS-->
-<div class="row" x-show="submodulos.length">
+<div class="row" x-show="(!moduleConfigurable || modoSubmodulos === 'personalizar') && submodulos.length">
 <template x-for="sub in submodulos" :key="sub.id">
 <div class="col-6 mb-3">
 <div class="form-check">
@@ -104,7 +119,8 @@ echo !empty($permisos['crear']) ? '
 </div>
 
 <!-- SIN SUBMODULOS -->
-<div class="text-muted" x-show="modulo_id && !submodulos.length">El módulo no cuenta con submódulos disponibles</div>
+<div class="text-muted" x-show="(!moduleConfigurable || modoSubmodulos === 'personalizar') && modulo_id && !submodulos.length">El módulo no cuenta con submódulos disponibles</div>
+<div class="text-muted" x-show="modulo_id && !moduleConfigurable">Este módulo conserva su configuración actual; sus submódulos se administran como antes.</div>
 </div>
 
 </div>

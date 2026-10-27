@@ -33,6 +33,14 @@ return `
 `;
 }
 },
+{ title: 'Modo submódulos', data: 'modo_submodulos', className: 'text-center align-middle', render: function (data) {
+const modos = {
+'actual': 'Configuración actual',
+'heredar': 'Hereda del puesto',
+'personalizar': 'Personalizado'
+};
+return modos[data] || modos.actual;
+}},
 { title: 'Leer', data: 'tbLeer', width: '60px', className: 'text-center align-middle', render: (data) => iconoPermiso(data)},
 { title: 'Crear', data: 'tbCrear', width: '60px', className: 'text-center align-middle', render: (data) => iconoPermiso(data)},
 { title: 'Editar', data: 'tbEditar', width: '60px', className: 'text-center align-middle', render: (data) => iconoPermiso(data)},

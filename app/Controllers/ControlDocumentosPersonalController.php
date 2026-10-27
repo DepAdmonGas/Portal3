@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Core\View;
 use App\Core\Breadcrumb;
+use App\Core\JsonResponse;
+use App\Core\Request;
 use App\Services\ControlDocumentosPersonalService;
 use App\Services\PersonalExcelService;
 use App\Services\ModuleStationService;
@@ -13,6 +15,57 @@ use App\Models\Operativo\RhPuestos;
 
 class ControlDocumentosPersonalController extends BaseController
 {
+    public function bajasPersonal()
+    {
+        $title = 'Bajas de Personal';
+        if (!$this->guardModuleAccess('control-documentos-personal', $title, 'departamento-operativo')) return;
+        $permisos = ControlDocumentosPersonalService::getPermisos();
+        if (!$permisos['puedeLeer']) {
+            http_response_code(403);
+            View::render('errors/403', [], 'departamento-operativo');
+            return;
+        }
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+        Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
+        Breadcrumb::add($title, '');
+
+        View::render('departamento-operativo/2-recursos-humanos/control-documentos-personal/bajas-personal', [
+            'title' => $title,
+            'moduleStationKey' => 'bajas-personal',
+            'pendientesData' => ControlDocumentosPersonalService::getBajasPendientes(),
+            'pendientesActuales' => ControlDocumentosPersonalService::getBajaPendienteCountActual(),
+            'puedeEditarBaja' => $permisos['puedeEditar'],
+            'puedeEliminarBaja' => $permisos['puedeEliminarBaja'],
+            'scripts' => [
+                '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/core/module-station-selector.js?v=' . time(),
+                '/assets/js/departamento-operativo/2-recursos-humanos/bajas-personal.datatable.init.js?v=' . time(),
+            ],
+            'links' => ['/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'],
+            'help' => false,
+        ], 'departamento-operativo');
+    }
+
+    public function getBajasData()
+    {
+        if (!ControlDocumentosPersonalService::getPermisos()['puedeLeer']) JsonResponse::forbidden('No tienes permiso de lectura para Bajas de Personal.');
+        JsonResponse::custom(['success' => true, 'data' => ControlDocumentosPersonalService::getBajasList()]);
+    }
+
+    public function updateBaja()
+    {
+        $id = filter_var(Request::input('id_baja'), FILTER_VALIDATE_INT);
+        $estado = filter_var(Request::input('estado_proceso'), FILTER_VALIDATE_INT);
+        if (!$id || $estado === false) JsonResponse::validation('Completa los datos del proceso.');
+        $proceso = trim((string)Request::input('proceso', ''));
+        if (!ControlDocumentosPersonalService::updateBajaProceso((int)$id, $proceso, (int)$estado)) {
+            JsonResponse::forbidden('No fue posible actualizar la baja. Verifica permisos, contexto y estatus.');
+        }
+        JsonResponse::success('Proceso de baja actualizado.');
+    }
+
     public function index()
     {
         $permisos = ControlDocumentosPersonalService::getPermisos();
@@ -128,91 +181,49 @@ class ControlDocumentosPersonalController extends BaseController
 
     public function getArchivosBaja()
     {
-        header('Content-Type: application/json');
-        $idBaja = sanitize_input($_GET['id_baja'] ?? null, 'int');
-        if (!$idBaja) {
-            echo json_encode(['success' => false, 'data' => []]);
-            return;
-        }
-        $data = ControlDocumentosPersonalService::getArchivosBaja($idBaja);
-        echo json_encode(['success' => true, 'data' => $data]);
-        return;
+        $idBaja = filter_var(Request::input('id_baja'), FILTER_VALIDATE_INT);
+        if (!$idBaja) JsonResponse::validation('El identificador de la baja no es válido.');
+        if (!ControlDocumentosPersonalService::getBajaDetalle((int)$idBaja)) JsonResponse::notFound('Baja no encontrada.');
+        JsonResponse::custom(['success' => true, 'data' => ControlDocumentosPersonalService::getArchivosBaja((int)$idBaja)]);
     }
 
     public function uploadBajaArchivo()
     {
-        header('Content-Type: application/json');
-        $idBaja = sanitize_input($_POST['id_baja'] ?? null, 'int');
-        $descripcion = sanitize_input($_POST['descripcion'] ?? null, 'string');
-
-        if (!$idBaja || empty($descripcion)) {
-            echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
-            return;
+        $idBaja = filter_var(Request::input('id_baja'), FILTER_VALIDATE_INT);
+        $descripcion = trim((string)Request::input('descripcion', ''));
+        $archivo = $_FILES['archivo'] ?? [];
+        if (!$idBaja || $descripcion === '' || (int)($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            JsonResponse::validation('Indica la descripción y selecciona un archivo.');
         }
-
-        if (empty($_FILES['archivo']) || $_FILES['archivo']['error'] !== 0) {
-            echo json_encode(['success' => false, 'message' => 'Archivo no proporcionado.']);
-            return;
+        if (!ControlDocumentosPersonalService::uploadBajaArchivo((int)$idBaja, $descripcion, $archivo)) {
+            JsonResponse::forbidden('No fue posible subir el archivo. Verifica permisos y contexto.');
         }
-
-        $result = ControlDocumentosPersonalService::uploadBajaArchivo($idBaja, $descripcion, $_FILES['archivo']);
-        echo json_encode([
-            'success' => $result,
-            'message' => $result ? 'Archivo subido correctamente.' : 'Error al subir archivo.',
-        ]);
-        return;
+        JsonResponse::success('Archivo subido correctamente.');
     }
 
     public function deleteBajaArchivo()
     {
-        header('Content-Type: application/json');
-        $data = json_decode(file_get_contents('php://input'), true);
-        $id = sanitize_input($data['id'] ?? null, 'int');
-
-        if (!$id) {
-            echo json_encode(['success' => false, 'message' => 'ID no proporcionado.']);
-            return;
-        }
-
-        $deleted = ControlDocumentosPersonalService::deleteBajaArchivo($id);
-        echo json_encode([
-            'success' => $deleted,
-            'message' => $deleted ? 'Archivo eliminado correctamente.' : 'Error al eliminar archivo.',
-        ]);
-        return;
+        $id = filter_var(Request::input('id'), FILTER_VALIDATE_INT);
+        if (!$id) JsonResponse::validation('El identificador del archivo no es válido.');
+        if (!ControlDocumentosPersonalService::deleteBajaArchivo((int)$id)) JsonResponse::forbidden('No fue posible eliminar el archivo.');
+        JsonResponse::success('Archivo eliminado correctamente.');
     }
 
     public function getComentariosBaja()
     {
-        header('Content-Type: application/json');
-        $idBaja = sanitize_input($_GET['id_baja'] ?? null, 'int');
-        if (!$idBaja) {
-            echo json_encode(['success' => false, 'data' => []]);
-            return;
-        }
-        $data = ControlDocumentosPersonalService::getComentariosBaja($idBaja);
-        echo json_encode(['success' => true, 'data' => $data]);
-        return;
+        $idBaja = filter_var(Request::input('id_baja'), FILTER_VALIDATE_INT);
+        if (!$idBaja) JsonResponse::validation('El identificador de la baja no es válido.');
+        if (!ControlDocumentosPersonalService::getBajaDetalle((int)$idBaja)) JsonResponse::notFound('Baja no encontrada.');
+        JsonResponse::custom(['success' => true, 'data' => ControlDocumentosPersonalService::getComentariosBaja((int)$idBaja)]);
     }
 
     public function addComentarioBaja()
     {
-        header('Content-Type: application/json');
-        $data = json_decode(file_get_contents('php://input'), true);
-        $idBaja = sanitize_input($data['id_baja'] ?? null, 'int');
-        $comentario = sanitize_input($data['comentario'] ?? null, 'string');
-
-        if (!$idBaja || empty($comentario)) {
-            echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
-            return;
-        }
-
-        $result = ControlDocumentosPersonalService::addComentarioBaja($idBaja, $comentario);
-        echo json_encode([
-            'success' => $result,
-            'message' => $result ? 'Comentario agregado.' : 'Error al agregar comentario.',
-        ]);
-        return;
+        $idBaja = filter_var(Request::input('id_baja'), FILTER_VALIDATE_INT);
+        $comentario = trim((string)Request::input('comentario', ''));
+        if (!$idBaja || $comentario === '') JsonResponse::validation('Escribe el comentario antes de enviarlo.');
+        if (!ControlDocumentosPersonalService::addComentarioBaja((int)$idBaja, $comentario)) JsonResponse::forbidden('No fue posible agregar el comentario.');
+        JsonResponse::success('Comentario agregado.');
     }
 
     public function getComentarios()
@@ -295,20 +306,12 @@ class ControlDocumentosPersonalController extends BaseController
 
     public function addBaja()
     {
-        header('Content-Type: application/json');
-        $idPersonal = sanitize_input($_POST['id_personal'] ?? null, 'int');
-
-        if (!$idPersonal) {
-            echo json_encode(['success' => false, 'message' => 'ID no proporcionado.']);
-            return;
+        $idPersonal = filter_var(Request::input('id_personal'), FILTER_VALIDATE_INT);
+        if (!$idPersonal) JsonResponse::validation('El identificador del colaborador no es válido.');
+        if (!ControlDocumentosPersonalService::addBajaPersonal((int)$idPersonal, Request::all(), $_FILES)) {
+            JsonResponse::forbidden('No fue posible registrar la baja. Verifica permisos, datos y contexto.');
         }
-
-        $result = ControlDocumentosPersonalService::addBajaPersonal($idPersonal, $_POST, $_FILES);
-        echo json_encode([
-            'success' => $result,
-            'message' => $result ? 'Baja registrada correctamente.' : 'Error al registrar baja.',
-        ]);
-        return;
+        JsonResponse::success('Baja registrada correctamente.');
     }
 
     public function getAcceso()
@@ -629,16 +632,23 @@ return;
         }
 
         $title = 'Detalle Baja de Personal (' . $data['nombre_completo'] . ')';
+        $permisos = ControlDocumentosPersonalService::getPermisos();
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
         Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
-        Breadcrumb::add('Control de Documentos del Personal', '/departamento-operativo/recursos-humanos/control-documentos-personal');
+        Breadcrumb::add('Bajas de Personal', '/departamento-operativo/recursos-humanos/bajas-personal');
         Breadcrumb::add($title);
 
         View::render('departamento-operativo/2-recursos-humanos/control-documentos-personal/detalle-baja', [
             'title'  => $title,
             'baja'   => $data,
+            'moduleStationKey' => 'bajas-personal',
+            'ocultarSelectorEstacion' => true,
+            'nombreBadgeEstacion' => $data['nombre_estacion'],
+            'puedeEditarBaja' => $permisos['puedeEditar'],
+            'puedeEliminarBaja' => $permisos['puedeEliminarBaja'],
+            'puedeDescargarBaja' => $permisos['puedeDescargar'],
             'help'   => false,
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),

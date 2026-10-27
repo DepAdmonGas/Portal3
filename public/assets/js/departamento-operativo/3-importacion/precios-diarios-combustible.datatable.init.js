@@ -105,7 +105,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 className: 'text-start align-middle fw-bold',
                 render: function (data) { return escHtml(data); }
             },
-
+            {
+                data: 'estatus',
+                title: 'Estatus',
+                width: '140px',
+                className: 'text-center align-middle',
+                render: renderEstatus
+            },
             {
                 data: 'id',
                 title: '<i class="ti ti-eye text-info fs-6"></i>',
@@ -137,13 +143,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<i class="ti ti-edit text-warning fs-6"></i></a>';
                 }
             },
-                        {
-                data: 'estatus',
-                title: 'Estatus',
-                width: '140px',
-                className: 'text-center align-middle',
-                render: renderEstatus
-            },
         ]
     });
 
@@ -151,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function aplicarVisibilidad() {
         try {
-            table.column(3).visible(permisos.esPuesto13 === true);
+            table.column(3).visible(permisos.puedeDetalle === true);
             table.column(4).visible(permisos.puedeCrear === true || permisos.puedeEditar === true);
         } catch (e) {}
     }

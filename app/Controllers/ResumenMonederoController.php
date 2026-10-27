@@ -22,6 +22,20 @@ public function index($idYear, $idMes)
 $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
+$origenNavegacion = $this->resolverOrigenNavegacion('resumen-monedero');
+$title = 'Resumen Monedero (' . nombremes($idMes) . ' ' . $idYear . ')';
+
+Breadcrumb::add('Home', '/home');
+Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+if ($origenNavegacion !== 'departamento-operativo') {
+    Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
+}
+if ($origenNavegacion === 'corte-diario') {
+    Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
+}
+Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
+Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
 
 $moduleCtx = ModuleStationService::getContext('corte-diario');
 $idEstacion = $moduleCtx['id_estacion'];
@@ -33,9 +47,12 @@ $data = [
 'idMes' => $idMes,
 'idEstacion' => 0,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
+'yearMesTemplate' => '/departamento-operativo/resumen-monedero/{year}/{mes}',
 'multiestacion' => false,
 'help' => false,
+'scripts' => [
+'/assets/js/core/module-station-selector.js?v=' . time(),
+],
 ];
 
 View::render('departamento-operativo/1-corporativo/resumen-monedero/index', $data, 'departamento-operativo');
@@ -52,16 +69,6 @@ $idMesDb = ResumenMonederoService::getMesId($idEstacion, $idYear, $idMes);
 
 $permisos = ResumenMonederoService::getPermisos();
 
-$title = 'Resumen Monedero (' . nombremes($idMes) . ' ' . $idYear . ')';
-
-Breadcrumb::add('Home', '/home');
-Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
-Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
-Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
-Breadcrumb::add('<span class="breadcrumb-item active">' . $title . '</span>', '');
-Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
-Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
-
 if (!$this->guardModuleAccess('corte-diario', $title, 'departamento-operativo')) {
 return;
 }
@@ -74,7 +81,6 @@ $data = [
 'idMes' => $idMes,
 'idEstacion' => $idEstacion,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
 'idMesDb' => $idMesDb,
 'multiestacion' => $permisos['multiestacion'],
 'esDireccionOperaciones' => $permisos['es_direccion_operaciones'],
@@ -95,6 +101,7 @@ $data = [
 'totalCols' => $verShell ? 25 : 24,
 'help' => false,
 'scripts' => [
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.resumen-monedero.init.js?v=' . time(),
 ],
 ];
@@ -587,5 +594,30 @@ $data = KpiResumenMonederoService::getTipoData($idEstacion, $idYear);
 
 echo json_encode(['success' => true, 'data' => $data]);
 exit;
+}
+
+private function resolverOrigenNavegacion(string $modulo): string
+{
+    $referer = (string) (parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_PATH) ?? '');
+    $sessionKey = 'nav_origen_' . $modulo;
+    $rutaModulo = '/departamento-operativo/' . $modulo . '/';
+
+    if (str_contains($referer, $rutaModulo)) {
+        $origenGuardado = (string) Session::get($sessionKey, '');
+        if (in_array($origenGuardado, ['departamento-operativo', 'corporativo', 'corte-diario'], true)) {
+            return $origenGuardado;
+        }
+    }
+
+    if (str_contains($referer, '/corporativo/corte-diario/')) {
+        $origen = 'corte-diario';
+    } elseif (str_contains($referer, '/departamento-operativo/corporativo')) {
+        $origen = 'corporativo';
+    } else {
+        $origen = 'departamento-operativo';
+    }
+
+    Session::set($sessionKey, $origen);
+    return $origen;
 }
 }

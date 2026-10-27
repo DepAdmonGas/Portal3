@@ -27,6 +27,24 @@ View::render('errors/403', [], 'departamento-operativo');
 return;
 }
 
+$validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
+$idYear = $validados['idYear'];
+$idMes = $validados['idMes'];
+$origenNavegacion = $this->resolverOrigenNavegacion('aceites-mes');
+$title = 'Resumen Aceites, ' . nombremes($idMes) . ' ' . $idYear;
+
+Breadcrumb::add('Home', '/home');
+Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+if ($origenNavegacion !== 'departamento-operativo') {
+    Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
+}
+if ($origenNavegacion === 'corte-diario') {
+    Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
+}
+Breadcrumb::add('<span class="breadcrumb-item active">Resumen Aceites (' . nombremes($idMes) . ' ' . $idYear . ')</span>', '');
+Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
+
 $moduleCtx = ModuleStationService::getContext('corte-diario');
 $idEstacion = $moduleCtx['id_estacion'];
 
@@ -37,18 +55,17 @@ $data = [
 'idMes' => $idMes,
 'idEstacion' => 0,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
+'yearMesTemplate' => '/departamento-operativo/aceites-mes/{year}/{mes}',
 'multiestacion' => false,
 'esDireccionOperaciones' => false,
 'help' => false,
+'scripts' => [
+'/assets/js/core/module-station-selector.js?v=' . time(),
+],
 ];
 View::render('departamento-operativo/1-corporativo/aceites-mes/index', $data, 'departamento-operativo');
 return;
 }
-
-$validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
-$idYear = $validados['idYear'];
-$idMes = $validados['idMes'];
 
 $idMesDb = AceiteService::getMesId($idEstacion, $idYear, $idMes);
 if (!$idMesDb) {
@@ -64,16 +81,6 @@ $finalizado = AceiteService::estaFinalizado($idMesDb);
 $nombreEstacion = AceiteService::getNombreEstacion($idEstacion);
 $diasEnMes = (int) date('t', mktime(0, 0, 0, (int) $idMes, 1, (int) $idYear));
 
-$title = 'Resumen Aceites, ' . nombremes($idMes) . ' ' . $idYear;
-
-Breadcrumb::add('Home', '/home');
-Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
-Breadcrumb::add('Corporativo', '/departamento-operativo/corporativo');
-Breadcrumb::add('Corte Diario ' . nombremes($idMes) . ' ' . $idYear, '/departamento-operativo/corporativo/corte-diario/' . $idYear . '/' . $idMes);
-Breadcrumb::add('<span class="breadcrumb-item active">Resumen Aceites (' . nombremes($idMes) . ' ' . $idYear . ')</span>', '');
-Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
-Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes), '');
-
 if (!$this->guardModuleAccess('corte-diario', $title, 'departamento-operativo')) {
 return;
 }
@@ -85,7 +92,6 @@ $data = [
 'idMesDb' => $idMesDb,
 'idEstacion' => $idEstacion,
 'moduleStationKey' => 'corte-diario',
-'ocultarSelectorEstacion' => true,
 'nombreEstacion' => $nombreEstacion,
 'diasEnMes' => $diasEnMes,
 'multiestacion' => $permisos['multiestacion'],
@@ -95,6 +101,7 @@ $data = [
 'puedeEditar' => $permisos['puedeEditar'],
 'puedeEliminar' => $permisos['puedeEliminar'],
 'scripts' => [
+'/assets/js/core/module-station-selector.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.corte.diario.init.js?v=' . time(),
 '/assets/js/departamento-operativo/1-corporativo/actions.aceites-mes.init.js?v=' . time(),
 ],
@@ -900,5 +907,30 @@ header('Content-Type: text/html; charset=utf-8');
 echo '<script>alert("Error al generar el archivo Excel. Intente de nuevo."); window.close();</script>';
 exit;
 }
+}
+
+private function resolverOrigenNavegacion(string $modulo): string
+{
+    $referer = (string) (parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_PATH) ?? '');
+    $sessionKey = 'nav_origen_' . $modulo;
+    $rutaModulo = '/departamento-operativo/' . $modulo . '/';
+
+    if (str_contains($referer, $rutaModulo)) {
+        $origenGuardado = (string) Session::get($sessionKey, '');
+        if (in_array($origenGuardado, ['departamento-operativo', 'corporativo', 'corte-diario'], true)) {
+            return $origenGuardado;
+        }
+    }
+
+    if (str_contains($referer, '/corporativo/corte-diario/')) {
+        $origen = 'corte-diario';
+    } elseif (str_contains($referer, '/departamento-operativo/corporativo')) {
+        $origen = 'corporativo';
+    } else {
+        $origen = 'departamento-operativo';
+    }
+
+    Session::set($sessionKey, $origen);
+    return $origen;
 }
 }

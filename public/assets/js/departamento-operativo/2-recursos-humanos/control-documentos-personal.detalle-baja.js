@@ -5,6 +5,9 @@ return {
 baja: bajaData,
 idBaja: bajaData.id || 0,
 idPersonal: bajaData.id_personal || 0,
+puedeEditarBaja: c?.dataset.puedeEditarBaja === 'true',
+puedeEliminarBaja: c?.dataset.puedeEliminarBaja === 'true',
+puedeDescargarBaja: c?.dataset.puedeDescargarBaja === 'true',
 
 archivosBaja: bajaData.archivos_baja || [],
 bajaForm: { descripcion: '' },
@@ -80,6 +83,7 @@ async agregarComentario() {
 if (this.guardandoComentario) return;
 if (!this.nuevoComentario.trim()) return;
 this.guardandoComentario = true;
+this.scrollChatToBottom();
 try {
 const resp = await fetch('/departamento-operativo/recursos-humanos/control-documentos-personal/add-comentario-baja', {
 method: 'POST',

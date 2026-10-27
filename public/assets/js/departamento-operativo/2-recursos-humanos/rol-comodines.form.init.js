@@ -1,5 +1,11 @@
 var rolComodinesFormActions = {};
 
+function rolComodinesOrigenQuery() {
+    return new URLSearchParams(window.location.search).get('origen') === 'incidencias-nomina'
+        ? '?origen=incidencias-nomina'
+        : '';
+}
+
 function rolComodinesForm() {
     var c = document.getElementById('container');
 
@@ -83,7 +89,7 @@ function rolComodinesForm() {
                 if (json.success) {
                     Notify.success('Rol finalizado correctamente.');
                     setTimeout(function () {
-                        window.location.href = '/departamento-operativo/recursos-humanos/rol-comodines';
+                        window.location.href = '/departamento-operativo/recursos-humanos/rol-comodines' + rolComodinesOrigenQuery();
                     }, 1000);
                 } else {
                     Notify.error(json.message || 'Error al finalizar.');
