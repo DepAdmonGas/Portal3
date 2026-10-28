@@ -25,6 +25,7 @@ if (!idYear || !idMes) return;
 
 const $table = $('#tabla-embarques');
 if (!$table.length) return;
+let selectedEmbarqueId = null;
 
 function docLink(v, label, icon) {
 if (!v) return '<i class="ti ti-file-off text-muted fs-6"></i>';
@@ -73,8 +74,8 @@ return json.data || [];
 autoWidth: false,
 stateSave: true,
 order: [[1, 'desc']],
-pageLength: 25,
-lengthMenu: [25, 50, 100],
+pageLength: 10,
+lengthMenu: [10, 25, 50, 100],
 language: {
 url: '/assets/libs/datatables.net/js/es-ES.json'
 },
@@ -213,6 +214,9 @@ return html;
 }
 }
 ],
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', selectedEmbarqueId === rowData.id);
+},
 columnDefs: [
 { orderable: false, targets: [4, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22] },
 { searchable: false, targets: [4, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22] }
@@ -222,6 +226,17 @@ if (window.Alpine) {
 Alpine.initTree(document.querySelector('#tabla-embarques'));
 }
 }
+});
+
+$table.find('tbody')
+.off('click.rowSelection')
+.on('click.rowSelection', 'tr', function () {
+const rowData = $table.DataTable().row(this).data();
+if (!rowData) return;
+
+selectedEmbarqueId = rowData.id;
+$table.find('tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 $table.on('click', '.btn-comentarios', function (e) {

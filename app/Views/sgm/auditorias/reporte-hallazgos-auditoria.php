@@ -1,4 +1,4 @@
-<div class="pb-4" x-data="{...actions(), ...reporte(<?= $id ?>)}">
+<div class="pb-4" x-data="{...actions(), ...reporte(<?= $id ?>)}" data-portal-table-selection="false">
 
 
 <div class="row g-0 ms-auto w-100 justify-content-end">

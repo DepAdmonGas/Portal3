@@ -18,6 +18,7 @@ crear: c.dataset.puedeCrear === 'true',
 editar: c.dataset.puedeEditar === 'true',
 eliminar: c.dataset.puedeEliminar === 'true'
 };
+var selectedPerfilId = null;
 
 var messageEl = document.getElementById('perfil-empty-message');
 var contentEl = document.getElementById('perfil-content');
@@ -106,13 +107,26 @@ return '<div x-data="actions()" class="d-flex gap-1 justify-content-center">'
 + '</div>';
 }
 }
-]
+],
+rowCallback: function (row, data) {
+$(row).addClass('pointer').toggleClass('selected', selectedPerfilId === Number(data.id));
+}
+});
+
+$('#table-perfil tbody').on('click.rowSelection', 'tr', function (event) {
+if ($(event.target).closest('a, button, input, select, .dropdown-menu').length) return;
+var row = table.row(this).data();
+if (!row) return;
+selectedPerfilId = Number(row.id);
+$('#table-perfil tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 function recargarTabla() {
 var idEst = getEstacionParam();
 var url = '/departamento-operativo/recursos-humanos/biometricos/configuracion/perfil/datatable';
 if (idEst) url += '?id_estacion=' + idEst;
+selectedPerfilId = null;
 table.ajax.url(url).load();
 toggleAgregarBtn();
 }

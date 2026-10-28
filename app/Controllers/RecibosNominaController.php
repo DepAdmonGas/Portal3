@@ -84,6 +84,42 @@ class RecibosNominaController extends BaseController
         }
     }
 
+    /**
+     * The period kind belongs to the selected locality, not to a browser
+     * control. Reject a stale/mismatched request instead of reading or writing
+     * a different weekly/fortnightly record with the same period number.
+     */
+    private static function resolverDescripcionPeriodo(int $idLocalidad, string $solicitada = ''): string
+    {
+        $correcta = RecibosNominaService::esSemanal($idLocalidad) ? 'Semana' : 'Quincena';
+        $solicitada = trim($solicitada);
+
+        if ($solicitada !== '' && !in_array($solicitada, ['Semana', 'Quincena'], true)) {
+            JsonResponse::validation('El tipo de periodo no es válido.');
+        }
+
+        if ($solicitada !== '' && $solicitada !== $correcta) {
+            JsonResponse::conflict(
+                'El tipo de periodo ya no corresponde a la estación seleccionada. Vuelve a elegir el periodo.'
+            );
+        }
+
+        return $correcta;
+    }
+
+    private static function periodoEnRango(int $year, int $periodo, string $descripcion): bool
+    {
+        if ($year < 1 || $periodo < 1) {
+            return false;
+        }
+
+        $maximo = $descripcion === 'Semana'
+            ? RecibosNominaService::getTotalSemanasPeriodo($year)
+            : 24;
+
+        return $periodo <= $maximo;
+    }
+
     public function index(int $idYear)
     {
         $yearResult = DropdownYearMesService::validarYearMes($idYear, null);
@@ -186,6 +222,14 @@ class RecibosNominaController extends BaseController
             }
 
             $esSemanal = RecibosNominaService::esSemanal($idEstacion);
+            $descripcion = $esSemanal ? 'Semana' : 'Quincena';
+            if (!self::periodoEnRango($idYear, $periodo, $descripcion)) {
+                return JsonResponse::success('Periodo fuera de rango', [
+                    'data' => [],
+                    'resumen' => null,
+                    'esSemanal' => $esSemanal,
+                ]);
+            }
             $nominaInfo = RecibosNominaService::getNominaData($idEstacion, $idYear, $periodo, $esSemanal);
 
             return JsonResponse::success('OK', [
@@ -374,11 +418,17 @@ class RecibosNominaController extends BaseController
 
         $year = (int)Request::input('year', 0);
         $periodo = (int)Request::input('periodo', 0);
-        $descripcion = (string)Request::input('descripcion', 'Semana');
         $idResponsable = (int)Request::input('idResponsable', 2);
 
         if (!$idEstacion || !$year || !$periodo) {
             JsonResponse::error('Datos incompletos');
+        }
+        $descripcion = self::resolverDescripcionPeriodo(
+            $idEstacion,
+            (string)Request::input('descripcion', '')
+        );
+        if (!self::periodoEnRango($year, $periodo, $descripcion)) {
+            JsonResponse::validation('El número de periodo no corresponde al año seleccionado.');
         }
 
         // Paridad con el legacy: la autorización de rol vive en la UI (botones
@@ -430,7 +480,7 @@ class RecibosNominaController extends BaseController
             );
 
             if (!$idEstacion) {
-                return JsonResponse::success('Sin estación', ['es_semanal' => true, 'periodos' => [], 'periodo_actual' => 1]);
+                return JsonResponse::success('Sin estación', ['es_semanal' => false, 'periodos' => [], 'periodo_actual' => 1]);
             }
 
             return JsonResponse::success('OK', RecibosNominaService::getPeriodosAnio($idEstacion, $idYear));
@@ -451,7 +501,13 @@ class RecibosNominaController extends BaseController
         $idEstacion = self::resolverLocalidad((int)Request::input('idEstacion', 0));
         $year = (int)Request::input('year', 0);
         $periodo = (int)Request::input('periodo', 0);
-        $descripcion = (string)Request::input('descripcion', 'Semana');
+        $descripcion = self::resolverDescripcionPeriodo(
+            $idEstacion,
+            (string)Request::input('descripcion', '')
+        );
+        if (!self::periodoEnRango($year, $periodo, $descripcion)) {
+            JsonResponse::validation('El número de periodo no corresponde al año seleccionado.');
+        }
 
         $list = RecibosNominaService::listarPersonalFaltante($idEstacion, $year, $periodo, $descripcion === 'Semana');
 
@@ -467,11 +523,17 @@ class RecibosNominaController extends BaseController
         $idEstacion = self::resolverLocalidad((int)Request::input('idEstacion', 0));
         $year = (int)Request::input('year', 0);
         $periodo = (int)Request::input('periodo', 0);
-        $descripcion = (string)Request::input('descripcion', 'Semana');
+        $descripcion = self::resolverDescripcionPeriodo(
+            $idEstacion,
+            (string)Request::input('descripcion', '')
+        );
         $personal = (array)Request::input('personal', []);
 
         if (!$idEstacion || !$year || !$periodo || empty($personal)) {
             JsonResponse::error('Datos incompletos');
+        }
+        if (!self::periodoEnRango($year, $periodo, $descripcion)) {
+            JsonResponse::validation('El número de periodo no corresponde al año seleccionado.');
         }
 
         // Validacion del legacy: el personal solo se captura en periodos que
@@ -498,7 +560,13 @@ class RecibosNominaController extends BaseController
         $idEstacion = self::resolverLocalidad((int)Request::input('idEstacion', 0));
         $year = (int)Request::input('year', 0);
         $periodo = (int)Request::input('periodo', 0);
-        $descripcion = (string)Request::input('descripcion', 'Semana');
+        $descripcion = self::resolverDescripcionPeriodo(
+            $idEstacion,
+            (string)Request::input('descripcion', '')
+        );
+        if (!self::periodoEnRango($year, $periodo, $descripcion)) {
+            JsonResponse::validation('El número de periodo no corresponde al año seleccionado.');
+        }
 
         $list = RecibosNominaService::getAcusesPeriodo($idEstacion, $year, $periodo, $descripcion);
 
@@ -515,7 +583,13 @@ class RecibosNominaController extends BaseController
         $idEstacion = self::resolverLocalidad((int)Request::input('idEstacion', 0));
         $year = (int)Request::input('year', 0);
         $periodo = (int)Request::input('periodo', 0);
-        $descripcion = (string)Request::input('descripcion', 'Semana');
+        $descripcion = self::resolverDescripcionPeriodo(
+            $idEstacion,
+            (string)Request::input('descripcion', '')
+        );
+        if (!self::periodoEnRango($year, $periodo, $descripcion)) {
+            JsonResponse::validation('El número de periodo no corresponde al año seleccionado.');
+        }
 
         if (empty($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
             JsonResponse::error('Error al subir el archivo');
@@ -557,7 +631,13 @@ class RecibosNominaController extends BaseController
         $idEstacion = self::resolverLocalidad((int)Request::input('idEstacion', 0));
         $year = (int)Request::input('year', 0);
         $periodo = (int)Request::input('periodo', 0);
-        $descripcion = (string)Request::input('descripcion', 'Semana');
+        $descripcion = self::resolverDescripcionPeriodo(
+            $idEstacion,
+            (string)Request::input('descripcion', '')
+        );
+        if (!self::periodoEnRango($year, $periodo, $descripcion)) {
+            JsonResponse::validation('El número de periodo no corresponde al año seleccionado.');
+        }
         $idAcuse = (int)Request::input('idAcuse', 0);
 
         if (empty($_FILES['doc_nomina_acuse']) || $_FILES['doc_nomina_acuse']['error'] !== UPLOAD_ERR_OK) {
@@ -579,7 +659,13 @@ class RecibosNominaController extends BaseController
         $idEstacion = self::resolverLocalidad((int)Request::input('idEstacion', 0));
         $year = (int)Request::input('year', 0);
         $periodo = (int)Request::input('periodo', 0);
-        $descripcion = (string)Request::input('descripcion', 'Semana');
+        $descripcion = self::resolverDescripcionPeriodo(
+            $idEstacion,
+            (string)Request::input('descripcion', '')
+        );
+        if (!self::periodoEnRango($year, $periodo, $descripcion)) {
+            JsonResponse::validation('El número de periodo no corresponde al año seleccionado.');
+        }
         $idAguinaldo = (int)Request::input('idAguinaldo', 0);
 
         if (empty($_FILES['doc_aguinaldo']) || $_FILES['doc_aguinaldo']['error'] !== UPLOAD_ERR_OK) {

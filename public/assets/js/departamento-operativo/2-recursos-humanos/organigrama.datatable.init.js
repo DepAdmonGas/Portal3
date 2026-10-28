@@ -8,6 +8,7 @@ if (!$table.length) return;
 
 const puedeEliminar = c.dataset.puedeEliminar === 'true';
 const moduleStationKey = c.dataset.moduleStationKey || '';
+let selectedOrganigramaId = null;
 
 if ($.fn.DataTable && $.fn.DataTable.isDataTable($table)) {
 $table.DataTable().destroy();
@@ -70,6 +71,9 @@ pageLength: 10,
 lengthMenu: [10, 25, 50, 100],
 language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
 columns: columns,
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', selectedOrganigramaId === rowData.id);
+},
 drawCallback: function () {
 var api = this.api();
 var total = api.rows({ filter: 'applied' }).count();
@@ -90,10 +94,19 @@ document.dispatchEvent(new Event('org-tabla-recargada'));
 }
 });
 
+$table.on('click.rowSelection', 'tbody tr', function () {
+var rowData = window.tablaOrganigrama.row(this).data();
+if (!rowData) return;
+selectedOrganigramaId = rowData.id;
+$table.find('tbody tr').removeClass('selected');
+$(this).addClass('selected');
+});
+
 function recargarTabla() {
 var url = buildUrl();
 var dt = window.tablaOrganigrama;
 if (!dt) return;
+selectedOrganigramaId = null;
 window._orgVersionActual = null;
 dt.ajax.url(url || EMPTY_URL).load();
 }

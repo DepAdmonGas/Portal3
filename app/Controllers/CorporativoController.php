@@ -126,7 +126,8 @@ $this->renderIconoLink(
 $esPasado,
 $textClass,
 "/departamento-operativo/ventas/{$idYear}/{$idMes}/{$idDia}",
-"ti ti-currency-dollar"
+"ti ti-currency-dollar",
+"corte-diario-icon-ventas"
 ),
 
 "tpv" =>
@@ -134,7 +135,8 @@ $this->renderIconoLink(
 $esPasado,
 $textClass,
 "/departamento-operativo/cierre-lote/{$idYear}/{$idMes}/{$idDia}",
-"ti ti-receipt"
+"ti ti-receipt",
+"corte-diario-icon-tpv"
 ),
 
 "impuestos" =>
@@ -142,7 +144,8 @@ $this->renderIconoLink(
 $esPasado,
 $textClass,
 "/departamento-operativo/impuestos/{$idYear}/{$idMes}/{$idDia}",
-"ti ti-receipt-tax"
+"ti ti-receipt-tax",
+"corte-diario-icon-impuestos"
 ),
 
 "monedero" =>
@@ -150,7 +153,8 @@ $this->renderIconoLink(
 $esPasado,
 $textClass,
 "/departamento-operativo/monedero/{$idYear}/{$idMes}/{$idDia}",
-"ti ti-wallet"
+"ti ti-wallet",
+"corte-diario-icon-monedero"
 ),
 
 "clientes" =>
@@ -158,7 +162,8 @@ $this->renderIconoLink(
 $esPasado,
 $textClass,
 "/departamento-operativo/clientes/{$idYear}/{$idMes}/{$idDia}",
-"ti ti-users"
+"ti ti-users",
+"corte-diario-icon-clientes"
 ),
 
 "editar" => $btnEditar
@@ -333,10 +338,10 @@ echo json_encode(['success' => false, 'message' => 'No se encontró el registro 
 exit;
 }
 
-private function renderIconoLink($esPasado, $textClass, $url, $icono)
+private function renderIconoLink($esPasado, $textClass, $url, $icono, $colorClass)
 {
 if ($esPasado) {
-return "<a href='{$url}' class='d-flex justify-content-center align-items-center {$textClass}'><i class='{$icono} fs-8'></i></a>";
+return "<a href='{$url}' class='corte-diario-icon-link pointer text-decoration-none d-flex justify-content-center align-items-center {$textClass}'><i class='{$icono} fs-8 {$colorClass}'></i></a>";
 }
 return "<span class='d-flex justify-content-center align-items-center {$textClass}'><i class='{$icono} fs-8 text-muted'></i></span>";
 }
@@ -362,8 +367,8 @@ $badgeHist = '
 if ($esPasado) {
 
 return '
-<a href="" class="btn-edit-corte btn-badge-historico d-flex justify-content-center align-items-center ' . $textClass . '" data-id="' . $idDia . '" data-fecha="' . $fecha . '">
-<i class="ti ti-edit fs-8"></i> ' . $badgeHist . '
+<a href="" class="btn-edit-corte btn-badge-historico pointer d-flex justify-content-center align-items-center ' . $textClass . '" data-id="' . $idDia . '" data-fecha="' . $fecha . '">
+<i class="ti ti-edit fs-8 corte-diario-icon-editar"></i> ' . $badgeHist . '
 </a>';
 }
 

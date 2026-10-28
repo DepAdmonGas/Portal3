@@ -7,10 +7,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!$table.length) return;
 
     const moduleStationKey = c.dataset.moduleStationKey || '';
+    let selectedReporteId = null;
 
     if ($.fn.DataTable && $.fn.DataTable.isDataTable($table)) {
         $table.DataTable().destroy();
     }
+
+    $table.off('click.rowSelection').on('click.rowSelection', 'tbody tr', function (event) {
+        if ($(event.target).closest('a, button, input, select, .dropdown-menu').length) return;
+        if (!window.tablaProgramarHorario) return;
+
+        const row = window.tablaProgramarHorario.row(this).data();
+        if (!row || row.id === undefined || row.id === null) return;
+
+        selectedReporteId = String(row.id);
+        $table.find('tbody tr').removeClass('selected');
+        $(this).addClass('selected');
+    });
 
     function getEstacionId() {
         var sel = document.getElementById('module-station-selector-programar-horario');
@@ -65,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { title: '#', data: 'id', className: 'align-middle text-center', width: '48px' },
         { title: 'Estación/Departamento', data: 'nombre_estacion', className: 'align-middle text-start text-nowrap', visible: false },
         { title: 'Fecha programada', data: 'fecha', className: 'align-middle text-start' },
-        { title: 'Estatus', data: 'estado', className: 'align-middle text-center text-nowrap',
+        { title: 'Estatus', data: 'estado', width:'96px', className: 'align-middle text-center text-nowrap',
             render: function(v, t, row) { return estatusBadge(row.estado); }
         },
         {
@@ -97,6 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
         lengthMenu: [15, 30, 50, 100],
         language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
         columns: columns,
+        rowCallback: function (row, data) {
+            $(row).addClass('pointer').toggleClass(
+                'selected',
+                selectedReporteId !== null && String(data.id) === selectedReporteId
+            );
+        },
         drawCallback: function() {
             if (window.Alpine) {
                 Alpine.initTree(document.querySelector('#tabla-programar-horario'));

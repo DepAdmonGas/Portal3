@@ -25,6 +25,7 @@ Alpine.data('clientesListaComponent', () => ({
 loading: true,
 credito: [],
 debito: [],
+selectedRows: { '#tablaCredito': null, '#tablaDebito': null },
 idEstacion: '',
 idYear: '',
 idMes: '',
@@ -153,6 +154,9 @@ destroy: true,
 createdRow: function (row, rowData) {
 if (rowData.estado == 0) $(row).css('background-color', '#ffb6af');
 },
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', self.selectedRows[id] === rowData.id);
+},
 drawCallback: function () {
 if (window.Alpine) {
 Alpine.initTree(this);
@@ -162,6 +166,16 @@ Alpine.initTree(this);
 });
 
 $('#tablaCredito tbody, #tablaDebito tbody')
+.off('click.rowSelection')
+.on('click.rowSelection', 'tr', function () {
+const selector = '#' + $(this).closest('table').attr('id');
+const rowData = $(selector).DataTable().row(this).data();
+if (!rowData) return;
+
+self.selectedRows[selector] = rowData.id;
+$(selector + ' tbody tr').removeClass('selected');
+$(this).addClass('selected');
+})
 .off('click', '.btn-edit-cliente')
 .on('click', '.btn-edit-cliente', function () {
 self.abrirModalEditar(parseInt($(this).data('id')));

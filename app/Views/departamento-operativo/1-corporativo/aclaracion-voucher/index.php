@@ -39,7 +39,7 @@ x-data="{ ...actions(), ...aclaracionVoucherComponent() }">
 </template>
 
 <div class="table-responsive pb-3 overflow-x-auto overflow-y-hidden">
-<table id="tabla-aclaracion-voucher" class="table table-striped table-bordered"></table>
+<table id="tabla-aclaracion-voucher" class="table table-striped table-bordered aclaracion-voucher-seleccionable portal-table portal-table--selectable"></table>
 </div>
 
 <!-- Modal Aclaración (Agregar / Editar) -->
@@ -280,12 +280,12 @@ Detalle de aclaración</h5>
 <label class="form-label mb-2">Documentación:</label>
 
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle aclaracion-voucher-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr><th class="text-center">Ticket</th><th class="text-center">Voucher</th></tr>
 </thead>
 <tbody>
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows.detalleDocumentos }" @click="seleccionarFila('detalleDocumentos', true)">
 <td class="text-center align-middle">
 <template x-if="detalle.doc_ticket">
 <i class="ti ti-download pointer text-primary fs-5" @click="downloadFile('aclaracion-voucher', detalle.doc_ticket)"></i>
@@ -520,7 +520,7 @@ Anexos de la aclaración</h5>
 <!-- </template> -->
 
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mt-3">
+<table class="table table-striped table-bordered mt-3 aclaracion-voucher-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle">No.</th>
@@ -533,7 +533,7 @@ Anexos de la aclaración</h5>
 </thead>
 <tbody>
 <template x-for="(a, idx) in anexos" :key="a.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows.anexos === a.id }" @click="seleccionarFila('anexos', a.id)">
 <td class="text-center" x-text="idx + 1"></td>
 <td class="text-center" x-text="a.fecha_creacion"></td>
 <td x-text="a.usuario_nombre"></td>

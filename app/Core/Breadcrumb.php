@@ -149,9 +149,9 @@ class Breadcrumb
 
             $last = $index === array_key_last($items);
 
-            if($last){
-                echo '<li class="breadcrumb-item active">'.$item['label'].'</li>';
-            }else{
+            if ($last || ($item['url'] ?? null) === null) {
+                echo '<li class="breadcrumb-item active" aria-current="page">' . $item['label'] . '</li>';
+            } else {
                 echo '<li class="breadcrumb-item"><a class="link-info text-decoration-none" href="'.$item['url'].'">'.$item['label'].'</a></li>';
             }
 

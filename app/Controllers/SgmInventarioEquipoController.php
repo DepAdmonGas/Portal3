@@ -29,6 +29,19 @@ class SgmInventarioEquipoController extends BaseController
         return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
     }
 
+    private function formatearFechaHoraManual($fecha): string
+    {
+        if (!$fecha) {
+            return 'S/I';
+        }
+
+        $fechaFormateada = formatearFecha($fecha->format('Y-m-d'));
+
+        return $fechaFormateada !== ''
+            ? $fechaFormateada . ', ' . $fecha->format('g:i a')
+            : 'S/I';
+    }
+
     public function index()
     {
         $title = 'Inventario de equipo';
@@ -243,9 +256,7 @@ class SgmInventarioEquipoController extends BaseController
 
                         'id' => $manual->id,
 
-                        'fecha_hora' => optional(
-                            $manual->fecha_hora
-                        )?->format('Y-m-d H:i'),
+                        'fecha_hora' => $this->formatearFechaHoraManual($manual->fecha_hora),
 
                         'archivo' => $manual->archivo,
 
@@ -381,9 +392,7 @@ class SgmInventarioEquipoController extends BaseController
             JsonResponse::success('Manual agregado correctamente.', [
                 'manual' => [
                     'id' => $manual->id,
-                    'fecha_hora' => optional(
-                        $manual->fecha_hora
-                    )?->format('Y-m-d H:i'),
+                    'fecha_hora' => $this->formatearFechaHoraManual($manual->fecha_hora),
                     'archivo' => $manual->archivo,
                     'url' => '/uploads/archivos/manuales/' .
                         $manual->archivo
@@ -445,9 +454,7 @@ class SgmInventarioEquipoController extends BaseController
 
                     'id' => $manual->id,
 
-                    'fecha_hora' => optional(
-                        $manual->fecha_hora
-                    )?->format('Y-m-d H:i'),
+                    'fecha_hora' => $this->formatearFechaHoraManual($manual->fecha_hora),
 
                     'archivo' => $manual->archivo,
 

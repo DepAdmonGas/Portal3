@@ -142,11 +142,6 @@ accept=".pdf,application/pdf"
 <div>
 <div class="row g-3">
 <div class="col-12">
-<label class="form-label mb-1">Fecha de captura:</label>
-<div class="" x-text="detalle.fecha || 'S/I'"></div>
-</div>
-
-<div class="col-12">
 <label class="form-label mb-1">* Año:</label>
 <input type="number"
 class="form-control"
@@ -164,7 +159,7 @@ x-model="form.periodo"
 @change="errores.periodo = false">
 <option value="">Seleccione una opción...</option>
 <template x-for="p in periodos" :key="p">
-<option :value="p" x-text="p"></option>
+<option :value="p" :selected="p === form.periodo" x-text="p"></option>
 </template>
 </select>
 </div>
@@ -173,12 +168,12 @@ x-model="form.periodo"
 <label class="form-label mb-1">Archivo actual:</label>
 <div class="d-flex align-items-center gap-2 flex-wrap">
 <template x-if="detalle.archivo_existe">
-    <button type="button" 
-            class="btn btn-primary d-inline-flex align-items-center gap-2" 
-            @click="descargar(detalle.archivo)">
-        <i class="ti ti-file-type-pdf fs-5"></i>
-        <span>Descargar PDF</span>
-    </button>
+<button type="button"
+class="btn btn-primary d-inline-flex align-items-center gap-2"
+@click="descargar(detalle.archivo)">
+<i class="ti ti-file-type-pdf fs-5"></i>
+<span>Descargar PDF</span>
+</button>
 </template>
 <template x-if="!detalle.archivo_existe">
 <div class="text-muted">

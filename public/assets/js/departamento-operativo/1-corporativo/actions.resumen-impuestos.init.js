@@ -4,8 +4,10 @@ cargando: false,
 detalleData: null,
 detalleFecha: '',
 detalleCargando: false,
+selectedDetailProduct: null,
 totalesData: null,
 totalesCargando: false,
+selectedTotalProduct: null,
 
 init() {
 document.addEventListener('abrir-detalle-impuesto', (e) => {
@@ -24,6 +26,7 @@ async abrirDetalle(idDia, fecha) {
 this.detalleData = null;
 this.detalleFecha = fecha;
 this.detalleCargando = true;
+this.selectedDetailProduct = null;
 
 const el = document.getElementById('modalDetalle');
 if (!el) return;
@@ -48,6 +51,7 @@ this.detalleCargando = false;
 async abrirTotales() {
 this.totalesData = null;
 this.totalesCargando = true;
+this.selectedTotalProduct = null;
 
 const c = document.getElementById('resumen-impuestos-container');
 const idYear = c ? parseInt(c.dataset.idYear) : 0;

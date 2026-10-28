@@ -32,7 +32,7 @@ style="display:none"
 
 <div class="datatables">
 <div class="table-responsive">
-<table id="table-perfil" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-perfil" class="table table-striped table-bordered mb-0 text-nowrap align-middle biometricos-seleccionable portal-table portal-table--selectable">
 <tbody></tbody>
 </table>
 </div>

@@ -213,7 +213,7 @@
                         <th>Parentesco</th>
                         <th>Dirección</th>
                         <th>Teléfono</th>
-                        <th>
+                        <th width="48px">
                             <i class="ti ti-trash text-danger fs-6"></i>
                         </th>
                     </tr>
@@ -222,7 +222,7 @@
                 <tbody>
                     <template x-if="familiares.length === 0">
                         <tr>
-                            <td colspan="5" class="text-center">
+                            <td colspan="5" class="text-center text-primary">
                                 No se encontraron datos familiares
                             </td>
                         </tr>
@@ -234,7 +234,7 @@
                             <td x-text="f.parentesco"></td>
                             <td x-text="f.domicilio"></td>
                             <td x-text="f.telefono"></td>
-                            <td>
+                            <td >
                                 <a class="pointer"
                                    @click="eliminarFamiliar(f.id, f.nombrecompleto)">
                                     <i class="ti ti-trash text-danger fs-6"></i>
@@ -277,7 +277,7 @@
                     <tr class="text-center align-middle">
                         <th>Nivel</th>
                         <th>Institución</th>
-                        <th>
+                        <th width="48px">
                             <i class="ti ti-trash text-danger fs-6"></i>
                         </th>
                     </tr>
@@ -318,8 +318,8 @@
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
 
             <div>
-                <h4 class="card-title mb-0">4. Experiencia laboral</h4>
-                <h5 class="mb-0">4.1 En otras empresas</h5>
+                <h4 class="card-title mb-2">4. Experiencia laboral</h4>
+                <small class="mb-0">4.1 En otras empresas</small>
             </div>
 
             <?php if (!empty($permisos['crear'])): ?>
@@ -341,7 +341,7 @@
                 <tbody>
                     <template x-if="experiencias.length === 0">
                         <tr>
-                            <td colspan="2" class="text-center">
+                            <td colspan="2" class="text-center text-primary">
                                 No se encontró información de experiencia laboral en otras empresas
                             </td>
                         </tr>
@@ -350,7 +350,7 @@
                     <template x-for="exp in experiencias" :key="exp.id">
                         <tr>
                             <td x-text="exp.detalle"></td>
-                            <td class="align-middle text-center">
+                            <td class="align-middle text-center" width="48px">
                                 <a class="pointer"
                                    @click="eliminarExperiencia(exp.id, exp.detalle)">
                                     <i class="ti ti-trash text-danger fs-6"></i>
@@ -401,7 +401,7 @@
                         <th class="text-center">
                             <i class="ti ti-edit text-warning fs-6"></i>
                         </th>
-                        <th class="text-center">
+                        <th class="text-center" width="48px">
                             <i class="ti ti-trash text-danger fs-6"></i>
                         </th>
                     </tr>
@@ -428,7 +428,7 @@
                     </template>
 
                     <tr x-show="empresas.length === 0">
-                        <td colspan="6" class="text-center text-muted">
+                        <td colspan="6" class="text-center text-primary">
                             No se encontró información de experiencia laboral en la empresa
                         </td>
                     </tr>

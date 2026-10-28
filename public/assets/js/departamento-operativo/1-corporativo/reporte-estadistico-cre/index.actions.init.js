@@ -22,6 +22,7 @@ function reporteEstadisticoCreComponent() {
         reporte: null,
         anuales: [],
         vistaAnual: false,
+        selectedRows: {},
 
         cargando: false,
         descargando: false,
@@ -96,6 +97,10 @@ function reporteEstadisticoCreComponent() {
         etiquetaPeriodo() {
             const m = this.meses.find((x) => x.mes === this.mes);
             return (m ? m.nombre : '') + ' ' + this.year;
+        },
+
+        seleccionarFila(tabla, id) {
+            this.selectedRows[tabla] = id;
         },
 
         /** Dia al que pertenece el comentario que se esta capturando. */

@@ -11,6 +11,7 @@ const puedeEliminar = container.dataset.puedeEliminar === 'true';
 const puedeCrear = container.dataset.puedeCrear === 'true';
 const mostrarCuenta = container.dataset.mostrarCuenta === 'true';
 const getDataUrl = container.dataset.getDataUrl || '/departamento-operativo/corporativo/solicitud-vales/get-data';
+let selectedValeId = null;
 
 const dt = $('#tabla-solicitud-vales').DataTable({
 processing: true,
@@ -91,6 +92,9 @@ columnDefs: [
 initComplete: function () {
 this.api().column(3).visible(mostrarCuenta);
 },
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', selectedValeId === rowData.id);
+},
 drawCallback: function () {
 $('[data-bs-toggle="tooltip"]').tooltip();
 if (window.Alpine) {
@@ -100,6 +104,14 @@ Alpine.initTree(document.querySelector('#tabla-solicitud-vales'));
 });
 
 window.tablaSolicitudVales = dt;
+
+$('#tabla-solicitud-vales tbody').on('click.rowSelection', 'tr', function () {
+const rowData = dt.row(this).data();
+if (!rowData) return;
+selectedValeId = rowData.id;
+$('#tabla-solicitud-vales tbody tr').removeClass('selected');
+$(this).addClass('selected');
+});
 
 $(document).on('click', '[data-action="detalle"]', function (e) {
 e.preventDefault();

@@ -18,6 +18,7 @@ crear: c.dataset.puedeCrear === 'true',
 editar: c.dataset.puedeEditar === 'true',
 eliminar: c.dataset.puedeEliminar === 'true'
 };
+var selectedHorarioId = null;
 
 var messageEl = document.getElementById('retardos-empty-message');
 var contentEl = document.getElementById('retardos-content');
@@ -108,13 +109,26 @@ return '<div x-data="actions()" class="d-flex gap-1 justify-content-center">'
 + '</div>';
 }
 }
-]
+],
+rowCallback: function (row, data) {
+$(row).addClass('pointer').toggleClass('selected', selectedHorarioId === Number(data.id));
+}
+});
+
+$('#table-horarios tbody').on('click.rowSelection', 'tr', function (event) {
+if ($(event.target).closest('a, button, input, select, .dropdown-menu, .select2-container').length) return;
+var row = table.row(this).data();
+if (!row) return;
+selectedHorarioId = Number(row.id);
+$('#table-horarios tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 function recargarHorarios() {
 var idEst = getEstacionParam();
 var url = '/departamento-operativo/recursos-humanos/biometricos/configuracion/retardo-horarios-incidencias/datatable-horarios';
 if (idEst) url += '?id_estacion=' + idEst;
+selectedHorarioId = null;
 table.ajax.url(url).load();
 toggleAgregarBtn();
 }

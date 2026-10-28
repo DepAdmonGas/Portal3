@@ -8,7 +8,7 @@ x-cloak>
 
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-<table id="tabla-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="tabla-asistencia" class="table table-striped table-bordered mb-0 text-nowrap align-middle control-documentos-personal-seleccionable portal-table portal-table--selectable">
 <tbody></tbody>
 </table>
 </div>
@@ -45,24 +45,24 @@ x-cloak>
 <template x-if="!modalIncidencia.cargando && modalIncidencia.existe">
 <div>
 <div class="mb-3">
-<small class="text-secondary fw-bold mb-1">Fecha:</small>
+<div class="form-label mb-1">Fecha:</div>
 <div x-text="modalIncidencia.fecha || '—'"></div>
 </div>
 <div class="mb-3">
-<small class="text-secondary fw-bold mb-1">Incidencia:</small>
+<div class="form-label mb-1">Incidencia:</div>
 <div  x-text="modalIncidencia.incidencia || '—'"></div>
 </div>
 <div class="mb-3">
-<small class="text-secondary fw-bold mb-1">Comentario:</small>
+<div class="form-label mb-1">Comentario:</div>
 <div x-text="modalIncidencia.comentario || '—'"></div>
 </div>
 <div class="mb-3">
-<small class="text-secondary fw-bold mb-1">Sueldo día:</small>
+<div class="form-label mb-1">Sueldo día:</div>
 <div x-text="modalIncidencia.puntos ?? '—'"></div>
 </div>
 <div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documento">
 <hr class="my-2">
-<small class="text-secondary fw-bold">Documento:</small>
+<div class="form-label mb-1">Documento:</div>
 <input type="file"
 class="form-control mt-1"
 accept=".pdf"
@@ -81,7 +81,7 @@ class="btn btn-success btn-sm"
 </div>
 <div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento">
 <hr class="my-2">
-<small class="text-secondary fw-bold">Documento:</small>
+<div class="form-label mb-1">Documento:</div>
 <div class="mt-1">
 <a href="" @click.prevent="download('docs-personal-incidencias', modalIncidencia.documento)"
 class="btn btn-sm btn-outline-danger">
@@ -145,30 +145,30 @@ class="btn btn-sm btn-outline-danger">
 </div>
 <div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documento">
 <hr class="my-2">
-<label class="form-label">* Documento:</label>
+<label class="form-label mb-1">* Documento:</label>
 <input type="file" class="form-control mt-1" accept=".pdf" id="cdFileIncidenciaExistente">
 <div class="mt-4">
-<label class="form-label">Fecha de inicio y termino de la incapacidad:</label>
+<label class="form-label mb-1">Fecha de inicio y termino de la incapacidad:</label>
 </div>
 <div class="row g-2 mt-1">
 <div class="col-md-6">
-<label class="form-label">* Fecha Inicio:</label>
+<label class="form-label mb-1">* Fecha Inicio:</label>
 <input type="date" class="form-control mb-2" x-model="modalIncidencia.fechaInicio">
 </div>
 <div class="col-md-6">
-<label class="form-label">* Fecha Fin:</label>
+<label class="form-label mb-1">* Fecha Fin:</label>
 <input type="date"
 class="form-control mb-2"
 x-model="modalIncidencia.fechaFin">
 </div>
 </div>
 <div class="mt-2">
-<label class="form-label">* Sueldo día:</label>
+<label class="form-label mb-1">* Sueldo día:</label>
 <input type="number" step="0.01" min="0" class="form-control" x-model="modalIncidencia.sueldoDia">
 </div>
 </div>
 <div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento">
-<label class="form-label">Documento:</label>
+<label class="form-label mb-1">Documento:</label>
 
 <div class="row g-0 ms-auto w-100 justify-content-start">
                     <div class="col-12 col-md-auto d-grid">
@@ -190,7 +190,7 @@ Descargar documento
 
 <template x-if="!modalIncidencia.cargando && !modalIncidencia.existe">
 <div>
-<label class="form-label">Seleccione alguna de las siguientes incidencias:</label>
+<label class="form-label mb-1">Seleccione alguna de las siguientes incidencias:</label>
 <div class="p-2" :class="{'border border-danger rounded': modalIncidencia.errorRadio}">
 <template x-for="item in catalogoIncidencias" :key="item.id">
 <div class="form-check mb-1">
@@ -208,7 +208,7 @@ x-text="item.detalle"></label>
 </div>
 
 <div class="mt-3">
-<label class="form-label fw-semibold">Comentario *</label>
+<label class="form-label mb-1">Comentario *</label>
 <textarea class="form-control"
 rows="2"
 placeholder="Escribe un comentario..."
@@ -220,31 +220,31 @@ x-model="modalIncidencia.comentario"></textarea>
 <div class="mt-3 p-3 border rounded bg-light">
 <hr class="my-2">
 <div class="mb-2">
-<label class="form-label fw-semibold">Documento</label>
+<label class="form-label mb-1">Documento:</label>
 <input type="file"
 class="form-control"
 accept=".pdf"
 id="cdFileIncidenciaNueva">
 </div>
 <div class="mb-2">
-<small class="text-secondary fw-bold">Fecha de inicio y termino de la incapacidad:</small>
+<div class="form-label mb-1">Fecha de inicio y termino de la incapacidad:</div>
 </div>
 <div class="row g-2 mb-2">
 <div class="col-md-6">
-<label class="form-label">Fecha Inicio</label>
+<label class="form-label mb-1">Fecha Inicio:</label>
 <input type="date"
 class="form-control"
 x-model="modalIncidencia.fechaInicio">
 </div>
 <div class="col-md-6">
-<label class="form-label">Fecha Fin</label>
+<label class="form-label mb-1">Fecha Fin:</label>
 <input type="date"
 class="form-control"
 x-model="modalIncidencia.fechaFin">
 </div>
 </div>
 <div class="mb-2">
-<label class="form-label">Sueldo día</label>
+<label class="form-label mb-1">Sueldo día:</label>
 <input type="number"
 step="0.01"
 min="0"

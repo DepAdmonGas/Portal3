@@ -11,6 +11,16 @@ const messageEl = document.getElementById('corte-diario-empty-message');
 const contentEl = document.getElementById('corte-diario-content');
 var table = null;
 
+$('#table-corte-diario').on('click', 'tbody tr', function () {
+if ($(this).hasClass('selected')) return;
+
+if (table) {
+table.$('tr.selected').removeClass('selected');
+}
+
+$(this).addClass('selected');
+});
+
 function showEmptyMessage() {
 if (contentEl) contentEl.style.display = 'none';
 if (messageEl) messageEl.style.display = '';

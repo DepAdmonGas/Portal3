@@ -12,7 +12,7 @@
 
     <?php else: ?>
 
-        <div class="text-end">
+        <div class="text-end mb-3">
             <div class="btn-group">
                 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="ti ti-dots-vertical fs-4"></i>
@@ -199,98 +199,30 @@
 
                     <div class="modal-body">
 
-                        <h5>Información General</h5>
-
-                        <div class="d-flex align-items-center my-4">
-                            <div class="border-end pe-4 w-100">
-                                <h6 class="text-muted fw-normal">Fecha</h6>
-                                <div class="fw-bolder"
-                                    x-text="detalle.fecha?.detalle">
-                                </div>
-                            </div>
-                            <div class="ms-4 border-end pe-4 w-100">
-                                <h6 class="text-muted fw-normal">Hora llegada</h6>
-                                <div
-                                    class="fw-bolder"
-                                    x-text="detalle.hora_llegada?.display">
-                                </div>
-                            </div>
-                            <div class="ms-4 border-end w-100">
-                                <h6 class="text-muted fw-normal">Hora salida</h6>
-                                <div
-                                    class="fw-bolder"
-                                    x-text="detalle.hora_salida?.display">
-                                </div>
-                            </div>
-                            <div class="ms-4 w-100">
-                                <h6 class="text-muted fw-normal">Tiempo descarga</h6>
-                                <div
-                                    class="fw-bolder"
-                                    x-text="detalle.tiempo_descarga">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center my-4">
-                            <div class="border-end pe-4 w-100">
-                                <h6 class="text-muted fw-normal">Factura</h6>
-                                <div class="fw-bolder"
-                                    x-text="detalle.no_factura">
-                                </div>
-                            </div>
-                            <div class="ms-4 border-end pe-4 w-100">
-                                <h6 class="text-muted fw-normal">Producto</h6>
-                                <div
-                                    class="fw-bolder"
-                                    :style="`color:${detalle.producto?.color}`"
-                                    x-text="detalle.producto?.nombre">
-                                </div>
-                            </div>
-                            <div class="ms-4 w-100">
-                                <h6 class="text-muted fw-normal">Litros Compra</h6>
-                                <div
-                                    class="fw-bolder"
-                                    x-text="detalle.litros_compra?.display">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center my-4">
-                            <div class="border-end pe-4 w-100">
-                                <h6 class="text-muted fw-normal">Operador</h6>
-                                <div class="fw-bolder"
-                                    x-text="detalle.operador">
-                                </div>
-                            </div>
-                            <div class="ms-4 border-end pe-4 w-100">
-                                <h6 class="text-muted fw-normal">Vehículo (Placas)</h6>
-                                <div
-                                    class="fw-bolder"
-                                    x-text="detalle.placa">
-                                </div>
-                            </div>
-                            <div class="ms-4 border-end w-100">
-                                <h6 class="text-muted fw-normal">No. Remolque</h6>
-                                <div
-                                    class="fw-bolder"
-                                    x-text="detalle.no_remolque">
-                                </div>
-                            </div>
-                            <div class="ms-4 w-100">
-                                <h6 class="text-muted fw-normal">Línea transporte</h6>
-                                <div class="fw-bolder"
-                                    x-text="detalle.linea_transporte">
-                                </div>
-                            </div>
+                        <h5 class="mb-3">Información General</h5>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-3 mb-3"><label class="form-label mb-1">Fecha:</label><div x-text="detalle.fecha?.detalle"></div></div>
+                            <div class="col-6 col-md-3 mb-3"><label class="form-label mb-1">Hora de llegada:</label><div x-text="detalle.hora_llegada?.display"></div></div>
+                            <div class="col-6 col-md-3 mb-3"><label class="form-label mb-1">Hora de salida:</label><div x-text="detalle.hora_salida?.display"></div></div>
+                            <div class="col-12 col-md-3 mb-3"><label class="form-label mb-1">Tiempo de descarga:</label><div x-text="detalle.tiempo_descarga"></div></div>
+                            <div class="col-12 col-md-4 mb-3"><label class="form-label mb-1">Factura:</label><div x-text="detalle.no_factura"></div></div>
+                            <div class="col-12 col-md-4 mb-3"><label class="form-label mb-1">Producto:</label><div :style="`color:${detalle.producto?.color}`" x-text="detalle.producto?.nombre"></div></div>
+                            <div class="col-12 col-md-4 mb-3"><label class="form-label mb-1">Litros de compra:</label><div x-text="detalle.litros_compra?.display"></div></div>
+                            <div class="col-12 col-md-3 mb-3"><label class="form-label mb-1">Operador:</label><div x-text="detalle.operador"></div></div>
+                            <div class="col-12 col-md-3 mb-3"><label class="form-label mb-1">Vehículo (placas):</label><div x-text="detalle.placa"></div></div>
+                            <div class="col-12 col-md-3 mb-3"><label class="form-label mb-1">No. de remolque:</label><div x-text="detalle.no_remolque"></div></div>
+                            <div class="col-12 col-md-3 mb-3"><label class="form-label mb-1">Línea de transporte:</label><div x-text="detalle.linea_transporte"></div></div>
                         </div>
 
                         <!-- ===================================================== -->
                         <!-- TANQUES -->
                         <!-- ===================================================== -->
 
-                        <table class="table table-sm">
+                        <h6 class="form-label mb-2">Tanques:</h6>
+                        <div class="table-responsive mb-3">
+                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
-                            <thead class="table-light">
+                            <thead>
 
                                 <tr>
 
@@ -354,7 +286,7 @@
 
                                     <td
                                         colspan="4"
-                                        class="text-end fw-bolder">
+                                        class="text-end">
 
                                         Merma:
 
@@ -369,131 +301,115 @@
                             </tfoot>
 
                         </table>
+                        </div>
 
                         <!-- ===================================================== -->
                         <!-- SELLOS -->
                         <!-- ===================================================== -->
 
-                        <h6 class="fw-bolder">
-                            Sellos
-                        </h6>
-
-                        <template
-                            x-for="sello in (detalle.sellos?.sellos || [])"
-                            :key="sello.verificar">
-
-                            <div
-                                class="d-flex justify-content-between border-bottom py-2">
-
-                                <div
-                                    x-text="sello.verificar">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label mb-2">Sellos:</label>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered mb-0 align-middle">
+                                        <thead><tr><th>Verificación</th><th class="text-center">Resultado</th></tr></thead>
+                                        <tbody>
+                                            <template x-for="sello in (detalle.sellos?.sellos || [])" :key="sello.verificar">
+                                                <tr><td x-text="sello.verificar"></td><td class="text-center" x-text="sello.resultado"></td></tr>
+                                            </template>
+                                            <tr><td>No. Serie</td><td class="text-center" x-text="detalle.sello_noserie"></td></tr>
+                                        </tbody>
+                                    </table>
                                 </div>
-
-                                <div
-                                    class="fw-bolder"
-                                    x-text="sello.resultado">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label mb-2">NICE:</label>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered mb-0 align-middle">
+                                        <thead><tr><th>Verificación</th><th class="text-center">Resultado</th></tr></thead>
+                                        <tbody>
+                                            <template x-for="nice in (detalle.sellos?.nice || [])" :key="nice.verificar">
+                                                <tr><td x-text="nice.verificar"></td><td class="text-center" x-text="nice.resultado"></td></tr>
+                                            </template>
+                                            <tr><td>Manómetro</td><td class="text-center" x-text="detalle.manometro"></td></tr>
+                                            <tr><td>Temperatura</td><td class="text-center" x-text="detalle.temperatura"></td></tr>
+                                        </tbody>
+                                    </table>
                                 </div>
-
-                            </div>
-
-                        </template>
-
-                        <div class="d-flex justify-content-between border-bottom py-2">
-
-                            <div>
-                                No. Serie:
-                            </div>
-
-                            <div
-                                class="fw-bolder"
-                                x-text="detalle.sello_noserie">
-                            </div>
-
-                        </div>
-
-                        <!-- NICE -->
-                        <h6 class="fw-bolder mt-3">
-                            NICE
-                        </h6>
-
-                        <template
-                            x-for="nice in (detalle.sellos?.nice || [])"
-                            :key="nice.verificar">
-
-                            <div
-                                class="d-flex justify-content-between border-bottom py-2">
-
-                                <div
-                                    x-text="nice.verificar">
-                                </div>
-
-                                <div
-                                    class="fw-bolder"
-                                    x-text="nice.resultado">
-                                </div>
-
-                            </div>
-
-                        </template>
-
-                        <div class="d-flex justify-content-between border-bottom py-2">
-                            <div>Manómetro:</div>
-                            <div class="fw-bolder" x-text="detalle.manometro">
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between border-bottom py-2">
-                            <div>Temperatura:</div>
-                            <div class="fw-bolder" x-text="detalle.temperatura">
-                            </div>
-                        </div>
-
-                        <h6 class="fw-bolder mt-4">Observaciones</h6>
+                        <label class="form-label mt-3 mb-1">Observaciones:</label>
                         <div class="p-3 bg-light rounded-2" x-text="detalle.observaciones || 'Sin observaciones'"></div>
 
 
 
-                        <!-- ===================================================== -->
-                        <!-- FIRMAS -->
-                        <!-- ===================================================== -->
-
-                        <div class="row mt-4">
-
-                            <!-- RECIBE -->
-
-                            <div class="col-md-6 mb-3">
-
-                                <div class="text-center">
-
-                                    <h6 class="fw-bolder text-muted">Firma de quien recibe</h6>
-                                    <template x-if="detalle.firma_recibe?.firma">
-                                        <img :src="detalle.firma_recibe.firma" width="140">
-                                    </template>
-                                    <div class="small mt-2" x-text="detalle.firma_recibe?.nombre"></div>
-
+                        <label class="form-label mt-4 mb-3">Firmas:</label>
+                        <div class="row">
+                            <div class="col-12 col-md-6 mb-3">
+                                <div class="card border h-100">
+                                    <div class="card-header bg-primary text-white py-3 border-0">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                                                <i class="ti ti-user-check fs-5"></i>
+                                            </div>
+                                            <div class="ms-3"><h6 class="mb-0 text-white">Firma de quien recibe</h6></div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+                                        <template x-if="detalle.firma_recibe?.firma">
+                                            <img :src="detalle.firma_recibe.firma" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma de quien recibe">
+                                        </template>
+                                        <template x-if="!detalle.firma_recibe?.firma">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+                                                <h6 class="text-muted mb-0">¡Falta la firma de quien recibe!</h6>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="card-footer bg-light text-center">
+                                        <small class="text-muted" x-text="detalle.firma_recibe?.nombre || 'Pendiente de firma electrónica'"></small>
+                                    </div>
                                 </div>
-
                             </div>
-
-                            <!-- SUPERVISA -->
-
-                            <div class="col-md-6 mb-3">
-
-                                <div class="text-center">
-
-                                    <h6 class="fw-bolder text-muted">Firma de quien supervisa</h6>
-                                    <template x-if="detalle.firma_supervisa?.firma">
-                                        <img :src="detalle.firma_supervisa.firma" width="140">
-                                    </template>
-                                    <div class="small mt-2" x-text="detalle.firma_supervisa?.nombre"></div>
-
+                            <div class="col-12 col-md-6 mb-3">
+                                <div class="card border h-100">
+                                    <div class="card-header bg-primary text-white py-3 border-0">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                                                <i class="ti ti-user-check fs-5"></i>
+                                            </div>
+                                            <div class="ms-3"><h6 class="mb-0 text-white">Firma de quien supervisa</h6></div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+                                        <template x-if="detalle.firma_supervisa?.firma">
+                                            <img :src="detalle.firma_supervisa.firma" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma de quien supervisa">
+                                        </template>
+                                        <template x-if="!detalle.firma_supervisa?.firma">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+                                                <h6 class="text-muted mb-0">¡Falta la firma de quien supervisa!</h6>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="card-footer bg-light text-center">
+                                        <small class="text-muted" x-text="detalle.firma_supervisa?.nombre || 'Pendiente de firma electrónica'"></small>
+                                    </div>
                                 </div>
-
                             </div>
-
-
                         </div>
 
+                    </div>
+
+                    <div class="modal-footer">
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                            <div class="col-12 col-md-auto d-grid">
+                                <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+                                    <i class="ti ti-x"></i> Cerrar
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

@@ -84,8 +84,16 @@ document.addEventListener('alpine:init', () => {
 
                 if (resp.data && resp.data.success) {
                     this.detalle = resp.data.data;
-                    this.form.year    = this.detalle.year;
-                    this.form.periodo = this.detalle.periodo;
+                    const periodoGuardado = String(this.detalle.periodo || '').trim();
+                    const periodoDisponible = this.periodos.find((periodo) =>
+                        String(periodo).trim().toLocaleLowerCase('es-MX') === periodoGuardado.toLocaleLowerCase('es-MX')
+                    );
+
+                    this.form = {
+                        ...this.form,
+                        year: this.detalle.year,
+                        periodo: periodoDisponible || periodoGuardado
+                    };
                 } else {
                     this.detalle = null;
                     this.notify('error', (resp.data && resp.data.message) || 'No se pudo obtener el registro.');

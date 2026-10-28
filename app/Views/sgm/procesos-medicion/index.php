@@ -78,12 +78,7 @@
 
                 <!-- Título y Número alineados a la derecha y centrados verticalmente -->
                 <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
-                    <span class="badge bg-primary-subtle text-primary fw-bold mb-2">
-                         Pendientes:
-                    <?= $pendientesCalibracion ?>
-                       
-                    </span>
-<h4 class="fw-bold text-dark mb-0 lh-sm">
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">
                        Bitácora la para la calibración de equipos
                     </h4>
                 </div>
@@ -96,9 +91,7 @@
         <!-- Pie de la tarjeta: Acción -->
         <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
             <span class="small">Ver detalle</span>
-            <div class="icon-transition">
-                <i class="ti ti-arrow-right fs-5"></i>
-            </div>
+            <span class="badge-historico badge-solicitud-home"><?= (int) $pendientesCalibracion ?></span>
         </div>
 
     </a>
@@ -167,12 +160,7 @@
 
                 <!-- Título y Número alineados a la derecha y centrados verticalmente -->
                 <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
-                    <span class="badge bg-primary-subtle text-primary fw-bold mb-2">
-                        Pendientes:
-                         <?= $pendientesVerificacion ?>
-                       
-                    </span>
-<h4 class="fw-bold text-dark mb-0 lh-sm">
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">
                   Bitácora para la verificación de equipos de medicion
                     </h4>
                 </div>
@@ -185,9 +173,7 @@
         <!-- Pie de la tarjeta: Acción -->
         <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
             <span class="small">Ver detalle</span>
-            <div class="icon-transition">
-                <i class="ti ti-arrow-right fs-5"></i>
-            </div>
+            <span class="badge-historico badge-solicitud-home"><?= (int) $pendientesVerificacion ?></span>
         </div>
 
     </a>

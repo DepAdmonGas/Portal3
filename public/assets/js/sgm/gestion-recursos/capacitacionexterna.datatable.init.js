@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let permisos = {};
-    let year = new Date().getFullYear();
+    let year = Number(document.getElementById('container')?.dataset.year) || new Date().getFullYear();
 
     table1 = $('#table-capacitacion-externa').DataTable({
 
@@ -190,26 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         ]
-
-    });
-
-     $("#table-capacitacion-externa tbody")
-    .on("click","tr",function(){
-
-        if($(this).hasClass("selected")){
-
-            $(this).removeClass("selected");
-
-        }else{
-
-            table1
-            .$("tr.selected")
-            .removeClass("selected");
-
-            $(this)
-            .addClass("selected");
-
-        }
 
     });
 

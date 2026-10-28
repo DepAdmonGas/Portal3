@@ -39,7 +39,7 @@ Descargar
 
 <div class="table-responsive">
 
-<table class="table table-bordered mt-3">
+<table class="table table-bordered mt-3" data-portal-table-selection="false">
 <tr>
 <td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png' ?>" style="width: 200px;"></td>
 <td colspan="2" class="text-center align-middle"><b>Registro de la atención y el seguimiento a la comunicación interna y externa.</b></td>
@@ -314,14 +314,14 @@ data-bs-dismiss="modal"
 
 <div class="modal fade" id="modalEvidencia" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 
-<div class="modal-dialog modal-lg modal-dialog-centered">
+<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 
 <div class="modal-content">
 
 <div class="modal-header modal-colored-header bg-primary text-white">
 
+<i class="ti ti-paperclip fs-7 me-1"></i>
 <h4 class="modal-title text-white">
-<i class="ti ti-camera"></i>
 Evidencias
 </h4>
 
@@ -334,12 +334,18 @@ data-bs-dismiss="modal">
 
 <div class="modal-body">
 
+<div class="col-12">
 <label class="form-label mb-1" x-text="evidencia.tema + ':'"></label>
-
+<div class="input-group">
 <input type="file"
 class="form-control"
 x-ref="fileEvidencia"
 accept=".jpg,.jpeg,.png,.gif">
+<button type="button" class="btn btn-success" @click="guardarEvidencia()">
+<i class="ti ti-check me-1"></i> Guardar
+</button>
+</div>
+</div>
 
 
 <template x-if="evidencias.length === 0">
@@ -355,20 +361,35 @@ No se encontraron evidencias
 
 <template x-for="item in evidencias" :key="item.id">
 
-<div class="col-md-4 mb-3">
-
-<div class="border p-2 position-relative">
-
-<button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
-@click="eliminarEvidencia(item.id)">
-<i class="ti ti-x"></i>
-</button>
-
-<img :src="item.url"
-class="img-fluid">
-
+<div class="col-12 col-md-6 mt-4">
+<div class="card h-100 shadow-sm border bg-light position-relative">
+<div class="position-absolute top-0 end-0 p-2" style="z-index: 2;">
+<span class="badge bg-white text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2" style="width: 32px; height: 32px;">
+<i class="ti ti-photo text-primary fs-6"></i>
+</span>
 </div>
 
+<a :href="item.url" target="_blank" class="text-decoration-none overflow-hidden d-block position-relative" style="height: 140px;">
+<img :src="item.url" class="w-100 h-100" style="object-fit: cover;" alt="Evidencia">
+</a>
+
+<div class="card-body border-top pb-2 bg-white">
+<a :href="item.url" target="_blank" class="text-body text-decoration-none">
+<p class="small fw-bold text-truncate mb-0" :title="item.archivo" x-text="item.archivo"></p>
+</a>
+</div>
+
+<div class="card-footer bg-white">
+<div class="d-flex align-items-center gap-2">
+<a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="item.url" :download="item.archivo" title="Descargar">
+<i class="ti ti-download"></i><span>Descargar</span>
+</a>
+<button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1" @click="eliminarEvidencia(item.id)" title="Eliminar">
+<i class="ti ti-trash"></i><span>Eliminar</span>
+</button>
+</div>
+</div>
+</div>
 </div>
 
 </template>
@@ -384,13 +405,6 @@ class="img-fluid">
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cancelar
-</button>
-                    </div>
-                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
-<button class="btn btn-success"
-@click="guardarEvidencia()">
-<i class="ti ti-check"></i>
-Guardar
 </button>
                     </div>
                   </div>

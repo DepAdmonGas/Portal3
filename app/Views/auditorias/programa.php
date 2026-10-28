@@ -28,7 +28,7 @@ x-data="programaAuditoria()">
         </div>
 </div>
 <div class="table-resposive overflow-x-auto overflow-y-hiddien mb-3">
-    <table class="table table-bordered mt-3  align-middle">
+    <table class="table table-bordered mt-3  align-middle" data-portal-table-selection="false">
     <tr>
     <td class="text-center align-middle"><img class="text-center" src="<?= $_ENV['APP_URL'] . '/assets/images/logos/Logo.png'; ?>" style="width: 200px;"></td>
     <td colspan="2" class="text-center align-middle"><b>Formato Programa de auditorias (Internas y externas) </b></td>

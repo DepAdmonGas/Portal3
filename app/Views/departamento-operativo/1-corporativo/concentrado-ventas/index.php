@@ -33,7 +33,7 @@ x-data="concentradoVentasComponent()">
 <div class="col-12 mb-4">
 
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-concentrado-ventas" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
 <thead>
 <tr>
@@ -60,8 +60,8 @@ x-data="concentradoVentasComponent()">
 </thead>
 
 <tbody>
-<template x-for="(row, idx) in daily" :key="idx">
-<tr>
+<template x-for="(row, idx) in daily" :key="row.fecha || idx">
+<tr class="pointer" :class="{ selected: selectedRowFecha === row.fecha }" @click="seleccionarFila(row)">
 <th class="text-start fw-normal" x-text="row.fecha"></th>
 
 <?php foreach ($productosList as $prod): ?>

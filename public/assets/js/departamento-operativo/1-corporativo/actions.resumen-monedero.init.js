@@ -4,6 +4,8 @@ loading: true,
 error: null,
 rows: [],
 totales: {},
+selectedRowFecha: null,
+selectedFacturaId: null,
 documentos: [],
 verProsegur: false,
 puedeEliminarDoc: false,
@@ -75,6 +77,16 @@ if (val === null || val === undefined) return '0.00';
 return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 },
 
+seleccionarFila(row) {
+if (this.selectedRowFecha === row.fecha) return;
+this.selectedRowFecha = row.fecha;
+},
+
+seleccionarFactura(doc) {
+if (this.selectedFacturaId === doc.id) return;
+this.selectedFacturaId = doc.id;
+},
+
 descargarExcel() {
 const container = document.getElementById('container');
 const idYear = container.dataset.idYear;
@@ -99,6 +111,7 @@ window.location.href = '/departamento-operativo/resumen-monedero/kpi-evaluacion/
 abrirModalFacturas() {
 this.modalFacturaVista = 'lista';
 this.modalFacturaTitulo = 'Facturas';
+this.selectedFacturaId = null;
 this.cargarDocumentos();
 new bootstrap.Modal(document.getElementById('modalFacturas')).show();
 },

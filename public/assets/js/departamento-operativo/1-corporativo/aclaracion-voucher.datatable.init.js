@@ -13,6 +13,7 @@ if (!$table.length) return;
 const esMultiestacion = c.dataset.multiestacion === 'true';
 const puedeEliminar = c.dataset.puedeEliminar === 'true';
 const puedeEditar = c.dataset.puedeEditar === 'true';
+let selectedAclaracionId = null;
 
 const ajaxUrl = '/departamento-operativo/corporativo/aclaracion-voucher/get-data?year=' + idYear + '&mes=' + idMes;
 
@@ -151,6 +152,9 @@ pageLength: 15,
 lengthMenu: [15, 30, 50, 100],
 language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
 columns: columns,
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', selectedAclaracionId === rowData.id);
+},
 drawCallback: function () {
 if (window.Alpine) {
 Alpine.initTree(document.querySelector('#tabla-aclaracion-voucher'));
@@ -158,6 +162,14 @@ Alpine.initTree(document.querySelector('#tabla-aclaracion-voucher'));
 const event = new CustomEvent('av-tabla-recargada');
 document.dispatchEvent(event);
 }
+});
+
+$table.on('click.rowSelection', 'tbody tr', function () {
+var rowData = $table.DataTable().row(this).data();
+if (!rowData) return;
+selectedAclaracionId = rowData.id;
+$table.find('tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 $table.on('click', '.btn-av-detalle', function (e) {

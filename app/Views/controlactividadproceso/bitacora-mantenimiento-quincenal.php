@@ -60,7 +60,7 @@
             data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content rounded-0 border-0">
+                <div class="modal-content">
 
                     <div class="modal-header modal-colored-header bg-primary">
                         <h4 class="text-white">

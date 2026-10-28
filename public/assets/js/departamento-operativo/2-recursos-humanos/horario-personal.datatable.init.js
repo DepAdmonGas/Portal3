@@ -8,6 +8,7 @@ if (!$table.length) return;
 
 const puedeEditar = c.dataset.puedeEditar === 'true';
 const moduleStationKey = c.dataset.moduleStationKey || '';
+let selectedHorarioId = null;
 
 if ($.fn.DataTable && $.fn.DataTable.isDataTable($table)) {
 $table.DataTable().destroy();
@@ -114,12 +115,6 @@ return $('<span></span>').text(texto);
 var $container = $sel.next('.select2-container');
 if ($container.length) {
 $container.css('width', '100%');
-var $selection = $container.find('.select2-selection');
-if ($selection.length) {
-$selection.addClass('bg-transparent p-3 border-0').css('height', 'auto');
-$container.find('.select2-selection__rendered').css({ height: 'auto', 'line-height': '24px' });
-$container.find('.select2-selection__arrow').css({ top: '0', height: '100%' });
-}
 }
 });
 }
@@ -176,6 +171,9 @@ pageLength: 10,
 lengthMenu: [10, 25, 50, 100],
 language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
 columns: columns,
+rowCallback: function(row, data) {
+$(row).addClass('pointer').toggleClass('selected', selectedHorarioId === parseInt(data.id));
+},
 drawCallback: function() {
 if (window.Alpine) {
 Alpine.initTree(document.querySelector('#tabla-horario-personal'));
@@ -183,6 +181,14 @@ Alpine.initTree(document.querySelector('#tabla-horario-personal'));
 initSelect2();
 
 }
+});
+
+$table.on('click.rowSelection', 'tbody tr', function() {
+var rowData = window.tablaHorarioPersonal.row(this).data();
+if (!rowData) return;
+selectedHorarioId = parseInt(rowData.id);
+$table.find('tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 $table.on('change', '.hp-select-dia', function() {
@@ -207,6 +213,7 @@ function recargarTabla() {
 var url = buildUrl();
 var dt = window.tablaHorarioPersonal;
 if (!dt) return;
+selectedHorarioId = null;
 dt.ajax.url(url || EMPTY_URL).load();
 }
 

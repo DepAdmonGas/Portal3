@@ -1,6 +1,8 @@
 <div id="container" class="pb-4"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
-    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
+    data-year="<?= (int) ($year ?? date('Y')) ?>"
+    x-data="{...actions(), ...capacitacion()}">
 
 <?php if (empty($estacionId)): ?>
 
@@ -11,10 +13,11 @@
 
 <?php else: ?>
 
-<div id="sgm-content" x-data="{...actions(), ...capacitacion()}">
+<div id="sgm-content">
 
-    <div class="text-end mt-2">
-        <div class="btn-group">
+    <div class="clearfix mt-2">
+        <h5 class="float-start mb-0 mt-1">Año <span x-text="year"></span></h5>
+        <div class="btn-group float-end">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ti ti-dots-vertical fs-4"></i>
             </button>
@@ -23,11 +26,8 @@
                     <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
                 </li>
                 <li>
-                    <a class="dropdown-item pointer" @click="openBuscar()"><i class="ti ti-search"></i> Buscar</a>
-                </li>
-                <li>
                     <a class="dropdown-item"
-                        :href="'/sgm/gestion-recursos/programa-capacitacion-externa/pdf/' + buscar.year" download>
+                        :href="'/sgm/gestion-recursos/programa-capacitacion-externa/pdf/' + year" download>
                         <i class="ti ti-download"></i> Descargar</a>
                 </li>
             </ul>
@@ -36,7 +36,7 @@
 
     <div class="datatables mt-3">
         <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
-            <table id="table-capacitacion-externa" class="table table-striped table-bordered align-middle">
+            <table id="table-capacitacion-externa" class="table table-striped table-bordered align-middle portal-table portal-table--selectable">
                 <thead>
                     <tr>
                         <th class="text-center align-middle">No</th>
@@ -278,44 +278,81 @@
 
                             </div>
 
-                            <table
-                                class="table table-striped table-bordered text-nowrap align-middle">
+                            <div class="row g-3">
+                                <template
+                                    x-for="evidencia in form.evidencias"
+                                    :key="evidencia.id">
 
-                                <tbody>
+                                    <div class="col-12 col-md-6">
+                                        <div class="card h-100 shadow-sm border bg-light position-relative mb-0">
+                                            <div class="position-absolute top-0 end-0 p-2" style="z-index: 2;">
+                                                <span class="badge bg-white text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2" style="width: 32px; height: 32px;">
+                                                    <i
+                                                        class="fs-6"
+                                                        :class="esPdfEvidencia(evidencia) ? 'ti ti-file-type-pdf text-danger' : (esImagenEvidencia(evidencia) ? 'ti ti-photo text-primary' : 'ti ti-file text-primary')"></i>
+                                                </span>
+                                            </div>
 
-                                    <template
-                                        x-for="evidencia in form.evidencias"
-                                        :key="evidencia.id">
+                                            <a
+                                                :href="'/uploads/archivos/sgm/' + evidencia.archivo"
+                                                target="_blank"
+                                                class="text-decoration-none overflow-hidden d-block position-relative"
+                                                style="height: 140px;">
+                                                <img
+                                                    x-show="esImagenEvidencia(evidencia)"
+                                                    :src="'/uploads/archivos/sgm/' + evidencia.archivo"
+                                                    class="w-100 h-100"
+                                                    style="object-fit: cover;"
+                                                    alt="Vista previa de evidencia">
 
-                                        <tr>
+                                                <div
+                                                    x-show="!esImagenEvidencia(evidencia)"
+                                                    class="text-center p-4 bg-white d-flex align-items-center justify-content-center h-100 w-100">
+                                                    <i
+                                                        class="display-4"
+                                                        :class="esPdfEvidencia(evidencia) ? 'ti ti-file-type-pdf text-danger' : 'ti ti-file text-primary'"></i>
+                                                </div>
+                                            </a>
 
-                                            <td>
-
+                                            <div class="card-body border-top pb-2 bg-white">
                                                 <a
-                                                    :href="'/uploads/archivos/sgm/'+evidencia.archivo"
+                                                    :href="'/uploads/archivos/sgm/' + evidencia.archivo"
                                                     target="_blank"
-                                                    x-text="evidencia.archivo">
+                                                    class="text-body text-decoration-none">
+                                                    <p class="small fw-bold text-break mb-0" x-text="evidencia.archivo"></p>
                                                 </a>
+                                            </div>
 
-                                            </td>
+                                            <div class="card-footer bg-white">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <a
+                                                        class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1"
+                                                        :href="'/uploads/archivos/sgm/' + evidencia.archivo"
+                                                        target="_blank"
+                                                        title="Descargar">
+                                                        <i class="ti ti-download"></i>
+                                                        Descargar
+                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1"
+                                                        @click.prevent="eliminarEvidencia(evidencia.id)"
+                                                        title="Eliminar">
+                                                        <i class="ti ti-trash"></i>
+                                                        Eliminar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
 
-                                            <td width="48">
-
-                                                <a @click="eliminarEvidencia(evidencia.id)">
-
-                                                    <i class="ti ti-trash fs-6 text-danger pointer"></i>
-
-                                                </a>
-
-                                            </td>
-
-                                        </tr>
-
-                                    </template>
-
-                                </tbody>
-
-                            </table>
+                                <div class="col-12" x-show="form.evidencias.length === 0">
+                                    <div class="alert alert-warning text-center mb-0" role="alert">
+                                        No se han subido evidencias.
+                                    </div>
+                                </div>
+                            </div>
 
                         </div>
 
@@ -356,82 +393,6 @@
     </div>
 
     <!-- Modal Nuevo ---->
-
-    <!-- Modal Buscar ---->
-    <div
-        class="modal fade"
-        id="modalBuscar"
-        tabindex="-1"
-        data-bs-backdrop="static"
-    data-bs-keyboard="false">
-
-        <div class="modal-dialog modal-md modal-dialog-centered">
-
-            <div class="modal-content">
-
-                <div class="modal-header bg-primary">
-
-                    <h4 class="modal-title text-white">
-                        <i class="ti ti-search fs-6"></i>
-                        Buscar programación
-                    </h4>
-
-                    <button
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
-                    </button>
-
-                </div>
-
-                <div class="modal-body">
-
-                    <label class="form-label">
-                        * Año:
-                    </label>
-
-                    <input
-                        type="number"
-                        class="form-control"
-                        x-model="buscar.year"
-                        @input="errors.year = false"
-                        :class="errors.year ? 'is-invalid' : ''">
-
-                </div>
-
-                <div class="modal-footer">
-<div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
-                       <button
-                        class="btn bg-danger-subtle text-danger"
-                        data-bs-dismiss="modal">
-                        <i class="ti ti-x"></i>
-                        Cancelar
-
-                    </button>
-                    </div>
-                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
-                      <button
-                        class="btn btn-success"
-                        @click="buscarProgramacion()">
-                        <i class="ti ti-search"></i>
-                        Buscar
-
-                    </button>
-                    </div>
-                  </div>
-
-               
-
-                    
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-    <!-- Modal Buscar ---->
 
     <!-- ------------------------- -->
     <!-- inicio offcanvas -------- -->

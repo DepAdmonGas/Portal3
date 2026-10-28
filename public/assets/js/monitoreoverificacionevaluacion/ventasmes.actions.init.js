@@ -9,6 +9,9 @@ document.addEventListener('alpine:init', () => {
 
         async init() {
 
+            const selectedYear = Number(document.getElementById('container')?.dataset.year);
+            if (selectedYear >= 2019) this.year = selectedYear;
+
             await this.buscar();
 
         },

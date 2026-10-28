@@ -16,11 +16,6 @@ document.addEventListener('alpine:init', () => {
             mes: ''
         },
 
-        errors: {
-        year: false,
-        mes: false
-        },
-
         modalDetalle: null,
 
          detalle: {
@@ -65,18 +60,6 @@ document.addEventListener('alpine:init', () => {
         // =====================================================
         // MODAL
         // =====================================================
-
-         validate() {
-            Object.keys(this.errors).forEach(k => this.errors[k] = false);
-            let valid = true;
-
-            if (!this.filtro.year) {
-            this.errors.year = true;
-            valid = false;
-            }
-
-            return valid;
-        },
 
         openBuscarModal() {
             this.limpiarBuscar();
@@ -143,33 +126,29 @@ document.addEventListener('alpine:init', () => {
         // =====================================================
 
         async buscar() {
-
-            if (!this.validate()) {
-                this.notify('error', 'Completa todos los campos obligatorios');
-                return;
-            }
-
-            let url =
-                '/sasisopa/control-actividades-procesos/mantenimiento-preventivo/datatable?';
-
+            const params = new URLSearchParams();
             if (this.filtro.equipo) {
-                url += '&id_equipo=' + this.filtro.equipo;
+                params.set('id_equipo', this.filtro.equipo);
             }
 
             if (this.filtro.year) {
-                url += '&year=' + this.filtro.year;
+                params.set('year', this.filtro.year);
             }
 
             if (this.filtro.mes) {
-                url += '&mes=' + this.filtro.mes;
+                params.set('mes', this.filtro.mes);
             }
+
+            const query = params.toString();
+            const url = '/sasisopa/control-actividades-procesos/mantenimiento-preventivo/datatable'
+                + (query ? `?${query}` : '');
 
             table1
                 .ajax
                 .url(url)
                 .load();
 
-            this.updatePdfUrl();
+            this.updatePdfUrl(false);
 
             this.modalBuscar.hide();
         },
@@ -178,25 +157,28 @@ document.addEventListener('alpine:init', () => {
         // PDF
         // =====================================================
 
-        updatePdfUrl() {
-
+        updatePdfUrl(usarAnioActual = true) {
             const currentYear = new Date().getFullYear();
+            const baseUrl = '/sasisopa/control-actividades-procesos/mantenimiento-preventivo/pdf';
 
-            let url =
-                '/sasisopa/control-actividades-procesos/mantenimiento-preventivo/pdf?';
-
-            // Año seleccionado o año actual por defecto
-            url += 'year=' + (this.filtro.year || currentYear);
+            const params = new URLSearchParams();
 
             if (this.filtro.equipo) {
-                url += '&equipo=' + this.filtro.equipo;
+                params.set('equipo', this.filtro.equipo);
+            }
+
+            if (this.filtro.year) {
+                params.set('year', this.filtro.year);
+            } else if (usarAnioActual) {
+                params.set('year', currentYear);
             }
 
             if (this.filtro.mes) {
-                url += '&mes=' + this.filtro.mes;
+                params.set('mes', this.filtro.mes);
             }
 
-            this.pdfUrl = url;
+            const query = params.toString();
+            this.pdfUrl = baseUrl + (query ? `?${query}` : '');
         },
 
         async openModalDetalle(row){

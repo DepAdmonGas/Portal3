@@ -4,6 +4,7 @@ $(document).ready(function () {
     if (!c) return;
 
     var permisos = {};
+    var selectedPermisoId = null;
 
     function escHtml(str) {
         return String(str || '').replace(/[&<>"']/g, function (m) {
@@ -81,6 +82,9 @@ $(document).ready(function () {
             var colors = { 0: '#ffb6af', 1: '#fcfcda', 2: '#b0f2c2' };
             $(row).css('background-color', colors[data.estado] || '#ffffff');
         },
+        rowCallback: function (row, data) {
+            $(row).addClass('pointer').toggleClass('selected', selectedPermisoId === Number(data.id));
+        },
         columns: [
             {
                 data: 'id',
@@ -152,6 +156,17 @@ $(document).ready(function () {
 
     window.tablaPermisos = table;
 
+    $('#tabla-permisos tbody').on('click.rowSelection', 'tr', function (event) {
+        if ($(event.target).closest('a, button, input, select, .dropdown-menu').length) return;
+
+        var row = table.row(this).data();
+        if (!row) return;
+
+        selectedPermisoId = Number(row.id);
+        $('#tabla-permisos tbody tr').removeClass('selected');
+        $(this).addClass('selected');
+    });
+
     function aplicarVisibilidadColumnaEstacion() {
         try {
             table.column(1).visible(!esContextoEspecifico());
@@ -167,6 +182,16 @@ $(document).ready(function () {
         e.stopPropagation();
         var $el = $(this);
         if ($el.hasClass('disabled')) return;
+
+        var dropdownMenu = this.closest('.dropdown-menu');
+        var dropdownToggle = dropdownMenu && dropdownMenu.parentElement
+            ? dropdownMenu.parentElement.querySelector('[data-bs-toggle="dropdown"]')
+            : null;
+        if (dropdownToggle && window.bootstrap && window.bootstrap.Dropdown) {
+            var dropdownInstance = window.bootstrap.Dropdown.getInstance(dropdownToggle)
+                || window.bootstrap.Dropdown.getOrCreateInstance(dropdownToggle);
+            dropdownInstance.hide();
+        }
 
         var action = $el.data('action');
         var id = parseInt($el.data('id'));

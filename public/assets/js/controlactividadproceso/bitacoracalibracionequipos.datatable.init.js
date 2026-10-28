@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 render: function(data,type,row){
 
                     const noEditar = permisos.editar;
-                    const noDetalle = row.detalle;
+                    const puedeVerDetalle = row.detalle === true || row.detalle === 1 || row.detalle === '1';
 
                 return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -88,9 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
 
                             <li>
-                                <a class="dropdown-item pointer d-flex align-items-center gap-3  ${!noDetalle ? 'text-muted' : ''}"
-                                ${!noDetalle ? '' : `                             
-                                @click='window.bitacoraCalibracionEquipos.abrirDetalle(${row.id})'`}>
+                                <a class="dropdown-item d-flex align-items-center gap-3 ${puedeVerDetalle ? 'pointer' : 'disabled text-muted'}"
+                                ${puedeVerDetalle
+                                    ? `href="#" @click.prevent='window.bitacoraCalibracionEquipos.abrirDetalle(${row.id})'`
+                                    : 'aria-disabled="true" tabindex="-1"'}>
                                 <i class="ti ti-eye"></i>Detalle
                                 </a>    
                                </li>  

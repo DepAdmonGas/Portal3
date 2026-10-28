@@ -15,15 +15,10 @@ document.addEventListener('alpine:init', () => {
           personal:[]
       },
 
-       buscar:{
-
-          year:new Date().getFullYear()
-
-      },
+       year: new Date().getFullYear(),
 
       errors:{
 
-          year: false,
           nombre_curso: false,
           fecha_programada: false,
           duracion: false,
@@ -32,12 +27,30 @@ document.addEventListener('alpine:init', () => {
       },
 
       modalNuevo:null,
-      modalBuscar:null,
      
 
       init(){
 
           window.capacitacion = this;
+
+          const yearContainer = document.getElementById('container');
+          const initialYear = Number(yearContainer?.dataset.year);
+          const currentYear = new Date().getFullYear();
+
+          if (Number.isInteger(initialYear) && initialYear >= 2020 && initialYear <= currentYear) {
+              this.year = initialYear;
+          }
+
+          this.actualizarYearBreadcrumb();
+
+          document.addEventListener('click', (event) => {
+              const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+              const opcion = target?.closest('[data-capacitacion-externa-year]');
+              if (!opcion) return;
+
+              event.preventDefault();
+              this.cambiarYear(opcion.dataset.capacitacionExternaYear);
+          });
 
           if (!document.getElementById('sgm-content')) {
               return;
@@ -45,10 +58,6 @@ document.addEventListener('alpine:init', () => {
 
           this.modalNuevo = new bootstrap.Modal(
               document.getElementById('modalNuevo')
-          );
-
-          this.modalBuscar = new bootstrap.Modal(
-              document.getElementById('modalBuscar')
           );
 
           this.bindModalSelect2({
@@ -293,32 +302,27 @@ document.addEventListener('alpine:init', () => {
 
         },
 
-      openBuscar(){
+      cambiarYear(year){
 
-          this.buscar.year = new Date().getFullYear();
-          this.errors.year = false;
-          this.modalBuscar.show();
+          const seleccionado = Number(year);
+          if (!Number.isInteger(seleccionado) || seleccionado < 2020 || seleccionado > new Date().getFullYear()) return;
+
+          this.year = seleccionado;
+          this.actualizarYearBreadcrumb();
+
+          const selectorTabla = '#table-capacitacion-externa';
+          if (window.jQuery?.fn?.DataTable?.isDataTable(selectorTabla)) {
+              window.jQuery(selectorTabla).DataTable().ajax.url(
+                  `/sgm/gestion-recursos/programa-capacitacion-externa/datatable/${seleccionado}`
+              ).load();
+          }
 
       },
 
-      buscarProgramacion(){
+      actualizarYearBreadcrumb(){
 
-          this.errors.year = false;
-
-          if(!this.buscar.year){
-
-              this.errors.year = true;
-
-              return;
-
-          }
-
-          table1.ajax.url(
-              '/sgm/gestion-recursos/programa-capacitacion-externa/datatable/'
-              + this.buscar.year
-          ).load();
-
-          this.modalBuscar.hide();
+          const etiqueta = document.getElementById('capacitacion-externa-year-label');
+          if (etiqueta) etiqueta.textContent = this.year;
 
       },
 
@@ -388,6 +392,14 @@ document.addEventListener('alpine:init', () => {
     if (res.success) {
     await this.cargarDetalle(this.form.id);   
     }
+  },
+
+  esPdfEvidencia(evidencia){
+      return /\.pdf$/i.test(String(evidencia?.archivo ?? ''));
+  },
+
+  esImagenEvidencia(evidencia){
+      return /\.(jpe?g|png|gif|webp)$/i.test(String(evidencia?.archivo ?? ''));
   },
 
   async guardarEvidencia() {

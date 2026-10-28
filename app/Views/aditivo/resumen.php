@@ -1,21 +1,20 @@
 <?php $esImportacion = ($contexto ?? '') === 'importacion'; ?>
 <div id="container" class="mb-4" data-base-url="<?= $baseUrl ?>" data-importacion="<?= $esImportacion ? '1' : '0' ?>">
-
 <div class="row mt-4 mb-4">
     <?php if ($esImportacion): ?>
-    <div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
+    <div class="col-12 d-flex flex-column flex-md-row justify-content-md-end gap-2">
+        <div class="d-grid">
+            <a href="<?= $baseUrl ?>" class="btn bg-danger-subtle text-danger">
+                <i class="ti ti-arrow-left"></i> Regresar
+            </a>
+        </div>
         
-        <a href="<?= $baseUrl ?>" class="btn bg-danger-subtle text-danger">
-            <i class="ti ti-arrow-left"></i> Regresar
-        </a>
-             </div>
-       
-         <div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
-        <a href="<?= $baseUrl ?>/resumen/pdf" class="btn btn-success">
-            <i class="ti ti-file-download"></i> Descargar PDF
-        </a>
-     </div>
-   
+        <div class="d-grid">
+            <a href="<?= $baseUrl ?>/resumen/pdf" class="btn btn-success">
+                <i class="ti ti-file-download"></i> Descargar PDF
+            </a>
+        </div>
+    </div>
     <?php endif; ?>
 </div>
 
@@ -34,10 +33,10 @@
           </thead>
           <tbody></tbody>
           <tfoot>
-            <tr class="table-dark">
-              <th class="text-center align-middle">Total</th>
-              <th class="text-center align-middle" id="total-gasolina"></th>
-              <th class="text-center align-middle" id="total-diesel"></th>
+            <tr class="table-dark ">
+              <th class="text-center align-middle text-white">Total</th>
+              <th class="text-center align-middle text-white" id="total-gasolina"></th>
+              <th class="text-center align-middle text-white" id="total-diesel"></th>
             </tr>
           </tfoot>
         </table>

@@ -66,33 +66,37 @@ x-data="tpvComponent()">
 </div>
 <div class="card-body p-0">
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle cierre-lote-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle">No. Cierre de lote</th>
-<th class="text-center align-middle">Importe</th>
+<th class="text-end align-middle">Importe</th>
 <th class="text-center align-middle">No. De tickets</th>
 <th class="text-center align-middle"></th>
 </tr>
 </thead>
 <tbody>
 <template x-for="(item, idx) in cierres[empresa]" :key="item.id">
-<tr>
-<td class="text-center align-middle p-0">
+<tr class="pointer" :class="{ selected: selectedRows[empresa] === item.id }" @click="seleccionarFila(empresa, item.id)">
 <template x-if="!multiestacion && puedeEditar && !finalizado">
+<td class="text-center align-middle p-0">
 <input type="text"
 class="border-0 p-3 text-center w-100 bg-transparent"
 style="min-width: 60px;"
 x-model="item.no_cierre_lote"
 @change="editarCierre(item.id, 'no_cierre_lote', $event.target.value)">
+</td>
 </template>
 
 <template x-if="!puedeEditar || multiestacion || finalizado">
+<td class="text-center align-middle">
 <span x-text="item.no_cierre_lote || ''"></span>
-</template>
 </td>
-<td class="align-middle text-end p-0">
+</template>
+
+
 <template x-if="!multiestacion && puedeEditar && !finalizado">
+<td class="align-middle text-end p-0">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
 <input type="number"
@@ -103,12 +107,15 @@ style="padding-left: 20px !important; min-width: 80px;"
 x-model="item.importe"
 @change="editarCierre(item.id, 'importe', $event.target.value)">
 </div>
+</td>
 </template>
 
 <template x-if="!puedeEditar || multiestacion || finalizado">
+<td class="align-middle text-end">
 <span x-text="'$ ' + formatNum(item.importe)"></span>
-</template>
 </td>
+</template>
+
 <td class="align-middle text-center p-0">
 <template x-if="!multiestacion && puedeEditar && !finalizado">
 <input type="number"

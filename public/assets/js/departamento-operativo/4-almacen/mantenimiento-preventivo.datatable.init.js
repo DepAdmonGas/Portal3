@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const moneda = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             $(this.api().table().footer()).html(
-                '<tr><th class="text-end text-white" colspan="8">Costo total:</th><th class="text-end text-white"> $' + moneda + '</th><th colspan="4"></th></tr>'
+                '<tr><th class="text-end text-white" colspan="9">Costo total:</th><th class="text-end text-white"> $' + moneda + '</th><th colspan="3"></th></tr>'
             );
         },
         drawCallback: function () {

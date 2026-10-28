@@ -12,6 +12,7 @@ total_pagar: 0,
 },
 pagos: [],
 permisos: {},
+selectedRows: { resumen: null, pagos: null },
 editId: 0,
 form: {
 fecha_inicio: '',
@@ -28,6 +29,10 @@ fecha_termino: '',
 
 init: function () {
 this.cargarData();
+},
+
+seleccionarFila: function (tabla, id) {
+this.selectedRows[tabla] = this.selectedRows[tabla] === id ? null : id;
 },
 
 cargarData: function (fechaInicio, fechaTermino) {

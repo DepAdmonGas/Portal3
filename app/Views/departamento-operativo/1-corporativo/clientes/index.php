@@ -13,7 +13,7 @@ x-data="clientesComponent()">
 <p class="text-muted">Cargando clientes...</p>
 </div>
 
-<div class="row d-flex justify-content-end align-items-center g-2" x-show="!loading">
+<div class="row d-flex justify-content-end align-items-center g-3" x-show="!loading">
 
 <div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
 <button x-show="puedeAgregar" type="button" class="btn bg-primary-subtle text-primary float-end" @click="abrirModalAgregar()">
@@ -30,7 +30,7 @@ x-data="clientesComponent()">
 <div class="col-12">
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2" >
-<table id="tablaClientes" class="table table-striped table-bordered text-nowrap align-middle" >
+<table id="tablaClientes" class="table table-striped table-bordered text-nowrap align-middle clientes-seleccionable portal-table portal-table--selectable" >
 <tbody></tbody>
 </table>
 </div>
@@ -180,7 +180,7 @@ Nuevos consumos y pagos</h5>
 <div class="row">
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle clientes-lista-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle" colspan="3">Crédito</th>
@@ -193,7 +193,7 @@ Nuevos consumos y pagos</h5>
 </thead>
 <tbody>
 <template x-for="c in listaCreditos" :key="c.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedModalRows.credito === c.id }" @click="seleccionarFilaModal('credito', c.id)">
 <th class="align-middle fw-normal" x-text="c.cuenta"></th>
 <td class="align-middle" x-text="c.cliente"></td>
 <td class="align-middle text-center" x-text="c.rfc || 'N/A'"></td>
@@ -210,7 +210,7 @@ Nuevos consumos y pagos</h5>
 </div>
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle clientes-lista-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle" colspan="2">Débito</th>
@@ -222,7 +222,7 @@ Nuevos consumos y pagos</h5>
 </thead>
 <tbody>
 <template x-for="c in listaDebitos" :key="c.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedModalRows.debito === c.id }" @click="seleccionarFilaModal('debito', c.id)">
 <th class="align-middle fw-normal" x-text="c.cuenta"></th>
 <td class="align-middle" x-text="c.cliente"></td>
 </tr>

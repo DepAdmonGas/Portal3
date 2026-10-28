@@ -8,7 +8,41 @@ document.addEventListener('alpine:init', () => {
         loading: false,
 
         async init() {
+            const legacyYear = Number(new URLSearchParams(window.location.search).get('year'));
+            if (Number.isInteger(legacyYear) && legacyYear >= 2020 && legacyYear <= new Date().getFullYear()) {
+                this.year = legacyYear;
+            }
+
+            // Compatibilidad con enlaces antiguos; mantener limpia la ruta de la página.
+            if (window.location.search) {
+                history.replaceState(null, document.title, window.location.pathname);
+            }
+
+            this.actualizarYearBreadcrumb();
+
+            document.addEventListener('click', (event) => {
+                const opcion = event.target.closest('[data-indicador-ventas-year]');
+                if (!opcion) return;
+
+                event.preventDefault();
+                this.cambiarYear(opcion.dataset.indicadorVentasYear);
+            });
+
             await this.getVentas();
+        },
+
+        cambiarYear(year) {
+            const seleccionado = Number(year);
+            if (!Number.isInteger(seleccionado) || seleccionado < 2020 || seleccionado > new Date().getFullYear()) return;
+
+            this.year = seleccionado;
+            this.actualizarYearBreadcrumb();
+            this.getVentas();
+        },
+
+        actualizarYearBreadcrumb() {
+            const etiqueta = document.getElementById('indicador-ventas-year-label');
+            if (etiqueta) etiqueta.textContent = this.year;
         },
 
         async getVentas() {
@@ -27,8 +61,6 @@ document.addEventListener('alpine:init', () => {
 
             // GRAFICA
             this.renderChart(data.chart);
-
-            history.replaceState(null, '', `?year=${this.year}`);
 
         } catch (e) {
             this.notify('error', 'Error al obtener los datos');
@@ -83,10 +115,6 @@ document.addEventListener('alpine:init', () => {
         this.chart.render();
     },
 
-        changeYear(e) {
-            this.year = e.target.value;
-            this.getVentas();
-        },
         format(num) {
             return (Math.round((num || 0) * 100) / 100).toLocaleString('es-MX', {
                 minimumFractionDigits: 2,

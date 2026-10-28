@@ -55,7 +55,7 @@ style="display: none;"></div>
 </h4>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="detalleData = null"></button>
 </div>
-<div class="modal-body p-0">
+<div class="modal-body">
 <template x-if="detalleCargando">
 <div class="text-center py-3">
 <div class="spinner-border text-primary" style="width: 2rem; height: 2rem;" role="status"></div>
@@ -64,7 +64,7 @@ style="display: none;"></div>
 </template>
 <template x-if="!detalleCargando && detalleData">
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-resumen-impuestos-detalle" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center align-middle">Producto</th>
@@ -88,7 +88,7 @@ style="display: none;"></div>
 </tr>
 </template>
 <template x-for="item in detalleData.items" :key="item.producto">
-<tr>
+<tr class="pointer" :class="{ selected: selectedDetailProduct === item.producto }" @click="selectedDetailProduct = item.producto">
 <th class="align-middle text-center" x-text="item.producto"></th>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.precio_litro)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.ieps)"></td>
@@ -147,7 +147,7 @@ Cerrar</button>
 Resumen de Impuestos Totales</h4>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="totalesData = null"></button>
 </div>
-<div class="modal-body p-0">
+<div class="modal-body mb-0">
 <template x-if="totalesCargando">
 <div class="text-center py-3">
 <div class="spinner-border text-primary" style="width: 2rem; height: 2rem;" role="status"></div>
@@ -156,7 +156,7 @@ Resumen de Impuestos Totales</h4>
 </template>
 <template x-if="!totalesCargando && totalesData">
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-resumen-impuestos-totales" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center align-middle">Producto</th>
@@ -180,7 +180,7 @@ Resumen de Impuestos Totales</h4>
 </tr>
 </template>
 <template x-for="item in totalesData.items" :key="item.producto">
-<tr>
+<tr class="pointer" :class="{ selected: selectedTotalProduct === item.producto }" @click="selectedTotalProduct = item.producto">
 <th class="align-middle text-center" x-text="item.producto"></th>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.precio_publico)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.ieps)"></td>

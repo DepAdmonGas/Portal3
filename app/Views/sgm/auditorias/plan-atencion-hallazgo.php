@@ -1,4 +1,4 @@
-<div x-data="{...actions(), ...planatencion(<?= $id ?>)}">
+<div x-data="{...actions(), ...planatencion(<?= $id ?>)}" data-portal-table-selection="false">
 
 
 

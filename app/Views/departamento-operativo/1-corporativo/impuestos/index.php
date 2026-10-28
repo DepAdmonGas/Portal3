@@ -29,7 +29,7 @@ x-data="impuestosComponent()">
 <div class="row">
 <div class="col-12">
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle impuestos-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle">Producto</th>
@@ -53,7 +53,7 @@ x-data="impuestosComponent()">
 </tr>
 </template>
 <template x-for="item in items" :key="item.producto">
-<tr>
+<tr class="pointer" :class="{ selected: selectedItem === item.producto }" @click="seleccionarFila(item.producto)">
 <th class="align-middle text-center" x-text="item.producto"></th>
 <td class="align-middle text-center" x-text="'$ ' + formatNum(item.precio_litro)"></td>
 <td class="align-middle text-center" x-text="'$ ' + formatNum(item.ieps)"></td>

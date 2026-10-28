@@ -6,6 +6,7 @@ if (!c) return;
 const idYear = parseInt(c.dataset.idYear);
 const idMes = parseInt(c.dataset.idMes);
 if (!idYear || !idMes) return;
+let selectedDayId = null;
 
 fetch('/departamento-operativo/resumen-impuestos/dias/' + idYear + '/' + idMes)
 .then(r => r.json())
@@ -57,7 +58,21 @@ $('<span>').text(data.fecha_formateada).html() +
 '"><i class="ti ti-eye text-primary fs-6 pointer"></i></a>';
 }
 }
-]
+],
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', selectedDayId === rowData.id_dia);
+}
+});
+
+$('#tabla-resumen-impuestos tbody')
+.off('click.rowSelection')
+.on('click.rowSelection', 'tr', function () {
+const rowData = $('#tabla-resumen-impuestos').DataTable().row(this).data();
+if (!rowData) return;
+
+selectedDayId = rowData.id_dia;
+$('#tabla-resumen-impuestos tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 });
 });

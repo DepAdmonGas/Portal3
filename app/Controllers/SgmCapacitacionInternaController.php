@@ -30,10 +30,12 @@ class SgmCapacitacionInternaController extends BaseController
     public function index()
     {
         $title = 'Programa Capacitacion Interna';
+        $year = (int) date('Y');
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SGM', '/sgm');
         Breadcrumb::add('6. Gestion de los Recursos', '/sgm/gestion-recursos');
         Breadcrumb::add($title, '');
+        Breadcrumb::add($this->dropdownYearCapacitacionInterna($year), '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
         $estacionId = $this->estacionModulo();
@@ -44,6 +46,7 @@ class SgmCapacitacionInternaController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $estacionId,
+            'year' => $year,
             'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -60,6 +63,21 @@ class SgmCapacitacionInternaController extends BaseController
         ];
 
         View::render('sgm/gestion-recursos/capacitacion-interna', $data, 'sgm');
+    }
+
+    private function dropdownYearCapacitacionInterna(int $yearSeleccionado): string
+    {
+        $html = '<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">'
+            . '<i class="ti ti-calendar"></i> <span class="ms-1" id="capacitacion-interna-year-label">'
+            . $yearSeleccionado . '</span></a>'
+            . '<ul class="dropdown-menu animated rubberBand">';
+
+        for ($year = (int) date('Y'); $year >= 2020; $year--) {
+            $html .= '<li><a class="dropdown-item pointer" href="#" data-capacitacion-interna-year="' . $year . '">'
+                . '<i class="ti ti-calendar me-1"></i>' . $year . '</a></li>';
+        }
+
+        return $html . '</ul>';
     }
 
     public function datatable(int $year)

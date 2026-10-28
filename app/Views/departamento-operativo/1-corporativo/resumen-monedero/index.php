@@ -52,7 +52,7 @@ x-data="resumenMonederoComponent()">
 </div>
 
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-resumen-monedero" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center align-middle" colspan="<?= $colspanMetodos ?>">Metodos de pago</th>
@@ -108,8 +108,8 @@ x-data="resumenMonederoComponent()">
 </tr>
 </thead>
 <tbody>
-<template x-for="(row, idx) in rows" :key="idx">
-<tr>
+<template x-for="(row, idx) in rows" :key="row.fecha || idx">
+<tr class="pointer" :class="{ selected: selectedRowFecha === row.fecha }" @click="seleccionarFila(row)">
 <th class="text-start fw-normal" x-text="row.fecha"></th>
 <td class="text-end" x-text="'$' + formato(row.bancomer)"></td>
 <td class="text-end" x-text="'$' + formato(row.amex)"></td>
@@ -221,7 +221,7 @@ x-text="modalFacturaTitulo">
 <div>
 <div class="table-responsive mt-3">
     
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-resumen-monedero-facturas" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center align-middle">Fecha</th>
@@ -240,7 +240,7 @@ x-text="modalFacturaTitulo">
 
 <tbody>
 <template x-for="doc in documentos" :key="doc.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedFacturaId === doc.id }" @click="seleccionarFactura(doc)">
 <td class="align-middle text-center fw-semibold" x-text="doc.fecha"></td>
 <td class="align-middle text-center " x-text="doc.monedero"></td>
 <td class="align-middle text-end" x-text="'$ ' + formato(doc.diferencia)"></td>
@@ -380,12 +380,6 @@ x-text="modalFacturaTitulo">
 <input class="form-control mb-3" type="file" id="ediXML">
 </div>
 
-<div class="col-12 col-md-auto d-grid ms-auto mb-3">
-<button type="button" class="btn btn-success" @click="guardarEdi()" :disabled="guardandoEdi">
-    <i class="ti ti-check"></i>
-<span x-text="guardandoEdi ? 'Guardando...' : 'Guardar'"></span>
-</button>
-</div>
 </div>
 
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
@@ -447,15 +441,6 @@ x-text="modalFacturaTitulo">
 <label class="form-label mb-1">* Documento (PDF o XLSX):</label>
 <input class="form-control mb-3" type="file" id="docArchivoPDF">
 
-
-<div class="row">
-<div class="tcol-12 col-md-auto d-grid ms-auto mb-3 ">
-<button type="button" class="btn btn-success" @click="guardarDocumentacion()" :disabled="guardandoDoc">
-    <i class="ti ti-check"></i>
-<span x-text="guardandoDoc ? 'Guardando...' : 'Guardar'"></span>
-</button>
-</div>
-</div>
 
 <div class="table-responsive">
 <table class="table table-striped table-bordered">
@@ -543,6 +528,14 @@ x-text="modalFacturaTitulo">
 Regresar</button>
 </template>
     </div>
+    <template x-if="modalFacturaVista === 'edi'">
+        <div class="col-12 col-md-auto d-grid ms-0 ms-md-2 mt-1 mt-md-0">
+            <button type="button" class="btn btn-success" @click="guardarEdi()" :disabled="guardandoEdi">
+                <i class="ti ti-check"></i>
+                <span x-text="guardandoEdi ? 'Guardando...' : 'Guardar'"></span>
+            </button>
+        </div>
+    </template>
 </div>
 
 
@@ -556,6 +549,14 @@ Regresar</button>
 </template>
 
 </div>
+<template x-if="modalFacturaVista === 'documentacion'">
+    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2 mt-1 mt-md-0">
+        <button type="button" class="btn btn-success" @click="guardarDocumentacion()" :disabled="guardandoDoc">
+            <i class="ti ti-check"></i>
+            <span x-text="guardandoDoc ? 'Guardando...' : 'Guardar'"></span>
+        </button>
+    </div>
+</template>
 </div>
 
 

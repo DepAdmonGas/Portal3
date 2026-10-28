@@ -31,7 +31,7 @@ data-id-estacion="<?= $idEstacion ?>">
 <template x-if="!loading && !error">
 <div>
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle ingresos-facturacion-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th colspan="14" class="align-middle text-center">Comparativo de Facturación</th>
@@ -55,7 +55,7 @@ data-id-estacion="<?= $idEstacion ?>">
 </thead>
 <tbody class="bg-white">
 <template x-for="row in posicion1" :key="row.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows.posicion1 === row.id }" @click="seleccionarFila('posicion1', row.id)">
 <th class="fw-normal" x-text="row.detalle"></th>
 <template x-for="(m, mi) in meses" :key="mi">
 <td class="align-middle text-end p-0">
@@ -85,7 +85,7 @@ x-init="$el.value = formatInput(row[m])"
 </div>
 
 <div class="table-responsive mt-4">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle ingresos-facturacion-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th colspan="14" class="align-middle text-center">Facturación</th>
@@ -109,7 +109,7 @@ x-init="$el.value = formatInput(row[m])"
 </thead>
 <tbody class="bg-white">
 <template x-for="row in posicion2" :key="row.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows.posicion2 === row.id }" @click="seleccionarFila('posicion2', row.id)">
 <th class="fw-normal" x-text="row.detalle"></th>
 <template x-for="(m, mi) in meses" :key="mi">
 <td class="align-middle text-end p-0">
@@ -168,7 +168,7 @@ Guardar</button>
 </div>
 
 <div class="table-responsive mt-3">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle ingresos-facturacion-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="align-middle text-center">Fecha</th>
@@ -178,7 +178,7 @@ Guardar</button>
 </thead>
 <tbody class="bg-white">
 <template x-for="a in archivos" :key="a.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows.archivos === a.id }" @click="seleccionarFila('archivos', a.id)">
 <th class="fw-normal align-middle text-center" x-text="a.fecha_formateada"></th>
 <td class="align-middle text-end">
 <span x-data="actions()">

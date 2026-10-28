@@ -270,7 +270,7 @@ async verDetalle(id) {
                 self.initSelect2();
                 self.initFirma();
                 if (!self.esNuevo && self.estacionCubre) {
-                    self.cargarPersonalCubre(self.estacionCubre, self.cubre);
+                    self.cargarPersonalCubre(self.estacionCubre, self.cubre, self.detalle.cubre_nombre || '');
                 }
             });
 
@@ -298,7 +298,7 @@ async verDetalle(id) {
             this.cargarPersonalCubre(this.estacionCubre);
         },
 
-        cargarPersonalCubre(estacion, preseleccion) {
+        cargarPersonalCubre(estacion, preseleccion, nombrePreseleccion) {
             const self = this;
             this.cargandoCubre = true;
             this.cubre = '';
@@ -312,7 +312,14 @@ async verDetalle(id) {
                     }
                     const $sel = $('#select-cubre');
                     $sel.empty().append('<option value="">Selecciona...</option>');
-                    (json.personal || []).forEach(function (p) {
+                    var personalCubre = Array.isArray(json.personal) ? json.personal.slice() : [];
+                    var preseleccionExiste = personalCubre.some(function (p) {
+                        return String(p.id) === String(preseleccion || '');
+                    });
+                    if (preseleccion && !preseleccionExiste && nombrePreseleccion) {
+                        personalCubre.push({ id: preseleccion, nombre: nombrePreseleccion });
+                    }
+                    personalCubre.forEach(function (p) {
                         $('<option>').val(p.id).text(p.nombre).appendTo($sel);
                     });
                     $sel.prop('disabled', false);

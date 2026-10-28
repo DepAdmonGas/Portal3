@@ -448,32 +448,28 @@ class="btn btn-primary"
 <div class="col-md-5">
 <label class="form-label mb-1">Cotización:</label>
 <div class="input-group">
-<template x-if="detalleAnexo && detalleAnexo.cotizacion">
-<span class="input-group-text bg-success text-white">
-<a class="pointer text-white" @click="descargarDocumento(detalleAnexo.cotizacion)" title="Descargar">
-<i class="ti ti-file-download"></i>
-</a>
-</span>
-</template>
 <input type="file" class="form-control" id="inputCotizacionAnexo"
 accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.xls,.xlsx,.doc,.docx"
 @change="docs.cotizacion = $event.target.files[0] || null">
+<template x-if="detalleAnexo && detalleAnexo.cotizacion">
+<button type="button" class="btn btn-outline-primary px-3 d-inline-flex align-items-center justify-content-center" @click="descargarDocumento(detalleAnexo.cotizacion)" title="Descargar cotización" aria-label="Descargar cotización">
+<i class="ti ti-download"></i>
+</button>
+</template>
 </div>
 </div>
 
 <div class="col-md-5">
 <label class="form-label mb-1">Factura:</label>
 <div class="input-group">
-<template x-if="detalleAnexo && detalleAnexo.factura">
-<span class="input-group-text bg-success text-white">
-<a class="pointer text-white" @click="descargarDocumento(detalleAnexo.factura)" title="Descargar">
-<i class="ti ti-file-download"></i>
-</a>
-</span>
-</template>
 <input type="file" class="form-control" id="inputFacturaAnexo"
 accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.xls,.xlsx,.doc,.docx"
 @change="docs.factura = $event.target.files[0] || null">
+<template x-if="detalleAnexo && detalleAnexo.factura">
+<button type="button" class="btn btn-outline-primary px-3 d-inline-flex align-items-center justify-content-center" @click="descargarDocumento(detalleAnexo.factura)" title="Descargar factura" aria-label="Descargar factura">
+<i class="ti ti-download"></i>
+</button>
+</template>
 </div>
 </div>
 

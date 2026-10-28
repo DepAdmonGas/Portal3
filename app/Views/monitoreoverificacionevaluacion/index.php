@@ -1,6 +1,7 @@
 <div id="container" class="pb-4"
 data-module-station-key="sasisopa"
 data-estacion-id="<?= e($estacionId ?? '') ?>"
+data-year="<?= (int) ($year ?? date('Y')) ?>"
 x-data="monitoreoEvaluacion()">
 
 <?php if (empty($estacionId)): ?>
@@ -14,31 +15,15 @@ x-data="monitoreoEvaluacion()">
 
 <div x-data="monitoreoEvaluacion">
 
-<div class="row mt-3 mb-3 w-100 justify-content-between">
-<div class="col-12 col-md-6 d-grid mb-3 mb-md-0">
-            <!-- <label class="form-label">Año</label> -->
-            <select
-                class="form-select"
-                x-model.number="year"
-                @change="buscar()">
-                <?php for($i = date('Y'); $i >= 2019; $i--): ?>
-                    <option value="<?= $i ?>">
-                        <?= $i ?>
-                    </option>
-                <?php endfor; ?>
-            </select>
-</div>
-
-<div class="col-12 col-md-auto d-grid">
-
- <a class="btn bg-primary-subtle text-primary"
-   :href="pdfUrl"
-   target="_blank"
-   rel="noopener noreferrer">
-    <i class="ti ti-download"></i> Descargar
-</a>
-
-</div>
+<div class="d-flex w-100 mt-3 mb-3">
+    <div class="ms-auto col-12 col-md-auto d-grid">
+        <a class="btn bg-primary-subtle text-primary"
+           :href="pdfUrl"
+           target="_blank"
+           rel="noopener noreferrer">
+             <i class="ti ti-download"></i> Descargar
+        </a>
+    </div>
 </div>
 
 <div class="row">
@@ -48,7 +33,7 @@ x-data="monitoreoEvaluacion()">
 <div class="card">
 <div class="card-body p-0">
     <div class="table-responsive">
-<table class="table table-responsive table-striped mb-0 text-nowrap align-middle">
+<table class="table table-responsive table-striped mb-0 text-nowrap align-middle" data-portal-table-selection="false">
         <tbody>
             <tr>
                 <td class="align-middle text-center">
@@ -116,7 +101,7 @@ x-data="monitoreoEvaluacion()">
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
-    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle" data-portal-table-selection="false">
     <tbody>
       <tr>
         <td class="align-middle text-center"><b>Objeto</b></td>
@@ -147,7 +132,8 @@ x-data="monitoreoEvaluacion()">
         <div class="col-md-2 mt-3 ">
 <div class="table-responsive">
             <table
-                class="table table-responsive table-striped mb-0 text-nowrap align-middle">
+                class="table table-responsive table-striped mb-0 text-nowrap align-middle"
+                data-portal-table-selection="false">
 
                 <thead>
 
@@ -249,7 +235,7 @@ x-data="monitoreoEvaluacion()">
 <div class="card">
 <div class="card-body p-0">
     <div class="table-responsive">
-<table class="table table-striped mb-0 text-nowrap align-middle">
+<table class="table table-striped mb-0 text-nowrap align-middle" data-portal-table-selection="false">
           <tbody>
             <tr>
               <td class="align-middle text-center"><b>Objeto</b></td>
@@ -328,7 +314,7 @@ x-data="monitoreoEvaluacion()">
 <div class="card">
 <div class="card-body p-0">
     <div class="table-responsive">
-<table class="table table-striped mb-0 text-nowrap align-middle">
+<table class="table table-striped mb-0 text-nowrap align-middle" data-portal-table-selection="false">
 
     <tbody>
 
@@ -464,7 +450,7 @@ x-data="monitoreoEvaluacion()">
     <div class="card-body p-0">
 
     <div class="table-responsive">
-<table class="table table-striped mb-0 text-nowrap align-middle">
+<table class="table table-striped mb-0 text-nowrap align-middle" data-portal-table-selection="false">
 
     <tbody>
 

@@ -8,7 +8,6 @@ document.addEventListener('alpine:init', () => {
         loading:false,
 
         modalNuevo:null,
-        modalBuscar:null,
         equipos:[],
 
         formNuevo:{
@@ -16,14 +15,9 @@ document.addEventListener('alpine:init', () => {
             fecha:''
         },
 
-        formBuscar:{
-            fecha_year:''
-        },
-
         errors: {
           equipo_id: false,
           fecha: false,
-          fecha_year: false,
         },
 
         pdf: '',
@@ -31,7 +25,19 @@ document.addEventListener('alpine:init', () => {
         init(){
 
             this.modalNuevo = new bootstrap.Modal(document.getElementById('modalNuevo'));
-            this.modalBuscar = new bootstrap.Modal(document.getElementById('modalBuscar'));
+            const yearContainer = document.getElementById('container');
+            const initialYear = Number(yearContainer?.dataset.year);
+            if (Number.isInteger(initialYear) && initialYear >= 2020 && initialYear <= new Date().getFullYear()) {
+                this.year = initialYear;
+            }
+            this.actualizarYearBreadcrumb();
+            document.addEventListener('click', (event) => {
+                const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+                const opcion = target?.closest('[data-sgm-programa-year]');
+                if (!opcion) return;
+                event.preventDefault();
+                this.cambiarYear(opcion.dataset.sgmProgramaYear);
+            });
             this.obtenerTabla(this.year);
 
             this.pdf = '/sgm/procesos-medicion/programa-anual-verificacion-equipos/pdf/' + this.year + '/' + this.formato;
@@ -146,47 +152,18 @@ document.addEventListener('alpine:init', () => {
 
         },
 
-        openModalBuscar() {
-
-            this.resetFormBuscar();
-
-            this.modalBuscar.show();
-
+        cambiarYear(year) {
+            const seleccionado = Number(year);
+            if (!Number.isInteger(seleccionado) || seleccionado < 2020 || seleccionado > new Date().getFullYear()) return;
+            this.year = seleccionado;
+            this.actualizarYearBreadcrumb();
+            this.pdf = '/sgm/procesos-medicion/programa-anual-verificacion-equipos/pdf/' + this.year + '/' + this.formato;
+            this.obtenerTabla(this.year);
         },
 
-        async buscar(){
-
-            if (!this.validaBuscar()) {
-                this.notify(
-                    'error',
-                    'Completa todos los campos obligatorios'
-                );
-                return;
-            }
-
-            this.modalBuscar.hide();
-
-            await this.obtenerTabla(
-                this.formBuscar.fecha_year
-            );
-
-            this.pdf = '/sgm/procesos-medicion/programa-anual-verificacion-equipos/pdf/' + this.formBuscar.fecha_year + '/' + this.formato;
-
-        },
-
-        validaBuscar() {
-
-            this.resetErrors();
-
-            let valid = true;
-
-            if (!this.formBuscar.fecha_year) {
-                this.errors.fecha_year = true;
-                valid = false;
-            }
-
-            return valid;
-
+        actualizarYearBreadcrumb() {
+            const etiqueta = document.getElementById('programa-medicion-year-label');
+            if (etiqueta) etiqueta.textContent = this.year;
         },
 
         resetErrors() {
@@ -208,15 +185,6 @@ document.addEventListener('alpine:init', () => {
 
         },
 
-        resetFormBuscar() {
-
-            this.formBuscar = {
-                fecha_year: this.year
-            };
-
-            this.resetErrors();
-
-        },
 
         async eliminar(id, name){
 

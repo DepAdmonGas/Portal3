@@ -172,23 +172,31 @@
                     </div>
                 </div>
 
-                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4 flex-grow-1" x-show="f.url">
+                <template x-if="f.url">
+                <div class="d-flex flex-column flex-grow-1">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4 flex-grow-1">
                     <img :src="f.url" alt="Firma" class="img-fluid mb-3" style="max-height: 120px; object-fit: contain;">
                     <template x-if="f.fecha">
                         <h6 class="text-dark mb-0"><strong x-text="f.fecha"></strong></h6>
                     </template>
                 </div>
-                <div class="card-footer bg-light text-center mt-auto border-top" x-show="f.url">
+                <div class="card-footer bg-light text-center mt-auto border-top">
                     <h6 class="mb-0 fw-semibold text-truncate" x-text="f.usuario || ''"></h6>
                 </div>
+                </div>
+                </template>
 
-                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4 flex-grow-1" x-show="!f.url">
+                <template x-if="!f.url">
+                <div class="d-flex flex-column flex-grow-1">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4 flex-grow-1">
                     <i class="ti ti-signature-off text-muted mb-3" style="font-size: 80px;"></i>
                     <h6 class="text-muted mb-0" x-text="'¡Falta la firma de ' + (f.tipo || 'Vo.Bo.') + '!'"></h6>
                 </div>
-                <div class="card-footer bg-light text-center mt-auto border-top" x-show="!f.url">
+                <div class="card-footer bg-light text-center mt-auto border-top">
                     <small class="text-muted">Pendiente de firma electrónica</small>
                 </div>
+                </div>
+                </template>
 
             </div>
         </div>

@@ -11,6 +11,16 @@ esVoBo: false,
 
 ventas_dia: [],
 ventas_dia_otros: [],
+selectedRows: {
+ventasDia: null,
+ventasOtros: null,
+aceites: null,
+documentos: null,
+prosegur: null,
+tarjetas: null,
+controlgas: null,
+pagoClientes: null,
+},
 prosegur: [],
 tarjetas_cb: [],
 controlgas: [],
@@ -109,6 +119,10 @@ this.esSuperviso = c.dataset.esSuperviso === 'true';
 this.esVoBo = c.dataset.esVoBo === 'true';
 this.loadData();
 if (!this.multiestacion) setTimeout(() => this.initSignaturePad(), 500);
+},
+
+seleccionarFila(tabla, id) {
+this.selectedRows[tabla] = id;
 },
 
 initSignaturePad() {

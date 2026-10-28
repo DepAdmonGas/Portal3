@@ -17,6 +17,7 @@ loading: true,
 saving: false,
 
 cierres: {},
+selectedRows: {},
 
 get empresasList() {
 return Object.keys(this.cierres);
@@ -34,6 +35,10 @@ this.puedeEditar = c.dataset.puedeEditar === 'true';
 this.puedeCrear = c.dataset.puedeCrear === 'true';
 this.finalizado = this.estado === 1;
 this.cargarDatos();
+},
+
+seleccionarFila(empresa, id) {
+this.selectedRows[empresa] = id;
 },
 
 async cargarDatos(showLoader = true) {

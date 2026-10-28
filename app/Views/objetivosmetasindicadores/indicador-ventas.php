@@ -1,4 +1,5 @@
 <div id="container" class="mb-3" x-data="{ ...actions(), ...indicadorVentas}"
+    data-portal-table-selection="false"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
@@ -14,20 +15,6 @@
 
 <div x-data="indicadorVentas">
 
-    <!-- SELECT AÑO -->
-
-     <div class="row mt-3 mb-3">
-        <div class="col-md-9 col-xl-9"> <h4 x-text="year"></h4> </div>
-        <div class="col-md-3 col-xl-3">
-            <select class="form-select" x-model="year" @change="getVentas()">
-                <template x-for="y in [2026,2025,2024,2023,2022,2021,2020]" :key="y">
-                    <option :value="y" x-text="y"></option>
-                </template>
-            </select>
-        </div>
-    </div>
-
- 
     <!-- LOADING -->
     <div x-show="loading" class="text-center">
         <div class="spinner-border" role="status">

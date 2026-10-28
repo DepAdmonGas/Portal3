@@ -65,14 +65,16 @@ public static function hasActionPermission(string $moduleKey, string $action): b
     return (int) ($grant[$action] ?? 0) === 1;
 }
 
-/** Capability flags for the legacy biometric configuration UI; missing grants remain false. */
+/** CRUD capability flags for configuration pages available to the authorized module context. */
 public static function getConfigurationPermissions(): array
 {
+$available = ModuleStationService::isAvailable(self::MODULE_KEY);
+
     return [
-        'leer' => self::hasActionPermission(self::MODULE_KEY, 'leer'),
-        'crear' => self::hasActionPermission(self::MODULE_KEY, 'crear'),
-        'editar' => self::hasActionPermission(self::MODULE_KEY, 'editar'),
-        'eliminar' => self::hasActionPermission(self::MODULE_KEY, 'eliminar'),
+        'leer' => $available,
+        'crear' => $available,
+        'editar' => $available,
+        'eliminar' => $available,
         'descargar' => self::hasActionPermission(self::MODULE_KEY, 'descargar'),
     ];
 }
@@ -913,7 +915,7 @@ return [
 
 public static function datatablePuestos(): array
 {
-if (!self::hasActionPermission('recursos-humanos', 'leer')) {
+if (!ModuleStationService::isAvailable(self::MODULE_KEY)) {
 return [];
 }
 $permisoEditar   = ModuloDptoOperativoService::permisosSesion('recursos-humanos');
@@ -1026,7 +1028,7 @@ return $result;
 
 public static function datatablePerfil(?int $idEstacion = null): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'leer')
+if (!ModuleStationService::isAvailable(self::MODULE_KEY)
     || $idEstacion === null || !self::legacyStationIsAuthorized($idEstacion)) {
 return [];
 }
@@ -1036,8 +1038,8 @@ $query = self::authorizedLegacyResourceQuery(RhLocalidadesPerfil::class)->where(
 
 $registros = $query->orderBy('id')->get();
 $permisos = [
-    'editar' => self::hasActionPermission(self::MODULE_KEY, 'editar'),
-    'eliminar' => self::hasActionPermission(self::MODULE_KEY, 'eliminar'),
+    'editar' => ModuleStationService::isAvailable(self::MODULE_KEY),
+    'eliminar' => ModuleStationService::isAvailable(self::MODULE_KEY),
 ];
 $result = [];
 
@@ -1059,8 +1061,8 @@ return $result;
 
 public static function createPerfil(int $idEstacion, string $usuario, string $password): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'crear')) {
-return ['success' => false, 'message' => 'No tienes permisos para crear perfiles.'];
+if (!ModuleStationService::isAvailable(self::MODULE_KEY)) {
+return ['success' => false, 'message' => 'No tienes acceso a la configuración de Biométricos.'];
 }
 if (!self::legacyStationIsAuthorized($idEstacion)) {
 return ['success' => false, 'message' => 'Estación requerida.'];
@@ -1097,8 +1099,8 @@ return ['success' => false, 'message' => 'No se pudo agregar el perfil.'];
 
 public static function updatePerfil(int $id, string $usuario, string $password): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'editar')) {
-return ['success' => false, 'message' => 'No tienes permisos para editar perfiles.'];
+if (!ModuleStationService::isAvailable(self::MODULE_KEY)) {
+return ['success' => false, 'message' => 'No tienes acceso a la configuración de Biométricos.'];
 }
 $perfil = self::authorizedLegacyResourceQuery(RhLocalidadesPerfil::class)->where('status', 1)->where('id', $id)->first();
 if (!$perfil) {
@@ -1123,8 +1125,8 @@ return ['success' => false, 'message' => 'No se pudo actualizar el perfil.'];
 
 public static function deletePerfil(int $id): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'eliminar')) {
-return ['success' => false, 'message' => 'No tienes permisos para desactivar perfiles.'];
+if (!ModuleStationService::isAvailable(self::MODULE_KEY)) {
+return ['success' => false, 'message' => 'No tienes acceso a la configuración de Biométricos.'];
 }
 $perfil = self::authorizedLegacyResourceQuery(RhLocalidadesPerfil::class)->where('status', 1)->where('id', $id)->first();
 if (!$perfil) {
@@ -1144,7 +1146,7 @@ return ['success' => false, 'message' => 'No se pudo desactivar el perfil.'];
 
 public static function getRetardoIncidencia(int $idEstacion): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'leer') || !self::legacyStationIsAuthorized($idEstacion)) {
+if (!ModuleStationService::isAvailable(self::MODULE_KEY) || !self::legacyStationIsAuthorized($idEstacion)) {
 return ['available' => false, 'configured' => false, 'retardo' => null, 'incidencia' => null];
 }
 
@@ -1164,8 +1166,8 @@ return [
 
 public static function updateRetardoIncidencia(int $idEstacion, int $retardo, int $incidencia): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'editar')) {
-return ['success' => false, 'message' => 'No tienes permisos para modificar reglas legacy.'];
+if (!ModuleStationService::isAvailable(self::MODULE_KEY)) {
+return ['success' => false, 'message' => 'No tienes acceso a la configuración de Biométricos.'];
 }
 if (!self::legacyStationIsAuthorized($idEstacion)) {
 return ['success' => false, 'message' => 'La estación solicitada está fuera de tu alcance.'];
@@ -1191,14 +1193,14 @@ return ['success' => true, 'message' => 'Configuración actualizada correctament
 
 public static function datatableHorarios(int $idEstacion): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'leer') || !self::legacyStationIsAuthorized($idEstacion)) return [];
+if (!ModuleStationService::isAvailable(self::MODULE_KEY) || !self::legacyStationIsAuthorized($idEstacion)) return [];
 $registros = self::authorizedLegacyResourceQuery(RhLocalidadesHorario::class)->where('id_estacion', $idEstacion)
 ->orderBy('id')
 ->get();
 
 $permisos = [
-    'editar' => self::hasActionPermission(self::MODULE_KEY, 'editar'),
-    'eliminar' => self::hasActionPermission(self::MODULE_KEY, 'eliminar'),
+    'editar' => ModuleStationService::isAvailable(self::MODULE_KEY),
+    'eliminar' => ModuleStationService::isAvailable(self::MODULE_KEY),
 ];
 $result = [];
 
@@ -1220,8 +1222,8 @@ return $result;
 
 public static function createHorario(int $idEstacion, string $titulo, string $horaEntrada, string $horaSalida): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'crear')) {
-return ['success' => false, 'message' => 'No tienes permisos para crear horarios legacy.'];
+if (!ModuleStationService::isAvailable(self::MODULE_KEY)) {
+return ['success' => false, 'message' => 'No tienes acceso a la configuración de Biométricos.'];
 }
 if (!self::legacyStationIsAuthorized($idEstacion)) {
 return ['success' => false, 'message' => 'La estación solicitada está fuera de tu alcance.'];
@@ -1251,8 +1253,8 @@ return ['success' => false, 'message' => 'No se pudo agregar el horario legacy.'
 
 public static function updateHorario(int $id, string $titulo, string $horaEntrada, string $horaSalida): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'editar')) {
-return ['success' => false, 'message' => 'No tienes permisos para editar horarios legacy.'];
+if (!ModuleStationService::isAvailable(self::MODULE_KEY)) {
+return ['success' => false, 'message' => 'No tienes acceso a la configuración de Biométricos.'];
 }
 $horario = self::authorizedLegacyResourceQuery(RhLocalidadesHorario::class)->where('id', $id)->first();
 if (!$horario) {
@@ -1282,8 +1284,8 @@ return ['success' => false, 'message' => 'No se pudo actualizar el horario legac
 
 public static function deleteHorario(int $id): array
 {
-if (!self::hasActionPermission(self::MODULE_KEY, 'eliminar')) {
-return ['success' => false, 'message' => 'No tienes permisos para eliminar horarios legacy.'];
+if (!ModuleStationService::isAvailable(self::MODULE_KEY)) {
+return ['success' => false, 'message' => 'No tienes acceso a la configuración de Biométricos.'];
 }
 $horario = self::authorizedLegacyResourceQuery(RhLocalidadesHorario::class)->where('id', $id)->first();
 if (!$horario) {

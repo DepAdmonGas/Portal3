@@ -18,7 +18,7 @@ data-puede-eliminar="<?= !empty($permisos['eliminar']) ? 'true' : 'false' ?>">
 
 <div class="datatables">
 <div class="table-responsive">
-<table id="table-puestos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-puestos" class="table table-striped table-bordered mb-0 text-nowrap align-middle biometricos-seleccionable portal-table portal-table--selectable">
 <tbody></tbody>
 </table>
 </div>

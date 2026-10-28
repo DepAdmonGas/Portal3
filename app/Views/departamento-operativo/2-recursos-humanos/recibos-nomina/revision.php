@@ -1,4 +1,4 @@
-<div id="revision-container" class="mt-3 mb-3"
+<div id="revision-container" class="mt-3 mb-3 recibos-nomina-revision"
 data-id-year="<?= $idYear ?>"
 data-id-estacion="<?= $idEstacion ?>"
 data-mes="<?= $mes ?>"
@@ -52,7 +52,7 @@ Selecciona una estación o departamento del menú superior.
 </button>
 </template>
 <template x-if="!bloque.puede_finalizar">
-<span class="badge rounded-pill" :class="bloque.estado_badge.clase" x-text="bloque.estado_badge.texto"></span>
+<span class="badge rounded-pill portal-table-badge--white" :class="bloque.estado_badge.clase" x-text="bloque.estado_badge.texto"></span>
 </template>
 </div>
 
@@ -61,7 +61,7 @@ Selecciona una estación o departamento del menú superior.
 
 <div class="card-body p-0">
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100 portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle" style="width:48px;">#</th>
@@ -77,13 +77,13 @@ Selecciona una estación o departamento del menú superior.
 </thead>
 <tbody>
 <template x-for="fila in bloque.rows" :key="fila.num">
-<tr :style="'background-color: ' + fila.bg_color + ';'">
+<tr class="pointer" :style="'background-color: ' + fila.bg_color + ';'" @click="seleccionarFila($event)">
 <td class="text-center align-middle" x-text="fila.num"></td>
 <td class="text-center align-middle" x-text="fila.no_colaborador"></td>
 <td x-text="fila.nombre"></td>
 <td class="text-end align-middle"><span x-text="'$' + fila.importe"></span></td>
 <td class="text-center align-middle">
-<span class="badge rounded-pill" :class="fila.prima.clase" x-text="fila.prima.texto"></span>
+<span class="badge rounded-pill portal-table-badge--white" :class="fila.prima.clase" x-text="fila.prima.texto"></span>
 </td>
 <td class="text-center align-middle">
 <a x-show="fila.doc_nomina.tiene_documento" :href="fila.doc_nomina.url" target="_blank"><i :class="fila.doc_nomina.icono"></i></a>
@@ -98,7 +98,7 @@ Selecciona una estación o departamento del menú superior.
 <i x-show="!fila.doc_aguinaldo.tiene_documento" :class="fila.doc_aguinaldo.icono"></i>
 </td>
 <td class="text-center align-middle">
-<span class="badge rounded-pill" :class="fila.estatus.clase" x-text="fila.estatus.texto"></span>
+<span class="badge rounded-pill portal-table-badge--white" :class="fila.estatus.clase" x-text="fila.estatus.texto"></span>
 </td>
 </tr>
 </template>

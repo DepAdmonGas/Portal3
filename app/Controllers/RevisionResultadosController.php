@@ -4,6 +4,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
+use App\Services\DropdownYearMesService;
 use App\Models\Sasisopa\RevisionResultados;
 
 class RevisionResultadosController extends BaseController{
@@ -29,13 +30,22 @@ private function carpetaRevisionResultados(): string
 
     return $carpeta;
 }
-public function index(){
+public function index(int $year = 0){
+
+        if ($year <= 0) {
+            header('Location: /sasisopa/revision-resultados/' . date('Y'));
+            exit;
+        }
+
+        $year = DropdownYearMesService::validarYearMes($year, 1)['idYear'];
+        $yearMesTemplate = '/sasisopa/revision-resultados/{year}';
 
         $title = '17. REVISIÓN DE RESULTADOS';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
+        Breadcrumb::add(DropdownYearMesService::dropdownYearManual($year, 1, 2019, $yearMesTemplate), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -45,6 +55,8 @@ public function index(){
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $this->estacionModulo(),
+            'year' => $year,
+            'yearMesTemplate' => $yearMesTemplate,
             'moduleStationKey' => 'sasisopa',
              'links' =>[
                 

@@ -1,6 +1,7 @@
 <div id="container" class="pb-4"
     data-module-station-key="sasisopa"
     data-estacion-id="<?= e($estacionId ?? '') ?>"
+    data-year="<?= (int) ($year ?? date('Y')) ?>"
     x-data="{ ...actions(), ...revisionResultados()}">
 
     <?php if (empty($estacionId)): ?>
@@ -12,21 +13,8 @@
 
     <?php else: ?>
 
-        <div class="row g-0 ms-auto w-100 justify-content-between mb-3 mt-3">
-            <div class="col-12 col-md-6 d-grid">
-                <select
-                    class="form-select"
-                    x-model.number="year"
-                    @change="buscar()">
-                    <?php for ($i = date('Y'); $i >= 2019; $i--): ?>
-                        <option value="<?= $i ?>">
-                            <?= $i ?>
-                        </option>
-                    <?php endfor; ?>
-                </select>
-            </div>
-
-            <div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
+        <div class="row g-0 ms-auto w-100 justify-content-end mb-3 mt-3">
+            <div class="col-12 col-md-auto d-grid">
              
                      <a class="btn bg-primary-subtle text-primary"
    :href="pdfUrl"
@@ -43,7 +31,7 @@
         <div class="card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
+                    <table class="table table-responsive table-striped table-bordered mb-0  align-middle" data-portal-table-selection="false">
                         <tbody>
                             <tr>
                                 <td class="align-middle text-center">
@@ -97,7 +85,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
+                    <table class="table table-responsive table-striped table-bordered mb-0  align-middle" data-portal-table-selection="false">
                         <tbody>
                             <tr>
                                 <td class="align-middle text-center"><b>Objeto</b></td>
@@ -120,7 +108,7 @@
 
                 <div class="mt-3 mb-3 form-label"><b>Resultado:</b></div>
 
-                <div class="row">
+                <div class="row g-3">
 
                     <template
                         x-for="(item,index) in ventas.detalle"
@@ -130,6 +118,7 @@
                             <div class="table-responsive">
                                 <table
                                     class="table table-responsive table-striped table-bordered mb-0 align-middle"
+                                    data-portal-table-selection="false"
                                     style="font-size:.9em;">
 
                                     <thead>
@@ -224,7 +213,7 @@
         <div class="card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
+                    <table class="table table-responsive table-striped table-bordered mb-0  align-middle" data-portal-table-selection="false">
                         <tbody>
                             <tr>
                                 <td class="align-middle text-center"><b>Objeto</b></td>
@@ -293,7 +282,7 @@
         <div class="card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
+                    <table class="table table-responsive table-striped table-bordered mb-0  align-middle" data-portal-table-selection="false">
 
                         <tbody>
 
@@ -418,7 +407,7 @@
         <div class="card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-responsive table-striped table-bordered mb-0 align-middle">
+                    <table class="table table-responsive table-striped table-bordered mb-0 align-middle" data-portal-table-selection="false">
 
                         <tbody>
 

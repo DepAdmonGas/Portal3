@@ -42,10 +42,10 @@
 
                                     <div class="card-body p-0">
                                         <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                                            <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                            <table class="table table-striped table-bordered mb-0 text-nowrap align-middle control-volumetrico-seleccionable portal-table portal-table--selectable">
 
                                                 <thead>
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.productos[p.id] === 'inventario' }" @click="seleccionarFila('productos', 'inventario', p.id)">
                                                         <th class="text-center align-middle"></th>
                                                         <th class="text-center align-middle">Rep. Volumétrico</th>
                                                         <th class="text-center align-middle">Reg. Contables</th>
@@ -56,7 +56,7 @@
                                                 <tbody>
 
                                                     <!-- Inventario final -->
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.productos[p.id] === 'compras-litros' }" @click="seleccionarFila('productos', 'compras-litros', p.id)">
                                                         <td class="fw-semibold ">Inventario final</td>
 
                                                         <td class="text-end p-0">
@@ -82,7 +82,7 @@ p.dato2 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato2', v)"
                                                     </tr>
 
                                                     <!-- Compras L -->
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.productos[p.id] === 'compras-importe' }" @click="seleccionarFila('productos', 'compras-importe', p.id)">
                                                         <td class="fw-semibold">Compras L</td>
 
                                                         <td class="text-end p-0">
@@ -100,7 +100,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato3', v)"
                                                     </tr>
 
                                                     <!-- $ Compras -->
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.productos[p.id] === 'ventas-litros' }" @click="seleccionarFila('productos', 'ventas-litros', p.id)">
 
                                                         <td class="fw-semibold">$</td>
 
@@ -121,7 +121,7 @@ p.dato5 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato5', v)"
                                                     </tr>
 
                                                     <!-- Ventas L -->
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.productos[p.id] === 'ventas-importe' }" @click="seleccionarFila('productos', 'ventas-importe', p.id)">
 
                                                         <td class="fw-semibold">Ventas L</td>
 
@@ -140,7 +140,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                     </tr>
 
                                                     <!-- $ Ventas -->
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.productos[p.id] === 'despachos-litros' }" @click="seleccionarFila('productos', 'despachos-litros', p.id)">
 
                                                         <td class="fw-semibold">$</td>
                                                         <td class="text-end p-0">
@@ -158,7 +158,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                     </tr>
 
                                                     <!-- Despachos L -->
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.productos[p.id] === 'despachos-importe' }" @click="seleccionarFila('productos', 'despachos-importe', p.id)">
 
                                                         <td class="fw-semibold">Despachos L</td>
                                                         <td class="text-end p-0">
@@ -176,7 +176,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                     </tr>
 
                                                     <!-- $ Despachos -->
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.productos[p.id] === 'parametro' }" @click="seleccionarFila('productos', 'parametro', p.id)">
 
                                                         <td class="fw-semibold">$</td>
                                                         <td class="text-end p-0">
@@ -195,7 +195,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                     </tr>
 
                                                     <!-- PARAMETRO -->
-                                                    <tr>
+                                                    <tr class="table-dark">
                                                         <td class="text-center align-middle" colspan="2"><strong>Parametro 1.5%</strong></td>
                                                         <td class="text-center align-middle" colspan="2">
                                                             <span :class="paramColor(p.parametro)" x-text="formatDisplay(p.parametro) + '%'"></span>
@@ -245,9 +245,9 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="table-responsive">
-                                        <table class="table table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-bordered mb-0 text-nowrap align-middle control-volumetrico-seleccionable portal-table portal-table--selectable">
                                             <thead>
-                                                <tr>
+                                                <tr class="pointer" :class="{ selected: selectedRows.aceites === 'ventas' }" @click="seleccionarFila('aceites', 'ventas')">
                                                     <th></th>
                                                     <th class="text-center">Piezas</th>
                                                     <th class="text-center">Rep. Volumétrico</th>
@@ -285,9 +285,9 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle control-volumetrico-seleccionable portal-table portal-table--selectable">
                                             <thead>
-                                                <tr>
+                                                <tr class="pointer" :class="{ selected: selectedRows.totales === 'compras-litros' }" @click="seleccionarFila('totales', 'compras-litros')">
                                                     <th></th>
                                                     <th class="text-center">Rep. Volumétrico</th>
                                                     <th class="text-center">Reg. Contables</th>
@@ -295,31 +295,31 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr>
+                                                <tr class="pointer" :class="{ selected: selectedRows.totales === 'compras-importe' }" @click="seleccionarFila('totales', 'compras-importe')">
                                                     <td class="fw-semibold">Compras L</td>
                                                     <td class="text-end fw-bold" x-text="formatNum(totales.dato3)"></td>
                                                     <td class="text-end fw-bold" x-text="formatNum(totales.dato4)"></td>
                                                     <td class="text-end fw-bold" :class="diffColor(totales.dif2)" x-text="formatNum(totales.dif2)"></td>
                                                 </tr>
-                                                <tr>
+                                                <tr class="pointer" :class="{ selected: selectedRows.totales === 'ventas-litros' }" @click="seleccionarFila('totales', 'ventas-litros')">
                                                     <td class="fw-semibold">$</td>
                                                     <td class="text-end fw-bold" x-text="'$ ' + formatNum(totales.dato5)"></td>
                                                     <td class="text-end fw-bold" x-text="'$ ' + formatNum(totales.dato6)"></td>
                                                     <td class="text-end fw-bold" :class="diffColor(totales.dif3)" x-text="'$ ' + formatNum(totales.dif3)"></td>
                                                 </tr>
-                                                <tr>
+                                                <tr class="pointer" :class="{ selected: selectedRows.totales === 'ventas-importe' }" @click="seleccionarFila('totales', 'ventas-importe')">
                                                     <td class="fw-semibold">Ventas L</td>
                                                     <td class="text-end fw-bold" x-text="formatNum(totales.dato7)"></td>
                                                     <td class="text-end fw-bold" x-text="formatNum(totales.dato8)"></td>
                                                     <td class="text-end fw-bold" :class="diffColor(totales.dif4)" x-text="formatNum(totales.dif4)"></td>
                                                 </tr>
-                                                <tr>
+                                                <tr class="pointer" :class="{ selected: selectedRows.totales === 'despachos-litros' }" @click="seleccionarFila('totales', 'despachos-litros')">
                                                     <td class="fw-semibold">$</td>
                                                     <td class="text-end fw-bold" x-text="'$ ' + formatNum(totales.dato9)"></td>
                                                     <td class="text-end fw-bold" x-text="'$ ' + formatNum(totales.dato10)"></td>
                                                     <td class="text-end fw-bold" :class="diffColor(totales.dif5)" x-text="'$ ' + formatNum(totales.dif5)"></td>
                                                 </tr>
-                                                <tr>
+                                                <tr class="pointer" :class="{ selected: selectedRows.totales === 'despachos-importe' }" @click="seleccionarFila('totales', 'despachos-importe')">
                                                     <td class="fw-semibold">Despachos L</td>
                                                     <td class="text-end fw-bold" x-text="formatNum(totales.dato11)"></td>
                                                     <td class="text-end fw-bold" x-text="formatNum(totales.dato12)"></td>
@@ -359,7 +359,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle control-volumetrico-seleccionable portal-table portal-table--selectable">
                                             <thead>
                                                 <tr>
                                                     <th class="text-center">Fecha</th>
@@ -376,7 +376,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                     </tr>
                                                 </template>
                                                 <template x-for="d in documentos" :key="d.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.documentos === d.id }" @click="seleccionarFila('documentos', d.id)">
                                                         <td class="text-center" x-text="d.fecha_formateada || ''"></td>
                                                         <td x-text="d.anexos"></td>
                                                         <td class="text-center">
@@ -423,7 +423,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle control-volumetrico-seleccionable portal-table portal-table--selectable">
                                             <thead>
                                                 <tr>
                                                     <th class="text-center">Serie</th>
@@ -440,7 +440,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                     </tr>
                                                 </template>
                                                 <template x-for="pf in prefijos" :key="pf.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.prefijos === pf.id }" @click="seleccionarFila('prefijos', pf.id)">
                                                         <td class="text-center  fw-semibold" x-text="pf.serie"></td>
                                                         <td class="" x-text="pf.descripcion"></td>
                                                         <td class="text-end p-0">

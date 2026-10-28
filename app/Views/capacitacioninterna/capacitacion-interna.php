@@ -112,8 +112,8 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
 
                 <h6 class="text-start text-muted mt-2" x-text="nombreUsuarioCursos"></h6>
            
-                    <div class="table-responsive table-striped overflow-x-auto overflow-y-hidden">
-                    <table class="table table-bordered table-sm">
+                    <div class="table-responsive overflow-x-auto overflow-y-hidden">
+                    <table class="table table-bordered table-striped">
                         <thead class="text-center">
                             <tr>
                                 <th>Fecha Programada</th>
@@ -162,7 +162,7 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
                             </template>
 
                             <tr x-show="cursos.length === 0">
-                                <td colspan="5" class="text-center text-muted">
+                                <td colspan="5" class="text-center text-primary">
                                     No se encontro información
                                 </td>
                             </tr>

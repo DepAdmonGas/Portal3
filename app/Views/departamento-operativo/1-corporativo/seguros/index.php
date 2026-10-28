@@ -25,7 +25,7 @@
         </div>
 
         <div class="table-responsive pb-5 overflow-x-auto overflow-y-hidden" >
-            <table id="tabla-seguros" class="table table-striped table-bordered mb-0 align-middle">
+            <table id="tabla-seguros" class="table table-striped table-bordered mb-0 align-middle seguros-seleccionable portal-table portal-table--selectable">
                 <tbody></tbody>
             </table>
         </div>
@@ -186,22 +186,22 @@ Cancelar</button>
              
 
                     <div x-show="polizaModo !== 'editar'" class="table-responsive overflow-x-auto overflow-y-hidden">
-                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mt-3">
+                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mt-3 seguros-seleccionable portal-table portal-table--selectable">
                             <thead>
                                 <tr>
-                                    <th class="text-center">Fecha de emisión</th>
-                                    <th class="text-center">Fecha de vencimiento</th>
-                                    <th class="text-center" width="48px"><i class="ti ti-file-download text-primary fs-6"></i></th>
-                                    <th class="text-center" width="48px"><i class="ti ti-pencil text-warning fs-6"></i></th>
-                                    <th class="text-center" width="48px"><i class="ti ti-trash text-danger  fs-6"></i></th>
+                                    <th class="text-center align-middle">Fecha de emisión</th>
+                                    <th class="text-center align-middle">Fecha de vencimiento</th>
+                                    <th class="text-center align-middle" width="48px"><i class="ti ti-file-download text-primary fs-6"></i></th>
+                                    <th class="text-center align-middle" width="48px"><i class="ti ti-pencil text-warning fs-6"></i></th>
+                                    <th class="text-center align-middle" width="48px"><i class="ti ti-trash text-danger  fs-6"></i></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template x-for="p in polizas" :key="p.id">
-                                    <tr>
-                                        <td class="text-center" x-text="p.emision"></td>
-                                        <td class="text-center" x-text="p.vencimiento"></td>
-                                        <td class="text-center">
+                                    <tr class="pointer" :class="{ selected: selectedPolizaId === p.id }" @click="seleccionarPoliza(p.id)">
+                                        <td class="text-center align-middle" x-text="p.emision"></td>
+                                        <td class="text-center align-middle" x-text="p.vencimiento"></td>
+                                        <td class="text-center align-middle">
                                             <template x-if="p.archivo">
                                                 <a href="" @click.prevent="download('seguros-polizas', p.archivo)"><i class="ti ti-file-download text-primary fs-6"></i></a>
                                             </template>
@@ -209,17 +209,17 @@ Cancelar</button>
                                                 <i class="ti ti-ban text-muted"></i>
                                             </template>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center align-middle">
                                             <a class="pointer" @click="editarPoliza(p.id)" ><i class="ti ti-pencil fs-6 text-warning"></i></a>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center align-middle">
                                             <a class="pointer" @click="eliminarPoliza(p.id)"><i class="ti ti-trash fs-6 text-danger"></i></a>
                                         </td>
                                     </tr>
                                 </template>
                                 <template x-if="polizas.length === 0">
                                     <tr>
-                                        <td colspan="5" class="text-center text-secondary py-2">
+                                        <td colspan="5" class="text-center text-secondary py-2 align-middle">
                                             <small>No se encontró información para mostrar</small>
                                         </td>
                                     </tr>

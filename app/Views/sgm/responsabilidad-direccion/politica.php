@@ -30,30 +30,34 @@ class="pb-4"
 <div
     x-data="{ ...actions(), ...politicaForm() }"  
 >
-    <div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
-                      <button
+    <div class="row align-items-center g-3 mt-3 mb-3">
+        <div class="col-12 col-md-6">
+            <div class="programar-horario-date-filter d-inline-flex align-items-center bg-light border rounded-pill px-3 px-md-4 py-2 gap-2 w-100">
+                <label for="politica-sgm-fecha" class="text-muted fw-semibold text-nowrap d-flex align-items-center gap-1 mb-0">
+                    <i class="ti ti-calendar fs-5 text-primary"></i>
+                    <span>Fecha:</span>
+                </label>
+                <input
+                    id="politica-sgm-fecha"
+                    type="date"
+                    class="form-control border-0 bg-transparent fw-semibold flex-grow-1"
+                    x-model="fecha"
+                >
+            </div>
+        </div>
+        <div class="col-12 col-md-6 d-flex justify-content-md-end">
+            <button
+                type="button"
                 class="btn btn-success"
                 @click="guardar">
-
-            <i class="ti ti-check"></i>
+                <i class="ti ti-check"></i>
                 Actualizar
             </button>
-                    </div>
-                  </div>
-
-            
-      
+        </div>
+    </div>
 
 <div class="class="card mt-4">
 <div class="card-body">
-
-        <input
-            type="date"
-            class="form-control mb-3"
-            x-model="fecha"
-        >
-
         <div
             x-ref="editor"
             style="height:350px"

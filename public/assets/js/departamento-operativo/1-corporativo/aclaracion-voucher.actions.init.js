@@ -96,6 +96,7 @@ anexoForm: { descripcion: '' },
 anexoSolicitudId: null,
 subiendoAnexo: false,
 guardando: false,
+selectedRows: { detalleDocumentos: null, anexos: null },
 
 init() {
 var c = document.getElementById('container');
@@ -120,6 +121,10 @@ window.addEventListener('load', () => {
 avActualizarPendientes();
 avActualizarToolOpciones();
 });
+},
+
+seleccionarFila(tabla, id) {
+this.selectedRows[tabla] = this.selectedRows[tabla] === id ? null : id;
 },
 
 abrirModalAgregar() {
@@ -266,6 +271,7 @@ if (dt) dt.ajax.reload(null, false);
 },
 
 abrirDetalle(id) {
+this.selectedRows.detalleDocumentos = null;
 var dt = $('#tabla-aclaracion-voucher').DataTable();
 if (!dt) return;
 var row = dt.rows().data().toArray().find(function (r) { return r.id === id; });
@@ -349,6 +355,7 @@ this.guardandoComentario = false;
 
 async abrirAnexos(id) {
 this.anexoSolicitudId = id;
+this.selectedRows.anexos = null;
 this.anexoForm = { descripcion: '' };
 var fa = document.getElementById('fileAnexo'); if (fa) fa.value = '';
 this.anexos = [];

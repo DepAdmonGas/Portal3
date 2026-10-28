@@ -1,4 +1,5 @@
 <div id="container" class="mt-4 mb-5"
+     data-portal-table-selection="false"
      data-id="<?= (int)$id ?>"
      data-fecha="<?= htmlspecialchars($fecha, ENT_QUOTES, 'UTF-8') ?>"
      data-estatus="<?= (int)$estatus ?>"

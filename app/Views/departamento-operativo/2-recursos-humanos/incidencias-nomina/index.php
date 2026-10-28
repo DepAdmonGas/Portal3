@@ -14,10 +14,12 @@
     <!-- SELECTOR DE SEMANA + DROPDOWN DE REPORTES -->
     <div class="row mb-3 align-items-center">
         <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-2">
-            <div class="d-flex align-items-center">
-                <!-- <label class="text-muted me-2 fw-semibold">Semana:</label> -->
-                <select class="form-select form-select-sm" id="incidencias-semana-selector"
-                    style="max-width: 220px;">
+            <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 px-md-4 py-2 gap-1 w-100 incidencias-week-filter">
+                <label for="incidencias-semana-selector" class="text-muted fw-semibold text-nowrap d-flex align-items-center gap-1 mb-0">
+                    <i class="ti ti-filter fs-4 text-primary"></i>
+                    <span>Semana:</span>
+                </label>
+                <select class="form-select form-select-sm border-0 bg-transparent fw-semibold w-auto flex-grow-1" id="incidencias-semana-selector">
                     <option value="">Selecciona una semana...</option>
                     <?php foreach ($weeks as $w): ?>
                         <option value="<?= $w['numero'] ?>" <?= $w['numero'] == $currentWeek ? 'selected' : '' ?>>
@@ -90,7 +92,7 @@
                     <div id="incidencias-content">
                         <div class="datatables">
                             <div class="table-responsive overflow-x-auto pb-4">
-                                <table id="tabla-incidencias-nomina" class="table table-striped table-bordered mb-0 text-nowrap align-middle" width="100%">
+                                <table id="tabla-incidencias-nomina" class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable" width="100%">
                                     <tbody></tbody>
                                 </table>
                             </div>

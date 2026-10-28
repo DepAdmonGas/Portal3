@@ -232,8 +232,8 @@ html += '<div class="alert alert-warning border-0 text-center py-3"><i class="ti
 
 html += '<div class="row">'
 + '<div class="col-12 mb-4 text-end">'
-+ '<div>Formato: <span class="text-primary">' + esc(d.codigo_formato || '') + '</span></div>'
-+ '<div>No. de control: <span class="text-primary">' + esc(d.no_control || '—') + '</span></div>'
++ '<div><div class="form-label mb-1">Formato:</div><div class="text-primary">' + esc(d.codigo_formato || '') + '</div></div>'
++ '<div><div class="form-label mb-1">No. de control:</div><div class="text-primary">' + esc(d.no_control || '—') + '</div></div>'
 + '<div>' + esc(d.encabezado_ciudad || '') + '</div>'
 + '</div>'
 + '</div>';
@@ -259,7 +259,7 @@ html += '</tbody></table></div>';
 }
 
 if (d.archivos && d.archivos.length) {
-html += '<h6 class="fw-semibold mb-2">Archivos: </h6>';
+html += '<div class="form-label mb-1">Archivos:</div>';
 html += '<div class="table-responsive mb-4">';
 html += '<table class="table table-striped table-bordered mb-0 align-middle">';
 html += '  <thead>';
@@ -285,7 +285,7 @@ html += '</table>';
 html += '</div>';
 }
 
-html += '<h6 class="fw-semibold mb-2">Firmas: </h6>';
+html += '<div class="form-label mb-1">Firmas:</div>';
 html += '<div class="row">';
 const labels = { A: 'ELABORÓ / ENCARGADO', B: 'VO.BO.', C: 'AUTORIZACIÓN', D: 'VERIFICACIÓN' };
 

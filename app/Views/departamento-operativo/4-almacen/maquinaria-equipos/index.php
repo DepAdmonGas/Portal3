@@ -285,63 +285,57 @@ x-model="form.costo_compra"
 </div>
 
 <div class="col-12">
-<label class="form-label mb-1">Factura actual:</label>
-<div class="d-flex align-items-center gap-2 flex-wrap">
-<template x-if="detalle.factura_existe">
-<button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" @click="descargarFactura(detalle.factura)">
-<i class="ti ti-file-download fs-5"></i>
-<span>Descargar factura</span>
-</button>
-</template>
-<template x-if="!detalle.factura_existe && detalle.factura">
-<div class="text-muted">
-<i class="ti ti-file-off me-1"></i>
-El archivo no está disponible en el servidor.
-</div>
-</template>
-<template x-if="!detalle.factura">
-<div class="text-muted">
-<i class="ti ti-file-off me-1"></i>
-Sin factura registrada.
-</div>
-</template>
-</div>
+<label class="form-label mb-1">Factura:</label>
+<div class="input-group">
 <input type="file"
-class="form-control mt-2"
+class="form-control"
 id="inputFacturaEditar"
 accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.xls,.xlsx,.doc,.docx"
 @change="form.factura_file = $event.target.files[0] || null; errores.factura_file = false"
 :style="errores.factura_file ? 'border: 2px solid #A52525 !important;' : ''">
+<template x-if="detalle.factura_existe">
+<button type="button"
+class="btn btn-outline-primary px-3 d-inline-flex align-items-center justify-content-center"
+@click="descargarFactura(detalle.factura)"
+title="Descargar factura actual"
+aria-label="Descargar factura actual">
+<i class="ti ti-download"></i>
+</button>
+</template>
+</div>
+<template x-if="!detalle.factura_existe && detalle.factura">
+<small class="text-muted d-block mt-1"><i class="ti ti-file-off me-1"></i>El archivo no está disponible en el servidor.</small>
+</template>
+<template x-if="!detalle.factura">
+<small class="text-muted d-block mt-1"><i class="ti ti-file-off me-1"></i>Sin factura registrada.</small>
+</template>
 </div>
 
 <div class="col-12">
-<label class="form-label mb-1">Manual actual:</label>
-<div class="d-flex align-items-center gap-2 flex-wrap">
-<template x-if="detalle.manual_existe">
-<button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" @click="descargarManual(detalle.manual)">
-<i class="ti ti-file-download fs-5"></i>
-<span>Descargar manual</span>
-</button>
-</template>
-<template x-if="!detalle.manual_existe && detalle.manual">
-<div class="text-muted">
-<i class="ti ti-file-off me-1"></i>
-El archivo no está disponible en el servidor.
-</div>
-</template>
-<template x-if="!detalle.manual">
-<div class="text-muted">
-<i class="ti ti-file-off me-1"></i>
-Sin manual registrado.
-</div>
-</template>
-</div>
+<label class="form-label mb-1">Manual:</label>
+<div class="input-group">
 <input type="file"
-class="form-control mt-2"
+class="form-control"
 id="inputManualEditar"
 accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.xls,.xlsx,.doc,.docx"
 @change="form.manual_file = $event.target.files[0] || null; errores.manual_file = false"
 :style="errores.manual_file ? 'border: 2px solid #A52525 !important;' : ''">
+<template x-if="detalle.manual_existe">
+<button type="button"
+class="btn btn-outline-primary px-3 d-inline-flex align-items-center justify-content-center"
+@click="descargarManual(detalle.manual)"
+title="Descargar manual actual"
+aria-label="Descargar manual actual">
+<i class="ti ti-download"></i>
+</button>
+</template>
+</div>
+<template x-if="!detalle.manual_existe && detalle.manual">
+<small class="text-muted d-block mt-1"><i class="ti ti-file-off me-1"></i>El archivo no está disponible en el servidor.</small>
+</template>
+<template x-if="!detalle.manual">
+<small class="text-muted d-block mt-1"><i class="ti ti-file-off me-1"></i>Sin manual registrado.</small>
+</template>
 </div>
 </div>
 </div>

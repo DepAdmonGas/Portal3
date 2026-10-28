@@ -5,6 +5,7 @@ var contentEl = document.getElementById('contratos-content');
 
 var table = null;
 var permisos = {};
+var selectedContratoId = null;
 
 function showEmptyMessage() {
 if (contentEl) contentEl.style.display = 'none';
@@ -43,6 +44,9 @@ serverSide: false,
 autoWidth: false,
 stateSave: true,
 order: [[0, 'desc']],
+language: {
+url: '/assets/libs/datatables.net/js/es-ES.json'
+},
 ajax: {
 url: '/departamento-operativo/contratos/data',
 type: 'GET',
@@ -99,6 +103,9 @@ return html;
 }
 }
 ],
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', selectedContratoId === rowData.id);
+},
 columnDefs: [
 { targets: '_all', render: function (d) { return d || ''; } }
 ],
@@ -107,6 +114,16 @@ if (window.Alpine) {
 Alpine.initTree(document.querySelector('#tabla-contratos'));
 }
 }
+});
+
+$('#tabla-contratos tbody')
+.off('click.rowSelection')
+.on('click.rowSelection', 'tr', function () {
+var rowData = dt.row(this).data();
+if (!rowData) return;
+selectedContratoId = rowData.id;
+$('#tabla-contratos tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 dt.on('xhr', function (e, settings, json) {
@@ -149,6 +166,8 @@ selContratos.addEventListener('change', ctActualizarToolOpciones);
 ModuleStationSelector.init('contratos', {
 customReload: function (ms) {
 var v = ms.getValue();
+selectedContratoId = null;
+$('#tabla-contratos tbody tr').removeClass('selected');
 if (v.id_estacion === null && v.id_depto === null && !esModoGlobal()) {
 ms.hideBadge();
 showEmptyMessage();

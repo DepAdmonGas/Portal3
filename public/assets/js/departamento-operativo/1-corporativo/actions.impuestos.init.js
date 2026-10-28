@@ -29,6 +29,7 @@ document.addEventListener('alpine:init', () => {
 Alpine.data('impuestosComponent', () => ({
 idDia: null,
 loading: true,
+selectedItem: null,
 
 items: [],
 aceitesTotal: 0,
@@ -42,6 +43,10 @@ const c = document.getElementById('container');
 if (!c) return;
 this.idDia = parseInt(c.dataset.idDia);
 this.cargarDatos();
+},
+
+seleccionarFila(producto) {
+this.selectedItem = producto;
 },
 
 async cargarDatos() {

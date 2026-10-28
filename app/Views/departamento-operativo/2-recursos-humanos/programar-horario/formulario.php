@@ -5,9 +5,14 @@
     <div class="row">
 
         <div class="col-md-6 mb-4">
-            <label for="fecha-programacion" class="form-label">Fecha de programación:</label>
-            <input type="date" class="form-control" id="fecha-programacion"
-                   :value="fechaSeleccionada" @change="changeFecha($event)">
+            <div class="programar-horario-date-filter d-inline-flex align-items-center bg-light border rounded-pill px-3 px-md-4 py-2 gap-2 w-100">
+                <label for="fecha-programacion" class="text-muted fw-semibold text-nowrap d-flex align-items-center gap-1 mb-0">
+                    <i class="ti ti-calendar fs-5 text-primary"></i>
+                    <span>Fecha:</span>
+                </label>
+                <input type="date" class="form-control border-0 bg-transparent fw-semibold flex-grow-1"
+                       id="fecha-programacion" :value="fechaSeleccionada" @change="changeFecha($event)">
+            </div>
         </div>
         <div class="col-md-6 mb-4 text-end d-flex align-items-end justify-content-end">
             <button type="button" class="btn btn-success me-2" @click="guardarReporte()"
@@ -29,7 +34,7 @@
                 <div class="mb-4">
                     <div class="datatables">
                         <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-                            <table :id="'ph-form-table-' + idx" class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100">
+                            <table :id="'ph-form-table-' + idx" class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100 portal-table portal-table--selectable horario-personal-seleccionable">
                                 <thead>
                                     <tr>
                                         <th class="text-center align-middle" width="48">#</th>

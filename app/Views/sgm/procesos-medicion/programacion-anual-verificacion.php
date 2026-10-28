@@ -1,6 +1,7 @@
 <div id="container" class="pb-4"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
-    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
+    data-year="<?= (int) ($year ?? date('Y')) ?>">
 
     <?php if (empty($estacionId)): ?>
 
@@ -14,27 +15,20 @@
         <div id="sgm-content" x-data="{ ...actions(), ...programacionAnual() }">
 
 
-            <div class="d-flex align-items-center mb-3 mt-3">
-                <div class="ms-auto">
-
-                    <div class="dropdown dropcenter">
-                        <a class="btn btn-light dropdown-toggle text-dark pointer" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ti ti-dots-vertical fs-4"></i>
-                        </a>
-
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <li>
-                                <button type="button" class="dropdown-item" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo</button>
-                            </li>
-                            <li>
-                                <button type="button" class="dropdown-item" @click="openModalBuscar()"><i class="ti ti-search"></i> Buscar</button>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" :href="pdf"><i class="ti ti-download"></i> Descargar</a>
-                            </li>
-                        </ul>
-                    </div>
-
+            <div class="clearfix mt-2 mb-3">
+                <h5 class="float-start mb-0 mt-1">Año <span x-text="year"></span></h5>
+                <div class="btn-group float-end">
+                    <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="ti ti-dots-vertical fs-4"></i>
+                    </button>
+                    <ul class="dropdown-menu animated rubberBand">
+                        <li>
+                            <button type="button" class="dropdown-item" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo</button>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" :href="pdf"><i class="ti ti-download"></i> Descargar</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -176,67 +170,6 @@
                             
 
                             
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div
-                class="modal fade"
-                id="modalBuscar"
-                tabindex="-1"
-                data-bs-backdrop="static"
-                data-bs-keyboard="false">
-                <div class="modal-dialog modal-md modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary">
-                            <h4 class="modal-title text-white">
-                                <i class="ti ti-search"></i>
-                                Buscar
-                            </h4>
-                            <button
-                                class="btn-close btn-close-white"
-                                data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-
-                            <label class="form-label">* Año:</label>
-
-                            <input
-                                type="number"
-                                class="form-control"
-                                x-model="formBuscar.fecha_year"
-                                @change="errors.fecha_year = false"
-                                :class="errors.fecha_year ? 'is-invalid' : ''">
-
-                        </div>
-
-                        <div class="modal-footer">
-<div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
-                      <button type="button"
-                                class="btn bg-danger-subtle text-danger"
-                                data-bs-dismiss="modal">
-                                <i class="ti ti-x"></i> Cancelar
-                            </button>
-                    </div>
-                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
-                       <button
-                                class="btn btn-success"
-                                @click="buscar()">
-                                <i class="ti ti-search"></i> Buscar
-
-                            </button>
-                    </div>
-                  </div>
-
-                            
-
-                           
 
                         </div>
 

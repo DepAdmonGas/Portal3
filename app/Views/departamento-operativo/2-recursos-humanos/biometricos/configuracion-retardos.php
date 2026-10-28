@@ -146,7 +146,7 @@ id="btn-agregar-horario"
 <div class="card-body mb-0">
 <div class="datatables">
 <div class="table-responsive">
-<table id="table-horarios" class="table table-striped table-bordered pb-4 align-middle" style="overflow-y: hidden; overflow-x: auto;">
+<table id="table-horarios" class="table table-striped table-bordered pb-4 align-middle biometricos-seleccionable portal-table portal-table--selectable" style="overflow-y: hidden; overflow-x: auto;">
 <tbody></tbody>
 </table>
 </div>

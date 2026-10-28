@@ -26294,7 +26294,7 @@ background: #3e71ac !important;
 /* Fondo */
 [data-bs-theme="dark"] .sidebar-nav,
 [data-bs-theme="dark"] .scroll-sidebar {
-background-color: #253662;
+background-color: #202936;
 color: #eaeff4;
 }
 
@@ -26302,6 +26302,13 @@ color: #eaeff4;
 [data-bs-theme="dark"] .simplebar-content-wrapper {
 background-color: #202936;
 color: #eaeff4;
+}
+
+[data-bs-theme="dark"] .left-sidebar,
+[data-bs-theme="dark"] .left-sidebar .sidebar-nav,
+[data-bs-theme="dark"] .left-sidebar .scroll-sidebar,
+[data-bs-theme="dark"] .left-sidebar .simplebar-content-wrapper {
+background-color: #202936 !important;
 }
 
 /* Hover (Bootstrap default) */
@@ -45874,9 +45881,6 @@ color: #fff !important;
 body table.dataTable.table-striped > tbody > tr:nth-of-type(2n + 1) > * {
 box-shadow: inset 0 0 0 9999px var(--bs-light);
 }
-body table.dataTable > tbody > tr.selected > * {
-box-shadow: inset 0 0 0 9999px var(--bs-primary);
-}
 .form-check-input.secondary:checked {
 background-color: var(--bs-secondary);
 border-color: var(--bs-secondary);
@@ -52990,6 +52994,36 @@ padding: 0 14px;
 body .apexcharts-tooltip-title {
 padding: 10px 14px;
 }
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-text,
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-legend-text,
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-xaxis-title-text,
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-yaxis-title-text,
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-datalabel,
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-data-labels text {
+color: #d8e1ef !important;
+fill: #d8e1ef !important;
+-webkit-text-fill-color: #d8e1ef !important;
+opacity: 1 !important;
+}
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-gridline {
+stroke: #536174 !important;
+}
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-xaxis-tick,
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-ycrosshairs,
+html[data-bs-theme="dark"] body .apexcharts-canvas .apexcharts-xcrosshairs {
+stroke: #718096 !important;
+}
+html[data-bs-theme="dark"] body .apexcharts-tooltip:not(.apexcharts-theme-dark) {
+background: #263244 !important;
+color: #e5ebf3 !important;
+border-color: #46566c !important;
+}
+html[data-bs-theme="dark"] body .apexcharts-tooltip:not(.apexcharts-theme-dark) .apexcharts-tooltip-title,
+html[data-bs-theme="dark"] body .apexcharts-tooltip:not(.apexcharts-theme-dark) .apexcharts-tooltip-text,
+html[data-bs-theme="dark"] body .apexcharts-tooltip:not(.apexcharts-theme-dark) .apexcharts-tooltip-y-group {
+background: #263244 !important;
+color: #e5ebf3 !important;
+}
 .css-bar {
 position: relative;
 display: inline-block;
@@ -56239,6 +56273,16 @@ min-width:24px;
 height:24px;
 padding:0 8px;
 font-size:12px;
+}
+
+/* En el sidebar contraído, el contador se superpone en la esquina superior del icono. */
+body[data-sidebartype="mini-sidebar"] .left-sidebar:not(:hover) .sidebar-nav .sidebar-link > .badge-historico {
+position:absolute;
+top:5px;
+left:calc(50% + 3px);
+right:auto;
+margin:0;
+z-index:1;
 }
 
 /* El badge conserva su estilo propio y no hereda el hover del sidebar. */

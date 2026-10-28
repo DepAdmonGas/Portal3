@@ -308,7 +308,7 @@ function renderDetalleModal(data, container) {
 
     html += '<div class="col-12">';
     html += '<div class="table-responsive mb-4">';
-    html += '<table class="table table-striped table-bordered mb-0 text-nowrap align-middle" width="100%">';
+    html += '<table class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table" width="100%">';
     html += '<thead>';
     html += '<tr>';
     html += '<th class="align-middle text-center">#</th>';
@@ -327,7 +327,7 @@ function renderDetalleModal(data, container) {
             html += '</tr>';
         });
     } else {
-        html += '<tr><th colspan="3" class="text-center text-secondary fw-normal"><small>No se encontró información para mostrar</small></th></tr>';
+        html += '<tr><th colspan="3" class="text-center text-secondary fw-normal"><small>No se encontró información</small></th></tr>';
     }
 
     html += '</tbody>';

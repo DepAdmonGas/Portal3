@@ -11,6 +11,7 @@ tipoPuesto: '',
 loading: true,
 
 productos: [],
+selectedRows: { productos: {}, aceites: null, totales: null, documentos: null, prefijos: null },
 aceites: { piezas: 0, volumetrico: 0, contables: 0, diferencia: 0 },
 totales: { dato3: 0, dato4: 0, dato5: 0, dato6: 0, dato7: 0, dato8: 0, dato9: 0, dato10: 0, dato11: 0, dato12: 0, dato13: 0, dato14: 0, dif2: 0, dif3: 0, dif4: 0, dif5: 0, dif6: 0, dif7: 0 },
 documentos: [],
@@ -34,6 +35,14 @@ this.estado = parseInt(c.dataset.estado);
 this.multiestacion = c.dataset.multiestacion === 'true';
 this.tipoPuesto = c.dataset.tipoPuesto || '';
 this.cargarDatos();
+},
+
+seleccionarFila(tabla, id, grupo = null) {
+if (grupo !== null) {
+this.selectedRows[tabla][grupo] = id;
+return;
+}
+this.selectedRows[tabla] = id;
 },
 
 async cargarDatos() {

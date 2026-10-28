@@ -8,8 +8,13 @@
 <div class="row align-items-end mb-3">
     <!-- Lado izquierdo: Fecha e Input (Ocupa la mitad en pantallas medianas/grandes y todo el ancho en celulares) -->
     <div class="col-xl-4 col-lg-5 col-md-6 col-12 mb-2 mb-md-0">
-        <label class="mb-1 form-label">* Fecha:</label>
-        <input type="date" class="form-control" id="Fecha" x-model="fecha">
+        <div id="fecha-programacion-wrapper" class="programar-horario-date-filter inventarios-diarios-date-filter d-inline-flex align-items-center bg-light border rounded-pill px-3 px-md-4 py-2 gap-2 w-100">
+            <label for="Fecha" class="text-muted fw-semibold text-nowrap d-flex align-items-center gap-1 mb-0">
+                <i class="ti ti-calendar fs-5 text-primary"></i>
+                <span>Fecha:</span>
+            </label>
+            <input type="date" class="form-control border-0 bg-transparent fw-semibold flex-grow-1" id="Fecha" x-model="fecha">
+        </div>
     </div>
 
     <!-- Lado derecho: Botones (Alineados a la derecha en pantallas medianas/grandes, y a la izquierda o completo en celulares según prefieras) -->

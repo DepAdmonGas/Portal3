@@ -155,7 +155,7 @@
 
                                     <tr
                                         class="pointer"
-                                        @click="abrirDetalle(item)">
+                                        @click="abrirDetalle(item, true)">
 
                                         <td class="text-center"
                                             x-text="index + 1"></td>
@@ -515,6 +515,17 @@
                         </button>
 
                     </template>
+
+
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        x-show="mostrarRegresarDetalle"
+                        x-cloak
+                        @click="regresarADia()">
+                        <i class="ti ti-arrow-left me-1"></i>
+                        Regresar
+                    </button>
 
 
                     <button

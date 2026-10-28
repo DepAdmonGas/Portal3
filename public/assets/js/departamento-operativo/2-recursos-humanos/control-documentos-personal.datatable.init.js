@@ -13,6 +13,8 @@ const puedeEliminar = c.dataset.puedeEliminar === 'true';
 const puedeDescargar = c.dataset.puedeDescargar === 'true';
 const esMultiestacion = c.dataset.multiestacion === 'true';
 const moduleStationKey = c.dataset.moduleStationKey || '';
+let selectedPersonalActivoId = null;
+let selectedPersonalInactivoId = null;
 
 if ($.fn.DataTable && $.fn.DataTable.isDataTable($table)) {
 $table.DataTable().destroy();
@@ -71,9 +73,9 @@ return '<i class="ti ti-file-off fs-6 text-muted"></i>';
 }
 
 function estatusBadge(estatus) {
-if (estatus === 'Finalizado') return '<span class="badge bg-success">Finalizado</span>';
-if (estatus === 'Pendiente') return '<span class="badge bg-danger">Pendiente</span>';
-return '<span class="badge bg-warning text-dark">En proceso</span>';
+if (estatus === 'Finalizado') return '<span class="badge bg-success text-white">Finalizado</span>';
+if (estatus === 'Pendiente') return '<span class="badge bg-danger text-white">Pendiente</span>';
+return '<span class="badge bg-warning text-white">En proceso</span>';
 }
 
 function renderComentarios(row) {
@@ -250,6 +252,7 @@ Alpine.initTree(document.querySelector('#tabla-control-docs'));
 },
 rowCallback: function(row, data) {
 $(row).css('background-color', '');
+$(row).addClass('pointer').toggleClass('selected', selectedPersonalActivoId === data.id);
 }
 });
 
@@ -280,7 +283,26 @@ Alpine.initTree(document.querySelector('#tabla-control-docs-inactivos'));
 rowCallback: function(row, data) {
 var bg = renderBajaColor(data);
 $(row).css('background-color', bg || '');
+$(row).addClass('pointer').toggleClass('selected', selectedPersonalInactivoId === data.id);
 }
+});
+}
+
+$table.on('click.rowSelection', 'tbody tr', function() {
+var rowData = window.tablaControlDocs.row(this).data();
+if (!rowData) return;
+selectedPersonalActivoId = rowData.id;
+$table.find('tbody tr').removeClass('selected');
+$(this).addClass('selected');
+});
+
+if (window.tablaControlDocsInactivos) {
+$tableInactivos.on('click.rowSelection', 'tbody tr', function() {
+var rowData = window.tablaControlDocsInactivos.row(this).data();
+if (!rowData) return;
+selectedPersonalInactivoId = rowData.id;
+$tableInactivos.find('tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 }
 
@@ -288,6 +310,7 @@ function recargarTablaActivos() {
 var url = buildUrlActivos();
 var dt = window.tablaControlDocs;
 if (!dt) return;
+selectedPersonalActivoId = null;
 dt.ajax.url(url || EMPTY_URL_ACTIVOS).load();
 }
 
@@ -295,6 +318,7 @@ function recargarTablaInactivos() {
 var url = buildUrlInactivos();
 var dt = window.tablaControlDocsInactivos;
 if (!dt) return;
+selectedPersonalInactivoId = null;
 dt.ajax.url(url || EMPTY_URL_INACTIVOS).load();
 }
 

@@ -67,7 +67,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar el C
 </div>
 
 <div class="table-responsive mb-5 overflow-x-auto overflow-y-hidden">
-<table id="tabla-comparativo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="tabla-comparativo" class="table table-striped table-bordered mb-0 text-nowrap align-middle comparativo-xml-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle" rowspan="2" width="48px">#</th>
@@ -157,7 +157,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar el C
 <tbody>
 
 <template x-for="(row, idx) in rows" :key="row.mes">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows.principal === row.mes }" @click="seleccionarFila('principal', row.mes)">
 <td class="align-middle text-center" x-text="row.mes"></td>
 <td class="align-middle text-center" x-text="row.nombre_mes"></td>
 <template x-for="cell in row.cells" :key="cell.campo">
@@ -263,7 +263,7 @@ x-init="$el.value = formatInput(cell.valor)"
 
 <div class="card-body p-0">
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle comparativo-xml-seleccionable portal-table portal-table--selectable">
 
 <thead>
 <tr>
@@ -276,7 +276,7 @@ x-init="$el.value = formatInput(cell.valor)"
 
 <tbody>
 <template x-for="item in month.items" :key="item.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows['sat-' + month.mes] === item.id }" @click="seleccionarFila('sat-' + month.mes, item.id)">
 <td class="text-center align-middle fw-semibold" x-text="item.categoria"></td>
 
 <td class="text-center align-middle p-0">
@@ -375,7 +375,7 @@ x-init="$el.value = formatInput(item.despacho_monto)"
 <div class="card-header text-bg-primary">
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
 <h5 class="mb-0 text-white">
-<i class="ti ti-eye me-2"></i>OBSERVACIONES
+<i class="ti ti-eye me-2"></i>Observaciones
 </h5>
 </div>
 </div>
@@ -437,23 +437,23 @@ Guardar Comentario
 
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
 <div x-data="actions()">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle comparativo-xml-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
-<th class="text-center">Fecha</th>
-<th>Anexo</th>
-<th class="text-center" width="48px"><i class="ti ti-download text-primary fs-5"></i></th>
+<th class="text-center align-middle">Fecha</th>
+<th class="align-middle">Anexo</th>
+<th class="text-center align-middle" width="48px"><i class="ti ti-download text-primary fs-5"></i></th>
 <template x-if="canEdit">
-<th class="text-center" width="48px"><i class="ti ti-trash text-danger fs-5"></i></th>
+<th class="text-center align-middle" width="48px"><i class="ti ti-trash text-danger fs-5"></i></th>
 </template>
 </tr>
 </thead>
 <tbody>
 <template x-if="documentos.length === 0">
-<tr><td colspan="4" class="text-center text-secondary">No se encontró información</td></tr>
+<tr><td colspan="4" class="text-center text-secondary align-middle">No se encontró información</td></tr>
 </template>
 <template x-for="doc in documentos" :key="doc.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows.documentos === doc.id }" @click="seleccionarFila('documentos', doc.id)">
 <td class="text-center align-middle" x-text="doc.fecha_formato"></td>
 <td class="align-middle" x-text="doc.anexo"></td>
 <td class="text-center align-middle">

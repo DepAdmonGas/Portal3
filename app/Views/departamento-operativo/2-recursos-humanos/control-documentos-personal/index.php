@@ -28,7 +28,7 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 <i class="ti ti-dots-vertical"></i>
 </button>
 <ul class="dropdown-menu">
-<li><a class="dropdown-item pointer" @click="abrirModalAgregar()"><i class="ti ti-plus me-1"></i> Agregar Personal</a></li>
+<li><a class="dropdown-item pointer" @click="abrirModalAgregar()"><i class="ti ti-plus me-1"></i> Nuevo Personal</a></li>
 <li><a class="dropdown-item pointer" href="/departamento-operativo/recursos-humanos/control-documentos-personal-excel"><i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel</a></li>
 <li><a class="dropdown-item pointer" href="/departamento-operativo/recursos-humanos/control-documentos-personal-kpi/<?= date('Y') ?>"><i class="ti ti-chart-column me-1"></i> Evaluacion Personal (KPIs)</a></li>
 </ul>
@@ -117,7 +117,7 @@ PERSONAL ACTIVO
 <div class="card-body">
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-<table id="tabla-control-docs" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="tabla-control-docs" class="table table-striped table-bordered mb-0 text-nowrap align-middle control-documentos-personal-seleccionable portal-table portal-table--selectable">
 <tbody></tbody>
 </table>
 </div>
@@ -141,7 +141,7 @@ PERSONAL ACTIVO
 <div class="card-body">
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-<table id="tabla-control-docs-inactivos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="tabla-control-docs-inactivos" class="table table-striped table-bordered mb-0 text-nowrap align-middle control-documentos-personal-seleccionable portal-table portal-table--selectable">
 <tbody></tbody>
 </table>
 </div>
@@ -167,7 +167,7 @@ PERSONAL ACTIVO
     <span>
         <i class="ti fs-6 text-white me-1" :class="modoForm === 'agregar' ? 'ti-user-plus': 'ti-edit'"></i>
     </span>
-<h5 class="modal-title text-white" x-text="nombreEstacionActual ? (modoForm === 'agregar' ? 'Agregar Personal (' + nombreEstacionActual + ')' : 'Editar Personal (' + nombreEstacionActual + ')') : (modoForm === 'agregar' ? 'Agregar Personal' : 'Editar Personal')"></h5>
+<h5 class="modal-title text-white" x-text="nombreEstacionActual ? (modoForm === 'agregar' ? 'Nuevo Personal (' + nombreEstacionActual + ')' : 'Editar Personal (' + nombreEstacionActual + ')') : (modoForm === 'agregar' ? 'Nuevo Personal' : 'Editar Personal')"></h5>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
@@ -336,13 +336,13 @@ style="width:28px;height:28px;">11</span>
 <label class="form-label fw-semibold" x-text="info.label + ':'"></label>
 
 <div class="input-group">
+<input type="file" class="form-control" :ref="'doc_' + campo" :name="'doc_' + campo" accept=".pdf,.jpg,.jpeg,.png">
+
 <template x-if="modoForm === 'editar' && form.documentos[campo]">
-<button type="button" class="btn btn-outline-success" @click="downloadDocumento(campo, form.documentos[campo])" title="Descargar archivo actual">
-<i class="ti ti-download me-1"></i>Descargar
+<button type="button" class="btn btn-outline-primary px-3 d-inline-flex align-items-center justify-content-center" @click="downloadDocumento(campo, form.documentos[campo])" title="Descargar archivo actual" aria-label="Descargar archivo actual">
+<i class="ti ti-download"></i>
 </button>
 </template>
-
-<input type="file" class="form-control" :ref="'doc_' + campo" :name="'doc_' + campo" accept=".pdf,.jpg,.jpeg,.png">
 </div>
 
 </div>

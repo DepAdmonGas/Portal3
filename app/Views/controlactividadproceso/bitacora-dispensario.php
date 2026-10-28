@@ -13,7 +13,7 @@
 
     <?php else: ?>
 
-        <div class="text-end">
+        <div class="text-end mb-3">
             <div class="btn-group">
                 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="ti ti-dots-vertical fs-4"></i>
@@ -466,7 +466,7 @@
 
                     </div>
 
-                    <div class="modal-body">
+                    <div class="modal-body pb-0">
 
                         <!-- FECHA -->
 

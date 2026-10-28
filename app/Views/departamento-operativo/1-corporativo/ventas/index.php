@@ -60,7 +60,7 @@
                                 <!-- CONCENTRADO DE VENTAS -->
                                 <div class="col-12" id="divConcentradoVentas">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle ventas-detalle-seleccionable portal-table portal-table--selectable">
 
                                             <thead>
                                                 <tr>
@@ -76,7 +76,7 @@
                                             <tbody>
 
                                                 <template x-for="v in ventas_dia" :key="v.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.ventasDia === v.id }" @click="seleccionarFila('ventasDia', v.id)">
 
                                                         <td class="p-0" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
                                                             <template x-if="estado == 0 && !multiestacion">
@@ -145,7 +145,7 @@
                                                 </tr>
 
                                                 <template x-for="o in ventas_dia_otros" :key="o.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.ventasOtros === o.id }" @click="seleccionarFila('ventasOtros', o.id)">
                                                         <td x-text="o.concepto"></td>
                                                         <td class="align-middle text-end" x-text="o.piezas"></td>
                                                         <td class="align-middle text-end"></td>
@@ -204,7 +204,7 @@
                             <div class="row">
                                 <div class="col-12" id="divAceitesLubricantes">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle ventas-detalle-seleccionable portal-table portal-table--selectable">
                                             <thead>
                                                 <tr>
                                                     <th class="align-middle text-center">#</th>
@@ -216,7 +216,7 @@
                                             </thead>
                                             <tbody>
                                                 <template x-for="a in aceites" :key="a.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.aceites === a.id }" @click="seleccionarFila('aceites', a.id)">
                                                         <td class="align-middle text-center" x-text="a.id_aceite"></td>
                                                         <td class="align-middle text-center" x-text="a.concepto"></td>
                                                         <td class="p-0 align-middle" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
@@ -252,10 +252,10 @@
                                                     </tr>
                                                 </template>
                                                 <tr x-show="aceites.length > 0">
-                                                    <th colspan="2" class="text-center">TOTAL (PRODUCTO):</th>
-                                                    <td class="align-middle text-center"><strong x-text="totales_aceites.totalCantidad"></strong></td>
-                                                    <th class="align-middle text-center">TOTAL (IMPORTE):</th>
-                                                    <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales_aceites.totalPrecio)"></strong></td>
+                                                    <th colspan="2" class="text-center table-dark text-white">TOTAL (PRODUCTO):</th>
+                                                    <td class="align-middle text-center table-dark text-white"><strong x-text="totales_aceites.totalCantidad"></strong></td>
+                                                    <th class="align-middle text-center table-dark text-white">TOTAL (IMPORTE):</th>
+                                                    <td class="align-middle text-end table-dark text-white"><strong x-text="'$ ' + formatNum(totales_aceites.totalPrecio)"></strong></td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -281,7 +281,7 @@
                             <div class="row">
                                 <div class="col-12" id="divDocumentos">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle ventas-detalle-seleccionable portal-table portal-table--selectable">
                                             <thead>
                                                 <tr>
                                                     <th class="text-center align-middle">Descripción</th>
@@ -300,7 +300,7 @@
                                                     </tr>
                                                 </template>
                                                 <template x-for="d in documentos" :key="d.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.documentos === d.id }" @click="seleccionarFila('documentos', d.id)">
                                                         <td class="text-center align-middle" x-text="d.detalle"></td>
                                                         <td class=" text-center" width="40px">
                                                             <span x-data="actions()">
@@ -349,7 +349,7 @@
                             <div class="row">
                                 <div class="col-12" id="divProsegur">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle ventas-detalle-seleccionable portal-table portal-table--selectable">
                                             <thead>
                                                 <tr>
                                                     <th class="text-center">Denominación</th>
@@ -359,7 +359,7 @@
                                             </thead>
                                             <tbody>
                                                 <template x-for="p in prosegur" :key="p.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.prosegur === p.id }" @click="seleccionarFila('prosegur', p.id)">
                                                         <td class="text-center align-middle p-3" x-text="p.denominacion"></td>
                                                         <td class="p-0 align-middle" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
                                                             <template x-if="estado == 0 && !multiestacion">
@@ -410,7 +410,7 @@
                             <div class="row">
                                 <div class="col-12" id="divTarjetasBancarias">
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle ventas-detalle-seleccionable portal-table portal-table--selectable">
                                             <thead>
                                                 <tr>
                                                     <th class="text-center" colspan="2">Concepto / Banco</th>
@@ -419,7 +419,7 @@
                                             </thead>
                                             <tbody>
                                                 <template x-for="t in tarjetas_cb" :key="t.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.tarjetas === t.id }" @click="seleccionarFila('tarjetas', t.id)">
                                                         <th class="align-middle text-center "><b x-text="t.num"></b></th>
                                                         <td class="align-middle " x-text="t.concepto === 'G500 FLETT' ? 'TICKETCARD+' : t.concepto"></td>
                                                         <template x-if="['TICKETCARD', 'G500 FLETT', 'EFECTICARD', 'SODEXO', 'AMERICAN EXPRESS', 'BBVA BANCOMER SA', 'INBURGAS', 'ULTRAGAS', 'ENERGEX', 'SHELL FLEET NAVIGATOR', 'SANTANDER', 'INBURSA'].includes(t.concepto)">
@@ -467,7 +467,7 @@
                             <div class="row">
                                 <div class="col-12" id="divControlgas">
                                     <div class="table-responsive overflow-x-auto overflow-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle ventas-detalle-seleccionable portal-table portal-table--selectable">
                                             <thead>
                                                 <tr>
                                                     <th class="text-center align-middle">Concepto</th>
@@ -477,7 +477,7 @@
                                             </thead>
                                             <tbody>
                                                 <template x-for="c in controlgas" :key="c.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.controlgas === c.id }" @click="seleccionarFila('controlgas', c.id)">
                                                         <td class="text-center align-middle p-3 " x-text="c.concepto"></td>
                                                         <td class="align-middle p-0" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
                                                             <template x-if="estado == 0 && !multiestacion">
@@ -556,7 +556,7 @@
                             <div class="row">
                                 <div class="col-12" id="divPagoClientes">
                                     <div class="table-responsive overflow-x-auto overflow-hidden">
-                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle ventas-detalle-seleccionable portal-table portal-table--selectable">
                                             <thead>
                                                 <tr>
                                                     <th class="text-center align-middle">Concepto</th>
@@ -566,7 +566,7 @@
                                             </thead>
                                             <tbody>
                                                 <template x-for="pc in pago_clientes" :key="pc.id">
-                                                    <tr>
+                                                    <tr class="pointer" :class="{ selected: selectedRows.pagoClientes === pc.id }" @click="seleccionarFila('pagoClientes', pc.id)">
                                                         <th class="align-middle " x-text="pc.concepto"></th>
                                                         <td class="align-middle p-0" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
                                                             <template x-if="estado == 0 && !multiestacion">

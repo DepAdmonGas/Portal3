@@ -31,7 +31,7 @@
                 <div class="mb-4">
                     <div class="datatables">
                         <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-                            <table :id="'ph-detalle-table-' + idx" class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100">
+                            <table :id="'ph-detalle-table-' + idx" class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100 portal-table portal-table--selectable">
                                 <thead>
                                     <tr>
                                         <th class="text-center align-middle" width="48">#</th>

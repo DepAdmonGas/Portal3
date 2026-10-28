@@ -54,7 +54,7 @@ data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 </template>
 
 <div class="table-responsive pb-5 overflow-x-auto overflow-y-hidden">
-<table id="tabla-factura-monedero" class="table table-striped table-bordered w-100"></table>
+<table id="tabla-factura-monedero" class="table table-striped table-bordered text-nowrap align-middle w-100 factura-monedero-seleccionable portal-table portal-table--selectable"></table>
 </div>
 
 <!-- Modal Nuevo/Editar -->
@@ -72,14 +72,14 @@ data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 <div class="row">
 
 <template x-if="editando">
-<div class="col-12 mb-3">
+<div class="col-12">
 <label class="form-label mb-0">Folio:</label>
 <p class="mt-0 fw-bold" x-text="'00' + form.folio"></p>
 </div>
 </template>
 
 <template x-if="editando">
-<div class="col-12 mb-3">
+<div class="col-12">
 <label class="form-label mb-1">Fecha de creación:</label>
 <p class="mt-0" x-text="form.fecha_creacion"></p>
 </div>
@@ -226,15 +226,15 @@ Detalle de factura monedero</h5>
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
 <label class="form-label mb-1">Estado del factura:</label>
 <p>
-<template x-if="detalle.estado == 1"><span class="badge bg-success">Finalizado</span></template>
-<template x-if="detalle.estado != 1"><span class="badge bg-warning text-dark">Pendiente</span></template>
+<template x-if="detalle.estado == 1"><span class="badge bg-success text-white">Finalizado</span></template>
+<template x-if="detalle.estado != 1"><span class="badge bg-warning text-white">Pendiente</span></template>
 </p>
 </div>
 
 <div class="col-12">
 <label class="form-label mb-2">Documentos:</label>
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 text-nowrap align-middle factura-monedero-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle">Factura (PDF)</th>
@@ -243,7 +243,7 @@ Detalle de factura monedero</h5>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="pointer" :class="{ selected: detalleDocumentosSeleccionados }" @click="seleccionarDocumentosDetalle()">
 <td class="text-center align-middle">
 <template x-if="detalle.archivo_factura">
 <i class="ti ti-download pointer text-primary fs-5" @click="downloadFile('factura-monedero', detalle.archivo_factura)"></i>
