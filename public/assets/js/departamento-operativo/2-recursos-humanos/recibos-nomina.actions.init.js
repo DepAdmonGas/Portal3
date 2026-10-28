@@ -14,6 +14,7 @@ document.addEventListener('alpine:init', () => {
         periodos: [],
         periodoActual: 1,
         periodoActualInfo: null,
+        _periodosRequestId: 0,
         resumenInfo: null,
 
         colaboradorEditando: null,
@@ -69,7 +70,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         clavePeriodo() {
-            return `rn_periodo_${this.idYear}_${this.idEstacionActual}`;
+            const tipo = this.esSemanal ? 'semana' : 'quincena';
+            return `rn_periodo_${this.idYear}_${this.idEstacionActual}_${tipo}`;
         },
 
         leerPeriodoGuardado() {
@@ -180,6 +182,18 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
+            // Limpia cualquier estado de la localidad anterior antes de pedir
+            // sus periodos. Evita que la tabla conserve datos quincenales al
+            // cambiar a una estación semanal (o al revés).
+            this._periodosRequestId++;
+            this.periodos = [];
+            this.esSemanal = false;
+            this.periodoActual = 0;
+            this.periodoActualInfo = null;
+            this.resumenInfo = null;
+            this.pintarPeriodos();
+            this.actualizarTotalFooter(0);
+            this.recargarTabla();
             this.actualizarPeriodos();
         },
 
@@ -216,6 +230,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         async actualizarPeriodos() {
+            const requestId = ++this._periodosRequestId;
+            const idEstacionSolicitada = this.idEstacionActual;
+
             if (!this.estacionResuelta || !this.idEstacionActual) {
                 this.periodos = [];
                 this.esSemanal = false;
@@ -228,20 +245,45 @@ document.addEventListener('alpine:init', () => {
 
             try {
                 const resp = await axios.post(`${this.baseUrl}/periodos/${this.idYear}`, {
-                    id_estacion: this.idEstacionActual
+                    id_estacion: idEstacionSolicitada
                 });
-                if (!resp.data.success) {
-                    this.periodos = [];
-                    this.periodoActual = 0;
-                    this.pintarPeriodos();
+
+                // Ignora respuestas de peticiones anteriores si el usuario
+                // cambió de estación mientras el servidor calculaba los periodos.
+                if (requestId !== this._periodosRequestId
+                    || idEstacionSolicitada !== this.idEstacionActual) {
                     return;
                 }
 
-                this.esSemanal = resp.data.es_semanal;
+                if (!resp.data.success) {
+                    this.periodos = [];
+                    this.esSemanal = false;
+                    this.periodoActual = 0;
+                    this.periodoActualInfo = null;
+                    this.resumenInfo = null;
+                    this.pintarPeriodos();
+                    this.actualizarTotalFooter(0);
+                    this.recargarTabla();
+                    return;
+                }
+
+                this.esSemanal = resp.data.es_semanal === true || resp.data.es_semanal === 1;
                 this.periodos = resp.data.periodos || [];
                 this.aplicarPeriodo(resp.data.periodo_actual || 1);
             } catch (e) {
-                console.error(e);
+                if (requestId !== this._periodosRequestId
+                    || idEstacionSolicitada !== this.idEstacionActual) {
+                    return;
+                }
+                this.periodos = [];
+                this.esSemanal = false;
+                this.periodoActual = 0;
+                this.periodoActualInfo = null;
+                this.resumenInfo = null;
+                this.pintarPeriodos();
+                this.actualizarTotalFooter(0);
+                this.recargarTabla();
+                console.error('[Recibos de Nómina] No se pudieron cargar los periodos:', e);
             }
         },
 
@@ -257,11 +299,12 @@ document.addEventListener('alpine:init', () => {
                 $sel.select2('destroy');
             }
 
+            $sel.off('change.rn');
             $sel.empty();
 
             if (!this.periodos.length) {
                 $sel.append(new Option('Selecciona...', ''));
-                $sel.trigger('change');
+                $sel.trigger('change.select2');
                 return;
             }
 
@@ -372,9 +415,10 @@ document.addEventListener('alpine:init', () => {
         recargarTabla() {
             if (!window.tablaRecibosNomina) return;
 
-            if (!this.idEstacionActual) {
-                window.tablaRecibosNomina.clear().draw(false);
+            if (!this.idEstacionActual || !this.periodoActual) {
                 this.resumenInfo = null;
+                this.actualizarTotalFooter(0);
+                window.tablaRecibosNomina.ajax.reload(null, false);
                 return;
             }
 

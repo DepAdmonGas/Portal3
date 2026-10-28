@@ -150,8 +150,8 @@ Activar Corte Diario (<span x-text="fecha" class="fw-normal"></span>)</h5>
 <tbody>
 <template x-if="historial.length === 0">
 <tr>
-<td colspan="4" class="text-center text-muted py-3">
-<small>No se encontraron registros de activación</small>
+<td colspan="4" class="text-center text-primary py-3">
+No se encontró información
 </td>
 </tr>
 </template>
@@ -173,8 +173,8 @@ Activar Corte Diario (<span x-text="fecha" class="fw-normal"></span>)</h5>
 <template x-if="!loading && step === 'activate'">
 <div>
 <div class="modal-body">
-<div class="mb-3">
-<h6 class="text-label">* Motivo:</h6>
+<div>
+<label class="form-label mb-1">* Motivo:</label>
 <textarea class="form-control" x-model="motivo" rows="3"></textarea>
 </div>
 </div>

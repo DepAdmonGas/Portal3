@@ -7,6 +7,22 @@ document.addEventListener('DOMContentLoaded', function () {
     var idYear = parseInt(c.dataset.idYear || '0');
 
     var dirTableInstance = null;
+    var selectedReporteId = null;
+    var dirTableEl = document.getElementById('tabla-dia-doble');
+
+    if (dirTableEl) {
+        $(dirTableEl).on('click.rowSelection', 'tbody tr', function (event) {
+            if ($(event.target).closest('a, button, input, select, .dropdown-menu').length) return;
+            if (!dirTableInstance) return;
+
+            var row = dirTableInstance.row(this).data();
+            if (!row || row.id === undefined || row.id === null) return;
+
+            selectedReporteId = String(row.id);
+            $(dirTableEl).find('tbody tr').removeClass('selected');
+            $(this).addClass('selected');
+        });
+    }
 
     function cls(enabled) { return enabled ? '' : ' disabled'; }
 
@@ -75,24 +91,18 @@ function comentariosIcon(row) {
         return html;
     }
 
-    function destroyDirTable() {
-        if (dirTableInstance) {
-            dirTableInstance.destroy();
-            dirTableInstance = null;
-        }
-        var tableEl = document.getElementById('tabla-dia-doble');
-        if (tableEl) {
-            tableEl.querySelector('tbody').innerHTML = '';
-        }
-    }
-
     function initDirDataTable() {
-        destroyDirTable();
+        if (!dirTableEl) return;
 
-        var tableEl = document.getElementById('tabla-dia-doble');
-        if (!tableEl) return;
+        // El wrapper de DataTables puede ser reubicado para aislar el scroll.
+        // Se conserva la instancia al alternar secciones para evitar que
+        // destroy() intente restaurar nodos fuera de su posición original.
+        if (dirTableInstance && $.fn.DataTable.isDataTable(dirTableEl)) {
+            dirTableInstance.ajax.reload(null, false);
+            return;
+        }
 
-        dirTableInstance = $(tableEl).DataTable({
+        dirTableInstance = $(dirTableEl).DataTable({
             processing: false,
             serverSide: false,
             deferRender: true,
@@ -142,6 +152,10 @@ function comentariosIcon(row) {
             rowCallback: function (row, data) {
                 var colors = { 0: '#ffb6af', 1: '#fcfcda', 2: '#fcfcda', 3: '#b0f2c2' };
                 $(row).css('background-color', colors[data.status] || '#ffffff');
+                $(row).addClass('pointer').toggleClass(
+                    'selected',
+                    selectedReporteId !== null && String(data.id) === selectedReporteId
+                );
             },
             drawCallback: function () {
                 $('#tabla-dia-doble [data-bs-toggle="dropdown"]').each(function () {
@@ -182,7 +196,7 @@ function comentariosIcon(row) {
             wrapper.className = 'mb-4';
 
             var tableHtml = '<div class="table-responsive">';
-            tableHtml += '<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">';
+            tableHtml += '<table class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table">';
             tableHtml += '<thead>';
             tableHtml += '<tr class="title-table-bg"><th class="text-start align-middle" colspan="4">' + escHtml(est.nombre) + '</th></tr>';
             tableHtml += '<tr>';
@@ -221,7 +235,7 @@ function comentariosIcon(row) {
                     }
                 });
             } else {
-                tableHtml += '<tr><th colspan="4" class="text-secondary text-center">No se encontró información para mostrar</th></tr>';
+                tableHtml += '<tr><th colspan="4" class="text-secondary text-center">No se encontró información</th></tr>';
             }
 
             tableHtml += '</tbody></table></div>';
@@ -284,7 +298,6 @@ function comentariosIcon(row) {
         if (dirTableInstance) dirTableInstance.ajax.reload(null, false);
     };
     window.diaDobleCleanup = function () {
-        destroyDirTable();
         var container = document.getElementById('dd-estaciones-tables');
         if (container) container.innerHTML = '';
         var loadingEl = document.getElementById('dd-estaciones-loading');
@@ -296,14 +309,29 @@ function comentariosIcon(row) {
 
     var semanaSelector = document.getElementById('dd-semana-selector');
     if (semanaSelector) {
-        semanaSelector.addEventListener('change', function () {
+        var onSemanaChange = function () {
             var semana = parseInt(this.value) || 1;
             axios.post('/departamento-operativo/recursos-humanos/dia-doble/guardar-contexto', {
                 semana: semana,
                 id_year: idYear
             });
             loadEstacionesData();
-        });
+        };
+
+        if (window.jQuery && jQuery.fn.select2) {
+            var $semanaSelector = $(semanaSelector);
+            $semanaSelector.select2({
+                width: 'auto',
+                minimumResultsForSearch: 0,
+                language: 'es',
+                dropdownParent: $('body'),
+                placeholder: 'Selecciona una semana...'
+            });
+            $semanaSelector.next('.select2-container').css({ width: 'auto', flexGrow: '1' });
+            $semanaSelector.on('change.diaDoble', onSemanaChange);
+        } else {
+            semanaSelector.addEventListener('change', onSemanaChange);
+        }
     }
 
     var btnPdf = document.getElementById('btn-dd-pdf-estaciones');

@@ -28,13 +28,25 @@ class SgmCapacitacionExternaController extends BaseController
         return ModuleStationService::getContext('sgm')['id_estacion'] ?? null;
     }
 
+    private function carpetaEvidencias(): string
+    {
+        return dirname(__DIR__, 2)
+            . DIRECTORY_SEPARATOR . 'public'
+            . DIRECTORY_SEPARATOR . 'uploads'
+            . DIRECTORY_SEPARATOR . 'archivos'
+            . DIRECTORY_SEPARATOR . 'sgm'
+            . DIRECTORY_SEPARATOR;
+    }
+
     public function index()
     {
         $title = 'Programa Capacitacion Externa';
+        $year = (int) date('Y');
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SGM', '/sgm');
         Breadcrumb::add('6. Gestion de los Recursos', '/sgm/gestion-recursos');
         Breadcrumb::add($title, '');
+        Breadcrumb::add($this->dropdownYearCapacitacionExterna($year), '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
         $estacionId = $this->estacionModulo();
@@ -45,6 +57,7 @@ class SgmCapacitacionExternaController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $estacionId,
+            'year' => $year,
             'moduleStationKey' => 'sgm',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -57,14 +70,29 @@ class SgmCapacitacionExternaController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/sgm/gestion-recursos/capacitacionexterna.actions.init.js?v=1.6.1',
-                '/js/sgm/gestion-recursos/capacitacionexterna.datatable.init.js?v=1.4.1',
+                '/js/sgm/gestion-recursos/capacitacionexterna.actions.init.js?v=1.6.3',
+                '/js/sgm/gestion-recursos/capacitacionexterna.datatable.init.js?v=1.4.2',
 
             ],
             'help' => true
         ];
 
         View::render('sgm/gestion-recursos/capacitacion-externa', $data, 'sgm');
+    }
+
+    private function dropdownYearCapacitacionExterna(int $yearSeleccionado): string
+    {
+        $html = '<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">'
+            . '<i class="ti ti-calendar"></i> <span class="ms-1" id="capacitacion-externa-year-label">'
+            . $yearSeleccionado . '</span></a>'
+            . '<ul class="dropdown-menu animated rubberBand">';
+
+        for ($year = (int) date('Y'); $year >= 2020; $year--) {
+            $html .= '<li><a class="dropdown-item pointer" href="#" data-capacitacion-externa-year="' . $year . '">'
+                . '<i class="ti ti-calendar me-1"></i>' . $year . '</a></li>';
+        }
+
+        return $html . '</ul>';
     }
 
     public function datatable(int $year): void
@@ -393,10 +421,14 @@ class SgmCapacitacionExternaController extends BaseController
                 $extension
             );
 
-            $carpetaFisica = dirname(__DIR__, 2) . '/public/uploads/archivos/sgm/';
+            $carpetaFisica = $this->carpetaEvidencias();
 
             if (!is_dir($carpetaFisica)) {
-                JsonResponse::error("La carpeta no existe: " . $carpetaFisica);
+                mkdir_safe($carpetaFisica, true);
+            }
+
+            if (!is_dir($carpetaFisica) || !is_writable($carpetaFisica)) {
+                JsonResponse::error('No fue posible preparar la carpeta para guardar la evidencia.');
                 return;
             }
 
@@ -450,9 +482,7 @@ class SgmCapacitacionExternaController extends BaseController
                 return;
             }
 
-            $archivo = ROOT_PATH .
-                '/public/archivos/sgm/' .
-                $evidencia->archivo;
+            $archivo = $this->carpetaEvidencias() . $evidencia->archivo;
 
             if (is_file($archivo)) {
                 unlink($archivo);

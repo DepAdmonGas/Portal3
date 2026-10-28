@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
+use App\Services\DropdownYearMesService;
 use App\Core\Breadcrumb;
 use App\Models\Estacion;
 use App\Models\Sasisopa\MedicionIndicadores;
@@ -26,13 +27,22 @@ class MonitoreoVerificacionEvaluacionController extends BaseController{
         return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
     }
 
-    public function index(){
+    public function index(int $year = 0){
+
+        if ($year <= 0) {
+            header('Location: /sasisopa/monitoreo-verificacion-evaluacion/' . date('Y'));
+            exit;
+        }
+
+        $year = DropdownYearMesService::validarYearMes($year, 1)['idYear'];
+        $yearMesTemplate = '/sasisopa/monitoreo-verificacion-evaluacion/{year}';
 
         $title = '14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
+        Breadcrumb::add(DropdownYearMesService::dropdownYearManual($year, 1, 2019, $yearMesTemplate), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
         $this->agregarIndicadores();
@@ -43,6 +53,8 @@ class MonitoreoVerificacionEvaluacionController extends BaseController{
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $this->estacionModulo(),
+            'year' => $year,
+            'yearMesTemplate' => $yearMesTemplate,
             'moduleStationKey' => 'sasisopa',
              'links' =>[
                 
@@ -1014,7 +1026,15 @@ foreach (array_chunk($ventas, 6) as $grupo) {
 
 //---------------------------------------------
 
-public function indexVentasMes(){
+public function indexVentasMes(int $year = 0){
+
+        if ($year <= 0) {
+            header('Location: /sasisopa/monitoreo-verificacion-evaluacion/ventas-mes/' . date('Y'));
+            exit;
+        }
+
+        $year = DropdownYearMesService::validarYearMes($year, 1)['idYear'];
+        $yearMesTemplate = '/sasisopa/monitoreo-verificacion-evaluacion/ventas-mes/{year}';
 
 $title = 'VENTAS DEL MES';
 
@@ -1022,6 +1042,7 @@ $title = 'VENTAS DEL MES';
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add('14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN', '/sasisopa/monitoreo-verificacion-evaluacion');
         Breadcrumb::add($title, '');
+        Breadcrumb::add(DropdownYearMesService::dropdownYearManual($year, 1, 2019, $yearMesTemplate), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -1031,6 +1052,8 @@ $title = 'VENTAS DEL MES';
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $this->estacionModulo(),
+            'year' => $year,
+            'yearMesTemplate' => $yearMesTemplate,
             'moduleStationKey' => 'sasisopa',
             'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css'    

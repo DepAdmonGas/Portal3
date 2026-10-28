@@ -30,6 +30,8 @@ $(document).ready(function () {
         return color;
     }
 
+    var selectedBitacoraId = null;
+
     function renderEstatus(row) {
         if (parseInt(row.estatus) === 1) {
             return '<span class="badge bg-success">Finalizado</span>';
@@ -109,6 +111,12 @@ $(document).ready(function () {
                 $(row).css('background-color', color);
             }
         },
+        rowCallback: function (row, data) {
+            $(row).addClass('pointer').toggleClass(
+                'selected',
+                selectedBitacoraId !== null && String(data.id) === selectedBitacoraId
+            );
+        },
         columns: [
             {
                 data: 'id',
@@ -182,6 +190,23 @@ $(document).ready(function () {
     });
 
     window.tablaBitacoraRrhh = table;
+
+    table.off('click.rowSelection').on('click.rowSelection', 'tbody tr', function (event) {
+        if ($(event.target).closest('a, button, input, select, textarea, .dropdown-menu').length) return;
+        var row = table.row(this).data();
+        if (!row || row.id === undefined || row.id === null) return;
+
+        selectedBitacoraId = String(row.id);
+        table.rows().nodes().to$().removeClass('selected');
+        $(this).addClass('selected');
+    });
+
+    $('#modalDocumentos, #modalVisualizaciones').on('click.rowSelection', 'table.portal-table--selectable tbody tr', function (event) {
+        if ($(event.target).closest('a, button, input, select, textarea, .dropdown-menu, [colspan]').length) return;
+        var $table = $(this).closest('table');
+        $table.find('tbody tr').removeClass('selected');
+        $(this).addClass('selected pointer');
+    });
 
     function isSeleccionEspecifica() {
         var sel = document.getElementById('module-station-selector-bitacora-rrhh');

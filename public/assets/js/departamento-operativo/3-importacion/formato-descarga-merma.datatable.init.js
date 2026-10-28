@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', function () {
         autoWidth: false,
         stateSave: false,
         order: [[0, 'desc']],
-        pageLength: 25,
-        lengthMenu: [25, 50, 75, 100],
+        pageLength: 10,
+        lengthMenu: [10, 25, 50, 100],
         language: {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },

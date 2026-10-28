@@ -276,7 +276,7 @@ if (!function_exists('mkdir_safe')) {
         if (!$result) {
             // Loggear el error
             $error = error_get_last();
-            \App\Core\Logger::getLogger()->error('Error al crear directorio', [
+            \App\Core\Logger::error('Error al crear directorio', [
                 'path' => $path,
                 'error' => $error['message'] ?? 'Error al crear'
             ]);
@@ -285,8 +285,8 @@ if (!function_exists('mkdir_safe')) {
         }
 
         // Loggear creación exitosa (solo en desarrollo)
-        if ($_ENV['APP_ENV'] ?? 'dev' === 'dev') {
-            \App\Core\Logger::getLogger()->debug('Directorio creado con permisos seguros', [
+        if (($_ENV['APP_ENV'] ?? 'dev') === 'dev') {
+            \App\Core\Logger::debug('Directorio creado con permisos seguros', [
                 'path' => $path,
                 'permissions' => '0755'
             ]);

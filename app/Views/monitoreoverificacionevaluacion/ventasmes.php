@@ -1,6 +1,7 @@
 <div id="container" class="pb-4"
 data-module-station-key="sasisopa"
 data-estacion-id="<?= e($estacionId ?? '') ?>"
+data-year="<?= (int) ($year ?? date('Y')) ?>"
 x-data="ventasMes()">
 
 <?php if (empty($estacionId)): ?>
@@ -12,26 +13,9 @@ x-data="ventasMes()">
 
 <?php else: ?>
 
-    <div class="row mb-3 mt-3">
-        <div class="col-md-12 d-flex justify-content-end">
-            <select
-                class="form-select "
-                style="width: 200px;"
-                x-model.number="year"
-                @change="buscar()">
-                <?php for($i = date('Y'); $i >= 2019; $i--): ?>
-                    <option value="<?= $i ?>">
-                        <?= $i ?>
-                    </option>
-                <?php endfor; ?>
-            </select>
-        </div>
-    </div>
-
-
 <div class="table-responsive overflow-x-auto overflow-y-hidden">
 
-    <table class="table table-striped table-bordered">
+    <table class="table mt-3 table-striped table-bordered">
          
 
     <thead>

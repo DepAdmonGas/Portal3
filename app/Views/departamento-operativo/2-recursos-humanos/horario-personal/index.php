@@ -11,7 +11,7 @@ x-data="{ ...actions(), ...horarioPersonalComponent() }">
 <div class="row">
 
 <template x-if="puedeDescargar">
-<div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="row ms-auto w-100 justify-content-end">
                     <div class="col-12 col-md-auto d-grid mb-3">
                      <a href="/departamento-operativo/recursos-humanos/horario-personal/pdf" target="_blank" class="btn bg-primary-subtle text-primary float-end">
 <i class="ti ti-file-text me-1"></i> Descargar PDF
@@ -25,7 +25,7 @@ x-data="{ ...actions(), ...horarioPersonalComponent() }">
 
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-<table id="tabla-horario-personal" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="tabla-horario-personal" class="table table-striped table-bordered mb-0 text-nowrap align-middle horario-personal-seleccionable portal-table portal-table--selectable">
 <tbody></tbody>
 </table>
 </div>

@@ -15,6 +15,22 @@ document.addEventListener('DOMContentLoaded', function () {
     var lastShowEst = false;
     var tableInstance = null;
     var loadingSeq = 0;
+    var selectedRowId = null;
+
+    var tableEl = document.getElementById('tabla-incidencias-nomina');
+    if (tableEl) {
+        $(tableEl).on('click.rowSelection', 'tbody tr', function (event) {
+            if ($(event.target).closest('a, button, input, select, .dropdown-menu').length) return;
+            if (!tableInstance) return;
+
+            var row = tableInstance.row(this).data();
+            if (!row || row.id === undefined || row.id === null) return;
+
+            selectedRowId = String(row.id);
+            $(tableEl).find('tbody tr').removeClass('selected');
+            $(this).addClass('selected');
+        });
+    }
 
     function showEmptyMessage() {
         if (contentEl) contentEl.style.display = 'none';
@@ -90,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     var diaIdx = meta.col - diasColOffset;
                     if (!v || !v[diaIdx]) return '';
                     var dia = v[diaIdx];
-                    return '<span class="' + escHtml(dia.color) + '">' + escHtml(dia.detalle) + '</span>';
+                    return '<span class="portal-table-day-value ' + escHtml(dia.color) + '">' + escHtml(dia.detalle) + '</span>';
                 }
             });
         }
@@ -137,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function () {
             tableInstance = null;
         }
 
-        var tableEl = document.getElementById('tabla-incidencias-nomina');
         if (!tableEl) return;
 
         var numDias = lastDias ? lastDias.length : 7;
@@ -157,11 +172,18 @@ document.addEventListener('DOMContentLoaded', function () {
             pageLength: 10,
             lengthMenu: [10, 25, 50, 100],
             language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
+            rowCallback: function (row, data) {
+                $(row).addClass('pointer').toggleClass(
+                    'selected',
+                    selectedRowId !== null && String(data.id) === selectedRowId
+                );
+            },
             columns: columns
         });
     }
 
     function loadData() {
+        selectedRowId = null;
         var url = buildUrl();
         if (!url) {
             showEmptyMessage();
@@ -217,7 +239,8 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    document.getElementById('incidencias-semana-selector').addEventListener('change', function() {
+    var weekSelect = document.getElementById('incidencias-semana-selector');
+    var onWeekChange = function() {
         var semana = this.value;
         if (semana) {
             fetch('/departamento-operativo/recursos-humanos/incidencias-nomina/guardar-contexto', {
@@ -227,7 +250,22 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         loadData();
-    });
+    };
+
+    if (weekSelect && window.jQuery && jQuery.fn.select2) {
+        var $weekSelect = $(weekSelect);
+        $weekSelect.select2({
+            width: 'auto',
+            minimumResultsForSearch: 0,
+            language: 'es',
+            dropdownParent: $('body'),
+            placeholder: 'Selecciona una semana...'
+        });
+        $weekSelect.next('.select2-container').css({ width: 'auto', flexGrow: '1' });
+        $weekSelect.on('change.incidenciasNomina', onWeekChange);
+    } else if (weekSelect) {
+        weekSelect.addEventListener('change', onWeekChange);
+    }
 
     var hasSelector = !!document.getElementById('module-station-selector-' + moduleStationKey);
 

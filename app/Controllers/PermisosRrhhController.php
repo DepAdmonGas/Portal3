@@ -143,6 +143,29 @@ class PermisosRrhhController extends BaseController
 
         $title = 'Editar Permiso (#' . $id . ')';
 
+        // Mantiene visibles las personas ya guardadas aunque hayan dejado de
+        // aparecer en los listados actuales de personal activo.
+        $personal = PermisosRrhhService::getPersonal($idEstacionRecord);
+        $idPersonalActual = (int)($detalle['id_personal'] ?? 0);
+        if ($idPersonalActual > 0 && !in_array($idPersonalActual, array_column($personal, 'id'), true)) {
+            array_unshift($personal, [
+                'id' => $idPersonalActual,
+                'nombre' => (string)($detalle['nombre_colaborador'] ?? ('Personal #' . $idPersonalActual)),
+            ]);
+        }
+
+        $estacionesCubre = PermisosRrhhService::getEstacionesCubre();
+        $idEstacionCubreActual = (int)($detalle['estacion_cubre'] ?? 0);
+        if ($idEstacionCubreActual <= 0) {
+            $idEstacionCubreActual = $idEstacionRecord;
+        }
+        if ($idEstacionCubreActual > 0 && !in_array($idEstacionCubreActual, array_column($estacionesCubre, 'id'), true)) {
+            $estacionesCubre[] = [
+                'id' => $idEstacionCubreActual,
+                'nombre' => (string)($detalle['estacion_cubre_nombre'] ?? ('Estación / Departamento #' . $idEstacionCubreActual)),
+            ];
+        }
+
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
         Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
@@ -156,8 +179,9 @@ class PermisosRrhhController extends BaseController
             'idEstacion'            => $idEstacionRecord,
             'idUsuario'             => $permisos['id_usuario'],
             'estaciones'            => PermisosRrhhService::getLocalidadesDisponibles(),
-            'estacionesCubre'       => PermisosRrhhService::getEstacionesCubre(),
-            'personal'              => PermisosRrhhService::getPersonal($idEstacionRecord),
+            'estacionesCubre'       => $estacionesCubre,
+            'estacionCubreActual'   => $idEstacionCubreActual,
+            'personal'              => $personal,
             'moduleStationKey'      => PermisosRrhhService::MODULE_KEY,
             'pendientesData'        => PermisosRrhhService::getPendingCountsFlat(),
                         'ocultarSelectorEstacion'=> true,

@@ -172,6 +172,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
     id="modalDetalleReporte"
     tabindex="-1"
     aria-hidden="true"
+    data-portal-table-selection="false"
     data-bs-backdrop="static"
     data-bs-keyboard="false">
 

@@ -306,7 +306,7 @@
         <div>
             <h5 class="mb-3 mt-3">Dispensarios</h5>
 
-            <table class="table table-sm table-bordered align-middle mb-4 fs-4">
+            <table class="table table-striped  table-bordered align-middle mb-4 fs-4">
                 <tbody>
 
                     <tr>
@@ -426,7 +426,7 @@
 
             </div>
 
-            <table class="table table-sm table-bordered table-hover align-middle">
+            <table class="table table-striped  table-bordered table-hover align-middle">
 
                 <thead class="table-light">
 

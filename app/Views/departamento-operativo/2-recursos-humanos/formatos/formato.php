@@ -38,8 +38,8 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 <div class="row">
 
 <div class="col-12 mb-4 text-end">
-<div class="">Formato: <span class="text-primary" x-text="cabecera.codigo || ''"></span></div>
-<div class="">No. de control: <span class="text-primary" x-text="esEdicion ? (cabecera.no_control || '—') : '—'"></span></div>
+<div><div class="form-label mb-1">Formato:</div><div class="text-primary" x-text="cabecera.codigo || ''"></div></div>
+<div><div class="form-label mb-1">No. de control:</div><div class="text-primary" x-text="esEdicion ? (cabecera.no_control || '—') : '—'"></div></div>
 <div class="" x-text="'Huixquilucan, Edo. de México a ' + (cabecera.fecha || '')"></div>
 </div>
 
@@ -67,12 +67,12 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 <!---------- FORMATOS MULTI-EMPLEADO (1 A 5) ---------->
 <template x-if="esMultiempleado">
 <div class="table-responsive overflow-x-auto overflow-y-hidden mb-3">
-<table class="table table-striped table-bordered mb-0  align-middle">
+<table class="table table-striped table-bordered mb-0 align-middle formato-edicion-seleccionable portal-table portal-table--selectable">
 
 <thead>
 <tr>
 <template x-for="(col, ci) in columnas" :key="'col-' + ci">
-<th :class="ci === 1 ? 'text-start' : 'text-center'">
+<th :class="ci === 1 ? 'text-start align-middle' : 'text-center align-middle'">
 <template x-if="col.includes('ti-file-text')">
 <i class="ti ti-file-text text-primary fs-5"></i>
 </template>
@@ -96,7 +96,7 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 </tr>
 </template>
 <template x-for="(fila, i) in filas" :key="'fila-' + i">
-<tr>
+<tr class="pointer" :class="{ selected: selectedFilaIndex === i }" @click="selectedFilaIndex = i">
 <td class="text-center" x-text="i + 1"></td>
 <td x-show="formato === 1" x-text="fila.nombre || '—'"></td>
 <td class="text-center" x-show="formato === 1" x-text="estacionNombre(fila.id_estacion)"></td>
@@ -138,7 +138,7 @@ formato: formato,
 fila_id: fila.id
 }}).then(r => {
 if (r?.success) {
-filas.splice(i, 1);}})"
+filas.splice(i, 1); if (selectedFilaIndex === i) selectedFilaIndex = null; else if (selectedFilaIndex !== null && selectedFilaIndex > i) selectedFilaIndex--;}})"
 title="Quitar empleado"></i>
 </span>
 
@@ -171,7 +171,7 @@ title="Quitar empleado"></i>
 <tr>
 <td class="text-center align-middle" x-text="localidad || '—'"></td>
 <td class="text-center align-middle p-0">
-<div class="select2-modal-field is-select2-pending " x-ref="f6PersonalWrapper">
+<div class="select2-modal-field select2-form-bordered is-select2-pending " x-ref="f6PersonalWrapper">
 <select name="id_personal" x-ref="f6PersonalSelect" class="form-select border-0 p-3 w-100 h-100">
 <option value="">Selecciona un empleado...</option>
 <template x-for="p in personal" :key="p.id">
@@ -229,7 +229,7 @@ title="Quitar empleado"></i>
 <tbody>
 <tr>
 <td class="text-center align-middle">
-<div class="select2-modal-field is-select2-pending" x-ref="f7PersonalWrapper">
+<div class="select2-modal-field select2-form-bordered is-select2-pending" x-ref="f7PersonalWrapper">
 <select name="id_personal" class="form-select" x-ref="f7PersonalSelect">
 <option value="">Selecciona un colaborador...</option>
 <template x-for="p in personal" :key="p.id">
@@ -332,11 +332,11 @@ title="Quitar empleado"></i>
 
 <div class="row" x-show="formato === 1" data-formato-fila="1">
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Nombre completo:</label>
+<label class="form-label mb-1">* Nombre completo:</label>
 <input type="text" class="form-control" x-model="fila.nombre" data-campo="nombre">
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Puesto:</label>
+<label class="form-label mb-1">* Puesto:</label>
 <div class="select2-modal-field select2-form-bordered is-select2-pending" x-ref="f1PuestoWrapper">
 <select class="form-select" x-ref="f1PuestoSelect" data-campo="puesto">
 <option value="">Selecciona un puesto...</option>
@@ -347,11 +347,11 @@ title="Quitar empleado"></i>
 </div>
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Fecha de alta:</label>
+<label class="form-label mb-1">* Fecha de alta:</label>
 <input type="date" class="form-control" x-model="fila.fecha_ingreso" data-campo="fecha_ingreso">
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Salario diario:</label>
+<label class="form-label mb-1">* Salario diario:</label>
 <input type="number" step="0.01" min="0" class="form-control" x-model="fila.sd" data-campo="sd">
 </div>
 <div class="col-12 mb-3">
@@ -359,7 +359,7 @@ title="Quitar empleado"></i>
 </div>
 <template x-for="arch in archivosAlta" :key="arch.campo">
 <div class="col-md-6 mb-3" x-show="arch.campo !== 'c_antecedentes' || fila.puesto == 4">
-<label class="form-label fw-semibold" x-text="(arch.campo === 'a_infonavit' ? '' : '* ') + arch.label + (arch.campo === 'a_infonavit' ? ' (Opcional)' : '')"></label>
+<label class="form-label mb-1" x-text="(arch.campo === 'a_infonavit' ? '' : '* ') + arch.label + (arch.campo === 'a_infonavit' ? ' (Opcional)' : '')"></label>
 <input type="file" class="form-control" :data-campo="arch.campo" @change="fila.archivos[arch.campo] = $event.target.files[0] || null">
 </div>
 </template>
@@ -367,8 +367,8 @@ title="Quitar empleado"></i>
 
 <div class="row" x-show="formato === 2" data-formato-fila="2">
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold">* Nombre del empleado:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="f2PersonalWrapper">
+<label class="form-label mb-1">* Nombre del empleado:</label>
+<div class="select2-modal-field select2-form-bordered is-select2-pending" x-ref="f2PersonalWrapper">
 <select class="form-select" x-ref="f2PersonalSelect" data-campo="id_personal">
 <option value="">Selecciona un empleado...</option>
 <template x-for="p in personal" :key="p.id">
@@ -378,11 +378,11 @@ title="Quitar empleado"></i>
 </div>
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold mb-1">* Fecha de aplicación de baja:</label>
+<label class="form-label mb-1">* Fecha de aplicación de baja:</label>
 <input type="date" class="form-control" x-model="fila.fecha_baja" data-campo="fecha_baja">
 </div>
 <div class="col-12 mb-3">
-<label class="form-label fw-semibold mb-1">* Causa:</label>
+<label class="form-label mb-1">* Causa:</label>
 <input type="text" class="form-control" list="motivosBaja" x-model="fila.motivo" data-campo="motivo">
 <datalist id="motivosBaja">
 <template x-for="m in motivos" :key="m">
@@ -391,15 +391,15 @@ title="Quitar empleado"></i>
 </datalist>
 </div>
 <div class="col-12 mb-3">
-<label class="form-label fw-semibold mb-1">* Motivo:</label>
+<label class="form-label mb-1">* Motivo:</label>
 <textarea class="form-control" rows="3" x-model="fila.detalle"></textarea>
 </div>
 </div>
 
 <div class="row" x-show="formato === 3" data-formato-fila="3">
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold mb-1">* Nombre del empleado:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="f3PersonalWrapper">
+<label class="form-label mb-1">* Nombre del empleado:</label>
+<div class="select2-modal-field select2-form-bordered is-select2-pending" x-ref="f3PersonalWrapper">
 <select class="form-select" x-ref="f3PersonalSelect" data-campo="id_personal">
 <option value="">Selecciona un empleado...</option>
 <template x-for="p in personal" :key="p.id">
@@ -409,7 +409,7 @@ title="Quitar empleado"></i>
 </div>
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold mb-1">* Día faltante:</label>
+<label class="form-label mb-1">* Día faltante:</label>
 <input type="date" class="form-control" x-model="fila.dias_falta" data-campo="dias_falta">
 </div>
 </div>
@@ -417,8 +417,8 @@ title="Quitar empleado"></i>
 <div class="row" x-show="formato === 4" data-formato-fila="4">
 
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold mb-0">* Nombre del empleado:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="f4PersonalWrapper">
+<label class="form-label mb-1">* Nombre del empleado:</label>
+<div class="select2-modal-field select2-form-bordered is-select2-pending" x-ref="f4PersonalWrapper">
 <select class="form-select" x-ref="f4PersonalSelect" data-campo="id_personal">
 <option value="">Selecciona un empleado...</option>
 <template x-for="p in personal" :key="p.id">
@@ -430,8 +430,8 @@ title="Quitar empleado"></i>
 
 
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold mb-0">* Cambio a:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="f4EstacionWrapper">
+<label class="form-label mb-1">* Cambio a:</label>
+<div class="select2-modal-field select2-form-bordered is-select2-pending" x-ref="f4EstacionWrapper">
 <select class="form-select" x-ref="f4EstacionSelect" data-campo="id_estacion_cambio">
 <option value="">Selecciona una localidad...</option>
 <template x-for="e in estacionesCambio" :key="e.id">
@@ -441,15 +441,15 @@ title="Quitar empleado"></i>
 </div>
 </div>
 <div class="col-12 mb-3">
-<label class="form-label fw-semibold mb-1">* Fecha de aplicación:</label>
+<label class="form-label mb-1">* Fecha de aplicación:</label>
 <input type="date" class="form-control" x-model="fila.fecha" data-campo="fecha">
 </div>
 </div>
 
 <div class="row" x-show="formato === 5" data-formato-fila="5">
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold mb-0">* Nombre del empleado:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="f5PersonalWrapper">
+<label class="form-label mb-1">* Nombre del empleado:</label>
+<div class="select2-modal-field select2-form-bordered is-select2-pending" x-ref="f5PersonalWrapper">
 <select class="form-select" x-ref="f5PersonalSelect" data-campo="id_personal">
 <option value="">Selecciona un empleado...</option>
 <template x-for="p in personal" :key="p.id">
@@ -459,15 +459,15 @@ title="Quitar empleado"></i>
 </div>
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold mb-1">* Salario actual:</label>
+<label class="form-label mb-1">* Salario actual:</label>
 <input type="number" step="0.01" min="0" class="form-control" x-model="fila.salario_actual" data-campo="salario_actual" disabled>
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold mb-1">* Ajuste a:</label>
+<label class="form-label mb-1">* Ajuste a:</label>
 <input type="number" step="0.01" min="0" class="form-control" x-model="fila.salario_ajustado" data-campo="salario_ajustado">
 </div>
 <div class="col-md-6 mb-3">
-<label class="form-label fw-semibold mb-1">* Aplicar a parte del:</label>
+<label class="form-label mb-1">* Aplicar a parte del:</label>
 <input type="date" class="form-control" x-model="fila.fecha_aplicacion" data-campo="fecha_aplicacion">
 </div>
 </div>

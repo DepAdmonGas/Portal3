@@ -1,6 +1,8 @@
 <div id="container" class="pb-4"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
-    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
+    data-year="<?= (int) ($year ?? date('Y')) ?>"
+    x-data="capacitacion()">
 
 <?php if (empty($estacionId)): ?>
 
@@ -11,25 +13,23 @@
 
 <?php else: ?>
 
-<div id="sgm-content" x-data="capacitacion()">
+<div id="sgm-content">
 
-    <div class="text-end mt-2">
-        <div class="btn-group">
+    <div class="clearfix mt-2">
+        <h5 class="float-start mb-0 mt-1">Año <span x-text="year"></span></h5>
+        <div class="btn-group float-end">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ti ti-dots-vertical fs-4"></i>
             </button>
             <ul class="dropdown-menu animated rubberBand">
                 <li>
-                    <a class="dropdown-item pointer" @click="openBuscar()"><i class="ti ti-search"></i> Buscar</a>
-                </li>
-                <li>
                     <a class="dropdown-item"
-                        :href="'/sgm/gestion-recursos/programa-capacitacion-interna/pdf/' + buscar.year" download>
+                        :href="'/sgm/gestion-recursos/programa-capacitacion-interna/pdf/' + year" download>
                         <i class="ti ti-download"></i> Descargar</a>
                 </li>
                 <li>
                     <a class="dropdown-item"
-                        :href="'/sgm/gestion-recursos/programa-capacitacion-interna/reconocimiento/year/' + buscar.year" download>
+                        :href="'/sgm/gestion-recursos/programa-capacitacion-interna/reconocimiento/year/' + year" download>
                         <i class="ti ti-certificate"></i> Reconocimientos</a>
                 </li>
             </ul>
@@ -38,7 +38,7 @@
 
     <div class="datatables mt-3">
         <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
-            <table id="table-capacitacion-interna" class="table table-striped table-bordered align-middle">
+            <table id="table-capacitacion-interna" class="table table-striped table-bordered align-middle portal-table portal-table--selectable">
                 <thead>
                     <tr>
                         <th class="text-center align-middle">No</th>
@@ -55,77 +55,6 @@
                 <tbody></tbody>
             </table>
         </div>
-    </div>
-
-    <div
-        class="modal fade"
-        id="modalBuscar"
-        tabindex="-1"
-        data-bs-backdrop="static"
-    data-bs-keyboard="false">
-
-        <div class="modal-dialog modal-md modal-dialog-centered">
-
-            <div class="modal-content">
-
-                <div class="modal-header bg-primary">
-
-                    <h4 class="modal-title text-white">
-                        <i class="ti ti-search"></i>
-                        Buscar programación interna
-                    </h4>
-
-                    <button
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
-                    </button>
-
-                </div>
-
-                <div class="modal-body">
-
-                    <label class="form-label">
-                        * Año:
-                    </label>
-
-                    <input
-                        type="number"
-                        class="form-control"
-                        x-model="buscar.year"
-                        @input="errors.year = false"
-                        :class="errors.year ? 'is-invalid' : ''">
-
-                </div>
-
-                <div class="modal-footer">
-<div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
-                      <button
-                        class="btn bg-danger-subtle text-danger"
-                        data-bs-dismiss="modal">
-                        <i class="ti ti-x"></i>
-                        Cancelar
-
-                    </button>
-                    </div>
-                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
-                      <button
-                        class="btn btn-success"
-                        @click="buscarProgramacion()">
-                        <i class="ti ti-search"></i>
-                        Buscar
-
-                    </button>
-                    </div>
-                  </div>
-                    
-
-                </div>
-
-            </div>
-
-        </div>
-
     </div>
 
     <!-- ------------------------- -->

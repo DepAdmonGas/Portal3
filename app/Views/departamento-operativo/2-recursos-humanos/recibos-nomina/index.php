@@ -198,7 +198,7 @@ Selecciona una estación o departamento del menú superior.
 
 <!---------- TABLA RECIBOS DE NOMINA "SEMANAL / QUINCENAL" ---------->
 <div class="table-responsive pb-4">
-<table id="tabla-recibos-nomina" class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100">
+<table id="tabla-recibos-nomina" class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100 recibos-nomina-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle" width="96px">#</th>
@@ -600,13 +600,13 @@ Acuse de nómina <small class="text-white" x-text="resumenInfo ? '(del ' + resum
 
 <!-- Tabla de acuses -->
 <div class="table-responsive mt-3" x-show="!acusesCargando">
-<table class="table table-bordered table-striped">
+<table class="table table-bordered table-striped recibos-nomina-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
-<th class="text-center" width="48px">#</th>
-<th class="text-center">Fecha</th>
-<th class="text-center" width="48px"><i class="ti ti-download text-primary fs-6"></i></th>
-<th class="text-center" width="48px" x-show="puedeEliminar"><i class="ti ti-trash text-danger fs-6"></i></th>
+<th class="text-center align-middle" width="48px">#</th>
+<th class="text-center align-middle">Fecha</th>
+<th class="text-center align-middle" width="48px"><i class="ti ti-download text-primary fs-6"></i></th>
+<th class="text-center align-middle" width="48px" x-show="puedeEliminar"><i class="ti ti-trash text-danger fs-6"></i></th>
 </tr>
 </thead>
 <tbody>
@@ -621,7 +621,7 @@ No se encontro información
 
 <!-- Listado de elementos -->
 <template x-for="(a, index) in listaAcuses" :key="a.id">
-<tr>
+<tr class="pointer">
 <td class="align-middle text-center fw-bolder" x-text="index + 1"></td>
 <td class="align-middle text-center" x-text="a.fecha"></td>
 

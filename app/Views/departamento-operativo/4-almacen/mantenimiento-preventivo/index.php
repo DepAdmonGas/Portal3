@@ -282,31 +282,28 @@ x-model="form.costo"
 
 <div class="col-12">
 <label class="form-label mb-1">Orden de servicio:</label>
-<div class="d-flex align-items-center gap-2 flex-wrap">
-<template x-if="detalle.orden_servicio_existe">
-<button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" @click="descargarOrden(detalle.orden_servicio)">
-<i class="ti ti-download fs-5"></i>
-<span>Descargar actual</span>
-</button>
-</template>
-<template x-if="!detalle.orden_servicio_existe && detalle.orden_servicio">
-<div class="text-muted">
-<i class="ti ti-file-off me-1"></i>
-El archivo no está disponible en el servidor.
-</div>
-</template>
-<template x-if="!detalle.orden_servicio">
-<div class="text-muted">
-<i class="ti ti-file-off me-1"></i>
-Sin orden de servicio registrada.
-</div>
-</template>
-</div>
+<div class="input-group">
 <input type="file"
-class="form-control mt-2"
+class="form-control"
 id="inputArchivoEditar"
 @change="form.archivo = $event.target.files[0] || null; errores.archivo = false"
 :style="errores.archivo ? 'border: 2px solid #A52525 !important;' : ''">
+<template x-if="detalle.orden_servicio_existe">
+<button type="button"
+class="btn btn-outline-primary px-3 d-inline-flex align-items-center justify-content-center"
+@click="descargarOrden(detalle.orden_servicio)"
+title="Descargar orden de servicio actual"
+aria-label="Descargar orden de servicio actual">
+<i class="ti ti-download"></i>
+</button>
+</template>
+</div>
+<template x-if="!detalle.orden_servicio_existe && detalle.orden_servicio">
+<small class="text-muted d-block mt-1"><i class="ti ti-file-off me-1"></i>El archivo no está disponible en el servidor.</small>
+</template>
+<template x-if="!detalle.orden_servicio">
+<small class="text-muted d-block mt-1"><i class="ti ti-file-off me-1"></i>Sin orden de servicio registrada.</small>
+</template>
 </div>
 
 <div class="col-12">

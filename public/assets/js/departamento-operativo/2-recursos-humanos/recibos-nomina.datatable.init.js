@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const puedeEditar = c.dataset.puedeEditar === 'true';
     const puedeEliminar = c.dataset.puedeEliminar === 'true';
     let puedeEditarFila = false;
+    let selectedReciboId = null;
 
     // column().visible() provoca un redibujado completo de la tabla. Si se
     // llama en cada respuesta AJAX, la tabla se repinta tres veces extra en cada
@@ -93,7 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
             url: prefix + '/data/' + idYear,
             data: function (d) {
                 const rn = window.rnComponentInstance;
-                d.id_estacion = getEstacionId();
+                d.id_estacion = rn
+                    ? (rn.estacionResuelta ? rn.idEstacionActual : 0)
+                    : getEstacionId();
                 d.periodo = rn && rn.periodoActual ? rn.periodoActual : 0;
             },
             dataSrc: function (json) {
@@ -151,6 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.bg_color) {
                 $(row).css('background-color', data.bg_color);
             }
+        },
+        rowCallback: function (row, data) {
+            $(row).addClass('pointer').toggleClass('selected', selectedReciboId === Number(data.id));
         },
         order: [[0, 'asc']],
         pageLength: 10,
@@ -273,6 +279,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    $table.on('click.rowSelection', 'tbody tr', function (event) {
+        if ($(event.target).closest('a, button, input, select, .dropdown-menu').length) return;
+        const row = window.tablaRecibosNomina.row(this).data();
+        if (!row) return;
+        selectedReciboId = Number(row.id);
+        $table.find('tbody tr').removeClass('selected');
+        $(this).addClass('selected');
+    });
+
+    const acusesTable = document.querySelector('#modalAcusePeriodo .recibos-nomina-seleccionable');
+    if (acusesTable) {
+        acusesTable.addEventListener('click', (event) => {
+            if (event.target.closest('a, button, input, .ti-trash')) return;
+            const row = event.target.closest('tbody tr');
+            if (!row || !row.querySelector('td')) return;
+            acusesTable.querySelectorAll('tbody tr.selected').forEach((selected) => selected.classList.remove('selected'));
+            row.classList.add('selected');
+        });
+    }
 
     $table.on('click', '.btn-comentario', function (e) {
         e.preventDefault();

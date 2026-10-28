@@ -113,10 +113,21 @@ document.addEventListener('alpine:init', () => {
             this.secciones.forEach(function(seccion, idx) {
                 var tableEl = document.getElementById('ph-form-table-' + idx);
                 if (!tableEl) return;
+                var selectedPersonalId = null;
                 if ($.fn.DataTable.isDataTable(tableEl)) {
                     $(tableEl).DataTable().destroy();
                     tableEl.innerHTML = '<thead>' + tableEl.querySelector('thead').outerHTML + '</thead><tbody></tbody>';
                 }
+
+                $(tableEl).off('click.rowSelection').on('click.rowSelection', 'tbody tr', function(event) {
+                    if ($(event.target).closest('a, button, input, select, textarea, .dropdown-menu, .select2-container').length) return;
+                    var row = $(tableEl).DataTable().row(this).data();
+                    if (!row || row.id === undefined || row.id === null) return;
+
+                    selectedPersonalId = String(row.id);
+                    $(tableEl).find('tbody tr').removeClass('selected');
+                    $(this).addClass('selected');
+                });
 
                 var columns = [
                     { title: '#', data: 'id', className: 'align-middle text-center fw-normal', width: '48px'},
@@ -150,7 +161,14 @@ document.addEventListener('alpine:init', () => {
                     lengthMenu: [10, 25, 50, 100],
                     language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
                     order: [[1, 'asc']],
+                    rowCallback: function(row, data) {
+                        $(row).addClass('pointer').toggleClass(
+                            'selected',
+                            selectedPersonalId !== null && String(data.id) === selectedPersonalId
+                        );
+                    },
                     drawCallback: function() {
+                        self.initTurnoSelect2(tableEl);
                         var dropdowns = tableEl.querySelectorAll('.dropdown-toggle');
                         dropdowns.forEach(function(el) {
                             new bootstrap.Dropdown(el);
@@ -172,8 +190,7 @@ document.addEventListener('alpine:init', () => {
             }
             var disabled = (reporte && reporte.id && reporte.estado != 0) ? ' disabled' : '';
 
-            var html = '<select class="form-select form-select-sm border-0 bg-transparent ph-turno-select"'
-                + ' style="font-size:0.82em;"'
+            var html = '<select class="form-select p-3 border-0 bg-transparent ph-turno-select"'
                 + ' data-personal="' + persona.id + '"'
                 + ' data-dia="' + dia.num + '"'
                 + ' data-id-estacion="' + persona.id_estacion + '"'
@@ -186,9 +203,12 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (persona.turnos && persona.turnos.length > 0) {
+                var self = this;
                 persona.turnos.forEach(function(turno) {
+                    var titulo = String(turno.titulo || '');
+                    var horario = self._formatearHorario(turno);
                     var sel = (currentVal === turno.titulo) ? ' selected' : '';
-                    html += '<option value="' + turno.titulo + '"' + sel + '>' + turno.titulo + '</option>';
+                    html += '<option value="' + self._escapeHtml(titulo) + '" data-hora="' + self._escapeHtml(horario) + '"' + sel + '>' + self._escapeHtml(titulo) + '</option>';
                 });
             }
 
@@ -198,18 +218,65 @@ document.addEventListener('alpine:init', () => {
             return html;
         },
 
+        _formatearHora(hora) {
+            var partes = String(hora || '').split(':');
+            if (partes.length < 2) return '';
+            var hora24 = parseInt(partes[0], 10);
+            if (Number.isNaN(hora24)) return '';
+            var hora12 = hora24 % 12 || 12;
+            return hora12 + ':' + partes[1] + ' ' + (hora24 >= 12 ? 'pm' : 'am');
+        },
+
+        _formatearHorario(turno) {
+            var entrada = this._formatearHora(turno.hora_entrada);
+            var salida = this._formatearHora(turno.hora_salida);
+            return entrada && salida ? entrada + ' a ' + salida : '';
+        },
+
+        _escapeHtml(value) {
+            return String(value || '').replace(/[&<>"']/g, function(char) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+            });
+        },
+
+        initTurnoSelect2(tableEl) {
+            if (!window.jQuery || !jQuery.fn.select2) return;
+
+            jQuery('.ph-turno-select', tableEl).each(function() {
+                var $select = jQuery(this);
+                if ($select.data('select2')) return;
+
+                $select.select2({
+                    width: '100%',
+                    dropdownParent: jQuery('body'),
+                    minimumResultsForSearch: Infinity,
+                    language: 'es',
+                    templateSelection: function(data) {
+                        if (!data.id) return data.text;
+                        var hora = data.element && data.element.dataset ? data.element.dataset.hora : '';
+                        return hora || data.text;
+                    },
+                    templateResult: function(data) {
+                        var texto = data.text || '';
+                        var hora = data.element && data.element.dataset ? data.element.dataset.hora : '';
+                        return jQuery('<span></span>').text(data.id && hora ? texto + ' (' + hora + ')' : texto);
+                    }
+                });
+            });
+        },
+
         _bindSelectEvents() {
             var self = this;
             var container = document.getElementById('container');
-            if (!container || container._phDtBound) return;
+            if (!container || container._phDtBound || !window.jQuery) return;
             container._phDtBound = true;
 
-            container.addEventListener('change', function(e) {
-                if (!e.target.classList.contains('ph-turno-select')) return;
-                var idPersonal = parseInt(e.target.dataset.personal);
-                var dia = parseInt(e.target.dataset.dia);
-                var idEstacion = parseInt(e.target.dataset.idEstacion);
-                var horario = e.target.value;
+            jQuery(container).on('change.programarHorario', '.ph-turno-select', function() {
+                var idPersonal = parseInt(this.dataset.personal, 10);
+                var dia = parseInt(this.dataset.dia, 10);
+                var idEstacion = parseInt(this.dataset.idEstacion, 10);
+                var horario = this.value;
+                if (!idPersonal || !dia || !idEstacion) return;
                 self.editarTurnoDirect(idPersonal, dia, horario, idEstacion);
             });
         },

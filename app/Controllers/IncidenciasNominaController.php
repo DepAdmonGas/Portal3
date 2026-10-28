@@ -68,12 +68,15 @@ class IncidenciasNominaController extends BaseController
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/libs/select2/dist/js/i18n/es.js',
                 '/assets/js/core/module-station-selector.js?v=' . time(),
                 '/assets/js/departamento-operativo/2-recursos-humanos/incidencias-nomina.datatable.init.js?v=' . time(),
                 '/assets/js/departamento-operativo/2-recursos-humanos/incidencias-nomina.actions.init.js?v=' . time(),
             ],
             'links' => [
                 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                '/assets/libs/select2/dist/css/select2.min.css',
             ],
         ], 'departamento-operativo');
     }

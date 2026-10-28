@@ -353,7 +353,7 @@ tabindex="-1"
 data-bs-backdrop="static"
 data-bs-keyboard="false">
 
-<div class="modal-dialog modal-lg modal-dialog-centered">
+<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 
 <div class="modal-content">
 
@@ -372,9 +372,11 @@ data-bs-dismiss="modal">
 
 </div>
 
-<div class="modal-body pb-0">
+<div class="modal-body">
 
-<div class="input-group mb-3">
+<div class="col-12">
+<label class="form-label mb-1">Archivo de evidencia:</label>
+<div class="input-group">
 
 <input
 type="file"
@@ -385,64 +387,70 @@ class="form-control"
 class="btn btn-success"
 @click="subirEvidencia()"
 :disabled="loadingEvidencia">
-<i class="ti ti-check"></i>
+<i class="ti ti-check me-1"></i>
 Guardar
 
 </button>
 
 </div>
+</div>
 
-<table class="table table-bordered table-striped">
+<div class="row mt-3" x-show="loadingEvidencia">
+    <div class="col-12 text-center py-4 text-muted">
+        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        Cargando evidencias...
+    </div>
+</div>
 
-<tbody>
+<div class="row" x-show="!loadingEvidencia && evidencias.length > 0">
 
 <template
 x-for="item in evidencias"
 :key="item.id">
 
-<tr>
-
-<td class="align-middle">
-<a
-:href="item.url"
-target="_blank"
-x-text="item.archivo">
-</a>
-
-</td>
-
-<td
-width="50"
-class="text-center align-middle">
-
-<button
-class="btn  btn-danger"
-@click="eliminarEvidencia(item.id)">
-
-<i class="ti ti-trash"></i>
-
-</button>
-
-</td>
-
-</tr>
+<div class="col-12 col-md-6 mt-3">
+    <div class="card h-100 shadow-sm border bg-light position-relative overflow-hidden">
+        <div class="position-absolute top-0 end-0 p-2" style="z-index:2;">
+            <span class="badge bg-white text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2" style="width:32px;height:32px;">
+                <i class="ti ti-file text-primary fs-6"></i>
+            </span>
+        </div>
+        <a :href="item.url" target="_blank" class="d-flex align-items-center justify-content-center overflow-hidden bg-white text-decoration-none" style="height:140px;">
+            <img
+                x-show="['png','jpg','jpeg','gif','webp','bmp'].includes((item.archivo || '').split('.').pop().toLowerCase())"
+                :src="item.url"
+                class="w-100 h-100"
+                style="object-fit:cover;"
+                :alt="item.archivo || 'Evidencia'">
+            <i
+                x-show="!['png','jpg','jpeg','gif','webp','bmp'].includes((item.archivo || '').split('.').pop().toLowerCase())"
+                class="ti ti-file-description text-primary"
+                style="font-size:64px;"></i>
+        </a>
+        <div class="card-body border-top pb-2 bg-white">
+            <p class="small fw-bold text-truncate mb-0" :title="item.archivo" x-text="item.archivo || 'Evidencia guardada'"></p>
+        </div>
+        <div class="card-footer bg-white">
+            <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="item.url" :download="item.archivo" title="Descargar evidencia">
+                    <i class="ti ti-download"></i><span>Descargar</span>
+                </a>
+                <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1" @click="eliminarEvidencia(item.id)" title="Eliminar evidencia">
+                    <i class="ti ti-trash"></i><span>Eliminar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 </template>
 
-<tr
-x-show="!loadingEvidencia && evidencias.length === 0">
+</div>
 
-<td colspan="2" class="text-center">
-
-No se encontraron evidencias
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
+<div class="text-center py-5 border rounded mt-3" x-show="!loadingEvidencia && evidencias.length === 0">
+    <i class="ti ti-file-off fs-7 text-muted"></i>
+    <div class="mt-2 text-muted">No se encontraron evidencias</div>
+</div>
 
 
 </div>
@@ -451,6 +459,7 @@ No se encontraron evidencias
                     <div class="col-12 col-md-auto d-grid">
                       
 <button
+type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 

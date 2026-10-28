@@ -10,6 +10,7 @@ puedeEliminarBaja: c?.dataset.puedeEliminarBaja === 'true',
 puedeDescargarBaja: c?.dataset.puedeDescargarBaja === 'true',
 
 archivosBaja: bajaData.archivos_baja || [],
+selectedArchivoBajaId: null,
 bajaForm: { descripcion: '' },
 subiendoArchivo: false,
 

@@ -1,3 +1,16 @@
+document.addEventListener('click', (event) => {
+    const tabla = event.target.closest('table.portal-table--selectable');
+    if (!tabla || event.target.closest('[colspan]')) return;
+
+    const fila = event.target.closest('tbody tr');
+    if (!fila || !tabla.contains(fila)) return;
+
+    tabla.querySelectorAll('tbody tr.selected').forEach((seleccionada) => {
+        seleccionada.classList.remove('selected');
+    });
+    fila.classList.add('selected', 'pointer');
+});
+
 document.addEventListener('alpine:init', () => {
 
     Alpine.data('bitacoraRrhhComponent', () => ({

@@ -59,9 +59,10 @@
                             <label class="form-label mb-1">* Estación de quien cubre:</label>
                             <select class="form-select" x-model="estacionCubre" @change="onEstacionCubreChange($event)">
                                 <option value="">Selecciona una opción...</option>
-                                <template x-for="e in estacionesCubre" :key="e.id">
-                                    <option :value="e.id" x-text="e.nombre"></option>
-                                </template>
+                                <?php foreach (($estacionesCubre ?? []) as $estacionOpcion): ?>
+                                    <?php $idEstacionOpcion = (int)($estacionOpcion['id'] ?? 0); ?>
+                                    <option value="<?= $idEstacionOpcion ?>" <?= (int)($estacionCubreActual ?? 0) === $idEstacionOpcion ? 'selected' : '' ?>><?= htmlspecialchars((string)($estacionOpcion['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
 

@@ -174,7 +174,7 @@
                 <label class="form-label mt-3">Renovación:</label>
 
                 <div class="table-responsive">
-                <table class="table table-bordered table-striped  text-nowrap align-middle">
+                <table class="table table-bordered table-striped text-nowrap align-middle" data-portal-table-selection="false">
                 <tbody>
                     <tr class="font-weight-bold align-middle">
                     <td class="text-center bg-light text-black">Ene</td>
@@ -363,7 +363,7 @@
                 <label class="form-label mb-1">Renovación:</label>
 
                 <div class="table-responsive">
-                <table class="table table-bordered table-striped  text-nowrap align-middle">
+                <table class="table table-bordered table-striped text-nowrap align-middle" data-portal-table-selection="false">
                 <tbody>
                     <tr class="font-weight-bold align-middle">
                     <td class="text-center  bg-light text-black">Ene</td>

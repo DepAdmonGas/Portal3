@@ -9,6 +9,7 @@ numProductos: 0,
 daily: [],
 totales: {},
 puedeDescargar: false,
+selectedRowFecha: null,
 
 init() {
 const container = document.getElementById('container');
@@ -42,6 +43,11 @@ return row.productos?.[prod]?.[campo] ?? 0;
 
 totalProd(prod, campo) {
 return this.totales?.[prod]?.[campo] ?? 0;
+},
+
+seleccionarFila(row) {
+if (this.selectedRowFecha === row.fecha) return;
+this.selectedRowFecha = row.fecha;
 },
 
 formatear(valor) {

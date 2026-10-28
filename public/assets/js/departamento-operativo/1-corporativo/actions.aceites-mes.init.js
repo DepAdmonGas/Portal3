@@ -13,10 +13,12 @@ nombreEstacion: '',
 
 loading: false,
 rows: [],
+selectedRowId: null,
 totals: {},
 documentos: [],
 facturas: [],
 diferencias: [],
+selectedModalRows: { documentos: null, facturas: null, diferencias: null, puntajes: null },
 puntajes: { promedio_ficha: 0, promedio_factura_doc: 0, promedio_factura_anexo: 0 },
 
 tempValues: {},
@@ -87,6 +89,16 @@ factura_venta_mostrador: row.factura_venta_mostrador || 0,
 };
 }
 this.tempValues = tv;
+},
+
+seleccionarFila(row) {
+if (this.selectedRowId === row.id) return;
+this.selectedRowId = row.id;
+},
+
+seleccionarFilaModal(tabla, id) {
+if (this.selectedModalRows[tabla] === id) return;
+this.selectedModalRows[tabla] = id;
 },
 
 getDiaria(row, dia, campo) {

@@ -1,5 +1,6 @@
 <div
-    x-data="{...actions(), ...planauditoria(<?= $id ?>)}">
+    x-data="{...actions(), ...planauditoria(<?= $id ?>)}"
+    data-portal-table-selection="false">
 
 
 <div class="row g-0 ms-auto w-100 justify-content-end">

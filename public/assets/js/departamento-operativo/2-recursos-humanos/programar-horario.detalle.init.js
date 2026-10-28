@@ -67,10 +67,21 @@ document.addEventListener('alpine:init', () => {
             this.secciones.forEach(function(seccion, idx) {
                 var tableEl = document.getElementById('ph-detalle-table-' + idx);
                 if (!tableEl) return;
+                var selectedPersonalId = null;
                 if ($.fn.DataTable.isDataTable(tableEl)) {
                     $(tableEl).DataTable().destroy();
                     tableEl.innerHTML = '<thead>' + tableEl.querySelector('thead').outerHTML + '</thead><tbody></tbody>';
                 }
+
+                $(tableEl).off('click.rowSelection').on('click.rowSelection', 'tbody tr', function(event) {
+                    if ($(event.target).closest('a, button, input, select, textarea, .dropdown-menu').length) return;
+                    var row = $(tableEl).DataTable().row(this).data();
+                    if (!row || row.id === undefined || row.id === null) return;
+
+                    selectedPersonalId = String(row.id);
+                    $(tableEl).find('tbody tr').removeClass('selected');
+                    $(this).addClass('selected');
+                });
 
                 var columns = [
                     { title: '#', data: 'id', className: 'align-middle text-center fw-normal', width: '48px'},
@@ -105,6 +116,12 @@ document.addEventListener('alpine:init', () => {
                     lengthMenu: [10, 25, 50, 100],
                     language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
                     order: [[0, 'asc']],
+                    rowCallback: function(row, data) {
+                        $(row).addClass('pointer').toggleClass(
+                            'selected',
+                            selectedPersonalId !== null && String(data.id) === selectedPersonalId
+                        );
+                    },
                     drawCallback: function() {
                         var dropdowns = tableEl.querySelectorAll('.dropdown-toggle');
                         dropdowns.forEach(function(el) {

@@ -4,6 +4,7 @@ document.addEventListener('alpine:init', () => {
         tempValues: {},
         creando: false,
         editandoConcepto: null,
+        selectedRowId: null,
 
         async init() {
             try {
@@ -34,6 +35,10 @@ document.addEventListener('alpine:init', () => {
                     input.select();
                 }
             });
+        },
+
+        seleccionarFila(id) {
+            this.selectedRowId = id;
         },
 
         guardarConcepto(id) {
@@ -76,6 +81,7 @@ document.addEventListener('alpine:init', () => {
         eliminarFila(id) {
             this.items = this.items.filter(i => i.id !== id);
             delete this.tempValues[id];
+            if (this.selectedRowId === id) this.selectedRowId = null;
         },
 
         async nuevoAceite() {

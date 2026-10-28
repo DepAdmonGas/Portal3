@@ -277,6 +277,7 @@
                                                 </td>
 
                                                 <td
+                                                    class="text-center"
                                                     x-text="manual.fecha_hora">
                                                 </td>
 

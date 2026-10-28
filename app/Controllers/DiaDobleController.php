@@ -41,7 +41,8 @@ class DiaDobleController extends BaseController
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
         Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
-        Breadcrumb::add('Incidencias de Nómina', '/departamento-operativo/recursos-humanos/incidencias-nomina/' . date('Y'));
+        Breadcrumb::add('Incidencias de Nómina', '/departamento-operativo/recursos-humanos/incidencias-nomina/' . $idYear);
+        Breadcrumb::add($title, null);
         Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, 1, 2022), '');
 
         $yearMesTemplate = '/departamento-operativo/recursos-humanos/dia-doble/{year}';
@@ -64,12 +65,15 @@ class DiaDobleController extends BaseController
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/libs/select2/dist/js/i18n/es.js',
                 '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js?v=' . time(),
                 '/assets/js/departamento-operativo/2-recursos-humanos/dia-doble.datatable.init.js?v=' . time(),
                 '/assets/js/departamento-operativo/2-recursos-humanos/dia-doble.actions.init.js?v=' . time(),
             ],
             'links' => [
                 '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                '/assets/libs/select2/dist/css/select2.min.css',
             ],
         ], 'departamento-operativo');
     }
@@ -573,8 +577,14 @@ class DiaDobleController extends BaseController
             'help'             => false,
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/libs/select2/dist/js/i18n/es.js',
                 '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js?v=' . time(),
                 '/assets/js/departamento-operativo/2-recursos-humanos/dia-doble.form.init.js?v=' . time(),
+            ],
+            'links' => [
+                '/assets/libs/select2/dist/css/select2.min.css',
+                '/assets/css/select2-modal.css?v=' . time(),
             ],
         ], 'departamento-operativo');
     }

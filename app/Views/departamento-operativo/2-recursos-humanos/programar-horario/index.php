@@ -17,7 +17,7 @@
 
         <div class="datatables">
             <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-                <table id="tabla-programar-horario" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                <table id="tabla-programar-horario" class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable">
                     <tbody></tbody>
                 </table>
             </div>

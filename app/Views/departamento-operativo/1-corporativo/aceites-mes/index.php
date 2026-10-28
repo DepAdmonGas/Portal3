@@ -24,7 +24,7 @@ x-data="aceitesMesComponent()"
 @refresh-documentos.window="cargarDocumentos()"
 @refresh-facturas.window="cargarFacturas()">
 
-<div x-show="!loading && rows.length === 0" class="col-12 mt-3 mb-4">
+<div class="col-12 mt-3 mb-4">
 <div class="float-end ">
 
 <div class="d-flex gap-2">
@@ -115,7 +115,7 @@ No hay registros de aceites para este mes
 </div>
 
 <div class="table-responsive" x-show="!loading && rows.length > 0" style="overflow-x:auto;">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-aceites-mes" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center">#</th>
@@ -151,7 +151,7 @@ No hay registros de aceites para este mes
 </thead>
 <tbody>
 <template x-for="(row, idx) in rows" :key="row.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRowId === row.id }" @click="seleccionarFila(row)">
 <th class="text-center align-middle" x-text="row.id"></th>
 <td class="text-center align-middle" x-text="row.id_aceite"></td>
 <td class="text-start align-middle" x-text="row.concepto"></td>
@@ -168,7 +168,7 @@ No hay registros de aceites para este mes
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
+<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
 x-model="tempValues[row.id].pedido" @change="guardarCampo(row, 'pedido')">
 </template>
 <template x-if="finalizado || !puedeEditar">
@@ -184,7 +184,7 @@ x-model="tempValues[row.id].pedido" @change="guardarCampo(row, 'pedido')">
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
+<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
 x-model="tempValues[row.id].inventario_bodega"
 @change="guardarCampo(row, 'inventario_bodega')">
 </template>
@@ -199,7 +199,7 @@ x-model="tempValues[row.id].inventario_bodega"
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
+<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
 x-model="tempValues[row.id].inventario_exibidores"
 @change="guardarCampo(row, 'inventario_exibidores')">
 </template>
@@ -233,7 +233,7 @@ title="Agregar diferencia de pago"></i>
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
+<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
 x-model="tempValues[row.id].producto_facturado"
 @change="guardarCampo(row, 'producto_facturado')">
 </template>
@@ -248,7 +248,7 @@ x-model="tempValues[row.id].producto_facturado"
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control form-control-sm border-0 text-end shadow-none" type="number" step="any"
+<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
 x-model="tempValues[row.id].factura_venta_mostrador"
 @change="guardarCampo(row, 'factura_venta_mostrador')">
 </template>
@@ -371,7 +371,7 @@ Documentos de Aceites</h5>
 </div>
 
 <div class="table-responsive" x-show="!documentoEditId">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-aceites-documentos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-start align-middle">Fecha</th>
@@ -384,7 +384,7 @@ Documentos de Aceites</h5>
 </thead>
 <tbody>
 <template x-for="doc in documentos" :key="doc.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedModalRows.documentos === doc.id }" @click="seleccionarFilaModal('documentos', doc.id)">
 <td class="text-start align-middle" x-text="doc.fecha_formateada"></td>
 <td class="text-center align-middle">
 <template x-if="doc.ficha_deposito">
@@ -511,7 +511,7 @@ Guardar
 </div>
 
 <div class="table-responsive">
-<table class="table table-striped table-bordered mt-3 text-nowrap align-middle">
+<table id="table-aceites-facturas" class="table table-striped table-bordered mt-3 text-nowrap align-middle">
 <thead>
 <tr>
 <th class="text-center align-middle">Fecha</th>
@@ -522,7 +522,7 @@ Guardar
 </thead>
 <tbody>
 <template x-for="fac in facturas" :key="fac.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedModalRows.facturas === fac.id }" @click="seleccionarFilaModal('facturas', fac.id)">
 <td class="text-center align-middle" x-text="fac.fecha_formateada"></td>
 <td class="text-center align-middle" x-text="fac.nombre_anexo"></td>
 <td class="text-center align-middle">
@@ -581,7 +581,7 @@ Cancelar
 </div>
 <div class="modal-body">
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="table-aceites-diferencias" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
 <th>Fecha</th>
@@ -594,7 +594,7 @@ Cancelar
 </thead>
 <tbody>
 <template x-for="d in diferencias" :key="d.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedModalRows.diferencias === d.id }" @click="seleccionarFilaModal('diferencias', d.id)">
 <td x-text="d.fecha_formateada || ''"></td>
 <td x-text="d.nomaceite || d.id_aceite"></td>
 <td class="text-end" x-text="d.diferencia"></td>
@@ -733,7 +733,7 @@ Cancelar
 </div>
 <div class="modal-body">
 <div class="table-responsive">
-<table class="table table-bordered mb-0">
+<table id="table-aceites-puntajes" class="table table-bordered mb-0">
 <thead>
 <tr>
 <th>Indicador</th>
@@ -741,15 +741,15 @@ Cancelar
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="pointer" :class="{ selected: selectedModalRows.puntajes === 'ficha' }" @click="seleccionarFilaModal('puntajes', 'ficha')">
 <td>Evaluación Ficha Depòsito</td>
 <td class="text-center"><strong x-text="puntajes.promedio_ficha"></strong></td>
 </tr>
-<tr>
+<tr class="pointer" :class="{ selected: selectedModalRows.puntajes === 'documentos' }" @click="seleccionarFilaModal('puntajes', 'documentos')">
 <td>Evaluación Factura (Documentos)</td>
 <td class="text-center"><strong x-text="puntajes.promedio_factura_doc"></strong></td>
 </tr>
-<tr>
+<tr class="pointer" :class="{ selected: selectedModalRows.puntajes === 'anexos' }" @click="seleccionarFilaModal('puntajes', 'anexos')">
 <td>Evaluación Factura (Anexos)</td>
 <td class="text-center"><strong x-text="puntajes.promedio_factura_anexo"></strong></td>
 </tr>

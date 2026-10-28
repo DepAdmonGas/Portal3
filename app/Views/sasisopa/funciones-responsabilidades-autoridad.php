@@ -22,11 +22,17 @@
       </div>
       <div class="card-body p-0">
         <?php if (!empty($organigrama)): ?>
-          <img src="<?= $organigrama ?>" class="w-100" alt="Organigrama">
+          <img src="<?= htmlspecialchars($organigrama, ENT_QUOTES, 'UTF-8') ?>" class="w-100 h-auto" alt="Organigrama de la estación">
         <?php else: ?>
-          <div class="alert alert-warning mb-0 d-flex align-items-center">
-            <i class="ti ti-alert-circle me-2 fs-4"></i>
-            <div>Selecciona una estación para ver el organigrama o esta estación no cuenta con uno registrado.</div>
+          <div class="d-flex flex-column align-items-center justify-content-center text-center px-4 py-5 bg-body-tertiary"
+               style="min-height: 220px;"
+               role="status"
+               aria-live="polite">
+            <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center p-3 mb-3">
+              <i class="ti ti-sitemap fs-2"></i>
+            </span>
+            <h5 class="mb-2">Organigrama no disponible</h5>
+            <p class="text-muted mb-0">La estación aún no tiene un organigrama registrado.</p>
           </div>
         <?php endif; ?>
       </div>
@@ -320,7 +326,7 @@
 
 
 
-<div id="ModalReTe" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+<div id="ModalReTe" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" data-portal-table-selection="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -393,7 +399,7 @@ data-bs-dismiss="modal">
 
 <!-- ------------------------- -->
 
-<div id="ModalGerente" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+<div id="ModalGerente" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" data-portal-table-selection="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -456,7 +462,7 @@ data-bs-dismiss="modal">
     </div>
 </div>
 <!-- ------------------------- -->
- <div id="ModalJefePiso" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+ <div id="ModalJefePiso" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" data-portal-table-selection="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -513,7 +519,7 @@ data-bs-dismiss="modal">
 </div>
 
 <!-- ------------------------- -->
- <div id="ModalFacturista" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+ <div id="ModalFacturista" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" data-portal-table-selection="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -567,7 +573,7 @@ data-bs-dismiss="modal">
     </div>
 </div>
 <!-- ------------------------- -->
- <div id="ModalDespachador" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+ <div id="ModalDespachador" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" data-portal-table-selection="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -624,7 +630,7 @@ data-bs-dismiss="modal">
 </div>
 
 <!-- ------------------------- -->
- <div id="ModalAuxiliar" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+ <div id="ModalAuxiliar" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" data-portal-table-selection="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -678,7 +684,7 @@ data-bs-dismiss="modal">
     </div>
 </div>
 <!-- ------------------------- -->
- <div id="ModalMantenimiento" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+ <div id="ModalMantenimiento" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" data-portal-table-selection="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">

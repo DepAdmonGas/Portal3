@@ -12,6 +12,8 @@ idEstacionActual: 0,
 imagenUrl: '',
 versionActual: 0,
 plantilla: [],
+selectedPlantillaId: null,
+selectedEmpresaFila: null,
 resultadosPersonal: {},
 stationInfo: null,
 stationInfoEstaciones: [1, 2, 3, 4, 5, 6, 7, 14],
@@ -45,6 +47,8 @@ document.addEventListener('org:estacion-cambio', () => {
 this.idEstacionActual = this.obtenerEstacionActual();
 this.imagenUrl = '';
 this.versionActual = 0;
+this.selectedPlantillaId = null;
+this.selectedEmpresaFila = null;
 this.cargarPlantilla();
 this.cargarStationInfo();
 
@@ -76,6 +80,14 @@ var p = sel.value.split('_');
 if (p.length === 2 && p[1]) return parseInt(p[1]);
 }
 return parseInt(container.dataset.idEstacion || '0');
+},
+
+seleccionarFilaPlantilla(id) {
+this.selectedPlantillaId = id;
+},
+
+seleccionarFilaEmpresa(campo) {
+this.selectedEmpresaFila = campo;
 },
 
 verImagen(archivo, version) {
@@ -170,6 +182,7 @@ if (json.success) {
 this.plantilla = (json.data || []).map(function(r) {
 return { ...r, idEstacion: idEstacion };
 });
+this.selectedPlantillaId = null;
 this.resultadosPersonal = {};
 } else {
 this.plantilla = [];
@@ -294,6 +307,7 @@ table: null
 });
 if (res && res.success) {
 this.plantilla = this.plantilla.filter(function(r) { return r.id !== id; });
+if (this.selectedPlantillaId === id) this.selectedPlantillaId = null;
 }
 },
 

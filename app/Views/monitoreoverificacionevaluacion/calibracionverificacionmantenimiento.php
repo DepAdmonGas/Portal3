@@ -68,7 +68,7 @@ x-data="calibracionVerificacion()">
 <div class="card-body">
     
     <div class="table-responsive">
-          <table class="table table-bordered mb-3">
+          <table class="table table-bordered mb-3" data-portal-table-selection="false">
 <tr>
 <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>
 <td colspan="2" class="text-center align-middle"><b>Equipos sometidos a calibración</b></td>

@@ -15,6 +15,7 @@ totales: {},
 satData: { months: [], total_anual_sat: 0, total_anual_despacho: 0, total_anual_diferencia: 0 },
 config: { colspanDespachos: 4, colspanVentas: 9, colspanFacturacion: 8, colspanDiferencia: 3 },
 tb: {},
+selectedRows: {},
 documentos: [],
 comentarios: [],
 mesActual: 0,
@@ -25,6 +26,10 @@ idUsuario: 0,
 editorContent: '',
 guardandoComentario: false,
 guardandoDocumento: false,
+
+seleccionarFila(tabla, id) {
+this.selectedRows[tabla] = id;
+},
 
 async cargarDatos(idYear, idEstacion) {
 this.idYear = idYear;
@@ -141,6 +146,11 @@ this.loading = false;
                 })
                 .then(editor => {
                     window.editorInstance = editor;
+                    const editable = editor.ui.view.editable.element;
+                    if (editable) {
+                        editable.classList.add('p-3');
+                        editable.style.setProperty('padding', '1rem', 'important');
+                    }
                     if (content) {
                         editor.setData(content);
                     }
@@ -351,6 +361,7 @@ verSeguimiento() {
 
 abrirModalDocumentos(mes) {
 this.mesActual = mes;
+this.selectedRows.documentos = null;
 const meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 this.mesActualNombre = meses[mes] || mes;
 this.nuevoAnexo = '';

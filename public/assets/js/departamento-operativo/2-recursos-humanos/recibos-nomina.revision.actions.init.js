@@ -38,6 +38,18 @@ document.addEventListener('alpine:init', () => {
             window.rnRevisionComponent = this;
         },
 
+        seleccionarFila(event) {
+            if (event.target.closest('a, button, input, select, .dropdown-menu')) return;
+
+            const fila = event.target.closest('tbody tr');
+            if (!fila || !fila.querySelector('td')) return;
+
+            fila.closest('tbody').querySelectorAll('tr.selected').forEach((seleccionada) => {
+                seleccionada.classList.remove('selected');
+            });
+            fila.classList.add('selected');
+        },
+
         /**
          * Cierre de la actividad desde la Revision. Mismo patron que el index:
          * alerta centrada de window.alerts en lugar de un modal propio, porque

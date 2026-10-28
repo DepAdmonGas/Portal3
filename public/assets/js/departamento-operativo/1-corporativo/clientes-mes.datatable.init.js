@@ -8,6 +8,7 @@ const idMes = parseInt(c.dataset.idMes);
 if (!idYear || !idMes) return;
 
 let finalizado = c.dataset.finalizado === 'true';
+const selectedRows = {};
 
 function formatMoney(val) {
 return '$ ' + parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -98,9 +99,23 @@ return '<span id="SF' + data.id + '">' + formatMoney(sf) + '</span>';
 }
 }
 ],
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', selectedRows[selector] === rowData.id);
+},
 drawCallback: function () {
 if (window.Alpine) Alpine.initTree(this);
 }
+});
+
+$(selector + ' tbody')
+.off('click.rowSelection')
+.on('click.rowSelection', 'tr', function () {
+const rowData = $(selector).DataTable().row(this).data();
+if (!rowData) return;
+
+selectedRows[selector] = rowData.id;
+$(selector + ' tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 }
 

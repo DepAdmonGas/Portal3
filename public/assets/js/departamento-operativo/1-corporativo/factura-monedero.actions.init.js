@@ -99,6 +99,7 @@ comentarios: [],
 nuevoComentario: '',
 guardandoComentario: false,
 detalle: {},
+detalleDocumentosSeleccionados: false,
 
 form: {
 no_factura: '',
@@ -332,6 +333,7 @@ table: '#tabla-factura-monedero'
 },
 
 abrirDetalle(id) {
+this.detalleDocumentosSeleccionados = false;
 const row = window.tablaFacturaMonedero ? window.tablaFacturaMonedero.row(function (idx, data) {
 return data.id === id;
 }).data() : null;
@@ -346,6 +348,10 @@ archivo_factura_xml: '', estado: 1
 };
 }
 bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalle')).show();
+},
+
+seleccionarDocumentosDetalle() {
+this.detalleDocumentosSeleccionados = true;
 },
 
 scrollChatToBottom() {

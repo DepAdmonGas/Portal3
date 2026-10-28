@@ -15,7 +15,7 @@
 
     <div class="datatables mt-4">
         <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
-            <table class="table table-bordered align-middle" id="table-bitacora-verificacion-equipos">
+            <table class="table table-striped  table-bordered align-middle" id="table-bitacora-verificacion-equipos">
                 <thead>
                     <tr class="bg-primary text-white">
                         <th class="text-center">Equipo a calibrar</th>

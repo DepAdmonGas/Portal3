@@ -123,13 +123,13 @@ document.addEventListener('alpine:init', function () {
             if (this.guardando) return;
 
             if (!this.fecha) {
-                var fechaInput = document.getElementById('Fecha');
-                if (fechaInput) fechaInput.style.border = '2px solid #A52525';
+                var fechaWrapper = document.getElementById('fecha-programacion-wrapper');
+                if (fechaWrapper) fechaWrapper.classList.add('is-invalid');
                 Notify.error('Selecciona una fecha para el inventario');
                 return;
             }
-            var fechaInput = document.getElementById('Fecha');
-            if (fechaInput) fechaInput.style.border = '';
+            var fechaWrapper = document.getElementById('fecha-programacion-wrapper');
+            if (fechaWrapper) fechaWrapper.classList.remove('is-invalid');
 
             this.guardando = true;
 

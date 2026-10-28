@@ -66,8 +66,12 @@
 
     <div class="col-12 col-md-6">
         <h4 class="fw-bold mb-2">Estaciones</h4>
-        <div class="d-flex align-items-center gap-2">
-            <select class="form-select form-select-sm shadow-sm" id="dd-semana-selector" style="max-width: 220px;">
+        <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 px-md-4 py-2 gap-1 w-100 dia-doble-week-filter">
+            <label for="dd-semana-selector" class="text-muted fw-semibold text-nowrap d-flex align-items-center gap-1 mb-0">
+                <i class="ti ti-filter fs-4 text-primary"></i>
+                <span>Semana:</span>
+            </label>
+            <select class="form-select form-select-sm border-0 bg-transparent fw-semibold w-auto flex-grow-1" id="dd-semana-selector">
                 <option value="">Selecciona una semana...</option>
                 <?php foreach ($weeks as $w): ?>
                     <option value="<?= $w['numero'] ?>" <?= $w['numero'] == $currentWeek ? 'selected' : '' ?>>
@@ -129,8 +133,8 @@
         <h4 class="mb-0">Dirección de Operaciones</h4>
     </div>
 
-    <div class="col-12 col-md-5">
-        <div class="row g-2 justify-content-md-end">
+    <div class="col-12 col-md-5 mb-4">
+        <div class="row g-3 justify-content-md-end">
             <div class="col-12 col-md-auto d-grid">
                 <button type="button" class="btn bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center" @click="showCards()">
                     <i class="ti ti-arrow-left me-1"></i> Regresar
@@ -149,13 +153,14 @@
     </div>
 </div>
 
-        <div class="datatables">
-            <div class="table-responsive overflow-x-auto pb-4">
-                <table id="tabla-dia-doble" class="table table-striped table-bordered mb-0 text-nowrap align-middle" width="100%">
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+<div class="datatables">
+    <!-- Añade el margen superior (ej. mt-3 o mt-4) aquí en el contenedor de bloque -->
+    <div class="table-responsive overflow-x-auto pb-4 mt-3">
+        <table id="tabla-dia-doble" class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable" width="100%">
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
 
     </div>
 
@@ -168,6 +173,13 @@
     </div>
 
     <!-- OFFCANVAS COMENTARIOS -->
+    <style>
+        #modalComentarios .actividad-ticket-field {
+            min-height: 62px;
+            background: var(--bs-body-bg);
+            font-size: .82rem;
+        }
+    </style>
     <div class="offcanvas offcanvas-end d-flex flex-column" tabindex="-1" id="modalComentarios" style="width: 480px; max-height: 100dvh; overflow: hidden;">
         <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary flex-shrink-0">
             <div class="hstack gap-3">
@@ -234,11 +246,11 @@
                             </div>
                         </template>
                     </div>
+                    <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
 
 </div>
             </div>
         </div>
-        <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
 
 
 

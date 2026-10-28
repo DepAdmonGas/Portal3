@@ -6,6 +6,7 @@ mesActual: c ? parseInt(c.dataset.mesActual || '0') : 0,
 anioActual: c ? parseInt(c.dataset.anioActual || '0') : 0,
 registros: [],
 catalogoIncidencias: [],
+selectedAsistenciaId: null,
 
 modalIncidencia: {
 cargando: false,
@@ -164,7 +165,19 @@ return json.data;
 return [];
 }
 },
-columns: columns
+columns: columns,
+rowCallback: function(row, data) {
+$(row).addClass('pointer').toggleClass('selected', self.selectedAsistenciaId === parseInt(data.id));
+}
+});
+
+$table.off('click.rowSelection', 'tbody tr');
+$table.on('click.rowSelection', 'tbody tr', function() {
+var rowData = window.tablaAsistencia.row(this).data();
+if (!rowData) return;
+self.selectedAsistenciaId = parseInt(rowData.id);
+$table.find('tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 $table.off('click', '.cd-btn-detalle-incidencia');

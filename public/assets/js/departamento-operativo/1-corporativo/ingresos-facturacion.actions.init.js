@@ -29,6 +29,7 @@ idYear: 0,
 idReporte: 0,
 guardando: false,
 archivos: [],
+selectedRows: { posicion1: null, posicion2: null, archivos: null },
 
 init() {
 this.idYear = parseInt(this.$el.dataset.idYear) || 0;
@@ -90,6 +91,10 @@ this.diferencias = d;
 
 totalFila(row) {
 return this.meses.reduce((s, mes) => s + (parseFloat(row[mes]) || 0), 0);
+},
+
+seleccionarFila(tabla, id) {
+this.selectedRows[tabla] = this.selectedRows[tabla] === id ? null : id;
 },
 
 editIF(id, mes, posicion) {

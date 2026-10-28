@@ -35,7 +35,7 @@
 
     <div class="datatables">
         <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-            <table id="tabla-bitacora-rrhh" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+            <table id="tabla-bitacora-rrhh" class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable">
                 <tbody></tbody>
             </table>
         </div>
@@ -261,7 +261,7 @@
 
 
                     <div class="table-responsive overflow-x-auto overflow-y-hidden mt-3">
-                        <table class="table table-striped table-bordered mb-0">
+                        <table class="table table-striped table-bordered mb-0 portal-table portal-table--selectable">
                             <thead>
                             <tr>
                                 <th class="text-center align-middle" width="64px">#</th>
@@ -324,7 +324,7 @@ Visualizaciones Bitácora RRHH <span x-text="'(#0' + visIdActual + ')'"></span>
 
                 <div class="modal-body">
                     <div class="table-responsive overflow-x-auto">
-                        <table class="table table-striped table-bordered mb-0">
+                        <table class="table table-striped table-bordered mb-0 portal-table portal-table--selectable">
                             <thead>
                             <tr>
                                 <th class="text-center">Nombre del personal</th>

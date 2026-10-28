@@ -16,6 +16,8 @@ puedeEliminar: false,
 loading: true,
 
 rows: [],
+selectedClientId: null,
+selectedModalRows: { credito: null, debito: null },
 resumen: {
 dc: 0, dp: 0, cc: 0, cp: 0,
 total_consumo: 0, total_pago: 0,
@@ -53,6 +55,10 @@ return !this.multiestacion && this.puedeCrear;
 
 get puedeBorrar() {
 return !this.multiestacion && this.puedeEliminar;
+},
+
+seleccionarFilaModal(tipo, id) {
+this.selectedModalRows[tipo] = id;
 },
 
 get listaCreditos() {
@@ -135,6 +141,20 @@ language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
 pageLength: 10,
 order: [[0, 'asc']],
 destroy: true,
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', self.selectedClientId === rowData.id);
+},
+});
+
+$('#tablaClientes tbody')
+.off('click.rowSelection')
+.on('click.rowSelection', 'tr', function () {
+const rowData = table.row(this).data();
+if (!rowData) return;
+
+self.selectedClientId = rowData.id;
+$('#tablaClientes tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 table.on('draw', function () {

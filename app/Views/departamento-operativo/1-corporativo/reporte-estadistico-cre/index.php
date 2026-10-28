@@ -41,9 +41,11 @@ x-data="{ ...actions(), ...reporteEstadisticoCreComponent() }">
 <div id="cre-contenido">
 
 <!---------- Barra de herramientas ---------->
-<div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mb-3">
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
 
-<div class="d-flex align-items-center gap-2">
+<h5 class="mb-0" x-text="vistaAnual ? 'Resumen Anual ' + year : 'Resumen Mensual ' + etiquetaPeriodo()"></h5>
+
+<div class="d-flex align-items-center gap-2 ms-auto">
 <button type="button" class="btn bg-success text-white" @click="descargarFacturas()" x-show="puedeDescargar" :disabled="descargando">
 <template x-if="!descargando"><i class="ti ti-file-zip me-1"></i></template>
 <template x-if="descargando"><span class="spinner-border spinner-border-sm me-1"></span></template>
@@ -150,7 +152,7 @@ target="_blank"
 <div class="card-body">
 <!-- Tabla de Volúmenes -->
 <div class="table-responsive mb-3">
-<table class="table table-striped table-bordered mb-0 align-middle">
+<table class="table table-striped table-bordered mb-0 align-middle reporte-cre-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle">Vo. (Lt) inicial</th>
@@ -160,7 +162,7 @@ target="_blank"
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows['volumen-' + celda.id] === celda.id }" @click="seleccionarFila('volumen-' + celda.id, celda.id)">
 <td class="text-center align-middle" x-text="formatearNumero(celda.volumen_inicial)"></td>
 <td class="text-center align-middle" x-text="formatearNumero(celda.volumen_venta)"></td>
 <td class="text-center align-middle" x-text="formatearNumero(celda.volumen_final)"></td>
@@ -173,7 +175,7 @@ target="_blank"
 <!-- Tabla de Pipas Registradas -->
 <div x-show="celda.pipas.length > 0">
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 align-middle">
+<table class="table table-striped table-bordered mb-0 align-middle reporte-cre-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center align-middle">Pipa</th>
@@ -185,7 +187,7 @@ target="_blank"
 </thead>
 <tbody>
 <template x-for="pipa in celda.pipas" :key="pipa.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows['pipas-' + celda.id] === pipa.id }" @click="seleccionarFila('pipas-' + celda.id, pipa.id)">
 <td class="text-center align-middle" x-text="pipa.pipa_numero"></td>
 <td class="text-center align-middle" x-text="formatearNumero(pipa.volumen)"></td>
 <td class="text-center align-middle" x-text="formatearNumero(pipa.precio_litro)"></td>
@@ -198,7 +200,7 @@ target="_blank"
 <td class="text-center align-middle">Total</td>
 <td class="text-center align-middle" x-text="formatearNumero(celda.total_compra)"></td>
 <td class="text-center align-middle" x-text="'$' + formatearNumero(celda.total_importe)"></td>
-<td colspan="2"></td>
+<td colspan="2" class="align-middle"></td>
 </tr>
 </tbody>
 </table>

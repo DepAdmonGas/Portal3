@@ -1,4 +1,4 @@
-<div class="bg-white mb-3">
+<div class="bg-white mb-3" data-portal-table-selection="false">
 
 <div class="card mt-3">
 

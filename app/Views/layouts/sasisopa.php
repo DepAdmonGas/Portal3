@@ -12,6 +12,7 @@
     <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/icono-web.png') ?>" />
     <!-- Core Css -->
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/css/styles.css') ?: 1 ?>" />
+    <link rel="stylesheet" href="<?= asset('css/portal-tables.css') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/css/portal-tables.css') ?: 1 ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
 
 
@@ -165,12 +166,9 @@
                                 <span class="hide-menu">Calendario</span>
                             </div>
 
-                            <?= ($pendientes['sasisopa'] ?? 0) > 0
-                                ? '<div class="hide-menu">
-        <span class="badge rounded bg-primary text-black d-flex align-items-center justify-content-center rounded-pill fs-1 fw-bolder">' . $pendientes['sasisopa'] . '</span>
-       </div>'
-                                : ''
-                            ?>
+                            <?= (int) ($pendientes['sasisopa'] ?? 0) > 0
+                                ? '<span class="badge-historico">' . (int) $pendientes['sasisopa'] . '</span>'
+                                : '' ?>
 
                         </a>
                     </li>
@@ -466,6 +464,8 @@
 
     <script src="<?= asset('js/core/highlight-init.js') ?>"></script>
     <script src="<?= asset('js/core/datatables-scroll-isolation.js') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/js/core/datatables-scroll-isolation.js') ?: 1 ?>"></script>
+    <script src="<?= asset('js/core/table-dropdown-overflow.js') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/js/core/table-dropdown-overflow.js') ?: 1 ?>"></script>
+    <script src="<?= asset('js/core/portal-table-selection.js') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/js/core/portal-table-selection.js') ?: 1 ?>"></script>
 
 
 </body>

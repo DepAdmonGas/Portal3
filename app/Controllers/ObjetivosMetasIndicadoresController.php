@@ -952,6 +952,11 @@ class ObjetivosMetasIndicadoresController extends BaseController{
     public function capacitacionPersonal(){
 
         $title = 'Capacitación del personal';
+        $yearActual = (int) date('Y');
+        $yearSolicitado = filter_var($_GET['year'] ?? null, FILTER_VALIDATE_INT);
+        if ($yearSolicitado !== false && $yearSolicitado >= 2020 && $yearSolicitado <= $yearActual) {
+            $yearActual = $yearSolicitado;
+        }
          // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -959,6 +964,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
         Breadcrumb::add($title, '');
+        Breadcrumb::add($this->dropdownYearCapacitacionPersonal($yearActual), '');
 
         $idEstacion = $this->estacionModulo();
 
@@ -984,6 +990,21 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
     }
 
+    private function dropdownYearCapacitacionPersonal(int $yearSeleccionado): string
+    {
+        $html = '<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">'
+            . '<i class="ti ti-calendar"></i> <span class="ms-1" id="capacitacion-personal-year-label">'
+            . $yearSeleccionado . '</span></a>'
+            . '<ul class="dropdown-menu animated rubberBand">';
+
+        for ($year = (int) date('Y'); $year >= 2020; $year--) {
+            $html .= '<li><a class="dropdown-item pointer" href="#" data-capacitacion-personal-year="' . $year . '">'
+                . '<i class="ti ti-calendar me-1"></i>' . $year . '</a></li>';
+        }
+
+        return $html . '</ul>';
+    }
+
     public function resumenCapacitacionPermosal(){
 
           header('Content-Type: application/json');
@@ -1003,6 +1024,11 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
     public function indicadorVentas(){
         $title = 'Indicadores de Ventas';
+        $yearActual = (int) date('Y');
+        $yearSolicitado = filter_var($_GET['year'] ?? null, FILTER_VALIDATE_INT);
+        if ($yearSolicitado !== false && $yearSolicitado >= 2020 && $yearSolicitado <= $yearActual) {
+            $yearActual = $yearSolicitado;
+        }
          // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -1010,6 +1036,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add('4. OBJETIVOS, METAS E INDICADORES', '/sasisopa/objetivos-metas-indicadores');
         Breadcrumb::add($title, '');
+        Breadcrumb::add($this->dropdownYearIndicadorVentas($yearActual), '');
 
         $idEstacion = $this->estacionModulo();
 
@@ -1034,6 +1061,21 @@ class ObjetivosMetasIndicadoresController extends BaseController{
         ];
         
         View::render('objetivosmetasindicadores/indicador-ventas', $data,'sasisopa');
+    }
+
+    private function dropdownYearIndicadorVentas(int $yearSeleccionado): string
+    {
+        $html = '<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">'
+            . '<i class="ti ti-calendar"></i> <span class="ms-1" id="indicador-ventas-year-label">'
+            . $yearSeleccionado . '</span></a>'
+            . '<ul class="dropdown-menu animated rubberBand">';
+
+        for ($year = (int) date('Y'); $year >= 2020; $year--) {
+            $html .= '<li><a class="dropdown-item pointer" href="#" data-indicador-ventas-year="' . $year . '">'
+                . '<i class="ti ti-calendar me-1"></i>' . $year . '</a></li>';
+        }
+
+        return $html . '</ul>';
     }
 
     public function getIndicadorVentas(){

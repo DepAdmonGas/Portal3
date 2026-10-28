@@ -82,10 +82,12 @@ class SgmProcesosMedicionController extends BaseController
     {
 
         $title = 'Programa anual de calibración de patrones e instrumentos de medida';
+        $year = (int) date('Y');
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SGM', '/sgm');
         Breadcrumb::add('7. Procesos de medición', '/sgm/procesos-medicion');
         Breadcrumb::add($title, '');
+        Breadcrumb::add($this->dropdownYearPrograma($year), '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
         $data = [
@@ -94,6 +96,7 @@ class SgmProcesosMedicionController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $this->estacionModulo(),
+            'year' => $year,
             'moduleStationKey' => 'sgm',
             'links' => [],
             'scripts' => [
@@ -152,10 +155,12 @@ class SgmProcesosMedicionController extends BaseController
     {
 
         $title = 'Programa anual de verificación de equipos';
+        $year = (int) date('Y');
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SGM', '/sgm');
         Breadcrumb::add('7. Procesos de medición', '/sgm/procesos-medicion');
         Breadcrumb::add($title, '');
+        Breadcrumb::add($this->dropdownYearPrograma($year), '');
         $permisos = ModuloService::permisosSesion($this->modulo);
 
         $data = [
@@ -164,6 +169,7 @@ class SgmProcesosMedicionController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $this->estacionModulo(),
+            'year' => $year,
             'moduleStationKey' => 'sgm',
             'links' => [],
             'scripts' => [
@@ -176,6 +182,23 @@ class SgmProcesosMedicionController extends BaseController
         ];
 
         View::render('sgm/procesos-medicion/programacion-anual-verificacion', $data, 'sgm');
+    }
+
+    private function dropdownYearPrograma(int $yearSeleccionado): string
+    {
+        $yearActual = (int) date('Y');
+        $yearSeleccionado = max(2020, min($yearActual, $yearSeleccionado));
+        $html = '<a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">'
+            . '<i class="ti ti-calendar"></i> <span class="ms-1" id="programa-medicion-year-label">'
+            . $yearSeleccionado . '</span></a>'
+            . '<ul class="dropdown-menu animated rubberBand">';
+
+        for ($year = $yearActual; $year >= 2020; $year--) {
+            $html .= '<li><a class="dropdown-item pointer" href="#" data-sgm-programa-year="' . $year . '">'
+                . '<i class="ti ti-calendar me-1"></i>' . $year . '</a></li>';
+        }
+
+        return $html . '</ul>';
     }
     //----- Programa anual de verificación de equipos
 

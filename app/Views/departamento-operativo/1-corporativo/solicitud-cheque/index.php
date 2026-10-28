@@ -744,7 +744,7 @@ Cancelar</button>
 </div>
 
 <div class="modal fade" id="modalPagos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalPagos">
-<div class="modal-dialog modal-md">
+<div class="modal-dialog modal-lg">
 <div class="modal-content">
 <div class="modal-header bg-primary">
 <h4 class="modal-title text-white">

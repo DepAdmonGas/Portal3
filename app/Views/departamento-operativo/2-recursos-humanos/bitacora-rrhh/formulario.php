@@ -77,7 +77,7 @@
                     </div>
 
                     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable">
                             <thead>
                             <tr>
                                 <th class="text-center" width="64px">#</th>

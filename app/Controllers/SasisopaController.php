@@ -2297,6 +2297,16 @@ class SasisopaController extends BaseController
         $moduleCtx = ModuleStationService::getContext('sasisopa');
         $idEstacion = $moduleCtx['id_estacion'];
         $estacion = $idEstacion ? Estacion::find($idEstacion) : null;
+        $organigrama = null;
+
+        if ($estacion) {
+            $nombreOrganigrama = basename(str_replace('\\', '/', (string)($estacion->organigrama ?? '')));
+            $rutaOrganigrama = PUBLIC_PATH . '/assets/images/organigramas/' . $nombreOrganigrama;
+
+            if ($nombreOrganigrama !== '' && is_file($rutaOrganigrama)) {
+                $organigrama = asset('/images/organigramas/' . rawurlencode($nombreOrganigrama));
+            }
+        }
 
         $data = [
             'title' => $title,
@@ -2305,7 +2315,7 @@ class SasisopaController extends BaseController
             'estacionId' => $idEstacion,
             'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
-            'organigrama' => $estacion?->organigrama ? asset('/images/organigramas/' . $estacion->organigrama) : null,
+            'organigrama' => $organigrama,
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 '/libs/select2/dist/css/select2.min.css'

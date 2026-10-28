@@ -33,19 +33,19 @@ x-cloak>
 <div id="divListadoAsistencia" x-show="!vistaReporte">
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-<table id="tabla-biometricos" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table id="tabla-biometricos" class="table table-striped table-bordered mb-0 text-nowrap align-middle biometricos-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
-<th>#</th>
-<th>Estación / Departamento</th>
-<th>Nombre</th>
-<th>Fecha</th>
-<th>Sistema (Entrada)</th>
-<th>Sistema (Salida)</th>
-<th>Sensor (Entrada)</th>
-<th>Sensor (Salida)</th>
-<th>Detalle</th>
-<th><i class="ti ti-alert-triangle fs-5"></i></th>
+<th class="align-middle">#</th>
+<th class="align-middle">Estación / Departamento</th>
+<th class="align-middle">Nombre</th>
+<th class="align-middle">Fecha</th>
+<th class="align-middle">Sistema (Entrada)</th>
+<th class="align-middle">Sistema (Salida)</th>
+<th class="align-middle">Sensor (Entrada)</th>
+<th class="align-middle">Sensor (Salida)</th>
+<th class="align-middle">Detalle</th>
+<th class="align-middle"><i class="ti ti-alert-triangle fs-5"></i></th>
 </tr>
 </thead>
 <tbody></tbody>

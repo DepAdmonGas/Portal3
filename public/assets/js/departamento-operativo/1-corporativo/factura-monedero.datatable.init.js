@@ -12,6 +12,7 @@ if (!$table.length) return;
 
 const esMultiestacion = c.dataset.multiestacion === 'true';
 const puedeEliminar = c.dataset.puedeEliminar === 'true';
+let selectedFacturaMonederoId = null;
 
 const ajaxUrl = '/departamento-operativo/corporativo/factura-monedero/get-data?year=' + idYear + '&mes=' + idMes;
 
@@ -22,8 +23,8 @@ $table.DataTable().destroy();
 function cls(enabled) { return enabled ? '' : ' disabled'; }
 
 function renderEstado(row) {
-if (row.estado === 1) return '<span class="badge bg-success">Finalizado</span>';
-return '<span class="badge bg-warning text-dark">Pendiente</span>';
+if (row.estado === 1) return '<span class="badge bg-success text-white">Finalizado</span>';
+return '<span class="badge bg-warning text-white">Pendiente</span>';
 }
 
 function renderDocumentoCol(file, tipo) {
@@ -133,6 +134,9 @@ pageLength: 15,
 lengthMenu: [15, 30, 50, 100],
 language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
 columns: columns,
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', selectedFacturaMonederoId === rowData.id);
+},
 drawCallback: function (settings) {
 if (window.Alpine) {
 Alpine.initTree(document.querySelector('#tabla-factura-monedero'));
@@ -140,6 +144,14 @@ Alpine.initTree(document.querySelector('#tabla-factura-monedero'));
 const event = new CustomEvent('fm-tabla-recargada');
 document.dispatchEvent(event);
 }
+});
+
+$table.on('click.rowSelection', 'tbody tr', function () {
+const rowData = window.tablaFacturaMonedero.row(this).data();
+if (!rowData) return;
+selectedFacturaMonederoId = rowData.id;
+$table.find('tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 $table.on('xhr.dt', function () {

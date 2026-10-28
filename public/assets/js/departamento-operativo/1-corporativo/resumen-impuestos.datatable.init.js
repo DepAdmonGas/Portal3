@@ -49,8 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
               '<th class="text-center align-middle">Total</th>' +
             '</tr></thead><tbody>';
 
-      json.items.forEach(function (row) {
-        html += '<tr>' +
+      json.items.forEach(function (row, index) {
+        html += '<tr class="pointer" data-selectable-row="impuesto-' + index + '">' +
           '<th class="text-center align-middle">' + row.producto + '</th>' +
           '<td class="text-center align-middle">' + fmt(row.precio_litro) + '</td>' +
           '<td class="text-center align-middle">' + fmt4(row.ieps) + '</td>' +
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
       var m = json.m;
       html += '<div class="col-12">' +
         '<div class="table-responsive">' +
-        '<table class="table table-bordered table-striped mb-0 text-nowrap align-middle">' +
+        '<table id="table-resumen-aceites-monedero" class="table table-bordered table-striped mb-0 text-nowrap align-middle">' +
           '<thead>' +
             '<tr><th colspan="15" class="text-center"><strong>Resumen Monederos</strong></th></tr>' +
             '<tr>' +
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
               '<th class="text-center">Total</th>' +
               '<th class="text-center">Total</th>' +
             '</tr></thead><tbody>' +
-            '<tr class="table-dark">' +
+            '<tr class="table-dark pointer" data-selectable-row="monedero">' +
               '<td class="text-end align-middle">' + fmt2(m.bancomer) + '</td>' +
               '<td class="text-end align-middle">' + fmt2(m.amex) + '</td>' +
               '<td class="text-end align-middle">' + fmt2(m.inburgas) + '</td>' +
@@ -142,5 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
             '</tr></tbody></table></div></div>';
 
       c.innerHTML = html;
+      c.addEventListener('click', function (event) {
+        const row = event.target.closest('tbody tr[data-selectable-row]');
+        if (!row || row.classList.contains('selected')) return;
+
+        const table = row.closest('table');
+        if (!table) return;
+
+        table.querySelectorAll('tbody tr.selected').forEach(function (selectedRow) {
+          selectedRow.classList.remove('selected');
+        });
+        row.classList.add('selected');
+      });
     });
 });

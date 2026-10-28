@@ -72,7 +72,7 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 <div class="card-body">
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
-<table id="tabla-organigrama-versions" class="table table-striped table-bordered mb-0 text-nowrap align-middle"></table>
+<table id="tabla-organigrama-versions" class="table table-striped table-bordered mb-0 text-nowrap align-middle organigrama-seleccionable portal-table portal-table--selectable"></table>
 </div>
 </div>
 </div>
@@ -97,31 +97,31 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 <div class="card-body p-0">
 
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0 align-middle" id="tabla-plantilla">
+<table class="table table-striped table-bordered mb-0 align-middle organigrama-seleccionable portal-table portal-table--selectable" id="tabla-plantilla">
 
 <thead>
 <tr>
-<th class="text-center" width="24">#</th>
-<th class="text-center">Descripción del puesto</th>
-<th class="text-center">Nombre</th>
-<th class="text-center" colspan="3">Perfil</th>
-<th class="text-center" colspan="3">Contrato</th>
-<th class="text-center" width="48px"><i class="ti ti-trash fs-6 text-danger"></i></th>
+<th class="text-center align-middle" width="24">#</th>
+<th class="text-start align-middle">Descripción del puesto</th>
+<th class="text-center align-middle">Nombre</th>
+<th class="text-center align-middle" colspan="3">Perfil</th>
+<th class="text-center align-middle" colspan="3">Contrato</th>
+<th class="text-center align-middle" width="48px"><i class="ti ti-trash fs-6 text-danger"></i></th>
 </tr>
 </thead>
 
 <tbody>
 <template x-if="plantilla.length === 0">
-<tr><td colspan="10" class="text-center text-secondary">No se encontro información</td></tr>
+<tr><td colspan="10" class="text-center text-secondary align-middle">No se encontro información</td></tr>
 </template>
 
 <template x-for="(row, idx) in plantilla" :key="row.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedPlantillaId === row.id }" @click="seleccionarFilaPlantilla(row.id)">
 <td class="text-center align-middle fw-bold" x-text="row.id"></td>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control form-control p-3 border-0" x-model="row.descripcion" @change="actualizarCampoPlantilla(row.id, 'descripcion', row.descripcion)">
 </td>
-<td class="p-0">
+<td class="p-0 align-middle">
 <div class="position-relative">
 <input type="text" class="form-control form-control p-3 border-0" x-model="row.nombre_completo" x-ref="nombreInput_$idx"
 @input="buscarPersonal(row.idEstacion || idEstacionActual, idx, $event)" @change="asignarNombrePlantilla(row, idx)" :list="'personal-list-' + idx">
@@ -216,75 +216,75 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 <div class="card-body p-0">
 
 <div class="table-responsive">
-<table class="table table-bordered table-striped mb-0 align-middle" id="tabla-datos-empresa">
+<table class="table table-bordered table-striped mb-0 align-middle organigrama-seleccionable portal-table portal-table--selectable" id="tabla-datos-empresa">
 
 <tbody>
 
-<tr>
-<th width="250px">Nombre de la empresa</th>
-<td x-text="stationInfo.razonsocial"></td>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'razonsocial' }" @click="seleccionarFilaEmpresa('razonsocial')">
+<th class="align-middle" width="250px">Nombre de la empresa</th>
+<td class="align-middle" x-text="stationInfo.razonsocial"></td>
 </tr>
 
-<tr>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'registro_patronal' }" @click="seleccionarFilaEmpresa('registro_patronal')">
 <th class="text-start align-middle">Registro Patronal</th>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.registro_patronal" 
 @change="actualizarStationInfo('registro_patronal', stationInfo.registro_patronal)">
 </td>
 </tr>
 
-<tr>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'calle' }" @click="seleccionarFilaEmpresa('calle')">
 <th class="text-start align-middle">Calle</th>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.calle" @change="actualizarStationInfo('calle', stationInfo.calle)">
 </td>
 </tr>
 
-<tr>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'numero_exterior' }" @click="seleccionarFilaEmpresa('numero_exterior')">
 <th class="text-start align-middle">Número Ext.</th>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.numero_exterior" @change="actualizarStationInfo('numero_exterior', stationInfo.numero_exterior)">
 </td>
 </tr>
 
-<tr>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'numero_interior' }" @click="seleccionarFilaEmpresa('numero_interior')">
 <th class="text-start align-middle">Número Int.</th>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.numero_interior" @change="actualizarStationInfo('numero_interior', stationInfo.numero_interior)">
 </td>
 </tr>
 
-<tr>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'colonia' }" @click="seleccionarFilaEmpresa('colonia')">
 <th class="text-start align-middle">Colonia</th>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.colonia" @change="actualizarStationInfo('colonia', stationInfo.colonia)">
 </td>
 </tr>
 
-<tr>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'codigo_postal' }" @click="seleccionarFilaEmpresa('codigo_postal')">
 <th class="text-start align-middle">Código Postal</th>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.codigo_postal" @change="actualizarStationInfo('codigo_postal', stationInfo.codigo_postal)">
 </td>
 </tr>
 
-<tr>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'estado' }" @click="seleccionarFilaEmpresa('estado')">
 <th class="text-start align-middle">Estado</th>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.estado" @change="actualizarStationInfo('estado', stationInfo.estado)">
 </td>
 </tr>
 
-<tr>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'municipio' }" @click="seleccionarFilaEmpresa('municipio')">
 <th class="text-start align-middle">Municipio</th>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.municipio" @change="actualizarStationInfo('municipio', stationInfo.municipio)">
 </td>
 </tr>
 
-<tr>
+<tr class="pointer" :class="{ selected: selectedEmpresaFila === 'numero_telefono' }" @click="seleccionarFilaEmpresa('numero_telefono')">
 <th class="text-start align-middle">Número de teléfono</th>
-<td class="p-0">
+<td class="p-0 align-middle">
 <input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.numero_telefono" @change="actualizarStationInfo('numero_telefono', stationInfo.numero_telefono)">
 </td>
 </tr>

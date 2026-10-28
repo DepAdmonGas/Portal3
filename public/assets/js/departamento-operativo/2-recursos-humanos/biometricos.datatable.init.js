@@ -7,6 +7,7 @@ const $table = $('#tabla-biometricos');
 if (!$table.length) return;
 
 const moduleStationKey = c.dataset.moduleStationKey || '';
+let selectedBiometricoId = null;
 
 function escHtml(str) {
 return String(str || '').replace(/[&<>"']/g, function(m) {
@@ -115,7 +116,18 @@ window.biometricosComponentInstance.registros = json.data;
 return json.data || [];
 }
 },
-columns: columns
+columns: columns,
+rowCallback: function(row, data) {
+$(row).addClass('pointer').toggleClass('selected', selectedBiometricoId === parseInt(data.id));
+}
+});
+
+$table.on('click.rowSelection', 'tbody tr', function() {
+var rowData = window.tablaBiometricos.row(this).data();
+if (!rowData) return;
+selectedBiometricoId = parseInt(rowData.id);
+$table.find('tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 $table.off('click', '.bio-btn-detalle-incidencia');
@@ -140,6 +152,7 @@ function recargarTabla() {
 var url = buildUrl();
 var dt = window.tablaBiometricos;
 if (!dt) return;
+selectedBiometricoId = null;
 dt.ajax.url(url || EMPTY_URL).load();
 }
 

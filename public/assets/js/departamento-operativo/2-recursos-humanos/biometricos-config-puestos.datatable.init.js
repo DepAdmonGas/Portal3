@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+let selectedPuestoId = null;
+
 const table = $('#table-puestos').DataTable({
 
 processing: true,
@@ -77,16 +79,20 @@ table: '#table-puestos'
 </div>`;
 }
 }
-]
+],
+rowCallback: function (row, data) {
+$(row).addClass('pointer').toggleClass('selected', selectedPuestoId === Number(data.id));
+}
 
 });
 
-$("#table-puestos tbody").on("click", "tr", function () {
-if ($(this).hasClass("selected")) {
-} else {
-table.$("tr.selected").removeClass("selected");
-$(this).addClass("selected");
-}
+$('#table-puestos tbody').on('click.rowSelection', 'tr', function (event) {
+if ($(event.target).closest('a, button, input, select, .dropdown-menu').length) return;
+const row = table.row(this).data();
+if (!row) return;
+selectedPuestoId = Number(row.id);
+$('#table-puestos tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 });

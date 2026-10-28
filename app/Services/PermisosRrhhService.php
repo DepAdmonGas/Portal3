@@ -369,8 +369,11 @@ class PermisosRrhhService
             'id_personal'      => (int)$r->id_personal,
             'cubre_nombre'     => self::nombrePersonal((int)$r->cubre_turno, (int)$r->estacion_cubre),
             'cubre_turno'      => (int)$r->cubre_turno,
-            'fecha_inicio'     => $r->fecha_inicio,
-            'fecha_termino'    => $r->fecha_termino,
+            // El formulario usa input[type=date], que requiere Y-m-d. Los
+            // casts date de Eloquent se serializan como ISO 8601 en JSON y el
+            // navegador no los muestra como valor válido para esos inputs.
+            'fecha_inicio'     => $r->fecha_inicio ? $r->fecha_inicio->format('Y-m-d') : '',
+            'fecha_termino'    => $r->fecha_termino ? $r->fecha_termino->format('Y-m-d') : '',
             'fecha_inicio_label' => $r->fecha_inicio ? formatearFecha($r->fecha_inicio) : '---',
             'fecha_termino_label' => $r->fecha_termino ? formatearFecha($r->fecha_termino) : '---',
             'dias_tomados'     => $r->dias_tomados ?? '',

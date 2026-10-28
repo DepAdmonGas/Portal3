@@ -13,3 +13,4 @@ Documentación de los componentes, convenciones y librerías del frontend de Por
 | [`javascript.md`](./javascript.md) | Organización del código JS |
 | [`components.md`](./components.md) | Componentes UI y vistas |
 | [`conventions.md`](./conventions.md) | Convenciones de frontend |
+| [`portal-tables/`](./portal-tables/README.md) | Estilos compartidos, selección de filas y opciones para excluir tablas |

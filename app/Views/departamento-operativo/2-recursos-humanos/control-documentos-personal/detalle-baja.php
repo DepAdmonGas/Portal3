@@ -181,7 +181,7 @@ x-cloak>
 </div>
 <div class="card-body p-0">
 <div class="table-responsive">
-<table class="table table-bordered table-striped mb-0 text-nowrap align-middle">
+<table class="table table-bordered table-striped mb-0 text-nowrap align-middle control-documentos-personal-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="align-middle">Descripción</th>
@@ -196,7 +196,7 @@ x-cloak>
 </tr>
 </template>
 <template x-for="a in archivosBaja" :key="a.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedArchivoBajaId === Number(a.id) }" @click="selectedArchivoBajaId = Number(a.id)">
 <td class="align-middle text-start" x-text="a.descripcion"></td>
 <td class="align-middle">
 <i class="ti ti-download fs-5 text-primary pointer" title="Descargar" x-show="puedeDescargarBaja" @click="download('docs-personal-baja', a.archivo)"></i>

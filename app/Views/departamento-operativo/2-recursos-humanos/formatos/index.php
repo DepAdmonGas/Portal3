@@ -145,7 +145,7 @@ Detalle del formato</h4>
                     <i class="ti ti-hash fs-5"></i>
                 </span>
                 <div class="flex-grow-1 overflow-hidden">
-                    <div class="form-label small mb-0">#:</div>
+                    <div class="form-label mb-1">#:</div>
                     <div x-text="detalleComentarioFormato ? detalleComentarioFormato.no_control : ''"></div>
                 </div>
             </div>
@@ -156,7 +156,7 @@ Detalle del formato</h4>
                     <i class="ti ti-calendar-event fs-5"></i>
                 </span>
                 <div class="flex-grow-1">
-                    <div class="form-label small mb-0">Fecha y hora:</div>
+                    <div class="form-label mb-1">Fecha y hora:</div>
                     <div x-text="detalleComentarioFormato && detalleComentarioFormato.fecha_hora ? detalleComentarioFormato.fecha_hora : 'S/I'"></div>
                 </div>
             </div>
@@ -167,7 +167,7 @@ Detalle del formato</h4>
                     <i class="ti ti-user fs-5"></i>
                 </span>
                 <div class="flex-grow-1">
-                    <div class="form-label small mb-0">Nombre del empleado:</div>
+                    <div class="form-label mb-1">Nombre del empleado:</div>
                     <div x-text="detalleComentarioFormato && detalleComentarioFormato.nombre_empleado ? detalleComentarioFormato.nombre_empleado : 'S/I'"></div>
                 </div>
             </div>
@@ -178,7 +178,7 @@ Detalle del formato</h4>
                     <i class="ti ti-file-text fs-5"></i>
                 </span>
                 <div class="flex-grow-1">
-                    <div class="form-label small mb-0">Formato:</div>
+                    <div class="form-label mb-1">Formato:</div>
                     <div x-text="detalleComentarioFormato && detalleComentarioFormato.formato_nombre ? detalleComentarioFormato.formato_nombre : 'S/I'"></div>
                 </div>
             </div>

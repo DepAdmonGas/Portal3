@@ -1,60 +1,54 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('capacitacion', () => ({
 
-      buscar:{
-
-          year:new Date().getFullYear()
-
-      },
-
-      errors:{
-
-          year:false
-
-      },
-
-      modalBuscar:null,
+      year: new Date().getFullYear(),
 
       init(){
 
-        if (!document.getElementById('sgm-content')) {
-            return;
+        const yearContainer = document.getElementById('container');
+        const initialYear = Number(yearContainer?.dataset.year);
+        const currentYear = new Date().getFullYear();
+
+        if (Number.isInteger(initialYear) && initialYear >= 2020 && initialYear <= currentYear) {
+            this.year = initialYear;
         }
 
-        this.modalBuscar = new bootstrap.Modal(
-            document.getElementById('modalBuscar')
-        );
+        this.actualizarYearBreadcrumb();
+
+        document.addEventListener('click', (event) => {
+            const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+            const opcion = target?.closest('[data-capacitacion-interna-year]');
+            if (!opcion) return;
+
+            event.preventDefault();
+            this.cambiarYear(opcion.dataset.capacitacionInternaYear);
+        });
 
       },
 
-      openBuscar(){
+      cambiarYear(year){
 
-          this.buscar.year = new Date().getFullYear();
-          this.errors.year = false;
-          this.modalBuscar.show();
+          const seleccionado = Number(year);
+          if (!Number.isInteger(seleccionado) || seleccionado < 2020 || seleccionado > new Date().getFullYear()) return;
 
-      },
+          this.year = seleccionado;
+          this.actualizarYearBreadcrumb();
 
-      buscarProgramacion(){
-
-          this.errors.year = false;
-
-          if(!this.buscar.year){
-
-              this.errors.year = true;
-
-              return;
-
+          const selectorTabla = '#table-capacitacion-interna';
+          if (window.jQuery?.fn?.DataTable?.isDataTable(selectorTabla)) {
+              window.jQuery(selectorTabla).DataTable().ajax.url(
+                  `/sgm/gestion-recursos/programa-capacitacion-interna/datatable/${seleccionado}`
+              ).load();
           }
 
-          table1.ajax.url(
-              '/sgm/gestion-recursos/programa-capacitacion-interna/datatable/'
-              + this.buscar.year
-          ).load();
-
-          this.modalBuscar.hide();
-
       },
+
+      actualizarYearBreadcrumb(){
+
+          const etiqueta = document.getElementById('capacitacion-interna-year-label');
+          if (etiqueta) etiqueta.textContent = this.year;
+
+      }
 
    }));
 });

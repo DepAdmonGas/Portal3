@@ -11,13 +11,13 @@ Visualizaciones Comparativo XML
 </div>
 <div class="card-body">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-<table id="tabla-accesos"  class="table table-striped table-bordered  text-nowrap align-middle">
+<table id="tabla-accesos" class="table table-striped table-bordered text-nowrap align-middle w-100">
 <thead>
 <tr>
-<th class="text-center">#</th>
-<th class="text-start">Nombre del usuario</th>
-<th class="text-center">Puesto</th>
-<th class="text-center">Fecha y hora de visualización</th>
+<th class="text-center align-middle">#</th>
+<th class="text-start align-middle">Nombre del usuario</th>
+<th class="text-center align-middle">Puesto</th>
+<th class="text-center align-middle">Fecha y hora de visualización</th>
 </tr>
 </thead>
 <tbody></tbody>
@@ -40,13 +40,13 @@ Comparativo XML
 <table id="tabla-edits" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
-<th class="text-center">#</th>
-<th class="text-start">Nombre del responsable</th>
-<th class="text-center">Fecha y hora de modificación</th>
-<th class="text-center">Mes</th>
-<th class="text-center">Sección</th>
-<th class="text-center">Descripción</th>
-<th class="text-center">Monto ingresado</th>
+<th class="text-center align-middle">#</th>
+<th class="text-start align-middle">Nombre del responsable</th>
+<th class="text-center align-middle">Fecha y hora de modificación</th>
+<th class="text-center align-middle">Mes</th>
+<th class="text-center align-middle">Sección</th>
+<th class="text-center align-middle">Descripción</th>
+<th class="text-center align-middle">Monto ingresado</th>
 </tr>
 </thead>
 <tbody></tbody>
@@ -69,13 +69,13 @@ Comparativo SAT / Despachos
 <table id="tabla-sat-edits" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
-<th class="text-center">#</th>
-<th class="text-start">Nombre del responsable</th>
-<th class="text-center">Fecha y hora de modificación</th>
-<th class="text-center">Mes</th>
-<th class="text-center">Categoría</th>
-<th class="text-center">SAT / Despachos</th>
-<th class="text-center">Monto ingresado</th>
+<th class="text-center align-middle">#</th>
+<th class="text-start align-middle">Nombre del responsable</th>
+<th class="text-center align-middle">Fecha y hora de modificación</th>
+<th class="text-center align-middle">Mes</th>
+<th class="text-center align-middle">Categoría</th>
+<th class="text-center align-middle">SAT / Despachos</th>
+<th class="text-center align-middle">Monto ingresado</th>
 </tr>
 </thead>
 <tbody></tbody>

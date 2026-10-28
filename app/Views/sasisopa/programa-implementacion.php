@@ -15,7 +15,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
     <div id="sasisopa-content">
 
 <?php if ($estacion?->nombre == 'Ventura Puente'): ?>
-<table class="table table-bordered table-striped  mb-0 pb-0">
+<table class="table table-bordered table-striped mb-0 pb-0" data-portal-table-selection="false">
    <tr>
     <td class="fw-semibold align-middle text-center"">Programa de implementación del Sistema de Administración</td>
     <td class="align-middle text-center" colspan="3""><b>Fecha:</b> 07-Agosto-19</td>
@@ -25,6 +25,8 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
      <td class="align-middle text-center""><b>Revisado por:</b> Eduardo Galicia Flores</td>
      <td class="align-middle text-center""><b>Aprobado por:</b> Jose Luis Quinzaños Suarez</td>
    </tr>
+   </table>
+<table class="table table-bordered table-striped mb-0 pb-0">
    <tr>
      <td class="align-middle text-start fw-semibold"">Actividad</td>
      <td class="align-middle text-center fw-semibold"">Fecha de Inicio</td>
@@ -115,7 +117,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 <?php endif; ?>
 
 <?php if ($estacion?->nombre == 'Xochimilco'): ?>
-<table class="table table-bordered table-striped mb-0 pb-0">
+<table class="table table-bordered table-striped mb-0 pb-0" data-portal-table-selection="false">
    <tr>
     <td class="fw-semibold align-middle text-center">Programa de implementación del Sistema de Administración</td>
     <td class="align-middle text-center" colspan="3"><b>Fecha:</b> 04-Diciembre-18</td>
@@ -125,6 +127,8 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
      <td class="align-middle text-center"><b>Revisado por:</b> Eduardo Galicia Flores</td>
      <td class="align-middle text-center"><b>Aprobado por:</b> Tomas Tarno Quinzaños</td>
    </tr>
+   </table>
+<table class="table table-bordered table-striped mb-0 pb-0">
    <tr>
      <td class="align-middle text-start fw-semibold">Actividad</td>
      <td class="align-middle text-center fw-semibold">Fecha de Inicio</td>
@@ -220,7 +224,7 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 || $estacion?->nombre == "Gasomira" 
 || $estacion?->nombre == "Valle de Guadalupe" 
 || $estacion?->nombre == "Esmegas"):?>
-<table class="table table-bordered table-striped mb-0 pb-0">
+<table class="table table-bordered table-striped mb-0 pb-0" data-portal-table-selection="false">
     <tr>
      <td class="fw-semibold align-middle text-center" >Programa de implementación del Sistema de Administración</td> 
      <td class="align-middle text-center" colspan="3" ><b>Fecha:</b> 04-Diciembre-18</td>
@@ -230,6 +234,8 @@ data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
       <td class="align-middle text-center" ><b>Revisado por:</b> Eduardo Galicia Flores</td>
       <td class="align-middle text-center" ><b>Aprobado por:</b> Tomas Tarno Quinzaños</td>
     </tr>
+    </table>
+<table class="table table-bordered table-striped mb-0 pb-0">
     <tr>
       <td class="align-middle text-start fw-semibold" >Actividad</td>
       <td class="align-middle text-center fw-semibold" >Fecha de Inicio</td>

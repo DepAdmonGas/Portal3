@@ -62,6 +62,7 @@ window.open(`/download?tipo=${tipo}&file=${encodeURIComponent(archivo)}`, '_blan
 detalle: {},
 documentos: [],
 documentosModal: [],
+selectedRows: { detalleDocumentos: null, documentosModal: null },
 documentoForm: { nombre: 'VALE' },
 subiendoDocumento: false,
 
@@ -88,6 +89,10 @@ if (!fecha) return '';
 var d = new Date(fecha);
 var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 return d.getDate() + ' de ' + meses[d.getMonth()] + ' del ' + d.getFullYear();
+},
+
+seleccionarFilaDocumentos(tabla, id) {
+this.selectedRows[tabla] = this.selectedRows[tabla] === id ? null : id;
 },
 
 scrollChatToBottom() {
@@ -125,6 +130,7 @@ bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasComent
 
 async abrirDetalle(id) {
 this.comentarioIdActual = id;
+this.selectedRows.detalleDocumentos = null;
 try {
 const res = await axios.get('/departamento-operativo/corporativo/solicitud-vales/get-documentos', { params: { id } });
 if (res.data.success) {
@@ -156,6 +162,7 @@ new bootstrap.Modal(document.getElementById('modalDetalle')).show();
 
 async abrirDocumentacion(id) {
 this.comentarioIdActual = id;
+this.selectedRows.documentosModal = null;
 try {
 const res = await axios.get('/departamento-operativo/corporativo/solicitud-vales/get-documentos', { params: { id } });
 if (res.data.success) {

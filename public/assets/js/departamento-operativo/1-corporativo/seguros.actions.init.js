@@ -5,6 +5,7 @@ var contentEl = document.getElementById('seguros-content');
 
 var table = null;
 var permisos = {};
+var selectedSeguroId = null;
 
 function showEmptyMessage() {
 if (contentEl) contentEl.style.display = 'none';
@@ -57,17 +58,17 @@ return json.data || [];
 }
 },
 columns: [
-{ title:'#', data: 'num', className: 'text-center fw-bold', width: '40px' },
-{ title:'Estación / departamento', data: 'localidad_nombre', className: 'text-center', visible: esModoGlobal() },
-{ title:'Fecha', data: 'fecha', className: 'text-center' },
-{ title:'Hora', data: 'hora', className: 'text-center' },
-{ title:'Asunto', data: 'asunto', className: 'text-center' },
-{ title:'Observaciones', data: 'observaciones', className: 'text-start' },
-{ title:'Solución', data: 'solucion', className: 'text-start' },
+{ title:'#', data: 'num', className: 'text-center fw-bold align-middle', width: '40px' },
+{ title:'Estación / departamento', data: 'localidad_nombre', className: 'text-center align-middle', visible: esModoGlobal() },
+{ title:'Fecha', data: 'fecha', className: 'text-center align-middle' },
+{ title:'Hora', data: 'hora', className: 'text-center align-middle' },
+{ title:'Asunto', data: 'asunto', className: 'text-center align-middle' },
+{ title:'Observaciones', data: 'observaciones', className: 'text-start align-middle' },
+{ title:'Solución', data: 'solucion', className: 'text-start align-middle' },
 {
 title: '<a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>',
 data: null,
-className: 'text-center',
+className: 'text-center align-middle',
 width: '50px',
 orderable: false,
 searchable: false,
@@ -101,9 +102,20 @@ return html;
 columnDefs: [
 { targets: '_all', render: function (d) { return d || ''; } }
 ],
+rowCallback: function (row, rowData) {
+$(row).addClass('pointer').toggleClass('selected', selectedSeguroId === rowData.id);
+},
 drawCallback: function () {
 if (window.Alpine) Alpine.initTree(document.querySelector('#tabla-seguros'));
 }
+});
+
+$('#tabla-seguros tbody').off('click.rowSelection').on('click.rowSelection', 'tr', function () {
+var rowData = dt.row(this).data();
+if (!rowData) return;
+selectedSeguroId = rowData.id;
+$('#tabla-seguros tbody tr').removeClass('selected');
+$(this).addClass('selected');
 });
 
 dt.on('xhr', function (e, settings, json) {
@@ -142,6 +154,7 @@ selSeguros.addEventListener('change', sgActualizarToolOpciones);
 
 ModuleStationSelector.init('seguros', {
 customReload: function (ms) {
+selectedSeguroId = null;
 var v = ms.getValue();
 if (v.id_estacion === null && v.id_depto === null && !esModoGlobal()) {
 ms.hideBadge();
@@ -181,7 +194,12 @@ vencimiento: '',
 polizaModo: 'agregar',
 polizaEditId: 0,
 polizas: [],
+selectedPolizaId: null,
 permisos: window.__segurosPermisos || {},
+
+seleccionarPoliza: function (id) {
+this.selectedPolizaId = id;
+},
 
 abrirDetalle: function (id) {
 var self = this;
@@ -312,6 +330,7 @@ reloadTable();
 abrirModalPoliza: function () {
 this.polizaModo = 'agregar';
 this.polizaEditId = 0;
+this.selectedPolizaId = null;
 this.polizaForm = { emision: '', vencimiento: '' };
 this.cargarPolizas();
 var fileInput = this.$refs.polizaFileInput;

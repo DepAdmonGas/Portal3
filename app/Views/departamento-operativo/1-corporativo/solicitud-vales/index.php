@@ -21,7 +21,7 @@ x-data="solicitudValesComponent()">
 </div>
 
 <div class="table-responsive pb-5" style="overflow-y: hidden; overflow-x: auto;">
-<table id="tabla-solicitud-vales" class="table table-striped table-bordered w-100"></table>
+<table id="tabla-solicitud-vales" class="table table-striped table-bordered w-100 solicitud-vales-seleccionable portal-table portal-table--selectable"></table>
 </div>
 
 <!-- Modal Detalle -->
@@ -103,7 +103,7 @@ Detalle de Solicitud</h5>
 <h6 class="form-label mb-2">Documentación:</h6>
    
     <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered mt-2 mb-0">
+<table class="table table-striped table-bordered mt-2 mb-0 solicitud-vales-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center">Descripción</th>
@@ -112,7 +112,7 @@ Detalle de Solicitud</h5>
 </thead>
 <tbody>
 <template x-for="doc in documentos" :key="doc.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows.detalleDocumentos === doc.id }" @click="seleccionarFilaDocumentos('detalleDocumentos', doc.id)">
 <td class="text-center fw-normal" x-text="doc.nombre"></td>
 <td class="text-center">
 <a href="" @click.prevent="downloadFile(doc.documento)">
@@ -394,7 +394,7 @@ Documentación</h5>
 
 <div class="col-12">
 <div class="table-responsive">
-<table class="table table-striped table-bordered mb-0">
+<table class="table table-striped table-bordered mb-0 solicitud-vales-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
 <th class="text-center">Nombre</th>
@@ -404,7 +404,7 @@ Documentación</h5>
 </thead>
 <tbody>
 <template x-for="doc in documentosModal" :key="doc.id">
-<tr>
+<tr class="pointer" :class="{ selected: selectedRows.documentosModal === doc.id }" @click="seleccionarFilaDocumentos('documentosModal', doc.id)">
 <th class="text-center fw-normal" x-text="doc.nombre"></th>
 <td class="text-center"><a href="" @click.prevent="downloadFile(doc.documento)"><i class="ti ti-download text-primary fs-5"></i></a></td>
 <td class="text-center"><a href="" @click.prevent="eliminarDocumento(doc.id)"><i class="ti ti-trash text-danger fs-5"></i></a></td>

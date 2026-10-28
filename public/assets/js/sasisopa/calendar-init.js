@@ -6,6 +6,8 @@ document.addEventListener('alpine:init', () => {
 
         modalDetalle: null,
         modalDia: null,
+        mostrarRegresarDetalle: false,
+        volverAlDiaAlOcultarDetalle: false,
 
         detalle: {},
 
@@ -98,6 +100,17 @@ document.addEventListener('alpine:init', () => {
                         'modalDia'
                     )
                 );
+
+            document.getElementById('modalDetalle')
+                .addEventListener('hidden.bs.modal', () => {
+                    const regresarAlDia = this.volverAlDiaAlOcultarDetalle;
+                    this.volverAlDiaAlOcultarDetalle = false;
+                    this.mostrarRegresarDetalle = false;
+
+                    if (regresarAlDia) {
+                        this.modalDia.show();
+                    }
+                });
 
                 this.modalActividad = new bootstrap.Modal(
                     document.getElementById('modalActividad')
@@ -476,7 +489,9 @@ document.addEventListener('alpine:init', () => {
 
 
 
-        abrirDetalle(item){
+        abrirDetalle(item, desdeModalDia = false){
+
+            this.mostrarRegresarDetalle = desdeModalDia;
 
 
             axios.get(
@@ -500,12 +515,34 @@ document.addEventListener('alpine:init', () => {
                 this.detalle =
                     response.data;
 
+                const modalDiaElement = document.getElementById('modalDia');
 
-                this.modalDetalle.show();
+                if (desdeModalDia && modalDiaElement.classList.contains('show')) {
+                    modalDiaElement.addEventListener(
+                        'hidden.bs.modal',
+                        () => this.modalDetalle.show(),
+                        { once: true }
+                    );
+                    this.modalDia.hide();
+                } else {
+                    this.modalDetalle.show();
+                }
 
 
             });
 
+
+        },
+
+
+        regresarADia(){
+
+            if (!this.mostrarRegresarDetalle) {
+                return;
+            }
+
+            this.volverAlDiaAlOcultarDetalle = true;
+            this.modalDetalle.hide();
 
         },
 

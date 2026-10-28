@@ -11,35 +11,33 @@
     x-init="initForm()">
 
     <?php if ($detail['status'] == 0 && $puedeEditar): ?>
-        <div class="row mb-3">
-            <div class="col-12 mb-3">
-                <div class="dropdown float-end">
-                    <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="ti ti-dots-vertical fs-4"></i>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item pointer" @click="abrirModalAgregarPersonal()"><i class="ti ti-plus me-1"></i> Nuevo Personal</a></li>
-                        <li><a class="dropdown-item pointer" @click="abrirModalEditarQuincena()"><i class="ti ti-calendar me-1"></i> Editar Quincena</a></li>
-                    </ul>
-                </div>
-<div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
-                     <button type="button" class="btn btn-success float-end me-2" @click="finalizarFormato()" :disabled="guardando">
-                    <i class="ti ti-check me-1"></i> <span x-text="guardando ? 'Guardando...' : 'Finalizar'"></span>
-                </button> 
-                    </div>
-                  </div>
+<div class="row mb-3 align-items-center">
+    <!-- Columna del botón Finalizar: 100% de ancho en móviles (col-12) y ancho automático en PC (col-md-auto) -->
+    <div class="col-12 col-md-auto mb-2 mb-md-0">
+        <button type="button" class="btn btn-success w-100" @click="finalizarFormato()" :disabled="guardando">
+            <i class="ti ti-check me-1"></i> <span x-text="guardando ? 'Guardando...' : 'Finalizar'"></span>
+        </button>
+    </div>
 
-                
-
-            </div>
+    <!-- Columna del Dropdown: Se alinea a la derecha en PC con ms-auto -->
+    <div class="col-12 col-md-auto ms-md-auto text-end">
+        <div class="dropdown">
+            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="ti ti-dots-vertical fs-4"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item pointer" @click="abrirModalAgregarPersonal()"><i class="ti ti-plus me-1"></i> Nuevo Personal</a></li>
+                <li><a class="dropdown-item pointer" @click="abrirModalEditarQuincena()"><i class="ti ti-calendar me-1"></i> Editar Quincena</a></li>
+            </ul>
         </div>
+    </div>
+</div>
     <?php endif; ?>
 
 
     <div class="row">
 
-        <div class="col-8">
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-body pb-1">
 
@@ -66,7 +64,7 @@
                     <div class="row mb-3">
                         <div class="col-12">
                             <div class="table-responsive">
-                                <table class="table table-striped table-bordered mb-0 align-middle" width="100%">
+                                <table id="tabla-dia-doble-form" class="table table-striped table-bordered mb-0 align-middle portal-table portal-table--selectable" width="100%">
                                     <thead>
                                         <tr>
                                             <th class="text-center align-middle" width="50">#</th>
@@ -125,36 +123,30 @@
 
         <?php if ($detail['status'] == 0 && $puedeEditar): ?>
             <div class="col-md-4 d-flex">
-                <div class="card w-100">
-                    <div class="card-header text-bg-primary">
-                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                            <h5 class="mb-0 text-white">
+                <div class="card border-0 bg-white w-100 d-flex flex-column">
+                    <div class="card-header text-bg-primary py-3 border-0 flex-shrink-0">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:45px;height:45px;">
                                 <i class="ti ti-signature fs-6"></i>
-                                FIRMA DE QUIEN ELABORA
-                            </h5>
-                            <button type="button" class="btn btn-danger btn-sm" id="btn-limpiar-firma-form">
-                                <i class="ti ti-eraser me-1"></i>
-                                Limpiar firma
-                            </button>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="mb-0 text-white">FIRMA DE QUIEN ELABORA</h5>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="card-body p-0 d-flex">
-                        <div id="firma-pad-wrap-form" class="signature-pad border-0 w-100 d-flex">
-                            <div class="signature-pad--body w-100 d-flex">
-                                <canvas id="firma-canvas-form"
-                                    style="
-width: 100%;
-height: 100%;
-min-height: 200px;
-display: block;
-cursor: crosshair;
-touch-action: none;">
-                                </canvas>
+                    <div class="card-body p-3 flex-fill d-flex flex-column">
+                        <div id="firma-pad-wrap-form" class="signature-pad-wrapper flex-fill d-flex" style="border:2px dashed #adb5bd;border-radius:6px;cursor:crosshair;">
+                            <div class="signature-pad--body w-100 h-100 d-flex">
+                                <canvas id="firma-canvas-form" style="width:100%;height:100%;min-height:0;display:block;touch-action:none;"></canvas>
                             </div>
-                            <input type="hidden" name="firma_elaboro" id="firma_elaboro" value="">
                         </div>
+                        <input type="hidden" name="firma_elaboro" id="firma_elaboro" value="">
                     </div>
+
+                    <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0 flex-shrink-0" style="border-bottom-left-radius:6px;border-bottom-right-radius:6px;" id="btn-limpiar-firma-form">
+                        <i class="ti ti-eraser me-1"></i> Limpiar firma
+                    </button>
                 </div>
             </div>
         <?php endif; ?>
@@ -172,9 +164,11 @@ touch-action: none;">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">* Nombre del personal:</label>
-                        <select class="form-select" id="personalSelect">
-                            <option value="">Selecciona una opcion...</option>
-                        </select>
+                        <div class="select2-modal-field">
+                            <select class="form-select" id="personalSelect" style="width:100%;">
+                                <option value="">Selecciona una opcion...</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">* Día doble:</label>
@@ -218,12 +212,14 @@ touch-action: none;">
                 <div class="modal-body">
                     <div class="">
                         <label class="form-label">* No. de quincena:</label>
-                        <select class="form-select" id="quincenaEditSelect">
-                            <option value="">Selecciona una opcion...</option>
-                            <?php foreach ($quincenas as $q): ?>
-                                <option value="<?= $q['numero'] ?>" <?= $q['numero'] == $detail['quincena'] ? 'selected' : '' ?>><?= $q['label'] ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="select2-modal-field">
+                            <select class="form-select" id="quincenaEditSelect" style="width:100%;">
+                                <option value="">Selecciona una opcion...</option>
+                                <?php foreach ($quincenas as $q): ?>
+                                    <option value="<?= $q['numero'] ?>" <?= $q['numero'] == $detail['quincena'] ? 'selected' : '' ?>><?= $q['label'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

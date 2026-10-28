@@ -1745,6 +1745,7 @@ $r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/general/{id:\d+}',
 
         // Elemento 14
         $r->addRoute('GET', '/monitoreo-verificacion-evaluacion', Route::auth(['MonitoreoVerificacionEvaluacionController', 'index']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/{year:\\d+}', Route::auth(['MonitoreoVerificacionEvaluacionController', 'index']));
         $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/buscar-indicadores', Route::auth(['MonitoreoVerificacionEvaluacionController', 'buscarIndicadores']));
         $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/descargar-revision-resultados-detalle/{id:\d+}', Route::auth(['MonitoreoVerificacionEvaluacionController', 'revisionResultadoPdf']));
 
@@ -1755,6 +1756,7 @@ $r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/general/{id:\d+}',
         $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/implementacion-sa/get/{id:\d+}', Route::auth(['ImplementacionSAController', 'get']));
 
         $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/ventas-mes', Route::auth(['MonitoreoVerificacionEvaluacionController', 'indexVentasMes']));
+        $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/ventas-mes/{year:\\d+}', Route::auth(['MonitoreoVerificacionEvaluacionController', 'indexVentasMes']));
         $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/ventas-mes/get', Route::auth(['MonitoreoVerificacionEvaluacionController', 'getVentasMes']));
 
         $r->addRoute('GET', '/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos', Route::auth(['CalibracionVerificacionMantenimientoController', 'index']));
@@ -1834,6 +1836,7 @@ $r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/general/{id:\d+}',
 
         // Elemento 17
         $r->addRoute('GET', '/revision-resultados', Route::auth(['RevisionResultadosController', 'index']));
+        $r->addRoute('GET', '/revision-resultados/{year:\\d+}', Route::auth(['RevisionResultadosController', 'index']));
         $r->addRoute('GET', '/revision-resultados/datatable', Route::auth(['RevisionResultadosController', 'datatable']));
         $r->addRoute('POST', '/revision-resultados/create', Route::auth(['RevisionResultadosController', 'create']));
         $r->addRoute('POST', '/revision-resultados/update', Route::auth(['RevisionResultadosController', 'update']));

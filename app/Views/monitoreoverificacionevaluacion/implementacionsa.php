@@ -12,7 +12,7 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
 <?php else: ?>
 
-<div class="text-end">
+<div class="text-end mb-3">
       <?= 
         !empty($permisos['crear']) ? 
         '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalNuevo()">

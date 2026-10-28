@@ -229,7 +229,7 @@
                             <th class="align-middle text-center">¿Cumple con la repetibilidad?</th>
                             <th class="align-middle text-center">Folio del holograma</th>
                             <th class="align-middle text-center">Distintivo empresarial</th>
-                            <th class="text-center p-2"><i class="ti ti-trash fs-6 text-muted"></i></th>
+                            <th class="text-center width="48px"><i class="ti ti-trash fs-6 text-muted"></i></th>
                         </tr>
                     </thead>
 
@@ -241,19 +241,19 @@
 
                             <tr>
 
-                                <td class="align-middle text-center p-2"
+                                <td class="align-middle text-center"
                                     x-text="item.dispensario.no_dispensario">
                                 </td>
 
-                                <td class="align-middle text-center p-2"
+                                <td class="align-middle text-center"
                                     x-text="item.dispensario.marca">
                                 </td>
 
-                                <td class="align-middle text-center p-2"
+                                <td class="align-middle text-center"
                                     x-text="item.dispensario.modelo">
                                 </td>
 
-                                <td class="align-middle text-center p-2"
+                                <td class="align-middle text-center"
                                     x-text="item.dispensario.serie">
                                 </td>
 
@@ -289,7 +289,7 @@
                                         @blur="editarDispensario(item, 10, 'resultado4')">
                                 </td>
 
-                                <td class="text-center align-middle p-2">
+                                <td class="text-center align-middle">
                                     <a class="pointer" @click="eliminarDispensario(item.id)"><i class="ti ti-trash fs-6 text-danger"></i></a>
                                 </td>
 

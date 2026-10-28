@@ -14,6 +14,8 @@ function diaDobleForm() {
 
         initForm() {
             var self = this;
+            self.inicializarSelect2('#quincenaEditSelect', '#modalEditarQuincena');
+            self.inicializarSeleccionTabla();
             if (self.status === 0 && self.puedeEditar && typeof SignaturePad !== 'undefined') {
                 setTimeout(function () {
                     var cv = document.getElementById('firma-canvas-form');
@@ -36,11 +38,54 @@ function diaDobleForm() {
 
         },
 
+        inicializarSeleccionTabla() {
+            var table = document.getElementById('tabla-dia-doble-form');
+            if (!table || table.dataset.rowSelectionBound === 'true') return;
+
+            table.dataset.rowSelectionBound = 'true';
+            table.addEventListener('click', function (event) {
+                if (event.target.closest('a, button, input, select, .dropdown-menu')) return;
+                var row = event.target.closest('tbody tr');
+                if (!row || !table.contains(row)) return;
+
+                table.querySelectorAll('tbody tr.selected').forEach(function (selected) {
+                    selected.classList.remove('selected');
+                });
+                row.classList.add('selected', 'pointer');
+            });
+        },
+
+        inicializarSelect2(selector, parentSelector) {
+            if (!window.jQuery || !jQuery.fn.select2) return;
+
+            var $select = $(selector);
+            if (!$select.length) return;
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            $select.select2({
+                width: '100%',
+                minimumResultsForSearch: 0,
+                language: 'es',
+                dropdownParent: $(parentSelector)
+            });
+        },
+
+        destruirSelect2(selector) {
+            if (!window.jQuery || !jQuery.fn.select2) return;
+            var $select = $(selector);
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+        },
+
         abrirModalAgregarPersonal() {
             var self = this;
             var select = document.getElementById('personalSelect');
             var fechaInput = document.getElementById('fechaDiaDoble');
             if (select) {
+                self.destruirSelect2('#personalSelect');
                 select.innerHTML = '<option value="">Cargando...</option>';
                 select.disabled = true;
             }
@@ -56,11 +101,13 @@ function diaDobleForm() {
                         });
                         select.innerHTML = options;
                         select.disabled = false;
+                        self.inicializarSelect2('#personalSelect', '#modalAgregarPersonal');
                     }
                 })
                 .catch(function () {
                     select.innerHTML = '<option value="">Error al cargar</option>';
                     select.disabled = false;
+                    self.inicializarSelect2('#personalSelect', '#modalAgregarPersonal');
                 });
 
             var modal = new bootstrap.Modal(document.getElementById('modalAgregarPersonal'));
@@ -106,8 +153,13 @@ function diaDobleForm() {
         },
 
         abrirModalEditarQuincena() {
-            var select = document.getElementById('quincenaEditSelect');
-            if (select) select.selectedIndex = 0;
+            var $select = window.jQuery ? $('#quincenaEditSelect') : null;
+            if ($select && $select.length) {
+                $select.val('').trigger('change');
+            } else {
+                var select = document.getElementById('quincenaEditSelect');
+                if (select) select.selectedIndex = 0;
+            }
             var modal = new bootstrap.Modal(document.getElementById('modalEditarQuincena'));
             modal.show();
         },

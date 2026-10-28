@@ -1,4 +1,5 @@
 <div id="container" class="mt-4 mb-5"
+data-portal-table-selection="false"
 x-data="{ ...actions(), ...pivoteoEditarComponent() }"
 data-detalle='<?= htmlspecialchars(json_encode($detalle, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>'>
 

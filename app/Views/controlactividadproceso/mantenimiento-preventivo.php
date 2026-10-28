@@ -12,7 +12,7 @@
 
     <?php else: ?>
 
-        <div class="text-end">
+        <div class="text-end mb-3">
             <div class="btn-group">
                 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="ti ti-dots-vertical fs-4"></i>
@@ -142,9 +142,7 @@
 
                         <select
                             class="form-select mb-2"
-                            x-model="filtro.year"
-                            :class="errors.year ? 'is-invalid' : ''"
-                            @input="errors.year = false">
+                            x-model="filtro.year">
 
                             <option value="">
                                 Todos
@@ -344,26 +342,25 @@
                                 x-for="item in detalle.evidencias"
                                 :key="item.id">
 
-                                <div class="col-md-3 mb-3">
-
-                                    <div class="card shadow-sm overflow-hidden h-100">
-
-                                        <a
-                                            :href="item.url"
-                                            target="_blank"
-                                            class="d-block">
-
-                                            <img
-                                                :src="item.url"
-                                                class="w-100"
-                                                style="
-                                            height:240px;
-                                            object-fit:cover;">
-
+                                <div class="col-12 col-md-4 mb-3">
+                                    <div class="card h-100 shadow-sm border bg-light position-relative overflow-hidden">
+                                        <div class="position-absolute top-0 end-0 p-2" style="z-index:2;">
+                                            <span class="badge bg-white text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2" style="width:32px;height:32px;">
+                                                <i class="ti ti-photo text-primary fs-6"></i>
+                                            </span>
+                                        </div>
+                                        <a :href="item.url" target="_blank" class="d-block overflow-hidden" style="height:140px;">
+                                            <img :src="item.url" class="w-100 h-100" style="object-fit:cover;" :alt="item.nombre || 'Evidencia de mantenimiento'">
                                         </a>
-
+                                        <div class="card-body border-top pb-2 bg-white">
+                                            <p class="small fw-bold text-truncate mb-0" :title="item.nombre" x-text="item.nombre"></p>
+                                        </div>
+                                        <div class="card-footer bg-white">
+                                            <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="item.url" :download="item.nombre" title="Descargar evidencia">
+                                                <i class="ti ti-download"></i><span>Descargar</span>
+                                            </a>
+                                        </div>
                                     </div>
-
                                 </div>
 
                             </template>
@@ -404,7 +401,7 @@
             data-bs-backdrop="static"
             data-bs-keyboard="false">
 
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 
                 <div class="modal-content">
 
@@ -422,20 +419,20 @@
 
                     </div>
 
-                    <div class="modal-body pb-0">
-
-                        <div class="">
-
-                            <label class="form-label">
-                                Imágenes:
-                            </label>
-
-                            <input
-                                type="file"
-                                class="form-control"
-                                accept="image/*"
-                                multiple
-                                @change="handleFiles($event)">
+                    <div class="modal-body">
+                        <div class="col-12">
+                            <label class="form-label mb-1">Imágenes:</label>
+                            <div class="input-group">
+                                <input
+                                    type="file"
+                                    class="form-control"
+                                    accept="image/*"
+                                    multiple
+                                    @change="handleFiles($event)">
+                                <button type="button" class="btn btn-success" @click="guardarEvidencias()">
+                                    <i class="ti ti-check me-1"></i> Guardar
+                                </button>
+                            </div>
                         </div>
 
                         <!-- PREVIEW -->
@@ -447,38 +444,24 @@
                                 x-for="(img,index) in previewImages"
                                 :key="index">
 
-                                <div class="col-md-3 mb-3">
-
-                                    <div class="card border border-warning position-relative overflow-hidden">
-
-                                        <!-- BADGE -->
-                                        <span
-                                            class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">
-                                            Nueva
-                                        </span>
-
-                                        <img
-                                            :src="img"
-                                            class="w-100"
-                                            style="
-                            height:220px;
-                            object-fit:cover;
-                        ">
-
-                                        <div class="card-body p-2">
-
-                                            <button
-                                                class="btn btn-danger btn-sm w-100"
-                                                @click="removePreview(index)">
-
-                                                <i class="ti ti-trash"></i>
-                                                Eliminar
-                                            </button>
-
+                                <div class="col-12 col-md-6 mt-4">
+                                    <div class="card h-100 shadow-sm border bg-light position-relative overflow-hidden">
+                                        <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2" style="z-index:2;">Nueva</span>
+                                        <div class="position-absolute top-0 end-0 p-2" style="z-index:2;">
+                                            <span class="badge bg-white text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2" style="width:32px;height:32px;">
+                                                <i class="ti ti-photo text-primary fs-6"></i>
+                                            </span>
                                         </div>
-
+                                        <img :src="img" class="w-100" style="height:140px;object-fit:cover;" alt="Vista previa de evidencia">
+                                        <div class="card-body border-top pb-2 bg-white">
+                                            <p class="small fw-bold text-truncate mb-0" :title="files[index]?.name" x-text="files[index]?.name || 'Imagen nueva'"></p>
+                                        </div>
+                                        <div class="card-footer bg-white">
+                                            <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1" @click="removePreview(index)">
+                                                <i class="ti ti-trash"></i><span>Eliminar</span>
+                                            </button>
+                                        </div>
                                     </div>
-
                                 </div>
 
                             </template>
@@ -486,50 +469,36 @@
                         </div>
 
                         <!-- EVIDENCIAS -->
-                        <div class="row mt-4">
+                        <div class="row">
 
                             <template
                                 x-for="(item,index) in evidencias"
                                 :key="item.id">
 
-                                <div class="col-md-3 mb-3">
-
-                                    <div class="card shadow-sm position-relative overflow-hidden">
-
-                                        <!-- BADGE -->
-                                        <span
-                                            class="badge bg-success position-absolute top-0 end-0 m-2">
-                                            Guardada
-                                        </span>
-
-                                        <a
-                                            :href="item.url"
-                                            target="_blank"
-                                            class="d-block w-100">
-
-                                            <img
-                                                :src="item.url"
-                                                class="w-100"
-                                                style="
-                                height:220px;
-                                object-fit:cover;
-                            ">
-                                        </a>
-
-                                        <div class="card-body p-2">
-
-                                            <button
-                                                class="btn btn-danger btn-sm w-100"
-                                                @click="eliminarEvidencia(item.id,index)">
-
-                                                <i class="ti ti-trash"></i>
-                                                Eliminar
-                                            </button>
-
+                                <div class="col-12 col-md-6 mt-4">
+                                    <div class="card h-100 shadow-sm border bg-light position-relative overflow-hidden">
+                                        <div class="position-absolute top-0 end-0 p-2" style="z-index:2;">
+                                            <span class="badge bg-white text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2" style="width:32px;height:32px;">
+                                                <i class="ti ti-photo text-primary fs-6"></i>
+                                            </span>
                                         </div>
-
+                                        <a :href="item.url" target="_blank" class="d-block overflow-hidden" style="height:140px;">
+                                            <img :src="item.url" class="w-100 h-100" style="object-fit:cover;" :alt="item.nombre || 'Evidencia guardada'">
+                                        </a>
+                                        <div class="card-body border-top pb-2 bg-white">
+                                            <p class="small fw-bold text-truncate mb-0" :title="item.nombre" x-text="item.nombre"></p>
+                                        </div>
+                                        <div class="card-footer bg-white">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="item.url" :download="item.nombre" title="Descargar">
+                                                    <i class="ti ti-download"></i><span>Descargar</span>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1" @click="eliminarEvidencia(item.id,index)" title="Eliminar">
+                                                    <i class="ti ti-trash"></i><span>Eliminar</span>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-
                                 </div>
 
                             </template>
@@ -539,29 +508,13 @@
                     </div>
 
                     <div class="modal-footer">
-<div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
-                      
-                        <button
-                            class="btn bg-danger-subtle text-danger"
-                            data-bs-dismiss="modal">
-
-                            <i class="ti ti-x"></i> Cerrar
-                        </button>
-                    </div>
-                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
-                      <button
-                            class="btn btn-success"
-                            @click="guardarEvidencias()">
-
-                            <i class="ti ti-check"></i> Guardar
-                        </button>
-                    </div>
-                  </div>
-
-
-                        
-
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                            <div class="col-12 col-md-auto d-grid">
+                                <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+                                    <i class="ti ti-x"></i> Cerrar
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

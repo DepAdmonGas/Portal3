@@ -14,20 +14,6 @@
 
 <div x-data="capacitacionPersonal">
 
-<!-- SELECT AÑO -->
-
-<div class="row mt-3 mb-3">
-<div class="col-md-9 col-xl-9"> <h4 x-text="resumen.year"></h4> </div>
-<div class="col-md-3 col-xl-3">
-<select class="form-select" x-model="year" @change="getResumen()">
-<template x-for="y in [2026,2025,2024,2023,2022,2021,2020]" :key="y">
-<option :value="y" x-text="y"></option>
-</template>
-</select>
-</div>
-</div>
-
-
 <!-- LOADING -->
 <div x-show="loading" class="text-center">
 <div class="spinner-border" role="status">
@@ -38,7 +24,7 @@
 <!-- CONTENIDO -->
 <div x-show="!loading">
 
-<div class="row">
+<div class="row mt-3">
 
 
 

@@ -18,7 +18,7 @@
     <div class="row">
         <div class="col-xl-5 col-lg-6 col-md-12 mb-3">
             <div class="table-responsive">
-                <table class="table table-striped table-bordered mb-0 align-middle">
+                <table class="table table-striped table-bordered mb-0 align-middle estimulo-fiscal-seleccionable portal-table portal-table--selectable">
                     <thead>
                         <tr>
                             <th colspan="3" class="text-center">
@@ -32,16 +32,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr class="pointer" :class="{ selected: selectedRows.resumen === 'productos' }" @click="seleccionarFila('resumen', 'productos')">
                             <td class="text-center fw-bold" x-text="numberFormat(resumen.g_super)"></td>
                             <td class="text-center fw-bold" x-text="numberFormat(resumen.g_premium)"></td>
                             <td class="text-center fw-bold" x-text="numberFormat(resumen.g_diesel)"></td>
                         </tr>
-                        <tr>
+                        <tr class="pointer" :class="{ selected: selectedRows.resumen === 'litros' }" @click="seleccionarFila('resumen', 'litros')">
                             <td colspan="2" class="text-end fw-normal">Total de Litros Comprados</td>
                             <td class="text-end fw-bold" x-text="numberFormat(resumen.total_litros)"></td>
                         </tr>
-                        <tr>
+                        <tr class="pointer" :class="{ selected: selectedRows.resumen === 'pagar' }" @click="seleccionarFila('resumen', 'pagar')">
                             <td colspan="2" class="text-end fw-normal">Total a pagar</td>
                             <td class="text-end fw-bold" x-text="'$ ' + formatMoney(resumen.total_pagar)"></td>
                         </tr>
@@ -52,7 +52,7 @@
 
         <div class="col-xl-7 col-lg-6 col-md-12">
             <div class="table-responsive overflow-x-auto overflow-y-hidden">
-                <table class="table table-striped table-bordered mb-0 align-middle">
+                <table class="table table-striped table-bordered mb-0 align-middle estimulo-fiscal-seleccionable portal-table portal-table--selectable">
                     <thead>
                         <tr>
                             <th class="text-center" colspan="3">Periodo</th>
@@ -74,7 +74,7 @@
                     </thead>
                     <tbody>
                         <template x-for="p in pagos" :key="p.id">
-                            <tr>
+                            <tr class="pointer" :class="{ selected: selectedRows.pagos === p.id }" @click="seleccionarFila('pagos', p.id)">
                                 <td class="text-center fw-bold" x-text="p.id"></td>
                                 <td class="text-center" x-text="p.fecha_inicio_formateada"></td>
                                 <td class="text-center" x-text="p.fecha_termino_formateada"></td>

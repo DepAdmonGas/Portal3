@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
         : '';
 
     var permisos = {};
+    var selectedRolId = null;
 
     function cls(enabled) { return enabled ? '' : ' disabled'; }
 
@@ -82,6 +83,10 @@ function renderAcciones(row) {
             }
         ],
         rowCallback: function (row, data) {
+            $(row).addClass('pointer').toggleClass(
+                'selected',
+                selectedRolId !== null && String(data.id) === selectedRolId
+            );
             if (data.status == 0) {
                 $(row).css('background-color', '#fcfcda');
             } else {
@@ -93,6 +98,17 @@ function renderAcciones(row) {
                 new bootstrap.Dropdown(this, { popperConfig: { strategy: 'fixed' } });
             });
         }
+    });
+
+    $('#tabla-rol-comodines tbody').on('click.rowSelection', 'tr', function (event) {
+        if ($(event.target).closest('a, button, input, select, .dropdown-menu').length) return;
+
+        var row = table.row(this).data();
+        if (!row || row.id === undefined || row.id === null) return;
+
+        selectedRolId = String(row.id);
+        $('#tabla-rol-comodines tbody tr').removeClass('selected');
+        $(this).addClass('selected');
     });
 
     $('#tabla-rol-comodines tbody').on('click', '[data-action]', function (e) {
