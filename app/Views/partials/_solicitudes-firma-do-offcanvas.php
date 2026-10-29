@@ -84,7 +84,7 @@
                         <template x-for="item in items" :key="item.tipo + '-' + item.id">
                             <tr>
                                 <td class="text-center align-middle text-nowrap">
-                                    <span x-text="item.tipo"></span>
+                                    <span x-text="item.tipo_label || item.tipo"></span>
                                 </td>
                                 <td class="text-center align-middle text-nowrap" x-text="item.fecha"></td>
                                 <td class="text-wrap" style="min-width: 180px;" x-text="item.concepto"></td>

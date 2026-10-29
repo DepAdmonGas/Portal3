@@ -704,7 +704,7 @@ class AlmacenMantenimientoPreventivoService
         self::notificar(
             $idEstacion,
             '✅',
-            'agregó un nuevo registro de No. de folio: 00' . $folio . ' en el Mantenimiento Preventivo correspondiente al apartado de Almacén',
+            'agregado un nuevo registro',
             $folio
         );
 
@@ -783,7 +783,7 @@ class AlmacenMantenimientoPreventivoService
         self::notificar(
             (int)$registro->id_estacion,
             '✏️',
-            'modificó el registro de No. de folio: 00' . (int)$registro->folio . ' en el Mantenimiento Preventivo correspondiente al apartado de Almacén',
+            'actualizado el registro',
             (int)$registro->folio
         );
 
@@ -827,7 +827,7 @@ class AlmacenMantenimientoPreventivoService
         self::notificar(
             $idEstacion,
             '🗑',
-            'eliminó el registro de No. de folio: 00' . $folio . ' en el Mantenimiento Preventivo correspondiente al apartado de Almacén',
+            'eliminado el registro',
             $folio
         );
 
@@ -870,8 +870,7 @@ class AlmacenMantenimientoPreventivoService
         self::notificar(
             $idEstacion,
             '🔄',
-            'actualizó el estatus del registro con folio No. 00' . $folio . ' del Mantenimiento Preventivo correspondiente al apartado de Almacén.'
-            . PHP_EOL . '🛠 Estado: ' . $transito['from'] . ' ➡ ' . $transito['to'],
+            'actualizado el estatus: ' . $transito['from'] . ' ➡ ' . $transito['to'],
             $folio
         );
 
@@ -1202,8 +1201,11 @@ class AlmacenMantenimientoPreventivoService
             // al conjunto completo. Se filtra explícitamente para conservar la semántica.
             $destinos = array_values(array_unique(array_diff($destinos, [$actor])));
 
-            $mensaje = $icono . ' ' . $autor . ' ' . $texto
-                . PHP_EOL . PHP_EOL . '⛽ Estación: ' . self::nombreEstacion($idEstacion) . '.';
+            $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $mensaje = $icono . ' Se ha ' . $escape($texto) . ' en el apartado de <b>Mantenimiento Preventivo</b>:'
+                . PHP_EOL . PHP_EOL . '🔢 <b>Folio:</b> ' . str_pad((string)$folio, 3, '0', STR_PAD_LEFT)
+                . PHP_EOL . PHP_EOL . '👤 <b>Responsable:</b> ' . $escape($autor)
+                . PHP_EOL . '⛽ <b>Estación:</b> ' . $escape(self::nombreEstacion($idEstacion));
 
             foreach ($destinos as $idUsuario) {
                 $telegram->sendTokenAsync((int)$idUsuario, $mensaje);

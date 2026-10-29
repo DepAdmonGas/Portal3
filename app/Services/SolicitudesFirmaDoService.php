@@ -28,13 +28,13 @@ use Illuminate\Database\Capsule\Manager as Capsule;
  *       Pinturas, Papelería, Limpieza, Aditivo
  *                     usuario 19 => 1, usuario 2 => 4
  *
- * Orden de Mantenimiento se omite: su módulo todavía no está migrado a
- * Portal3 y no debe aparecer como una opción huérfana.
+ * Orden de Mantenimiento utiliza el flujo de firmas nativo de Portal3 y se
+ * agrega sólo para los usuarios a quienes corresponde la etapa.
  */
 class SolicitudesFirmaDoService
 {
     /** Usuarios autorizados (id real de tb_usuarios). */
-    public const USUARIOS = [2, 19];
+    public const USUARIOS = [2, 19, 21];
 
     public const TIPO_GENERAL = 'General';
 
@@ -57,6 +57,7 @@ class SolicitudesFirmaDoService
         'Limpieza' => 'Pedido de Artículos de Limpieza',
         'Aditivo' => 'Pedido de Aditivo',
         'Formatos' => 'Formatos',
+        'OrdenMantenimiento' => 'Orden de Mantenimiento',
     ];
 
     /** Rutas de firma ya existentes en Portal3 (grupo Departamento Operativo). */
@@ -67,6 +68,7 @@ class SolicitudesFirmaDoService
         'Papeleria' => '/departamento-operativo/comercializadora/pedido-papeleria-firma/',
         'Limpieza' => '/departamento-operativo/comercializadora/pedido-articulos-limpieza-firma/',
         'Aditivo' => '/departamento-operativo/comercializadora/pedido-aditivo-firma/',
+        'OrdenMantenimiento' => '/departamento-operativo/almacen/orden-mantenimiento-firma/',
     ];
 
     /** @var array<int, array<int, array<string, mixed>>> */
@@ -144,8 +146,16 @@ class SolicitudesFirmaDoService
 
         $opciones = [
             ['valor' => self::TIPO_GENERAL, 'etiqueta' => 'Todas las solicitudes y pedidos...'],
-            ['valor' => 'Cheque', 'etiqueta' => self::ETIQUETAS['Cheque']],
         ];
+
+        // El usuario 21 sólo participa en el VO.BO. de Orden de Mantenimiento;
+        // no se le muestran solicitudes de otros flujos de firma.
+        if ((int)$idUsuario === 21) {
+            $opciones[] = ['valor' => 'OrdenMantenimiento', 'etiqueta' => self::ETIQUETAS['OrdenMantenimiento']];
+            return $opciones;
+        }
+
+        $opciones[] = ['valor' => 'Cheque', 'etiqueta' => self::ETIQUETAS['Cheque']];
 
         if ((int) $idUsuario === 19) {
             foreach (['Pinturas', 'Papeleria', 'Limpieza', 'Aditivo'] as $tipo) {
@@ -154,6 +164,9 @@ class SolicitudesFirmaDoService
         }
 
         $opciones[] = ['valor' => 'Formatos', 'etiqueta' => self::ETIQUETAS['Formatos']];
+        if ((int)$idUsuario === 19) {
+            $opciones[] = ['valor' => 'OrdenMantenimiento', 'etiqueta' => self::ETIQUETAS['OrdenMantenimiento']];
+        }
 
         return $opciones;
     }
@@ -184,11 +197,14 @@ class SolicitudesFirmaDoService
             return self::$cache[$idUsuario];
         }
 
-        $filas = self::consultar($idUsuario);
-
-        self::$cache[$idUsuario] = array_map(
+        $filas = $idUsuario === 21 ? [] : array_map(
             fn ($fila) => self::normalizar($fila),
-            $filas
+            self::consultar($idUsuario)
+        );
+
+        self::$cache[$idUsuario] = array_merge(
+            $filas,
+            OrdenMantenimientoService::pendingSignatureItems($idUsuario)
         );
 
         return self::$cache[$idUsuario];
@@ -315,6 +331,10 @@ class SolicitudesFirmaDoService
      */
     private static function puedeAbrir(string $tipo, int $id): bool
     {
+        if ($tipo === 'OrdenMantenimiento') {
+            return OrdenMantenimientoService::signingType($id) !== null;
+        }
+
         if (!isset(self::RUTAS_FIRMA[$tipo])) {
             return false;
         }

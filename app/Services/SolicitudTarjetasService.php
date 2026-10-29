@@ -156,10 +156,19 @@ final class SolicitudTarjetasService
             $station = Estacion::find($idEstacion);
             $stationName = htmlspecialchars((string)($station->nombre ?? 'Estación'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $userName = htmlspecialchars((string)(Auth::user()->nombre ?? 'Usuario'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $labels = ['agregar' => 'creó una solicitud', 'editar' => 'editó una solicitud', 'eliminar' => 'eliminó una solicitud', 'estatus' => 'actualizó el estatus', 'finalizar' => 'finalizó la revisión'];
-            $label = $labels[$accion] ?? 'actualizó la solicitud';
-            $safeDetail = trim($detalle) === '' ? '' : "\n📝 Detalle: " . htmlspecialchars($detalle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $message = "🎫 <b>Solicitud de Tarjetas</b>\n👤 Responsable: {$userName}\n📍 Estación: {$stationName}\n🔢 Solicitud: #{$noSolicitud}\n✅ Acción: {$label}{$safeDetail}";
+            $verbo = [
+                'agregar' => 'creado una solicitud',
+                'editar' => 'actualizado una solicitud',
+                'eliminar' => 'eliminado una solicitud',
+                'estatus' => 'actualizado el estatus de la solicitud',
+                'finalizar' => 'finalizado la revisión de la solicitud',
+            ][$accion] ?? 'actualizado la solicitud';
+            $detalle = trim($detalle);
+            $safeDetail = $detalle === '' ? '' : PHP_EOL . '📝 <b>Detalle:</b> ' . htmlspecialchars($detalle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $message = '🎫 Se ha ' . $verbo . ' en el apartado de <b>Solicitud de Tarjetas</b>:' . PHP_EOL . PHP_EOL
+                . '🔢 <b>Folio:</b> #' . $noSolicitud . $safeDetail
+                . PHP_EOL . PHP_EOL . '👤 <b>Responsable:</b> ' . $userName
+                . PHP_EOL . '⛽ <b>Estación:</b> ' . $stationName;
             $telegram = new TelegramService();
             $telegram->sendMessageToMultiple($telegram->getUserIdsByStation($idEstacion, (int)(Auth::id() ?? 0)), $message);
         } catch (\Throwable $error) {

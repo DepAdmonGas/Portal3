@@ -15,6 +15,25 @@ width: 100%;
 
 #tabla-analisis-compra .col-status select {
 width: 100%;
+color-scheme: light;
+}
+
+#tabla-analisis-compra .col-status select option {
+background-color: #fff !important;
+color: #263244 !important;
+-webkit-text-fill-color: #263244 !important;
+}
+
+html[data-bs-theme="light"] #tabla-analisis-compra .col-status select option:checked {
+background-color: #315fc9 !important;
+color: #fff !important;
+-webkit-text-fill-color: #fff !important;
+}
+
+html[data-bs-theme="dark"] #tabla-analisis-compra .col-status select option:checked {
+background-color: #a9c9f5 !important;
+color: #263244 !important;
+-webkit-text-fill-color: #263244 !important;
 }
 </style>
 
@@ -125,7 +144,7 @@ x-on:change="guardarNotac($event, '<?= $r['fecha'] ?>', '<?= $r['no_factura'] ?>
 
 <td class="col-status p-0">
 <?php if ($puedeEditar): ?>
-<select class="form-select border-0 p-3" x-on:change="guardarStatus($event, '<?= $r['fecha'] ?>', '<?= $r['no_factura'] ?>')">
+<select class="form-select border-0 p-3" x-on:change="guardarStatus($event, '<?= htmlspecialchars((string) $r['fecha'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars((string) $r['no_factura'], ENT_QUOTES, 'UTF-8') ?>')">
 <option value="">Selecciona una opción...</option>
 <option value="Pendiente"<?= $r['status'] === 'Pendiente' ? ' selected' : '' ?>>Pendiente</option>
 <option value="Pagada"<?= $r['status'] === 'Pagada' ? ' selected' : '' ?>>Pagada</option>

@@ -61,6 +61,7 @@ class MenuBadgeService
                 'pedido-papeleria' => PedidoPapeleriaService::getPendientesFirmaVoBoCard(),
                 'pedido-articulos-limpieza' => PedidoArticulosLimpiezaService::getPendientesFirmaVoBoCard(),
                 'pedido-aditivo' => PedidoAditivoService::getPendientesFirmaVoBoCard(),
+                'orden-mantenimiento' => count(OrdenMantenimientoService::pendingSignatureItems($idUsuario)),
                 default => 0,
             };
 

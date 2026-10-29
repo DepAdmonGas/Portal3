@@ -419,6 +419,7 @@
     <script src="<?= asset('js/home/actions-home.init.js?v=1.1') ?>"></script>
 
     <script src="<?= asset('js/loader.min.js') ?>"></script>
+    <script src="<?= asset('js/core/request-action-loader.js?v=' . (@filemtime(PUBLIC_PATH . '/assets/js/core/request-action-loader.js') ?: 1)) ?>"></script>
     <script src="<?= asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= asset('libs/simplebar/dist/simplebar.min.js') ?>"></script>
     <script src="<?= asset('js/theme/app.init.js') ?>"></script>

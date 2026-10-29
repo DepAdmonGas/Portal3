@@ -500,9 +500,17 @@ class AlmacenCalibracionDispensarioService
             // para conservar la semántica del legacy.
             $destinos = array_values(array_unique(array_diff($destinos, [$actor])));
 
-            $mensaje = $icono . ' ' . $autor . ' ' . $verbo . ' en Calibración de dispensarios correspondiente al apartado de Almacén'
-                . PHP_EOL . '📄 ' . $periodo . ', ' . $year . '.'
-                . PHP_EOL . PHP_EOL . '⛽ Estación: ' . self::nombreEstacion($idEstacion) . '.';
+            $accion = match ($verbo) {
+                'agregó un nuevo registro' => 'agregado un nuevo registro',
+                'actualizó el registro' => 'actualizado un registro',
+                'eliminó el registro' => 'eliminado un registro',
+                default => $verbo,
+            };
+            $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $mensaje = $icono . ' Se ha ' . $accion . ' en el apartado de <b>Calibración de Dispensarios</b>:'
+                . PHP_EOL . PHP_EOL . '📄 <b>Periodo:</b> ' . $escape($periodo . ', ' . $year)
+                . PHP_EOL . PHP_EOL . '👤 <b>Responsable:</b> ' . $escape($autor)
+                . PHP_EOL . '⛽ <b>Estación:</b> ' . $escape(self::nombreEstacion($idEstacion));
 
             foreach ($destinos as $idUsuario) {
                 $telegram->sendTokenAsync((int)$idUsuario, $mensaje);

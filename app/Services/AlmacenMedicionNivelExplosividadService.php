@@ -640,7 +640,7 @@ class AlmacenMedicionNivelExplosividadService
             NivelExplosividad::where('id', $id)->delete();
         });
 
-        self::notificar($idEstacion, '🗑', 'eliminó el registro', '00' . $folio, '');
+        self::notificar($idEstacion, '🗑', 'eliminó el registro', '00' . $folio, (string)$reporte->fecha);
 
         return ['success' => true, 'message' => 'Registro eliminado exitosamente.', 'code' => 200];
     }
@@ -842,15 +842,20 @@ class AlmacenMedicionNivelExplosividadService
             $destinos = array_merge($destinos, $telegram->getUserIdsMantenimiento($actor));
             $destinos = array_values(array_unique(array_diff($destinos, [$actor])));
 
-            $mensaje = $icono . ' ' . $autor . ' ' . $verbo
-                . ' correspondiente al apartado de Nivel de Explosividad correspondiente al de módulo de Almacén.'
-                . PHP_EOL . '#️⃣ No. de folio: ' . $folio;
-
-            if ($fecha !== '') {
-                $mensaje .= PHP_EOL . '🗓️ Fecha: ' . formatearFecha($fecha);
-            }
-
-            $mensaje .= PHP_EOL . PHP_EOL . '⛽ Estación: ' . self::nombreEstacion($idEstacion) . '.';
+            $acciones = [
+                'finalizó el registro' => 'finalizado un registro',
+                'eliminó el registro' => 'eliminado un registro',
+            ];
+            $accion = $acciones[$verbo] ?? $verbo;
+            $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $fechaLabel = trim($fecha) !== '' && !str_starts_with($fecha, '0000-00-00')
+                ? formatearFecha($fecha)
+                : 'S/I';
+            $mensaje = $icono . ' Se ha ' . $accion . ' en el apartado de <b>Medición de Nivel de Explosividad</b>:'
+                . PHP_EOL . PHP_EOL . '🔢 <b>Folio:</b> ' . $escape(ltrim($folio, '0') ?: '0')
+                . PHP_EOL . '📅 <b>Fecha:</b> ' . $escape($fechaLabel)
+                . PHP_EOL . PHP_EOL . '👤 <b>Responsable:</b> ' . $escape($autor)
+                . PHP_EOL . '⛽ <b>Estación:</b> ' . $escape(self::nombreEstacion($idEstacion));
 
             foreach ($destinos as $idUsuario) {
                 $telegram->sendTokenAsync((int)$idUsuario, $mensaje);
