@@ -81,6 +81,14 @@
 <?php endif; ?>
 </h4>
 </div>
+<?php elseif ($submenu['clave'] === 'orden-mantenimiento'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesFirmaOrdenMantenimiento ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaOrdenMantenimiento ?></span>
+<?php endif; ?>
+</h4>
+</div>
 <?php endif; ?>
 </div>
 </div>

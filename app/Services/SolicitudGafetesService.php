@@ -270,19 +270,18 @@ final class SolicitudGafetesService
             $nombreEstacion = htmlspecialchars((string) ($estacion?->nombre ?? 'Estación'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $usuario = htmlspecialchars((string) (Auth::name() ?? 'Usuario'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $detalle = trim($detalle);
-            $textoDetalle = $detalle === '' ? '' : "\n📝 Detalle: " . htmlspecialchars($detalle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $verbo = match ($accion) {
-                'agregar' => 'agregó información a',
-                'editar' => 'actualizó',
-                'comentario' => 'actualizó el seguimiento de',
-                'eliminar' => 'eliminó',
-                default => 'actualizó',
+                'agregar' => 'agregado información a la solicitud',
+                'editar' => 'actualizado la solicitud',
+                'comentario' => 'agregado un comentario al seguimiento de la solicitud',
+                'eliminar' => 'eliminado la solicitud',
+                default => 'actualizado la solicitud',
             };
-            $mensaje = "🎫 <b>Solicitud de Gafetes</b>\n"
-                . "👤 Responsable: {$usuario}\n"
-                . "📍 Estación: {$nombreEstacion}\n"
-                . "🔢 Solicitud: #{$noReporte}\n"
-                . "✅ Acción: {$verbo} la solicitud" . $textoDetalle;
+            $mensaje = '🎫 Se ha ' . $verbo . ' en el apartado de <b>Solicitud de Gafetes</b>:' . PHP_EOL . PHP_EOL
+                . '🔢 <b>Folio:</b> #' . $noReporte
+                . ($detalle === '' ? '' : PHP_EOL . '📝 <b>Detalle:</b> ' . htmlspecialchars($detalle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'))
+                . PHP_EOL . PHP_EOL . '👤 <b>Responsable:</b> ' . $usuario
+                . PHP_EOL . '⛽ <b>Estación:</b> ' . $nombreEstacion;
             $telegram = new TelegramService();
             $telegram->sendMessageToMultiple($telegram->getUserIdsByStation($idEstacion, $idUsuario), $mensaje);
         } catch (\Throwable $error) {

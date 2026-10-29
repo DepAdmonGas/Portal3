@@ -15,6 +15,7 @@ use App\Services\PedidoPinturasService;
 use App\Services\PedidoPapeleriaService;
 use App\Services\PedidoArticulosLimpiezaService;
 use App\Services\PedidoAditivoService;
+use App\Services\OrdenMantenimientoService;
 
 class DptoOperativoController extends BaseController{
 protected string $modulo = 'departamento-operativo';
@@ -104,6 +105,9 @@ $data = [
 'pendientesFirmaPedidoPapeleria' => $slug === 'comercializadora' ? PedidoPapeleriaService::getPendientesFirmaVoBoCard() : 0,
 'pendientesFirmaPedidoArticulosLimpieza' => $slug === 'comercializadora' ? PedidoArticulosLimpiezaService::getPendientesFirmaVoBoCard() : 0,
 'pendientesFirmaPedidoAditivo' => $slug === 'comercializadora' ? PedidoAditivoService::getPendientesFirmaVoBoCard() : 0,
+'pendientesFirmaOrdenMantenimiento' => $slug === 'almacen'
+    ? count(OrdenMantenimientoService::pendingSignatureItems((int)($usuario->id ?? 0)))
+    : 0,
 'modulo' => $this->modulo,
 'idYear' => $idYear,
 'idMes' => $idMes,
@@ -170,7 +174,8 @@ $cards = \App\Models\ModuloSubDptoOperativo::whereIn('clave', [
     'medicion-nivel-explosividad',
     'maquinaria-equipos',
     'mantenimiento-preventivo',
-    'terminales-punto-venta'
+    'terminales-punto-venta',
+    'orden-mantenimiento'
 ])
 ->where('id_modulo', 4)
 ->where('activo', 1)
@@ -193,6 +198,7 @@ View::render('departamento-operativo/submodulos-index', [
 'title' => $title,
 'permisos' => $modulo,
 'submenus' => $submenus,
+'pendientesFirmaOrdenMantenimiento' => count(OrdenMantenimientoService::pendingSignatureItems((int)($usuario->id ?? 0))),
 'modulo' => 'almacen',
 'links' => [],
 'scripts' => [],

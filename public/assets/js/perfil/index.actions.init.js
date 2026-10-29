@@ -270,7 +270,11 @@
 
             this.error = '';
 
-            axios.post('/token-telegram/status')
+            // This endpoint is polled every 2.5 seconds; exclude the read-only
+            // status check from the global action loader to avoid flashing it.
+            axios.post('/token-telegram/status', {}, {
+                headers: { 'X-Portal3-Skip-Action-Loader': '1' }
+            })
                 .then(({ data }) => {
 
                     const d = data.data ?? {};

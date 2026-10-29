@@ -1003,6 +1003,36 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/almacen', Route::auth(['DptoOperativoController', 'almacenIndex']));
 $r->addRoute('GET', '/almacen/mantenimiento', Route::auth(['DptoOperativoController', 'almacenMantenimientoIndex']));
 
+// --- PEDIDO DE MATERIALES (Orden de Mantenimiento legacy) ---
+        $r->addRoute('GET', '/almacen/orden-mantenimiento-firma/{id:\\d+}', Route::auth(['OrdenMantenimientoController', 'signPage']));
+        $r->addRoute('GET', '/almacen/orden-mantenimiento', Route::auth(['OrdenMantenimientoController', 'index']));
+$r->addRoute('GET', '/almacen/orden-mantenimiento/{id:\d+}', Route::auth(['OrdenMantenimientoController', 'index']));
+$r->addRoute('GET', '/almacen/orden-mantenimiento/{id:\d+}/pdf', Route::auth(['OrdenMantenimientoController', 'pdf']));
+$r->addRoute('GET', '/almacen/orden-mantenimiento/{id:\d+}/excel', Route::auth(['OrdenMantenimientoController', 'excel']));
+$r->addRoute('GET', '/almacen/orden-mantenimiento/data', Route::auth(['OrdenMantenimientoController', 'data']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/crear', Route::auth(['OrdenMantenimientoController', 'create']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/detalle', Route::auth(['OrdenMantenimientoController', 'detail']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/editar', Route::auth(['OrdenMantenimientoController', 'update']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/comentarios', Route::auth(['OrdenMantenimientoController', 'comments']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/comentarios/guardar', Route::auth(['OrdenMantenimientoController', 'addComment']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/areas/actualizar', Route::auth(['OrdenMantenimientoController', 'toggleArea']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/areas/agregar', Route::auth(['OrdenMantenimientoController', 'addArea']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/areas/subareas/actualizar', Route::auth(['OrdenMantenimientoController', 'toggleSubarea']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/refacciones', Route::auth(['OrdenMantenimientoController', 'refacciones']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/refacciones/agregar', Route::auth(['OrdenMantenimientoController', 'addMaterial']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/refacciones/eliminar', Route::auth(['OrdenMantenimientoController', 'deleteMaterial']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/archivos', Route::auth(['OrdenMantenimientoController', 'files']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/instalacion/agregar', Route::auth(['OrdenMantenimientoController', 'storeInstallation']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/instalacion/eliminar', Route::auth(['OrdenMantenimientoController', 'deleteInstallation']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/evidencias/agregar', Route::auth(['OrdenMantenimientoController', 'storeEvidence']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/evidencias/eliminar', Route::auth(['OrdenMantenimientoController', 'deleteEvidence']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/causas/agregar', Route::auth(['OrdenMantenimientoController', 'addCause']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/causas/eliminar', Route::auth(['OrdenMantenimientoController', 'deleteCause']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/finalizar', Route::auth(['OrdenMantenimientoController', 'finalize']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/firma/token', Route::auth(['OrdenMantenimientoController', 'createSignatureToken']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/firma/confirmar', Route::auth(['OrdenMantenimientoController', 'sign']));
+$r->addRoute('POST', '/almacen/orden-mantenimiento/eliminar', Route::auth(['OrdenMantenimientoController', 'destroy']));
+
 // --- MANTENIMIENTO PREVENTIVO ---
 $r->addRoute('GET', '/almacen/mantenimiento-preventivo', Route::auth(['AlmacenMantenimientoPreventivoController', 'index']));
         $r->addRoute('GET', '/almacen/mantenimiento-preventivo/{idYear:\d+}', Route::auth(['AlmacenMantenimientoPreventivoController', 'index']));

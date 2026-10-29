@@ -10,11 +10,13 @@ Esta guía explica cómo funcionan los estilos compartidos de tablas, cómo cons
 
 ## Qué se activa por defecto
 
-La selección de fila está habilitada para las tablas de esas páginas sin agregar una clase especial. Al hacer clic en una fila del `tbody`:
+La selección de fila está habilitada para las tablas de esas páginas sin agregar una clase especial. La selección se mantiene de forma independiente por vista: la página principal tiene su propio alcance y cada modal u offcanvas tiene el suyo. Al hacer clic en una fila del `tbody`:
 
 1. Se marca con la clase `selected` y el cursor `pointer`.
-2. Se quita la selección de las demás filas de la misma tabla.
+2. Se quita la selección anterior únicamente dentro del mismo alcance (página, modal u offcanvas).
 3. Se aplica el fondo primario y el texto blanco definidos por el CSS compartido.
+
+Al hacer clic fuera de una fila, se quita `selected` de las filas del mismo alcance y recuperan su estilo original. Esto incluye clics fuera de la tabla. Una interacción dentro de un modal u offcanvas no limpia ni modifica la selección de las tablas que quedan detrás; una interacción en la página tampoco cambia la selección de un diálogo abierto. Al cerrar el diálogo, se limpia sólo la selección de sus tablas. Los controles dentro de una fila mantienen la selección mientras el clic siga dentro de esa fila.
 
 Las filas que tienen una celda con `colspan` se omiten. El comportamiento de la selección del día en FullCalendar también está en ese script, pero se configura por separado y no se desactiva con el atributo de tablas.
 
