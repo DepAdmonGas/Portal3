@@ -7,7 +7,7 @@
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
     x-data="{ ...actions(), ...programaAnualMantenimiento() }">
 
-    <div class="text-end">
+    <div class="text-end mb-3 mt-3">
         <div class="btn-group">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ti ti-dots-vertical fs-4"></i>
@@ -247,7 +247,7 @@
                         class="btn btn-success"
                         @click="editar()">
                         <i class="ti ti-check"></i>
-                        Guardar
+                        Actualizar
                     </button>
                     </div>
                   </div>

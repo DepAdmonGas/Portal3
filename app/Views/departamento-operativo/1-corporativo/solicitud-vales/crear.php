@@ -64,7 +64,7 @@ data-estaciones='<?= $estacionesJson ?>'>
 
 <template x-if="mostrarCuenta">
 <div class="col-12">
-<hr>
+
 <h5 class="mt-3 mb-3">CARGO A CUENTA:</h5>
 <div class="row g-3">
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-2">

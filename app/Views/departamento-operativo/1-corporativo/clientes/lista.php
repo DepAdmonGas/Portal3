@@ -88,13 +88,13 @@ Nuevo Cliente</h5>
 <textarea class="form-control rounded-0 mt-1 mb-4" id="Cliente" x-model="formCliente"></textarea>
 
 <h6 class="form-label">* Tipo:</h6> 
-<select class="form-select rounded-0 mt-1 mb-4" id="Tipo" x-model="formTipo">
+<select class="form-select rounded-0 mt-1 mb-3" id="Tipo" x-model="formTipo">
 <option value="">Selecciona una opción...</option>
 <option value="Crédito">Crédito</option>
 <option value="Débito">Débito</option>
 </select>
 
-<div id="SelCredito" x-cloak x-show="formTipo === 'Crédito'">
+<div id="SelCredito" x-cloak x-show="formTipo === 'Crédito' ">
 
 <h6 class="mb-1 form-label">RFC:</h6> 
 <input type="text" class="form-control rounded-0  mb-2" id="RFC" x-model="formRfc">
@@ -116,7 +116,7 @@ Nuevo Cliente</h5>
 <input type="file" class="form-control  mb-3" id="PoderNotarial" @change="files[5] = $event.target.files[0] || null">
 
 <h6 class="mb-1 form-label">Opinión de Cumplimiento:</h6>
-<input type="file" class="form-control  mb-3" id="OpinionCumplimiento" @change="files[6] = $event.target.files[0] || null">
+<input type="file" class="form-control mb-0" id="OpinionCumplimiento" @change="files[6] = $event.target.files[0] || null">
 </div>
 
 <div id="SelDebito" x-cloak x-show="formTipo === 'Débito'">
@@ -129,7 +129,7 @@ Nuevo Cliente</h5>
 <input type="file" class="form-control mb-3" id="ComprobanteDom" @change="files[2] = $event.target.files[0] || null">
 
 <h6 class="mb-1 form-label">Identificación:</h6> 
-<input type="file" class="form-control mb-3" id="Identificacion" @change="files[3] = $event.target.files[0] || null">
+<input type="file" class="form-control mb-0" id="Identificacion" @change="files[3] = $event.target.files[0] || null">
 </div>
 </div>
 
@@ -205,7 +205,7 @@ Editar Cliente</h5>
 <input type="file" class="form-control  mb-3" id="EditOpinion" @change="editFiles[5] = $event.target.files[0] || null">
 
 <h6 class="mb-1 form-label">Poder Notarial:</h6> 
-<input type="file" class="form-control mb-3" id="EditPoder" @change="editFiles[6] = $event.target.files[0] || null">
+<input type="file" class="form-control mb-0" id="EditPoder" @change="editFiles[6] = $event.target.files[0] || null">
 </div>
 
 <div x-cloak x-show="editTipo === 'Débito'">
@@ -218,7 +218,7 @@ Editar Cliente</h5>
 <input type="file" class="form-control mb-3" id="EditComprobanteDom_Debito" @change="editFiles[2] = $event.target.files[0] || null">
 
 <h6 class="mb-1 form-label">Identificación:</h6> 
-<input type="file" class="form-control mb-3" id="EditIdentificacion_Debito" @change="editFiles[3] = $event.target.files[0] || null">
+<input type="file" class="form-control mb-0" id="EditIdentificacion_Debito" @change="editFiles[3] = $event.target.files[0] || null">
 </div>
 </div>
 

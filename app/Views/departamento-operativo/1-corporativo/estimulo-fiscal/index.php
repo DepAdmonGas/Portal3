@@ -131,7 +131,7 @@
                                             </a>
                                             <div class="dropdown-menu pointer">
                                                 <a class="dropdown-item pointer" @click="$dispatch('estimulo-fiscal:editar', {id: p.id})">
-                                                    <i class="ti ti-pencil me-1"></i> Editar
+                                                    <i class="ti ti-edit me-1"></i> Editar
                                                 </a>
                                                 <a class="dropdown-item pointer" @click="$dispatch('estimulo-fiscal:eliminar', {id: p.id})">
                                                     <i class="ti ti-trash me-1"></i> Eliminar
@@ -168,11 +168,11 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-6 mb-3">
+                        <div class="col-6">
                             <label class="form-label">* Fecha Inicio:</label>
                             <input type="date" class="form-control" x-model="buscarForm.fecha_inicio">
                         </div>
-                        <div class="col-6 mb-3">
+                        <div class="col-6">
                             <label class="form-label">* Fecha Termino:</label>
                             <input type="date" class="form-control" x-model="buscarForm.fecha_termino">
                         </div>
@@ -233,12 +233,12 @@ Cancelar</button>
                 </div>
                 <div class="modal-footer">
                     <div class="row g-0 ms-auto w-100 justify-content-end">
-                        <div class="col-12 col-md-auto d-grid mb-1 me-0 me-md-2">
+                        <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="loading">
 <i class="ti ti-x"></i>    
 Cancelar</button>
                         </div>
-<div class="col-12 col-md-auto d-grid mb-2">
+<div class="col-12 col-md-auto d-grid mb-2 mb-md-0 ">
                 <button type="button" class="btn btn-success" @click="guardarPago" :disabled="loading">
                 <i class="ti ti-check"></i>    
                 Guardar</button>
@@ -255,7 +255,7 @@ Cancelar</button>
             <div class="modal-content">
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white">
-                        <i class="ti ti-pencil-dollar"></i>
+                        <i class="ti ti-edit"></i>
                     Editar comprobante de pago</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -264,44 +264,44 @@ Cancelar</button>
                     <div class="row">
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1">* Fecha Inicio:</label>
-                            <input type="date" class="form-control mb-3" x-model="editForm.fecha_inicio">
+                            <input type="date" class="form-control mb-2" x-model="editForm.fecha_inicio">
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1">* Fecha Termino:</label>
-                            <input type="date" class="form-control mb-3" x-model="editForm.fecha_termino">
+                            <input type="date" class="form-control mb-2" x-model="editForm.fecha_termino">
                         </div>
                     </div>
  
                     <div class="row">
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1"> Factura PDF:</label>
-                            <input type="file" class="form-control mb-3" x-ref="edit_EPDF_file_input">
+                            <input type="file" class="form-control mb-2" x-ref="edit_EPDF_file_input">
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1"> Factura XML:</label>
-                            <input type="file" class="form-control mb-3" x-ref="edit_EXML_file_input">
+                            <input type="file" class="form-control mb-2" x-ref="edit_EXML_file_input">
                         </div>
                     </div>
  
                     <div class="row">
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1"> Complemento PDF:</label>
-                            <input type="file" class="form-control mb-3" x-ref="edit_CPDF_file_input">
+                            <input type="file" class="form-control mb-2" x-ref="edit_CPDF_file_input">
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1"> Complemento XML:</label>
-                            <input type="file" class="form-control mb-3" x-ref="edit_CXML_file_input">
+                            <input type="file" class="form-control" x-ref="edit_CXML_file_input">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <div class="row g-0 ms-auto w-100 justify-content-end">
-                        <div class="col-12 col-md-auto d-grid mb-2 mb-md-0 me-0 me-md-2">
+                        <div class="col-12 col-md-auto d-grid mb-2 mb-md-0 ">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="loading">
 <i class="ti ti-x"></i>    
 Cancelar</button>
                         </div>
-<div class="col-12 col-md-auto d-grid">
+<div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
 
                     <button type="button" class="btn btn-success" @click="editarPago" :disabled="loading">
                     <i class="ti ti-check"></i>    

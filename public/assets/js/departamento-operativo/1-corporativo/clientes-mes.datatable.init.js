@@ -44,7 +44,7 @@ return meta.row + 1;
 {
 title: 'Saldo inicio',
 data: null,
-className: 'text-end',
+className: 'text-center',
 render: function (data, type) {
 if (type !== 'display') return parseFloat(data.saldo_inicial) || 0;
 
@@ -55,7 +55,7 @@ return `
 <input 
 id="ESI${data.id}" 
 type="number" 
-class="border-0 p-3 text-end w-100 bg-transparent"
+class="border-0 p-3 text-center w-100 bg-transparent"
 value="${parseFloat(data.saldo_inicial).toFixed(2)}"/>
 </div>
 `;
@@ -73,7 +73,7 @@ $(td).addClass('p-0');
 {
 title: 'Consumos',
 data: 'consumos',
-className: 'text-end align-middle',
+className: 'text-center align-middle',
 render: function (data, type) {
 if (type !== 'display') return parseFloat(data) || 0;
 return formatMoney(data);
@@ -82,7 +82,7 @@ return formatMoney(data);
 {
 title: 'Pagos',
 data: 'pagos',
-className: 'text-end align-middle',
+className: 'text-center align-middle',
 render: function (data, type) {
 if (type !== 'display') return parseFloat(data) || 0;
 return formatMoney(data);
@@ -91,7 +91,7 @@ return formatMoney(data);
 {
 title: 'Saldo final',
 data: null,
-className: 'text-end align-middle',
+className: 'text-center align-middle',
 render: function (data, type) {
 const sf = parseFloat(data.saldo_inicial || 0) + parseFloat(data.consumos || 0) - parseFloat(data.pagos || 0);
 if (type !== 'display') return sf;

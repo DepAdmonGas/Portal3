@@ -88,17 +88,22 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
 
-                    <div class="modal-header modal-colored-header bg-primary text-white">
-                        <h4 class="modal-title text-white">
-                            <i class="ti ti-progress-check ms-2"></i>
-                            CAPACITACIÓN EXTERNA
-                        </h4>
-                        <button type="button"
-                            class="btn-close btn-close-white"
-                            data-bs-dismiss="modal"
-                            @click="closeModal()">
-                        </button>
-                    </div>
+                    
+<div class="modal-header modal-colored-header bg-primary text-white">
+    <h4 class="modal-title text-white">
+        <i class="ti ms-2"
+           :class="mode=== 'edit' ? 'ti-edit' : 'ti-progress-check'"></i>
+
+        <span x-text="mode === 'edit' ? 'Editar capacitacion externa' : 'Nueva capacitacion externa'"></span>
+    </h4>
+
+    <button type="button"
+        class="btn-close btn-close-white"
+        data-bs-dismiss="modal"
+        @click="closeModal()">
+    </button>
+</div>
+
 
                     <div class="modal-body">
 

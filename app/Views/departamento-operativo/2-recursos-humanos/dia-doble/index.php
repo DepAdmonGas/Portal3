@@ -128,7 +128,7 @@
     <!-- SECCION: DIRECCION DE OPERACIONES -->
     <div id="dd-section-direccion" style="display:none;">
 
-       <div class="row align-items-center g-2">
+       <div class="row align-items-center g-2 mb-3 mt-3">
     <div class="col-12 col-md-7">
         <h4 class="mb-0">Dirección de Operaciones</h4>
     </div>

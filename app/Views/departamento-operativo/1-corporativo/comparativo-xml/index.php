@@ -2,11 +2,11 @@
 #ck-editor-container .ck-editor {
 resize: vertical !important;
 overflow: auto !important;
-min-height: 550px !important;
+min-height: 200px !important;
 border: none !important;
 }
 #ck-editor-container .ck-editor__main .ck-editor__editable {
-min-height: 500px !important;
+min-height: 200px !important;
 border: none !important;
 outline: none !important;
 box-shadow: none !important;
@@ -58,9 +58,16 @@ Debes de seleccionar una estación del menú superior para poder visualizar el C
 </template>
 
 <template x-if="!esDireccionOperaciones">
-<button type="button" class="btn btn-labeled2 btn-success float-end" @click="descargarExcel()">
+<div class="row g-0 ms-auto w-100 justify-content-end mb-1 mt-3">
+                    <div class="col-12 col-md-auto d-grid">
+                     <button type="button" class="btn btn-labeled2 btn-success float-end" @click="descargarExcel()">
 <span class="btn-label2"><i class="ti ti-file-spreadsheet"></i></span>Descargar Excel
-</button>
+</button> 
+                    </div>
+                  </div>
+
+
+
 </template>
 
 </div>
@@ -381,7 +388,7 @@ x-init="$el.value = formatInput(item.despacho_monto)"
 </div>
 
 <div class="card-body p-0" id="ck-editor-container">
-<textarea id="editor" style="display: none;"></textarea>
+<textarea id="editor" style="display: none;" placeholder="escribe tu comentario..."></textarea>
 </div>
 
 <div class="card-footer bg-white border-0 text-end">
@@ -389,7 +396,8 @@ x-init="$el.value = formatInput(item.despacho_monto)"
 type="button"
 class="btn btn-success"
 @click="guardarObservaciones()">
-Guardar Comentario
+<i class="ti ti-check"></i>
+Guardar
 </button>
 </div>
 </div>
@@ -422,16 +430,36 @@ Guardar Comentario
 
     <div class="col-12 mb-3">
         <label class="form-label mb-1">* Archivo:</label>
-        <input class="form-control" type="file" x-ref="fileInput" id="docFile">
     </div>
+    
+   
+<div class="row g-0 w-100 mt-2 mb-3">
+    <div class="col-12">
+        <div class="input-group">
+            <input
+                class="form-control"
+                type="file"
+                x-ref="fileInput"
+                id="docFile"
+            >
 
-    <div class="col-12 col-md-auto d-grid mb-3 mt-2">
-        <button type="button" class="btn btn-success"
-                @click="guardarDocumento()" :disabled="guardandoDocumento">
-            <i class="ti ti-check"></i>
-            <span x-text="guardandoDocumento ? 'Guardando...' : 'Guardar'"></span>
-        </button>
+            <button
+                type="button"
+                class="btn btn-success"
+                @click="guardarDocumento()"
+                :disabled="guardandoDocumento"
+            >
+                <i class="ti ti-check" x-show="!guardandoDocumento"></i>
+                <span x-text="guardandoDocumento ? 'Guardando...' : 'Guardar'"></span>
+                <span
+                    x-show="guardandoDocumento"
+                    class="spinner-border spinner-border-sm ms-1"
+                ></span>
+            </button>
+        </div>
     </div>
+</div>
+
 </div>
 </template>
 

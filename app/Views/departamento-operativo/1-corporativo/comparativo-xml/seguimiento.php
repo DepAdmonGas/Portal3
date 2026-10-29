@@ -1,6 +1,7 @@
 <div id="seguimiento-container" data-year="<?= $idYear ?>" data-id-estacion="<?= $idEstacion ?>">
 <div class="row mt-4">
 
+
 <div class="col-12 mb-4">
 <div class="card h-100">
 <div class="card-header text-bg-primary">
@@ -25,7 +26,9 @@ Visualizaciones Comparativo XML
 </div>
 </div>
 </div>
+
 </div>
+
 
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-4">
 <div class="card h-100">

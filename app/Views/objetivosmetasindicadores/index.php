@@ -321,7 +321,7 @@ data-bs-keyboard="false">
     <div class="modal-body">
 
     <div x-show="mode !== 'view'">
-    <h6 class="fs-5 text-primary">Satisfacción del cliente</h6>                
+    <h6 class="fs-5 text-primary mb-1">Satisfacción del cliente</h6>                
 
     <div class="row">
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
@@ -341,9 +341,8 @@ data-bs-keyboard="false">
       </div>
     </div>
 
-    <hr>
 
-    <h6 class="fs-5 text-primary">Mantenimiento</h6>
+    <h6 class="fs-5 text-primary mt-3 mb-1">Mantenimiento</h6>
                     
     <div class="row">
       
@@ -363,10 +362,10 @@ data-bs-keyboard="false">
         <input type="date" class="form-control" id="Dato8" x-model="objetivosMetas.mantenimiento.fecha_aplicacion">
       </div>
     </div>
-    <hr>
 
 
-  <h6 class="text-primary fs-5">Capacitación</h6>
+
+  <h6 class="text-primary fs-5 mt-3 mb-1">Capacitación</h6>
 
   <div class="row">
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
@@ -386,10 +385,9 @@ data-bs-keyboard="false">
       <input type="date" class="form-control" id="Dato12" x-model="objetivosMetas.capacitacion.fecha_aplicacion">
     </div>
   </div>
-  <hr>
 
 
-  <h6 class="text-primary fs-5">Quejas y sugerencias</h6>
+  <h6 class="text-primary fs-5 mt-3 mb-1">Quejas y sugerencias</h6>
   <div class="row">
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12"> 
       <label class="form-label">Fecha:</label>
@@ -408,9 +406,8 @@ data-bs-keyboard="false">
       <input type="date" class="form-control" id="Dato16" x-model="objetivosMetas.quejas.fecha_aplicacion">
     </div>
   </div>
-  <hr>
 
-  <h6 class="text-primary fs-5">Cumplimiento de legislación </h6>
+  <h6 class="text-primary fs-5 mb-1 mt-3">Cumplimiento de legislación </h6>
   <div class="row">
     
 

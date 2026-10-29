@@ -221,7 +221,7 @@ Es necesario que el responsable de <strong>firmar la autorización</strong> fina
 <thead>
 <tr>
 <th>Nombre del documento</th>
-<th class="text-center" width="48px"><i class="ti ti-download text-primary" title="Descargar"></i></th>
+<th class="text-center" width="48px"><i class="ti ti-download text-primary fs-5" title="Descargar"></i></th>
 </tr>
 </thead>
 <tbody>
@@ -229,7 +229,7 @@ Es necesario que el responsable de <strong>firmar la autorización</strong> fina
 <template x-for="d in detalle.documentos" :key="d.id">
 <tr>
 <td x-text="d.nombre"></td>
-<td class="text-center"><i class="ti ti-download pointer text-primary" @click.prevent="download('solicitud-cheque', d.documento)" title="Descargar"></i></td>
+<td class="text-center"><i class="ti ti-download pointer text-primary fs-5" @click.prevent="download('solicitud-cheque', d.documento)" title="Descargar"></i></td>
 </tr>
 </template>
 </template>

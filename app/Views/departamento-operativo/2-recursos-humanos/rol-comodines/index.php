@@ -47,7 +47,9 @@ Detalle Rol de Comodines</h5>
 <div class="modal-footer">
     <div class="row g-0 ms-auto w-100 justify-content-end">
                     <div class="col-12 col-md-auto d-grid">
- <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>   
+ <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+ <i class="ti ti-x"></i> 
+ Cerrar</button>   
                     </div>
                   </div>
 

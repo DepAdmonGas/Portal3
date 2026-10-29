@@ -48,7 +48,7 @@ $(this).addClass('selected');
 
 // --- Accesos ---
 buildTable('#tabla-accesos', [
-{ data: 'num', width: '72px', className: 'text-center' },
+{ data: 'num', width: '48px', className: 'text-center' },
 { data: 'usuario' },
 { data: 'puesto', className: 'text-center' },
 { data: 'fecha_hora', className: 'text-center' }

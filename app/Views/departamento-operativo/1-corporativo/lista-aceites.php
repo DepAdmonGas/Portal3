@@ -10,10 +10,12 @@
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle lista-aceites-seleccionable portal-table portal-table--selectable">
 <thead>
 <tr>
+
 <th class="text-center align-middle" style="width: 96px;">#</th>
 <th class="align-middle">Concepto</th>
 <th class="text-center align-middle" style="width: 96px;">Pzas / cajas</th>
 <th class="text-center align-middle" >Precio unitario</th>
+
 <?php if ($esDireccionOperaciones): ?>
 <th class="text-center align-middle" style="width: 48px;"><i class="ti ti-trash text-danger fs-6"></i></th>
 <?php endif; ?>
@@ -21,9 +23,11 @@
 </thead>
 <tbody>
 <template x-for="(item, index) in items" :key="item.id">
+
 <tr class="pointer" :class="{ selected: selectedRowId === item.id }" @click="seleccionarFila(item.id)">
 <td class="p-0 align-middle text-center" x-text="item.id_aceite"></td>
 <td class="p-0 align-middle">
+
 <template x-if="editandoConcepto !== item.id">
 <span @dblclick="editarConcepto(item.id)"
 class="d-block px-2 py-1 rounded cursor-pointer"
@@ -52,12 +56,12 @@ class="form-control form-control p-3 text-center border-0">
 <input type="number" min="0" step="0.01"
 x-model="tempValues[item.id].precio"
 @change="guardar(item.id, 'precio', tempValues[item.id].precio)"
-class="form-control form-control p-3 text-end border-0">
+class="form-control form-control p-3 text-center border-0">
 </td>
 <?php if ($esDireccionOperaciones): ?>
 <td class="p-0 align-middle text-center">
 <span x-data="actions()">
-<i class="ti ti-trash text-danger fs-6 pointer"
+<i class="ti ti-trash text-danger fs-6 pointer" width="48px"
 @click="deleteAction({url: '/departamento-operativo/corporativo/lista-aceites/eliminar', id: item.id, name: item.concepto || 'ID ' + item.id_aceite, table: null}).then(r => r?.success && eliminarFila(item.id))">
 </i>
 </span>

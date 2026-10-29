@@ -67,9 +67,11 @@ x-data="{ ...actions(), ...solicitudChequeComponent() }">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
 
-<div class="modal-header">
-<h4 class="modal-title">Comprobante de Pago</h4>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h4 class="modal-title text-white">
+    <i class="ti ti-receipt-2"></i>
+Comprobante de Pago</h4>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
 <div class="modal-body">
@@ -81,12 +83,32 @@ x-data="{ ...actions(), ...solicitudChequeComponent() }">
 
 <div class="col-12 mb-3">
 <label class="form-label">* Factura Telcel:</label>
-<input type="file" class="form-control" x-ref="nuevoTelcelGlobalFile" accept=".pdf">
+</div>
+<div class="row g-0 w-100 mt-3 mb-3">
+    <div class="col-12">
+        <div class="input-group">
+            <input 
+                type="file" 
+                class="form-control" 
+                x-ref="nuevoTelcelGlobalFile" 
+                accept=".pdf"
+            >
+
+            <button 
+                type="button"
+                class="btn btn-success" 
+                @click="agregarTelcelGlobal()" 
+                :disabled="guardandoTelcelGlobal"
+            >
+                <i class="ti ti-check"></i>
+                Guardar
+            </button>
+        </div>
+    </div>
 </div>
 
-<div class="col-12 mb-3">
-<button class="btn btn-success float-end" @click="agregarTelcelGlobal()" :disabled="guardandoTelcelGlobal">Guardar</button>
-</div>
+
+
 
 </div>
 </template>
@@ -153,22 +175,49 @@ x-data="{ ...actions(), ...solicitudChequeComponent() }">
 </template>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal">
+<i class="ti ti-x"></i>
+    Cancelar</button>
+                    </div>
+
 
 <template x-if="telcelEditandoId">
-<div class="d-flex gap-2">
-<button class="btn btn-secondary"
+                      <div class="col-12 col-md-auto d-grid ms-0 ms-md-2 me-0 me-md-2">
+                      <button class="btn bg-primary-subtle text-primary"
 @click="cancelarEditarTelcelGlobal()">
+<i class="ti ti-arrow-narrow-left"></i>
 Regresar
 </button>
+                    </div>
 
+
+                    </template>
+                    <template x-if="telcelEditandoId">
+                      <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
+                      
 <button class="btn btn-success"
 @click="guardarEditarTelcelGlobal()"
 :disabled="guardandoTelcelGlobal">
+<i class="ti ti-check"></i>
 Guardar
 </button>
-</div>
+                    </div>
+
 </template>
+
+                  </div>
+
+
+
+
+
+
+
+
+
 </div>
 </div>
 </div>
@@ -462,7 +511,7 @@ $<span x-text="formatNum(detalle.monto)"></span>
 <thead>
 <tr>
 <th>Nombre del documento</th>
-<th class="text-center" width="48px"><i class="ti ti-download text-primary" title="Descargar"></i></th>
+<th class="text-center" width="48px"><i class="ti ti-download text-primary fs-5" title="Descargar"></i></th>
 </tr>
 </thead>
 <tbody>
@@ -470,7 +519,7 @@ $<span x-text="formatNum(detalle.monto)"></span>
 <template x-for="d in detalle.documentos" :key="d.id">
 <tr>
 <td x-text="d.nombre"></td>
-<td class="text-center"><i class="ti ti-download pointer text-primary" @click.prevent="download('solicitud-cheque', d.documento)" title="Descargar"></i></td>
+<td class="text-center"><i class="ti ti-download pointer text-primary fs-5" @click.prevent="download('solicitud-cheque', d.documento)" title="Descargar"></i></td>
 </tr>
 </template>
 </template>
@@ -689,17 +738,33 @@ Documentos (#<span x-text="archivoSolicitudId"></span>)</h4>
 </div>
 
 <div class="col-12">
-<label class="form-label">Archivo:</label>
-<input type="file" class="form-control" x-ref="nuevoDocumentoFile">
+<label class="form-label mb-2">Archivo:</label>
 </div>
 </div>
-<div class="row g-0 ms-auto w-100 justify-content-end">
-<div class="col-12 col-md-auto d-grid mt-3 mb-3">
-<button class="btn btn-success" @click="subirDocumento()" :disabled="subiendoDocumento">
-<i class="ti ti-check"></i>
-Guardar</button>
+
+
+<div class="row g-0 ms-auto w-100 mb-3">
+    <div class="col-12">
+        <div class="input-group">
+            <input 
+                type="file" 
+                class="form-control" 
+                x-ref="nuevoDocumentoFile"
+            >
+
+            <button 
+                type="button"
+                class="btn btn-success" 
+                @click="subirDocumento()" 
+                :disabled="subiendoDocumento"
+            >
+                <i class="ti ti-check"></i>
+                Guardar
+            </button>
+        </div>
+    </div>
 </div>
-</div>
+
 
 
 <!-- </template> -->
@@ -758,17 +823,32 @@ Comprobantes de Pago (#<span x-text="pagoSolicitudId"></span>)</h4>
 
 <div class="col-12">
 <label class="form-label">Archivo de pago:</label>
-<input type="file" class="form-control" x-ref="nuevoPagoFile">
 </div>
 </div>
 
-<div class="row g-0 ms-auto w-100 justify-content-end">
-<div class="col-12 col-md-auto d-grid mt-3 mb-3">
-<button class="btn btn-success" @click="subirPago()" :disabled="subiendoPago">
-    <i class="ti ti-check"></i>
-Guardar</button>
+
+<div class="row g-0 w-100 mt-3 mb-3">
+    <div class="col-12">
+        <div class="input-group">
+            <input 
+                type="file" 
+                class="form-control" 
+                x-ref="nuevoPagoFile"
+            >
+
+            <button 
+                type="button"
+                class="btn btn-success" 
+                @click="subirPago()" 
+                :disabled="subiendoPago"
+            >
+                <i class="ti ti-check"></i>
+                Guardar
+            </button>
+        </div>
+    </div>
 </div>
-</div>
+
 
 
 <!-- </template> -->

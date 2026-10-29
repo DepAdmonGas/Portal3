@@ -158,14 +158,29 @@ x-init="$el.value = formatInput(row[m])"
 </div>
 <div class="modal-body">
 <label class="form-label mb-1">* Archivo:</label>
-<input class="form-control mb-3" type="file" id="archivoInput">
-<div class="row g-0 ms-auto w-100 justify-content-end">
-<div class="col-12 col-md-auto d-grid">
-<button type="button" class="btn btn-success" @click="guardarArchivo()" :disabled="guardando">
-<i class="ti ti-check"></i>    
-Guardar</button>
+
+<div class="row g-0 w-100 mt-3 mb-3">
+    <div class="col-12">
+        <div class="input-group">
+            <input 
+                class="form-control" 
+                type="file" 
+                id="archivoInput"
+            >
+
+            <button 
+                type="button" 
+                class="btn btn-success" 
+                @click="guardarArchivo()" 
+                :disabled="guardando"
+            >
+                <i class="ti ti-check"></i>
+                Guardar
+            </button>
+        </div>
+    </div>
 </div>
-</div>
+
 
 <div class="table-responsive mt-3">
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle ingresos-facturacion-seleccionable portal-table portal-table--selectable">

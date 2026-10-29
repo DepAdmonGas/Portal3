@@ -58,11 +58,11 @@ return json.data || [];
 }
 },
 columns: [
-{ title:'#', data: 'num', className: 'text-center fw-bold align-middle', width: '40px' },
-{ title:'Estación / departamento', data: 'localidad_nombre', className: 'text-center align-middle', visible: esModoGlobal() },
-{ title:'Fecha', data: 'fecha', className: 'text-center align-middle' },
-{ title:'Hora', data: 'hora', className: 'text-center align-middle' },
-{ title:'Asunto', data: 'asunto', className: 'text-center align-middle' },
+{ title:'#', data: 'num', className: 'text-center fw-bold align-middle', width: '48px' },
+{ title:'Estación / departamento', data: 'localidad_nombre', className: 'text-start align-middle', visible: esModoGlobal() },
+{ title:'Fecha', data: 'fecha', className: 'text-center align-middle text-nowrap' },
+{ title:'Hora', data: 'hora', className: 'text-center align-middle text-nowrap' },
+{ title:'Asunto', data: 'asunto', className: 'text-start align-middle' },
 { title:'Observaciones', data: 'observaciones', className: 'text-start align-middle' },
 { title:'Solución', data: 'solucion', className: 'text-start align-middle' },
 {

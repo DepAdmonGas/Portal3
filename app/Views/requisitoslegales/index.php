@@ -15,7 +15,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar los 
 
 <?php else: ?>
 
-<div class="text-end mt-2">
+<div class="text-end mt-3 mb-3">
 <div class="btn-group">
 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 <i class="ti ti-dots-vertical fs-4"></i>

@@ -221,7 +221,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
 
                                     <div class="card-body p-0">
                                         <textarea class="form-control border-0 p-3" rows="5"
-                                            placeholder="Escribe tu comentario aquí..."
+                                            placeholder="Escribe tus observaciones aquí..."
                                             style="resize: vertical;"
                                             x-model="p.comentario"
                                             @keyup="editarComentarioResumen(p.id)">

@@ -46,18 +46,19 @@ style="display: none;"></div>
 <template x-if="tipoCargado">
 <div>
 
-<div class="row g-0 w-100 justify-content-between">
-<div class="col-12 col-md-auto d-grid mb-1 mb-md-3 mt-2 mt-md-3">
+<div class="row g-0 w-100 justify-content-between mb-3 mt-3">
+<div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 <button class="btn bg-danger-subtle text-danger" @click="volverOpciones()">
 <i class="ti ti-arrow-left me-1"></i>Cambiar evaluación
 </button>
 </div>
-<div class="col-12 col-md-auto d-grid mb-3 mb-md-3 mt-0 mt-md-3">
+<div class="col-12 col-md-auto d-grid">
 <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirInfoEvaluacion()">
 <i class="ti ti-info-circle me-1"></i>Forma de evaluación
 </button>
 </div>
 </div>
+
 
 <div x-show="cargando" class="text-center py-5">
 <div class="spinner-border text-primary" role="status">
