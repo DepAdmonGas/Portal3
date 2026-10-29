@@ -41,22 +41,50 @@ x-data="{ ...actions(), ...reporteEstadisticoCreComponent() }">
 <div id="cre-contenido">
 
 <!---------- Barra de herramientas ---------->
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
 
-<h5 class="mb-0" x-text="vistaAnual ? 'Resumen Anual ' + year : 'Resumen Mensual ' + etiquetaPeriodo()"></h5>
 
-<div class="d-flex align-items-center gap-2 ms-auto">
-<button type="button" class="btn bg-success text-white" @click="descargarFacturas()" x-show="puedeDescargar" :disabled="descargando">
-<template x-if="!descargando"><i class="ti ti-file-zip me-1"></i></template>
-<template x-if="descargando"><span class="spinner-border spinner-border-sm me-1"></span></template>
-<span x-text="descargando ? 'Generando...' : 'Descargar facturas del año'"></span>
-</button>
-<button type="button" class="btn bg-primary-subtle text-primary" @click="cambiarVistaAnual()" :disabled="cargando">
-<i class="ti ti-chart-pie me-1"></i>
-<span x-text="vistaAnual ? 'Detalle mensual' : 'Resumen anual'"></span>
-</button>
+<div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-3">
+
+    <!-- Título -->
+    <h5 class="mb-0"
+        x-text="vistaAnual ? 'Resumen Anual ' + year : 'Resumen Mensual ' + etiquetaPeriodo()">
+    </h5>
+
+    <!-- Botones -->
+    <div class="d-grid d-md-flex gap-2 ms-md-auto">
+
+        <button
+            type="button"
+            class="btn bg-success text-white"
+            @click="descargarFacturas()"
+            x-show="puedeDescargar"
+            :disabled="descargando">
+
+            <template x-if="!descargando">
+                <i class="ti ti-file-zip me-1"></i>
+            </template>
+
+            <template x-if="descargando">
+                <span class="spinner-border spinner-border-sm me-1"></span>
+            </template>
+
+            <span x-text="descargando ? 'Generando...' : 'Descargar facturas del año'"></span>
+        </button>
+
+        <button
+            type="button"
+            class="btn bg-primary-subtle text-primary"
+            @click="cambiarVistaAnual()"
+            :disabled="cargando">
+
+            <i class="ti ti-chart-pie me-1"></i>
+            <span x-text="vistaAnual ? 'Detalle mensual' : 'Resumen anual'"></span>
+        </button>
+
+    </div>
 </div>
-</div>
+
+
 
 <!-- ============ VISTA MENSUAL ============ -->
 <div x-show="!vistaAnual">

@@ -208,7 +208,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 </div>
 </div>
 
-<div class="col-md-6 mb-3">
+<div class="col-md-6 mb-0 mb-md-3">
 <label class="form-label mb-1">* Unidad:</label>
 <div class="select2-modal-field is-select2-pending" x-ref="unidadWrapper">
 <select class="form-select" x-ref="unidadSelect" data-width="100%">

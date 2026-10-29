@@ -432,28 +432,34 @@ errors.protocolo.archivo = false;
                             * Anexo:
                         </label>
 
-                        <input
-                            id="archivoAnexo"
-                            type="file"
-                            class="form-control"
-                            accept=".pdf"
-                            :class="errors.anexo.archivo ? 'is-invalid' : ''"
-                            @change="
-anexo.archivo = $event.target.files[0];
-errors.anexo.archivo = false;
-">
+                       
+<div class="row g-0 w-100 mt-3 mb-3">
+    <div class="col-12">
+        <div class="input-group">
+            <input
+                id="archivoAnexo"
+                type="file"
+                class="form-control"
+                accept=".pdf"
+                :class="errors.anexo.archivo ? 'is-invalid' : ''"
+                @change="
+                    anexo.archivo = $event.target.files[0];
+                    errors.anexo.archivo = false;
+                "
+            >
 
-                        <div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
-                      <button
-                                class="btn btn-success"
-                                @click="guardarAnexo()">
+            <button
+                type="button"
+                class="btn btn-success"
+                @click="guardarAnexo()"
+            >
+                <i class="ti ti-check"></i>
+                Guardar
+            </button>
+        </div>
+    </div>
+</div>
 
-                                <i class="ti ti-check"></i> Guardar
-
-                            </button>
-                    </div>
-                  </div>
 
                             
                    

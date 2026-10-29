@@ -44,12 +44,16 @@ x-data="{ ...actions(), ...contratosComponent() }"
 <div class="modal-content">
 
 <div class="modal-header bg-primary">
-<h5 class="modal-title text-white">
-<i class="ti ti-contract"></i>
-<span
-x-text="modalTitle"></span>
-</h5>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="cerrarModal"></button>
+  <h5 class="modal-title text-white">
+    <i class="ti"
+       :class="{
+         'ti-eye': modo === 'detalle',
+         'ti-edit': modo === 'editar',
+         'ti-contract': modo !== 'detalle' && modo !== 'editar'
+       }"></i>
+    <span x-text="modalTitle"></span>
+  </h5>
+  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="cerrarModal"></button>
 </div>
 
 <div class="modal-body">
@@ -91,7 +95,7 @@ x-text="modalTitle"></span>
 </div>
 <div class="col-xl-4 col-lg-4 col-md-6">
 <label class="form-label mb-1">Comentario:</label>
-<p class="mb-3" x-text="detalle.comentario"></p>
+<p class="mb-0 mb-md-3" x-text="detalle.comentario"></p>
 </div>
 </div>
 </template>
@@ -129,13 +133,14 @@ x-text="modalTitle"></span>
 </div>
 <div class="col-xl-6 col-lg-6 col-md-12">
 <label class="form-label mb-1">Comentario:</label>
-<textarea class="form-control mb-3" x-model="form.comentario"></textarea>
+<textarea class="form-control mb-0 mb-md-3" x-model="form.comentario"></textarea>
 </div>
 </div>
 </form>
 </template>
 
 </div>
+<!-------------footer de los tres------>
 
 <div class="modal-footer" x-show="modo === 'detalle'">
   <div class="row g-0 ms-auto w-100 justify-content-end">

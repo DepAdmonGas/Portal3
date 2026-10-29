@@ -121,7 +121,7 @@ title="Descargar factura">
 </div>
 </div>
 
-<div class="col-md-6 mb-3">
+<div class="col-md-6 mb-0 mb-md-3">
 <label class="form-label mb-1">Factura (XML):</label>
 
 <div class="input-group">
@@ -178,7 +178,7 @@ Cancelar</button>
         <div class="col-12 col-md-auto d-grid ms-0 ms-md-1">
 <button type="button" class="btn btn-success" @click="guardar()" :disabled="guardando">
     <i class="ti ti-check"></i>
-<span x-text="editando ? 'Finalizar' : 'Guardar'"></span>
+<span x-text="editando ? 'Actualizar' : 'Guardar'"></span>
 </button>
         </div>
     </div>

@@ -15,16 +15,19 @@ x-data="clientesComponent()">
 
 <div class="row d-flex justify-content-end align-items-center g-3" x-show="!loading">
 
-<div class="col-12 col-md-auto d-grid mt-3 mt-md-0">
+<div class="row d-flex justify-content-end align-items-center g-0 w-100 mb-3 mt-3" x-show="!loading">
+<div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 <button x-show="puedeAgregar" type="button" class="btn bg-primary-subtle text-primary float-end" @click="abrirModalAgregar()">
 <i class="ti ti-plus"></i> Nuevo
 </button>
 </div>
-<div class="col-12 col-md-auto d-grid mt-3 mt-md-0 mb-3 mb-md-0">
+<div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
 <button type="button" class="btn btn-success" @click="abrirListaClientes()">
 <i class="ti ti-users"></i> Lista de Clientes
 </button>
 </div>
+</div>
+
 
 
 <div class="col-12">
@@ -143,12 +146,16 @@ Nuevos consumos y pagos</h5>
 </div>
 <div class="modal-footer">
     <div class="row g-0 ms-auto w-100 justify-content-end">
-        <div class="col-12 col-md-auto d-grid mb-1 me-0 me-md-2">
+
+
+        <div class="col-12 col-md-auto d-grid  me-0 me-md-2">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
     <i class="ti ti-x"></i>    
     Cancelar</button>
         </div>
-        <div class="col-12 col-md-auto d-grid ">
+
+
+        <div class="col-12 col-md-auto d-grid mt-1 mt-md-0 ">
 <button type="button" class="btn btn-labeled2 btn-success" @click="guardar()" :disabled="guardando">
     <i class="ti ti-check"></i>
 <span x-show="!guardando">Guardar</span>

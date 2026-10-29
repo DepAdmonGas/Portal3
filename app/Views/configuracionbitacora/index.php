@@ -199,7 +199,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
                     type="button"
                     class="btn btn-success"
                     @click="eliminar()">
-                    <i class="ti ti-check"></i>
+                    <i class="ti ti-trash"></i>
                         Eliminar
                     </button>
                     </div>

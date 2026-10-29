@@ -135,10 +135,10 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
 
                 </small>
 
- <div class="row mt-4">
+ <div class="row mt-2">
 
     <!-- Tarjeta 1: Fo.ADMONGAS.024 -->
-    <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
+    <div class="col-12 col-md-6 d-flex align-items-stretch mb-4 mb-md-0">
         <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" 
            download
            class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
@@ -172,7 +172,7 @@ x-data="{ ...actions(), ...auditoriaInterna()}">
     </div>
 
     <!-- Tarjeta 2: Fo.ADMONGAS.025 -->
-    <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
+    <div class="col-12 col-md-6 d-flex align-items-stretch mb-0 mb-md-0">
         <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" 
            download
            class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">

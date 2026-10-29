@@ -295,7 +295,7 @@
 
                         </div>
 
-                        <div class="mb-3">
+                
 
                             <label class="form-label fw-bolder">
 
@@ -313,7 +313,6 @@
                             $event.target.files[0]
                         ">
 
-                        </div>
 
 
                     </div>

@@ -122,6 +122,7 @@
         </div>
 
         <?php if ($detail['status'] == 0 && $puedeEditar): ?>
+
             <div class="col-md-4 d-flex">
                 <div class="card border-0 bg-white w-100 d-flex flex-column">
                     <div class="card-header text-bg-primary py-3 border-0 flex-shrink-0">
@@ -149,12 +150,13 @@
                     </button>
                 </div>
             </div>
+
         <?php endif; ?>
 
     </div>
 
     <!-- MODAL Nuevo PERSONAL -->
-    <div class="modal fade" id="modalAgregarPersonal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalAgregarPersonal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-primary">
@@ -202,7 +204,7 @@
     </div>
 
     <!-- MODAL EDITAR QUINCENA -->
-    <div class="modal fade" id="modalEditarQuincena" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalEditarQuincena" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-primary">

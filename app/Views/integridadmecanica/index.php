@@ -171,32 +171,32 @@ x-data="{ ...actions(), ...equipoCritico()}">
     <div class="modal-body">
 
 
-        <label class="form-label">* Nombre:</label>
-        <textarea class="form-control mb-2" x-model="equipo.nombre"
+        <label class="form-label mb-1">* Nombre:</label>
+        <textarea class="form-control mb-3" x-model="equipo.nombre"
                 :class="errors.nombre ? 'is-invalid' : ''"
                 @input="errors.nombre = false"></textarea>
 
-        <label class="form-label">* Marca y Modelo:</label>
-        <textarea class="form-control mb-2" x-model="equipo.marca_modelo"
+        <label class="form-label mb-1">* Marca y Modelo:</label>
+        <textarea class="form-control mb-3" x-model="equipo.marca_modelo"
                 :class="errors.marca_modelo ? 'is-invalid' : ''"
                 @input="errors.marca_modelo = false"></textarea>
 
-        <label class="form-label">* Función:</label>
-        <textarea class="form-control mb-2" x-model="equipo.funciones"
+        <label class="form-label mb-1">* Función:</label>
+        <textarea class="form-control mb-3" x-model="equipo.funciones"
                 :class="errors.funciones ? 'is-invalid' : ''"
                 @input="errors.funciones = false"></textarea>
 
-        <label class="form-label">* Fecha Instalación <small>(Aproximado)</small>:</label>
-        <input class="form-control mb-2" type="date" x-model="equipo.fecha_instalacion"
+        <label class="form-label mb-1">* Fecha Instalación <small>(Aproximado)</small>:</label>
+        <input class="form-control mb-3" type="date" x-model="equipo.fecha_instalacion"
                 :class="errors.fecha_instalacion ? 'is-invalid' : ''"
                 @input="errors.fecha_instalacion = false">  
 
-        <label class="form-label">* Tiempo de vida <small>(Años)</small>:</label>
-        <input class="form-control mb-2" type="number" x-model="equipo.tiempo_vida"
+        <label class="form-label mb-1">* Tiempo de vida <small>(Años)</small>:</label>
+        <input class="form-control mb-3" type="number" x-model="equipo.tiempo_vida"
                 :class="errors.tiempo_vida ? 'is-invalid' : ''"
                 @input="errors.tiempo_vida = false">  
 
-        <label class="form-label">* Manual:</label>
+        <label class="form-label mb-1">* Manual:</label>
         <input class="form-control" type="file" x-model="equipo.manual"
                 x-ref="fileManual"
                 :class="errors.manual ? 'is-invalid' : ''"

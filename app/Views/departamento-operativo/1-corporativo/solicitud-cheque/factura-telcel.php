@@ -196,9 +196,17 @@
  Cancelar</button>
                             </div>
                             <div class="col-12 col-md-auto d-grid">
-<button type="button" class="btn btn-success" @click="guardarDirectorio" :disabled="guardando">
+
+<button 
+    type="button" 
+    class="btn btn-success" 
+    @click="guardarDirectorio" 
+    :disabled="guardando"
+>
     <i class="ti ti-check"></i>
-Guardar</button>
+    <span x-text="editandoDirectorio ? 'Actualizar' : 'Guardar'"></span>
+</button>
+
                             </div>
                         </div>
                         </div>

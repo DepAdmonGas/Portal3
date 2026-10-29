@@ -497,18 +497,40 @@ Archivos Aceites</h5>
 </div>
 <div class="col-12">
 <h6 class="mb-1 form-label">* Archivo:</h6>
-<input type="file" class="form-control mb-3" @change="facturaArchivo = $event.target.files[0]">
+</div>
 </div>
 
-<div class="col-12 col-md-auto d-grid ms-md-auto">
-<button class="btn btn-success" @click="subirFactura" :disabled="subiendoFactura">
-<span x-show="subiendoFactura" class="spinner-border spinner-border-sm me-1"></span>
-<i x-show="!subiendoFactura"></i>
-<i class="ti ti-check"></i>
-Guardar
-</button>
+<div class="row g-0 w-100 mt-3 mb-3">
+    <div class="col-12">
+        <div class="input-group">
+            <input 
+                type="file" 
+                class="form-control" 
+                @change="facturaArchivo = $event.target.files[0]"
+            >
+
+            <button 
+                type="button"
+                class="btn btn-success" 
+                @click="subirFactura" 
+                :disabled="subiendoFactura"
+            >
+                <span 
+                    x-show="subiendoFactura" 
+                    class="spinner-border spinner-border-sm me-1"
+                ></span>
+
+                <i 
+                    class="ti ti-check"
+                    x-show="!subiendoFactura"
+                ></i>
+
+                Guardar
+            </button>
+        </div>
+    </div>
 </div>
-</div>
+
 
 <div class="table-responsive">
 <table id="table-aceites-facturas" class="table table-striped table-bordered mt-3 text-nowrap align-middle">

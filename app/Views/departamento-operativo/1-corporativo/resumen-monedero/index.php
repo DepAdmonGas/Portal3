@@ -207,13 +207,17 @@ No hay registros para este mes
 <div class="modal-content">
 
 <div class="modal-header bg-primary">
-    <h4 class="modal-title text-white  gap-0"> 
-    <i class="ti ti-file-text fs-6 me-0 text-white"></i>
-<span
-x-text="modalFacturaTitulo">
-</span>
-</h4>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  <h4 class="modal-title text-white gap-0">
+    <i class="ti fs-6 me-0 text-white"
+       :class="{
+         'ti-receipt-2': modalFacturaVista === 'form' && !facturaForm.id,
+         'ti-edit': modalFacturaVista === 'form' && facturaForm.id,
+         'ti-clipboard-list': modalFacturaVista === 'documentacion',
+         'ti-file-text': modalFacturaVista === 'lista' || modalFacturaVista === 'edi'
+       }"></i>
+    <span x-text="modalFacturaTitulo"></span>
+  </h4>
+  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
 <div class="modal-body mb-0">
@@ -373,7 +377,7 @@ x-text="modalFacturaTitulo">
 
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
 <label class="form-label mb-1">* PDF:</label>
-<input class="form-control mb-3" type="file" id="ediPDF">
+<input class="form-control mb-3 mb-md-0" type="file" id="ediPDF">
 </div>
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 ">
 <label class="form-label mb-1">* XML:</label>
@@ -440,7 +444,6 @@ x-text="modalFacturaTitulo">
 
 <label class="form-label mb-1">* Documento (PDF o XLSX):</label>
 <input class="form-control mb-3" type="file" id="docArchivoPDF">
-
 
 <div class="table-responsive">
 <table class="table table-striped table-bordered">
@@ -520,14 +523,20 @@ x-text="modalFacturaTitulo">
 </div>
 
 
-<div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="row g-0 ms-auto w-100 justify-content-end align-items-start">
+
     <div class="col-12 col-md-auto d-grid">
-<template x-if="modalFacturaVista === 'edi'">
-<button type="button" class="btn bg-danger-subtle text-danger" @click="volverListaFacturas()">
-<i class="ti ti-arrow-narrow-left"></i>    
-Regresar</button>
-</template>
+        <template x-if="modalFacturaVista === 'edi'">
+            <button
+                type="button"
+                class="btn bg-danger-subtle text-danger"
+                @click="volverListaFacturas()">
+                <i class="ti ti-arrow-narrow-left"></i>
+                Regresar
+            </button>
+        </template>
     </div>
+
     <template x-if="modalFacturaVista === 'edi'">
         <div class="col-12 col-md-auto d-grid ms-0 ms-md-2 mt-1 mt-md-0">
             <button type="button" class="btn btn-success" @click="guardarEdi()" :disabled="guardandoEdi">
@@ -538,6 +547,8 @@ Regresar</button>
     </template>
 </div>
 
+
+  
 
 
 <div class="row g-0 ms-auto w-100 justify-content-end">
@@ -557,6 +568,7 @@ Regresar</button>
         </button>
     </div>
 </template>
+
 </div>
 
 

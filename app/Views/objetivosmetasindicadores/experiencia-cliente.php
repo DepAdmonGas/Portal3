@@ -14,7 +14,7 @@
 
   <div class="text-end mt-2">
       <div class="btn-group">
-          <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <button type="button" class="btn btn-light dropdown-toggle text-dark mb-3 mt-3" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
              <i class="ti ti-dots-vertical fs-4"></i>
           </button>
             <ul class="dropdown-menu animated rubberBand">

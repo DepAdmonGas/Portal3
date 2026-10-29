@@ -196,18 +196,18 @@
                             <label class="form-label">
 
 
-                                <strong>
+                                <strong class="mb-1">
                                     Nombre del residuo peligroso:
                                 </strong>
                             </label>
-                            <div class="mb-2"
+                            <div 
                                 x-text="detalleRegistro.nombreresiduo || 'S/I'">
                             </div>
 
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Cantidad generada:
                                 </strong>
@@ -218,7 +218,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Características de peligrosidad:
                                 </strong>
@@ -229,7 +229,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Área o proceso de generación:
                                 </strong>
@@ -242,7 +242,7 @@
                         <div class="row">
 
                             <div class="col-md-6">
-                                <label class="form-label">
+                                <label class="form-label mb-1">
                                     <strong>
                                         Fecha de ingreso:
                                     </strong>
@@ -254,7 +254,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">
+                                <label class="form-label mb-1">
                                     <strong>
                                         Fecha de salida:
                                     </strong>
@@ -274,7 +274,7 @@
                         </h5>
 
                         <div class="mb-2">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Nombre o razón social:
                                 </strong>
@@ -286,7 +286,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Número de autorización Semarnat:
                                 </strong>
@@ -302,7 +302,7 @@
                         </h5>
 
                         <div class="mb-2">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Nombre o razón social:
                                 </strong>
@@ -314,7 +314,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Número de autorización Semarnat:
                                 </strong>
@@ -331,7 +331,7 @@
                         </h5>
 
                         <div class="mb-2">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Nombre o razón social:
                                 </strong>
@@ -343,7 +343,7 @@
                         </div>
 
                         <div class="mb-2">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Número de autorización Semarnat:
                                 </strong>
@@ -355,7 +355,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Proceso de destino final:
                                 </strong>
@@ -369,7 +369,7 @@
 
 
                         <div>
-                            <label class="form-label">
+                            <label class="form-label mb-1">
                                 <strong>
                                     Responsable Técnico de la Bitácora:
                                 </strong>

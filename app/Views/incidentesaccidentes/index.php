@@ -652,7 +652,7 @@ data-bs-backdrop="static"
                         form.tipo_evento == '2'
                     ">
 
-                            <div class="form-check mb-3">
+                            <div class="form-check">
 
                                 <input
                                     type="checkbox"
@@ -697,7 +697,7 @@ data-bs-backdrop="static"
 
                                 </div>
 
-                                <div class="mb-3">
+                                <div class="mb-0">
 
                                     <label class="form-label">
                                         * Nombre del líder de la investigación:
@@ -715,7 +715,7 @@ data-bs-backdrop="static"
                         </template>
 
                         <template x-if="form.tipo_evento == '3' || form.hubo_muertes">
-                            <div class="mb-3">
+                            <div class="mb-0 mt-2">
 
                                 <label class="form-label">
                                     * Número de muertes

@@ -177,7 +177,6 @@ No se encontró información
 <label class="form-label mb-1">* Motivo:</label>
 <textarea class="form-control" x-model="motivo" rows="3"></textarea>
 </div>
-</div>
 
 
 

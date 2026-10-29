@@ -709,7 +709,7 @@ x-data="monitoreoEvaluacion()">
 
 </div>
 
-<div class="modal fade" id="modal-capacitacion" tabindex="-1" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+<div class="modal fade" id="modal-capacitacion" tabindex="-1" aria-labelledby="mySmallModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header mb-0 bg-primary d-flex align-items-center">
@@ -791,13 +791,17 @@ x-data="monitoreoEvaluacion()">
                 </div>
 
                 <div class="modal-footer">
-           <button
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
                     <i class="ti ti-x"></i> Cancelar
-
                 </button>
+                    </div>
+                  </div>
+
+           
                 </div>
                 
                   

@@ -12,15 +12,20 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
 <?php else: ?>
 
-<div class="text-end mb-3">
-      <?= 
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                      <?= 
         !empty($permisos['crear']) ? 
         '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalNuevo()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
-        ?>     
-    </div>
+        ?>   
+                    </div>
+                  </div>
+
+        
+
 
       <div class="datatables ">
     <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
@@ -76,9 +81,15 @@ x-data="{ ...actions(), ...implementacionSA()}">
                 <div class="text-start"> <h5 class="form-label">Lee detalladamente y contesta de manera honesta los siguientes cuestionamientos </h5></div>
 
                 <label class="form-label mt-2">* Fecha:</label>
-                <input type="date" class="form-control w-50" x-model="fecha"
+                <div class="row g-0 ms-auto w-100 justify-content-start">
+                    <div class="col-12 col-md-6 d-grid">
+                        <input type="date" class="form-control " x-model="fecha"
                 :class="errors.fecha ? 'is-invalid' : ''"
                   @input="errors.fecha = false">
+                    </div>
+                  </div>
+
+              
 
                 
 
@@ -173,13 +184,15 @@ x-data="{ ...actions(), ...implementacionSA()}">
                 </div>
 
                 <div class="modal-footer">
-
-                    <button class="btn bg-danger-subtle text-danger"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
                         <i class="ti ti-x"></i> Cancelar
                     </button>
-
-                    <button x-show="mode !== 'view'"
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button x-show="mode !== 'view'"
                             class="btn btn-success"
                             @click="guardar()">
 
@@ -187,6 +200,12 @@ x-data="{ ...actions(), ...implementacionSA()}">
                         <span x-text="mode === 'edit' ? 'Actualizar' : 'Guardar'"></span>
 
                     </button>
+                    </div>
+                  </div>
+
+                    
+
+                    
 
                 </div>
 
@@ -279,13 +298,17 @@ x-data="{ ...actions(), ...implementacionSA()}">
             </div>
 
             <div class="modal-footer">
-
-                <button class="btn bg-danger-subtle text-danger"
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                       <button class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                     <i class="ti ti-x"></i> Cerrar
-
                 </button>
+                    </div>
+                  </div>
+
+
+               
 
             </div>
 

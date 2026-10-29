@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       let html = '<div class="col-12 mt-4 mb-4">' +
-        '<div class="table-responsive">' +
+        '<div class="table-responsive mb-3">' +
         '<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">' +
           '<thead>' +
             '<tr><th colspan="10" class="text-center align-middle"><strong>Resumen de Impuestos</strong></th></tr>' +
@@ -90,8 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       var m = json.m;
       html += '<div class="col-12">' +
-        '<div class="table-responsive">' +
+        '<div class="table-responsive mb-5">' +
         '<table id="table-resumen-aceites-monedero" class="table table-bordered table-striped mb-0 text-nowrap align-middle">' +
+
           '<thead>' +
             '<tr><th colspan="15" class="text-center"><strong>Resumen Monederos</strong></th></tr>' +
             '<tr>' +

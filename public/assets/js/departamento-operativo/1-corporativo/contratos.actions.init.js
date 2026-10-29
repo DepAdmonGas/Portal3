@@ -61,10 +61,10 @@ return json.data || [];
 }
 },
 columns: [
-{ title:'#', data: 'num', className: 'text-center', width: '40px' },
+{ title:'#', data: 'num', className: 'text-center', width: '48px' },
 { title:'Estación', data: 'estacion_nombre', className: 'text-center', visible: esModoGlobal() },
 { title:'Fecha', data: 'fecha_formateada', className: 'text-center' },
-{ title:'Descripción del contrato', data: 'descripcion' },
+{ title:'Descripción del contrato', data: 'descripcion', className: 'text-center', },
 {
 title: '<a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>',
 data: null,
