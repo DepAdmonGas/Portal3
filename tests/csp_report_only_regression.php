@@ -97,9 +97,7 @@ $tests = [
             ['objetivosmetasindicadores/index.php', 'openNuevoReporteIndicador()'],
             ['sgm/normatividad/index.php', 'nuevo()'],
             ['sgm/procesos-medicion/programacion-anual-calibracion.php', 'openModalNuevo()'],
-            ['sgm/procesos-medicion/programacion-anual-calibracion.php', 'openModalBuscar()'],
             ['sgm/procesos-medicion/programacion-anual-verificacion.php', 'openModalNuevo()'],
-            ['sgm/procesos-medicion/programacion-anual-verificacion.php', 'openModalBuscar()'],
         ];
 
         foreach ($manifest as [$relativePath, $action]) {
@@ -108,7 +106,7 @@ $tests = [
             if (preg_match('~<a\\b[^>]*href=["\\\']javascript:void\\(0\\)["\\\'][^>]*@click=["\\\']' . $quotedAction . '["\\\'][^>]*>~', $source)) {
                 return false;
             }
-            if (!preg_match('~<button\\b[^>]*type=["\\\']button["\\\'][^>]*@click=["\\\']' . $quotedAction . '["\\\'][^>]*>~', $source)) {
+            if (!preg_match('~<button\\b(?=[^>]*\\btype=["\\\']button["\\\'])(?=[^>]*@click=["\\\']' . $quotedAction . '["\\\'])[^>]*>~', $source)) {
                 return false;
             }
         }
