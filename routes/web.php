@@ -2446,6 +2446,8 @@ $r->addRoute('POST', '/actividades/solicitar-revision', Route::auth(['SoporteAct
 
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------
     $r->addRoute('POST', '/telegram/webhook', ['TelegramWebhookController', 'handle']);
+    $r->addRoute('POST', '/telegram/webhook/demo', ['TelegramWebhookController', 'handleDemo']);
+    $r->addRoute('POST', '/telegram/webhook/dev', ['TelegramWebhookController', 'handleDev']);
     $r->addRoute('GET', '/telegram/poll', Route::auth(['TelegramWebhookController', 'poll']));
     $r->addRoute('POST', '/token-telegram/status', Route::auth(['TokenTelegramController', 'status']));
     $r->addRoute('POST', '/token-telegram/generate', Route::auth(['TokenTelegramController', 'generate']));

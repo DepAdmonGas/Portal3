@@ -298,24 +298,44 @@ if (!function_exists('mkdir_safe')) {
 
 // ============================================================
 // TELEGRAM: Obtiene el token del bot según el entorno
-// APP_ENV=local   → usa TELEGRAM_BOT_TOKEN_LOCAL (bot dedicado de pruebas locales)
-// APP_ENV=dev|demo→ usa TELEGRAM_BOT_TOKEN_DEMO  (pruebas en servidor)
-// APP_ENV=prod    → usa TELEGRAM_BOT_TOKEN        (servidor productivo)
+// APP_ENV=local   → bot dedicado local
+// APP_ENV=dev     → bot normal/de desarrollo
+// APP_ENV=demo|prod → bot DEMO (Portal3 en el servidor público)
 // ============================================================
 if (!function_exists('telegramBotToken')) {
     function telegramBotToken(): string
     {
         $env = $_ENV['APP_ENV'] ?? 'prod';
+        $tokens = [];
 
         if ($env === 'local') {
-            return $_ENV['TELEGRAM_BOT_TOKEN_LOCAL'] ?? $_ENV['TELEGRAM_BOT_TOKEN_DEMO'] ?? $_ENV['TELEGRAM_BOT_TOKEN'] ?? '';
+            $tokens = [
+                $_ENV['TELEGRAM_BOT_TOKEN_LOCAL'] ?? '',
+                $_ENV['TELEGRAM_BOT_TOKEN_DEV'] ?? '',
+                $_ENV['TELEGRAM_BOT_TOKEN'] ?? '',
+            ];
+        } elseif ($env === 'dev') {
+            $tokens = [
+                $_ENV['TELEGRAM_BOT_TOKEN_DEV'] ?? '',
+                $_ENV['TELEGRAM_BOT_TOKEN'] ?? '',
+            ];
+        } elseif (in_array($env, ['demo', 'prod'], true)) {
+            $tokens = [
+                $_ENV['TELEGRAM_BOT_TOKEN_DEMO'] ?? '',
+                $_ENV['TELEGRAM_BOT_TOKEN'] ?? '',
+            ];
+        } else {
+            $tokens = [$_ENV['TELEGRAM_BOT_TOKEN'] ?? ''];
         }
 
-        if (in_array($env, ['dev', 'demo'], true)) {
-            return $_ENV['TELEGRAM_BOT_TOKEN_DEMO'] ?? $_ENV['TELEGRAM_BOT_TOKEN'] ?? '';
+        foreach ($tokens as $token) {
+            $token = trim((string) $token);
+            if ($token !== '') {
+                return $token;
+            }
         }
 
-        return $_ENV['TELEGRAM_BOT_TOKEN'] ?? '';
+        return '';
     }
 }
 

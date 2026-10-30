@@ -448,8 +448,8 @@
                     Swal.fire({
                         icon: data.success ? 'success' : 'error',
                         title: data.success
-                            ? 'Mensaje enviado'
-                            : 'No se pudo enviar el mensaje',
+                            ? 'Prueba enviada'
+                            : 'No se pudo enviar la prueba',
                         text: data.message,
                         confirmButtonText: 'Aceptar'
                     });
@@ -459,9 +459,9 @@
 
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
+                        title: 'No se pudo enviar la prueba',
                         text: error.response?.data?.message ??
-                            'No fue posible enviar el mensaje.',
+                            'No pudimos enviar el mensaje de prueba. Inténtalo de nuevo.',
                         confirmButtonText: 'Aceptar'
                     });
 

@@ -12,7 +12,7 @@ use App\Services\SolicitudesFirmaDoService;
 /**
  * Datos de "Solicitudes pendientes (Firma)" del sidebar de Departamento
  * Operativo. La consulta está reservada a los usuarios con etapas de firma
- * asignadas: 2, 19 y 21; cada usuario sólo recibe sus flujos autorizados.
+ * asignadas: 2, 19, 21 y 30; cada usuario sólo recibe sus flujos autorizados.
  */
 class SolicitudesFirmaDoController extends BaseController
 {

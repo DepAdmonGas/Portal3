@@ -16,14 +16,16 @@ use Illuminate\Database\Capsule\Manager as Capsule;
  * en Portal3.
  *
  * Reglas heredadas que se conservan:
- *   - Sólo los usuarios 2 y 19 pueden consultar.
+ *   - Los usuarios 2, 19 y 21 consultan sus flujos asignados; el usuario 30
+ *     sólo consulta el VO.BO. de Solicitud de Cheques de Gestoría.
  *   - Cheque: sólo el mes en curso (las firmas de periodos anteriores ya no
  *     aplican).
  *   - Resto de solicitudes: mes actual y anterior (en enero: enero y
  *     diciembre), como en el sistema anterior.
  *   - Cheque se filtra por id_year/id_mes; el resto por fecha.
  *   - Los estatus dependen del usuario firmante:
- *       Cheque        usuario 2 => 1, usuario 19 => 0
+ *       Cheque        usuario 2 => 1, usuario 19 => 0,
+ *                     usuario 30 => 0 sólo para Gestoría
  *       Formatos      usuario 2 => 2, usuario 19 => 1
  *       Pinturas, Papelería, Limpieza, Aditivo
  *                     usuario 19 => 1, usuario 2 => 4
@@ -34,7 +36,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 class SolicitudesFirmaDoService
 {
     /** Usuarios autorizados (id real de tb_usuarios). */
-    public const USUARIOS = [2, 19, 21];
+    public const USUARIOS = [2, 19, 21, 30];
 
     public const TIPO_GENERAL = 'General';
 
@@ -155,6 +157,12 @@ class SolicitudesFirmaDoService
             return $opciones;
         }
 
+        // Usuario 30 sólo firma el VO.BO. de cheques de Gestoría.
+        if ((int)$idUsuario === 30) {
+            $opciones[] = ['valor' => 'Cheque', 'etiqueta' => self::ETIQUETAS['Cheque']];
+            return $opciones;
+        }
+
         $opciones[] = ['valor' => 'Cheque', 'etiqueta' => self::ETIQUETAS['Cheque']];
 
         if ((int) $idUsuario === 19) {
@@ -204,7 +212,9 @@ class SolicitudesFirmaDoService
 
         self::$cache[$idUsuario] = array_merge(
             $filas,
-            OrdenMantenimientoService::pendingSignatureItems($idUsuario)
+            in_array($idUsuario, [19, 21], true)
+                ? OrdenMantenimientoService::pendingSignatureItems($idUsuario)
+                : []
         );
 
         return self::$cache[$idUsuario];
@@ -221,6 +231,21 @@ class SolicitudesFirmaDoService
         $mes = (int) date('n');
 
         $esUsuario2 = (int) $idUsuario === 2;
+
+        if ((int)$idUsuario === 30) {
+            return Capsule::select(
+                "SELECT 'Cheque' AS tipo, id, fecha, beneficiario, monto, concepto, NULL AS formato, NULL AS comentarios
+                 FROM op_solicitud_cheque
+                 WHERE status = 0 AND id_year = ? AND id_mes = ? AND id_estacion = ? AND depto = ?
+                 ORDER BY fecha ASC, id ASC",
+                [
+                    $anio,
+                    $mes,
+                    SolicitudChequeService::ESTACION_GESTORIA,
+                    SolicitudChequeService::DEPARTAMENTO_GESTORIA,
+                ]
+            );
+        }
 
         $condCheque = $esUsuario2 ? 1 : 0;
         $condFormatos = $esUsuario2 ? 2 : 1;

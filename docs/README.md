@@ -22,6 +22,7 @@ Este directorio contiene la documentación técnica de **Portal3**, un sistema w
 | [`frontend/`](./frontend/README.md) | Frontend: Alpine.js, Axios, JS, CSS, librerías |
 | [`loader-global-acciones/`](./loader-global-acciones/README.md) | Uso del loader compartido para acciones, navegación y descargas |
 | [`badges-historicos-firma/`](./badges-historicos-firma/README.md) | Cálculo y presentación de contadores históricos de firmas pendientes |
+| [`Telegram/`](./Telegram/README.md) | Configuración del bot por entorno, webhook de producción, verificación y poller local |
 | [`architecture/database.md`](./architecture/database.md) | Esquema, relaciones, índices y convenciones de base de datos |
 | [`api/`](./api/README.md) | Endpoints HTTP, autenticación y convenciones de respuesta |
 | [`development/`](./development/README.md) | Configuración, entorno local, debugging y deploy |
