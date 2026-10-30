@@ -360,33 +360,20 @@
                     </table>
 
                     <div>
+    <label class="form-label mb-1">
+        Descripción detallada del servicio equipo que requiere:
+    </label>
 
-                        <label class="form-label fw-bolder text-black mb-1">
-                            Descripción detallada del servicio equipo que requiere:
-                        </label>
+    <p class="mb-3 text-dark" x-text="detalle.descripcion"></p>
+</div>
 
-                        <div>
-                            <p
-                        class="mb-3  text-black"
-                            x-text="detalle.descripcion">
-                            </p>
-                        </div>
+<div>
+    <label class="form-label mb-1">
+        Justificación del servicio que requiere:
+    </label>
 
-                    </div>
-
-                    <div>
-
-                        <label class="form-label fw-bolder text-black mb-1">
-                            Justificación del servicio que requiere:
-                        </label>
-
-                        <div>
-                        <p class="text-black"
-                            x-text="detalle.justificacion">
-                        </p>
-                        </div>
-
-                    </div>
+    <p class="mb-0 text-dark" x-text="detalle.justificacion"></p>
+</div>
 
                 </div>
 

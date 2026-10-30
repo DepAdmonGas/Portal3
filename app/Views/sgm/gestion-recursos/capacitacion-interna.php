@@ -15,8 +15,8 @@
 
 <div id="sgm-content">
 
-    <div class="clearfix mt-2">
-        <h5 class="float-start mb-0 mt-1">Año <span x-text="year"></span></h5>
+    <div class="clearfix mt-3 mb-3">
+        <h5 class="float-start">Año <span x-text="year"></span></h5>
         <div class="btn-group float-end">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ti ti-dots-vertical fs-4"></i>

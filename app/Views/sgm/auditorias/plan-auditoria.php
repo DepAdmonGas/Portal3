@@ -839,7 +839,7 @@ Nombre, denominación o razón social                    </td>
                                 </label>
 
                                 <textarea
-                                    class="form-control mb-3"
+                                    class="form-control"
                                     x-model="formAuditor.area_actividad"
                                     @change="errors.area_actividad = false"
                                     :class="errors.area_actividad ? 'is-invalid' : ''">
@@ -937,7 +937,7 @@ Nombre, denominación o razón social                    </td>
                                 </label>
 
                                 <textarea
-                                    class=" form-control mb-3"
+                                    class=" form-control"
                                     x-model="formAuxiliar.nombre"
                                     @change="errors.nombre = false"
                                     :class="errors.nombre ? 'is-invalid' : ''">
@@ -1118,7 +1118,7 @@ Nombre, denominación o razón social                    </td>
                         </label>
 
                         <textarea
-                            class="form-control mb-3"
+                            class="form-control"
                             rows="2"
                             x-model="formAgenda.guia">
             </textarea>
