@@ -104,8 +104,8 @@ document.addEventListener('DOMContentLoaded', function () {
             : '<a class="dropdown-item disabled"><i class="ti ti-mail fs-6"></i> Envío por correo</a>';
 
         var editar = row.puedeEditar
-            ? '<a class="dropdown-item" href="' + urlBase + '"><i class="ti ti-pencil fs-6"></i> Editar</a>'
-            : '<a class="dropdown-item disabled"><i class="ti ti-pencil fs-6"></i> Editar</a>';
+            ? '<a class="dropdown-item" href="' + urlBase + '"><i class="ti ti-edit fs-6"></i> Editar</a>'
+            : '<a class="dropdown-item disabled"><i class="ti ti-edit fs-6"></i> Editar</a>';
 
         var eliminar = row.puedeEliminar
             ? '<a class="dropdown-item pointer" data-action="pivoteo-eliminar" data-id="' + row.id + '" data-name="#' + row.id + '"><i class="ti ti-trash fs-6"></i> Eliminar</a>'

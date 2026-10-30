@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     let html = '<div x-data="actions()" class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a><div class="dropdown-menu">';
 
-                    html += '<a class="dropdown-item pointer btn-editar' + cls(activaEditar) + '" data-editar="' + (activaEditar ? 1 : 0) + '" data-row=\'' + rowJson + '\'><i class="ti ti-pencil me-1"></i> Editar</a>';
+                    html += '<a class="dropdown-item pointer btn-editar' + cls(activaEditar) + '" data-editar="' + (activaEditar ? 1 : 0) + '" data-row=\'' + rowJson + '\'><i class="ti ti-edit me-1"></i> Editar</a>';
 
                     // DELETE GLOBAL: se invoca desde el propio ambito
                     // x-data="actions()", que es el patron del proyecto para

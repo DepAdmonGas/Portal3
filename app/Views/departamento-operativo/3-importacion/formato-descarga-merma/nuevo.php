@@ -10,22 +10,23 @@ x-data="{ ...actions(), ...mermaForm() }">
 .signature-pad-wrapper.is-invalid { border-color: var(--bs-danger) !important; }
 </style>
 
-<div class="row">
+
 
 <!---------- BOTON DE FINALIZAR ---------->
-<div class="col-12">
-<div class="d-flex justify-content-end mb-3">
-<button type="button" class="btn btn-success d-inline-flex align-items-center gap-1" :disabled="guardando" @click="guardarNuevo()">
+<div class="row g-0 ms-auto w-100 justify-content-end mb-3">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button" class="btn btn-success align-items-center gap-1" :disabled="guardando" @click="guardarNuevo()">
 <!-- Spinner cuando guarda -->
 <span x-show="guardando" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-
 <i class="ti ti-check"></i>
 Finalizar
-
 </button>
-</div>
-</div>
+                    </div>
+                  </div>
 
+
+
+<div class="row">
 <!---------- CARD DATOS GENERALES ---------->
 <div class="col-12">
 <div class="card">

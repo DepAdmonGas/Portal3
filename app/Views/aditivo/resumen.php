@@ -2,7 +2,7 @@
 <div id="container" class="mb-4" data-base-url="<?= $baseUrl ?>" data-importacion="<?= $esImportacion ? '1' : '0' ?>">
 <div class="row mt-4 mb-4">
     <?php if ($esImportacion): ?>
-    <div class="col-12 d-flex flex-column flex-md-row justify-content-md-end gap-2">
+    <div class="col-12 d-flex flex-column flex-md-row justify-content-between gap-2">
         <div class="d-grid">
             <a href="<?= $baseUrl ?>" class="btn bg-danger-subtle text-danger">
                 <i class="ti ti-arrow-left"></i> Regresar

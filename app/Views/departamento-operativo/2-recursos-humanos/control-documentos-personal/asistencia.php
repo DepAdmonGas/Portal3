@@ -56,38 +56,54 @@ x-cloak>
 <div class="form-label mb-1">Comentario:</div>
 <div x-text="modalIncidencia.comentario || '—'"></div>
 </div>
-<div class="mb-3">
+
 <div class="form-label mb-1">Sueldo día:</div>
 <div x-text="modalIncidencia.puntos ?? '—'"></div>
-</div>
+
 <div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documento">
-<hr class="my-2">
-<div class="form-label mb-1">Documento:</div>
-<input type="file"
-class="form-control mt-1"
-accept=".pdf"
-id="cdFileDetalleIncidencia">
-<div class="text-end mt-2">
-<button type="button"
-class="btn btn-success btn-sm"
-@click="guardarDocumentoIncidencia()"
-:disabled="modalIncidencia.guardando">
-<template x-if="modalIncidencia.guardando">
-<span class="spinner-border spinner-border-sm me-1"></span>
-</template>
-<span x-text="modalIncidencia.guardando ? 'Guardando...' : 'Guardar'"></span>
-</button>
+
+<div class="form-label mb-1 mt-2">Documento:</div>
+
+<div class="input-group mt-1 mb-3">
+    <input
+        type="file"
+        class="form-control"
+        accept=".pdf"
+        id="cdFileDetalleIncidencia"
+    >
+
+    <button
+        type="button"
+        class="btn btn-success"
+        @click="guardarDocumentoIncidencia()"
+        :disabled="modalIncidencia.guardando">
+
+        <template x-if="modalIncidencia.guardando">
+            <span class="spinner-border spinner-border-sm me-1"></span>
+        </template>
+
+        <span x-text="modalIncidencia.guardando ? 'Guardando...' : 'Guardar'"></span>
+    </button>
 </div>
+
+
 </div>
+
 <div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento">
-<hr class="my-2">
-<div class="form-label mb-1">Documento:</div>
-<div class="mt-1">
-<a href="" @click.prevent="download('docs-personal-incidencias', modalIncidencia.documento)"
-class="btn btn-sm btn-outline-danger">
+
+<div class="form-label mb-1 mt-3">Documento:</div>
+
+<div class="row g-0 ms-auto w-100 justify-content-start">
+                    <div class="col-12 col-md-auto d-grid mb-0 mt-2">
+                      <a href="" @click.prevent="download('docs-personal-incidencias', modalIncidencia.documento)"
+class="btn  bg-danger-subtle text-danger">
 <i class="ti ti-file-text me-1"></i>Descargar PDF
 </a>
-</div>
+                    </div>
+                  </div>
+
+
+
 </div>
 </div>
 </template>

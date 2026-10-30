@@ -533,8 +533,9 @@ type="button"
 <div>
 <label class="form-label mb-1">* Nombre del personal:</label>
 <select id="select-personal-agregar" class="form-select" multiple></select>
-<small class="text-muted mt-1">Selecciona uno o varios colaboradores para agregarlos al periodo actual.</small>
-
+ <small class="form-text d-block mt-3 mb-1">
+        Selecciona uno o varios colaboradores para agregarlos al periodo actual.
+    </small>
 <template x-if="!personalFaltante.length">
 <div class="alert alert-secondary text-center text-muted mb-0">No hay personal disponible por agregar.</div>
 </template>

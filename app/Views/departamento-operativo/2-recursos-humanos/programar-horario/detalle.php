@@ -15,6 +15,7 @@
                   :class="reporte.estado == 1 ? 'text-bg-success' : 'text-bg-danger'">
                 <span x-text="reporte.estado == 1 ? 'Finalizado' : 'Pendiente'"></span>
             </span>
+            
 
             <span class="badge rounded-pill text-bg-primary ">
                 <i class="ti ti-calendar me-1"></i>

@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
         html += '<a class="dropdown-item pointer" href="/departamento-operativo/importacion/formato-descarga-merma-detalle/' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
         html += '<a class="dropdown-item pointer" href="/departamento-operativo/importacion/formato-descarga-merma/pdf/' + row.id + '" target="_blank"><i class="ti ti-file-type-pdf me-1"></i> Descargar PDF</a>';
         html += '<a class="dropdown-item pointer" href="/departamento-operativo/importacion/formato-descarga-merma/excel/' + row.id + '"><i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel</a>';
-        html += '<a class="dropdown-item pointer' + cls(puedeEditar) + '" href="' + (puedeEditar ? '/departamento-operativo/importacion/formato-descarga-merma-editar/' + row.id : 'javascript:void(0)') + '"><i class="ti ti-pencil me-1"></i> Editar</a>';
+        html += '<a class="dropdown-item pointer' + cls(puedeEditar) + '" href="' + (puedeEditar ? '/departamento-operativo/importacion/formato-descarga-merma-editar/' + row.id : 'javascript:void(0)') + '"><i class="ti ti-edit me-1"></i> Editar</a>';
         html += '<a class="dropdown-item pointer btn-eliminar' + cls(puedeEliminar) + '" href="#" data-id="' + row.id + '" data-name="Formato #00' + escHtml(row.folio) + '"><i class="ti ti-trash me-1"></i> Eliminar</a>';
         html += '</div></div>';
         return html;

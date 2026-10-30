@@ -14,8 +14,8 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 
 <template x-if="esMultiempleado">
 
-<div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+<div class="row g-0 ms-auto w-100 justify-content-end mb-3 mt-3">
+                    <div class="col-12 col-md-auto d-grid ">
                      <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirModal">
 <i class="ti ti-plus me-1"></i> Nuevo
 </button> 

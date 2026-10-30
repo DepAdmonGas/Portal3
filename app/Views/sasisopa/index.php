@@ -17,7 +17,7 @@
 
             <div class="text-end mt-2">
                 
-<div class="row g-0  ms-auto w-100 justify-content-end">
+<div class="row g-0  ms-auto w-100 justify-content-end mt-3 mb-3">
     <div class="col-12 col-md-auto d-grid">
 <button class="btn bg-primary-subtle text-primary "@click="abrirModalBuscar()">
 <i class="ti ti-search"></i> Buscar

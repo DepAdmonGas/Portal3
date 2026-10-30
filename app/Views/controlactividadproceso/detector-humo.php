@@ -58,7 +58,7 @@ x-data="{ ...actions(), ...detectorHumo()}">
                 @input="errors.no_detector = false" />
 
         <label class="form-label">* Ubicación:</label>
-        <textarea class="form-control mb-2" x-model="ubicacion"
+        <textarea class="form-control " x-model="ubicacion"
                 :class="errors.ubicacion ? 'is-invalid' : ''"
                 @input="errors.ubicacion = false"></textarea>
 

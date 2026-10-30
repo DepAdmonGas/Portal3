@@ -27,16 +27,26 @@ data-detalle='<?= htmlspecialchars(json_encode($detalle, JSON_HEX_APOS | JSON_HE
 </style>
 
 <!-- Barra de acciones -->
-<div class="d-flex flex-wrap align-items-center mb-3">
-<div class="ms-auto d-flex flex-wrap align-items-center">
-<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirAgregar()" x-show="puedeAgregar">
-<i class="ti ti-plus me-1"></i> Nuevo
+<div class="row g-0 ms-auto w-100 justify-content-end mb-3">
+                    <div class="col-12 col-md-auto d-grid me-0 me-md-2">
+    <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirAgregar()" x-show="puedeAgregar">
+<i class="ti ti-plus "></i> 
+Nuevo
 </button>
-<button type="button" class="btn btn-success ms-2" @click="confirmarFinalizar()" x-show="puedeFinalizar">
-<i class="ti ti-check me-1"></i> Finalizar
-</button>
-</div>
-</div>
+                    </div>
+
+                    <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
+                     <button type="button" class="btn btn-success" @click="confirmarFinalizar()" x-show="puedeFinalizar">
+<i class="ti ti-check"></i> 
+Finalizar
+</button> 
+                    </div>
+                  </div>
+
+
+
+
+
 
 <!-- Tabla superior -->
 <template x-if="multiestacion">
@@ -128,7 +138,7 @@ x-text="detalle.causa"
                                             <template x-if="inlineEditable">
                                                 <button type="button" class="btn bg-primary-subtle text-primary btn-sm w-100 h-100 rounded-0"
                                                         @click="abrirEstacion(fila.id_detalle, 1, fila.estacion_fc, fila.destino_fc)">
-                                                    <i class="ti ti-pencil fs-5"></i>
+                                                    <i class="ti ti-edit fs-5"></i>
                                                 </button>
                                             </template>
                                         </td>
@@ -138,7 +148,7 @@ x-text="detalle.causa"
                                             <template x-if="inlineEditable">
                                                 <button type="button" class="btn bg-primary-subtle text-primary btn-sm w-100 h-100 rounded-0"
                                                         @click="abrirEstacion(fila.id_detalle, 2, fila.estacion_fn, fila.destino_fn)">
-                                                    <i class="ti ti-pencil fs-5"></i>
+                                                    <i class="ti ti-edit fs-5"></i>
                                                 </button>
                                             </template>
                                         </td>
@@ -304,13 +314,15 @@ x-text="detalle.causa"
                                 <template x-if="puedeEliminarDetalle">
                                     <button type="button" class="btn bg-danger text-white w-100"
                                             @click="confirmarEliminarDetalle(fila.id_detalle)">
-                                        <i class="ti ti-trash me-1"></i> Eliminar
+                                        <i class="ti ti-trash "></i> 
+                                        Eliminar
                                     </button>
                                 </template>
                                 <template x-if="!puedeEliminarDetalle">
                                     <button type="button" class="btn bg-danger text-white w-100 opacity-50" style="cursor: not-allowed;" disabled
                                             title="No se puede eliminar este registro">
-                                        <i class="ti ti-trash me-1"></i> Eliminar
+                                        <i class="ti ti-trash "></i> 
+                                        Eliminar
                                     </button>
                                 </template>
                             </div>
@@ -331,7 +343,7 @@ x-text="detalle.causa"
     </template>
 
     <!-- Modal Agregar Línea -->
-    <div class="modal fade" id="modalAgregar" tabindex="-1" x-ref="modalAgregar">
+    <div class="modal fade" id="modalAgregar" tabindex="-1" x-ref="modalAgregar" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header modal-colored-header bg-primary text-white">
@@ -396,27 +408,38 @@ x-text="detalle.causa"
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
                         <i class="ti ti-x"></i> Cancelar
                     </button>
-                    <button type="button" class="btn btn-success" @click="guardarAgregar()" :disabled="guardando">
-                        <template x-if="!guardando"><i class="ti ti-check fs-5 me-1"></i></template>
+                    </div>
+
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarAgregar()" :disabled="guardando">
+                        <template x-if="!guardando"><i class="ti ti-check"></i></template>
                         <template x-if="guardando">
                             <span class="spinner-border spinner-border-sm me-1"></span>
                         </template>
                         Guardar
                     </button>
+                    </div>
+                  </div>
+
+                    
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Modal Seleccionar Estación -->
-    <div class="modal fade" id="modalEstacion" tabindex="-1" x-ref="modalEstacion">
+    <div class="modal fade" id="modalEstacion" tabindex="-1" x-ref="modalEstacion" 
+data-bs-backdrop="static"  data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header modal-colored-header bg-primary text-white">
-                    <h5 class="modal-title text-white"><i class="ti ti-pencil me-2"></i>Editar <span x-text="'Pivoteo (#' + id + ')'"></span></h5>
+                    <h5 class="modal-title text-white"><i class="ti ti-edit me-2"></i>Editar <span x-text="'Pivoteo (#' + id + ')'"></span></h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -435,8 +458,8 @@ x-text="detalle.causa"
                         </div>
 
                         <div class="col-12">
-<hr>
-                        <h5 class="text-primary mb-3">Otra Estación</h5>
+
+                        <h5 class="text-primary mb-3 mt-3">Otra Estación</h5>
 
                             <div :class="{ 'opacity-50 pe-none': !!estacionForm.estacion }">
 
@@ -455,23 +478,33 @@ x-text="detalle.causa"
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
                         <i class="ti ti-x"></i> Cancelar
-                    </button>
-                    <button type="button" class="btn btn-success" @click="guardarEstacion()" :disabled="guardando">
-                        <template x-if="!guardando"><i class="ti ti-check fs-5 me-1"></i></template>
+                    </button> 
+                    </div>
+
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarEstacion()" :disabled="guardando">
+                        <template x-if="!guardando"><i class="ti ti-check"></i></template>
                         <template x-if="guardando">
                             <span class="spinner-border spinner-border-sm me-1"></span>
                         </template>
                         Guardar
                     </button>
+                    </div>
+                  </div>
+                    
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Modal Envío por correo -->
-    <div class="modal fade" id="modalGmail" tabindex="-1">
+    <div class="modal fade" id="modalGmail" tabindex="-1" 
+data-bs-backdrop="static"  data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header modal-colored-header bg-primary text-white">
@@ -514,16 +547,23 @@ x-text="detalle.causa"
                     </template>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
                         <i class="ti ti-x"></i> Cancelar
                     </button>
-                    <button type="button" class="btn btn-success" @click="guardarGmail()" :disabled="guardando">
-                        <template x-if="!guardando"><i class="ti ti-send fs-5 me-1"></i></template>
+                    </div>
+
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarGmail()" :disabled="guardando">
+                        <template x-if="!guardando"><i class="ti ti-send "></i></template>
                         <template x-if="guardando">
                             <span class="spinner-border spinner-border-sm me-1"></span>
                         </template>
                         Enviar
                     </button>
+                    </div>
+                  </div>
                 </div>
             </div>
         </div>

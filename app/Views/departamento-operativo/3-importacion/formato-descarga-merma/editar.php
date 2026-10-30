@@ -11,19 +11,23 @@ x-data="{ ...actions(), ...mermaFormEditar() }">
 .form-check.is-invalid .form-check-label { color: var(--bs-danger); }
 </style>
 
-<div class="row">
 
-<div class="col-12">
-    <div class="d-flex justify-content-end align-items-center mb-3">
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-success d-inline-flex align-items-center gap-1" :disabled="guardando" @click="guardarEditar()">
+
+<div class="row g-0 ms-auto w-100 justify-content-end mb-3">
+                    <div class="col-12 col-md-auto d-grid">
+                       <button type="button" class="btn btn-success  align-items-center gap-1" :disabled="guardando" @click="guardarEditar()">
                 <span x-show="guardando" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 <i class="ti ti-check"></i> Actualizar
             </button>
-        </div>
-    </div>
-</div>
+                    </div>
+                  </div>
 
+
+           
+
+
+
+<div class="row">
 <!---------- CARD DATOS GENERALES ---------->
 <div class="col-12">
 <div class="card">

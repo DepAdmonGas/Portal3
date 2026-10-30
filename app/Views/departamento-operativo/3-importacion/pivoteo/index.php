@@ -42,7 +42,7 @@
     </div>
 
     <!-- Modal Detalle -->
-    <div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header modal-colored-header bg-primary text-white">
@@ -278,13 +278,27 @@
 
                         </div>
                     </template>
+
+                    <div class="footer">
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button type="button"
+                            class="btn bg-danger-subtle text-danger"
+                            data-bs-dismiss="modal">
+                            <i class="ti ti-x"></i> Cerrar
+                        </button>
+                    </div>
+                  </div>
+
+                         
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Modal Envío por correo -->
-    <div class="modal fade" id="modalGmail" tabindex="-1">
+    <div class="modal fade" id="modalGmail" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header modal-colored-header bg-primary text-white">
@@ -342,17 +356,32 @@
 <div class="alert alert-secondary text-center mb-0" role="alert" x-show="gmailHistorial.length === 0">
     <p class="mb-0">No se encontro información.</p>
 </div>                </div>
+
+
                 <div class="modal-footer">
-                    <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                     <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
                         <i class="ti ti-x"></i> Cancelar
-                    </button>
-                    <button type="button" class="btn btn-success" @click="guardarGmail()" :disabled="guardando">
+                    </button> 
+                    </div>
+
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarGmail()" :disabled="guardando">
                         <template x-if="!guardando"><i class="ti ti-send fs-5 me-1"></i></template>
                         <template x-if="guardando">
                             <span class="spinner-border spinner-border-sm me-1"></span>
                         </template>
                         Enviar
                     </button>
+                    </div>
+                  </div>
+
+
+                    
+
+                    
+
                 </div>
             </div>
         </div>

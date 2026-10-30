@@ -94,7 +94,7 @@ function renderAccionesActivas(row) {
 var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
 html += '<a class="dropdown-item pointer cd-btn-asistencia" data-id="' + row.id + '"><i class="ti ti-clock me-1"></i> Asistencia</a>';
 html += '<a class="dropdown-item pointer cd-btn-acceso" data-id="' + row.id + '" data-nombre="' + row.nombre_completo + '"><i class="ti ti-key me-1"></i> Acceso</a>';
-html += '<a class="dropdown-item pointer cd-btn-editar" data-id="' + row.id + '"><i class="ti ti-pencil me-1"></i> Editar informacion</a>';
+html += '<a class="dropdown-item pointer cd-btn-editar" data-id="' + row.id + '"><i class="ti ti-edit me-1"></i> Editar informacion</a>';
 if (puedeEliminar) {
 html += '<a class="dropdown-item pointer cd-btn-baja" data-id="' + row.id + '" data-nombre="' + row.nombre_completo + '"><i class="ti ti-user-off me-1"></i> Dar de Baja</a>';
 }
