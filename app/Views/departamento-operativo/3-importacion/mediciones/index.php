@@ -13,17 +13,21 @@
 }
 </style>
 
-    <div class="row">
-        <div class="col-12">
-
-<div class="float-end mb-3" x-show="puedeCrear">
-    <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirNuevo()">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3">
+                      <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirNuevo()">
         <i class="ti ti-plus me-1"></i> Nuevo
     </button>
-</div>
+                    </div>
+                  </div>
 
-        </div>
-    </div>
+
+
+    
+
+
+     
+ 
 
     <div class="datatables">
         <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
@@ -34,7 +38,7 @@
     </div>
 
     <!-- Modal Nuevo -->
-    <div class="modal fade" id="modalNuevo" tabindex="-1">
+    <div class="modal fade" id="modalNuevo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header modal-colored-header bg-primary text-white">
@@ -75,16 +79,37 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
-                        <i class="ti ti-x"></i> Cancelar
+
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button type="button" 
+                    class="btn bg-danger-subtle text-danger" 
+                    data-bs-dismiss="modal">
+                        <i class="ti ti-x"></i> 
+                        Cancelar
                     </button>
-                    <button type="button" class="btn btn-success" @click="guardarNuevo()" :disabled="guardando">
-                        <template x-if="!guardando"><i class="ti ti-check fs-5 me-1"></i></template>
+                    </div>
+
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" 
+                    class="btn btn-success"
+                     @click="guardarNuevo()" 
+                     :disabled="guardando">
+                        <template x-if="!guardando">
+                            <i class="ti ti-check"></i>
+                        </template>
                         <template x-if="guardando">
                             <span class="spinner-border spinner-border-sm me-1"></span>
                         </template>
+                        
                         Guardar
                     </button>
+                    </div>
+                  </div>
+
+                   
+
+                    
                 </div>
             </div>
         </div>

@@ -54,12 +54,14 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+
                     <div class="row g-3">
                         <div class="col-12">
-                    <label class="form-label">* Nombre completo:</label>
+                    <label class="form-label mb-1">* Nombre completo:</label>
+
                             <div class="select2-modal-field is-select2-pending" x-ref="personalWrapper">
-                                <select class="form-select" x-ref="personalSelect">
-                                    <option value="">Selecciona un colaborador...</option>
+                                <select class="form-select mb-3" x-ref="personalSelect">
+                                    <option value="">Selecciona una opcion...</option>
                                     <?php foreach ($personal as $p): ?>
                                         <option value="<?= (int)$p['id'] ?>"><?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?></option>
                                     <?php endforeach; ?>
@@ -67,11 +69,11 @@
                             </div>
                         </div>
                         <div class="col-12">
-                         <label class="form-label">* Motivo:</label>
-                            <textarea class="form-control" rows="2" x-model="agregarForm.motivo"></textarea>
+                         <label class="form-label mb-1">* Motivo:</label>
+                            <textarea class="form-control mb-1" rows="2" x-model="agregarForm.motivo"></textarea>
                         </div>
                         <div class="col-12">
-                        <label class="form-label">* Descripción:</label>
+                        <label class="form-label mb-1">* Descripción:</label>
 
 
                             <textarea class="form-control" rows="3" x-model="agregarForm.detalle"></textarea>
@@ -79,21 +81,27 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-           <button type="button"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                        <button type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
                         <i class="ti ti-x"></i> Cancelar
                     </button>
+                    </div>
 
-
-
-                <button type="button" class="btn btn-success" @click="guardarAgregar()" :disabled="guardando">
-                        <template x-if="!guardando"><i class="ti ti-check fs-5 me-1"></i></template>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="guardarAgregar()" :disabled="guardando">
+                        <template x-if="!guardando"><i class="ti ti-check"></i></template>
                         <template x-if="guardando">
                             <span class="spinner-border spinner-border-sm me-1"></span>
                         </template>
                         Guardar
                     </button>
+                    </div>
+                  </div>
+
+
                 </div>
             </div>
         </div>
@@ -111,20 +119,35 @@
                     <div class="row g-3">
                         <div class="col-12">
 
-                        <label class="form-label">* Fecha de inicio:</label>
-                            <input type="date" class="form-control" x-model="buscarForm.fechaInicio">
+                        <label class="form-label mb-1">* Fecha de inicio:</label>
+                            <input type="date" class="form-control mb-1" x-model="buscarForm.fechaInicio">
                         </div>
                         <div class="col-12">
-                                                    <label class="form-label">* Fecha de fin:</label>
+                                                    <label class="form-label mb-1">* Fecha de fin:</label>
                             <input type="date" class="form-control" x-model="buscarForm.fechaFin">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" @click="buscar()">
-                        <i class="ti ti-search fs-5 me-1"></i>Buscar
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+             <button type="button"
+             class="btn bg-danger-subtle text-danger" 
+             data-bs-dismiss="modal">
+             <i class="ti ti-x"></i>
+             Cancelar
+            </button>
+
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button" class="btn btn-success" @click="buscar()">
+                        <i class="ti ti-search"></i>
+                        Buscar
                     </button>
+                    </div>
+                  </div>
+
+                    
                 </div>
             </div>
         </div>

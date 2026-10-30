@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         html += '<a class="dropdown-item pointer btn-detalle" data-id="' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
 
-        html += '<a class="dropdown-item pointer btn-editar' + (esPendiente ? '' : ' disabled') + '" data-id="' + row.id + '"><i class="ti ti-pencil me-1"></i> Editar</a>';
+        html += '<a class="dropdown-item pointer btn-editar' + (esPendiente ? '' : ' disabled') + '" data-id="' + row.id + '"><i class="ti ti-edit me-1"></i> Editar</a>';
 
         html += '<a class="dropdown-item pointer btn-eliminar' + (esPendiente ? '' : ' disabled') + '" data-id="' + row.id + '" data-name="Reporte #' + row.id + '" data-action="eliminar"><i class="ti ti-trash me-1"></i> Eliminar</a>';
 
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function(v, t, row) { return estatusBadge(row.estado); }
         },
         {
-            title: '<i class="fas fa-ellipsis-v"></i>',
+            title: '<i class="ti ti-dots-vertical fs-5"></i>',
             data: null,
             className: 'align-middle text-center',
             orderable: false,

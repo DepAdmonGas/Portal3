@@ -5,29 +5,51 @@
      data-reporte='<?= htmlspecialchars(json_encode($reporte, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>'
      x-data="{ ...actions(), ...inventariosReporteComponent() }">
 
-<div class="row align-items-end mb-3">
-    <!-- Lado izquierdo: Fecha e Input (Ocupa la mitad en pantallas medianas/grandes y todo el ancho en celulares) -->
-    <div class="col-xl-4 col-lg-5 col-md-6 col-12 mb-2 mb-md-0">
-        <div id="fecha-programacion-wrapper" class="programar-horario-date-filter inventarios-diarios-date-filter d-inline-flex align-items-center bg-light border rounded-pill px-3 px-md-4 py-2 gap-2 w-100">
+<div class="row align-items-center justify-content-between mb-3 mt-3 g-2">
+
+    <!-- Fecha: lado izquierdo -->
+    <div class="col-12 col-md-6 ">
+        <div id="fecha-programacion-wrapper"
+             class="programar-horario-date-filter inventarios-diarios-date-filter d-inline-flex align-items-center bg-light border rounded-pill px-3 px-md-4 py-2 gap-2 w-100">
+
             <label for="Fecha" class="text-muted fw-semibold text-nowrap d-flex align-items-center gap-1 mb-0">
                 <i class="ti ti-calendar fs-5 text-primary"></i>
                 <span>Fecha:</span>
             </label>
-            <input type="date" class="form-control border-0 bg-transparent fw-semibold flex-grow-1" id="Fecha" x-model="fecha">
+
+            <input type="date"
+                   class="form-control border-0 bg-transparent fw-semibold flex-grow-1"
+                   id="Fecha"
+                   x-model="fecha">
         </div>
     </div>
 
-    <!-- Lado derecho: Botones (Alineados a la derecha en pantallas medianas/grandes, y a la izquierda o completo en celulares según prefieras) -->
-    <div class="col-xl-8 col-lg-7 col-md-6 col-12">
-        <div class="d-flex justify-content-md-end justify-content-start flex-wrap gap-2">
-            <button type="button" class="btn bg-success text-white" x-show="puedeEditar" x-on:click="finalizar()" :disabled="guardando">
-                <i class="ti ti-check me-1"></i> Finalizar inventario
-            </button>
-                        <button type="button" class="btn bg-primary-subtle text-primary" x-show="puedeCrear" x-on:click="abrirModal()">
-                <i class="ti ti-plus me-1"></i> Nuevo
-            </button>
+    <!-- Botones: lado derecho -->
+    <div class="col-12 col-md-auto">
+        <div class="d-flex flex-column flex-md-row justify-content-md-end gap-2">
+
+            <div class="d-grid d-md-block">
+                <button type="button"
+                        class="btn bg-success text-white"
+                        x-show="puedeEditar"
+                        x-on:click="finalizar()"
+                        :disabled="guardando">
+                    <i class="ti ti-check me-1"></i> Finalizar inventario
+                </button>
+            </div>
+
+            <div class="d-grid d-md-block">
+                <button type="button"
+                        class="btn bg-primary-subtle text-primary"
+                        x-show="puedeCrear"
+                        x-on:click="abrirModal()">
+                    <i class="ti ti-plus me-1"></i> Nuevo
+                </button>
+            </div>
+
         </div>
     </div>
+
 </div>
 
 
@@ -103,7 +125,7 @@
     </div>
 
     <!-- Modal Nuevo registro -->
-    <div class="modal fade" id="modalAgregarSucursal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalAgregarSucursal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"  data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
 
@@ -167,18 +189,28 @@
                 
                 <div class="modal-footer">
 
-            <button type="button"
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         @click="resetModal()">
                     <i class="ti ti-x"></i> Cancelar
                 </button>
-
-            <button type="button"
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button"
                         class="btn bg-success text-white"
                         x-on:click="guardarSucursal()" :disabled="guardando">
-                   <i class="ti ti-check me-1"></i> Guardar
+                   <i class="ti ti-check"></i> 
+                   Guardar
                 </button>
+                    </div>
+                  </div>
+
+           
+
+            
                 
                 </div>
             </div>

@@ -335,15 +335,29 @@ style="width:28px;height:28px;">11</span>
 <div :class="info.fullWidth ? 'col-12' : 'col-xl-6 col-lg-6 col-md-12'">
 <label class="form-label fw-semibold" x-text="info.label + ':'"></label>
 
-<div class="input-group">
-<input type="file" class="form-control" :ref="'doc_' + campo" :name="'doc_' + campo" accept=".pdf,.jpg,.jpeg,.png">
 
-<template x-if="modoForm === 'editar' && form.documentos[campo]">
-<button type="button" class="btn btn-outline-primary px-3 d-inline-flex align-items-center justify-content-center" @click="downloadDocumento(campo, form.documentos[campo])" title="Descargar archivo actual" aria-label="Descargar archivo actual">
-<i class="ti ti-download"></i>
-</button>
-</template>
+<div class="input-group">
+    <input
+        type="file"
+        class="form-control"
+        :ref="'doc_' + campo"
+        :name="'doc_' + campo"
+        accept=".pdf,.jpg,.jpeg,.png"
+    >
+
+    <template x-if="modoForm === 'editar' && form.documentos[campo]">
+        <button
+            type="button"
+            class="btn bg-light text-dark border px-3 d-inline-flex align-items-center justify-content-center"
+            @click="downloadDocumento(campo, form.documentos[campo])"
+            title="Descargar archivo actual"
+            aria-label="Descargar archivo actual"
+        >
+            <i class="ti ti-download"></i>
+        </button>
+    </template>
 </div>
+
 
 </div>
 </template>
@@ -699,7 +713,7 @@ x-text="accesoData.pin ? accesoData.pin : 'No registrado'">
 <template x-if="!accesoGuardando"><i class="ti ti-check"></i></template>
 </button>
 
-<button type="button" class="btn btn-outline-secondary" @click="toggleEditPin()">
+<button type="button" class="btn bg-danger-subtle text-danger" @click="toggleEditPin()">
 <i class="ti ti-x"></i>
 </button>
 

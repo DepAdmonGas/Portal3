@@ -8,12 +8,18 @@
 
     <div class="row">
 
-        <div class="col-12 mb-3 text-end" id="ph-agregar-wrapper" style="display:none;">
-            <button type="button" class="btn btn-primary"
+       <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3"  id="ph-agregar-wrapper" >
+                      <button type="button" class="btn bg-primary-subtle text-primary"
                     @click="agregarReporte()">
                 <i class="ti ti-plus me-1"></i> Nuevo
             </button>
-        </div>
+                    </div>
+                  </div>
+
+        
+            
+
 
         <div class="datatables">
             <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">

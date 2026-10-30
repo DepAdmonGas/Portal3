@@ -315,10 +315,10 @@ Nuevo organigrama</h5>
 <label class="form-label">* Imagen (JPG, PNG):</label>
 <input type="file" class="form-control" x-ref="fileArchivo" accept=".jpg,.jpeg,.png">
 </div>
-<div class="mb-3">
+
 <label class="form-label">Observaciones:</label>
 <textarea class="form-control" placeholder="Escribe tus observaciones" x-model="form.observaciones" rows="3"></textarea>
-</div>
+
 </div>
 
 
@@ -363,10 +363,10 @@ class="btn btn-success"
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
-<div class="mb-3">
+
 <label class="form-label">* Documento (PDF):</label>
 <input type="file" class="form-control" x-ref="fileDocumento" accept=".pdf">
-</div>
+
 </div>
 <div class="modal-footer">
 <div class="row g-0 ms-auto w-100 justify-content-end">

@@ -21,15 +21,17 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="d-flex mb-3" :class="puedeCrear ? 'justify-content-between' : 'justify-content-end'">
+        <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center mb-3"
+             :class="puedeCrear ? 'justify-content-between' : 'justify-content-between'">
 
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn bg-success-subtle text-success" onclick="descargarExcel()">
+            <div class="d-grid d-md-block mb-1 mb-md-0">
+                <button type="button" class="btn bg-success-subtle text-success w-100"
+                        onclick="descargarExcel()">
                     <i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel
                 </button>
             </div>
 
-            <div x-show="puedeCrear">
+            <div x-show="puedeCrear" class="d-grid d-md-block ">
                 <a href="/departamento-operativo/importacion/formato-descarga-merma-nuevo"
                    class="btn bg-primary-subtle text-primary">
                     <i class="ti ti-plus me-1"></i> Nuevo

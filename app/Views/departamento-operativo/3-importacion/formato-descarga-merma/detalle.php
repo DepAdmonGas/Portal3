@@ -2,26 +2,29 @@
 data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? 'formato-descarga-merma', ENT_QUOTES, 'UTF-8') ?>"
 x-data="{ ...actions() }">
 
-<div class="row">
-    <div class="col-12 mb-3">
-        <!-- Se cambió justify-content-between por justify-content-end -->
-        <div class="d-flex justify-content-end align-items-center ">
-            <div class="d-flex gap-2">
-                <?php if ($puedeDescargar): ?>
-                    <a href="/departamento-operativo/importacion/formato-descarga-merma/pdf/<?= $registro['id'] ?>"
-                       class="btn btn-outline-danger" target="_blank">
-                        <i class="ti ti-file-type-pdf me-1"></i> Descargar PDF
-                    </a>
-                    <a href="/departamento-operativo/importacion/formato-descarga-merma/excel/<?= $registro['id'] ?>"
-                       class="btn btn-outline-success">
-                        <i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel
-                    </a>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-</div>
 
+        <!-- Se cambió justify-content-between por justify-content-end -->
+
+                <?php if ($puedeDescargar): ?>
+    <div class="row g-2 ms-0 ms-md-auto mb-3 w-100 justify-content-between">
+
+        <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+            <a href="/departamento-operativo/importacion/formato-descarga-merma/pdf/<?= $registro['id'] ?>"
+               class="btn btn-outline-danger" target="_blank">
+                <i class="ti ti-file-type-pdf me-1"></i> Descargar PDF
+            </a>
+        </div>
+
+        <div class="col-12 col-md-auto d-grid">
+            <a href="/departamento-operativo/importacion/formato-descarga-merma/excel/<?= $registro['id'] ?>"
+               class="btn btn-outline-success">
+                <i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel
+            </a>
+        </div>
+
+    </div>
+<?php endif; ?>
+      
 
 <div class="row">
 
