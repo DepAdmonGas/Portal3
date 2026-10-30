@@ -18,7 +18,7 @@
 
     <script type="application/json" id="personal-data"><?= json_encode($puestos, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 
-    <div class="text-end mt-2">
+    <div class="text-end mt-3 mb-3">
         <div class="btn-group">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ti ti-dots-vertical fs-4"></i>

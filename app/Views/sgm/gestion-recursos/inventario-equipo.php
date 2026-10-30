@@ -176,7 +176,7 @@
 
                         <input
                             type="date"
-                            class="form-control mb-3"
+                            class="form-control mb-0"
                             x-model="form.fecha_instalacion">
 
 
@@ -185,7 +185,7 @@
                     <template x-if="modo == 'edit'">
 
                         <div>
-                            <label class="form-label fw-bolder mb-2">
+                            <label class="form-label fw-bolder mb-2 mt-3">
 
                                 Manuales, garantías o información documental:
 

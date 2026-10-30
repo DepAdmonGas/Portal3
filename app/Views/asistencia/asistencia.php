@@ -29,7 +29,7 @@ x-init="
 <!----------inicio de primera card------->
 <div class="row">
 
-    <div class="col-sm-6 col-12">
+    <div class="col-12 col-md-6">
         
 <div class="card">
     <div class="card-body">
@@ -238,7 +238,7 @@ x-init="
 
 
 
-    <div class="col-sm-6 col-12">
+    <div class="col-12 col-md-6">
 
 
     <div class="card">

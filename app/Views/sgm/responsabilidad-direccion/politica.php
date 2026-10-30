@@ -45,7 +45,7 @@ class="pb-4"
                 >
             </div>
         </div>
-        <div class="col-12 col-md-6 d-flex justify-content-md-end">
+        <div class="col-12 col-md-6 d-grid justify-content-md-end ">
             <button
                 type="button"
                 class="btn btn-success"
