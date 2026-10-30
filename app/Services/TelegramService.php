@@ -9,16 +9,21 @@ use App\Models\Usuario;
 class TelegramService
 {
 private string $apiUrl;
+private ?string $lastError = null;
 
-public function __construct()
+public function __construct(?string $botToken = null)
 {
-$token = telegramBotToken();
-$this->apiUrl = "https://api.telegram.org/{$token}";
+$token = $botToken ?? telegramBotToken();
+        $this->apiUrl = $token !== '' ? "https://api.telegram.org/bot{$token}" : '';
 }
 
 public function sendMessage(int $chatId, string $mensaje, string $parseMode = 'HTML'): bool
 {
-if (empty($this->apiUrl)) return false;
+    $this->lastError = null;
+    if (empty($this->apiUrl)) {
+        $this->lastError = 'token_missing';
+        return false;
+    }
 
 $data = [
 'chat_id' => $chatId,
@@ -37,11 +42,34 @@ CURLOPT_RETURNTRANSFER => true,
 CURLOPT_TIMEOUT => 10,
 ]);
 
-curl_exec($ch);
+$response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlError = curl_errno($ch);
 curl_close($ch);
 
-return $httpCode === 200;
+if ($curlError !== 0 || !is_string($response)) {
+    $this->lastError = 'network_error';
+    error_log('[Telegram] sendMessage request failed (HTTP ' . (int) $httpCode . ', cURL ' . (int) $curlError . ').');
+    return false;
+}
+
+$result = json_decode($response, true);
+if (!is_array($result) || $httpCode !== 200 || ($result['ok'] ?? false) !== true) {
+    $errorCode = is_array($result) ? (int) ($result['error_code'] ?? 0) : 0;
+    $description = is_array($result) && is_string($result['description'] ?? null)
+        ? preg_replace('/[\r\n]+/', ' ', $result['description'])
+        : 'Respuesta inválida de la Bot API.';
+    $this->lastError = (string) $errorCode . ':' . $description;
+    error_log('[Telegram] sendMessage rejected (HTTP ' . (int) $httpCode . ', API ' . $errorCode . '): ' . $description);
+    return false;
+}
+
+return true;
+}
+
+public function getLastError(): ?string
+{
+    return $this->lastError;
 }
 
 public function sendToken(int $idUsuario, string $mensaje): bool
@@ -226,17 +254,21 @@ return Usuario::where('id_gas', 8)
 
 public function handleWebhookMessage(string $userMessage, int $chatId): bool
 {
-if ($userMessage === '/start') {
-return $this->sendMessage($chatId, "Bienvenid@ al sistema de Recepcion de token.\n\nDeberas de ingresar el token generado en el portal para poder llevar a cabo la recepción de token.");
-}
-
 $existing = TokenTelegram::where('chat_id', $chatId)
 ->where('estatus', 1)
 ->orderBy('id', 'desc')
 ->first();
 
+if ($userMessage === '/start' || str_starts_with($userMessage, '/start ')) {
+    if ($existing) {
+        return $this->sendMessage($chatId, "¡TU USUARIO YA SE ENCUENTRA VERIFICADO! ✅👤\n\nNo es necesario responder a este chat. Aquí recibirás las notificaciones internas del Portal de Admongas, además de los códigos de autorización.");
+    }
+
+    return $this->sendMessage($chatId, "👋 <b>Vincula tu cuenta de Portal 3</b>\n\nEste chat aún no está vinculado. Entra a tu perfil de Portal 3, genera un token de Telegram y envíalo en este chat.");
+}
+
 if ($existing) {
-return $this->sendMessage($chatId, "¡TU USUARIO YA SE ENCUENTRA VERIFICADO!\nNo es necesario responder la conversación a este chat.");
+return $this->sendMessage($chatId, "¡TU USUARIO YA SE ENCUENTRA VERIFICADO! ✅👤\n\nNo es necesario responder a este chat. Aquí recibirás las notificaciones internas del Portal de Admongas, además de los códigos de autorización.");
 }
 
 $record = TokenTelegram::where('token', $userMessage)
@@ -245,12 +277,12 @@ $record = TokenTelegram::where('token', $userMessage)
 ->first();
 
 if (!$record) {
-return $this->sendMessage($chatId, "¡ERROR DE AUTENTICACIÓN!\nEl token proporcionado no es el correcto.");
+return $this->sendMessage($chatId, "¡EL TOKEN NO ES VÁLIDO! 📲❌\n\nEl token proporcionado no es el correcto. ⚠\n\nGenera un token nuevo desde tu perfil de Portal 3 y vuelve a enviarlo en este chat.");
 }
 
 $expiry = \Carbon\Carbon::parse($record->fecha_creacion)->addMinutes(2);
 if (\Carbon\Carbon::now()->greaterThan($expiry)) {
-return $this->sendMessage($chatId, "¡TU CODIGO DE VERIFICACIÓN HA EXPIRADO!\nGenera un nuevo código para llevar a cabo la verificación.");
+return $this->sendMessage($chatId, "⌛ <b>El token venció</b>\n\nGenera uno nuevo desde tu perfil de Portal 3 y envíalo aquí.");
 }
 
 $record->update([
@@ -258,7 +290,7 @@ $record->update([
 'estatus' => 1,
 ]);
 
-return $this->sendMessage($chatId, "✅ *¡Autenticación exitosa!*\n\nAhora puedes recibir notificaciones internas de Portal 3 y generar tus tokens para autorizar solicitudes.");
+return $this->sendMessage($chatId, "¡AUTENTICACIÓN EXITOSA! ✅👤\n\nTu cuenta quedó vinculada con el Portal de Admongas. Ya puedes recibir en este chat las notificaciones internas de Portal3 y los códigos de autorización.");
 }
 
 public function processUpdate(array $update): bool
@@ -352,9 +384,21 @@ CURLOPT_TIMEOUT => 10,
 ]);
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlError = curl_errno($ch);
 curl_close($ch);
 
-return $httpCode === 200;
+if ($curlError !== 0 || $httpCode !== 200 || !is_string($response)) {
+    error_log('[Telegram] setWebhook request failed (HTTP ' . (int) $httpCode . ', cURL ' . (int) $curlError . ').');
+    return false;
+}
+
+$result = json_decode($response, true);
+if (!is_array($result) || ($result['ok'] ?? false) !== true) {
+    error_log('[Telegram] setWebhook was rejected by the Bot API.');
+    return false;
+}
+
+return true;
 }
 
 public function deleteWebhook(): bool
