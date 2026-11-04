@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!app) return;
 
     const base = app.dataset.baseUrl;
+    const idYear = Number(app.dataset.idYear || new Date().getFullYear());
+    const idMes = Number(app.dataset.idMes || new Date().getMonth() + 1);
     const moduleKey = app.dataset.moduleKey;
     const tableSelector = '#tabla-orden-mantenimiento';
     const table = $(tableSelector);
@@ -18,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let serviceSaveQueue = Promise.resolve();
     const serviceSaveTimers = {};
     const confirmedServiceValues = {};
+    const formatQuantity = value => new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(Number(value || 0));
 
     const openAreaOptions = areaId => {
         const area = (record?.areas || []).find(item => Number(item.id) === Number(areaId));
@@ -129,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         table.DataTable({
             processing: true,
             serverSide: false,
-            ajax: { url: base + '/data', type: 'GET', cache: false, dataSrc: json => json?.success ? (json.data || []) : [] },
+            ajax: { url: base + '/data/' + idYear + '/' + idMes, type: 'GET', cache: false, dataSrc: json => json?.success ? (json.data || []) : [] },
             order: [[0, 'desc']],
             pageLength: 15,
             lengthMenu: [15, 30, 50, 100],
@@ -144,12 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 { title: 'Estatus', data: 'estatus_texto', className: 'text-center align-middle', width: '210px', render: (v, t, row) => {
                     const done = ['Refacción Instalada', 'Orden cerrada'].includes(row.estatus_texto);
                     const processLabel = row.firma_b ? 'En proceso: Autorización' : 'En proceso: Vo.Bo.';
-                    const label = Number(row.estatus) === 0 ? 'Pendiente' : (Number(row.estatus) === 1 ? processLabel : v);
-                    const color = Number(row.estatus) === 0 ? 'bg-danger text-white' : (Number(row.estatus) === 1 ? 'bg-warning text-white' : (done ? 'bg-success text-white' : 'bg-danger text-white'));
+                    const label = v === 'No autorizado' ? v : (Number(row.estatus) === 0 ? 'Pendiente' : (Number(row.estatus) === 1 ? processLabel : v));
+                    const color = label === 'No autorizado' || Number(row.estatus) === 0 ? 'bg-danger text-white' : (Number(row.estatus) === 1 ? 'bg-warning text-white' : (done ? 'bg-success text-white' : 'bg-danger text-white'));
                     return '<span class="badge ' + color + '">' + esc(label) + '</span>';
                 } },
                 { title: 'Firma', data: null, className: 'text-center align-middle', orderable: false, searchable: false, width: '70px',
-                    render: (v, t, row) => row.puede_firmar ? '<a class="d-inline-flex align-items-center justify-content-center text-decoration-none" href="' + base + '-firma/' + Number(row.id) + '" title="Firmar" aria-label="Firmar"><i class="ti ti-clock text-primary fs-8"></i></a>' : (row.estatus < 1 ? '<i class="ti ti-clock text-muted fs-8" title="Firma pendiente" aria-label="Firma pendiente"></i>' : '<i class="ti ti-clock text-muted fs-8" title="Firma no disponible" aria-label="Firma no disponible"></i>') },
+                    render: (v, t, row) => row.puede_firmar
+                        ? '<a class="d-inline-flex align-items-center justify-content-center text-decoration-none" href="' + base + '-firma/' + Number(row.id) + '" title="Firmar ' + (row.tipo_firma_pendiente === 'B' ? 'VO.BO.' : 'autorización') + '" aria-label="Firmar ' + (row.tipo_firma_pendiente === 'B' ? 'VO.BO.' : 'autorización') + '"><i class="ti ti-signature text-primary fs-8"></i></a>'
+                        : (row.estatus < 1 ? '<i class="ti ti-clock text-muted fs-8" title="Firma pendiente" aria-label="Firma pendiente"></i>' : '<i class="ti ti-clock text-muted fs-8" title="Firma no disponible" aria-label="Firma no disponible"></i>') },
                 { title: '<i class="ti ti-message fs-7" title="Comentarios"></i>', data: null, className: 'text-center align-middle', orderable: false, searchable: false, width: '42px',
                     render: (v, t, row) => {
                         const badge = row.comentarios > 0
@@ -162,12 +167,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     render: (v, t, row) => {
                         const item = (label, icon, enabled, extraClass = '', attributes = '') => '<a class="dropdown-item ' + (enabled ? 'pointer ' : 'disabled ') + extraClass + '" ' + (enabled ? attributes : 'aria-disabled="true" tabindex="-1"') + '><i class="ti ' + icon + ' me-1"></i> ' + label + '</a>';
                         const exportItem = (label, icon, enabled, format) => '<a class="dropdown-item ' + (enabled ? 'pointer js-orden-export" href="' + base + '/' + row.id + '/' + format + '" data-format="' + format : 'disabled" aria-disabled="true" tabindex="-1') + '"><i class="ti ' + icon + ' fs-6 me-1"></i> ' + label + '</a>';
+                        const acuseEnabled = Number(row.estatus_salida) === 2;
+                        const acuseHref = '/departamento-operativo/almacen/refacciones/salidas-pdf/' + Number(row.id_movimiento_salida || 0);
                         return '<div class="dropdown dropstart"><a href="javascript:void(0)" class="pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">' +
                             item('Detalle', 'ti-eye', true, 'js-orden-detail', 'data-id="' + row.id + '"') +
                             item('Evidencia', 'ti-photo', row.puede_ver_evidencia, row.puede_ver_evidencia ? 'js-orden-evidence' : '', 'data-id="' + row.id + '"') +
                             item('Causa', 'ti-help-circle', row.puede_ver_causa, row.puede_ver_causa ? 'js-orden-cause' : '', 'data-id="' + row.id + '"') +
                             exportItem('Descargar PDF', 'ti-file-type-pdf', row.puede_descargar, 'pdf') +
                             exportItem('Descargar Excel', 'ti-file-spreadsheet', row.puede_descargar, 'excel') +
+                            (row.id_movimiento_salida ? item('Descargar Acuse PDF', 'ti-file-type-pdf', acuseEnabled, '', acuseEnabled ? 'href="' + acuseHref + '" target="_blank" rel="noopener"' : '') : '') +
                             item('Editar', 'ti-pencil', canEdit && row.puede_editar, 'js-orden-edit', 'data-id="' + row.id + '"') +
                             item('Eliminar', 'ti-trash', canDelete && row.puede_eliminar, 'js-orden-delete text-danger', 'data-id="' + row.id + '" data-name="Folio ' + esc(row.folio_label) + '"') +
                             '</div></div>';
@@ -294,9 +302,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
         areas.innerHTML = '<table class="table table-striped table-bordered align-middle w-100 mb-0"><tbody>' + (areaRows || '<tr><td colspan="3" class="text-center text-primary">No se encontró información</td></tr>') + '</tbody></table>';
         const materials = document.getElementById('orden-materiales');
-        document.getElementById('orden-agregar-refaccion').hidden = !allowChanges;
-        materials.innerHTML = '<table class="table table-bordered mb-0 table-striped align-middle w-100"><thead><tr><th>Refacción</th><th class="text-center align-middle">Cantidad</th><th>Nota</th><th class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><i class="ti ti-trash fs-6 text-danger" title="Eliminar" aria-label="Eliminar"></i></th></tr></thead><tbody>' +
-            ((record.materiales || []).map(item => '<tr><td>' + esc(item.concepto) + '</td><td class="text-center align-middle">' + esc(item.cantidad) + '</td><td>' + esc(item.nota) + '</td><td class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><button class="btn btn-link p-0 text-decoration-none js-material-delete ' + (allowChanges ? '' : 'disabled') + '" data-id="' + item.id + '" data-name="' + esc(item.concepto) + '" ' + (allowChanges ? '' : 'disabled') + '><i class="ti ti-trash fs-6 text-danger"></i></button></td></tr>').join('') || '<tr><td colspan="4" class="text-center text-primary">No se encontró información</td></tr>') + '</tbody></table>';
+        const catalogRefactions = Boolean(record.usa_refacciones_catalogo);
+        document.getElementById('orden-agregar-refaccion').hidden = !allowChanges || (catalogRefactions && (record.materiales || []).length > 0);
+        materials.innerHTML = '<table class="table table-bordered mb-0 table-striped align-middle w-100"><thead><tr><th>Refacción</th><th class="text-center align-middle">Cantidad</th>' + (catalogRefactions ? '' : '<th>Nota</th>') + '<th class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><i class="ti ti-trash fs-6 text-danger" title="Eliminar" aria-label="Eliminar"></i></th></tr></thead><tbody>' +
+            ((record.materiales || []).map(item => '<tr><td>' + esc(item.concepto) + '</td><td class="text-center align-middle">' + esc(formatQuantity(item.cantidad)) + '</td>' + (catalogRefactions ? '' : '<td>' + esc(item.nota) + '</td>') + '<td class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><button class="btn btn-link p-0 text-decoration-none js-material-delete ' + (allowChanges ? '' : 'disabled') + '" data-id="' + item.id + '" data-name="' + esc(item.concepto) + '" ' + (allowChanges ? '' : 'disabled') + '><i class="ti ti-trash fs-6 text-danger"></i></button></td></tr>').join('') || '<tr><td colspan="' + (catalogRefactions ? '3' : '4') + '" class="text-center text-primary">No se encontró información</td></tr>') + '</tbody></table>';
         document.getElementById('orden-subir-instalacion').hidden = !(canEdit && [2, 3].includes(record.estatus));
         document.getElementById('orden-subir-evidencia').hidden = !allowChanges;
         loadFiles();
@@ -652,10 +661,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 html += tableSection('Área', [], areaRows, 2);
             }
 
-            const materialRows = asList(detail.materiales).map(material =>
-                '<tr><td class="align-middle">' + value(material.concepto) + '</td><td class="text-center align-middle">' + value(material.cantidad) + '</td><td class="text-center align-middle">' + value(material.nota) + '</td></tr>'
+            const catalogRefactions = Boolean(detail.usa_refacciones_catalogo);
+            const materialRows = asList(detail.materiales).map(material => catalogRefactions
+                ? '<tr><td class="align-middle">' + value(material.concepto) + '</td><td class="text-center align-middle">' + value(formatQuantity(material.cantidad)) + '</td></tr>'
+                : '<tr><td class="align-middle">' + value(material.concepto) + '</td><td class="text-center align-middle">' + value(formatQuantity(material.cantidad)) + '</td><td class="text-center align-middle">' + value(material.nota) + '</td></tr>'
             );
-            html += tableSection('Refacciones', ['Refacción', 'Cantidad', 'Estatus'], materialRows, 3);
+            html += catalogRefactions
+                ? tableSection('Refacciones', ['Refacción', 'Cantidad'], materialRows, 2)
+                : tableSection('Refacciones', ['Refacción', 'Cantidad', 'Estatus'], materialRows, 3);
 
             const evidenceRows = asList(detail.evidencias).map(file =>
                 '<tr><td class="text-center align-middle"><a class="text-primary" href="' + esc(file.url) + '" title="Descargar evidencia"><i class="ti ti-file-download fs-5"></i></a></td><td class="text-center align-middle">' + value(file.area) + '</td><td class="align-middle text-break">' + value(file.motivo) + '</td></tr>'
@@ -853,9 +866,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data } = await axios.post(base + '/refacciones', { id: record.id });
             if (!data.success) throw new Error(data.message || 'No se pudo cargar el catálogo.');
             const select = document.getElementById('orden-refaccion');
-            select.innerHTML = '<option value="">Otra...</option>' + (data.data || []).map(item => '<option value="' + item.id + '">' + esc(item.nombre + ' (' + item.estado + ')') + '</option>').join('');
+            const catalogMode = Boolean(record.usa_refacciones_catalogo);
+            const otherField = document.getElementById('orden-otra-refaccion').closest('.mb-3');
+            const help = document.getElementById('orden-refaccion-ayuda');
+            const quantityInput = document.getElementById('orden-cantidad-refaccion');
+            otherField.hidden = catalogMode;
+            help.textContent = catalogMode ? 'Existencias disponibles en Almacen.' : 'Selecciona una refacción del catálogo o captura otra.';
+            select.innerHTML = '<option value="">' + (catalogMode ? 'Selecciona una refacción de Almacen...' : 'Otra...') + '</option>' + (data.data || []).map(item => {
+                const text = catalogMode ? item.sku + ' — ' + item.nombre + ' (Disponible: ' + formatQuantity(item.existencia) + ' ' + item.unidad_medida + ')' : item.nombre + ' (' + item.estado + ')';
+                return '<option value="' + item.id + '" data-stock="' + Number(item.existencia || 0) + '">' + esc(text) + '</option>';
+            }).join('');
             document.getElementById('orden-otra-refaccion').value = '';
-            document.getElementById('orden-cantidad-refaccion').value = '';
+            quantityInput.value = '';
+            quantityInput.removeAttribute('max');
             const $select = $(select);
             if ($.fn.select2 && !$select.hasClass('select2-hidden-accessible')) {
                 $select.select2({
@@ -875,6 +898,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const otraRefaccionInput = document.getElementById('orden-otra-refaccion');
     const refaccionSelectWrapper = refaccionSelect?.closest('.select2-modal-field');
     const syncOtraRefaccion = () => {
+        const selected = refaccionSelect?.selectedOptions?.[0];
+        const catalogMode = Boolean(record?.usa_refacciones_catalogo);
+        const available = Number(selected?.dataset?.stock || 0);
+        const quantityInput = document.getElementById('orden-cantidad-refaccion');
+        if (quantityInput) {
+            if (catalogMode && selected?.value) quantityInput.max = String(available);
+            else quantityInput.removeAttribute('max');
+        }
+        if (catalogMode) {
+            if (otraRefaccionInput) otraRefaccionInput.value = '';
+            return;
+        }
         const seleccionCatalogo = Boolean(refaccionSelect?.value);
         const capturaManual = Boolean(otraRefaccionInput?.value.trim());
         if (otraRefaccionInput) {
@@ -901,7 +936,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = document.getElementById('orden-guardar-refaccion');
         const quantityInput = document.getElementById('orden-cantidad-refaccion');
         const hasCatalogMaterial = Boolean(refaccionSelect.value);
-        const hasCustomMaterial = !hasCatalogMaterial && Boolean(otraRefaccionInput.value.trim());
+        const catalogMode = Boolean(record.usa_refacciones_catalogo);
+        const selectedStock = Number(refaccionSelect.selectedOptions?.[0]?.dataset?.stock || 0);
+        const hasCustomMaterial = !catalogMode && !hasCatalogMaterial && Boolean(otraRefaccionInput.value.trim());
         const quantity = Number(quantityInput.value);
         if (!hasCatalogMaterial && !hasCustomMaterial) {
             refaccionSelectWrapper?.classList.add('is-invalid');
@@ -916,12 +953,18 @@ document.addEventListener('DOMContentLoaded', () => {
             Notify.error('La cantidad debe ser de al menos 1.');
             return;
         }
+        if (catalogMode && quantity > selectedStock) {
+            quantityInput.classList.add('is-invalid');
+            Notify.error('La cantidad excede la existencia disponible en Almacen (' + formatQuantity(selectedStock) + ').');
+            return;
+        }
         button.disabled = true;
         try {
             const { data } = await axios.post(base + '/refacciones/agregar', {
                 id: record.id,
                 refaccion: refaccionSelect.value,
-                otro: otraRefaccionInput.value,
+                id_refaccion: catalogMode ? refaccionSelect.value : undefined,
+                otro: catalogMode ? '' : otraRefaccionInput.value,
                 cantidad: quantityInput.value
             });
             if (!data.success) throw new Error(data.message || 'No se pudo agregar la refacción.');

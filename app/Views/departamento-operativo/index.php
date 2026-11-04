@@ -82,6 +82,8 @@ foreach ($accesos as $acceso):
 <span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoArticulosLimpieza ?></span>
 <?php elseif (($acceso['clave'] ?? '') === 'pedido-aditivo' && (int)($pendientesFirmaPedidoAditivo ?? 0) > 0): ?>
 <span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaPedidoAditivo ?></span>
+<?php elseif (($acceso['clave'] ?? '') === 'orden-mantenimiento' && (int)($pendientesFirmaOrdenMantenimiento ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesFirmaOrdenMantenimiento ?></span>
 <?php else: ?>
 <i class="ti ti-arrow-right fs-8"></i>
 <?php endif; ?>

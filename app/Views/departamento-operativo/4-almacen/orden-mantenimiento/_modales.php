@@ -69,7 +69,7 @@
         <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
             <div class="modal-header bg-primary"><h5 class="modal-title text-white"><i class="ti ti-tool me-1"></i> Nueva refacción</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
             <div class="modal-body">
-                <div class="mb-3 select2-modal-field"><label for="orden-refaccion" class="form-label mb-1">* Refacción:</label><select id="orden-refaccion" class="form-select" aria-describedby="orden-refaccion-ayuda"><option value="">Otra...</option></select><div id="orden-refaccion-ayuda" class="form-text">Selecciona una refacción del catálogo o captura otra.</div></div>
+                <div class="mb-3 select2-modal-field"><label for="orden-refaccion" class="form-label mb-1">* Refacción:</label><select id="orden-refaccion" class="form-select" aria-describedby="orden-refaccion-ayuda"><option value="">Selecciona una refacción...</option></select><div id="orden-refaccion-ayuda" class="form-text">Selecciona una refacción del catálogo o captura otra.</div></div>
                 <div class="mb-3"><label for="orden-otra-refaccion" class="form-label mb-1">Otra refacción:</label><input id="orden-otra-refaccion" class="form-control" maxlength="250" autocomplete="off"></div>
                 <div><label for="orden-cantidad-refaccion" class="form-label mb-1">* Cantidad (mínimo 1):</label><input id="orden-cantidad-refaccion" class="form-control" type="number" min="1" step="0.01" inputmode="decimal"></div>
             </div>

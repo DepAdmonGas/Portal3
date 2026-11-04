@@ -57,6 +57,7 @@ $data = [
 'pendientesFirmaPedidoPapeleria' => PedidoPapeleriaService::getPendientesFirmaVoBoCard(),
 'pendientesFirmaPedidoArticulosLimpieza' => PedidoArticulosLimpiezaService::getPendientesFirmaVoBoCard(),
 'pendientesFirmaPedidoAditivo' => PedidoAditivoService::getPendientesFirmaVoBoCard(),
+'pendientesFirmaOrdenMantenimiento' => count(OrdenMantenimientoService::pendingSignatureItems((int)($usuario->id ?? 0))),
 'links' =>[],
 'scripts' => [
 '/assets/js/vendor.min.js?v=' . time()

@@ -60,6 +60,24 @@ return false;
 }
 }
 
+/** Envía un correo HTML sencillo reutilizando la configuración SMTP del Portal. */
+public function sendHtml(string $to, string $subject, string $bodyHtml, string $altBody = ''): bool
+{
+try {
+$this->mail->clearAddresses();
+$this->mail->clearAttachments();
+$this->mail->addAddress($to);
+$this->mail->Subject = $subject;
+$this->mail->Body = $bodyHtml !== '' ? $bodyHtml : $subject;
+$this->mail->AltBody = $altBody !== '' ? $altBody : trim(strip_tags($bodyHtml));
+$this->mail->send();
+return true;
+} catch (Exception $e) {
+error_log('[EmailService] Error SMTP: ' . $this->mail->ErrorInfo);
+return false;
+}
+}
+
 public function getLastError(): string
 {
 return $this->mail->ErrorInfo;
@@ -91,6 +109,34 @@ return true;
 $errorMsg = 'Error SMTP: ' . $this->mail->ErrorInfo;
 error_log('[EmailService] ' . $errorMsg);
 
+return false;
+}
+}
+
+/** Envía un PDF generado en memoria, sin dejar archivos temporales en disco. */
+public function sendWithPdfContent(
+string $to,
+string $subject,
+string $bodyHtml,
+string $pdfContent,
+string $pdfName,
+string $altBody = ''
+): bool {
+try {
+$this->mail->clearAddresses();
+$this->mail->clearAttachments();
+$this->mail->addAddress($to);
+
+$this->mail->Subject = $subject;
+$this->mail->Body = $bodyHtml !== '' ? $bodyHtml : $subject;
+$this->mail->AltBody = $altBody !== '' ? $altBody : htmlspecialchars(strip_tags($bodyHtml), ENT_QUOTES, 'UTF-8');
+$this->mail->addStringAttachment($pdfContent, $pdfName, PHPMailer::ENCODING_BASE64, 'application/pdf');
+
+$this->mail->send();
+return true;
+} catch (Exception $e) {
+$errorMsg = 'Error SMTP: ' . $this->mail->ErrorInfo;
+error_log('[EmailService] ' . $errorMsg);
 return false;
 }
 }

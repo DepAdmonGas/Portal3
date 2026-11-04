@@ -21,7 +21,8 @@ class PedidoMateriales extends Model
         'orden_trabajo',
         'orden_riesgo',
         'comentarios',
-        'estatus'
+        'estatus',
+        'usa_refacciones_catalogo'
     ];
 
     protected $casts = [
@@ -32,7 +33,8 @@ class PedidoMateriales extends Model
         'tipo_servicio' => 'integer',
         'orden_trabajo' => 'integer',
         'orden_riesgo' => 'integer',
-        'estatus' => 'integer'
+        'estatus' => 'integer',
+        'usa_refacciones_catalogo' => 'boolean'
     ];
 }
 

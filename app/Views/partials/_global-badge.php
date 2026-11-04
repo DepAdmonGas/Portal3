@@ -4,7 +4,7 @@
 // Station 8 → shows user's role/department; other stations → station name
 // NOT hidden by ocultarSelectorEstacion (that flag only hides the old <select>)
 $fu = $filtro_usuario ?? [];
-if (empty($moduleStationKey)):
+if (empty($moduleStationKey) || !empty($mostrarBadgeGlobal)):
 $idEstacion = $fu['id_estacion'] ?? null;
 $esTodas    = (int)$idEstacion === 8;
 $badgeText  = '';

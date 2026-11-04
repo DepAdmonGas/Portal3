@@ -8,6 +8,7 @@ use App\Core\Request;
 use App\Core\View;
 use App\Services\ModuleStationService;
 use App\Services\OrdenMantenimientoService as Service;
+use App\Services\DropdownYearMesService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -18,8 +19,69 @@ final class OrdenMantenimientoController extends BaseController
     private const BASE = '/departamento-operativo/almacen/orden-mantenimiento';
     private const TITLE = 'Orden de Mantenimiento';
 
+    public function redirectToPeriod(): void
+    {
+        header('Location: ' . self::BASE . '/' . date('Y') . '/' . date('n'));
+        exit;
+    }
+
+    public function period(int $idYear, int $idMes): void
+    {
+        if ($idMes < 1 || $idMes > 12) {
+            $this->redirectToPeriod();
+        }
+        $valid = DropdownYearMesService::validarYearMes($idYear, $idMes);
+        $idYear = $valid['idYear'];
+        $idMes = $valid['idMes'];
+        $periodTitle = self::TITLE . ' (' . nombremes($idMes) . ' ' . $idYear . ')';
+        $yearMesTemplate = self::BASE . '/{year}/{mes}';
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+        Breadcrumb::add('Almacén', '/departamento-operativo/almacen');
+        Breadcrumb::add($periodTitle, '');
+        Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes, $yearMesTemplate), '');
+        Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes, 2023, $yearMesTemplate), '');
+
+        if (!$this->guardModuleAccess(Service::MODULE_KEY, $periodTitle, 'departamento-operativo')) return;
+        $context = ModuleStationService::getContext(Service::MODULE_KEY);
+        $selected = $context['id_estacion'] ?? $context['id_depto'] ?? null;
+        $permissions = Service::permissions();
+
+        View::render('departamento-operativo/4-almacen/orden-mantenimiento/index', [
+            'title' => $periodTitle,
+            'idYear' => $idYear,
+            'idMes' => $idMes,
+            'yearMesTemplate' => $yearMesTemplate,
+            'moduleStationKey' => Service::MODULE_KEY,
+            'estacionFija' => $selected !== null,
+            'estacionActual' => (int)($selected ?? 0),
+            'ocultarSelectorEstacion' => false,
+            'nombreBadgeEstacion' => '',
+            'registro' => null,
+            'permisos' => $permissions,
+            'scripts' => [
+                '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/libs/select2/dist/js/select2.full.min.js',
+                '/assets/libs/select2/dist/js/i18n/es.js',
+                '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                '/assets/js/core/module-station-selector.js?v=' . time(),
+                '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js',
+                '/assets/js/departamento-operativo/4-almacen/orden-mantenimiento.init.js?v=' . time(),
+            ],
+            'links' => [
+                '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                '/assets/libs/select2/dist/css/select2.min.css',
+                '/assets/css/select2-modal.css',
+            ],
+        ], 'departamento-operativo');
+    }
+
     public function index(?int $id = null): void
     {
+        if ($id === null) {
+            $this->redirectToPeriod();
+        }
         $permissions = Service::permissions();
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
@@ -111,10 +173,16 @@ final class OrdenMantenimientoController extends BaseController
         ], 'departamento-operativo');
     }
 
-    public function data(): void
+    public function data(int $idYear, int $idMes): void
     {
         if (!Service::permissions()['leer']) JsonResponse::forbidden('No tienes permiso para consultar Orden de Mantenimiento.');
-        JsonResponse::custom(['success' => true, 'data' => Service::getData()]);
+        $valid = DropdownYearMesService::validarYearMes($idYear, $idMes);
+        JsonResponse::custom(['success' => true, 'data' => Service::getData($valid['idYear'], $valid['idMes'])]);
+    }
+
+    public function dataCurrentPeriod(): void
+    {
+        $this->data((int)date('Y'), (int)date('n'));
     }
 
     public function create(): void
@@ -295,6 +363,7 @@ final class OrdenMantenimientoController extends BaseController
             return;
         }
         $e = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $formatQuantity = static fn($value): string => rtrim(rtrim(number_format((float)($value ?? 0), 2, '.', ','), '0'), '.');
         $projectRoot = dirname(__DIR__, 2);
         $imageDataUri = static function (string $filename) use ($projectRoot): ?string {
             $filename = basename($filename);
@@ -349,9 +418,12 @@ final class OrdenMantenimientoController extends BaseController
             }
         }
 
+        $catalogRefactions = !empty($data['usa_refacciones_catalogo']);
         $materialRows = '';
         foreach ($data['materiales'] as $item) {
-            $materialRows .= '<tr><td>'.$e($item['concepto'] ?? '').'</td><td class="center">'.$e($item['cantidad'] ?? '').'</td><td>'.$e($item['nota'] ?? '').'</td></tr>';
+            $materialRows .= '<tr><td>'.$e($item['concepto'] ?? '').'</td><td class="center">'.$e($formatQuantity($item['cantidad'] ?? 0)).'</td>'
+                .($catalogRefactions ? '' : '<td>'.$e($item['nota'] ?? '').'</td>')
+                .'</tr>';
         }
         $evidenceRows = '';
         foreach ($data['evidencias'] as $evidence) {
@@ -395,7 +467,7 @@ final class OrdenMantenimientoController extends BaseController
             .$choiceTable('¿La orden de trabajo se puede atender internamente?', ['Si', 'No', 'Ambas'], $workType)
             .$choiceTable('¿La orden de trabajo es de alto riesgo?', ['Si', 'No'], $riskType)
             .((int)$data['id_estacion'] !== 9 ? $pdfTable('Área', [], $areaRows, 2) : '')
-            .$pdfTable('Refacciones', ['Refacción', 'Cantidad', 'Estatus'], $materialRows, 3)
+            .$pdfTable('Refacciones', $catalogRefactions ? ['Refacción', 'Cantidad'] : ['Refacción', 'Cantidad', 'Estatus'], $materialRows, $catalogRefactions ? 2 : 3)
             .$pdfTable('Evidencia', ['Archivo', 'Área', 'Motivo'], $evidenceRows, 3)
             .$pdfTable('Comentarios', [], '<tr><td class="center">'.$e($data['comentarios_generales'] !== '' ? $data['comentarios_generales'] : 'S/I').'</td></tr>', 1)
             .$pdfTable('Firmas', [], $signatureRows, $signatureColumnCount)
@@ -525,10 +597,17 @@ final class OrdenMantenimientoController extends BaseController
             }
         }
 
+        $catalogRefactions = !empty($data['usa_refacciones_catalogo']);
         $section($nextRow, 'REFACCIONES');
         $materialHeaderRow = $nextRow + 1;
-        $sheet->fromArray([['Refacción', 'Cantidad', 'Estatus', null]], null, 'A'.$materialHeaderRow);
-        $sheet->mergeCells('C'.$materialHeaderRow.':D'.$materialHeaderRow);
+        if ($catalogRefactions) {
+            $sheet->fromArray([['Refacción', null, 'Cantidad', null]], null, 'A'.$materialHeaderRow);
+            $sheet->mergeCells('A'.$materialHeaderRow.':B'.$materialHeaderRow);
+            $sheet->mergeCells('C'.$materialHeaderRow.':D'.$materialHeaderRow);
+        } else {
+            $sheet->fromArray([['Refacción', 'Cantidad', 'Estatus', null]], null, 'A'.$materialHeaderRow);
+            $sheet->mergeCells('C'.$materialHeaderRow.':D'.$materialHeaderRow);
+        }
         $styleSubHeader('A'.$materialHeaderRow.':D'.$materialHeaderRow);
         $materialRow = $materialHeaderRow + 1;
         if ($data['materiales'] === []) {
@@ -537,10 +616,19 @@ final class OrdenMantenimientoController extends BaseController
             $nextRow = $materialRow + 2;
         } else {
             foreach ($data['materiales'] as $item) {
-                $sheet->setCellValue('A'.$materialRow, $item['concepto']);
-                $sheet->setCellValue('B'.$materialRow, $item['cantidad']);
-                $sheet->setCellValue('C'.$materialRow, $item['nota']);
-                $sheet->mergeCells('C'.$materialRow.':D'.$materialRow);
+                if ($catalogRefactions) {
+                    $sheet->setCellValue('A'.$materialRow, $item['concepto']);
+                    $sheet->mergeCells('A'.$materialRow.':B'.$materialRow);
+                    $sheet->setCellValue('C'.$materialRow, $item['cantidad']);
+                    $sheet->getStyle('C'.$materialRow)->getNumberFormat()->setFormatCode('0.##');
+                    $sheet->mergeCells('C'.$materialRow.':D'.$materialRow);
+                } else {
+                    $sheet->setCellValue('A'.$materialRow, $item['concepto']);
+                    $sheet->setCellValue('B'.$materialRow, $item['cantidad']);
+                    $sheet->getStyle('B'.$materialRow)->getNumberFormat()->setFormatCode('0.##');
+                    $sheet->setCellValue('C'.$materialRow, $item['nota']);
+                    $sheet->mergeCells('C'.$materialRow.':D'.$materialRow);
+                }
                 $materialRow++;
             }
             $nextRow = $materialRow + 1;

@@ -1,0 +1,57 @@
+.refacciones-metric{border:1px solid var(--bs-border-color);border-radius:.8rem}
+.refacciones-metric-label{color:var(--bs-secondary-color)}
+.refacciones-metric-icon{font-size:1.5rem;line-height:1}
+.refacciones-metric-primary{background:var(--bs-primary);border-color:var(--bs-primary);color:#fff}
+.refacciones-metric-primary .refacciones-metric-label,
+.refacciones-metric-primary .refacciones-metric-icon,
+.refacciones-metric-primary .h3{color:#fff!important}
+.refacciones-metric-primary .refacciones-metric-icon{opacity:.9}
+.refacciones-metric-success{background:var(--bs-success-bg-subtle);border-color:var(--bs-success-border-subtle)}
+.refacciones-metric-secondary{background:var(--bs-primary-bg-subtle);border-color:var(--bs-primary-border-subtle)}
+.refacciones-metric-warning{background:var(--bs-warning-bg-subtle);border-color:var(--bs-warning-border-subtle)}
+.refacciones-dashboard-chart{min-height:270px}
+.refacciones-product-image{width:100%;height:170px;object-fit:contain;background:var(--bs-secondary-bg);border-radius:.5rem}
+.refacciones-product-card{cursor:pointer}
+.refacciones-product-card-image{padding:.75rem;min-height:176px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--bs-border-color)}
+.refacciones-product-card-image img{width:100%;height:150px;object-fit:contain;border:1px solid var(--bs-border-color);border-radius:.45rem;background:var(--bs-body-bg)}
+.refacciones-product-image-placeholder{width:100%;height:150px;border-radius:.45rem;background:var(--bs-secondary-bg);display:grid;place-items:center;color:var(--bs-primary);font-size:2rem}
+.refacciones-product-info-row{min-height:49px;display:grid;grid-template-columns:2rem minmax(4rem,4.5rem) minmax(0,1fr);align-items:center;gap:.5rem;padding:.45rem .75rem;border-bottom:1px solid var(--bs-border-color)}
+.refacciones-product-info-row:last-child{border-bottom:0}
+.refacciones-product-info-icon{width:1.75rem;height:1.75rem;border-radius:50%;display:grid;place-items:center;background:var(--bs-primary);color:#fff;font-size:1rem}
+.refacciones-product-info-label{color:var(--bs-secondary-color);font-size:.62rem;line-height:1.2;text-transform:uppercase;letter-spacing:.02em}
+.refacciones-product-info-value{text-align:right;color:var(--bs-emphasis-color);font-size:.8rem;line-height:1.25;overflow-wrap:anywhere}
+.refacciones-product-thumb,.refacciones-product-thumb-placeholder{width:2.25rem;height:2.25rem;object-fit:contain;border-radius:.3rem;background:var(--bs-secondary-bg);display:inline-block;vertical-align:middle}
+.refacciones-product-detail-image{width:100%;height:230px;object-fit:contain;border:1px solid var(--bs-border-color);border-radius:.5rem;background:var(--bs-body-bg)}
+.refacciones-product-detail-image-wrap{width:100%;min-height:190px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bs-border-color);border-radius:.5rem;background:var(--bs-body-bg);padding:.5rem}
+.refacciones-product-detail-image-wrap .refacciones-product-detail-image{width:100%;height:auto;max-height:280px;object-fit:contain;border:0}
+.refacciones-product-detail-image-wrap .refacciones-product-image-placeholder{width:100%;height:190px}
+.refacciones-product-detail-fields .form-label{font-weight:600;margin-bottom:.3rem}
+.refacciones-product-detail-value{min-height:1.5rem;color:var(--bs-emphasis-color);overflow-wrap:anywhere}
+.refacciones-product-view{border:1px solid var(--bs-primary-border-subtle);font-weight:600;transition:background-color .15s ease,color .15s ease,box-shadow .15s ease}
+.refacciones-product-view:focus-visible{box-shadow:0 0 0 .2rem rgba(var(--bs-primary-rgb),.2)}
+@media(max-width:575.98px){.refacciones-product-info-row{grid-template-columns:1.85rem minmax(3.75rem,4.2rem) minmax(0,1fr);gap:.4rem;padding:.45rem .65rem}.refacciones-product-info-icon{width:1.65rem;height:1.65rem}.refacciones-product-info-value{font-size:.75rem}.refacciones-product-card-image{min-height:158px}.refacciones-product-card-image img,.refacciones-product-image-placeholder{height:132px}}
+
+/* Keep the document and layout wrappers in normal flow so the whole module can scroll. */
+html:has(#refacciones-module),
+body:has(#refacciones-module),
+#main-wrapper:has(#refacciones-module),
+.page-wrapper:has(#refacciones-module),
+.page-wrapper:has(#refacciones-module) .body-wrapper,
+.page-wrapper:has(#refacciones-module) .body-wrapper > .container-fluid {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+}
+
+body:has(#refacciones-module) {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+.page-wrapper:has(#refacciones-module) .body-wrapper > .container-fluid {
+    padding-bottom: 2rem;
+}
+
+.page-wrapper:has(#refacciones-calendar) .calender-sidebar {
+    padding-bottom: 2rem;
+}
