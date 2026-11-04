@@ -69,22 +69,47 @@ final class OrdenMantenimientoService
         return $id !== null && (int)$id > 0 ? (int)$id : null;
     }
 
-    private static function authorizedRecord(int $id): ?PedidoMateriales
+    private static function authorizedRecord(int $id, bool $currentPeriodOrFinalized = false): ?PedidoMateriales
     {
         $contexts = self::contexts();
         if ($id <= 0 || $contexts === []) return null;
         $record = PedidoMateriales::find($id);
-        return $record && isset($contexts[(int)$record->id_estacion]) ? $record : null;
+        if (!$record || !isset($contexts[(int)$record->id_estacion])) return null;
+        if ($currentPeriodOrFinalized && !self::isCurrentPeriodRecord($record)) return null;
+        return $record;
     }
 
-    public static function getData(): array
+    private static function authorizedCurrentOrFinalizedRecord(int $id): ?PedidoMateriales
+    {
+        $record = self::authorizedRecord($id);
+        if (!$record) return null;
+        if (self::isCurrentPeriodRecord($record)) return $record;
+        return (int)$record->estatus >= 2 && self::isPreviousPeriodRecord($record) ? $record : null;
+    }
+
+    private static function isCurrentPeriodRecord(PedidoMateriales $record): bool
+    {
+        $date = substr((string)$record->getRawOriginal('fecha'), 0, 10);
+        $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+        return $parsed !== false && $parsed->format('Y-m') === date('Y-m');
+    }
+
+    private static function isPreviousPeriodRecord(PedidoMateriales $record): bool
+    {
+        $date = substr((string)$record->getRawOriginal('fecha'), 0, 7);
+        return preg_match('/^\d{4}-\d{2}$/', $date) === 1 && $date < date('Y-m');
+    }
+
+    public static function getData(int $idYear, int $idMes): array
     {
         $contexts = self::contexts();
         if ($contexts === []) return [];
         $contextId = self::contextId();
         if ($contextId !== null && !isset($contexts[$contextId])) return [];
 
-        $query = PedidoMateriales::query()->whereIn('id_estacion', array_keys($contexts));
+        if ($idYear < 2000 || $idMes < 1 || $idMes > 12) return [];
+        $query = PedidoMateriales::query()->whereIn('id_estacion', array_keys($contexts))
+            ->whereYear('fecha', $idYear)->whereMonth('fecha', $idMes);
         if ($contextId !== null) $query->where('id_estacion', $contextId);
         $records = $query->orderByDesc('folio')->get();
         if ($records->isEmpty()) return [];
@@ -92,6 +117,13 @@ final class OrdenMantenimientoService
         $ids = $records->pluck('id')->all();
         $concepts = PedidoMaterialesDetalle::whereIn('id_pedido', $ids)
             ->orderBy('id')->get()->groupBy('id_pedido');
+        $catalogConcepts = DB::table('op_pedido_materiales_refacciones as pr')
+            ->join('op_refacciones_catalogo as c', 'c.id', '=', 'pr.id_refaccion')
+            ->leftJoin('op_refacciones_salidas as s', 's.id_movimiento', '=', 'pr.id_movimiento_salida')
+            ->whereIn('pr.id_pedido', $ids)
+            ->orderBy('pr.id')
+            ->get(['pr.id_pedido', 'c.nombre', 'pr.id_movimiento_salida', 's.estatus as estatus_salida'])
+            ->groupBy('id_pedido');
         $commentCounts = PedidoMaterialesComentarios::whereIn('id_pedido', $ids)
             ->selectRaw('id_pedido, COUNT(*) as total')->groupBy('id_pedido')->pluck('total', 'id_pedido');
         $signatureTypes = PedidoMaterialesFirma::whereIn('id_pedido', $ids)
@@ -100,6 +132,8 @@ final class OrdenMantenimientoService
         $causes = PedidoMaterialesCausa::whereIn('id_reporte', $ids)->pluck('id_reporte')->all();
         $permissions = self::permissions();
         $allContexts = self::contextId() === null;
+        $currentPeriod = (int)date('Y') === $idYear && (int)date('n') === $idMes;
+        $periodExpired = $idYear < (int)date('Y') || ($idYear === (int)date('Y') && $idMes < (int)date('n'));
         $result = [];
 
         foreach ($records as $record) {
@@ -107,13 +141,27 @@ final class OrdenMantenimientoService
             // Read the stored date directly so the display is not affected by
             // Eloquent's `date` cast when the record is serialized for JSON.
             $recordDate = (string)$record->getRawOriginal('fecha');
+            $expiredPending = $periodExpired && $status < 2;
+            $periodActionsAllowed = $currentPeriod || ($periodExpired && $status >= 2);
             $hasInstall = in_array((int)$record->id, array_map('intval', $installations), true);
             $hasCause = in_array((int)$record->id, array_map('intval', $causes), true);
-            $subject = $concepts->get($record->id, collect())
-                ->pluck('concepto')
+            $hasFirmaB = $signatureTypes->get($record->id, collect())->contains('tipo_firma', 'B');
+            $hasFirmaC = $signatureTypes->get($record->id, collect())->contains('tipo_firma', 'C');
+            $pendingSignatureType = $status === 1 ? (!$hasFirmaB ? 'B' : (!$hasFirmaC ? 'C' : '')) : '';
+            $currentUserCanSign = $currentPeriod && (
+                ($pendingSignatureType === 'B' && $permissions['id_usuario'] === 21)
+                || ($pendingSignatureType === 'C' && $permissions['id_usuario'] === 19)
+            );
+            $recordCatalogConcepts = $catalogConcepts->get($record->id, collect());
+            $subject = $recordCatalogConcepts
+                ->pluck('nombre')
+                ->merge($concepts->get($record->id, collect())->pluck('concepto'))
                 ->map(static fn($concepto) => trim((string)$concepto))
                 ->filter()
+                ->unique()
                 ->implode(', ');
+            $linkedExit = $recordCatalogConcepts->first();
+            $linkedExitId = (int)($linkedExit->id_movimiento_salida ?? 0) ?: null;
             $affectation = trim((string)$record->afectacion);
             $result[] = [
                 'id' => (int)$record->id,
@@ -126,21 +174,23 @@ final class OrdenMantenimientoService
                 'asunto' => $subject !== '' ? $subject : 'S/I',
                 'afectacion' => $affectation !== '' ? $affectation : 'S/I',
                 'estatus' => $status,
-                'estatus_texto' => self::statusText($status, $hasInstall, $hasCause),
+                'estatus_texto' => $expiredPending ? 'No autorizado' : self::statusText($status, $hasInstall, $hasCause),
+                'periodo_actual' => $currentPeriod,
                 'comentarios' => (int)($commentCounts[$record->id] ?? 0),
-                'firma_b' => $signatureTypes->get($record->id, collect())->contains('tipo_firma', 'B'),
-                'firma_c' => $signatureTypes->get($record->id, collect())->contains('tipo_firma', 'C'),
-                'puede_editar' => $permissions['editar'] && in_array($status, [0, 1], true),
-                'puede_eliminar' => $permissions['eliminar'] && ($status === 0 || $permissions['id_usuario'] === 19),
-                'puede_descargar' => $permissions['descargar'] && in_array($status, [2, 3], true),
+                'firma_b' => $hasFirmaB,
+                'firma_c' => $hasFirmaC,
+                'puede_editar' => $currentPeriod && $permissions['editar'] && in_array($status, [0, 1], true),
+                'puede_eliminar' => $periodActionsAllowed && $permissions['eliminar'] && ($status === 0 || $permissions['id_usuario'] === 19),
+                'puede_descargar' => $periodActionsAllowed && $permissions['descargar'] && in_array($status, [2, 3], true),
+                'id_movimiento_salida' => $linkedExitId,
+                'estatus_salida' => $linkedExitId !== null ? (int)($linkedExit->estatus_salida ?? 0) : null,
                 // Keep the legacy menu's mutually exclusive states: once an
                 // installation is registered, the Cause action is disabled;
                 // once a cause is registered, Evidence is disabled.
-                'puede_ver_evidencia' => in_array($status, [2, 3], true) && !$hasCause,
-                'puede_ver_causa' => in_array($status, [2, 3], true) && !$hasInstall,
-                'puede_firmar' => ($permissions['id_usuario'] === 21 && $status === 1 && !$signatureTypes->get($record->id, collect())->contains('tipo_firma', 'B'))
-                    || ($permissions['id_usuario'] === 19 && $status === 1 && $signatureTypes->get($record->id, collect())->contains('tipo_firma', 'B') && !$signatureTypes->get($record->id, collect())->contains('tipo_firma', 'C')),
-                'tipo_firma_pendiente' => $permissions['id_usuario'] === 21 ? 'B' : ($permissions['id_usuario'] === 19 ? 'C' : ''),
+                'puede_ver_evidencia' => $periodActionsAllowed && in_array($status, [2, 3], true) && !$hasCause,
+                'puede_ver_causa' => $periodActionsAllowed && in_array($status, [2, 3], true) && !$hasInstall,
+                'puede_firmar' => $currentUserCanSign,
+                'tipo_firma_pendiente' => $pendingSignatureType,
                 'puede_ver_estacion' => $allContexts,
             ];
         }
@@ -162,6 +212,7 @@ final class OrdenMantenimientoService
                     'fecha' => date('Y-m-d'), 'afectacion' => '',
                     'tipo_servicio' => 0, 'orden_trabajo' => 0,
                     'orden_riesgo' => 0, 'comentarios' => '', 'estatus' => 0,
+                    'usa_refacciones_catalogo' => 1,
                 ]);
                 foreach (self::DEFAULT_AREAS as $area) {
                     $areaRecord = PedidoMaterialesArea::create(['id_pedido' => $record->id, 'area' => $area, 'estatus' => 0]);
@@ -186,8 +237,16 @@ final class OrdenMantenimientoService
         $areas = PedidoMaterialesArea::where('id_pedido', $id)->orderBy('id')->get();
         $subareas = PedidoMaterialesAreaOtros::whereIn('id_area', $areas->pluck('id'))
             ->orderBy('id')->get()->groupBy('id_area');
+        $usesCurrentCatalog = (bool)($record->usa_refacciones_catalogo ?? false);
         $details = PedidoMaterialesDetalle::where('id_pedido', $id)->orderBy('id')->get();
+        $catalogDetails = $usesCurrentCatalog
+            ? DB::table('op_pedido_materiales_refacciones as pr')
+                ->join('op_refacciones_catalogo as c', 'c.id', '=', 'pr.id_refaccion')
+                ->where('pr.id_pedido', $id)
+                ->get(['pr.id', 'pr.cantidad', 'c.nombre', 'c.sku'])
+            : collect();
         $status = (int)$record->estatus;
+        $expiredPending = $status < 2 && substr($recordDate, 0, 7) < date('Y-m');
         $hasInstall = PedidoMaterialesInstalacion::where('id_pedido', $id)->exists();
         $hasCause = PedidoMaterialesCausa::where('id_reporte', $id)->exists();
         $stationId = (int)$record->id_estacion;
@@ -228,10 +287,12 @@ final class OrdenMantenimientoService
             'razon_social' => $razonSocial !== '' ? $razonSocial : 'S/I',
             'fecha' => $recordDate,
             'fecha_label' => self::formatDate($recordDate),
-            'asunto' => ($subject = $details
-                ->pluck('concepto')
+            'asunto' => ($subject = $catalogDetails
+                ->pluck('nombre')
+                ->merge($details->pluck('concepto'))
                 ->map(static fn($concepto) => trim((string)$concepto))
                 ->filter()
+                ->unique()
                 ->implode(', ')) !== '' ? $subject : 'S/I',
             'afectacion' => trim((string)$record->afectacion) !== '' ? trim((string)$record->afectacion) : 'S/I',
             'tipo_servicio' => (int)$record->tipo_servicio,
@@ -239,7 +300,8 @@ final class OrdenMantenimientoService
             'orden_riesgo' => (int)$record->orden_riesgo,
             'comentarios_generales' => (string)$record->comentarios,
             'estatus' => $status,
-            'estatus_texto' => self::statusText($status, $hasInstall, $hasCause),
+            'usa_refacciones_catalogo' => $usesCurrentCatalog,
+            'estatus_texto' => $expiredPending ? 'No autorizado' : self::statusText($status, $hasInstall, $hasCause),
             'areas' => $areas->map(static fn($row) => [
                 'id' => (int)$row->id,
                 'area' => (string)$row->area,
@@ -258,7 +320,12 @@ final class OrdenMantenimientoService
                         'estatus' => (int)$subarea->estatus,
                     ])->all(),
             ])->all(),
-            'materiales' => $details->map(static fn($row) => ['id' => (int)$row->id, 'concepto' => (string)$row->concepto, 'cantidad' => (string)$row->cantidad, 'nota' => (string)$row->nota])->all(),
+            'materiales' => $usesCurrentCatalog
+                ? $catalogDetails->map(static fn($row) => [
+                    'id' => (int)$row->id, 'concepto' => (string)$row->nombre,
+                    'sku' => (string)$row->sku, 'cantidad' => (string)$row->cantidad, 'nota' => '',
+                ])->all()
+                : $details->map(static fn($row) => ['id' => (int)$row->id, 'concepto' => (string)$row->concepto, 'cantidad' => (string)$row->cantidad, 'nota' => (string)$row->nota])->all(),
             'evidencias' => $files['evidencias'] ?? [],
             'firmas' => $signatures,
         ];
@@ -267,7 +334,7 @@ final class OrdenMantenimientoService
     public static function exportData(int $id): ?array
     {
         $detail = self::detail($id);
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedCurrentOrFinalizedRecord($id);
         if ($detail === null || !$record || !in_array((int)$detail['estatus'], [2, 3], true)) return null;
         $station = Estacion::find((int)$record->id_estacion);
         $detail['direccion_completa'] = (int)$record->id_estacion === 9
@@ -279,7 +346,7 @@ final class OrdenMantenimientoService
 
     public static function update(int $id, array $data, bool $sendNotification = true): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedRecord($id, true);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La solicitud ya no permite edición.', 409);
 
@@ -311,7 +378,7 @@ final class OrdenMantenimientoService
 
     public static function addComment(int $id, string $text): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedRecord($id, true);
         $text = trim($text);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if ($text === '' || mb_strlen($text) > 4000) return self::fail('Escribe un comentario válido.', 422);
@@ -330,9 +397,9 @@ final class OrdenMantenimientoService
     public static function toggleArea(int $areaId, int $status): array
     {
         $area = PedidoMaterialesArea::find($areaId);
-        if (!$area || !self::authorizedRecord((int)$area->id_pedido)) return self::fail('Área no encontrada.', 404);
+        if (!$area || !self::authorizedRecord((int)$area->id_pedido, true)) return self::fail('Área no encontrada.', 404);
         if (!in_array($status, [0, 1], true)) return self::fail('Estado de área inválido.', 422);
-        $record = self::authorizedRecord((int)$area->id_pedido);
+        $record = self::authorizedRecord((int)$area->id_pedido, true);
         if (!$record || !in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite cambios.', 409);
         try {
             $area->estatus = $status;
@@ -346,7 +413,7 @@ final class OrdenMantenimientoService
 
     public static function addArea(int $id, string $name): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedRecord($id, true);
         $name = trim($name);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite agregar áreas.', 409);
@@ -366,7 +433,7 @@ final class OrdenMantenimientoService
         $subarea = PedidoMaterialesAreaOtros::find($subareaId);
         if (!$subarea) return self::fail('Subárea no encontrada.', 404);
         $area = PedidoMaterialesArea::find((int)$subarea->id_area);
-        $record = $area ? self::authorizedRecord((int)$area->id_pedido) : null;
+        $record = $area ? self::authorizedRecord((int)$area->id_pedido, true) : null;
         if (!$record) return self::fail('Subárea fuera de tu alcance.', 404);
         if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite cambios.', 409);
         if (!in_array($status, [0, 1], true)) return self::fail('Estado de subárea inválido.', 422);
@@ -382,11 +449,41 @@ final class OrdenMantenimientoService
 
     public static function addMaterial(int $id, array $data): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedRecord($id, true);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite cambios.', 409);
         $quantity = filter_var($data['cantidad'] ?? null, FILTER_VALIDATE_FLOAT);
         if ($quantity === false || $quantity < 1) return self::fail('La cantidad debe ser de al menos 1.', 422);
+        $quantity = round((float)$quantity, 2);
+        if ((bool)($record->usa_refacciones_catalogo ?? false)) {
+            $productId = filter_var($data['id_refaccion'] ?? $data['refaccion'] ?? null, FILTER_VALIDATE_INT);
+            if ($productId === false || $productId <= 0) return self::fail('Selecciona una refacción del catálogo.', 422);
+            if (DB::table('op_pedido_materiales_refacciones')->where('id_pedido', $id)->exists()) {
+                return self::fail('La orden sólo permite agregar una refacción.', 409);
+            }
+            try {
+                $warehouseId = RefaccionesService::getWarehouseLocationId();
+                if ($warehouseId === null) return self::fail('No se encontró la localidad de Almacén configurada.', 500);
+                DB::transaction(static function () use ($id, $productId, $quantity, $warehouseId): void {
+                    $product = DB::table('op_refacciones_catalogo')->where('id', (int)$productId)
+                        ->where('tipo_articulo', 'refaccion')->where('activo', 1)->lockForUpdate()->first();
+                    if (!$product) throw new \RuntimeException('La refacción seleccionada ya no está disponible.');
+                    $stock = DB::table('op_refacciones_existencias')->where('id_refaccion', (int)$productId)
+                        ->where('id_estacion', $warehouseId)->lockForUpdate()->first();
+                    $available = (float)($stock->existencia ?? 0);
+                    if ($available <= 0) throw new \RuntimeException('La refacción no tiene existencia disponible en Almacén.');
+                    if ((float)$quantity > $available) throw new \RuntimeException('La cantidad excede la existencia disponible en Almacén.');
+                    DB::table('op_pedido_materiales_refacciones')->insert([
+                        'id_pedido' => $id, 'id_refaccion' => (int)$productId,
+                        'cantidad' => $quantity,
+                    ]);
+                });
+                return ['success' => true, 'message' => 'Refacción agregada.', 'code' => 201];
+            } catch (\Throwable $e) {
+                error_log('[OrdenMantenimiento] addCatalogMaterial: '.$e->getMessage());
+                return self::fail($e->getMessage() === 'La orden sólo permite agregar una refacción.' ? $e->getMessage() : ($e instanceof \RuntimeException ? $e->getMessage() : 'No se pudo agregar la refacción.'), $e instanceof \RuntimeException ? 422 : 500);
+            }
+        }
         $refaccionId = (int)($data['refaccion'] ?? 0);
         $manualName = trim((string)($data['otro'] ?? ''));
         $refaccion = null;
@@ -411,7 +508,7 @@ final class OrdenMantenimientoService
         try {
             PedidoMaterialesDetalle::create([
                 'id_pedido' => $id, 'refaccion' => $refaccionId, 'concepto' => $name,
-                'cantidad' => rtrim(rtrim(number_format($quantity, 4, '.', ''), '0'), '.'), 'nota' => $note,
+                'cantidad' => rtrim(rtrim(number_format($quantity, 2, '.', ''), '0'), '.'), 'nota' => $note,
             ]);
             return ['success' => true, 'message' => 'Refacción agregada.', 'code' => 201];
         } catch (\Throwable $e) {
@@ -422,9 +519,22 @@ final class OrdenMantenimientoService
 
     public static function deleteMaterial(int $detailId): array
     {
+        $catalogDetail = DB::table('op_pedido_materiales_refacciones')->where('id', $detailId)->first();
+        if ($catalogDetail) {
+            $record = self::authorizedRecord((int)$catalogDetail->id_pedido, true);
+            if (!$record) return self::fail('Refacción no encontrada.', 404);
+            if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite cambios.', 409);
+            try {
+                DB::table('op_pedido_materiales_refacciones')->where('id', $detailId)->delete();
+                return ['success' => true, 'message' => 'Refacción eliminada.', 'code' => 200];
+            } catch (\Throwable $e) {
+                error_log('[OrdenMantenimiento] deleteCatalogMaterial: '.$e->getMessage());
+                return self::fail('No se pudo eliminar la refacción.', 500);
+            }
+        }
         $detail = PedidoMaterialesDetalle::find($detailId);
-        if (!$detail || !self::authorizedRecord((int)$detail->id_pedido)) return self::fail('Refacción no encontrada.', 404);
-        $record = self::authorizedRecord((int)$detail->id_pedido);
+        if (!$detail || !self::authorizedRecord((int)$detail->id_pedido, true)) return self::fail('Refacción no encontrada.', 404);
+        $record = self::authorizedRecord((int)$detail->id_pedido, true);
         if (!$record || !in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite cambios.', 409);
         try {
             $detail->delete();
@@ -439,6 +549,9 @@ final class OrdenMantenimientoService
     {
         $record = self::authorizedRecord($id);
         if (!$record) return null;
+        if ((bool)($record->usa_refacciones_catalogo ?? false)) {
+            return RefaccionesService::getProductosAlmacenParaOrden();
+        }
         return DB::table('op_refacciones')->where('id_estacion', (int)$record->id_estacion)
             ->where('status', 1)->orderBy('id')->get(['id', 'nombre', 'estado_r', 'unidad'])
             ->map(static fn($row) => [
@@ -481,7 +594,7 @@ final class OrdenMantenimientoService
 
     public static function storeInstallation(int $id, array $file): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedCurrentOrFinalizedRecord($id);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if (!in_array((int)$record->estatus, [2, 3], true)) return self::fail('La orden aún no está disponible para registrar instalación.', 409);
         $upload = self::saveUpload($file, ['pdf', 'jpg', 'jpeg', 'png', 'webp']);
@@ -503,7 +616,7 @@ final class OrdenMantenimientoService
     public static function deleteInstallation(int $installationId): array
     {
         $installation = PedidoMaterialesInstalacion::find($installationId);
-        $record = $installation ? self::authorizedRecord((int)$installation->id_pedido) : null;
+        $record = $installation ? self::authorizedCurrentOrFinalizedRecord((int)$installation->id_pedido) : null;
         if (!$installation || !$record) return self::fail('Evidencia no encontrada.', 404);
         if (!in_array((int)$record->estatus, [2, 3], true)) return self::fail('La evidencia ya no se puede eliminar.', 409);
 
@@ -522,7 +635,7 @@ final class OrdenMantenimientoService
 
     public static function storeEvidence(int $id, array $data, array $file): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedRecord($id, true);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite agregar evidencias.', 409);
         $area = trim((string)($data['area'] ?? ''));
@@ -543,7 +656,7 @@ final class OrdenMantenimientoService
     public static function deleteEvidence(int $evidenceId): array
     {
         $evidence = PedidoMaterialesEvidenciaArchivo::find($evidenceId);
-        $record = $evidence ? self::authorizedRecord((int)$evidence->id_pedido) : null;
+        $record = $evidence ? self::authorizedRecord((int)$evidence->id_pedido, true) : null;
         if (!$evidence || !$record) return self::fail('Evidencia no encontrada.', 404);
         if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite eliminar evidencias.', 409);
         try {
@@ -558,7 +671,7 @@ final class OrdenMantenimientoService
 
     public static function addCause(int $id, array $data, array $pdf, array $xml): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedCurrentOrFinalizedRecord($id);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if (!in_array((int)$record->estatus, [2, 3], true)) return self::fail('La causa sólo puede registrarse después de la autorización.', 409);
         $description = trim((string)($data['descripcion'] ?? ''));
@@ -586,7 +699,7 @@ final class OrdenMantenimientoService
 
     public static function createSignatureToken(int $id, string $channel): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedRecord($id, true);
         $userId = (int)(Session::get('usuario')['id'] ?? 0);
         $signType = self::expectedSignType($record, $userId);
         if (!$record || $signType === null) return self::fail('No te corresponde firmar esta orden.', 403);
@@ -634,7 +747,7 @@ final class OrdenMantenimientoService
     public static function signingType(int $id): ?string
     {
         $userId = (int)(Session::get('usuario')['id'] ?? 0);
-        return self::expectedSignType(self::authorizedRecord($id), $userId);
+        return self::expectedSignType(self::authorizedRecord($id, true), $userId);
     }
 
     /**
@@ -644,9 +757,17 @@ final class OrdenMantenimientoService
      */
     public static function pendingSignatureItems(int $userId): array
     {
-        if (!in_array($userId, [19, 21], true) || !self::permissions()['leer']) {
+        // En el flujo vigente, 21 recibe VO.BO. y 19 la autorización. El
+        // contador sólo se muestra si el usuario tiene acceso configurado al
+        // submódulo, además del permiso de lectura del módulo Almacén.
+        if (!in_array($userId, [19, 21], true)) {
             return [];
         }
+
+        $moduleAccess = ModuloDptoOperativoService::getPermiso($userId, self::PARENT_MODULE);
+        $hasOrderModule = !empty($moduleAccess['leer'])
+            && in_array(self::MODULE_KEY, array_column($moduleAccess['submenus'] ?? [], 'clave'), true);
+        if (!$hasOrderModule) return [];
 
         $contexts = self::contexts();
         if ($contexts === []) {
@@ -655,6 +776,10 @@ final class OrdenMantenimientoService
 
         $records = PedidoMateriales::query()
             ->where('estatus', 1)
+            // Las firmas sólo están disponibles para el periodo en curso,
+            // igual que las acciones de la vista de órdenes.
+            ->whereYear('fecha', (int)date('Y'))
+            ->whereMonth('fecha', (int)date('n'))
             ->whereIn('id_estacion', array_keys($contexts))
             ->orderBy('fecha')
             ->get();
@@ -706,7 +831,7 @@ final class OrdenMantenimientoService
 
     public static function finalize(int $id, array $data): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedRecord($id, true);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if ((int)$record->estatus !== 0) return self::fail('La orden ya se finalizó.', 409);
         $affectation = trim((string)($data['afectacion'] ?? ''));
@@ -760,7 +885,7 @@ final class OrdenMantenimientoService
         try {
             DB::transaction(static function () use ($id, $token, $userId): void {
                 $record = PedidoMateriales::where('id', $id)->lockForUpdate()->first();
-                $authorized = $record ? self::authorizedRecord($id) : null;
+                $authorized = $record ? self::authorizedRecord($id, true) : null;
                 $type = self::expectedSignType($authorized, $userId);
                 if (!$record || !$authorized || $type === null) throw new \RuntimeException('No te corresponde firmar esta orden.');
                 $validToken = PedidoMaterialesToken::where('id_pedido', $id)->where('id_usuario', $userId)->where('token', (int)$token)->lockForUpdate()->first();
@@ -770,11 +895,35 @@ final class OrdenMantenimientoService
                     'tipo_firma' => $type, 'firma' => 'Firma: '.bin2hex(random_bytes(64)).'.'.uniqid('', true),
                 ]);
                 if ($type === 'C') {
-                    foreach (PedidoMaterialesDetalle::where('id_pedido', $id)->where('refaccion', '>', 0)->get() as $item) {
-                        $stock = DB::table('op_refacciones')->where('id', (int)$item->refaccion)->lockForUpdate()->first();
-                        if ($stock) {
-                            $remaining = max(0, (float)$stock->unidad - (float)$item->cantidad);
-                            DB::table('op_refacciones')->where('id', (int)$item->refaccion)->update(['unidad' => $remaining]);
+                    if ((bool)($record->usa_refacciones_catalogo ?? false)) {
+                        $item = DB::table('op_pedido_materiales_refacciones')->where('id_pedido', $id)->lockForUpdate()->first();
+                        if ($item) {
+                            $authorSignature = PedidoMaterialesFirma::where('id_pedido', $id)->where('tipo_firma', 'A')->first();
+                            if (!$authorSignature) throw new \RuntimeException('No se encontró la firma del encargado de la orden.');
+                            $authorFile = basename((string)$authorSignature->firma);
+                            $authorPath = dirname(__DIR__, 2).'/public/uploads/archivos/'.$authorFile;
+                            if ($authorFile === '' || !is_file($authorPath)) throw new \RuntimeException('No se encontró el archivo de la firma del encargado.');
+                            $authorName = (string)(Usuario::where('id', (int)$authorSignature->id_usuario)->value('nombre') ?: 'Usuario');
+                            $movementId = RefaccionesService::crearSalidaDesdeOrdenMantenimiento(
+                                $id,
+                                (int)$record->id_estacion,
+                                (int)$item->id_refaccion,
+                                (float)$item->cantidad,
+                                'uploads/archivos/'.$authorFile,
+                                $authorName,
+                                (string)$authorSignature->getRawOriginal('fecha')
+                            );
+                            DB::table('op_pedido_materiales_refacciones')->where('id', (int)$item->id)->update([
+                                'id_movimiento_salida' => $movementId,
+                            ]);
+                        }
+                    } else {
+                        foreach (PedidoMaterialesDetalle::where('id_pedido', $id)->where('refaccion', '>', 0)->get() as $item) {
+                            $stock = DB::table('op_refacciones')->where('id', (int)$item->refaccion)->lockForUpdate()->first();
+                            if ($stock) {
+                                $remaining = max(0, (float)$stock->unidad - (float)$item->cantidad);
+                                DB::table('op_refacciones')->where('id', (int)$item->refaccion)->update(['unidad' => $remaining]);
+                            }
                         }
                     }
                     $record->estatus = 2;
@@ -882,7 +1031,7 @@ final class OrdenMantenimientoService
     public static function deleteCause(int $causeId): array
     {
         $cause = PedidoMaterialesCausa::find($causeId);
-        $record = $cause ? self::authorizedRecord((int)$cause->id_reporte) : null;
+        $record = $cause ? self::authorizedCurrentOrFinalizedRecord((int)$cause->id_reporte) : null;
         if (!$cause || !$record) return self::fail('Causa no encontrada.', 404);
         if (!in_array((int)$record->estatus, [2, 3], true)) return self::fail('La causa sólo puede eliminarse después de la autorización.', 409);
         $pdf = basename((string)$cause->factura_pdf);
@@ -947,7 +1096,7 @@ final class OrdenMantenimientoService
 
     public static function destroy(int $id): array
     {
-        $record = self::authorizedRecord($id);
+        $record = self::authorizedRecord($id, true);
         $permissions = self::permissions();
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if (!$permissions['eliminar'] || ((int)$record->estatus !== 0 && $permissions['id_usuario'] !== 19)) {

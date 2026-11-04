@@ -77,9 +77,9 @@ $riskLabels = [1 => 'Sí', 2 => 'No'];
     <div class="card mb-3">
         <div class="card-header bg-primary"><h5 class="mb-0 text-white"><i class="ti ti-tool me-1"></i> Refacciones solicitadas</h5></div>
         <div class="card-body p-0"><div class="table-responsive"><table class="table table-striped table-bordered align-middle w-100 mb-0" data-portal-table-selection="false">
-            <thead><tr><th>Refacción</th><th class="text-center">Cantidad</th><th>Nota</th></tr></thead><tbody>
-                <?php if (($detail['materiales'] ?? []) === []): ?><tr><td colspan="3" class="text-center text-primary">No se encontró información</td></tr><?php endif; ?>
-                <?php foreach (($detail['materiales'] ?? []) as $material): ?><tr><td><?= $e($material['concepto']) ?></td><td class="text-center"><?= $e($material['cantidad']) ?></td><td><?= $e($material['nota']) ?></td></tr><?php endforeach; ?>
+            <thead><tr><th>Refacción</th><th class="text-center">Cantidad</th><?php if (empty($detail['usa_refacciones_catalogo'])): ?><th>Nota</th><?php endif; ?></tr></thead><tbody>
+                <?php if (($detail['materiales'] ?? []) === []): ?><tr><td colspan="<?= empty($detail['usa_refacciones_catalogo']) ? '3' : '2' ?>" class="text-center text-primary">No se encontró información</td></tr><?php endif; ?>
+                <?php foreach (($detail['materiales'] ?? []) as $material): ?><tr><td><?= $e($material['concepto']) ?></td><td class="text-center"><?= $e($material['cantidad']) ?></td><?php if (empty($detail['usa_refacciones_catalogo'])): ?><td><?= $e($material['nota']) ?></td><?php endif; ?></tr><?php endforeach; ?>
             </tbody>
         </table></div></div>
     </div>

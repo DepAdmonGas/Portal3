@@ -60,6 +60,7 @@ class SolicitudesFirmaDoService
         'Aditivo' => 'Pedido de Aditivo',
         'Formatos' => 'Formatos',
         'OrdenMantenimiento' => 'Orden de Mantenimiento',
+        'SolicitudCalcomanias' => 'Solicitud de Calcomanías',
     ];
 
     /** Rutas de firma ya existentes en Portal3 (grupo Departamento Operativo). */
@@ -71,6 +72,7 @@ class SolicitudesFirmaDoService
         'Limpieza' => '/departamento-operativo/comercializadora/pedido-articulos-limpieza-firma/',
         'Aditivo' => '/departamento-operativo/comercializadora/pedido-aditivo-firma/',
         'OrdenMantenimiento' => '/departamento-operativo/almacen/orden-mantenimiento-firma/',
+        'SolicitudCalcomanias' => '/departamento-operativo/almacen/refacciones/solicitud-calcomanias-firma/',
     ];
 
     /** @var array<int, array<int, array<string, mixed>>> */
@@ -174,6 +176,7 @@ class SolicitudesFirmaDoService
         $opciones[] = ['valor' => 'Formatos', 'etiqueta' => self::ETIQUETAS['Formatos']];
         if ((int)$idUsuario === 19) {
             $opciones[] = ['valor' => 'OrdenMantenimiento', 'etiqueta' => self::ETIQUETAS['OrdenMantenimiento']];
+            $opciones[] = ['valor' => 'SolicitudCalcomanias', 'etiqueta' => self::ETIQUETAS['SolicitudCalcomanias']];
         }
 
         return $opciones;
@@ -214,6 +217,9 @@ class SolicitudesFirmaDoService
             $filas,
             in_array($idUsuario, [19, 21], true)
                 ? OrdenMantenimientoService::pendingSignatureItems($idUsuario)
+                : [],
+            $idUsuario === 19
+                ? RefaccionesSolicitudCalcomaniasService::pendingSignatureItems($idUsuario)
                 : []
         );
 
@@ -358,6 +364,14 @@ class SolicitudesFirmaDoService
     {
         if ($tipo === 'OrdenMantenimiento') {
             return OrdenMantenimientoService::signingType($id) !== null;
+        }
+
+        if ($tipo === 'SolicitudCalcomanias') {
+            $solicitud = RefaccionesSolicitudCalcomaniasService::obtener($id);
+            return (int) (Auth::user()->id ?? 0) === 19
+                && $solicitud !== null
+                && (int) ($solicitud['estado'] ?? -1) === 1
+                && trim((string) ($solicitud['firma_autorizacion'] ?? '')) === '';
         }
 
         if (!isset(self::RUTAS_FIRMA[$tipo])) {

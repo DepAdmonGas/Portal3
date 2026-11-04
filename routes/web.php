@@ -1005,11 +1005,13 @@ $r->addRoute('GET', '/almacen/mantenimiento', Route::auth(['DptoOperativoControl
 
 // --- PEDIDO DE MATERIALES (Orden de Mantenimiento legacy) ---
         $r->addRoute('GET', '/almacen/orden-mantenimiento-firma/{id:\\d+}', Route::auth(['OrdenMantenimientoController', 'signPage']));
-        $r->addRoute('GET', '/almacen/orden-mantenimiento', Route::auth(['OrdenMantenimientoController', 'index']));
+        $r->addRoute('GET', '/almacen/orden-mantenimiento', Route::auth(['OrdenMantenimientoController', 'redirectToPeriod']));
+$r->addRoute('GET', '/almacen/orden-mantenimiento/{idYear:\\d+}/{idMes:\\d+}', Route::auth(['OrdenMantenimientoController', 'period']));
 $r->addRoute('GET', '/almacen/orden-mantenimiento/{id:\d+}', Route::auth(['OrdenMantenimientoController', 'index']));
 $r->addRoute('GET', '/almacen/orden-mantenimiento/{id:\d+}/pdf', Route::auth(['OrdenMantenimientoController', 'pdf']));
 $r->addRoute('GET', '/almacen/orden-mantenimiento/{id:\d+}/excel', Route::auth(['OrdenMantenimientoController', 'excel']));
-$r->addRoute('GET', '/almacen/orden-mantenimiento/data', Route::auth(['OrdenMantenimientoController', 'data']));
+$r->addRoute('GET', '/almacen/orden-mantenimiento/data/{idYear:\\d+}/{idMes:\\d+}', Route::auth(['OrdenMantenimientoController', 'data']));
+$r->addRoute('GET', '/almacen/orden-mantenimiento/data', Route::auth(['OrdenMantenimientoController', 'dataCurrentPeriod']));
 $r->addRoute('POST', '/almacen/orden-mantenimiento/crear', Route::auth(['OrdenMantenimientoController', 'create']));
 $r->addRoute('POST', '/almacen/orden-mantenimiento/detalle', Route::auth(['OrdenMantenimientoController', 'detail']));
 $r->addRoute('POST', '/almacen/orden-mantenimiento/editar', Route::auth(['OrdenMantenimientoController', 'update']));
@@ -1135,6 +1137,46 @@ $r->addRoute('POST', '/almacen/medicion-nivel-explosividad/pozo/guardar', Route:
 $r->addRoute('POST', '/almacen/medicion-nivel-explosividad/pozo/eliminar', Route::auth(['AlmacenMedicionNivelExplosividadController', 'eliminarPozo']));
 
 // --- MAQUINARIA Y EQUIPOS ---
+$r->addRoute('GET', '/almacen/refacciones', Route::auth(['RefaccionesController', 'index']));
+$r->addRoute('GET', '/almacen/refacciones/salidas-pdf/{id:\d+}', Route::auth(['RefaccionesController', 'descargarSalidaPdf']));
+$r->addRoute('GET', '/almacen/refacciones/salidas-formulario/nueva/{id:\d+}', Route::auth(['RefaccionesController', 'nuevaSalidaFormulario']));
+$r->addRoute('GET', '/almacen/refacciones/salidas-formulario/{id:\d+}', Route::auth(['RefaccionesController', 'salidaFormulario']));
+$r->addRoute('GET', '/almacen/refacciones/salidas-firma/{id:\d+}', Route::auth(['RefaccionesController', 'salidaFirma']));
+$r->addRoute('GET', '/almacen/refacciones/solicitud-calcomanias-firma/{id:\d+}', Route::auth(['RefaccionesController', 'solicitudCalcomaniasFirma']));
+$r->addRoute('GET', '/almacen/refacciones/solicitud-calcomanias/pdf/{id:\d+}', Route::auth(['RefaccionesController', 'descargarSolicitudCalcomaniasPdf']));
+$r->addRoute('GET', '/almacen/refacciones/solicitud-calcomanias/detalle', Route::auth(['RefaccionesController', 'detalleSolicitudCalcomanias']));
+$r->addRoute('GET', '/almacen/refacciones/solicitud-calcomanias/{id:\d+}', Route::auth(['RefaccionesController', 'solicitudCalcomanias']));
+$r->addRoute('GET', '/almacen/refacciones/{section:[a-z-]+}', Route::auth(['RefaccionesController', 'section']));
+$r->addRoute('POST', '/almacen/refacciones/contexto', Route::auth(['RefaccionesController', 'setContext']));
+$r->addRoute('POST', '/almacen/refacciones/solicitud-calcomanias/guardar', Route::auth(['RefaccionesController', 'guardarSolicitudCalcomanias']));
+$r->addRoute('POST', '/almacen/refacciones/solicitud-calcomanias/eliminar', Route::auth(['RefaccionesController', 'eliminarSolicitudCalcomanias']));
+$r->addRoute('POST', '/almacen/refacciones/solicitud-calcomanias/agregar-calcomania', Route::auth(['RefaccionesController', 'agregarCalcomaniaSolicitud']));
+$r->addRoute('POST', '/almacen/refacciones/solicitud-calcomanias/eliminar-calcomania', Route::auth(['RefaccionesController', 'eliminarCalcomaniaSolicitud']));
+$r->addRoute('POST', '/almacen/refacciones/solicitud-calcomanias/observaciones', Route::auth(['RefaccionesController', 'actualizarObservacionesSolicitudCalcomanias']));
+$r->addRoute('POST', '/almacen/refacciones/solicitud-calcomanias/firmar-encargado', Route::auth(['RefaccionesController', 'firmarSolicitudCalcomaniasEncargado']));
+$r->addRoute('POST', '/almacen/refacciones/solicitud-calcomanias/firmar-autorizacion', Route::auth(['RefaccionesController', 'firmarSolicitudCalcomaniasAutorizacion']));
+$r->addRoute('POST', '/almacen/refacciones/solicitud-calcomanias/crear-token-autorizacion', Route::auth(['RefaccionesController', 'crearTokenSolicitudCalcomaniasAutorizacion']));
+$r->addRoute('POST', '/almacen/refacciones/reportes/consultar', Route::auth(['RefaccionesController', 'consultarReporte']));
+$r->addRoute('POST', '/almacen/refacciones/reportes/enviar-correo', Route::auth(['RefaccionesController', 'enviarReporteCorreo']));
+$r->addRoute('POST', '/almacen/refacciones/productos/guardar', Route::auth(['RefaccionesController', 'storeProduct']));
+$r->addRoute('GET', '/almacen/refacciones/productos/precios/{id:\\d+}', Route::auth(['RefaccionesController', 'priceHistory']));
+$r->addRoute('POST', '/almacen/refacciones/productos/actualizar', Route::auth(['RefaccionesController', 'updateProduct']));
+$r->addRoute('POST', '/almacen/refacciones/productos/eliminar', Route::auth(['RefaccionesController', 'deleteProduct']));
+$r->addRoute('POST', '/almacen/refacciones/movimientos/guardar', Route::auth(['RefaccionesController', 'storeMovement']));
+$r->addRoute('POST', '/almacen/refacciones/salidas/guardar', Route::auth(['RefaccionesController', 'storeSalida']));
+$r->addRoute('POST', '/almacen/refacciones/salidas/actualizar-pendiente', Route::auth(['RefaccionesController', 'actualizarSalidaPendiente']));
+$r->addRoute('POST', '/almacen/refacciones/salidas/firmar', Route::auth(['RefaccionesController', 'firmarSalida']));
+$r->addRoute('POST', '/almacen/refacciones/salidas/retorno', Route::auth(['RefaccionesController', 'actualizarRetornoSalida']));
+$r->addRoute('POST', '/almacen/refacciones/salidas/procesar-retornos', Route::auth(['RefaccionesController', 'procesarRetornosVencidos']));
+$r->addRoute('POST', '/almacen/refacciones/salidas/eliminar', Route::auth(['RefaccionesController', 'eliminarSalida']));
+$r->addRoute('POST', '/almacen/refacciones/movimientos/actualizar-entrada', Route::auth(['RefaccionesController', 'updateEntry']));
+$r->addRoute('POST', '/almacen/refacciones/movimientos/eliminar-entrada', Route::auth(['RefaccionesController', 'deleteEntry']));
+$r->addRoute('POST', '/almacen/refacciones/calendario/guardar', Route::auth(['RefaccionesController', 'storeEvent']));
+$r->addRoute('GET', '/almacen/refacciones/calendario/dia', Route::auth(['RefaccionesController', 'calendarioDia']));
+$r->addRoute('GET', '/almacen/refacciones/calendario/detalle', Route::auth(['RefaccionesController', 'detalleCalendario']));
+$r->addRoute('POST', '/almacen/refacciones/calendario/estado', Route::auth(['RefaccionesController', 'actualizarEstadoCalendario']));
+$r->addRoute('POST', '/almacen/refacciones/calendario/recordatorios', Route::auth(['RefaccionesController', 'enviarRecordatoriosCalendario']));
+
 $r->addRoute('GET', '/almacen/maquinaria-equipos', Route::auth(['AlmacenMaquinariaEquiposController', 'index']));
 $r->addRoute('GET', '/almacen/maquinaria-equipos/data', Route::auth(['AlmacenMaquinariaEquiposController', 'data']));
 $r->addRoute('POST', '/almacen/maquinaria-equipos/data', Route::auth(['AlmacenMaquinariaEquiposController', 'data']));

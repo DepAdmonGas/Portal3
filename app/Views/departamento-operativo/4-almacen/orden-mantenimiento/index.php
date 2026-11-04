@@ -11,6 +11,8 @@
      class="pb-4"
      data-base-url="<?= $baseUrl ?>"
      data-module-key="<?= htmlspecialchars((string)$moduleStationKey, ENT_QUOTES, 'UTF-8') ?>"
+     data-id-year="<?= (int)($idYear ?? date('Y')) ?>"
+     data-id-mes="<?= (int)($idMes ?? date('n')) ?>"
      data-record-id="<?= (int)($registro['id'] ?? 0) ?>"
      data-record="<?= htmlspecialchars(json_encode($registro, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: 'null', ENT_QUOTES, 'UTF-8') ?>"
      data-puede-leer="<?= !empty($permisos['leer']) ? 'true' : 'false' ?>"

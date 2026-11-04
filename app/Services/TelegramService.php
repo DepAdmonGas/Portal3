@@ -33,24 +33,57 @@ $data = [
 
 $url = $this->apiUrl . '/sendMessage';
 
-$ch = curl_init();
-curl_setopt_array($ch, [
-CURLOPT_URL => $url,
-CURLOPT_POST => 1,
-CURLOPT_POSTFIELDS => http_build_query($data),
-CURLOPT_RETURNTRANSFER => true,
-CURLOPT_TIMEOUT => 10,
-]);
+$response = false;
+$httpCode = 0;
+$curlError = 0;
 
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlError = curl_errno($ch);
-curl_close($ch);
+if (function_exists('curl_init')) {
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_POST => 1,
+        CURLOPT_POSTFIELDS => http_build_query($data),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+    ]);
 
-if ($curlError !== 0 || !is_string($response)) {
-    $this->lastError = 'network_error';
-    error_log('[Telegram] sendMessage request failed (HTTP ' . (int) $httpCode . ', cURL ' . (int) $curlError . ').');
-    return false;
+    $response = curl_exec($ch);
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_errno($ch);
+    curl_close($ch);
+
+    if ($curlError !== 0 || !is_string($response)) {
+        $this->lastError = 'network_error';
+        error_log('[Telegram] sendMessage request failed (HTTP ' . $httpCode . ', cURL ' . $curlError . ').');
+        return false;
+    }
+} else {
+    // Some Portal3 PHP runtimes run without ext-curl. Use the native HTTPS
+    // stream transport so token delivery still works in those environments.
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: application/x-www-form-urlencoded\r\nConnection: close\r\n",
+            'content' => http_build_query($data),
+            'timeout' => 10,
+            'ignore_errors' => true,
+        ],
+        'ssl' => [
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+        ],
+    ]);
+    $response = @file_get_contents($url, false, $context);
+    foreach ($http_response_header ?? [] as $header) {
+        if (preg_match('/^HTTP\/\S+\s+(\d{3})/', $header, $matches)) {
+            $httpCode = (int) $matches[1];
+        }
+    }
+    if (!is_string($response)) {
+        $this->lastError = 'network_error';
+        error_log('[Telegram] sendMessage request failed using HTTPS stream transport.');
+        return false;
+    }
 }
 
 $result = json_decode($response, true);

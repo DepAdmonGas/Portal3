@@ -13,8 +13,6 @@
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/css/styles.css') ?: 1 ?>" />
     <link rel="stylesheet" href="<?= asset('css/portal-tables.css') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/css/portal-tables.css') ?: 1 ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
-
-
     <!-- Scripts por vista -->
     <?php if (!empty($links)): ?>
         <?php foreach ($links as $link): ?>
@@ -57,7 +55,7 @@
                 <a class="sidebartoggler ms-auto text-decoration-none fs-5 d-block d-xl-none pointer"><i class="ti ti-x"></i></a>
             </div>
 
-            <nav class="sidebar-nav scroll-sidebar" data-simplebar x-data="menuDoApp()" x-init="init()">
+            <nav class="sidebar-nav scroll-sidebar" data-simplebar <?= empty($refaccionesOnlySidebar) ? 'x-data="menuDoApp()" x-init="init()"' : '' ?>>
 
                 <ul id="sidebarnav" class="mt-3">
 
@@ -71,6 +69,23 @@
                         </a>
                     </li>
 
+<?php if (!empty($refaccionesOnlySidebar)): ?>
+                    <li class="nav-small-cap">
+                        <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                        <span class="hide-menu"><?= htmlspecialchars((string) ($refaccionesSidebarTitle ?? 'Refacciones'), ENT_QUOTES, 'UTF-8') ?></span>
+                    </li>
+                    <?php foreach (($refaccionesSidebarItems ?? []) as $item): ?>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link<?= !empty($item['disabled']) ? ' pe-none opacity-50' : '' ?>"
+                               href="<?= htmlspecialchars((string) ($item['ruta'] ?? '#'), ENT_QUOTES, 'UTF-8') ?>"
+                               aria-expanded="false"<?= !empty($item['disabled']) ? ' aria-disabled="true" tabindex="-1" title="Opción pendiente de desarrollo"' : '' ?>>
+                                <span><i class="<?= htmlspecialchars((string) ($item['icono'] ?? 'ti ti-layout-grid'), ENT_QUOTES, 'UTF-8') ?>"></i></span>
+                                <span class="hide-menu"><?= htmlspecialchars((string) ($item['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
+                                <?php if ((int) ($item['badge_count'] ?? 0) > 0): ?><span class="badge-historico"><?= (int) $item['badge_count'] ?></span><?php endif; ?>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+<?php else: ?>
 <?php 
 $esPuestoProcedimientos = in_array((int) ($user->id_puesto ?? 0), [3, 13], true); 
 $idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
@@ -142,6 +157,7 @@ $idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
                         <i class="ti ti-alert-circle nav-small-cap-icon fs-4"></i>
                         <span class="hide-menu"></span>
                     </li>
+<?php endif; ?>
 
                 </ul>
             </nav>
@@ -317,7 +333,9 @@ $idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
                         </div>
                     <?php endif; ?>
 
-                    <?= $moduleStationSelector ?? '' ?>
+                    <?php if (!empty($moduleStationSelector)): ?>
+                        <div class="d-flex justify-content-end w-100 mb-2"><?= $moduleStationSelector ?></div>
+                    <?php endif; ?>
                     <?php if (isset($pendientesJson)): ?>
                         <span id="sc-pendientes-data" style="display:none;"><?= htmlspecialchars($pendientesJson, ENT_QUOTES, 'UTF-8') ?></span>
                     <?php endif; ?>
@@ -351,7 +369,9 @@ $idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
     <!-- Import Js Files -->
     <script src="<?= asset('js/home/actions-home.init.js?v=1.2') ?>"></script>
     <!-- Menú lateral de Departamento Operativo -->
-    <script src="<?= asset('js/departamento-operativo/menu-do.init.js?v=1.1') ?>"></script>
+    <?php if (empty($refaccionesOnlySidebar)): ?>
+        <script src="<?= asset('js/departamento-operativo/menu-do.init.js?v=1.1') ?>"></script>
+    <?php endif; ?>
 
     <script src="<?= asset('js/loader.min.js') ?>"></script>
     <script src="<?= asset('js/core/request-action-loader.js?v=' . (@filemtime(PUBLIC_PATH . '/assets/js/core/request-action-loader.js') ?: 1)) ?>"></script>
@@ -360,7 +380,9 @@ $idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
     <script src="<?= asset('js/theme/app.init.js') ?>"></script>
     <script src="<?= asset('js/theme/theme.js') ?>"></script>
     <script src="<?= asset('js/theme/app.min.js') ?>"></script>
-    <script src="<?= asset('js/theme/sidebarmenu.js') ?>"></script>
+    <?php if (empty($refaccionesOnlySidebar)): ?>
+        <script src="<?= asset('js/theme/sidebarmenu.js') ?>"></script>
+    <?php endif; ?>
 
     <!-- solar icons -->
     <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
