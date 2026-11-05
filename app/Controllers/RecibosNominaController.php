@@ -275,6 +275,7 @@ class RecibosNominaController extends BaseController
             ->map(function ($c) use ($idUsuario) {
                 return [
                     'id'             => $c->id,
+                    'id_usuario'     => (int)($c->id_usuario ?? 0),
                     'nombre_usuario' => $c->usuario?->nombre ?? 'Usuario',
                     'comentario'     => $c->comentario,
                     'fecha_hora' => $c->fecha_hora ? formatearFecha($c->fecha_hora) . ', ' . date('g:i a', strtotime($c->fecha_hora)) : '', 

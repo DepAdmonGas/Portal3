@@ -513,7 +513,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
 
                             <template x-if="!item.propio">
                                 <div class="d-flex gap-3 align-items-start">
-                                    <div class="flex-shrink-0"><div class="rounded-circle bg-dark d-flex align-items-center justify-content-center" style="width:45px;height:45px;"><i class="ti ti-user text-white fs-5"></i></div></div>
+                                    <div class="flex-shrink-0"><img class="rounded-circle object-fit-cover flex-shrink-0" style="width:45px;height:45px;" :src="fotoComentario(item)" alt="Foto de perfil" loading="lazy" data-profile-avatar></div>
                                     <div>
                                         <h6 class="fw-semibold mb-1" x-text="item.usuario || 'Usuario'"></h6>
                                         <div class="fs-3 text-muted mb-1" x-text="item.fechaFormateada"></div>

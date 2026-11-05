@@ -145,7 +145,7 @@
                 <div class="fixed-profile p-2 mx-2 mb-5 bg-secondary-subtle-do rounded mt-0">
                     <div class="hstack gap-2">
                         <div class="john-img">
-                            <img src="<?= asset('images/profile/user-1.jpg') ?>" class="rounded-circle" width="40" height="40" alt="modernize-img" />
+                            <img src="<?= htmlspecialchars($foto_perfil_url, ENT_QUOTES, 'UTF-8') ?>" class="rounded-circle object-fit-cover" width="40" height="40" alt="Foto de <?= htmlspecialchars((string) ($user->nombre ?? 'usuario'), ENT_QUOTES, 'UTF-8') ?>" />
                         </div>
                         <div class="john-title">
                             <h6 class="mb-0 fs-5 fw-normal text-white"><?= implode(' ', array_slice(explode(' ', trim($user->nombre)), 0, 2)); ?></h6>
@@ -213,7 +213,7 @@
                                         <a class="nav-link pe-0 pointer" id="drop1" aria-expanded="false">
                                             <div class="d-flex align-items-center">
                                                 <div class="user-profile-img">
-                                                    <img src="<?= asset('images/profile/user-1.jpg') ?>" class="rounded-circle" width="35" height="35" alt="modernize-img" />
+                                                    <img src="<?= htmlspecialchars($foto_perfil_url, ENT_QUOTES, 'UTF-8') ?>" class="rounded-circle object-fit-cover" width="35" height="35" alt="Foto de <?= htmlspecialchars((string) ($user->nombre ?? 'usuario'), ENT_QUOTES, 'UTF-8') ?>" />
                                                 </div>
                                             </div>
                                         </a>
@@ -223,7 +223,7 @@
                                                     <h5 class="mb-0 fs-5 fw-semibold">Perfil de Usuario</h5>
                                                 </div>
                                                 <div class="d-flex align-items-center py-9 mx-7 border-bottom">
-                                                    <img src="<?= asset('images/profile/user-1.jpg') ?>" class="rounded-circle" width="80" height="80" alt="modernize-img" />
+                                                    <img src="<?= htmlspecialchars($foto_perfil_url, ENT_QUOTES, 'UTF-8') ?>" class="rounded-circle object-fit-cover" width="80" height="80" alt="Foto de <?= htmlspecialchars((string) ($user->nombre ?? 'usuario'), ENT_QUOTES, 'UTF-8') ?>" />
                                                     <div class="ms-3">
                                                         <h5 class="mb-1 fs-3"><?= $user->nombre ?></h5>
                                                         <span class="mb-1 d-block"><?php $user->puesto->tipo_puesto ?></span>

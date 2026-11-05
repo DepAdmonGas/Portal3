@@ -426,9 +426,7 @@ target="_blank"
                                 <template x-if="!c.es_propio">
                                     <div class="d-flex gap-3 align-items-start" style="max-width: 88%;">
                                         <div class="flex-shrink-0">
-                                            <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center" style="width:45px; height:45px;">
-                                                <i class="ti ti-user text-white fs-5"></i>
-                                            </div>
+                                            <img class="rounded-circle object-fit-cover flex-shrink-0" style="width:45px;height:45px;" :src="fotoComentario(c)" alt="Foto de perfil" loading="lazy" data-profile-avatar>
                                         </div>
                                         <div class="overflow-hidden">
                                             <h6 class="fw-semibold mb-1 text-truncate" x-text="c.nombre"></h6>

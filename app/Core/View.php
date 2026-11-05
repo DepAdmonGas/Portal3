@@ -56,6 +56,7 @@ class View
         return [
             'title'           => 'Portal3',
             'user'            => Auth::user(),
+            'foto_perfil_url' => \App\Services\PerfilFotoService::url(Auth::user()),
             'filtro_usuario'  => $filtro_usuario,
             'estaciones'      => $estaciones,
             'pendientes'     => CalendarioService::pendientes(),

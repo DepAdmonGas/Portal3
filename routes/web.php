@@ -2483,7 +2483,14 @@ $r->addRoute('POST', '/actividades/solicitar-revision', Route::auth(['SoporteAct
 
     $r->addGroup('/perfil', function (RouteCollector $r) {
         $r->addRoute('GET', '', Route::auth(['PerfilController', 'index']));
+        $r->addRoute('GET', '/avatar/{id}', Route::auth(['PerfilController', 'avatarComentario']));
         $r->addRoute('POST', '/cambiar-password', Route::auth(['PerfilController', 'cambiarPassword']));
+        $r->addRoute('POST', '/actualizar-datos', Route::auth(['PerfilController', 'actualizarDatos']));
+        $r->addRoute('POST', '/actualizar-informacion-personal', Route::auth(['PerfilController', 'actualizarInformacionPersonal']));
+        $r->addRoute('POST', '/actualizar-firma', Route::auth(['PerfilController', 'actualizarFirma']));
+        $r->addRoute('POST', '/eliminar-firma', Route::auth(['PerfilController', 'eliminarFirma']));
+        $r->addRoute('POST', '/actualizar-foto', Route::auth(['PerfilController', 'actualizarFoto']));
+        $r->addRoute('POST', '/eliminar-foto', Route::auth(['PerfilController', 'eliminarFoto']));
     });
 
     // ---------------- TELEGRAM / NOTIFICACIONES GLOBAL ----------------

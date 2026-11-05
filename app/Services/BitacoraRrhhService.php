@@ -288,6 +288,7 @@ class BitacoraRrhhService
             $user = Usuario::find($r->id_usuario);
             $data[] = [
                 'id'             => (int)$r->id,
+                'id_usuario'     => (int)$r->id_usuario,
                 'usuario_nombre' => $user ? $user->nombre : 'Desconocido',
                 'comentario'     => $r->comentario,
                 'fecha_hora'     => $r->fecha_hora

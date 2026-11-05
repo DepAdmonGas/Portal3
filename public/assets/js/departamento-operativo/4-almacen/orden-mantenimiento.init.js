@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
         commentList.innerHTML = rows.length ? rows.map(comment => {
             if (!comment.propio) {
                 return '<div class="d-flex mb-3 justify-content-start"><div class="d-flex gap-3 align-items-start">'
-                    + '<div class="flex-shrink-0"><div class="rounded-circle bg-dark d-flex align-items-center justify-content-center" style="width:45px;height:45px"><i class="ti ti-user text-white fs-5"></i></div></div>'
+                    + '<div class="flex-shrink-0"><img class="rounded-circle object-fit-cover" style="width:45px;height:45px" src="' + esc(window.fotoComentario(comment)) + '" alt="Foto de perfil" loading="lazy" data-profile-avatar></div>'
                     + '<div><h6 class="fw-semibold mb-1">' + esc(comment.usuario || 'Usuario') + '</h6><div class="fs-3 text-muted mb-1">' + esc(comment.fecha || '') + '</div><div class="p-3 text-bg-success rounded-3 text-white mt-2" style="max-width:420px;overflow-wrap:anywhere">' + esc(comment.comentario) + '</div></div>'
                     + '</div></div>';
             }

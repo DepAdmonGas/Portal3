@@ -42,6 +42,23 @@
             .map(({ item }) => item);
     };
 
+    window.fotoComentario = function (comentario) {
+        const idUsuario = firstValue(comentario, [
+            'id_usuario', 'id_personal', 'usuario_id', 'id_autor', 'creado_por', 'idUsuario'
+        ]) || firstValue(comentario && comentario.usuario, ['id', 'id_usuario']);
+        const id = Number(idUsuario);
+        return Number.isInteger(id) && id > 0
+            ? `/perfil/avatar/${id}`
+            : '/assets/images/profile/user-general.jpg';
+    };
+
+    document.addEventListener('error', function (event) {
+        const image = event.target;
+        if (!(image instanceof HTMLImageElement) || !image.hasAttribute('data-profile-avatar')) return;
+        image.removeAttribute('data-profile-avatar');
+        image.src = '/assets/images/profile/user-general.jpg';
+    }, true);
+
     const etiquetasContexto = {
         estacion: 'Estación', nombre_estacion: 'Estación', departamento: 'Departamento', nombre_departamento: 'Departamento',
         solicitante: 'Solicitante', nombre_solicitante: 'Solicitante', usuario: 'Usuario', beneficiario: 'Beneficiario',
