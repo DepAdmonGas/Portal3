@@ -545,9 +545,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
 
                                                                 <!-- ICONO -->
                                                                 <div class="flex-shrink-0">
-                                                                    <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center" style="width:45px; height:45px;">
-                                                                        <i class="ti ti-user text-white fs-6"></i>
-                                                                    </div>
+                                                                    <img class="rounded-circle object-fit-cover flex-shrink-0" style="width:45px;height:45px;" :src="fotoComentario(c)" alt="Foto de perfil" loading="lazy" data-profile-avatar>
                                                                 </div>
 
                                                                 <!-- CONTENIDO -->

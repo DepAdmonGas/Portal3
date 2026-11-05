@@ -23,6 +23,7 @@ class Usuario extends Model
         'nombre',
         'email',
         'telefono',
+        'foto',
         'id_gas',
         'id_puesto',
         'usuario',

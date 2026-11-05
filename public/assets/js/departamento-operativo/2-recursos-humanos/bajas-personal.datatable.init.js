@@ -46,10 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const body = document.createElement('div');
             body.className = comment.esPropio ? 'd-flex flex-column align-items-end' : 'd-flex gap-3 align-items-start';
             if (!comment.esPropio) {
-                const avatar = document.createElement('div');
-                avatar.className = 'flex-shrink-0 rounded-circle bg-dark d-flex align-items-center justify-content-center text-white';
+                const avatar = document.createElement('img');
+                avatar.className = 'flex-shrink-0 rounded-circle object-fit-cover';
                 avatar.style.cssText = 'width:42px;height:42px';
-                avatar.innerHTML = '<i class="ti ti-user fs-5"></i>';
+                avatar.src = window.fotoComentario(comment);
+                avatar.alt = 'Foto de perfil';
+                avatar.loading = 'lazy';
+                avatar.setAttribute('data-profile-avatar', '');
                 body.appendChild(avatar);
             }
             const content = document.createElement('div');

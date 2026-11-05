@@ -29,10 +29,26 @@
                     requestPath = '';
                 }
 
-                // El selector administra su propio reintento seguro al renovar
-                // el token. Las demás peticiones conservan la recarga existente.
+                // El selector administra su propia renovación. Para el resto,
+                // aceptar el token renovado por CsrfMiddleware y reintentar una
+                // sola vez evita perder formularios abiertos después de 1 hora.
                 if (requestPath !== '/api/module-context/set') {
-                    window.location.reload();
+                    const refreshedToken = error.response.data && error.response.data.new_token;
+                    const currentMeta = document.querySelector('meta[name="csrf-token"]');
+                    const requestConfig = error.config;
+
+                    if (refreshedToken && currentMeta && requestConfig && !requestConfig._csrfRetried) {
+                        currentMeta.setAttribute('content', refreshedToken);
+                        requestConfig._csrfRetried = true;
+                        requestConfig.headers = requestConfig.headers || {};
+                        requestConfig.headers['X-CSRF-TOKEN'] = refreshedToken;
+                        window.axios.defaults.headers.common['X-CSRF-TOKEN'] = refreshedToken;
+                        return window.axios(requestConfig);
+                    }
+
+                    if (!requestConfig || !requestConfig._csrfRetried) {
+                        window.location.reload();
+                    }
                 }
             }
             return Promise.reject(error);

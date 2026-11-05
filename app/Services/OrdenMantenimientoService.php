@@ -1087,6 +1087,7 @@ final class OrdenMantenimientoService
         $names = Usuario::whereIn('id', $rows->pluck('id_usuario')->unique())->pluck('nombre', 'id');
         return $rows->map(static fn($row) => [
             'id' => (int)$row->id,
+            'id_usuario' => (int)$row->id_usuario,
             'usuario' => (string)($names[$row->id_usuario] ?? 'Usuario'),
             'comentario' => (string)$row->comentario,
             'fecha' => self::formatDateTime((string)$row->fecha_hora),

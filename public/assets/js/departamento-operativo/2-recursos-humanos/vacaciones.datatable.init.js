@@ -219,7 +219,8 @@
         const ownId = Number(root.dataset.idUsuario);
         commentList.innerHTML = messages.map((message) => {
             const own = Number(message.id_usuario) === ownId;
-            return '<div class="d-flex ' + (own ? 'justify-content-end' : 'justify-content-start') + ' mb-2"><div class="' + (own ? 'bg-primary text-white' : 'bg-body-tertiary text-body') + ' rounded-3 px-3 py-2" style="max-width:88%"><div class="small fw-semibold mb-1">' + escapeHtml(message.nombre_usuario) + '</div><div class="text-break" style="white-space:pre-wrap">' + escapeHtml(message.comentario) + '</div><div class="text-end small opacity-75 mt-1">' + escapeHtml(message.fecha_hora) + '</div></div></div>';
+            const avatar = '<img class="rounded-circle object-fit-cover flex-shrink-0 me-2" style="width:42px;height:42px" src="' + escapeHtml(window.fotoComentario(message)) + '" alt="Foto de perfil" loading="lazy" data-profile-avatar>';
+            return '<div class="d-flex ' + (own ? 'justify-content-end' : 'justify-content-start') + ' mb-2">' + (own ? '' : avatar) + '<div class="' + (own ? 'bg-primary text-white' : 'bg-body-tertiary text-body') + ' rounded-3 px-3 py-2" style="max-width:88%"><div class="small fw-semibold mb-1">' + escapeHtml(message.nombre_usuario) + '</div><div class="text-break" style="white-space:pre-wrap">' + escapeHtml(message.comentario) + '</div><div class="text-end small opacity-75 mt-1">' + escapeHtml(message.fecha_hora) + '</div></div></div>';
         }).join('');
         commentList.scrollTop = commentList.scrollHeight;
     };

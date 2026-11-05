@@ -654,9 +654,7 @@ x-ref="chatContainer">
 <template x-if="!c.esMio">
 <div class="d-flex gap-3 align-items-start">
 <div class="flex-shrink-0">
-<div class="rounded-circle bg-dark d-flex align-items-center justify-content-center" style="width:45px; height:45px;">
-<i class="ti ti-user text-white fs-5"></i>
-</div>
+<img class="rounded-circle object-fit-cover flex-shrink-0" style="width:45px;height:45px;" :src="fotoComentario(c)" alt="Foto de perfil" loading="lazy" data-profile-avatar>
 </div>
 <div>
 <h6 class="fw-semibold mb-1" x-text="c.usuario_nombre || 'Usuario'"></h6>

@@ -74,12 +74,12 @@ class PasswordValidator
         
         // Validación 2: Longitud mínima
         if (strlen($password) < self::MIN_LENGTH) {
-            $errors[] = str_replace(':min', self::MIN_LENGTH, self::MESSAGES['too_short']);
+            $errors[] = str_replace(':min', (string) self::MIN_LENGTH, self::MESSAGES['too_short']);
         }
         
         // Validación 3: Longitud máxima (prevenir DoS)
         if (strlen($password) > self::MAX_LENGTH) {
-            $errors[] = str_replace(':max', self::MAX_LENGTH, self::MESSAGES['too_long']);
+            $errors[] = str_replace(':max', (string) self::MAX_LENGTH, self::MESSAGES['too_long']);
         }
         
         // Validación 4: Mayúsculas

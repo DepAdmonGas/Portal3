@@ -513,6 +513,7 @@ foreach ($comentarios as $c) {
 $usuario = Usuario::find($c->id_usuario);
 $data[] = [
 'id'             => $c->id,
+'id_usuario'     => (int)$c->id_usuario,
 'usuario_nombre' => $usuario ? $usuario->nombre : 'Sistema',
 'comentario'     => $c->comentario ?? '',
 'fecha_hora'     => ($c->fecha_hora && ($fechaFmt = formatearFecha($c->fecha_hora->format('Y-m-d H:i:s')))) ? $fechaFmt . ', ' . $c->fecha_hora->format('g:i a') : '-',
@@ -906,6 +907,7 @@ foreach ($comentarios as $c) {
 $usuario = Usuario::find($c->id_usuario);
 $data[] = [
 'id'             => $c->id,
+'id_usuario'     => (int)$c->id_usuario,
 'usuario_nombre' => $usuario ? $usuario->nombre : 'Sistema',
 'comentario'     => $c->comentario ?? '',
 'fecha_hora'     => ($c->fecha_hora && ($fechaFmt = formatearFecha($c->fecha_hora->format('Y-m-d H:i:s')))) ? $fechaFmt . ', ' . $c->fecha_hora->format('g:i a') : '-',
