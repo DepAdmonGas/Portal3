@@ -12,15 +12,16 @@
 
     <?php else: ?>
 
-        <div class="text-end mb-3">
-            <div class="btn-group">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h5 class="mb-0 me-auto" x-show="periodoTexto" x-text="periodoTexto"></h5>
+            <div class="btn-group ms-auto">
                 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="ti ti-dots-vertical fs-4"></i>
                 </button>
                 <ul class="dropdown-menu animated rubberBand">
                     <li><a class="dropdown-item pointer" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
                     <li>
-                        <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+                        <a class="dropdown-item pointer" :href="pdfUrl" aria-label="Descargar PDF" title="Descargar PDF"><i class="ti ti-download"></i> Descargar</a>
                     </li>
                 </ul>
             </div>

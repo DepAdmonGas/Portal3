@@ -213,7 +213,8 @@
         <div class="card">
 
             <div class="card-header">
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0" x-show="periodoBuscado" x-text="periodoBuscado"></h5>
                     <div class="ms-auto">
                         <div class="dropdown dropcenter">
                             <button type="button" class="btn  bg-primary-subtle text-primary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -239,7 +240,7 @@
 
 
                 <div class="table-responsive">
-                    <table class="table table-bordered mt-2 mb-2">
+                    <table class="table table-bordered  mb-3">
                         <tr>
                             <td class="text-center align-middle"><img class="text-center" src="<?= asset('images/logos/Logo.png') ?>" style="width: 200px;"></td>
                             <td colspan="2" class="text-center align-middle"><b>Programa anual de simulacros</b></td>
@@ -257,7 +258,7 @@
                 <div class="datatables">
                     <div class="table-responsive">
 
-                        <div class="table-responsive pb-4 overflow-x-auto overflow-hidden">
+                        <div class="table-responsive mt-2 pb-4 overflow-x-auto overflow-hidden">
                             <table id="table-programa-simulacro" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
                                 <thead>
                                     <tr>
@@ -335,7 +336,7 @@
                             :class="errors.protocolo.fecha ? 'is-invalid' : ''"
                             @input="errors.protocolo.fecha = false">
 
-                        <label class="form-label mt-2">
+                        <label class="form-label mt-3">
                             * Archivo PDF
                         </label>
 
@@ -433,7 +434,7 @@ errors.protocolo.archivo = false;
                         </label>
 
                        
-<div class="row g-0 w-100 mt-3 mb-3">
+<div class="row g-0 w-100 mb-3">
     <div class="col-12">
         <div class="input-group">
             <input
@@ -472,8 +473,8 @@ errors.protocolo.archivo = false;
 
                                 <tr>
 
-                                    <th>Nombre:</th>
-                                    <th>Fecha:</th>
+                                    <th>Nombre</th>
+                                    <th>Fecha</th>
                                     <th
                                         width="70"
                                         class="text-center">

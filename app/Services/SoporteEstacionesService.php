@@ -431,9 +431,8 @@ class SoporteEstacionesService
      * Puede registrar las fechas comprometidas del ticket.
      *
      * Sólo lo puede hacer el responsable asignado (o el responsable principal
-     * del área, id 496) y únicamente mientras el ticket siga abierto
-     * (estado "Pendiente"). Es el primer paso del flujo: al registrar las
-     * fechas se notifica al solicitante y con ello arranca el seguimiento.
+     * del área, id 496) y mientras el ticket siga abierto (Pendiente o En
+     * proceso). Las fechas comprometidas se pueden ajustar hasta el cierre.
      */
     public static function puedeEditarSeguimiento(Soporte $ticket): bool
     {
@@ -441,8 +440,12 @@ class SoporteEstacionesService
             return false;
         }
 
-        // Con el trabajo ya cerrado la pantalla queda en modo sólo lectura.
-        if ((int)$ticket->estado !== SoporteService::ESTADO_PENDIENTE) {
+        // Permite actualizar las fechas mientras el ticket siga abierto.
+        // Finalizado, cancelado, expirado y en creación no admiten cambios.
+        if (!in_array((int)$ticket->estado, [
+            SoporteService::ESTADO_PENDIENTE,
+            SoporteService::ESTADO_EN_PROCESO,
+        ], true)) {
             return false;
         }
 
@@ -452,8 +455,8 @@ class SoporteEstacionesService
             return false;
         }
 
-        // Sólo el responsable asignado puede modificar el seguimiento.
-   return $idResponsable === self::idUsuario();
+        // El responsable principal del área también puede actualizarlo.
+        return $idResponsable === self::idUsuario() || self::idUsuario() === self::USUARIO_SISTEMAS;
     }
 
     /**
@@ -899,9 +902,10 @@ class SoporteEstacionesService
      * Al guardar se notifica por Telegram al solicitante, que es quien
      * necesita conocer las fechas comprometidas.
      *
+     * @param int $diasHabiles Días hábiles capturados en el seguimiento (0 a 60).
      * @param array<int, array{id: int, fecha_inicio?: string, fecha_termino?: string}> $actividades
      */
-    public static function guardarSeguimiento(int $idTicket, string $fechaInicio, string $fechaTermino, array $actividades = []): array
+    public static function guardarSeguimiento(int $idTicket, string $fechaInicio, string $fechaTermino, int $diasHabiles, array $actividades = []): array
     {
         self::activarModulo();
 
@@ -916,18 +920,25 @@ class SoporteEstacionesService
         }
 
         if (!self::puedeEditarSeguimiento($ticket)) {
-            $cerrado = (int)$ticket->estado !== SoporteService::ESTADO_PENDIENTE;
+            $cerrado = !in_array((int)$ticket->estado, [
+                SoporteService::ESTADO_PENDIENTE,
+                SoporteService::ESTADO_EN_PROCESO,
+            ], true);
 
             return [
                 'success' => false,
                 'message' => $cerrado
                     ? 'El ticket ya está cerrado: no se pueden modificar las fechas.'
-                    : 'Sólo el responsable asignado puede registrar el seguimiento.',
+                    : 'Sólo el responsable asignado o el responsable principal del área puede registrar el seguimiento.',
             ];
         }
 
             if ($fechaInicio === '' || $fechaTermino === '') {
             return ['success' => false, 'message' => 'Indica la fecha de inicio y la fecha de término.'];
+        }
+
+        if ($diasHabiles < 0 || $diasHabiles > 60) {
+            return ['success' => false, 'message' => 'Los días hábiles deben estar entre 0 y 60.'];
         }
 
         $inicio = strtotime($fechaInicio);
@@ -939,7 +950,8 @@ class SoporteEstacionesService
 
         $hoy = strtotime(date('Y-m-d'));
 
-        if ($inicio < $hoy) {
+        $fechaInicioRegistrada = SoporteService::isoFecha($ticket->fecha_inicio);
+        if ($inicio < $hoy && $fechaInicioRegistrada !== $fechaInicio) {
             return ['success' => false, 'message' => 'La fecha de inicio no puede ser anterior a hoy.'];
         }
 
@@ -958,13 +970,12 @@ class SoporteEstacionesService
 
         $cambiaFechas = $sinFechas
             || SoporteService::isoFecha($ticket->fecha_inicio) !== $fechaInicio
-            || SoporteService::isoFecha($ticket->fecha_termino) !== $fechaTermino;
+            || SoporteService::isoFecha($ticket->fecha_termino) !== $fechaTermino
+            || (int)$ticket->tiempo_solucion !== $diasHabiles;
 
         $ticket->fecha_inicio = $fechaInicio . ' ' . date('H:i:s');
         $ticket->fecha_termino = $fechaTermino . ' ' . date('H:i:s');
-        $ticket->save();
-
-        $ticket->tiempo_solucion = self::diasHabiles($idTicket);
+        $ticket->tiempo_solucion = $diasHabiles;
         $ticket->save();
 
         // Fechas de las actividades del ticket.

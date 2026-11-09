@@ -63,8 +63,9 @@ class CursosController extends BaseController
 
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/cursos/index.action.init.js?v=1.5',
+                '/js/cursos/index.action.init.js?v=1.7',
             ]
         ];
 
@@ -1023,14 +1024,33 @@ class CursosController extends BaseController
             ->orderBy('fecha_programada', 'desc')
             ->get();
 
+        // Un resultado aprobado sin usuario o tema no puede producir un
+        // reconocimiento válido; excluirlo evita fallos al componer el PDF.
+        $calendarios = $calendarios->filter(
+            fn ($cal) => $cal->usuario && $cal->tema
+        );
+
         // ======================
         // PDF
         // ======================
         $pdf = new FPDF('L', 'mm', 'A4');
 
-        foreach ($calendarios as $cal) {
+        if ($calendarios->isEmpty()) {
+            $pdf->AddPage();
+            $pdf->SetFont('Arial', '', 16);
+            $pdf->Cell(
+                0,
+                12,
+                $safeText('No hay reconocimientos disponibles para este módulo y año.'),
+                0,
+                1,
+                'C'
+            );
+        }
 
-            if (!$cal->usuario || !$cal->tema) continue;
+        $fondo = PUBLIC_PATH . '/assets/images/cursos/fondo-2024.jpg';
+
+        foreach ($calendarios as $cal) {
 
             $nombre = $safeText($cal->usuario->nombre);
             $titulo = $safeText($cal->tema->titulo);
@@ -1050,13 +1070,11 @@ class CursosController extends BaseController
 
             $pdf->SetTitle(substr($titulo, 0, 100));
 
-            $pdf->Image(
-                asset('images/cursos/fondo-2024.jpg'),
-                0,
-                0,
-                300,
-                210
-            );
+            // FPDF requiere una ruta local. `asset()` devuelve una URL web y
+            // puede provocar un error interno al descargar desde el servidor.
+            if (is_file($fondo)) {
+                $pdf->Image($fondo, 0, 0, 300, 210);
+            }
 
             // ======================
             // NOMBRE
@@ -1099,14 +1117,14 @@ class CursosController extends BaseController
             );
         }
 
-        if (isset($estacion->firma)) {
+        if (!empty($estacion?->firma)) {
 
             $rutaFirma = PUBLIC_PATH
                 . '/uploads/firma-personal/'
                 . $estacion->firma;
 
-            if (file_exists($rutaFirma)) {
-                $extension = pathinfo($estacion->firma, PATHINFO_EXTENSION);
+            $extension = strtolower(pathinfo($rutaFirma, PATHINFO_EXTENSION));
+            if (is_file($rutaFirma) && in_array($extension, ['jpg', 'jpeg', 'png', 'gif'], true)) {
                 $pdf->Image($rutaFirma, '175', '151', '50', '0', $extension);
             }
         }

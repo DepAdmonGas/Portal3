@@ -15,8 +15,11 @@ const year = new Date().getFullYear();
             '/sasisopa/control-actividades-procesos/recepcion-descarga-producto/datatable?year=' + year,
             type: 'GET',
              dataSrc: function (json) {
-            permisos = json.permisos;
-            return json.data;
+                permisos = json.permisos;
+                if (json.success && window.recepcionDescargaProducto) {
+                    window.recepcionDescargaProducto.actualizarPeriodo(json.year, json.mes);
+                }
+                return json.data;
             }
         },
 

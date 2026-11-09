@@ -5,6 +5,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
+use App\Services\DropdownYearMesService;
 use App\Models\Sasisopa\ComunicacionIE;
 use App\Models\Sasisopa\ComunicacionEvidencia;
 use App\Models\Sasisopa\QuejasSugerencia;
@@ -25,13 +26,64 @@ protected string $modulo = 'sasisopa';
         return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
     }
 
-  public function index(){
+    /**
+     * Accept the multiselect's JSON array and legacy comma-separated values,
+     * then persist only unique positive puesto IDs.
+     */
+    private function normalizarDestinatarios(mixed $values): array
+    {
+        if (is_string($values)) {
+            $values = $values === '' ? [] : explode(',', $values);
+        }
+
+        if (!is_array($values)) {
+            throw new \InvalidArgumentException('Selecciona puestos válidos en "Dirigido a".');
+        }
+
+        $ids = [];
+        foreach ($values as $value) {
+            if (is_string($value)) {
+                $value = trim($value);
+            }
+
+            if (!is_scalar($value) || filter_var($value, FILTER_VALIDATE_INT) === false) {
+                throw new \InvalidArgumentException('La selección de "Dirigido a" contiene un puesto inválido.');
+            }
+
+            $id = (int) $value;
+            if ($id <= 0) {
+                throw new \InvalidArgumentException('La selección de "Dirigido a" contiene un puesto inválido.');
+            }
+
+            $ids[$id] = $id;
+        }
+
+        return array_values($ids);
+    }
+
+    private function destinatariosActivos(array $ids): bool
+    {
+        return $ids === [] || Puestos::where('estatus', 0)
+            ->whereIn('id', $ids)
+            ->count() === count($ids);
+    }
+
+  public function index(int $year = 0){
+
+        if ($year <= 0) {
+            header('Location: /sasisopa/comunicacion-participacion-consulta/' . date('Y'));
+            exit;
+        }
+
+        $year = DropdownYearMesService::validarYearMes($year, 1)['idYear'];
+        $yearMesTemplate = '/sasisopa/comunicacion-participacion-consulta/{year}';
 
         $title = '7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
+        Breadcrumb::add(DropdownYearMesService::dropdownYearManual($year, 1, 2019, $yearMesTemplate), '');
 
         // Buscar permisos de los modulos
         $permisos = ModuloService::permisosSesion($this->modulo);
@@ -43,6 +95,8 @@ protected string $modulo = 'sasisopa';
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'estacionId' => $idEstacion,
+            'year' => $year,
+            'yearMesTemplate' => $yearMesTemplate,
             'moduleStationKey' => 'sasisopa',
              'links' =>[
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -153,8 +207,16 @@ protected string $modulo = 'sasisopa';
             $detalle = sanitize_input($data['detalle'] ?? null, 'string');
             $tipo_comunicacion = sanitize_input($data['tipo_comunicacion'] ?? null, 'string');
             $material = sanitize_input($data['material'] ?? null, 'string');
-            $dirigidoa = $data['dirigidoa'] ?? [];
+            $dirigidoaIds = $this->normalizarDestinatarios($data['dirigidoa'] ?? []);
             $seguimiento = sanitize_input($data['seguimiento'] ?? null, 'string');
+
+            if (!in_array($tipo_comunicacion, ['Interna', 'Externa'], true)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona un tipo de comunicación válido.'
+                ]);
+                return;
+            }
 
             if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
 
@@ -178,6 +240,30 @@ protected string $modulo = 'sasisopa';
                     'message' => 'Completa todos los campos obligatorios'
                 ]);
 
+                return;
+            }
+
+            if ($tipo_comunicacion === 'Interna' && $dirigidoaIds === []) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona al menos un puesto en "Dirigido a".'
+                ]);
+                return;
+            }
+
+            if ($tipo_comunicacion === 'Interna' && !$this->destinatariosActivos($dirigidoaIds)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Uno o más puestos seleccionados ya no están disponibles. Actualiza la página e inténtalo de nuevo.'
+                ]);
+                return;
+            }
+
+            if ($tipo_comunicacion === 'Externa' && empty($seguimiento)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona el seguimiento de la comunicación.'
+                ]);
                 return;
             }
 
@@ -206,10 +292,10 @@ protected string $modulo = 'sasisopa';
                 'encargado_comunicacion'=> $id_usuario,
                 'tipo_comunicacion'     => $tipo_comunicacion,
                 'material'              => $material,
-                'seguimiento'           => $seguimiento,
-                'dirigidoa'             => !empty($dirigidoa)
-                                            ? implode(',', $dirigidoa)
-                                            : '',
+                'seguimiento'           => $tipo_comunicacion === 'Externa' ? $seguimiento : '',
+                'dirigidoa'             => $tipo_comunicacion === 'Interna'
+                    ? implode(',', $dirigidoaIds)
+                    : '',
                 'url'                   => '',
                 'asistencia'            => 0
             ]);
@@ -224,11 +310,19 @@ protected string $modulo = 'sasisopa';
 
         } catch (\Throwable $e) {
 
-            Capsule::rollBack();
+            try {
+                Capsule::rollBack();
+            } catch (\Throwable $rollbackError) {
+                error_log('Error al revertir creación de comunicación: ' . $rollbackError->getMessage());
+            }
+
+            error_log('Error al crear comunicación: ' . $e->getMessage());
 
             echo json_encode([
                 'success' => false,
-                'message' => 'Error al guardar'
+                'message' => $e instanceof \InvalidArgumentException
+                    ? $e->getMessage()
+                    : 'Error al guardar'
             ]);
         }
     }
@@ -251,7 +345,31 @@ protected string $modulo = 'sasisopa';
             $tipo_comunicacion = sanitize_input($data['tipo_comunicacion'] ?? null, 'string');
             $material = sanitize_input($data['material'] ?? null, 'string');
             $seguimiento = sanitize_input($data['seguimiento'] ?? null, 'string');
-            $dirigidoa = !empty($data['dirigidoa']) ? implode(',', $data['dirigidoa']) : '';
+            $dirigidoaIds = $this->normalizarDestinatarios($data['dirigidoa'] ?? []);
+
+            if (!in_array($tipo_comunicacion, ['Interna', 'Externa'], true)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona un tipo de comunicación válido.'
+                ]);
+                return;
+            }
+
+            if ($tipo_comunicacion === 'Interna' && $dirigidoaIds === []) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Selecciona al menos un puesto en "Dirigido a".'
+                ]);
+                return;
+            }
+
+            if ($tipo_comunicacion === 'Interna' && !$this->destinatariosActivos($dirigidoaIds)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Uno o más puestos seleccionados ya no están disponibles. Actualiza la página e inténtalo de nuevo.'
+                ]);
+                return;
+            }
 
             if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
 
@@ -283,8 +401,10 @@ protected string $modulo = 'sasisopa';
                 'detalle' => $detalle,
                 'tipo_comunicacion' => $tipo_comunicacion,
                 'material' => $material,
-                'seguimiento' => $seguimiento,
-                'dirigidoa' => $dirigidoa,
+                'seguimiento' => $tipo_comunicacion === 'Externa' ? $seguimiento : '',
+                'dirigidoa' => $tipo_comunicacion === 'Interna'
+                    ? implode(',', $dirigidoaIds)
+                    : '',
             ]);
 
             echo json_encode([
@@ -398,239 +518,88 @@ protected string $modulo = 'sasisopa';
             return;
         }
 
-        $idComunicacion = $_POST['id_comunicacion'] ?? null;
-
-        if (!$idComunicacion) {
-
-            echo json_encode([
-                'success' => false,
-                'message' => 'Comunicación inválida'
-            ]);
-
-            return;
-        }
-
-        if (
-            empty($_FILES['evidencia']) ||
-            $_FILES['evidencia']['error'] !== UPLOAD_ERR_OK
-        ) {
-
-            echo json_encode([
-                'success' => false,
-                'message' => 'Selecciona una imagen'
-            ]);
-
-            return;
-        }
-
-        $carpeta = __DIR__ . '../../../public/uploads/archivos/evidencias/';
-
-        if (!file_exists($carpeta)) {
-             mkdir_safe($carpeta, true);
-        }
-
-        $path = null;
+        $idComunicacion = (int) ($_POST['id_comunicacion'] ?? 0);
+        $idEstacion = $this->estacionModulo();
+        $archivoMovido = null;
 
         try {
+            if ($idComunicacion <= 0 || !$idEstacion) {
+                throw new \InvalidArgumentException('Comunicación inválida.');
+            }
 
-            $path = $this->guardarArchivoEvidencia(
-                $_FILES['evidencia'],
-                $carpeta
-            );
+            // El id recibido no basta para autorizar la carga: debe pertenecer
+            // a la estación activa del módulo SASISOPA.
+            $comunicacion = ComunicacionIE::where('id_estacion', $idEstacion)
+                ->find($idComunicacion);
+
+            if (!$comunicacion) {
+                throw new \InvalidArgumentException('La comunicación no existe o no pertenece a la estación activa.');
+            }
+
+            $file = $_FILES['evidencia'] ?? null;
+            if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+                throw new \InvalidArgumentException('Selecciona una imagen válida.');
+            }
+
+            if (!is_uploaded_file($file['tmp_name'])) {
+                throw new \InvalidArgumentException('No se recibió correctamente el archivo.');
+            }
+
+            if (($file['size'] ?? 0) <= 0 || $file['size'] > 10 * 1024 * 1024) {
+                throw new \InvalidArgumentException('La imagen debe pesar menos de 10 MB.');
+            }
+
+            // Validar el contenido real del archivo; no confiar en su nombre o extensión.
+            $imageInfo = @getimagesize($file['tmp_name']);
+            $mime = $imageInfo['mime'] ?? '';
+            $extensions = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/gif' => 'gif',
+            ];
+
+            if (!isset($extensions[$mime])) {
+                throw new \InvalidArgumentException('Formato no permitido. Usa una imagen JPG, PNG o GIF.');
+            }
+
+            $directory = __DIR__ . '/../../public/uploads/archivos/evidencias/';
+            if (!is_dir($directory)) {
+                mkdir_safe($directory, true);
+            }
+            if (!is_dir($directory) || !is_writable($directory)) {
+                throw new \RuntimeException('No se pudo preparar la carpeta para guardar la evidencia.');
+            }
+
+            $filename = 'evidencia_' . bin2hex(random_bytes(16)) . '.' . $extensions[$mime];
+            $destination = $directory . $filename;
+
+            if (!move_uploaded_file($file['tmp_name'], $destination)) {
+                throw new \RuntimeException('No se pudo guardar la imagen seleccionada.');
+            }
+            $archivoMovido = $destination;
 
             ComunicacionEvidencia::create([
-                'id_comunicacion' => $idComunicacion,
-                'archivo' => $path,
-                'estado' => 1
+                'id_comunicacion' => (int) $comunicacion->id,
+                'archivo' => $filename,
             ]);
 
             echo json_encode([
                 'success' => true,
                 'message' => 'Evidencia agregada correctamente'
             ]);
-
         } catch (\Throwable $e) {
-
-            if (
-                $path &&
-                file_exists(
-                    __DIR__ . '../../../public/archivos/evidencias/' . ltrim($path, '/')
-                )
-            ) {
-
-                unlink(
-                    __DIR__ . '../../../public/archivos/evidencias/' . ltrim($path, '/')
-                );
+            if ($archivoMovido && is_file($archivoMovido)) {
+                @unlink($archivoMovido);
             }
 
+            error_log('Error al guardar evidencia de comunicación: ' . $e->getMessage());
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e instanceof \InvalidArgumentException
+                    ? $e->getMessage()
+                    : 'No se pudo guardar la evidencia. Intenta nuevamente.'
             ]);
         }
-    }
-
-        private function guardarArchivoEvidencia(
-        array $file,
-        string $carpeta,
-        string $prefijo = 'evidencia_'
-    ): string {
-
-        $extension = strtolower(
-            pathinfo(
-                $file['name'],
-                PATHINFO_EXTENSION
-            )
-        );
-
-        $permitidos = [
-            'jpg',
-            'jpeg',
-            'png',
-            'gif'
-        ];
-
-        if (!in_array($extension, $permitidos)) {
-
-            throw new \Exception(
-                'Formato no permitido'
-            );
-        }
-
-        $nombre =
-            $prefijo .
-            uniqid() .
-            '.' .
-            $extension;
-
-        $rutaCompleta =
-            $carpeta . $nombre;
-
-        $this->compressImage(
-        $file['tmp_name'],
-        $rutaCompleta,
-        70);
-
-        return $nombre;
-    }
-
-    private function compressImage(
-    string $source,
-    string $destination,
-    int $quality = 70
-    ): bool {
-
-        $info = getimagesize($source);
-
-        if (!$info) {
-
-            throw new \Exception(
-                'No se pudo leer la imagen'
-            );
-        }
-
-        $mime = $info['mime'];
-
-        switch ($mime) {
-
-            case 'image/jpeg':
-                $image = imagecreatefromjpeg($source);
-            break;
-
-            case 'image/png':
-                $image = imagecreatefrompng($source);
-            break;
-
-            case 'image/webp':
-                $image = imagecreatefromwebp($source);
-            break;
-
-            default:
-
-                throw new \Exception(
-                    'Formato no soportado'
-                );
-        }
-
-        // -----------------------------
-        // REDIMENSIONAR
-        // -----------------------------
-
-        $width = imagesx($image);
-        $height = imagesy($image);
-
-        $maxWidth = 1600;
-
-        if ($width > $maxWidth) {
-
-            $newWidth = $maxWidth;
-
-            $newHeight =
-                intval(
-                    ($height * $newWidth) / $width
-                );
-
-            $tmp = imagecreatetruecolor(
-                $newWidth,
-                $newHeight
-            );
-
-            imagecopyresampled(
-                $tmp,
-                $image,
-                0,
-                0,
-                0,
-                0,
-                $newWidth,
-                $newHeight,
-                $width,
-                $height
-            );
-
-            $image = $tmp;
-        }
-
-        // -----------------------------
-        // ROTACIÓN EXIF
-        // -----------------------------
-
-        if (function_exists('exif_read_data')) {
-
-            $exif = @exif_read_data($source);
-
-            if (!empty($exif['Orientation'])) {
-
-                switch ($exif['Orientation']) {
-
-                    case 3:
-                        $image = imagerotate($image, 180, 0);
-                    break;
-
-                    case 6:
-                        $image = imagerotate($image, -90, 0);
-                    break;
-
-                    case 8:
-                        $image = imagerotate($image, 90, 0);
-                    break;
-                }
-            }
-        }
-
-        // -----------------------------
-        // GUARDAR JPG COMPRIMIDO
-        // -----------------------------
-
-        $result = imagejpeg(
-            $image,
-            $destination,
-            $quality
-        );
-
-        imagedestroy($image);
-
-        return $result;
     }
 
     public function getEvidencias(int $id)

@@ -225,9 +225,9 @@ protected string $modulo = 'sasisopa';
                 );
             }
 
-            $carpeta = __DIR__ . '../../../public/uploads/archivos/calibracion/';
+            $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/calibracion/';
 
-            if (!file_exists($carpeta)) {
+            if (!is_dir($carpeta)) {
 
                 mkdir_safe(
                     $carpeta,

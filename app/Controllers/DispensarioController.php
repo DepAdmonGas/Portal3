@@ -75,9 +75,9 @@ class DispensarioController extends BaseController
                 'marca' => $item->marca,
                 'modelo' => $item->modelo,
                 'serie' => $item->serie,
-                'producto1' => $item->producto1,
-                'producto2' => $item->producto2,
-                'producto3' => $item->producto3,
+                'producto1' => $item->producto1 ?? 0,
+                'producto2' => $item->producto2 ?? 0,
+                'producto3' => $item->producto3 ?? 0,
                 'estado' => $item->estado
             ];
         });
@@ -109,9 +109,10 @@ class DispensarioController extends BaseController
     $marca = sanitize_input($data['marca'] ?? null, 'string');
     $modelo = sanitize_input($data['modelo'] ?? null, 'string');
     $serie = sanitize_input($data['serie'] ?? null, 'string');
-    $producto1 = sanitize_input($data['producto1'] ?? 0, 'int');
-    $producto2 = sanitize_input($data['producto2'] ?? 0, 'int');
-    $producto3 = sanitize_input($data['producto3'] ?? 0, 'int');
+    // Los conteos de mangueras son opcionales; persistir 0 cuando se dejan vacíos.
+    $producto1 = sanitize_input($data['producto1'] ?? null, 'int') ?? 0;
+    $producto2 = sanitize_input($data['producto2'] ?? null, 'int') ?? 0;
+    $producto3 = sanitize_input($data['producto3'] ?? null, 'int') ?? 0;
 
      if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([

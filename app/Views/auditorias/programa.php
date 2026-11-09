@@ -12,7 +12,8 @@ x-data="programaAuditoria()">
 
 <?php else: ?>
 
-<div class="text-end mt-3 mb-3">
+<div class="d-flex align-items-center justify-content-between mt-3 mb-3">
+   <h5 class="mb-0" x-show="periodoVisualizado" x-text="periodoVisualizado"></h5>
    <div class="btn-group">
             <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ti ti-dots-vertical fs-4"></i>

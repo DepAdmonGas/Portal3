@@ -59,6 +59,11 @@ class BitacoraResiduosController extends BaseController
 
     public function datatable()
 {
+    [
+        'year' => $year,
+        'mes' => $mes
+    ] = $this->filtros();
+
     $data = ResiduoPeligroso::query()
 
         ->with('usuario')
@@ -72,6 +77,9 @@ class BitacoraResiduosController extends BaseController
             'estado',
             1
         )
+
+        ->when($year, fn ($query) => $query->whereYear('fechaingreso', $year))
+        ->when($mes && $mes != 13, fn ($query) => $query->whereMonth('fechaingreso', $mes))
 
         ->orderByDesc('folio')
 
@@ -164,6 +172,8 @@ public function pdf()
             'id_estacion',
             $this->estacionModulo()
         )
+
+        ->where('estado', 1)
 
         ->when(
             $year,

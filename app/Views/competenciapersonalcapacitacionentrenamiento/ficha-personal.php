@@ -1,3 +1,10 @@
+<?php
+$firmaArchivoFicha = basename((string) ($usuario->firma ?? ''));
+$firmaUrlFicha = $firmaArchivoFicha !== ''
+    && is_file(PUBLIC_PATH . '/uploads/firma-personal/' . $firmaArchivoFicha)
+        ? rtrim((string) ($_ENV['APP_URL'] ?? ''), '/') . '/uploads/firma-personal/' . rawurlencode($firmaArchivoFicha)
+        : '';
+?>
 <div id="container" class="pb-4"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
@@ -11,9 +18,7 @@
     seguroSocial='<?= htmlspecialchars($usuario->seguro_social ?? '') ?>'; 
     telefono='<?= htmlspecialchars($usuario->telefono ?? '') ?>';
     email='<?= htmlspecialchars($usuario->email ?? '') ?>';
-    firmaPreview = '<?= !empty($usuario->firma)
-                        ? $_ENV['APP_URL'] . '/uploads/firma-personal/' . $usuario->firma
-                        : '' ?>';
+    firmaPreview = <?= json_encode($firmaUrlFicha, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 ">
 <!-- Botón Descargar -->
 <div class="row g-0 w-100 justify-content-end">
@@ -26,7 +31,7 @@
 </div>
 
 <!-- 1. Datos del personal -->
-<div class="row mt-4">
+<div class="row mt-4 align-items-start">
 
     <div class="col-xl-8 col-lg-8 col-md-8 col-sm-12">
         <div class="card">
@@ -118,65 +123,71 @@
 
     <!-- Firma -->
     <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
-        <div class="card border-0 bg-white h-100">
-
-            <div class="card-header text-bg-primary py-3 border-0">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0"
-                         style="width:45px;height:45px;">
-                        <i class="ti ti-signature fs-6"></i>
+        <div class="card border-0 bg-white">
+            <div class="card-header bg-light border-0 d-flex align-items-center justify-content-between flex-wrap gap-3 py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="bg-info-subtle text-info rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:38px;height:38px;">
+                        <i class="ti ti-signature fs-5"></i>
+                    </span>
+                    <div>
+                        <h5 class="card-title mb-0">Firma</h5>
+                        <small class="text-muted">Firma asociada al usuario</small>
                     </div>
-
-                    <h5 class="ms-3 mb-0 text-white">FIRMA</h5>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-danger" x-show="firmaPreview && !editorFirmaAbierto" @click="eliminarFirma()" :disabled="guardandoFirma || eliminandoFirma">
+                        <i class="ti" :class="eliminandoFirma ? 'ti-loader-2 ti-spin me-1' : 'ti-trash me-1'"></i>
+                        <span x-text="eliminandoFirma ? 'Eliminando...' : 'Eliminar firma'"></span>
+                    </button>
+                    <button type="button" class="btn" :class="editorFirmaAbierto ? 'bg-danger-subtle text-danger' : 'btn-outline-primary'" @click="alternarEditorFirma()" :disabled="guardandoFirma || eliminandoFirma">
+                        <i class="ti me-1" :class="editorFirmaAbierto ? 'ti-x' : 'ti-signature fs-4'"></i>
+                        <span x-text="editorFirmaAbierto ? 'Cancelar' : (firmaPreview ? 'Actualizar firma' : 'Nueva firma')"></span>
+                    </button>
                 </div>
             </div>
 
-            <div class="card-body p-3 pb-0">
-                <div id="signature-pad"
-                     class="signature-pad-wrapper"
-                     style="border:2px dashed #adb5bd; border-radius:6px; cursor:crosshair;">
-                    <div class="signature-pad--body">
-                        <canvas x-ref="canvas"
-                                id="canvas"
-                                width="500"
-                                height="250"
-                                style="width:100%; height:250px; display:block;">
-                        </canvas>
+            <div class="card-body">
+                <div class="border border-dashed rounded-3 p-4 text-center" x-show="!editorFirmaAbierto">
+                    <template x-if="firmaPreview">
+                        <img :src="firmaPreview" alt="Firma registrada" class="img-fluid" style="max-height:200px;max-width:100%;object-fit:contain">
+                    </template>
+                    <div x-show="!firmaPreview">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width:58px;height:58px"><i class="ti ti-signature fs-7 text-muted"></i></div>
+                        <h6 class="mb-1">Sin firma registrada</h6>
+                        <p class="text-muted mb-0">Este usuario aún no tiene una firma asociada.</p>
                     </div>
                 </div>
-            </div>
 
-            <button type="button"
-                    class="btn bg-danger-subtle text-danger w-100 rounded-0"
-                    @click="limpiarFirma(); firmaPreview = null; firmaError = false;">
-                <i class="ti ti-eraser me-1"></i> Limpiar firma
-            </button>
+                <div x-show="editorFirmaAbierto" x-cloak>
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                        <div class="btn-group" role="group" aria-label="Forma de agregar firma">
+                            <button type="button" class="btn" :class="modoFirma === 'pad' ? 'btn-primary' : 'btn-outline-primary'" @click="seleccionarModoFirma('pad')"><i class="ti ti-pencil me-1"></i>Dibujar firma</button>
+                            <button type="button" class="btn" :class="modoFirma === 'archivo' ? 'btn-primary' : 'btn-outline-primary'" @click="seleccionarModoFirma('archivo')"><i class="ti ti-upload me-1"></i>Subir imagen</button>
+                        </div>
+                        <button type="button" class="btn btn-success" @click="guardarFirma()" :disabled="guardandoFirma">
+                            <span x-show="!guardandoFirma"><i class="ti ti-check me-1"></i>Guardar firma</span>
+                            <span x-show="guardandoFirma"><span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Guardando...</span>
+                        </button>
+                    </div>
 
-            <button type="button"
-                    class="btn btn-success mt-3 w-100 rounded-0"
-                    @click="guardarFirma()">
-                <i class="ti ti-check me-1"></i> Guardar firma
-            </button>
+                    <div x-show="modoFirma === 'pad'" x-cloak>
+                        <div class="signature-pad-wrapper border border-dashed rounded-3 overflow-hidden" style="cursor:crosshair;touch-action:none">
+                            <div class="signature-pad--body">
+                                <canvas x-ref="canvasFirma" aria-label="Área para dibujar la firma" style="width:100%;height:250px;display:block;touch-action:none"></canvas>
+                            </div>
+                        </div>
+                        <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-0 mt-2" @click="limpiarFirma()"><i class="ti ti-eraser me-1"></i>Limpiar firma</button>
+                    </div>
 
-            <div class="card-body p-3 border-top mt-auto">
+                    <div x-show="modoFirma === 'archivo'" x-cloak>
+                        <label class="form-label mt-3 mb-2">Imagen de firma <span class="small">(PNG, JPG o WEBP; máximo 3 MB)</span>:</label>
+                        <input type="file" accept="image/png,image/jpeg,image/webp" class="form-control" :class="{'is-invalid': errorFirma}" x-ref="archivoFirma" @change="seleccionarArchivo($event)" :disabled="guardandoFirma">
+                        <div class="invalid-feedback" x-text="errorFirma"></div>
+                        <template x-if="vistaPreviaFirma"><img :src="vistaPreviaFirma" alt="Vista previa de la firma" class="img-fluid mt-3 border rounded p-2" style="max-height:160px"></template>
+                    </div>
 
-                <div class="mt-3 text-center"
-                     x-show="firmaPreview && !firmaError">
-                    <span class="d-block small text-muted mb-1">Vista previa:</span>
-                    <img :src="firmaPreview"
-                         @error="firmaError = true"
-                         class="img-fluid border rounded p-1"
-                         style="max-height:100px;">
+                    <div class="alert alert-danger mt-3 mb-0" x-show="errorFirma" x-text="errorFirma" role="alert"></div>
                 </div>
-
-                <div x-show="!firmaPreview || firmaError"
-                     class="text-muted text-center mt-3">
-                    <small>
-                        <i class="ti ti-info-circle me-1"></i>
-                        No se ha registrado una firma
-                    </small>
-                </div>
-
             </div>
         </div>
     </div>

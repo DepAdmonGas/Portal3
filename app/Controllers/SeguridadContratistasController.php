@@ -16,6 +16,7 @@ use App\Models\Sasisopa\RequisicionObraFormato14;
 use App\Models\Sasisopa\RequisicionObraFormato15;
 use App\Services\SeguridadContratistasService;
 use App\Services\ModuleStationService;
+use App\Services\DropdownYearMesService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -29,14 +30,23 @@ class SeguridadContratistasController extends BaseController
     {
         return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
     }
-    public function index()
+    public function index(int $year = 0)
     {
+
+        if ($year <= 0) {
+            header('Location: /sasisopa/seguridad-contratistas/' . date('Y'));
+            exit;
+        }
+
+        $year = DropdownYearMesService::validarYearMes($year, 1)['idYear'];
+        $yearMesTemplate = '/sasisopa/seguridad-contratistas/{year}';
 
         $title = '12. SEGURIDAD DE CONTRATISTAS';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
+        Breadcrumb::add(DropdownYearMesService::dropdownYearManual($year, 1, 2019, $yearMesTemplate), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -45,6 +55,8 @@ class SeguridadContratistasController extends BaseController
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'estacionId' => $this->estacionModulo(),
+            'year' => $year,
+            'yearMesTemplate' => $yearMesTemplate,
             'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
             'links' => [
@@ -63,7 +75,7 @@ class SeguridadContratistasController extends BaseController
         View::render('seguridadcontratistas/index', $data, 'sasisopa');
     }
 
-    public function datatable()
+    public function datatable(int $year = 0)
     {
         $data = RequisicionObra::query()
 
@@ -75,6 +87,7 @@ class SeguridadContratistasController extends BaseController
                 'cartaResponsiva'
             ])
             ->where('id_estacion', $this->estacionModulo())
+            ->when($year > 0, fn ($query) => $query->whereYear('fecha', $year))
             ->orderByDesc('id')
             ->get()
             ->map(function ($item) {
@@ -1272,22 +1285,37 @@ class SeguridadContratistasController extends BaseController
             $idRequisicion = (int) ($_POST['id_requisicion'] ?? 0);
 
             if (!$idRequisicion) {
-
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'No se encontro registro'
-                ]);
+                http_response_code(422);
+                echo json_encode(['success' => false, 'message' => 'No se encontró el registro']);
+                exit;
             }
 
-            if (empty($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
-
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Debe seleccionar un archivo PDF'
-                ]);
+            if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tienes permiso para actualizar']);
+                exit;
             }
 
-            $file = $_FILES['archivo'];
+            $requisicion = RequisicionObra::query()
+                ->where('id_estacion', $this->estacionModulo())
+                ->findOrFail($idRequisicion);
+
+            $archivo = $_FILES['archivo'] ?? null;
+            if (!$archivo || ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Actualización completada; se conservó el archivo existente'
+                ]);
+                exit;
+            }
+
+            if (($archivo['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+                http_response_code(422);
+                echo json_encode(['success' => false, 'message' => 'No fue posible recibir el archivo']);
+                exit;
+            }
+
+            $file = $archivo;
 
             $extension = strtolower(
                 pathinfo(
@@ -1297,17 +1325,13 @@ class SeguridadContratistasController extends BaseController
             );
 
             if ($extension !== 'pdf') {
-
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Solo se permiten archivos PDF'
-                ]);
+                http_response_code(422);
+                echo json_encode(['success' => false, 'message' => 'Solo se permiten archivos PDF']);
+                exit;
             }
 
             // Carpeta física
-            $carpetaFisica =
-                __DIR__
-                . '../../../public/uploads/archivos/seguridad-contratistas/';
+            $carpetaFisica = dirname(__DIR__, 2) . '/public/uploads/archivos/seguridad-contratistas/';
 
             if (!file_exists($carpetaFisica)) {
 
@@ -1322,11 +1346,12 @@ class SeguridadContratistasController extends BaseController
             $rutaFisica = $carpetaFisica . $nombreArchivo;
 
             if (!move_uploaded_file($file['tmp_name'], $rutaFisica)) {
-
+                http_response_code(500);
                 echo json_encode([
                     'success' => false,
                     'message' => 'No fue posible guardar el archivo'
                 ]);
+                exit;
             }
 
             // Ruta que se guarda en BD
@@ -1334,19 +1359,10 @@ class SeguridadContratistasController extends BaseController
                 'archivos/seguridad-contratistas/'
                 . $nombreArchivo;
 
-            RequisicionObraFormato14::where(
-                'id_requisicion',
-                $idRequisicion
-            )->delete();
-
-            RequisicionObraFormato14::create([
-
-                'id_requisicion' =>
-                $idRequisicion,
-
-                'archivo' =>
-                $rutaBd
-            ]);
+            RequisicionObraFormato14::updateOrCreate(
+                ['id_requisicion' => $requisicion->id],
+                ['archivo' => $rutaBd]
+            );
 
             echo json_encode([
                 'success' => true,
@@ -1384,9 +1400,13 @@ class SeguridadContratistasController extends BaseController
                     'id' => null,
                     'id_requisicion' => $id,
                     'fecha_lv' => null,
-                    'fecha_uv' => null,
-                    'fecha_rr' => null,
-                    'id_supervisor' => null,
+                    'hora_lv' => null,
+                    'pregunta1' => 1,
+                    'pregunta2' => 1,
+                    'pregunta3' => 1,
+                    'pregunta4' => 1,
+                    'pregunta5' => 1,
+                    'id_usuario' => null,
                     'supervisor' => null,
                 ];
             }
@@ -1418,26 +1438,57 @@ class SeguridadContratistasController extends BaseController
     public function updateFormato15()
     {
         header('Content-Type: application/json');
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
         try {
 
-            $formato = RequisicionObraFormato15::updateOrCreate(
+            if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tienes permiso para actualizar']);
+                exit;
+            }
 
-                [
-                    'id_requisicion' => (int) $data['id_requisicion']
-                ],
+            $idRequisicion = (int) ($data['id_requisicion'] ?? 0);
+            $requisicion = RequisicionObra::query()
+                ->where('id_estacion', $this->estacionModulo())
+                ->findOrFail($idRequisicion);
 
-                [
-                    'fecha_lv' => $data['fecha_lv'],
-                    'hora_lv' => $data['hora_lv'],
-                    'pregunta1' => (int) $data['pregunta1'],
-                    'pregunta2' => (int) $data['pregunta2'],
-                    'pregunta3' => (int) $data['pregunta3'],
-                    'pregunta4' => (int) $data['pregunta4'],
-                    'pregunta5' => (int) $data['pregunta5'],
-                    'id_usuario' => (int) $data['id_usuario']
-                ]
-            );
+            $fecha = trim((string) ($data['fecha_lv'] ?? ''));
+            $hora = trim((string) ($data['hora_lv'] ?? ''));
+            $idUsuario = (int) ($data['id_usuario'] ?? 0);
+            if ($fecha === '' || $hora === '' || $idUsuario <= 0) {
+                http_response_code(422);
+                echo json_encode(['success' => false, 'message' => 'Completa fecha, hora y supervisor']);
+                exit;
+            }
+
+            $supervisorValido = Usuario::query()
+                ->where('id', $idUsuario)
+                ->where('id_gas', $this->estacionModulo())
+                ->where('id_puesto', 6)
+                ->where('estatus', 0)
+                ->exists();
+            if (!$supervisorValido) {
+                http_response_code(422);
+                echo json_encode(['success' => false, 'message' => 'Selecciona un supervisor válido']);
+                exit;
+            }
+
+            $formato = RequisicionObraFormato15::firstOrNew(['id_requisicion' => $requisicion->id]);
+            if (!$formato->exists) {
+                // La columna legado es NOT NULL aunque el formato aún no tenga PDF.
+                $formato->archivo = '';
+            }
+            $formato->fill([
+                'fecha_lv' => $fecha,
+                'hora_lv' => $hora,
+                'pregunta1' => (int) ($data['pregunta1'] ?? 0),
+                'pregunta2' => (int) ($data['pregunta2'] ?? 0),
+                'pregunta3' => (int) ($data['pregunta3'] ?? 0),
+                'pregunta4' => (int) ($data['pregunta4'] ?? 0),
+                'pregunta5' => (int) ($data['pregunta5'] ?? 0),
+                'id_usuario' => $idUsuario,
+            ]);
+            $formato->save();
 
             echo json_encode([
                 'success' => true,

@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    const year = document.getElementById('container')?.dataset.year || new Date().getFullYear();
+
     table1 = $('#table-mantenimiento-quincenal').DataTable({
 
         processing: true,
@@ -13,8 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ajax: {
 
-            url:
-            '/sasisopa/control-actividades-procesos/bitacora-mantenimiento-quincenal/datatable',
+            url: '/sasisopa/control-actividades-procesos/bitacora-mantenimiento-quincenal/datatable?year=' + encodeURIComponent(year),
 
             type: 'GET',
 

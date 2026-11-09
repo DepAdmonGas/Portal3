@@ -26,7 +26,8 @@ document.addEventListener('alpine:init', () => {
         errors: {
             litros: false,
             producto: false,
-            fecha: false
+            fecha: false,
+            no_factura: false
         },
 
         // CALCULAR GALONES
@@ -70,6 +71,7 @@ document.addEventListener('alpine:init', () => {
 
             this.mode = 'edit';
             this.id = data.id;
+            this.errors = { litros: false, producto: false, fecha: false, no_factura: false };
 
             this.litros = data.litros ?? '';
             this.producto = data.producto ?? '';
@@ -95,14 +97,17 @@ document.addEventListener('alpine:init', () => {
                 this.errors.litros = !this.litros;
                 this.errors.producto = !this.producto;
                 this.errors.fecha = !this.fecha;
+                this.errors.no_factura = !String(this.no_factura ?? '').trim();
 
                 return !this.errors.litros &&
                        !this.errors.producto &&
-                       !this.errors.fecha;
+                       !this.errors.fecha &&
+                       !this.errors.no_factura;
             }
 
             // EDIT → solo factura
-            return !!this.no_factura;
+            this.errors.no_factura = !String(this.no_factura ?? '').trim();
+            return !this.errors.no_factura;
         },
 
         // 🔹 RESET
@@ -119,7 +124,8 @@ document.addEventListener('alpine:init', () => {
             this.errors = {
                 litros: false,
                 producto: false,
-                fecha: false
+                fecha: false,
+                no_factura: false
             };
         },
 

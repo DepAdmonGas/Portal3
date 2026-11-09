@@ -11,31 +11,32 @@
 
 <?php else: ?>
 
-<div class="row mt-3">
+<div class="row mt-3 align-items-stretch">
 
 <div class="col-md-9 col-12">
-    <div class="card">
+    <div class="card h-100 d-flex flex-column">
       <div class="card-header bg-primary">
         <h4 class="card-title mb-0 text-white d-flex align-items-center">
           <i class="ti ti-sitemap me-2"></i>Organigrama
         </h4>
       </div>
-      <div class="card-body p-0">
-        <?php if (!empty($organigrama)): ?>
-          <img src="<?= htmlspecialchars($organigrama, ENT_QUOTES, 'UTF-8') ?>" class="w-100 h-auto" alt="Organigrama de la estación">
-        <?php else: ?>
-          <div class="d-flex flex-column align-items-center justify-content-center text-center px-4 py-5 bg-body-tertiary"
-               style="min-height: 220px;"
-               role="status"
-               aria-live="polite">
-            <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center p-3 mb-3">
-              <i class="ti ti-sitemap fs-2"></i>
-            </span>
-            <h5 class="mb-2">Organigrama no disponible</h5>
-            <p class="text-muted mb-0">La estación aún no tiene un organigrama registrado.</p>
-          </div>
-        <?php endif; ?>
-      </div>
+<div class="card-body p-0 flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+  <?php if (!empty($organigrama)): ?>
+    <img src="<?= htmlspecialchars($organigrama, ENT_QUOTES, 'UTF-8') ?>" 
+         class="img-fluid mw-100 mh-100 object-fit-contain" 
+         alt="Organigrama de la estación">
+  <?php else: ?>
+    <div class="d-flex flex-column h-100 flex-grow-1 align-items-center justify-content-center text-center px-4 py-5"
+         role="status"
+         aria-live="polite">
+      <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center p-3 mb-3">
+        <i class="ti ti-sitemap fs-8"></i>
+      </span>
+      <h5 class="mb-2">Organigrama no disponible</h5>
+      <p class="text-muted mb-0">La estación aún no tiene un organigrama registrado.</p>
+    </div>
+  <?php endif; ?>
+</div>
     </div>
   </div>
 
@@ -203,8 +204,10 @@
               <input type="file"
                 class="form-control"
                 x-ref="pdfInput"
+                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                 @change="handleFile($event)"
                 :class="{'is-invalid': errors.pdf}">
+              <small class="form-text text-muted">Archivos PDF, JPG o PNG, máximo 10 MB.</small>
 
             </div>
 

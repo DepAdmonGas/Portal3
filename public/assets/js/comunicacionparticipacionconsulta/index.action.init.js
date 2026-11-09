@@ -3,7 +3,6 @@ document.addEventListener('alpine:init', () => {
 
         mode: 'create',
         modalComunicacion: null,
-        modalBuscar: null,
         modalQuejas: null,
         modalEvidencia: null,
         modalDetalleComunicacion: null,
@@ -11,10 +10,6 @@ document.addEventListener('alpine:init', () => {
         idComunicacion: null,
         pdfUrl: '/sasisopa/comunicacion-participacion-consulta/pdf-registro-comunicacion',
         year: '',
-
-        errors: {
-        year: false
-        },
 
         //----- Registro atencion
         comie: {
@@ -33,6 +28,19 @@ document.addEventListener('alpine:init', () => {
         material: false,
         dirigidoa: false,
         seguimiento: false
+        },
+
+        dirigidoaPayload() {
+            const selected = this.comie.dirigidoa;
+            const values = Array.isArray(selected)
+                ? selected
+                : (typeof selected === 'string' && selected.trim() !== ''
+                    ? selected.split(',')
+                    : []);
+
+            return [...new Set(values
+                .map(value => Number(value))
+                .filter(value => Number.isInteger(value) && value > 0))];
         },
 
          puestos: [],
@@ -92,9 +100,30 @@ document.addEventListener('alpine:init', () => {
             window.comunicacionParticipacionConsulta = this;
             this.modalComunicacion = new bootstrap.Modal(document.getElementById('modalComunicacion'));
             this.modalEvidencia = new bootstrap.Modal(document.getElementById('modalEvidencia'));
-            this.modalBuscar = new bootstrap.Modal(document.getElementById('modalBuscar'));
             this.modalQuejas = new bootstrap.Modal(document.getElementById('modalQS'));
             this.modalDetalleComunicacion = new bootstrap.Modal(document.getElementById('modalDetalleComunicacion'));
+
+            this.bindModalSelect2({
+                modalRef: 'modalComunicacion',
+                selectRef: 'selectDirigidoa',
+                model: 'comie.dirigidoa',
+                namespace: 'comunicacionParticipacionConsulta',
+                options: {
+                    placeholder: 'Selecciona',
+                    multiple: true,
+                    closeOnSelect: false
+                },
+                onShown() {
+                    if (!this.puestos.length) {
+                        this.getPuestos();
+                        return false;
+                    }
+                    return true;
+                }
+            });
+
+            this.year = document.getElementById('container')?.dataset.year || '';
+            this.actualizarPdfUrl();
             
         },
 
@@ -167,9 +196,12 @@ document.addEventListener('alpine:init', () => {
                 this.errorscomie[key] = false;
             });
 
-            $('#dirigidoa')
-                .val(null)
-                .trigger('change');
+            this.$nextTick(() => {
+                const select = this.$refs.selectDirigidoa;
+                if (select && $(select).hasClass('select2-hidden-accessible')) {
+                    $(select).val(null).trigger('change');
+                }
+            });
         },
 
        openModalComunicacion(){
@@ -178,7 +210,6 @@ document.addEventListener('alpine:init', () => {
 
             this.limpiarModalComunicacion();
             this.modalComunicacion.show();
-            this.getPuestos();
        },
 
         async getPuestos() {
@@ -192,7 +223,20 @@ document.addEventListener('alpine:init', () => {
                 this.puestos = res.data;
 
                  this.$nextTick(() => {
-                    this.initSelect2();
+                    const modal = this.$refs.modalComunicacion;
+                    if (modal?.classList.contains('show')) {
+                        this.initModalSelect2({
+                            modalRef: 'modalComunicacion',
+                            selectRef: 'selectDirigidoa',
+                            model: 'comie.dirigidoa',
+                            namespace: 'comunicacionParticipacionConsulta',
+                            options: {
+                                placeholder: 'Selecciona',
+                                multiple: true,
+                                closeOnSelect: false
+                            }
+                        });
+                    }
                 });
 
             } catch (e) {
@@ -201,50 +245,26 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-       initSelect2() {
-
-        const vm = this;
-
-        $('#dirigidoa').select2({
-            placeholder: 'Selecciona',
-            width: '100%',
-            dropdownParent: $('#modalComunicacion')
-        });
-
-        // iniciar bloqueado
-        $('#dirigidoa').prop(
-            'disabled',
-            vm.comie.tipo_comunicacion !== 'Interna'
-        );
-
-        $('#dirigidoa').on('change', function () {
-
-            vm.comie.dirigidoa = $(this).val();
-
-        });
-
-    },
-
         tipoComunicacion() {
 
             const disabled =
                 this.comie.tipo_comunicacion !== 'Interna';
 
             // bloquear/desbloquear select2
-            $('#dirigidoa')
-                .prop('disabled', disabled);
+            const dirigidoa = $(this.$refs.selectDirigidoa);
+            dirigidoa.prop('disabled', disabled);
 
             // refrescar select2
-            $('#dirigidoa').trigger('change.select2');
+            dirigidoa.trigger('change.select2');
 
             // limpiar cuando NO sea interna
             if (disabled) {
 
                 this.comie.dirigidoa = [];
 
-                $('#dirigidoa')
-                    .val(null)
-                    .trigger('change');
+                dirigidoa.val(null).trigger('change');
+            } else {
+                this.comie.seguimiento = '';
             }
         },
 
@@ -271,8 +291,12 @@ document.addEventListener('alpine:init', () => {
                     detalle: this.comie.detalle,
                     tipo_comunicacion: this.comie.tipo_comunicacion,
                     material: this.comie.material,
-                    dirigidoa: this.comie.dirigidoa,
+                    dirigidoa: this.dirigidoaPayload(),
                     seguimiento: this.comie.seguimiento
+                },
+
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                 },
 
                 table: '#table-registro-comunicacion'
@@ -315,15 +339,7 @@ document.addEventListener('alpine:init', () => {
         };
 
         this.modalComunicacion.show();
-
-        this.$nextTick(() => {
-
-            $('#dirigidoa')
-                .val(this.comie.dirigidoa)
-                .trigger('change');
-
-            this.tipoComunicacion();
-        });
+        this.$nextTick(() => this.tipoComunicacion());
     },
 
     async updateComunicacion() {
@@ -350,8 +366,14 @@ document.addEventListener('alpine:init', () => {
                 detalle: this.comie.detalle,
                 tipo_comunicacion: this.comie.tipo_comunicacion,
                 material: this.comie.material,
-                dirigidoa: this.comie.dirigidoa,
-                seguimiento: this.comie.seguimiento
+                dirigidoa: this.dirigidoaPayload(),
+                seguimiento: this.comie.tipo_comunicacion === 'Externa'
+                    ? this.comie.seguimiento
+                    : ''
+            },
+
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
             },
 
             table: '#table-registro-comunicacion'
@@ -558,63 +580,21 @@ async openModalDetalle(id) {
     }
 },
 
-    //---------------- Buscar
+    //---------------- Filtro anual
 
-       openModalBuscar(){
-            this.mode = 'search';
-            this.id = null;
-            this.modalBuscar.show();
-       },
-
-       resetBusqueda(){
-
-            this.year = '';
-
-            table1.ajax.url(
-                '/sasisopa/comunicacion-participacion-consulta/datatable-registro-comunicacion'
-            ).load();
-
-            this.pdfUrl = '/sasisopa/comunicacion-participacion-consulta/pdf-registro-comunicacion';
-
-            this.limpiarBusqueda();
+        actualizarPdfUrl() {
+            const base = '/sasisopa/comunicacion-participacion-consulta/pdf-registro-comunicacion';
+            this.pdfUrl = this.year ? `${base}?year=${encodeURIComponent(this.year)}` : base;
         },
 
-       limpiarBusqueda(){
-            this.year = '';
-            Object.keys(this.errors).forEach(key => this.errors[key] = false);
-        },
+        filtrarPorAnio() {
+            const base = '/sasisopa/comunicacion-participacion-consulta/datatable-registro-comunicacion';
+            const url = this.year ? `${base}?year=${encodeURIComponent(this.year)}` : base;
 
-       validateBusqueda() {
-            Object.keys(this.errors).forEach(k => this.errors[k] = false);
-            let valid = true;
-
-            if (!this.year) {
-            this.errors.year = true;
-            valid = false;
+            this.actualizarPdfUrl();
+            if (typeof table1 !== 'undefined' && table1) {
+                table1.ajax.url(url).load();
             }
-
-            return valid;
-        },
-
-        buscarYear(){   
-
-             if (!this.validateBusqueda()) {
-                this.notify('error', 'Completa todos los campos obligatorios');
-                return;
-            }
-
-            // RECARGAR DATATABLE
-            table1.ajax.url(
-                `/sasisopa/comunicacion-participacion-consulta/datatable-registro-comunicacion?year=${this.year}`
-            ).load();
-
-            this.pdfUrl = `/sasisopa/comunicacion-participacion-consulta/pdf-registro-comunicacion?year=${this.year}`;
-
-            // CERRAR MODAL
-            bootstrap.Modal
-                .getInstance(document.getElementById('modalBuscar'))
-                .hide();
-            
         },
 
 

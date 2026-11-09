@@ -104,9 +104,9 @@ document.addEventListener('alpine:init', () => {
                     marca: this.marca,
                     modelo: this.modelo,
                     serie: this.serie,
-                    producto1: this.producto1,
-                    producto2: this.producto2,
-                    producto3: this.producto3
+                    producto1: this.producto1 === '' ? 0 : this.producto1,
+                    producto2: this.producto2 === '' ? 0 : this.producto2,
+                    producto3: this.producto3 === '' ? 0 : this.producto3
                     },
                     table: '#table-dispensario'
                 });

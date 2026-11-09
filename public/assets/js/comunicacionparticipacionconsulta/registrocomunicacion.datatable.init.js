@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    const selectedYear = document.getElementById('container')?.dataset.year || new Date().getFullYear();
+    const dataUrl = selectedYear
+        ? `/sasisopa/comunicacion-participacion-consulta/datatable-registro-comunicacion?year=${encodeURIComponent(selectedYear)}`
+        : '/sasisopa/comunicacion-participacion-consulta/datatable-registro-comunicacion';
+
     table1 = $('#table-registro-comunicacion').DataTable({
         processing: true,
         serverSide: false,
@@ -10,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/comunicacion-participacion-consulta/datatable-registro-comunicacion',
+            url: dataUrl,
             type: 'GET',
             dataSrc: function (json) {
                 //guardas permisos globalmente
@@ -21,13 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
         columns: [
             {
             data: null,
-            width: '60px', className: 'text-center',
+            width: '60px', className: 'text-center align-middle',
             render: function (data, type, row, meta) {
                     return meta.row + meta.settings._iDisplayStart + 1;
                 }
             },
             {
             data: 'fecha',
+            className: 'text-center align-middle',
             render: function (data, type, row) {
 
                 if (!data) return 'S/I';
@@ -46,23 +52,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
             { data: 'tema',
-                defaultContent: 'S/I',
-                render: function (data) {
-                return `<div style="max-width:250px; white-space:normal; word-break:break-word;">${data}</div>`;
+                className: 'text-start align-middle',
+                defaultContent: 'N/A',
+                render: function (data, type) {
+                    const value = String(data ?? '').trim() || 'N/A';
+                    if (type === 'sort' || type === 'type') return value;
+                    const escaped = $('<div>').text(value).html();
+                    return `<div style="max-width:250px; white-space:normal; word-break:break-word;">${escaped}</div>`;
                 }
              },
-            { data: 'encargado_comunicacion' },
-            { data: 'tipo_comunicacion' },
+            { data: 'encargado_comunicacion', className: 'text-center align-middle' },
+            { data: 'tipo_comunicacion', className: 'text-center align-middle' },
              { data: 'material',
+                className: 'text-center align-middle',
                 defaultContent: 'S/I',
-                render: function (data) {
-                return `<div style="max-width:200px; white-space:normal; word-break:break-word;">${data}</div>`;
+                render: function (data, type) {
+                    const value = String(data ?? '').trim() || 'S/I';
+                    if (type === 'sort' || type === 'type') return value;
+                    const escaped = $('<div>').text(value).html();
+                    return `<div style="max-width:200px; white-space:normal; word-break:break-word;">${escaped}</div>`;
                 }
              },
             { data: 'seguimiento',
-                defaultContent: 'S/I',
-                render: function (data) {
-                return `<div style="max-width:160px; white-space:normal; word-break:break-word;">${data}</div>`;
+                className: 'text-center align-middle',
+                defaultContent: 'N/A',
+                render: function (data, type) {
+                    const raw = String(data ?? '').trim();
+                    const value = raw === '' || raw === 'S/I' ? 'N/A' : raw;
+                    if (type === 'sort' || type === 'type') return value;
+                    const escaped = $('<div>').text(value).html();
+                    return `<div style="max-width:160px; white-space:normal; word-break:break-word;">${escaped}</div>`;
                 }
              },
 

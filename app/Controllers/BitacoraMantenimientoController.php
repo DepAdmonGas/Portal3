@@ -5,6 +5,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
+use App\Services\DropdownYearMesService;
 use App\Models\Sasisopa\MantenimientoQuincenal;
 
 class BitacoraMantenimientoController extends BaseController{
@@ -50,7 +51,15 @@ class BitacoraMantenimientoController extends BaseController{
        
     }
 
-    public function mantenimientoQuincenal(){
+    public function mantenimientoQuincenal(int $year = 0){
+
+    if ($year <= 0) {
+        header('Location: /sasisopa/control-actividades-procesos/bitacora-mantenimiento-quincenal/' . date('Y'));
+        exit;
+    }
+
+    $year = DropdownYearMesService::validarYearMes($year, 1)['idYear'];
+    $yearMesTemplate = '/sasisopa/control-actividades-procesos/bitacora-mantenimiento-quincenal/{year}';
 
     $title = 'Mantenimiento Quincenal';
 
@@ -59,6 +68,7 @@ class BitacoraMantenimientoController extends BaseController{
         Breadcrumb::add('10. CONTROL DE ACTIVIDADES Y PROCESOS','/sasisopa/control-actividades-procesos');
         Breadcrumb::add('Mantenimiento','/sasisopa/control-actividades-procesos/bitacora-mantenimiento');
         Breadcrumb::add($title, '');
+        Breadcrumb::add(DropdownYearMesService::dropdownYearManual($year, 1, 2019, $yearMesTemplate), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
         $carpeta = '';
@@ -81,6 +91,8 @@ class BitacoraMantenimientoController extends BaseController{
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'carpeta' => $carpeta,
+            'year' => $year,
+            'yearMesTemplate' => $yearMesTemplate,
             'estacionId' => $this->estacionModulo(),
             'moduleStationKey' => 'sasisopa',
             'links' => [
@@ -102,12 +114,18 @@ class BitacoraMantenimientoController extends BaseController{
 
     public function datatable(){
 
+    $year = sanitize_input($_GET['year'] ?? date('Y'), 'int');
+
     $data = MantenimientoQuincenal::query()
 
         ->where(
             'id_estacion',
             $this->estacionModulo()
         )
+
+        ->when($year, function ($query) use ($year) {
+            $query->whereYear('fechacreacion', $year);
+        })
 
         ->orderBy('fechacreacion', 'desc')
 
@@ -185,9 +203,9 @@ public function create()
 
         $folio = $this->folioMantenimientoQuincenal($this->estacionModulo(),$fecha);
 
-        $carpetaFisica = __DIR__ . '../../../public/uploads/archivos/mantenimiento-quincenal/';
+        $carpetaFisica = dirname(__DIR__, 2) . '/public/uploads/archivos/mantenimiento-quincenal/';
 
-        if (!file_exists($carpetaFisica)) {
+        if (!is_dir($carpetaFisica)) {
 
             mkdir_safe(
                 $carpetaFisica,
@@ -335,9 +353,9 @@ public function update()
         }
 
         $registro->fechacreacion = $fecha;
-        $carpetaFisica = __DIR__ . '../../../public/uploads/archivos/mantenimiento-quincenal/';
+        $carpetaFisica = dirname(__DIR__, 2) . '/public/uploads/archivos/mantenimiento-quincenal/';
 
-        if (!file_exists($carpetaFisica)) {
+        if (!is_dir($carpetaFisica)) {
 
             mkdir_safe(
                 $carpetaFisica,
@@ -380,8 +398,8 @@ public function update()
 
             if (!empty($registro->$campoBD)) {
 
-                $archivoAnterior = __DIR__ .
-                    '../../../public/uploads/' .
+                $archivoAnterior = dirname(__DIR__, 2) .
+                    '/public/uploads/' .
                     $registro->$campoBD;
 
                 if (file_exists($archivoAnterior)) {
@@ -455,7 +473,7 @@ public function update()
                 continue;
             }
 
-            $archivo = __DIR__ . '../../../public/uploads/' . $registro->$campo;
+            $archivo = dirname(__DIR__, 2) . '/public/uploads/' . $registro->$campo;
 
             if (file_exists($archivo)) {
                 unlink($archivo);

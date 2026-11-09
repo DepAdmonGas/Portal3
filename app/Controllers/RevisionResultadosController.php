@@ -17,10 +17,9 @@ private function estacionModulo(): ?int
 
 private function carpetaRevisionResultados(): string
 {
-    $carpeta =
-        __DIR__ . '../../../public/uploads/archivos/revision-resultados/';
+    $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/revision-resultados/';
 
-    if (!file_exists($carpeta)) {
+    if (!is_dir($carpeta)) {
 
         mkdir_safe(
             $carpeta,
@@ -242,19 +241,16 @@ public function index(int $year = 0){
 
             if (isset($_FILES['archivo'])) {
 
+                $rutaAnterior = dirname(__DIR__, 2)
+                    . '/public/uploads/'
+                    . ltrim((string) $revision->archivo, '/\\');
+
                 if (
                     !empty($revision->archivo)
                     &&
-                    file_exists(
-                        __DIR__ . '../../../public/uploads/'
-                        . $revision->archivo
-                    )
+                    is_file($rutaAnterior)
                 ) {
-
-                    unlink(
-                        __DIR__ . '../../../public/uploads/'
-                        . $revision->archivo
-                    );
+                    unlink($rutaAnterior);
                 }
 
                 $nombreArchivo =
@@ -325,16 +321,16 @@ public function index(int $year = 0){
             }
 
             // Eliminar archivo físico si existe
+            $rutaArchivo = dirname(__DIR__, 2)
+                . '/public/uploads/'
+                . ltrim((string) $revision->archivo, '/\\');
+
             if (
                 !empty($revision->archivo) &&
-                file_exists(
-                    __DIR__ . '../../../public/uploads/' . $revision->archivo
-                )
+                is_file($rutaArchivo)
             ) {
 
-                unlink(
-                    __DIR__ . '../../../public/uploads/' . $revision->archivo
-                );
+                unlink($rutaArchivo);
             }
 
             $revision->delete();

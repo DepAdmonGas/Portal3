@@ -67,8 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         render: function (data, type, row) {
 
-            const canEdit = permisos.editar;
-            const canDelete = row.estatus.estatus;
+            const usuarioActivo = row.estatus?.estatus === true;
+            const canFicha = usuarioActivo;
+            const canEdit = permisos.editar && usuarioActivo;
+            const canDelete = permisos.eliminar && usuarioActivo;
             // const canDownload = permisos.descargar;
 
             return `
@@ -81,24 +83,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     <ul class="dropdown-menu">
 
                         <li>
-                            <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                            href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal/${row.id}">
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!canFicha ? 'disabled text-muted pe-none' : ''}"
+                            ${canFicha ? `href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal/${row.id}"` : 'aria-disabled="true" tabindex="-1"'}>
                                 <i class="ti ti-eye fs-4"></i>
                                 Ficha Personal
                             </a>
                         </li>
 
                         <li>
-                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!canEdit ? 'disabled text-muted' : ''}"
-                            ${canEdit ? `onclick="personal.openEditar(${JSON.stringify(row).replace(/"/g, '&quot;')})"` : ''}>
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!canEdit ? 'disabled text-muted pe-none' : ''}"
+                            ${canEdit ? `onclick="personal.openEditar(${JSON.stringify(row).replace(/"/g, '&quot;')})"` : 'aria-disabled="true" tabindex="-1"'}>
                                 <i class="ti ti-edit fs-4"></i>
                                 Editar
                             </a>
                         </li>
 
                         <li>
-                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!canDelete ? 'disabled text-muted' : ''}"
-                            ${canDelete ? `onclick="personal.delete(${row.id})"` : ''}>
+                            <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!canDelete ? 'disabled text-muted pe-none' : ''}"
+                            ${canDelete ? `onclick="personal.delete(${row.id})"` : 'aria-disabled="true" tabindex="-1"'}>
                                 <i class="ti ti-trash fs-4"></i>
                                 Eliminar
                             </a>

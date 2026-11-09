@@ -255,6 +255,7 @@ class SoporteEstacionesController extends BaseController
             (int)Request::input('id_ticket'),
             (string)Request::input('fecha_inicio'),
             (string)Request::input('fecha_termino'),
+            (int)Request::input('dias_habiles', 0),
             $actividades
         ));
     }

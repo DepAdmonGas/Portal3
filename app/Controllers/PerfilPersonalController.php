@@ -2,6 +2,7 @@
 namespace App\Controllers;
 use App\Core\View;
 use App\Core\Breadcrumb;
+use App\Core\JsonResponse;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
 use App\Models\Estacion;
@@ -20,6 +21,29 @@ class PerfilPersonalController extends BaseController
  private function estacionModulo(): ?int
  {
      return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
+ }
+
+ private function usuarioFirmaAutorizado(int $id): Usuario
+ {
+     if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+         JsonResponse::forbidden('No tienes permiso para actualizar la ficha del personal.');
+     }
+
+     $idEstacion = $this->estacionModulo();
+     if (!$idEstacion || $id < 1) {
+         JsonResponse::notFound('No se encontró el usuario de la estación seleccionada.');
+     }
+
+     $usuario = Usuario::query()
+         ->where('id', $id)
+         ->where('id_gas', $idEstacion)
+         ->first();
+
+     if (!$usuario) {
+         JsonResponse::notFound('No se encontró el usuario de la estación seleccionada.');
+     }
+
+     return $usuario;
  }
 
 public function perfilesPersonal(){
@@ -518,78 +542,86 @@ public function perfilesPersonal(){
         }
     }
 
-    public function updateFirma()
-        {
-
-        header('Content-Type: application/json; charset=utf-8');
-
-        $data = json_decode(file_get_contents("php://input"), true);
-
-        if (!$data || empty($data['id']) || empty($data['firma'])) {
-            echo json_encode(['success' => false]);
-            return;
-        }
-
+    public function updateFirma(): void
+    {
         try {
+            $json = json_decode(file_get_contents('php://input'), true);
+            $data = array_merge($_POST, is_array($json) ? $json : []);
+            $usuario = $this->usuarioFirmaAutorizado((int) ($data['id'] ?? 0));
+            $bytes = false;
+            $extension = '';
 
-            $usuario = Usuario::find($data['id']);
+            if (isset($_FILES['firma']) && is_array($_FILES['firma'])) {
+                $archivo = $_FILES['firma'];
+                if (($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || ($archivo['size'] ?? 0) > 3 * 1024 * 1024) {
+                    JsonResponse::validation('Selecciona una imagen de firma de hasta 3 MB.', ['firma' => 'El archivo no se pudo leer o excede el límite de 3 MB.']);
+                }
 
-            if (!$usuario) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Usuario no encontrado'
-                ]);
-                return;
+                $info = @getimagesize($archivo['tmp_name']);
+                $mime = $info['mime'] ?? '';
+                $extension = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'][$mime] ?? '';
+                if ($extension === '' || ($info[0] ?? 0) > 5000 || ($info[1] ?? 0) > 3000) {
+                    JsonResponse::validation('El archivo debe ser una imagen PNG, JPG o WEBP.', ['firma' => 'Formato de imagen no válido.']);
+                }
+                $bytes = file_get_contents($archivo['tmp_name']);
+            } else {
+                $dataUrl = (string) ($data['firma'] ?? '');
+                if (!preg_match('#^data:image/(png|jpeg|webp);base64,#', $dataUrl)) {
+                    JsonResponse::validation('Dibuja la firma o selecciona una imagen.', ['firma' => 'No se recibió una firma válida.']);
+                }
+
+                $encoded = substr($dataUrl, strpos($dataUrl, ',') + 1);
+                if (strlen($encoded) > 4 * 1024 * 1024) {
+                    JsonResponse::validation('La imagen de firma excede el tamaño permitido.', ['firma' => 'La imagen debe ser de hasta 3 MB.']);
+                }
+
+                $bytes = base64_decode($encoded, true);
+                $info = is_string($bytes) ? @getimagesizefromstring($bytes) : false;
+                $mime = $info['mime'] ?? '';
+                $extension = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'][$mime] ?? '';
+                if ($extension === '' || ($info[0] ?? 0) > 5000 || ($info[1] ?? 0) > 3000) {
+                    JsonResponse::validation('La imagen debe ser PNG, JPG o WEBP y tener dimensiones válidas.', ['firma' => 'Formato o dimensiones de imagen no válidos.']);
+                }
             }
 
-            $firma = $data['firma'];
-            $firma = str_replace('data:image/png;base64,', '', $firma);
-            $firma = str_replace(' ', '+', $firma);
-
-            $imageData = base64_decode($firma, true);
-
-            if ($imageData === false) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Firma inválida'
-                ]);
-                return;
+            if (!is_string($bytes) || $bytes === '' || @getimagesizefromstring($bytes) === false) {
+                JsonResponse::validation('La imagen de firma no es válida.', ['firma' => 'Selecciona una imagen PNG, JPG o WEBP válida.']);
             }
 
-            $nombreArchivo = 'firma_' . $usuario->id . '_' . time() . '.png';
             $directorio = PUBLIC_PATH . '/uploads/firma-personal/';
-
-            if (!is_dir($directorio)) {
-                mkdir($directorio, 0777, true);
+            if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+                JsonResponse::serverError('No fue posible preparar el almacenamiento de firmas.');
             }
 
-            $ruta = $directorio . $nombreArchivo;
-
-            if (file_put_contents($ruta, $imageData) === false) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'No se pudo guardar el archivo de la firma'
-                ]);
-                return;
+            $nombreArchivo = 'firma_' . (int) $usuario->id . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+            if (file_put_contents($directorio . $nombreArchivo, $bytes, LOCK_EX) === false) {
+                JsonResponse::serverError('No fue posible guardar la imagen de firma.');
             }
 
+            // Se conserva la imagen anterior por si la referencia aparece en otros documentos.
             $usuario->firma = $nombreArchivo;
             $usuario->save();
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Firma actualizada correctamente',
-                'ruta' => $_ENV['APP_URL'] . '/uploads/firma-personal/' . $nombreArchivo
+            JsonResponse::success('La firma se actualizó correctamente.', [
+                'firma' => rtrim((string) ($_ENV['APP_URL'] ?? ''), '/') . '/uploads/firma-personal/' . rawurlencode($nombreArchivo),
             ]);
-
         } catch (\Throwable $e) {
-
-            echo json_encode([
-                'success' => false,
-                'error' => 'Error al actualizar la firma'
-            ]);
+            JsonResponse::error('No fue posible actualizar la firma.', 500);
         }
+    }
 
+    public function deleteFirma(): void
+    {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+            $usuario = $this->usuarioFirmaAutorizado((int) ($data['id'] ?? 0));
+            $usuario->firma = null;
+            $usuario->save();
+
+            JsonResponse::success('La firma se eliminó correctamente.');
+        } catch (\Throwable $e) {
+            JsonResponse::error('No fue posible eliminar la firma.', 500);
+        }
     }
 
     //------------------------------------------------------------------

@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/seguridad-contratistas/datatable',
+            url: `/sasisopa/seguridad-contratistas/datatable/${$('#container').data('year') || new Date().getFullYear()}`,
             type: 'GET',
             dataSrc: function (json) {
          

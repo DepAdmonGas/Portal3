@@ -10,6 +10,7 @@ document.addEventListener('alpine:init', () => {
         tema: {},
         preguntas: [],
         total: 0,
+        selecciones: {},
 
         // 👇 aquí guardamos:
         // { [numeroPregunta]: valor }
@@ -47,6 +48,7 @@ document.addEventListener('alpine:init', () => {
 
                 // reset limpio
                 this.respuestas = {};
+                this.selecciones = {};
 
             } catch (e) {
                 this.notify('error', 'Error al cargar evaluación');
@@ -62,7 +64,8 @@ document.addEventListener('alpine:init', () => {
         */
         async seleccionar(pregunta, respuesta) {
 
-            // guardamos SOLO valor por pregunta.numero
+            // La interfaz identifica la opción por su ID; el backend recibe el valor evaluado.
+            this.selecciones[pregunta.id] = respuesta.id;
             this.respuestas[pregunta.numero] = respuesta.valor;
 
             try {

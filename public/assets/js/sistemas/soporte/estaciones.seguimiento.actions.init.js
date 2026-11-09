@@ -27,7 +27,7 @@ document.addEventListener('alpine:init', () => {
         actividades: [],
         cargando: true,
 
-        diasHabiles: 2,
+        diasHabiles: 0,
         fechaInicio: '',
         fechaTermino: '',
 
@@ -48,9 +48,8 @@ document.addEventListener('alpine:init', () => {
         puedeFinalizar: false,
 
         // Estados de los atributos :disabled.
-        // Cuando el trabajo ya está cerrado (ticket en "En proceso" o
-        // finalizado) la pantalla queda en modo sólo lectura: no se pueden
-        // guardar fechas ni editar actividades.
+        // Las fechas se pueden ajustar mientras el ticket esté Pendiente o
+        // En proceso; los tickets cerrados quedan en modo de sólo lectura.
         seguimientoDeshabilitado: true,
         guardarDeshabilitado: true,
         cierreDeshabilitado: true,
@@ -78,8 +77,21 @@ document.addEventListener('alpine:init', () => {
                 if (data.success === true && data.data) {
                     this.ticket = data.data;
                     this.actividades = data.data.actividades || [];
+                    // La respuesta del servidor es la fuente autoritativa del
+                    // permiso; el atributo inicial del HTML puede quedar viejo.
+                    this.puedeSeguimiento = data.data.puede_seguimiento === true;
                     this.fechaInicio = data.data.fecha_inicio_iso || '';
                     this.fechaTermino = data.data.fecha_termino_iso || '';
+                    const diasGuardados = Number.parseInt(data.data.tiempo_solucion, 10);
+                    this.diasHabiles = Number.isFinite(diasGuardados)
+                        ? Math.min(60, Math.max(0, diasGuardados))
+                        : 0;
+
+                    // Un seguimiento nuevo debe iniciar con 0 días y fechas
+                    // calculadas para que pueda guardarse sin capturas previas.
+                    if (!this.fechaInicio || !this.fechaTermino) {
+                        this.calcularFechas();
+                    }
                 } else {
                     this.notify('error', data.message || 'No se pudo cargar el ticket.');
                 }
@@ -95,12 +107,13 @@ document.addEventListener('alpine:init', () => {
         /** Habilita o deshabilita los campos según el estado del ticket. */
         aplicarEstado() {
             this.fechaRegistro = !!(this.ticket && this.ticket.fecha_inicio_iso && this.ticket.fecha_termino_iso);
-            this.trabajoFinalizado = this.ticket ? Number(this.ticket.estado) !== 1 : false;
+            const estado = this.ticket ? Number(this.ticket.estado) : 0;
+            this.trabajoFinalizado = ![1, 2].includes(estado);
             this.puedeEditarActividades = this.puedeSeguimiento && this.fechaRegistro;
             this.puedeFinalizar = this.puedeSeguimiento && this.fechaRegistro && !this.trabajoFinalizado;
 
             this.seguimientoDeshabilitado = !this.puedeSeguimiento || this.trabajoFinalizado;
-            this.guardarDeshabilitado = !this.puedeSeguimiento || this.trabajoFinalizado;
+            this.guardarDeshabilitado = this.seguimientoDeshabilitado;
             this.cierreDeshabilitado = !this.puedeFinalizar;
             this.actividadesDeshabilitadas = !this.puedeEditarActividades || this.trabajoFinalizado;
         },
@@ -144,39 +157,44 @@ document.addEventListener('alpine:init', () => {
         /* -------------------------------------------------------------- */
 
         /**
-         * Calcula la fecha de inicio (mañana, saltando el fin de semana) y
-         * la fecha de término según los días hábiles indicados. Es la misma
-         * regla del sistema anterior.
+         * Calcula la fecha de término a partir del inicio seleccionado y los
+         * días hábiles. Cero días significa que inicio y término coinciden.
          *
          * El número de días se limita a un rango razonable: sin ese límite
          * un valor captura equivocado (por ejemplo 170000) movía la fecha de
          * término cientos de años adelante.
          */
         calcularFechas() {
-            const dias = Math.min(60, Math.max(1, parseInt(this.diasHabiles || 2, 10) || 2));
+            const diasCapturados = Number.parseInt(this.diasHabiles, 10);
+            const dias = Math.min(60, Math.max(0, Number.isFinite(diasCapturados) ? diasCapturados : 0));
 
             this.diasHabiles = dias;
 
-            const inicio = new Date();
-            inicio.setHours(0, 0, 0, 0);
-            inicio.setDate(inicio.getDate() + 1);
-
-            // 6 = sábado, 0 = domingo: se recorre al lunes.
-            if (inicio.getDay() === 6) {
-                inicio.setDate(inicio.getDate() + 2);
-            } else if (inicio.getDay() === 0) {
+            let inicio;
+            if (this.fechaInicio) {
+                inicio = new Date(this.fechaInicio + 'T00:00:00');
+            } else {
+                inicio = new Date();
+                inicio.setHours(0, 0, 0, 0);
                 inicio.setDate(inicio.getDate() + 1);
+
+                // 6 = sábado, 0 = domingo: se recorre al lunes.
+                if (inicio.getDay() === 6) {
+                    inicio.setDate(inicio.getDate() + 2);
+                } else if (inicio.getDay() === 0) {
+                    inicio.setDate(inicio.getDate() + 1);
+                }
             }
 
             const fin = new Date(inicio.getTime());
             let contador = 0;
 
             while (contador < dias) {
+                fin.setDate(fin.getDate() + 1);
                 const dia = fin.getDay();
                 if (dia >= 1 && dia <= 5) {
                     contador++;
                 }
-                fin.setDate(fin.getDate() + 1);
             }
 
             this.fechaInicio = this.toIso(inicio);
@@ -216,6 +234,7 @@ document.addEventListener('alpine:init', () => {
                     url: this.endpoint + '/guardar-seguimiento',
                     data: {
                         id_ticket: this.ticket.id_ticket,
+                        dias_habiles: this.diasHabiles,
                         fecha_inicio: this.fechaInicio,
                         fecha_termino: this.fechaTermino,
                         actividades: actividades
@@ -229,7 +248,7 @@ document.addEventListener('alpine:init', () => {
                 this.notify('error', 'Error al guardar el seguimiento.');
             } finally {
                 this.guardando = false;
-                this.guardarDeshabilitado = !this.puedeSeguimiento;
+                this.guardarDeshabilitado = this.seguimientoDeshabilitado;
             }
         },
 

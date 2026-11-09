@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    const year = new Date().getFullYear();
+
     table1 = $('#table-residuos-peligrosos').DataTable({
         processing: true,
         serverSide: false,
@@ -11,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         ajax: {
-            url: '/sasisopa/control-actividades-procesos/bitacora-residuos-peligrosos/datatable',
+            url: '/sasisopa/control-actividades-procesos/bitacora-residuos-peligrosos/datatable?year=' + year + '&mes=',
             type: 'GET',
             dataSrc: function(json){
 
@@ -53,8 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 defaultContent: 'S/I'
             },
 
-            {
+        {
             data: 'fechaingreso',
+            className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';
@@ -83,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         {
             data: 'fechasalida',
+            className: 'text-center align-middle',
             render: function (data, type) {
 
                 if (!data || data === 'S/I') return 'S/I';

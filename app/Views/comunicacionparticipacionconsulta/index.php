@@ -1,6 +1,7 @@
 <div id="container" class="pb-4"
 data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
 data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
+data-year="<?= (int) ($year ?? date('Y')) ?>"
 x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 
 <?php if (empty($estacionId)): ?>
@@ -12,7 +13,7 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 
 <?php else: ?>
 
-<div class="text-end">
+<div class="d-flex justify-content-end mb-3 mt-3">
 <div class="btn-group">
 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 <i class="ti ti-dots-vertical fs-4"></i>
@@ -22,9 +23,6 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 '<li><button type="button" class="dropdown-item pointer" @click="openModalComunicacion()"><i class="ti ti-plus"></i> Nuevo </button></li>'
 : '' 
 ?>
-<li>
-<button type="button" class="dropdown-item pointer" @click="openModalBuscar()"><i class="ti ti-search"></i> Buscar</button>
-</li>
 <li>
 <a class="dropdown-item pointer"
 :href="pdfUrl">
@@ -60,13 +58,13 @@ Descargar
 <table id="table-registro-comunicacion" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
-<th class="text-center">No.</th>
-<th class="text-center">Fecha</th>
-<th class="text-center">Tema a comunicar</th>
-<th>Encargado de la comunicación</th>
+<th class="text-center align-middle">No.</th>
+<th class="text-center align-middle">Fecha</th>
+<th class="text-start align-middle">Tema a comunicar</th>
+<th class="text-center align-middle">Encargado de la comunicación</th>
 <th class="text-center">Tipo de comunicación</th>
-<th width="200px">Material utilizado para la comunicación</th>
-<th width="200px">Seguimiento de la comunicación</th>
+<th class="text-center align-middle" width="200px">Material utilizado para la comunicación</th>
+<th class="text-center align-middle" width="200px">Seguimiento de la comunicación</th>
 <th class="text-center">
 <a class="text-muted"><i class="ti ti-dots-vertical fs-6"></i></a>
 </th>
@@ -129,7 +127,7 @@ Descargar
 
 <!-- Modal Nuevo -->
 
-<div class="modal fade" id="modalComunicacion" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+<div class="modal fade" id="modalComunicacion" x-ref="modalComunicacion" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-centered">
 <div class="modal-content">
 
@@ -157,7 +155,7 @@ aria-label="Close"
 
 <input type="text"
 class="form-control"
-placeholder="Agregar tema a comunicar"
+placeholder="Ingresa el tema a comunicar..."
 x-model="comie.tema"
 :class="errorscomie.tema ? 'is-invalid' : ''"
 @input="errorscomie.tema = false">
@@ -171,7 +169,7 @@ x-model="comie.tema"
 
 <textarea class="form-control"
 rows="6"
-placeholder="Agregar detalle"
+placeholder="Ingresa aqui el detalle..."
 x-model="comie.detalle"
 :class="errorscomie.detalle ? 'is-invalid' : ''"
 @input="errorscomie.detalle = false"></textarea>
@@ -238,7 +236,7 @@ Portal AdmonGas
 Dirigido a:
 </label>
 
-<select id="dirigidoa"
+<select id="dirigidoa" x-ref="selectDirigidoa"
 class="form-select"
 multiple
 :disabled="comie.tipo_comunicacion !== 'Interna'">
@@ -655,58 +653,6 @@ data-bs-dismiss="modal">
 </div>
 
 </div>
-
-<!-- Modal Buscar -->
-
-<div class="modal fade" id="modalBuscar" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-<div class="modal-dialog modal-dialog-centered">
-<div class="modal-content">
-
-<div class="modal-header modal-colored-header bg-primary text-white">
-<h4 class="modal-title text-white"> <i class="ti ti-search ms-2"></i>
-Buscar</h4>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" @click="limpiarBusqueda()"></button>
-</div>
-
-<div class="modal-body">
-
-
-<label class="form-label mb-1">* Año:</label>
-<input type="number" class="form-control mb-3" x-model="year"
-:class="errors.year ? 'is-invalid' : ''"
-@input="errors.year = false" placeholder="Ingresa el año">
-
-</div>
-
-<div class="modal-footer">
-    <div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
-                      <button 
-class="btn bg-danger-subtle text-danger"
-data-bs-dismiss="modal"
-aria-label="Close"
-@click="year ? resetBusqueda() : limpiarBusqueda()">
-<i class="ti ti-x"></i>
-<span x-text="year ? 'Cancelar' : 'Cancelar'"></span>
-
-</button>
-                    </div>
-                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
-                      <button class="btn btn-success" @click="buscarYear()">
-<i class="ti ti-search"></i> Buscar
-</button>
-                    </div>
-                  </div>
-
-
-
-</div>
-
-</div>
-</div>
-</div>
-
-<!-- -- -->
 
 <!-- Modal Quejas y Sugerencias -->
 

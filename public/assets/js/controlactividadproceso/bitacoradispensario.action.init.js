@@ -6,6 +6,7 @@ document.addEventListener('alpine:init', () => {
         modalBuscar: null,
         modalDetalle: null,
         years: [],
+        periodoTexto: '',
         dispensarios: [],
         productos: [],
 
@@ -21,9 +22,14 @@ document.addEventListener('alpine:init', () => {
         },
 
         errorsNuevo: {
+            motivo: false,
             fecha: null,
             hora_inicio: null,
+            hora_termino: null,
             id_dispensario: null,
+            lado: null,
+            producto: null,
+            detalle: null,
         },
 
         filtro: {
@@ -46,6 +52,7 @@ document.addEventListener('alpine:init', () => {
         this.modalDetalle = new bootstrap.Modal(document.getElementById('ModalDetalle'));
 
         this.excelUrl = '/sasisopa/control-actividades-procesos/bitacora-dispensario/excel?year=' + currentYear;
+        this.periodoTexto = String(currentYear);
 
          for(let i = 2020; i <= currentYear; i++){
         this.years.push(i);
@@ -65,6 +72,11 @@ document.addEventListener('alpine:init', () => {
             Object.keys(this.errorsNuevo)
                 .forEach(k => this.errorsNuevo[k] = false);
 
+            if (!this.nuevo.motivo) {
+                this.errorsNuevo.motivo = true;
+                valid = false;
+            }
+
             if(!this.nuevo.fecha){
                 this.errorsNuevo.fecha = true;
                 valid = false;
@@ -75,8 +87,28 @@ document.addEventListener('alpine:init', () => {
                 valid = false;
             }
 
-            if(!this.nuevo.id_dispensario){
+            if (!this.nuevo.hora_termino) {
+                this.errorsNuevo.hora_termino = true;
+                valid = false;
+            }
+
+            if (this.nuevo.motivo != 2 && !this.nuevo.id_dispensario) {
                 this.errorsNuevo.id_dispensario = true;
+                valid = false;
+            }
+
+            if (this.nuevo.motivo != 2 && !this.nuevo.lado) {
+                this.errorsNuevo.lado = true;
+                valid = false;
+            }
+
+            if ((this.productos.length > 0 || this.nuevo.motivo == 2) && !this.nuevo.producto) {
+                this.errorsNuevo.producto = true;
+                valid = false;
+            }
+
+            if (!String(this.nuevo.detalle || '').trim()) {
+                this.errorsNuevo.detalle = true;
                 valid = false;
             }
 
@@ -97,6 +129,7 @@ document.addEventListener('alpine:init', () => {
             producto: '',
             detalle: ''
         };
+        Object.keys(this.errorsNuevo).forEach(k => this.errorsNuevo[k] = false);
     },
 
     async loadCatalogos(){
@@ -166,17 +199,19 @@ document.addEventListener('alpine:init', () => {
 
     limpiarFiltros() {
 
+        const year = new Date().getFullYear();
         this.filtro = {
-            year: '',
+            year,
             mes: ''
         };
 
         table1.ajax.url(
-            '/sasisopa/control-actividades-procesos/bitacora-dispensario/datatable'
+            '/sasisopa/control-actividades-procesos/bitacora-dispensario/datatable?year=' + year
         ).load();
 
         this.excelUrl =
-            '/sasisopa/control-actividades-procesos/bitacora-dispensario/excel';
+            '/sasisopa/control-actividades-procesos/bitacora-dispensario/excel?year=' + year;
+        this.periodoTexto = String(year);
 
         this.modalBuscar.hide();
     },
@@ -222,7 +257,44 @@ document.addEventListener('alpine:init', () => {
             .hide();
 
             this.excelUrl = '/sasisopa/control-actividades-procesos/bitacora-dispensario/excel?year=' + this.filtro.year + '&mes=' + this.filtro.mes;
+            this.actualizarPeriodo(this.filtro.year, this.filtro.mes);
 
+    },
+
+    actualizarPeriodo(year, mes) {
+        const meses = [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+        this.periodoTexto = mes ? `${meses[Number(mes) - 1]} ${year}` : String(year);
+    },
+
+    async descargarExcel() {
+        if (window.loader) window.loader.show();
+
+        try {
+            const response = await fetch(this.excelUrl, { credentials: 'same-origin' });
+            if (!response.ok) throw new Error('No fue posible descargar el archivo');
+
+            const blob = await response.blob();
+            const contentType = response.headers.get('Content-Type') || blob.type;
+            if (!contentType.toLowerCase().includes('text/csv')) {
+                throw new Error('El servidor no generó el archivo CSV');
+            }
+
+            const objectUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = 'Bitacora-dispensarios.csv';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        } catch (error) {
+            this.notify('error', error.message || 'Error al descargar el archivo');
+        } finally {
+            if (window.loader) window.loader.hide();
+        }
     },
 
     async eliminar(id, name){

@@ -49,12 +49,12 @@ private function validateTarjetaUpload(?array $file): array
     ];
 
     if (!isset($allowed[$extension])) {
-        return ['valid' => false, 'message' => 'Tipo de archivo no permitido.'];
+        return ['valid' => false, 'message' => 'Archivo no permitido. Formatos válidos: JPG, JPEG, PNG y PDF (máximo 5 MB).'];
     }
 
     $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
     if (!is_string($mime) || !in_array($mime, $allowed[$extension], true)) {
-        return ['valid' => false, 'message' => 'El contenido del archivo no coincide con su extensión.'];
+        return ['valid' => false, 'message' => 'El contenido del archivo no coincide con su extensión. Formatos válidos: JPG, JPEG, PNG y PDF (máximo 5 MB).'];
     }
 
     return ['valid' => true, 'extension' => $extension];
@@ -182,7 +182,9 @@ public function datatableTarjetas(){
             default => ['Sin estatus', 'bg-secondary'],
         };
         $station = Estacion::where('nombre', $row->id_estacion)->first();
-        $fechaRaw = $row->fecha ? date('Y-m-d', strtotime((string)$row->fecha)) : 'S/I';
+        // Evita convertir fechas vacías o corruptas a la época Unix (31/12/1969).
+        // La fecha de captura debe ser una fecha civil YYYY-MM-DD válida.
+        $fechaRaw = $this->fechaTarjetaValida($row->getRawOriginal('fecha'));
         $data[] = [
             'idSolicitud' => (int)$row->id,
             'idEstacionReal' => (int)($station->id ?? 0),
@@ -206,6 +208,27 @@ public function datatableTarjetas(){
     $pendingCounts = SolicitudTarjetasService::contarPendientesPorEstacion();
     $pendingContext = $ctx['all'] ? $pendingCounts['total'] : ($pendingCounts['estacion_' . (int)$ctx['station']->id] ?? 0);
     JsonResponse::custom(['data' => $data, 'filas_mostrar' => ['mostrar_fila_estacion' => $ctx['all']], 'pendientesData' => $pendingCounts, 'pendientesContexto' => $pendingContext]);
+}
+
+/** Devuelve una fecha civil válida o S/I; nunca interpreta valores inválidos como timestamp 0. */
+private function fechaTarjetaValida($valor): string
+{
+    if ($valor instanceof \DateTimeInterface) {
+        return $valor->format('Y-m-d');
+    }
+
+    $fecha = trim((string)($valor ?? ''));
+    if ($fecha === '' || $fecha === '0000-00-00') {
+        return 'S/I';
+    }
+
+    $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $fecha, new \DateTimeZone(date_default_timezone_get()));
+    $errors = \DateTimeImmutable::getLastErrors();
+    if (!$date || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) || $date->format('Y-m-d') !== $fecha) {
+        return 'S/I';
+    }
+
+    return $fecha;
 }
 
 public function createReporte()

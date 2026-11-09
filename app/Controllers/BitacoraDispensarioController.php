@@ -18,6 +18,23 @@ class BitacoraDispensarioController extends BaseController{
         return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
     }
 
+    private function productosHabilitados(): array
+    {
+        $estacion = Estacion::find($this->estacionModulo());
+        if (!$estacion) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map('trim', [
+                (string) ($estacion->producto_uno ?? ''),
+                (string) ($estacion->producto_dos ?? ''),
+                (string) ($estacion->producto_tres ?? '')
+            ]),
+            static fn(string $producto): bool => $producto !== ''
+        ));
+    }
+
     public function index(){
 
     $title = 'Bitácora de registro de eventos (PROFECO)';
@@ -148,7 +165,6 @@ class BitacoraDispensarioController extends BaseController{
     public function catalogos()
     {
 
-        $estacion = Estacion::find($this->estacionModulo());
         $dispensarios = Dispensario::query()
 
             ->where('id_estacion',$this->estacionModulo())
@@ -158,11 +174,7 @@ class BitacoraDispensarioController extends BaseController{
 
         echo json_encode([
             'dispensarios' => $dispensarios,
-            'productos' => [
-                $estacion['producto_uno'],
-                $estacion['producto_dos'],
-                $estacion['producto_tres']
-            ]
+            'productos' => $this->productosHabilitados()
         ]);
     }
 
@@ -232,6 +244,28 @@ class BitacoraDispensarioController extends BaseController{
 
     try {
 
+        $productosHabilitados = $this->productosHabilitados();
+
+        if (!$categoria || !$fecha || !$horaInicio || !$horaTermino || !$detalle) {
+            throw new \Exception('Completa todos los campos obligatorios');
+        }
+
+        if ($categoria !== 2 && !in_array($categoria, [1, 3, 4, 5, 6, 7], true)) {
+            throw new \Exception('Motivo inválido');
+        }
+
+        if ($producto && !in_array($producto, $productosHabilitados, true)) {
+            throw new \Exception('Selecciona un producto habilitado para la estación');
+        }
+
+        if ($productosHabilitados && !$producto) {
+            throw new \Exception('Selecciona un producto habilitado para la estación');
+        }
+
+        if ($categoria === 2 && (!$producto || !in_array($producto, $productosHabilitados, true))) {
+            throw new \Exception('Selecciona un producto habilitado para la estación');
+        }
+
         if ($categoria == 2) {
 
             $this->crearCambioPrecio(
@@ -243,6 +277,19 @@ class BitacoraDispensarioController extends BaseController{
             );
 
         } else {
+
+            if (!$idDispensario || !in_array($lado, [1, 2], true)) {
+                throw new \Exception('Completa todos los campos obligatorios');
+            }
+
+            $dispensarioValido = Dispensario::query()
+                ->where('id_estacion', $this->estacionModulo())
+                ->where('estado', 1)
+                ->find($idDispensario);
+
+            if (!$dispensarioValido) {
+                throw new \Exception('Selecciona un dispensario de la estación');
+            }
 
             $motivos = [
 

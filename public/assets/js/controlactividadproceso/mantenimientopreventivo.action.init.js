@@ -10,6 +10,14 @@ document.addEventListener('alpine:init', () => {
 
         years: [],
 
+        periodoTexto: '',
+        filtrosAplicados: {
+            equipo: '',
+            equipoNombre: '',
+            year: '',
+            mes: ''
+        },
+
         filtro: {
             equipo: '',
             year: '',
@@ -36,6 +44,8 @@ document.addEventListener('alpine:init', () => {
 
             const currentYear = new Date().getFullYear();
             window.mantenimientoPreventivo = this;
+            this.filtrosAplicados.year = String(currentYear);
+            this.actualizarPeriodo();
 
             this.modalBuscar = new bootstrap.Modal(
                 this.$refs.ModalBuscar
@@ -77,8 +87,27 @@ document.addEventListener('alpine:init', () => {
             $('#selectEquipo')
                 .val(null)
                 .trigger('change');
+        },
 
-            this.updatePdfUrl();
+        actualizarPeriodo() {
+            const meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            const partes = [];
+            const mes = Number(this.filtrosAplicados.mes);
+
+            if (mes >= 1 && mes <= 12) {
+                partes.push(meses[mes - 1]);
+            }
+            if (this.filtrosAplicados.year) {
+                partes.push(this.filtrosAplicados.year);
+            }
+            if (this.filtrosAplicados.equipoNombre) {
+                partes.push(this.filtrosAplicados.equipoNombre);
+            }
+
+            this.periodoTexto = partes.join(' · ');
         },
 
         // =====================================================
@@ -143,12 +172,24 @@ document.addEventListener('alpine:init', () => {
             const url = '/sasisopa/control-actividades-procesos/mantenimiento-preventivo/datatable'
                 + (query ? `?${query}` : '');
 
+            const equipoSeleccionado = this.filtro.equipo
+                ? this.equipos.find(equipo => String(equipo.id) === String(this.filtro.equipo))
+                : null;
+            const filtrosNuevos = {
+                equipo: this.filtro.equipo || '',
+                equipoNombre: equipoSeleccionado?.detalle || '',
+                year: this.filtro.year || '',
+                mes: this.filtro.mes || ''
+            };
+
             table1
                 .ajax
                 .url(url)
-                .load();
-
-            this.updatePdfUrl(false);
+                .load(() => {
+                    this.filtrosAplicados = filtrosNuevos;
+                    this.actualizarPeriodo();
+                    this.updatePdfUrl(false);
+                });
 
             this.modalBuscar.hide();
         },

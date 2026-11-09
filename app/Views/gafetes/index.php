@@ -45,7 +45,8 @@ x-data="{ ...actions(), ...gafetesForm() }" @open-edit.window="openEdit($event.d
 
 <!-- FOTO -->
 <label class="form-label mb-1">* Foto</label>
-<input type="file" class="form-control" x-ref="foto" @change="handleFile($event)" :class="errors.foto ? 'is-invalid' : ''">
+<input type="file" class="form-control" x-ref="foto" accept=".jpg,.jpeg,.png,.gif,.pdf,image/jpeg,image/png,image/gif,application/pdf" @change="handleFile($event)" :class="errors.foto ? 'is-invalid' : ''">
+<div class="invalid-feedback d-block" x-show="errors.foto" x-text="errorFoto"></div>
 </div>
 
 <!-- FOOTER -->

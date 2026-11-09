@@ -1,8 +1,85 @@
 <div
-    class="container mt-3"
+    class=" mt-3 pb-5 cursos-evaluacion"
     x-data="evaluacion(<?= $calendario->id ?>)"
     x-init="init()"
 >
+    <style>
+        .cursos-evaluacion .opcion-evaluacion {
+            border: 1px solid #e3e8ef;
+            border-radius: .75rem;
+            transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease;
+            cursor: pointer;
+        }
+        .cursos-evaluacion .opcion-evaluacion:hover {
+            border-color: #91a4ff;
+            background-color: #f8f9ff;
+            transform: translateY(-1px);
+        }
+        .cursos-evaluacion .opcion-evaluacion.seleccionada {
+            border-color: #637bff;
+            background-color: #f0f3ff;
+            box-shadow: 0 0 0 .15rem rgba(99, 123, 255, .12);
+        }
+        .cursos-evaluacion .opcion-evaluacion .form-check-input {
+            width: 1.15rem;
+            height: 1.15rem;
+            margin: 0;
+            flex: 0 0 auto;
+            accent-color: #637bff;
+        }
+        .cursos-evaluacion .opcion-evaluacion .form-check-input:checked {
+            background-color: #637bff;
+            border-color: #637bff;
+        }
+        .cursos-evaluacion .resultado-evaluacion {
+            min-height: calc(100vh - 14rem);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #e8edf5;
+            border-radius: .85rem;
+            background: linear-gradient(135deg, #f8faff 0%, #fff 55%, #f4f7ff 100%);
+        }
+        .cursos-evaluacion .resultado-cabecera {
+            padding: clamp(1.5rem, 4vw, 3.5rem);
+            background: var(--bs-primary, #637bff);
+        }
+        .cursos-evaluacion .resultado-icono {
+            width: clamp(4.5rem, 9vw, 7rem);
+            height: clamp(4.5rem, 9vw, 7rem);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .18);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            flex: 0 0 auto;
+        }
+        .cursos-evaluacion .resultado-cuerpo {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            padding: clamp(1.5rem, 4vw, 4rem);
+        }
+        .cursos-evaluacion .resultado-panel {
+            height: 100%;
+            padding: clamp(1.5rem, 3vw, 2.5rem);
+            border: 1px solid #e8edf5;
+            border-radius: .85rem;
+            background: #fff;
+            box-shadow: 0 .5rem 1.5rem rgba(38, 57, 100, .06);
+        }
+        .cursos-evaluacion .resultado-puntaje {
+            font-size: clamp(4.5rem, 10vw, 8rem);
+            line-height: 1;
+            letter-spacing: -.06em;
+        }
+        @media (max-width: 767.98px) {
+            .cursos-evaluacion .resultado-evaluacion { min-height: calc(100vh - 12rem); }
+            .cursos-evaluacion .resultado-cuerpo { padding: 1rem; }
+        }
+    </style>
+
     <!-- LOADING -->
     <template x-if="loading">
         <div class="text-center py-5">
@@ -13,88 +90,76 @@
         </div>
     </template>
 
+
+
+
     <!-- RESULTADO -->
-
     <template x-if="resultado">
-    <div class="d-flex align-items-center justify-content-center mt-5">
-        <div class="col-12 col-md-7 col-lg-5 mt-5">
-            <div
-                class="card border-0 shadow-lg overflow-hidden"
-                x-transition
-                x-show="resultado">
-
-                <!-- HEADER COLOR -->
-                <div
-                    class="p-4 text-white text-center"
-                    :class="'bg-' + resultado.color">
-                    <i
-                        :class="resultado.icono"
-                        class="display-1 mb-3 d-block animate__animated animate__fadeInDown"
-                    ></i>
-
-                    <h2
-                        class="mb-0 fw-bolder text-white"
-                        x-text="resultado.titulo"
-                    ></h2>
+        <section class="resultado-evaluacion shadow-sm" x-transition>
+            <header class="resultado-cabecera text-white">
+                <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
+                    <div class="resultado-icono">
+                        <i class="ti ti-school-off" aria-hidden="true"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="small text-white-50 text-uppercase fw-semibold mb-2">
+                            Evaluación completada
+                        </div>
+                        <h1 class="text-white fw-bold mb-2" x-text="resultado.titulo"></h1>
+                    </div>
+                    <span class="badge rounded-pill fs-5 px-4 py-3 align-self-md-center"
+                        :class="resultado.aprobado ? 'bg-success' : 'bg-danger'"
+                        x-text="resultado.aprobado ? 'Aprobado' : 'No aprobado'">
+                    </span>
                 </div>
+            </header>
 
-                <!-- BODY -->
-                <div class="card-body text-center p-3">
-
-                    <!-- PORCENTAJE ANIMADO -->
-                    <div class="mb-3">
-                        <span
-                            class="display-3 fw-bold text-dark"
-                            x-text="resultado.porcentaje + '%'"
-                        ></span>
+            <div class="resultado-cuerpo">
+                <div class="row g-4 g-xl-5 align-items-stretch w-100">
+                    <div class="col-12 col-xl-4">
+                        <div class="resultado-panel d-flex flex-column justify-content-center text-center">
+                            <div class="text-uppercase small fw-semibold text-muted mb-3">
+                                Calificación obtenida
+                            </div>
+                            <div class="resultado-puntaje fw-bold text-primary"
+                                x-text="resultado.porcentaje + '%'">
+                            </div>
+                            <div class="text-muted mt-3">Puntaje final</div>
+                        </div>
                     </div>
 
-                    <!-- MENSAJE -->
-                    <p
-                        class="lead text-muted mb-4"
-                        x-text="resultado.mensaje"
-                    ></p>
-
-                    <!-- PROGRESO -->
-                    <div class="progress mb-4" style="height: 12px;">
-
-                        <div
-                            class="progress-bar progress-bar-striped progress-bar-animated"
-                            :class="'bg-' + resultado.color"
-                            :style="'width:' + resultado.porcentaje + '%'"
-                        ></div>
-
+                    <div class="col-12 col-xl-8">
+                        <div class="resultado-panel d-flex flex-column justify-content-center">
+                            <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                                <h3 class="fw-semibold mb-0">Resultado de la evaluación</h3>
+                                <span class="text-muted fw-semibold" x-text="resultado.porcentaje + '%'" ></span>
+                            </div>
+                            <div class="progress mb-4" style="height: 1rem;">
+                                <div class="progress-bar progress-bar-striped"
+                                    :class="'bg-' + resultado.color"
+                                    role="progressbar"
+                                    :style="'width:' + resultado.porcentaje + '%'"
+                                    :aria-valuenow="resultado.porcentaje"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100">
+                                </div>
+                            </div>
+                            <p class="lead text-body-secondary mb-0" x-text="resultado.mensaje"></p>
+                        </div>
                     </div>
-
-                    <!-- BADGE -->
-                    <div class="mb-4">
-
-                        <span
-                            class="badge fs-6 px-3 py-2"
-                            :class="resultado.aprobado ? 'bg-success' : 'bg-danger'"
-                        >
-
-                            <span x-text="resultado.aprobado ? 'Aprobado' : 'No aprobado'"></span>
-
-                        </span>
-
-                    </div>
-
-                    <!-- BOTÓN -->
-                    <a
-                        href="/sasisopa/cursos"
-                        class="btn btn-lg btn-primary w-100 rounded-pill shadow-sm"
-                    >
-
-                        Volver a cursos
-
-                    </a>
                 </div>
             </div>
-        </div>
-    </div>
-</template>
 
+            <footer class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border-top bg-white px-4 px-xl-5 py-4">
+                <div class="text-muted">
+                    Evaluación finalizada
+                </div>
+                <a href="/sasisopa/cursos" class="btn btn-primary btn-lg px-5">
+                   <i class="ti ti-arrow-left"></i> Volver a cursos
+                </a>
+            </footer>
+        </section>
+    </template>
 
     <!-- EXAMEN -->
 
@@ -104,119 +169,80 @@
 
             <!-- CABECERA -->
 
-            <div class="card shadow-sm mb-4">
-
-                <div class="card-body">
-
-                    <div class="row align-items-center">
-
-                        <div class="col-md">
-
-                            <h3 class="mb-1">
-
-                                Evaluación
-
-                            </h3>
-
-                            <div class="text-muted">
-
-                                Tema
-
-                                <strong x-text="tema.numero"></strong>
-
-                                -
-
-                                <span x-text="tema.titulo"></span>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-auto text-end">
-
-                            <div class="display-6">
-
-                                <span x-text="contestadas"></span>
-
-                                /
-
-                                <span x-text="total"></span>
-
-                            </div>
-
-                            <small class="text-muted">
-
-                                Respondidas
-
-                            </small>
-
-                        </div>
-
-                    </div>
-
-                    <div class="progress mt-4" style="height:12px;">
-
-                        <div
-
-                            class="progress-bar progress-bar-striped progress-bar-animated"
-
-                            :style="'width:'+porcentaje+'%'"
-
-                        ></div>
-
-                    </div>
-
-                </div>
-
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary">
+        <h4 class="mb-0 text-white card-title">
+            <i class="ti ti-clipboard-check"></i> Evaluación
+        </h4>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md">
+                <h4 class="text-muted fw-semibold">
+                    Tema
+                    <strong x-text="tema.numero"></strong>
+                    -
+                    <span x-text="tema.titulo"></span>
+                </h4>
             </div>
+            <div class="col-md-auto text-end">
+                <div class="display-6">
+                    <span x-text="contestadas"></span>
+                    /
+                    <span x-text="total"></span>
+                </div>
+                <small class="text-muted">
+                    Respondidas
+                </small>
+            </div>
+        </div>
+        <div class="progress mt-4" style="height:12px;">
+            <div
+                class="progress-bar progress-bar-striped progress-bar-animated"
+                :style="'width:'+porcentaje+'%'"
+            ></div>
+        </div>
+    </div>
+</div>
 
 
             <!-- PREGUNTAS -->
 
             <template x-for="pregunta in preguntas" :key="pregunta.id">
 
-                <div class="card shadow-sm border-0 mb-4">
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-primary">
+        <h5 class="mb-0 text-white card-title">
+            <span class="badge bg-white text-primary me-2" x-text="pregunta.numero"></span>
+            <span x-text="pregunta.titulo"></span>
+        </h5>
+    </div>
 
-                    <div class="card-body">
 
-                        <h5 class="mb-3">
-                            <span class="badge bg-primary me-2"
-                                x-text="pregunta.numero"></span>
+<div class="card-body">
+    <template x-for="respuesta in pregunta.respuestas" :key="respuesta.id">
+        <label
+            class="card opcion-evaluacion mb-2 p-3 d-block"
+            :class="selecciones[pregunta.id] === respuesta.id ? 'seleccionada' : ''"
+        >
+            <div class="d-flex align-items-center gap-3">
+                <input
+                    class="form-check-input"
+                    type="radio"
+                    :name="'pregunta_' + pregunta.id"
+                    :value="respuesta.valor"
+                    :checked="selecciones[pregunta.id] === respuesta.id"
+                    @change="seleccionar(pregunta, respuesta)"
+                >
+                <span class="fw-medium text-dark flex-grow-1">
+                    <span x-text="respuesta.titulo"></span>
+                </span>
+            </div>
+        </label>
+    </template>
+</div>
 
-                            <span x-text="pregunta.titulo"></span>
-                        </h5>
-
-                        <template x-for="respuesta in pregunta.respuestas"
-                                :key="respuesta.id">
-
-                            <label class="card border mb-2 p-3 d-block"
-                                style="cursor:pointer;">
-
-                                <div class="form-check">
-
-                                    <input
-                                        class="form-check-input"
-                                        type="radio"
-                                        :name="'pregunta_' + pregunta.id"
-                                        :value="respuesta.valor"
-                                        :checked="respuestas[pregunta.id] === respuesta.valor"
-
-                                        @change="seleccionar(pregunta, respuesta)"
-                                    >
-
-                                    <label class="form-check-label ms-2">
-                                        <span x-text="respuesta.titulo"></span>
-                                    </label>
-
-                                </div>
-
-                            </label>
-
-                        </template>
-
-                    </div>
-
-                </div>
+</div>
 
             </template>
 

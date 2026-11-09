@@ -12,7 +12,8 @@
 
     <?php else: ?>
 
-        <div class="text-end mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 mt-3">
+            <h5 class="mb-0 me-auto" x-text="periodoTexto"></h5>
             <div class="btn-group">
                 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="ti ti-dots-vertical fs-4"></i>
@@ -20,7 +21,7 @@
                 <ul class="dropdown-menu animated rubberBand">
                     <li><a class="dropdown-item pointer" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
                     <li>
-                        <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+                        <a class="dropdown-item pointer" href="#" @click.prevent="descargarPdf()"><i class="ti ti-download"></i> Descargar</a>
                     </li>
 
                 </ul>
@@ -31,8 +32,8 @@
             <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
                 <table
                     id="table-residuos-peligrosos"
-                    class="table table-striped table-bordered">
-                    <thead>
+                    class="table table-striped table-bordered text-center align-middle">
+                    <thead class="text-center align-middle">
                         <tr>
                             <th>Folio</th>
                             <th>Nombre del residuo peligroso</th>

@@ -576,9 +576,10 @@ class SoporteActividadesService
     /**
      * Registra las fechas comprometidas del ticket y de sus actividades.
      *
+     * @param int $diasHabiles Días hábiles capturados en el seguimiento (0 a 60).
      * @param array<int, array{id: int, fecha_inicio?: string, fecha_termino?: string}> $actividades
      */
-    public static function guardarSeguimiento(int $idTicket, string $fechaInicio, string $fechaTermino, array $actividades = []): array
+    public static function guardarSeguimiento(int $idTicket, string $fechaInicio, string $fechaTermino, int $diasHabiles, array $actividades = []): array
     {
         self::activarModulo();
 
@@ -600,6 +601,10 @@ class SoporteActividadesService
             return ['success' => false, 'message' => 'Indica la fecha de inicio y la fecha de término.'];
         }
 
+        if ($diasHabiles < 0 || $diasHabiles > 60) {
+            return ['success' => false, 'message' => 'Los días hábiles deben estar entre 0 y 60.'];
+        }
+
         $inicio = strtotime($fechaInicio);
         $termino = strtotime($fechaTermino);
 
@@ -616,13 +621,14 @@ class SoporteActividadesService
 
         $cambiaFechas = $sinFechas
             || SoporteService::isoFecha($ticket->fecha_inicio) !== $fechaInicio
-            || SoporteService::isoFecha($ticket->fecha_termino) !== $fechaTermino;
+            || SoporteService::isoFecha($ticket->fecha_termino) !== $fechaTermino
+            || (int)$ticket->tiempo_solucion !== $diasHabiles;
 
         $ticket->fecha_inicio = $fechaInicio . ' ' . date('H:i:s');
         $ticket->fecha_termino = $fechaTermino . ' ' . date('H:i:s');
         $ticket->save();
 
-        $ticket->tiempo_solucion = SoporteService::diasHabiles($idTicket);
+        $ticket->tiempo_solucion = $diasHabiles;
         $ticket->save();
 
         foreach ($actividades as $actividad) {

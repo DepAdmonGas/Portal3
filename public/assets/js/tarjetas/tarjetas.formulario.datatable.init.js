@@ -52,6 +52,22 @@ render: function (data, type, row) {
 const disabled = 'disabled opacity-50 pointer-events-none';
 const noEdit = !row.acciones?.editar;
 const noDelete = !row.acciones?.eliminar;
+const accionEliminar = noDelete ? '' : `@click="async () => {
+const result = await deleteAction({
+url: '/solicitud-tarjetas/delete-reporte-formulario',
+id: ${Number(row.id)},
+name: '${Number(row.id)}'
+});
+if (!result?.success) return;
+if (Number(result.remaining) === 0) {
+window.location.assign('/solicitud-tarjetas');
+return;
+}
+const selector = '#table-tarjetas-formulario';
+if (document.querySelector(selector) && $.fn.DataTable.isDataTable(selector)) {
+$(selector).DataTable().ajax.reload(null, false);
+}
+}"`;
 
 return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -74,17 +90,7 @@ return `
 <li>
 <a 
 class="dropdown-item d-flex align-items-center gap-1 pointer ${noDelete ? disabled : ''}"
-${noDelete ? '' : `
-@click="async () => {
-const result = await deleteAction({
-url: '/solicitud-tarjetas/delete-reporte-formulario',
-id: ${row.id},
-name: '${row.id}',
-table: '#table-tarjetas-formulario'
-});
-if (result && Number(result.remaining) === 0) window.location.href = '/solicitud-tarjetas';
-}"
-`}
+${accionEliminar}
 >
 <i class="fs-4 ti ti-trash"></i> Eliminar  
 </a>

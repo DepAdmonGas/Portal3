@@ -43,7 +43,7 @@ class SalaJuntasController extends BaseController
                 // El layout 'main' antepone /assets/ via asset(),
                 // asi que aqui van las rutas SIN ese prefijo.
                 '/libs/select2/dist/css/select2.min.css',
-                '/css/select2-modal.css?v=2.0.1',
+                '/css/select2-modal.css?v=2.0.2',
             ],
             'scripts'           => [
                 '/js/vendor.min.js',

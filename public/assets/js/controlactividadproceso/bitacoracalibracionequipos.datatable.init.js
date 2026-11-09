@@ -9,8 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url:
-            '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/datatable',
+            url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/datatable?year=' + new Date().getFullYear() + '&mes=',
             type: 'GET',
             dataSrc: function (json) {
             permisos = json.permisos;

@@ -214,6 +214,7 @@ class RequisitosLegalesCalendario extends Model
 
             return [
                 'id' => $item->id,
+                'matrix_id' => $matriz?->id,
                 'dependencia' => $dependencia,
                 'permiso' => $requisito,
                 'vigencia' => $item->vigencia,

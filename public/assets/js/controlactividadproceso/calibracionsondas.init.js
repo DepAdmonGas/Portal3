@@ -68,6 +68,7 @@ async editarCampo(input, valor, campo) {
         const response = await this.createAction({
             url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/update',
             notify: false,
+            headers: { 'X-Portal3-Skip-Action-Loader': '1' },
             data: {
                 id: this.calibracion.id,
                 input,
@@ -105,6 +106,7 @@ async editarSonda(item, input, campo) {
         const response = await this.createAction({
             url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/update',
             notify: false,
+            headers: { 'X-Portal3-Skip-Action-Loader': '1' },
             data: {
                 id: item.id,
                 input,

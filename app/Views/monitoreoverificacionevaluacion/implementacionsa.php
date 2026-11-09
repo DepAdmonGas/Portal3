@@ -3,6 +3,19 @@ data-module-station-key="sasisopa"
 data-estacion-id="<?= e($estacionId ?? '') ?>"
 x-data="{ ...actions(), ...implementacionSA()}">
 
+<style>
+    #modalImplementacion .respuesta-pendiente > td {
+        border-top: 2px solid var(--bs-danger) !important;
+        border-bottom: 2px solid var(--bs-danger) !important;
+    }
+    #modalImplementacion .respuesta-pendiente > td:first-child {
+        border-left: 2px solid var(--bs-danger) !important;
+    }
+    #modalImplementacion .respuesta-pendiente > td:last-child {
+        border-right: 2px solid var(--bs-danger) !important;
+    }
+</style>
+
 <?php if (empty($estacionId)): ?>
  
     <div id="sasisopa-empty-message"
@@ -127,15 +140,9 @@ x-data="{ ...actions(), ...implementacionSA()}">
                                     <template
                                         x-for="pregunta in grupo.preguntas"
                                         :key="pregunta.id">
-<tr>
-                                        <div class="">
-
-                                            <td class="form-label"
-                                            x-text="pregunta.id + '. ' + pregunta.texto">
-                                            </td>
-
-                                            <div>
-<td class="text-center">
+<tr :class="mostrarPendientes && preguntaPendiente(pregunta) ? 'respuesta-pendiente' : ''">
+    <td class="form-label" x-text="pregunta.id + '. ' + pregunta.texto"></td>
+    <td class="text-center">
 
 
                                                     <input 
@@ -147,8 +154,8 @@ x-data="{ ...actions(), ...implementacionSA()}">
 
                                                     
 
-</td>
-<td class="text-center">
+    </td>
+    <td class="text-center">
   
 
                                                     <input 
@@ -158,10 +165,7 @@ x-data="{ ...actions(), ...implementacionSA()}">
                                                         value="0"
                                                         x-model="pregunta.respuesta">
 
-</td>
-                                            </div>
-
-                                         </div>
+    </td>
 </tr>
                                        </template>
 
@@ -319,4 +323,3 @@ x-data="{ ...actions(), ...implementacionSA()}">
     </div>
 
 </div>
-    

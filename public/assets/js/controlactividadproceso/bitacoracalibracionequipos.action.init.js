@@ -15,7 +15,7 @@ document.addEventListener('alpine:init', () => {
             id: null,
             equipo: '',
             fecha: '',
-            resultados: ''
+            resultado: ''
         },
 
         modalDetalle: null,
@@ -24,6 +24,7 @@ document.addEventListener('alpine:init', () => {
         tablaDetalle: '',
 
          pdfUrl: '',
+        periodoTexto: '',
         modalBuscar: null,
         years: [],
 
@@ -44,7 +45,17 @@ document.addEventListener('alpine:init', () => {
         this.modalDetalle = new bootstrap.Modal(document.getElementById('modalDetalle'));
         this.modalBuscar = new bootstrap.Modal(document.getElementById('ModalBuscar'));
 
-        this.pdfUrl = '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/pdf';
+        this.filtro.year = currentYear;
+        this.actualizarPeriodo(currentYear, '');
+        this.pdfUrl = '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/pdf?year=' + currentYear + '&mes=';
+
+        document.getElementById('modalNuevo')?.addEventListener('hidden.bs.modal', () => {
+            this.limpiarNuevo();
+        });
+
+        document.getElementById('modalResultados')?.addEventListener('hidden.bs.modal', () => {
+            this.limpiarResultados();
+        });
 
             for (let i = 2020; i <= currentYear; i++) {
                 this.years.push(i);
@@ -71,6 +82,8 @@ document.addEventListener('alpine:init', () => {
 
             if (this.modalNuevo) {
                 this.modalNuevo.hide();
+            } else {
+                this.limpiarNuevo();
             }
         },
 
@@ -109,6 +122,8 @@ document.addEventListener('alpine:init', () => {
                 });
 
                 if (res?.success) {
+                    this.modalNuevo.hide();
+                    this.limpiarNuevo();
                     window.location.href = res.data.redirect;
                 }
 
@@ -121,6 +136,7 @@ document.addEventListener('alpine:init', () => {
 
         abrirModalResultados(item)
         {
+            this.limpiarResultados();
             this.resultadoSeleccionado = {
                 id: item.id,
                 equipo: item.equipo,
@@ -128,9 +144,55 @@ document.addEventListener('alpine:init', () => {
                 resultado: item.resultado
             };
 
-            this.archivoResultado = null;
-
             this.modalResultados.show();
+        },
+
+        limpiarResultados() {
+            this.archivoResultado = null;
+            this.resultadoSeleccionado = {
+                id: null,
+                equipo: '',
+                fecha: '',
+                resultado: ''
+            };
+            const input = document.getElementById('archivoResultado');
+            if (input) input.value = '';
+        },
+
+        actualizarPeriodo(year, mes) {
+            const nombresMes = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            const nombreMes = mes ? nombresMes[Number(mes) - 1] : '';
+            this.periodoTexto = nombreMes ? `${nombreMes} ${year}` : String(year);
+        },
+
+        async descargarPdf() {
+            if (window.loader) window.loader.show();
+
+            try {
+                const response = await fetch(this.pdfUrl, { credentials: 'same-origin' });
+                if (!response.ok) throw new Error('No fue posible descargar el archivo');
+
+                const blob = await response.blob();
+                if (blob.type !== 'application/pdf') {
+                    throw new Error('El servidor no devolvió un archivo PDF');
+                }
+
+                const objectUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = objectUrl;
+                link.download = 'Bitacora-calibracion-equipos.pdf';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+            } catch (error) {
+                this.notify('error', error.message || 'Error al descargar el archivo');
+            } finally {
+                if (window.loader) window.loader.hide();
+            }
         },
 
     async guardarResultado()
@@ -158,7 +220,9 @@ document.addEventListener('alpine:init', () => {
                 });
 
 
-            this.resultadoSeleccionado.resultados = response.archivo;
+            if (!response?.success) return;
+
+            this.resultadoSeleccionado.resultado = response.archivo;
             this.modalResultados.hide();
             table1.ajax.reload(null,false);
 
@@ -498,6 +562,7 @@ document.addEventListener('alpine:init', () => {
                 .hide();
 
                 this.pdfUrl = '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/pdf?year=' + this.filtro.year + '&mes=' + this.filtro.mes;
+                this.actualizarPeriodo(this.filtro.year, this.filtro.mes);
             
 
         },

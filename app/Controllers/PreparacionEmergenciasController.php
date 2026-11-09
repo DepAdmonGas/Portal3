@@ -138,9 +138,7 @@ public function protocoloCreate()
                 === UPLOAD_ERR_OK
         ){
 
-            $carpeta =
-                __DIR__
-                . '../../../public/uploads/archivos/protocolo/';
+            $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/protocolo/';
 
             if(!file_exists($carpeta)){
 
@@ -238,9 +236,11 @@ public function protocoloUpdate()
             $nombre =
                 'PROTOCOLO-'.$id.'-'.time().'.pdf';
 
-            $carpeta =
-                __DIR__
-                . '../../../public/uploads/archivos/protocolo/';
+            $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/protocolo/';
+
+            if (!is_dir($carpeta)) {
+                mkdir_safe($carpeta, true);
+            }
 
             move_uploaded_file(
                 $_FILES['archivo']['tmp_name'],
@@ -409,9 +409,7 @@ public function anexoCreate()
         $archivo =
             $_FILES['archivo'];
 
-        $carpeta =
-            __DIR__
-            . '../../../public/uploads/archivos/protocolo/';
+        $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/protocolo/';
 
         if(!file_exists($carpeta)){
 
@@ -1310,9 +1308,7 @@ public function evaluacionCreate()
             return;
         }
 
-        $carpeta =
-            __DIR__
-            . '../../../public/uploads/archivos/protocolo/';
+        $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/protocolo/';
 
         if(
             !file_exists($carpeta)

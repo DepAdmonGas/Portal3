@@ -126,12 +126,12 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
 
       <td class="align-middle">DLES.ADMONGAS.002</td>
       <td class="align-middle">Bitácora de mantenimiento preventivo y correctivo</td>
-      <td class="text-center align-middle"><a href="<?=$_ENV['APP_URL'];?>/sasisopa/mantenimiento-preventivo-correctivo"><i class="ti ti-world fs-7 text-primary"></i></a></td>
+      <td class="text-center align-middle"><a href="/sasisopa/control-actividades-procesos/mantenimiento-correctivo"><i class="ti ti-world fs-7 text-primary"></i></a></td>
     </tr>          
     <tr>
       <td class="align-middle">DLES.ADMONGAS.003 </td>
       <td class="align-middle">Bitácora de operación </td>
-      <td class="text-center align-middle"><a href="<?=$_ENV['APP_URL'];?>/sasisopa/recepcion-descargar-producto"><i class="ti ti-world fs-7 text-primary"></i></a></td>
+      <td class="text-center align-middle"><a href="/sasisopa/control-actividades-procesos/recepcion-descarga-producto"><i class="ti ti-world fs-7 text-primary"></i></a></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.011</td>
@@ -147,7 +147,7 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
     <tr>
       <td class="align-middle bg-light">DLES.ADMONGAS.002</td>
       <td class="align-middle bg-light">Bitácora de mantenimiento preventivo y correctivo</td>
-      <td class="text-center align-middle bg-light"><a href="<?=$_ENV['APP_URL'];?>/sasisopa/mantenimiento-preventivo-correctivo"><i class="ti ti-world fs-7 text-primary"></i></a></td>
+      <td class="text-center align-middle bg-light"><a href="/sasisopa/control-actividades-procesos/mantenimiento-preventivo"><i class="ti ti-world fs-7 text-primary"></i></a></td>
     </tr>
     <tr>
       <td class="align-middle bg-light">Fo.ADMONGAS.011</td>

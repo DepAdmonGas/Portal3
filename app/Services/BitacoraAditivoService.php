@@ -106,7 +106,7 @@ class BitacoraAditivoService
 
     public static function crearBitacora(int $idEstacion, float $litros, string $producto, string $fecha, ?string $noFactura): array
     {
-        if ($litros == 0.0 || trim($producto) === '' || trim($fecha) === '') {
+        if ($litros == 0.0 || trim($producto) === '' || trim($fecha) === '' || trim((string) $noFactura) === '') {
             return ['success' => false, 'message' => 'Campos obligatorios faltantes'];
         }
 
@@ -161,7 +161,8 @@ class BitacoraAditivoService
 
     public static function editarFactura(int $id, string $noFactura): array
     {
-        if (!$id || !$noFactura) {
+        $noFactura = trim($noFactura);
+        if (!$id || $noFactura === '') {
             return ['success' => false, 'message' => 'Datos incompletos'];
         }
 
@@ -239,9 +240,9 @@ class BitacoraAditivoService
             return ['success' => false, 'message' => 'La fecha es obligatoria'];
         }
 
-        $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+        $carpeta = self::directorioReportes();
 
-        if (!file_exists($carpeta)) {
+        if (!is_dir($carpeta)) {
             mkdir_safe($carpeta, true);
         }
 
@@ -279,7 +280,8 @@ class BitacoraAditivoService
 
     public static function eliminarReporte(int $id): array
     {
-        $rutaBase = dirname(__DIR__, 2) . '/public/uploads/archivos/bitacora-aditivo/';
+        $rutaBase = self::directorioReportes();
+        $rutaLegada = dirname(__DIR__, 2) . '/public/uploads/archivos/';
 
         Capsule::beginTransaction();
 
@@ -290,7 +292,10 @@ class BitacoraAditivoService
                 throw new \Exception('Registro no encontrado');
             }
 
-            $rutaArchivo = $rutaBase . $reporte->documento;
+            $rutaArchivo = $rutaBase . basename((string) $reporte->documento);
+            if ($reporte->documento && !is_file($rutaArchivo)) {
+                $rutaArchivo = $rutaLegada . basename((string) $reporte->documento);
+            }
 
             if ($reporte->documento && file_exists($rutaArchivo)) {
                 unlink($rutaArchivo);
@@ -306,6 +311,11 @@ class BitacoraAditivoService
 
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    private static function directorioReportes(): string
+    {
+        return dirname(__DIR__, 2) . '/public/uploads/archivos/bitacora-aditivo/';
     }
 
     public static function crearInventario(int $idEstacion, float $gasolina, float $diesel): array
