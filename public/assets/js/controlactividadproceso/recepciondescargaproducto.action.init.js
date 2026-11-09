@@ -14,6 +14,8 @@ document.addEventListener('alpine:init', () => {
         year: false
         },
 
+        periodoTexto: '',
+
         modalDetalle: null,
        detalle: {
             tanques: {
@@ -34,6 +36,7 @@ document.addEventListener('alpine:init', () => {
             this.modalBuscar = new bootstrap.Modal(document.getElementById('ModalBuscar'));
             this.modalDetalle = new bootstrap.Modal(document.getElementById('modalDetalle'));
             this.pdfUrl = '/sasisopa/control-actividades-procesos/recepcion-descarga-producto/pdf?year=' + currentYear;
+            this.actualizarPeriodo(currentYear, '');
             
             for (let i = 2020; i <= currentYear; i++) {
                 this.years.push(i);
@@ -59,6 +62,12 @@ document.addEventListener('alpine:init', () => {
 
         limpiar(){
              Object.keys(this.errors).forEach(k => this.errors[k] = false);
+        },
+
+        actualizarPeriodo(year, mes) {
+            this.periodoTexto = mes
+                ? `Registros de ${mes} ${year}`
+                : `Registros de ${year}`;
         },
 
         buscar() {

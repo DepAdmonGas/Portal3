@@ -312,12 +312,17 @@ async deleteAction({ url, id, name, table, data = {} }) {
         this.notify('error', mensaje);
 
         if (typeof onError === 'function') {
-            onError({ success: false, message: mensaje });
+            onError({
+                success: false,
+                message: mensaje,
+                errors: err.response?.data?.errors ?? {}
+            });
         }
 
         return {
             success: false,
-            message: mensaje
+            message: mensaje,
+            errors: err.response?.data?.errors ?? {}
         };
 
     } finally {

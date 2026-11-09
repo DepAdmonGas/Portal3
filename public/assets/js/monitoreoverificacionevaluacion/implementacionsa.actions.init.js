@@ -5,6 +5,7 @@ document.addEventListener('alpine:init', () => {
         editId: null,
         modalNuevo: null,
         preguntas: [],
+        mostrarPendientes: false,
         fecha: '',
 
         errors: {
@@ -316,9 +317,16 @@ document.addEventListener('alpine:init', () => {
 
         this.mode = 'create';
         this.editId = null;
+        this.mostrarPendientes = false;
         this.cargarPreguntas();
         this.modalNuevo.show();
 
+    },
+
+    preguntaPendiente(pregunta) {
+        return pregunta.respuesta === null ||
+            pregunta.respuesta === undefined ||
+            pregunta.respuesta === '';
     },
 
     validate() {
@@ -334,11 +342,10 @@ document.addEventListener('alpine:init', () => {
             }
 
             const preguntasSinResponder = this.preguntas.some(grupo =>
-                grupo.preguntas.some(pregunta =>
-                    pregunta.respuesta === null ||
-                    pregunta.respuesta === ''
-                )
+                grupo.preguntas.some(pregunta => this.preguntaPendiente(pregunta))
             );
+
+            this.mostrarPendientes = preguntasSinResponder;
 
             if (preguntasSinResponder) {
                 valid = false;
@@ -444,6 +451,7 @@ document.addEventListener('alpine:init', () => {
 
             this.mode = 'edit';
             this.editId = id;
+            this.mostrarPendientes = false;
 
             this.cargarPreguntas();
 

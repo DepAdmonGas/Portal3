@@ -81,6 +81,7 @@ document.addEventListener('alpine:init', () => {
 
         handleFile(e) {
             this.form.pdf = e.target.files[0];
+            this.errors.pdf = false;
         },
                         
         init() {

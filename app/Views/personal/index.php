@@ -208,9 +208,13 @@
                             <input type="text"
                                 class="form-control"
                                 placeholder="Usuario"
+                                minlength="3"
+                                maxlength="50"
+                                autocomplete="username"
                                 x-model="usuario"
-                                @input="errors.usuario = false"
+                                @input="errors.usuario = false; mensajeErrorUsuario = ''; error = ''"
                                 :class="errors.usuario ? 'is-invalid' : ''">
+                            <div class="invalid-feedback" x-show="errors.usuario" x-text="mensajeErrorUsuario || validarNombreUsuario(usuario)"></div>
 
                         </div>
 
@@ -235,15 +239,15 @@
                         <!-- Password -->
                         <div class="col-md-5">
 
-                            <label class="form-label fw-semibold">
-
-                                Contraseña:
-
-                            </label>
+                            <label class="form-label fw-semibold" x-text="mode === 'create' ? '* Contraseña:' : 'Contraseña:'"></label>
 
                             <input type="text"
                                 class="form-control"
-                                x-model="password">
+                                maxlength="128"
+                                autocomplete="new-password"
+                                x-model="password"
+                                @input="errors.password = false; error = ''"
+                                :class="errors.password ? 'is-invalid' : ''">
 
                         </div>
 
@@ -275,8 +279,32 @@
 
                             <input type="password"
                                 class="form-control"
-                                x-model="password_confirmacion">
+                                maxlength="128"
+                                autocomplete="new-password"
+                                x-model="password_confirmacion"
+                                @input="errors.password_confirmacion = false; error = ''"
+                                :class="errors.password_confirmacion ? 'is-invalid' : ''">
 
+                        </div>
+
+                        <div class="col-12">
+                            <small class="form-text text-muted d-block">
+                                Para que sea muy fuerte, usa al menos 8 caracteres, mayúsculas, minúsculas, números y símbolos.
+                            </small>
+                            <div class="progress mt-2" style="height: 6px;" role="progressbar"
+                                x-show="password"
+                                :aria-valuenow="evaluarFortalezaPassword(password).score"
+                                aria-valuemin="0"
+                                aria-valuemax="100">
+                                <div class="progress-bar"
+                                    :style="'width:' + evaluarFortalezaPassword(password).score + '%;background-color:' + evaluarFortalezaPassword(password).color">
+                                </div>
+                            </div>
+                            <small class="d-block mt-1"
+                                x-show="password"
+                                :class="evaluarFortalezaPassword(password).textClass">
+                                Seguridad: <span class="fw-semibold" x-text="evaluarFortalezaPassword(password).label"></span>
+                            </small>
                         </div>
 
                     </div>

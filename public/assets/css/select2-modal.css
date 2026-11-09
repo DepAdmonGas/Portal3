@@ -34,9 +34,10 @@
   border-color: var(--bs-form-invalid-border-color, #dc3545);
 }
 
-.modal .select2-dropdown,
-.modal .select2-container--open {
-  z-index: 2000;
+/* El contenedor abierto puede estar adjunto a <body>, fuera del modal. */
+body.modal-open .select2-container--open,
+.modal .select2-dropdown {
+  z-index: 2000 !important;
 }
 
 .modal .select2-results__options {

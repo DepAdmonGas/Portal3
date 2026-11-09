@@ -307,13 +307,14 @@ public function createEvidencia()
 {
     try {
 
-        if(empty($_FILES['archivo'])){
+        if (empty($_FILES['archivo']) || ($_FILES['archivo']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
 
+            http_response_code(422);
             echo json_encode([
-            'success' => true,
+            'success' => false,
             'message' => 'Archivo requerido'
             ]);
-
+            exit;
         }
 
         $idHallazgo = $_POST['id_hallazgo'];
@@ -330,8 +331,7 @@ public function createEvidencia()
             '.' .
             $extension;
 
-        $carpeta =
-            __DIR__ . '../../../public/uploads/archivos/atencion-hallazgos/';
+        $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/atencion-hallazgos/';
 
         if(!file_exists($carpeta)){
 
@@ -396,9 +396,9 @@ public function deleteEvidencia()
 
         }
 
-        $archivo =
-             __DIR__ . '../../../public/uploads/archivos/atencion-hallazgos/' .
-            $evidencia->archivo;
+        $archivo = dirname(__DIR__, 2)
+            . '/public/uploads/archivos/atencion-hallazgos/'
+            . $evidencia->archivo;
 
         if(file_exists($archivo)){
             unlink($archivo);

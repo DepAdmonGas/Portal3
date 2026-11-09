@@ -13,7 +13,8 @@
 
     <?php else: ?>
 
-        <div class="text-end mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h5 class="mb-0 me-auto" x-text="periodoTexto"></h5>
             <div class="btn-group">
                 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="ti ti-dots-vertical fs-4"></i>
@@ -22,7 +23,7 @@
                     <li><a class="dropdown-item pointer" @click="openNuevoModal()"><i class="ti ti-plus"></i> Nuevo </a></li>
                     <li><a class="dropdown-item pointer" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
                     <li>
-                        <a class="dropdown-item pointer" :href="excelUrl"><i class="ti ti-download"></i> Descargar</a>
+                        <a class="dropdown-item pointer" href="#" @click.prevent="descargarExcel()"><i class="ti ti-download"></i> Descargar</a>
                     </li>
 
                     <li>
@@ -98,9 +99,12 @@
 
                         <select
                             class="form-select"
-                            x-model="nuevo.motivo">
+                            x-model="nuevo.motivo"
+                            required
+                            :class="errorsNuevo.motivo ? 'is-invalid' : ''"
+                            @change="errorsNuevo.motivo = false">
 
-                            <option value="">
+                            <option value="" disabled>
                                 Selecciona una opción...
                             </option>
 
@@ -143,6 +147,7 @@
                                         type="date"
                                         class="form-control"
                                         x-model="nuevo.fecha"
+                                        required
                                         :class="errorsNuevo.fecha ? 'is-invalid' : ''"
                                         @input="errorsNuevo.fecha = false">
                                 </div>
@@ -156,6 +161,7 @@
                                         type="time"
                                         class="form-control"
                                         x-model="nuevo.hora_inicio"
+                                        required
                                         :class="errorsNuevo.hora_inicio ? 'is-invalid' : ''"
                                         @input="errorsNuevo.hora_inicio = false">
                                 </div>
@@ -168,7 +174,10 @@
                                     <input
                                         type="time"
                                         class="form-control"
-                                        x-model="nuevo.hora_termino">
+                                        x-model="nuevo.hora_termino"
+                                        required
+                                        :class="errorsNuevo.hora_termino ? 'is-invalid' : ''"
+                                        @input="errorsNuevo.hora_termino = false">
                                 </div>
 
                                 <template x-if="nuevo.motivo != 2">
@@ -182,6 +191,7 @@
                                         <select
                                             class="form-select"
                                             x-model="nuevo.id_dispensario"
+                                            required
                                             :class="errorsNuevo.id_dispensario ? 'is-invalid' : ''"
                                             @input="errorsNuevo.id_dispensario = false">
 
@@ -216,7 +226,10 @@
 
                                         <select
                                             class="form-select"
-                                            x-model="nuevo.lado">
+                                            x-model="nuevo.lado"
+                                            required
+                                            :class="errorsNuevo.lado ? 'is-invalid' : ''"
+                                            @change="errorsNuevo.lado = false">
 
                                             <option value="">
                                                 Selecciona una opcion...
@@ -236,17 +249,21 @@
 
                                 </template>
 
+                                <template x-if="productos.length > 0">
                                 <div class="col-md-6 mt-3">
 
                                     <label class="form-label">
-                                        Producto:
+                                        * Producto:
                                     </label>
 
                                     <select
                                         class="form-select"
-                                        x-model="nuevo.producto">
+                                        x-model="nuevo.producto"
+                                        required
+                                        :class="errorsNuevo.producto ? 'is-invalid' : ''"
+                                        @change="errorsNuevo.producto = false">
 
-                                        <option value="">
+                                        <option value="" disabled>
                                             Selecciona una opcion...
                                         </option>
 
@@ -263,6 +280,7 @@
                                     </select>
 
                                 </div>
+                                </template>
 
                                 <div class="col-12 mt-3">
 
@@ -281,7 +299,10 @@
                                     <textarea
                                         class="form-control"
                                         rows="4"
-                                        x-model="nuevo.detalle">
+                                        x-model="nuevo.detalle"
+                                        required
+                                        :class="errorsNuevo.detalle ? 'is-invalid' : ''"
+                                        @input="errorsNuevo.detalle = false">
                               </textarea>
 
                                 </div>
@@ -403,7 +424,7 @@
                             <button
                                 class="btn"
                                 @click="limpiarFiltros()">
-                                <i class="ti ti-filter"></i> Mostrar todo
+                                <i class="ti ti-filter"></i> Mostrar año actual
                             </button>
                         </div>
 

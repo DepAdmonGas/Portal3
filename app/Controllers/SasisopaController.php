@@ -15,6 +15,7 @@ use App\Models\Sasisopa\SasisopaConsulta;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
 use App\Services\ReporteRequisitosLegalesService;
+use App\Services\FileValidatorService;
 use App\Models\Sasisopa\CapacitacionExterna;
 use App\Models\Sasisopa\ComunicacionIE;
 use App\Models\Sasisopa\QuejasSugerencia;
@@ -2377,52 +2378,80 @@ class SasisopaController extends BaseController
         }
 
 
-        $nombre = sanitize_input($_POST['nombre'] ?? null, 'string');
-        $fecha = sanitize_input($_POST['fecha'] ?? null, 'string');
-        $file  = $_FILES['pdf'] ?? null;
+        $nombre = trim((string) sanitize_input($_POST['nombre'] ?? '', 'string'));
+        $fecha = trim((string) sanitize_input($_POST['fecha'] ?? '', 'string'));
+        $file = $_FILES['pdf'] ?? null;
+        $estacionId = (int) (ModuleStationService::getContext('sasisopa')['id_estacion'] ?? 0);
 
-        if (!$nombre || !$fecha) {
+        $fechaValidada = \DateTimeImmutable::createFromFormat('!Y-m-d', $fecha);
+        $erroresFecha = \DateTimeImmutable::getLastErrors();
+        if (
+            $nombre === '' ||
+            $fechaValidada === false ||
+            ($erroresFecha !== false && ($erroresFecha['warning_count'] > 0 || $erroresFecha['error_count'] > 0)) ||
+            $fechaValidada->format('Y-m-d') !== $fecha ||
+            $estacionId <= 0
+        ) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Campos obligatorios'
+                'message' => 'Completa el nombre, la fecha válida y selecciona una estación.'
             ]);
             exit;
         }
 
-        // CONFIG RUTA
-        $carpeta = __DIR__ . '../../../public/uploads/archivos/representante-tecnico/';
-
-        // SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
-        if (!file_exists($carpeta)) {
-            mkdir_safe($carpeta, true);
+        if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Selecciona un archivo PDF, JPG o PNG válido.'
+            ]);
+            exit;
         }
 
+        $extension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+        $mimePermitidoPorExtension = [
+            'pdf' => ['application/pdf'],
+            'jpg' => ['image/jpeg'],
+            'jpeg' => ['image/jpeg'],
+            'png' => ['image/png'],
+        ];
+        $tmpPath = (string) ($file['tmp_name'] ?? '');
+        $validador = new FileValidatorService();
+        if (
+            !isset($mimePermitidoPorExtension[$extension]) ||
+            (int) ($file['size'] ?? 0) <= 0 ||
+            (int) ($file['size'] ?? 0) > 10 * 1024 * 1024 ||
+            !$validador->isValidMimeType($tmpPath, $mimePermitidoPorExtension[$extension]) ||
+            (str_starts_with($mimePermitidoPorExtension[$extension][0], 'image/') && !$validador->isValidImageIntegrity($tmpPath))
+        ) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'El archivo no es válido. Adjunta un PDF, JPG o PNG de máximo 10 MB.'
+            ]);
+            exit;
+        }
+
+        $carpeta = PUBLIC_PATH . '/uploads/archivos/representante-tecnico/';
         $nombreArchivo = null;
 
         try {
-
-            // SUBIR ARCHIVO (opcional)
-            if ($file && $file['error'] === UPLOAD_ERR_OK) {
-
-                // Validar extensión
-                $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-                // nombre único
-                $nombreArchivo = uniqid('Formato_') . '.' . $extension;
-
-                $rutaDestino = $carpeta . $nombreArchivo;
-
-                if (!move_uploaded_file($file['tmp_name'], $rutaDestino)) {
-                    throw new \Exception('No se pudo guardar el archivo');
-                }
+            if (!is_dir($carpeta) && !mkdir_safe($carpeta, true) && !is_dir($carpeta)) {
+                throw new \RuntimeException('No se pudo preparar la carpeta de archivos.');
             }
 
-            // GUARDAR EN BD
+            if (!is_writable($carpeta)) {
+                throw new \RuntimeException('La carpeta de archivos no permite escritura.');
+            }
+
+            $nombreArchivo = 'Formato_' . bin2hex(random_bytes(16)) . '.' . $extension;
+            if (!move_uploaded_file($tmpPath, $carpeta . $nombreArchivo)) {
+                throw new \RuntimeException('No se pudo mover el archivo cargado.');
+            }
+
             RepresentanteTecnico::create([
-                'id_estacion' => ModuleStationService::getContext('sasisopa')['id_estacion'],
-                'nom_representante'  => $nombre,
-                'fecha'       => $fecha,
-                'archivo'   => 'archivos/representante-tecnico/' . $nombreArchivo
+                'id_estacion' => $estacionId,
+                'nom_representante' => $nombre,
+                'fecha' => $fecha,
+                'archivo' => 'archivos/representante-tecnico/' . $nombreArchivo
             ]);
 
             echo json_encode([
@@ -2430,15 +2459,15 @@ class SasisopaController extends BaseController
                 'message' => 'Representante técnico almacenado correctamente'
             ]);
         } catch (\Throwable $e) {
-
-            // Si falla BD, borrar archivo
             if ($nombreArchivo && file_exists($carpeta . $nombreArchivo)) {
                 unlink($carpeta . $nombreArchivo);
             }
 
+            error_log('Error al guardar representante técnico: ' . $e->getMessage());
+
             echo json_encode([
                 'success' => false,
-                'message' => 'Error al guardar representante técnico'
+                'message' => 'No se pudo guardar el formato. Verifica el archivo e inténtalo de nuevo.'
             ]);
         }
 
@@ -2477,21 +2506,27 @@ class SasisopaController extends BaseController
             }
 
             // Ruta archivo
-            $rutaBase = __DIR__ . '../../../public/uploads/';
-            $rutaArchivo = $rutaBase . $reporte->archivo;
+            $rutaBase = realpath(PUBLIC_PATH . '/uploads');
+            $rutaArchivo = $rutaBase !== false
+                ? realpath($rutaBase . DIRECTORY_SEPARATOR . ltrim((string) $reporte->archivo, '/\\'))
+                : false;
 
             // TRANSACCIÓN
             Capsule::beginTransaction();
 
             // Eliminar archivo si existe
-            if ($reporte->archivo && file_exists($rutaArchivo)) {
-                unlink($rutaArchivo);
-            }
-
-            // Eliminar registro (puedes usar delete o estado = 0)
             $reporte->delete();
 
             Capsule::commit();
+
+            if (
+                $rutaBase !== false &&
+                $rutaArchivo !== false &&
+                str_starts_with($rutaArchivo, $rutaBase . DIRECTORY_SEPARATOR) &&
+                is_file($rutaArchivo)
+            ) {
+                unlink($rutaArchivo);
+            }
 
             echo json_encode([
                 'success' => true,
@@ -2499,11 +2534,15 @@ class SasisopaController extends BaseController
             ]);
         } catch (\Throwable $e) {
 
-            Capsule::rollBack();
+            if (Capsule::connection()->transactionLevel() > 0) {
+                Capsule::rollBack();
+            }
+
+            error_log('Error al eliminar representante técnico: ' . $e->getMessage());
 
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'No se pudo eliminar el representante técnico.'
             ]);
         }
 

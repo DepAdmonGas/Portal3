@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
      const moduleKey = (document.getElementById('container')?.dataset?.moduleStationKey) || 'sasisopa';
      const downloadEndpoint = moduleKey === 'sgm'
          ? '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download'
-         : '/requisitos-legales/download';
+         : '/sasisopa/requisitos-legales/download';
 
     table1 = $('#table-lista-requisitos-legales-detalle').DataTable({
         processing: true,
@@ -118,20 +118,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const noDescargar = permisos.descargar;
                 const tieneArchivo = row.acuse_file && row.acuse_file.trim() !== '';
-
-                const archivo = row.acuse_file.split('/').pop();
+                const matrixId = Number(row.matrix_id);
+                const puedeDescargar = Number.isInteger(matrixId) && matrixId > 0;
 
                
                 if (!tieneArchivo) {
                     return `<i class="ti ti-x text-danger fs-6"></i>`;
                 }
 
+                if (!puedeDescargar || !noDescargar) {
+                    return `<i class="ti ti-download fs-6 text-muted" aria-label="Descarga no disponible"></i>`;
+                }
+
                 return `
                 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
-                    <a class="pointer ${!noDescargar ? 'disabled' : ''}"
-                    ${!noDescargar ? '' : `
-                        @click="window.location.href='${downloadEndpoint}?matrix_id=${row.id}&variant=acuse'"
-                        `}>
+                    <a class="pointer" @click="window.location.href='${downloadEndpoint}?matrix_id=${matrixId}&variant=acuse'">
                         <i class="ti ti-download fs-6 text-success"></i>
                     </a>
                 </div>
@@ -149,19 +150,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const noDescargar = permisos.descargar;
                 const tieneArchivo = row.requisito_file && row.requisito_file.trim() !== '';
-                const archivo = row.requisito_file.split('/').pop();
+                const matrixId = Number(row.matrix_id);
+                const puedeDescargar = Number.isInteger(matrixId) && matrixId > 0;
 
                
                 if (!tieneArchivo) {
                     return `<i class="ti ti-x text-danger fs-6"></i>`;
                 }
+
+                if (!puedeDescargar || !noDescargar) {
+                    return `<i class="ti ti-download fs-6 text-muted" aria-label="Descarga no disponible"></i>`;
+                }
                 
                 return `
                     <div x-data="actions()">
-                    <a class="pointer ${!noDescargar ? 'disabled' : ''}"
-                     ${!noDescargar ? '' : `
-                        @click="window.location.href='${downloadEndpoint}?matrix_id=${row.id}&variant=requisito'"
-                        `}>
+                    <a class="pointer" @click="window.location.href='${downloadEndpoint}?matrix_id=${matrixId}&variant=requisito'">
                         <i class="ti ti-download fs-6 text-success"></i>
                     </a>
                     </div>

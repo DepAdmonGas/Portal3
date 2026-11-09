@@ -6,6 +6,7 @@ clave: '',
 nombre_g: '',
 foto: null,
 loading: false,
+errorFoto: '',
 
 errors: {
 clave: false,
@@ -15,8 +16,18 @@ foto: false
 
 // CAPTURAR ARCHIVO
 handleFile(e) {
-this.foto = e.target.files[0];
+const archivo = e.target.files?.[0] || null;
+const formatos = 'Formatos válidos: JPG, JPEG, PNG, GIF y PDF (máximo 5 MB).';
+if (archivo && !/\.(jpe?g|png|gif|pdf)$/i.test(archivo.name)) {
+this.foto = null;
+this.errors.foto = true;
+this.errorFoto = `Archivo no permitido. ${formatos}`;
+e.target.value = '';
+return;
+}
+this.foto = archivo;
 this.errors.foto = false;
+this.errorFoto = '';
 },
 
 // VALIDACIÓN
@@ -24,6 +35,7 @@ validate() {
 this.errors.clave = !this.clave;
 this.errors.nombre_g = !this.nombre_g;
 this.errors.foto = !this.foto;
+if (this.errors.foto) this.errorFoto = 'Selecciona un archivo. Formatos válidos: JPG, JPEG, PNG, GIF y PDF (máximo 5 MB).';
 
 if (this.errors.clave || this.errors.nombre_g || this.errors.foto) {
 this.notify('error', 'Completa los campos obligatorios');
@@ -39,6 +51,7 @@ resetForm() {
 this.clave = '';
 this.nombre_g = '';
 this.foto = null;
+this.errorFoto = '';
 
 this.errors = {
 clave: false,
@@ -69,6 +82,11 @@ url: '/solicitud-gafetes/create-reporte',
 data: formData,
 table: '#table-gafetes'
 });
+
+if (res && !res.success && /formatos válidos/i.test(res.message || '')) {
+this.errors.foto = true;
+this.errorFoto = res.message;
+}
 
 if (res && res.success) {
 

@@ -139,10 +139,14 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
                        :disabled="mode === 'edit'">
 
                 <!-- FACTURA -->
-                <label class="form-label mt-3">No. Factura:</label>
+                <label class="form-label mt-3">* No. Factura:</label>
                 <input type="text"
                        class="form-control"
-                       x-model="no_factura">
+                       x-model="no_factura"
+                       required
+                       @input="errors.no_factura = false"
+                       :class="errors.no_factura ? 'is-invalid' : ''">
+                <div class="invalid-feedback" x-show="errors.no_factura">El No. de factura es obligatorio.</div>
 
                 <!-- PRODUCTO -->
                 <label class="form-label mt-3">* Producto:</label>

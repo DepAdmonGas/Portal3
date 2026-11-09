@@ -31,7 +31,9 @@ Nuevo registro</h4>
 
 <!-- ARCHIVO -->
 <label class="form-label mb-1">Cargar archivo:</label>
-<input type="file" class="form-control mb-3" x-ref="archivo" @change="handleFile($event)" :class="errors.archivo ? 'is-invalid' : ''">
+<input type="file" class="form-control" x-ref="archivo" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" @change="handleFile($event)" :class="errors.archivo ? 'is-invalid' : ''">
+<div class="form-text mb-3">Formatos válidos: JPG, JPEG, PNG y PDF (máximo 5 MB).</div>
+<div class="invalid-feedback d-block mt-n2 mb-3" x-show="errors.archivo" x-text="errorArchivo"></div>
 
 
 <!-- RAZON SOCIAL -->

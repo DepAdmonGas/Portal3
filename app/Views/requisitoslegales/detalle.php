@@ -317,7 +317,7 @@
                             <th>Requisito</th>
                         </tr>
 
-                        <template x-for="row in matriz" :key="row.fecha_emision">
+                        <template x-for="row in matriz" :key="row.matrix_id">
                             <tr class="text-center">
 
                                 <td x-text="row.fecha_emision || 'S/I'"></td>
@@ -325,9 +325,9 @@
 
                                 <!-- ACUSE -->
                                 <td>
-                                    <template x-if="row.acuse">
-                                       <button type="button" class="btn btn-link p-0"
-                                        @click="window.location.href='/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
+                                    <template x-if="row.acuse && Number(row.matrix_id) > 0">
+                                       <button type="button" class="btn p-0 border-0 bg-transparent text-primary text-decoration-none"
+                                        @click="window.location.href='/sasisopa/requisitos-legales/download?matrix_id=' + encodeURIComponent(row.matrix_id) + '&variant=acuse'">
                                             <i class="ti ti-download text-primary fs-6"></i>
                                         </button>
                                     </template>
@@ -338,9 +338,9 @@
 
                                 <!-- REQUISITO -->
                                 <td>
-                                    <template x-if="row.requisito">
-                                        <button type="button" class="btn btn-link p-0"
-                                        @click="window.location.href='/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
+                                    <template x-if="row.requisito && Number(row.matrix_id) > 0">
+                                        <button type="button" class="btn p-0 border-0 bg-transparent text-primary text-decoration-none"
+                                        @click="window.location.href='/sasisopa/requisitos-legales/download?matrix_id=' + encodeURIComponent(row.matrix_id) + '&variant=requisito'">
                                             <i class="ti ti-download text-primary fs-6"></i>
                                         </button>
                                     </template>
@@ -461,8 +461,8 @@
                                     <th>Fecha vencimiento</th>
                                     <th>Acuse</th>
                                     <th>Requisito legal</th>
-                                    <th><a class="text-muted"><i class="ti ti-edit text-warning fs-6"></i></a></th>
-                                    <th><a class="text-muted"><i class="ti ti-trash text-danger fs-6"></i></a></th>
+                                    <th><i class="ti ti-edit text-warning fs-6"></i></th>
+                                    <th><i class="ti ti-trash text-danger fs-6"></i></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -472,8 +472,8 @@
                                         <td x-text="row.fecha_vencimiento || 'S/I'"></td>
                                         <td>
                                             <template x-if="row.acusepdf">
-                                                <button type="button" class="btn btn-link p-0"
-                                                    @click="window.location.href='/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
+                                                <button type="button" class="btn btn-link p-0 text-decoration-none"
+                                                    @click="window.location.href='/sasisopa/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
                                                     <i class="ti ti-download text-primary fs-6"></i>
                                                 </button>
                                             </template>
@@ -483,8 +483,8 @@
                                         </td>
                                         <td>
                                             <template x-if="row.requisitolegalpdf">
-                                                <button type="button" class="btn btn-link p-0"
-                                                    @click="window.location.href='/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
+                                                <button type="button" class="btn btn-link p-0 text-decoration-none"
+                                                    @click="window.location.href='/sasisopa/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
                                                     <i class="ti ti-download text-primary pointer fs-6"></i>
                                                 </button>
                                             </template>
@@ -493,9 +493,9 @@
                                             </template>
                                         </td>
                                         <td>
-                                            <a @click="editHistorialRow(row)"><i class="ti ti-edit text-warning pointer fs-6"></i></a>
+                                            <a class="text-decoration-none" @click="editHistorialRow(row)"><i class="ti ti-edit text-warning pointer fs-6"></i></a>
                                         </td>
-                                        <td><a @click="deleteHistorialRow(row)"><i class="ti ti-trash pointer text-danger fs-6"></i></a></td>
+                                        <td><a class="text-decoration-none" @click="deleteHistorialRow(row)"><i class="ti ti-trash pointer text-danger fs-6"></i></a></td>
                                     </tr>
                                 </template>
                                 <tr x-show="historialRows.length === 0">

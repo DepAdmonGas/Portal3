@@ -122,8 +122,12 @@ document.addEventListener('alpine:init', () => {
         },
 
         limpiarEliminar(){
-
+            this.comentario = '';
             this.categoria = '';
+            this.id_autorizacion = '';
+            this.nombre = '';
+            this.text_usuario = '';
+            this.titulo = '';
 
             Object.keys(this.errors).forEach(k => {this.errors[k] = false;});
         },

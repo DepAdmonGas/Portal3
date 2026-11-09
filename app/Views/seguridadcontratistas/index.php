@@ -1,6 +1,7 @@
 <div id="container"
 data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
 data-estacion-id="<?= $estacionId ?? '' ?>"
+data-year="<?= (int) ($year ?? date('Y')) ?>"
 class="pb-4"
 x-data="{ ...actions(), ...seguridadContratistas()}">
 

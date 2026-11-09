@@ -12,7 +12,8 @@
 
     <?php else: ?>
 
-        <div class="text-end mb-3 mt-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 mt-3">
+            <h5 class="mb-0 me-auto" x-show="periodoTexto" x-text="periodoTexto"></h5>
             <div class="btn-group">
                 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="ti ti-dots-vertical fs-4"></i>
@@ -20,7 +21,7 @@
                 <ul class="dropdown-menu animated rubberBand">
                     <li><a class="dropdown-item pointer" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
                     <li>
-                        <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+                        <a class="dropdown-item pointer" :href="pdfUrl" aria-label="Descargar PDF" title="Descargar PDF"><i class="ti ti-download"></i> Descargar</a>
                     </li>
 
                     <li>
@@ -43,7 +44,7 @@
 
         <div class="datatables">
             <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
-                <table id="table-mantenimiento-preventivo" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                <table id="table-mantenimiento-preventivo" class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100">
                     <thead>
                         <tr>
                             <th class="text-center align-middle">Folio</th>

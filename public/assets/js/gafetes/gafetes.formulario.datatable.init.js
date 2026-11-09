@@ -54,7 +54,7 @@ const noDesc = !permisos.descargar || !row.archivo_disponible;
 const disabledEditar = puedeEditar ? '' : disabled;
 const disabledEliminar = puedeEliminar ? '' : disabled;
 const accionEliminar = puedeEliminar
-    ? `@click="async () => { const result = await deleteAction({url: '/solicitud-gafetes/delete-reporte-registro-formulario', id: ${Number(row.idGafete)}, name: '${Number(row.idGafete)}', table: '#table-gafetes-formulario'}); if (result?.sinRegistros) window.location.href = '/solicitud-gafetes'; }"`
+    ? `@click="async () => { const result = await deleteAction({url: '/solicitud-gafetes/delete-reporte-registro-formulario', id: ${Number(row.idGafete)}, name: '${Number(row.idGafete)}'}); if (!result?.success) return; if (result.sinRegistros) { window.location.assign('/solicitud-gafetes'); return; } const selector = '#table-gafetes-formulario'; if (document.querySelector(selector) && $.fn.DataTable.isDataTable(selector)) $(selector).DataTable().ajax.reload(null, false); }"`
     : '';
 const clave = escapeHtml(row.clave || '');
 const nombre = escapeHtml(row.nombre_completo || '');

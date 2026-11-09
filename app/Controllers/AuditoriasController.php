@@ -29,10 +29,9 @@ class AuditoriasController extends BaseController{
 
     private function carpetaAuditorias(): string
     {
-        $carpeta =
-            __DIR__ . '../../../public/uploads/archivos/auditorias/';
+        $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/auditorias/';
 
-        if (!file_exists($carpeta)) {
+        if (!is_dir($carpeta)) {
 
             mkdir_safe(
                 $carpeta,

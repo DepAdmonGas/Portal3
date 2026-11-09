@@ -1553,6 +1553,7 @@ $r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/general/{id:\d+}',
         $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-experiencia-empresa', Route::auth(['PerfilPersonalController', 'deleteExperienciaEmpresa']));
         $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/update-experiencia-empresa', Route::auth(['PerfilPersonalController', 'updateExperienciaEmpresa']));
         $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/update-firma', Route::auth(['PerfilPersonalController', 'updateFirma']));
+        $r->addRoute('POST', '/competencia-personal-capacitacion-entrenamiento/delete-firma', Route::auth(['PerfilPersonalController', 'deleteFirma']));
 
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/capacitacion-interna', Route::auth(['CapacitacionInternaController', 'index']));
         $r->addRoute('GET', '/competencia-personal-capacitacion-entrenamiento/datatable-capacitacion-interna/{idTema:\d+}', Route::auth(['CapacitacionInternaController', 'datatableCapacitacionInterna']));
@@ -1576,6 +1577,7 @@ $r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/general/{id:\d+}',
 
         // Elemento 7
         $r->addRoute('GET', '/comunicacion-participacion-consulta', Route::auth(['ComunicacionParticipacionConsultaController', 'index']));
+        $r->addRoute('GET', '/comunicacion-participacion-consulta/{year:\\d+}', Route::auth(['ComunicacionParticipacionConsultaController', 'index']));
         $r->addRoute('GET', '/comunicacion-participacion-consulta/datatable-registro-comunicacion', Route::auth(['ComunicacionParticipacionConsultaController', 'datatableRegistroComunicacion']));
         $r->addRoute('POST', '/comunicacion-participacion-consulta/create-registro-comunicacion', Route::auth(['ComunicacionParticipacionConsultaController', 'createRegistroComunicacion']));
         $r->addRoute('POST', '/comunicacion-participacion-consulta/delete-registro-comunicacion', Route::auth(['ComunicacionParticipacionConsultaController', 'deleteRegistroComunicacion']));
@@ -1737,6 +1739,7 @@ $r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/general/{id:\d+}',
 
         $r->addRoute('GET', '/control-actividades-procesos/bitacora-mantenimiento', Route::auth(['BitacoraMantenimientoController', 'index']));
         $r->addRoute('GET', '/control-actividades-procesos/bitacora-mantenimiento-quincenal', Route::auth(['BitacoraMantenimientoController', 'mantenimientoQuincenal']));
+        $r->addRoute('GET', '/control-actividades-procesos/bitacora-mantenimiento-quincenal/{year:\d+}', Route::auth(['BitacoraMantenimientoController', 'mantenimientoQuincenal']));
         $r->addRoute('GET', '/control-actividades-procesos/bitacora-mantenimiento-quincenal/datatable', Route::auth(['BitacoraMantenimientoController', 'datatable']));
         $r->addRoute('POST', '/control-actividades-procesos/bitacora-mantenimiento-quincenal/create', Route::auth(['BitacoraMantenimientoController', 'create']));
         $r->addRoute('POST', '/control-actividades-procesos/bitacora-mantenimiento-quincenal/delete', Route::auth(['BitacoraMantenimientoController', 'delete']));
@@ -1753,6 +1756,8 @@ $r->addRoute('GET', '/almacen/maquinaria-equipos-bitacora/pdf/general/{id:\d+}',
 
         // Elemento 12
         $r->addRoute('GET', '/seguridad-contratistas', Route::auth(['SeguridadContratistasController', 'index']));
+        $r->addRoute('GET', '/seguridad-contratistas/{year:\d+}', Route::auth(['SeguridadContratistasController', 'index']));
+        $r->addRoute('GET', '/seguridad-contratistas/datatable/{year:\d+}', Route::auth(['SeguridadContratistasController', 'datatable']));
         $r->addRoute('GET', '/seguridad-contratistas/datatable', Route::auth(['SeguridadContratistasController', 'datatable']));
         $r->addRoute('POST', '/seguridad-contratistas/create', Route::auth(['SeguridadContratistasController', 'create']));
         $r->addRoute('POST', '/seguridad-contratistas/update', Route::auth(['SeguridadContratistasController', 'update']));

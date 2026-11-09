@@ -56220,6 +56220,35 @@ word-break: break-word;
 line-height: 1.2;
 }
 
+/* En móviles, usa el viewport visible del navegador y reserva el pie del usuario. */
+@media (max-width: 1299.98px) {
+  .left-sidebar:has(> .bg-footer-do) {
+    box-sizing: border-box;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .left-sidebar:has(> .bg-footer-do) > .scroll-sidebar {
+    flex: 1 1 0%;
+    min-height: 0;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .left-sidebar:has(> .bg-footer-do) > .scroll-sidebar .simplebar-content-wrapper {
+    height: 100%;
+    max-height: 100%;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .left-sidebar:has(> .bg-footer-do) > .bg-footer-do {
+    flex: 0 0 auto;
+  }
+}
+
 .loader-admongas {
 position: fixed;
 top: 0;
@@ -56251,6 +56280,7 @@ object-fit: contain;
 .badge-historico{
 margin-left:auto;
 flex-shrink:0;
+white-space:nowrap;
 min-width:18px;
 height:18px;
 padding:0 6px;
@@ -56335,5 +56365,182 @@ box-shadow:0 0 0 0 rgba(220,53,69,0);
     width: auto;
     max-width: none;
     margin-left: auto;
+  }
+}
+
+/* Select2 suele adjuntar el desplegable a <body>; elévalo sobre el modal abierto. */
+body.modal-open .select2-container--open {
+  z-index: 2000 !important;
+}
+
+/* Menús nativos de select: conserva la apariencia de Portal3 en tablas y formularios. */
+select {
+  color-scheme: light;
+}
+
+[data-bs-theme="dark"] select {
+  color-scheme: dark;
+}
+
+select option,
+select optgroup {
+  background-color: var(--bs-body-bg, #ffffff);
+  color: var(--bs-body-color, #212529);
+}
+
+select option:checked,
+select option:hover {
+  background-color: var(--bs-primary, #315fd5);
+  color: #ffffff;
+}
+
+/* En tema claro, los controles dentro de una fila seleccionada heredan el
+   texto blanco de la fila. Fija colores propios en las opciones nativas para
+   que el menú desplegable mantenga texto legible sobre fondo claro. */
+html[data-bs-theme="light"] select option,
+html[data-bs-theme="light"] select optgroup {
+  background-color: #ffffff !important;
+  color: #263244 !important;
+  -webkit-text-fill-color: #263244 !important;
+}
+
+html[data-bs-theme="light"] select option:checked {
+  background-color: #315fc9 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* En pantallas estrechas, reserva espacio para el contador histórico y permite
+   que el texto del menú se ajuste sin montarse sobre el badge. */
+.sidebar-nav ul .sidebar-item .sidebar-link > .hide-menu {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.sidebar-nav .sidebar-link > .badge-historico {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* En móvil, Mostrar ocupa su fila y Buscar mantiene etiqueta e input en una sola línea. */
+@media (max-width: 767.98px) {
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_length,
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_filter {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_length {
+    order: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_filter {
+    order: 1;
+    margin-bottom: 1rem;
+  }
+
+  .dataTables_wrapper:not(.dt-bootstrap5) > .table-responsive {
+    order: 2;
+  }
+
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_info {
+    order: 3;
+  }
+
+  .dataTables_wrapper:not(.dt-bootstrap5) > .dataTables_paginate {
+    order: 4;
+  }
+
+  .dataTables_wrapper > .row:first-child > div:has(.dataTables_length),
+  .dataTables_wrapper > .row:first-child > div:has(.dataTables_filter),
+  .dataTables_wrapper > .row:first-child > .dataTables_length,
+  .dataTables_wrapper > .row:first-child > .dataTables_filter {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  /* DataTables puede envolver cada control en col-md-6 sin la clase dt-bootstrap5. */
+  .dataTables_wrapper .row > [class*="col-"]:has(.dataTables_filter) {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .dataTables_wrapper > .row:first-child > div:has(.dataTables_length),
+  .dataTables_wrapper > .row:first-child > .dataTables_length {
+    order: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .dataTables_wrapper > .row:first-child > div:has(.dataTables_filter),
+  .dataTables_wrapper > .row:first-child > .dataTables_filter {
+    order: 1;
+    margin-bottom: 1rem;
+  }
+
+  .dataTables_wrapper .dataTables_filter {
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .dataTables_wrapper .dataTables_filter label {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.5rem;
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  .dataTables_wrapper .dataTables_filter input {
+    display: block;
+    min-width: 0;
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0;
+    box-sizing: border-box;
+    /* iOS Safari hace zoom al enfocar inputs con fuente menor de 16px. */
+    font-size: 16px !important;
+  }
+
+  /* Evita que los divisores del breadcrumb queden solos al saltar de línea. */
+  nav[aria-label="breadcrumb"] {
+    width: 100%;
+    min-width: 0;
+  }
+
+  nav[aria-label="breadcrumb"] .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.25rem;
+    row-gap: 0.35rem;
+    line-height: 1.45;
+  }
+
+  nav[aria-label="breadcrumb"] .breadcrumb-item {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  nav[aria-label="breadcrumb"] .breadcrumb-item + .breadcrumb-item {
+    padding-left: 0;
+  }
+
+  nav[aria-label="breadcrumb"] .breadcrumb-item + .breadcrumb-item::before {
+    float: none;
+    flex: 0 0 auto;
+    padding: 0 0.25rem 0 0;
+    line-height: inherit;
   }
 }

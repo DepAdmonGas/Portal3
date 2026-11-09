@@ -22,7 +22,7 @@ Cargando la información del ticket...
 <div class="col-12">
 <div class="alert alert-warning text-center gap-2" role="alert">
 <i class="ti ti-lock fs-4 me-1"></i>
-Sólo el responsable asignado del ticket puede registrar el seguimiento.
+Sólo el responsable asignado o el responsable principal del área puede registrar el seguimiento.
 </div>
 </div>
 </template>
@@ -103,7 +103,7 @@ x-text="ticket ? valorCampo(ticket.prioridad) : 'S/I'"></span>
 
 <div class="col-md-4">
 <label class="form-label" for="se-dias-habiles">Días hábiles:</label>
-<input type="number" class="form-control" id="se-dias-habiles" min="1" max="60"
+<input type="number" class="form-control" id="se-dias-habiles" min="0" max="60"
 x-model.number="diasHabiles" @change="calcularFechas()" :disabled="seguimientoDeshabilitado">
 </div>
 <div class="col-md-4">

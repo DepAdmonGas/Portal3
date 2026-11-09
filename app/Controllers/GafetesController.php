@@ -99,7 +99,7 @@ $allowedMimes = [
 ];
 
 if (!in_array($mimeType, $allowedMimes)) {
-$response['error'] = 'Tipo de archivo no permitido: ' . $mimeType;
+$response['error'] = 'Archivo no permitido. Formatos válidos: JPG, JPEG, PNG, GIF y PDF (máximo 5 MB).';
 return $response;
 }
 
@@ -113,7 +113,7 @@ $mimeToExt = [
 ];
 
 if (!isset($mimeToExt[$mimeType]) || !in_array($extension, $mimeToExt[$mimeType])) {
-$response['error'] = 'La extensión no corresponde con el tipo de archivo';
+$response['error'] = 'El archivo no coincide con su extensión. Formatos válidos: JPG, JPEG, PNG, GIF y PDF (máximo 5 MB).';
 return $response;
 }
 

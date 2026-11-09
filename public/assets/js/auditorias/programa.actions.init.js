@@ -8,6 +8,7 @@ document.addEventListener('alpine:init', () => {
 
         fechaInicio: '',
         fechaFin: '',
+        periodoVisualizado: '',
 
         modalBuscar: null,
 
@@ -49,6 +50,10 @@ document.addEventListener('alpine:init', () => {
                 if (data.success) {
 
                     this.registros = data.data;
+                    this.periodoVisualizado = this.formatearPeriodo(
+                        this.fechaInicio,
+                        this.fechaFin
+                    );
 
                     this.years = [];
 
@@ -82,25 +87,66 @@ document.addEventListener('alpine:init', () => {
             return mes.charAt(0).toUpperCase() + mes.slice(1);
         },
 
+        formatearPeriodo(inicio, fin) {
+            const formatearFecha = fecha => {
+                const [year, month, day] = String(fecha || '').split('-').map(Number);
+                if (!year || !month || !day) return '';
+
+                return new Intl.DateTimeFormat('es-MX', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                }).format(new Date(year, month - 1, day));
+            };
+
+            const desde = formatearFecha(inicio);
+            const hasta = formatearFecha(fin);
+            return desde && hasta ? `${desde} – ${hasta}` : '';
+        },
+
         existeEnYear(registro, year) {
 
             return new Date(registro.fecha)
                 .getFullYear() == year;
         },
 
-        descargarPdf() {
+        async descargarPdf() {
 
-    const inicio =
-        this.fechaInicio.split('-')[0];
+            const inicio = this.fechaInicio.split('-')[0];
+            const fin = this.fechaFin.split('-')[0];
+            const url = `/sasisopa/auditorias/programa/pdf/${inicio}/${fin}`;
 
-    const fin =
-        this.fechaFin.split('-')[0];
+            window.loader?.show();
 
-    window.open(
-        `/sasisopa/auditorias/programa/pdf/${inicio}/${fin}`,
-        '_blank'
-    );
-}
+            try {
+                const response = await fetch(url, {
+                    credentials: 'same-origin',
+                    headers: { Accept: 'application/pdf' }
+                });
+
+                if (!response.ok) {
+                    throw new Error('No fue posible descargar el programa de auditorías.');
+                }
+
+                const archivo = await response.blob();
+                if (!archivo.type.includes('pdf')) {
+                    throw new Error('El servidor no devolvió un archivo PDF.');
+                }
+
+                const archivoUrl = URL.createObjectURL(archivo);
+                const enlace = document.createElement('a');
+                enlace.href = archivoUrl;
+                enlace.download = 'Programa de auditorias.pdf';
+                document.body.appendChild(enlace);
+                enlace.click();
+                enlace.remove();
+                window.setTimeout(() => URL.revokeObjectURL(archivoUrl), 1000);
+            } catch (error) {
+                this.notify('error', error?.message || 'Error al descargar el archivo');
+            } finally {
+                window.loader?.hide();
+            }
+        }
 
 
     }));

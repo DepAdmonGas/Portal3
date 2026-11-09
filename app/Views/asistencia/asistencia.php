@@ -60,7 +60,7 @@ x-init="
             <div class="form-group">
                 <label class="form-label mb-1">* Nombre del encargado de la comunicación:</label>
 
-                <select class="form-control" x-model="encargado" :class="errors.encargado ? 'is-invalid' : ''">
+                <select class="form-select" x-model="encargado" :class="errors.encargado ? 'is-invalid' : ''">
 
                     <option value="">Selecciona una opcion...</option>
 

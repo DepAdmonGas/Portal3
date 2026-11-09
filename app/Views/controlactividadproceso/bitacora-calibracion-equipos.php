@@ -12,7 +12,8 @@
 
     <?php else: ?>
 
-        <div class="text-end mb-3 mt-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 mt-3">
+            <h5 class="mb-0 me-auto" x-text="periodoTexto"></h5>
             <div class="btn-group">
                 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="ti ti-dots-vertical fs-4"></i>
@@ -21,7 +22,7 @@
                     <li><a class="dropdown-item pointer" @click="modalNuevoOpen()"><i class="ti ti-plus"></i> Nuevo </a></li>
                     <li><a class="dropdown-item pointer" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar </a></li>
                     <li>
-                        <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+                        <a class="dropdown-item pointer" href="#" @click.prevent="descargarPdf()"><i class="ti ti-download"></i> Descargar</a>
                     </li>
                 </ul>
             </div>
@@ -68,9 +69,9 @@
                         <select class="form-select" x-model="equipo"
                             :class="errorNuevo.equipo ? 'is-invalid' : ''"
                             @change="errorNuevo.equipo = false">
-                            <option>Selecciona una opción...</option>
+                            <option value="" disabled>Selecciona una opción...</option>
                             <option>Tanques de almacenamiento</option>
-                            <option>Sondas de medición</ption>
+                            <option>Sondas de medición</option>
                             <option>Dispensario</option>
                             <option>Jarra patron</option>
                         </select>
@@ -136,6 +137,7 @@
                         </label>
 
                         <input
+                            id="archivoResultado"
                             type="file"
                             class="form-control"
                             accept=".pdf"

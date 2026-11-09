@@ -118,10 +118,10 @@
                                                                 type="number"
                                                                 min="0"
                                                                 step="any"
-                                                                class="form-control border-0 text-center"
+                                                                class="form-control text-center"
 
                                                                 x-model="producto.volumen.inicial"
-                                                                :class="{ 'is-invalid': errors.volumen[index]?.inicial }"
+                                                                :class="errors.volumen[index]?.inicial ? 'is-invalid' : 'border-0'"
                                                                 @input="errors.volumen[index].inicial = false">
 
                                                         </td>
@@ -132,10 +132,10 @@
                                                                 type="number"
                                                                 min="0"
                                                                 step="any"
-                                                                class="form-control border-0 text-center"
+                                                                class="form-control text-center"
 
                                                                 x-model="producto.volumen.venta"
-                                                                :class="{ 'is-invalid': errors.volumen[index]?.venta }"
+                                                                :class="errors.volumen[index]?.venta ? 'is-invalid' : 'border-0'"
                                                                 @input="errors.volumen[index].venta = false">
 
                                                         </td>
@@ -146,10 +146,10 @@
                                                                 type="number"
                                                                 min="0"
                                                                 step="any"
-                                                                class="form-control border-0 text-center"
+                                                                class="form-control text-center"
 
                                                                 x-model="producto.volumen.final"
-                                                                :class="{ 'is-invalid': errors.volumen[index]?.final }"
+                                                                :class="errors.volumen[index]?.final ? 'is-invalid' : 'border-0'"
                                                                 @input="errors.volumen[index].final = false">
 
                                                         </td>

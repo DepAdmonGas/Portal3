@@ -82,6 +82,7 @@ document.addEventListener('alpine:init', () => {
                 url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/update',
 
                 notify: false,
+                headers: { 'X-Portal3-Skip-Action-Loader': '1' },
 
                 data: {
                     id: item.id,
@@ -133,6 +134,7 @@ document.addEventListener('alpine:init', () => {
                 url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/update',
 
                 notify: false,
+                headers: { 'X-Portal3-Skip-Action-Loader': '1' },
 
                 data: {
                     id: this.calibracion.id,

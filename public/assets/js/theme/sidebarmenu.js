@@ -1,5 +1,5 @@
 var at = document.documentElement.getAttribute("data-layout");
-if ((at = "vertical")) {
+if (at === "vertical") {
 
   // ----------------------------------------
   // Active 2 file at same time 
@@ -11,12 +11,14 @@ if ((at = "vertical")) {
       : document.location.href;
 
   var current_link = document.getElementById("get-url");
-  if (currentNewURL.includes("/main/index.html")) {
-    current_link.setAttribute("href", "../main/index.html");
-  } else if (currentNewURL.includes("/index.html")) {
-    current_link.setAttribute("href", "./index.html");
-  } else {
-    current_link.setAttribute("href", "./");
+  if (current_link) {
+    if (currentNewURL.includes("/main/index.html")) {
+      current_link.setAttribute("href", "../main/index.html");
+    } else if (currentNewURL.includes("/index.html")) {
+      current_link.setAttribute("href", "./index.html");
+    } else {
+      current_link.setAttribute("href", "./");
+    }
   }
   // end
 
@@ -86,7 +88,7 @@ if ((at = "vertical")) {
     });
   });
 }
-if ((at = "horizontal")) {
+if (at === "horizontal") {
   function findMatchingElement() {
     var currentUrl = window.location.href;
     var anchors = document.querySelectorAll("#sidebarnavh ul#sidebarnav a");

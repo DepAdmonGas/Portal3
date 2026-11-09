@@ -122,6 +122,7 @@ document.addEventListener('alpine:init', () => {
             year: '',
             mes: ''
         },
+        periodoBuscado: '',
 
         init() {
              const currentYear = new Date().getFullYear();
@@ -1208,6 +1209,11 @@ document.addEventListener('alpine:init', () => {
         const url = '/sasisopa/preparacion-emergencias/simulacro/datatable'
             + '?year=' + this.filtro.year
             + '&mes=' + this.filtro.mes;
+
+        const mes = Number(this.filtro.mes);
+        this.periodoBuscado = mes
+            ? `${new Intl.DateTimeFormat('es-MX', { month: 'long' }).format(new Date(2000, mes - 1, 1))} ${this.filtro.year}`
+            : String(this.filtro.year);
 
             table1
             .ajax

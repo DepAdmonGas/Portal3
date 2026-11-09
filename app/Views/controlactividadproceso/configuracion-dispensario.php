@@ -90,19 +90,19 @@ x-data="{ ...actions(), ...dispensario()}">
          </div>
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">Mangueras G SUPER:</label>
-            <input type="text" class="form-control mb-3" x-model="producto1"
+            <input type="number" min="0" step="1" class="form-control mb-3" x-model="producto1"
                     :class="errors.producto1 ? 'is-invalid' : ''"
                     @input="errors.producto1 = false" />
          </div>
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">Mangueras G PREMIUM:</label>
-            <input type="text" class="form-control mb-3" x-model="producto2"
+            <input type="number" min="0" step="1" class="form-control mb-3" x-model="producto2"
                 :class="errors.producto2 ? 'is-invalid' : ''"
                 @input="errors.producto2 = false" />
          </div>
          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
             <label class="form-label">Mangueras G DIESEL:</label>
-            <input type="text" class="form-control mb-3" x-model="producto3"
+            <input type="number" min="0" step="1" class="form-control mb-3" x-model="producto3"
                 :class="errors.producto3 ? 'is-invalid' : ''"
                 @input="errors.producto3 = false" />
          </div>

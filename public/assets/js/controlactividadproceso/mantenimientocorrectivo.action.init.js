@@ -3,6 +3,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('mantenimientoCorrectivo', () => ({
        
         pdfUrl: '',
+        periodoTexto: '',
         modalBuscar: null,
         years: [],
 
@@ -95,14 +96,24 @@ document.addEventListener('alpine:init', () => {
                 table1
                     .ajax
                     .url(url)
-                    .load();
+                    .load(() => {
+                        const meses = [
+                            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                        ];
+                        const mes = Number(this.filtro.mes);
+                        this.periodoTexto = mes >= 1 && mes <= 12
+                            ? `${meses[mes - 1]} ${this.filtro.year}`
+                            : String(this.filtro.year);
+
+                        this.pdfUrl = '/sasisopa/control-actividades-procesos/mantenimiento-correctivo/pdf?year='
+                            + encodeURIComponent(this.filtro.year)
+                            + '&mes=' + encodeURIComponent(this.filtro.mes || '');
+                    });
 
                 bootstrap.Modal
                 .getInstance(document.getElementById('ModalBuscar'))
                 .hide();
-
-                this.pdfUrl = '/sasisopa/control-actividades-procesos/mantenimiento-correctivo/pdf?year=' + this.filtro.year + '&mes=' + this.filtro.mes;
-            
 
         },
 

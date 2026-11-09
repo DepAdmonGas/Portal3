@@ -76,6 +76,7 @@ foto: null,
 modo: 'nuevo',
 idRegistro: null,
 loading: false,
+errorFoto: '',
 
 errors: {
 clave: false,
@@ -90,13 +91,24 @@ this.clave = data.clave || '';
 this.nombre_g = data.nombre_g || '';
 this.foto = null;
 this.errors = { clave: false, nombre_g: false, foto: false };
+this.errorFoto = '';
 if (this.$refs.foto) this.$refs.foto.value = null;
 bootstrap.Modal.getOrCreateInstance(document.getElementById('nuevo')).show();
 },
 
 handleFile(e) {
-this.foto = e.target.files[0];
+const archivo = e.target.files?.[0] || null;
+const formatos = 'Formatos válidos: JPG, JPEG, PNG, GIF y PDF (máximo 5 MB).';
+if (archivo && !/\.(jpe?g|png|gif|pdf)$/i.test(archivo.name)) {
+this.foto = null;
+this.errors.foto = true;
+this.errorFoto = `Archivo no permitido. ${formatos}`;
+e.target.value = '';
+return;
+}
+this.foto = archivo;
 this.errors.foto = false;
+this.errorFoto = '';
 },
 
 validate() {
@@ -104,6 +116,7 @@ validate() {
 this.errors.clave = !this.clave;
 this.errors.nombre_g = !this.nombre_g;
 this.errors.foto = this.modo === 'nuevo' && !this.foto;
+if (this.errors.foto) this.errorFoto = 'Selecciona un archivo. Formatos válidos: JPG, JPEG, PNG, GIF y PDF (máximo 5 MB).';
 
 if (
 this.errors.clave ||
@@ -128,6 +141,7 @@ this.nombre_g = '';
 this.foto = null;
 this.modo = 'nuevo';
 this.idRegistro = null;
+this.errorFoto = '';
 
 this.errors = {
 clave: false,
@@ -162,6 +176,11 @@ url: editar ? '/solicitud-gafetes/update-reporte-formulario' : '/solicitud-gafet
 data: formData,
 table: '#table-gafetes-formulario'
 });
+
+if (res && !res.success && /formatos válidos/i.test(res.message || '')) {
+this.errors.foto = true;
+this.errorFoto = res.message;
+}
 
 if (res && res.success) {
 
@@ -303,6 +322,11 @@ text: Number(noSeguimiento) === 1
 : 'La entrega quedó finalizada y el proceso está completo.',
 confirmButtonColor: '#198754'
 });
+
+if (Number(noSeguimiento) === 1) {
+window.location.assign('/solicitud-gafetes');
+return;
+}
 
 window.location.reload();
 

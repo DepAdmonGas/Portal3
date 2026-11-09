@@ -85,11 +85,10 @@ class CapacitacionExternaController extends BaseController{
 {
     header('Content-Type: application/json; charset=utf-8');
 
+    $transactionStarted = false;
+
     try {
-
-$data = json_decode(file_get_contents('php://input'), true);
-
-        
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $curso = sanitize_input($data['curso'] ?? null, 'string');
         $fecha_programada = sanitize_input($data['fecha_programada'] ?? null, 'string');
         $duracion = sanitize_input($data['duracion'] ?? null, 'string');
@@ -115,34 +114,16 @@ $data = json_decode(file_get_contents('php://input'), true);
         $id_estacion = $this->estacionModulo();
         $id_usuario = $this->userId();
 
-
-        Capsule::beginTransaction();
-
-        $capacitacion = CapacitacionExterna::create([
-            'id_estacion'       => $id_estacion,
-            'id_usuario'        => $id_usuario,
-            'curso'             => $curso,
-            'fecha_programada'  => $fecha_programada,
-            'duracion'          => $duracion,
-            'duraciondetalle'   => $duraciondetalle,
-            'instructor'        => $instructor,
-            'fecha_real'        => ''
-        ]);
-      
-        
-        if (empty($curso) || empty($fecha_programada)) {
+        if (empty($id_estacion) || empty($id_usuario)) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Completa todos los campos obligatorios'
+                'message' => 'No se pudo identificar la estación o el usuario actual'
             ]);
             return;
         }
 
-        $id_estacion = $this->estacionModulo();
-        $id_usuario = $this->userId();
-
-
         Capsule::beginTransaction();
+        $transactionStarted = true;
 
         $capacitacion = CapacitacionExterna::create([
             'id_estacion'       => $id_estacion,
@@ -155,7 +136,6 @@ $data = json_decode(file_get_contents('php://input'), true);
             'fecha_real'        => ''
         ]);
 
-  
         $usuarios = Usuario::activo()
             ->where('id_gas', $id_estacion)
             ->pluck('id');
@@ -174,6 +154,7 @@ $data = json_decode(file_get_contents('php://input'), true);
         }
 
         Capsule::commit();
+        $transactionStarted = false;
 
         echo json_encode([
             'success' => true,
@@ -183,7 +164,9 @@ $data = json_decode(file_get_contents('php://input'), true);
 
     } catch (\Throwable $e) {
 
-        Capsule::rollBack();
+        if ($transactionStarted) {
+            Capsule::rollBack();
+        }
 
         echo json_encode([
             'success' => false,

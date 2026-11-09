@@ -37,15 +37,18 @@ document.addEventListener('DOMContentLoaded', () => {
              },
 
              { data: 'producto1', className: 'text-center align-middle',
-                defaultContent: 'S/I'
+                defaultContent: 0,
+                render: data => data === null || data === undefined || data === '' ? 0 : data
              },
 
              { data: 'producto2', className: 'text-center align-middle',
-                defaultContent: 'S/I'
+                defaultContent: 0,
+                render: data => data === null || data === undefined || data === '' ? 0 : data
              },
 
              { data: 'producto3', className: 'text-center align-middle',
-                defaultContent: 'S/I'
+                defaultContent: 0,
+                render: data => data === null || data === undefined || data === '' ? 0 : data
              },
 
     {

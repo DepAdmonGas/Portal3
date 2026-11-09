@@ -414,3 +414,31 @@ html[data-bs-theme="dark"] body table > tbody > tr.selected .dropdown-menu .drop
   color: var(--bs-danger) !important;
   -webkit-text-fill-color: var(--bs-danger) !important;
 }
+
+/* Los selects nativos dentro de tablas no deben heredar el texto blanco de la fila seleccionada. */
+html[data-bs-theme="light"] body table.table > tbody > tr > * select option,
+html[data-bs-theme="light"] body table.table > tbody > tr > * select optgroup {
+  color: #263244 !important;
+  background-color: #fff !important;
+  -webkit-text-fill-color: #263244 !important;
+}
+
+html[data-bs-theme="light"] body table.table > tbody > tr.selected > * select option:not(.dropdown-menu):not(.dropdown-menu *),
+html[data-bs-theme="light"] body table.table > tbody > tr.selected > * select optgroup:not(.dropdown-menu):not(.dropdown-menu *) {
+  color: #263244 !important;
+  background-color: #fff !important;
+  -webkit-text-fill-color: #263244 !important;
+}
+
+html[data-bs-theme="light"] body table.table > tbody > tr.selected > * select option:checked:not(.dropdown-menu):not(.dropdown-menu *),
+html[data-bs-theme="light"] body table.table > tbody > tr > * select option:checked {
+  color: #fff !important;
+  background-color: #315fc9 !important;
+  -webkit-text-fill-color: #fff !important;
+}
+/* Mantiene visible el valor seleccionado del control de cantidad en cursos. */
+.cursos-pendientes-card #table-cursos-pendientes_wrapper .dataTables_length select {
+  width: 72px !important;
+  min-width: 72px;
+  padding-right: 1rem;
+}

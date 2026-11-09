@@ -135,7 +135,7 @@ try {
             }
 
       
-            $ruta = __DIR__ . '../../../public/uploads/archivos/manuales/';
+            $ruta = dirname(__DIR__, 2) . '/public/uploads/archivos/manuales/';
             $nombreArchivo = 'MANUAL-EQUIPO-' .uniqid() . '.pdf';
 
             // SECURITY: BAJO #35 - Usar mkdir_safe con permisos 0755
@@ -143,10 +143,14 @@ try {
                 mkdir_safe($ruta, true);
             }
 
-            move_uploaded_file(
+            $archivoMovido = move_uploaded_file(
                 $archivo['tmp_name'],
                 $ruta . $nombreArchivo
             );
+
+            if (!$archivoMovido) {
+                throw new \RuntimeException('No fue posible guardar el manual PDF.');
+            }
 
             $ultimo = EquipoCritico::where(
                 'id_estacion',

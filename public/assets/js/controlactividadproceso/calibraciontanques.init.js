@@ -65,6 +65,7 @@ document.addEventListener('alpine:init', () => {
             const response = await this.createAction({
                 url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/update',
                 notify: false,
+                headers: { 'X-Portal3-Skip-Action-Loader': '1' },
                 data: {
                     id: this.calibracion.id,
                     input,
@@ -104,6 +105,7 @@ document.addEventListener('alpine:init', () => {
             const response = await this.createAction({
                 url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/update',
                 notify: false,
+                headers: { 'X-Portal3-Skip-Action-Loader': '1' },
                 data: {
                     id: item.id,
                     input,

@@ -323,6 +323,7 @@ public function deleteAditivo(){
 header('Content-Type: application/json; charset=utf-8');
 
 $data = json_decode(file_get_contents('php://input'), true);
+$data = is_array($data) ? $data : [];
 $id = $data['id'] ?? null;
 
 if (!$this->ctx()->getCapacidades()['puedeEliminar']) {
@@ -346,6 +347,8 @@ public function createAditivo(){
 
 header('Content-Type: application/json; charset=utf-8');
 $data = json_decode(file_get_contents('php://input'), true);
+$data = is_array($data) ? $data : [];
+$data['no_factura'] = trim((string) ($data['no_factura'] ?? ''));
 
 if (!$this->ctx()->getCapacidades()['puedeCrear']) {
 echo json_encode([
@@ -373,11 +376,12 @@ exit;
 $errors = validate_input($data, [
 'litros' => 'required|numeric',
 'producto' => 'required|max:100',
-'fecha' => 'required|max:20'
+'fecha' => 'required|max:20',
+'no_factura' => 'required'
 ]);
 
 if (!empty($errors)) {
-echo json_encode(['success' => false, 'errors' => $errors]);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios', 'errors' => $errors]);
 exit;
 }
 
@@ -396,9 +400,10 @@ public function updateAditivo()
 header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
+$data = is_array($data) ? $data : [];
 
 $id = sanitize_input($data['id'] ?? null, 'int');
-$noFactura = sanitize_input($data['no_factura'] ?? null, 'string');
+$noFactura = trim((string) ($data['no_factura'] ?? ''));
 
 if (!$id || !$noFactura) {
 echo json_encode([

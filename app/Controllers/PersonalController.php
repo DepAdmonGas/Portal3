@@ -6,6 +6,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
+use App\Core\PasswordValidator;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
 
@@ -132,16 +133,16 @@ class PersonalController extends BaseController
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
 
-                '/js/personal/index.datatable.init.js?v=1.2.0',
-                '/js/personal/index.actions.init.js?v=1.2.0',
+                '/js/personal/index.datatable.init.js?v=1.3.0',
+                '/js/personal/index.actions.init.js?v=1.7.0',
                 '/js/core/module-station-selector.js?v=' . time()
 
             ] : [
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
 
-                '/js/personal/index.datatable.init.js?v=1.2.0',
-                '/js/personal/index.actions.init.js?v=1.2.0'
+                '/js/personal/index.datatable.init.js?v=1.3.0',
+                '/js/personal/index.actions.init.js?v=1.7.0'
 
             ],
             'help' => true
@@ -294,9 +295,55 @@ class PersonalController extends BaseController
 
             $data = json_decode(file_get_contents('php://input'), true);
 
+            $password = is_string($data['password'] ?? null)
+                ? $data['password']
+                : '';
+            $passwordConfirmacion = is_string($data['password_confirmacion'] ?? null)
+                ? $data['password_confirmacion']
+                : '';
+            $nombreUsuario = trim((string) ($data['usuario'] ?? ''));
+            $longitudUsuario = function_exists('mb_strlen')
+                ? mb_strlen($nombreUsuario, 'UTF-8')
+                : strlen($nombreUsuario);
+            $erroresUsuario = [];
+
+            if (
+                $longitudUsuario < 3
+                || $longitudUsuario > 50
+                || !preg_match('/^[\pL\pN._-]+$/u', $nombreUsuario)
+            ) {
+                $erroresUsuario['usuario'] = 'Escribe un usuario de 3 a 50 caracteres; utiliza letras, números, punto, guion o guion bajo.';
+            } elseif (Usuario::query()->where('usuario', $nombreUsuario)->exists()) {
+                $erroresUsuario['usuario'] = 'Ese nombre de usuario ya está registrado.';
+            }
+
+            if ($erroresUsuario) {
+                JsonResponse::validation('Revisa los datos señalados.', $erroresUsuario);
+            }
+
+            $validacionPassword = PasswordValidator::validate($password);
+            $erroresPassword = $validacionPassword['errors'];
+            if (($validacionPassword['score'] ?? 0) <= 80 && !$erroresPassword) {
+                $erroresPassword[] = 'La contraseña debe alcanzar el nivel Muy fuerte.';
+            }
+
+            if (!$validacionPassword['valid'] || ($validacionPassword['score'] ?? 0) <= 80) {
+                JsonResponse::validation(
+                    'La contraseña debe alcanzar el nivel Muy fuerte.',
+                    ['password' => $erroresPassword]
+                );
+            }
+
+            if ($password !== $passwordConfirmacion) {
+                JsonResponse::validation(
+                    'La confirmación de la contraseña no coincide.',
+                    ['password_confirmacion' => 'Confirma la contraseña exactamente como la escribiste.']
+                );
+            }
+
             $idEstacion = (int) (ModuleStationService::getContext($this->moduleKey($data ?? []))['id_estacion'] ?? $this->estacionId());
 
-            Capsule::transaction(function () use ($data, $idEstacion) {
+            Capsule::transaction(function () use ($data, $idEstacion, $password, $nombreUsuario) {
 
                 $usuario = Usuario::create([
                     'nombre' => trim($data['nombre']),
@@ -304,8 +351,8 @@ class PersonalController extends BaseController
                     'telefono' => trim($data['telefono']),
                     'id_gas' => $idEstacion,
                     'id_puesto' => (int) $data['id_puesto'],
-                    'usuario' => trim($data['usuario']),
-                    'password' => $data['password'],
+                    'usuario' => $nombreUsuario,
+                    'password' => $password,
                     'fecha_ingreso' => $data['fecha_ingreso'],
                     'bitacora_app' => 0,
                     'estatus' => 0,
@@ -374,7 +421,56 @@ class PersonalController extends BaseController
 
             $data = json_decode(file_get_contents('php://input'), true);
 
-            Capsule::transaction(function () use ($data) {
+            $idUsuario = (int) ($data['id'] ?? 0);
+            $usuarioExistente = Usuario::query()->findOrFail($idUsuario);
+            $password = is_string($data['password'] ?? null)
+                ? $data['password']
+                : '';
+            $nombreUsuario = trim((string) ($data['usuario'] ?? ''));
+            $longitudUsuario = function_exists('mb_strlen')
+                ? mb_strlen($nombreUsuario, 'UTF-8')
+                : strlen($nombreUsuario);
+            $erroresUsuario = [];
+
+            if (
+                $longitudUsuario < 3
+                || $longitudUsuario > 50
+                || !preg_match('/^[\pL\pN._-]+$/u', $nombreUsuario)
+            ) {
+                $erroresUsuario['usuario'] = 'Escribe un usuario de 3 a 50 caracteres; utiliza letras, números, punto, guion o guion bajo.';
+            } elseif (Usuario::query()->where('usuario', $nombreUsuario)->where('id', '!=', $idUsuario)->exists()) {
+                $erroresUsuario['usuario'] = 'Ese nombre de usuario ya está registrado.';
+            }
+
+            if ($erroresUsuario) {
+                JsonResponse::validation('Revisa los datos señalados.', $erroresUsuario);
+            }
+
+            if ($password !== '' && $password !== (string) $usuarioExistente->password) {
+                $validacionPassword = PasswordValidator::validate($password);
+                $erroresPassword = $validacionPassword['errors'];
+                if (($validacionPassword['score'] ?? 0) <= 80 && !$erroresPassword) {
+                    $erroresPassword[] = 'La contraseña debe alcanzar el nivel Muy fuerte.';
+                }
+                if (!$validacionPassword['valid'] || ($validacionPassword['score'] ?? 0) <= 80) {
+                    JsonResponse::validation(
+                        'La contraseña debe alcanzar el nivel Muy fuerte.',
+                        ['password' => $erroresPassword]
+                    );
+                }
+
+                $passwordConfirmacion = is_string($data['password_confirmacion'] ?? null)
+                    ? $data['password_confirmacion']
+                    : '';
+                if ($password !== $passwordConfirmacion) {
+                    JsonResponse::validation(
+                        'La confirmación de la contraseña no coincide.',
+                        ['password_confirmacion' => 'Confirma la contraseña exactamente como la escribiste.']
+                    );
+                }
+            }
+
+            Capsule::transaction(function () use ($data, $password, $nombreUsuario) {
 
                 $usuario = Usuario::findOrFail((int)$data['id']);
 
@@ -383,14 +479,14 @@ class PersonalController extends BaseController
                     'email' => trim($data['email']),
                     'telefono' => trim($data['telefono']),
                     'id_puesto' => (int) $data['id_puesto'],
-                    'usuario' => trim($data['usuario']),
+                    'usuario' => $nombreUsuario,
                     'fecha_ingreso' => $data['fecha_ingreso'],
                 ]);
 
                 // Solo actualizar password si viene llena
-                if (!empty($data['password'])) {
+                if ($password !== '') {
                     $usuario->update([
-                        'password' => $data['password']
+                        'password' => $password
                     ]);
                 }
             });

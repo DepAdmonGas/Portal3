@@ -508,11 +508,9 @@ $service = new ReporteRequisitosLegalesService();
                 === UPLOAD_ERR_OK
         ){
 
-            $carpeta =
-                __DIR__
-                . '../../../public/uploads/archivos/informe-revision-resultados/';
+            $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/informe-revision-resultados/';
 
-            if(!file_exists($carpeta)){
+            if(!is_dir($carpeta)){
 
                 mkdir_safe(
                     $carpeta,
@@ -527,10 +525,14 @@ $service = new ReporteRequisitosLegalesService();
                 .time()
                 .'.pdf';
 
-            move_uploaded_file(
+            $archivoMovido = move_uploaded_file(
                 $_FILES['documento']['tmp_name'],
                 $carpeta.$nombre
             );
+
+            if (!$archivoMovido) {
+                throw new \RuntimeException('No fue posible guardar el documento PDF.');
+            }
 
             $rutaBd = $nombre;
         }

@@ -608,6 +608,7 @@ class RequisitosLegalesController extends BaseController
 
             $data[] = [
                 "id" => $row['id'],
+                "matrix_id" => $row['matrix_id'] ?? null,
                 "dependencia" => $row['dependencia'],
                 "permiso" => $row['permiso'],
                 "vigencia" => $row['vigencia'],
@@ -951,6 +952,7 @@ class RequisitosLegalesController extends BaseController
         $matriz = $calendario->matriz->map(function ($m) {
 
             return [
+                'matrix_id' => (int) $m->id,
                 'fecha_emision' => ($m->fecha_emision && $m->fecha_emision != '0000-00-00')
                     ? formatearFecha($m->fecha_emision)
                     : 'S/I',

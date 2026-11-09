@@ -89,7 +89,8 @@ class PuestoController extends BaseController
                     'tipo_puesto'
                 ])
                 ->orderBy('tipo_puesto')
-                ->get();
+                ->get()
+                ->toArray();
 
             JsonResponse::custom($puestos);
         } catch (\Throwable $e) {

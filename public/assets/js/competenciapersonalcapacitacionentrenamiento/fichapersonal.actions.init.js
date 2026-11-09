@@ -95,6 +95,14 @@ document.addEventListener('alpine:init', () => {
     firmaBase64: '',
     firmaPreview: '',
     firmaError: false,
+    modoFirma: 'pad',
+    editorFirmaAbierto: false,
+    archivoFirma: null,
+    vistaPreviaFirma: '',
+    errorFirma: '',
+    guardandoFirma: false,
+    eliminandoFirma: false,
+    _firmaResizeHandler: null,
 
     // ======================
     // INIT
@@ -102,10 +110,6 @@ document.addEventListener('alpine:init', () => {
     init() {
 
         this.id = document.getElementById('container').dataset.id;
-
-        this.$nextTick(() => {
-            this.initFirma();
-        });
 
         this.modals.familiar = new bootstrap.Modal(document.getElementById('modalFamiliar'));
         this.modals.formacion = new bootstrap.Modal(document.getElementById('modalFormacion'));
@@ -605,65 +609,177 @@ document.addEventListener('alpine:init', () => {
     // FIRMA
     // ======================
 
-        initFirma() {
+        async alternarEditorFirma() {
+            if (this.editorFirmaAbierto) {
+                this.cancelarEdicionFirma();
+                return;
+            }
+            this.limpiarFirmaForm();
+            this.editorFirmaAbierto = true;
+            await this.$nextTick();
+            this.iniciarFirmaPad();
+        },
 
-        const canvas = this.$refs.canvas;
+        cancelarEdicionFirma() {
+            this.limpiarFirmaForm();
+            this.editorFirmaAbierto = false;
+        },
 
-        const ratio = window.devicePixelRatio || 1;
-        canvas.width = canvas.offsetWidth * ratio;
-        canvas.height = canvas.offsetHeight * ratio;
-        canvas.getContext("2d").scale(ratio, ratio);
+        seleccionarModoFirma(modo) {
+            this.modoFirma = modo;
+            this.errorFirma = '';
+            if (modo === 'pad') {
+                this.$nextTick(() => this.iniciarFirmaPad());
+            } else {
+                this.firmaPad?.off();
+                this.firmaPad = null;
+            }
+        },
 
-        this.firmaPad = new SignaturePad(canvas, {
-            minWidth: 1,
-            maxWidth: 2.5,
-            penColor: "black"
-        });
-
-    },
-
-    limpiarFirma() {
-        if (this.firmaPad) {
-            this.firmaPad.clear();
-        }
-    },
-
-    guardarFirma() {
-
-        if (!this.firmaPad || this.firmaPad.isEmpty()) {
-            this.notify('error', 'Firma vacía');
-            return;
-        }
-
-        this.firmaBase64 = this.firmaPad.toDataURL('image/png');
-
-        
-
-        this.subirFirma();
-    },
-
-    async subirFirma() {
-
-        try {
-
-            const res = await this.createAction({
-                url: '/sasisopa/competencia-personal-capacitacion-entrenamiento/update-firma',
-                data: {
-                    id: this.id,
-                    firma: this.firmaBase64
-                }
-            });
-
-            if (res.success) {
-                this.limpiarFirma();
-                this.firmaError = false;
-                this.firmaPreview = this.firmaBase64;
+        iniciarFirmaPad() {
+            const canvas = this.$refs.canvasFirma;
+            if (!canvas) return;
+            if (typeof window.SignaturePad === 'undefined') {
+                this.errorFirma = 'No se pudo cargar el panel de firma. Recarga la página e inténtalo de nuevo.';
+                return;
             }
 
-        } catch (e) {
-            this.notify('error', 'Error al guardar firma');
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width < 1 || rect.height < 1) {
+                window.requestAnimationFrame(() => this.iniciarFirmaPad());
+                return;
+            }
+
+            const trazos = this.firmaPad && !this.firmaPad.isEmpty() ? this.firmaPad.toData() : null;
+            this.firmaPad?.off();
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = Math.round(rect.width * ratio);
+            canvas.height = Math.round(rect.height * ratio);
+            const context = canvas.getContext('2d');
+            context.setTransform(ratio, 0, 0, ratio, 0, 0);
+            this.firmaPad = new window.SignaturePad(canvas, {
+                backgroundColor: 'rgb(255,255,255)',
+                penColor: '#1f2937',
+                minWidth: 1,
+                maxWidth: 2.5
+            });
+            if (trazos) this.firmaPad.fromData(trazos);
+
+            if (!this._firmaResizeHandler) {
+                this._firmaResizeHandler = () => {
+                    if (this.editorFirmaAbierto && this.modoFirma === 'pad') {
+                        this.$nextTick(() => this.iniciarFirmaPad());
+                    }
+                };
+                window.addEventListener('resize', this._firmaResizeHandler);
+            }
+        },
+
+        limpiarFirma() {
+            this.firmaPad?.clear();
+            this.errorFirma = '';
+        },
+
+        seleccionarArchivo(event) {
+            this.archivoFirma = event.target.files?.[0] || null;
+            this.errorFirma = '';
+            if (!this.archivoFirma) {
+                this.vistaPreviaFirma = '';
+                return;
+            }
+            if (!['image/png', 'image/jpeg', 'image/webp'].includes(this.archivoFirma.type) || this.archivoFirma.size > 3 * 1024 * 1024) {
+                this.errorFirma = 'Selecciona un PNG, JPG o WEBP de máximo 3 MB.';
+                event.target.value = '';
+                this.archivoFirma = null;
+                this.vistaPreviaFirma = '';
+                return;
+            }
+            if (this.vistaPreviaFirma.startsWith('blob:')) URL.revokeObjectURL(this.vistaPreviaFirma);
+            this.vistaPreviaFirma = URL.createObjectURL(this.archivoFirma);
+        },
+
+        limpiarFirmaForm() {
+            this.firmaPad?.off();
+            this.firmaPad = null;
+            const canvas = this.$refs.canvasFirma;
+            if (canvas) canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+            const input = this.$refs.archivoFirma;
+            if (input) input.value = '';
+            if (this.vistaPreviaFirma.startsWith('blob:')) URL.revokeObjectURL(this.vistaPreviaFirma);
+            this.archivoFirma = null;
+            this.vistaPreviaFirma = '';
+            this.errorFirma = '';
+            this.modoFirma = 'pad';
+        },
+
+        async guardarFirma() {
+            this.errorFirma = '';
+            this.guardandoFirma = true;
+            try {
+                const url = '/sasisopa/competencia-personal-capacitacion-entrenamiento/update-firma';
+                let response;
+                if (this.modoFirma === 'archivo') {
+                    if (!this.archivoFirma) {
+                        this.errorFirma = 'Selecciona una imagen de firma.';
+                        return;
+                    }
+                    const formData = new FormData();
+                    formData.append('id', this.id);
+                    formData.append('firma', this.archivoFirma);
+                    response = await axios.post(url, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                } else {
+                    if (!this.firmaPad || this.firmaPad.isEmpty()) {
+                        this.errorFirma = 'Dibuja la firma antes de guardar.';
+                        return;
+                    }
+                    response = await axios.post(url, {
+                        id: this.id,
+                        firma: this.firmaPad.toDataURL('image/png')
+                    });
+                }
+
+                this.firmaPreview = response.data.firma || '';
+                this.editorFirmaAbierto = false;
+                this.limpiarFirmaForm();
+                this.notify('success', response.data.message || 'La firma se actualizó correctamente.');
+            } catch (error) {
+                const data = error.response?.data || {};
+                const field = data.errors?.firma;
+                this.errorFirma = Array.isArray(field) ? field[0] : (field || data.message || 'No fue posible actualizar la firma.');
+                this.notify('error', data.message || 'No fue posible actualizar la firma.');
+            } finally {
+                this.guardandoFirma = false;
+            }
+        },
+
+        async eliminarFirma() {
+            if (this.eliminandoFirma || this.guardandoFirma) return;
+            const confirmacion = await Swal.fire({
+                icon: 'warning',
+                title: '¿Eliminar firma del personal?',
+                text: 'La firma dejará de estar asociada a esta ficha personal.',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#f56c6c'
+            });
+            if (!confirmacion.isConfirmed) return;
+
+            this.eliminandoFirma = true;
+            try {
+                const response = await axios.post(
+                    '/sasisopa/competencia-personal-capacitacion-entrenamiento/delete-firma',
+                    { id: this.id }
+                );
+                this.firmaPreview = '';
+                this.notify('success', response.data.message || 'La firma se eliminó correctamente.');
+            } catch (error) {
+                const data = error.response?.data || {};
+                this.notify('error', data.message || 'No fue posible eliminar la firma.');
+            } finally {
+                this.eliminandoFirma = false;
+            }
         }
-    }
 
    }));
 });

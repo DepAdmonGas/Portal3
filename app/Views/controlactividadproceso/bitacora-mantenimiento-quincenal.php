@@ -2,7 +2,8 @@
     x-data="{ ...actions(), ...mantenimientoQuincenal()}"
     data-carpeta="<?= htmlspecialchars($carpeta) ?>"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
-    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
+    data-year="<?= (int) ($year ?? date('Y')) ?>">
 
 
     <?php if (empty($estacionId)): ?>
@@ -14,7 +15,8 @@
 
     <?php else: ?>
 
-    <div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 w-100 mb-3 mt-3">
+    <h5 class="mb-0 me-auto"><?= (int) ($year ?? date('Y')) ?></h5>
     <div class="col-12 col-md-auto d-grid mb-3 mt-3">
         <button type="button"
                 class="btn bg-primary-subtle text-primary"

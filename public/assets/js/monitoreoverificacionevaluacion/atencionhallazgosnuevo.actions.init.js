@@ -81,17 +81,15 @@ document.addEventListener('alpine:init', () => {
                     tipo_auditoria: this.tipo_auditoria
                 };
 
-                const res =
-                await this.createAction({
-                    url: '/sasisopa/monitoreo-verificacion-evaluacion/atencion-hallazgos/update-encabezados',
-                    data: payload,
-                    notify: false
+                const { data } = await axios.post(
+                    '/sasisopa/monitoreo-verificacion-evaluacion/atencion-hallazgos/update-encabezados',
+                    payload,
+                    { headers: { 'X-Portal3-Skip-Action-Loader': '1' } }
+                );
 
-                });
-
-            if (res && res.success) {
-                 
-            }
+                if (!data?.success) {
+                    this.notify('error', data?.message || 'No fue posible actualizar el encabezado');
+                }
 
             } catch (e) {
 
@@ -220,19 +218,29 @@ document.addEventListener('alpine:init', () => {
     }
     },
 
-    editar(registro){
+    async editar(registro){
 
         this.modoHallazgo = 'edit';
-        this.cargarSasisopa();
         this.editIdHallazgo = registro.id;
 
         this.hallazgo = {
-            id_sasisopa: String(registro.id_sasisopa),
+            id_sasisopa: Number(registro.id_sasisopa),
             hallazgo: registro.hallazgos,
             accion: registro.accion,
             fecha: registro.fecha
         };
 
+        await this.cargarSasisopa();
+
+        const idActual = Number(registro.id_sasisopa);
+        if (idActual && !this.sasisopaOptions.some(item => Number(item.id) === idActual)) {
+            this.sasisopaOptions.unshift({
+                id: idActual,
+                nombre: registro.sasisopa
+            });
+        }
+
+        await this.$nextTick();
         this.modalHallazgo.show();
     },
 

@@ -25,10 +25,9 @@ class IncidentesAccidentesController extends BaseController
 
     private function carpetaIncidentes(): string
     {
-        $carpeta =
-            __DIR__ . '../../../public/uploads/archivos/incidentes-accidentes/';
+        $carpeta = dirname(__DIR__, 2) . '/public/uploads/archivos/incidentes-accidentes/';
 
-        if (!file_exists($carpeta)) {
+        if (!is_dir($carpeta)) {
 
             mkdir_safe(
                 $carpeta,

@@ -10,6 +10,7 @@ no_unidad: '',
 tarjeta: '',
 tipo_tarjeta: '',
 loading: false,
+errorArchivo: '',
 
 errors: {
 archivo: false,
@@ -24,8 +25,25 @@ tipo_tarjeta: false
 
 // CAPTURAR ARCHIVO
 handleFile(e) {
-this.archivo = e.target.files[0];
+const archivo = e.target.files?.[0] || null;
+const formatos = 'Formatos válidos: JPG, JPEG, PNG y PDF (máximo 5 MB).';
+if (archivo && !/\.(jpe?g|png|pdf)$/i.test(archivo.name)) {
+this.archivo = null;
+this.errors.archivo = true;
+this.errorArchivo = `Archivo no permitido. ${formatos}`;
+e.target.value = '';
+return;
+}
+if (archivo && archivo.size > 5 * 1024 * 1024) {
+this.archivo = null;
+this.errors.archivo = true;
+this.errorArchivo = `El archivo excede el tamaño máximo de 5 MB. ${formatos}`;
+e.target.value = '';
+return;
+}
+this.archivo = archivo;
 this.errors.archivo = false;
+this.errorArchivo = '';
 },
 
 // VALIDACIÓN
@@ -49,6 +67,7 @@ return true;
 // RESET
 resetForm() {
 this.archivo = '';
+this.errorArchivo = '';
 this.razon_social = '';
 this.nombre_usuario = '';
 this.vehiculo = null;
@@ -96,6 +115,11 @@ url: '/solicitud-tarjetas/create-reporte',
 data: formData,
 table: '#table-tarjetas'
 });
+
+if (res && !res.success && /archivo|formato|tamaño/i.test(res.message || '')) {
+this.errors.archivo = true;
+this.errorArchivo = res.errors?.archivo || res.message;
+}
 
 if (res && res.success) {
 

@@ -79,9 +79,9 @@ class="alert alert-secondary border-0 text-center text-muted py-4 mt-4">
 
 <!----------------------- Pendientes ----------------------->
 <div class="col-12 p-0">
-<template x-if="!loading && cursos.length">
+<template x-if="!loadingPendientes && cursos.length">
 
-<div class="card border-primary">
+<div class="card border-primary cursos-pendientes-card">
 
 <div class="card-header bg-primary">
 <div class="d-flex justify-content-between align-items-center">
@@ -94,72 +94,29 @@ x-text="total">
 </div>
 </div>
 
+<div class="card-body">
+<div class="datatables">
 <div class="table-responsive">
-
-<table class="table table-hover align-middle mb-0">
-
+<table id="table-cursos-pendientes" class="table table-striped table-bordered mb-0 align-middle w-100" style="table-layout: fixed;">
 <thead>
-
 <tr>
-
 <th class="text-center align-middle">Fecha</th>
-
-<th class="text-start align-middle" x-show="multiestacion">Nombre del personal</th>
-
+<?php if ($multiestacion): ?>
+<th class="text-center align-middle">Nombre del personal</th>
+<?php endif; ?>
 <th class="text-start align-middle">Tema</th>
-
-<th class="text-center align-middle">Categoria</th>
-
-<th class="text-center" x-show="!multiestacion">Iniciar</th>
-
+<th class="text-center align-middle">Categoría</th>
+<?php if (!$multiestacion): ?>
+<th class="text-center align-middle">Iniciar</th>
+<?php endif; ?>
 </tr>
-
 </thead>
-
-<tbody>
-
-<template x-for="curso in cursos" :key="curso.id">
-
-<tr>
-
-<td class="text-center align-middle" width="250px">
-<span x-text="curso.fecha"></span>
-</td>
-
-<td class="text-center align-middle" x-show="multiestacion">
-<span x-text="curso.personal"></span>
-</td>
-
-<td class="text-start align-middle">
-<span x-text="curso.titulo"></span>
-</td>
-
-<td class="text-center align-middle" width="98px">
-<span class="badge bg-primary" x-text="curso.categoria">
-</span>
-
-</td>
-
-<td width="140" class="text-end" x-show="!multiestacion">
-
-<button
-class="btn btn-success"
-@click="iniciar(curso)">
-<i class="ti ti-player-play me-1"></i>
-Iniciar
-</button>
-
-</td>
-
-</tr>
-
-</template>
-
-</tbody>
-
+<tbody></tbody>
 </table>
-
 </div>
+</div>
+</div>
+
 
 </div>
 
