@@ -434,7 +434,8 @@ document.addEventListener('alpine:init', () => {
 
         const res = await this.createAction({
         url: `/sgm/gestion-recursos/programa-capacitacion-externa/evidencia/create`,
-        data: formData
+        data: formData,
+        table: '#table-capacitacion-externa'
     });
 
            if (res.success) {
@@ -464,7 +465,9 @@ async eliminarEvidencia(id){
 
         id,
 
-        name: 'evidencia'
+        name: 'evidencia',
+
+        table: '#table-capacitacion-externa'
 
     });
 

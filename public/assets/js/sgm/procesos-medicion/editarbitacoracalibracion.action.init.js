@@ -55,6 +55,7 @@ Alpine.data('editarBitacoraCalibracion',(id)=>({
                 valor:this.bitacora[campo]
 
             },
+            headers: { 'X-Portal3-Skip-Action-Loader': '1' },
             notify: false
 
         });
@@ -73,6 +74,7 @@ Alpine.data('editarBitacoraCalibracion',(id)=>({
 
                 valor:detalle.resultado
             },
+            headers: { 'X-Portal3-Skip-Action-Loader': '1' },
             notify: false
 
         });

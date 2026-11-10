@@ -24,11 +24,13 @@
             <ul class="dropdown-menu animated rubberBand">
                 <li>
                     <a class="dropdown-item"
+                        aria-label="Descargar PDF"
                         :href="'/sgm/gestion-recursos/programa-capacitacion-interna/pdf/' + year" download>
                         <i class="ti ti-download"></i> Descargar</a>
                 </li>
                 <li>
                     <a class="dropdown-item"
+                        aria-label="Descargar PDF"
                         :href="'/sgm/gestion-recursos/programa-capacitacion-interna/reconocimiento/year/' + year" download>
                         <i class="ti ti-certificate"></i> Reconocimientos</a>
                 </li>

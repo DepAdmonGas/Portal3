@@ -140,24 +140,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 
-     $("#table-capacitacion-induccion tbody")
-    .on("click","tr",function(){
-
-        if($(this).hasClass("selected")){
-
-            $(this).removeClass("selected");
-
-        }else{
-
-            table1
-            .$("tr.selected")
-            .removeClass("selected");
-
-            $(this)
-            .addClass("selected");
-
-        }
-
-    });
-
 });

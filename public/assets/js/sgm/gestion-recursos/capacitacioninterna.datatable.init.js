@@ -178,7 +178,7 @@ className:'text-center',
                     if(data.pdf){
 
                         return `
-                        <a target="_blank"
+                        <a aria-label="Descargar PDF" download
                         href="/sgm/gestion-recursos/programa-capacitacion-interna/reconocimiento/${row.id}">
                             <i class="ti ti-file-type-pdf fs-7 text-danger"></i>
                         </a>

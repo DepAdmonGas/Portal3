@@ -65,7 +65,7 @@ class SgmPlanAuditoriaController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/sgm/auditorias/planauditoria.actions.init.js?v=1.9.1',
+                '/js/sgm/auditorias/planauditoria.actions.init.js?v=1.9.4',
             ],
             'help' => false,
         ];
@@ -141,17 +141,29 @@ class SgmPlanAuditoriaController extends BaseController
             ->values();
 
         $auditores = PlanAuditoriaAuditor::query()
-            ->where('id_plan', $plan->id)
-            ->with('usuario')
-            ->whereNotIn('categoria', [
+            ->leftJoin(
+                'tb_usuarios as auditor_usuario',
+                'auditor_usuario.id',
+                '=',
+                'sgm_plan_auditoria_auditor.id_usuario'
+            )
+            ->where('sgm_plan_auditoria_auditor.id_plan', $plan->id)
+            ->whereNotIn('sgm_plan_auditoria_auditor.categoria', [
                 'GUÍAS',
                 'OBSERVADORES',
                 'EXPERTO(S) TÉCNICO(S)',
             ])
-            ->orderBy('id')
+            ->orderBy('sgm_plan_auditoria_auditor.id')
+            ->select([
+                'sgm_plan_auditoria_auditor.id',
+                'sgm_plan_auditoria_auditor.id_plan',
+                'sgm_plan_auditoria_auditor.id_usuario',
+                'sgm_plan_auditoria_auditor.area_actividad',
+                'sgm_plan_auditoria_auditor.categoria',
+            ])
+            ->selectRaw("COALESCE(NULLIF(TRIM(auditor_usuario.nombre), ''), NULLIF(TRIM(sgm_plan_auditoria_auditor.nombre), '')) AS nombre")
             ->get()
             ->map(function ($auditor) {
-
                 return [
                     'id' => $auditor->id,
 
@@ -159,10 +171,7 @@ class SgmPlanAuditoriaController extends BaseController
 
                     'id_usuario' => $auditor->id_usuario,
 
-                    'nombre' =>
-                    $auditor->id_usuario
-                        ? ($auditor->usuario?->nombre ?? '')
-                        : $auditor->nombre,
+                    'nombre' => $auditor->nombre ?? '',
 
                     'categoria' => $auditor->categoria,
 
@@ -421,46 +430,63 @@ class SgmPlanAuditoriaController extends BaseController
 
     public function createAuditor(): void
     {
-        $id = Request::jsonInput('id');
+        $id = (int) Request::jsonInput('id');
+        $categoria = trim((string) Request::jsonInput('equipo'));
+        $area = trim((string) Request::jsonInput('area_actividad'));
+        $nombreExterno = trim((string) Request::jsonInput('auditor'));
+        $idUsuario = (int) Request::jsonInput('auditor_interno');
 
-        $categoria = Request::jsonInput('equipo');
-
-        $area = Request::jsonInput('area_actividad');
-
-        $nombreExterno = Request::jsonInput('auditor');
-
-        $idUsuario = Request::jsonInput('auditor_interno');
-
+        if (
+            !in_array($categoria, ['AUDITOR LÍDER', 'AUDITOR'], true)
+            || $area === ''
+            || ($nombreExterno === '' && $idUsuario <= 0)
+            || ($nombreExterno !== '' && $idUsuario > 0)
+        ) {
+            JsonResponse::validation(
+                'Completa los campos obligatorios y selecciona solo un tipo de auditor.'
+            );
+        }
 
         $auditoria = Auditoria::query()
             ->where('id', $id)
+            ->where('id_estacion', $this->estacionModulo())
             ->firstOrFail();
-
 
         $plan = $this->asegurarPlanAuditoria($auditoria);
 
+        $usuario = null;
+        if ($idUsuario > 0) {
+            $usuario = Usuario::query()
+                ->where('id', $idUsuario)
+                ->where('id_gas', $this->estacionModulo())
+                ->where('estatus', 0)
+                ->first();
+
+            if (!$usuario) {
+                JsonResponse::validation(
+                    'Selecciona un auditor interno activo de la estación.'
+                );
+            }
+        }
 
         $auditor = PlanAuditoriaAuditor::create([
             'id_plan' => $plan->id,
-            'nombre' => $nombreExterno ?: '',
+            'id_usuario' => $usuario?->id,
+            'nombre' => $usuario?->nombre ?? $nombreExterno,
             'area_actividad' => $area,
             'categoria' => $categoria,
         ]);
 
         JsonResponse::success(
             'Auditor agregado correctamente',
-            [
-                'data' => [
-                    'id' => $auditor->id,
-                    'id_plan' => $auditor->id_plan,
-
-                    'nombre' => $auditor->nombre,
-
-                    'categoria' => $auditor->categoria,
-
-                    'area_actividad' => $auditor->area_actividad,
-                ],
-            ]
+            ['data' => [
+                'id' => $auditor->id,
+                'id_plan' => $auditor->id_plan,
+                'id_usuario' => $auditor->id_usuario,
+                'nombre' => $usuario?->nombre ?? $auditor->nombre,
+                'categoria' => $auditor->categoria,
+                'area_actividad' => $auditor->area_actividad,
+            ]]
         );
     }
 

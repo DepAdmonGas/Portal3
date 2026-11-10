@@ -1,9 +1,9 @@
 <div id="container" data-elemento="110" data-herramienta="2" data-id="0">
 
     
-            <div x-data="{ ...actions(), ...auditorias() }">
-                <div class="table-responsive overflow-x-auto overflow-y-hidden">
-<table class="table table-striped table-bordered text-nowrap align-middle mb-4 mt-4">
+    <div class="datatables mt-3">
+        <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+            <table id="table-auditorias-sgm" class="table table-striped table-bordered align-middle mb-4">
                     <thead>
                         <tr>
                             <th class="text-center" width="96px">#</th>
@@ -23,116 +23,11 @@
                         </tr>
                     </thead>
 
-                    <tbody>
-
-                        <tr x-show="loading">
-                            <td colspan="8" class="text-center">
-                                Cargando...
-                            </td>
-                        </tr>
-
-                        <tr x-show="error">
-                            <td colspan="8"
-                                class="text-center text-danger"
-                                x-text="error">
-                            </td>
-                        </tr>
-
-                        <template x-for="item in auditorias" :key="item.id">
-                            <tr>
-                                <td class="text-center" x-text="item.numero"></td>
-
-                                <td class="text-center" x-text="item.year"></td>
-
-                                <!-- Plan 18 -->
-                                <td class="text-center">
-                                    <a
-                                        class="pointer"
-                                        @click="editar(item.id, 18)">
-                                        <i class="ti ti-edit fs-7 text-warning text-warning"></i>
-                                    </a>
-                                </td>
-
-                                <td class="text-center">
-                                    <template x-if="item.plan18.pdf">
-                                        <a
-                                            class="pointer"
-                                            @click="descargar(item.id, 18)">
-                                            <i class="ti ti-file-type-pdf fs-7 text-danger"></i>
-                                        </a>
-                                    </template>
-
-                                    <template x-if="!item.plan18.pdf">
-                                        <i class="ti ti-x text-muted fs-7 "></i>
-                                    </template>
-                                </td>
-
-                                <!-- Hallazgos 19 -->
-                                <td class="text-center">
-                                    <a
-                                        class="pointer"
-                                        @click="editar(item.id, 19)">
-                                        <i class="ti ti-edit fs-7 text-warning"></i>
-                                    </a>
-                                </td>
-
-                                <td class="text-center">
-                                    <template x-if="item.hallazgo19.pdf">
-                                        <a
-                                            class="pointer"
-                                            @click="descargar(item.id, 19)">
-                                            <i class="ti ti-file-type-pdf text-danger fs-7"></i>
-                                        </a>
-                                    </template>
-
-                                    <template x-if="!item.hallazgo19.pdf">
-                                        <i class="ti ti-x text-muted fs-7"></i>
-                                    </template>
-                                </td>
-
-                                <!-- Plan 20 -->
-                                <td class="text-center">
-                                    <a
-                                        class="pointer"
-                                        @click="editar(item.id, 20)">
-                                        <i class="ti ti-edit fs-7 text-warning"></i>
-                                    </a>
-                                </td>
-
-                                <td class="text-center">
-                                    <template x-if="item.plan20.pdf">
-                                        <a
-                                            class="pointer"
-                                            @click="descargar(item.id, 20)">
-                                            <i class="ti ti-file-type-pdf text-danger fs-7"></i>
-                                        </a>
-                                    </template>
-
-                                    <template x-if="!item.plan20.pdf">
-                                        <i class="ti ti-x text-muted fs-7"></i>
-                                    </template>
-                                </td>
-                            </tr>
-                        </template>
-
-                        <tr
-                            x-show="!loading && auditorias.length === 0">
-
-                            <td colspan="8"
-                                class="text-center text-secondary">
-
-                                No se encontró información.
-
-                            </td>
-
-                        </tr>
-
-                    </tbody>
+                    <tbody></tbody>
 
                 </table>
-                </div>
-                
-            </div>
+        </div>
+    </div>
      
  
 

@@ -1,7 +1,6 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('gestionRecursos', () => ({
 
-      lista:[],
       form:{
 
       fecha:'',
@@ -26,23 +25,13 @@ document.addEventListener('alpine:init', () => {
 
         this.modal = new bootstrap.Modal(document.getElementById('modalNuevo'));
 
-        this.cargar();
-
       },
 
       async cargar(){
-
-
-      let response = await fetch(
-      '/sgm/gestion-recursos/responsable/table'
-      );
-
-
-      let json = await response.json();
-
-
-      this.lista=json.data;
-
+        const selector = '#table-responsables-sgm';
+        if ($.fn.DataTable.isDataTable(selector)) {
+            $(selector).DataTable().ajax.reload(null, false);
+        }
 
       },
 

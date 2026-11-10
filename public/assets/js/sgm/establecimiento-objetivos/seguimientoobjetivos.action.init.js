@@ -160,7 +160,8 @@ document.addEventListener('alpine:init', () => {
 
                     valor
 
-                }
+                },
+                { headers: { 'X-Portal3-Skip-Action-Loader': '1' } }
 
             );
 
@@ -182,7 +183,8 @@ document.addEventListener('alpine:init', () => {
 
                     contenido: detalle
 
-                }
+                },
+                { headers: { 'X-Portal3-Skip-Action-Loader': '1' } }
 
             );
 

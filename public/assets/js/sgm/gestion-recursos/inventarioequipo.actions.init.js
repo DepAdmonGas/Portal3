@@ -41,6 +41,11 @@ document.addEventListener('alpine:init', () => {
               document.getElementById('modalNuevo')
           );
 
+          document.getElementById('modalNuevo')?.addEventListener('hidden.bs.modal', () => {
+              this.resetForm();
+              this.modo = 'create';
+          });
+
           this.modalManuales = new bootstrap.Modal(
               document.getElementById('modalManuales')
           );
@@ -49,15 +54,19 @@ document.addEventListener('alpine:init', () => {
 
       openNuevo(){
 
-          this.modo='create';
-
           this.resetForm();
+
+          this.modo='create';
 
           this.modalNuevo.show();
 
       },
 
       resetForm(){
+
+        if (this.$refs?.manual) {
+            this.$refs.manual.value = '';
+        }
 
         this.form={
 
@@ -188,8 +197,7 @@ document.addEventListener('alpine:init', () => {
 
         if(res.success){
 
-            this.modo = 'edit';
-            await this.openEditar(res.id);
+            this.modalNuevo.hide();
         }
 
     }catch(e){
@@ -285,9 +293,19 @@ async subirManual() {
 
         if (res.success) {
 
-            await this.cargarManuales();
+            const manual = res.manual ?? res.data?.manual;
+            if (manual) {
+                this.form.manuales = [
+                    manual,
+                    ...(this.form.manuales ?? []).filter(item => item.id !== manual.id)
+                ];
+            } else {
+                await this.cargarManuales();
+            }
 
-            this.$refs.manual.value = '';
+            if (this.$refs?.manual) {
+                this.$refs.manual.value = '';
+            }
 
         }
 

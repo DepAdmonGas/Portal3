@@ -166,6 +166,9 @@ document.addEventListener('alpine:init', () => {
 
                     },
 
+                    headers: campo === 'fecha'
+                        ? { 'X-Portal3-Skip-Action-Loader': '1' }
+                        : {},
                     notify: false
 
                 });
@@ -199,8 +202,11 @@ document.addEventListener('alpine:init', () => {
                       '/sgm/auditorias-internas-externas-atencion-hallazgos/reporte-hallazgos-auditoria/responsable/create',
 
                   data: {
-                      id: this.idReporte,
+                      id: this.hallazgo.id,
                       id_responsable: idUsuario
+                  },
+                  headers: {
+                      'X-Portal3-Skip-Action-Loader': '1'
                   },
                   notify: false
 

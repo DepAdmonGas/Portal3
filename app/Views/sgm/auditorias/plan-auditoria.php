@@ -647,9 +647,9 @@ Nombre, denominación o razón social                    </td>
                             class="text-center align-middle fw-bold">
 
                             De
-                            <span x-text="item.hora_inicio"></span>
+                            <span x-text="formatearHora(item.hora_inicio)"></span>
                             a
-                            <span x-text="item.hora_termino"></span>
+                            <span x-text="formatearHora(item.hora_termino)"></span>
 
                         </td>
 
@@ -799,7 +799,7 @@ Nombre, denominación o razón social                    </td>
                                     x-model="formAuditor.nombre"
                                     @input="limpiarAuditorInterno()"
                                     @change="errors.nombre = false"
-                                    :disabled="tieneAuditorInterno"
+                                    :disabled="tieneAuditorInterno()"
                                     :class="errors.nombre ? 'is-invalid' : ''">
 
                             </div>
@@ -814,7 +814,8 @@ Nombre, denominación o razón social                    </td>
                                     class="form-select mb-3"
                                     x-model="formAuditor.auditorInterno"
                                     @change="limpiarNombreAuditor()"
-                                    :disabled="tieneNombreAuditor">
+                                    :disabled="tieneNombreAuditor()"
+                                    :class="errors.auditorInterno ? 'is-invalid' : ''">
 
                                     <option value="">
                                         Seleccione una opcion...

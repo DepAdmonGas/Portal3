@@ -140,7 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </li>
                                  <li>
                                     <a class="dropdown-item d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
-                                    href="/sgm/evaluacion-cumplimiento-objetivos-revision-direccion/pdf/${row.id}" target="_blank">
+                                    aria-label="Descargar PDF"
+                                    href="/sgm/evaluacion-cumplimiento-objetivos-revision-direccion/pdf/${row.id}" download>
                                         <i class="ti ti-download"></i>Descargar
                                     </a>
                                 </li>

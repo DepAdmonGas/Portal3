@@ -28,6 +28,7 @@ Alpine.data('editRevision', (id) => ({
 
     const res = await this.createAction({
         url: '/sgm/revision/update',
+        headers: { 'X-Portal3-Skip-Action-Loader': '1' },
         data: {
             id: this.id,
             campo,
@@ -42,6 +43,7 @@ async actualizarDetalle(item) {
 
     const res = await this.createAction({
         url: '/sgm/revision/update-detalle',
+        headers: { 'X-Portal3-Skip-Action-Loader': '1' },
         data: {
             id: item.id,
             respuesta: item.respuesta
