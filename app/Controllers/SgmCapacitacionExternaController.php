@@ -70,8 +70,8 @@ class SgmCapacitacionExternaController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/sgm/gestion-recursos/capacitacionexterna.actions.init.js?v=1.6.3',
-                '/js/sgm/gestion-recursos/capacitacionexterna.datatable.init.js?v=1.4.2',
+                '/js/sgm/gestion-recursos/capacitacionexterna.actions.init.js?v=1.6.4',
+                '/js/sgm/gestion-recursos/capacitacionexterna.datatable.init.js?v=1.4.3',
 
             ],
             'help' => true

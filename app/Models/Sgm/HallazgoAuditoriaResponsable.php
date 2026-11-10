@@ -3,6 +3,7 @@
 namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Usuario;
 
 class HallazgoAuditoriaResponsable extends Model
 {
@@ -26,4 +27,22 @@ class HallazgoAuditoriaResponsable extends Model
         'id_hallazgo' => 'integer',
         'id_responsable' => 'integer',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(
+            Usuario::class,
+            'id_responsable',
+            'id'
+        );
+    }
+
+    public function hallazgo()
+    {
+        return $this->belongsTo(
+            HallazgoAuditoria::class,
+            'id_hallazgo',
+            'id'
+        );
+    }
 }

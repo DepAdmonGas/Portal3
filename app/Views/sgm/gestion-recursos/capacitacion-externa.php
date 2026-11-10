@@ -27,6 +27,7 @@
                 </li>
                 <li>
                     <a class="dropdown-item"
+                        aria-label="Descargar PDF"
                         :href="'/sgm/gestion-recursos/programa-capacitacion-externa/pdf/' + year" download>
                         <i class="ti ti-download"></i> Descargar</a>
                 </li>

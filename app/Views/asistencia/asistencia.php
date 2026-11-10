@@ -152,7 +152,7 @@ x-init="
 
         <tr>
 
-            <th class="text-center align-middle">Fecha</th>
+            <th class="text-center align-middle">Fecha y hora</th>
 
             <th class="text-center align-middle">Evidencia</th>
 

@@ -723,7 +723,9 @@ class ListaAsistenciaController extends BaseController{
             ->get()
             ->map(fn ($e) => [
                 'id' => $e->id,
-                'fecha' => $e->fecha_hora?->format('d-m-Y h:m'),
+                'fecha' => $e->fecha_hora
+                    ? formatearFecha($e->fecha_hora) . ', ' . date('g:i a', strtotime($e->fecha_hora))
+                    : '',
                 'url' => '/archivos/evidencias/' . $e->evidencia,
             ]);
 
@@ -779,7 +781,7 @@ class ListaAsistenciaController extends BaseController{
         ListaAsistenciaEvidencia::create([
             'id_lista_asistencia'=> $_POST['id'],
             'evidencia'=>$nombre,
-            'fecha_hora' => date('Y-m-d H:m:s'),
+            'fecha_hora' => date('Y-m-d H:i:s'),
         ]);
 
          echo json_encode([

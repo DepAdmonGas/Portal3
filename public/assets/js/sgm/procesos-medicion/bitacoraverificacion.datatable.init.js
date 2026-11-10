@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                  <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!data.acciones.descargar ? 'disabled text-muted' : ''}"
                                     ${!data.acciones.descargar ? '' : `
-                                      href="/sgm/procesos-medicion/bitacora-verificacion-equipo-medicion/pdf/${row.id}"`} download>
+                                      href="/sgm/procesos-medicion/bitacora-verificacion-equipo-medicion/pdf/${row.id}"`} download aria-label="Descargar PDF">
                                         <i class="ti ti-download"></i>Descargar
                                     </a>
                                 </li>

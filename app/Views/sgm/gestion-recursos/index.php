@@ -16,7 +16,7 @@
             <h5 class="fw-semibold mt-4">
                 1. Gestión de personal, funciones y roles
             </h5>
-            <div class="row mt-3">
+            <div class="row mt-3 align-items-start">
                 <div class="col-md-6">
 
                     <div class="card">
@@ -45,9 +45,10 @@
     </div>
 </div>
 
-                        <div class="card-body p-0">
+                        <div class="card-body">
 
-                            <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
+                            <div class="table-responsive">
+                            <table id="table-responsables-sgm" class="table table-striped table-bordered text-nowrap align-middle mb-0 w-100">
 
                                 <thead>
 
@@ -64,93 +65,24 @@
                                 </thead>
 
 
-                                <tbody>
-
-
-                                    <template x-for="(item,index) in lista" :key="item.id">
-
-
-                                        <tr>
-
-                                            <td
-                                                class="text-center fw-bold"
-                                                width="96px"
-                                                x-text="index+1">
-                                            </td>
-
-
-                                            <td
-                                                class="text-center"
-                                                x-text="item.fecha">
-                                            </td>
-
-
-
-                                            <td class="text-center">
-
-                                                <div class="dropdown dropstart">
-                                                    <a class="pointer" data-bs-toggle="dropdown">
-                                                        <i class="ti ti-dots-vertical fs-6"></i>
-                                                    </a>
-                                                    <ul class="dropdown-menu">
-                                                        <li>
-                                                            <a class="dropdown-item d-flex align-items-center gap-3 btn-delete" :href="'/sgm/gestion-recursos/responsable/pdf/' + item.id" download>
-                                                                <i class="fs-4 ti ti-download"></i>Descargar
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="dropdown-item d-flex align-items-center gap-3"
-                                                                @click="eliminar(item.id)">
-                                                                <i class="fs-4 ti ti-trash"></i>Eliminar
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-
-
-                                            </td>
-
-
-                                        </tr>
-
-
-                                    </template>
-
-
-
-                                    <tr x-show="lista.length==0">
-
-                                        <td colspan="3" class="text-center text-secondary">
-
-                                            No se encontró información
-
-                                        </td>
-
-                                    </tr>
-
-
-                                </tbody>
+                                <tbody></tbody>
 
 
                             </table>
+                            </div>
 
                         </div>
                     </div>
 
                 </div>
 
-     <div
-    class="col-md-6 d-flex align-items-stretch mb-4"
-    x-data="{ mobile: window.innerWidth < 768 }"
-    x-init="window.addEventListener('resize', () => mobile = window.innerWidth < 768)"
->
+<div class="col-md-6 mb-4">
     <a
         href="/personal/SGM"
-        class="card w-100 text-decoration-none card-hover overflow-hidden position-relative"
-        :class="mobile ? 'h-100' : 'h-75'"
+        class="card w-100 h-auto text-decoration-none card-hover overflow-hidden position-relative"
     >
 
-        <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+        <div class="card-body p-4 mb-0">
             <div class="d-flex align-items-center gap-3">
 
                 <!-- Icono circular -->
@@ -172,7 +104,7 @@
         </div>
 
         <!-- Pie de la tarjeta -->
-        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold">
             <span class="small">Ver personal</span>
 
             <div class="icon-transition">

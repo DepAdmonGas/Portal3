@@ -128,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </li>
                                  <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!data.acciones.descargar ? 'disabled text-muted' : ''}"
+                                    aria-label="Descargar PDF"
                                     ${!data.acciones.descargar ? '' : `
                                       href="/sgm/procesos-medicion/bitacora-calibracion-equipos/pdf/${row.id}"`} download>
                                         <i class="ti ti-download"></i>Descargar

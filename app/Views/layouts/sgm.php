@@ -8,7 +8,7 @@
     <title><?= $title ?? 'Portal3' ?></title>
 
     <!-- Favicon icon-->
-    <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/favicon.png') ?>" />
+    <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/icono-web.png') ?>" />
     <!-- Core Css -->
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/css/styles.css') ?: 1 ?>" />
     <link rel="stylesheet" href="<?= asset('css/portal-tables.css') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/css/portal-tables.css') ?: 1 ?>" />

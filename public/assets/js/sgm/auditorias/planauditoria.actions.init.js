@@ -42,28 +42,28 @@ document.addEventListener('alpine:init', () => {
 
         
 
-        get tieneNombreAuditor() {
-            return this.formAuditor.nombre.trim() !== '';
+        tieneNombreAuditor() {
+            return String(this.formAuditor.nombre || '').trim() !== '';
         },
 
-        get tieneAuditorInterno() {
-            return this.formAuditor.auditorInterno !== '';
+        tieneAuditorInterno() {
+            return String(this.formAuditor.auditorInterno || '').trim() !== '';
         },
 
         limpiarNombreAuditor() {
-
             if (this.formAuditor.auditorInterno) {
                 this.formAuditor.nombre = '';
+                this.errors.nombre = false;
+                this.errors.auditorInterno = false;
             }
-
         },
 
         limpiarAuditorInterno() {
-
-            if (this.formAuditor.nombre.trim() !== '') {
+            if (String(this.formAuditor.nombre || '').trim() !== '') {
                 this.formAuditor.auditorInterno = '';
+                this.errors.nombre = false;
+                this.errors.auditorInterno = false;
             }
-
         },
 
         formAuxiliar: {
@@ -75,6 +75,7 @@ document.addEventListener('alpine:init', () => {
         errors:{
           categoria: false,
           nombre: false,
+          auditorInterno: false,
           area_actividad: false,
 
           hora_inicio: false,
@@ -248,7 +249,8 @@ document.addEventListener('alpine:init', () => {
                 categoria: '',
                 nombre: '',
                 id_usuario: '',
-                area_actividad: ''
+                area_actividad: '',
+                auditorInterno: ''
             };
 
             this.modalTipo = 'auditor';
@@ -300,9 +302,19 @@ document.addEventListener('alpine:init', () => {
             });
 
             if (res.success) {
+                const auditorGuardado = res.data?.data ?? res.data ?? {};
+                const auditorInterno = this.usuarios.find(
+                    usuario => Number(usuario.id) === Number(this.formAuditor.auditorInterno)
+                );
 
-                // Agregar a la tabla
-                this.auditores.push(res.data);
+                this.auditores.push({
+                    ...auditorGuardado,
+                    nombre: String(auditorGuardado.nombre || '').trim()
+                        || auditorInterno?.nombre
+                        || String(this.formAuditor.nombre || '').trim(),
+                    categoria: auditorGuardado.categoria || this.formAuditor.categoria,
+                    area_actividad: auditorGuardado.area_actividad || this.formAuditor.area_actividad
+                });
 
                 // Limpiar formulario
                 this.formAuditor = {
@@ -344,8 +356,14 @@ document.addEventListener('alpine:init', () => {
                 valid = false;
             }
 
-            if (!this.formAuditor.area_actividad) {
+            if (!String(this.formAuditor.area_actividad || '').trim()) {
                 this.errors.area_actividad = true;
+                valid = false;
+            }
+
+            if (!this.tieneNombreAuditor() && !this.tieneAuditorInterno()) {
+                this.errors.nombre = true;
+                this.errors.auditorInterno = true;
                 valid = false;
             }
           
@@ -670,6 +688,20 @@ document.addEventListener('alpine:init', () => {
 
             }
 
+        },
+
+        formatearHora(hora) {
+            if (!hora) return '';
+
+            const partes = String(hora).trim().match(/^(\d{1,2}):(\d{2})/);
+            if (!partes) return hora;
+
+            const hora24 = Number(partes[1]);
+            if (hora24 < 0 || hora24 > 23) return hora;
+
+            const sufijo = hora24 < 12 ? 'a. m.' : 'p. m.';
+            const hora12 = hora24 % 12 || 12;
+            return `${hora12}:${partes[2]} ${sufijo}`;
         },
 
         finalizar(){

@@ -53,7 +53,7 @@ class SgmAuditoriaInternaExternaController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
                 '/libs/select2/dist/js/select2.min.js',
-                '/js/sgm/auditorias/index.actions.init.js?v=1.3.0',
+                '/js/sgm/auditorias/index.actions.init.js?v=1.4.0',
                 '/js/asistencia/listaasistencia.crear.init.js?v=1.0.1',
                 '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.1',
             ],

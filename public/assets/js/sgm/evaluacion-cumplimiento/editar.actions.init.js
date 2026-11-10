@@ -64,6 +64,7 @@ async guardarCampo() {
     await this.createAction({
         url: '/sgm/evaluacion-cumplimiento-objetivos-revision-direccion/update',
         data: this.revision,
+        headers: { 'X-Portal3-Skip-Action-Loader': '1' },
         notify: false
 
     });

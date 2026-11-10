@@ -14,7 +14,6 @@ use App\Models\Usuario;
 use App\Models\Sgm\Elemento;
 use App\Models\Sgm\Autorizado;
 use App\Models\Sgm\Auditoria;
-use App\Models\Sgm\PlanAuditoriaResponsable;
 use App\Models\Sgm\HallazgoAuditoria;
 use App\Models\Sgm\HallazgoAuditoriaResultado;
 use App\Models\Sgm\HallazgoAuditoriaEntrevistador;
@@ -62,7 +61,7 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
             'links' => [],
             'scripts' => [
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/sgm/auditorias/reportehallazgoauditoria.actions.init.js?v=1.9.0',
+                '/js/sgm/auditorias/reportehallazgoauditoria.actions.init.js?v=1.9.1',
             ],
             'help' => true,
         ];
@@ -188,16 +187,15 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
             })
             ->values();
 
-        $responsables = PlanAuditoriaResponsable::query()
-            ->where('id_plan', $id)
+        $responsables = HallazgoAuditoriaResponsable::query()
+            ->where('id_hallazgo', $hallazgo->id)
             ->with('usuario.puesto')
             ->orderBy('id')
             ->get()
             ->map(function ($responsable) {
                 return [
                     'id' => $responsable->id,
-
-                    'id_plan' => $responsable->id_plan,
+                    'id_hallazgo' => $responsable->id_hallazgo,
 
                     'id_responsable' =>
                     $responsable->id_responsable,
@@ -479,6 +477,12 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
         $id = (int) Request::jsonInput('id');
         $idResponsable = (int) Request::jsonInput('id_responsable');
 
+        $hallazgo = HallazgoAuditoria::query()
+            ->where('id', $id)
+            ->whereHas('auditoria', function ($query) {
+                $query->where('id_estacion', $this->estacionModulo());
+            })
+            ->firstOrFail();
 
         $usuario = Usuario::query()
             ->where('id', $idResponsable)
@@ -487,22 +491,22 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
             ->with('puesto')
             ->firstOrFail();
 
-        $existe = PlanAuditoriaResponsable::query()
-            ->where('id_plan', $id)
+        $existe = HallazgoAuditoriaResponsable::query()
+            ->where('id_hallazgo', $hallazgo->id)
             ->where('id_responsable', $usuario->id)
             ->exists();
 
         if ($existe) {
 
             JsonResponse::error(
-                'El usuario ya está asignado al plan.'
+                'El usuario ya está asignado al reporte.'
             );
 
             return;
         }
 
-        $responsable = PlanAuditoriaResponsable::create([
-            'id_plan' => $id,
+        $responsable = HallazgoAuditoriaResponsable::create([
+            'id_hallazgo' => $hallazgo->id,
             'id_responsable' => $usuario->id,
         ]);
 
@@ -513,8 +517,8 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
                     'id' =>
                     $responsable->id,
 
-                    'id_plan' =>
-                    $responsable->id_plan,
+                    'id_hallazgo' =>
+                    $responsable->id_hallazgo,
 
                     'id_responsable' =>
                     $responsable->id_responsable,
@@ -536,8 +540,11 @@ class SgmReporteHallazgoAuditoriaController extends BaseController
     {
         $id = Request::jsonInput('id');
 
-        $responsable = PlanAuditoriaResponsable::query()
+        $responsable = HallazgoAuditoriaResponsable::query()
             ->where('id', $id)
+            ->whereHas('hallazgo.auditoria', function ($query) {
+                $query->where('id_estacion', $this->estacionModulo());
+            })
             ->firstOrFail();
 
         $responsable->delete();

@@ -81,8 +81,8 @@ class SgmInventarioEquipoController extends BaseController
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-                '/js/sgm/gestion-recursos/inventarioequipo.actions.init.js?v=1.2.0',
-                '/js/sgm/gestion-recursos/inventarioequipo.datatable.init.js?v=1.3.0'
+                '/js/sgm/gestion-recursos/inventarioequipo.actions.init.js?v=1.2.1',
+                '/js/sgm/gestion-recursos/inventarioequipo.datatable.init.js?v=1.3.1'
             ],
             'help' => true
         ];
@@ -384,6 +384,8 @@ class SgmInventarioEquipoController extends BaseController
             $manual = InventarioEquipoManual::create([
 
                 'id_equipo' => $equipo->id,
+
+                'fecha_hora' => date('Y-m-d H:i:s'),
 
                 'archivo' => $nombreArchivo
 

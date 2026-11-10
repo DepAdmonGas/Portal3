@@ -510,17 +510,17 @@
 
                     </div>
 
-                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mt-2 mb-3">
+                    <table class="table table-striped table-bordered align-middle mt-2 mb-3 w-100" style="table-layout: fixed;">
 
                         <thead>
 
                             <tr>
 
-                                <th class="text-center" >#</th>
+                                <th class="text-center" style="width: 60px;">#</th>
 
                                 <th>Aspecto</th>
 
-                                <th class="text-center" width="180">Respuesta</th>
+                                <th class="text-center" style="width: 140px;">Respuesta</th>
 
                             </tr>
 
@@ -653,14 +653,14 @@
 
                 <div class="modal-body" x-show="detalle">
 
-                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mb-4">
+                    <table class="table table-striped table-bordered mb-4 align-middle w-100" style="table-layout: fixed;">
                         <tbody>
 
                             <tr>
                                 <th width="35%">
                                     Trabajo realizado o producto adquirido:
                                 </th>
-                                <td x-text="detalle.descripcion"></td>
+                                <td class="text-break" x-text="detalle.descripcion"></td>
                             </tr>
 
                             <tr>
@@ -691,13 +691,13 @@
                         </tbody>
                     </table>
 
-                    <table class="table table-striped table-bordered mb-4  align-middle">
+                    <table class="table table-striped table-bordered mb-4 align-middle w-100" style="table-layout: fixed;">
 
                         <thead>
                             <tr>
-                                <th class="text-center" width="60">No.</th>
+                                <th class="text-center" style="width: 60px;">No.</th>
                                 <th>Aspecto evaluado</th>
-                                <th class="text-center" width="120">Respuesta</th>
+                                <th class="text-center" style="width: 120px;">Respuesta</th>
                             </tr>
                         </thead>
 
@@ -782,7 +782,7 @@
 
                     </div>
 
-                    <table class="table table-striped table-bordered  text-nowrap align-middle">
+                    <table class="table table-striped table-bordered align-middle w-100" style="table-layout: fixed;">
 
                         <tbody>
 

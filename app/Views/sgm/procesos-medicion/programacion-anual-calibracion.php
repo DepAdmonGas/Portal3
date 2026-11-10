@@ -25,7 +25,7 @@
                             <button type="button" class="dropdown-item" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo</button>
                         </li>
                         <li>
-                            <a class="dropdown-item" :href="pdf"><i class="ti ti-download"></i> Descargar</a>
+                            <a class="dropdown-item" aria-label="Descargar PDF" :href="pdf" download><i class="ti ti-download"></i> Descargar</a>
                         </li>
                     </ul>
                 </div>

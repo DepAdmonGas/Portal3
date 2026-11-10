@@ -18,6 +18,7 @@
                     <div class="col-12 col-md-auto d-grid mb-3 mt-3">
                        <a
         class="btn bg-primary-subtle text-primary"
+        aria-label="Descargar PDF"
         :href="'/sgm/gestion-recursos/programa-capacitacion-induccion/pdf'"
         download>
         <i class="ti ti-download"></i> Descargar

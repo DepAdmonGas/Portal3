@@ -51,7 +51,7 @@ class SgmCapacitacionInduccionController extends BaseController
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/sgm/gestion-recursos/capacitacioninduccion.actions.init.js?v=1.0.1',
-                '/js/sgm/gestion-recursos/capacitacioninduccion.datatable.init.js?v=1.0.1',
+                '/js/sgm/gestion-recursos/capacitacioninduccion.datatable.init.js?v=1.0.2',
 
             ],
             'help' => true

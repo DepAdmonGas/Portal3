@@ -102,7 +102,10 @@ document.addEventListener('alpine:init',()=>{
                 campo,
                 valor: this.bitacora[campo]
             },
-            notify: false
+            notify: false,
+            headers: {
+                'X-Portal3-Skip-Action-Loader': '1'
+            }
         });
 
         },
@@ -119,7 +122,10 @@ document.addEventListener('alpine:init',()=>{
                 resultado: resultado.resultado
 
             },
-            notify: false
+            notify: false,
+            headers: {
+                'X-Portal3-Skip-Action-Loader': '1'
+            }
 
         });
 

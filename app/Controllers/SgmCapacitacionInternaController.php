@@ -182,9 +182,13 @@ class SgmCapacitacionInternaController extends BaseController
 
     public function reconocimiento(int $id)
     {
-        $pdf = new FPDF();
+        $idEstacion = $this->estacionModulo();
+        if (!$idEstacion) {
+            http_response_code(404);
+            exit('No se encontró la estación del módulo.');
+        }
 
-        $estacion = Estacion::findOrFail($this->estacionModulo());
+        $estacion = Estacion::findOrFail($idEstacion);
 
         // ======================
         // OBTENER DATOS
@@ -192,7 +196,15 @@ class SgmCapacitacionInternaController extends BaseController
         $cal = CursoCalendario::with([
             'tema.modulo',
             'usuario'
-        ])->findOrFail($id);
+        ])
+            ->where('id_estacion', $idEstacion)
+            ->where('resultado', '>=', 60)
+            ->findOrFail($id);
+
+        if (!$cal->tema || !$cal->usuario) {
+            http_response_code(404);
+            exit('El reconocimiento no cuenta con los datos requeridos.');
+        }
 
         $titulo = $cal->tema->titulo;
         $modulo = $cal->tema->modulo->titulo ?? '';
@@ -210,13 +222,10 @@ class SgmCapacitacionInternaController extends BaseController
         $pdf->AddPage();
 
         // Fondo
-        $pdf->Image(
-            PUBLIC_PATH . '/assets/images/cursos/fondo-sgm.jpg',
-            0,
-            0,
-            300,
-            210
-        );
+        $fondo = PUBLIC_PATH . '/assets/images/cursos/fondo-sgm.jpg';
+        if (is_file($fondo)) {
+            $pdf->Image($fondo, 0, 0, 300, 210);
+        }
 
         // Helper encoding
         $txt = fn($t) => mb_convert_encoding($t, 'ISO-8859-1', 'UTF-8');
@@ -261,15 +270,16 @@ class SgmCapacitacionInternaController extends BaseController
             0
         );
 
-        if (isset($estacion->firma)) {
-            $extension = pathinfo($estacion->firma, PATHINFO_EXTENSION);
-            $pdf->Image(PUBLIC_PATH . '/uploads/firma-personal/' . $estacion->firma, '175', '151', '50', '0', $extension);
+        $rutaFirma = PUBLIC_PATH . '/uploads/firma-personal/' . (string) $estacion->firma;
+        $extension = strtolower(pathinfo((string) $estacion->firma, PATHINFO_EXTENSION));
+        if (!empty($estacion->firma) && in_array($extension, ['jpg', 'jpeg', 'png'], true) && is_file($rutaFirma)) {
+            $pdf->Image($rutaFirma, '175', '151', '50', '0', $extension);
         }
 
         // ======================
         // OUTPUT
         // ======================
-        return $pdf->Output('I', 'reconocimiento.pdf');
+        return $pdf->Output('D', 'reconocimiento-' . $id . '.pdf');
     }
 
     public function pdf(int $year)
@@ -519,14 +529,22 @@ class SgmCapacitacionInternaController extends BaseController
             ->orderBy('fecha_programada', 'desc')
             ->get();
 
+        $calendarios = $calendarios->filter(
+            fn ($cal) => $cal->usuario && $cal->tema
+        );
+
         // ======================
         // PDF
         // ======================
         $pdf = new FPDF('L', 'mm', 'A4');
 
-        foreach ($calendarios as $cal) {
+        if ($calendarios->isEmpty()) {
+            $pdf->AddPage();
+            $pdf->SetFont('Arial', '', 16);
+            $pdf->Cell(0, 12, $safeText('No hay reconocimientos disponibles para este año.'), 0, 1, 'C');
+        }
 
-            if (!$cal->usuario || !$cal->tema) continue;
+        foreach ($calendarios as $cal) {
 
             $nombre = $safeText($cal->usuario->nombre);
             $titulo = $safeText($cal->tema->titulo);
@@ -546,13 +564,10 @@ class SgmCapacitacionInternaController extends BaseController
 
             $pdf->SetTitle(substr($titulo, 0, 100));
 
-            $pdf->Image(
-                asset('images/cursos/fondo-sgm.jpg'),
-                0,
-                0,
-                300,
-                210
-            );
+            $fondo = PUBLIC_PATH . '/assets/images/cursos/fondo-sgm.jpg';
+            if (is_file($fondo)) {
+                $pdf->Image($fondo, 0, 0, 300, 210);
+            }
 
             // ======================
             // NOMBRE
@@ -590,16 +605,17 @@ class SgmCapacitacionInternaController extends BaseController
                 'C'
             );
 
-            if (isset($estacion->firma)) {
-                $extension = pathinfo($estacion->firma, PATHINFO_EXTENSION);
-                $pdf->Image(PUBLIC_PATH . '/uploads/firma-personal/' . $estacion->firma, '175', '151', '50', '0', $extension);
+            $rutaFirma = PUBLIC_PATH . '/uploads/firma-personal/' . (string) $estacion->firma;
+            $extension = strtolower(pathinfo((string) $estacion->firma, PATHINFO_EXTENSION));
+            if (!empty($estacion->firma) && in_array($extension, ['jpg', 'jpeg', 'png'], true) && is_file($rutaFirma)) {
+                $pdf->Image($rutaFirma, '175', '151', '50', '0', $extension);
             }
         }
 
 
 
         return $pdf->Output(
-            'I',
+            'D',
             "reconocimientos_sgm_{$year}.pdf"
         );
     }

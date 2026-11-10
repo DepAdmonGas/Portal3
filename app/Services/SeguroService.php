@@ -33,13 +33,23 @@ final class SeguroService
             ->orderByDesc('fecha_hora')->orderByDesc('id')->get()
             ->map(static function ($registro): array {
                 $archivo = basename((string) $registro->archivo);
-                $fecha = (string) $registro->fecha_hora;
-                $timestamp = strtotime($fecha);
-                $fechaFormateada = formatearFecha($registro->fecha_hora);
+                $fechaValor = $registro->fecha_hora;
+                if ($fechaValor instanceof \DateTimeInterface) {
+                    $fecha = $fechaValor->format('Y-m-d H:i:s');
+                    $fechaFormateada = formatearFecha($fechaValor->format('Y-m-d'))
+                        . ' ' . $fechaValor->format('g:i a');
+                } else {
+                    $fecha = is_scalar($fechaValor) ? trim((string) $fechaValor) : '';
+                    $timestamp = $fecha !== '' ? strtotime($fecha) : false;
+                    $fechaFormateada = $timestamp === false
+                        ? ''
+                        : formatearFecha(date('Y-m-d', $timestamp)) . ' ' . date('g:i a', $timestamp);
+                }
+
                 return [
                     'id' => (int) $registro->id,
                     'fecha_hora' => $fecha,
-                    'fecha_hora_formateada' => trim($fechaFormateada . ($timestamp === false ? '' : ' ' . date('g:i a', $timestamp))),
+                    'fecha_hora_formateada' => trim($fechaFormateada),
                     'archivo' => $archivo,
                     'archivo_disponible' => $archivo !== '' && is_file(self::directorio() . $archivo),
                     'estatus' => (int) $registro->estatus,

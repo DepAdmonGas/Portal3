@@ -48,11 +48,15 @@ class SgmGestionRecursosController extends BaseController
             'usuarios' => $usuarios,
             'estacionId' => $estacionId,
             'moduleStationKey' => 'sgm',
-            'links' => [],
+            'links' => [
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+            ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/sgm/gestion-recursos/index.actions.init.js?v=1.1.0'
+                '/js/sgm/gestion-recursos/index.actions.init.js?v=1.1.1',
+                '/js/sgm/gestion-recursos/index.datatable.init.js?v=1.0.0'
             ],
             'help' => true
         ];
