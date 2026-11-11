@@ -186,6 +186,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    var punchReportFilterModal = document.getElementById('punch-report-filter-modal');
+    var punchReportFilterForm = document.getElementById('punch-report-filter-form');
+    if (punchReportFilterModal && punchReportFilterForm) {
+        var punchReportAppliedValues = [];
+        var punchReportSubmitted = false;
+        function capturePunchReportAppliedValues() {
+            punchReportAppliedValues = Array.from(punchReportFilterForm.elements)
+                .filter(function (control) { return control.name && control.type !== 'button' && control.type !== 'submit'; })
+                .map(function (control) { return [control, control.value]; });
+        }
+        punchReportFilterModal.addEventListener('show.bs.modal', function () {
+            var visibleWorker = document.getElementById('punch-report-worker');
+            var hiddenWorker = punchReportFilterForm.querySelector('input[name="worker_id"]');
+            if (visibleWorker && hiddenWorker) hiddenWorker.value = visibleWorker.value;
+            punchReportSubmitted = false;
+            capturePunchReportAppliedValues();
+        });
+        punchReportFilterForm.addEventListener('submit', function () { punchReportSubmitted = true; });
+        punchReportFilterModal.addEventListener('hidden.bs.modal', function () {
+            if (punchReportSubmitted) return;
+            punchReportAppliedValues.forEach(function (entry) { entry[0].value = entry[1]; });
+        });
+    }
+
     var csvForm = document.querySelector('[data-checador-csv-form]');
     var punchReportFilterForm = document.getElementById('punch-report-filter-form');
     if (!csvForm || !punchReportFilterForm) return;

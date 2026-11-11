@@ -626,6 +626,38 @@ final class ChecadorAccessService
      * @param array<int,int> $stationIds in tb_estaciones ID space
      * @return array<int, array{id:int,nombre:string}>
      */
+    public static function resolveActiveStationIdForLocality(int $localityId): ?int
+    {
+        if ($localityId < 1) {
+            return null;
+        }
+
+        try {
+            // Reuse the established station/locality converter, then validate
+            // its result through this service's unique, active station bridge.
+            $stationIds = MultiestacionService::convertIds(
+                [$localityId],
+                MultiestacionService::TABLA_RH_LOCALIDADES,
+                MultiestacionService::TABLA_ESTACIONES
+            );
+            if (count($stationIds) !== 1) {
+                return null;
+            }
+
+            $stationId = (int) $stationIds[0];
+            $mappedLocalities = self::mapStationIdsToUniqueLocalities([$stationId]);
+            if ($stationId < 1
+                || count($mappedLocalities) !== 1
+                || (int) ($mappedLocalities[0]['id'] ?? 0) !== $localityId) {
+                return null;
+            }
+
+            return $stationId;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
     private static function mapStationIdsToUniqueLocalities(array $stationIds): array
     {
         $mapped = [];

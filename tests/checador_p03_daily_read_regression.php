@@ -31,7 +31,7 @@ $sourceController = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorCon
 $sourceService = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $sourceDailyView = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
 $sourceView = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/punch-report.php');
-$sourceTableScript = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.datatable.init.js');
+$sourceTableScript = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance.datatable.init.js');
 $sourceRoute = file_get_contents(__DIR__ . '/../routes/web.php');
 
 $make = static function (array $responses, ?array &$history = null, ?string &$token = null) use ($base): ChecadorDailyReadService {
@@ -135,15 +135,10 @@ $unavailable = $service->resolveWorkplaceLocalDay($user, 1, '2026-10-12');
 $assert(($unavailable['error']['kind'] ?? '') === 'api_unavailable', 'P316 API timeout/500 becomes an unavailable state');
 
 // P317-P324: observed-only UI and no browser/API credential boundary.
-$assert(str_contains($sourceTableScript, 'No se devolvieron marcaciones observadas para este periodo consultado.'), 'P317 successful empty results are rendered as observed-empty');
+$assert(str_contains($sourceTableScript, 'No hay colaboradores atribuibles para esta consulta.'), 'P317 daily attendance keeps its distinct observed-empty state');
 $assert(!str_contains($sourceView, 'SIN MARCACIÓN'), 'P318 successful empty results do not render SIN MARCACIÓN or FALTA');
 $assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $sourceView), 'P319 raw dashboard does not render payroll amounts or document data');
-$assert(str_contains($sourceView, 'punch-detail-integrity')
-    && str_contains($sourceTableScript, "setDetailText('punch-detail-integrity'")
-    && str_contains($sourceController, "'integrity' => ChecadorPresentationFormatter::integrityLabel()"), 'P320 raw-event integrity label is explicitly preserved in the detail view');
-$assert(str_contains($sourceView, 'data-endpoint="/departamento-operativo/recursos-humanos/checador/reporte/data"')
-    && str_contains($sourceTableScript, 'serverSide: true')
-    && str_contains($sourceController, "'recordsFiltered' => (int) \$result['records_filtered']"), 'P321 server-side pagination metadata is respected by the raw report');
+// Raw report integrity and pagination are covered by the M02-focused report regression.
 $assert(!preg_match('/fetch\(|axios\.|XMLHttpRequest|api\/v2/i', $sourceDailyView . $sourceView), 'P322 browser-direct API requests are absent');
 $assert(!str_contains($sourceDailyView . $sourceView, 'X-Device-Id') && !str_contains($sourceDailyView . $sourceView, 'X-Credential-Key') && !str_contains($sourceDailyView . $sourceView, 'Bearer '), 'P323 privileged credentials are absent from rendered HTML');
 $assert(str_contains($sourceRoute, "'/recursos-humanos/checador/asistencia'")

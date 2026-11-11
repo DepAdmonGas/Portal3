@@ -639,6 +639,7 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/recursos-humanos/checador/programacion-semanal/asignar', Route::auth(['ChecadorController', 'createScheduleAssignment']));
         $r->addRoute('GET', '/recursos-humanos/checador/reporte', Route::auth(['ChecadorController', 'punchReport']));
         $r->addRoute('GET', '/recursos-humanos/checador/reporte/data', Route::auth(['ChecadorController', 'punchReportData']));
+        $r->addRoute('GET', '/recursos-humanos/checador/reporte/colaboradores', Route::auth(['ChecadorController', 'punchReportWorkers']));
         $r->addRoute('GET', '/recursos-humanos/checador/comparacion-nomina', Route::auth(['ChecadorController', 'payrollComparison']));
         $r->addRoute('POST', '/recursos-humanos/checador/incidencias/crear', Route::auth(['ChecadorController', 'createIncidence']));
         $r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia}/resolve', Route::auth(['ChecadorController', 'lifecycleResolve']));

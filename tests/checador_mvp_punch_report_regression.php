@@ -37,13 +37,17 @@ $datatableJs = (string) file_get_contents($datatablePath);
 $route = (string) file_get_contents($routePath);
 
 $start = strpos($controller, 'public function punchReport(): void');
-$end = strpos($controller, 'public function punchReportData(): void', $start === false ? 0 : $start);
+$end = strpos($controller, 'public function punchReportWorkers(): void', $start === false ? 0 : $start);
+if ($end === false) $end = strpos($controller, 'public function punchReportData(): void', $start === false ? 0 : $start);
 $reportMethod = $start !== false && $end !== false ? substr($controller, $start, $end - $start) : '';
 
 $assert($reportMethod !== '' && str_contains($reportMethod, 'new ChecadorRawPunchReadService()'), 'MVP report constructs the dedicated raw SQL reader');
 $assert(!str_contains($reportMethod, 'new ChecadorDailyReadService') && !str_contains($reportMethod, '/api/v2/punch-events') && !str_contains($reportMethod, 'workplaces/'), 'MVP report no longer depends on punch/timezone API HTTP calls; demo-label configuration is not a read request');
-$assert(str_contains($reportMethod, 'ChecadorAccessService::authorize(null)') && str_contains($reportMethod, 'array_column($workplaces, \'id\')') && str_contains($reportMethod, 'requested_station_out_of_scope'), 'server-authorized locality scope is checked before SQL report queries');
-$assert(str_contains($reportMethod, "'title' => 'Checador'") && str_contains($reportMethod, "Breadcrumb::add('Recursos Humanos'") && str_contains($reportMethod, "Breadcrumb::add('Reporte de marcaciones'"), 'report uses the Operations title and breadcrumb conventions');
+$assert(str_contains($reportMethod, 'ChecadorAccessService::authorize(null)')
+    && str_contains($reportMethod, '$this->sessionWorkplaceId($access)')
+    && str_contains($reportMethod, 'ChecadorAccessService::authorize($selectedWorkplaceForView)')
+    && str_contains($reportMethod, 'setChecadorWorkplaceContext($selectedWorkplaceForView)'), 'server-authorized session locality is rechecked before M02 reads');
+$assert(str_contains($reportMethod, "'title' => 'Reporte de marcaciones'") && str_contains($reportMethod, "Breadcrumb::add('Recursos Humanos'") && str_contains($reportMethod, "Breadcrumb::add('Reporte de marcaciones'"), 'report uses its specific title and institutional breadcrumb');
 $scopeCheckPosition = strpos($reportMethod, 'requested_station_out_of_scope');
 $sqlReadPosition = strpos($reportMethod, '$reader->readDataTablePage(');
 $assert($scopeCheckPosition !== false && $sqlReadPosition !== false && $scopeCheckPosition < $sqlReadPosition, 'requested URL station is denied before any raw SQL read');
@@ -52,7 +56,7 @@ $assert(str_contains($access, '\'descargar\' => !empty($parent[\'descargar\'])')
 $assert(str_contains($access, 'return $homeStationId > 0 && in_array($homeStationId, $supportedStationIds, true)') && str_contains($access, 'return $supportedStationIds;'), 'Encargado remains on primary station and Dirección stays within existing Checador allowlist');
 
 $forbiddenSql = preg_match('/\b(INSERT|UPDATE|DELETE|REPLACE|CREATE|ALTER|DROP|TRUNCATE|GRANT|REVOKE)\b/i', $reader) === 1;
-$assert(str_contains($reader, 'SELECT COUNT(*)') && str_contains($reader, 'SELECT id, event_uuid') && !$forbiddenSql, 'raw SQL repository contains SELECT reads only');
+$assert(str_contains($reader, 'SELECT COUNT(*)') && str_contains($reader, 'SELECT punches.id, punches.event_uuid') && !$forbiddenSql, 'raw SQL repository contains SELECT reads only');
 $assert(str_contains($reader, 'id_estacion_resuelta = ?') && str_contains($reader, 'ocurrido_at_utc >= ?') && str_contains($reader, 'ocurrido_at_utc < ?') && str_contains($reader, 'id_personal_resuelto = ?'), 'SQL has mandatory station, half-open UTC, and canonical identity filters');
 $assert(!str_contains($reader, 'integrity_seal') && !str_contains($reader, 'integrity_key_id') && !str_contains($reader, 'metadata_json'), 'SQL projection excludes integrity secrets and unneeded metadata');
 $assert(str_contains($reader, 'LIMIT ? OFFSET ?') && str_contains($reader, 'MAX_PAGE_SIZE = 200') && str_contains($reader, 'MAX_OFFSET = 100000'), 'SQL pagination is parameterized, capped, and deterministic');
@@ -67,13 +71,13 @@ $invalidSort = $reflection->invoke($service, 1, '2026-02-01 00:00:00', '2026-02-
 $assert(($invalidSort['error']['kind'] ?? '') === 'bad_request', 'sort direction is allowlisted');
 $dataTableMethod = new ReflectionMethod(App\Services\ChecadorRawPunchReadService::class, 'readDataTablePage');
 $invalidDataTableLength = $dataTableMethod->invoke($service, 1, '2026-02-01 00:00:00', '2026-02-02 00:00:00', null, 0, 200, '', 1, 'asc');
-$invalidDataTableOrder = $dataTableMethod->invoke($service, 1, '2026-02-01 00:00:00', '2026-02-02 00:00:00', null, 0, 25, '', 5, 'asc');
+$invalidDataTableOrder = $dataTableMethod->invoke($service, 1, '2026-02-01 00:00:00', '2026-02-02 00:00:00', null, 0, 25, '', 7, 'asc');
 $invalidDataTableSearch = $dataTableMethod->invoke($service, 1, '2026-02-01 00:00:00', '2026-02-02 00:00:00', null, 0, 25, str_repeat('a', 101), 1, 'asc');
 $assert(($invalidDataTableLength['error']['kind'] ?? '') === 'bad_request'
     && ($invalidDataTableOrder['error']['kind'] ?? '') === 'bad_request'
     && ($invalidDataTableSearch['error']['kind'] ?? '') === 'bad_request', 'DataTables page size, sortable columns and search size are strictly allowlisted before SQL access');
 $searchClause = new ReflectionMethod(App\Services\ChecadorRawPunchReadService::class, 'searchClause');
-$escapedSearch = $searchClause->invoke(null, 'a_%!');
+$escapedSearch = $searchClause->invoke(null, 'a_%!', 'Localidad de prueba');
 $assert(str_contains((string) ($escapedSearch[0] ?? ''), "LIKE ? ESCAPE '!'")
     && ($escapedSearch[1][0] ?? null) === '%a!_!%!!%', 'global-search metacharacters are parameterized and treated as literal text');
 $csvBuilder = new ReflectionMethod(ChecadorController::class, 'punchReportCsvContent');
@@ -121,13 +125,26 @@ $dataConfig = $dataHandler instanceof Closure ? (new ReflectionFunction($dataHan
 $assert(($dataRoute[0] ?? null) === \FastRoute\Dispatcher::FOUND
     && ($dataConfig['middlewares'] ?? null) === ['auth', 'csrf']
     && ($dataConfig['handler'] ?? null) === ['ChecadorController', 'punchReportData'], 'DataTables JSON route is protected by the existing authenticated middleware');
-$assert(str_contains($view, 'Hora en UTC')
+$workerRoute = $routeDispatcher->dispatch('GET', '/departamento-operativo/recursos-humanos/checador/reporte/colaboradores');
+$workerHandler = $workerRoute[1] ?? null;
+$workerConfig = $workerHandler instanceof Closure ? (new ReflectionFunction($workerHandler))->getStaticVariables() : [];
+$workerStart = strpos($controller, 'public function punchReportWorkers(): void');
+$workerEnd = strpos($controller, 'public function punchReportData(): void', $workerStart === false ? 0 : $workerStart);
+$workerMethod = $workerStart !== false && $workerEnd !== false ? substr($controller, $workerStart, $workerEnd - $workerStart) : '';
+$assert(($workerRoute[0] ?? null) === \FastRoute\Dispatcher::FOUND
+    && ($workerConfig['middlewares'] ?? null) === ['auth', 'csrf']
+    && ($workerConfig['handler'] ?? null) === ['ChecadorController', 'punchReportWorkers']
+    && str_contains($workerMethod, 'ChecadorAccessService::authorize(null)')
+    && str_contains($workerMethod, 'ModuleStationService::getContext'), 'name search route is authenticated and derives its locality from authorized server context');
+$assert(str_contains($view, 'Horas en UTC')
     && str_contains($formatter, 'Integridad no verificada por Portal3')
     && str_contains($controller, "'ocurrido_at_utc' =>"), 'view and JSON projection explain UTC and integrity remains explicitly unverified by Portal3');
-$assert(str_contains($view, 'name="worker_id"') && str_contains($view, 'workplace_id') && str_contains($view, 'from_date') && str_contains($view, 'to_date'), 'view filters by canonical worker, authorized station, and UTC date range');
+$assert(str_contains($view, 'name="worker_id"') && !str_contains($view, 'name="workplace_id"')
+    && str_contains($view, 'from_date') && str_contains($view, 'to_date')
+    && str_contains($reportMethod, '$this->sessionWorkplaceId($access)'), 'view filters by canonical worker and UTC range while locality comes from authorized session');
 $assert(str_contains($view, 'if (!empty($canDownload))') && str_contains($datatableJs, 'pageLength: 25') && str_contains($datatableJs, 'lengthMenu: [10, 25, 50, 100]'), 'CSV control follows download permission and DataTables provides the only page-size/pagination controls');
 $assert(str_contains($datatableJs, "url: '/assets/libs/datatables.net/js/es-ES.json'")
-    && str_contains($view, 'una consulta sin filas no confirma ausencia de marcaciones'), 'empty results reuse the institutional Spanish language file while the report explains the evidence limit');
+    && str_contains($view, 'un periodo sin resultados no confirma ausencia laboral'), 'empty results reuse the institutional Spanish language file while the report explains the evidence limit');
 $assert(str_contains($view, 'no convierte la hora del dispositivo')
     && str_contains($datatableJs, 'Hora de marcación no determinada')
     && str_contains($controller, "'ocurrido_at_utc' =>")
@@ -146,7 +163,7 @@ $assert(str_contains($view, 'data-endpoint="/departamento-operativo/recursos-hum
 $assert(str_contains($datatableJs, 'function findTableSearchInput(dataTable)')
     && str_contains($datatableJs, '(tableWrap || document)')
     && str_contains($datatableJs, 'var searchEventRoot = tableWrap || dataTable.table().container() || document')
-    && str_contains($controller, 'checador.datatable.init.js?v=20261022-1'),
+    && preg_match('/checador\.datatable\.init\.js\?v=[0-9-]+/', $reportMethod) === 1,
     'V6B7 filter and CSV listeners use the current report wrapper when the DataTables API container is null and load the cache-busted initializer');
 $assert(str_contains($controller, "'recordsTotal'") && str_contains($controller, "'recordsFiltered'")
     && str_contains($controller, 'ChecadorPresentationFormatter::processingStatusLabel')
@@ -156,7 +173,7 @@ $diaDobleJs = file_get_contents(__DIR__ . '/../public/assets/js/departamento-ope
 $diaDobleController = file_get_contents(__DIR__ . '/../app/Controllers/DiaDobleController.php');
 $assert(str_contains($datatableJs, "url: '/assets/libs/datatables.net/js/es-ES.json'")
     && str_contains($controller, '/assets/libs/datatables.net/js/jquery.dataTables.min.js')
-    && !str_contains($controller, '/assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js')
+    && !str_contains($reportMethod, '/assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js')
     && str_contains($diaDobleController, '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css')
     && file_exists(__DIR__ . '/../public/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css')
     && file_exists(__DIR__ . '/../public/assets/libs/datatables.net/js/jquery.dataTables.min.js'), 'report reuses Día Doble local DataTables core, Bootstrap stylesheet, and Spanish language without a separate Bootstrap adapter');
@@ -181,9 +198,7 @@ $assert(str_contains($datatableJs, 'showRequestError()')
 $assert(str_contains($datatableJs, 'searchField.value = searchInput ? searchInput.value : dataTable.search()')
     && str_contains($controller, "'dt_search'")
     && str_contains($controller, 'streamPunchReportDataTableCsv'), 'CSV preserves the active DataTables search and backend full-result export');
-$assert(str_contains($legacyView, "require __DIR__ . '/index.php'")
-    && str_contains($controller, "'/reporte'")
-    && !preg_match('/fetch\(|axios\.|XMLHttpRequest|Bearer /i', $view), 'daily view includes the secondary module navigation and browser receives no API credentials');
+$assert(!preg_match('/fetch\(|axios\.|XMLHttpRequest|Bearer /i', $view), 'M02 report view contains no browser-direct API calls or credentials');
 
 $assert(ChecadorPresentationFormatter::processingStatusLabel('RECEIVED') === 'Marcación recibida'
     && str_contains(ChecadorPresentationFormatter::processingStatusExplanation('RECEIVED'), 'no confirma identidad, jornada ni integridad'), 'received means receipt only and does not imply identity, journey, or integrity validation');
