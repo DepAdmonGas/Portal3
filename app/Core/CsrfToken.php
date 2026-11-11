@@ -8,6 +8,8 @@ namespace App\Core;
  */
 class CsrfToken
 {
+    private const LIFETIME_SECONDS = 3600;
+
     /**
      * Generar token CSRF si no existe
      * 
@@ -15,13 +17,21 @@ class CsrfToken
      */
     public static function generate(): string
     {
-        if (!Session::get('_csrf_token')) {
+        $token = Session::get('_csrf_token');
+        $issuedAt = Session::get('_csrf_token_time', 0);
+        $now = time();
+        $age = is_numeric($issuedAt) ? $now - (int) $issuedAt : -1;
+
+        if (!is_string($token)
+            || preg_match('/\A[a-f0-9]{64}\z/i', $token) !== 1
+            || $age < 0
+            || $age > self::LIFETIME_SECONDS) {
             $token = bin2hex(random_bytes(32));
             Session::set('_csrf_token', $token);
-            Session::set('_csrf_token_time', time());
+            Session::set('_csrf_token_time', $now);
         }
         
-        return Session::get('_csrf_token');
+        return $token;
     }
     
     /**
@@ -36,12 +46,12 @@ class CsrfToken
         $tokenTime = Session::get('_csrf_token_time', 0);
         
         // Verificar si existe el token en sesión
-        if (!$sessionToken || !$token) {
+        if (!is_string($sessionToken) || $sessionToken === '' || $token === '') {
             return false;
         }
         
-        // Verificar tiempo (token válido por 1 hora)
-        if (time() - $tokenTime > 3600) {
+        $age = is_numeric($tokenTime) ? time() - (int) $tokenTime : -1;
+        if ($age < 0 || $age > self::LIFETIME_SECONDS) {
             // Token expirado, regenerar
             Session::remove('_csrf_token');
             Session::remove('_csrf_token_time');
@@ -87,7 +97,16 @@ class CsrfToken
             return 0;
         }
         
-        $remaining = 3600 - (time() - $tokenTime);
+        if (!is_numeric($tokenTime)) {
+            return 0;
+        }
+
+        $age = time() - (int) $tokenTime;
+        if ($age < 0) {
+            return 0;
+        }
+
+        $remaining = self::LIFETIME_SECONDS - $age;
         return max(0, $remaining);
     }
 }
