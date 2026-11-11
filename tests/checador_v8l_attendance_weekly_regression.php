@@ -45,6 +45,96 @@ $assert(($cells['2026-10-19']['status'] ?? '') === 'assigned'
     && ($cells['2026-10-19']['template']['segmentos'][0]['dia_offset_fin'] ?? null) === 1, 'overnight template detail and its next-day offset remain visible');
 $assert(($cells['2026-10-20']['status'] ?? '') === 'rest'
     && ($cells['2026-10-21']['status'] ?? '') === 'unassigned', 'explicit rest stays distinct from no assignment');
+$recurrentAndTemporary = ChecadorWeeklyScheduleService::matrix(
+    [['worker_id' => 7, 'full_name' => 'QA habitual'] ],
+    [7 => [
+        ['id' => 10, 'tipo_asignacion' => 'HABITUAL', 'es_activo' => 1, 'dia_semana' => 'MIERCOLES', 'valido_desde' => '2026-11-04', 'valido_hasta' => null, 'id_plantilla' => 5],
+        ['id' => 11, 'tipo_asignacion' => 'HABITUAL', 'es_activo' => 1, 'dia_semana' => 'JUEVES', 'valido_desde' => '2026-11-05', 'valido_hasta' => null, 'id_plantilla' => null],
+        ['id' => 12, 'tipo_asignacion' => 'TEMPORAL', 'es_activo' => 1, 'dia_semana' => 'MIERCOLES', 'valido_desde' => '2026-11-04', 'valido_hasta' => '2026-11-05', 'id_plantilla' => 6],
+    ]],
+    [5 => ['nombre' => 'Habitual recurrente'], 6 => ['nombre' => 'Excepción temporal']],
+    '2026-11-02'
+);
+$nextWeekProjection = ChecadorWeeklyScheduleService::matrix(
+    [['worker_id' => 7, 'full_name' => 'QA habitual'] ],
+    [7 => [
+        ['id' => 10, 'tipo_asignacion' => 'HABITUAL', 'es_activo' => 1, 'dia_semana' => 'MIERCOLES', 'valido_desde' => '2026-11-04', 'valido_hasta' => null, 'id_plantilla' => 5],
+        ['id' => 11, 'tipo_asignacion' => 'HABITUAL', 'es_activo' => 1, 'dia_semana' => 'JUEVES', 'valido_desde' => '2026-11-05', 'valido_hasta' => null, 'id_plantilla' => null],
+        ['id' => 12, 'tipo_asignacion' => 'TEMPORAL', 'es_activo' => 1, 'dia_semana' => 'MIERCOLES', 'valido_desde' => '2026-11-04', 'valido_hasta' => '2026-11-05', 'id_plantilla' => 6],
+    ]],
+    [5 => ['nombre' => 'Habitual recurrente'], 6 => ['nombre' => 'Excepción temporal']],
+    '2026-11-09'
+);
+$assert(($recurrentAndTemporary['workers'][0]['cells']['2026-11-04']['template']['nombre'] ?? '') === 'Excepción temporal'
+    && ($recurrentAndTemporary['habitual_workers'][0]['cells']['2026-11-04']['template']['nombre'] ?? '') === 'Habitual recurrente',
+    'a temporary exception overrides only the effective projection while the habitual card keeps its recurring baseline');
+$assert(($nextWeekProjection['workers'][0]['cells']['2026-11-11']['template']['nombre'] ?? '') === 'Habitual recurrente'
+    && ($nextWeekProjection['workers'][0]['cells']['2026-11-12']['status'] ?? '') === 'rest'
+    && ($nextWeekProjection['workers'][0]['cells']['2026-11-12']['assignment_type'] ?? '') === 'HABITUAL',
+    'a later week automatically returns to the unchanged recurring habitual shift and explicit recurring day off');
+$closedReplacementProjection = ChecadorWeeklyScheduleService::matrix(
+    [['worker_id' => 1007, 'full_name' => 'QA replacement history']],
+    [1007 => [
+        ['id' => 33, 'tipo_asignacion' => 'HABITUAL', 'es_activo' => 0, 'dia_semana' => 'LUNES', 'valido_desde' => '2026-11-09', 'valido_hasta' => '2026-11-16', 'id_plantilla' => 13],
+        ['id' => 41, 'tipo_asignacion' => 'HABITUAL', 'es_activo' => 1, 'dia_semana' => 'LUNES', 'valido_desde' => '2026-11-16', 'valido_hasta' => null, 'id_plantilla' => 1],
+    ]],
+    [13 => ['nombre' => 'Turno previo'], 1 => ['nombre' => 'Turno reemplazo']],
+    '2026-11-09'
+);
+$replacementCells = $closedReplacementProjection['workers'][0]['cells'] ?? [];
+$replacementWeekProjection = ChecadorWeeklyScheduleService::matrix(
+    [['worker_id' => 1007, 'full_name' => 'QA replacement history']],
+    [1007 => [
+        ['id' => 33, 'tipo_asignacion' => 'HABITUAL', 'es_activo' => 0, 'dia_semana' => 'LUNES', 'valido_desde' => '2026-11-09', 'valido_hasta' => '2026-11-16', 'id_plantilla' => 13],
+        ['id' => 41, 'tipo_asignacion' => 'HABITUAL', 'es_activo' => 1, 'dia_semana' => 'LUNES', 'valido_desde' => '2026-11-16', 'valido_hasta' => null, 'id_plantilla' => 1],
+    ]],
+    [13 => ['nombre' => 'Turno previo'], 1 => ['nombre' => 'Turno reemplazo']],
+    '2026-11-16'
+);
+$replacementEffectiveCells = $replacementWeekProjection['workers'][0]['cells'] ?? [];
+$assert(($replacementCells['2026-11-09']['template']['nombre'] ?? '') === 'Turno previo'
+    && ($replacementEffectiveCells['2026-11-16']['template']['nombre'] ?? '') === 'Turno reemplazo',
+    'a versioned replacement keeps its closed predecessor visible before the exclusive end and selects the successor from its effective date');
+$coverageDates = ChecadorWeeklyScheduleService::dates('2026-11-02');
+$verifiedWeekDates = array_column($coverageDates, 'date');
+$completeCells = [];
+$partialCells = [];
+$unassignedCells = [];
+foreach ($coverageDates as $index => $day) {
+    $completeCells[$day['date']] = ['status' => $index === 6 ? 'rest' : 'assigned'];
+    $partialCells[$day['date']] = ['status' => $index < 3 ? ($index === 2 ? 'rest' : 'assigned') : 'unassigned'];
+    $unassignedCells[$day['date']] = ['status' => 'unassigned'];
+}
+$completeCoverage = ChecadorWeeklyScheduleService::habitualCoverage([
+    'verified_dates' => $verifiedWeekDates, 'schedule_read_status' => 'available', 'cells' => $completeCells,
+], $coverageDates);
+$partialCoverage = ChecadorWeeklyScheduleService::habitualCoverage([
+    'verified_dates' => $verifiedWeekDates, 'schedule_read_status' => 'available', 'cells' => $partialCells,
+], $coverageDates);
+$unassignedCoverage = ChecadorWeeklyScheduleService::habitualCoverage([
+    'verified_dates' => $verifiedWeekDates, 'schedule_read_status' => 'available', 'cells' => $unassignedCells,
+], $coverageDates);
+$unknownCoverage = ChecadorWeeklyScheduleService::habitualCoverage([
+    'verified_dates' => [$verifiedWeekDates[0]], 'schedule_read_status' => 'available', 'cells' => $unassignedCells,
+], $coverageDates);
+$assert(($completeCoverage['status'] ?? '') === 'complete' && ($completeCoverage['covered_days'] ?? 0) === 7,
+    'seven habitual work/rest days count as complete coverage');
+$assert(($partialCoverage['status'] ?? '') === 'partial' && ($partialCoverage['covered_days'] ?? 0) === 3
+    && count($partialCoverage['missing_days'] ?? []) === 4,
+    'a verified mix of explicit habitual days and missing days is partial coverage');
+$assert(($unassignedCoverage['status'] ?? '') === 'unassigned' && ($unassignedCoverage['assignable'] ?? false) === true,
+    'seven verified empty days are unassigned rather than an explicit rest');
+$assert(($unknownCoverage['status'] ?? '') === 'unknown' && ($unknownCoverage['assignable'] ?? true) === false,
+    'incomplete membership prevents a definitive coverage result and disables assignment');
+$partialReadMatrix = ChecadorWeeklyScheduleService::matrix(
+    [['worker_id' => 8, 'verified_dates' => $verifiedWeekDates, 'schedule_read_status' => 'partial']],
+    [8 => [['es_activo' => 1, 'dia_semana' => 'LUNES', 'valido_desde' => '2026-11-02', 'valido_hasta' => null, 'id_plantilla' => 5]]],
+    [5 => ['nombre' => 'Turno visible']],
+    '2026-11-02'
+);
+$assert(($partialReadMatrix['workers'][0]['cells']['2026-11-03']['status'] ?? '') === 'schedule_unavailable'
+    && ($partialReadMatrix['habitual_workers'][0]['habitual_coverage']['status'] ?? '') === 'unknown',
+    'a capped assignment page leaves absent weekdays unconfirmed instead of treating them as unassigned');
 $ambiguous = ChecadorWeeklyScheduleService::matrix(
     [['worker_id' => 7]],
     [7 => [
@@ -56,9 +146,55 @@ $ambiguous = ChecadorWeeklyScheduleService::matrix(
 );
 $assert(($ambiguous['workers'][0]['cells']['2026-10-19']['status'] ?? '') === 'ambiguous', 'overlapping active assignments are flagged for review, never arbitrarily selected');
 
+$partiallyVerified = ChecadorWeeklyScheduleService::matrix(
+    [['worker_id' => 7, 'full_name' => 'Trabajadora de prueba', 'verified_dates' => ['2026-10-21', '2026-10-22']]],
+    [7 => [
+        ['id' => 3, 'id_personal' => 7, 'id_estacion' => 3, 'id_plantilla' => 5, 'dia_semana' => 'LUNES', 'valido_desde' => '2026-10-19', 'valido_hasta' => '2026-10-20', 'es_activo' => 1],
+        ['id' => 4, 'id_personal' => 7, 'id_estacion' => 3, 'id_plantilla' => 5, 'dia_semana' => 'MIERCOLES', 'valido_desde' => '2026-10-21', 'valido_hasta' => '2026-10-22', 'es_activo' => 1],
+    ]],
+    [5 => ['nombre' => 'Turno verificado', 'segmentos' => [['ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00', 'hora_fin_local' => '16:00']]]],
+    '2026-10-19'
+);
+$partialCells = $partiallyVerified['workers'][0]['cells'] ?? [];
+$assert(($partialCells['2026-10-19']['status'] ?? '') === 'membership_unverified'
+    && ($partialCells['2026-10-19']['label'] ?? '') === 'Pertenencia no confirmada'
+    && ($partialCells['2026-10-21']['status'] ?? '') === 'assigned', 'partial weekly membership shows confirmed days and masks unverified days without inventing an empty schedule');
+
+$scheduleUnavailable = ChecadorWeeklyScheduleService::matrix(
+    [['worker_id' => 7, 'verified_dates' => ['2026-10-19'], 'schedule_read_status' => 'unavailable']],
+    [],
+    [],
+    '2026-10-19'
+);
+$assert(($scheduleUnavailable['workers'][0]['cells']['2026-10-19']['status'] ?? '') === 'schedule_unavailable', 'a failed assignment read is not represented as an unassigned schedule');
+
+$rosterSource = file_get_contents(dirname(__DIR__) . '/app/Services/ChecadorAttendanceRosterService.php') ?: '';
+$weeklyRosterStart = strpos($rosterSource, 'public function workersForScheduleWeek(');
+$weeklyRosterEnd = $weeklyRosterStart === false ? false : strpos($rosterSource, 'private static function isCivilDate(', $weeklyRosterStart);
+$weeklyRosterMethod = $weeklyRosterStart !== false && $weeklyRosterEnd !== false
+    ? substr($rosterSource, $weeklyRosterStart, $weeklyRosterEnd - $weeklyRosterStart)
+    : '';
+$assert($weeklyRosterMethod !== ''
+    && str_contains($weeklyRosterMethod, 'resolveActiveStationIdForLocality($workplaceId)')
+    && str_contains($weeklyRosterMethod, '->where(\'id_estacion\', $physicalStationId)')
+    && str_contains($weeklyRosterMethod, '->where(\'workplace_id\', $workplaceId)')
+    && strpos($weeklyRosterMethod, '->where(\'id_estacion\', $physicalStationId)') < strpos($weeklyRosterMethod, '->limit(self::MAX_ROSTER_ROWS + 1)')
+    && str_contains($weeklyRosterMethod, '$resolver->resolveAssignments($workerId, $effectiveAt)'), 'weekly roster scopes physical and versioned candidates to the authorized locality before its safety limit and resolves each date');
+$assert($weeklyRosterMethod !== ''
+    && str_contains($weeklyRosterMethod, 'if (!$currentBelongs && $verifiedDates === [])')
+    && str_contains($weeklyRosterMethod, "\$currentBelongs ? 'current_roster' : 'week_membership'")
+    && str_contains($weeklyRosterMethod, 'versioned_verified_dates'),
+    'current station candidates remain a separate reference roster while weekly membership provenance is preserved');
+$assert(str_contains(file_get_contents(dirname(__DIR__) . '/app/Controllers/ChecadorController.php') ?: '', 'workersForScheduleWeek('), 'weekly schedule uses the locality-scoped per-week roster');
+$controllerSource = file_get_contents(dirname(__DIR__) . '/app/Controllers/ChecadorController.php') ?: '';
+$assert(str_contains($controllerSource, 'verified_dates\'] ?? []) === [])')
+    && str_contains($controllerSource, 'assignmentApiRecordCount'),
+    'the controller avoids assignment API reads without any date-verified membership and reports API record counts separately');
+
 $weeklyViewData = [
     'weekDates' => $week,
     'scheduleRows' => $matrix['workers'],
+    'habitualScheduleRows' => $matrix['habitual_workers'],
     'selectedWorkplaceId' => 3,
     'selectedWorkplaceName' => 'Centro de prueba',
     'weekStart' => '2026-10-19',
@@ -89,9 +225,14 @@ try {
     restore_error_handler();
 }
 $assert($scheduleWeekRenderError === null
-    && str_contains($renderedScheduleWeek, 'Programación semanal')
-    && str_contains($renderedScheduleWeek, 'Turno verificado'),
-    'weekly screen renders the matrix without PHP view warnings');
+    && !preg_match('/<h1\b/i', $renderedScheduleWeek)
+    && str_contains($renderedScheduleWeek, 'Horario habitual del personal')
+    && str_contains($renderedScheduleWeek, 'Programación semanal / Cambios temporales')
+    && str_contains($renderedScheduleWeek, 'no se duplican cada semana')
+    && str_contains($renderedScheduleWeek, 'Turno verificado')
+    && substr_count($renderedScheduleWeek, '<caption class="visually-hidden">Horario de lunes a domingo para la semana consultada</caption>') === 2
+    && str_contains(file_get_contents(dirname(__DIR__) . '/app/Views/layouts/departamento-operativo.php') ?: '', '<h4 class="fw-semibold mt-3"><?= $title; ?></h4>'),
+    'weekly screen renders its matrix without a duplicate page title or PHP view warnings');
 
 $events = [
     ['event_uuid' => 'entry-1', 'ocurrido_at_utc' => '2026-10-20 05:00:00', 'metodo_captura' => 'BIOMETRIC', 'id_dispositivo' => 2, 'pairing_role' => 'ENTRY', 'segment_ordinal' => 1],
@@ -101,10 +242,25 @@ $events = [
     ['event_uuid' => 'extra', 'ocurrido_at_utc' => '2026-10-20 16:00:00', 'metodo_captura' => 'BIOMETRIC', 'id_dispositivo' => 2, 'pairing_role' => 'SURPLUS', 'segment_ordinal' => 1],
     ['event_uuid' => 'unmatched', 'ocurrido_at_utc' => '2026-10-20 17:00:00', 'metodo_captura' => 'BIOMETRIC', 'id_dispositivo' => 2, 'pairing_role' => 'UNMATCHED', 'segment_ordinal' => null],
 ];
+$rawEvents = array_map(static function (array $event): array {
+    unset($event['pairing_role'], $event['segment_ordinal']);
+    return $event;
+}, $events);
 $projection = ChecadorAttendanceProjection::workerRow(
     ['worker_id' => 7, 'full_name' => 'Trabajadora de prueba', 'employee_number' => '700'],
-    $events,
-    ['journey_status' => 'REVIEW_REQUIRED', 'evaluated_raw_events' => $events],
+    $rawEvents,
+    [
+        'evaluated' => true,
+        'journey_status' => 'EVALUATED',
+        'schedule' => ['estado_jornada' => 'SCHEDULED'],
+        'source_evidence' => ['window_level2_status' => 'VERIFIED'],
+        'pairing' => ['pairing_status' => 'EXACT_PAIR', 'completeness_l2' => 'VERIFIED', 'segments' => [
+            ['ordinal' => 1, 'status' => 'EXACT_PAIR'],
+            ['ordinal' => 2, 'status' => 'EXACT_PAIR'],
+        ]],
+        'evaluated_raw_event_count' => count($events),
+        'evaluated_raw_events' => $events,
+    ],
     'America/Mexico_City'
 );
 $assert(($projection['slots']['ENTRY:1']['event']['event_uuid'] ?? '') === 'entry-1'
@@ -125,14 +281,29 @@ $assert($withoutJourney['status'] === 'classification_pending'
     && count($withoutJourney['additional_events']) === 1
     && $withoutJourney['slots']['ENTRY:1']['event'] === null, 'raw events remain visible while unclassified events are not promoted into P3-H slots');
 $duplicateEvents = [$events[0], array_merge($events[0], ['event_uuid' => 'entry-1-duplicate'])];
+$duplicateRawEvents = array_map(static function (array $event): array {
+    unset($event['pairing_role'], $event['segment_ordinal']);
+    return $event;
+}, $duplicateEvents);
 $duplicate = ChecadorAttendanceProjection::workerRow(
     ['worker_id' => 7],
-    $duplicateEvents,
-    ['journey_status' => 'AMBIGUOUS_PAIRING', 'evaluated_raw_events' => $duplicateEvents],
+    $duplicateRawEvents,
+    [
+        'evaluated' => true,
+        'journey_status' => 'EVALUATED',
+        'schedule' => ['estado_jornada' => 'SCHEDULED'],
+        'source_evidence' => ['window_level2_status' => 'VERIFIED'],
+        'pairing' => ['pairing_status' => 'AMBIGUOUS_PAIRING', 'completeness_l2' => 'VERIFIED', 'segments' => [
+            ['ordinal' => 1, 'status' => 'EXACT_PAIR'],
+        ]],
+        'evaluated_raw_event_count' => count($duplicateEvents),
+        'evaluated_raw_events' => $duplicateEvents,
+    ],
     'America/Mexico_City'
 );
 $assert(($duplicate['slots']['ENTRY:1']['ambiguous'] ?? false) === true
-    && count($duplicate['additional_events']) === 1, 'duplicate slot is marked ambiguous and its second original event is retained');
+    && $duplicate['slots']['ENTRY:1']['event'] === null
+    && count($duplicate['additional_events']) === 2, 'ambiguous duplicate candidates stay out of the slot and both originals remain visible');
 
 $expectedLimits = [2026 => [48, 9], 2027 => [46, 9], 2028 => [44, 10], 2029 => [42, 11], 2030 => [40, 12]];
 foreach ($expectedLimits as $year => [$ordinary, $extraordinary]) {
@@ -166,7 +337,8 @@ $stack = HandlerStack::create(new MockHandler([
     ]]),
     $jsonResponse(201, ['status' => 'success', 'data' => [
         'id' => 99, 'id_personal' => 7, 'id_estacion' => 3, 'id_plantilla' => 5, 'dia_semana' => 'LUNES',
-        'valido_desde' => '2026-10-19', 'valido_hasta' => '2026-10-20',
+        'tipo_asignacion' => 'HABITUAL', 'valido_desde' => '2026-10-19', 'valido_hasta' => '2026-10-20',
+        'creado_at' => '2026-10-18 12:00:00', 'registrado_at_utc' => '2026-10-18 18:00:00',
     ]]),
 ]));
 $stack->push(Middleware::history($requestHistory));
@@ -249,11 +421,16 @@ $assert($historyAccessPosition !== false && $historyReadPosition !== false && $h
     && str_contains($weeklyView, ': null'), 'weekly and historical schedule links require read access; current week is withheld when the workplace timezone is unavailable');
 $assert(str_contains($routes, "Route::auth(['ChecadorController', 'createScheduleAssignment'])")
     && str_contains($routeAuth, "['auth', 'csrf']"), 'individual assignment POST remains behind the existing authentication and CSRF middleware');
-$assert(str_contains($weeklyView, 'no copia semanal ni asignación masiva')
-    && str_contains($weeklyView, 'Confirmar día')
-    && str_contains($controller, 'CHECADOR_API_REAL_POSTS_ENABLED'), 'UI distinguishes individual contract-supported assignment from unavailable copy/mass operations and controller guards real writes');
-$assert(str_contains($view, 'Entrada 1') && str_contains($view, 'Salida 1')
-    && str_contains($view, 'Entrada 2') && str_contains($view, 'Salida 2')
+$assert(str_contains($weeklyView, 'no se duplican cada semana')
+    && str_contains($weeklyView, 'Nuevo cambio temporal')
+    && str_contains($weeklyView, 'El cambio temporal sólo sustituye el horario durante la fecha seleccionada')
+    && str_contains($weeklyView, 'Asignar horario habitual')
+    && str_contains($weeklyView, 'value="TEMPORAL"')
+    && str_contains($controller, 'Request::expectsJson()')
+    && str_contains($controller, "'target_date' => \$targetDate")
+    && str_contains($controller, 'scheduleApiPostOperationsEnabled()'), 'UI distinguishes recurring habitual assignments from optional date-specific changes and the controller retains the schedule-only write gate');
+$assert(str_contains($view, '1.ª entrada') && str_contains($view, '1.ª salida')
+    && str_contains($view, '2.ª entrada') && str_contains($view, '2.ª salida')
     && str_contains($controller, "'segundos_trabajados_totales'")
     && str_contains($controller, "'estado_calculo'")
     && str_contains($controller, "'CALCULATED'")

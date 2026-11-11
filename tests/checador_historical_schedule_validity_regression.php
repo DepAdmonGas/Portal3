@@ -150,12 +150,24 @@ $assignmentMethodEnd = $assignmentMethodStart === false ? false : (strpos($servi
 $assignmentMethod = $assignmentMethodStart === false ? '' : substr($service, $assignmentMethodStart, $assignmentMethodEnd - $assignmentMethodStart);
 $assert(str_contains($assignmentMethod, "'GET', 'api/v2/shift-assignments'") && !str_contains($assignmentMethod, "'POST'")
     && !preg_match('/PDO|mysqli|UPDATE\s|INSERT\s|DELETE\s/i', $assignmentMethod), 'V8C17 history service has no write operation or local database fallback');
-$assert(str_contains($view, 'Desde (incl.)') && str_contains($view, 'Hasta (excl.)')
-    && str_contains($view, 'la API no entrega un total') && str_contains($view, 'no demuestra por sí solo que no exista'), 'V8C18 UI explains half-open validity and non-authoritative empty pages');
-$assert(str_contains($view, 'dia_offset_fin') && str_contains($view, 'Zona horaria laboral contractual'), 'V8C18A overnight end-day offset and contract timezone are preserved for display');
+$assert(!str_contains($view, 'Consultar vigencia') && !str_contains($view, 'Trabajador canónico')
+    && !str_contains($view, 'Fecha local consultada') && str_contains($historyMethod, 'getShiftAssignments'), 'V8C18 M04 catalog view omits the history form while the backend history read remains');
+$assert(str_contains($service, "'dia_offset_fin'") && str_contains($controller, 'getEffectiveSchedule('), 'V8C18A overnight offsets remain supported by the history backend');
 $assert(str_contains($view, 'moduleStationKey') || str_contains($controller, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY"), 'V8C19 existing institutional station selector context is preserved');
-$assert(str_contains($mainView, 'schedule_history') && str_contains($mainView, 'Vigencias de horario'), 'V8C20 main Checador screen links to historical schedule lookup');
-$assert(str_contains($view, 'historyItems') && str_contains($view, 'effectiveScheduleError'), 'V8C21 assignment history remains independently displayable if resolver fails');
+$navigationMethodStart = strpos($controller, 'private function buildModuleNavigation(');
+$navigationMethodEnd = $navigationMethodStart === false
+    ? false
+    : strpos($controller, 'private function renderDashboardWorkspace(', $navigationMethodStart);
+$navigationMethod = $navigationMethodStart === false
+    ? ''
+    : substr($controller, $navigationMethodStart, ($navigationMethodEnd ?: strlen($controller)) - $navigationMethodStart);
+$assert(str_contains($navigationMethod, "'label' => 'Horarios y turnos'")
+    && str_contains($navigationMethod, "'href' => \$base . '/horarios-turnos'")
+    && str_contains($navigationMethod, "'available' => \$scheduleRead")
+    && str_contains($mainView, '$moduleNavigation'), 'V8C20 dynamic Checador navigation exposes Horarios y turnos behind the schedule-read permission');
+$assert(str_contains($historyMethod, 'historyItems') && str_contains($historyMethod, '$historyItems')
+    && str_contains($historyMethod, 'historyError') && str_contains($historyMethod, '$historyError')
+    && str_contains($historyMethod, 'getShiftAssignments'), 'V8C21 controller continues to retain independently queried history and resolver errors');
 
 $renderData = [
     'selectedWorkplaceId' => 8,
@@ -164,6 +176,22 @@ $renderData = [
     'selectedWorkerId' => 77,
     'demoMode' => false,
     'demoScenario' => null,
+    'templateCatalogStatus' => 'received',
+    'templateCatalogMessage' => '12 plantillas recibidas. Esta página no confirma que existan más.',
+    'scheduleTemplates' => [[
+        'nombre' => 'Legacy Interlomas — ENCARGADO 3 — 22:00–06:00',
+        'clave' => 'LEGACY_IL1_220000_060000',
+        'version' => 1,
+        'es_activo' => 1,
+        'segmentos' => [[
+            'ordinal' => 1,
+            'tipo_segmento' => 'WORK',
+            'hora_inicio_local' => '22:00:00',
+            'hora_fin_local' => '06:00:00',
+            'dia_offset_inicio' => 0,
+            'dia_offset_fin' => 1,
+        ]],
+    ]],
     'effectiveSchedule' => array_replace($effective, [
         'horario_local' => [
             'timezone' => 'America/Mexico_City',
@@ -204,11 +232,16 @@ try {
 } finally {
     restore_error_handler();
 }
+$visibleRenderedText = html_entity_decode(strip_tags($rendered), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 $assert($renderError === null
-    && str_contains($rendered, '22:00:00')
-    && str_contains($rendered, '06:00:00')
-    && str_contains($rendered, '2026-11-01')
-    && str_contains($rendered, 'Historial de asignaciones'), 'V8C22 native view renders overnight schedule and historical validity without runtime warnings');
+    && str_contains($visibleRenderedText, '22:00')
+    && str_contains($visibleRenderedText, '06:00 (+1 día)')
+    && str_contains($visibleRenderedText, 'ENCARGADO 3')
+    && str_contains($rendered, 'data-template-key="LEGACY_IL1_220000_060000"')
+    && !str_contains($visibleRenderedText, 'LEGACY_IL1_220000_060000')
+    && !str_contains($visibleRenderedText, 'Legacy Interlomas')
+    && !str_contains($rendered, 'Historial de asignaciones')
+    && !str_contains($rendered, 'Consultar vigencia'), 'V8C22 catalog view presents a clean overnight row and omits historical consultation UI');
 
 echo "RESULTS: {$passes} PASS / {$fails} FAIL\n";
 exit($fails === 0 ? 0 : 1);

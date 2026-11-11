@@ -28,6 +28,7 @@ final class ChecadorDailyReadService
         'AUTHORIZED_LATENESS',
         'AUTHORIZED_EARLY_DEPARTURE',
         'OFFICIAL_MISSION',
+        'PUNCH_ATTENDANCE',
     ];
 
     /** @var callable(Usuario): string */
@@ -66,9 +67,13 @@ final class ChecadorDailyReadService
         };
     }
 
-    /** Synthetic API responses are opt-in and never enabled outside local development. */
+    /** Synthetic responses are test-only: HTTP application requests always use the configured API. */
     public static function demoModeEnabled(): bool
     {
+        if (PHP_SAPI !== 'cli') {
+            return false;
+        }
+
         $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
         $flag = strtolower(trim((string) ($_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] ?? getenv('CHECADOR_ADVANCED_DEMO_ENABLED') ?: '')));
 
@@ -88,6 +93,87 @@ final class ChecadorDailyReadService
 
         return in_array($environment, ['dev', 'development', 'local'], true)
             && in_array($flag, ['1', 'true', 'yes', 'on'], true);
+    }
+
+    /**
+     * Local Shift Scheduling writes may be enabled without enabling POSTs for
+     * Journey, incidences, temporary access, snapshots, or other modules.
+     * The general opt-in remains backward compatible when it is explicitly on.
+     */
+    public static function scheduleApiPostOperationsEnabled(): bool
+    {
+        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
+        $flag = strtolower(trim((string) ($_ENV['CHECADOR_SHIFT_SCHEDULING_POSTS_ENABLED'] ?? getenv('CHECADOR_SHIFT_SCHEDULING_POSTS_ENABLED') ?: '')));
+
+        return in_array($environment, ['dev', 'development', 'local'], true)
+            && (self::realApiPostOperationsEnabled() || in_array($flag, ['1', 'true', 'yes', 'on'], true));
+    }
+
+    public static function attendancePolicyPostOperationsEnabled(): bool
+    {
+        return self::localDevelopmentFlagEnabled('CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED');
+    }
+
+    /** M11 Portal3-local catalog/profile writes are separately gated in development. */
+    public static function m11ConfigurationPostOperationsEnabled(): bool
+    {
+        return self::localDevelopmentFlagEnabled('CHECADOR_M11_CONFIGURATION_POSTS_ENABLED');
+    }
+
+    /** PIN temporary transitions have an isolated development gate for M07. */
+    public static function temporaryAccessPostOperationsEnabled(): bool
+    {
+        return self::realApiPostOperationsEnabled()
+            || self::localDevelopmentFlagEnabled('CHECADOR_TEMPORARY_ACCESS_POSTS_ENABLED');
+    }
+
+    public static function p3gBPostOperationsEnabled(): bool
+    {
+        return self::localDevelopmentFlagEnabled('CHECADOR_P3G_B_POSTS_ENABLED');
+    }
+
+    private static function localDevelopmentFlagEnabled(string $name): bool
+    {
+        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
+        $flag = strtolower(trim((string) ($_ENV[$name] ?? getenv($name) ?: '')));
+        return in_array($environment, ['dev', 'development', 'local'], true)
+            && in_array($flag, ['1', 'true', 'yes', 'on'], true);
+    }
+
+    private static function isApprovedShiftSchedulingWritePath(string $path): bool
+    {
+        $requestPath = parse_url($path, PHP_URL_PATH);
+        if (!is_string($requestPath)) {
+            return false;
+        }
+        $requestPath = '/' . ltrim($requestPath, '/');
+
+        return $requestPath === '/api/v2/shift-templates'
+            || preg_match('#\A/api/v2/shift-templates/[A-Za-z0-9_-]{1,64}/versions\z#D', $requestPath) === 1
+            || preg_match('#\\A/api/v2/shift-assignments(?:/[1-9][0-9]*/(?:close|replace))?\\z#D', $requestPath) === 1;
+    }
+
+    private static function realApiPostAllowed(string $method, string $path): bool
+    {
+        if (strtoupper($method) !== 'POST') {
+            return true;
+        }
+
+        $requestPath = parse_url($path, PHP_URL_PATH);
+        $requestPath = is_string($requestPath) ? '/' . ltrim($requestPath, '/') : '';
+        if ($requestPath === '/api/v2/attendance-policies') {
+            return self::attendancePolicyPostOperationsEnabled();
+        }
+        if ($requestPath === '/api/v2/incidences') {
+            return self::p3gBPostOperationsEnabled();
+        }
+        if (preg_match('#\\A/api/v2/temporary-access/requests/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/(?:authorize|reject|cancel)\\z#iD', $requestPath) === 1) {
+            return self::temporaryAccessPostOperationsEnabled();
+        }
+        if (self::realApiPostOperationsEnabled()) return true;
+
+        return self::scheduleApiPostOperationsEnabled()
+            && self::isApprovedShiftSchedulingWritePath($path);
     }
 
     /** @return string|null A safe scenario name, or null when demo mode is disabled. */
@@ -180,6 +266,13 @@ final class ChecadorDailyReadService
         return $this->demoScenario;
     }
 
+    /** True only when this client is configured to reach a loopback API host. */
+    public function isLocalTarget(): bool
+    {
+        $host = strtolower((string) (parse_url($this->baseUrl, PHP_URL_HOST) ?? ''));
+        return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+    }
+
     /**
      * Resolve the API-owned timezone and UTC window for one local calendar day.
      *
@@ -244,6 +337,192 @@ final class ChecadorDailyReadService
         ]];
     }
 
+    /** Read the API-owned M11 device inventory using the delegated human JWT. */
+    public function readAdministrativeDevices(Usuario $user): array
+    {
+        if ($this->demoScenario !== null) return self::failure('demo_operation_blocked', 403);
+
+        $response = $this->request($user, 'GET', 'api/v2/administrative-devices');
+        if (!($response['ok'] ?? false)) return $response;
+        $payload = $response['payload'];
+        $items = $payload['items'] ?? null;
+        $completeness = $payload['completeness'] ?? null;
+        $readAt = $payload['read_at_utc'] ?? null;
+        if (($payload['status'] ?? null) !== 'OK'
+            || !in_array($completeness, ['COMPLETE', 'PARTIAL', 'UNKNOWN'], true)
+            || !is_string($readAt) || trim($readAt) === ''
+            || !is_array($items) || !array_is_list($items)
+            || count($items) > 500) {
+            return self::failure('administrative_unavailable', 502);
+        }
+
+        $safeItems = [];
+        foreach ($items as $item) {
+            if (!is_array($item)
+                || !is_array($item['device'] ?? null)
+                || !is_array($item['physical_station'] ?? null)
+                || !is_array($item['workplace'] ?? null)
+                || !is_array($item['assignment'] ?? null)
+                || !is_array($item['last_communication'] ?? null)) {
+                return self::failure('administrative_unavailable', 502);
+            }
+            $device = $item['device'];
+            $station = $item['physical_station'];
+            $workplace = $item['workplace'];
+            $assignment = $item['assignment'];
+            $communication = $item['last_communication'];
+            if (!is_int($device['id'] ?? null) || $device['id'] < 1
+                || !is_string($device['uuid'] ?? null) || !is_string($device['name'] ?? null)
+                || !in_array($device['persisted_status'] ?? null, ['ACTIVE', 'INACTIVE', 'UNKNOWN'], true)
+                || !in_array($assignment['status'] ?? null, ['ASSIGNED', 'UNASSIGNED', 'UNKNOWN'], true)
+                || !in_array($workplace['mapping_status'] ?? null, ['VERIFIED', 'AMBIGUOUS'], true)
+                || !(($communication['last_server_received_at_utc'] ?? null) === null
+                    || is_string($communication['last_server_received_at_utc']))) {
+                return self::failure('administrative_unavailable', 502);
+            }
+            // Whitelist the approved response fields; secrets and telemetry payloads
+            // cannot cross this boundary even if the upstream response changes.
+            $safeItems[] = [
+                'device' => [
+                    'id' => $device['id'], 'uuid' => $device['uuid'], 'name' => $device['name'],
+                    'persisted_status' => $device['persisted_status'],
+                ],
+                'physical_station' => [
+                    'id' => $station['id'] ?? null, 'name' => $station['name'] ?? null,
+                    'numlista' => $station['numlista'] ?? null,
+                ],
+                'workplace' => [
+                    'id' => $workplace['id'] ?? null, 'name' => $workplace['name'] ?? null,
+                    'mapping_status' => $workplace['mapping_status'],
+                ],
+                'assignment' => [
+                    'status' => $assignment['status'], 'valid_from_utc' => $assignment['valid_from_utc'] ?? null,
+                    'valid_to_utc' => $assignment['valid_to_utc'] ?? null, 'source' => $assignment['source'] ?? null,
+                ],
+                'group' => [
+                    'id' => null, 'name' => null, 'mapping_status' => 'UNAVAILABLE',
+                ],
+                'last_communication' => [
+                    'last_server_received_at_utc' => $communication['last_server_received_at_utc'],
+                    'source' => $communication['source'] ?? 'ACCEPTED_DEVICE_TELEMETRY',
+                ],
+            ];
+        }
+
+        $partialReasons = $payload['partial_reasons'] ?? [];
+        if (!is_array($partialReasons) || !array_is_list($partialReasons)) {
+            return self::failure('administrative_unavailable', 502);
+        }
+        foreach ($partialReasons as $reason) {
+            if (!is_string($reason) || preg_match('/\\A[A-Z][A-Z0-9_]{0,63}\\z/D', $reason) !== 1) {
+                return self::failure('administrative_unavailable', 502);
+            }
+        }
+
+        return ['ok' => true, 'data' => [
+            'status' => 'OK', 'completeness' => $completeness, 'read_at_utc' => $readAt,
+            'items' => $safeItems,
+            'partial_reasons' => array_values($partialReasons),
+        ]];
+    }
+
+    /** Read the API-owned effective M11 policy; no legacy value is promoted into a V2 version. */
+    public function readAttendancePolicy(Usuario $user, int $workplaceId, string $effectiveDate): array
+    {
+        if ($this->demoScenario !== null) return self::failure('demo_operation_blocked', 403);
+        if ($workplaceId < 1 || !self::isCivilDate($effectiveDate)) return self::failure('bad_request', 400);
+
+        $response = $this->request($user, 'GET', 'api/v2/attendance-policies', [
+            'workplace_id' => $workplaceId,
+            'effective_date' => $effectiveDate,
+        ]);
+        if (!($response['ok'] ?? false)) return $response;
+        $data = $response['payload']['data'] ?? null;
+        if (!self::validAttendancePolicyEnvelope($data, $workplaceId, $effectiveDate)) {
+            return self::failure('administrative_unavailable', 502);
+        }
+        return ['ok' => true, 'data' => $data];
+    }
+
+    /** Discover the station's current local date using API timezone authority, then read exactly that date. */
+    public function readCurrentAttendancePolicy(Usuario $user, int $workplaceId): array
+    {
+        $seedDate = gmdate('Y-m-d');
+        $seed = $this->readAttendancePolicy($user, $workplaceId, $seedDate);
+        if (!($seed['ok'] ?? false)) return $seed;
+        $localDate = (string) ($seed['data']['current_local_date'] ?? '');
+        if (!self::isCivilDate($localDate)) return self::failure('administrative_unavailable', 502);
+        if ($localDate === $seedDate) return $seed;
+        $local = $this->readAttendancePolicy($user, $workplaceId, $localDate);
+        if (!($local['ok'] ?? false)
+            || (string) ($local['data']['current_local_date'] ?? '') !== $localDate) {
+            return self::failure('administrative_unavailable', 502);
+        }
+        return $local;
+    }
+
+    /** Create a future M11 version through its dedicated development gate and API writer. */
+    public function createAttendancePolicy(Usuario $user, array $input, string $idempotencyKey): array
+    {
+        if ($this->demoScenario !== null) return self::failure('demo_write_blocked', 403);
+        $workplaceId = self::positiveInt($input['workplace_id'] ?? null);
+        $effectiveDate = is_string($input['effective_from_local_date'] ?? null)
+            ? trim($input['effective_from_local_date']) : '';
+        $tolerance = self::strictInteger($input['retardo_tolerance_minutes'] ?? null);
+        $deadlineDays = self::strictInteger($input['incidence_deadline_days'] ?? null);
+        if ($workplaceId === null || !self::isCivilDate($effectiveDate)
+            || $tolerance === null || $tolerance < 0 || $tolerance > 120
+            || $deadlineDays === null || $deadlineDays < 0 || $deadlineDays > 30
+            || !preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/', trim($idempotencyKey))) {
+            return self::failure('bad_request', 400);
+        }
+        if (!self::attendancePolicyPostOperationsEnabled()) return self::failure('api_post_disabled', 403);
+
+        $response = $this->requestJson($user, 'POST', 'api/v2/attendance-policies', [
+            'workplace_id' => $workplaceId,
+            'effective_from_local_date' => $effectiveDate,
+            'retardo_tolerance_minutes' => $tolerance,
+            'incidence_deadline_days' => $deadlineDays,
+        ], trim($idempotencyKey));
+        if (!($response['ok'] ?? false)) return $response;
+        $data = $response['payload']['data'] ?? null;
+        if (!is_array($data)
+            || self::positiveInt($data['id'] ?? null) === null
+            || (int) ($data['workplace_id'] ?? 0) !== $workplaceId
+            || !is_int($data['policy_version'] ?? null) || $data['policy_version'] < 1
+            || (string) ($data['effective_from_local_date'] ?? '') !== $effectiveDate
+            || (int) ($data['retardo_tolerance_minutes'] ?? -1) !== $tolerance
+            || (int) ($data['incidence_deadline_days'] ?? -1) !== $deadlineDays
+            || !is_string($data['timezone_id'] ?? null)
+            || !ChecadorOperationalPeriod::isIanaTimezone($data['timezone_id'])
+            || !is_int($data['actor_portal_user_id'] ?? null)
+            || (string) ($data['source'] ?? '') !== 'PORTAL3_ADMIN') {
+            return self::failure('administrative_unavailable', 502);
+        }
+        return ['ok' => true, 'http_status' => (int) ($response['http_status'] ?? 200), 'data' => $data];
+    }
+
+    private static function validAttendancePolicyEnvelope(mixed $data, int $workplaceId, string $date): bool
+    {
+        if (!is_array($data) || (int) ($data['workplace_id'] ?? 0) !== $workplaceId
+            || (string) ($data['effective_date'] ?? '') !== $date
+            || !self::isCivilDate((string) ($data['current_local_date'] ?? ''))
+            || !is_string($data['timezone_id'] ?? null)
+            || !ChecadorOperationalPeriod::isIanaTimezone($data['timezone_id'])
+            || !in_array(($data['status'] ?? null), ['VERSIONED', 'LEGACY_UNVERSIONED'], true)
+            || !array_key_exists('policy', $data)) return false;
+        if ($data['status'] === 'LEGACY_UNVERSIONED') return $data['policy'] === null;
+        $policy = $data['policy'];
+        return is_array($policy)
+            && (int) ($policy['workplace_id'] ?? 0) === $workplaceId
+            && self::isCivilDate((string) ($policy['effective_from_local_date'] ?? ''))
+            && (string) $policy['effective_from_local_date'] <= $date
+            && is_int($policy['retardo_tolerance_minutes'] ?? null)
+            && $policy['retardo_tolerance_minutes'] >= 0 && $policy['retardo_tolerance_minutes'] <= 120
+            && is_int($policy['incidence_deadline_days'] ?? null)
+            && $policy['incidence_deadline_days'] >= 0 && $policy['incidence_deadline_days'] <= 30;
+    }
+
     /**
      * Read observed raw punches for the exact API-provided UTC window.
      *
@@ -294,11 +573,39 @@ final class ChecadorDailyReadService
 
         $rawPagination = array_map(static fn(mixed $value): int => (int) $value, $pagination);
         if ($rawPagination['current_page'] < 1
+            || $rawPagination['current_page'] !== $page
             || $rawPagination['per_page'] < 1
             || $rawPagination['per_page'] > self::MAX_PAGE_SIZE
+            || $rawPagination['per_page'] !== $perPage
             || $rawPagination['total_records'] < 0
-            || $rawPagination['total_pages'] < 0) {
+            || $rawPagination['total_pages'] < 0
+            || $rawPagination['total_pages'] !== ($rawPagination['total_records'] > 0
+                ? (int) ceil($rawPagination['total_records'] / $perPage)
+                : 0)
+            || count($events) > $perPage
+            || count(array_filter($events, 'is_array')) !== count($events)) {
             return self::failure('api_unavailable', 502);
+        }
+
+        $integrityStatuses = ['VALID', 'INVALID', 'UNVERIFIABLE', 'LEGACY_UNSEALED'];
+        foreach ($events as $event) {
+            $eventUuid = $event['event_uuid'] ?? null;
+            $physicalStationId = $event['id_estacion_resuelta'] ?? null;
+            $workerId = $event['id_personal_resuelto'] ?? null;
+            $processingStatus = $event['processing_status'] ?? null;
+            $integrityStatus = $event['integrity']['status'] ?? null;
+            $validPhysicalId = is_int($physicalStationId)
+                || (is_string($physicalStationId) && ctype_digit($physicalStationId));
+            $validWorkerId = $workerId === null
+                || is_int($workerId)
+                || (is_string($workerId) && ctype_digit($workerId));
+            if (!is_string($eventUuid) || trim($eventUuid) === ''
+                || !$validPhysicalId || (int) $physicalStationId < 1
+                || !$validWorkerId || ($workerId !== null && (int) $workerId < 1)
+                || !is_string($processingStatus) || trim($processingStatus) === ''
+                || !is_string($integrityStatus) || !in_array($integrityStatus, $integrityStatuses, true)) {
+                return self::failure('api_unavailable', 502);
+            }
         }
 
         $normalizedPagination = [
@@ -313,6 +620,91 @@ final class ChecadorDailyReadService
             'events' => array_values(array_filter($events, 'is_array')),
             'pagination' => $normalizedPagination,
         ];
+    }
+
+    /**
+     * Read the live, authorized raw-event result for one local workday without
+     * creating a snapshot. `station_id` is a canonical locality; each returned
+     * `id_estacion_resuelta` is a physical station and must be checked against
+     * the already-resolved physical ID supplied by the caller.
+     *
+     * This validates API pagination, but does not claim source completeness or
+     * snapshot consistency. The raw events are never classified here.
+     *
+     * @return array{ok:bool,timezone?:array<string,string>,events?:list<array<string,mixed>>,pagination?:array<string,int>,consistency?:string,source_coverage?:string,error?:array{kind:string,status:int}}
+     */
+    public function readJourneyObservationSet(
+        Usuario $user,
+        int $workplaceId,
+        int $physicalStationId,
+        string $date,
+        int $maxPages = 20
+    ): array {
+        if ($workplaceId < 1 || $physicalStationId < 1 || !self::isCivilDate($date)
+            || $maxPages < 1 || $maxPages > 20) {
+            return self::failure('bad_request', 400);
+        }
+
+        $timezoneResult = $this->resolveWorkplaceLocalDay($user, $workplaceId, $date);
+        if (!($timezoneResult['ok'] ?? false)) {
+            return $timezoneResult;
+        }
+        $timezone = $timezoneResult['data'];
+        $events = [];
+        $seenUuids = [];
+        $firstPagination = null;
+        $readPages = 0;
+
+        for ($page = 1; $page <= $maxPages; $page++) {
+            $result = $this->readObservedPunches($user, $workplaceId, $timezone, $page, self::MAX_PAGE_SIZE);
+            if (!($result['ok'] ?? false)) {
+                return $result;
+            }
+
+            $pagination = $result['pagination'];
+            if ($firstPagination === null) {
+                $firstPagination = $pagination;
+            } elseif ($pagination['total_records'] !== $firstPagination['total_records']
+                || $pagination['total_pages'] !== $firstPagination['total_pages']) {
+                return self::failure('journey_read_inconsistent', 502);
+            }
+
+            foreach ($result['events'] as $event) {
+                if ((int) ($event['id_estacion_resuelta'] ?? 0) !== $physicalStationId) {
+                    return self::failure('station_scope_mismatch', 502);
+                }
+                $uuid = (string) ($event['event_uuid'] ?? '');
+                if ($uuid === '' || isset($seenUuids[$uuid])) {
+                    return self::failure('journey_read_inconsistent', 502);
+                }
+                $seenUuids[$uuid] = true;
+                $events[] = $event;
+            }
+
+            $readPages = $page;
+            $requiredPages = max(1, (int) ($firstPagination['total_pages'] ?? 0));
+            if ($page >= $requiredPages) {
+                if (count($events) !== (int) ($firstPagination['total_records'] ?? -1)) {
+                    return self::failure('journey_read_inconsistent', 502);
+                }
+
+                return [
+                    'ok' => true,
+                    'timezone' => $timezone,
+                    'events' => $events,
+                    'pagination' => [
+                        'total_records' => (int) $firstPagination['total_records'],
+                        'total_pages' => (int) $firstPagination['total_pages'],
+                        'pages_read' => $readPages,
+                        'per_page' => self::MAX_PAGE_SIZE,
+                    ],
+                    'consistency' => 'LIVE_NON_SNAPSHOT',
+                    'source_coverage' => 'UNKNOWN',
+                ];
+            }
+        }
+
+        return self::failure('journey_read_limit', 502);
     }
 
     /**
@@ -667,6 +1059,61 @@ final class ChecadorDailyReadService
     }
 
     /**
+     * Read the opt-in API V2 WORKER_EFFECTIVE resolver. Unlike the legacy
+     * station query, the API derives the home locality and authorized coverage
+     * from canonical membership and coverage history; Portal3 never chooses it.
+     * @return array{ok:bool,data?:array<string,mixed>,error?:array{kind:string,status:int}}
+     */
+    public function getWorkerEffectiveSchedule(
+        Usuario $user,
+        int $workerId,
+        string $date,
+        ?int $expectedEffectiveWorkplaceId = null
+    ): array {
+        if ($workerId < 1 || !self::isCivilDate($date)
+            || ($expectedEffectiveWorkplaceId !== null && $expectedEffectiveWorkplaceId < 1)) {
+            return self::failure('bad_request', 400);
+        }
+        $response = $this->request($user, 'GET', 'api/v2/workers/' . $workerId . '/effective-schedule', [
+            'fecha_local' => $date,
+            'resolution_context' => 'WORKER_EFFECTIVE',
+        ]);
+        if (!$response['ok']) return $response;
+
+        $data = $response['payload']['data'] ?? null;
+        $status = is_array($data) ? (string) ($data['estado_jornada'] ?? '') : '';
+        $effectiveWorkplaceId = is_array($data)
+            ? self::positiveInt($data['effective_workplace_id'] ?? $data['id_estacion'] ?? null)
+            : null;
+        if (!is_array($data)
+            || (int) ($data['id_personal'] ?? 0) !== $workerId
+            || (string) ($data['fecha_local'] ?? '') !== $date
+            || ($data['resolution_context'] ?? '') !== 'WORKER_EFFECTIVE'
+            || !in_array($status, ['SCHEDULED', 'DAY_OFF', 'UNSCHEDULED', 'UNKNOWN'], true)
+            || ($status !== 'UNKNOWN' && $effectiveWorkplaceId === null)) {
+            return self::failure('schedule_unavailable', 502);
+        }
+        if ($expectedEffectiveWorkplaceId !== null && $effectiveWorkplaceId !== null
+            && $effectiveWorkplaceId !== $expectedEffectiveWorkplaceId) {
+            return self::failure('effective_workplace_mismatch', 409);
+        }
+        if ($status === 'SCHEDULED') {
+            $local = $data['horario_local'] ?? null;
+            $segments = is_array($local) ? ($local['segmentos'] ?? null) : null;
+            if (!is_array($local) || !self::isIanaTimezone($local['timezone'] ?? null)
+                || !is_array($segments) || $segments === []) {
+                return self::failure('schedule_unavailable', 502);
+            }
+            foreach ($segments as $segment) {
+                if (!is_array($segment) || !isset($segment['ordinal'], $segment['tipo'], $segment['hora_inicio_local'], $segment['hora_fin_local'])) {
+                    return self::failure('schedule_unavailable', 502);
+                }
+            }
+        }
+        return ['ok' => true, 'data' => $data];
+    }
+
+    /**
      * Read the API-owned effective-dated assignment history for one canonical
      * worker and authorized Workplace. A reference date is optional and, when
      * supplied, follows the API's half-open validity interval contract.
@@ -679,7 +1126,9 @@ final class ChecadorDailyReadService
         int $workplaceId,
         int $page = 1,
         int $perPage = 50,
-        ?string $referenceDate = null
+        ?string $referenceDate = null,
+        bool $snapshotMode = false,
+        ?string $snapshotToken = null
     ): array {
         if ($workerId < 1 || $workplaceId < 1 || $page < 1 || $page > 10000
             || $perPage < 1 || $perPage > 200
@@ -696,8 +1145,17 @@ final class ChecadorDailyReadService
         if ($referenceDate !== null) {
             $query['fecha_referencia'] = $referenceDate;
         }
+        $headers = [];
+        if ($snapshotMode) {
+            $query['pagination_mode'] = 'snapshot';
+            if ($snapshotToken !== null && $snapshotToken !== '') {
+                $headers['X-Read-Snapshot'] = $snapshotToken;
+            }
+        } elseif ($snapshotToken !== null) {
+            return self::failure('bad_request', 400);
+        }
 
-        $response = $this->request($user, 'GET', 'api/v2/shift-assignments', $query);
+        $response = $this->request($user, 'GET', 'api/v2/shift-assignments', $query, null, null, $headers);
         if (!$response['ok']) {
             return $response;
         }
@@ -752,6 +1210,7 @@ final class ChecadorDailyReadService
                 'id_personal' => $itemWorkerId,
                 'id_estacion' => $itemWorkplaceId,
                 'id_plantilla' => $templateId,
+                'tipo_asignacion' => strtoupper(trim((string) ($item['tipo_asignacion'] ?? 'HABITUAL'))),
                 'dia_semana' => $weekday,
                 'valido_desde' => $validFrom,
                 'valido_hasta' => $validTo,
@@ -760,7 +1219,7 @@ final class ChecadorDailyReadService
             ];
         }
 
-        return [
+        $normalized = [
             'ok' => true,
             'data' => [
                 'page' => $page,
@@ -768,13 +1227,129 @@ final class ChecadorDailyReadService
                 'items' => $normalizedItems,
             ],
         ];
+        if ($snapshotMode) {
+            $pagination = $data['pagination'] ?? null;
+            $totalRecords = is_array($pagination) ? filter_var($pagination['total_records'] ?? null, FILTER_VALIDATE_INT) : false;
+            $totalPages = is_array($pagination) ? filter_var($pagination['total_pages'] ?? null, FILTER_VALIDATE_INT) : false;
+            $hasMore = is_array($pagination) ? filter_var($pagination['has_more'] ?? null, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null;
+            $token = is_array($pagination) ? (string) ($pagination['read_snapshot'] ?? '') : '';
+            $expiresAt = is_array($pagination) ? (string) ($pagination['expires_at_utc'] ?? '') : '';
+            if ($totalRecords === false || $totalRecords < 0 || $totalPages === false || $totalPages < 0
+                || $totalPages > 50 || $hasMore === null
+                || preg_match('/\A[A-Za-z0-9_-]{43}\z/D', $token) !== 1
+                || !self::isUtcTimestamp($expiresAt)) {
+                return self::failure('schedule_history_unavailable', 502);
+            }
+            $expectedPages = $totalRecords === 0 ? 0 : (int) ceil($totalRecords / $perPage);
+            $expectedCount = $totalRecords === 0 ? 0 : min($perPage, max(0, $totalRecords - (($page - 1) * $perPage)));
+            if ($totalPages !== $expectedPages || count($normalizedItems) !== $expectedCount
+                || $hasMore !== ($page < $totalPages) || ($totalPages === 0 && $page !== 1)
+                || ($totalPages > 0 && $page > $totalPages)) {
+                return self::failure('schedule_history_unavailable', 502);
+            }
+            $normalized['data']['pagination'] = [
+                'total_records' => $totalRecords,
+                'total_pages' => $totalPages,
+                'has_more' => $hasMore,
+                'read_snapshot' => $token,
+                'expires_at_utc' => $expiresAt,
+            ];
+        }
+        return $normalized;
+    }
+
+    /**
+     * Read one worker's complete assignment set from one API-owned immutable snapshot.
+     * Snapshot tokens stay inside this server-side service and are never returned to a view.
+     *
+     * @return array{ok:bool,data?:array{items:list<array<string,mixed>>,complete:bool},error?:array{kind:string,status:int}}
+     */
+    public function getAllShiftAssignmentsSnapshot(Usuario $user, int $workerId, int $workplaceId, ?string $referenceDate = null, int $perPage = 200): array
+    {
+        if ($workerId < 1 || $workplaceId < 1 || $perPage < 1 || $perPage > 200
+            || ($referenceDate !== null && !self::isCivilDate($referenceDate))) {
+            return self::failure('bad_request', 400);
+        }
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            $items = [];
+            $seenIds = [];
+            $snapshotToken = null;
+            $expectedPages = null;
+            $expectedTotal = null;
+            $expectedExpiry = null;
+            $failed = null;
+            for ($page = 1; $page <= 50; $page++) {
+                $response = $this->getShiftAssignments($user, $workerId, $workplaceId, $page, $perPage, $referenceDate, true, $snapshotToken);
+                if (($response['ok'] ?? false) !== true) {
+                    $failed = $response;
+                    break;
+                }
+                $data = $response['data'];
+                $pagination = $data['pagination'] ?? null;
+                if (!is_array($pagination)) {
+                    $failed = self::failure('schedule_history_unavailable', 502);
+                    break;
+                }
+                if ($snapshotToken === null) {
+                    $snapshotToken = (string) $pagination['read_snapshot'];
+                    $expectedPages = (int) $pagination['total_pages'];
+                    $expectedTotal = (int) $pagination['total_records'];
+                    $expectedExpiry = (string) $pagination['expires_at_utc'];
+                } elseif (!hash_equals($snapshotToken, (string) $pagination['read_snapshot'])
+                    || $expectedPages !== (int) $pagination['total_pages']
+                    || $expectedTotal !== (int) $pagination['total_records']
+                    || $expectedExpiry !== (string) $pagination['expires_at_utc']) {
+                    $failed = self::failure('schedule_history_unavailable', 502);
+                    break;
+                }
+                foreach ($data['items'] as $item) {
+                    $id = (int) $item['id'];
+                    if (isset($seenIds[$id])) {
+                        $failed = self::failure('schedule_history_unavailable', 502);
+                        break 2;
+                    }
+                    $seenIds[$id] = true;
+                    $items[] = $item;
+                }
+                if ($expectedTotal === 0) {
+                    if ($page !== 1 || $data['items'] !== [] || $pagination['has_more'] !== false) {
+                        $failed = self::failure('schedule_history_unavailable', 502);
+                    }
+                    break;
+                }
+                if ($page > $expectedPages || (bool) $pagination['has_more'] !== ($page < $expectedPages)) {
+                    $failed = self::failure('schedule_history_unavailable', 502);
+                    break;
+                }
+                if ($page === $expectedPages) {
+                    break;
+                }
+            }
+            if ($failed !== null) {
+                // An expired/invalidated snapshot may be restarted once; no results from it survive.
+                if ($attempt === 0 && (int) ($failed['error']['status'] ?? 0) === 409) {
+                    continue;
+                }
+                return $failed;
+            }
+            if ($expectedPages === null || $expectedTotal === null || count($items) !== $expectedTotal
+                || count($seenIds) !== $expectedTotal || ($expectedPages === 0 && $items !== [])) {
+                return self::failure('schedule_history_unavailable', 502);
+            }
+            return ['ok' => true, 'data' => ['items' => $items, 'complete' => true]];
+        }
+        return self::failure('schedule_history_unavailable', 502);
     }
 
     /** @return array{ok:bool,data?:array{page:int,per_page:int,items:list<array<string,mixed>>},error?:array{kind:string,status:int}} */
-    public function getShiftTemplates(Usuario $user, int $page = 1, int $perPage = 100): array
+    public function getShiftTemplates(Usuario $user, int $page = 1, int $perPage = 100, ?int $workplaceId = null): array
     {
         if ($page < 1 || $page > 10000 || $perPage < 1 || $perPage > 200) return self::failure('bad_request', 400);
-        $response = $this->request($user, 'GET', 'api/v2/shift-templates', ['page' => $page, 'per_page' => $perPage]);
+        $queryParams = ['page' => $page, 'per_page' => $perPage];
+        if ($workplaceId !== null && $workplaceId > 0) {
+            $queryParams['station_id'] = $workplaceId;
+        }
+        $response = $this->request($user, 'GET', 'api/v2/shift-templates', $queryParams);
         if (!$response['ok']) return $response;
         $data = $response['payload']['data'] ?? null;
         $items = is_array($data) ? ($data['items'] ?? null) : null;
@@ -787,20 +1362,235 @@ final class ChecadorDailyReadService
             $key = is_array($item) ? trim((string) ($item['clave'] ?? '')) : '';
             $name = is_array($item) ? trim((string) ($item['nombre'] ?? '')) : '';
             $active = is_array($item) ? filter_var($item['es_activo'] ?? null, FILTER_VALIDATE_INT) : false;
+            $scope = is_array($item) ? strtoupper(trim((string) ($item['scope'] ?? 'GLOBAL'))) : 'GLOBAL';
+            $stationId = is_array($item) && isset($item['id_estacion']) && $item['id_estacion'] !== null ? (int) $item['id_estacion'] : null;
+            $lineage = is_array($item['derived_from_global'] ?? null) ? $item['derived_from_global'] : null;
+            $customization = is_array($item['station_customization'] ?? null) ? $item['station_customization'] : null;
             if ($id === null || $version === null || $key === '' || strlen($key) > 100 || $name === '' || !in_array($active, [0, 1], true)) {
                 return self::failure('schedule_templates_unavailable', 502);
             }
             $normalized[] = ['id' => $id, 'clave' => $key, 'version' => $version, 'nombre' => $name,
-                'tipo_turno' => (string) ($item['tipo_turno'] ?? ''), 'es_activo' => (int) $active];
+                'tipo_turno' => (string) ($item['tipo_turno'] ?? ''), 'scope' => $scope, 'id_estacion' => $stationId, 'es_activo' => (int) $active,
+                'derived_from_global' => $lineage === null ? null : ['clave' => trim((string) ($lineage['clave'] ?? '')), 'version' => self::positiveInt($lineage['version'] ?? null)],
+                'station_customization' => $customization === null ? null : ['clave' => trim((string) ($customization['clave'] ?? '')), 'source_version' => self::positiveInt($customization['source_version'] ?? null)]];
         }
         return ['ok' => true, 'data' => ['page' => $page, 'per_page' => $perPage, 'items' => $normalized]];
     }
 
+    /** Create or safely recover the existing station copy of a visible global template. */
+    public function customizeGlobalShiftTemplate(Usuario $user, array $source, array $template, string $idempotencyKey, int $workplaceId): array
+    {
+        $sourceKey = trim((string) ($source['clave'] ?? ''));
+        $sourceVersion = self::positiveInt($source['version'] ?? null);
+        $name = trim((string) ($template['nombre'] ?? ''));
+        $type = strtoupper(trim((string) ($template['tipo_turno'] ?? '')));
+        $rawSegments = $template['segmentos'] ?? null;
+        if (preg_match('/\\A[A-Za-z0-9_-]{1,100}\\z/', $sourceKey) !== 1 || $sourceVersion === null || $workplaceId < 1
+            || $name === '' || self::unicodeLength($name) > 128 || !in_array($type, ['REGULAR', 'NOCTURNO', 'MIXTO', 'ROTATIVO'], true)
+            || !is_array($rawSegments) || !array_is_list($rawSegments) || $rawSegments === [] || count($rawSegments) > 255
+            || trim($idempotencyKey) === '') return self::failure('bad_request', 400);
+        $segments = [];
+        foreach ($rawSegments as $index => $segment) {
+            if (!is_array($segment) || (int) ($segment['ordinal'] ?? 0) !== $index + 1) return self::failure('bad_request', 400);
+            $segmentType = strtoupper(trim((string) ($segment['tipo_segmento'] ?? '')));
+            $start = (string) ($segment['hora_inicio_local'] ?? ''); $end = (string) ($segment['hora_fin_local'] ?? '');
+            $startOffset = filter_var($segment['dia_offset_inicio'] ?? null, FILTER_VALIDATE_INT); $endOffset = filter_var($segment['dia_offset_fin'] ?? null, FILTER_VALIDATE_INT);
+            $normalize = static function (string $time): ?string {
+                if (preg_match('/\\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\\z/', $time) !== 1) return null;
+                return strlen($time) === 5 ? $time . ':00' : $time;
+            };
+            $start = $normalize($start); $end = $normalize($end);
+            if (!in_array($segmentType, ['WORK', 'BREAK'], true) || $start === null || $end === null
+                || !in_array($startOffset, [0, 1], true) || !in_array($endOffset, [0, 1], true)) return self::failure('bad_request', 400);
+            $segments[] = ['ordinal' => $index + 1, 'tipo_segmento' => $segmentType, 'hora_inicio_local' => $start,
+                'hora_fin_local' => $end, 'dia_offset_inicio' => $startOffset, 'dia_offset_fin' => $endOffset];
+        }
+        $response = $this->requestJson($user, 'POST', 'api/v2/shift-templates', [
+            'scope' => 'STATION', 'derived_from_global' => ['clave' => $sourceKey, 'version' => $sourceVersion],
+            'nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $segments,
+        ], $idempotencyKey, $workplaceId);
+        if (!($response['ok'] ?? false)) return $response;
+        $data = $response['payload']['data'] ?? null;
+        if (!is_array($data) || ($response['payload']['status'] ?? null) !== 'success'
+            || (string) ($data['scope'] ?? '') !== 'STATION' || (int) ($data['id_estacion'] ?? 0) !== $workplaceId
+            || (int) ($data['version'] ?? 0) < 1 || (string) ($data['derived_from_global']['clave'] ?? '') !== $sourceKey
+            || (int) ($data['derived_from_global']['version'] ?? 0) !== $sourceVersion) return self::failure('schedule_template_readback_unconfirmed', 502);
+        $localKey = (string) ($data['clave'] ?? ''); $localVersion = (int) $data['version'];
+        $detail = $this->getShiftTemplateVersion($user, $localKey, $localVersion, $workplaceId);
+        if (!($detail['ok'] ?? false) || (int) ($detail['data']['id'] ?? 0) !== (int) ($data['id'] ?? 0)
+            || (string) ($detail['data']['derived_from_global']['clave'] ?? '') !== $sourceKey
+            || (int) ($detail['data']['derived_from_global']['version'] ?? 0) !== $sourceVersion
+            || (string) ($detail['data']['nombre'] ?? '') !== $name || ($detail['data']['segmentos'] ?? null) !== $segments) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+        return ['ok' => true, 'created' => (int) ($response['http_status'] ?? 0) === 201, 'data' => $detail['data']];
+    }
+
+    /** Create the next immutable version of an existing station template and confirm it by readback. */
+    public function createShiftTemplateVersion(Usuario $user, string $templateKey, int $expectedVersion, array $template, int $workplaceId): array
+    {
+        $templateKey = trim($templateKey);
+        $name = trim((string) ($template['nombre'] ?? ''));
+        $type = strtoupper(trim((string) ($template['tipo_turno'] ?? '')));
+        $rawSegments = $template['segmentos'] ?? null;
+        if (preg_match('/\A[A-Za-z0-9_-]{1,64}\z/', $templateKey) !== 1 || $expectedVersion < 1 || $workplaceId < 1
+            || $name === '' || self::unicodeLength($name) > 128
+            || !in_array($type, ['REGULAR', 'NOCTURNO', 'MIXTO', 'ROTATIVO'], true)
+            || !is_array($rawSegments) || !array_is_list($rawSegments) || $rawSegments === [] || count($rawSegments) > 255) {
+            return self::failure('bad_request', 400);
+        }
+
+        $segments = [];
+        foreach ($rawSegments as $index => $segment) {
+            if (!is_array($segment) || (int) ($segment['ordinal'] ?? 0) !== $index + 1) return self::failure('bad_request', 400);
+            $segmentType = strtoupper(trim((string) ($segment['tipo_segmento'] ?? '')));
+            $start = (string) ($segment['hora_inicio_local'] ?? '');
+            $end = (string) ($segment['hora_fin_local'] ?? '');
+            $startOffset = filter_var($segment['dia_offset_inicio'] ?? null, FILTER_VALIDATE_INT);
+            $endOffset = filter_var($segment['dia_offset_fin'] ?? null, FILTER_VALIDATE_INT);
+            $normalizeTime = static function (string $value): ?string {
+                if (preg_match('/\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\z/', $value) !== 1) return null;
+                return strlen($value) === 5 ? $value . ':00' : $value;
+            };
+            $startNormalized = $normalizeTime($start);
+            $endNormalized = $normalizeTime($end);
+            if (!in_array($segmentType, ['WORK', 'BREAK'], true) || $startNormalized === null || $endNormalized === null
+                || !in_array($startOffset, [0, 1], true) || !in_array($endOffset, [0, 1], true)) return self::failure('bad_request', 400);
+            $startSecond = $startOffset * 86400 + (int) substr($startNormalized, 0, 2) * 3600 + (int) substr($startNormalized, 3, 2) * 60 + (int) substr($startNormalized, 6, 2);
+            $endSecond = $endOffset * 86400 + (int) substr($endNormalized, 0, 2) * 3600 + (int) substr($endNormalized, 3, 2) * 60 + (int) substr($endNormalized, 6, 2);
+            if ($endSecond <= $startSecond) return self::failure('bad_request', 400);
+            $segments[] = ['ordinal' => $index + 1, 'tipo_segmento' => $segmentType,
+                'hora_inicio_local' => $startNormalized, 'hora_fin_local' => $endNormalized,
+                'dia_offset_inicio' => $startOffset, 'dia_offset_fin' => $endOffset];
+        }
+
+        $path = 'api/v2/shift-templates/' . rawurlencode($templateKey) . '/versions';
+        $response = $this->requestJson($user, 'POST', $path, [
+            'nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $segments,
+            'scope' => 'STATION', 'id_estacion' => $workplaceId,
+        ], null, $workplaceId);
+        if (!($response['ok'] ?? false)) return $response;
+        $data = $response['payload']['data'] ?? null;
+        $newVersion = $expectedVersion + 1;
+        if ((int) ($response['http_status'] ?? 0) !== 201 || ($response['payload']['status'] ?? null) !== 'success'
+            || !is_array($data) || self::positiveInt($data['id'] ?? null) === null
+            || (string) ($data['clave'] ?? '') !== $templateKey || (int) ($data['version'] ?? 0) !== $newVersion
+            || (string) ($data['nombre'] ?? '') !== $name || (string) ($data['tipo_turno'] ?? '') !== $type
+            || strtoupper((string) ($data['scope'] ?? '')) !== 'STATION' || (int) ($data['id_estacion'] ?? 0) !== $workplaceId
+            || (int) ($data['es_activo'] ?? 0) !== 1 || !self::segmentsMatchExpected($data['segmentos'] ?? null, $segments)) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+
+        $detail = $this->getShiftTemplateVersion($user, $templateKey, $newVersion, $workplaceId);
+        if (!($detail['ok'] ?? false) || (int) ($detail['data']['id'] ?? 0) !== (int) $data['id']
+            || (string) ($detail['data']['nombre'] ?? '') !== $name || (string) ($detail['data']['tipo_turno'] ?? '') !== $type
+            || (int) ($detail['data']['es_activo'] ?? 0) !== 1 || ($detail['data']['segmentos'] ?? null) !== $segments) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+        $catalog = $this->getShiftTemplates($user, 1, 200, $workplaceId);
+        if (!($catalog['ok'] ?? false)) return self::failure('schedule_template_readback_unconfirmed', 502);
+        $latest = null;
+        foreach ($catalog['data']['items'] as $item) if ((string) $item['clave'] === $templateKey) { $latest = $item; break; }
+        if ($latest === null || (int) $latest['version'] !== $newVersion || $latest['scope'] !== 'STATION'
+            || (int) ($latest['id_estacion'] ?? 0) !== $workplaceId || (int) $latest['es_activo'] !== 1
+            || (int) $latest['id'] !== (int) $data['id'] || $latest['nombre'] !== $name) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+        return ['ok' => true, 'data' => array_merge($detail['data'], ['scope' => 'STATION', 'id_estacion' => $workplaceId])];
+    }
+
+    /** Create a template through the existing API contract and require detail readback. */
+    public function createShiftTemplate(Usuario $user, array $template, string $idempotencyKey, ?int $workplaceId = null): array
+    {
+        $key = trim((string) ($template['clave'] ?? ''));
+        $name = trim((string) ($template['nombre'] ?? ''));
+        $type = strtoupper(trim((string) ($template['tipo_turno'] ?? '')));
+        $rawSegments = $template['segmentos'] ?? null;
+        if ($key === '' || strlen($key) > 64 || str_contains($key, '/')
+            || preg_match('/[\\x00-\\x1F\\x7F]/', $key) === 1
+            || $name === '' || self::unicodeLength($name) > 128
+            || !in_array($type, ['REGULAR', 'NOCTURNO', 'MIXTO', 'ROTATIVO'], true)
+            || !is_array($rawSegments) || !array_is_list($rawSegments) || $rawSegments === [] || count($rawSegments) > 255
+            || trim($idempotencyKey) === '') {
+            return self::failure('bad_request', 400);
+        }
+
+        $segments = [];
+        foreach ($rawSegments as $index => $segment) {
+            if (!is_array($segment) || (int) ($segment['ordinal'] ?? 0) !== $index + 1) {
+                return self::failure('bad_request', 400);
+            }
+            $segmentType = strtoupper(trim((string) ($segment['tipo_segmento'] ?? '')));
+            $start = (string) ($segment['hora_inicio_local'] ?? '');
+            $end = (string) ($segment['hora_fin_local'] ?? '');
+            $startOffset = filter_var($segment['dia_offset_inicio'] ?? null, FILTER_VALIDATE_INT);
+            $endOffset = filter_var($segment['dia_offset_fin'] ?? null, FILTER_VALIDATE_INT);
+            $normalizeTime = static function (string $value): ?string {
+                if (preg_match('/\\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\\z/', $value) !== 1) return null;
+                return strlen($value) === 5 ? $value . ':00' : $value;
+            };
+            $startNormalized = $normalizeTime($start);
+            $endNormalized = $normalizeTime($end);
+            if (!in_array($segmentType, ['WORK', 'BREAK'], true)
+                || $startNormalized === null || $endNormalized === null
+                || !in_array($startOffset, [0, 1], true) || !in_array($endOffset, [0, 1], true)) {
+                return self::failure('bad_request', 400);
+            }
+            $startSecond = $startOffset * 86400 + ((int) substr($startNormalized, 0, 2) * 3600)
+                + ((int) substr($startNormalized, 3, 2) * 60) + (strlen($startNormalized) > 5 ? (int) substr($startNormalized, 6, 2) : 0);
+            $endSecond = $endOffset * 86400 + ((int) substr($endNormalized, 0, 2) * 3600)
+                + ((int) substr($endNormalized, 3, 2) * 60) + (strlen($endNormalized) > 5 ? (int) substr($endNormalized, 6, 2) : 0);
+            if ($endSecond <= $startSecond) return self::failure('bad_request', 400);
+            $segments[] = [
+                'ordinal' => $index + 1,
+                'tipo_segmento' => $segmentType,
+                'hora_inicio_local' => $startNormalized,
+                'hora_fin_local' => $endNormalized,
+                'dia_offset_inicio' => $startOffset,
+                'dia_offset_fin' => $endOffset,
+            ];
+        }
+
+        $payload = ['clave' => $key, 'nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $segments];
+        if ($workplaceId !== null && $workplaceId > 0) {
+            $payload['scope'] = 'STATION';
+            $payload['id_estacion'] = $workplaceId;
+        }
+        $response = $this->requestJson($user, 'POST', 'api/v2/shift-templates', $payload, $idempotencyKey, $workplaceId);
+        if (!$response['ok']) return $response;
+        $data = $response['payload']['data'] ?? null;
+        $templateId = is_array($data) ? self::positiveInt($data['id'] ?? null) : null;
+        if (($response['payload']['status'] ?? null) !== 'success'
+            || !is_array($data) || $templateId === null
+            || (string) ($data['clave'] ?? '') !== $key || (int) ($data['version'] ?? 0) !== 1
+            || (string) ($data['nombre'] ?? '') !== $name || (string) ($data['tipo_turno'] ?? '') !== $type
+            || (int) ($data['es_activo'] ?? 0) !== 1
+            || ($workplaceId !== null && ((string) ($data['scope'] ?? '') !== 'STATION'
+                || (int) ($data['id_estacion'] ?? 0) !== $workplaceId))) {
+            return self::failure('schedule_templates_unavailable', 502);
+        }
+
+        $readback = $this->getShiftTemplateVersion($user, $key, 1, $workplaceId);
+        if (!($readback['ok'] ?? false)
+            || (int) ($readback['data']['id'] ?? 0) !== $templateId
+            || (string) ($readback['data']['nombre'] ?? '') !== $name
+            || (string) ($readback['data']['tipo_turno'] ?? '') !== $type
+            || (int) ($readback['data']['es_activo'] ?? 0) !== 1
+            || ($workplaceId !== null && ((string) ($readback['data']['scope'] ?? '') !== 'STATION'
+                || (int) ($readback['data']['id_estacion'] ?? 0) !== $workplaceId))
+            || ($readback['data']['segmentos'] ?? null) !== $segments) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+
+        return ['ok' => true, 'data' => $readback['data']];
+    }
+
     /** @return array{ok:bool,data?:array<string,mixed>,error?:array{kind:string,status:int}} */
-    public function getShiftTemplateVersion(Usuario $user, string $templateKey, int $version): array
+    public function getShiftTemplateVersion(Usuario $user, string $templateKey, int $version, ?int $workplaceId = null): array
     {
         if ($templateKey === '' || strlen($templateKey) > 100 || str_contains($templateKey, '/') || $version < 1) return self::failure('bad_request', 400);
-        $response = $this->request($user, 'GET', 'api/v2/shift-templates/' . rawurlencode($templateKey) . '/versions/' . $version);
+        $query = $workplaceId !== null && $workplaceId > 0 ? ['station_id' => $workplaceId] : [];
+        $response = $this->request($user, 'GET', 'api/v2/shift-templates/' . rawurlencode($templateKey) . '/versions/' . $version, $query);
         if (!$response['ok']) return $response;
         $data = $response['payload']['data'] ?? null;
         $segments = is_array($data) ? ($data['segmentos'] ?? null) : null;
@@ -821,7 +1611,11 @@ final class ChecadorDailyReadService
         }
         return ['ok' => true, 'data' => ['id' => self::positiveInt($data['id'] ?? null), 'clave' => $templateKey,
             'version' => $version, 'nombre' => (string) ($data['nombre'] ?? ''), 'tipo_turno' => (string) ($data['tipo_turno'] ?? ''),
-            'es_activo' => (int) ($data['es_activo'] ?? 0), 'segmentos' => $normalizedSegments]];
+            'es_activo' => (int) ($data['es_activo'] ?? 0), 'scope' => strtoupper((string) ($data['scope'] ?? '')),
+            'id_estacion' => isset($data['id_estacion']) ? (int) $data['id_estacion'] : null,
+            'derived_from_global' => is_array($data['derived_from_global'] ?? null) ? ['clave' => trim((string) $data['derived_from_global']['clave']),
+                'version' => self::positiveInt($data['derived_from_global']['version'] ?? null)] : null,
+            'segmentos' => $normalizedSegments]];
     }
 
     /** Caller must verify the write by canonical GET readback before presenting success. */
@@ -833,21 +1627,142 @@ final class ChecadorDailyReadService
         $weekday = strtoupper(trim((string) ($assignment['dia_semana'] ?? '')));
         $validFrom = (string) ($assignment['valido_desde'] ?? '');
         $validTo = $assignment['valido_hasta'] ?? null;
+        $tipoAsignacion = strtoupper(trim((string) ($assignment['tipo_asignacion'] ?? 'HABITUAL')));
+        if (!in_array($tipoAsignacion, ['HABITUAL', 'TEMPORAL'], true)) $tipoAsignacion = 'HABITUAL';
         if ($workerId === null || $workplaceId === null || (($assignment['id_plantilla'] ?? null) !== null && $templateId === null)
             || !in_array($weekday, ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'], true)
             || !self::isCivilDate($validFrom) || ($validTo !== null && (!is_string($validTo) || !self::isCivilDate($validTo) || $validTo <= $validFrom))
+            || ($tipoAsignacion === 'TEMPORAL' && $validTo === null)
             || trim($idempotencyKey) === '') return self::failure('bad_request', 400);
         $body = ['id_personal' => $workerId, 'id_estacion' => $workplaceId, 'id_plantilla' => $templateId,
+            'tipo_asignacion' => $tipoAsignacion,
             'dia_semana' => $weekday, 'valido_desde' => $validFrom, 'valido_hasta' => $validTo, 'es_activo' => 1];
         $response = $this->requestJson($user, 'POST', 'api/v2/shift-assignments', $body, $idempotencyKey, $workplaceId);
         if (!$response['ok']) return $response;
         $data = $response['payload']['data'] ?? null;
+        $httpStatus = (int) ($response['http_status'] ?? 0);
         if (!is_array($data) || self::positiveInt($data['id'] ?? null) === null
+            || $httpStatus !== 201
             || (int) ($data['id_personal'] ?? 0) !== $workerId || (int) ($data['id_estacion'] ?? 0) !== $workplaceId
             || (($data['id_plantilla'] ?? null) !== null && (int) $data['id_plantilla'] !== $templateId)
             || (string) ($data['dia_semana'] ?? '') !== $weekday || (string) ($data['valido_desde'] ?? '') !== $validFrom
-            || (($data['valido_hasta'] ?? null) !== $validTo)) return self::failure('schedule_assignment_unavailable', 502);
+            || (($data['valido_hasta'] ?? null) !== $validTo)
+            || (string) ($data['tipo_asignacion'] ?? 'HABITUAL') !== $tipoAsignacion
+            || !is_string($data['creado_at'] ?? null)
+            || preg_match('/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/', $data['creado_at']) !== 1
+            || !is_string($data['registrado_at_utc'] ?? null)
+            || preg_match('/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/', $data['registrado_at_utc']) !== 1) {
+            return self::failure('schedule_assignment_unavailable', 502);
+        }
+        return ['ok' => true, 'http_status' => $httpStatus, 'data' => $data];
+    }
+
+    /** Close one assignment with an expected version and validate the API response. */
+    public function closeShiftAssignment(
+        Usuario $user,
+        int $assignmentId,
+        int $workplaceId,
+        string $effectiveCloseDate,
+        string $expectedValidFrom,
+        ?string $expectedValidTo,
+        string $idempotencyKey
+    ): array {
+        if ($assignmentId < 1 || $workplaceId < 1 || !self::isCivilDate($effectiveCloseDate)
+            || !self::isCivilDate($expectedValidFrom)
+            || ($expectedValidTo !== null && !self::isCivilDate($expectedValidTo))
+            || trim($idempotencyKey) === '') {
+            return self::failure('bad_request', 400);
+        }
+        $response = $this->requestJson(
+            $user,
+            'POST',
+            'api/v2/shift-assignments/' . $assignmentId . '/close',
+            [
+                'effective_close_date' => $effectiveCloseDate,
+                'expected_valido_desde' => $expectedValidFrom,
+                'expected_valido_hasta' => $expectedValidTo,
+            ],
+            $idempotencyKey,
+            $workplaceId
+        );
+        if (!$response['ok']) return $response;
+        $data = $response['payload']['data'] ?? null;
+        if (!is_array($data)
+            || self::positiveInt($data['id'] ?? null) !== $assignmentId
+            || (int) ($data['id_estacion'] ?? 0) !== $workplaceId
+            || (string) ($data['valido_desde'] ?? '') !== $expectedValidFrom
+            || (string) ($data['valido_hasta'] ?? '') !== $effectiveCloseDate
+            || (int) ($data['es_activo'] ?? -1) !== 0) {
+            return self::failure('schedule_assignment_readback_unconfirmed', 502);
+        }
         return ['ok' => true, 'data' => $data];
+    }
+
+    /** Close and replace one assignment atomically, then validate both returned versions. */
+    public function replaceShiftAssignment(
+        Usuario $user,
+        int $assignmentId,
+        int $workplaceId,
+        string $effectiveCloseDate,
+        string $expectedValidFrom,
+        ?string $expectedValidTo,
+        ?int $replacementTemplateId,
+        ?string $replacementValidTo,
+        string $idempotencyKey
+    ): array {
+        if ($assignmentId < 1 || $workplaceId < 1 || !self::isCivilDate($effectiveCloseDate)
+            || !self::isCivilDate($expectedValidFrom)
+            || ($expectedValidTo !== null && !self::isCivilDate($expectedValidTo))
+            || ($replacementValidTo !== null && !self::isCivilDate($replacementValidTo))
+            || ($replacementValidTo !== null && $replacementValidTo <= $effectiveCloseDate)
+            || ($replacementTemplateId !== null && $replacementTemplateId < 1)
+            || trim($idempotencyKey) === '') {
+            return self::failure('bad_request', 400);
+        }
+        $response = $this->requestJson(
+            $user,
+            'POST',
+            'api/v2/shift-assignments/' . $assignmentId . '/replace',
+            [
+                'effective_close_date' => $effectiveCloseDate,
+                'expected_valido_desde' => $expectedValidFrom,
+                'expected_valido_hasta' => $expectedValidTo,
+                'id_plantilla' => $replacementTemplateId,
+                'valido_hasta' => $replacementValidTo,
+            ],
+            $idempotencyKey,
+            $workplaceId
+        );
+        if (!$response['ok']) return $response;
+        $data = $response['payload']['data'] ?? null;
+        $closed = is_array($data) ? ($data['closed'] ?? null) : null;
+        $replacement = is_array($data) ? ($data['replacement'] ?? null) : null;
+        $idempotent = (bool) ($data['idempotent'] ?? false);
+        $audit = is_array($data) ? ($data['audit'] ?? null) : null;
+        $actorId = (int) ($user->id ?? 0);
+        $replacementAudit = is_array($audit) ? ($audit['replace'] ?? null) : null;
+        $auditConfirmed = $idempotent || (is_array($replacementAudit)
+            && self::positiveInt($replacementAudit['id'] ?? null) !== null
+            && (string) ($replacementAudit['operation'] ?? '') === 'REPLACE'
+            && (int) ($replacementAudit['actor_user_id'] ?? 0) === $actorId
+            && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', (string) ($replacementAudit['recorded_at_utc'] ?? '')) === 1);
+        if (!is_array($closed) || !is_array($replacement)
+            || self::positiveInt($closed['id'] ?? null) !== $assignmentId
+            || (int) ($closed['id_estacion'] ?? 0) !== $workplaceId
+            || (string) ($closed['valido_desde'] ?? '') !== $expectedValidFrom
+            || (string) ($closed['valido_hasta'] ?? '') !== $effectiveCloseDate
+            || (int) ($closed['es_activo'] ?? -1) !== 0
+            || (int) ($replacement['id_personal'] ?? 0) < 1
+            || (int) ($replacement['id_estacion'] ?? 0) !== $workplaceId
+            || (($replacement['id_plantilla'] ?? null) !== $replacementTemplateId)
+            || (string) ($replacement['valido_desde'] ?? '') !== $effectiveCloseDate
+            || (($replacement['valido_hasta'] ?? null) !== $replacementValidTo)
+            || (int) ($replacement['es_activo'] ?? -1) !== 1
+            || (!$idempotent && (int) ($replacement['creado_por_usuario_id'] ?? 0) !== $actorId)
+            || !$auditConfirmed) {
+            return self::failure('schedule_assignment_readback_unconfirmed', 502);
+        }
+        return ['ok' => true, 'data' => ['closed' => $closed, 'replacement' => $replacement, 'audit' => $audit, 'idempotent' => $idempotent]];
     }
 
     /**
@@ -1051,7 +1966,11 @@ final class ChecadorDailyReadService
                     || ($pairingRole !== 'UNMATCHED' && $segmentOrdinal === null)) {
                     return self::failure('journey_unavailable', 502);
                 }
-                $eventUuids[(string) $event['event_uuid']] = true;
+                $eventUuid = trim((string) $event['event_uuid']);
+                if (isset($eventUuids[$eventUuid])) {
+                    return self::failure('journey_unavailable', 502);
+                }
+                $eventUuids[$eventUuid] = true;
             }
 
             $pairing = $data['pairing'] ?? null;
@@ -1163,6 +2082,11 @@ final class ChecadorDailyReadService
         $endDate = is_string($input['end_date'] ?? null) ? trim($input['end_date']) : '';
         $reason = is_string($input['reason'] ?? null) ? trim($input['reason']) : '';
         $evidenceReference = $input['evidence_reference'] ?? null;
+        $checkDate = is_string($input['check_date'] ?? null) ? trim($input['check_date']) : '';
+        $checkKind = is_string($input['check_kind'] ?? null) ? trim($input['check_kind']) : '';
+        $nature = is_string($input['nature'] ?? null) ? trim($input['nature']) : '';
+        $sourceEventDeviceId = self::positiveInt($input['source_event_device_id'] ?? null);
+        $sourceEventUuid = is_string($input['source_event_uuid'] ?? null) ? trim($input['source_event_uuid']) : '';
 
         if ($workerId === null || $workplaceId === null
             || !in_array($category, self::INCIDENCE_CATEGORIES, true)
@@ -1170,6 +2094,33 @@ final class ChecadorDailyReadService
             || $reason === ''
             || ($evidenceReference !== null && !is_string($evidenceReference))
             || !preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/', trim($idempotencyKey))) {
+            return self::failure('bad_request', 400);
+        }
+
+        $checkPayload = null;
+        if ($category === 'PUNCH_ATTENDANCE') {
+            if (!self::p3gBPostOperationsEnabled()
+                || !preg_match('/\A\[QA DEV\]/', $reason)
+                || !is_string($evidenceReference)
+                || !str_starts_with(trim($evidenceReference), 'QA-M06-')
+                || !self::isCivilDate($checkDate) || $checkDate !== $startDate || $checkDate !== $endDate
+                || !in_array($checkKind, ['ENTRY', 'LUNCH_EXIT', 'LUNCH_RETURN', 'FINAL_EXIT'], true)
+                || !in_array($nature, ['LATENESS', 'OMISSION'], true)
+                || ($nature === 'LATENESS' && ($sourceEventDeviceId === null || $sourceEventUuid === '' || strlen($sourceEventUuid) > 64))
+                || ($nature === 'OMISSION' && (($input['source_event_device_id'] ?? '') !== '' || $sourceEventUuid !== ''))) {
+                return self::failure('bad_request', 400);
+            }
+            $checkPayload = [
+                'check_date' => $checkDate,
+                'check_kind' => $checkKind,
+                'nature' => $nature,
+            ];
+            if ($nature === 'LATENESS') {
+                $checkPayload['source_event_device_id'] = $sourceEventDeviceId;
+                $checkPayload['source_event_uuid'] = $sourceEventUuid;
+            }
+        } elseif ($checkDate !== '' || $checkKind !== '' || $nature !== ''
+            || $sourceEventDeviceId !== null || $sourceEventUuid !== '') {
             return self::failure('bad_request', 400);
         }
 
@@ -1188,6 +2139,9 @@ final class ChecadorDailyReadService
             'reason' => $reason,
             'evidence_reference' => $evidenceReference,
         ];
+        if ($checkPayload !== null) {
+            $body = array_merge($body, $checkPayload);
+        }
 
         $response = $this->requestJson($user, 'POST', 'api/v2/incidences', $body, trim($idempotencyKey));
         if (!($response['ok'] ?? false)) {
@@ -1196,7 +2150,12 @@ final class ChecadorDailyReadService
                 return self::failure('api_authorization', 403);
             }
             if ((int) ($response['error']['status'] ?? 0) === 422) {
-                return self::failure('bad_request', 422);
+                $kind = (string) ($response['error']['kind'] ?? 'bad_request');
+                return in_array($kind, [
+                    'incidence_deadline_expired', 'attendance_policy_not_versioned',
+                    'attendance_policy_invalid', 'attendance_policy_unavailable',
+                    'check_date_future', 'worker_membership_unverified', 'source_event_not_matched',
+                ], true) ? $response : self::failure('bad_request', 422);
             }
             return $response;
         }
@@ -1215,6 +2174,12 @@ final class ChecadorDailyReadService
             || !is_string($data['created_at_utc'] ?? null) || trim($data['created_at_utc']) === '') {
             return self::failure('administrative_unavailable', 502);
         }
+        if ($category === 'PUNCH_ATTENDANCE') {
+            $checkReference = $data['check_reference'] ?? null;
+            if (!self::matchesPunchCheckReference($checkReference, $checkPayload ?? [])) {
+                return self::failure('administrative_unavailable', 502);
+            }
+        }
 
         return ['ok' => true, 'data' => [
             'uuid_incidencia' => $uuid,
@@ -1226,6 +2191,7 @@ final class ChecadorDailyReadService
             'current_revision' => $data['current_revision'],
             'status' => $data['status'],
             'created_at_utc' => $data['created_at_utc'],
+            'check_reference' => $data['check_reference'] ?? null,
         ]];
     }
 
@@ -1267,6 +2233,11 @@ final class ChecadorDailyReadService
             || !is_array($revisions)) {
             return self::failure('administrative_unavailable', 502);
         }
+        $normalizedCheckReference = self::normalizePunchCheckReference($data['check_reference'] ?? null);
+        if (($data['category'] === 'PUNCH_ATTENDANCE' && $normalizedCheckReference === null)
+            || ($data['category'] !== 'PUNCH_ATTENDANCE' && $normalizedCheckReference !== null)) {
+            return self::failure('administrative_unavailable', 502);
+        }
 
         $normalizedRevisions = [];
         foreach ($revisions as $revision) {
@@ -1305,6 +2276,7 @@ final class ChecadorDailyReadService
             'time_interval' => $data['time_interval'] ?? null,
             'current_status' => $data['current_status'],
             'current_revision' => $data['current_revision'],
+            'check_reference' => $normalizedCheckReference,
             'revisions' => $normalizedRevisions,
         ]];
     }
@@ -1433,6 +2405,234 @@ final class ChecadorDailyReadService
                 'linked_adjustments' => $linkedAdjustments,
             ],
         ]];
+    }
+
+    /** Read one bounded page of persisted administrative adjustments from API V2. */
+    public function readAdministrativeAdjustments(Usuario $user, array $filters): array
+    {
+        $workplaceId = filter_var($filters['workplace_id'] ?? null, FILTER_VALIDATE_INT);
+        $dateFrom = (string) ($filters['date_from'] ?? '');
+        $dateTo = (string) ($filters['date_to'] ?? '');
+        $page = filter_var($filters['page'] ?? 1, FILTER_VALIDATE_INT);
+        $perPage = filter_var($filters['per_page'] ?? 25, FILTER_VALIDATE_INT);
+        $workerId = ($filters['worker_id'] ?? null) === null || ($filters['worker_id'] ?? '') === ''
+            ? null : filter_var($filters['worker_id'], FILTER_VALIDATE_INT);
+        $type = trim((string) ($filters['adjustment_type'] ?? ''));
+        $status = trim((string) ($filters['status'] ?? ''));
+        $fromDate = self::isCivilDate($dateFrom) ? new \DateTimeImmutable($dateFrom) : null;
+        $toDate = self::isCivilDate($dateTo) ? new \DateTimeImmutable($dateTo) : null;
+
+        if ($workplaceId === false || $workplaceId < 1 || $fromDate === null || $toDate === null
+            || $dateTo < $dateFrom || $toDate->diff($fromDate)->days > 30
+            || $page === false || $page < 1 || $perPage === false || $perPage < 1 || $perPage > 100
+            || ($workerId !== null && ($workerId === false || $workerId < 1))) {
+            return self::failure('bad_request', 400);
+        }
+        if (($type !== '' && !in_array($type, ['OVERRIDE_STATUS', 'INTERPRETED_ENTRY_TIME', 'INTERPRETED_EXIT_TIME', 'JUSTIFY_LATENESS'], true))
+            || ($status !== '' && !in_array($status, ['ACTIVE', 'SUPERSEDED', 'CANCELLED'], true))) {
+            return self::failure('bad_request', 422);
+        }
+
+        $query = [
+            'workplace_id' => $workplaceId,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+        if ($workerId !== null) $query['worker_id'] = $workerId;
+        if ($type !== '') $query['adjustment_type'] = $type;
+        if ($status !== '') $query['status'] = $status;
+
+        $response = $this->request($user, 'GET', 'api/v2/administrative-adjustments', $query);
+        if (!($response['ok'] ?? false)) return $response;
+        $data = $response['payload']['data'] ?? null;
+        if (!is_array($data) || (int) ($data['workplace_id'] ?? 0) !== $workplaceId
+            || !is_array($data['query'] ?? null)
+            || (string) ($data['query']['date_from'] ?? '') !== $dateFrom
+            || (string) ($data['query']['date_to'] ?? '') !== $dateTo
+            || (($data['query']['worker_id'] ?? null) !== $workerId)
+            || (($data['query']['adjustment_type'] ?? null) !== ($type === '' ? null : $type))
+            || (($data['query']['status'] ?? null) !== ($status === '' ? null : $status))
+            || !self::isUtcTimestamp((string) ($data['as_of_utc'] ?? ''))
+            || !is_int($data['total_records'] ?? null) || $data['total_records'] < 0
+            || !is_int($data['page'] ?? null) || $data['page'] !== $page
+            || !is_int($data['per_page'] ?? null) || $data['per_page'] !== $perPage
+            || !is_int($data['total_pages'] ?? null)
+            || !is_array($data['adjustments'] ?? null) || !array_is_list($data['adjustments'])) {
+            return self::failure('administrative_unavailable', 502);
+        }
+
+        $expectedPages = $data['total_records'] === 0 ? 0 : (int) ceil($data['total_records'] / $perPage);
+        if ($data['total_pages'] !== $expectedPages || count($data['adjustments']) > $perPage) {
+            return self::failure('administrative_unavailable', 502);
+        }
+        $items = [];
+        $seen = [];
+        foreach ($data['adjustments'] as $item) {
+            if (!is_array($item)) return self::failure('administrative_unavailable', 502);
+            $uuid = $item['uuid_ajuste'] ?? null;
+            $logicalUuid = $item['uuid_ajuste_logico'] ?? null;
+            $rowWorker = filter_var($item['worker_id'] ?? null, FILTER_VALIDATE_INT);
+            $rowWorkplace = filter_var($item['workplace_id'] ?? null, FILTER_VALIDATE_INT);
+            $revision = filter_var($item['revision_number'] ?? null, FILTER_VALIDATE_INT);
+            $linkedCount = filter_var($item['linked_evaluation_count'] ?? null, FILTER_VALIDATE_INT);
+            if (!is_string($uuid) || $uuid === '' || strlen($uuid) > 64 || str_contains($uuid, '/')
+                || !is_string($logicalUuid) || $logicalUuid === '' || strlen($logicalUuid) > 64
+                || isset($seen[$uuid]) || $rowWorker === false || $rowWorker < 1
+                || $rowWorkplace !== $workplaceId || $revision === false || $revision < 1
+                || !is_string($item['status'] ?? null) || !in_array($item['status'], ['ACTIVE', 'SUPERSEDED', 'CANCELLED'], true)
+                || !is_string($item['adjustment_type'] ?? null)
+                || !self::isCivilDate((string) ($item['work_date_local'] ?? ''))
+                || $item['work_date_local'] < $dateFrom || $item['work_date_local'] > $dateTo
+                || !is_string($item['workplace_timezone'] ?? null) || trim($item['workplace_timezone']) === ''
+                || !is_string($item['motive'] ?? null)
+                || !self::isUtcTimestamp((string) ($item['created_at_utc'] ?? ''))
+                || !is_int($item['created_by_user_id'] ?? null) || $item['created_by_user_id'] < 1
+                || !is_int($item['approved_by_user_id'] ?? null) || $item['approved_by_user_id'] < 1
+                || $linkedCount === false || $linkedCount < 0
+                || !self::nullableUtcTimestamp($item['interpreted_entry_at_utc'] ?? null)
+                || !self::nullableUtcTimestamp($item['interpreted_exit_at_utc'] ?? null)) {
+                return self::failure('administrative_unavailable', 502);
+            }
+            if ($workerId !== null && $rowWorker !== $workerId) return self::failure('administrative_unavailable', 502);
+            if ($type !== '' && $item['adjustment_type'] !== $type) return self::failure('administrative_unavailable', 502);
+            if ($status !== '' && $item['status'] !== $status) return self::failure('administrative_unavailable', 502);
+            $seen[$uuid] = true;
+            $items[] = [
+                'uuid_ajuste' => $uuid,
+                'uuid_ajuste_logico' => $logicalUuid,
+                'revision_number' => $revision,
+                'status' => $item['status'],
+                'adjustment_type' => $item['adjustment_type'],
+                'worker_id' => $rowWorker,
+                'workplace_id' => $rowWorkplace,
+                'work_date_local' => $item['work_date_local'],
+                'workplace_timezone' => $item['workplace_timezone'],
+                'motive' => $item['motive'],
+                'interpreted_entry_at_utc' => $item['interpreted_entry_at_utc'],
+                'interpreted_exit_at_utc' => $item['interpreted_exit_at_utc'],
+                'created_at_utc' => $item['created_at_utc'],
+                'created_by_user_id' => $item['created_by_user_id'],
+                'approved_by_user_id' => $item['approved_by_user_id'],
+                'linked_evaluation_count' => $linkedCount,
+            ];
+        }
+
+        return ['ok' => true, 'data' => [
+            'workplace_id' => $workplaceId,
+            'query' => $query,
+            'as_of_utc' => $data['as_of_utc'],
+            'total_records' => $data['total_records'],
+            'page' => $page,
+            'per_page' => $perPage,
+            'total_pages' => $data['total_pages'],
+            'adjustments' => $items,
+        ]];
+    }
+
+    /** Read one authorized adjustment revision and its persisted lineage from API V2. */
+    public function readAdministrativeAdjustmentDetail(Usuario $user, string $uuid): array
+    {
+        if ($uuid === '' || strlen($uuid) > 64 || str_contains($uuid, '/') || preg_match('/\A[A-Za-z0-9._:-]+\z/D', $uuid) !== 1) {
+            return self::failure('bad_request', 400);
+        }
+        $response = $this->request($user, 'GET', 'api/v2/administrative-adjustments/' . rawurlencode($uuid));
+        if (!($response['ok'] ?? false)) return $response;
+        $data = $response['payload']['data'] ?? null;
+        if (!is_array($data) || !is_array($data['adjustment'] ?? null)
+            || !is_array($data['revision_history'] ?? null) || !array_is_list($data['revision_history'])
+            || !is_array($data['linked_evaluations'] ?? null) || !array_is_list($data['linked_evaluations'])) {
+            return self::failure('administrative_unavailable', 502);
+        }
+
+        $normalizeRevision = static function (mixed $item) use ($uuid): ?array {
+            if (!is_array($item)) return null;
+            $rowUuid = $item['uuid_ajuste'] ?? null;
+            $workerId = filter_var($item['worker_id'] ?? null, FILTER_VALIDATE_INT);
+            $workplaceId = filter_var($item['workplace_id'] ?? null, FILTER_VALIDATE_INT);
+            $revision = filter_var($item['revision_number'] ?? null, FILTER_VALIDATE_INT);
+            if (!is_string($rowUuid) || $rowUuid === '' || strlen($rowUuid) > 64 || str_contains($rowUuid, '/')
+                || !is_string($item['uuid_ajuste_logico'] ?? null) || $item['uuid_ajuste_logico'] === ''
+                || $workerId === false || $workerId < 1 || $workplaceId === false || $workplaceId < 1
+                || $revision === false || $revision < 1 || !is_string($item['status'] ?? null)
+                || !is_string($item['adjustment_type'] ?? null) || !self::isCivilDate((string) ($item['work_date_local'] ?? ''))
+                || !is_string($item['workplace_timezone'] ?? null) || trim($item['workplace_timezone']) === ''
+                || !is_string($item['motive'] ?? null) || !self::isUtcTimestamp((string) ($item['created_at_utc'] ?? ''))
+                || !is_int($item['created_by_user_id'] ?? null) || $item['created_by_user_id'] < 1
+                || !is_int($item['approved_by_user_id'] ?? null) || $item['approved_by_user_id'] < 1
+                || !self::nullableUtcTimestamp($item['interpreted_entry_at_utc'] ?? null)
+                || !self::nullableUtcTimestamp($item['interpreted_exit_at_utc'] ?? null)) return null;
+            $previousUuid = $item['previous_revision_uuid'] ?? null;
+            if ($previousUuid !== null && (!is_string($previousUuid) || $previousUuid === '' || strlen($previousUuid) > 64 || str_contains($previousUuid, '/'))) return null;
+            return [
+                'uuid_ajuste' => $rowUuid,
+                'uuid_ajuste_logico' => (string) $item['uuid_ajuste_logico'],
+                'revision_number' => $revision,
+                'status' => (string) $item['status'],
+                'adjustment_type' => (string) $item['adjustment_type'],
+                'worker_id' => $workerId,
+                'workplace_id' => $workplaceId,
+                'work_date_local' => (string) $item['work_date_local'],
+                'workplace_timezone' => (string) $item['workplace_timezone'],
+                'motive' => (string) $item['motive'],
+                'interpreted_entry_at_utc' => $item['interpreted_entry_at_utc'],
+                'interpreted_exit_at_utc' => $item['interpreted_exit_at_utc'],
+                'created_at_utc' => (string) $item['created_at_utc'],
+                'created_by_user_id' => $item['created_by_user_id'],
+                'approved_by_user_id' => $item['approved_by_user_id'],
+                'previous_revision_uuid' => $previousUuid,
+            ];
+        };
+
+        $selected = $normalizeRevision($data['adjustment']);
+        if ($selected === null || $selected['uuid_ajuste'] !== $uuid) return self::failure('administrative_unavailable', 502);
+        $history = [];
+        $historyUuids = [];
+        $lastRevision = 0;
+        foreach ($data['revision_history'] as $item) {
+            $normalized = $normalizeRevision($item);
+            if ($normalized === null || $normalized['uuid_ajuste_logico'] !== $selected['uuid_ajuste_logico']
+                || $normalized['worker_id'] !== $selected['worker_id'] || $normalized['workplace_id'] !== $selected['workplace_id']
+                || isset($historyUuids[$normalized['uuid_ajuste']]) || $normalized['revision_number'] <= $lastRevision) {
+                return self::failure('administrative_unavailable', 502);
+            }
+            $historyUuids[$normalized['uuid_ajuste']] = true;
+            $lastRevision = $normalized['revision_number'];
+            $history[] = $normalized;
+        }
+        if (!isset($historyUuids[$uuid])) return self::failure('administrative_unavailable', 502);
+
+        $linkedEvaluations = [];
+        foreach ($data['linked_evaluations'] as $evaluation) {
+            if (!is_array($evaluation)
+                || filter_var($evaluation['worker_id'] ?? null, FILTER_VALIDATE_INT) !== $selected['worker_id']
+                || filter_var($evaluation['workplace_id'] ?? null, FILTER_VALIDATE_INT) !== $selected['workplace_id']
+                || !self::isCivilDate((string) ($evaluation['work_date_local'] ?? ''))
+                || !is_int($evaluation['revision_number'] ?? null) || $evaluation['revision_number'] < 1
+                || !is_string($evaluation['status'] ?? null) || !self::isUtcTimestamp((string) ($evaluation['created_at_utc'] ?? ''))) {
+                return self::failure('administrative_unavailable', 502);
+            }
+            $linkedEvaluations[] = [
+                'worker_id' => $selected['worker_id'],
+                'workplace_id' => $selected['workplace_id'],
+                'work_date_local' => (string) $evaluation['work_date_local'],
+                'revision_number' => $evaluation['revision_number'],
+                'status' => $evaluation['status'],
+                'created_at_utc' => $evaluation['created_at_utc'],
+            ];
+        }
+
+        return ['ok' => true, 'data' => [
+            'adjustment' => $selected,
+            'revision_history' => $history,
+            'linked_evaluations' => $linkedEvaluations,
+        ]];
+    }
+
+    private static function nullableUtcTimestamp(mixed $value): bool
+    {
+        return $value === null || (is_string($value) && trim($value) !== '' && self::isUtcTimestamp($value));
     }
 
     /**
@@ -1712,6 +2912,88 @@ final class ChecadorDailyReadService
         return null;
     }
 
+    /** API create responses include segment database IDs; compare the contract fields only. */
+    private static function segmentsMatchExpected(mixed $actual, array $expected): bool
+    {
+        if (!is_array($actual) || !array_is_list($actual) || count($actual) !== count($expected)) return false;
+        $normalized = [];
+        foreach ($actual as $index => $segment) {
+            if (!is_array($segment)) return false;
+            $normalized[] = [
+                'ordinal' => filter_var($segment['ordinal'] ?? null, FILTER_VALIDATE_INT),
+                'tipo_segmento' => strtoupper(trim((string) ($segment['tipo_segmento'] ?? ''))),
+                'hora_inicio_local' => (string) ($segment['hora_inicio_local'] ?? ''),
+                'hora_fin_local' => (string) ($segment['hora_fin_local'] ?? ''),
+                'dia_offset_inicio' => filter_var($segment['dia_offset_inicio'] ?? null, FILTER_VALIDATE_INT),
+                'dia_offset_fin' => filter_var($segment['dia_offset_fin'] ?? null, FILTER_VALIDATE_INT),
+            ];
+        }
+        foreach ($expected as $index => $segment) {
+            if (($normalized[$index] ?? null) !== $segment) return false;
+        }
+        return true;
+    }
+
+    private static function strictInteger(mixed $value): ?int
+    {
+        if (is_int($value)) return $value;
+        if (!is_string($value) || !preg_match('/\A(?:0|[1-9][0-9]*)\z/D', $value)) return null;
+        $parsed = filter_var($value, FILTER_VALIDATE_INT);
+        return $parsed === false ? null : $parsed;
+    }
+
+    private static function normalizePunchCheckReference(mixed $reference): ?array
+    {
+        if ($reference === null) return null;
+        if (!is_array($reference)
+            || !self::isCivilDate((string) ($reference['check_date'] ?? ''))
+            || !in_array(($reference['check_kind'] ?? null), ['ENTRY', 'LUNCH_EXIT', 'LUNCH_RETURN', 'FINAL_EXIT'], true)
+            || !in_array(($reference['nature'] ?? null), ['LATENESS', 'OMISSION'], true)
+            || self::positiveInt($reference['policy_version_id'] ?? null) === null
+            || !is_int($reference['policy_version'] ?? null) || $reference['policy_version'] < 1
+            || !self::isIanaTimezone($reference['timezone_id'] ?? null)
+            || !self::isCivilDate(substr((string) ($reference['cutoff_local'] ?? ''), 0, 10))
+            || !self::isLocalDateTime((string) ($reference['cutoff_local'] ?? ''))) {
+            return null;
+        }
+        $deviceId = $reference['source_event_device_id'] ?? null;
+        $eventUuid = $reference['source_event_uuid'] ?? null;
+        if (($reference['nature'] === 'LATENESS'
+                && (self::positiveInt($deviceId) === null || !is_string($eventUuid) || trim($eventUuid) === '' || strlen($eventUuid) > 64))
+            || ($reference['nature'] === 'OMISSION' && ($deviceId !== null || $eventUuid !== null))) {
+            return null;
+        }
+        return [
+            'check_date' => (string) $reference['check_date'],
+            'check_kind' => (string) $reference['check_kind'],
+            'nature' => (string) $reference['nature'],
+            'source_event_device_id' => $deviceId === null ? null : (int) $deviceId,
+            'source_event_uuid' => $eventUuid === null ? null : (string) $eventUuid,
+            'policy_version_id' => (int) $reference['policy_version_id'],
+            'policy_version' => (int) $reference['policy_version'],
+            'timezone_id' => (string) $reference['timezone_id'],
+            'cutoff_local' => (string) $reference['cutoff_local'],
+        ];
+    }
+
+    private static function matchesPunchCheckReference(mixed $reference, array $expected): bool
+    {
+        $normalized = self::normalizePunchCheckReference($reference);
+        if ($normalized === null) return false;
+        foreach (['check_date', 'check_kind', 'nature', 'source_event_device_id', 'source_event_uuid'] as $key) {
+            if (($normalized[$key] ?? null) !== ($expected[$key] ?? null)) return false;
+        }
+        return true;
+    }
+
+    private static function isLocalDateTime(string $value): bool
+    {
+        $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value);
+        return $parsed instanceof \DateTimeImmutable
+            && $parsed->format('Y-m-d H:i:s') === $value
+            && !array_filter(\DateTimeImmutable::getLastErrors() ?: []);
+    }
+
     private static function normalizeIncidenceSummary(mixed $incidence, int $workerId, int $workplaceId): ?array
     {
         if (!is_array($incidence)
@@ -1730,6 +3012,12 @@ final class ChecadorDailyReadService
             || $incidence['current_revision'] < 1
             || !array_key_exists('reason', $incidence)
             || !array_key_exists('source_classification', $incidence)) {
+            return null;
+        }
+
+        $checkReference = self::normalizePunchCheckReference($incidence['check_reference'] ?? null);
+        if (($incidence['category'] === 'PUNCH_ATTENDANCE' && $checkReference === null)
+            || ($incidence['category'] !== 'PUNCH_ATTENDANCE' && $checkReference !== null)) {
             return null;
         }
 
@@ -1752,6 +3040,7 @@ final class ChecadorDailyReadService
             'created_at_utc' => $incidence['created_at_utc'] ?? null,
             'created_by_user_id' => $incidence['created_by_user_id'] ?? null,
             'approved_by_user_id' => $incidence['approved_by_user_id'] ?? null,
+            'check_reference' => $checkReference,
         ];
     }
 
@@ -1761,7 +3050,8 @@ final class ChecadorDailyReadService
         string $path,
         array $query = [],
         ?string $diagnosticOperation = null,
-        ?int $demoResolvedWorkerId = null
+        ?int $demoResolvedWorkerId = null,
+        array $additionalHeaders = []
     ): array
     {
         try {
@@ -1788,7 +3078,7 @@ final class ChecadorDailyReadService
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => 'Bearer ' . $token,
-                    ],
+                    ] + $additionalHeaders,
                     'http_errors' => false,
                 ]);
             }
@@ -1816,9 +3106,12 @@ final class ChecadorDailyReadService
             if ($status < 200 || $status >= 300) {
                 $errorCode = is_array($payload['error'] ?? null) ? ($payload['error']['code'] ?? '') : '';
                 $statusCode = $errorCode !== '' ? $errorCode : ($payload['status'] ?? '');
-                $kind = str_starts_with(ltrim($path, '/'), 'api/v2/temporary-access/')
+                $normalizedPath = ltrim($path, '/');
+                $kind = str_starts_with($normalizedPath, 'api/v2/temporary-access/')
                     ? self::mapTemporaryAccessApiError((string) $statusCode, $status)
-                    : self::mapApiError((string) $statusCode, $status);
+                    : (str_starts_with($normalizedPath, 'api/v2/administrative-adjustments')
+                        ? self::mapAdministrativeAdjustmentApiError((string) $statusCode, $status)
+                        : self::mapApiError((string) $statusCode, $status));
                 if ($diagnosticOperation !== null) {
                     $diagnostic['api_error_code'] = self::safeApiErrorCode((string) $statusCode);
                     $diagnostic['local_error_kind'] = $kind;
@@ -2013,7 +3306,7 @@ final class ChecadorDailyReadService
             if ($this->demoScenario !== null) {
                 $response = $this->demoResponse($method, $path, [], $body, $user, $idempotencyKey, $demoLocalityId);
             } else {
-                if (strtoupper($method) === 'POST' && !self::realApiPostOperationsEnabled()) {
+                if (strtoupper($method) === 'POST' && !self::realApiPostAllowed($method, $path)) {
                     return self::failure('api_post_disabled', 403);
                 }
 
@@ -2051,7 +3344,7 @@ final class ChecadorDailyReadService
                 return self::failure($kind, $status);
             }
 
-            return ['ok' => true, 'payload' => $payload];
+            return ['ok' => true, 'http_status' => $status, 'payload' => $payload];
         } catch (ChecadorApiJwtConfigurationException) {
             return self::failure('api_unavailable', 503);
         } catch (\Throwable) {
@@ -3576,6 +4869,19 @@ final class ChecadorDailyReadService
             && !array_filter(\DateTimeImmutable::getLastErrors() ?: []);
     }
 
+    private static function isUtcTimestamp(string $value): bool
+    {
+        if (preg_match('/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z\z/D', $value) !== 1) {
+            return false;
+        }
+        try {
+            $date = new \DateTimeImmutable($value);
+            return $date->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s') === substr($value, 0, 19);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     private static function unicodeLength(string $value): int
     {
         $length = preg_match_all('/./us', $value, $matches);
@@ -3602,6 +4908,17 @@ final class ChecadorDailyReadService
             'INVALID_LIFECYCLE_TRANSITION' => 'invalid_lifecycle_transition',
             'CALCULATION_NOT_FOUND' => 'calculation_not_found',
             'INVALID_PAYLOAD', 'UNRESOLVED_IDENTITY' => 'bad_request',
+            'ATTENDANCE_POLICY_NOT_VERSIONED' => 'attendance_policy_not_versioned',
+            'ATTENDANCE_POLICY_INVALID' => 'attendance_policy_invalid',
+            'ATTENDANCE_POLICY_UNAVAILABLE' => 'attendance_policy_unavailable',
+            'INCIDENCE_DEADLINE_EXPIRED' => 'incidence_deadline_expired',
+            'CHECK_DATE_IN_FUTURE' => 'check_date_future',
+            'WORKER_MEMBERSHIP_UNVERIFIED' => 'worker_membership_unverified',
+            'SOURCE_EVENT_NOT_MATCHED' => 'source_event_not_matched',
+            'QA_DEVELOPMENT_SCOPE_REQUIRED' => 'qa_development_scope_required',
+            'DEVELOPMENT_ONLY' => 'development_only',
+            'POLICY_MUST_BE_PROSPECTIVE' => 'policy_not_prospective',
+            'POLICY_VERSION_DATE_CONFLICT' => 'policy_version_date_conflict',
             'UNAUTHORIZED_STATION_ACCESS' => 'api_authorization',
             'BAD_DATE', 'BAD_REQUEST', 'DATE_RANGE_TOO_LARGE' => 'bad_request',
             'SERVER_ERROR' => 'api_unavailable',
@@ -3623,6 +4940,23 @@ final class ChecadorDailyReadService
             default => $httpStatus === 401 ? 'api_authentication'
                 : ($httpStatus === 403 ? 'api_authorization'
                     : ($httpStatus === 409 ? 'administrative_conflict' : 'api_unavailable')),
+        };
+    }
+
+    /** Preserve adjustment-specific HTTP semantics without changing other workspace mappings. */
+    private static function mapAdministrativeAdjustmentApiError(string $status, int $httpStatus): string
+    {
+        return match ($status) {
+            'UNAUTHORIZED' => 'api_authentication',
+            'FUNCTION_PERMISSION_DENIED', 'STATION_SCOPE_DENIED' => 'api_authorization',
+            'ADJUSTMENT_NOT_FOUND' => 'adjustment_not_found',
+            'WORKER_NOT_FOUND_OR_OUT_OF_SCOPE' => 'worker_not_found_or_out_of_scope',
+            'INVALID_PAYLOAD', 'INVALID_DATE_RANGE', 'DATE_RANGE_TOO_LARGE', 'INVALID_FILTER' => 'bad_request',
+            'DATA_INTEGRITY_CONFLICT' => 'administrative_integrity_conflict',
+            'SOURCE_UNAVAILABLE' => 'administrative_unavailable',
+            default => $httpStatus === 401 ? 'api_authentication'
+                : ($httpStatus === 403 ? 'api_authorization'
+                    : ($httpStatus >= 500 ? 'administrative_unavailable' : 'bad_request')),
         };
     }
 

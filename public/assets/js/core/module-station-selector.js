@@ -12,6 +12,7 @@ class ModuleStationSelector {
         this.badge = document.getElementById('module-station-badge-' + moduleKey);
         this.loadEmpty = this.selector ? this.selector.dataset.loadEmpty === 'true' : true;
         this._customReload = null;
+        this._confirmedValue = this.selector ? this.selector.value : '';
         this._bindChange();
     }
 
@@ -25,8 +26,11 @@ class ModuleStationSelector {
             this._saving = true;
             this._pendingChange = false;
             this.selector.disabled = true;
-            this.updateBadge();
-            this.saveContext().then(() => {
+            var requestedValue = this.selector.value;
+            var previousValue = this._confirmedValue;
+            this.saveContext(requestedValue).then(() => {
+                this._confirmedValue = requestedValue;
+                this.updateBadge();
                 this._saving = false;
                 this.selector.disabled = false;
                 if (this._pendingChange) {
@@ -34,7 +38,7 @@ class ModuleStationSelector {
                     this.selector.dispatchEvent(new Event('change'));
                 } else {
                     try {
-                        this.reloadDataTable();
+                        this.reloadDataTable(previousValue);
                     } catch (e) {
                         console.error('[ModuleStationSelector] Error al recargar datos:', e);
                     }
@@ -43,6 +47,8 @@ class ModuleStationSelector {
                 this._saving = false;
                 this.selector.disabled = false;
                 this._pendingChange = false;
+                this.selector.value = this._confirmedValue;
+                this.updateBadge();
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar la selección. Intente de nuevo.', timer: 3000, showConfirmButton: false });
                 }
@@ -58,12 +64,25 @@ class ModuleStationSelector {
         return { id_estacion: parseInt(val.replace('estacion_', '')), id_depto: null };
     }
 
-    saveContext() {
-        var v = this.getValue();
+    saveContext(value) {
+        var selectorValue = value === undefined ? (this.selector ? this.selector.value : '') : value;
+        var v = { id_estacion: null, id_depto: null };
+        if (selectorValue) {
+            if (selectorValue.startsWith('depto_')) {
+                v.id_depto = parseInt(selectorValue.replace('depto_', ''));
+            } else {
+                v.id_estacion = parseInt(selectorValue.replace('estacion_', ''));
+            }
+        }
         return axios.post('/api/module-context/set', {
             module_key: this.moduleKey,
             id_estacion: v.id_estacion,
             id_depto: v.id_depto
+        }).then(function (response) {
+            if (!response || !response.data || response.data.ok !== true) {
+                throw new Error('El servidor no confirmó el contexto de Checador.');
+            }
+            return response;
         });
     }
 
@@ -79,9 +98,9 @@ class ModuleStationSelector {
         }
     }
 
-    reloadDataTable() {
+    reloadDataTable(previousValue) {
         if (this._customReload) {
-            this._customReload(this);
+            this._customReload(this, previousValue);
             return;
         }
         var tableSelector = ModuleStationSelector.dataTableMap[this.moduleKey];

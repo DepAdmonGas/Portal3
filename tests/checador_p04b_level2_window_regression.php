@@ -31,6 +31,7 @@ $base = 'https://checador.test/';
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$adjustmentsViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $p04aSource = file_get_contents(__DIR__ . '/checador_p04_level1_snapshot_regression.php');
 
 $make = static function (array $responses, ?array &$history = null, ?string &$token = null) use ($base): ChecadorDailyReadService {
@@ -117,7 +118,7 @@ $assert(($unknownWithVerifiedDimension['data']['window_level2_status'] ?? '') ==
 // P3B15-P3B20: zero events/completeness are not attendance or payroll conclusions.
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P3B15 zero events + UNKNOWN does not produce SIN MARCACIÓN');
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P3B16 zero events + INCOMPLETE does not produce SIN MARCACIÓN');
-$assert(str_contains($viewSource, 'Nunca se activa automáticamente'), 'P3B17 zero events + VERIFIED does not produce automatic FALTA');
+$assert(is_string($adjustmentsViewSource) && stripos($adjustmentsViewSource, 'nunca se activa automáticamente') !== false, 'P3B17 zero events + VERIFIED does not produce automatic FALTA');
 $assert(!str_contains($viewSource, 'has_zero_governed_events') || !str_contains($viewSource, 'AUSENTE'), 'P3B18 has_zero_governed_events does not produce absence');
 $assert(!str_contains($viewSource, 'RETARDO'), 'P3B19 no RETARDO inference is rendered');
 $assert(!preg_match('/n[oó]mina|payroll|descuento/i', $viewSource), 'P3B20 no payroll conclusion is rendered');
@@ -134,7 +135,9 @@ $assert(($networkError['error']['kind'] ?? '') === 'api_unavailable' && !isset($
 $assert(str_contains($controllerSource, '$level2Meta = null') && str_contains($controllerSource, 'Fail closed'), 'P3B25 a failed fresh request cannot retain a prior VERIFIED state');
 
 // P3B26-P3B30: preserve P04A/P03 and keep scope/token details server-side.
-$assert(str_contains($p04aSource, 'createDailyPunchSnapshot') && str_contains($controllerSource, 'createDailyPunchSnapshot'), 'P3B26 P04A snapshot behavior remains intact');
+$assert(str_contains($p04aSource, 'createDailyPunchSnapshot')
+    && str_contains($controllerSource, 'No existe una consulta estable disponible. Esta lectura no crea snapshots automáticamente.')
+    && !str_contains($controllerSource, 'createDailyPunchSnapshot('), 'P3B26 snapshot service behavior remains intact and GET does not create one automatically');
 $assert(str_contains($serviceSource, 'readObservedPunches'), 'P3B27 P03 raw-read behavior remains intact');
 $assert(str_contains($controllerSource, 'authorize($requestedWorkplace)') && str_contains($controllerSource, 'selectedWorkplaceId'), 'P3B28 client input cannot broaden workplace scope');
 $assert(!preg_match('/\bmanifest_digest\b/', $viewSource) && !preg_match('/(?<!level2_)evaluation_ref\b/', $viewSource), 'P3B29 internal evidence is not unnecessarily exposed to normal UI');

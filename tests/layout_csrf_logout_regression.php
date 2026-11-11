@@ -61,7 +61,31 @@ function layout_has_csrf_bootstrap(string $layout): bool
     return str_contains($contents, '<meta name="csrf-token" content="<?= \\App\\Core\\CsrfToken::token() ?>">')
         && (str_contains($contents, "axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken")
             && str_contains($contents, "config.headers['X-CSRF-TOKEN'] = getCsrfToken()")
-            || str_contains($contents, "js/core/http-security.js"));
+            || str_contains($contents, "js/core/http-security.js")
+            || str_contains($contents, "js/core/csrf-request-setup.js"));
+}
+
+function layout_has_external_operational_security_scripts(): bool
+{
+    $root = dirname(__DIR__);
+    $layout = (string) file_get_contents($root . '/app/Views/layouts/departamento-operativo.php');
+    $axiosSetup = (string) file_get_contents($root . '/public/assets/js/core/csrf-request-setup.js');
+    $jquerySetup = (string) file_get_contents($root . '/public/assets/js/core/jquery-csrf-setup.js');
+    $fallbackSetup = (string) file_get_contents($root . '/public/assets/js/core/script-fallbacks.js');
+
+    return str_contains($layout, "js/core/script-fallbacks.js")
+        && str_contains($layout, "data-fallback-src=\"https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js\"")
+        && str_contains($layout, "data-fallback-src=\"https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js\"")
+        && str_contains($layout, "js/core/csrf-request-setup.js")
+        && str_contains($layout, "js/core/jquery-csrf-setup.js")
+        && !str_contains($layout, 'onerror=')
+        && !str_contains($layout, "axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken")
+        && !str_contains($layout, 'jQuery.ajaxSetup(')
+        && str_contains($axiosSetup, 'axiosClient.interceptors.request.use(')
+        && str_contains($axiosSetup, 'axiosClient.interceptors.response.use(')
+        && str_contains($axiosSetup, 'window.fetch = function (input, init)')
+        && str_contains($jquerySetup, 'window.jQuery.ajaxSetup(')
+        && str_contains($fallbackSetup, "document.addEventListener('error'");
 }
 
 function layout_has_no_get_logout_anchor(string $layout): bool
@@ -96,6 +120,7 @@ $tests = [
     'SGM layout exposes the current CSRF meta and Axios request bootstrap' => static fn (): bool => layout_has_csrf_bootstrap('sgm'),
     'SASISOPA layout exposes the current CSRF meta and Axios request bootstrap' => static fn (): bool => layout_has_csrf_bootstrap('sasisopa'),
     'Configuracion layout exposes the current CSRF meta and Axios request bootstrap' => static fn (): bool => layout_has_csrf_bootstrap('configuracion'),
+    'Departamento operativo keeps external CSRF and script fallback behavior without inline setup handlers' => static fn (): bool => layout_has_csrf_bootstrap('departamento-operativo') && layout_has_external_operational_security_scripts(),
     'Configuracion layout no longer exposes a GET logout anchor' => static fn (): bool => layout_has_no_get_logout_anchor('configuracion'),
     'SGM current CSRF contract authorizes POST logout' => static fn (): bool => $sgmFlow['login']['status'] === 200 && $sgmFlow['valid']['status'] === 200,
     'SASISOPA current CSRF contract authorizes POST logout' => static fn (): bool => $sasisopaFlow['login']['status'] === 200 && $sasisopaFlow['valid']['status'] === 200,

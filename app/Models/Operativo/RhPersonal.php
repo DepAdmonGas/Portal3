@@ -33,6 +33,8 @@ class RhPersonal extends Model
         'contrato',
         'sd',
         'documentos',
+        'rh_direct_create_idempotency_key_hash',
+        'rh_direct_create_request_fingerprint',
         'estado'
     ];
 

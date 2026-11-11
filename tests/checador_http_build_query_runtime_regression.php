@@ -22,6 +22,23 @@ $renderDashboard = static function (?int $workplaceId, string $date, ?int $worke
     $state = 'idle';
     $stateMessage = '';
     $demoMode = false;
+    $base = '/departamento-operativo/recursos-humanos/checador';
+    $moduleNavigation = [
+        ['label' => 'Asistencia del día', 'href' => $base . '/asistencia', 'available' => true],
+        [
+            'label' => 'Programación semanal',
+            'description' => $canReadScheduling ? 'Consulta y organiza los turnos.' : 'No disponible.',
+            'utility' => $canReadScheduling ? 'Turnos · Descansos · Asignaciones' : '',
+            'href' => $base . '/programacion-semanal',
+            'available' => $canReadScheduling,
+            'unavailable' => 'Disponible con autorización de lectura de programación.',
+        ],
+        ['label' => 'Horarios y turnos', 'href' => $base . '/horarios-turnos', 'available' => true],
+        ['label' => 'Reportes', 'href' => $base . '/reporte', 'available' => true],
+    ];
+    $buildQueryString = static function (array $params): string {
+        return http_build_query(array_filter($params, static fn(mixed $value): bool => $value !== null && $value !== ''), '', '&', PHP_QUERY_RFC3986);
+    };
     $selectedWorkplaceKind = $workplaceId === 9 ? 'Departamento' : 'Estación';
     $authorizedProfileLabel = 'Perfil de prueba';
     $realApiPostOperationsEnabled = false;
@@ -62,7 +79,7 @@ try {
 
 $assert($renderError === null
     && str_contains($stationHtml, 'Programación semanal')
-    && str_contains($stationHtml, 'Turnos de lunes a domingo'),
+    && str_contains($stationHtml, 'Consulta y organiza los turnos.'),
     'dashboard renders the authorized weekly directory link without a runtime TypeError');
 
 $readModuleAnchor = static function (string $html, string $label): ?array {
@@ -87,14 +104,14 @@ $stationQuery = [];
 if ($stationHref !== null) {
     parse_str((string) parse_url($stationHref, PHP_URL_QUERY), $stationQuery);
 }
-$assert(($stationQuery['schedule_week'] ?? null) === '1'
-    && ($stationQuery['workplace_id'] ?? null) === '1'
-    && ($stationQuery['week_start'] ?? null) === '2026-10-19',
-    'station, weekly flag and Monday derived from the selected labor date are present in the generated URL');
+$assert(parse_url((string) ($stationAnchor['href'] ?? ''), PHP_URL_PATH)
+        === '/departamento-operativo/recursos-humanos/checador/programacion-semanal'
+    && $stationQuery === [],
+    'weekly navigation uses the canonical path and keeps locality in the authorized session context');
 $assert(is_array($stationAnchor)
-    && str_contains($stationAnchor['raw_href'], '&amp;')
-    && !preg_match('/(?<!&)&(?!amp;)/', $stationAnchor['raw_href']),
-    'query separators are HTML-escaped inside the navigation href');
+    && !str_contains($stationAnchor['raw_href'], 'schedule_week')
+    && !str_contains($stationAnchor['raw_href'], 'workplace_id'),
+    'weekly navigation does not expose a screen selector or untrusted locality query parameter');
 
 $departmentAnchor = $readModuleAnchor($departmentHtml, 'Programación semanal');
 $departmentHref = $departmentAnchor['href'] ?? null;
@@ -102,8 +119,10 @@ $departmentQuery = [];
 if ($departmentHref !== null) {
     parse_str((string) parse_url($departmentHref, PHP_URL_QUERY), $departmentQuery);
 }
-$assert(($departmentQuery['workplace_id'] ?? null) === '9',
-    'canonical department workplace context remains in the generated URL');
+$assert(parse_url((string) ($departmentAnchor['href'] ?? ''), PHP_URL_PATH)
+        === '/departamento-operativo/recursos-humanos/checador/programacion-semanal'
+    && $departmentQuery === [],
+    'department scheduling navigation also relies on the validated institutional session context');
 
 $zeroAnchor = $readModuleAnchor($zeroHtml, 'Programación semanal');
 $zeroHref = $zeroAnchor['href'] ?? null;
@@ -111,7 +130,7 @@ $zeroQuery = [];
 if ($zeroHref !== null) {
     parse_str((string) parse_url($zeroHref, PHP_URL_QUERY), $zeroQuery);
 }
-$assert(($zeroQuery['workplace_id'] ?? null) === '0'
+$assert($zeroQuery === []
     && is_callable($buildQueryString)
     && $buildQueryString(['integer_zero' => 0, 'string_zero' => '0', 'empty' => '', 'missing' => null]) === 'integer_zero=0&string_zero=0',
     'integer and string zero survive filtering while null and empty-string values are omitted');
@@ -121,23 +140,38 @@ $historyQuery = [];
 if ($historyAnchor !== null) {
     parse_str((string) parse_url($historyAnchor['href'], PHP_URL_QUERY), $historyQuery);
 }
-$assert(($historyQuery['schedule_history'] ?? null) === '1'
-    && ($historyQuery['workplace_id'] ?? null) === '1'
-    && ($historyQuery['date'] ?? null) === '2026-10-19'
-    && ($historyQuery['worker_id'] ?? null) === '558',
-    'authorized schedule-history navigation retains station, worker and labor-date context');
+$assert(parse_url((string) ($historyAnchor['href'] ?? ''), PHP_URL_PATH) === '/departamento-operativo/recursos-humanos/checador/horarios-turnos'
+    && $historyQuery === []
+    && !str_contains((string) ($historyAnchor['href'] ?? ''), 'schedule_history')
+    && !str_contains((string) ($historyAnchor['href'] ?? ''), 'workplace_id'),
+    'authorized schedule-history navigation uses the clean institutional route without technical screen or locality parameters');
 
 $reportAnchor = $readModuleAnchor($stationHtml, 'Reportes');
 $reportQuery = [];
 if ($reportAnchor !== null) {
     parse_str((string) parse_url($reportAnchor['href'], PHP_URL_QUERY), $reportQuery);
 }
-$assert(($reportQuery['source_workplace_id'] ?? null) === '1'
-    && ($reportQuery['source_work_date'] ?? null) === '2026-10-19'
-    && ($reportQuery['source_worker_id'] ?? null) === '558'
+$assert(parse_url((string) ($reportAnchor['href'] ?? ''), PHP_URL_PATH)
+    === '/departamento-operativo/recursos-humanos/checador/reporte'
+    && $reportQuery === []
     && is_callable($buildQueryString)
     && $buildQueryString(['period' => 'custom', 'page' => 0, 'order' => '0', 'worker_id' => 558, 'date' => '2026-10-19']) === 'period=custom&page=0&order=0&worker_id=558&date=2026-10-19',
-    'report navigation retains source context and generic query building keeps pagination, order, worker, date and zero values');
+    'report navigation remains on its workspace route and generic query building keeps pagination, order, worker, date and zero values');
+
+$routes = file_get_contents(dirname(__DIR__) . '/routes/web.php') ?: '';
+$controller = file_get_contents(dirname(__DIR__) . '/app/Controllers/ChecadorController.php') ?: '';
+$scheduleWeekView = file_get_contents(dirname(__DIR__) . '/app/Views/departamento-operativo/2-recursos-humanos/checador/schedule-week.php') ?: '';
+$assert(str_contains($routes, "'/recursos-humanos/checador/programacion-semanal'")
+    && str_contains($controller, 'public function scheduleWeek(): void')
+    && str_contains($controller, "Request::method() === 'GET'")
+    && str_contains($controller, 'scheduleWeekHref($query)'),
+    'canonical M03 route exists and the old screen flag is handled only as a GET redirect');
+$assert(str_contains($controller, "'/departamento-operativo/recursos-humanos/checador/programacion-semanal'")
+    && str_contains($controller, "ChecadorAccessService::authorizeScheduling(null, 'leer')")
+    && str_contains($controller, 'scheduleWeekQueryParameters')
+    && !str_contains($scheduleWeekView, 'name="schedule_week"')
+    && !str_contains($scheduleWeekView, 'action="/departamento-operativo/recursos-humanos/checador"'),
+    'week filter and save-return links use the canonical route while authorization remains in the shared renderer');
 
 $assert(!str_contains($restrictedHtml, 'schedule_week=1')
     && !str_contains(strip_tags($restrictedHtml), 'Turnos de lunes a domingo'),

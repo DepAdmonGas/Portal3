@@ -95,11 +95,13 @@ $incidences = $render('workspace-incidences.php', $common + [
     'administrativeEvaluations' => [],
     'administrativeEvaluationErrors' => [],
 ]);
-$assert(str_contains($incidences, 'Incidencias e historial')
+$assert(!str_contains($incidences, 'Incidencias e historial')
     && str_contains($incidences, 'Vacaciones')
     && str_contains($incidences, 'Activa')
     && str_contains($incidences, 'Motivo inicial')
-    && !str_contains($incidences, '<form'), 'incidence workspace renders revision history as read-only and escapes dynamic values');
+    && str_contains($incidences, 'id="checador-incidence-search-modal"')
+    && preg_match('/<form\b[^>]*method="get"/i', $incidences) === 1
+    && !preg_match('/<form\b[^>]*method="post"/i', $incidences), 'incidence workspace renders a GET-only search modal and keeps history read-only without create permission');
 
 $adjustments = $render('workspace-adjustments.php', $common + [
     'administrativeEvaluations' => [558 => ['work_date' => '2026-10-19', 'evaluation_exists' => true, 'evaluation' => [
@@ -128,7 +130,7 @@ $temporary = $render('workspace-temporary-access.php', $common + [
 ]);
 $assert(str_contains($temporary, 'Solicitudes de acceso temporal')
     && str_contains($temporary, 'Colaborador de prueba')
-    && str_contains($temporary, 'No incluido en esta lectura')
+    && str_contains($temporary, 'Sin información de estado')
     && str_contains($temporary, 'PIN no se consulta')
     && !str_contains($temporary, '<form'), 'temporary-access workspace renders only queue data and does not expose write controls or a PIN');
 $oneTimePin = $render('workspace-temporary-access.php', $common + [
@@ -151,15 +153,15 @@ $assert(str_contains($controller, "renderDashboardWorkspace('daily-attendance')"
     && str_contains($controller, "'/reporte'")
     && str_contains($controller, "'/comparacion-nomina'")
     && str_contains($controller, "'/configuracion'"), 'module directory links open their distinct functional routes');
-$assert(str_contains($dailyAttendance, 'Entrada 1') && str_contains($dailyAttendance, 'Salida 1')
-    && str_contains($dailyAttendance, 'Entrada 2') && str_contains($dailyAttendance, 'Salida 2'), 'daily table keeps the neutral four-position operational projection');
+$assert(str_contains($dailyAttendance, '1.ª entrada') && str_contains($dailyAttendance, '1.ª salida')
+    && str_contains($dailyAttendance, '2.ª entrada') && str_contains($dailyAttendance, '2.ª salida'), 'daily table keeps the neutral four-position operational projection');
 $assert(str_contains($controller, 'authorizeScheduling($requestedWorkplace, \'leer\')')
     && str_contains($controller, 'authorizeScheduling($workplaceId, \'leer\')'), 'weekly matrix and schedule history retain their separate read ACL gate');
 $assert(str_contains($dailyAttendance, 'snapshot_ref') && str_contains($controller, '\'snapshot_ref\' => $snapshotRef'), 'daily detail navigation preserves the current snapshot and canonical station/date/worker context');
 $workspaceReadGate = strpos($controller, 'if ($workspace !== \'temporary-access\' && !$workspaceSnapshotMissing && $requestedWorkplace !== null && $date !== \'\')');
-$snapshotCreateCall = strpos($controller, 'createDailyPunchSnapshot(');
-$assert($workspaceReadGate !== false && $snapshotCreateCall !== false && $workspaceReadGate < $snapshotCreateCall
-    && str_contains($controller, "'daily-attendance' => 'daily-attendance'"), 'secondary workspaces avoid creating daily snapshots on direct load and require the stable reference for linked reads');
+$assert($workspaceReadGate !== false
+    && !str_contains($controller, 'createDailyPunchSnapshot(')
+    && str_contains($controller, "'daily-attendance' => 'daily-attendance'"), 'secondary workspaces preserve stable-reference reads and no GET creates a daily snapshot');
 $moduleStart = strpos($controller, '$entries = [', strpos($controller, 'private function buildModuleNavigation'));
 $moduleEnd = $moduleStart === false ? false : strpos($controller, '];', $moduleStart);
 $moduleSource = $moduleStart !== false && $moduleEnd !== false ? substr($controller, $moduleStart, $moduleEnd - $moduleStart) : '';

@@ -15,6 +15,7 @@ class RhComodinesDia extends Model
     protected $fillable = [
         'id_reporte',
         'id_usuario',
+        'id_personal',
         'id_estacion',
         'dia',
     ];
@@ -23,6 +24,7 @@ class RhComodinesDia extends Model
         'id' => 'integer',
         'id_reporte' => 'integer',
         'id_usuario' => 'integer',
+        'id_personal' => 'integer',
         'id_estacion' => 'integer',
     ];
 }

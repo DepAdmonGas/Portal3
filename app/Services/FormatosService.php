@@ -617,9 +617,42 @@ return ['success' => false, 'message' => 'Ya fue firmado ' . $label];
 
 $firmaHash = 'Firma:' . bin2hex(random_bytes(64)) . '.' . uniqid();
 
-Capsule::transaction(function () use ($id, $idUsuario, $tipoFirma, $estado, $formato, $firmaHash) {
+$registrarFirma = function () use ($id, $idUsuario, $tipoFirma, $token, $estado, &$formato, $firmaHash): void {
+Capsule::transaction(function () use ($id, $idUsuario, $tipoFirma, $token, $estado, &$formato, $firmaHash) {
+    $formato = RhFormatos::query()->whereKey($id)->lockForUpdate()->first();
+    if (!$formato) {
+        throw new \DomainException('Formato no encontrado durante la autorización.');
+    }
+    $lockedToken = RhFormatosToken::query()
+        ->where('id_formato', $id)
+        ->where('id_usuario', $idUsuario)
+        ->where('token', $token)
+        ->orderByDesc('id')
+        ->lockForUpdate()
+        ->first();
+    if (!$lockedToken) {
+        throw new \DomainException('El token dejó de ser válido antes de registrar la firma.');
+    }
+    if (Carbon::now()->greaterThan(Carbon::parse($lockedToken->fecha_creacion)->addMinutes(2))) {
+        throw new \DomainException('El token expiró antes de registrar la firma.');
+    }
+    if ((int)$formato->status === 4) {
+        throw new \DomainException('El formato ya está finalizado.');
+    }
+    if (($tipoFirma === 'B' && (int)$formato->status !== 1)
+        || ($tipoFirma === 'C' && (int)$formato->status !== 2)) {
+        throw new \DomainException('El formato cambió de estado antes de registrar la firma.');
+    }
+    if (RhFormatosFirma::query()
+        ->where('id_formato', $id)
+        ->where('tipo_firma', $tipoFirma)
+        ->lockForUpdate()
+        ->exists()) {
+        throw new \DomainException('La firma ya fue registrada para este formato.');
+    }
+
 if ($tipoFirma === 'C') {
-self::ejecutarOperacionAutorizacion($formato);
+self::ejecutarOperacionAutorizacion($formato, $idUsuario);
 }
 
 $formato->status = $estado;
@@ -633,6 +666,13 @@ RhFormatosFirma::create([
 'fecha'      => Carbon::now(),
 ]);
 });
+};
+
+if ($tipoFirma === 'C' && in_array((int)$formato->formato, [1, 2, 4], true)) {
+    WorkerWorkplaceAssignmentWriteCoordinator::runExclusive($registrarFirma);
+} else {
+    $registrarFirma();
+}
 
 $usuario = Usuario::find($idUsuario);
 $nombre = $usuario ? $usuario->nombre : 'Desconocido';
@@ -1457,17 +1497,17 @@ return 'Sin información';
 return implode(', ', $nombres);
 }
 
-private static function ejecutarOperacionAutorizacion(RhFormatos $formato): void
+private static function ejecutarOperacionAutorizacion(RhFormatos $formato, int $actorId): void
 {
 switch ((int)$formato->formato) {
 case 1:
-self::aplicarAltaPersonal((int)$formato->id);
+self::aplicarAltaPersonal((int)$formato->id, $actorId);
 break;
 case 2:
 self::aplicarBajaPersonal((int)$formato->id);
 break;
 case 4:
-self::aplicarReestructuracionPersonal((int)$formato->id);
+self::aplicarReestructuracionPersonal((int)$formato->id, $actorId);
 break;
 case 5:
 self::aplicarAjusteSalarial((int)$formato->id);
@@ -1475,13 +1515,25 @@ break;
 }
 }
 
-private static function aplicarAltaPersonal(int $idFormato): void
+private static function aplicarAltaPersonal(int $idFormato, int $actorId): void
 {
 $filas = RhFormatosAlta::where('id_formulario', $idFormato)->orderBy('id')->get();
+$historyEnabled = WorkerWorkplaceAssignmentHistoryWriteGate::enabled();
+$writer = $historyEnabled ? new WorkerWorkplaceAssignmentVersionService() : null;
+if ($historyEnabled) {
+    self::assertAssignmentHistoryActor($actorId);
+}
 
 foreach ($filas as $fila) {
 $nombre = trim((string)$fila->nombre);
 $idEstacion = (int)$fila->id_estacion;
+$lockedLocality = null;
+if ($historyEnabled) {
+    $lockedLocality = RhLocalidad::query()->whereKey($idEstacion)->lockForUpdate()->first(['id']);
+    if ($lockedLocality === null) {
+        throw new \DomainException('La localidad de la alta autorizada no existe en op_rh_localidades.id.');
+    }
+}
 
 $duplicado = RhPersonal::where('nombre_completo', $nombre)
 ->where('id_estacion', $idEstacion)
@@ -1489,6 +1541,23 @@ $duplicado = RhPersonal::where('nombre_completo', $nombre)
 ->exists();
 
 if ($duplicado) {
+if ($historyEnabled && $writer !== null) {
+    $existingWorker = RhPersonal::query()
+        ->where('nombre_completo', $nombre)
+        ->where('id_estacion', $idEstacion)
+        ->where('estado', 1)
+        ->lockForUpdate()
+        ->first(['id']);
+    if ($existingWorker === null) {
+        throw new \DomainException('The existing HR duplicate changed during authorized alta.');
+    }
+    $currentAssignment = (new WorkerWorkplaceAssignmentResolver())
+        ->resolveAssignments((int)$existingWorker->id, $writer->nowUtc());
+    if ($currentAssignment['status'] !== 'RESOLVED_SINGLE'
+        || (int)$currentAssignment['assignments'][0]['workplace_id'] !== $idEstacion) {
+        throw new \DomainException('The existing HR duplicate has missing or conflicting locality history.');
+    }
+}
 continue;
 }
 
@@ -1512,12 +1581,26 @@ $datosPersonal[$campo] = '';
 }
 
 $personal = RhPersonal::create($datosPersonal);
+if (!$personal) {
+    throw new \DomainException('No se pudo crear el trabajador durante la alta autorizada.');
+}
 
 RhPersonalAcceso::create([
 'id_personal' => (int)$personal->id,
 'huella'      => '',
 'pin'         => 0,
 ]);
+
+if ($historyEnabled && $writer !== null) {
+    $writer->appendVersion(
+        (int)$personal->id,
+        $idEstacion,
+        $writer->nowUtc(),
+        null,
+        $actorId,
+        'Alta autorizada mediante formato RH #' . $idFormato
+    );
+}
 }
 }
 
@@ -1582,15 +1665,19 @@ RhPersonalBaja::create([
 }
 }
 
-private static function aplicarReestructuracionPersonal(int $idFormato): void
+private static function aplicarReestructuracionPersonal(int $idFormato, int $actorId): void
 {
 $filas = RhFormatosRestructuracion::where('id_formulario', $idFormato)->orderBy('id')->get();
+$historyEnabled = WorkerWorkplaceAssignmentHistoryWriteGate::enabled();
+if ($historyEnabled) {
+    self::assertAssignmentHistoryActor($actorId);
+}
 
 foreach ($filas as $fila) {
 $idPersonal = (int)$fila->id_personal;
 $idEstacionCambio = (int)$fila->id_estacion_cambio;
 
-$personal = RhPersonal::find($idPersonal);
+$personal = RhPersonal::query()->whereKey($idPersonal)->lockForUpdate()->first();
 if (!$personal) {
 continue;
 }
@@ -1599,8 +1686,24 @@ if ((int)$personal->id_estacion === $idEstacionCambio) {
 continue;
 }
 
+if ($historyEnabled) {
+    if (!RhLocalidad::query()->whereKey($idEstacionCambio)->exists()) {
+        throw new \DomainException('El destino de la reestructuración no existe en op_rh_localidades.id.');
+    }
+    throw new \DomainException(
+        'La reestructuración contiene sólo una fecha DATE; se requiere una regla institucional de hora y zona antes de activar el historial.'
+    );
+}
+
 $personal->id_estacion = $idEstacionCambio;
 $personal->save();
+}
+}
+
+private static function assertAssignmentHistoryActor(int $actorId): void
+{
+if ($actorId <= 0 || !Usuario::query()->whereKey($actorId)->exists()) {
+    throw new \DomainException('El historial requiere al actor autorizado existente en Portal3.');
 }
 }
 

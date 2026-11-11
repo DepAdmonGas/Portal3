@@ -26,6 +26,8 @@ $permisos = ModuloService::getPermisos($usuario->id);
 
 // Buscar menu / modulo del departamento
 $elementos = ModuloDptoOperativoService::getPermisos($usuario->id);
+// PIN temporal y M07 son capacidades internas de Checador, no módulos raíz.
+unset($elementos['acceso-temporal'], $elementos['checador-v2-ajustes']);
 
 $data = [
 'title' => $title,

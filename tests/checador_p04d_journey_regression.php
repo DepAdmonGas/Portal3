@@ -40,6 +40,19 @@ $extractPublicMethod = static function (string $source, string $method): string 
     return preg_match($pattern, $source, $matches) === 1 ? $matches[0] : '';
 };
 $journeyMethodSource = $extractPublicMethod($serviceSource, 'evaluateJourney');
+$renderJourney = static function (array $data, string $evaluationState = 'not_run', bool $includeJourney = true): string {
+    $journeys = $includeJourney ? [1 => $data + ['worker_name' => 'Colaborador de prueba']] : [];
+    $journeyErrors = [];
+    $journeyEvaluationState = $evaluationState;
+    $selectedDate = '2026-10-12';
+    $selectedWorkplaceId = 1;
+    $selectedWorkplaceName = 'Interlomas';
+    $selectedWorkerId = 1;
+    $state = 'success';
+    ob_start();
+    require __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-journeys.php';
+    return (string) ob_get_clean();
+};
 
 $journeyPayload = static function (string $status = 'SCHEDULED', string $level2 = 'VERIFIED', bool $evaluated = true): array {
     $events = $evaluated ? [
@@ -111,14 +124,46 @@ $assert(!str_contains($viewSource, "'UNSCHEDULED' => 'Descanso programado'"), 'P
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P4D15 UNSCHEDULED does not become SIN MARCACIÓN');
 $assert(!str_contains($viewSource, 'FALTA'), 'P4D16 Journey view does not turn UNSCHEDULED into FALTA');
 $assert(str_contains($viewSource, 'Descanso programado'), 'P4D17 DAY_OFF has distinct wording');
-$assert(str_contains($viewSource, 'events') && str_contains($viewSource, 'foreach ($events'), 'P4D18 observed events remain visible on DAY_OFF');
+$notEvaluatedHtml = $renderJourney([], 'not_evaluated', false);
+$assert(str_contains($notEvaluatedHtml, 'La evaluación no se ejecuta al abrir esta pantalla')
+    && str_contains($notEvaluatedHtml, 'esto no determina falta ni ausencia')
+    && !str_contains($notEvaluatedHtml, 'Resultado disponible'), 'P4D17A a Journey GET without a persisted evaluation renders a neutral, non-classifying empty state');
+$dayOffData = $journeyPayload('DAY_OFF')['data'];
+$dayOffData['journey_status'] = 'DAY_OFF';
+$dayOffHtml = $renderJourney($dayOffData);
+$assert(str_contains($dayOffHtml, 'Descanso programado')
+    && str_contains($dayOffHtml, 'ev-1')
+    && str_contains($dayOffHtml, 'ev-2'), 'P4D18 observed events remain visible on a DAY_OFF Journey result');
 $unknown = $make([new Response(200, [], json_encode($journeyPayload('UNKNOWN', 'UNKNOWN', false), JSON_THROW_ON_ERROR))])->evaluateJourney($user, 1, 1, '2026-10-12');
 $incomplete = $make([new Response(200, [], json_encode($journeyPayload('SCHEDULED', 'INCOMPLETE', false), JSON_THROW_ON_ERROR))])->evaluateJourney($user, 1, 1, '2026-10-12');
 $assert(($unknown['data']['journey_status'] ?? '') === 'UNKNOWN_SCHEDULE', 'P4D19 UNKNOWN stays non-final');
 $assert(($incomplete['data']['source_evidence']['window_level2_status'] ?? '') === 'INCOMPLETE', 'P4D20 INCOMPLETE stays non-final');
 $assert(str_contains($serviceSource, 'window_level2_status'), 'P4D21 aggregate source status is preserved');
-$assert(str_contains($viewSource, 'foreach ($events as $event)'), 'P4D22 all returned events are rendered');
-$assert(str_contains($viewSource, 'foreach ($events as $event)') && !str_contains($viewSource, 'array_slice($events'), 'P4D23 5+ events are not truncated');
+$manyEvents = [];
+for ($eventIndex = 1; $eventIndex <= 6; $eventIndex++) {
+    $manyEvents[] = [
+        'event_uuid' => 'p04d-event-' . $eventIndex,
+        'id_dispositivo' => $eventIndex,
+        'ocurrido_at_utc' => '2026-10-12 ' . sprintf('%02d', 13 + $eventIndex) . ':00:00',
+        'pairing_role' => $eventIndex === 1 ? 'ENTRY' : ($eventIndex === 6 ? 'EXIT' : 'SURPLUS'),
+        'segment_ordinal' => 1,
+    ];
+}
+$manyData = $journeyPayload()['data'];
+$manyData['evaluated_raw_event_count'] = count($manyEvents);
+$manyData['evaluated_raw_events'] = $manyEvents;
+$manyData['provenance']['evaluated_raw_event_count'] = count($manyEvents);
+$manyData['provenance']['evaluated_raw_events'] = $manyEvents;
+$manyEventsHtml = $renderJourney($manyData);
+$allManyEventIdsRendered = count(array_filter(
+    $manyEvents,
+    static fn(array $event): bool => substr_count($manyEventsHtml, $event['event_uuid']) === 1
+)) === count($manyEvents);
+$assert(str_contains($viewSource, "foreach (\$detail['events'] as \$event)")
+    && $allManyEventIdsRendered, 'P4D22 all returned Journey events render once in the current traceability modal');
+$assert(count($manyEvents) >= 5
+    && $allManyEventIdsRendered
+    && !str_contains($viewSource, 'array_slice($detail[\'events\']'), 'P4D23 five-plus Journey events are not truncated');
 $assert(str_contains($viewSource, 'pairing') && str_contains($serviceSource, 'pairing'), 'P4D24 unmatched pairing evidence can be preserved');
 $assert(str_contains($viewSource, 'journey_status') && str_contains($serviceSource, 'journey_status'), 'P4D25 ambiguous/review status is preserved');
 $assert(str_contains($scheduleHistoryViewSource, 'segmentos')
@@ -145,7 +190,9 @@ $assert(($failed['error']['kind'] ?? '') === 'api_unavailable', 'P4D35 HTTP fail
 $assert(str_contains($controllerSource, '$journeys = []') && str_contains($controllerSource, '$journeyErrors = []'), 'P4D36 stale Journey is cleared before refresh');
 $assert(str_contains($controllerSource, 'getEffectiveSchedule') && str_contains($serviceSource, 'api/v2/workers/'), 'P4D37 P04C schedule integration is preserved');
 $assert(str_contains($controllerSource, 'getLevel2WindowStatus'), 'P4D38 P04B Level 2 integration is preserved');
-$assert(str_contains($controllerSource, 'createDailyPunchSnapshot') && str_contains($serviceSource, 'readDailyPunchSnapshotPage'), 'P4D39 P04A/P03 behavior is preserved');
+$assert(!str_contains($controllerSource, 'createDailyPunchSnapshot(')
+    && str_contains($serviceSource, 'public function createDailyPunchSnapshot(')
+    && str_contains($serviceSource, 'readDailyPunchSnapshotPage'), 'P4D39 snapshot operation remains in the service while Portal3 GET paths do not invoke creation');
 $administrativeStateCode = 'RESOLVED_PENDING_AUTHORIZATION';
 $assert(!str_contains($incidenceViewSource, $administrativeStateCode)
     && str_contains($incidenceViewSource, 'ChecadorPresentationFormatter::incidenceStatusLabel')

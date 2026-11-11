@@ -96,7 +96,10 @@ $service = $make([
     $punchPayload([
         [
             'event_uuid' => 'e1',
+            'id_estacion_resuelta' => 1,
+            'id_personal_resuelto' => 100,
             'ocurrido_at_utc' => '2026-10-12 18:00:00',
+            'processing_status' => 'RECEIVED',
             'integrity' => ['status' => 'VALID'],
         ],
     ]),
@@ -140,7 +143,7 @@ $assert(!str_contains($sourceView, 'SIN MARCACIÓN'), 'P318 successful empty res
 $assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $sourceView), 'P319 raw dashboard does not render payroll amounts or document data');
 $assert(str_contains($sourceView, 'punch-detail-integrity')
     && str_contains($sourceTableScript, "setDetailText('punch-detail-integrity'")
-    && str_contains($sourceController, "'integrity' => ChecadorPresentationFormatter::integrityLabel()"), 'P320 raw-event integrity label is explicitly preserved in the detail view');
+    && !str_contains($sourceDailyView, 'integrityStatusLabel($event[\'integrity\'][\'status\'] ?? null)'), 'P320 API-reported raw-event integrity status remains in the raw-punch report detail, outside the attendance modal');
 $assert(str_contains($sourceView, 'data-endpoint="/departamento-operativo/recursos-humanos/checador/reporte/data"')
     && str_contains($sourceTableScript, 'serverSide: true')
     && str_contains($sourceController, "'recordsFiltered' => (int) \$result['records_filtered']"), 'P321 server-side pagination metadata is respected by the raw report');
@@ -148,7 +151,34 @@ $assert(!preg_match('/fetch\(|axios\.|XMLHttpRequest|api\/v2/i', $sourceDailyVie
 $assert(!str_contains($sourceDailyView . $sourceView, 'X-Device-Id') && !str_contains($sourceDailyView . $sourceView, 'X-Credential-Key') && !str_contains($sourceDailyView . $sourceView, 'Bearer '), 'P323 privileged credentials are absent from rendered HTML');
 $assert(str_contains($sourceRoute, "'/recursos-humanos/checador/asistencia'")
     && str_contains($sourceController, "renderDashboardWorkspace('daily-attendance')")
-    && str_contains($sourceDailyView, 'Asistencia del día'), 'P324 the operational attendance view remains available through its separate authenticated route');
+    && str_contains($sourceController, "'daily-attendance' => 'Asistencia del día'")
+    && !str_contains($sourceDailyView, '<h1'), 'P324 the operational attendance view remains available through its separate authenticated route and uses the layout heading');
+
+$rawAttendanceMethodStart = strpos($sourceController, 'private static function readDailyRawAttendance(');
+$rawAttendanceMethodEnd = $rawAttendanceMethodStart === false
+    ? false
+    : strpos($sourceController, 'private static function readAttendanceSnapshotSet(', $rawAttendanceMethodStart);
+$rawAttendanceMethod = $rawAttendanceMethodStart !== false && $rawAttendanceMethodEnd !== false
+    ? substr($sourceController, $rawAttendanceMethodStart, $rawAttendanceMethodEnd - $rawAttendanceMethodStart)
+    : '';
+$assert(str_contains($sourceController, "if (\$workspace === 'daily-attendance' && !\$demoMode)")
+    && str_contains($rawAttendanceMethod, 'readObservedPunches(')
+    && !str_contains($rawAttendanceMethod, 'createDailyPunchSnapshot('), 'P330 production daily attendance consumes the existing raw GET boundary without creating a Level 1 snapshot');
+$assert(str_contains($rawAttendanceMethod, "\$integrityStatus !== 'VALID'")
+    && str_contains($rawAttendanceMethod, "\$processingStatus !== 'RECEIVED'")
+    && str_contains($rawAttendanceMethod, 'ChecadorAttendanceProjection::workerRow(')
+    && !str_contains($rawAttendanceMethod, 'evaluateJourney(')
+    && !str_contains($rawAttendanceMethod, 'realApiPostOperationsEnabled()')
+    && str_contains($rawAttendanceMethod, "'journey_evaluation_state' => 'not_evaluated'")
+    && str_contains($rawAttendanceMethod, 'journeyEvaluationState'), 'P331 only API-HMAC-valid resolved events render and Journey remains explicitly unevaluated on daily reads');
+$assert(str_contains($sourceView, 'punch-detail-integrity')
+    && str_contains($sourceDailyView, 'Cobertura no confirmada')
+    && str_contains($sourceDailyView, '$showCoverageIndicator')
+    && str_contains($sourceDailyView, 'Pendiente de clasificación')
+    && !preg_match('/HMAC válido|evaluación P1\\/P2|integrityStatusLabel/', $sourceDailyView), 'P332 raw-event integrity stays in the report detail while attendance distinguishes coverage from pending classification in user-facing language');
+$assert(str_contains($rawAttendanceMethod, "'status' => \$omittedCount > 0 ? 'partial' : 'source_completeness_unknown'")
+    && str_contains($rawAttendanceMethod, "'complete' => false")
+    && str_contains($rawAttendanceMethod, 'La API devolvió cero marcaciones para esta estación y fecha'), 'P333 raw GET never claims source completeness and distinguishes a successful empty response');
 
 // P325-P329: temporal fail-closed states and successful empty/error distinction.
 $service = $make([new Response(404, [], json_encode(['status' => 'WORKPLACE_TIMEZONE_UNRESOLVED'], JSON_THROW_ON_ERROR))]);

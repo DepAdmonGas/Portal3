@@ -138,15 +138,13 @@ $reportControllerSource = substr($controllerSource, strpos($controllerSource, 'p
 $assert(str_contains($accessSource, 'mapStationIdsToUniqueLocalities')
     && str_contains($accessSource, "where('numlista',")
     && str_contains($accessSource, 'RhLocalidad::query()->where')
-    && str_contains($reportControllerSource, "'source_workplace_id'")
-    && str_contains($reportControllerSource, 'sourceWorkplaceCandidate, array_column($workplaces,')
-    && str_contains($reportControllerSource, 'requestedWorkplace !== null'),
-    'authorized source station is mapped to a canonical locality by unique numlista and source context is revalidated');
-$assert(str_contains($dailyViewSource, "'source_work_date'")
-    && str_contains($dailyViewSource, "'source_worker_id'")
-    && str_contains($dailyViewSource, 'http_build_query')
-    && str_contains($dailyViewSource, "'/departamento-operativo/recursos-humanos/checador/reporte'"),
-    'daily-to-report navigation carries source locality, local date and resolved worker without converting the date to UTC');
+    && str_contains($reportControllerSource, '$requestedWorkplace = $this->sessionWorkplaceId($access)')
+    && str_contains($reportControllerSource, '$sourceWorkplaceId = $sourceContextValid ? $requestedWorkplace : null')
+    && !str_contains($reportControllerSource, "'workplace_id' => \$selectedWorkplaceForView"),
+    'raw report derives locality from the institutional session and never from source or query locality');
+$assert(str_contains($controllerSource, "'href' => \$base . '/reporte'")
+    && !str_contains($dailyViewSource, 'workplace_id'),
+    'daily module navigation opens the clean report route while locality remains in session');
 
 $sourceWorkplaceId = 14;
 $sourceWorkDate = '2026-10-19';
@@ -170,8 +168,8 @@ $events = [];
 ob_start();
 include __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/punch-report.php';
 $reportHtml = (string) ob_get_clean();
-$assert(str_contains($reportHtml, 'href="/departamento-operativo/recursos-humanos/checador?workplace_id=14&amp;date=2026-10-19&amp;worker_id=900001"')
-    && str_contains($reportHtml, 'name="source_workplace_id" value="14"')
+$assert(str_contains($reportHtml, 'href="/departamento-operativo/recursos-humanos/checador/asistencia?date=2026-10-19&amp;worker_id=900001"')
+    && !str_contains($reportHtml, 'name="source_workplace_id"')
     && str_contains($reportHtml, 'name="source_work_date" value="2026-10-19"')
     && str_contains($reportHtml, 'name="source_worker_id" value="900001"')
     && !str_contains($reportHtml, 'id="from_date" name="from_date" type="date" value="2026-10-19"'),
@@ -193,8 +191,8 @@ extract($dailyViewVars, EXTR_OVERWRITE);
 ob_start();
 include __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php';
 $dailyHtml = (string) ob_get_clean();
-$assert(str_contains($dailyHtml, 'href="/departamento-operativo/recursos-humanos/checador/reporte?source_workplace_id=14&amp;source_work_date=2026-10-19&amp;source_worker_id=900001"'),
-    'daily screen exposes one existing report route with station, worker and local-date origin context');
+$assert(!str_contains($dailyHtml, 'workplace_id'),
+    'directory view does not reintroduce a locality query parameter');
 
 foreach ($previousEnvironment as $key => $value) {
     if ($value === null) {

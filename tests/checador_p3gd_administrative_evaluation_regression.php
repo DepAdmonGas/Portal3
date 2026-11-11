@@ -130,8 +130,13 @@ $assert(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentTyp
 $assert(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentStatusLabel('SUPERSEDED') === 'Sustituido por revisión posterior', 'P3GPD43 known adjustment revision status is presented in Spanish');
 $assert(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentTypeLabel('UNRECOGNIZED') === 'Tipo de ajuste no reconocido', 'P3GPD44 unknown adjustment type fails to a generic Spanish label');
 $assert(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentStatusLabel('UNRECOGNIZED') === 'Estado del ajuste no reconocido', 'P3GPD45 unknown adjustment state fails to a generic Spanish label');
-$assert(str_contains($viewSource, 'administrativeAdjustmentTypeLabel') && str_contains($viewSource, 'administrativeAdjustmentStatusLabel') && str_contains($viewSource, 'uuid_ajuste_logico') && str_contains($viewSource, 'no entrega aquí el historial completo'), 'P3GPD46 view renders only the linked adjustment projection and states its history limit');
-$assert(!str_contains($routesSource, '/ajustes/') && !str_contains($viewSource, 'name="adjustment_type"'), 'P3GPD47 no unsupported adjustment command route or form is exposed');
+$linkedEvaluationSection = explode('<section class="card" aria-labelledby="adjustment-workspace-heading">', $viewSource, 2)[1] ?? '';
+$assert(str_contains($linkedEvaluationSection, 'administrativeAdjustmentTypeLabel') && str_contains($linkedEvaluationSection, 'administrativeAdjustmentStatusLabel') && str_contains($linkedEvaluationSection, 'uuid_ajuste_logico')
+    && str_contains($viewSource, 'Inventario de ajustes administrativos'), 'P3GPD46 existing linked evaluation projection remains and the approved separate read inventory is present');
+$assert(str_contains($routesSource, "addGroup('/departamento-operativo'")
+    && str_contains($routesSource, "'/recursos-humanos/checador/ajustes/data'")
+    && str_contains($routesSource, "'/recursos-humanos/checador/ajustes/detalle/{uuidAjuste}'")
+    && !preg_match("/addRoute\\('POST', [^\\n]*ajustes\\//i", $routesSource), 'P3GPD47 collection/detail are GET-only; no adjustment command route is exposed');
 $assert(array_key_exists('policy_rule_version', $readback['data']['evaluation']) && $readback['data']['evaluation']['policy_rule_version'] === null, 'P3GPD19 null policy_rule_version is not fabricated');
 $assert(str_contains($controllerSource, 'readAdministrativeEvaluation($user, $workerId, $workplaceId, $date)'), 'P3GPD20 successful POST triggers canonical GET readback');
 $assert(str_contains($controllerSource, 'retry_idempotency_key') && str_contains($evaluationFeedbackSource = $controllerSource, 'evaluationFeedback'), 'P3GPD21 transport retry retains the same idempotency identity');
@@ -153,18 +158,20 @@ $server = $make([new Response(500, [], json_encode(['error' => ['code' => 'SERVE
 $assert(($server['error']['kind'] ?? '') === 'api_unavailable', 'P3GPD29 timeout/5xx never becomes success');
 $assert(!str_contains($serviceSource, 'INSERT INTO') && !str_contains($controllerSource, 'INSERT INTO'), 'P3GPD30 no direct Portal3 database write exists');
 $assert(!str_contains($serviceSource, 'evaluateCalculation') && !str_contains($controllerSource, 'evaluateCalculation'), 'P3GPD31 no local P1/P2 calculation engine is added');
-$assert(!str_contains($controllerSource, 'raw PunchEvent') && !str_contains($controllerSource, 'incidencePrecedence'), 'P3GPD32 no raw membership or incidence precedence logic is added');
+$assert(!str_contains($evaluationControllerMethodSource, 'raw PunchEvent') && !str_contains($evaluationControllerMethodSource, 'incidencePrecedence'), 'P3GPD32 evaluation path does not use raw punches or local incidence precedence');
 $payrollResultFields = '/\\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\\b/i';
 $evaluationPathSource = $evaluationControllerMethodSource . $evaluationServiceMethodSource;
 $assert($evaluationControllerMethodSource !== '' && $evaluationServiceMethodSource !== ''
     && !preg_match('/RecibosNominaService|OpReciboNominaV2/i', $evaluationPathSource)
     && !preg_match($payrollResultFields, $evaluationPathSource . $viewSource), 'P3GPD33 evaluation path uses no payroll reader and renders no payroll result fields');
 $assert(str_contains($viewSource, 'REVIEW_REQUIRED') || str_contains($viewSource, 'human_review_status'), 'P3GPD34 review states remain renderable');
-$assert(str_contains($viewSource, 'policyRuleVersion === null ?') && str_contains($viewSource, 'Referencia de cálculo'), 'P3GPD35 provenance display preserves nullable policy and calculation reference');
+$assert(str_contains($viewSource, "associated_calculation_revision_id") && str_contains($viewSource, 'Identificador de cálculo') && str_contains($viewSource, 'No disponible'), 'P3GPD35 provenance display preserves the nullable calculation reference without inventing a value');
 $assert(str_contains($controllerSource, '$administrativeEvaluations = []') && str_contains($controllerSource, '$evaluationPermissions = ['), 'P3GPD36 worker/date evaluation state starts empty per request');
 $assert(str_contains($controllerSource, 'expectedCalculationId') && str_contains($controllerSource, 'calculation_id'), 'P3GPD37 selected Journey calculation reference is used without recomputation');
 $assert(str_contains($routesSource, "'POST', '/departamento-operativo/recursos-humanos/checador/evaluations/evaluate'"), 'P3GPD38 Portal3 exposes one authenticated POST route');
-$assert(str_contains($viewSource, 'name="authorize_falta" value="1"') && str_contains($viewSource, 'Nunca se activa automáticamente'), 'P3GPD39 explicit FALTA control is never automatic');
+$assert(str_contains($viewSource, 'name="authorize_falta" value="1"')
+    && str_contains($viewSource, 'Confirmo explícitamente autorizar FALTA')
+    && str_contains($viewSource, 'required'), 'P3GPD39 explicit FALTA action remains separate and requires human confirmation');
 $assert(!preg_match('/op_rh_personal_asistencia|op_rh_personal_asistencia_incidencia|op_rh_v2_/', $serviceSource . $controllerSource), 'P3GPD40 no legacy or direct V2 table writes are introduced');
 
 printf("CHECADOR_P3GD_ADMINISTRATIVE_EVALUATION_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);

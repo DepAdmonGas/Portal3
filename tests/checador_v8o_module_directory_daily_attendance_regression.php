@@ -21,6 +21,8 @@ $layout = file_get_contents($base . '/app/Views/layouts/departamento-operativo.p
 $themeCss = file_get_contents($base . '/public/assets/css/styles.css') ?: '';
 $mainView = file_get_contents($viewDir . 'index.php') ?: '';
 $dailyView = file_get_contents($viewDir . 'daily-attendance.php') ?: '';
+$roleView = file_get_contents($viewDir . 'role-comodines.php') ?: '';
+$rosterService = file_get_contents($base . '/app/Services/ChecadorAttendanceRosterService.php') ?: '';
 $render = static function (string $view, array $vars) use ($viewDir): string {
     extract($vars, EXTR_SKIP);
     ob_start();
@@ -30,6 +32,7 @@ $render = static function (string $view, array $vars) use ($viewDir): string {
 
 $cards = [
     ['Asistencia del día', 'Consulta las checadas, horarios y estado de asistencia del personal de tu estación.', 'Personal · Marcaciones · Incidencias', 'Ver asistencia'],
+    ['Rol de comodines', 'Consulta las programaciones registradas y su estado para la estación autorizada.', 'Periodo · Estado · Estación · Consulta', 'Consultar rol'],
     ['Programación semanal', 'Consulta y organiza los turnos del personal de lunes a domingo.', 'Turnos · Descansos · Asignaciones', 'Ver programación'],
     ['Horarios y turnos', 'Revisa los horarios disponibles, las asignaciones vigentes y su historial.', 'Horarios · Vigencias · Historial', 'Consultar horarios'],
     ['Jornadas laborales', 'Consulta jornadas evaluadas, tiempos registrados y situaciones que requieren revisión.', 'Jornadas · Horas · Seguimiento', 'Consultar jornadas'],
@@ -48,7 +51,7 @@ foreach ($cards as $index => [$label, $description, $utility, $action]) {
         'utility' => $utility,
         'action' => $action,
         'icon' => 'ti-calendar-check',
-        'href' => '/checador/modulo-' . $index . '?workplace_id=1',
+        'href' => '/checador/modulo-' . $index,
         'available' => true,
     ];
 }
@@ -59,9 +62,17 @@ $mainHtml = $render('index.php', [
     'selectedWorkplaceKind' => 'Estación',
     'isModuleDirectory' => true,
 ]);
+$emptySelectionHtml = $render('index.php', [
+    'moduleNavigation' => [],
+    'selectedWorkplaceId' => null,
+    'selectedWorkplaceName' => '',
+    'selectedWorkplaceKind' => 'Estación',
+    'isModuleDirectory' => true,
+    'requiresExplicitWorkplaceSelection' => true,
+]);
 $unauthorizedNavigation = $navigation;
-$unauthorizedNavigation[1]['available'] = false;
-$unauthorizedNavigation[1]['unavailable'] = 'Disponible con autorización de lectura de programación.';
+$unauthorizedNavigation[2]['available'] = false;
+$unauthorizedNavigation[2]['unavailable'] = 'Disponible con autorización de lectura de programación.';
 $unauthorizedHtml = $render('index.php', [
     'moduleNavigation' => $unauthorizedNavigation,
     'selectedWorkplaceId' => 1,
@@ -90,14 +101,60 @@ $dailyHtml = $render('daily-attendance.php', [
     'attendanceCoverage' => ['complete' => true],
     'attendanceRows' => [],
 ]);
+$roleHtml = $render('role-comodines.php', [
+    'state' => 'ready',
+    'stateMessage' => '',
+    'selectedWorkplaceName' => 'Centro de prueba & estación',
+    'returnHref' => '/checador?workplace_id=1',
+    'roles' => [[
+        'period_label' => '26/10/2026 al 01/11/2026',
+        'status_label' => 'Finalizado',
+        'station_label' => 'Centro de prueba & estación',
+        'days_label' => 'Lunes',
+        'identity_label' => 'Cuenta sin vínculo canónico verificado',
+        'incomplete' => false,
+        'coverage_authorized' => false,
+    ]],
+]);
+$emptyRoleHtml = $render('role-comodines.php', [
+    'state' => 'ready',
+    'stateMessage' => '',
+    'selectedWorkplaceName' => 'Centro de prueba & estación',
+    'returnHref' => '/checador?workplace_id=1',
+    'roles' => [],
+]);
 $assert(str_contains($routes, "'/recursos-humanos/checador'")
     && str_contains($indexAction, '$this->renderModuleDirectory();')
     && !str_contains($indexAction, "renderDashboardWorkspace('daily-attendance')"), 'authenticated root route dispatches to the module directory only');
 $assert(str_contains($routes, "'/recursos-humanos/checador/asistencia'")
+    && str_contains($routes, "'/recursos-humanos/checador/horarios-turnos'")
     && str_contains($controller, 'public function dailyAttendance(): void')
+    && str_contains($controller, 'public function scheduleHistory(): void')
+    && str_contains($controller, "'/departamento-operativo/recursos-humanos/checador/horarios-turnos'")
     && str_contains($controller, "renderDashboardWorkspace('daily-attendance')")
-    && str_contains($controller, "'schedule_week' => '1'")
-    && str_contains($controller, "'schedule_history' => '1'"), 'daily alias and separate weekly/history routes remain available');
+    && str_contains($routes, "'/recursos-humanos/checador/programacion-semanal'")
+    && str_contains($controller, 'public function scheduleWeek(): void')
+    && str_contains($controller, 'scheduleWeekHref($query)')
+    && str_contains($controller, "if ((\$query['schedule_history'] ?? '') === '1')"), 'daily alias and dedicated M04 route retain the compatible legacy history redirect');
+$assert(str_contains($routes, "'/recursos-humanos/checador/rol-comodines'")
+    && str_contains($controller, 'public function rolComodines(): void')
+    && str_contains($controller, "RolComodinesService::getChecadorReadModel")
+    && str_contains($controller, "ChecadorAccessService::authorize(\$workplaceId)"), 'Rol de comodines is a separate read-only Checador route with server-side station authorization');
+$assert(str_contains($layout, 'href="/departamento-operativo/recursos-humanos/checador/rol-comodines"')
+    && !str_contains($layout, 'href="/departamento-operativo/recursos-humanos/rol-comodines"'),
+    'institutional navigation routes Rol de comodines into Checador instead of the legacy standalone UI');
+$assert(str_contains($roleHtml, 'Programaciones registradas')
+    && str_contains($roleHtml, 'Finalizado')
+    && str_contains($roleHtml, 'No acreditada')
+    && !str_contains($roleHtml, 'Guardar')
+    && !str_contains($roleHtml, 'Editar')
+    && !str_contains($roleHtml, 'Eliminar')
+    && !str_contains($roleHtml, 'data-coverage-transition=')
+    && !str_contains($roleHtml, 'data-create-url='), 'legacy programming remains read-only and is never presented as authorized coverage');
+$assert(str_contains($emptyRoleHtml, 'No hay programaciones registradas para esta localidad.')
+    && !str_contains($emptyRoleHtml, 'encabezados sin asignaciones')
+    && !str_contains($emptyRoleHtml, 'Sin periodo válido')
+    && !str_contains($emptyRoleHtml, 'Pendiente'), 'empty station view uses concise wording and does not create placeholder records');
 $assert(!str_contains($mainHtml, '<h1')
     && substr_count($mainHtml, '<h2') === 1
     && !str_contains($mainHtml, 'Estación:')
@@ -109,19 +166,26 @@ $assert(str_contains($layout, '<h4 class="fw-semibold mt-3"><?= $title; ?></h4>'
     && str_contains($layout, 'Breadcrumb::render();')
     && str_contains($controller, "'title' => 'Checador'"), 'institutional title, breadcrumb layout, and shared station selector remain outside the directory view');
 $assert(substr_count($mainHtml, 'data-checador-featured-card') === 1
-    && substr_count($mainHtml, 'data-checador-module-card') === 9
-    && substr_count($mainHtml, '<article') === 10
+    && substr_count($mainHtml, 'data-checador-module-card') === 10
+    && substr_count($mainHtml, '<article') === 11
     && str_contains($mainHtml, 'Asistencia del día')
     && substr_count($mainHtml, '<h2') === 1
     && !str_contains($mainHtml, 'Módulos de Checador</h2>')
-    && str_contains($controller, "'href' => \$queryString(\$base . '/asistencia', \$context)"), 'directory renders all ten cards and links the daily view to its separate route');
+    && str_contains($controller, "'href' => \$base . '/asistencia'")
+    && str_contains($controller, "'href' => \$base . '/rol-comodines'")
+    && !str_contains($controller, "'href' => \$queryString(\$base . '/asistencia', \$context)")
+    && !str_contains($controller, "'href' => \$queryString(\$base . '/rol-comodines', \$context)"), 'directory renders eleven cards and links attendance and comodines workspaces without locality query state');
+$assert(str_contains($emptySelectionHtml, 'Selecciona una estación o departamento para consultar los módulos de Checador')
+    && !str_contains($emptySelectionHtml, 'data-checador-featured-card')
+    && !str_contains($emptySelectionHtml, 'data-checador-module-card'),
+    'Dirección index shows the selection prompt and no cards while session context is empty');
 $copyPreserved = true;
 foreach ($cards as [$label, $description, $utility, $action]) {
     foreach ([$label, $description, ...array_map('trim', explode('·', $utility))] as $text) {
         $copyPreserved = $copyPreserved && str_contains($mainHtml, htmlspecialchars($text, ENT_QUOTES, 'UTF-8'));
     }
 }
-$assert($copyPreserved, 'directory renders all ten card titles, descriptions, and utility labels');
+$assert($copyPreserved, 'directory renders all eleven card titles, descriptions, and utility labels');
 $controllerCopyPreserved = true;
 foreach ($cards as [$label, $description, $utility, $action]) {
     foreach ([$label, $description, $utility, $action] as $text) {
@@ -129,32 +193,34 @@ foreach ($cards as [$label, $description, $utility, $action]) {
     }
 }
 $assert($controllerCopyPreserved, 'controller defines all owner-approved card copy verbatim');
-$expectedColumns = ['Nombre completo', 'Horario efectivo', 'Entrada 1', 'Salida 1', 'Entrada 2', 'Salida 2', 'Estado', 'Incidencias', 'Acciones'];
+$expectedColumns = ['Nombre completo', 'Horario efectivo', '1.ª entrada', '1.ª salida', '2.ª entrada', '2.ª salida', 'Estado', 'Incidencias'];
 $columnCount = 0;
 foreach ($expectedColumns as $column) if (str_contains($dailyHtml, '>' . $column . '</th>')) $columnCount++;
-$assert($columnCount === 9 && str_contains($dailyHtml, '<h1 class="h3 mb-1">Asistencia del día</h1>')
-    && str_contains($dailyHtml, 'data-checador-filter-modal')
+$assert($columnCount === 8
+    && preg_match('/<th\b[^>]*scope="col"[^>]*>\s*Acciones\s*<\/th>/s', $dailyHtml) === 1
+    && !str_contains($dailyHtml, '<h1')
+    && str_contains($dailyHtml, 'id="checador-search-modal-toggle"')
     && str_contains($dailyView, 'Ver detalle')
     && !str_contains($dailyView, 'Almuerzo') && !str_contains($dailyView, 'Comida'), 'separate attendance workspace keeps nine operational columns and neutral four-slot semantics');
 $assert(str_contains($mainView, 'aria-label="Módulos de Checador"')
     && !str_contains($dailyHtml, 'Comparación con Nómina')
     && !str_contains($dailyHtml, 'Configuración')
     && !str_contains($dailyView, "require __DIR__ . '/index.php'"), 'daily attendance stays focused and does not embed unrelated module cards');
-$assert(substr_count($mainHtml, '<a href=') === 10
-    && substr_count($mainHtml, 'focus-ring-primary rounded-3') === 10
-    && !str_contains($mainHtml, 'class="btn'), 'all ten authorized cards are full-card links with visible focus and no inner buttons');
+$assert(substr_count($mainHtml, '<a href=') === 11
+    && substr_count($mainHtml, 'focus-ring-primary rounded-3') === 11
+    && !str_contains($mainHtml, 'class="btn'), 'all eleven authorized cards are full-card links with visible focus and no inner buttons');
 $assert(str_contains($mainHtml, 'display-6 fw-bolder text-white')
     && str_contains($mainHtml, 'rounded-3 bg-primary text-white p-4')
     && str_contains($mainHtml, 'fs-13 text-white')
     && str_contains($mainHtml, 'ti-chevron-right fs-9 text-white')
     && str_contains($mainHtml, 'fs-7 text-white mb-4'), 'featured card uses a contrasting icon tile, larger icon and chevron, strong title and readable description');
-$assert(substr_count($mainHtml, 'card-title fs-6 fw-bolder mb-2') === 9
-    && substr_count($mainHtml, 'text-body-secondary mb-3') === 9
-    && substr_count($mainHtml, 'bg-primary-subtle text-primary p-3') === 9
-    && substr_count($mainHtml, 'fs-9" aria-hidden="true"') === 9
-    && substr_count($mainHtml, 'ti ti-chevron-right fs-7 text-primary') === 9
+$assert(substr_count($mainHtml, 'card-title fs-6 fw-bolder mb-2') === 10
+    && substr_count($mainHtml, 'text-body-secondary mb-3') === 10
+    && substr_count($mainHtml, 'bg-primary-subtle text-primary p-3') === 10
+    && substr_count($mainHtml, 'fs-9" aria-hidden="true"') === 10
+    && substr_count($mainHtml, 'ti ti-chevron-right fs-7 text-primary') === 10
     && !str_contains($mainHtml, 'text-secondary mb-3')
-    && !str_contains($mainHtml, 'fs-4" aria-hidden="true"'), 'all nine secondary cards use institutional dark titles, muted descriptions and visible icons');
+    && !str_contains($mainHtml, 'fs-4" aria-hidden="true"'), 'all ten secondary cards use institutional dark titles, muted descriptions and visible icons');
 $previousStyleCausesVerified = preg_match('/\.display-6\s*\{[^}]*font-weight:\s*300;/', $themeCss) === 1
     && preg_match('/\.fs-1\s*\{\s*font-size:\s*0\.625rem !important;/', $themeCss) === 1
     && preg_match('/\.fs-4\s*\{\s*font-size:\s*1rem !important;/', $themeCss) === 1
@@ -164,11 +230,11 @@ $previousStyleCausesVerified = preg_match('/\.display-6\s*\{[^}]*font-weight:\s*
 $assert($previousStyleCausesVerified, 'V8O-R3 typography scale, weight and secondary-blue color issues are confirmed in the active stylesheet');
 $assert(substr_count($mainHtml, 'badge rounded-pill bg-white text-primary fw-semibold px-3 py-2') === 3,
     'featured card uses three light badges');
-$assert(substr_count($mainHtml, 'badge rounded-pill bg-primary-subtle text-primary fw-semibold px-2 py-1') === 28,
+$assert(substr_count($mainHtml, 'badge rounded-pill bg-primary-subtle text-primary fw-semibold px-2 py-1') === 32,
     'secondary cards use light-background badges');
-$assert(substr_count($mainHtml, 'bg-primary-subtle text-primary p-3') === 9,
+$assert(substr_count($mainHtml, 'bg-primary-subtle text-primary p-3') === 10,
     'all secondary cards use consistently sized light icon tiles');
-$assert(substr_count($mainHtml, '<li><span class="badge rounded-pill') === 31,
+$assert(substr_count($mainHtml, '<li><span class="badge rounded-pill') === 35,
     'all module utility badges remain informational and non-interactive');
 $assert(!str_contains($mainHtml, 'style='), 'card redesign adds no inline styles');
 $assert(str_contains($mainHtml, 'row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3')
@@ -179,20 +245,28 @@ foreach ($themeClasses as $class) {
     $realThemeClasses = $realThemeClasses && str_contains($themeCss, '.' . $class);
 }
 $assert(str_contains($themeCss, 'Bootstrap  v5.3.2') && $realThemeClasses, 'all card classes exist in the active shared stylesheet; the embedded Bootstrap version is verified separately');
-$assert(substr_count($unauthorizedHtml, '<a href=') === 9
+$assert(substr_count($unauthorizedHtml, '<a href=') === 10
     && substr_count($unauthorizedHtml, 'aria-disabled="true"') === 1
-    && str_contains($unauthorizedHtml, 'Acceso según permisos del perfil.')
-    && !str_contains($unauthorizedHtml, 'Disponible con autorización de lectura de programación.')
+    && str_contains($unauthorizedHtml, 'Disponible con autorización de lectura de programación.')
     && !str_contains($unauthorizedHtml, 'No disponible para este centro o perfil.')
-    && !str_contains($unauthorizedHtml, '/checador/modulo-1?workplace_id=1'), 'unauthorized card has an availability message and no navigable link');
-$assert(substr_count($unauthorizedFeaturedHtml, '<a href=') === 9
+    && !str_contains($unauthorizedHtml, '<a href="/checador/modulo-2"'), 'unauthorized card has its scoped availability message and no navigable link');
+$assert(substr_count($unauthorizedFeaturedHtml, '<a href=') === 10
     && str_contains($unauthorizedFeaturedHtml, 'data-checador-featured-card aria-disabled="true"')
-    && !str_contains($unauthorizedFeaturedHtml, 'href="/checador/modulo-0?workplace_id=1"')
+    && !str_contains($unauthorizedFeaturedHtml, 'href="/checador/modulo-0')
     && str_contains($unauthorizedFeaturedHtml, 'Acceso según permisos del perfil.')
     && !str_contains($unauthorizedFeaturedHtml, '>Disponible</'), 'featured attendance card is also non-interactive when its server gate denies access');
 $assert(str_contains($dailyHtml, 'Registros observados') === false
     && str_contains($dailyView, 'event_uuid'), 'empty attendance is not inferred and event provenance remains available when returned');
 $assert(str_contains($dailyView, 'snapshot_ref'), 'daily attendance preserves snapshot context in detail navigation');
+$assert(str_contains($dailyView, "'habitual' => ['label' => 'Padrón habitual actual'")
+    && str_contains($dailyView, "'observed_outside_roster' => ['label' => 'Marcación observada · fuera del padrón habitual'")
+    && str_contains($dailyView, "default => ['label' => 'Marcación observada'")
+    && str_contains($dailyView, "'scheduled_comodine' => ['label' => 'Comodín programado · autorización no acreditada'")
+    && str_contains($rosterService, 'if ($scheduled) return \'scheduled_comodine\';')
+    && str_contains($rosterService, "? 'observed_outside_roster'\n                : 'observed'")
+    && str_contains($controller, "'scheduled_comodines' => ['status' => 'not_queried'")
+    && str_contains($controller, "\$scheduledComodines['workers'] ?? []"),
+    'daily attendance labels observed marks, current roster and scheduled coverage from separate evidence sources');
 $assert(str_contains($controller, 'ChecadorAccessService::authorize($requestedWorkplace)')
     && str_contains($controller, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY"), 'selected station is reauthorized and uses the shared Checador selector context');
 

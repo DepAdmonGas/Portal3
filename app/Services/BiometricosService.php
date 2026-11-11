@@ -14,6 +14,7 @@ use App\Models\Operativo\RhLocalidadesPerfil;
 use App\Models\Operativo\RhLocalidadesRetardoIncidencia;
 use App\Models\Operativo\RhPersonalAsistenciaIncidencia;
 use App\Services\ModuloDptoOperativoService;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class BiometricosService
 {
@@ -942,15 +943,7 @@ public static function createPuesto(string $nombre): array
 if (!self::hasActionPermission('recursos-humanos', 'crear')) {
 return ['success' => false, 'message' => 'No tienes permisos para crear puestos.'];
 }
-try {
-RhPuestos::create([
-'puesto' => $nombre,
-'status' => 1,
-]);
-return ['success' => true, 'message' => 'Puesto creado correctamente.'];
-} catch (\Throwable) {
-return ['success' => false, 'message' => 'No se pudo crear el puesto.'];
-}
+return self::createPositionCatalogRecord($nombre, null);
 }
 
 public static function updatePuesto(int $id, string $nombre): array
@@ -963,13 +956,89 @@ if (!$puesto) {
 return ['success' => false, 'message' => 'Puesto no encontrado.'];
 }
 
-try {
-$puesto->puesto = $nombre;
-$puesto->save();
-return ['success' => true, 'message' => 'Puesto actualizado correctamente.'];
-} catch (\Throwable) {
-return ['success' => false, 'message' => 'No se pudo actualizar el puesto.'];
+return self::updatePositionCatalogRecord($puesto, $nombre, null);
 }
+
+/** M11 writer for the existing institutional position catalog; Dirección only. */
+public static function createM11Position(string $nombre, ?int $requestedLocalityId): array
+{
+    $access = ChecadorAccessService::authorizePositionCatalog($requestedLocalityId, 'editar');
+    if (!($access['allowed'] ?? false)) return ['success' => false, 'message' => 'El perfil no puede administrar el catálogo institucional de puestos.'];
+    if (!ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled()) return ['success' => false, 'message' => 'La escritura local M11 está deshabilitada por su gate específico.'];
+    $actor = self::activeM11ActorId();
+    if ($actor === null) return ['success' => false, 'message' => 'La identidad activa no pudo verificarse.'];
+    return self::createPositionCatalogRecord($nombre, $actor);
+}
+
+/** M11 writer for editing, never deleting, an existing institutional position. */
+public static function updateM11Position(int $id, string $nombre, ?int $requestedLocalityId): array
+{
+    $access = ChecadorAccessService::authorizePositionCatalog($requestedLocalityId, 'editar');
+    if (!($access['allowed'] ?? false)) return ['success' => false, 'message' => 'El perfil no puede administrar el catálogo institucional de puestos.'];
+    if (!ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled()) return ['success' => false, 'message' => 'La escritura local M11 está deshabilitada por su gate específico.'];
+    $actor = self::activeM11ActorId();
+    if ($actor === null) return ['success' => false, 'message' => 'La identidad activa no pudo verificarse.'];
+    $position = RhPuestos::query()->where('status', 1)->where('id', $id)->first();
+    if (!$position) return ['success' => false, 'message' => 'Puesto no encontrado.'];
+    return self::updatePositionCatalogRecord($position, $nombre, $actor);
+}
+
+private static function createPositionCatalogRecord(string $nombre, ?int $m11ActorId): array
+{
+    return self::withM11CatalogLock('portal3_rh_positions', static function () use ($nombre, $m11ActorId): array {
+        try {
+            return Capsule::connection()->transaction(static function () use ($nombre, $m11ActorId): array {
+                $duplicate = RhPuestos::query()->where('status', 1)
+                    ->whereRaw('LOWER(TRIM(puesto)) = LOWER(TRIM(?))', [$nombre])->lockForUpdate()->exists();
+                if ($duplicate) return ['success' => false, 'message' => 'Ya existe un puesto activo con ese nombre.'];
+                $position = RhPuestos::create(['puesto' => $nombre, 'status' => 1]);
+                if ($m11ActorId !== null) {
+                    ChecadorM11ConfigurationAuditService::record($m11ActorId,
+                        ChecadorV2PermissionService::POSITION_CATALOG_EDIT, null, 'POSITION', (int) $position->id, 'CREATE');
+                }
+                return ['success' => true, 'message' => 'Puesto creado correctamente.', 'id' => (int) $position->id];
+            });
+        } catch (\Throwable) {
+            return ['success' => false, 'message' => 'No se pudo crear el puesto.'];
+        }
+    });
+}
+
+private static function updatePositionCatalogRecord(RhPuestos $position, string $nombre, ?int $m11ActorId): array
+{
+    return self::withM11CatalogLock('portal3_rh_positions', static function () use ($position, $nombre, $m11ActorId): array {
+        try {
+            return Capsule::connection()->transaction(static function () use ($position, $nombre, $m11ActorId): array {
+                $duplicate = RhPuestos::query()->where('status', 1)->where('id', '<>', (int) $position->id)
+                    ->whereRaw('LOWER(TRIM(puesto)) = LOWER(TRIM(?))', [$nombre])->lockForUpdate()->exists();
+                if ($duplicate) return ['success' => false, 'message' => 'Ya existe un puesto activo con ese nombre.'];
+                $position->puesto = $nombre;
+                $position->save();
+                if ($m11ActorId !== null) {
+                    ChecadorM11ConfigurationAuditService::record($m11ActorId,
+                        ChecadorV2PermissionService::POSITION_CATALOG_EDIT, null, 'POSITION', (int) $position->id, 'UPDATE');
+                }
+                return ['success' => true, 'message' => 'Puesto actualizado correctamente.', 'id' => (int) $position->id];
+            });
+        } catch (\Throwable) {
+            return ['success' => false, 'message' => 'No se pudo actualizar el puesto.'];
+        }
+    });
+}
+
+private static function withM11CatalogLock(string $lockKey, callable $operation): array
+{
+    $connection = Capsule::connection();
+    $lockName = 'p3_' . substr(hash('sha256', $lockKey), 0, 32);
+    try {
+        $lock = $connection->selectOne('SELECT GET_LOCK(?, 5) AS acquired', [$lockName]);
+        if ((int) ($lock->acquired ?? 0) !== 1) return ['success' => false, 'message' => 'El catálogo está ocupado; vuelve a intentar.'];
+        return $operation();
+    } catch (\Throwable) {
+        return ['success' => false, 'message' => 'El catálogo no está disponible.'];
+    } finally {
+        try { $connection->selectOne('SELECT RELEASE_LOCK(?) AS released', [$lockName]); } catch (\Throwable) {}
+    }
 }
 
 public static function deletePuesto(int $id): array
@@ -1109,16 +1178,102 @@ if ($usuario === '') {
 return ['success' => false, 'message' => 'El usuario es obligatorio.'];
 }
 
-try {
-$perfil->usuario = self::encrypt($usuario);
-if ($password !== '') {
-$perfil->password = self::encrypt($password);
+return self::updateReaderProfileRecord($perfil, $usuario, $password);
 }
-$perfil->save();
-return ['success' => true, 'message' => 'Perfil actualizado correctamente.'];
-} catch (\Throwable) {
-return ['success' => false, 'message' => 'No se pudo actualizar el perfil.'];
+
+/** Read only the selected station's active reader usernames; secret columns are never selected or serialized. */
+public static function readM11ReaderProfiles(int $workplaceId): array
+{
+    if (!(ChecadorAccessService::authorizeReaderProfiles($workplaceId, 'leer')['allowed'] ?? false)) {
+        return ['status' => 'permission_denied', 'items' => [], 'partial' => false];
+    }
+    $isSharedDepartment = $workplaceId === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID;
+    $physicalStationId = 0;
+    $sharedStationName = 'Palo Solo';
+    if ($isSharedDepartment) {
+        $physicalStationId = 2; // Palo Solo host station
+    } else {
+        $mapping = ChecadorConfigurationReadService::resolveUniquePhysicalStation($workplaceId);
+        $physicalStationId = (int) ($mapping['physical_station_id'] ?? 0);
+        if (($mapping['status'] ?? '') !== 'unique_numlista_mapping' || $physicalStationId < 1) {
+            return ['status' => 'mapping_unavailable', 'items' => [], 'partial' => false];
+        }
+    }
+    try {
+        $rows = RhLocalidadesPerfil::query()->where('id_estacion', $physicalStationId)->where('status', 1)
+            ->orderBy('id')->limit(21)->get(['id', 'usuario']);
+        $partial = $rows->count() > 20;
+        $items = $rows->take(20)->map(static fn(RhLocalidadesPerfil $profile): array => [
+            'id' => (int) $profile->id,
+            'usuario' => self::decrypt((string) $profile->usuario),
+            'shared' => $isSharedDepartment,
+            'shared_from' => $isSharedDepartment ? $sharedStationName : '',
+        ])->all();
+        return [
+            'status' => $isSharedDepartment ? 'shared_station_reference' : 'station_scoped',
+            'items' => $items,
+            'partial' => $partial,
+            'shared_station_name' => $isSharedDepartment ? $sharedStationName : null,
+        ];
+    } catch (\Throwable) {
+        return ['status' => 'unavailable', 'items' => [], 'partial' => false];
+    }
 }
+
+/** M11 update/rotation uses the existing legacy writer format, with fresh ACL, locality scope and secret-free audit. */
+public static function updateM11ReaderProfile(int $workplaceId, int $profileId, string $username, string $newPassword): array
+{
+    if (!(ChecadorAccessService::authorizeReaderProfiles($workplaceId, 'editar')['allowed'] ?? false)) {
+        return ['success' => false, 'message' => 'El perfil no puede editar lectores de esta localidad.'];
+    }
+    if (!ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled()) {
+        return ['success' => false, 'message' => 'La escritura local M11 está deshabilitada por su gate específico.'];
+    }
+    if ($profileId < 1 || trim($username) === '' || mb_strlen($username) > 120 || strlen($newPassword) > 512) {
+        return ['success' => false, 'message' => 'Revisa el usuario y el valor opcional de rotación.'];
+    }
+    $mapping = ChecadorConfigurationReadService::resolveUniquePhysicalStation($workplaceId);
+    $physicalStationId = (int) ($mapping['physical_station_id'] ?? 0);
+    if (($mapping['status'] ?? '') !== 'unique_numlista_mapping' || $physicalStationId < 1) {
+        return ['success' => false, 'message' => 'No se pudo confirmar el mapeo único de la localidad a estación física.'];
+    }
+    $actorId = self::activeM11ActorId();
+    if ($actorId === null) return ['success' => false, 'message' => 'La identidad activa no pudo verificarse.'];
+    try {
+        return Capsule::connection()->transaction(static function () use ($profileId, $username, $newPassword, $physicalStationId, $workplaceId, $actorId): array {
+            $profile = RhLocalidadesPerfil::query()->where('id', $profileId)->where('id_estacion', $physicalStationId)
+                ->where('status', 1)->lockForUpdate()->first();
+            if (!$profile) return ['success' => false, 'message' => 'El perfil no pertenece a la localidad seleccionada o ya no está activo.'];
+            $result = self::updateReaderProfileRecord($profile, trim($username), $newPassword);
+            if (!($result['success'] ?? false)) return $result;
+            $action = $newPassword === '' ? 'UPDATE_USERNAME' : 'ROTATE_SECRET';
+            ChecadorM11ConfigurationAuditService::record($actorId,
+                ChecadorV2PermissionService::READER_PROFILE_EDIT, $workplaceId, 'READER_PROFILE', $profileId, $action);
+            return ['success' => true, 'message' => $newPassword === '' ? 'Usuario del lector actualizado.' : 'Credencial del lector actualizada; el secreto no se vuelve a mostrar.'];
+        });
+    } catch (\Throwable) {
+        return ['success' => false, 'message' => 'No se pudo actualizar la credencial.'];
+    }
+}
+
+private static function updateReaderProfileRecord(RhLocalidadesPerfil $profile, string $username, string $password): array
+{
+    try {
+        $profile->usuario = self::encrypt($username);
+        if ($password !== '') $profile->password = self::encrypt($password);
+        $profile->save();
+        return ['success' => true, 'message' => 'Perfil actualizado correctamente.'];
+    } catch (\Throwable) {
+        return ['success' => false, 'message' => 'No se pudo actualizar el perfil.'];
+    }
+}
+
+private static function activeM11ActorId(): ?int
+{
+    $authenticated = Auth::user();
+    if (!$authenticated || (int) $authenticated->id < 1) return null;
+    $active = \App\Models\Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first(['id']);
+    return $active ? (int) $active->id : null;
 }
 
 public static function deletePerfil(int $id): array

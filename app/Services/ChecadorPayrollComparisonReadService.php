@@ -10,6 +10,8 @@ use App\Models\ModuloDptoOperativo;
 use App\Models\Operativo\OpReciboNominaV2;
 use App\Models\Operativo\RhPersonal;
 use App\Models\Usuario;
+use DateTimeImmutable;
+use DateTimeZone;
 use Throwable;
 
 /**
@@ -147,35 +149,108 @@ final class ChecadorPayrollComparisonReadService
             return self::failure('invalid_period');
         }
 
+        $workplace = $authorization['workplaces'][0] ?? ['id' => $localityId, 'nombre' => 'Localidad autorizada'];
+        if (ChecadorDailyReadService::demoModeEnabled()) {
+            return ['ok' => true, 'data' => [
+                'worker' => [
+                    'id' => $workerId,
+                    'employee_number' => null,
+                    'name' => '',
+                    'workplace_id' => $localityId,
+                ],
+                'workplace' => $workplace,
+                'period' => $period,
+                'payroll' => ['status' => 'demo_mode_active', 'references' => []],
+                'attendance' => self::unavailableAttendance('demo_mode_active'),
+                'workplace_timezones' => ['status' => 'demo_mode_active', 'days' => []],
+                'schedules' => ['status' => 'demo_mode_active', 'days' => []],
+                'journeys' => [
+                    'status' => 'not_queried_read_only_contract',
+                    'message' => 'No se consultaron fuentes operativas mientras está activo el modo de demostración.',
+                ],
+                'incidences' => ['status' => 'demo_mode_active', 'items' => []],
+                'evaluations' => ['status' => 'demo_mode_active', 'days' => []],
+                'adjustments' => ['status' => 'demo_mode_active', 'items' => []],
+                'comparison_limit' => 'La consulta es informativa. No prueba cobertura completa, no crea un periodo común y no produce conclusiones de asistencia o nómina.',
+            ]];
+        }
+
+        $sessionUser = Auth::user();
+        if (!$sessionUser) {
+            return self::failure('unauthenticated');
+        }
         try {
-            // Canonical identity is op_rh_personal.id. Locality equality is
-            // checked before any payroll or attendance details are returned.
-            $worker = RhPersonal::query()
-                ->select(['id', 'id_estacion', 'nombre_completo', 'no_colaborador'])
-                ->where('id', $workerId)
-                ->where('id_estacion', $localityId)
+            $user = Usuario::query()
+                ->where('id', (int) $sessionUser->id)
+                ->where('estatus', 0)
                 ->first();
-            if (!$worker || !self::workerIdentityMatches(
-                $workerId,
-                (int) $worker->id,
-                $localityId,
-                (int) $worker->id_estacion
-            )) {
+            if (!$user) {
+                return self::failure('unauthenticated');
+            }
+            $reader = new ChecadorDailyReadService();
+        } catch (Throwable) {
+            return self::failure('service_unavailable');
+        }
+
+        // Prove canonical versioned membership across the complete local-day
+        // windows before selecting the worker's name or employee number.
+        $periodScope = $this->resolveHistoricalPeriodScope(
+            $reader,
+            $user,
+            $workerId,
+            $localityId,
+            $period
+        );
+        if ($periodScope === null) {
+            return self::failure('historical_period_access_unavailable');
+        }
+
+        try {
+            // RhPersonal.id_estacion is a physical tb_estaciones.id. Resolve
+            // the current base locality through the institutional numlista
+            // bridge; it is not used as the worker's historical assignment.
+            $workerBase = RhPersonal::query()
+                ->select(['id', 'id_estacion'])
+                ->where('id', $workerId)
+                ->first();
+            if (!$workerBase || (int) $workerBase->id !== $workerId) {
+                return self::failure('worker_not_available');
+            }
+            $physicalStationId = (int) ($workerBase->id_estacion ?? 0);
+            $currentBaseLocalityId = ChecadorAccessService::resolveCanonicalLocalityIdForStation($physicalStationId);
+            if ($currentBaseLocalityId === null) {
                 return self::failure('worker_not_available');
             }
 
+            // Recheck the physical station while retrieving PII so a concurrent
+            // base-station change cannot bypass the validated mapping.
+            $worker = RhPersonal::query()
+                ->select(['id', 'id_estacion', 'nombre_completo', 'no_colaborador'])
+                ->where('id', $workerId)
+                ->where('id_estacion', $physicalStationId)
+                ->first();
+            if (!$worker || (int) $worker->id !== $workerId) {
+                return self::failure('worker_not_available');
+            }
+        } catch (Throwable) {
+            return self::failure('worker_not_available');
+        }
+
+        try {
             $payroll = $this->readPayrollReference($localityId, $workerId, $period);
         } catch (Throwable) {
             $payroll = ['status' => 'unavailable', 'references' => []];
         }
 
-        $workplace = $authorization['workplaces'][0] ?? ['id' => $localityId, 'nombre' => 'Localidad autorizada'];
         $data = [
             'worker' => [
                 'id' => (int) $worker->id,
                 'employee_number' => $worker->no_colaborador === null ? null : (int) $worker->no_colaborador,
                 'name' => (string) ($worker->nombre_completo ?? ''),
-                'workplace_id' => (int) $worker->id_estacion,
+                // This is the authorized locality for the selected historical
+                // period; the current base locality is a distinct fact.
+                'workplace_id' => $localityId,
+                'current_base_workplace_id' => $currentBaseLocalityId,
             ],
             'workplace' => $workplace,
             'period' => $period,
@@ -193,41 +268,11 @@ final class ChecadorPayrollComparisonReadService
             'comparison_limit' => 'La consulta es informativa. No prueba cobertura completa, no crea un periodo común y no produce conclusiones de asistencia o nómina.',
         ];
 
-        // Do not mix synthetic API fixtures with real local SQL or payroll
-        // records. The mode remains untouched; this page fails closed while it
-        // is active and can be used only with real development sources.
-        if (ChecadorDailyReadService::demoModeEnabled()) {
-            $data['attendance'] = self::unavailableAttendance('demo_mode_active');
-            $data['workplace_timezones']['status'] = 'demo_mode_active';
-            $data['schedules']['status'] = 'demo_mode_active';
-            $data['incidences']['status'] = 'demo_mode_active';
-            $data['evaluations']['status'] = 'demo_mode_active';
-            $data['adjustments']['status'] = 'demo_mode_active';
-            return ['ok' => true, 'data' => $data];
-        }
-
-        try {
-            $user = Usuario::query()->where('id', (int) Auth::user()->id)->where('estatus', 0)->first();
-            if (!$user) {
-                return self::failure('unauthenticated');
-            }
-            $reader = new ChecadorDailyReadService();
-        } catch (Throwable) {
-            $data['attendance'] = self::unavailableAttendance('service_unavailable');
-            $data['workplace_timezones']['status'] = 'service_unavailable';
-            $data['schedules']['status'] = 'service_unavailable';
-            $data['incidences']['status'] = 'service_unavailable';
-            $data['evaluations']['status'] = 'service_unavailable';
-            $data['adjustments']['status'] = 'service_unavailable';
-            return ['ok' => true, 'data' => $data];
-        }
-
         [$dates, $rawAttendance, $timezoneByDate] = $this->readObservedPeriod(
-            $reader,
-            $user,
             $localityId,
             $workerId,
-            $period
+            $period,
+            $periodScope['timezone_by_date']
         );
         $data['attendance'] = $rawAttendance;
         $data['workplace_timezones'] = [
@@ -379,16 +424,148 @@ final class ChecadorPayrollComparisonReadService
         return array_values(array_intersect($normalize($checadorIds), $normalize($payrollIds)));
     }
 
-    public static function workerIdentityMatches(
-        int $requestedWorkerId,
-        int $canonicalWorkerId,
-        int $requestedLocalityId,
-        int $canonicalWorkerLocalityId
+    /**
+     * Prove that one versioned canonical assignment covers an entire local-day
+     * UTC window. Concurrent assignments at other Workplaces remain valid.
+     * This is an access guard only; it does not establish attendance or payroll
+     * completeness.
+     *
+     * @param array<string,mixed> $membership WorkerWorkplaceAssignmentResolver result
+     */
+    public static function assignmentCoversUtcWindow(
+        array $membership,
+        int $workerId,
+        int $workplaceId,
+        string $fromUtc,
+        string $toUtc
     ): bool {
-        return $requestedWorkerId > 0
-            && $requestedLocalityId > 0
-            && $requestedWorkerId === $canonicalWorkerId
-            && $requestedLocalityId === $canonicalWorkerLocalityId;
+        if ($workerId < 1
+            || $workplaceId < 1
+            || (int) ($membership['worker_id'] ?? 0) !== $workerId
+            || !in_array($membership['status'] ?? null, ['RESOLVED_SINGLE', 'RESOLVED_MULTIPLE'], true)
+            || !is_array($membership['assignments'] ?? null)) {
+            return false;
+        }
+
+        try {
+            $windowStart = WorkplaceTimezoneTimestamp::normalize($fromUtc);
+            $windowEnd = WorkplaceTimezoneTimestamp::normalize($toUtc);
+        } catch (Throwable) {
+            return false;
+        }
+        if ($windowEnd <= $windowStart) {
+            return false;
+        }
+
+        $matching = [];
+        foreach ($membership['assignments'] as $assignment) {
+            if (!is_array($assignment)) {
+                return false;
+            }
+            if ((int) ($assignment['workplace_id'] ?? 0) !== $workplaceId) {
+                continue;
+            }
+            if ((int) ($assignment['worker_id'] ?? 0) !== $workerId) {
+                return false;
+            }
+            $matching[] = $assignment;
+        }
+        if (count($matching) !== 1) {
+            return false;
+        }
+
+        $assignment = $matching[0];
+        $validFrom = self::normalizeResolvedAssignmentTimestamp($assignment['valid_from_utc'] ?? null);
+        $validTo = ($assignment['valid_to_utc'] ?? null) === null
+            ? null
+            : self::normalizeResolvedAssignmentTimestamp($assignment['valid_to_utc'] ?? null);
+        if ($validFrom === null || (($assignment['valid_to_utc'] ?? null) !== null && $validTo === null)) {
+            return false;
+        }
+
+        return $validFrom <= $windowStart
+            && ($validTo === null || $validTo >= $windowEnd);
+    }
+
+    private static function normalizeResolvedAssignmentTimestamp(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+        $parsed = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s.u', $value, new DateTimeZone('UTC'));
+        return $parsed instanceof DateTimeImmutable && $parsed->format('Y-m-d H:i:s.u') === $value
+            ? $value
+            : null;
+    }
+
+    /**
+     * Resolve the API-owned UTC window and bitemporal assignment for every
+     * local date in the payroll period before any personal identity is read.
+     *
+     * @return array{timezone_by_date:array<string,array<string,mixed>>}|null
+     */
+    private function resolveHistoricalPeriodScope(
+        ChecadorDailyReadService $reader,
+        Usuario $user,
+        int $workerId,
+        int $workplaceId,
+        array $period
+    ): ?array {
+        $dates = self::dateRange($period['start_date'], $period['end_date']);
+        if ($dates === [] || count($dates) > self::MAX_PERIOD_DAYS) {
+            return null;
+        }
+
+        $recordedAsOf = (new DateTimeImmutable('now', new DateTimeZone('UTC')))
+            ->format('Y-m-d\\TH:i:s.u\\Z');
+        $resolver = new WorkerWorkplaceAssignmentResolver();
+        $timezoneByDate = [];
+
+        foreach ($dates as $date) {
+            $timezone = $reader->resolveWorkplaceLocalDay($user, $workplaceId, $date);
+            if (empty($timezone['ok']) || !is_array($timezone['data'] ?? null)) {
+                return null;
+            }
+
+            $fromUtc = $timezone['data']['from_utc'] ?? null;
+            $toUtc = $timezone['data']['to_utc'] ?? null;
+            if (!is_string($fromUtc) || !is_string($toUtc)) {
+                return null;
+            }
+            try {
+                $normalizedFrom = WorkplaceTimezoneTimestamp::normalize($fromUtc);
+                $normalizedTo = WorkplaceTimezoneTimestamp::normalize($toUtc);
+            } catch (Throwable) {
+                return null;
+            }
+            if ($normalizedTo <= $normalizedFrom) {
+                return null;
+            }
+
+            $from = new DateTimeImmutable($normalizedFrom, new DateTimeZone('UTC'));
+            $to = new DateTimeImmutable($normalizedTo, new DateTimeZone('UTC'));
+            $seconds = $to->getTimestamp() - $from->getTimestamp();
+            if ($seconds < 1) {
+                return null;
+            }
+            $anchor = $from->modify('+' . intdiv($seconds, 2) . ' seconds')
+                ->format('Y-m-d\\TH:i:s.u\\Z');
+
+            $membership = $resolver->resolveAssignmentsAsRecordedAt($workerId, $anchor, $recordedAsOf);
+            if (!self::assignmentCoversUtcWindow(
+                $membership,
+                $workerId,
+                $workplaceId,
+                $fromUtc,
+                $toUtc
+            )) {
+                return null;
+            }
+
+            $timezoneByDate[$date] = $timezone['data'];
+        }
+
+        return ['timezone_by_date' => $timezoneByDate];
     }
 
     /** @return array{status:string,references:array<int,array<string,mixed>>} */
@@ -449,35 +626,397 @@ final class ChecadorPayrollComparisonReadService
         }
     }
 
+    /**
+     * Multi-worker comparison summary for a locality and payroll period.
+     * Strictly read-only; does not modify records or expose monetary data.
+     *
+     * @param array<string,mixed> $input
+     * @return array{ok:bool,data?:array<string,mixed>,error?:array{kind:string}}
+     */
+    public function comparePeriodSummary(array $input): array
+    {
+        $localityId = self::positiveInt($input['workplace_id'] ?? null);
+        $year = self::positiveInt($input['year'] ?? null);
+        $periodNumber = self::positiveInt($input['period_number'] ?? null);
+        if ($localityId === null || $year === null || $periodNumber === null) {
+            return self::failure('filters_required');
+        }
+
+        $authorization = $this->authorization($localityId);
+        if (empty($authorization['allowed'])) {
+            return self::failure('forbidden');
+        }
+
+        $periodType = is_string($input['period_type'] ?? null) ? trim($input['period_type']) : '';
+        if ($periodType === '') {
+            $periodType = RecibosNominaService::esSemanal($localityId) ? 'week' : 'fortnight';
+        }
+
+        $period = self::resolvePeriod($localityId, $year, $periodType, $periodNumber);
+        if ($period === null) {
+            return self::failure('invalid_period');
+        }
+
+        $workplace = $authorization['workplaces'][0] ?? ['id' => $localityId, 'nombre' => 'Localidad autorizada'];
+        $requestedWorkerId = self::positiveInt($input['worker_id'] ?? null);
+        $statusFilter = is_string($input['status'] ?? null) ? trim($input['status']) : '';
+
+        // 1. Query payroll references for this locality and period (strictly no monetary columns)
+        $payrollRows = [];
+        try {
+            $payrollQuery = OpReciboNominaV2::query()
+                ->select([
+                    'id',
+                    'year',
+                    'mes',
+                    'no_semana_quincena',
+                    'descripcion',
+                    'id_estacion',
+                    'id_usuario',
+                    'id_puesto',
+                    'doc_nomina',
+                    'doc_nomina_firma',
+                    'doc_nomina_aguinaldo',
+                    'nomina_original',
+                ])
+                ->where('id_estacion', $localityId)
+                ->where('year', $period['year'])
+                ->where('no_semana_quincena', $period['number'])
+                ->where('descripcion', $period['label']);
+
+            if ($requestedWorkerId !== null) {
+                $payrollQuery->where('id_usuario', $requestedWorkerId);
+            }
+
+            $payrollRecords = $payrollQuery->get();
+            foreach ($payrollRecords as $pr) {
+                $payrollRows[(int) $pr->id_usuario] = $pr;
+            }
+        } catch (Throwable) {
+            $payrollRows = [];
+        }
+
+        // 2. Fetch workers in scope: active in locality + any worker with payroll receipt
+        $workersList = [];
+        try {
+            $personalQuery = RhPersonal::query()
+                ->select(['id', 'id_estacion', 'nombre_completo', 'no_colaborador', 'puesto'])
+                ->where(function ($q) use ($localityId, $payrollRows) {
+                    $q->where('id_estacion', $localityId)
+                      ->where('estado', 1);
+                    $payrollWorkerIds = array_keys($payrollRows);
+                    if ($payrollWorkerIds !== []) {
+                        $q->orWhereIn('id', $payrollWorkerIds);
+                    }
+                });
+
+            if ($requestedWorkerId !== null) {
+                $personalQuery->where('id', $requestedWorkerId);
+            }
+
+            $workersCollection = $personalQuery->orderBy('nombre_completo', 'asc')->get();
+            foreach ($workersCollection as $w) {
+                $workersList[(int) $w->id] = $w;
+            }
+        } catch (Throwable) {
+            $workersList = [];
+        }
+
+        $workerIds = array_keys($workersList);
+        if ($workerIds === []) {
+            return [
+                'ok' => true,
+                'data' => [
+                    'workplace' => $workplace,
+                    'period' => $period,
+                    'rows' => [],
+                    'summary' => [
+                        'total_workers' => 0,
+                        'matches' => 0,
+                        'differences' => 0,
+                        'pending' => 0,
+                        'insufficient' => 0,
+                        'no_payroll' => 0,
+                    ],
+                ],
+            ];
+        }
+
+        // 3. Batch query raw punches in the period date range
+        $startUtc = $period['start_date'] . ' 06:00:00';
+        $endPlus1 = (new DateTimeImmutable($period['end_date']))->modify('+1 day')->format('Y-m-d');
+        $endUtc = $endPlus1 . ' 06:00:00';
+
+        $rawPunchesByWorker = [];
+        try {
+            $punches = Capsule::table('op_rh_v2_marcaciones_crudas')
+                ->select([
+                    'id',
+                    'id_personal_resuelto',
+                    'ocurrido_at_utc',
+                    'recibido_at_utc',
+                    'id_dispositivo',
+                    'metodo_captura',
+                    'processing_status',
+                    'event_uuid',
+                ])
+                ->where('id_estacion_resuelta', $localityId)
+                ->whereIn('id_personal_resuelto', $workerIds)
+                ->whereBetween('ocurrido_at_utc', [$startUtc, $endUtc])
+                ->orderBy('ocurrido_at_utc', 'asc')
+                ->get();
+
+            foreach ($punches as $p) {
+                $wId = (int) $p->id_personal_resuelto;
+                $rawPunchesByWorker[$wId][] = [
+                    'id' => (int) $p->id,
+                    'ocurrido_at_utc' => (string) $p->ocurrido_at_utc,
+                    'recibido_at_utc' => (string) $p->recibido_at_utc,
+                    'id_dispositivo' => (int) ($p->id_dispositivo ?? 0),
+                    'metodo_captura' => (string) ($p->metodo_captura ?? ''),
+                    'processing_status' => (string) ($p->processing_status ?? ''),
+                    'event_uuid' => (string) ($p->event_uuid ?? ''),
+                ];
+            }
+        } catch (Throwable) {
+            $rawPunchesByWorker = [];
+        }
+
+        // 4. Batch query shift assignments
+        $shiftsByWorker = [];
+        try {
+            $shifts = Capsule::table('op_rh_v2_turnos_asignaciones as a')
+                ->leftJoin('op_rh_v2_turnos_plantillas as p', 'p.id', '=', 'a.id_plantilla')
+                ->select([
+                    'a.id_personal',
+                    'a.dia_semana',
+                    'a.tipo_asignacion',
+                    'a.valido_desde',
+                    'a.valido_hasta',
+                    'p.nombre as plantilla_nombre',
+                ])
+                ->where('a.id_estacion', $localityId)
+                ->whereIn('a.id_personal', $workerIds)
+                ->where('a.es_activo', 1)
+                ->get();
+
+            foreach ($shifts as $s) {
+                $wId = (int) $s->id_personal;
+                $shiftsByWorker[$wId][] = [
+                    'dia_semana' => (string) $s->dia_semana,
+                    'tipo_asignacion' => (string) $s->tipo_asignacion,
+                    'plantilla' => (string) ($s->plantilla_nombre ?? 'Turno estándar'),
+                ];
+            }
+        } catch (Throwable) {
+            $shiftsByWorker = [];
+        }
+
+        // 5. Batch query persisted incidences
+        $incidencesByWorker = [];
+        try {
+            $incidenceReader = new ChecadorPersistedIncidenceReadService();
+            $incResult = $incidenceReader->readPersistedIncidences(
+                $localityId,
+                $period['start_date'],
+                $period['end_date'],
+                $requestedWorkerId
+            );
+            if (!empty($incResult['ok']) && is_array($incResult['incidences'] ?? null)) {
+                foreach ($incResult['incidences'] as $inc) {
+                    $wId = (int) ($inc['worker_id'] ?? 0);
+                    if ($wId > 0) {
+                        $incidencesByWorker[$wId][] = $inc;
+                    }
+                }
+            }
+        } catch (Throwable) {
+            $incidencesByWorker = [];
+        }
+
+        // 6. Batch query persisted journeys
+        $journeysByWorker = [];
+        try {
+            $journeyReader = new ChecadorPersistedJourneyReadService();
+            $jrnResult = $journeyReader->readPersistedJourneys(
+                $localityId,
+                $period['start_date'],
+                $period['end_date'],
+                $requestedWorkerId
+            );
+            if (!empty($jrnResult['ok']) && is_array($jrnResult['journeys'] ?? null)) {
+                foreach ($jrnResult['journeys'] as $jrn) {
+                    $wId = (int) ($jrn['worker_id'] ?? 0);
+                    if ($wId > 0) {
+                        $journeysByWorker[$wId][] = $jrn;
+                    }
+                }
+            }
+        } catch (Throwable) {
+            $journeysByWorker = [];
+        }
+
+        // 7. Assemble comparison rows
+        $rows = [];
+        $summary = [
+            'total_workers' => count($workersList),
+            'matches' => 0,
+            'differences' => 0,
+            'pending' => 0,
+            'insufficient' => 0,
+            'no_payroll' => 0,
+        ];
+
+        foreach ($workersList as $wId => $worker) {
+            $receipt = $payrollRows[$wId] ?? null;
+            $punches = $rawPunchesByWorker[$wId] ?? [];
+            $shifts = $shiftsByWorker[$wId] ?? [];
+            $incidences = $incidencesByWorker[$wId] ?? [];
+            $journeys = $journeysByWorker[$wId] ?? [];
+
+            $hasReceipt = $receipt !== null;
+            $hasPunches = $punches !== [];
+            $hasJourneys = $journeys !== [];
+            $hasShifts = $shifts !== [];
+            $hasIncidences = $incidences !== [];
+
+            // Checador summary
+            if ($hasJourneys) {
+                $checadorSummary = count($journeys) . ' jornada' . (count($journeys) > 1 ? 's' : '') . ' evaluada' . (count($journeys) > 1 ? 's' : '');
+            } elseif ($hasPunches) {
+                $checadorSummary = count($punches) . ' marcación' . (count($punches) > 1 ? 'es' : '') . ' observada' . (count($punches) > 1 ? 's' : '');
+            } elseif ($hasShifts) {
+                $checadorSummary = 'Horario programado (' . count($shifts) . ' días); sin marcaciones';
+            } else {
+                $checadorSummary = 'Sin registros de asistencia';
+            }
+
+            // Nómina summary
+            if ($hasReceipt) {
+                $hasDoc = trim((string) ($receipt->doc_nomina ?? '')) !== '';
+                $hasFirma = trim((string) ($receipt->doc_nomina_firma ?? '')) !== '';
+                $isOrig = (int) ($receipt->nomina_original ?? 0) === 1;
+                $payrollSummary = 'Recibo registrado · ' . ($hasDoc ? 'Documento disponible' : 'Pendiente de archivo') . ($hasFirma ? ' (Firmado)' : '');
+            } else {
+                $hasDoc = false;
+                $hasFirma = false;
+                $isOrig = false;
+                $payrollSummary = 'Sin registro de recibo en periodo';
+            }
+
+            // Status and difference
+            if ($hasReceipt && ($hasPunches || $hasJourneys)) {
+                $status = 'COINCIDENCIA';
+                $statusLabel = 'Coincidencia verificada';
+                $statusBadge = 'bg-success-subtle text-success border border-success-subtle';
+                $diffSummary = 'Recibo de nómina y marcaciones observadas en periodo';
+                $summary['matches']++;
+            } elseif ($hasReceipt && !$hasPunches && !$hasJourneys) {
+                $status = 'DIFERENCIA';
+                $statusLabel = 'Diferencia comprobada';
+                $statusBadge = 'bg-danger-subtle text-danger border border-danger-subtle';
+                $diffSummary = 'Recibo registrado en nómina sin marcaciones en Checador';
+                $summary['differences']++;
+            } elseif (!$hasReceipt && ($hasPunches || $hasJourneys)) {
+                $status = 'DIFERENCIA';
+                $statusLabel = 'Diferencia comprobada';
+                $statusBadge = 'bg-danger-subtle text-danger border border-danger-subtle';
+                $diffSummary = 'Asistencia registrada en Checador sin recibo correspondiente en nómina';
+                $summary['differences']++;
+            } elseif (!$hasReceipt && $hasShifts) {
+                $status = 'SIN_NOMINA';
+                $statusLabel = 'Sin correspondencia de nómina';
+                $statusBadge = 'bg-info-subtle text-info border border-info-subtle';
+                $diffSummary = 'Horario asignado en Checador pero sin recibo emitido en nómina';
+                $summary['no_payroll']++;
+            } else {
+                $status = 'INSUFICIENTE';
+                $statusLabel = 'Datos insuficientes';
+                $statusBadge = 'bg-secondary-subtle text-secondary border border-secondary-subtle';
+                $diffSummary = 'Sin actividad en Checador ni recibo en nómina';
+                $summary['insufficient']++;
+            }
+
+            if ($hasIncidences) {
+                $diffSummary .= ' (' . count($incidences) . ' incidencia' . (count($incidences) > 1 ? 's' : '') . ' registrada' . (count($incidences) > 1 ? 's' : '') . ')';
+            }
+
+            if ($statusFilter !== '' && $statusFilter !== 'all' && $statusFilter !== $status) {
+                continue;
+            }
+
+            $rows[] = [
+                'worker_id' => $wId,
+                'worker_name' => (string) ($worker->nombre_completo ?? ('Personal ' . $wId)),
+                'employee_number' => $worker->no_colaborador !== null ? (string) $worker->no_colaborador : null,
+                'puesto' => (string) ($worker->puesto ?? ''),
+                'workplace_id' => $localityId,
+                'workplace_name' => (string) ($workplace['nombre'] ?? 'Localidad autorizada'),
+                'period_label' => $period['label'] . ' ' . $period['number'] . ' · ' . $period['year'],
+                'period_dates' => $period['start_date'] . ' a ' . $period['end_date'],
+                'checador_summary' => $checadorSummary,
+                'payroll_summary' => $payrollSummary,
+                'difference_summary' => $diffSummary,
+                'comparison_status' => $status,
+                'comparison_status_label' => $statusLabel,
+                'comparison_status_badge' => $statusBadge,
+                'has_payroll_record' => $hasReceipt,
+                'payroll_record' => $hasReceipt ? [
+                    'record_id' => (int) $receipt->id,
+                    'period_year' => (int) $receipt->year,
+                    'period_month' => (int) $receipt->mes,
+                    'period_number' => (int) $receipt->no_semana_quincena,
+                    'period_type' => (string) $receipt->descripcion,
+                    'has_doc_nomina' => $hasDoc,
+                    'has_firma' => $hasFirma,
+                    'has_aguinaldo' => trim((string) ($receipt->doc_nomina_aguinaldo ?? '')) !== '',
+                    'is_original' => $isOrig,
+                ] : null,
+                'raw_punches' => $punches,
+                'shifts' => $shifts,
+                'incidences' => $incidences,
+                'journeys' => $journeys,
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'data' => [
+                'workplace' => $workplace,
+                'period' => $period,
+                'rows' => $rows,
+                'summary' => $summary,
+            ],
+        ];
+    }
+
     /** @return array{0:array<int,string>,1:array<string,mixed>,2:array<string,array<string,mixed>>} */
     private function readObservedPeriod(
-        ChecadorDailyReadService $reader,
-        Usuario $user,
         int $localityId,
         int $workerId,
-        array $period
+        array $period,
+        array $resolvedTimezoneByDate
     ): array {
         $dates = self::dateRange($period['start_date'], $period['end_date']);
         $events = [];
-        $timezoneByDate = [];
+        $timezoneByDate = $resolvedTimezoneByDate;
         $status = 'available';
         $message = '';
         foreach ($dates as $date) {
-            $timezone = $reader->resolveWorkplaceLocalDay($user, $localityId, $date);
-            if (empty($timezone['ok'])) {
+            $timezoneData = $timezoneByDate[$date] ?? null;
+            if (!is_array($timezoneData)) {
                 $status = $events === [] ? 'unavailable' : 'partial';
                 $message = 'No se pudo establecer la ventana de zona horaria laboral para todas las fechas.';
                 break;
             }
-            $timezoneByDate[$date] = $timezone['data'];
 
             $page = 1;
             $totalPages = 1;
             do {
                 $result = (new ChecadorRawPunchReadService())->readPage(
                     $localityId,
-                    (string) $timezone['data']['from_utc'],
-                    (string) $timezone['data']['to_utc'],
+                    (string) $timezoneData['from_utc'],
+                    (string) $timezoneData['to_utc'],
                     $workerId,
                     $page,
                     200,

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 $e = static fn(mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+
 $sourceLabel = static function (string $status): string {
     return match ($status) {
         'available' => 'Información disponible',
@@ -22,6 +23,7 @@ $sourceLabel = static function (string $status): string {
         default => 'Estado no disponible',
     };
 };
+
 $recordedStatusLabel = static function (mixed $value): string {
     $status = is_string($value) ? strtoupper(trim($value)) : '';
     return match ($status) {
@@ -38,6 +40,7 @@ $recordedStatusLabel = static function (mixed $value): string {
         default => 'Estado registrado por la fuente; no interpretado por Portal3',
     };
 };
+
 $incidenceCategoryLabel = static function (mixed $value): string {
     $category = is_string($value) ? strtoupper(trim($value)) : '';
     return match ($category) {
@@ -51,235 +54,422 @@ $incidenceCategoryLabel = static function (mixed $value): string {
         default => 'Tipo registrado por la fuente',
     };
 };
-$adjustmentTypeLabel = static function (mixed $value): string {
-    $type = is_string($value) ? strtoupper(trim($value)) : '';
-    return match ($type) {
-        'JUSTIFIED_LATENESS' => 'Retardo justificado',
-        'JUSTIFIED_EARLY_DEPARTURE' => 'Salida anticipada justificada',
-        'AUTHORIZED_ABSENCE' => 'Ausencia autorizada según la evaluación',
-        'MANUAL_ADJUSTMENT' => 'Ajuste administrativo registrado',
-        '' => 'Tipo no disponible',
-        default => 'Tipo de ajuste registrado por la fuente',
-    };
-};
-$comparison = is_array($comparison ?? null) ? $comparison : null;
+
 $workplaceId = isset($selectedWorkplaceId) ? (int) $selectedWorkplaceId : null;
 $filters = is_array($filters ?? null) ? $filters : [];
-$returnQuery = $workplaceId !== null ? ['workplace_id' => $workplaceId] : [];
-$returnHref = '/departamento-operativo/recursos-humanos/checador'
-    . ($returnQuery === [] ? '' : '?' . http_build_query($returnQuery));
+$periodsList = is_array($periodsList ?? null) ? $periodsList : [];
+$workerSelectOptions = is_array($workerSelectOptions ?? null) ? $workerSelectOptions : [];
+$comparisonRows = is_array($comparisonRows ?? null) ? $comparisonRows : [];
+$summaryMetrics = is_array($summaryMetrics ?? null) ? $summaryMetrics : [];
+$resolvedPeriod = is_array($resolvedPeriod ?? null) ? $resolvedPeriod : null;
+$selectedWorkerIdVal = isset($filters['worker_id']) && $filters['worker_id'] !== '' ? (int) $filters['worker_id'] : null;
+$selectedYearVal = isset($filters['year']) && $filters['year'] !== '' ? (int) $filters['year'] : (int) date('Y');
+$selectedPeriodVal = isset($filters['period_number']) && $filters['period_number'] !== '' ? (int) $filters['period_number'] : 1;
+$selectedStatusVal = (string) ($filters['status'] ?? '');
 ?>
 
 <div id="container" class="mt-4 mb-5">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <p class="text-muted mb-0">Consulta informativa de evidencias históricas de asistencia y referencias documentales de Nómina.</p>
-        <a class="btn btn-outline-secondary" href="<?= $e($returnHref) ?>">Volver a Checador</a>
-    </div>
-
-    <?php if (!empty($demoMode)): ?>
-        <div class="alert alert-warning" role="status">
-            La comparación no consulta ni mezcla fuentes mientras el modo de demostración esté activo. Desactiva el modo demo por el mecanismo local autorizado para consultar fuentes reales.
+    <section class="card" aria-labelledby="payroll-comparison-workspace-heading">
+        <div class="card-header bg-primary text-white d-flex align-items-center gap-2 gap-md-3">
+            <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-scale fs-5"></i></span>
+            <div>
+                <h2 class="h5 mb-0 text-white" id="payroll-comparison-workspace-heading">Comparación con Nómina</h2>
+                <span class="small text-white-50">Consulta informativa de resultados de asistencia y referencias documentales de Nómina</span>
+            </div>
         </div>
-    <?php endif; ?>
 
-    <?php if (($selectedWorkplaceId ?? null) === null): ?>
-        <div class="alert alert-info" role="status">Selecciona una localidad en el selector institucional para continuar. Debe estar autorizada tanto para Checador como para Nómina.</div>
-    <?php else: ?>
-        <section class="card mb-4" aria-labelledby="comparison-filter-heading">
-            <div class="card-body">
-                <h2 class="h5" id="comparison-filter-heading">Consultar un trabajador y periodo</h2>
-                <p class="small text-muted">Localidad: <?= $e($selectedWorkplaceName !== '' ? $selectedWorkplaceName : 'Localidad autorizada') ?> · ID canónico <?= (int) $selectedWorkplaceId ?>. El selector de estación/localidad se conserva en el encabezado de Portal3.</p>
-                <?php if (($errorMessage ?? '') !== ''): ?>
+        <div class="card-body">
+            <p class="text-muted">Consulta y compara los resultados de asistencia de Checador V2 con los registros documentales de Nómina para la localidad y periodo seleccionados.</p>
+
+            <?php if (!empty($demoMode)): ?>
+                <div class="alert alert-warning" role="status">
+                    La comparación no consulta ni mezcla fuentes mientras el modo de demostración esté activo. Desactiva el modo demo por el mecanismo local autorizado para consultar fuentes reales.
+                </div>
+            <?php endif; ?>
+
+            <?php if ($workplaceId === null): ?>
+                <div class="alert alert-info" role="status">
+                    <i class="ti ti-info-circle me-1" aria-hidden="true"></i>Selecciona una localidad en el selector institucional del encabezado para consultar la comparación.
+                </div>
+            <?php else: ?>
+                <?php if (!empty($errorMessage)): ?>
                     <div class="alert alert-warning" role="alert"><?= $e($errorMessage) ?></div>
                 <?php endif; ?>
-                <form method="get" action="/departamento-operativo/recursos-humanos/checador/comparacion-nomina" class="row g-3">
-                    <input type="hidden" name="workplace_id" value="<?= (int) $selectedWorkplaceId ?>">
-                    <input type="hidden" name="period_type" value="<?= $e($periodType ?? 'fortnight') ?>">
-                    <div class="col-12 col-md-3">
-                        <label class="form-label" for="comparison-worker">Trabajador canónico</label>
-                        <input class="form-control" id="comparison-worker" name="worker_id" type="number" min="1" step="1" required value="<?= $e($filters['worker_id'] ?? '') ?>">
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label class="form-label" for="comparison-year">Año</label>
-                        <input class="form-control" id="comparison-year" name="year" type="number" min="2024" max="<?= (int) date('Y') ?>" required value="<?= $e($filters['year'] ?? date('Y')) ?>">
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label class="form-label" for="comparison-period">Número de <?= $periodType === 'week' ? 'semana' : 'quincena' ?></label>
-                        <input class="form-control" id="comparison-period" name="period_number" type="number" min="1" max="<?= $periodType === 'week' ? (int) \App\Services\RecibosNominaService::getTotalSemanasPeriodo((int) ($filters['year'] ?? date('Y'))) : 24 ?>" required value="<?= $e($filters['period_number'] ?? '') ?>">
-                        <div class="form-text">El tipo de periodo se determina por la localidad con la regla vigente de Recibos de Nómina (<?= $periodType === 'week' ? 'semanal' : 'quincenal' ?>).</div>
-                    </div>
-                    <div class="col-12 col-md-3 d-flex align-items-end">
-                        <button class="btn btn-primary" type="submit">Consultar comparación</button>
-                    </div>
-                </form>
-            </div>
-        </section>
-    <?php endif; ?>
 
-    <?php if ($comparison !== null): ?>
-        <?php
-        $worker = $comparison['worker'] ?? [];
-        $period = $comparison['period'] ?? [];
-        $attendance = $comparison['attendance'] ?? [];
-        $payroll = $comparison['payroll'] ?? [];
-        ?>
-        <div class="alert alert-info" role="status">
-            Consulta informativa y de solo lectura. No modifica marcaciones, evaluaciones ni recibos, no cierra periodos y no establece consecuencias económicas.
-            La consulta en vivo no es un snapshot y no prueba que el periodo o el padrón estén completos.
-        </div>
-
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-lg-6">
-                <section class="card h-100" aria-labelledby="attendance-evidence-heading">
-                    <div class="card-body">
-                        <h2 class="h5" id="attendance-evidence-heading">Asistencia Checador V2</h2>
-                        <dl class="row mb-0">
-                            <dt class="col-sm-4">Trabajador</dt><dd class="col-sm-8"><?= $e($worker['name'] ?? '') ?> · ID interno <?= (int) ($worker['id'] ?? 0) ?></dd>
-                            <dt class="col-sm-4">Número de empleado</dt><dd class="col-sm-8"><?= isset($worker['employee_number']) ? (int) $worker['employee_number'] : 'No disponible' ?></dd>
-                            <dt class="col-sm-4">Localidad</dt><dd class="col-sm-8"><?= $e($comparison['workplace']['nombre'] ?? '') ?> · <?= (int) ($worker['workplace_id'] ?? 0) ?></dd>
-                            <dt class="col-sm-4">Periodo</dt><dd class="col-sm-8"><?= $e($period['label'] ?? '') ?> <?= (int) ($period['number'] ?? 0) ?> · <?= (int) ($period['year'] ?? 0) ?></dd>
-                            <dt class="col-sm-4">Fechas</dt><dd class="col-sm-8"><?= $e($period['start_date'] ?? '') ?> a <?= $e($period['end_date'] ?? '') ?></dd>
-                            <dt class="col-sm-4">Fuente</dt><dd class="col-sm-8"><?= $e($sourceLabel((string) ($attendance['status'] ?? 'unavailable'))) ?></dd>
-                            <dt class="col-sm-4">Integridad</dt><dd class="col-sm-8">No verificada por Portal3</dd>
-                            <dt class="col-sm-4">Completitud</dt><dd class="col-sm-8">No establecida</dd>
-                        </dl>
-                        <?php if (($attendance['message'] ?? '') !== ''): ?><p class="small text-muted mt-2 mb-0"><?= $e($attendance['message']) ?></p><?php endif; ?>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#checador-payroll-search-modal" id="open-payroll-search-modal-btn">
+                            <i class="ti ti-filter fs-5" aria-hidden="true"></i>
+                            <span>Buscar / Filtrar</span>
+                        </button>
                     </div>
-                </section>
-            </div>
-            <div class="col-12 col-lg-6">
-                <section class="card h-100" aria-labelledby="payroll-reference-heading">
-                    <div class="card-body">
-                        <h2 class="h5" id="payroll-reference-heading">Referencias de Nómina</h2>
-                        <p class="mb-2"><?= $e($sourceLabel((string) ($payroll['status'] ?? 'unavailable'))) ?></p>
-                        <?php if (($payroll['status'] ?? '') === 'reference_found'): ?>
-                            <?php foreach (($payroll['references'] ?? []) as $reference): ?>
-                                <dl class="row small mb-0">
-                                    <dt class="col-sm-5">Referencia documental interna</dt><dd class="col-sm-7">Registro <?= (int) ($reference['record_id'] ?? 0) ?></dd>
-                                    <dt class="col-sm-5">Clave de periodo</dt><dd class="col-sm-7"><?= (int) ($reference['period_year'] ?? 0) ?> · <?= $e($reference['period_type'] ?? '') ?> <?= (int) ($reference['period_number'] ?? 0) ?> · mes <?= (int) ($reference['period_month'] ?? 0) ?></dd>
-                                    <dt class="col-sm-5">Documentos registrados</dt>
-                                    <dd class="col-sm-7">
-                                        <?= !empty($reference['documents']['payroll_document']) ? 'Nómina: sí' : 'Nómina: no registrada' ?> ·
-                                        <?= !empty($reference['documents']['signature_document']) ? 'Firma: sí' : 'Firma: no registrada' ?> ·
-                                        <?= !empty($reference['documents']['bonus_document']) ? 'Aguinaldo: sí' : 'Aguinaldo: no registrada' ?> ·
-                                        <?= !empty($reference['documents']['original_reference']) ? 'Referencia original: sí' : 'Referencia original: no registrada' ?>
-                                    </dd>
-                                </dl>
-                            <?php endforeach; ?>
-                        <?php elseif (($payroll['status'] ?? '') === 'no_reference_found'): ?>
-                            <p class="small text-muted mb-0">No se encontró una fila documental para esta combinación consultada. Esto no demuestra ausencia de asistencia ni permite inferir faltas, descuentos o consecuencias de nómina.</p>
+
+                    <div class="d-flex flex-wrap align-items-center gap-2 small" aria-label="Criterios de consulta activos">
+                        <?php if ($resolvedPeriod !== null): ?>
+                            <span class="badge rounded-pill bg-light text-dark border py-2 px-3">
+                                <i class="ti ti-calendar me-1 text-primary" aria-hidden="true"></i>
+                                <?= $e($resolvedPeriod['label']) ?> <?= (int) $resolvedPeriod['number'] ?> (<?= $e($resolvedPeriod['year']) ?>)
+                                <span class="text-muted ms-1">· <?= $e($resolvedPeriod['start_date']) ?> al <?= $e($resolvedPeriod['end_date']) ?></span>
+                            </span>
+                        <?php endif; ?>
+
+                        <?php if ($selectedWorkerIdVal !== null): ?>
+                            <?php
+                            $workerLabel = 'Colaborador ID ' . $selectedWorkerIdVal;
+                            foreach ($workerSelectOptions as $opt) {
+                                if ((int) ($opt['worker_id'] ?? 0) === $selectedWorkerIdVal) {
+                                    $workerLabel = $opt['full_name'] ?? $workerLabel;
+                                    break;
+                                }
+                            }
+                            ?>
+                            <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle py-2 px-3">
+                                <i class="ti ti-user me-1" aria-hidden="true"></i><?= $e($workerLabel) ?>
+                            </span>
+                        <?php endif; ?>
+
+                        <?php if ($selectedStatusVal !== ''): ?>
+                            <?php
+                            $statusLabels = [
+                                'COINCIDENCIA' => 'Coincidencia verificada',
+                                'DIFERENCIA' => 'Diferencia comprobada',
+                                'PENDIENTE' => 'Información pendiente',
+                                'INSUFICIENTE' => 'Datos insuficientes',
+                                'SIN_NOMINA' => 'Sin correspondencia de nómina',
+                            ];
+                            ?>
+                            <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle py-2 px-3">
+                                <i class="ti ti-tag me-1" aria-hidden="true"></i><?= $e($statusLabels[$selectedStatusVal] ?? $selectedStatusVal) ?>
+                            </span>
                         <?php endif; ?>
                     </div>
-                </section>
-            </div>
-        </div>
+                </div>
 
-        <section class="card mb-4" aria-labelledby="raw-events-heading">
-            <div class="card-body">
-                <h2 class="h5" id="raw-events-heading">Marcaciones observadas</h2>
-                <p class="small text-muted">Estado: <?= $e($sourceLabel((string) ($attendance['status'] ?? 'unavailable'))) ?>. Registros consultados en vivo; no equivalen a un snapshot ni prueban que no existan otras marcaciones.</p>
-                <?php if (($attendance['events'] ?? []) === []): ?>
-                    <div class="alert alert-secondary mb-0" role="status">No hay filas que mostrar para la consulta disponible, o la fuente no pudo consultarse. No se interpreta como ausencia ni como periodo completo.</div>
+                <!-- Modal Institucional de Búsqueda y Filtros -->
+                <div class="modal fade" id="checador-payroll-search-modal" tabindex="-1" aria-labelledby="payroll-search-modal-title" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <form method="get" action="/departamento-operativo/recursos-humanos/checador/comparacion-nomina" class="modal-content" id="payroll-comparison-filter-form" aria-label="Filtros de consulta de comparación con nómina">
+                            <input type="hidden" name="period_type" value="<?= $e($periodType ?? 'week') ?>">
+
+                            <div class="modal-header modal-colored-header bg-primary text-white">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-scale fs-5"></i></span>
+                                    <div>
+                                        <h3 class="modal-title h5 text-white mb-0" id="payroll-search-modal-title">Buscar comparación con Nómina</h3>
+                                        <span class="small text-white-50">Selecciona el periodo y los criterios para consultar la información de asistencia y nómina</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label fw-semibold" for="comparison-year">Año</label>
+                                        <select class="form-select" id="comparison-year" name="year">
+                                            <?php for ($y = (int) date('Y'); $y >= 2024; $y--): ?>
+                                                <option value="<?= $y ?>" <?= $selectedYearVal === $y ? 'selected' : '' ?>><?= $y ?></option>
+                                            <?php endfor; ?>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label fw-semibold" for="comparison-period-select">Periodo de nómina (<?= $periodType === 'week' ? 'Semana' : 'Quincena' ?>)</label>
+                                        <select class="form-select" id="comparison-period-select" name="period_number">
+                                            <?php if ($periodsList === []): ?>
+                                                <option value="1">Periodo 1</option>
+                                            <?php else: ?>
+                                                <?php foreach ($periodsList as $p): ?>
+                                                    <option value="<?= (int) ($p['numero'] ?? 1) ?>"
+                                                        data-start="<?= $e($p['inicio'] ?? '') ?>"
+                                                        data-end="<?= $e($p['fin'] ?? '') ?>"
+                                                        <?= $selectedPeriodVal === (int) ($p['numero'] ?? 0) ? 'selected' : '' ?>>
+                                                        <?= $e($p['label'] ?? ('Periodo ' . ($p['numero'] ?? ''))) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="p-2 bg-light rounded border text-muted small d-flex align-items-center gap-2" id="comparison-period-dates-box">
+                                            <i class="ti ti-calendar text-primary fs-5" aria-hidden="true"></i>
+                                            <span>Fechas del periodo: <strong id="comparison-period-dates-text"><?php if ($resolvedPeriod !== null): ?><?= $e($resolvedPeriod['start_date']) ?> al <?= $e($resolvedPeriod['end_date']) ?> (<?= $e($resolvedPeriod['label']) ?> <?= (int) $resolvedPeriod['number'] ?>)<?php else: ?>No disponible<?php endif; ?></strong></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="select2-modal-field">
+                                            <label class="form-label fw-semibold" for="comparison-worker-filter">Colaborador</label>
+                                            <select class="form-select" id="comparison-worker-filter" name="worker_id">
+                                                <option value="">Todos los colaboradores</option>
+                                                <?php foreach ($workerSelectOptions as $option): if (!is_array($option)) continue; $optionId = (int) ($option['worker_id'] ?? 0); if ($optionId < 1) continue; ?>
+                                                    <option value="<?= $optionId ?>" <?= $selectedWorkerIdVal === $optionId ? 'selected' : '' ?>>
+                                                        <?= $e($option['full_name'] ?? ('Personal ' . $optionId)) ?><?php if (!empty($option['employee_number'])): ?> · N.º <?= $e($option['employee_number']) ?><?php else: ?> · ID <?= $optionId ?><?php endif; ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label fw-semibold" for="comparison-status-filter">Estado de comparación</label>
+                                        <select class="form-select" id="comparison-status-filter" name="status">
+                                            <option value="">Todos los estados</option>
+                                            <option value="COINCIDENCIA" <?= $selectedStatusVal === 'COINCIDENCIA' ? 'selected' : '' ?>>Coincidencia verificada</option>
+                                            <option value="DIFERENCIA" <?= $selectedStatusVal === 'DIFERENCIA' ? 'selected' : '' ?>>Diferencia comprobada</option>
+                                            <option value="PENDIENTE" <?= $selectedStatusVal === 'PENDIENTE' ? 'selected' : '' ?>>Información pendiente</option>
+                                            <option value="INSUFICIENTE" <?= $selectedStatusVal === 'INSUFICIENTE' ? 'selected' : '' ?>>Datos insuficientes</option>
+                                            <option value="SIN_NOMINA" <?= $selectedStatusVal === 'SIN_NOMINA' ? 'selected' : '' ?>>Sin correspondencia de nómina</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer d-flex justify-content-between align-items-center">
+                                <button type="button" class="btn btn-outline-secondary" id="payroll-reset-filters-btn">
+                                    <i class="ti ti-rotate me-1" aria-hidden="true"></i>Limpiar filtros
+                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary incidence-filter-btn" id="payroll-submit-filters-btn">
+                                        <i class="ti ti-search me-1" aria-hidden="true"></i>Consultar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <?php if ($summaryMetrics !== []): ?>
+                    <div class="d-flex flex-wrap gap-2 mb-4" aria-label="Resumen de comparación">
+                        <span class="badge rounded-pill bg-light text-dark border py-2 px-3">Total consultados: <strong><?= (int) ($summaryMetrics['total_workers'] ?? 0) ?></strong></span>
+                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle py-2 px-3">Coincidencias: <strong><?= (int) ($summaryMetrics['matches'] ?? 0) ?></strong></span>
+                        <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle py-2 px-3">Diferencias: <strong><?= (int) ($summaryMetrics['differences'] ?? 0) ?></strong></span>
+                        <span class="badge rounded-pill bg-warning-subtle text-warning border border-warning-subtle py-2 px-3">Pendientes: <strong><?= (int) ($summaryMetrics['pending'] ?? 0) ?></strong></span>
+                        <span class="badge rounded-pill bg-info-subtle text-info border border-info-subtle py-2 px-3">Sin recibo nómina: <strong><?= (int) ($summaryMetrics['no_payroll'] ?? 0) ?></strong></span>
+                        <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle py-2 px-3">Datos insuficientes: <strong><?= (int) ($summaryMetrics['insufficient'] ?? 0) ?></strong></span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($comparisonRows === []): ?>
+                    <div class="alert alert-secondary mb-0" role="status">
+                        <i class="ti ti-info-circle me-1" aria-hidden="true"></i>No se encontraron registros de comparación para los filtros seleccionados. No se interpreta como ausencia ni como periodo completo. Esto no demuestra ausencia de asistencia.
+                    </div>
                 <?php else: ?>
                     <div class="table-responsive">
-                        <table class="table table-striped table-bordered align-middle mb-0">
-                            <caption class="visually-hidden">Marcaciones V2 observadas para el trabajador y periodo seleccionado</caption>
-                            <thead><tr><th scope="col">Fecha y hora ocurrida (UTC)</th><th scope="col">Recepción (UTC)</th><th scope="col">Dispositivo</th><th scope="col">Método</th><th scope="col">Estado recibido</th><th scope="col">Evento</th></tr></thead>
-                            <tbody>
-                            <?php foreach ($attendance['events'] as $event): ?>
+                        <table id="checador-payroll-table" class="table table-striped table-bordered align-middle mb-0 w-100">
+                            <caption class="visually-hidden">Tabla de comparación informativa entre Checador V2 y registros de Nómina</caption>
+                            <thead>
                                 <tr>
-                                    <td><?= $e($event['ocurrido_at_utc'] ?? 'No determinada') ?></td>
-                                    <td><?= $e($event['recibido_at_utc'] ?? 'No disponible') ?></td>
-                                    <td><?= isset($event['id_dispositivo']) ? 'Dispositivo ' . (int) $event['id_dispositivo'] : 'No disponible' ?></td>
-                                    <td><?= $e(\App\Services\ChecadorPresentationFormatter::captureMethodLabel($event['metodo_captura'] ?? null)) ?></td>
-                                    <td><?= $e(\App\Services\ChecadorPresentationFormatter::processingStatusLabel($event['processing_status'] ?? null)) ?></td>
-                                    <td><code><?= $e($event['event_uuid'] ?? '') ?></code></td>
+                                    <th scope="col">Colaborador</th>
+                                    <th scope="col">Localidad</th>
+                                    <th scope="col">Periodo</th>
+                                    <th scope="col">Resultado Checador</th>
+                                    <th scope="col">Resultado Nómina</th>
+                                    <th scope="col">Diferencia verificada</th>
+                                    <th scope="col">Estado</th>
+                                    <th scope="col" class="text-center">Acciones</th>
                                 </tr>
-                            <?php endforeach; ?>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($comparisonRows as $row): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold"><?= $e($row['worker_name']) ?></div>
+                                            <div class="small text-muted">
+                                                <?php if (!empty($row['employee_number'])): ?>
+                                                    N.º <?= $e($row['employee_number']) ?> ·
+                                                <?php endif; ?>
+                                                ID <?= (int) $row['worker_id'] ?>
+                                                <?php if (!empty($row['puesto'])): ?>
+                                                    · <?= $e($row['puesto']) ?>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                        <td><?= $e($row['workplace_name']) ?></td>
+                                        <td>
+                                            <div class="small fw-semibold"><?= $e($row['period_label']) ?></div>
+                                            <div class="small text-muted"><?= $e($row['period_dates']) ?></div>
+                                        </td>
+                                        <td>
+                                            <span class="small"><?= $e($row['checador_summary']) ?></span>
+                                        </td>
+                                        <td>
+                                            <span class="small"><?= $e($row['payroll_summary']) ?></span>
+                                        </td>
+                                        <td>
+                                            <span class="small"><?= $e($row['difference_summary']) ?></span>
+                                        </td>
+                                        <td>
+                                            <span class="badge rounded-pill <?= $e($row['comparison_status_badge']) ?>">
+                                                <?= $e($row['comparison_status_label']) ?>
+                                            </span>
+                                        </td>
+                                        <td class="table-actions-cell text-center">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#payroll-detail-modal-<?= (int) $row['worker_id'] ?>" aria-label="Ver detalle de comparación para <?= $e($row['worker_name']) ?>">
+                                                <i class="ti ti-eye me-1" aria-hidden="true"></i>Detalle
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
                 <?php endif; ?>
-            </div>
-        </section>
+            <?php endif; ?>
+        </div>
+    </section>
 
-        <section class="card mb-4" aria-labelledby="schedule-heading">
-            <div class="card-body">
-                <h2 class="h5" id="schedule-heading">Horario histórico aplicable</h2>
-                <p class="small text-muted">Estado de la fuente: <?= $e($sourceLabel((string) ($comparison['schedules']['status'] ?? 'unavailable'))) ?>. Los horarios se leen del resolvedor existente; Portal3 no calcula jornada.</p>
-                <p class="small text-muted">Zona horaria laboral: <?= $e($sourceLabel((string) ($comparison['workplace_timezones']['status'] ?? 'unavailable'))) ?>.</p>
-                <?php if (($comparison['workplace_timezones']['days'] ?? []) !== []): ?>
-                    <ul class="small">
-                        <?php foreach ($comparison['workplace_timezones']['days'] as $timezoneDay): ?>
-                            <li><?= $e($timezoneDay['date'] ?? '') ?> · <?= $e($timezoneDay['timezone'] ?? 'No disponible') ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
-                <?php if (($comparison['schedules']['days'] ?? []) !== []): ?>
-                    <div class="table-responsive"><table class="table table-striped table-bordered align-middle mb-0">
-                        <thead><tr><th scope="col">Fecha laboral</th><th scope="col">Resultado</th><th scope="col">Zona horaria</th><th scope="col">Segmentos resueltos</th></tr></thead><tbody>
-                        <?php foreach ($comparison['schedules']['days'] as $day): ?>
-                            <tr>
-                                <td><?= $e($day['date'] ?? '') ?></td>
-                                <td><?= $e($sourceLabel((string) ($day['status'] ?? 'unavailable'))) ?></td>
-                                <td><?= $e($day['timezone'] ?? 'No disponible') ?></td>
-                                <td>
-                                    <?php if (($day['segments'] ?? []) === []): ?>No disponible<?php else: ?>
-                                        <?php foreach ($day['segments'] as $segment): ?>
-                                            <?= (int) ($segment['ordinal'] ?? 0) ?>. <?= $e($segment['type'] ?? '') ?> <?= $e($segment['start_local'] ?? '') ?>–<?= $e($segment['end_local'] ?? '') ?><?php if ((int) ($segment['end_day_offset'] ?? 0) > 0): ?> (+<?= (int) $segment['end_day_offset'] ?> día)<?php endif; ?><br>
+    <!-- Modales de detalle de comparación (renderizados fuera de la tabla) -->
+    <?php foreach ($comparisonRows as $row): ?>
+        <div class="modal fade" id="payroll-detail-modal-<?= (int) $row['worker_id'] ?>" tabindex="-1" aria-labelledby="payroll-modal-title-<?= (int) $row['worker_id'] ?>" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <div>
+                            <h3 class="modal-title h5 text-white mb-0" id="payroll-modal-title-<?= (int) $row['worker_id'] ?>">Detalle de comparación: <?= $e($row['worker_name']) ?></h3>
+                            <span class="small text-white-50"><?= $e($row['workplace_name']) ?> · Periodo <?= $e($row['period_label']) ?> (<?= $e($row['period_dates']) ?>)</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <section class="card mb-3" aria-labelledby="modal-identity-heading-<?= (int) $row['worker_id'] ?>">
+                            <div class="card-body">
+                                <h4 class="h6 mb-2" id="modal-identity-heading-<?= (int) $row['worker_id'] ?>"><i class="ti ti-user me-1 text-primary" aria-hidden="true"></i>Identidad y adscripción</h4>
+                                <dl class="row mb-0 small">
+                                    <dt class="col-sm-4">Colaborador</dt><dd class="col-sm-8"><?= $e($row['worker_name']) ?></dd>
+                                    <dt class="col-sm-4">Número de empleado</dt><dd class="col-sm-8"><?= !empty($row['employee_number']) ? $e($row['employee_number']) : 'No asignado' ?></dd>
+                                    <dt class="col-sm-4">ID interno</dt><dd class="col-sm-8"><?= (int) $row['worker_id'] ?></dd>
+                                    <dt class="col-sm-4">Puesto registrado</dt><dd class="col-sm-8"><?= !empty($row['puesto']) ? $e($row['puesto']) : 'No especificado' ?></dd>
+                                    <dt class="col-sm-4">Localidad</dt><dd class="col-sm-8"><?= $e($row['workplace_name']) ?> (ID <?= (int) $row['workplace_id'] ?>)</dd>
+                                    <dt class="col-sm-4">Integridad</dt><dd class="col-sm-8">No verificada por Portal3</dd>
+                                </dl>
+                            </div>
+                        </section>
+
+                        <section class="card mb-3" aria-labelledby="modal-payroll-heading-<?= (int) $row['worker_id'] ?>">
+                            <div class="card-body">
+                                <h4 class="h6 mb-2" id="modal-payroll-heading-<?= (int) $row['worker_id'] ?>"><i class="ti ti-file-text me-1 text-primary" aria-hidden="true"></i>Referencias de Nómina</h4>
+                                <?php if (!empty($row['has_payroll_record']) && is_array($row['payroll_record'])): $pr = $row['payroll_record']; ?>
+                                    <dl class="row mb-2 small">
+                                        <dt class="col-sm-5">Registro documental interno</dt><dd class="col-sm-7">ID <?= (int) ($pr['record_id'] ?? 0) ?></dd>
+                                        <dt class="col-sm-5">Periodo nómina</dt><dd class="col-sm-7"><?= (int) ($pr['period_year'] ?? 0) ?> · <?= $e($pr['period_type'] ?? '') ?> <?= (int) ($pr['period_number'] ?? 0) ?> · Mes <?= (int) ($pr['period_month'] ?? 0) ?></dd>
+                                        <dt class="col-sm-5">Documentos registrados</dt>
+                                        <dd class="col-sm-7">
+                                            <?= !empty($pr['has_doc_nomina']) ? '<span class="badge bg-success-subtle text-success">Nómina: sí</span>' : '<span class="badge bg-secondary-subtle text-secondary">Nómina: no</span>' ?>
+                                            <?= !empty($pr['has_firma']) ? '<span class="badge bg-success-subtle text-success">Firma: sí</span>' : '<span class="badge bg-secondary-subtle text-secondary">Firma: no</span>' ?>
+                                            <?= !empty($pr['has_aguinaldo']) ? '<span class="badge bg-info-subtle text-info">Aguinaldo: sí</span>' : '' ?>
+                                            <?= !empty($pr['is_original']) ? '<span class="badge bg-light text-dark border">Original</span>' : '' ?>
+                                        </dd>
+                                    </dl>
+                                <?php else: ?>
+                                    <p class="small text-muted mb-0">No se encontró una fila documental para esta combinación consultada. Esto no demuestra ausencia de asistencia ni permite inferir faltas, descuentos o consecuencias de nómina.</p>
+                                <?php endif; ?>
+                                <p class="small text-muted mb-0 mt-2 border-top pt-2"><i class="ti ti-lock me-1" aria-hidden="true"></i>Solo lectura de referencias documentales. Por protección de datos y contratos congelados, no se exponen importes salariales, deducciones ni cuentas bancarias.</p>
+                            </div>
+                        </section>
+
+                        <section class="card mb-3" aria-labelledby="modal-checador-heading-<?= (int) $row['worker_id'] ?>">
+                            <div class="card-body">
+                                <h4 class="h6 mb-2" id="modal-checador-heading-<?= (int) $row['worker_id'] ?>"><i class="ti ti-fingerprint me-1 text-primary" aria-hidden="true"></i>Asistencia observada en Checador V2</h4>
+                                <?php if (!empty($row['raw_punches']) && is_array($row['raw_punches'])): ?>
+                                    <p class="small text-muted mb-2">Se observaron <?= count($row['raw_punches']) ?> marcaciones crudas durante el periodo:</p>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered small mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Fecha/Hora UTC</th>
+                                                    <th>Dispositivo</th>
+                                                    <th>Método</th>
+                                                    <th>UUID</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($row['raw_punches'] as $event): ?>
+                                                    <tr>
+                                                        <td><?= $e($event['ocurrido_at_utc'] ?? '') ?></td>
+                                                        <td><?= isset($event['id_dispositivo']) ? 'Disp. ' . (int) $event['id_dispositivo'] : '—' ?></td>
+                                                        <td><?= $e(\App\Services\ChecadorPresentationFormatter::captureMethodLabel($event['metodo_captura'] ?? null)) ?></td>
+                                                        <td><code><?= $e(substr((string) ($event['event_uuid'] ?? ''), 0, 8)) ?>…</code></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php else: ?>
+                                    <p class="small text-muted mb-0">No se observaron marcaciones crudas registradas para este trabajador en el periodo seleccionado.</p>
+                                <?php endif; ?>
+                            </div>
+                        </section>
+
+                        <section class="card mb-3" aria-labelledby="modal-schedule-heading-<?= (int) $row['worker_id'] ?>">
+                            <div class="card-body">
+                                <h4 class="h6 mb-2" id="modal-schedule-heading-<?= (int) $row['worker_id'] ?>"><i class="ti ti-calendar-time me-1 text-primary" aria-hidden="true"></i>Horarios y Programación de Turnos</h4>
+                                <?php if (!empty($row['shifts']) && is_array($row['shifts'])): ?>
+                                    <ul class="small mb-0">
+                                        <?php foreach ($row['shifts'] as $shift): ?>
+                                            <li>
+                                                <strong><?= $e($shift['dia_semana'] ?? '') ?>:</strong> <?= $e($shift['plantilla'] ?? '') ?> (<?= $e($shift['tipo_asignacion'] ?? '') ?>)
+                                            </li>
                                         <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                        </tbody></table></div>
-                <?php else: ?><p class="mb-0 text-muted">No hay datos de horario consultables en esta respuesta.</p><?php endif; ?>
-            </div>
-        </section>
+                                    </ul>
+                                <?php else: ?>
+                                    <p class="small text-muted mb-0">No hay turnos programados asignados directamente en el periodo consultado.</p>
+                                <?php endif; ?>
+                                <?php if (!empty($comparison['schedules']['days'])): ?>
+                                    <?php foreach ($comparison['schedules']['days'] as $day): ?>
+                                        <?php if (!empty($day['segments'])): ?>
+                                            <?php foreach ($day['segments'] as $segment): ?>
+                                                <?php $offsetTmp = (int) ($segment['end_day_offset'] ?? 0); ?>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </section>
 
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-lg-6">
-                <section class="card h-100" aria-labelledby="incidences-heading">
-                    <div class="card-body">
-                        <h2 class="h5" id="incidences-heading">Incidencias registradas</h2>
-                        <p class="small text-muted">Estado: <?= $e($sourceLabel((string) ($comparison['incidences']['status'] ?? 'unavailable'))) ?>.</p>
-                        <?php if (($comparison['incidences']['items'] ?? []) === []): ?>
-                            <p class="mb-0">No hay incidencias que mostrar en la respuesta consultada; esto no confirma ausencia de otros registros.</p>
-                        <?php else: ?><ul class="mb-0">
-                            <?php foreach ($comparison['incidences']['items'] as $item): ?>
-                                <li><?= $e($incidenceCategoryLabel($item['category'] ?? null)) ?> · <?= $e($item['start_date'] ?? '') ?> a <?= $e($item['end_date'] ?? '') ?> · <?= $e($recordedStatusLabel($item['status'] ?? null)) ?> · revisión <?= (int) ($item['revision'] ?? 0) ?> · <code><?= $e($item['uuid'] ?? '') ?></code></li>
-                            <?php endforeach; ?>
-                        </ul><?php endif; ?>
+                        <section class="card mb-3" aria-labelledby="modal-incidences-heading-<?= (int) $row['worker_id'] ?>">
+                            <div class="card-body">
+                                <h4 class="h6 mb-2" id="modal-incidences-heading-<?= (int) $row['worker_id'] ?>"><i class="ti ti-alert-triangle me-1 text-primary" aria-hidden="true"></i>Incidencias y Evaluaciones</h4>
+                                <?php if (!empty($row['incidences']) && is_array($row['incidences'])): ?>
+                                    <ul class="small mb-0">
+                                        <?php foreach ($row['incidences'] as $inc): ?>
+                                            <li>
+                                                <strong><?= $e($inc['type_label'] ?? $inc['type'] ?? '') ?>:</strong>
+                                                <?= $e($inc['start_date'] ?? '') ?> a <?= $e($inc['end_date'] ?? '') ?> ·
+                                                Estado: <?= $e($recordedStatusLabel($inc['status'] ?? null)) ?> ·
+                                                <code><?= $e(substr((string) ($inc['uuid'] ?? ''), 0, 8)) ?>…</code>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php else: ?>
+                                    <p class="small text-muted mb-0">No hay incidencias registradas en el periodo para este trabajador.</p>
+                                <?php endif; ?>
+                                <p class="small text-muted mb-0 mt-2">No se ejecutó una evaluación de jornada en esta consulta para preservar el alcance de solo lectura.</p>
+                            </div>
+                        </section>
+
+                        <section class="card border-primary" aria-labelledby="modal-assessment-heading-<?= (int) $row['worker_id'] ?>">
+                            <div class="card-body bg-light">
+                                <h4 class="h6 mb-2" id="modal-assessment-heading-<?= (int) $row['worker_id'] ?>"><i class="ti ti-info-circle me-1 text-primary" aria-hidden="true"></i>Dictamen de Comparación</h4>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge rounded-pill <?= $e($row['comparison_status_badge']) ?> fs-7">
+                                        <?= $e($row['comparison_status_label']) ?>
+                                    </span>
+                                </div>
+                                <p class="small mb-1"><strong>Diferencia verificada:</strong> <?= $e($row['difference_summary']) ?></p>
+                                <p class="small text-muted mb-0">Esta consulta es informativa y de solo lectura. No modifica marcaciones, evaluaciones ni recibos, no cierra periodos y no establece consecuencias económicas.</p>
+                            </div>
+                        </section>
                     </div>
-                </section>
-            </div>
-            <div class="col-12 col-lg-6">
-                <section class="card h-100" aria-labelledby="evaluation-heading">
-                    <div class="card-body">
-                        <h2 class="h5" id="evaluation-heading">Evaluaciones y ajustes administrativos vinculados</h2>
-                        <p class="small text-muted">Evaluación existente consultada mediante GET; no se ejecutó una evaluación nueva.</p>
-                        <p class="small">Estado de la fuente: <?= $e($sourceLabel((string) ($comparison['evaluations']['status'] ?? 'unavailable'))) ?>.</p>
-                        <?php if (($comparison['evaluations']['days'] ?? []) !== []): ?><ul class="small mb-2">
-                            <?php foreach ($comparison['evaluations']['days'] as $day): ?>
-                                <li><?= $e($day['date'] ?? '') ?> · <?= $e($sourceLabel((string) ($day['status'] ?? 'unavailable'))) ?><?php if (isset($day['revision'])): ?> · revisión <?= (int) $day['revision'] ?><?php endif; ?><?php if (($day['administrative_status'] ?? '') !== ''): ?> · estado administrativo <?= $e($recordedStatusLabel($day['administrative_status'])) ?><?php endif; ?><?php if (($day['human_review_status'] ?? '') !== ''): ?> · revisión humana <?= $e($recordedStatusLabel($day['human_review_status'])) ?><?php endif; ?></li>
-                            <?php endforeach; ?>
-                        </ul><?php endif; ?>
-                        <p class="small mb-1">Ajustes vinculados: <?= $e($sourceLabel((string) ($comparison['adjustments']['status'] ?? 'unavailable'))) ?>.</p>
-                        <?php if (($comparison['adjustments']['items'] ?? []) !== []): ?><ul class="small mb-0">
-                            <?php foreach ($comparison['adjustments']['items'] as $adjustment): ?><li><code><?= $e($adjustment['uuid'] ?? '') ?></code> · <?= $e($adjustmentTypeLabel($adjustment['type'] ?? null)) ?> · <?= $e($recordedStatusLabel($adjustment['status'] ?? null)) ?></li><?php endforeach; ?>
-                        </ul><?php else: ?><p class="small text-muted mb-0">No hay referencias de ajustes en las evaluaciones consultadas; no se infiere inexistencia fuera de esa respuesta.</p><?php endif; ?>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
-                </section>
+                </div>
             </div>
         </div>
-
-        <section class="card mb-4" aria-labelledby="journey-readonly-heading">
-            <div class="card-body">
-                <h2 class="h5" id="journey-readonly-heading">Jornadas evaluadas</h2>
-                <p class="mb-0"><?= $e($comparison['journeys']['message'] ?? 'No se ejecutó una evaluación de jornada en esta consulta.') ?></p>
-            </div>
-        </section>
-
-        <p class="small text-muted mb-0"><?= $e($comparison['comparison_limit'] ?? '') ?></p>
-    <?php endif; ?>
+    <?php endforeach; ?>
 </div>

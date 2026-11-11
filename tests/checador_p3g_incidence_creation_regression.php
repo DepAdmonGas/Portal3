@@ -19,13 +19,14 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
     $condition ? $passes++ : $fails++;
 };
 
-$mockEnvironmentKeys = ['APP_ENV', 'CHECADOR_API_REAL_POSTS_ENABLED'];
+$mockEnvironmentKeys = ['APP_ENV', 'CHECADOR_API_REAL_POSTS_ENABLED', 'CHECADOR_P3G_B_POSTS_ENABLED'];
 $mockEnvironmentOriginal = [];
 foreach ($mockEnvironmentKeys as $key) {
     $mockEnvironmentOriginal[$key] = [array_key_exists($key, $_ENV), $_ENV[$key] ?? null, getenv($key)];
 }
 $_ENV['APP_ENV'] = 'dev';
 $_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'true'; // All outgoing requests below use explicit Guzzle MockHandlers.
+$_ENV['CHECADOR_P3G_B_POSTS_ENABLED'] = 'true'; // Incidence POST has its own development-only gate.
 
 $makeClient = static function (array $responses, array &$history): Client {
     $stack = HandlerStack::create(new MockHandler($responses));
@@ -186,9 +187,13 @@ $root = dirname(__DIR__);
 $controller = file_get_contents($root . '/app/Controllers/ChecadorController.php') ?: '';
 $access = file_get_contents($root . '/app/Services/ChecadorAccessService.php') ?: '';
 $routes = file_get_contents($root . '/routes/web.php') ?: '';
-$view = file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/index.php') ?: '';
-$assert(str_contains($routes, "'/departamento-operativo/recursos-humanos/checador/incidencias/crear'")
-    && str_contains($routes, "['ChecadorController', 'createIncidence']"), 'authenticated POST route is registered for creation');
+$view = file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php') ?: '';
+$routeDispatcher = \FastRoute\simpleDispatcher(require $root . '/routes/web.php');
+$createPostRoute = $routeDispatcher->dispatch('POST', '/departamento-operativo/recursos-humanos/checador/incidencias/crear');
+$assert(str_contains($routes, "'/recursos-humanos/checador/incidencias/crear'")
+    && str_contains($routes, "['ChecadorController', 'createIncidence']")
+    && ($createPostRoute[0] ?? null) === \FastRoute\Dispatcher::FOUND,
+    'authenticated POST route resolves through the departamento-operativo group');
 $assert(str_contains($access, "INCIDENCE_MODULE_KEY = 'checador-v2-incidencias'")
     && str_contains($access, 'empty($permissions[\'crear\'])')
     && str_contains($access, 'empty($permissions[\'leer\'])'), 'dedicated create ACL and canonical readback ACL are required');
@@ -197,7 +202,8 @@ $assert(str_contains($controller, 'authorizeIncidenceCreate($workplaceId)')
     && str_contains($controller, "(string) (\$readData['scope'] ?? '') === 'WORKER'")
     && str_contains($controller, "(int) (\$firstRevision['revision_number'] ?? 0) === 1")
     && str_contains($controller, "'retry_idempotency_key' => \$idempotencyKey")
-    && str_contains($controller, "(string) (\$input['confirm_create'] ?? '') !== '1'"),
+    && str_contains($controller, '$confirmCreate = (string) ($input[\'confirm_create\'] ?? \'\') === \'1\';')
+    && str_contains($controller, '!$confirmCreate'),
     'controller rechecks create ACL and verifies canonical tuple/history after POST');
 $assert(str_contains($view, 'name="_csrf_token"')
     && str_contains($view, 'name="idempotency_key"')

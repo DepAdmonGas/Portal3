@@ -503,3 +503,125 @@ RESPONSIVE_RUNTIME_VALIDATION: BLOCKED_BY_BROWSER_TOOLING
 The remaining shared-development ACL and browser-tooling items are P2/UAT
 debt only. No P0/P1 finding, schema change, ACL mutation, database change, or
 production action was introduced by this closure.
+
+## M11 administrative device inventory — functional approval record (2026-11-03)
+
+- **Activity:** `CHECADOR_V2_M11_DEVICE_ADMIN_GOVERNANCE_APPROVAL_V1`
+- **Status:** `FUNCTIONAL_APPROVAL_RECORDED; CROSS_PROJECT_APPROVAL_PENDING; IMPLEMENTATION_NOT_AUTHORIZED`
+- **Approval evidence:** The user, acting as the responsible functional approver, expressly approved the development-only scope on 2026-11-03. The approval applies to `docs/v2/CHECADOR_V2_M11_DEVICE_ADMIN_READ_AUTHORIZATION_ADDENDUM_V1.0.md`, SHA-256 `2308c7f39378699822bab2d583193bdfac0246a97f1c1948ec5771458546a639`. The supplied approval did not identify the approver by personal name; none is inferred here.
+- **Approved functional scope:** Read-only development inventory via backend Portal3 → API V2 with delegated user JWT; capability `checador-v2-dispositivos.leer` scoped to Encargado's authorized station and Dirección's institutionally authorized localities; M11 display with institutional components; persisted device state and last telemetry remain separate; station-to-group relation stays optional until verified.
+- **Protected scope:** No device writes, reassignment, activation/deactivation, telemetry changes, production work, extra databases, or commits/pushes. Architecture Freeze V1.0 and J1/J2 are unchanged.
+- **Cross-project gate:** The addendum remains `PROPOSED_FOR_CROSS_PROJECT_APPROVAL` with `Implementation authorized: NO`. No express approval by the Portal3 project owner or API V2 project owner for this exact SHA, and no completed cross-project approval record, was found. This entry records only the functional approval and does not attribute approval to either project owner. No endpoint, runtime integration, ACL grant, data query, or runtime change was started.
+- **Required next step:** The authorized owners of Portal3 and API V2 must each approve this exact addendum SHA through the applicable cross-project governance process. Once that evidence is recorded, the specifically authorized development implementation can be considered without extending scope to writes or production.
+
+## M11 device inventory — cross-project approval (2026-11-03)
+
+- **Activity:** `CHECADOR_V2_M11_CROSS_APPROVAL_AND_IMPLEMENTATION_V1`
+- **Status:** `CROSS_PROJECT_APPROVED; DEVELOPMENT_IMPLEMENTATION_AUTHORIZED`
+- **Approver:** The user expressly states they are the authorized responsible owner for both Portal3 and API V2 and approves in both capacities. No personal name was supplied; none is inferred.
+- **Approved source addendum:** `docs/v2/CHECADOR_V2_M11_DEVICE_ADMIN_READ_AUTHORIZATION_ADDENDUM_V1.0.md`, SHA-256 `2308c7f39378699822bab2d583193bdfac0246a97f1c1948ec5771458546a639`.
+- **Current byte-identical addendum copies:** SHA-256 `5e95682af7d41740095bc1ec925de7a3c112d4cd52c0e16b6abe95b395251c21`. Only governance/authorization wording was updated after approval; the approved read contract scope remains unchanged.
+- **Authorized development scope:** Read-only API endpoint, delegated backend Portal3 M11 integration, and dedicated `checador-v2-dispositivos.leer` grants for Encargado (position 6, own authorized station) and Dirección (position 13, authorized localities). Device status and last telemetry remain separate; station–group relation remains optional.
+- **Excluded:** Device writes or assignment changes, activation/deactivation, credentials, telemetry mutation, schema/migrations, production, POST-gate changes, Level 2 evaluation, Architecture Freeze/J1/J2 changes, extra databases, commit, and push.
+
+## M11 administrative device inventory — development implementation (2026-11-03)
+
+- **Status:** `IMPLEMENTED_AND_VERIFIED_DEVELOPMENT_READ_ONLY` under cross-project owner approval in Entry 058/059 of the API Activity Ledger. Approved source addendum SHA-256 is `2308c7f39378699822bab2d583193bdfac0246a97f1c1948ec5771458546a639`; reconciled identical current copies SHA-256 is `a2f0ad3980032bd992e9aade2aea5f51c9cf141027e7cde64a3d130506f36eb6`.
+- **Implementation:** Portal3 M11 calls API V2 through the server-only delegated JWT boundary and displays inventory through its existing DataTables stack. The browser receives no API URL or JWT. The table separates persisted state, assignment history and latest telemetry; it does not derive connectivity. Group remains unavailable until an institutional relation is verified.
+- **ACL:** Dedicated read grant `checador-v2-dispositivos.leer` is active for positions 6 and 13 in development only. Position 6 remains limited to its one authorized station; position 13 uses only its current institutional locality scope. No broad Biométricos capability or write gate was changed.
+- **Real read evidence:** Portal and API target `bd_admongas` through loopback development configuration. API returned 2 Interlomas devices for user 33/position 6 and 3 devices within user 19/position 13 scope. An explicit unauthorized locality filter returned 403 with no device rows.
+- **Chrome:** Authenticated Playwright read checks passed for Encargado and Dirección at 1440, 768 and 375 px. DataTables loaded real API data through Portal3 same-origin BFF; no direct API browser requests, writes, page errors or unauthorized locality rows were observed. Screenshots are retained under `/home/silvinol/.local/state/portal3-e2e/artifacts/candidate-screenshots/` in task-specific folders.
+- **Validation:** API projection tests 11/11 PASS; focused M11 Playwright 2/2 PASS; PHP and JavaScript syntax checks PASS. The database returned `COMPLETE` for the current authorized reads; ambiguous/partial cases are covered by isolated projection tests.
+- **Preserved:** No device/assignment/credential/telemetry mutation, DDL, production, global POST gate, Architecture Freeze, J1/J2, Lector, commit or push changes.
+
+## M04 global-template station customization — cross-project approval (2026-11-04)
+
+- **Activity:** `CHECADOR_V2_M04_GLOBAL_TEMPLATE_CUSTOMIZATION_APPROVAL_V1`
+- **Status:** `CROSS_PROJECT_APPROVED; DEVELOPMENT_IMPLEMENTATION_AUTHORIZED`
+- **Approver:** The user expressly identified themselves as responsible owner of Portal3 and API V2 and approved in both capacities; no personal name is inferred.
+- **Approved source addendum:** `docs/v2/CHECADOR_V2_M04_GLOBAL_TEMPLATE_STATION_CUSTOMIZATION_ADDENDUM_V1.0.md`, SHA-256 `96744a64edecbde0a63fa5c55756b44e56d03dabbd00e61f8c89acc443a1846b`.
+- **Scope:** Development-only local copy of an exact visible global version, immutable lineage and station/source uniqueness through existing API template write/version flow. Encargado remains restricted to their authorized station; Dirección remains read-only. No assignments, global source rows, production, Architecture Freeze/J1/J2, Legacy, Lector, Journey or PunchEvents are modified.
+- **Reconciled copies:** The approval/status metadata was reconciled identically in both addenda after approval; current SHA-256 is `651a8b963f39d60663999e12c962fee0ec1ac4a6325b27ac55b7902d923a854e`. The approved source SHA remains recorded above; functional scope is unchanged.
+
+## M04 global template customization — implementation (2026-11-04)
+
+- **Status:** `IMPLEMENTED_AND_VERIFIED_DEVELOPMENT_QA`; this is a scoped M04 feature result, not module-wide acceptance.
+- **Approval:** Cross-project implementation approved for the source addendum SHA `96744a64edecbde0a63fa5c55756b44e56d03dabbd00e61f8c89acc443a1846b`. Identical reconciled copies are SHA-256 `651a8b963f39d60663999e12c962fee0ec1ac4a6325b27ac55b7902d923a854e`. Freeze/J1/J2 were not modified.
+- **Implementation:** M04 exposes a global-row action to create a local copy and retains the existing versioned edit action for a local row. Portal3 uses its existing authenticated server-side API client, CSRF-protected station-scoped route, Alpine/Axios handler and DataTables instance. Direction remains read-only.
+- **QA evidence:** Chrome Encargado user 33 customized global template `LEGACY_IL1_200000_060000` version 1 for Interlomas. API returned 201; Portal3 verified exact-detail and catalog readback before reporting success. The repeated request returned the same local identity (200) without a second customization. A local version edit produced version 2 while retaining the same immutable source lineage. Foreign-station and Dirección writes returned 403. Chrome Dirección confirmed read-only presentation. Focused E2E passed for both profiles at 1440, 768 and 375 px; screenshots are in `/home/silvinol/.local/state/portal3-e2e/artifacts/candidate-screenshots/m04-global-template-customization-20261104`.
+- **Preserved:** Global source remains unchanged; the existing six assignments were not changed; no original PunchEvent, production data, Legacy writer, global POST gate, or extra database was touched. Human visual approval remains pending.
+
+## M04 Horarios y turnos — cierre formal de QA (2026-11-04)
+
+- **Activity:** `CHECADOR_V2_M04_FORMAL_CLOSURE_V1`
+- **Status:** `M04_CLOSED_FUNCTIONAL_QA`
+- **Approval:** El responsable aprobó formalmente el cierre funcional y visual de M04. `FUNCTIONAL_APPROVAL: YES`; `VISUAL_APPROVAL: YES`; `PRODUCTION_APPROVAL: NO`. Esta aprobación final sustituye las notas históricas de aprobación visual pendiente en las entradas de implementación anteriores.
+- **Environment:** La aceptación se limita a desarrollo local `bd_admongas`; no constituye aprobación o verificación de producción.
+- **Capabilities covered:** Consulta del catálogo global y local; creación de turnos locales; edición mediante nuevas versiones; personalización local de una plantilla global con referencia de origen inmutable y prevención de duplicados; segmentos de trabajo y descanso explícito; turnos nocturnos; permisos de Encargado limitados a su estación y Dirección en lectura; tabla DataTables, búsqueda, paginación, acciones y presentación institucional responsive.
+- **Evidence retained:** Regresiones focalizadas M04 de personalización (13/13 en el cierre visual más reciente), regresión de versionado local (3/3), pruebas de API y autorización del registro de implementación (11/11 y 23/23), y Playwright autenticado reciente para Encargado y Dirección (2/2, 1440/768/375). Las capturas candidatas existentes se conservan en `/home/silvinol/.local/state/portal3-e2e/artifacts/candidate-screenshots/`; no se repitieron pruebas para este registro de aprobación.
+- **QA and data preservation:** Se conservan las plantillas y asignaciones QA existentes con su trazabilidad. Las 12 plantillas globales originales, la procedencia de la personalización local y las asignaciones existentes permanecen intactas según los readbacks registrados. No se modificaron Freeze, J1/J2, API, migraciones, permisos ni datos durante este cierre.
+- **Next module:** `M03_PROGRAMACION_SEMANAL`.
+
+## M03 Programación semanal de turnos — cierre oficial (2026-11-05)
+
+```yaml
+PROJECT: CHECADOR_V2
+MODULE: M03_PROGRAMACION_SEMANAL
+STATUS: CLOSED
+OWNER_APPROVAL: YES
+OWNER_APPROVAL_DATE: 2026-11-05
+FUNCTIONAL_STATUS: OWNER_APPROVED
+VISUAL_STATUS: OWNER_APPROVED
+ENVIRONMENT: DEVELOPMENT_ONLY
+```
+
+- **Aprobación:** El responsable del proyecto aprobó expresamente el diseño y funcionamiento actuales de M03 el 2026-11-05. El cierre cubre exclusivamente desarrollo y no representa aprobación de producción.
+- **Funcionalidades aprobadas:** consulta del personal existente de Interlomas; asignación inicial habitual, incluso con inicio a mitad de semana; recurrencia semanal de lunes a domingo; descansos explícitos; cambios permanentes versionados; cambios temporales y retorno al horario habitual; conservación de historial y vigencias; aislamiento de permisos de Encargado y Dirección; interfaz responsive institucional; y etiquetas limpias en selectores de trabajador y turno, sin IDs visibles ni nomenclatura técnica `Legacy`, `v1` o `v2`.
+- **Evidencia conservada:** se mantienen las referencias de validación y regresión ya registradas en los artefactos de M03, incluida `tests/checador_m03_schedule_capture_regression.php`. La aprobación funcional y visual de este registro es la aprobación expresa del responsable; no se generaron nuevas pruebas para efectuar este registro.
+- **Seguimiento técnico separado:** este cierre no cambia ni declara resueltas observaciones técnicas registradas en sus documentos de seguimiento, incluidas las relacionadas con concurrencia/atomicidad y completitud de lecturas de asignaciones. Permanecen como seguimiento independiente y no alteran el estado de aprobación del módulo en el alcance expresamente aprobado.
+- **Gobierno del módulo:** M03 queda cerrado para cambios funcionales o visuales no solicitados. Una nueva modificación requiere una solicitud específica del responsable. No se cambian aquí estados de otros módulos.
+
+## M04 — Catálogo local independiente para Autolavado (2026-11-05)
+
+- **Activity:** `CHECADOR_V2_M04_AUTOLAVADO_ACTIVACION_FUNCIONAL`
+- **Alcance autorizado:** adaptar exclusivamente la lectura y administración de plantillas M04 para Autolavado, localidad canónica 9 (`numlista=10`), mediante las tablas y el modelo `STATION` existentes. No se amplían las asignaciones M03, los demás departamentos, los permisos efectivos ni la administración de plantillas globales.
+- **Decisión funcional registrada:** Autolavado conserva un catálogo local separado de Palo Solo (localidad 2, `numlista=1`). No se copian turnos entre ambos ámbitos. La selección departamental se valida por alcance explícito; no se interpreta `tb_estaciones.id=9` como Autolavado.
+- **Implementación:** Portal3 mantiene la selección institucional, aplica autorización de lectura M04 para el departamento autorizado y enruta la administración local al escritor existente. API V2 revalida permiso y alcance para lista, detalle, creación y versionado; en el catálogo departamental filtra estrictamente `STATION` de localidad 9. No se habilita personalización de plantillas globales en este ámbito. Dirección conserva lectura.
+- **Esquema y datos:** no se crearon tablas, columnas ni migraciones. Lectura de desarrollo observada: 12 plantillas globales, 7 locales en Palo Solo y 0 locales en Autolavado antes de la prueba; no se ejecutaron escrituras ni se alteró ningún turno.
+- **Validación:** sintaxis PHP y regresiones estáticas focalizadas Portal3 7/7 y API 12/12 PASS; autorización API 23/23 y personalización global 11/11 PASS; regresiones Portal3 de autorización 57/57 y M03 53/53 PASS. Chrome autenticado como Dirección mostró Autolavado seleccionado, el estado vacío del catálogo local y ninguna acción de escritura. La creación/edición real desde Chrome y el readback posterior permanecen sin verificar porque no hubo sesión Encargado disponible; no se presenta como persistencia probada.
+- **Protegido:** Palo Solo, M03, asignaciones, ACL/grants, datos, producción, Architecture Freeze, J1/J2 y M04 layout. Sin commit ni push.
+
+## Autolavado — acceso Checador M04 y precondiciones M03 (2026-11-05)
+
+- **Activity:** `CHECADOR_V2_AUTOLAVADO_M03_M04_ACCESS_FIX`
+- **M04 card:** La tarjeta utiliza `authorizeM04TemplateRead()` para el departamento seleccionado. El contexto Autolavado se conserva al abrir la ruta institucional M04. Las operaciones de administración siguen detrás del permiso específico `checador.turnos.estacion.administrar` y el alcance del departamento explícito.
+- **M03 card/backend:** La tarjeta M03 no se abre para Autolavado mientras falte la precondición de fecha/localidad del backend. La ruta muestra el estado no disponible para departamentos; no consulta ni mezcla las asignaciones de Palo Solo. El API permite resolver únicamente localidad 9 si existe el permiso efectivo M03 y el scope departamental explícito, y valida que un eventual horario asignado pertenezca a una plantilla `STATION` de localidad 9.
+- **Bloqueo real observado:** La lectura local de `op_rh_v2_localidades_zonas_horarias` no encontró una fila para localidad 9. Sin zona horaria laboral autoritativa no se puede validar membresía y vigencias por fecha local. No se asumió `America/Mexico_City`, no se creó la fila y no se habilitó el acceso operativo M03.
+- **Validación:** Portal3 focalizado: regresión Autolavado 9/9, autorización Checador 57/57 y M03 capture 53/53 PASS; sintaxis PHP y `git diff --check` PASS. API focalizado: autorización 23/23, plantilla global local 11/11 y alcance Autolavado/M03 19/19 PASS; sintaxis y diff check PASS. Chrome autenticado como Dirección abrió M04 con Autolavado seleccionado y catálogo local vacío, sin acción de escritura. No hubo sesión Encargado disponible, por lo que el botón Nuevo/POST de Encargado no se validó en navegador y no se ejecutó ninguna escritura.
+- **Datos y módulos protegidos:** cero cambios de base de datos, plantillas, membresías o asignaciones. Palo Solo conserva su catálogo y flujo actuales. Dirección continúa en solo lectura. Sin cambios a M04 de Palo Solo, Architecture Freeze, J1/J2, producción o permisos globales; sin commit ni push.
+
+## 2026-11-06 — M07 Temporary Access Operation Permission Split Approval
+
+- **Activity:** `CHECADOR_V2_PIN_TEMPORAL_IMPLEMENTACION_FINAL_APROBADA`
+- **Contract approval:** Cross-project approval expressly granted for Portal3 and API V2 by the responsible user for addendum SHA-256 `87916221327e3f36195288213e5d941792d5a5e70bd90ef450fa9b87f34f7cc5`.
+- **Authorized scope:** Development only. `leer` reads; `crear` authorizes; `eliminar` cancels; `editar` rejects. Existing `editar` compatibility remains only for profiles already effectively authorized. Encargado Palo Solo is authorized to read/authorize/cancel and not reject; Dirección is read-only; Autolavado remains out of scope.
+- **Implementation authorization:** YES for the exact approved addendum and development environment. No production, schema, migration, M02/M03/M04, or unrelated ACL change is authorized.
+- **Evidence:** Approval was recorded without changing the substantive addendum content. Implementation and validation results are to be added after the authorized development slice completes.
+
+### M07 — PIN temporal, permisos por operación (2026-11-06)
+
+- **Aprobación:** Addendum cruzado aprobado para ambos proyectos; SHA-256 `87916221327e3f36195288213e5d941792d5a5e70bd90ef450fa9b87f34f7cc5`. El contenido sustantivo se conservó.
+- **Portal3:** autorización de servidor por operación y formularios visibles solo para `crear` (autorizar) y `eliminar` (cancelar); `editar` (rechazar) no aparece para el Encargado con `editar=0`. Se añadió `CHECADOR_TEMPORARY_ACCESS_POSTS_ENABLED`, gate local exclusivo de las rutas M07; la configuración `.env` de desarrollo lo habilita sin activar `CHECADOR_API_REAL_POSTS_ENABLED` ni el gate de M03.
+- **API V2:** validación independiente de `leer`, `crear`, `eliminar` y `editar`; compatibilidad de `editar` se conserva solo conforme al addendum. No hubo cambios de ruta, esquema, migración, autenticación de dispositivo ni contratos congelados.
+- **ACL local:** se actualizó únicamente el grant preexistente de usuario 52 en `acceso-temporal` a `leer=1, crear=1, editar=0, eliminar=1, descargar=0`. Readback: user 19 Dirección conserva `leer=1` y los demás flags en 0. Configuración conserva allowlist `[2]`, `allow_all=0`; Autolavado sigue excluido. Los diez apartados RH y los módulos existentes comparados no cambiaron.
+- **Validación:** Portal3 M07 regresiones 16/16, UI 8/8, feedback PIN 16/16, access foundation 57/57 y POST-gate isolation 18/18 PASS. API `sec_l03_authorization_regression.php` 40/40 PASS y sintaxis PHP PASS. Lectura API local real: HTTP 200, cola vacía para Encargado 52 y Dirección 19. POST directo real de rechazo con JWT de Encargado: HTTP 403 `FUNCTION_PERMISSION_DENIED`.
+- **Pendiente de evidencia:** no había solicitud legítima del Lector en la cola; por ello autorizar/cancelar con readback de estado y auditoría no se ejecutaron. Chrome autenticado tampoco estuvo disponible. No se simularon solicitudes ni se realizaron transiciones.
+- **Protegido:** sin cambios en M02/M03/M04, producción, permisos de otros perfiles, grants de puesto, tablas o migraciones; sin commit ni push.
+
+### M07 — alcance general de estaciones y separación de IDs (2026-11-06)
+
+- **Corrección focalizada:** la autorización de Portal3/API V2 conserva las localidades canónicas para decisiones de alcance; al filtrar filas de solicitud M07, API V2 utiliza los IDs de estación física del lector, que es el espacio persistido en `op_rh_v2_solicitudes_acceso_temporal.id_estacion`. El mapeo se obtiene de la relación institucional vigente y falla cerrado si no es unívoco o la estación no está autorizada.
+- **Reutilización general:** el mecanismo sigue configurado por ACL y allowlist efectiva por módulo. No se habilitaron todas las estaciones ni se añadieron IDs fijos al flujo. Ninguna otra concesión de permisos o cambio de configuración se realizó en esta corrección.
+- **Evidencia:** `tests/sec_l03_authorization_regression.php` 42/42 PASS; PHP lint y `git diff --check` PASS. La lectura API local reportada para Encargado 52 y Dirección 19 respondió HTTP 200 con cola vacía; los POST de rechazo no autorizado para Encargado y autorización para Dirección respondieron 403. No hubo solicitudes legítimas pendientes, por lo que no se ejecutaron autorización/cancelación ni auditorías de transición.
+- **Límite contractual:** una solicitud conserva dispositivo, estación física anfitriona, referencia externa e identidad personal resuelta; no persiste una localidad efectiva del trabajador. La identidad externa está ligada al dispositivo y no resuelve localidad. El lector compartido Palo Solo/Autolavado no puede atribuir de forma inequívoca una solicitud a localidad 2 o 9 bajo el contrato/modelo actual. Autolavado permanece excluido; habilitarlo requiere aprobación cruzada de una extensión contractual que defina y persista esa atribución, no basta con ampliar el ACL.
+- **Verificación de interfaz:** no se encontró código fuente ejecutable del proyecto Lector en el checkout inspeccionado y Chrome no tenía una sesión autenticada abierta para este recorrido. El E2E completo Lector→API→Portal3 y la presentación Chrome quedan `NOT_TESTED`; no se generaron solicitudes ni PIN sintéticos.

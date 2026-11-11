@@ -202,7 +202,7 @@ $unavailable = $make('incidence_service_unavailable')->lifecycleAction(
 $assert(($unavailable['error']['kind'] ?? '') === 'api_unavailable', 'simulated service outage fails without applying an action');
 
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$incidenceViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php');
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $formatterSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorPresentationFormatter.php');
 $authGuardAt = strpos($controllerSource, 'ChecadorAccessService::authorizeLifecycle($workplaceId, $action)');
@@ -211,11 +211,11 @@ $readbackAt = is_int($serviceCallAt)
     ? strpos($controllerSource, '$reader->readIncidence($user, $uuidIncidencia)', $serviceCallAt)
     : false;
 $assert(is_int($authGuardAt) && is_int($serviceCallAt) && $authGuardAt < $serviceCallAt
-    && str_contains($viewSource, "!empty(\$lifecyclePermissions['resolve'])")
-    && str_contains($viewSource, 'Demostración sintética: estas acciones sólo cambian el historial local')
-    && str_contains($viewSource, 'ChecadorPresentationFormatter::incidenceStatusLabel')
+    && str_contains($incidenceViewSource, "!empty(\$lifecyclePermissions['resolve'])")
+    && str_contains($incidenceViewSource, 'lifecycleFeedback')
+    && str_contains($incidenceViewSource, 'ChecadorPresentationFormatter::incidenceStatusLabel')
     && str_contains($formatterSource, "'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta; pendiente de autorización'")
-    && str_contains($controllerSource, 'Acción confirmada en el historial sintético')
+    && str_contains($controllerSource, 'Acción confirmada en el historial sintético; no modifica información operativa.')
     && is_int($readbackAt) && $serviceCallAt < $readbackAt,
     'real per-action ACL remains before the provider, successful actions require canonical readback, and demo outcomes are labelled in Spanish');
 $assert(str_contains(file_get_contents(__DIR__ . '/../app/Core/Route.php'), "['auth', 'csrf']")

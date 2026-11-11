@@ -13,6 +13,17 @@ puedeEditar: false,
 puedeEliminar: false,
 puedeDescargar: false,
 nombreEstacionActual: '',
+baselineBusy: false,
+baselinePreview: null,
+baselineImportResult: null,
+baselineError: '',
+baselineAllowedWorkplaceIds: [],
+baselineDefaultWorkplaceId: 0,
+baselineWorkplaceId: 0,
+baselineEffectiveFromUtc: '',
+baselineReasonText: '',
+baselineSelectedWorkerIds: [],
+confirmBaselineRoster: false,
 
 modoForm: 'agregar',
 personalId: 0,
@@ -82,6 +93,12 @@ this.puedeEliminar = c.dataset.puedeEliminar === 'true';
 this.puedeDescargar = c.dataset.puedeDescargar === 'true';
 this.esMultiestacion = c.dataset.multiestacion === 'true';
 this.idEstacionActual = parseInt(c.dataset.idEstacion || '0');
+try {
+this.baselineAllowedWorkplaceIds = JSON.parse(c.dataset.baselineWorkplaceIds || '[]').map(Number).filter(Number.isInteger);
+} catch (e) {
+this.baselineAllowedWorkplaceIds = [];
+}
+this.baselineDefaultWorkplaceId = parseInt(c.dataset.baselineCurrentWorkplaceId || '0');
 
 this.cargarPuestos();
 this.cargarEstaciones();
@@ -139,6 +156,134 @@ this.haSeleccionado = true;
 this.actualizarNombreEstacion();
 
 window.controlDocsComponentInstance = this;
+},
+
+selectedBaselineWorkplaceId() {
+var selector = document.getElementById('module-station-selector-control-documentos-personal');
+if (selector && selector.value) {
+if (!selector.value.startsWith('estacion_')) return 0;
+var selected = parseInt(selector.value.slice('estacion_'.length));
+return Number.isInteger(selected) ? selected : 0;
+}
+return this.baselineDefaultWorkplaceId;
+},
+
+canRunChecadorBaseline() {
+var workplaceId = this.selectedBaselineWorkplaceId();
+return this.puedeEditar && workplaceId > 0 && this.baselineAllowedWorkplaceIds.includes(workplaceId);
+},
+
+clearBaselinePreview() {
+this.baselinePreview = null;
+this.baselineImportResult = null;
+this.baselineError = '';
+this.baselineSelectedWorkerIds = [];
+this.confirmBaselineRoster = false;
+},
+
+abrirChecadorBaseline() {
+if (!this.canRunChecadorBaseline()) return;
+this.baselineWorkplaceId = this.selectedBaselineWorkplaceId();
+this.baselineEffectiveFromUtc = this.baselineWorkplaceId === 1 ? '2026-11-06T06:00:00Z' : '';
+this.baselineReasonText = '';
+this.clearBaselinePreview();
+bootstrap.Modal.getOrCreateInstance(document.getElementById('checadorMembershipBaselineModal')).show();
+},
+
+baselineSelectionPreviewMatches() {
+if (!this.baselinePreview || !this.baselinePreview.requires_worker_selection) return true;
+var selected = (this.baselineSelectedWorkerIds || []).map(Number).filter(Number.isInteger).sort(function(a, b) { return a - b; });
+var previewed = (this.baselinePreview.selected_worker_ids || []).map(Number).filter(Number.isInteger).sort(function(a, b) { return a - b; });
+return JSON.stringify(selected) === JSON.stringify(previewed);
+},
+
+onBaselineWorkerSelectionChange() {
+this.confirmBaselineRoster = false;
+this.baselineImportResult = null;
+},
+
+async previewChecadorBaseline() {
+if (this.baselineBusy || !this.canRunChecadorBaseline() || this.baselineWorkplaceId !== this.selectedBaselineWorkplaceId()) return;
+var selectedIds = this.baselineWorkplaceId === 9 && this.baselineSelectedWorkerIds.length
+? this.baselineSelectedWorkerIds.map(Number).filter(Number.isInteger).sort(function(a, b) { return a - b; })
+: null;
+this.baselineBusy = true;
+this.baselinePreview = null;
+this.baselineImportResult = null;
+this.baselineError = '';
+this.confirmBaselineRoster = false;
+try {
+var payload = {
+workplace_id: this.baselineWorkplaceId,
+valid_from_utc: this.baselineEffectiveFromUtc
+};
+if (this.baselineWorkplaceId === 9) {
+payload.reason = this.baselineReasonText.trim();
+if (selectedIds !== null) payload.selected_worker_ids = selectedIds;
+}
+var response = await axios.post('/departamento-operativo/recursos-humanos/control-documentos-personal/checador-membership-preview', payload);
+this.baselinePreview = response.data.data || null;
+this.baselineSelectedWorkerIds = (this.baselinePreview?.selected_worker_ids || []).map(Number).filter(Number.isInteger);
+this.baselineError = response.data.success ? '' : (response.data.message || 'La vista previa no está disponible.');
+} catch (error) {
+var payload = error && error.response ? error.response.data : null;
+if (payload && payload.data) this.baselinePreview = payload.data;
+this.baselineSelectedWorkerIds = (this.baselinePreview?.selected_worker_ids || []).map(Number).filter(Number.isInteger);
+if (!this.baselinePreview) {
+this.baselineError = payload && payload.message ? payload.message : 'No se pudo completar la vista previa autorizada.';
+this.notify('error', this.baselineError);
+}
+} finally {
+this.baselineBusy = false;
+}
+},
+
+async importChecadorBaseline() {
+if (this.baselineBusy || !this.canRunChecadorBaseline()
+    || !this.baselinePreview || !this.baselinePreview.ready_to_import
+    || !this.baselineSelectionPreviewMatches()
+    || (!this.baselinePreview.is_interlomas && !this.confirmBaselineRoster)) return;
+var confirmationText = this.baselinePreview.is_interlomas
+? 'Se registrarán exactamente los 41 trabajadores autorizados de Interlomas desde 2026-11-06 06:00 UTC. No se crearán horarios.'
+: (this.baselinePreview.requires_worker_selection
+? 'Se registrarán únicamente los IDs ' + (this.baselinePreview.selected_worker_ids || []).join(', ') + ' de ' + (this.baselinePreview.locality_reference?.locality || 'la estación seleccionada') + ' desde ' + this.baselinePreview.valid_from_utc + '. Motivo: ' + (this.baselinePreview.reason || '') + '. No se crearán horarios.'
+: 'Se registrará únicamente el conjunto mostrado para ' + (this.baselinePreview.locality_reference?.locality || 'la estación seleccionada') + ' desde ' + this.baselinePreview.valid_from_utc + '. No se crearán horarios.');
+var confirmation = await Swal.fire({
+icon: 'warning',
+title: 'Confirmar incorporación inicial',
+text: confirmationText,
+showCancelButton: true,
+confirmButtonText: 'Registrar membresías',
+cancelButtonText: 'Cancelar',
+reverseButtons: true
+});
+if (!confirmation.isConfirmed) return;
+
+this.baselineBusy = true;
+this.baselineError = '';
+try {
+var payload = {
+workplace_id: this.baselinePreview.workplace_id,
+candidate_count: this.baselinePreview.candidate_count,
+candidate_fingerprint: this.baselinePreview.candidate_fingerprint,
+source_fingerprint: this.baselinePreview.source_fingerprint,
+valid_from_utc: this.baselinePreview.valid_from_utc,
+confirm_roster: this.confirmBaselineRoster
+};
+if (this.baselinePreview.requires_worker_selection) {
+payload.selected_worker_ids = this.baselinePreview.selected_worker_ids;
+payload.full_candidate_fingerprint = this.baselinePreview.full_candidate_fingerprint;
+}
+var response = await axios.post('/departamento-operativo/recursos-humanos/control-documentos-personal/checador-membership-import', payload);
+this.baselineImportResult = response.data || null;
+this.notify('success', response.data.message || 'La importación fue verificada.');
+} catch (error) {
+var payload = error && error.response ? error.response.data : null;
+this.baselineError = payload && payload.message ? payload.message : 'No se confirmó la importación. Genera una vista previa nueva y verifica el historial.';
+this.notify('error', this.baselineError);
+} finally {
+this.baselineBusy = false;
+}
 },
 
 obtenerEstacionActual() {
@@ -294,6 +439,7 @@ cartasPenales.style.display = (nombrePuesto === 'Despachador') ? 'block' : 'none
 },
 
 async guardarPersonal() {
+if (this.guardando) return;
 this.clearErrors();
 var hasError = false;
 
@@ -341,6 +487,19 @@ var url = this.modoForm === 'agregar'
 ? '/departamento-operativo/recursos-humanos/control-documentos-personal/add'
 : '/departamento-operativo/recursos-humanos/control-documentos-personal/edit';
 
+var requestHeaders = {};
+if (this.modoForm === 'agregar') {
+    try {
+        requestHeaders['Idempotency-Key'] = await this.idempotencyKeyFor(data);
+    } catch (keyError) {
+        var keyMessage = keyError && String(keyError.message || '').includes('still pending')
+            ? 'Hay un alta pendiente. Reintenta con los datos y documentos originales antes de iniciar otra.'
+            : 'No se pudo preparar una clave segura para el alta. Actualiza el navegador e inténtalo de nuevo.';
+        this.notify('error', keyMessage);
+        return;
+    }
+}
+
 if (this.modoForm === 'editar') {
 data.append('id', this.personalId);
 }
@@ -348,20 +507,75 @@ data.append('id', this.personalId);
 var resp = await axios({
 method: 'POST',
 url: url,
-data: data
+data: data,
+headers: requestHeaders
 });
 
 this.handleResponse(resp, '#tabla-control-docs');
 if (resp.data.success) {
+if (this.modoForm === 'agregar') {
+    try { sessionStorage.removeItem('portal3:control-docs:direct-create-operation'); } catch (e) {}
+}
 bootstrap.Modal.getInstance(document.getElementById('modalAgregarPersonal'))?.hide();
 if (window.tablaControlDocs) window.tablaControlDocs.ajax.reload(null, false);
 if (window.tablaControlDocsInactivos) window.tablaControlDocsInactivos.ajax.reload(null, false);
 }
 } catch (err) {
-this.notify('error', 'Error al guardar');
+var status = err && err.response ? err.response.status : 0;
+var serverMessage = err && err.response && err.response.data ? err.response.data.message : '';
+if (this.modoForm === 'agregar' && status >= 400 && status < 500 && status !== 409) {
+    try { sessionStorage.removeItem('portal3:control-docs:direct-create-operation'); } catch (e) {}
+}
+this.notify('error', serverMessage || (status === 409
+    ? 'La clave de esta operación ya se usó con otros datos. Recupera la solicitud original antes de iniciar otra alta.'
+    : (status === 403 ? 'No tienes autorización para esta localidad.' : 'Error al guardar')));
 } finally {
 this.guardando = false;
 }
+},
+
+async idempotencyKeyFor(formData) {
+    if (!window.crypto || !window.crypto.subtle || !window.crypto.getRandomValues) {
+        throw new Error('Secure browser crypto is required.');
+    }
+    var payload = [];
+    for (var [key, value] of formData.entries()) {
+        if (value instanceof File) {
+            if (value.size > 0) {
+                var fileDigest = await window.crypto.subtle.digest('SHA-256', await value.arrayBuffer());
+                var fileFingerprint = Array.from(new Uint8Array(fileDigest)).map(function(byte) {
+                    return byte.toString(16).padStart(2, '0');
+                }).join('');
+                payload.push([key, value.name, value.size, value.lastModified, fileFingerprint]);
+            }
+        } else {
+            payload.push([key, String(value)]);
+        }
+    }
+    payload.sort(function(a, b) { return String(a[0]).localeCompare(String(b[0])); });
+    var bytes = new TextEncoder().encode(JSON.stringify(payload));
+    var digest = await window.crypto.subtle.digest('SHA-256', bytes);
+    var fingerprint = Array.from(new Uint8Array(digest)).map(function(value) {
+        return value.toString(16).padStart(2, '0');
+    }).join('');
+    var storageKey = 'portal3:control-docs:direct-create-operation';
+    var saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem(storageKey) || 'null'); } catch (e) {}
+    if (saved && typeof saved.key === 'string') {
+        if (saved.fingerprint !== fingerprint) {
+            throw new Error('A direct-create operation is still pending; retry its original payload before changing it.');
+        }
+        return saved.key;
+    }
+
+    var bytesKey = new Uint8Array(16);
+    window.crypto.getRandomValues(bytesKey);
+    bytesKey[6] = (bytesKey[6] & 0x0f) | 0x40;
+    bytesKey[8] = (bytesKey[8] & 0x3f) | 0x80;
+    var hex = Array.from(bytesKey).map(function(value) { return value.toString(16).padStart(2, '0'); }).join('');
+    var key = hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
+    sessionStorage.setItem(storageKey, JSON.stringify({ key: key, fingerprint: fingerprint }));
+    return key;
 },
 
 confirmarEliminar(id, nombre) {

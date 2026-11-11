@@ -6,6 +6,8 @@ data-puede-editar="<?= $puedeEditar ? 'true' : 'false' ?>"
 data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
 data-puede-descargar="<?= $puedeDescargar ? 'true' : 'false' ?>"
 data-nombre-puesto="<?= $nombrePuesto ?>"
+data-baseline-workplace-ids="<?= htmlspecialchars(json_encode($baselineWorkplaceIds ?? [], JSON_THROW_ON_ERROR), ENT_QUOTES, 'UTF-8') ?>"
+data-baseline-current-workplace-id="<?= (int) ($baselineCurrentWorkplaceId ?? 0) ?>"
 data-module-station-key="control-documentos-personal"
 x-data="{ ...actions(), ...controlDocsComponent() }">
 
@@ -21,20 +23,114 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 <div class="row">
 
 <!---------- BOTON DE ACCION ---------->
-<template x-if="puedeCrear">
+<template x-if="puedeCrear || canRunChecadorBaseline()">
 <div class="col-12 mb-3">
 <div class="dropdown float-end">
 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
 <i class="ti ti-tools"></i>
 </button>
 <ul class="dropdown-menu">
+<template x-if="puedeCrear">
 <li><a class="dropdown-item pointer" @click="abrirModalAgregar()"><i class="ti ti-plus me-1"></i> Agregar Personal</a></li>
+</template>
+<template x-if="puedeCrear">
 <li><a class="dropdown-item pointer" href="/departamento-operativo/recursos-humanos/control-documentos-personal-excel"><i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel</a></li>
+</template>
+<template x-if="puedeCrear">
 <li><a class="dropdown-item pointer" href="/departamento-operativo/recursos-humanos/control-documentos-personal-kpi/<?= date('Y') ?>"><i class="ti ti-chart-column me-1"></i> Evaluacion Personal (KPIs)</a></li>
+</template>
+<template x-if="canRunChecadorBaseline()">
+<li><button type="button" class="dropdown-item" @click="abrirChecadorBaseline()"><i class="ti ti-users-plus me-1"></i> Incorporar membresías de Checador</button></li>
+</template>
 </ul>
 </div>
 </div>
 </template>
+
+<div class="modal fade" id="checadorMembershipBaselineModal" tabindex="-1" aria-labelledby="checadorMembershipBaselineTitle" aria-hidden="true">
+<div class="modal-dialog modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header modal-colored-header bg-primary text-white">
+<h5 class="modal-title text-white" id="checadorMembershipBaselineTitle"><i class="ti ti-users-plus me-2"></i>Incorporación inicial de membresías</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+<div class="modal-body">
+<p class="mb-3">La vista previa muestra al personal activo sin historial de membresía. Sólo registra la adscripción prospectiva; no crea horarios.</p>
+<div class="mb-3">
+<label for="checador-baseline-cutoff" class="form-label">Fecha efectiva UTC (ISO 8601)</label>
+<input id="checador-baseline-cutoff" type="text" class="form-control" x-model="baselineEffectiveFromUtc" @input="clearBaselinePreview()" :readonly="baselineWorkplaceId === 1" placeholder="YYYY-MM-DDTHH:mm:ssZ" autocomplete="off" aria-describedby="checador-baseline-cutoff-help">
+<div id="checador-baseline-cutoff-help" class="form-text" x-show="baselineWorkplaceId !== 1">Elige un corte futuro confirmado para esta estación. Usa el formato exacto YYYY-MM-DDTHH:mm:ssZ.</div>
+<div class="form-text" x-show="baselineWorkplaceId === 1">Interlomas conserva el corte previamente autorizado: 2026-11-06T06:00:00Z.</div>
+</div>
+<div class="mb-3" x-show="baselineWorkplaceId === 9">
+<label for="checador-baseline-reason" class="form-label">Motivo RH</label>
+<textarea id="checador-baseline-reason" class="form-control" rows="2" maxlength="500" x-model="baselineReasonText" @input="clearBaselinePreview()" placeholder="Escribe el motivo confirmado por RH" aria-describedby="checador-baseline-reason-help"></textarea>
+<div id="checador-baseline-reason-help" class="form-text">El motivo se guardará con cada membresía seleccionada. No se asignará uno automáticamente.</div>
+</div>
+<div class="alert alert-light border" role="status" x-show="baselinePreview">
+<div><strong>Estación:</strong> <span x-text="baselinePreview?.locality_reference?.locality || '—'"></span> · localidad canónica <span x-text="baselinePreview?.workplace_id || '—'"></span></div>
+<div><strong>Personal activo:</strong> <span x-text="baselinePreview?.active_worker_count ?? '—'"></span> · <strong>candidatas sin membresía:</strong> <span x-text="baselinePreview?.full_candidate_count ?? baselinePreview?.candidate_count ?? '—'"></span><template x-if="baselinePreview?.requires_worker_selection"><span> · <strong>seleccionadas:</strong> <span x-text="baselinePreview?.candidate_count ?? 0"></span></span></template></div>
+<div><strong>Fecha efectiva UTC:</strong> <time x-text="baselinePreview?.valid_from_utc || '—'"></time></div>
+<div><strong>Actor RH:</strong> <span x-text="baselinePreview?.recorded_by || '—'"></span></div>
+<div x-show="baselinePreview?.requires_worker_selection"><strong>Motivo RH:</strong> <span x-text="baselinePreview?.reason || 'Pendiente de captura.'"></span></div>
+<div><strong>Fingerprint del conjunto:</strong> <code class="user-select-all" x-text="baselinePreview?.candidate_fingerprint || '—'"></code></div>
+<div x-show="baselinePreview?.requires_worker_selection"><strong>Fingerprint del padrón completo:</strong> <code class="user-select-all" x-text="baselinePreview?.full_candidate_fingerprint || '—'"></code></div>
+<div><strong>Fingerprint de padrón/localidad:</strong> <code class="user-select-all" x-text="baselinePreview?.source_fingerprint || '—'"></code></div>
+<div class="small mt-1" x-text="baselinePreview?.is_interlomas ? (baselinePreview?.approved_set_match ? 'El conjunto coincide con los 41 IDs autorizados.' : 'El conjunto de Interlomas no coincide con la autorización; no se podrá importar.') : 'Revisa los identificadores faltantes y confirma el padrón y el corte antes de importar.'"></div>
+<div class="small mt-2" x-show="baselinePreview?.selection_effect"><strong>Antes:</strong> <span x-text="baselinePreview?.selection_effect?.before"></span><br><strong>Después:</strong> <span x-text="baselinePreview?.selection_effect?.after"></span><br><span x-text="(baselinePreview?.full_candidate_count || 0) - (baselinePreview?.candidate_count || 0)"></span> candidatas no seleccionadas permanecerán sin cambios.</div>
+<div class="border rounded p-3 mt-3" x-show="baselinePreview?.requires_worker_selection">
+<div class="fw-semibold mb-2">Trabajadoras sin membresía para revisar</div>
+<p class="small mb-2">Selecciona sólo las trabajadoras cuya incorporación prospectiva haya confirmado RH. Las no seleccionadas quedarán fuera de esta operación.</p>
+<div class="small border-bottom pb-2 mb-2">
+<div class="fw-semibold">Estado actual de las dos trabajadoras de esta revisión</div>
+<template x-for="worker in (baselinePreview?.review_workers || [])" :key="'review-' + worker.worker_id">
+<div class="mt-1"><span x-text="'ID ' + worker.worker_id + ' · ' + (worker.full_name || 'Nombre no disponible') + ': ' + worker.membership_status_label"></span><template x-if="worker.version_summary"><span x-text="' ' + worker.version_summary"></span></template></div>
+</template>
+</div>
+<template x-if="(baselinePreview?.available_candidate_workers || []).length === 0"><div class="small text-muted">No hay candidatas sin membresía.</div></template>
+<template x-for="candidate in (baselinePreview?.available_candidate_workers || [])" :key="candidate.worker_id">
+<div class="form-check mb-1">
+<input class="form-check-input" type="checkbox" :id="'checador-baseline-worker-' + candidate.worker_id" :value="candidate.worker_id" x-model.number="baselineSelectedWorkerIds" @change="onBaselineWorkerSelectionChange()" :disabled="!candidate.in_review_scope">
+<label class="form-check-label" :for="'checador-baseline-worker-' + candidate.worker_id"><span x-text="'ID ' + candidate.worker_id + ' · ' + (candidate.full_name || 'Nombre no disponible')"></span><template x-if="candidate.employee_number !== null"><span x-text="' · No. colaborador ' + candidate.employee_number"></span></template><template x-if="!candidate.in_review_scope"><span class="text-muted"> · Fuera de esta revisión (sin cambios)</span></template></label>
+</div>
+</template>
+<div class="small mt-2" x-show="baselinePreview?.selection_ready && baselineSelectionPreviewMatches()">Selección validada: <span x-text="(baselinePreview?.selected_worker_ids || []).join(', ')"></span></div>
+<div class="small text-warning mt-2" x-show="!baselineSelectionPreviewMatches()">La selección cambió. Genera de nuevo el preview para actualizar sus fingerprints.</div>
+</div>
+<details class="small mt-2"><summary>Ver identificadores del personal activo</summary><div class="mt-2 user-select-all" x-text="(baselinePreview?.active_worker_ids || []).join(', ') || 'No hay personal activo.'"></div></details>
+<details class="small mt-2"><summary>Ver identificadores sin membresía</summary><div class="mt-2 user-select-all" x-text="(baselinePreview?.candidate_worker_ids || []).join(', ') || 'No hay candidatos.'"></div></details>
+<details class="small mt-2"><summary>Ver identificadores con historial</summary><div class="mt-2 user-select-all" x-text="(baselinePreview?.active_workers_with_membership_ids || []).join(', ') || 'No hay personal activo con historial.'"></div></details>
+</div>
+<template x-if="baselinePreview">
+<div class="alert" :class="baselinePreview.ready_to_import ? 'alert-success' : 'alert-warning'" role="status">
+<div class="fw-semibold" x-text="baselinePreview.ready_to_import ? 'Vista previa lista para revisión final.' : 'La vista previa requiere conciliación antes de importar.'"></div>
+<div class="small mt-1" x-text="'Conflictos: ' + baselinePreview.conflicting_assignments"></div>
+</div>
+</template>
+<div class="form-check mb-2" x-show="baselinePreview?.ready_to_import && baselinePreview?.requires_roster_confirmation">
+<input class="form-check-input" type="checkbox" id="checador-baseline-confirm-roster" x-model="confirmBaselineRoster">
+<label class="form-check-label" for="checador-baseline-confirm-roster" x-text="baselinePreview?.requires_worker_selection ? 'Confirmo el conjunto seleccionado, el motivo RH y la fecha UTC mostrados.' : 'Confirmo que revisé los identificadores del padrón y la fecha UTC mostrados.'"></label>
+</div>
+<template x-if="baselineImportResult">
+<div class="alert alert-success" role="status" x-text="baselineImportResult.message"></div>
+</template>
+<template x-if="baselineError">
+<div class="alert alert-danger" role="alert" x-text="baselineError"></div>
+</template>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+<button type="button" class="btn btn-primary" @click="previewChecadorBaseline()" :disabled="baselineBusy || !canRunChecadorBaseline() || !baselineEffectiveFromUtc || (baselineWorkplaceId === 9 && !baselineReasonText.trim())">
+<span x-show="baselineBusy" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+<i x-show="!baselineBusy" class="ti ti-search me-1" aria-hidden="true"></i><span x-text="baselineWorkplaceId === 9 && baselineSelectedWorkerIds.length ? 'Validar selección' : 'Generar vista previa'"></span>
+</button>
+<button type="button" class="btn btn-danger" @click="importChecadorBaseline()" :disabled="baselineBusy || !baselinePreview?.ready_to_import || !baselineSelectionPreviewMatches() || (!baselinePreview?.is_interlomas && !confirmBaselineRoster) || baselineImportResult?.success">
+<i class="ti ti-database-import me-1" aria-hidden="true"></i><span x-text="baselinePreview?.is_interlomas ? 'Registrar las 41 membresías' : 'Incorporar membresías revisadas'"></span>
+</button>
+</div>
+</div>
+</div>
+</div>
 
 <!---------- ABREVIATURAS DE DOCUMENTACION ---------->
 <div class="col-12 mb-3">

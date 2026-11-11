@@ -11,6 +11,7 @@
     <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/icono-web.png') ?>" />
     <!-- Core Css -->
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
+    <link rel="stylesheet" href="<?= asset('css/table-actions.css?v=20261028-1') ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
 
 
@@ -21,84 +22,14 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
+    <script src="<?= asset('js/core/script-fallbacks.js?v=20261028-1') ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <!-- Alpine + Axios -->
-    <script defer src="<?= asset('libs/alpinejs/dist/alpinejs.min.js') ?>" onerror="var s=document.createElement('script');s.defer=true;s.src='https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js';document.head.appendChild(s);"></script>
-    <script src="<?= asset('libs/axios/dist/axios.min.js') ?>" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js';document.head.appendChild(s);"></script>
+    <script defer src="<?= asset('libs/alpinejs/dist/alpinejs.min.js') ?>" data-fallback-src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="<?= asset('libs/axios/dist/axios.min.js') ?>" data-fallback-src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
-    <script>
-        (function() {
-            function getCsrfToken() {
-                const meta = document.querySelector('meta[name="csrf-token"]');
-                return meta ? meta.getAttribute('content') : null;
-            }
-
-            const csrfToken = getCsrfToken();
-            if (csrfToken) {
-                axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-
-                axios.interceptors.request.use(
-                    function(config) {
-                        config.headers['X-CSRF-TOKEN'] = getCsrfToken();
-                        return config;
-                    },
-                    function(error) {
-                        return Promise.reject(error);
-                    }
-                );
-
-                axios.interceptors.response.use(
-                    function(response) {
-                        return response;
-                    },
-                    function(error) {
-                        if (error.response && error.response.status === 419) {
-                            const meta = document.querySelector('meta[name="csrf-token"]');
-                            const newToken = error.response.data && error.response.data.new_token;
-                            if (meta && newToken) {
-                                meta.setAttribute('content', newToken);
-                                if (error.config && !error.config._csrfRetried) {
-                                    error.config._csrfRetried = true;
-                                    return axios(error.config);
-                                }
-                            }
-                            window.location.reload();
-                        }
-                        return Promise.reject(error);
-                    }
-                );
-            }
-
-            const __origFetch = window.fetch;
-            if (typeof __origFetch === 'function') {
-                window.fetch = function(input, init) {
-                    init = init || {};
-                    var method = ((init.method || (input && input.method) || 'GET') + '').toUpperCase();
-                    if (method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH') {
-                        var url = typeof input === 'string' ? input : (input && input.url);
-                        var sameOrigin = true;
-                        if (url && /^https?:\/\//i.test(url)) {
-                            try {
-                                sameOrigin = new URL(url, window.location.href).origin === window.location.origin;
-                            } catch (e) {
-                                sameOrigin = false;
-                            }
-                        }
-                        if (sameOrigin) {
-                            var headers = new Headers(init.headers || (input && input.headers) || undefined);
-                            var token = getCsrfToken();
-                            if (token && !headers.has('X-CSRF-TOKEN')) {
-                                headers.set('X-CSRF-TOKEN', token);
-                            }
-                            init.headers = headers;
-                        }
-                    }
-                    return __origFetch.call(window, input, init);
-                };
-            }
-        })();
-    </script>
+    <script src="<?= asset('js/core/csrf-request-setup.js?v=20261028-2') ?>"></script>
 </head>
 
 <body class="link-sidebar">
@@ -198,12 +129,19 @@
                         </a>
                     </li>
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/rol-comodines" aria-expanded="false">
-                            <span><i class="ti ti-users-group"></i></span>
-                            <span class="hide-menu">Rol de Comodines</span>
-                        </a>
-                    </li>
+                    <?php if (isset($user) && (int) ($user->id_puesto ?? 0) === 13
+                        && \App\Services\ChecadorV2PermissionService::allowsComodines(
+                            (int) ($user->id ?? 0),
+                            (int) ($user->id_puesto ?? 0),
+                            \App\Services\ChecadorV2PermissionService::COMODINES_READ
+                        )): ?>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/checador/rol-comodines" aria-expanded="false">
+                                <span><i class="ti ti-users-group"></i></span>
+                                <span class="hide-menu">Rol de Comodines</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
                     <li class="sidebar-item">
                         <a class="sidebar-link" href="/departamento-operativo/recursos-humanos/lista-negra" aria-expanded="false">
@@ -472,24 +410,7 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <script>
-        (function() {
-            function getCsrfToken() {
-                var meta = document.querySelector('meta[name="csrf-token"]');
-                return meta ? meta.getAttribute('content') : null;
-            }
-            if (window.jQuery) {
-                jQuery.ajaxSetup({
-                    beforeSend: function(jqXHR) {
-                        var token = getCsrfToken();
-                        if (token) {
-                            jqXHR.setRequestHeader('X-CSRF-TOKEN', token);
-                        }
-                    }
-                });
-            }
-        })();
-    </script>
+    <script src="<?= asset('js/core/jquery-csrf-setup.js?v=20261028-1') ?>"></script>
 
 
 

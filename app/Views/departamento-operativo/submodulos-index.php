@@ -1,36 +1,38 @@
 <div class="row mt-4">
 
-<?php if (!empty($submenus)): ?>
+    <?php if (!empty($submenus)): ?>
 
-<?php $i = 1; foreach ($submenus as $submenu): ?>
-<div class="col-lg-4 col-md-6 col-12">
-<a href="<?= $submenu['ruta'] ?>" class="text-decoration-none">
-<div class="card body-container-do overflow-hidden card-hover shadow-sm">
-<div class="d-flex flex-row align-items-center">
-<div class="icon-container-do">
-<h3 class="text-white mb-0">
-<i class="ti <?= $submenu['icono'] ?> fs-9"></i>
-</h3>
-</div>
-<div class="p-4 flex-grow-1">
-<h5 class="text-white mb-0">
-<?= $i . '. ' . $submenu['nombre'] ?>
-</h5>
-</div>
-</div>
-</div>
-</a>
-</div>
-<?php $i++; endforeach; ?>
+        <?php $i = 1;
+        foreach ($submenus as $submenu): ?>
+            <div class="col-lg-4 col-md-6 col-12">
+                <a href="<?= $submenu['ruta'] ?>" class="text-decoration-none">
+                    <div class="card body-container-do overflow-hidden card-hover shadow-sm">
+                        <div class="d-flex flex-row align-items-center">
+                            <div class="icon-container-do">
+                                <h3 class="text-white mb-0">
+                                    <i class="ti <?= $submenu['icono'] ?> fs-9"></i>
+                                </h3>
+                            </div>
+                            <div class="p-4 flex-grow-1">
+                                <h5 class="text-white mb-0">
+                                    <?= $i . '. ' . $submenu['nombre'] ?>
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        <?php $i++;
+        endforeach; ?>
 
-<?php else: ?>
+    <?php else: ?>
 
-<div class="col-12">
-<div class="alert alert-warning text-center py-4" role="alert">
-No cuentas con apartados configurados para este módulo.
-</div>
-</div>
+        <div class="col-12">
+            <div class="alert alert-warning text-center py-4" role="alert">
+                No cuentas con apartados configurados para este módulo.
+            </div>
+        </div>
 
-<?php endif; ?>
+    <?php endif; ?>
 
 </div>

@@ -1,0 +1,14 @@
+{
+  "name": "portal3-local-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "auth": "node scripts/prepare-auth.mjs",
+    "smoke:browser": "node scripts/browser-smoke.mjs",
+    "test:attendance": "playwright test --config=playwright.config.mjs",
+    "quality": "node scripts/quality-gate.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
