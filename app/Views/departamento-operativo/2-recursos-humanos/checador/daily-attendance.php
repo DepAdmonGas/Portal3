@@ -47,7 +47,7 @@ $statusPresentation = static fn(string $status): array => match ($status) {
     'review' => ['Requiere revisión', 'text-bg-warning'],
     'ambiguous' => ['Registros por revisar', 'text-bg-warning'],
     'incomplete' => ['Información insuficiente', 'text-bg-info'],
-    'classification_pending' => ['Registros pendientes de clasificación', 'text-bg-secondary'],
+    'classification_pending' => ['Pendiente de clasificación', 'text-bg-secondary'],
     'no_observed_event' => ['Sin marcación observada', 'text-bg-light border text-body-secondary'],
     default => ['No determinado', 'text-bg-light border text-body-secondary'],
 };
@@ -223,7 +223,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
             <span><strong>Fecha laboral:</strong> <?= $esc($selectedDate !== '' ? $selectedDate : 'No disponible') ?></span>
             <?php if ($selectedWorkerId !== null): ?><span><strong>Colaborador:</strong> <?= $selectedWorkerId ?></span><?php else: ?><span class="text-muted">Todos los colaboradores atribuibles</span><?php endif; ?>
-            <span class="text-muted small ms-auto">Un espacio vacío sólo indica que no se mostró una marcación en esta consulta.</span>
+            <span class="text-muted small ms-auto">Sin marcaciones observadas para esta consulta. Un espacio vacío no confirma una ausencia.</span>
         </div>
     </section>
 
@@ -232,7 +232,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
             <?= $esc($stateMessageForAttendance) ?>
         </div>
     <?php elseif (($attendanceCoverage['complete'] ?? false) !== true): ?>
-        <div class="alert alert-info py-2" role="status">La información disponible es parcial; se muestran sólo los registros que pudieron atribuirse.</div>
+        <div class="alert alert-info py-2" role="status">Cobertura no confirmada: esta consulta no confirma que se hayan recibido todas las marcaciones del período.</div>
     <?php endif; ?>
 
     <section class="card" aria-labelledby="daily-attendance-table-title">
