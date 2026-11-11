@@ -1815,6 +1815,7 @@ final class ChecadorController extends BaseController
     /** Read-only MVP report of raw V2 punch events. */
     public function punchReport(): void
     {
+        $this->normalizeLegacyWorkplaceUrl();
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
         Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
@@ -1822,19 +1823,20 @@ final class ChecadorController extends BaseController
         Breadcrumb::add('Reporte de marcaciones', '');
 
         $query = Request::query();
-        $hasExplicitWorkplace = array_key_exists('workplace_id', $query);
-        $requestedWorkplace = self::positiveInteger($query['workplace_id'] ?? null);
+        $requestedWorkplace = null;
         $fromDate = is_string($query['from_date'] ?? null) ? trim($query['from_date']) : '';
         $toDate = is_string($query['to_date'] ?? null) ? trim($query['to_date']) : '';
+        $workerIdInvalidType = array_key_exists('worker_id', $query) && !is_string($query['worker_id']);
         $workerIdInput = is_string($query['worker_id'] ?? null) ? trim($query['worker_id']) : '';
         $workerId = $workerIdInput === '' ? null : self::positiveInteger($workerIdInput);
-        $sourceWorkplaceCandidate = self::positiveInteger($query['source_workplace_id'] ?? null);
+        $captureMethodInput = is_string($query['capture_method'] ?? null) ? trim($query['capture_method']) : '';
+        $processingStatusInput = is_string($query['processing_status'] ?? null) ? trim($query['processing_status']) : '';
         $sourceWorkDateCandidate = is_string($query['source_work_date'] ?? null) ? trim($query['source_work_date']) : '';
         $sourceWorkerCandidate = self::positiveInteger($query['source_worker_id'] ?? null);
         $sort = ($query['dt_order_direction'] ?? $query['sort'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
         $tableSearch = is_string($query['dt_search'] ?? null) ? trim($query['dt_search']) : '';
         $tableOrderColumn = self::nonNegativeInteger($query['dt_order_column'] ?? 1) ?? 1;
-        if (!in_array($tableOrderColumn, [1, 2, 3, 4], true)) {
+        if (!in_array($tableOrderColumn, [1, 2, 3, 4, 5, 6], true)) {
             $tableOrderColumn = 1;
         }
         $exportCsv = ($query['export'] ?? '') === 'csv';
@@ -1847,33 +1849,12 @@ final class ChecadorController extends BaseController
             return;
         }
         $workplaces = $access['workplaces'];
-        $rawWorkplace = $query['workplace_id'] ?? null;
-        if ($hasExplicitWorkplace && $rawWorkplace !== '' && $requestedWorkplace === null) {
-            self::renderAccessDenied('invalid_station_selection', null);
-            return;
-        }
-        if ($requestedWorkplace !== null
-            && !in_array($requestedWorkplace, array_column($workplaces, 'id'), true)) {
-            self::renderAccessDenied('requested_station_out_of_scope', $requestedWorkplace);
-            return;
-        }
-        $sourceContextValid = $sourceWorkplaceCandidate !== null
-            && in_array($sourceWorkplaceCandidate, array_column($workplaces, 'id'), true)
-            && self::isCivilDate($sourceWorkDateCandidate);
-        $sourceWorkplaceId = $sourceContextValid ? $sourceWorkplaceCandidate : null;
+        $requestedWorkplace = $this->sessionWorkplaceId($access);
+        $sourceContextValid = $requestedWorkplace !== null && self::isCivilDate($sourceWorkDateCandidate);
+        $sourceWorkplaceId = $sourceContextValid ? $requestedWorkplace : null;
         $sourceWorkDate = $sourceContextValid ? $sourceWorkDateCandidate : '';
         $sourceWorkerId = $sourceContextValid ? $sourceWorkerCandidate : null;
-        $selectedWorkplaceForView = $requestedWorkplace
-            ?? ($hasExplicitWorkplace ? null : $sourceWorkplaceId);
-        if ($selectedWorkplaceForView === null && !$hasExplicitWorkplace) {
-            $moduleContext = ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY);
-            $contextWorkplace = self::positiveInteger($moduleContext['id_depto'] ?? $moduleContext['id_estacion'] ?? null);
-            if ($contextWorkplace !== null && in_array($contextWorkplace, array_column($workplaces, 'id'), true)) {
-                $selectedWorkplaceForView = $contextWorkplace;
-            } elseif ($workplaces !== []) {
-                $selectedWorkplaceForView = (int) $workplaces[0]['id'];
-            }
-        }
+        $selectedWorkplaceForView = $requestedWorkplace;
         if ($selectedWorkplaceForView !== null) {
             $selectedAccess = ChecadorAccessService::authorize($selectedWorkplaceForView);
             if (!($selectedAccess['allowed'] ?? false)) {
@@ -1884,8 +1865,6 @@ final class ChecadorController extends BaseController
                 self::renderAccessDenied('requested_station_out_of_scope', $selectedWorkplaceForView);
                 return;
             }
-        } elseif ($hasExplicitWorkplace) {
-            ModuleStationService::setContext(ChecadorAccessService::MODULE_KEY, null, null);
         }
         $requestedWorkplace = $selectedWorkplaceForView;
         if ($sourceWorkplaceId !== null && $selectedWorkplaceForView !== $sourceWorkplaceId) {
@@ -1896,6 +1875,10 @@ final class ChecadorController extends BaseController
         $selectedWorkerForView = array_key_exists('worker_id', $query)
             ? $workerIdInput
             : ($sourceWorkerId === null ? '' : (string) $sourceWorkerId);
+        if (!array_key_exists('worker_id', $query) && $sourceWorkerId !== null) {
+            $workerId = $sourceWorkerId;
+            $workerIdInput = (string) $sourceWorkerId;
+        }
 
         $nowUtc = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $periodInput = is_string($query['period'] ?? null) ? trim($query['period']) : '';
@@ -1934,6 +1917,16 @@ final class ChecadorController extends BaseController
         } elseif ($hasExplicitDateRange) {
             $periodPreset = 'custom';
         }
+        $periodUiPreset = $periodPreset;
+        if ($hasExplicitDateRange && $periodInput === 'year') {
+            $specificYear = self::positiveInteger($query['year'] ?? null);
+            $specificMonth = self::positiveInteger($query['month'] ?? null);
+            if ($specificYear !== null && $specificMonth !== null && $specificMonth <= 12) {
+                $periodUiPreset = 'year';
+                $periodYear = $specificYear;
+                $periodMonth = $specificMonth;
+            }
+        }
 
         $yearSegmentLinks = [];
         if (!$periodError && $selectedWorkplaceForView !== null && $periodPreset === 'year') {
@@ -1946,7 +1939,6 @@ final class ChecadorController extends BaseController
                     'label' => $monthLabels[$monthNumber],
                     'url' => '/departamento-operativo/recursos-humanos/checador/reporte?'
                         . http_build_query([
-                            'workplace_id' => $selectedWorkplaceForView,
                             'period' => 'year',
                             'year' => $periodYear,
                             'month' => $monthNumber,
@@ -1957,6 +1949,8 @@ final class ChecadorController extends BaseController
 
         $state = 'idle';
         $stateMessage = '';
+        $selectedWorkerOption = null;
+        $selectedWorkerError = $workerIdInvalidType ? 'bad_request' : null;
         $events = [];
         $pagination = null;
         $selectedWorkplaceName = '';
@@ -1967,10 +1961,37 @@ final class ChecadorController extends BaseController
             }
         }
 
+        if ($selectedWorkerForView !== '') {
+            $selectedWorkerId = self::positiveInteger($selectedWorkerForView);
+            if ($selectedWorkerId === null || $requestedWorkplace === null) {
+                $selectedWorkerError = 'worker_scope_mismatch';
+            } else {
+                $roster = self::punchReportAuthorizedRoster($requestedWorkplace);
+                $selectedWorkerLookup = ($roster['ok'] ?? false)
+                    ? (new ChecadorRawPunchReadService())->findReportWorker(
+                        $requestedWorkplace,
+                        $roster['worker_ids'],
+                        $selectedWorkerId
+                    )
+                    : ['ok' => false, 'error' => ['kind' => 'database_unavailable']];
+                if (($selectedWorkerLookup['ok'] ?? false) === true) {
+                    $selectedWorkerOption = $selectedWorkerLookup['worker'];
+                } else {
+                    $selectedWorkerError = (string) ($selectedWorkerLookup['error']['kind'] ?? 'database_unavailable');
+                }
+            }
+        }
+
         // A daily-screen source context may preselect station/worker, but only
-        // explicit UTC date criteria or export initiate a raw SQL query.
-        $hasAnyFilter = $fromDate !== '' || $toDate !== '' || $workerIdInput !== '' || $exportCsv || $periodError;
-        if ($hasAnyFilter) {
+        // explicit UTC date criteria or export initiate a raw SQL read.
+        $hasAnyFilter = $fromDate !== '' || $toDate !== '' || $workerIdInput !== ''
+            || $captureMethodInput !== '' || $processingStatusInput !== '' || $exportCsv || $periodError;
+        if ($selectedWorkerError !== null) {
+            $state = 'error';
+            $stateMessage = $selectedWorkerError === 'worker_scope_mismatch'
+                ? 'El colaborador seleccionado no está disponible en esta localidad.'
+                : 'No se pudo confirmar el colaborador seleccionado. Inténtalo nuevamente.';
+        } elseif ($hasAnyFilter) {
             if ($periodError) {
                 $state = 'error';
                 $stateMessage = 'El periodo solicitado no es válido. El año en curso se consulta por segmentos mensuales y no permite seleccionar meses futuros.';
@@ -1978,9 +1999,11 @@ final class ChecadorController extends BaseController
                 || !self::isCivilDate($fromDate)
                 || !self::isCivilDate($toDate)
                 || $fromDate > $toDate
-                || ($workerIdInput !== '' && $workerId === null)) {
+                || ($workerIdInput !== '' && $workerId === null)
+                || ($captureMethodInput !== '' && !in_array($captureMethodInput, ChecadorRawPunchReadService::CAPTURE_METHOD_FILTERS, true))
+                || ($processingStatusInput !== '' && !in_array($processingStatusInput, ChecadorRawPunchReadService::PROCESSING_STATUS_FILTERS, true))) {
                 $state = 'error';
-                $stateMessage = 'Selecciona una estación autorizada, un rango de fechas válido y, si aplica, un identificador de colaborador válido.';
+                $stateMessage = 'Selecciona una estación autorizada, un rango de fechas válido y filtros reconocidos.';
             } else {
                 $user = Auth::user();
                 if (!$user) {
@@ -2028,7 +2051,10 @@ final class ChecadorController extends BaseController
                                         100,
                                         $tableSearch,
                                         $tableOrderColumn,
-                                        $sort
+                                        $sort,
+                                        $selectedWorkplaceName,
+                                        $captureMethodInput,
+                                        $processingStatusInput
                                     );
                                     if (!($result['ok'] ?? false)) {
                                         $kind = (string) ($result['error']['kind'] ?? 'database_unavailable');
@@ -2051,7 +2077,9 @@ final class ChecadorController extends BaseController
                                             $workerId,
                                             $tableSearch,
                                             $tableOrderColumn,
-                                            $sort
+                                            $sort,
+                                            $captureMethodInput,
+                                            $processingStatusInput
                                         );
                                         return;
                                     }
@@ -2069,8 +2097,8 @@ final class ChecadorController extends BaseController
         View::render(
             'departamento-operativo/2-recursos-humanos/checador/punch-report',
             [
-                'title' => 'Checador',
-                'demoMode' => ChecadorDailyReadService::demoModeEnabled(),
+                'title' => 'Reporte de marcaciones',
+            'demoMode' => false,
                 'moduleStationKey' => ChecadorAccessService::MODULE_KEY,
                 'workplaces' => $workplaces,
                 'selectedWorkplaceId' => $selectedWorkplaceForView,
@@ -2078,6 +2106,17 @@ final class ChecadorController extends BaseController
                 'fromDate' => $fromDate,
                 'toDate' => $toDate,
                 'workerId' => $selectedWorkerForView,
+                'selectedWorkerOption' => $selectedWorkerOption,
+                'captureMethod' => $captureMethodInput,
+                'processingStatus' => $processingStatusInput,
+                'captureMethodOptions' => array_combine(
+                    ChecadorRawPunchReadService::CAPTURE_METHOD_FILTERS,
+                    array_map([ChecadorPresentationFormatter::class, 'captureMethodLabel'], ChecadorRawPunchReadService::CAPTURE_METHOD_FILTERS)
+                ),
+                'processingStatusOptions' => array_combine(
+                    ChecadorRawPunchReadService::PROCESSING_STATUS_FILTERS,
+                    array_map([ChecadorPresentationFormatter::class, 'processingStatusLabel'], ChecadorRawPunchReadService::PROCESSING_STATUS_FILTERS)
+                ),
                 'sourceWorkplaceId' => $sourceWorkplaceId,
                 'sourceWorkDate' => $sourceWorkDate,
                 'sourceWorkerId' => $sourceWorkerId,
@@ -2086,6 +2125,7 @@ final class ChecadorController extends BaseController
                 'tableSearch' => $tableSearch,
                 'tableOrderColumn' => $tableOrderColumn,
                 'periodPreset' => $periodPreset,
+                'periodUiPreset' => $periodUiPreset,
                 'periodLabel' => $periodLabel,
                 'periodYear' => $periodYear,
                 'periodMonth' => $periodMonth,
@@ -2097,19 +2137,74 @@ final class ChecadorController extends BaseController
                 'stateMessage' => $stateMessage,
                 'links' => [
                     '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                    '/assets/libs/select2/dist/css/select2.min.css',
+                    '/assets/css/checador-punch-report.css?v=20261106-1',
                 ],
                 'scripts' => [
                     '/assets/js/vendor.min.js',
+                    '/assets/libs/select2/dist/js/select2.full.min.js',
                     '/assets/js/core/module-station-selector.js',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261022-2',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.filters.init.js?v=20261021-2',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261027-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.filters.init.js?v=20261026-1',
                     '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.datatable.init.js?v=20261022-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.datatable.init.js?v=20261106-6',
                 ],
                 'help' => false,
             ],
             'departamento-operativo'
         );
+    }
+
+    /** Search the authorized active roster and historical punch identities by worker name. */
+    public function punchReportWorkers(): void
+    {
+        if (!Auth::check() || Auth::user() === null) {
+            JsonResponse::send(['results' => [], 'pagination' => ['more' => false]], 401, ['Cache-Control' => 'private, no-store']);
+        }
+        $access = ChecadorAccessService::authorize(null);
+        if (empty($access['allowed'])) {
+            JsonResponse::send(['results' => [], 'pagination' => ['more' => false]], 403, ['Cache-Control' => 'private, no-store']);
+        }
+        $context = ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY);
+        $localityId = self::positiveInteger($context['id_depto'] ?? $context['id_estacion'] ?? null);
+        if ($localityId === null || empty(ChecadorAccessService::authorize($localityId)['allowed'])) {
+            JsonResponse::send(['results' => [], 'pagination' => ['more' => false]], 403, ['Cache-Control' => 'private, no-store']);
+        }
+
+        $query = Request::query();
+        $term = is_string($query['term'] ?? null) ? trim($query['term']) : '';
+        $page = self::positiveInteger($query['page'] ?? 1) ?? 1;
+        $workerId = array_key_exists('worker_id', $query) ? self::positiveInteger($query['worker_id']) : null;
+        $roster = self::punchReportAuthorizedRoster($localityId);
+        if (!($roster['ok'] ?? false)) {
+            JsonResponse::send(['results' => [], 'pagination' => ['more' => false]], 503, ['Cache-Control' => 'private, no-store']);
+        }
+        $reader = new ChecadorRawPunchReadService();
+        if (array_key_exists('worker_id', $query)) {
+            if ($workerId === null) {
+                JsonResponse::send(['results' => [], 'pagination' => ['more' => false]], 422, ['Cache-Control' => 'private, no-store']);
+            }
+            $found = $reader->findReportWorker($localityId, $roster['worker_ids'], $workerId);
+            if (!($found['ok'] ?? false)) {
+                $kind = (string) ($found['error']['kind'] ?? 'database_unavailable');
+                $status = $kind === 'worker_scope_mismatch' ? 403 : 503;
+                JsonResponse::send(['results' => [], 'pagination' => ['more' => false]], $status, ['Cache-Control' => 'private, no-store']);
+            }
+            JsonResponse::send([
+                'results' => [['id' => $found['worker']['id'], 'text' => $found['worker']['text']]],
+                'pagination' => ['more' => false],
+            ], 200, ['Cache-Control' => 'private, no-store']);
+        }
+        $result = $reader->searchReportWorkers($localityId, $roster['worker_ids'], $term, $page);
+        if (!($result['ok'] ?? false)) {
+            $kind = (string) ($result['error']['kind'] ?? 'database_unavailable');
+            $status = $kind === 'bad_request' ? 422 : 503;
+            JsonResponse::send(['results' => [], 'pagination' => ['more' => false]], $status, ['Cache-Control' => 'private, no-store']);
+        }
+        JsonResponse::send([
+            'results' => $result['workers'],
+            'pagination' => ['more' => (bool) $result['more']],
+        ], 200, ['Cache-Control' => 'private, no-store']);
     }
 
     /** DataTables endpoint; each request re-resolves the user and station scope. */
@@ -2121,11 +2216,15 @@ final class ChecadorController extends BaseController
             self::punchReportJsonError(422, 'La solicitud de la tabla no es válida.', 0);
         }
 
-        $requestedWorkplace = self::positiveInteger($query['workplace_id'] ?? null);
+        $submittedWorkplace = array_key_exists('workplace_id', $query)
+            ? self::positiveInteger($query['workplace_id'])
+            : null;
         $fromDate = is_string($query['from_date'] ?? null) ? trim($query['from_date']) : '';
         $toDate = is_string($query['to_date'] ?? null) ? trim($query['to_date']) : '';
         $workerInput = is_string($query['worker_id'] ?? null) ? trim($query['worker_id']) : '';
         $workerId = $workerInput === '' ? null : self::positiveInteger($workerInput);
+        $captureMethod = is_string($query['capture_method'] ?? null) ? trim($query['capture_method']) : '';
+        $processingStatus = is_string($query['processing_status'] ?? null) ? trim($query['processing_status']) : '';
         $start = self::nonNegativeInteger($query['start'] ?? null);
         $length = self::positiveInteger($query['length'] ?? null);
         $searchInput = $query['search'] ?? [];
@@ -2146,6 +2245,12 @@ final class ChecadorController extends BaseController
         if (!($access['allowed'] ?? false)) {
             self::punchReportJsonError(403, 'No tienes acceso al reporte de marcaciones.', $draw);
         }
+        $context = ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY);
+        $requestedWorkplace = self::positiveInteger($context['id_depto'] ?? $context['id_estacion'] ?? null);
+        if ($requestedWorkplace === null
+            || (array_key_exists('workplace_id', $query) && $submittedWorkplace !== $requestedWorkplace)) {
+            self::punchReportJsonError(403, 'La estación no coincide con el contexto autorizado de la sesión.', $draw);
+        }
         $selectedWorkplace = null;
         foreach ($access['workplaces'] ?? [] as $workplace) {
             if ((int) ($workplace['id'] ?? 0) === $requestedWorkplace) {
@@ -2153,20 +2258,26 @@ final class ChecadorController extends BaseController
                 break;
             }
         }
-        if ($requestedWorkplace === null || $selectedWorkplace === null) {
+        if ($requestedWorkplace === null || $selectedWorkplace === null
+            || empty(ChecadorAccessService::authorize($requestedWorkplace)['allowed'])) {
             self::punchReportJsonError(403, 'La estación solicitada no está autorizada.', $draw);
         }
 
         if (!self::isCivilDate($fromDate)
             || !self::isCivilDate($toDate)
             || $fromDate > $toDate
+            || (array_key_exists('worker_id', $query) && !is_string($query['worker_id']))
             || ($workerInput !== '' && $workerId === null)
             || $start === null
             || $length === null
             || !in_array($length, ChecadorRawPunchReadService::DATATABLE_PAGE_SIZES, true)
+            || (preg_match_all('/./us', $search, $unused) === false)
+            || preg_match_all('/./us', $search, $unused) > 100
             || $regexSearch
             || $orderColumn === null
-            || !in_array($orderColumn, [1, 2, 3, 4], true)
+            || !in_array($orderColumn, [1, 2, 3, 4, 5, 6], true)
+            || ($captureMethod !== '' && !in_array($captureMethod, ChecadorRawPunchReadService::CAPTURE_METHOD_FILTERS, true))
+            || ($processingStatus !== '' && !in_array($processingStatus, ChecadorRawPunchReadService::PROCESSING_STATUS_FILTERS, true))
             || !in_array($direction, ['asc', 'desc'], true)) {
             self::punchReportJsonError(422, 'Revisa la estación, el rango de fechas y los filtros de la tabla.', $draw);
         }
@@ -2183,6 +2294,27 @@ final class ChecadorController extends BaseController
             self::punchReportJsonError(422, 'El rango excede el límite de 31 días UTC.', $draw);
         }
 
+        if ($workerId !== null) {
+            $roster = self::punchReportAuthorizedRoster($requestedWorkplace);
+            $workerScope = ($roster['ok'] ?? false)
+                ? (new ChecadorRawPunchReadService())->findReportWorker(
+                    $requestedWorkplace,
+                    $roster['worker_ids'],
+                    $workerId
+                )
+                : ['ok' => false, 'error' => ['kind' => 'database_unavailable']];
+            if (!($workerScope['ok'] ?? false)) {
+                $kind = (string) ($workerScope['error']['kind'] ?? 'database_unavailable');
+                self::punchReportJsonError(
+                    $kind === 'worker_scope_mismatch' ? 403 : 503,
+                    $kind === 'worker_scope_mismatch'
+                        ? 'El colaborador seleccionado no está disponible en esta localidad.'
+                        : 'No se pudo confirmar el colaborador seleccionado.',
+                    $draw
+                );
+            }
+        }
+
         $result = (new ChecadorRawPunchReadService())->readDataTablePage(
             $requestedWorkplace,
             $fromUtc,
@@ -2192,7 +2324,10 @@ final class ChecadorController extends BaseController
             $length,
             $search,
             $orderColumn,
-            $direction
+            $direction,
+            (string) ($selectedWorkplace['nombre'] ?? ''),
+            $captureMethod,
+            $processingStatus
         );
         if (!($result['ok'] ?? false)) {
             $kind = (string) ($result['error']['kind'] ?? 'database_unavailable');
@@ -2209,17 +2344,18 @@ final class ChecadorController extends BaseController
 
         $workplaceName = (string) ($selectedWorkplace['nombre'] ?? 'Estación no disponible');
         $rows = [];
-        foreach ($result['events'] as $event) {
+        foreach (self::preparePunchReportRows($result['events']) as $event) {
             $resolvedWorkerId = $event['id_personal_resuelto'] ?? null;
-            $collaborator = ChecadorPresentationFormatter::collaboratorLabel($resolvedWorkerId);
-            if ($resolvedWorkerId !== null) {
-                $collaborator .= ' · ID interno ' . (int) $resolvedWorkerId;
-            }
+            $occurredUtc = $event['ocurrido_at_utc'] === null ? null : (string) $event['ocurrido_at_utc'];
+            $receivedUtc = (string) ($event['recibido_at_utc'] ?? '');
             $rows[] = [
                 'station' => $workplaceName,
-                'received_at_utc' => (string) ($event['recibido_at_utc'] ?? ''),
-                'occurrence_available' => ($event['ocurrido_at_utc'] ?? null) !== null,
-                'collaborator' => $collaborator,
+                'received_at_utc' => $receivedUtc,
+                'event_time_display' => $occurredUtc !== null
+                    ? $occurredUtc . ' UTC'
+                    : ($receivedUtc !== '' ? $receivedUtc . ' UTC' : 'No disponible'),
+                'occurrence_available' => $occurredUtc !== null,
+                'collaborator' => (string) ($event['collaborator_display'] ?? ChecadorPresentationFormatter::collaboratorLabel($resolvedWorkerId)),
                 'capture_method' => ChecadorPresentationFormatter::captureMethodLabel($event['metodo_captura'] ?? null),
                 'processing_status' => ChecadorPresentationFormatter::processingStatusLabel($event['processing_status'] ?? null),
                 'processing_status_class' => ChecadorPresentationFormatter::processingStatusBadgeClass($event['processing_status'] ?? null),
@@ -2227,7 +2363,7 @@ final class ChecadorController extends BaseController
                 'device' => isset($event['id_dispositivo']) ? 'Dispositivo ' . (int) $event['id_dispositivo'] : 'No disponible',
                 'source_timestamp_raw' => (string) ($event['source_timestamp_raw'] ?? ''),
                 'source_timezone_reported' => (string) ($event['source_timezone_reported'] ?? ''),
-                'ocurrido_at_utc' => $event['ocurrido_at_utc'] === null ? null : (string) $event['ocurrido_at_utc'],
+                'ocurrido_at_utc' => $occurredUtc,
                 'recibido_at_utc_detail' => (string) ($event['recibido_at_utc'] ?? ''),
                 'processing_explanation' => ChecadorPresentationFormatter::processingStatusExplanation($event['processing_status'] ?? null),
                 'integrity' => ChecadorPresentationFormatter::integrityLabel(),
@@ -2240,6 +2376,38 @@ final class ChecadorController extends BaseController
             'recordsFiltered' => (int) $result['records_filtered'],
             'data' => $rows,
         ]);
+    }
+
+    /**
+     * Resolve current employees from the canonical attendance roster. The
+     * returned worker IDs are canonical op_rh_personal.id values and are
+     * re-evaluated on each Select2, report, and CSV request.
+     *
+     * @return array{ok:bool,worker_ids?:list<int>,status?:string}
+     */
+    private static function punchReportAuthorizedRoster(int $localityId): array
+    {
+        $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? getenv('APP_TIMEZONE') ?: ''));
+        if (!ChecadorOperationalPeriod::isIanaTimezone($timezone)) {
+            $timezone = 'UTC';
+        }
+        $today = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))
+            ->setTimezone(new \DateTimeZone($timezone))
+            ->format('Y-m-d');
+        $roster = (new \App\Services\ChecadorAttendanceRosterService())
+            ->workersForAttendanceFilter($localityId, $today, null, false);
+        $status = (string) ($roster['status'] ?? 'unavailable');
+        if (!in_array($status, ['ready', 'current_roster_only'], true)) {
+            return ['ok' => false, 'status' => $status];
+        }
+        $workerIds = [];
+        foreach ($roster['workers'] ?? [] as $worker) {
+            $workerId = (int) ($worker['worker_id'] ?? 0);
+            if ($workerId > 0) {
+                $workerIds[] = $workerId;
+            }
+        }
+        return ['ok' => true, 'worker_ids' => array_values(array_unique($workerIds)), 'status' => $status];
     }
 
     /** Informational, strictly read-only comparison with payroll period references. */
@@ -2935,11 +3103,29 @@ final class ChecadorController extends BaseController
     /** @param array<int,array<string,mixed>> $events @return array<int,array<string,mixed>> */
     private static function preparePunchReportRows(array $events): array
     {
+        $workerIds = [];
+        foreach ($events as $event) {
+            $workerId = self::positiveInteger($event['id_personal_resuelto'] ?? null);
+            if ($workerId !== null) {
+                $workerIds[] = $workerId;
+            }
+        }
+        $profiles = (new \App\Services\ChecadorAttendanceRosterService())->observedProfiles($workerIds, false);
         foreach ($events as &$event) {
             $event['integrity_status'] = 'NOT_VERIFIED_BY_PORTAL3';
             $event['occurrence_status'] = ($event['ocurrido_at_utc'] ?? null) === null
                 ? 'OCCURRENCE_TIME_UNRESOLVED'
                 : 'OCCURRENCE_TIME_AVAILABLE_UTC';
+            $workerId = self::positiveInteger($event['id_personal_resuelto'] ?? null);
+            if ($workerId === null) {
+                $event['collaborator_display'] = ChecadorPresentationFormatter::collaboratorLabel(null);
+                continue;
+            }
+            $profile = $profiles[$workerId] ?? null;
+            $name = is_array($profile) ? trim((string) ($profile['full_name'] ?? '')) : '';
+            $event['collaborator_display'] = $name !== '' && $name !== 'Nombre no disponible'
+                ? $name . ' · ID interno ' . $workerId
+                : ChecadorPresentationFormatter::collaboratorLabel($workerId) . ' · ID interno ' . $workerId;
         }
         unset($event);
         return $events;
@@ -3024,7 +3210,9 @@ final class ChecadorController extends BaseController
         ?int $workerId,
         string $search,
         int $orderColumn,
-        string $direction
+        string $direction,
+        string $captureMethod = '',
+        string $processingStatus = ''
     ): void {
         $stream = fopen('php://output', 'wb');
         if (!is_resource($stream)) {
@@ -3040,7 +3228,7 @@ final class ChecadorController extends BaseController
         self::writePunchReportCsvHeader($stream);
         fputcsv($stream, [
             'Aviso',
-            'Consulta en vivo: los registros pueden cambiar durante la descarga. UTC significa Tiempo Universal Coordinado. La integridad no fue verificada por Portal3.',
+            'Consulta SQL local en vivo; los registros pueden cambiar durante la descarga. UTC significa Tiempo Universal Coordinado. La integridad no fue verificada por Portal3; un resultado vacío no confirma ausencia ni completitud.',
         ], ',', '"', '');
 
         $expectedTotal = (int) ($firstPage['records_total'] ?? -1);
@@ -3065,7 +3253,10 @@ final class ChecadorController extends BaseController
                 $length,
                 $search,
                 $orderColumn,
-                $direction
+                $direction,
+                $workplaceName,
+                $captureMethod,
+                $processingStatus
             );
             if (!($result['ok'] ?? false)
                 || ($result['records_total'] ?? -1) !== $expectedTotal
@@ -3128,7 +3319,7 @@ final class ChecadorController extends BaseController
             fputcsv($stream, [
                 self::csvText($workplaceName),
                 self::csvText($event['event_uuid'] ?? ''),
-                self::csvText(ChecadorPresentationFormatter::collaboratorLabel($event['id_personal_resuelto'] ?? null)),
+                self::csvText($event['collaborator_display'] ?? ChecadorPresentationFormatter::collaboratorLabel($event['id_personal_resuelto'] ?? null)),
                 self::csvText(isset($event['id_dispositivo']) ? 'Dispositivo ' . (string) $event['id_dispositivo'] : 'No disponible'),
                 self::csvText($event['source_timestamp_raw'] ?? ''),
                 self::csvText($event['source_timezone_reported'] ?? ''),
@@ -3138,7 +3329,9 @@ final class ChecadorController extends BaseController
                 self::csvText(ChecadorPresentationFormatter::processingStatusLabel($event['processing_status'] ?? null)),
                 self::csvText(($event['ocurrido_at_utc'] ?? null) === null
                     ? 'Hora no determinada; se muestra la fecha y hora de recepción'
-                    : 'Hora de marcación disponible (UTC)'),
+                    : (ChecadorPresentationFormatter::eventLocalDateTime($event) === null
+                        ? 'Hora de marcación disponible (UTC; zona efectiva no resuelta)'
+                        : 'Hora de marcación convertida para presentación usando la zona efectiva registrada por V2')),
                 ChecadorPresentationFormatter::integrityLabel(),
             ], ',', '"', '');
         }
@@ -3176,7 +3369,9 @@ final class ChecadorController extends BaseController
     {
         return match ($kind) {
             'bad_request' => ['error', 'Revisa las fechas (máximo 31 días), el número de colaborador y la página solicitada.'],
-            'database_unavailable' => ['unavailable', 'La consulta de marcaciones no está disponible; no se puede confirmar si hay registros.'],
+            'result_too_large' => ['error', 'El resultado supera el límite seguro de 100,000 registros. Reduce el rango de fechas.'],
+            'station_mapping_unavailable' => ['unavailable', 'No se pudo validar la localidad canónica autorizada para el reporte.'],
+            'database_unavailable' => ['unavailable', 'La consulta SQL no está disponible; no se interpreta como ausencia de marcaciones.'],
             default => ['unavailable', 'La consulta no está disponible; no se interpreta como ausencia de marcaciones.'],
         };
     }

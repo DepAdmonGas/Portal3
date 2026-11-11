@@ -28,46 +28,35 @@ $assert(str_contains($daily, 'id="checador-filter-modal"')
 $assert(str_contains($report, 'id="punch-report-filter-modal"')
     && str_contains($report, 'id="from_date" name="from_date" type="date"')
     && str_contains($report, 'id="to_date" name="to_date" type="date"')
-    && str_contains($report, 'id="worker_id" name="worker_id" type="number"'), 'raw report modal contains the UTC range and optional collaborator filter');
+    && str_contains($report, 'type="hidden" id="worker_id" name="worker_id"')
+    && str_contains($report, 'id="punch-report-worker" name="worker_id"')
+    && str_contains($report, 'data-search-url="/departamento-operativo/recursos-humanos/checador/reporte/colaboradores"'), 'raw report modal and Select2 retain the UTC range and canonical collaborator filter');
 $assert(substr_count($daily, 'id="checador-filter-modal"') === 1
     && substr_count($report, 'id="punch-report-filter-modal"') === 1
     && substr_count($daily, 'data-bs-target="#checador-filter-modal"') >= 1
     && substr_count($report, 'data-bs-target="#punch-report-filter-modal"') === 1
     && str_contains($daily, 'Filtros')
     && str_contains($report, 'Filtros'), 'both screens reuse one Bootstrap filter modal; dashboard navigation may open the same filter dialog');
-$assert(substr_count($daily, 'data-checador-filter-form') === 1
-    && substr_count($report, 'data-checador-filter-form') === 1
-    && substr_count($daily, 'formnovalidate') === 1
-    && substr_count($report, 'formnovalidate') === 1
-    && substr_count($daily, 'data-checador-clear-filters') === 1
+$assert(substr_count($report, 'data-checador-filter-form') === 1
+    && str_contains($report, 'type="submit"')
     && substr_count($report, 'data-checador-clear-filters') === 1
-    && str_contains($daily, 'Cancelar')
-    && str_contains($report, 'Cancelar'), 'Apply, clear, and cancel controls are present without duplicate filter forms');
-$assert(!preg_match('/<select\b[^>]*\bname="workplace_id"/i', $daily . $report)
-    && substr_count($daily . $report, 'id="workplace_id" name="workplace_id"') === 2,
-    'institutional station selector remains outside both filter modals with one hidden authorized context per screen');
-$dailyIds = [];
-$reportIds = [];
-preg_match_all('/\bid="([^"]+)"/', $daily, $dailyIdMatches);
-preg_match_all('/\bid="([^"]+)"/', $report, $reportIdMatches);
-$dailyIds = array_count_values($dailyIdMatches[1]);
-$reportIds = array_count_values($reportIdMatches[1]);
-$assert(count(array_filter($dailyIds, static fn (int $count): bool => $count > 1)) === 0
-    && count(array_filter($reportIds, static fn (int $count): bool => $count > 1)) === 0,
-    'both rendered view templates use unique literal control and modal identifiers');
+    && str_contains($report, 'Cancelar'), 'M02 modal has one filter form with apply, clear, and cancel controls');
+$assert(!preg_match('/<select\b[^>]*\bname="workplace_id"/i', $report)
+    && !str_contains($report, 'name="workplace_id"')
+    && str_contains($controller, '$this->sessionWorkplaceId($access)'),
+    'M02 locality is derived from the authorized server session rather than a browser field');
+$assert(substr_count($report, 'id="punch-report-filter-modal"') === 1
+    && substr_count($report, 'id="punch-report-filter-form"') === 1
+    && substr_count($report, 'id="punch-report-worker"') === 1,
+    'M02 filter and worker controls have unique IDs; mutually exclusive result headings may share a label ID');
 $assert(str_contains($report, 'id="punch-report-csv-form"')
-    && strpos($report, 'id="punch-report-csv-form"') < strpos($report, 'id="punch-report-filter-modal"')
     && str_contains($report, 'if (!empty($canDownload))')
     && str_contains($report, 'name="export" value="csv"')
     && str_contains($report, 'name="dt_search"')
     && str_contains($report, 'name="dt_order_column"'), 'CSV remains a permission-gated independent form carrying applied filters and table state');
-$assert(str_contains($filtersJs, "modal.addEventListener('hidden.bs.modal'")
-    && str_contains($filtersJs, 'filterForm.reset()')
-    && str_contains($filtersJs, 'data-checador-clear-filters')
-    && str_contains($filtersJs, "['date', 'from_date', 'to_date', 'worker_id']")
-    && !str_contains($filtersJs, "['date', 'from_date', 'to_date', 'worker_id', 'workplace_id']")
-    && str_contains($filtersJs, 'dt_search')
-    && str_contains($filtersJs, 'dt_order_direction'), 'cancel restores the server-applied form state and CSV receives current DataTables search/order');
+$assert(str_contains($filtersJs, "modal.addEventListener('hidden.bs.modal', resetDraft)"), 'M01 AJAX filter cancel restores its captured draft');
+$assert(str_contains($filtersJs, "['dt_search', 'dt_order_column', 'dt_order_direction']")
+    && str_contains($filtersJs, "punchReportFilterForm.addEventListener('submit'"), 'M02 CSV state synchronization remains separate from M01 AJAX filters');
 $assert(str_contains($dataTable, 'serverSide: true')
     && str_contains($dataTable, 'pageLength: 25')
     && str_contains($dataTable, "request.from_date = document.getElementById('from_date').value")
