@@ -610,6 +610,13 @@ return function (RouteCollector $r) {
         //----- 2. Recursos Humanos
         $r->addRoute('GET', '/recursos-humanos', Route::auth(['DptoOperativoController', 'recursosHumanosIndex']));
         $r->addRoute('GET', '/recursos-humanos/checador', Route::auth(['ChecadorController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines', Route::auth(['ChecadorController', 'rolComodines']));
+        $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['RolComodinesController', 'coverageList']));
+        $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines/trabajadores', Route::auth(['RolComodinesController', 'searchCoverageWorkers']));
+        $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines/coberturas/{coverageUuid}', Route::auth(['RolComodinesController', 'coverageDetail']));
+        $r->addRoute('POST', '/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['RolComodinesController', 'requestCoverage']));
+        $r->addRoute('POST', '/recursos-humanos/checador/rol-comodines/coberturas/{coverageUuid}/authorize', Route::auth(['RolComodinesController', 'authorizeCoverage']));
+        $r->addRoute('POST', '/recursos-humanos/checador/rol-comodines/coberturas/{coverageUuid}/cancel', Route::auth(['RolComodinesController', 'cancelCoverage']));
         $r->addRoute('GET', '/recursos-humanos/checador/asistencia', Route::auth(['ChecadorController', 'dailyAttendance']));
         $r->addRoute('GET', '/recursos-humanos/checador/jornadas', Route::auth(['ChecadorController', 'journeys']));
         $r->addRoute('GET', '/recursos-humanos/checador/incidencias', Route::auth(['ChecadorController', 'incidences']));
