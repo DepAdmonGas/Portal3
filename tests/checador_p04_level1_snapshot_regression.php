@@ -29,8 +29,22 @@ $user->id = 999;
 $base = 'https://checador.test/';
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
+$punchReportViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/punch-report.php');
 $routeSource = file_get_contents(__DIR__ . '/../routes/web.php');
+$testEnvironmentKeys = ['APP_ENV', 'CHECADOR_API_REAL_POSTS_ENABLED', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_ADVANCED_DEMO_SCENARIO'];
+$testEnvironmentOriginal = [];
+foreach ($testEnvironmentKeys as $key) {
+    $testEnvironmentOriginal[$key] = [array_key_exists($key, $_ENV), $_ENV[$key] ?? null, getenv($key)];
+}
+$_ENV['APP_ENV'] = 'dev';
+$_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'true';
+$_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
+unset($_ENV['CHECADOR_ADVANCED_DEMO_SCENARIO']);
+putenv('APP_ENV=dev');
+putenv('CHECADOR_API_REAL_POSTS_ENABLED=true');
+putenv('CHECADOR_ADVANCED_DEMO_ENABLED=false');
+putenv('CHECADOR_ADVANCED_DEMO_SCENARIO');
 
 $make = static function (array $responses, ?array &$history = null, ?string &$token = null) use ($base): ChecadorDailyReadService {
     $mock = new MockHandler($responses);
@@ -127,20 +141,40 @@ $assert(($failed->readDailyPunchSnapshotPage($user, 'failed')['error']['kind'] ?
 
 // P420-P424 and P431: observed-only wording and integrity preservation.
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P420 successful empty snapshot does not render SIN MARCACIÓN');
-$assert(str_contains($viewSource, 'Nunca se activa automáticamente'), 'P421 successful empty snapshot does not render automatic FALTA');
+$assert(str_contains($viewSource, 'Sin marcaciones observadas para esta consulta.')
+    && str_contains($viewSource, 'Pendiente de clasificación')
+    && !preg_match('/\bFALTA\b|\bAUSENTE\b/i', $viewSource), 'P421 daily attendance keeps empty reads neutral and never infers absence');
 $assert(!str_contains($viewSource, 'AUSENTE'), 'P422 successful empty snapshot does not render AUSENTE');
 $assert(!preg_match('/n[oó]mina|payroll|descuento/i', $viewSource), 'P423 no payroll conclusion is rendered');
-$assert(str_contains($viewSource, "['integrity']['status']") || str_contains($viewSource, "['integrity']['status'] ??"), 'P424 integrity status is preserved');
-$assert(str_contains($viewSource, 'conjunto estable de marcaciones observadas') && str_contains($viewSource, 'no determina faltas'), 'P431 source-completeness notice is rendered');
+$assert(str_contains((string) $punchReportViewSource, 'punch-detail-integrity'), 'P424 API-reported integrity remains available in the raw report detail');
+$assert(str_contains($viewSource, 'Cobertura no confirmada')
+    && str_contains($viewSource, 'no confirma que se hayan recibido todas las marcaciones'), 'P431 attendance presents source-completeness uncertainty without a false completeness claim');
 
 // P425-P430 and P432: Portal3 boundary, fail-closed scope, and P03 preservation.
 $assert(str_contains($controllerSource, 'ChecadorAccessService::authorize($requestedWorkplace)'), 'P425 current Portal3 authorization is revalidated on page requests');
 $assert(str_contains($controllerSource, "workplace_id'] ?? 0") && str_contains($controllerSource, 'snapshot_ref'), 'P426 snapshot state cannot broaden workplace scope');
-$assert(str_contains($controllerSource, 'resolveWorkplaceLocalDay') && str_contains($controllerSource, 'timezone_unresolved'), 'P427 date before timezone authority fails before snapshot creation');
+$assert(str_contains($controllerSource, 'resolveWorkplaceLocalDay') && str_contains($controllerSource, 'timezone_unresolved'), 'P427 date before timezone authority fails before reading attendance');
 $assert(!str_contains($serviceSource, 'op_rh_v2_'), 'P428 Portal3 does not read raw V2 tables directly');
 $assert(str_contains($serviceSource, 'readObservedPunches'), 'P429 ordinary P03 raw-read functionality remains intact');
-$assert(str_contains($routeSource, '/departamento-operativo/recursos-humanos/checador') && str_contains($controllerSource, 'createDailyPunchSnapshot'), 'P430 P03 route remains the same while Level 1 is added');
+$assert(str_contains($routeSource, "addRoute('GET', '/recursos-humanos/checador/asistencia'")
+    && str_contains($routeSource, "addRoute('POST', '/recursos-humanos/checador/asistencia'")
+    && str_contains($serviceSource, 'createDailyPunchSnapshot')
+    && !str_contains($controllerSource, 'createDailyPunchSnapshot('), 'P430 routes remain unchanged, the service contract remains available, and GET does not create a snapshot');
 $assert(str_contains($controllerSource, "'snapshot_expired'") && str_contains($controllerSource, 'snapshotRefProvided') && str_contains($controllerSource, 'snapshot_state_unavailable'), 'P432 expiration does not silently substitute a different snapshot');
+
+foreach ($testEnvironmentKeys as $key) {
+    [$wasSet, $envValue, $processValue] = $testEnvironmentOriginal[$key];
+    if ($wasSet) {
+        $_ENV[$key] = $envValue;
+    } else {
+        unset($_ENV[$key]);
+    }
+    if ($processValue === false) {
+        putenv($key);
+    } else {
+        putenv($key . '=' . $processValue);
+    }
+}
 
 printf("CHECADOR_P04_LEVEL1_SNAPSHOT_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

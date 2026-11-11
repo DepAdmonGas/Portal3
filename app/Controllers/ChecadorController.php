@@ -518,7 +518,11 @@ final class ChecadorController extends BaseController
 
         $hasExplicitWorkplace = array_key_exists('workplace_id', $query);
         $requestedWorkplace = self::positiveInteger($query['workplace_id'] ?? null);
-        $requestedWorker = self::positiveInteger($query['worker_id'] ?? null);
+        $requestedWorkerValue = $query['worker_id'] ?? null;
+        $requestedWorker = self::positiveInteger($requestedWorkerValue);
+        $requestedWorkerInvalid = array_key_exists('worker_id', $query)
+            && !(is_scalar($requestedWorkerValue) && trim((string) $requestedWorkerValue) === '')
+            && $requestedWorker === null;
         $snapshotRefProvided = array_key_exists('snapshot_ref', $query);
         $snapshotRef = self::safeSnapshotRef($query['snapshot_ref'] ?? null);
         $access = ChecadorAccessService::authorize(null);
@@ -527,6 +531,10 @@ final class ChecadorController extends BaseController
             return;
         }
         $workplaces = $access['workplaces'];
+        $authorizedStationWorkplaceIds = array_values(array_map(
+            static fn(array $item): int => (int) ($item['id'] ?? 0),
+            is_array($access['station_workplaces'] ?? null) ? $access['station_workplaces'] : []
+        ));
         $rawWorkplace = $query['workplace_id'] ?? null;
         if ($hasExplicitWorkplace && $rawWorkplace !== '' && $requestedWorkplace === null) {
             self::renderAccessDenied('invalid_station_selection', null);
@@ -640,6 +648,7 @@ final class ChecadorController extends BaseController
                 }
             }
         }
+        $attendanceTimezoneResolution = $defaultTimezoneResolution;
         if ($scheduleHistoryMode) {
             $rawHistoryPage = self::positiveInteger($query['schedule_history_page'] ?? 1);
             $this->renderScheduleHistory(
@@ -740,6 +749,34 @@ final class ChecadorController extends BaseController
             } else {
                 try {
                     $reader = new ChecadorDailyReadService();
+                    if ($workspace === 'daily-attendance' && !$demoMode) {
+                        $workerCatalog = (new \App\Services\ChecadorAttendanceRosterService())
+                            ->workersForAttendanceFilter($requestedWorkplace, $date, null, false);
+                        $rawAttendance = self::readDailyRawAttendance(
+                            $reader,
+                            $user,
+                            $requestedWorkplace,
+                            $date,
+                            $requestedWorker,
+                            $requestedWorkerInvalid,
+                            $authorizedStationWorkplaceIds,
+                            $workerCatalog,
+                            $attendanceTimezoneResolution
+                        );
+                        $state = $rawAttendance['state'];
+                        $stateMessage = $rawAttendance['state_message'];
+                        $timezone = $rawAttendance['timezone'];
+                        $events = $rawAttendance['events'];
+                        $attendanceEvents = $rawAttendance['attendance_events'];
+                        $attendanceCoverage = $rawAttendance['attendance_coverage'];
+                        $attendanceRoster = $rawAttendance['attendance_roster'];
+                        $workerSelectOptions = $rawAttendance['worker_options'];
+                        $requestedWorker = $rawAttendance['selected_worker_id'];
+                        $scheduledComodines = $rawAttendance['scheduled_comodines'];
+                        $attendanceRows = $rawAttendance['attendance_rows'];
+                        $effectiveSchedules = $rawAttendance['effective_schedules'];
+                        $effectiveScheduleErrors = $rawAttendance['effective_schedule_errors'];
+                    } else {
                     $snapshotState = null;
 
                     if ($snapshotRefProvided && $snapshotRef === null) {
@@ -755,37 +792,11 @@ final class ChecadorController extends BaseController
                             $stateMessage = 'La consulta estable expiró. Vuelve a consultar para obtener una nueva lectura.';
                         }
                     } else {
-                        $timezoneResult = $defaultTimezoneResolution
-                            ?? $reader->resolveWorkplaceLocalDay($user, $requestedWorkplace, $date);
-                        if (!$timezoneResult['ok']) {
-                            [$state, $stateMessage] = self::stateForError($timezoneResult['error']['kind']);
-                        } else {
-                            $timezone = $timezoneResult['data'];
-                            $snapshotResult = $reader->createDailyPunchSnapshot($user, $requestedWorkplace, $timezone, self::creationRequestUuid());
-                            if (!$snapshotResult['ok']) {
-                                [$state, $stateMessage] = self::stateForError($snapshotResult['error']['kind']);
-                                $timezone = null;
-                            } else {
-                                $level2Result = $reader->getLevel2WindowStatus($user, $requestedWorkplace, $timezone);
-                                if (!$level2Result['ok']) {
-                                    [$state, $stateMessage] = self::stateForLevel2Error($level2Result['error']['kind']);
-                                    $timezone = null;
-                                } else {
-                                    $level2Meta = $level2Result['data'];
-                                    $level2Loaded = true;
-                                    $snapshotRef = self::newSnapshotRef();
-                                    $snapshotState = [
-                                        'user_id' => (int) $user->id,
-                                        'workplace_id' => $requestedWorkplace,
-                                        'date' => $date,
-                                        'timezone' => $timezone,
-                                        'snapshot' => $snapshotResult['data'],
-                                        'cursors' => [1 => null],
-                                    ];
-                                    self::saveSnapshotState($snapshotRef, $snapshotState);
-                                }
-                            }
-                        }
+                        // Snapshot creation is an explicit API write and does not
+                        // belong to rendering a workspace. A previously issued
+                        // reference remains readable through the existing contract.
+                        $state = 'snapshot_state_unavailable';
+                        $stateMessage = 'La consulta estable no está disponible. Vuelve a consultar mediante la operación explícita autorizada.';
                     }
 
                     if ($snapshotState !== null && !isset($snapshotState['expired']) && $state === 'idle') {
@@ -1028,6 +1039,7 @@ final class ChecadorController extends BaseController
                                 }
                             }
                         }
+                    }
                     }
                 } catch (\Throwable) {
                     $state = 'error';
@@ -3586,6 +3598,337 @@ final class ChecadorController extends BaseController
     {
         return is_string($value) && preg_match('/\A[a-f0-9]{32}\z/', $value) ? $value : null;
     }
+
+    private static function readDailyRawAttendance(
+        ChecadorDailyReadService $reader,
+        \App\Models\Usuario $user,
+        int $workplaceId,
+        string $date,
+        ?int $requestedWorkerId,
+        bool $requestedWorkerInvalid,
+        array $authorizedWorkplaceIds,
+        array $workerCatalog,
+        ?array $timezoneResolutionForDate
+    ): array {
+        $empty = [
+            'state' => 'error',
+            'state_message' => 'Las marcaciones observadas no están disponibles en este momento.',
+            'timezone' => null,
+            'events' => [],
+            'attendance_events' => [],
+            'attendance_coverage' => ['status' => 'not_available', 'complete' => false, 'message' => 'No se pudo confirmar la cobertura de la lectura.'],
+            'attendance_roster' => $workerCatalog,
+            'worker_options' => [],
+            'worker_options_status' => (string) ($workerCatalog['status'] ?? 'unavailable'),
+            'worker_options_message' => '',
+            'selected_worker_id' => null,
+            'scheduled_comodines' => ['status' => 'not_queried', 'workers' => [], 'message' => ''],
+            'attendance_rows' => [],
+            'effective_schedules' => [],
+            'effective_schedule_errors' => [],
+            'journey_evaluation_state' => 'not_evaluated',
+        ];
+        $sortWorkerOptions = static function (array &$options): void {
+            $collator = class_exists(\Collator::class) ? new \Collator('es_MX') : null;
+            usort($options, static function (array $left, array $right) use ($collator): int {
+                $leftName = (string) ($left['full_name'] ?? '');
+                $rightName = (string) ($right['full_name'] ?? '');
+                $nameOrder = $collator instanceof \Collator
+                    ? $collator->compare($leftName, $rightName)
+                    : strcmp(strtolower($leftName), strtolower($rightName));
+                if (!is_int($nameOrder) || $nameOrder === 0) {
+                    return (int) ($left['worker_id'] ?? 0) <=> (int) ($right['worker_id'] ?? 0);
+                }
+                return $nameOrder;
+            });
+        };
+        $workerOptionsById = [];
+        foreach ($workerCatalog['workers'] ?? [] as $profile) {
+            if (!is_array($profile)) continue;
+            $workerId = self::positiveInteger($profile['worker_id'] ?? null);
+            $name = trim((string) ($profile['full_name'] ?? ''));
+            if ($workerId === null || $name === '' || $name === 'Nombre no disponible') continue;
+            $workerOptionsById[$workerId] = [
+                'worker_id' => $workerId,
+                'full_name' => $name,
+                'employee_number' => is_scalar($profile['employee_number'] ?? null)
+                    ? trim((string) $profile['employee_number'])
+                    : '',
+            ];
+        }
+        $empty['worker_options'] = array_values($workerOptionsById);
+        $sortWorkerOptions($empty['worker_options']);
+        $empty['selected_worker_id'] = $requestedWorkerId !== null && isset($workerOptionsById[$requestedWorkerId])
+            ? $requestedWorkerId
+            : null;
+        $rowsWithoutPunches = static function (array $catalog, ?string $timezone, ?int $workerFilter): array {
+            $rows = [];
+            foreach ($catalog['workers'] ?? [] as $profile) {
+                if (!is_array($profile)) continue;
+                $workerId = self::positiveInteger($profile['worker_id'] ?? null);
+                if ($workerId === null || ($workerFilter !== null && $workerId !== $workerFilter)) continue;
+                $row = \App\Services\ChecadorAttendanceProjection::workerRow($profile, [], null, $timezone);
+                $row['status'] = 'punches_unavailable';
+                $row['schedule'] = null;
+                $row['schedule_error'] = 'schedule_not_loaded';
+                $row['worked_seconds'] = null;
+                $row['worked_time_source'] = null;
+                $row['incidence_count'] = null;
+                $rows[$workerId] = $row;
+            }
+            return $rows;
+        };
+        $empty['attendance_rows'] = $rowsWithoutPunches(
+            $workerCatalog,
+            null,
+            $empty['selected_worker_id']
+        );
+        $empty['attendance_roster'] = $workerCatalog;
+
+        if ($requestedWorkerInvalid) {
+            $empty['state'] = 'error';
+            $empty['state_message'] = 'El filtro de colaborador no es válido.';
+            return $empty;
+        }
+
+        $timezoneResult = $timezoneResolutionForDate
+            ?? $reader->resolveWorkplaceLocalDay($user, $workplaceId, $date);
+        if (!($timezoneResult['ok'] ?? false)) {
+            [$empty['state'], $empty['state_message']] = self::stateForError(
+                (string) ($timezoneResult['error']['kind'] ?? 'api_unavailable')
+            );
+            if (($workerCatalog['coverage'] ?? null) === 'current_active_roster') {
+                $empty['state_message'] .= ' Se conserva el padrón activo actual; no acredita pertenencia histórica para la fecha solicitada.';
+            }
+            return $empty;
+        }
+
+        $timezone = $timezoneResult['data'];
+        $empty['timezone'] = $timezone;
+        $rosterService = new \App\Services\ChecadorAttendanceRosterService();
+        $dateWorkerCatalog = $rosterService->workersForAttendanceFilter(
+            $workplaceId,
+            $date,
+            (string) ($timezone['timezone'] ?? ''),
+            false
+        );
+        if (in_array((string) ($dateWorkerCatalog['status'] ?? ''), ['ready', 'partial', 'current_roster_only'], true)) {
+            $workerOptionsById = [];
+            foreach ($dateWorkerCatalog['workers'] ?? [] as $profile) {
+                if (!is_array($profile)) continue;
+                $workerId = self::positiveInteger($profile['worker_id'] ?? null);
+                $name = trim((string) ($profile['full_name'] ?? ''));
+                if ($workerId === null || $name === '' || $name === 'Nombre no disponible') continue;
+                $workerOptionsById[$workerId] = [
+                    'worker_id' => $workerId,
+                    'full_name' => $name,
+                    'employee_number' => is_scalar($profile['employee_number'] ?? null)
+                        ? trim((string) $profile['employee_number'])
+                        : '',
+                ];
+            }
+            $empty['worker_options_status'] = (string) $dateWorkerCatalog['status'];
+            $empty['worker_options'] = array_values($workerOptionsById);
+            $empty['worker_options_message'] = (string) ($dateWorkerCatalog['message'] ?? '');
+            $sortWorkerOptions($empty['worker_options']);
+        }
+        $attendanceRoster = in_array((string) ($dateWorkerCatalog['status'] ?? ''), ['ready', 'partial', 'current_roster_only'], true)
+            ? $dateWorkerCatalog
+            : $workerCatalog;
+        $empty['attendance_roster'] = $attendanceRoster;
+        $empty['attendance_rows'] = $rowsWithoutPunches(
+            $attendanceRoster,
+            (string) ($timezoneResult['data']['timezone'] ?? ''),
+            $empty['selected_worker_id']
+        );
+        if ($requestedWorkerId !== null && !isset($workerOptionsById[$requestedWorkerId])) {
+            $empty['state'] = 'error';
+            $empty['state_message'] = 'El colaborador seleccionado no pertenece a la localidad autorizada para esta consulta.';
+            $empty['attendance_rows'] = [];
+            return $empty;
+        }
+        $empty['selected_worker_id'] = $requestedWorkerId;
+
+        $events = [];
+        $firstPagination = null;
+        $readComplete = false;
+        for ($page = 1; $page <= 20; $page++) {
+            $result = $reader->readObservedPunches($user, $workplaceId, $timezone, $page, 200);
+            if (!($result['ok'] ?? false)) {
+                [$empty['state'], $empty['state_message']] = self::stateForError(
+                    (string) ($result['error']['kind'] ?? 'api_unavailable')
+                );
+                $empty['state_message'] = 'Marcaciones no disponibles. ' . $empty['state_message'];
+                return $empty;
+            }
+            $pagination = $result['pagination'];
+            if ($firstPagination === null) {
+                $firstPagination = $pagination;
+            } elseif ((int) $pagination['total_records'] !== (int) $firstPagination['total_records']
+                || (int) $pagination['total_pages'] !== (int) $firstPagination['total_pages']) {
+                $empty['state'] = 'unavailable';
+                $empty['state_message'] = 'El resultado cambió mientras se leían sus páginas. Vuelve a consultar para obtener una lectura coherente.';
+                $empty['state_message'] = 'Marcaciones no disponibles. ' . $empty['state_message'];
+                return $empty;
+            }
+            foreach ($result['events'] as $event) {
+                $events[] = $event;
+            }
+            $requiredPages = max(1, (int) ($firstPagination['total_pages'] ?? 0));
+            if ($page >= $requiredPages) {
+                $readComplete = count($events) === (int) ($firstPagination['total_records'] ?? 0);
+                break;
+            }
+        }
+        if (!$readComplete) {
+            $empty['state'] = 'unavailable';
+            $empty['state_message'] = 'La consulta excede el límite seguro de páginas o cambió durante la lectura; no se muestran resultados parciales.';
+            $empty['state_message'] = 'Marcaciones no disponibles. ' . $empty['state_message'];
+            return $empty;
+        }
+
+        // Only events with an API-verified HMAC, a resolved canonical worker,
+        // and a completed identity state become attendance rows. The raw GET
+        // response does not classify events into the four neutral positions.
+        $attendanceEvents = [];
+        $unverifiedIntegrityCount = 0;
+        $unresolvedIdentityCount = 0;
+        $stationMismatchCount = 0;
+        foreach ($events as $event) {
+            $eventStationId = self::positiveInteger($event['id_estacion_resuelta'] ?? null);
+            $integrityStatus = strtoupper(trim((string) ($event['integrity']['status'] ?? '')));
+            $workerId = self::positiveInteger($event['id_personal_resuelto'] ?? null);
+            $processingStatus = strtoupper(trim((string) ($event['processing_status'] ?? '')));
+            if ($eventStationId !== $workplaceId) {
+                $stationMismatchCount++;
+                continue;
+            }
+            if ($integrityStatus !== 'VALID') {
+                $unverifiedIntegrityCount++;
+            }
+            if ($workerId === null || $processingStatus !== 'RECEIVED') {
+                $unresolvedIdentityCount++;
+            }
+            if ($integrityStatus !== 'VALID' || $workerId === null || $processingStatus !== 'RECEIVED') {
+                continue;
+            }
+            $attendanceEvents[] = $event;
+        }
+
+        $attendanceRoster = in_array((string) ($dateWorkerCatalog['status'] ?? ''), ['ready', 'partial', 'current_roster_only'], true)
+            ? $dateWorkerCatalog
+            : $workerCatalog;
+        $scheduledComodines = ['status' => 'not_queried', 'workers' => [], 'message' => ''];
+        $programmingRead = RolComodinesService::authorizeCanonicalProgramming($workplaceId, 'read');
+        if (!empty($programmingRead['allowed'])) {
+            $scheduledComodines = RolComodinesService::getCanonicalScheduledWorkersForDate(
+                $workplaceId,
+                $date,
+                $programmingRead['station_workplace_ids'] ?? $authorizedWorkplaceIds
+            );
+        } else {
+            $scheduledComodines = ['status' => 'not_authorized', 'workers' => [], 'message' => ''];
+        }
+
+        $eventsByWorker = [];
+        $observedIds = [];
+        foreach ($attendanceEvents as $event) {
+            $workerId = (int) $event['id_personal_resuelto'];
+            $observedIds[$workerId] = true;
+            $eventsByWorker[$workerId][] = $event;
+        }
+
+        $observedProfiles = $rosterService->observedProfiles(array_map('intval', array_keys($observedIds)), false);
+        $profiles = [];
+        foreach ($attendanceRoster['workers'] ?? [] as $profile) {
+            $profileWorkerId = (int) ($profile['worker_id'] ?? 0);
+            if ($profileWorkerId > 0) {
+                $profiles[$profileWorkerId] = $profile;
+            }
+        }
+        $profiles += $observedProfiles;
+        foreach (array_keys($observedIds) as $workerId) {
+            $profiles[$workerId] ??= ['worker_id' => (int) $workerId, 'full_name' => 'Nombre no disponible', 'employee_number' => null];
+        }
+        if ($requestedWorkerId !== null) {
+            $profiles = array_intersect_key($profiles, [$requestedWorkerId => true]);
+        }
+
+        $effectiveSchedules = [];
+        $effectiveScheduleErrors = [];
+        foreach (array_slice(array_keys($profiles), 0, 50) as $workerId) {
+            $scheduleResult = $reader->getEffectiveSchedule($user, (int) $workerId, $workplaceId, $date);
+            if ($scheduleResult['ok']) {
+                $effectiveSchedules[(int) $workerId] = $scheduleResult['data'];
+            } else {
+                $effectiveScheduleErrors[(int) $workerId] = $scheduleResult['error']['kind'];
+            }
+        }
+
+        $journeys = [];
+        $journeyErrors = [];
+        $journeyEvaluationState = 'not_evaluated';
+
+        $attendanceRows = [];
+        foreach ($profiles as $workerId => $profile) {
+            $workerId = (int) $workerId;
+            $attendanceRows[$workerId] = \App\Services\ChecadorAttendanceProjection::workerRow(
+                $profile,
+                $eventsByWorker[$workerId] ?? [],
+                $journeys[$workerId] ?? null,
+                (string) ($timezone['timezone'] ?? '')
+            );
+            if (isset($journeyErrors[$workerId])) {
+                $attendanceRows[$workerId]['journey_error'] = $journeyErrors[$workerId];
+                if (($attendanceRows[$workerId]['observed_count'] ?? 0) > 0) {
+                    $attendanceRows[$workerId]['status'] = 'evaluation_unavailable';
+                }
+            }
+            $attendanceRows[$workerId]['schedule'] = $effectiveSchedules[$workerId] ?? null;
+            $attendanceRows[$workerId]['schedule_error'] = $effectiveScheduleErrors[$workerId] ?? 'schedule_not_loaded';
+            $attendanceRows[$workerId]['worked_seconds'] = null;
+            $attendanceRows[$workerId]['worked_time_source'] = null;
+            $attendanceRows[$workerId]['incidence_count'] = null;
+        }
+
+        $omittedCount = max(0, count($events) - count($attendanceEvents));
+        $coverageMessage = $omittedCount > 0
+            ? sprintf(
+                'Se omitieron %d marcaciones con integridad, identidad, estación o estado de procesamiento no verificable. La clasificación de las posiciones no está disponible en esta lectura.',
+                $omittedCount
+            )
+            : (count($events) === 0
+                ? 'La API devolvió cero marcaciones para esta estación y fecha. Esta lectura no acredita que la fuente haya recibido todas las marcaciones del periodo.'
+                : 'Se leyeron todas las páginas disponibles del API; la lectura no acredita que la fuente haya enviado todas las marcaciones del periodo.');
+
+        return [
+            'state' => 'success',
+            'state_message' => '',
+            'timezone' => $timezone,
+            'events' => $attendanceEvents,
+            'attendance_events' => $attendanceEvents,
+            'attendance_coverage' => [
+                'status' => $omittedCount > 0 ? 'partial' : 'source_completeness_unknown',
+                'complete' => false,
+                'message' => $coverageMessage,
+                'api_records_read' => count($events),
+                'unverified_integrity_count' => $unverifiedIntegrityCount,
+                'unresolved_identity_count' => $unresolvedIdentityCount,
+                'station_mismatch_count' => $stationMismatchCount,
+            ],
+            'attendance_roster' => $attendanceRoster,
+            'worker_options' => $empty['worker_options'],
+            'worker_options_status' => $empty['worker_options_status'],
+            'worker_options_message' => $empty['worker_options_message'],
+            'selected_worker_id' => $empty['selected_worker_id'],
+            'scheduled_comodines' => $scheduledComodines,
+            'attendance_rows' => $attendanceRows,
+            'effective_schedules' => $effectiveSchedules,
+            'effective_schedule_errors' => $effectiveScheduleErrors,
+            'journey_evaluation_state' => $journeyEvaluationState,
+        ];
+    }
+
 
     private static function loadSnapshotState(string $ref, int $userId, int $workplaceId, string $date): ?array
     {
