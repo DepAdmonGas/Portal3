@@ -630,6 +630,7 @@ return function (RouteCollector $r) {
         $r->addRoute('POST', '/recursos-humanos/checador/rol-comodines/coberturas/{coverageUuid}/authorize', Route::auth(['ChecadorComodinesController', 'authorizeCoverage']));
         $r->addRoute('POST', '/recursos-humanos/checador/rol-comodines/coberturas/{coverageUuid}/cancel', Route::auth(['ChecadorComodinesController', 'cancelCoverage']));
         $r->addRoute('GET', '/recursos-humanos/checador/asistencia', Route::auth(['ChecadorController', 'dailyAttendance']));
+        $r->addRoute('POST', '/recursos-humanos/checador/asistencia', Route::auth(['ChecadorController', 'dailyAttendance']));
         $r->addRoute('GET', '/recursos-humanos/checador/jornadas', Route::auth(['ChecadorController', 'journeys']));
         $r->addRoute('GET', '/recursos-humanos/checador/incidencias', Route::auth(['ChecadorController', 'incidences']));
         $r->addRoute('GET', '/recursos-humanos/checador/ajustes', Route::auth(['ChecadorController', 'adjustments']));

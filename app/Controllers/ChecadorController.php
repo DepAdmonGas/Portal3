@@ -42,6 +42,52 @@ final class ChecadorController extends BaseController
 
     public function dailyAttendance(): void
     {
+        if (Request::method() === 'POST') {
+            $contentType = strtolower(trim(explode(';', (string) ($_SERVER['CONTENT_TYPE'] ?? ''), 2)[0]));
+            $requestedWith = strtoupper(trim((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')));
+            if ($contentType !== 'application/json' || $requestedWith !== 'XMLHTTPREQUEST') {
+                JsonResponse::send([
+                    'success' => false,
+                    'error' => ['code' => 'invalid_request_format', 'message' => 'La solicitud de búsqueda no tiene un formato válido.'],
+                ], 415, ['Cache-Control' => 'private, no-store']);
+            }
+
+            $payload = Request::json();
+            $payloadKeys = array_keys($payload);
+            sort($payloadKeys);
+            $date = $payload['date'] ?? null;
+            $workerId = $payload['worker_id'] ?? null;
+            $validDate = $date === null || (is_string($date) && self::isCivilDate($date));
+            $validWorkerId = $workerId === null
+                || ((is_string($workerId) || is_int($workerId))
+                    && filter_var($workerId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) !== false);
+            if ($payloadKeys !== ['date', 'worker_id'] || !$validDate || !$validWorkerId) {
+                JsonResponse::send([
+                    'success' => false,
+                    'error' => ['code' => 'invalid_search_payload', 'message' => 'Selecciona una fecha y un filtro de colaborador válidos.'],
+                ], 422, ['Cache-Control' => 'private, no-store']);
+            }
+
+            ob_start();
+            $this->renderDashboardWorkspace('daily-attendance');
+            $html = (string) ob_get_clean();
+            $status = http_response_code();
+            if ($status !== false && $status >= 400) {
+                JsonResponse::send([
+                    'success' => false,
+                    'error' => ['code' => 'attendance_read_unavailable', 'message' => 'No fue posible consultar la asistencia para el alcance autorizado.'],
+                ], $status, ['Cache-Control' => 'private, no-store']);
+            }
+            if (!str_contains($html, 'data-checador-attendance-results')) {
+                JsonResponse::send([
+                    'success' => false,
+                    'error' => ['code' => 'attendance_context_unavailable', 'message' => 'No fue posible confirmar el contexto autorizado. Recarga la página.'],
+                ], 403, ['Cache-Control' => 'private, no-store']);
+            }
+
+            JsonResponse::send(['success' => true, 'html' => $html], 200, ['Cache-Control' => 'private, no-store']);
+        }
+
         $this->renderDashboardWorkspace('daily-attendance');
     }
 
@@ -441,7 +487,9 @@ final class ChecadorController extends BaseController
 
     private function renderDashboardWorkspace(?string $workspace): void
     {
-        $query = Request::query();
+        $query = $workspace === 'daily-attendance' && Request::method() === 'POST'
+            ? Request::json()
+            : Request::query();
         $scheduleHistoryMode = $workspace === null && ($query['schedule_history'] ?? '') === '1';
         $scheduleWeekMode = $workspace === null && ($query['schedule_week'] ?? '') === '1';
         Breadcrumb::add('Home', '/home');
@@ -629,6 +677,7 @@ final class ChecadorController extends BaseController
         $attendanceCoverage = ['status' => 'not_available', 'complete' => false, 'message' => 'No se pudo confirmar la cobertura de marcaciones.'];
         $attendanceRoster = ['status' => 'not_available', 'coverage' => 'unknown', 'workers' => [], 'message' => 'Padrón no disponible.'];
         $attendanceRows = [];
+        $workerSelectOptions = [];
         $journeys = [];
         $journeyErrors = [];
         $administrativeIncidences = [];
@@ -935,6 +984,22 @@ final class ChecadorController extends BaseController
                                     foreach (array_keys($observedIds) as $workerId) {
                                         $profiles[$workerId] ??= ['worker_id' => (int) $workerId, 'full_name' => 'Trabajador ' . (int) $workerId, 'employee_number' => null];
                                     }
+                                    $workerSelectOptions = array_values(array_filter(
+                                        $profiles,
+                                        static function (array $profile): bool {
+                                            $name = trim((string) ($profile['full_name'] ?? ''));
+                                            return $name !== '' && preg_match('/^Trabajador\s+\d+$/u', $name) !== 1;
+                                        }
+                                    ));
+                                    usort($workerSelectOptions, static function (array $left, array $right): int {
+                                        $byName = strnatcasecmp(
+                                            trim((string) ($left['full_name'] ?? '')),
+                                            trim((string) ($right['full_name'] ?? ''))
+                                        );
+                                        return $byName !== 0
+                                            ? $byName
+                                            : ((int) ($left['worker_id'] ?? 0) <=> (int) ($right['worker_id'] ?? 0));
+                                    });
                                     if ($requestedWorker !== null) {
                                         $profiles = array_intersect_key($profiles, [$requestedWorker => true]);
                                     }
@@ -1172,6 +1237,7 @@ final class ChecadorController extends BaseController
                 'defaultReportYear' => (int) gmdate('Y'),
                 'defaultReportMonth' => (int) gmdate('n'),
                 'selectedWorkerId' => $requestedWorker,
+                'workerSelectOptions' => $workerSelectOptions,
                 'snapshotRef' => $snapshotRef,
                 'demoWorkerFilterNoMatches' => $demoWorkerFilterNoMatches,
                 'timezone' => $timezone,
