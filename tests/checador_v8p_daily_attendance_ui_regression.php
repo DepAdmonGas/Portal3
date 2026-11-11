@@ -69,6 +69,11 @@ $vars = [
     'state' => 'success',
     'attendanceCoverage' => ['complete' => true],
     'attendanceRows' => [$row],
+    'workerSelectOptions' => [[
+        'worker_id' => 900001,
+        'full_name' => 'Ana García',
+        'employee_number' => 'EMP-009',
+    ]],
     'administrativeIncidences' => [900001 => [[
         'category' => 'PERMISSION',
         'date_range' => ['start_date' => '2026-10-23', 'end_date' => '2026-10-23'],
@@ -95,9 +100,11 @@ $assert(str_contains($html, '<h1 class="h3 mb-1">Asistencia del día</h1>')
 $assert(str_contains($html, 'data-bs-target="#checador-filter-modal"')
     && str_contains($html, 'id="checador-filter-modal"')
     && str_contains($html, 'id="date" name="date" type="date"')
-    && str_contains($html, 'id="worker_id" name="worker_id" type="number"')
-    && str_contains($html, 'name="workplace_id"')
-    && str_contains($html, 'data-checador-clear-filters'), 'filter modal preserves required date, optional worker, station scope, apply and clear controls');
+    && str_contains($html, 'id="worker_id" name="worker_id" class="form-select"')
+    && str_contains($html, '<option value="900001">Ana García · N.º EMP-009</option>')
+    && str_contains($html, 'data-checador-ajax')
+    && !str_contains($html, 'name="workplace_id"')
+    && str_contains($html, 'data-checador-search-action="clear"'), 'filter modal submits only attendance filters through the authenticated read endpoint; station scope remains server-derived');
 $assert(count(array_filter($renderedIds, static fn(int $count): bool => $count > 1)) === 0
     && !preg_match('/\sstyle="/i', $html), 'rendered daily view has unique control IDs and no inline styles');
 $assert(str_contains($mainTable, 'Ana García') && str_contains($mainTable, 'EMP-009')
@@ -130,7 +137,8 @@ $vars['incidenceCreateKeys'] = [900001 => 'create-key'];
 $authorizedHtml = $render($vars);
 $assert(str_contains($authorizedHtml, 'Registrar incidencia')
     && str_contains($authorizedHtml, 'href="/departamento-operativo/recursos-humanos/checador/incidencias?workplace_id=14&amp;date=2026-10-23&amp;snapshot_ref=snapshot%2Fref-1&amp;worker_id=900001"')
-    && !str_contains($authorizedHtml, 'method="post"'), 'incidence entry link appears only with existing server-provided permission and key and does not submit a write');
+    && !str_contains($authorizedHtml, 'action="/departamento-operativo/recursos-humanos/checador/incidencias/crear"')
+    && !str_contains($authorizedHtml, 'name="idempotency_key"'), 'incidence entry link appears only with existing server-provided permission and key and does not submit a write');
 
 printf("CHECADOR_V8P_DAILY_ATTENDANCE_UI: %d PASS / %d FAIL\n", $assertions - $failures, $failures);
 exit($failures === 0 ? 0 : 1);

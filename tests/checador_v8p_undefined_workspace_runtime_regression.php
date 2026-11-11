@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Controllers {
     class BaseController
     {
+        public function __construct()
+        {
+        }
     }
 }
 
