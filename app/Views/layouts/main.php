@@ -11,6 +11,7 @@
     <link rel="shortcut icon" type="image/png" href="<?= asset('images/logos/icono-web.png') ?>" />
     <!-- Core Css -->
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>" />
+    <link rel="stylesheet" href="<?= asset('css/table-actions.css?v=20261028-1') ?>" />
     <link rel="stylesheet" href="<?= asset('libs/sweetalert2/dist/sweetalert2.min.css') ?>">
 
     <!-- Scripts por vista -->
