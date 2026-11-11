@@ -4,5 +4,7 @@
 /public/build
 /public/uploads
 /node_modules
+/tests/e2e/node_modules/
 .env
 package-lock.json
+!/tests/e2e/package-lock.json
