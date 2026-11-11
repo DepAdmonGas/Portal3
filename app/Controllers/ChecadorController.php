@@ -12,6 +12,8 @@ use App\Core\Request;
 use App\Core\Session;
 use App\Core\View;
 use App\Services\ChecadorAccessService;
+use App\Services\ChecadorRolComodinesService;
+use App\Services\ChecadorV2PermissionService;
 use App\Services\ChecadorDailyReadService;
 use App\Services\ChecadorConfigurationReadService;
 use App\Services\ChecadorOperationalPeriod;
@@ -42,6 +44,174 @@ final class ChecadorController extends BaseController
     {
         $this->renderDashboardWorkspace('daily-attendance');
     }
+
+    public function rolComodines(): void
+    {
+        $currentUser = Auth::user();
+        if (!$currentUser) {
+            self::renderAccessDenied('unauthenticated', null);
+            return;
+        }
+        $positionId = (int) ($currentUser->id_puesto ?? 0);
+        $userId = (int) ($currentUser->id ?? 0);
+        if ($positionId !== 13 || !ChecadorV2PermissionService::allowsComodines(
+            $userId,
+            $positionId,
+            ChecadorV2PermissionService::COMODINES_READ
+        )) {
+            self::renderAccessDenied('comodines_permission_denied', null);
+            return;
+        }
+
+        $access = ChecadorAccessService::authorize(null);
+        if (empty($access['allowed'])) {
+            self::renderAccessDenied((string) ($access['reason'] ?? 'authorization_lookup_failed'), null);
+            return;
+        }
+
+        $stationWorkplaces = is_array($access['station_workplaces'] ?? null)
+            ? $access['station_workplaces']
+            : [];
+        $authorizedWorkplaceIds = array_values(array_map(
+            static fn(array $item): int => (int) ($item['id'] ?? 0),
+            $stationWorkplaces
+        ));
+        $workplaceId = $this->comodinesSessionWorkplaceId($access);
+        if ($workplaceId !== null && !in_array($workplaceId, $authorizedWorkplaceIds, true)) {
+            self::renderAccessDenied('requested_station_out_of_scope', $workplaceId);
+            return;
+        }
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+        Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
+        Breadcrumb::add('Checador', '/departamento-operativo/recursos-humanos/checador');
+        Breadcrumb::add('Rol de comodines', '');
+
+        $selectedWorkplaceName = '';
+        foreach ($stationWorkplaces as $workplace) {
+            if ((int) ($workplace['id'] ?? 0) === (int) ($workplaceId ?? 0)) {
+                $selectedWorkplaceName = (string) ($workplace['nombre'] ?? '');
+                break;
+            }
+        }
+
+        $roleReadAuthorization = $workplaceId === null
+            ? ['allowed' => false, 'reason' => 'station_selection_required']
+            : ChecadorRolComodinesService::authorizeCanonicalProgramming($workplaceId, 'read');
+        $readModel = $workplaceId === null || empty($roleReadAuthorization['allowed'])
+            ? ['ok' => false, 'error' => $workplaceId === null ? 'station_selection_required' : 'legacy_read_not_authorized']
+            : ChecadorRolComodinesService::getChecadorReadModel(
+                $workplaceId,
+                $roleReadAuthorization['station_workplace_ids'] ?? []
+            );
+        $state = !empty($readModel['ok']) ? 'ready' : 'unavailable';
+        $stateMessage = match ($readModel['error'] ?? '') {
+            'station_selection_required' => 'Selecciona una estación autorizada para consultar sus programaciones.',
+            'legacy_read_not_authorized' => 'Los registros históricos no están disponibles para este perfil. La consulta canónica usa sus permisos independientes.',
+            'station_mapping_unavailable' => 'No se pudo resolver de forma única la relación entre la estación y la localidad.',
+            'read_limit_exceeded' => 'La consulta excede el límite seguro de lectura. Solicita revisión administrativa.',
+            default => $state === 'ready' ? '' : 'No se pudo consultar el rol de comodines de forma segura.',
+        };
+        $coverageWriter = new \App\Services\RolComodinesPortalWriterService();
+        $coverageWriterEnabled = \App\Services\RolComodinesPortalWriterService::writesEnabled()
+            && \App\Core\Database::isLocalDevelopmentDatabaseConnection();
+        // The shared MariaDB is the canonical record. The Portal3 administration UI
+        // must not depend on the API HTTP service to list or mutate coverage records.
+        $coverageRead = $coverageWriter->listVisible($authorizedWorkplaceIds);
+        $coverageReadMessage = match ((string) ($coverageRead['code'] ?? '')) {
+            'coverage_scope_denied' => 'No se pudieron consultar coberturas fuera del alcance autorizado.',
+            default => !empty($coverageRead['ok']) ? '' : 'No fue posible consultar las coberturas canónicas en este momento.',
+        };
+        $coverageRows = !empty($coverageRead['ok'])
+            ? ChecadorRolComodinesService::coveragePresentationRows($coverageRead['data']['items'] ?? [])
+            : [];
+        $canRequestCoverageGrant = $currentUser instanceof \App\Models\Usuario
+            && ChecadorV2PermissionService::allowsComodines(
+                $userId,
+                $positionId,
+                ChecadorV2PermissionService::COMODINES_REQUEST
+            );
+        $canApproveCoverageGrant = $currentUser instanceof \App\Models\Usuario
+            && ChecadorV2PermissionService::allowsComodines(
+                $userId,
+                $positionId,
+                ChecadorV2PermissionService::COMODINES_APPROVE
+            );
+        $canCancelCoverageGrant = $currentUser instanceof \App\Models\Usuario
+            && ChecadorV2PermissionService::allowsComodines(
+                $userId,
+                $positionId,
+                ChecadorV2PermissionService::COMODINES_CANCEL
+            );
+        $coverageWorkplaces = $coverageWriterEnabled && $canRequestCoverageGrant && $workplaceId !== null
+            ? array_values(array_filter(
+                ChecadorRolComodinesService::coverageWorkplaces(0),
+                static fn(array $workplace): bool => in_array((int) ($workplace['id'] ?? 0), $authorizedWorkplaceIds, true)
+            ))
+            : [];
+        $coverageTemplates = [];
+        $coverageTemplateCatalogReady = false;
+        if ($coverageWriterEnabled && $canRequestCoverageGrant && $workplaceId !== null && !empty($coverageRead['ok'])) {
+            $catalog = $coverageWriter->templateCatalog();
+            if (!empty($catalog['ok']) && !empty($catalog['data']['complete'])) {
+                $coverageTemplates = $catalog['data']['items'] ?? [];
+                $coverageTemplateCatalogReady = true;
+            }
+        }
+        $canRequestCoverage = $coverageWriterEnabled
+            && $canRequestCoverageGrant
+            && $workplaceId !== null
+            && !empty($coverageRead['ok'])
+            && $coverageTemplateCatalogReady
+            && $coverageTemplates !== []
+            && $coverageWorkplaces !== [];
+        $returnHref = '/departamento-operativo/recursos-humanos/checador';
+
+        View::render(
+            'departamento-operativo/2-recursos-humanos/checador/role-comodines',
+            [
+                'title' => 'Rol de comodines',
+                'roles' => $readModel['roles'] ?? [],
+                'state' => $state,
+                'stateMessage' => $stateMessage,
+                'selectedWorkplaceId' => $workplaceId,
+                'selectedWorkplaceName' => $selectedWorkplaceName,
+                'coverageRows' => $coverageRows,
+                'coverageReadState' => !empty($coverageRead['ok']) ? 'ready' : 'unavailable',
+                'coverageReadMessage' => $coverageReadMessage,
+                'coverageWriterEnabled' => $coverageWriterEnabled,
+                'coverageWorkplaces' => $coverageWorkplaces,
+                'coverageTemplates' => $coverageTemplates,
+                'canRequestCoverage' => $canRequestCoverage,
+                'canReviewCoverage' => $coverageWriterEnabled && $canApproveCoverageGrant && !empty($coverageRead['ok']),
+                'canCancelCoverage' => $coverageWriterEnabled && $canCancelCoverageGrant && !empty($coverageRead['ok']),
+                'coverageCreateUrl' => '/departamento-operativo/recursos-humanos/checador/rol-comodines/coberturas',
+                'coverageWorkersUrl' => '/departamento-operativo/recursos-humanos/checador/rol-comodines/trabajadores',
+                'coverageDetailUrl' => '/departamento-operativo/recursos-humanos/checador/rol-comodines/coberturas',
+                'workplaces' => $stationWorkplaces,
+                'returnHref' => $returnHref,
+                'moduleStationKey' => ChecadorAccessService::MODULE_KEY,
+                'links' => [
+                    '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                    '/assets/libs/select2/dist/css/select2.min.css',
+                    '/assets/css/select2-modal.css',
+                ],
+                'scripts' => [
+                    '/assets/js/vendor.min.js',
+                    '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                    '/assets/libs/select2/dist/js/select2.full.min.js',
+                    '/assets/js/core/module-station-selector.js',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261027-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.role-comodines.datatable.init.js?v=20261110-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.role-comodines.programming.init.js?v=20261110-1',
+                ],
+                'help' => false,
+            ],
+            'departamento-operativo'
+        );
+    }
+
 
     public function journeys(): void
     {
@@ -2970,6 +3140,25 @@ final class ChecadorController extends BaseController
         if (is_int($value) && $value > 0) return $value;
         if (!is_string($value) || !ctype_digit($value) || (int) $value < 1) return null;
         return (int) $value;
+    }
+
+    /** Resolve Comodines from the canonical Checador session context only. */
+    private function comodinesSessionWorkplaceId(array $access): ?int
+    {
+        $context = ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY);
+        $workplaceId = self::positiveInteger($context['id_depto'] ?? $context['id_estacion'] ?? null);
+        $authorizedIds = array_map('intval', array_column($access['station_workplaces'] ?? [], 'id'));
+
+        if ($workplaceId !== null && !in_array($workplaceId, $authorizedIds, true)) {
+            ModuleStationService::setContext(ChecadorAccessService::MODULE_KEY, null, null);
+            return null;
+        }
+        if ($workplaceId !== null
+            && empty(ChecadorAccessService::authorize($workplaceId)['allowed'])) {
+            ModuleStationService::setContext(ChecadorAccessService::MODULE_KEY, null, null);
+            return null;
+        }
+        return $workplaceId;
     }
 
     private static function renderAccessDenied(string $reason, ?int $requestedStationId): void

@@ -622,6 +622,13 @@ return function (RouteCollector $r) {
         $r->addRoute('GET', '/recursos-humanos/vacaciones/nuevo/{idLocalidad:\d+}', Route::auth(['VacacionesController', 'nuevo']));
         $r->addRoute('GET', '/recursos-humanos/vacaciones/editar/{idFormulario:\d+}', Route::auth(['VacacionesController', 'editar']));
         $r->addRoute('GET', '/recursos-humanos/checador', Route::auth(['ChecadorController', 'index']));
+        $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines', Route::auth(['ChecadorController', 'rolComodines']));
+        $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['ChecadorComodinesController', 'coverageList']));
+        $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines/trabajadores', Route::auth(['ChecadorComodinesController', 'searchCoverageWorkers']));
+        $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines/coberturas/{coverageUuid}', Route::auth(['ChecadorComodinesController', 'coverageDetail']));
+        $r->addRoute('POST', '/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['ChecadorComodinesController', 'requestCoverage']));
+        $r->addRoute('POST', '/recursos-humanos/checador/rol-comodines/coberturas/{coverageUuid}/authorize', Route::auth(['ChecadorComodinesController', 'authorizeCoverage']));
+        $r->addRoute('POST', '/recursos-humanos/checador/rol-comodines/coberturas/{coverageUuid}/cancel', Route::auth(['ChecadorComodinesController', 'cancelCoverage']));
         $r->addRoute('GET', '/recursos-humanos/checador/asistencia', Route::auth(['ChecadorController', 'dailyAttendance']));
         $r->addRoute('GET', '/recursos-humanos/checador/jornadas', Route::auth(['ChecadorController', 'journeys']));
         $r->addRoute('GET', '/recursos-humanos/checador/incidencias', Route::auth(['ChecadorController', 'incidences']));

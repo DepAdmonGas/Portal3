@@ -153,6 +153,34 @@ final class ChecadorAccessService
     }
 
     /** Schedule API uses the existing biometricos ACL, not the Checador menu grant alone. */
+    /** Preserve legacy Biométricos scheduling checks used by Comodines. */
+    public static function authorizeBiometricosScheduling(?int $requestedLocalityId, string $action): array
+    {
+        if (!in_array($action, ['leer', 'editar'], true)) {
+            return ['allowed' => false, 'reason' => 'unknown_biometricos_action', 'workplaces' => []];
+        }
+        $scope = self::authorize($requestedLocalityId);
+        if (!($scope['allowed'] ?? false)) return $scope;
+        try {
+            $authenticated = Auth::user();
+            if (!$authenticated) return ['allowed' => false, 'reason' => 'unauthenticated', 'workplaces' => []];
+            $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
+            if (!$user) return ['allowed' => false, 'reason' => 'inactive_user', 'workplaces' => []];
+            $permissions = ModuloDptoOperativoService::getPermiso((int) $user->id, 'biometricos');
+            if (empty($permissions[$action])) {
+                return ['allowed' => false, 'reason' => 'biometricos_permission_denied', 'workplaces' => []];
+            }
+            return [
+                'allowed' => true,
+                'reason' => 'authorized',
+                'workplaces' => $scope['workplaces'],
+                'station_workplaces' => $scope['station_workplaces'] ?? [],
+            ];
+        } catch (Throwable) {
+            return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
+        }
+    }
+
     public static function authorizeScheduling(?int $requestedLocalityId, string $action): array
     {
         if (!in_array($action, ['leer', 'editar'], true)) {
