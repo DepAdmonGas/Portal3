@@ -43,6 +43,41 @@ if ($path === '/authenticated-form') {
     exit(json_encode(['csrf_token' => CsrfToken::token(), 'authenticated' => true]));
 }
 
+if ($path === '/expire-csrf-token') {
+    if (!Auth::check()) {
+        http_response_code(401);
+        exit;
+    }
+    CsrfToken::token();
+    Session::set('_csrf_token_time', time() - 3601);
+    exit('expired');
+}
+
+if ($path === '/reset-csrf-marker') {
+    Session::remove('csrf_handler_reached');
+    exit('reset');
+}
+
+if ($path === '/csrf-handler-state') {
+    header('Content-Type: application/json');
+    exit(json_encode(['reached' => Session::get('csrf_handler_reached', false) === true]));
+}
+
+if ($path === '/incidence-create-feedback') {
+    $feedback = Session::get('checador_incidence_create_feedback', []);
+    header('Content-Type: application/json');
+    exit(json_encode([
+        'type' => is_array($feedback) ? ($feedback['type'] ?? '') : '',
+        'message' => is_array($feedback) ? ($feedback['message'] ?? '') : '',
+        'worker_id' => is_array($feedback) ? ($feedback['worker_id'] ?? null) : null,
+        'workplace_id' => is_array($feedback) ? ($feedback['workplace_id'] ?? null) : null,
+        'return_date' => is_array($feedback) ? ($feedback['return_date'] ?? '') : '',
+        'reason' => is_array($feedback) ? ($feedback['form_values']['reason'] ?? '') : '',
+        'confirmed' => is_array($feedback) ? (($feedback['form_values']['confirm_create'] ?? false) === true) : false,
+        'idempotency_key' => is_array($feedback) ? ($feedback['retry_idempotency_key'] ?? '') : '',
+    ]));
+}
+
 if ($path === '/mutation') {
     if (!Auth::check()) {
         http_response_code(401);
@@ -52,6 +87,17 @@ if ($path === '/mutation') {
     (new CsrfMiddleware())->handle();
     header('Content-Type: application/json');
     exit(json_encode(['accepted' => true, 'authenticated' => true]));
+}
+
+if ($path === '/departamento-operativo/recursos-humanos/checador/incidencias/crear') {
+    if (!Auth::check()) {
+        http_response_code(401);
+        exit;
+    }
+
+    (new CsrfMiddleware())->handle();
+    Session::set('csrf_handler_reached', true);
+    exit('accepted');
 }
 
 http_response_code(404);
