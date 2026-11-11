@@ -16,9 +16,16 @@ use App\Models\Operativo\RhLocalidad;
 use App\Models\Operativo\RhListaIncidencias;
 use App\Models\Usuario;
 use App\Models\Estacion;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\QueryException;
+use DomainException;
+use InvalidArgumentException;
 
 class ControlDocumentosPersonalService
 {
+private const RH_DIRECT_CREATE_KEY_HASH = 'rh_direct_create_idempotency_key_hash';
+private const RH_DIRECT_CREATE_REQUEST_FINGERPRINT = 'rh_direct_create_request_fingerprint';
+
 const DOCUMENT_TYPES = [
 'requisicion'      => ['label' => 'Requisición del Personal',       'folder' => 'requisicion',              'prefix' => 'Requisicion'],
 'curriculum'       => ['label' => 'Curriculum Vitae',               'folder' => 'curriculum',               'prefix' => 'Curriculum'],
@@ -255,14 +262,28 @@ $data[] = [
 return $data;
 }
 
-public static function addPersonal(array $input, array $files): ?int
+public static function addPersonal(array $input, array $files, string $idempotencyKey): ?array
 {
+$permisos = self::getPermisos();
+if (empty($permisos['puedeCrear'])) throw new RhDirectCreateAuthorizationException('The authenticated user cannot create RH personnel.');
+
 $ctx = ModuleStationService::getContext('control-documentos-personal');
 $idEstacion = (int)($input['id_estacion'] ?? 0);
 if (!$idEstacion) $idEstacion = $ctx['id_estacion'] ?? 0;
-if (!$idEstacion) return null;
+if (!$idEstacion) throw new RhDirectCreateAuthorizationException('No authorized RH locality is selected.');
+$allowedLocalityIds = self::getAllowedEstacionIds();
+if (!in_array($idEstacion, $allowedLocalityIds, true)
+    || !RhLocalidad::query()->whereKey($idEstacion)->exists()) {
+throw new RhDirectCreateAuthorizationException('The requested RH locality is not authorized.');
+}
 
-$uploadDir = self::getUploadDir();
+$idempotencyKey = trim($idempotencyKey);
+if (!preg_match('/\A[A-Za-z0-9._:-]{16,128}\z/', $idempotencyKey)) {
+    throw new InvalidArgumentException('A valid Idempotency-Key header is required for RH worker creation.');
+}
+$actorId = (int)(Session::get('usuario')['id'] ?? 0);
+self::assertHistoryActor($actorId);
+
 $data = [
 'id_estacion'      => $idEstacion,
 'fecha_ingreso'    => normalizarFecha($input['fecha_ingreso'] ?? ''),
@@ -270,6 +291,7 @@ $data = [
 'nombre_completo'  => trim($input['nombre_completo'] ?? ''),
 'puesto'           => (int)($input['puesto'] ?? 0),
 'sd'               => (float)($input['sd'] ?? 0),
+'documentos'       => '',
 'estado'           => 1,
 ];
 
@@ -278,54 +300,255 @@ $data[$campo] = '';
 }
 
 $nombrePersonal = $data['nombre_completo'];
+$keyHash = hash('sha256', $idempotencyKey, true);
+$requestFingerprint = self::directCreateRequestFingerprint($data, $files, $actorId);
+$data[self::RH_DIRECT_CREATE_KEY_HASH] = $keyHash;
+$data[self::RH_DIRECT_CREATE_REQUEST_FINGERPRINT] = $requestFingerprint;
 
-$record = RhPersonal::create($data);
-if (!$record) return null;
+$gateEnabled = WorkerWorkplaceDirectCreateMembershipWriteGate::enabled();
+$createdFiles = [];
+try {
+    $result = WorkerWorkplaceAssignmentWriteCoordinator::runExclusive(fn() => Capsule::connection()->transaction(function () use ($data, $idEstacion, $allowedLocalityIds, $gateEnabled, $actorId, $keyHash, $requestFingerprint, $files, &$createdFiles): ?array {
+        $existing = RhPersonal::query()
+            ->where(self::RH_DIRECT_CREATE_KEY_HASH, $keyHash)
+            ->lockForUpdate()
+            ->first();
+        if ($existing !== null) {
+            return self::resolveDirectCreateReplay($existing, $idEstacion, $allowedLocalityIds, $requestFingerprint);
+        }
 
-foreach (self::DOCUMENT_TYPES as $campo => $info) {
-$fileKey = 'doc_' . $campo;
-if (!empty($files[$fileKey]) && $files[$fileKey]['error'] === 0) {
-self::uploadFile($record->id, $campo, $files[$fileKey], $nombrePersonal);
+        $record = RhPersonal::create($data);
+        if (!$record) return null;
+
+        if ($gateEnabled) {
+            $writer = new WorkerWorkplaceAssignmentVersionService();
+            $writer->appendVersion(
+                (int)$record->id,
+                $idEstacion,
+                $writer->nowUtc(),
+                null,
+                $actorId,
+                'Alta directa en Control de Documentos del Personal'
+            );
+        }
+
+        self::storeDirectCreateFiles($record, $files, $keyHash, $createdFiles);
+
+        return ['worker_id' => (int)$record->id, 'idempotent_replay' => false];
+    }));
+} catch (RhDirectCreateIdempotencyConflict $exception) {
+    foreach ($createdFiles as $createdFile) {
+        if (is_file($createdFile)) @unlink($createdFile);
+    }
+    throw $exception;
+} catch (QueryException $exception) {
+    foreach ($createdFiles as $createdFile) {
+        if (is_file($createdFile)) @unlink($createdFile);
+    }
+    if ((int)($exception->errorInfo[1] ?? 0) !== 1062) {
+        throw $exception;
+    }
+    $result = self::resolveDirectCreateByKey($keyHash, $idEstacion, $allowedLocalityIds, $requestFingerprint);
+    if ($result === null) throw $exception;
+} catch (DomainException | InvalidArgumentException) {
+    foreach ($createdFiles as $createdFile) {
+        if (is_file($createdFile)) @unlink($createdFile);
+    }
+    return null;
+} catch (\Throwable $exception) {
+    foreach ($createdFiles as $createdFile) {
+        if (is_file($createdFile)) @unlink($createdFile);
+    }
+    throw $exception;
 }
+if (!$result) return null;
+
+if (!$result['idempotent_replay']) {
+    self::notify($idEstacion, 'agregó personal', [
+        'nombre' => $nombrePersonal,
+        'puesto' => RhPuestos::find($data['puesto'])->puesto ?? '',
+    ]);
 }
 
-self::notify($idEstacion, 'agregó personal', [
-'nombre' => $nombrePersonal,
-'puesto' => RhPuestos::find($data['puesto'])->puesto ?? '',
-]);
+return $result;
+}
 
-return $record->id;
+/** @return array<string, array{name:string,size:int,sha256:string}> */
+private static function directCreateFileFingerprints(array $files): array
+{
+    $fingerprints = [];
+    foreach (self::DOCUMENT_TYPES as $field => $_info) {
+        $fileKey = 'doc_' . $field;
+        $file = $files[$fileKey] ?? null;
+        if (!is_array($file)) continue;
+        $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($error === UPLOAD_ERR_NO_FILE) continue;
+        if ($error !== UPLOAD_ERR_OK || !is_file((string)($file['tmp_name'] ?? ''))) {
+            throw new InvalidArgumentException('A document upload is incomplete or unreadable.');
+        }
+        $digest = hash_file('sha256', (string)$file['tmp_name']);
+        if (!is_string($digest)) {
+            throw new InvalidArgumentException('A document upload could not be fingerprinted.');
+        }
+        $fingerprints[$field] = [
+            'name' => basename((string)($file['name'] ?? '')),
+            'size' => (int)($file['size'] ?? filesize((string)$file['tmp_name']) ?: 0),
+            'sha256' => $digest,
+        ];
+    }
+    ksort($fingerprints, SORT_STRING);
+    return $fingerprints;
+}
+
+private static function directCreateRequestFingerprint(array $workerData, array $files, int $actorId): string
+{
+    $normalized = [
+        'actor_id' => $actorId,
+        'workplace_id' => (int)$workerData['id_estacion'],
+        'fecha_ingreso' => (string)($workerData['fecha_ingreso'] ?? ''),
+        'no_colaborador' => (int)$workerData['no_colaborador'],
+        'nombre_completo' => (string)$workerData['nombre_completo'],
+        'puesto' => (int)$workerData['puesto'],
+        'sd' => number_format((float)$workerData['sd'], 2, '.', ''),
+        'documents' => self::directCreateFileFingerprints($files),
+    ];
+    return hash('sha256', json_encode($normalized, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), true);
+}
+
+private static function resolveDirectCreateReplay(RhPersonal $record, int $workplaceId, array $allowedWorkplaceIds, string $requestFingerprint): array
+{
+    if (!in_array($workplaceId, $allowedWorkplaceIds, true)
+        || (int)$record->id_estacion !== $workplaceId) {
+        throw new RhDirectCreateIdempotencyConflict('The prior result no longer matches the authorized workplace scope.');
+    }
+    if (!hash_equals((string)$record->getAttribute(self::RH_DIRECT_CREATE_REQUEST_FINGERPRINT), $requestFingerprint)) {
+        throw new RhDirectCreateIdempotencyConflict('Idempotency-Key was already used with different request data.');
+    }
+    return ['worker_id' => (int)$record->id, 'idempotent_replay' => true];
+}
+
+private static function resolveDirectCreateByKey(string $keyHash, int $workplaceId, array $allowedWorkplaceIds, string $requestFingerprint): ?array
+{
+    return Capsule::connection()->transaction(function () use ($keyHash, $workplaceId, $allowedWorkplaceIds, $requestFingerprint): ?array {
+        $record = RhPersonal::query()
+            ->where(self::RH_DIRECT_CREATE_KEY_HASH, $keyHash)
+            ->lockForUpdate()
+            ->first();
+        return $record === null
+            ? null
+            : self::resolveDirectCreateReplay($record, $workplaceId, $allowedWorkplaceIds, $requestFingerprint);
+    });
+}
+
+/** Move optional documents to deterministic private names so an exact retry never creates copies. */
+private static function storeDirectCreateFiles(RhPersonal $record, array $files, string $keyHash, array &$createdFiles): void
+{
+    $keyHex = bin2hex($keyHash);
+    foreach (self::DOCUMENT_TYPES as $field => $info) {
+        $file = $files['doc_' . $field] ?? null;
+        if (!is_array($file) || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) continue;
+        if ((int)($file['error'] ?? -1) !== UPLOAD_ERR_OK) {
+            throw new InvalidArgumentException('A document upload is incomplete.');
+        }
+
+        $extension = strtolower((string)preg_replace('/[^A-Za-z0-9]/', '', pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION)));
+        if ($extension === '') $extension = 'bin';
+        $directory = self::getUploadDir() . $info['folder'] . '/';
+        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+            throw new RuntimeException('Could not create the private document directory.');
+        }
+        $filename = 'rh-alta-' . substr($keyHex, 0, 32) . '-' . $field . '.' . $extension;
+        $target = $directory . $filename;
+        $expectedDigest = hash_file('sha256', (string)$file['tmp_name']);
+        if (is_file($target)) {
+            if (!is_string($expectedDigest) || !hash_equals((string)hash_file('sha256', $target), $expectedDigest)) {
+                throw new RhDirectCreateIdempotencyConflict('A deterministic document path is occupied by different content.');
+            }
+        } else {
+            if (!move_uploaded_file((string)$file['tmp_name'], $target)) {
+                throw new RuntimeException('Could not persist a private worker document.');
+            }
+            $createdFiles[] = $target;
+        }
+        $record->update([$field => $filename]);
+    }
 }
 
 public static function editPersonal(int $id, array $input, array $files): bool
 {
-$record = RhPersonal::find($id);
-if (!$record) return false;
+$permisos = self::getPermisos();
+if (empty($permisos['puedeEditar'])) return false;
 
-$record->update([
-'id_estacion'     => (int)($input['id_estacion'] ?? $record->id_estacion),
-'fecha_ingreso'   => normalizarFecha($input['fecha_ingreso'] ?? ''),
-'no_colaborador'  => (int)($input['no_colaborador'] ?? 0),
-'nombre_completo' => trim($input['nombre_completo'] ?? ''),
-'puesto'          => (int)($input['puesto'] ?? 0),
-'sd'              => (float)($input['sd'] ?? 0),
-]);
+$allowedLocalityIds = self::getAllowedEstacionIds();
+$gateEnabled = WorkerWorkplaceAssignmentHistoryWriteGate::enabled();
+try {
+    $result = WorkerWorkplaceAssignmentWriteCoordinator::runExclusive(fn() => Capsule::connection()->transaction(function () use ($id, $input, $allowedLocalityIds, $gateEnabled): ?array {
+        $record = RhPersonal::query()->whereKey($id)->lockForUpdate()->first();
+        if (!$record) return null;
 
-$nombrePersonal = $record->nombre_completo;
+        $currentLocalityId = (int)$record->id_estacion;
+        if (!in_array($currentLocalityId, $allowedLocalityIds, true)) {
+            return null;
+        }
+        $newLocalityId = (int)($input['id_estacion'] ?? $record->id_estacion);
+        $localityChanged = $newLocalityId !== $currentLocalityId;
+        if ($localityChanged) {
+            if (!in_array($newLocalityId, $allowedLocalityIds, true)
+                || !RhLocalidad::query()->whereKey($newLocalityId)->exists()) {
+                return null;
+            }
+
+            if ($gateEnabled) {
+                $actorId = (int)(Session::get('usuario')['id'] ?? 0);
+                self::assertHistoryActor($actorId);
+                $writer = new WorkerWorkplaceAssignmentVersionService();
+                $writer->appendCurrentLocalityTransition(
+                    $id,
+                    $currentLocalityId,
+                    $newLocalityId,
+                    $writer->nowUtc(),
+                    $actorId,
+                    'Cambio de localidad desde edición de Control de Documentos del Personal'
+                );
+            }
+        }
+
+        $record->update([
+            'id_estacion'     => $newLocalityId,
+            'fecha_ingreso'   => normalizarFecha($input['fecha_ingreso'] ?? ''),
+            'no_colaborador'  => (int)($input['no_colaborador'] ?? 0),
+            'nombre_completo' => trim($input['nombre_completo'] ?? ''),
+            'puesto'          => (int)($input['puesto'] ?? 0),
+            'sd'              => (float)($input['sd'] ?? 0),
+        ]);
+
+        return ['nombre' => $record->nombre_completo, 'localidad_id' => $newLocalityId, 'puesto' => $record->puesto];
+    }));
+} catch (DomainException | InvalidArgumentException) {
+    return false;
+}
+if ($result === null) return false;
 
 foreach (self::DOCUMENT_TYPES as $campo => $info) {
 $fileKey = 'doc_' . $campo;
 if (!empty($files[$fileKey]) && $files[$fileKey]['error'] === 0) {
-self::uploadFile($record->id, $campo, $files[$fileKey], $nombrePersonal);
+self::uploadFile($id, $campo, $files[$fileKey], $result['nombre']);
 }
 }
 
-self::notify($record->id_estacion, 'modificó personal', [
-'nombre' => $nombrePersonal,
-'puesto' => RhPuestos::find($record->puesto)->puesto ?? '',
+self::notify($result['localidad_id'], 'modificó personal', [
+'nombre' => $result['nombre'],
+'puesto' => RhPuestos::find($result['puesto'])->puesto ?? '',
 ]);
 
 return true;
+}
+
+private static function assertHistoryActor(int $actorId): void
+{
+if ($actorId <= 0 || !Usuario::query()->whereKey($actorId)->exists()) {
+    throw new DomainException('Assignment history requires the authenticated existing Portal3 actor.');
+}
 }
 
 public static function deletePersonal(int $id): bool
@@ -338,7 +561,11 @@ $nombrePersonal = $record->nombre_completo;
 $puesto = RhPuestos::find($record->puesto);
 $nombrePuesto = $puesto ? $puesto->puesto : '';
 
-$record->update(['estado' => 0]);
+WorkerWorkplaceAssignmentWriteCoordinator::runExclusive(static function () use ($id): void {
+    Capsule::connection()->transaction(static function () use ($id): void {
+        RhPersonal::query()->whereKey($id)->lockForUpdate()->update(['estado' => 0]);
+    });
+});
 
 self::notify($idEstacion, 'eliminó personal', [
 'nombre' => $nombrePersonal,

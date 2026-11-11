@@ -12,6 +12,7 @@ use App\Models\Operativo\RhListaNegraComentario;
 use App\Models\Operativo\RhListaNegraArchivo;
 use App\Services\ModuloDptoOperativoService;
 use App\Services\TelegramService;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class ListaNegraService
 {
@@ -120,16 +121,27 @@ class ListaNegraService
 
     public static function agregar(int $idPersonal, string $motivo, string $detalle): int
     {
-        $record = RhPersonalListaNegra::create([
-            'id_personal' => $idPersonal,
-            'fecha'       => date('Y-m-d'),
-            'motivo'      => $motivo,
-            'detalle'     => $detalle,
-        ]);
+        return WorkerWorkplaceAssignmentWriteCoordinator::runExclusive(static fn(): int => Capsule::connection()->transaction(static function () use ($idPersonal, $motivo, $detalle): int {
+            $personal = RhPersonal::query()->whereKey($idPersonal)->lockForUpdate()->first(['id']);
+            if ($personal === null) {
+                throw new \DomainException('El trabajador que se agregará a Lista Negra ya no existe.');
+            }
 
-        RhPersonal::where('id', $idPersonal)->update(['estado' => 0]);
+            $record = RhPersonalListaNegra::create([
+                'id_personal' => $idPersonal,
+                'fecha'       => date('Y-m-d'),
+                'motivo'      => $motivo,
+                'detalle'     => $detalle,
+            ]);
+            if (!$record) {
+                throw new \DomainException('No se pudo registrar la entrada de Lista Negra.');
+            }
 
-        return (int)$record->id;
+            $personal->estado = 0;
+            $personal->save();
+
+            return (int)$record->id;
+        }));
     }
 
     public static function eliminar(int $idListaNegra): bool
