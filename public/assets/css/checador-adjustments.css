@@ -1,0 +1,177 @@
+/* M07 filter controls; scoped to this workspace and adapted from M06 Incidencias. */
+.adjustments-filter-form .form-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--bs-body-color, #5a6a85);
+    margin-bottom: 0.35rem;
+}
+
+.adjustments-filter-field > .form-control,
+.adjustments-filter-field > .select2-container .select2-selection--single,
+.adjustments-filter-btn {
+    box-sizing: border-box;
+    height: 39px;
+    min-height: 39px;
+}
+
+.adjustments-filter-field > .form-control {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.875rem;
+    border-color: var(--bs-border-color, #dfe5ef);
+    border-radius: 7px;
+}
+
+.adjustments-filter-field > .form-control:focus {
+    border-color: var(--bs-primary, #5d87ff);
+    box-shadow: 0 0 0 0.25rem rgba(93, 135, 255, 0.25);
+}
+
+.adjustments-filter-field > .select2-container {
+    display: block;
+    width: 100% !important;
+}
+
+.adjustments-filter-field > .select2-container .select2-selection--single {
+    position: relative !important;
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background-color: var(--bs-body-bg, #fff);
+    border: 1px solid var(--bs-border-color, #dfe5ef) !important;
+    border-radius: 7px !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.adjustments-filter-field > .select2-container .select2-selection__rendered {
+    display: block;
+    box-sizing: border-box;
+    height: 37px;
+    padding: 0 2.25rem 0 0.75rem !important;
+    color: var(--bs-body-color, #5a6a85) !important;
+    font-size: 0.875rem;
+    line-height: 37px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.adjustments-filter-field > .select2-container .select2-selection__placeholder {
+    color: var(--bs-secondary-color, #7c8fac) !important;
+}
+
+.adjustments-filter-field > .select2-container .select2-selection__clear {
+    position: absolute !important;
+    top: 50% !important;
+    right: 26px !important;
+    z-index: 2;
+    margin: 0 !important;
+    padding: 0 2px !important;
+    color: #999 !important;
+    line-height: 1 !important;
+    transform: translateY(-50%) !important;
+}
+
+.adjustments-filter-field > .select2-container--default .select2-selection--single .select2-selection__arrow {
+    position: absolute !important;
+    top: 1px !important;
+    right: 1px !important;
+    bottom: 1px !important;
+    width: 28px !important;
+    height: 37px !important;
+    background: transparent !important;
+    border: 0 !important;
+}
+
+.adjustments-filter-field > .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    position: absolute !important;
+    top: 50%;
+    left: 50%;
+    width: 0 !important;
+    height: 0 !important;
+    margin: -2px 0 0 -5px !important;
+    border-width: 5px 4px 0 !important;
+    border-style: solid !important;
+    border-color: #5a6a85 transparent transparent !important;
+}
+
+.adjustments-filter-field > .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    margin-top: -3px !important;
+    border-width: 0 4px 5px !important;
+    border-color: transparent transparent #5a6a85 !important;
+}
+
+.adjustments-filter-field > .select2-container--default.select2-container--open .select2-selection--single,
+.adjustments-filter-field > .select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: var(--bs-primary, #5d87ff) !important;
+    box-shadow: 0 0 0 0.25rem rgba(93, 135, 255, 0.25) !important;
+}
+
+.select2-dropdown.adjustments-filter-dropdown {
+    z-index: 1060;
+    overflow: hidden;
+    background-color: var(--bs-body-bg, #fff);
+    border: 1px solid var(--bs-border-color, #dfe5ef);
+    border-radius: 7px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.select2-dropdown.adjustments-filter-dropdown .select2-search--dropdown {
+    padding: 8px 10px;
+    background-color: var(--bs-light, #f6f9fc);
+    border-bottom: 1px solid var(--bs-border-color, #dfe5ef);
+}
+
+.select2-dropdown.adjustments-filter-dropdown .select2-search__field {
+    box-sizing: border-box;
+    width: 100%;
+    height: 35px;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid var(--bs-border-color, #dfe5ef);
+    border-radius: 6px;
+}
+
+.adjustments-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Compact server-side DataTables output without an inner vertical scroll. */
+.adjustments-table-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-bottom: 0;
+}
+
+#checador-adjustments-table {
+    margin-bottom: 0;
+}
+
+#checador-adjustments-table thead th {
+    vertical-align: middle;
+}
+
+#checador-adjustments-table tbody td.dataTables_empty {
+    padding: 0.75rem 1rem;
+    color: var(--bs-secondary-color, #7c8fac);
+    text-align: left;
+}
+
+#checador-adjustments-table_wrapper .dataTables_info,
+#checador-adjustments-table_wrapper .dataTables_paginate {
+    padding-top: 0.75rem;
+}
+
+/* Bootstrap alert-light has identical text and background values in Portal3 light theme. */
+[data-bs-theme="light"] .adjustments-final-falta-note {
+    --bs-alert-color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .adjustments-final-falta-note {
+    --bs-alert-color: var(--bs-light-text-emphasis);
+}

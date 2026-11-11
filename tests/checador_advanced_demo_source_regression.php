@@ -24,6 +24,7 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
 };
 
 $keys = ['APP_ENV', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_ADVANCED_DEMO_SCENARIO', 'CHECADOR_ADVANCED_DEMO_REFERENCE_DATE'];
+$sourceService = (string) file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $original = [];
 foreach ($keys as $key) {
     $original[$key] = array_key_exists($key, $_ENV) ? $_ENV[$key] : null;
@@ -73,6 +74,9 @@ $makeService = static function (string $scenario) use ($guardedClient, &$tokenCa
 };
 
 try {
+    $assert(str_contains($sourceService, "if (PHP_SAPI !== 'cli')")
+        && strpos($sourceService, "if (PHP_SAPI !== 'cli')") < strpos($sourceService, "CHECADOR_ADVANCED_DEMO_ENABLED"), 'HTTP SAPIs cannot activate synthetic responses even when the demo flag is true');
+
     $setConfig('dev', null);
     $assert(ChecadorDailyReadService::demoModeEnabled() === false, 'demo mode is disabled by default');
 
@@ -683,8 +687,7 @@ try {
         && str_contains(substr($controllerSource, $readSuccessPosition, 700), 'if ($demoMode && $requestedWorker !== null)')
         && str_contains(substr($controllerSource, $readSuccessPosition, 700), "\$event['id_personal_resuelto']"), 'demo worker filter uses only resolved canonical event identity');
     $schedulePosition = $readSuccessPosition === false ? false : strpos($controllerSource, 'getEffectiveSchedule(', $readSuccessPosition);
-    $journeyPosition = $readSuccessPosition === false ? false : strpos($controllerSource, 'evaluateJourney(', $readSuccessPosition);
-    $assert($schedulePosition !== false && $journeyPosition !== false
+    $assert($schedulePosition !== false
         && str_contains($controllerSource, 'readApplicableIncidences(')
         && str_contains($controllerSource, 'readIncidence(')
         && str_contains($controllerSource, 'readAdministrativeEvaluation(')

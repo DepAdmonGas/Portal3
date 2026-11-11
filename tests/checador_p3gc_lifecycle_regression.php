@@ -80,7 +80,7 @@ $assert(($resolve['data']['status'] ?? '') !== 'ACTIVE' && ($resolve['data']['re
 $assert(($authorize['ok'] ?? false) === true && ($authorize['data']['status'] ?? '') === 'ACTIVE', 'P3GPC13 authorize refresh result is ACTIVE');
 $assert(($reject['ok'] ?? false) === true && ($reject['data']['status'] ?? '') === 'REJECTED', 'P3GPC14 reject refresh result is REJECTED');
 $assert(($revoke['ok'] ?? false) === true && ($revoke['data']['status'] ?? '') === 'CANCELLED'
-    && str_contains($viewSource, 'Historial de revisiones')
+    && str_contains($viewSource, 'Historial de revisión')
     && str_contains($viewSource, 'foreach ($revisions as $revision)'), 'P3GPC15 revoke result is CANCELLED and revision history remains rendered');
 $assert(str_contains($viewSource, 'REVIEW_REQUIRED') || str_contains($viewSource, 'current_status'), 'P3GPC16 REVIEW_REQUIRED/current state remains explicit');
 $assert(ChecadorPresentationFormatter::incidenceStatusLabel('RESOLVED_PENDING_AUTHORIZATION') === 'Resuelta; pendiente de autorización'

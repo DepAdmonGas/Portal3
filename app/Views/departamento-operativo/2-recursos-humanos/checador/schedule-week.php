@@ -4,7 +4,13 @@
     $dailyHref = '/departamento-operativo/recursos-humanos/checador' . (($selectedWorkplaceId ?? null) !== null ? '?' . http_build_query(['workplace_id' => (int) $selectedWorkplaceId, 'date' => $weekStart]) : '');
     $configurationHref = '/departamento-operativo/recursos-humanos/checador/configuracion'
         . (($selectedWorkplaceId ?? null) !== null ? '?' . http_build_query(['workplace_id' => (int) $selectedWorkplaceId]) : '');
-    $matrixIncomplete = ($coverage ?? '') === 'partial';
+    $templatesHref = '/departamento-operativo/recursos-humanos/checador/horarios-turnos'
+        . (($selectedWorkplaceId ?? null) !== null ? '?' . http_build_query(['workplace_id' => (int) $selectedWorkplaceId]) : '');
+    $rosterCoverageState = (string) ($rosterCoverage ?? 'unknown');
+    $matrixCoverageState = (string) ($matrixCoverage ?? 'unknown');
+    $matrixIncomplete = $rosterCoverageState !== 'ready' || $matrixCoverageState !== 'ready';
+    $scheduleRows = is_array($scheduleRows ?? null) ? $scheduleRows : [];
+    $confirmedScheduleRead = $rosterCoverageState === 'ready' && $matrixCoverageState === 'ready';
     $validWeekDate = \DateTimeImmutable::createFromFormat('!Y-m-d', (string) $weekStart, new \DateTimeZone('UTC'));
     $previousWeek = $validWeekDate === false ? '' : $validWeekDate->modify('-7 days')->format('Y-m-d');
     $nextWeek = $validWeekDate === false ? '' : $validWeekDate->modify('+7 days')->format('Y-m-d');
@@ -14,16 +20,53 @@
     $currentWeek = $workplaceZone === null
         ? null
         : \App\Services\ChecadorWeeklyScheduleService::monday((new \DateTimeImmutable('now', $workplaceZone))->format('Y-m-d'));
+    $cleanTemplateName = static function (mixed $value): string {
+        $rawName = trim(is_string($value) ? $value : '');
+        $displayName = preg_replace('/^Legacy\s+[^—–-]+[—–-]\s*/iu', '', $rawName) ?? $rawName;
+        $displayName = preg_replace('/(?<![\p{L}\p{N}])legacy(?![\p{L}\p{N}])/iu', '', $displayName) ?? $displayName;
+        $displayName = preg_replace('/(?<![\p{L}\p{N}])v\d+(?![\p{L}\p{N}])/iu', '', $displayName) ?? $displayName;
+        $displayName = preg_replace('/\s*(?:[—–-]\s*)?\b\d{1,2}:\d{2}(?::\d{2})?\s*[—–-]\s*\d{1,2}:\d{2}(?::\d{2})?(?:\s*\(\+?\d+\s*d[ií]a\))?\s*$/u', '', $displayName) ?? $displayName;
+        $displayName = preg_replace('/\s*([·|])\s*(?:[·|]\s*)+/u', ' · ', $displayName) ?? $displayName;
+        $displayName = preg_replace('/\s{2,}/u', ' ', $displayName) ?? $displayName;
+        $displayName = trim(preg_replace('/[—–-]\s*$/u', '', $displayName) ?? $displayName);
+        $displayName = trim($displayName, " \t\n\r\0\x0B·|—–-_");
+        return $displayName !== '' ? $displayName : 'Turno sin nombre';
+    };
+    $templateOptionLabel = static function (array $template) use ($cleanTemplateName): string {
+        $segments = is_array($template['segmentos'] ?? null) ? $template['segmentos'] : [];
+        usort($segments, static fn(array $left, array $right): int => (int) ($left['ordinal'] ?? 0) <=> (int) ($right['ordinal'] ?? 0));
+        $work = array_values(array_filter($segments, static fn(array $segment): bool => strtoupper((string) ($segment['tipo_segmento'] ?? '')) === 'WORK'));
+        $breaks = array_values(array_filter($segments, static fn(array $segment): bool => strtoupper((string) ($segment['tipo_segmento'] ?? '')) === 'BREAK'));
+        $formatEndpoint = static function (array $segment, string $timeKey, string $offsetKey): string {
+            $time = substr((string) ($segment[$timeKey] ?? ''), 0, 5);
+            $offset = (int) ($segment[$offsetKey] ?? 0);
+            return $time . ($offset > 0 ? ' (+' . $offset . ' día)' : '');
+        };
+        $details = '';
+        if ($work !== []) {
+            $details = $formatEndpoint($work[0], 'hora_inicio_local', 'dia_offset_inicio')
+                . '–' . $formatEndpoint($work[count($work) - 1], 'hora_fin_local', 'dia_offset_fin');
+            if ($breaks !== []) {
+                $details .= ' · descanso ' . $formatEndpoint($breaks[0], 'hora_inicio_local', 'dia_offset_inicio')
+                    . '–' . $formatEndpoint($breaks[count($breaks) - 1], 'hora_fin_local', 'dia_offset_fin');
+            }
+        }
+        $label = $cleanTemplateName($template['nombre'] ?? null);
+        if ($details !== '') $label .= ' · ' . $details;
+        return $label;
+    };
     ?>
-    <header class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h1 class="h3 mb-1">Programación semanal</h1>
-            <p class="text-muted mb-0">Turnos y descansos por persona.</p>
-        </div>
-        <div class="d-flex gap-2 align-items-center">
-            <?php if (($demoMode ?? false) === true): ?><span class="badge rounded-pill text-bg-secondary" title="Datos sintéticos aislados">Demo</span><?php endif; ?>
-            <a class="btn btn-outline-primary btn-sm" href="<?= htmlspecialchars($configurationHref, ENT_QUOTES, 'UTF-8') ?>">Configuración</a>
-            <a class="btn btn-outline-secondary btn-sm" href="<?= htmlspecialchars($dailyHref, ENT_QUOTES, 'UTF-8') ?>">Volver a asistencia diaria</a>
+    <header class="d-flex justify-content-end align-items-center gap-2 mb-3">
+        <?php if (($demoMode ?? false) === true): ?><span class="badge rounded-pill text-bg-secondary" title="Datos sintéticos aislados">Demo</span><?php endif; ?>
+        <div class="dropdown">
+            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Opciones del módulo">
+                <i class="ti ti-dots-vertical fs-4" aria-hidden="true"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li><a class="dropdown-item" href="<?= htmlspecialchars($configurationHref, ENT_QUOTES, 'UTF-8') ?>"><i class="ti ti-settings me-1" aria-hidden="true"></i>Configuración</a></li>
+                <li><a class="dropdown-item" href="<?= htmlspecialchars($dailyHref, ENT_QUOTES, 'UTF-8') ?>"><i class="ti ti-calendar-check me-1" aria-hidden="true"></i>Asistencia del día</a></li>
+                <li><a class="dropdown-item" href="<?= htmlspecialchars($templatesHref, ENT_QUOTES, 'UTF-8') ?>"><i class="ti ti-clock me-1" aria-hidden="true"></i><?= ($canManageTemplates ?? false) === true ? 'Administrar turnos' : 'Consultar Horarios y turnos' ?></a></li>
+            </ul>
         </div>
     </header>
 
@@ -35,8 +78,7 @@
                 <span class="badge text-bg-light border"><strong class="text-body">Semana:</strong> <?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?><?= $weekEnd !== '' ? ' — ' . htmlspecialchars($weekEnd, ENT_QUOTES, 'UTF-8') : '' ?></span>
                 <span class="badge text-bg-light border"><strong class="text-body">Zona:</strong> <?= htmlspecialchars((string) ($timezone ?? 'No confirmada'), ENT_QUOTES, 'UTF-8') ?></span>
             </div>
-            <form method="get" action="/departamento-operativo/recursos-humanos/checador" class="d-flex flex-wrap align-items-end gap-2">
-                <input type="hidden" name="schedule_week" value="1">
+            <form method="get" action="/departamento-operativo/recursos-humanos/checador/programacion-semanal" class="d-flex flex-wrap align-items-end gap-2">
                 <input type="hidden" name="workplace_id" value="<?= $selectedWorkplaceId !== null ? (int) $selectedWorkplaceId : '' ?>">
                 <label for="checador-week-start" class="form-label mb-0">Semana desde el lunes</label>
                 <div class="input-group w-auto">
@@ -49,9 +91,21 @@
             </form>
         </div>
     </section>
-    <?php if ($previousWeek !== '' && $currentWeek !== null && $previousWeek >= $currentWeek): ?><form id="checador-week-previous" method="get" action="/departamento-operativo/recursos-humanos/checador" class="d-none"><input type="hidden" name="schedule_week" value="1"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplaceId !== null ? (int) $selectedWorkplaceId : '' ?>"><input type="hidden" name="week_start" value="<?= htmlspecialchars($previousWeek, ENT_QUOTES, 'UTF-8') ?>"></form><?php endif; ?>
-    <?php if ($nextWeek !== ''): ?><form id="checador-week-next" method="get" action="/departamento-operativo/recursos-humanos/checador" class="d-none"><input type="hidden" name="schedule_week" value="1"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplaceId !== null ? (int) $selectedWorkplaceId : '' ?>"><input type="hidden" name="week_start" value="<?= htmlspecialchars($nextWeek, ENT_QUOTES, 'UTF-8') ?>"></form><?php endif; ?>
-    <?php if ($currentWeek !== null): ?><form id="checador-week-current" method="get" action="/departamento-operativo/recursos-humanos/checador" class="d-none"><input type="hidden" name="schedule_week" value="1"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplaceId !== null ? (int) $selectedWorkplaceId : '' ?>"><input type="hidden" name="week_start" value="<?= htmlspecialchars($currentWeek, ENT_QUOTES, 'UTF-8') ?>"></form><?php endif; ?>
+    <?php if ($previousWeek !== '' && $currentWeek !== null && $previousWeek >= $currentWeek): ?><form id="checador-week-previous" method="get" action="/departamento-operativo/recursos-humanos/checador/programacion-semanal" class="d-none"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplaceId !== null ? (int) $selectedWorkplaceId : '' ?>"><input type="hidden" name="week_start" value="<?= htmlspecialchars($previousWeek, ENT_QUOTES, 'UTF-8') ?>"></form><?php endif; ?>
+    <?php if ($nextWeek !== ''): ?><form id="checador-week-next" method="get" action="/departamento-operativo/recursos-humanos/checador/programacion-semanal" class="d-none"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplaceId !== null ? (int) $selectedWorkplaceId : '' ?>"><input type="hidden" name="week_start" value="<?= htmlspecialchars($nextWeek, ENT_QUOTES, 'UTF-8') ?>"></form><?php endif; ?>
+    <?php if ($currentWeek !== null): ?><form id="checador-week-current" method="get" action="/departamento-operativo/recursos-humanos/checador/programacion-semanal" class="d-none"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplaceId !== null ? (int) $selectedWorkplaceId : '' ?>"><input type="hidden" name="week_start" value="<?= htmlspecialchars($currentWeek, ENT_QUOTES, 'UTF-8') ?>"></form><?php endif; ?>
+
+    <?php if (!empty($isDepartmentLocality)): ?>
+        <div class="alert alert-warning py-3" role="status">
+            <div class="d-flex align-items-center">
+                <i class="ti ti-alert-triangle fs-4 me-2" aria-hidden="true"></i>
+                <div>
+                    <strong>Módulo no disponible para esta localidad.</strong>
+                    <div class="small mt-1">La programación semanal de turnos está habilitada exclusivamente para estaciones de servicio autorizadas. Las operaciones de turnos para el departamento <strong><?= htmlspecialchars((string) ($selectedWorkplaceName ?? 'Autolavado'), ENT_QUOTES, 'UTF-8') ?></strong> no están disponibles en este módulo.</div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <?php if (($errorMessage ?? '') !== ''): ?><div class="alert alert-warning" role="status"><?= htmlspecialchars((string) $errorMessage, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
     <?php if (is_array($feedback ?? null)): ?><div class="alert alert-<?= htmlspecialchars(in_array(($feedback['type'] ?? ''), ['success', 'info'], true) ? (string) $feedback['type'] : 'warning', ENT_QUOTES, 'UTF-8') ?>" role="status"><?= htmlspecialchars((string) ($feedback['message'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
@@ -59,25 +113,270 @@
     <?php if (($demoMode ?? false) === true): ?>
         <div class="alert alert-info py-2" role="status">Demostración local; esta información no modifica la programación operativa.</div>
     <?php endif; ?>
-    <?php if ($matrixIncomplete): ?><div class="alert alert-warning py-2" role="status">La matriz tiene cobertura parcial: alguna lectura falló, se alcanzó el límite seguro de personal o no se pudo revisar todo el historial.</div><?php endif; ?>
+    <?php if ($matrixIncomplete && trim((string) ($errorMessage ?? '')) === ''): ?><div class="alert alert-warning py-2" role="status">Algunos horarios de esta semana no pudieron confirmarse. Sólo se habilitan cambios para fechas y trabajadores con información verificada.</div><?php endif; ?>
 
-    <section class="card mb-3" aria-labelledby="weekly-matrix-heading">
-        <div class="card-body">
-            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-                <div><h2 class="h5 mb-1" id="weekly-matrix-heading">Turnos de la semana</h2>
-                    <p class="text-muted mb-0">Un espacio sin asignación visible no equivale a descanso.</p></div>
-                <span class="badge text-bg-light border"><?= count($scheduleRows ?? []) ?> persona<?= count($scheduleRows ?? []) === 1 ? '' : 's' ?></span>
+    <div data-schedule-week-ui data-workplace-id="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
+        <ul class="nav nav-tabs" role="tablist" data-schedule-tabs>
+            <li class="nav-item" role="presentation"><button class="nav-link active" id="habitual-schedule-tab" data-bs-toggle="tab" data-bs-target="#habitual-schedule-panel" type="button" role="tab" aria-controls="habitual-schedule-panel" aria-selected="true">Horario habitual del personal</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" id="temporary-schedule-tab" data-bs-toggle="tab" data-bs-target="#temporary-schedule-panel" type="button" role="tab" aria-controls="temporary-schedule-panel" aria-selected="false">Cambios temporales</button></li>
+        </ul>
+        <div class="row g-2 align-items-center my-3">
+            <label class="col-auto form-label mb-0" for="habitual-worker-search">Buscar trabajador</label>
+            <div class="col-12 col-md-4"><input class="form-control" type="search" id="habitual-worker-search" data-schedule-worker-search placeholder="Nombre o trabajador" aria-label="Buscar trabajador en la programación"></div>
+        </div>
+        <div class="tab-content overflow-x-hidden">
+        <div class="tab-pane fade show active" id="habitual-schedule-panel" role="tabpanel" aria-labelledby="habitual-schedule-tab" tabindex="0">
+        <section class="card mb-3" aria-labelledby="habitual-schedule-heading">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0 text-white" id="habitual-schedule-heading"><i class="ti ti-calendar-repeat me-1" aria-hidden="true"></i>Horario habitual del personal</h2>
             </div>
-            <?php if (($scheduleRows ?? []) === []): ?>
-                <p class="mb-0 text-muted">No hay personas con programación visible para esta semana.</p>
+            <div class="card-body">
+                <p class="small text-muted mb-3">El horario habitual se mantiene en las semanas siguientes. Registra sólo los días acreditados; los descansos deben seleccionarse explícitamente.</p>
+                <?php if (($habitualScheduleRows ?? []) === []): ?>
+                    <p class="mb-0 text-muted">No hay trabajadores disponibles para consultar en esta estación.</p>
+                <?php else: ?>
+                    <div class="table-responsive" data-schedule-matrix-panel>
+                        <table class="table table-striped align-middle mb-0" aria-describedby="habitual-schedule-heading">
+                            <caption class="visually-hidden">Horario habitual de lunes a domingo para el personal de la estación seleccionada</caption>
+                            <thead><tr><th scope="col">Trabajador</th><?php foreach ($weekDates as $weekday): ?><th scope="col"><span><?= htmlspecialchars((string) $weekday['label'], ENT_QUOTES, 'UTF-8') ?></span><div class="small text-muted fw-normal"><?= htmlspecialchars((string) $weekday['date'], ENT_QUOTES, 'UTF-8') ?></div></th><?php endforeach; ?><th scope="col">Cobertura habitual</th><th scope="col" class="text-center text-nowrap"><span class="visually-hidden">Acciones</span><i class="ti ti-dots-vertical fs-6" aria-hidden="true"></i></th></tr></thead>
+                            <tbody>
+                            <?php foreach ($habitualScheduleRows as $row): ?>
+                                <?php
+                                $workerId = (int) ($row['worker_id'] ?? 0);
+                                $workerName = (string) ($row['full_name'] ?? 'Nombre no disponible');
+                                $habitualCoverage = is_array($row['habitual_coverage'] ?? null) ? $row['habitual_coverage'] : [];
+                                $coverageStatus = (string) ($habitualCoverage['status'] ?? 'unknown');
+                                $verifiedDates = is_array($row['verified_dates'] ?? null) ? array_values(array_filter($row['verified_dates'], 'is_string')) : [];
+                                $hasVerifiedMembership = ($row['has_versioned_membership'] ?? false) === true;
+                                $canManageWorker = ($canEditSchedules ?? false) === true && $workerId > 0 && $hasVerifiedMembership && $verifiedDates !== [];
+                                $existingDays = [];
+                                $replacementSources = [];
+                                $verifiedDateSet = array_fill_keys($verifiedDates, true);
+                                $verifiedDateCount = 0;
+                                $partialMembershipOnly = true;
+                                $hasHabitualAssignmentOnVerifiedDate = false;
+                                foreach ($weekDates as $weekday) {
+                                    $cell = $row['cells'][$weekday['date']] ?? [];
+                                    $assignment = is_array($cell['assignment'] ?? null) ? $cell['assignment'] : null;
+                                    $weekdayCode = (string) $weekday['weekday'];
+                                    $cellStatus = (string) ($cell['status'] ?? 'unknown');
+                                    $dateVerified = isset($verifiedDateSet[(string) $weekday['date']]);
+                                    if ($dateVerified) {
+                                        $verifiedDateCount++;
+                                        if ($cellStatus === 'assigned' || $cellStatus === 'rest') {
+                                            if ($assignment !== null && strtoupper((string) ($assignment['tipo_asignacion'] ?? 'HABITUAL')) !== 'TEMPORAL') {
+                                                $hasHabitualAssignmentOnVerifiedDate = true;
+                                            }
+                                            $partialMembershipOnly = false;
+                                        } elseif ($cellStatus !== 'unassigned') {
+                                            $partialMembershipOnly = false;
+                                        }
+                                    } elseif ($cellStatus !== 'membership_unverified') {
+                                        $partialMembershipOnly = false;
+                                    }
+                                    if ($assignment !== null && strtoupper((string) ($assignment['tipo_asignacion'] ?? 'HABITUAL')) !== 'TEMPORAL') {
+                                        $existingDays[$weekdayCode] = ($cell['status'] ?? '') === 'rest' ? 'REST' : (string) ($assignment['id_plantilla'] ?? '');
+                                        if ((int) ($assignment['es_activo'] ?? 0) === 1 && in_array(($cell['status'] ?? ''), ['assigned', 'rest'], true)) {
+                                            $replacementSources[] = [
+                                                'id' => (int) ($assignment['id'] ?? 0),
+                                                'weekday' => $weekdayCode,
+                                                'weekday_label' => (string) $weekday['label'],
+                                                'label' => (string) ($cell['label'] ?? 'Descanso'),
+                                                'valid_from' => (string) ($assignment['valido_desde'] ?? ''),
+                                                'valid_to' => $assignment['valido_hasta'] ?? null,
+                                            ];
+                                        }
+                                    }
+                                }
+                                $canReplace = $canManageWorker && $coverageStatus === 'complete' && $replacementSources !== [];
+                                $canInitialOnPartialMembership = $canManageWorker
+                                    && $coverageStatus === 'unknown'
+                                    && ($row['schedule_read_status'] ?? '') === 'available'
+                                    && $verifiedDateCount > 0
+                                    && $partialMembershipOnly
+                                    && !$hasHabitualAssignmentOnVerifiedDate;
+                                $coverageLabel = (string) ($habitualCoverage['label'] ?? 'No confirmada');
+                                $coverageClass = match ($coverageStatus) {
+                                    'complete' => 'text-bg-success', 'partial' => 'text-bg-warning', 'unassigned' => 'text-bg-secondary', default => 'text-bg-light border text-body',
+                                };
+                                $habitualButtonData = htmlspecialchars(json_encode($existingDays, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}', ENT_QUOTES, 'UTF-8');
+                                $replacementSourcesData = htmlspecialchars(json_encode($replacementSources, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8');
+                                ?>
+                                <tr data-worker-name="<?= htmlspecialchars($workerName, ENT_QUOTES, 'UTF-8') ?>">
+                                    <th scope="row"><?= htmlspecialchars($workerName, ENT_QUOTES, 'UTF-8') ?><div class="small text-muted">ID <?= $workerId ?><?= !empty($row['employee_number']) ? ' · N.º ' . htmlspecialchars((string) $row['employee_number'], ENT_QUOTES, 'UTF-8') : '' ?></div></th>
+                                    <?php foreach ($weekDates as $weekday): ?>
+                                        <?php $cell = $row['cells'][$weekday['date']] ?? ['status' => 'unassigned', 'label' => 'Sin asignación confirmada']; ?>
+                                        <td class="text-center">
+                                            <?php if (($cell['status'] ?? '') === 'rest'): ?><span class="badge text-bg-light border">Descanso</span>
+                                            <?php elseif (($cell['status'] ?? '') === 'assigned' && is_array($cell['template'] ?? null)): ?><span class="fw-semibold"><?= htmlspecialchars($cleanTemplateName($cell['template']['nombre'] ?? null), ENT_QUOTES, 'UTF-8') ?></span><div class="small text-muted"><?= htmlspecialchars(implode(' · ', array_map(static fn(array $segment): string => (string) ($segment['hora_inicio_local'] ?? '') . '–' . (string) ($segment['hora_fin_local'] ?? '') . ((int) ($segment['dia_offset_fin'] ?? 0) > 0 ? ' (+día)' : ''), $cell['template']['segmentos'] ?? [])), ENT_QUOTES, 'UTF-8') ?></div>
+                                            <?php elseif (($cell['status'] ?? '') === 'unassigned'): ?><span class="small text-muted">Sin asignación</span>
+                                            <?php elseif (($cell['status'] ?? '') === 'schedule_not_requested'): ?><span class="small text-muted">Selecciona para consultar</span>
+                                            <?php elseif (($cell['status'] ?? '') === 'membership_unverified'): ?><span class="small text-muted">Pertenencia no confirmada</span>
+                                            <?php elseif (($cell['status'] ?? '') === 'schedule_unavailable'): ?><span class="small text-muted">Horario no disponible</span>
+                                            <?php else: ?><span class="small text-muted"><?= htmlspecialchars((string) ($cell['label'] ?? 'Sin asignación confirmada'), ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
+                                        </td>
+                                    <?php endforeach; ?>
+                                    <td><span class="badge <?= $coverageClass ?>"><?= htmlspecialchars($coverageLabel, ENT_QUOTES, 'UTF-8') ?></span><div class="small text-muted mt-1"><?= (int) ($habitualCoverage['covered_days'] ?? 0) ?>/<?= (int) ($habitualCoverage['total_days'] ?? 7) ?> días</div></td>
+                                    <td class="text-center">
+                                        <div class="dropdown dropstart">
+                                            <button class="btn p-0 border-0 bg-transparent text-body" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Acciones de <?= htmlspecialchars($workerName, ENT_QUOTES, 'UTF-8') ?>"><i class="ti ti-dots-vertical fs-6" aria-hidden="true"></i></button>
+                                            <ul class="dropdown-menu">
+                                                <?php if ($canManageWorker && ($coverageStatus === 'unassigned' || $canInitialOnPartialMembership)): ?>
+                                                    <li><button class="dropdown-item pointer" type="button" data-habitual-assignment-read-url="/departamento-operativo/recursos-humanos/checador/programacion-semanal/asignaciones/readback" data-habitual-worker-id="<?= $workerId ?>" data-habitual-worker-name="<?= htmlspecialchars($workerName, ENT_QUOTES, 'UTF-8') ?>" data-habitual-week-start="<?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?>" data-habitual-workplace-id="<?= (int) $selectedWorkplaceId ?>"><i class="ti ti-calendar-plus me-1" aria-hidden="true"></i>Asignar horario habitual</button></li>
+                                                <?php elseif ($canManageWorker && $coverageStatus === 'partial'): ?>
+                                                    <li><button class="dropdown-item pointer" type="button" data-habitual-assignment-read-url="/departamento-operativo/recursos-humanos/checador/programacion-semanal/asignaciones/readback" data-habitual-worker-id="<?= $workerId ?>" data-habitual-worker-name="<?= htmlspecialchars($workerName, ENT_QUOTES, 'UTF-8') ?>" data-habitual-week-start="<?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?>" data-habitual-workplace-id="<?= (int) $selectedWorkplaceId ?>"><i class="ti ti-calendar-plus me-1" aria-hidden="true"></i>Completar horario habitual</button></li>
+                                                <?php elseif ($canReplace): ?>
+                                                    <li><button class="dropdown-item pointer" type="button" data-bs-toggle="modal" data-bs-target="#habitual-schedule-replacement-modal" data-habitual-replacement-worker-id="<?= $workerId ?>" data-habitual-replacement-worker-name="<?= htmlspecialchars($workerName, ENT_QUOTES, 'UTF-8') ?>" data-habitual-replacement-sources="<?= $replacementSourcesData ?>"><i class="ti ti-calendar-repeat me-1" aria-hidden="true"></i>Cambiar horario habitual</button></li>
+                                                <?php endif; ?>
+                                                <li><a class="dropdown-item pointer" href="/departamento-operativo/recursos-humanos/checador/horarios-turnos?<?= htmlspecialchars(http_build_query(['worker_id' => $workerId, 'date' => (string) $weekStart]), ENT_QUOTES, 'UTF-8') ?>"><i class="ti ti-history me-1" aria-hidden="true"></i>Ver historial</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        <p class="small text-muted mt-2 mb-0">La ausencia de una asignación no significa descanso. Sólo se habilitan cambios para fechas con adscripción verificada y lectura completa.</p>
+                    </div>
+                    <p class="small text-muted mt-2 mb-0 d-none" data-schedule-no-results>No hay trabajadores que coincidan con la búsqueda.</p>
+                <?php endif; ?>
+            </div>
+        </section>
+    </div>
+
+    <?php if (($canEditSchedules ?? false) === true && ($assignableWorkers ?? []) !== []): ?>
+        <script type="application/json" id="habitual-week-dates"><?php
+            $habitualWeekDates = [];
+            foreach ($weekDates as $weekday) $habitualWeekDates[(string) $weekday['weekday']] = (string) $weekday['date'];
+            echo json_encode($habitualWeekDates, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        ?></script>
+        <div class="modal fade" id="habitual-schedule-assignment-modal" data-assignment-read-url="/departamento-operativo/recursos-humanos/checador/programacion-semanal/asignaciones/readback" tabindex="-1" aria-labelledby="habitual-schedule-assignment-title" aria-hidden="true" x-data="habitualScheduleAssignment" x-init="initialize($el)">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+                <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title text-white h5" id="habitual-schedule-assignment-title">Asignar horario habitual</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+                <form method="post" action="/departamento-operativo/recursos-humanos/checador/programacion-semanal/asignar" @submit.prevent="submit($event)">
+                    <div class="modal-body">
+                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(\App\Core\CsrfToken::token(), ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="workplace_id" value="<?= (int) $selectedWorkplaceId ?>">
+                        <input type="hidden" name="week_start" value="<?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="tipo_asignacion" value="HABITUAL">
+                        <input type="hidden" name="worker_id" x-model="workerId">
+                        <p class="mb-3">Trabajador: <strong x-text="workerName"></strong></p>
+                        <div class="mb-3">
+                            <label class="form-label" for="habitual-effective-start-date">Fecha de inicio de vigencia</label>
+                            <input class="form-control" type="date" id="habitual-effective-start-date" name="effective_start_date" min="<?= htmlspecialchars((string) $effectiveDateMin, ENT_QUOTES, 'UTF-8') ?>" max="<?= htmlspecialchars((string) $effectiveDateMax, ENT_QUOTES, 'UTF-8') ?>" @change="updateEffectiveStart()" required>
+                            <div class="form-text" x-text="effectiveStartMessage">El patrón semanal se aplicará desde la fecha elegida; los días anteriores no generan asignaciones.</div>
+                        </div>
+                        <div class="row g-3">
+                            <?php foreach ($weekDates as $weekday): ?>
+                                <?php $weekdayCode = (string) $weekday['weekday']; ?>
+                                <div class="col-12 col-md-6"><label class="form-label" for="habitual-day-<?= htmlspecialchars($weekdayCode, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) $weekday['label'], ENT_QUOTES, 'UTF-8') ?></label>
+                                    <select class="form-select" id="habitual-day-<?= htmlspecialchars($weekdayCode, ENT_QUOTES, 'UTF-8') ?>" name="schedule[<?= htmlspecialchars($weekdayCode, ENT_QUOTES, 'UTF-8') ?>]" disabled>
+                                        <option value="">Selecciona turno o descanso explícito</option>
+                                        <?php foreach ($templates ?? [] as $template): if ((int) ($template['es_activo'] ?? 0) !== 1) continue; ?>
+                        <option value="<?= (int) $template['id'] ?>"><?= htmlspecialchars($templateOptionLabel($template), ENT_QUOTES, 'UTF-8') ?></option>
+                                        <?php endforeach; ?>
+                                        <option value="REST">Descanso explícito</option>
+                                    </select>
+                                    <div class="form-text" data-habitual-day-effective>Selecciona una fecha de inicio.</div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="habitual-assignment-confirm" name="confirm_action" value="1" required><label class="form-check-label" for="habitual-assignment-confirm">Confirmo los turnos o descansos seleccionados; cada día comienza en su primera fecha igual o posterior al inicio y se repite semanalmente.</label></div>
+                        <div class="alert alert-danger mt-3 mb-0" role="alert" x-show="error" x-text="error"></div>
+                        <div class="alert alert-success mt-3 mb-0" role="status" x-show="status" x-text="status"></div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary" :disabled="loading"><span x-show="loading" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Guardar días seleccionados</button></div>
+                </form>
+            </div></div>
+        </div>
+    <?php endif; ?>
+
+    <?php if (($canEditSchedules ?? false) === true): ?>
+        <div class="modal fade" id="habitual-schedule-replacement-modal" tabindex="-1" aria-labelledby="habitual-schedule-replacement-title" aria-hidden="true" x-data="habitualScheduleReplacement" x-init="initialize($el)">
+            <div class="modal-dialog modal-lg"><div class="modal-content">
+                <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title text-white h5" id="habitual-schedule-replacement-title">Cambiar horario habitual</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+                <form method="post" action="/departamento-operativo/recursos-humanos/checador/programacion-semanal/asignaciones/reemplazar">
+                    <div class="modal-body">
+                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(\App\Core\CsrfToken::token(), ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="workplace_id" value="<?= (int) $selectedWorkplaceId ?>">
+                        <input type="hidden" name="week_start" value="<?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="worker_id" x-ref="workerId">
+                        <input type="hidden" name="assignment_id" x-ref="assignmentId">
+                        <input type="hidden" name="expected_valido_desde" x-ref="expectedFrom">
+                        <input type="hidden" name="expected_valido_hasta" x-ref="expectedTo">
+                        <input type="hidden" name="selected_date" x-ref="selectedDate">
+                        <p>Trabajador: <strong x-text="workerName"></strong></p>
+                        <div class="mb-3"><label class="form-label" for="habitual-replacement-source">Día y asignación vigente</label><select class="form-select" id="habitual-replacement-source" x-ref="source" @change="selectSource()" required><option value="">Selecciona</option></select></div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6"><label class="form-label" for="habitual-replacement-date">Fecha efectiva</label><input class="form-control" type="date" id="habitual-replacement-date" name="effective_close_date" x-ref="effectiveDate" @change="validateEffectiveDate()" required><div class="form-text" x-text="dateHint"></div></div>
+                            <div class="col-12 col-md-6"><label class="form-label" for="habitual-replacement-template">Nuevo turno o descanso</label><select class="form-select" id="habitual-replacement-template" name="replacement_template_id" required><option value="">Selecciona</option><?php foreach ($templates ?? [] as $template): if ((int) ($template['es_activo'] ?? 0) !== 1) continue; ?><option value="<?= (int) $template['id'] ?>"><?= htmlspecialchars($templateOptionLabel($template), ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?><option value="REST">Descanso explícito</option></select></div>
+                            <div class="col-12"><label class="form-label" for="habitual-replacement-valid-to">Fin de vigencia (opcional)</label><input class="form-control" type="date" id="habitual-replacement-valid-to" name="replacement_valido_hasta"><div class="form-text">Déjalo vacío para que el nuevo horario habitual continúe hasta otro cambio autorizado.</div></div>
+                        </div>
+                        <div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="habitual-replacement-confirm" name="confirm_action" value="1" required><label class="form-check-label" for="habitual-replacement-confirm">Confirmo el reemplazo prospectivo; la versión anterior y su historial se conservarán.</label></div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary" :disabled="dateInvalid || submitting">Guardar cambio</button></div>
+                </form>
+            </div></div>
+        </div>
+    <?php endif; ?>
+
+        <div class="tab-pane fade" id="temporary-schedule-panel" role="tabpanel" aria-labelledby="temporary-schedule-tab" tabindex="0">
+    <section class="card mb-3" aria-labelledby="weekly-matrix-heading">
+        <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                <div><h2 class="h5 mb-1 text-white" id="weekly-matrix-heading">Programación semanal / Cambios temporales</h2>
+                    <p class="text-white-50 mb-0">Un cambio temporal sólo aplica en las fechas autorizadas.</p></div>
+            </div>
+            <?php if (($canEditSchedules ?? false) === true && ($assignableWorkers ?? []) !== []): ?>
+                <button class="btn bg-white text-primary" type="button" data-bs-toggle="modal" data-bs-target="#temporary-schedule-assignment-modal">
+                    <i class="ti ti-plus me-1" aria-hidden="true"></i>Nuevo cambio temporal
+                </button>
+            <?php endif; ?>
+        </div>
+        <div class="card-body">
+            <?php if ($confirmedScheduleRead): ?>
+                <div class="d-flex justify-content-end mb-2"><span class="badge text-bg-light border"><?= count($scheduleRows) ?> persona<?= count($scheduleRows) === 1 ? '' : 's' ?></span></div>
             <?php else: ?>
-                <div class="table-responsive">
+                <?php
+                $rosterCoverageLabel = match ($rosterCoverageState) {
+                    'ready' => 'confirmado',
+                    'partial' => 'cobertura parcial',
+                    'unavailable' => 'no disponible',
+                    default => 'no confirmado',
+                };
+                $matrixCoverageLabel = match ($matrixCoverageState) {
+                    'ready' => 'completa',
+                    'partial' => 'cobertura parcial',
+                    'not_evaluated' => 'no evaluada',
+                    'unavailable' => 'no disponible',
+                    default => 'no confirmada',
+                };
+                ?>
+                <div class="d-flex flex-wrap gap-2 mb-2" role="status">
+                    <span class="badge text-bg-light border">Padrón: <?= htmlspecialchars($rosterCoverageLabel, ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="badge text-bg-light border">Matriz semanal: <?= htmlspecialchars($matrixCoverageLabel, ENT_QUOTES, 'UTF-8') ?></span>
+                </div>
+            <?php endif; ?>
+            <?php if ($scheduleRows === []): ?>
+                <?php if (!$confirmedScheduleRead && $rosterCoverageState === 'partial'): ?>
+                    <p class="mb-0 text-muted">No se puede confirmar el conjunto de personas para esta semana.</p>
+                <?php elseif (!$confirmedScheduleRead && $matrixCoverageState === 'not_evaluated'): ?>
+                    <p class="mb-0 text-muted">La matriz semanal no se evaluó; no se puede confirmar si existen asignaciones.</p>
+                <?php elseif (!$confirmedScheduleRead && $matrixCoverageState === 'unavailable'): ?>
+                    <p class="mb-0 text-muted">La matriz semanal no está disponible; no se puede confirmar si existen asignaciones.</p>
+                <?php elseif ($confirmedScheduleRead): ?>
+                    <p class="mb-0 text-muted">No hay asignaciones para el padrón con membresía canónica vigente. Esto no equivale a descanso ni ausencia.</p>
+                <?php else: ?>
+                    <p class="mb-0 text-muted">No se puede confirmar si existen asignaciones para esta semana.</p>
+                <?php endif; ?>
+            <?php else: ?>
+                    <div class="table-responsive" data-schedule-matrix-panel>
                     <table class="table table-striped align-middle mb-0">
                         <caption class="visually-hidden">Asignaciones de turno de lunes a domingo para la semana seleccionada</caption>
                         <thead><tr><th scope="col">Trabajador</th><?php foreach ($weekDates as $weekday): ?><th scope="col"><span><?= htmlspecialchars((string) $weekday['label'], ENT_QUOTES, 'UTF-8') ?></span><div class="small text-muted fw-normal"><?= htmlspecialchars((string) $weekday['date'], ENT_QUOTES, 'UTF-8') ?></div></th><?php endforeach; ?><th scope="col">Historial</th></tr></thead>
                         <tbody>
                         <?php foreach ($scheduleRows as $row): ?>
-                            <tr>
+                            <tr data-worker-name="<?= htmlspecialchars((string) ($row['full_name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                                 <th scope="row"><?= htmlspecialchars((string) ($row['full_name'] ?? 'Nombre no disponible'), ENT_QUOTES, 'UTF-8') ?><div class="small text-muted">ID <?= (int) ($row['worker_id'] ?? 0) ?><?= !empty($row['employee_number']) ? ' · N.º ' . htmlspecialchars((string) $row['employee_number'], ENT_QUOTES, 'UTF-8') : '' ?></div></th>
                                 <?php foreach ($weekDates as $weekday): ?>
                                     <?php $cell = $row['cells'][$weekday['date']] ?? ['status' => 'unassigned', 'label' => 'Sin asignación visible']; $template = is_array($cell['template'] ?? null) ? $cell['template'] : null; ?>
@@ -85,7 +384,7 @@
                                         <?php if (($cell['status'] ?? '') === 'rest'): ?><span class="badge text-bg-light border">Descanso</span>
                                         <?php elseif (($cell['status'] ?? '') === 'ambiguous'): ?><span class="badge text-bg-warning">Revisar conflicto</span>
                                         <?php elseif ($template !== null): ?>
-                                            <span class="fw-semibold"><?= htmlspecialchars((string) ($template['nombre'] ?? 'Turno'), ENT_QUOTES, 'UTF-8') ?></span>
+                                            <span class="fw-semibold"><?= htmlspecialchars($cleanTemplateName($template['nombre'] ?? null), ENT_QUOTES, 'UTF-8') ?></span>
                                             <div class="small text-muted"><?= htmlspecialchars(implode(' · ', array_map(static fn(array $s): string => (string) ($s['hora_inicio_local'] ?? '') . '–' . (string) ($s['hora_fin_local'] ?? '') . ((int) ($s['dia_offset_fin'] ?? 0) > 0 ? ' (+día)' : ''), $template['segmentos'] ?? [])), ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php else: ?><span class="small text-muted"><?= htmlspecialchars((string) ($cell['label'] ?? 'No disponible'), ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
                                     </td>
@@ -96,30 +395,59 @@
                         </tbody>
                     </table>
                 </div>
+                <p class="small text-muted mt-2 mb-0 d-none" data-schedule-no-results>No hay trabajadores que coincidan con la búsqueda.</p>
             <?php endif; ?>
         </div>
     </section>
+        <?php if (($demoMode ?? false) !== true && empty($canAssign) && $confirmedScheduleRead): ?><div class="alert alert-secondary py-2" role="status">La consulta está disponible; este perfil no puede guardar cambios temporales.</div><?php endif; ?>
+        </div>
+        </div>
 
-    <?php if (($canAssign ?? false) === true && ($errorMessage ?? '') === '' && ($scheduleRows ?? []) !== []): ?>
-        <section class="card mb-3" aria-labelledby="single-assignment-heading">
-            <div class="card-body">
-                <h2 class="h5" id="single-assignment-heading">Asignar un turno a un día</h2>
-                <p class="small text-muted">La API sólo ofrece alta individual, no copia semanal ni asignación masiva. Cada envío crea vigencia para el día seleccionado ([fecha, día siguiente)); no cambia registros previos. Un turno recurrente o una sustitución existente requiere un flujo contractual adicional o la operación de cierre autorizada.</p>
-                <form method="post" action="/departamento-operativo/recursos-humanos/checador/programacion-semanal/asignar" class="row g-3">
-                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(\App\Core\CsrfToken::token(), ENT_QUOTES, 'UTF-8') ?>">
-                    <input type="hidden" name="workplace_id" value="<?= (int) $selectedWorkplaceId ?>">
-                    <input type="hidden" name="week_start" value="<?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?>">
-                    <div class="col-12 col-md-3"><label class="form-label" for="assignment-worker">Trabajador</label><select class="form-select" id="assignment-worker" name="worker_id" required><option value="">Selecciona</option><?php foreach ($scheduleRows as $row): ?><option value="<?= (int) $row['worker_id'] ?>"><?= htmlspecialchars((string) $row['full_name'], ENT_QUOTES, 'UTF-8') ?> · <?= (int) $row['worker_id'] ?></option><?php endforeach; ?></select></div>
-                    <div class="col-12 col-md-3"><label class="form-label" for="assignment-date">Día de la semana</label><select class="form-select" id="assignment-date" name="target_date" required><?php foreach ($weekDates as $weekday): ?><option value="<?= htmlspecialchars((string) $weekday['date'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) $weekday['label'] . ' · ' . (string) $weekday['date'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
-                    <div class="col-12 col-md-4"><label class="form-label" for="assignment-template">Turno o descanso</label><select class="form-select" id="assignment-template" name="template_id" required><option value="">Selecciona</option><?php foreach ($templates as $template): if ((int) ($template['es_activo'] ?? 0) !== 1) continue; ?><option value="<?= (int) $template['id'] ?>"><?= htmlspecialchars((string) $template['nombre'] . ' · v' . (int) $template['version'] . ' · ' . (string) $template['tipo_turno'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?><option value="REST">Descanso explícito</option></select></div>
-                    <div class="col-12 col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">Confirmar día</button></div>
-                    <div class="col-12"><label class="form-check-label small"><input class="form-check-input me-1" type="checkbox" name="confirm_action" value="1" required> Confirmo crear esta asignación individual en la API para la fecha indicada.</label></div>
+    <?php if (($canEditSchedules ?? false) === true && ($assignableWorkers ?? []) !== []): ?>
+        <?php
+        $habitualByWorker = [];
+        foreach ($habitualScheduleRows ?? [] as $habitualRow) {
+            $habitualByWorker[(string) ($habitualRow['worker_id'] ?? '')] = $habitualRow;
+        }
+        $temporaryHabitualReference = [];
+        foreach ($assignableWorkers as $assignableWorker) {
+            $referenceWorkerId = (string) ($assignableWorker['worker_id'] ?? '');
+            $habitualRow = $habitualByWorker[$referenceWorkerId] ?? [];
+            foreach ($weekDates as $referenceDate) {
+                $civilDate = (string) ($referenceDate['date'] ?? '');
+                $habitualCell = $habitualRow['cells'][$civilDate] ?? null;
+                if (!is_array($habitualCell)) continue;
+                $temporaryHabitualReference[$referenceWorkerId][$civilDate] = (string) ($habitualCell['label'] ?? 'Sin asignación habitual confirmada');
+            }
+        }
+        ?>
+        <script type="application/json" id="temporary-schedule-habitual-reference-data"><?= json_encode($temporaryHabitualReference, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+        <div class="modal fade" id="temporary-schedule-assignment-modal" tabindex="-1" aria-labelledby="temporary-schedule-assignment-title" aria-hidden="true" x-data="temporaryScheduleAssignment" x-init="initialize($el)">
+            <div class="modal-dialog"><div class="modal-content">
+                <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title text-white h5" id="temporary-schedule-assignment-title">Nuevo cambio temporal</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+                <form method="post" action="/departamento-operativo/recursos-humanos/checador/programacion-semanal/asignar" @submit.prevent="submit($event)">
+                    <div class="modal-body">
+                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(\App\Core\CsrfToken::token(), ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="workplace_id" value="<?= (int) $selectedWorkplaceId ?>">
+                        <input type="hidden" name="week_start" value="<?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="tipo_asignacion" value="TEMPORAL">
+                        <div class="row g-3">
+                            <div class="col-12"><label class="form-label" for="temporary-assignment-date">Fecha del cambio</label><select class="form-select" id="temporary-assignment-date" name="target_date" data-schedule-target-date required><option value="">Selecciona una fecha</option><?php foreach ($weekDates as $weekday): ?><option value="<?= htmlspecialchars((string) $weekday['date'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) $weekday['label'] . ' · ' . (string) $weekday['date'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
+                            <div class="col-12"><label class="form-label" for="temporary-assignment-worker">Trabajador</label><select class="form-select" id="temporary-assignment-worker" name="worker_id" data-schedule-worker-select required><option value="">Selecciona trabajador</option><?php foreach ($assignableWorkers as $assignableWorker): $verifiedDatesForWorker = is_array($assignableWorker['versioned_verified_dates'] ?? null) ? array_values(array_filter($assignableWorker['versioned_verified_dates'], 'is_string')) : []; $workerOptionLabel = trim((string) ($assignableWorker['full_name'] ?? 'Trabajador')); ?><option value="<?= (int) ($assignableWorker['worker_id'] ?? 0) ?>" data-worker-label="<?= htmlspecialchars($workerOptionLabel, ENT_QUOTES, 'UTF-8') ?>" data-verified-dates="<?= htmlspecialchars(implode(',', $verifiedDatesForWorker), ENT_QUOTES, 'UTF-8') ?>" disabled><?= htmlspecialchars($workerOptionLabel, ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select><div class="form-text" data-schedule-worker-status>Selecciona una fecha para consultar el personal con adscripción verificada.</div></div>
+                            <div class="col-12"><label class="form-label" for="temporary-assignment-template">Turno o descanso explícito</label><select class="form-select" id="temporary-assignment-template" name="template_id" required><option value="">Selecciona</option><?php foreach ($templates ?? [] as $template): if ((int) ($template['es_activo'] ?? 0) !== 1) continue; ?><option value="<?= (int) $template['id'] ?>"><?= htmlspecialchars($templateOptionLabel($template), ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?><option value="REST">Descanso explícito</option></select></div>
+                        </div>
+                        <div class="alert alert-light border mt-3 mb-0" role="status"><strong>Horario habitual vigente de referencia</strong><div class="small mt-1" x-text="habitualReference">Selecciona un trabajador y una fecha para consultar el horario habitual.</div></div>
+                        <div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="temporary-assignment-confirm" name="confirm_action" value="1" required><label class="form-check-label" for="temporary-assignment-confirm">Confirmo este cambio únicamente para la fecha seleccionada; después continúa el horario habitual vigente.</label></div>
+                        <div class="alert alert-danger mt-3 mb-0" role="alert" x-show="error" x-text="error"></div>
+                        <div class="alert alert-success mt-3 mb-0" role="status" x-show="status" x-text="status"></div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary" :disabled="loading || completed"><span x-show="loading" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Guardar cambio</button></div>
                 </form>
-            </div>
-        </section>
-    <?php elseif (($demoMode ?? false) !== true && empty($canAssign)): ?>
-        <div class="alert alert-secondary py-2" role="status">La consulta está disponible; la asignación de turnos no está habilitada para este perfil.</div>
+            </div></div>
+        </div>
     <?php endif; ?>
+
+    </div>
 
     <details class="card" aria-labelledby="legal-reference-heading">
         <summary class="card-header h6 mb-0" id="legal-reference-heading">Referencias laborales informativas</summary>

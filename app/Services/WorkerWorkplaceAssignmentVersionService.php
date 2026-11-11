@@ -12,6 +12,7 @@ use DateTimeZone;
 use DomainException;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use InvalidArgumentException;
+use LogicException;
 
 /** Append-only write boundary for bitemporal worker-Workplace memberships. */
 final class WorkerWorkplaceAssignmentVersionService
@@ -22,6 +23,101 @@ final class WorkerWorkplaceAssignmentVersionService
     public function __construct(?callable $clock = null)
     {
         $this->clock = $clock ?? static fn(): DateTimeImmutable => new DateTimeImmutable('now', new DateTimeZone('UTC'));
+    }
+
+    /** Return the current operation instant in strict UTC RFC3339 form. */
+    public function nowUtc(): string
+    {
+        return ($this->clock)()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
+    }
+
+    /**
+     * Append a single-locality transition while the caller retains the worker
+     * row lock. The old fact is superseded by a corrected closed interval and
+     * the new locality starts at the same half-open boundary.
+     *
+     * @return array{closed_version_id:int,new_version_id:int}
+     */
+    public function appendCurrentLocalityTransition(
+        int $workerId,
+        int $expectedCurrentWorkplaceId,
+        int $newWorkplaceId,
+        string $validFromUtc,
+        int $actorId,
+        string $reason
+    ): array {
+        $connection = Capsule::connection();
+        if ($connection->transactionLevel() < 1) {
+            throw new LogicException('A locality transition requires a caller-owned transaction.');
+        }
+        if ($workerId <= 0 || $expectedCurrentWorkplaceId <= 0 || $newWorkplaceId <= 0
+            || $actorId <= 0 || trim($reason) === '') {
+            throw new InvalidArgumentException('A transition requires canonical IDs, an actor, and a reason.');
+        }
+        if ($expectedCurrentWorkplaceId === $newWorkplaceId) {
+            throw new InvalidArgumentException('A locality transition must change the canonical Workplace.');
+        }
+
+        $effectiveAt = WorkplaceTimezoneTimestamp::normalize($validFromUtc);
+        $effectiveInstant = (new DateTimeImmutable($effectiveAt, new DateTimeZone('UTC')))
+            ->format('Y-m-d\TH:i:s.u\Z');
+        $worker = RhPersonal::query()->whereKey($workerId)->lockForUpdate()->first(['id', 'id_estacion']);
+        if ($worker === null) {
+            throw new DomainException('Canonical worker op_rh_personal.id does not exist.');
+        }
+        if ((int) $worker->id_estacion !== $expectedCurrentWorkplaceId) {
+            throw new DomainException('Worker current locality changed before the versioned transition.');
+        }
+        $localityIdsToLock = [$expectedCurrentWorkplaceId, $newWorkplaceId];
+        sort($localityIdsToLock, SORT_NUMERIC);
+        foreach ($localityIdsToLock as $localityId) {
+            if (RhLocalidad::query()->whereKey($localityId)->lockForUpdate()->first(['id']) === null) {
+                throw new DomainException('Both transition Workplaces must exist in op_rh_localidades.id.');
+            }
+        }
+
+        $beforeEffective = (new DateTimeImmutable($effectiveAt, new DateTimeZone('UTC')))
+            ->modify('-1 microsecond')
+            ->format('Y-m-d\TH:i:s.u\Z');
+        $resolved = (new WorkerWorkplaceAssignmentResolver($this->clock))
+            ->resolveAssignments($workerId, $beforeEffective);
+        if ($resolved['status'] !== 'RESOLVED_SINGLE'
+            || (int) $resolved['assignments'][0]['workplace_id'] !== $expectedCurrentWorkplaceId) {
+            throw new DomainException('Current assignment history is missing, ambiguous, or does not match the HR source.');
+        }
+
+        $currentVersion = RhPersonalLocalidadVersion::query()
+            ->whereKey((int) $resolved['assignments'][0]['id'])
+            ->where('worker_id', $workerId)
+            ->lockForUpdate()
+            ->first();
+        if ($currentVersion === null) {
+            throw new DomainException('Current assignment version disappeared during transition.');
+        }
+        $currentValidFrom = self::databaseTimestamp((string) $currentVersion->valid_from_utc);
+        if (WorkplaceTimezoneTimestamp::normalize($currentValidFrom) >= $effectiveAt) {
+            throw new DomainException('A transition cannot precede or equal its current assignment start.');
+        }
+
+        $closedVersionId = $this->appendVersion(
+            $workerId,
+            $expectedCurrentWorkplaceId,
+            $currentValidFrom,
+            $effectiveInstant,
+            $actorId,
+            $reason,
+            (int) $currentVersion->id
+        );
+        $newVersionId = $this->appendVersion(
+            $workerId,
+            $newWorkplaceId,
+            $effectiveInstant,
+            null,
+            $actorId,
+            $reason
+        );
+
+        return ['closed_version_id' => $closedVersionId, 'new_version_id' => $newVersionId];
     }
 
     public function appendVersion(
@@ -69,7 +165,7 @@ final class WorkerWorkplaceAssignmentVersionService
             if ($worker === null) {
                 throw new DomainException('Canonical worker op_rh_personal.id does not exist.');
             }
-            if (!RhLocalidad::query()->whereKey($workplaceId)->exists()) {
+            if (RhLocalidad::query()->whereKey($workplaceId)->lockForUpdate()->first(['id']) === null) {
                 throw new DomainException('Canonical Workplace op_rh_localidades.id does not exist.');
             }
 

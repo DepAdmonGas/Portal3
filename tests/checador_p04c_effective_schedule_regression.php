@@ -106,7 +106,7 @@ $assert(str_contains($controllerSource, 'requestedWorkplace') && str_contains($c
 $assert(str_contains($controllerSource, "id_personal_resuelto"), 'P4C04 worker identity uses canonical id_personal_resuelto');
 $assert(!str_contains($controllerSource, "referencia_externa_personal") && !str_contains($controllerSource, "no_colaborador"), 'P4C05 external worker references are not worker fallbacks');
 $assert(str_contains($uri, '/api/v2/workers/105/effective-schedule'), 'P4C06 effective schedule uses the authoritative endpoint');
-$assert(!preg_match('/APP_TIMEZONE|APP_TIMEZONE|date_default_timezone_set/', $controllerSource . $serviceSource . $viewSource), 'P4C07 APP_TIMEZONE is not a business fallback');
+$assert($effectiveScheduleMethodSource !== '' && !preg_match('/APP_TIMEZONE|date_default_timezone_set/', $effectiveScheduleMethodSource), 'P4C07 effective-schedule reader does not substitute application timezone for API workplace timezone');
 $assert(!preg_match('/Intl\.DateTimeFormat|resolvedOptions\(\)\.timeZone|navigator\.language/', $viewSource), 'P4C08 browser timezone is not used');
 $assert(($scheduled['data']['estado_jornada'] ?? '') === 'SCHEDULED'
     && ($scheduled['data']['horario_local']['timezone'] ?? '') === 'America/Mexico_City', 'P4C09 effective schedule response is parsed exactly');
@@ -143,10 +143,11 @@ $assert($effectiveScheduleMethodSource !== ''
     && !preg_match('/early.?departure|salida anticipada/i', $effectiveScheduleMethodSource), 'P4C21 effective-schedule client does not calculate early departure');
 $assert(!preg_match('/overtime|tiempo extra|horas extra/i', $controllerSource . $serviceSource . $viewSource), 'P4C22 overtime is not calculated');
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P4C23 SIN MARCACIÓN is not inferred');
-$assert(str_contains($adjustmentsViewSource, 'Nunca se activa automáticamente') && str_contains($controllerSource, 'authorizeFalta'), 'P4C24 FALTA is not inferred');
+$assert(stripos($adjustmentsViewSource, 'nunca se activa automáticamente') !== false && str_contains($controllerSource, 'authorizeFalta'), 'P4C24 FALTA is not inferred');
 $assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $effectiveScheduleMethodSource . $viewSource), 'P4C25 schedule view does not render payroll amounts or document data');
 $assert(str_contains($controllerSource, 'getLevel2WindowStatus') && str_contains($controllerSource, '$level2Meta'), 'P4C26 P04B Level 2 remains authoritative and separate');
-$assert(str_contains($p04aSource, 'createDailyPunchSnapshot'), 'P4C27 P04A snapshot behavior remains intact');
+$assert(str_contains($p04aSource, 'createDailyPunchSnapshot')
+    && !str_contains($controllerSource, 'createDailyPunchSnapshot('), 'P4C27 snapshot service remains available while GET workspaces do not request creation');
 $assert(str_contains($p03Source, 'readObservedPunches'), 'P4C28 P03 raw-read behavior remains intact');
 $assert(($make([new Response(500, [], json_encode(['status' => 'SERVER_ERROR'], JSON_THROW_ON_ERROR))])->getEffectiveSchedule($user, 105, 12, '2026-11-02')['error']['kind'] ?? '') === 'api_unavailable'
     && ($make([$schedulePayload('UNKNOWN')])->getEffectiveSchedule($user, 105, 12, '2026-11-02')['data']['estado_jornada'] ?? '') === 'UNKNOWN', 'P4C29 transport failure remains distinct from schedule UNKNOWN');

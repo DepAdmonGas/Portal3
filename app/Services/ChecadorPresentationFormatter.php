@@ -44,6 +44,7 @@ final class ChecadorPresentationFormatter
         return match (self::code($value)) {
             'RECEIVED' => 'Marcación recibida',
             'PENDING_MATCH' => 'Identificación pendiente',
+            'REJECTED' => 'Marcación rechazada',
             null => 'Estado no disponible',
             default => self::unknownLabel('processing_status', self::code($value) ?? ''),
         };
@@ -54,6 +55,7 @@ final class ChecadorPresentationFormatter
         return match (self::code($value)) {
             'RECEIVED' => 'Solo confirma que la marcación fue recibida; no confirma identidad, jornada ni integridad.',
             'PENDING_MATCH' => 'La identidad del colaborador aún no ha sido resuelta.',
+            'REJECTED' => 'El estado registrado indica que la marcación fue rechazada.',
             null => '',
             default => self::unknownExplanation('processing_status', self::code($value) ?? ''),
         };
@@ -64,8 +66,23 @@ final class ChecadorPresentationFormatter
         return match (self::code($value)) {
             'RECEIVED' => 'text-bg-info',
             'PENDING_MATCH' => 'text-bg-warning',
+            'REJECTED' => 'text-bg-danger',
             default => 'text-bg-secondary',
         };
+    }
+
+    /** Local display conversion uses only the UTC event fact and V2's stored effective timezone. */
+    public static function eventLocalDateTime(array $event): ?string
+    {
+        $timezone = $event['effective_timezone'] ?? null;
+        if (!is_string($timezone)) {
+            return null;
+        }
+        $local = ChecadorAttendanceProjection::localEventTime($event, $timezone);
+        if ($local === null) {
+            return null;
+        }
+        return $local['date'] . ' ' . $local['time'];
     }
 
     public static function incidenceStatusLabel(mixed $value): string
@@ -149,6 +166,19 @@ final class ChecadorPresentationFormatter
     public static function integrityLabel(): string
     {
         return 'Integridad no verificada por Portal3';
+    }
+
+    public static function integrityStatusLabel(mixed $value): string
+    {
+        return match (self::code($value)) {
+            'VALID' => 'HMAC verificado por API V2',
+            'INVALID' => 'HMAC inválido; registro omitido de asistencia',
+            'UNVERIFIABLE' => 'HMAC no verificable; registro omitido de asistencia',
+            'LEGACY_UNSEALED' => 'Registro histórico sin HMAC; omitido de asistencia',
+            'NOT_VERIFIED_BY_PORTAL3' => 'Integridad no verificada por Portal3',
+            null => 'Estado de integridad no disponible',
+            default => self::unknownLabel('integrity_status', self::code($value) ?? ''),
+        };
     }
 
     private static function unknownLabel(string $field, string $code): string

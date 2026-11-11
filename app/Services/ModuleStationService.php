@@ -65,7 +65,9 @@ if ($moduleKey === ChecadorAccessService::MODULE_KEY) {
         $idEstacion = null;
         $idDepto = null;
     }
-    if ($idEstacion === null && $idDepto === null && count($stationById) + count($departmentById) === 1) {
+    if ((int) ($access['position_id'] ?? 0) !== 13
+        && $idEstacion === null && $idDepto === null
+        && count($stationById) + count($departmentById) === 1) {
         if ($stationById !== []) {
             $idEstacion = (int) array_key_first($stationById);
         } else {
@@ -312,8 +314,9 @@ self::$isBlocked = false;
 
 $hasSelection = $idEstacion !== null || $idDepto !== null;
 $hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
-        $showSelector = $moduleKey === ChecadorAccessService::MODULE_KEY
-    ? ($showSelector && count($stations) + count($depts) > 1)
+$showSelector = $moduleKey === ChecadorAccessService::MODULE_KEY
+    ? ($showSelector && ((int) (ChecadorAccessService::authorize()['position_id'] ?? 0) === 13
+        || count($stations) + count($depts) > 1))
     : ($showSelector && (MultiestacionService::isEnabled() || $hasChoices));
 
 $html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';

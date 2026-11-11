@@ -9,6 +9,7 @@ use App\Core\Session;
 use App\Services\ChecadorAccessService;
 use App\Services\ModuleStationService;
 use App\Services\ModuloDptoOperativoService;
+use App\Services\RolComodinesService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 $passes = 0;
@@ -193,7 +194,8 @@ $assert(array_column(ModuleStationService::getAvailableStations('checador'), 'id
 $assert(ChecadorAccessService::authorize(202)['reason'] === 'requested_station_out_of_scope', 'C03 Encargado cannot cross to a second supported station');
 $login(1300);
 $directionAccess = ChecadorAccessService::authorize();
-$assert($directionAccess['allowed'] && array_column($directionAccess['workplaces'], 'id') === [201, 202, 204], 'C03 Dirección receives all active, uniquely mapped Checador stations, including one omitted from global multi-station scope');
+$assert($directionAccess['allowed'] && ($directionAccess['position_id'] ?? null) === 13
+    && array_column($directionAccess['workplaces'], 'id') === [201, 202, 204], 'C03 Dirección receives its fresh effective position and all active, uniquely mapped Checador stations');
 $previousModuleContext = ['corte-diario' => ['id_estacion' => 101, 'id_depto' => null]];
 Session::set('module_context', $previousModuleContext);
 ModuleStationService::setContext('checador', 202, null);
@@ -346,13 +348,24 @@ $db->table('tb_modulos_config')->where('modulo_key', 'checador')->update(['estac
 $login(1300);
 $interlomas = ChecadorAccessService::authorize();
 $interlomasSelector = ModuleStationService::render('checador');
+$emptyPuesto13Context = ModuleStationService::getContext('checador');
 $assert($interlomas['allowed']
     && $interlomas['workplaces'] === [['id' => 1, 'nombre' => 'Interlomas']]
     && array_column(ModuleStationService::getAvailableStations('checador'), 'id') === [1]
+    && $emptyPuesto13Context['id_estacion'] === null
+    && $emptyPuesto13Context['id_depto'] === null
     && str_contains($interlomasSelector, 'Interlomas')
-    && !str_contains($interlomasSelector, 'id="module-station-selector-checador"')
+    && str_contains($interlomasSelector, 'id="module-station-selector-checador"')
+    && str_contains($interlomasSelector, '<option value="" selected>')
     && ChecadorAccessService::authorize(14)['reason'] === 'requested_station_out_of_scope',
-    'V6B1 Interlomas station 1 maps through unique numlista 2 to locality 1 and does not inherit synthetic locality 14');
+    'P13 with one authorized station retains an empty session context and shows the explicit selector');
+ModuleStationService::setContext('checador', null, null);
+$assert(ModuleStationService::getContext('checador')['id_estacion'] === null,
+    'P13 clearing the selected context does not automatically restore its sole authorized locality');
+ModuleStationService::setChecadorWorkplaceContext(1);
+$stationOneContext = ModuleStationService::getContext('checador');
+$assert(($stationOneContext['id_estacion'] ?? null) === 1 && ($stationOneContext['id_depto'] ?? null) === null,
+    'P13 station selection stores station 1 only in the session context');
 
 // V6B4 keeps Autolavado (canonical locality 9) in a separately authorized
 // department group; it is not inferred from Palo Solo or a physical station.
@@ -376,10 +389,18 @@ $assert($directionWithDepartment['allowed']
     && str_contains($mixedSelector, 'value="depto_9"')
     && !str_contains($mixedSelector, 'value="estacion_9"'),
     'V6B4 Dirección sees its supported stations plus explicitly granted Autolavado in separate selector groups');
+$db->table('tb_modulos_config')->where('modulo_key', 'checador')->update(['estaciones_soportadas' => '[1,101,102,104]']);
 $assert(ModuleStationService::setChecadorWorkplaceContext(9)
     && ModuleStationService::getContext('checador')['id_depto'] === 9
     && ModuleStationService::getContext('checador')['id_estacion'] === null,
     'V6B4 canonical locality 9 is persisted as a department context, not a gas station');
+$assert(ModuleStationService::setChecadorWorkplaceContext(1)
+    && ModuleStationService::getContext('checador')['id_estacion'] === 1
+    && ModuleStationService::getContext('checador')['id_depto'] === null
+    && ModuleStationService::setChecadorWorkplaceContext(9)
+    && ModuleStationService::getContext('checador')['id_estacion'] === null
+    && ModuleStationService::getContext('checador')['id_depto'] === 9,
+    'P13 can switch between station 1 and Autolavado 9 without retaining the previous context group');
 $db->table('tb_estaciones')->insert(['id' => 111, 'numlista' => 7, 'nombre' => 'Palo Solo', 'estatus' => 0]);
 $db->table('op_rh_localidades')->insert(['id' => 2, 'numlista' => 7, 'localidad' => 'Palo Solo']);
 $db->table('tb_modulos_config')->where('modulo_key', 'checador')->update(['estaciones_soportadas' => '[101,102,104,111]']);
@@ -440,6 +461,51 @@ $assert($createAllowed['allowed']
     && $createAllowed['namespace'] === ChecadorAccessService::INCIDENCE_MODULE_KEY
     && array_column($createAllowed['workplaces'], 'id') === [201],
     'V7C12 incidence creation requires its dedicated create grant and retains canonical station scope');
+
+// Canonical comodines use existing Checador scheduling ACL plus effective RH
+// permissions. PUESTO names never expand the station scope.
+$db->table('modulos_dpto_operativo')->insert([
+    'id' => 65,
+    'clave' => 'biometricos',
+    'nombre' => 'Biométricos',
+    'activo' => 1,
+]);
+$db->table('modulos_puestos_do')->insert([
+    ['id_modulo' => 65, 'id_puesto' => 6, 'leer' => 1, 'editar' => 0],
+    ['id_modulo' => 65, 'id_puesto' => 13, 'leer' => 1, 'editar' => 1],
+]);
+$db->table('modulos_puestos_do')->where('id_modulo', 2)->where('id_puesto', 13)->update([
+    'leer' => 1,
+    'crear' => 1,
+    'editar' => 1,
+]);
+$db->table('tb_usuarios')->where('id', 600)->update(['id_gas' => 101]);
+$login(600);
+$encargadoRoleRead = RolComodinesService::authorizeCanonicalProgramming(201, 'read');
+$encargadoOtherStation = RolComodinesService::authorizeCanonicalProgramming(202, 'read');
+$encargadoCreate = RolComodinesService::authorizeCanonicalProgramming(201, 'create');
+if (empty($encargadoRoleRead['allowed']) || ($encargadoOtherStation['reason'] ?? '') !== 'requested_station_out_of_scope' || !empty($encargadoCreate['allowed'])) {
+    fwrite(STDERR, 'Encargado canonical authorization fixture: ' . json_encode([
+        'read' => $encargadoRoleRead,
+        'other_station' => $encargadoOtherStation,
+        'create' => $encargadoCreate,
+    ], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+}
+$assert(!empty($encargadoRoleRead['allowed'])
+    && ($encargadoOtherStation['reason'] ?? '') === 'requested_station_out_of_scope'
+    && empty($encargadoCreate['allowed']),
+    'canonical Comodines lets an Encargado read only its assigned station and denies create without effective write grants');
+$login(1300);
+$direccionCreate = RolComodinesService::authorizeCanonicalProgramming(201, 'create');
+$assert(!empty($direccionCreate['allowed'])
+    && in_array(201, $direccionCreate['station_workplace_ids'] ?? [], true),
+    'Dirección access depends on effective Checador scheduling and Recursos Humanos write permissions');
+$login(651);
+$paloSoloRoleRead = RolComodinesService::authorizeCanonicalProgramming(2, 'read');
+$assert(!empty($paloSoloRoleRead['allowed'])
+    && ($paloSoloRoleRead['worker_workplace_ids'] ?? []) === [2]
+    && !in_array(9, $paloSoloRoleRead['worker_workplace_ids'] ?? [], true),
+    'Encargado canonical worker search excludes a separately granted department locality outside its station roster');
 
 printf("CHECADOR_ACCESS_FOUNDATION_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

@@ -1,0 +1,244 @@
+/**
+ * Checador V2 - M06 Incidencias Filter & Select2 Form Styles
+ * Scoped strictly to the M06 incidences workspace to avoid side effects on other modules.
+ */
+
+/* Form wrapper and row alignment */
+.incidence-filter-form {
+    margin-bottom: 1.5rem;
+}
+
+.incidence-filter-form .form-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--bs-body-color, #5a6a85);
+    margin-bottom: 0.35rem;
+    white-space: nowrap;
+}
+
+/* Ensure date inputs have consistent height and styling */
+.incidence-filter-form .form-control {
+    height: 39px;
+    min-height: 39px;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.875rem;
+    border-color: var(--bs-border-color, #dfe5ef);
+    border-radius: 7px;
+    box-sizing: border-box;
+}
+
+.incidence-filter-form .form-control:focus {
+    border-color: var(--bs-primary, #5d87ff);
+    box-shadow: 0 0 0 0.25rem rgba(93, 135, 255, 0.25);
+}
+
+/* Select2 container containment */
+#checador-incidences-search-modal .select2-container,
+.incidence-filter-field > .select2-container {
+    display: block;
+    width: 100% !important;
+}
+
+#checador-incidences-search-modal .select2-container .select2-selection--single,
+.incidence-filter-field > .select2-container .select2-selection--single {
+    position: relative !important;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 39px !important;
+    min-height: 39px;
+    padding: 0;
+    margin: 0;
+    background-color: var(--bs-body-bg, #ffffff);
+    border: 1px solid var(--bs-border-color, #dfe5ef) !important;
+    border-radius: 7px !important;
+    outline: none;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Rendered text inside Select2 */
+#checador-incidences-search-modal .select2-container .select2-selection__rendered,
+.incidence-filter-field > .select2-container .select2-selection__rendered {
+    box-sizing: border-box;
+    display: block;
+    height: 37px;
+    line-height: 37px !important;
+    padding-left: 0.75rem !important;
+    padding-right: 2.25rem !important;
+    font-size: 0.875rem;
+    color: var(--bs-body-color, #5a6a85) !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#checador-incidences-search-modal .select2-container .select2-selection__placeholder,
+.incidence-filter-field > .select2-container .select2-selection__placeholder {
+    color: var(--bs-secondary-color, #7c8fac) !important;
+}
+
+/* Clear icon (x) positioned properly before arrow */
+#checador-incidences-search-modal .select2-container .select2-selection__clear,
+.incidence-filter-field > .select2-container .select2-selection__clear {
+    position: absolute !important;
+    top: 50% !important;
+    right: 26px !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    padding: 0 2px !important;
+    font-size: 1rem;
+    line-height: 1 !important;
+    color: #999 !important;
+    z-index: 2;
+    cursor: pointer;
+}
+
+#checador-incidences-search-modal .select2-container .select2-selection__clear:hover,
+.incidence-filter-field > .select2-container .select2-selection__clear:hover {
+    color: var(--bs-danger, #fa896b) !important;
+}
+
+/* Arrow positioning: override global styles.css top: -2px; right: 20px; */
+#checador-incidences-search-modal .select2-container--default .select2-selection--single .select2-selection__arrow,
+.incidence-filter-field > .select2-container--default .select2-selection--single .select2-selection__arrow {
+    position: absolute !important;
+    top: 1px !important;
+    right: 1px !important;
+    bottom: 1px !important;
+    width: 28px !important;
+    height: 37px !important;
+    background: transparent !important;
+    border: 0 !important;
+}
+
+#checador-incidences-search-modal .select2-container--default .select2-selection--single .select2-selection__arrow b,
+.incidence-filter-field > .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    margin-top: -2px !important;
+    margin-left: -5px !important;
+    border-width: 5px 4px 0 4px !important;
+    border-style: solid !important;
+    border-color: #5a6a85 transparent transparent transparent !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Open arrow state */
+#checador-incidences-search-modal .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b,
+.incidence-filter-field > .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-width: 0 4px 5px 4px !important;
+    border-color: transparent transparent #5a6a85 transparent !important;
+}
+
+/* Focus and open ring states */
+#checador-incidences-search-modal .select2-container--default.select2-container--open .select2-selection--single,
+#checador-incidences-search-modal .select2-container--default.select2-container--focus .select2-selection--single,
+.incidence-filter-field > .select2-container--default.select2-container--open .select2-selection--single,
+.incidence-filter-field > .select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: var(--bs-primary, #5d87ff) !important;
+    box-shadow: 0 0 0 0.25rem rgba(93, 135, 255, 0.25) !important;
+}
+
+/* Dropdown styling */
+.select2-dropdown.incidence-filter-dropdown {
+    border: 1px solid var(--bs-border-color, #dfe5ef);
+    border-radius: 7px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    background-color: var(--bs-body-bg, #ffffff);
+    z-index: 1060;
+    overflow: hidden;
+}
+
+.select2-dropdown.incidence-filter-dropdown .select2-search--dropdown {
+    padding: 8px 10px;
+    background-color: var(--bs-light, #f6f9fc);
+    border-bottom: 1px solid var(--bs-border-color, #dfe5ef);
+}
+
+.select2-dropdown.incidence-filter-dropdown .select2-search__field {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 35px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.875rem;
+    color: var(--bs-body-color, #5a6a85);
+    background-color: var(--bs-body-bg, #ffffff);
+    border: 1px solid var(--bs-border-color, #dfe5ef);
+    border-radius: 6px;
+    outline: none;
+}
+
+.select2-dropdown.incidence-filter-dropdown .select2-search__field:focus {
+    border-color: var(--bs-primary, #5d87ff);
+    box-shadow: 0 0 0 0.2rem rgba(93, 135, 255, 0.2);
+}
+
+.select2-dropdown.incidence-filter-dropdown .select2-results__option {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+}
+
+.select2-dropdown.incidence-filter-dropdown .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--bs-primary, #5d87ff) !important;
+    color: #ffffff !important;
+}
+
+/* Consultar Button styling */
+.incidence-filter-btn {
+    height: 39px !important;
+    min-height: 39px;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0 1.25rem !important;
+    width: 100%;
+}
+
+/* Checador V2 - Incidences and Payroll Comparison DataTables Pagination & Length Styling */
+#checador-incidences-table_wrapper .dataTables_paginate ul.pagination,
+#checador-payroll-table_wrapper .dataTables_paginate ul.pagination {
+    margin: 0;
+    gap: 0;
+}
+
+#checador-incidences-table_wrapper .dataTables_paginate ul.pagination li.paginate_button,
+#checador-payroll-table_wrapper .dataTables_paginate ul.pagination li.paginate_button {
+    padding: 0 !important;
+    border: none !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+
+#checador-incidences-table_wrapper .dataTables_paginate ul.pagination li.paginate_button a.page-link,
+#checador-payroll-table_wrapper .dataTables_paginate ul.pagination li.paginate_button a.page-link {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+}
+
+#checador-incidences-table_wrapper .dataTables_paginate ul.pagination li.paginate_button.active a.page-link,
+#checador-payroll-table_wrapper .dataTables_paginate ul.pagination li.paginate_button.active a.page-link {
+    background-color: var(--bs-primary, #5d87ff) !important;
+    border-color: var(--bs-primary, #5d87ff) !important;
+    color: #ffffff !important;
+}
+
+#checador-incidences-table_wrapper .dataTables_paginate ul.pagination li.paginate_button.disabled a.page-link,
+#checador-payroll-table_wrapper .dataTables_paginate ul.pagination li.paginate_button.disabled a.page-link {
+    color: var(--bs-secondary-color, #7c8fac);
+    pointer-events: none;
+    background-color: var(--bs-tertiary-bg, #f6f9fc);
+    border-color: var(--bs-border-color, #ebf1f6);
+}
+
+#checador-incidences-table_wrapper .dataTables_length select,
+#checador-payroll-table_wrapper .dataTables_length select {
+    min-width: 70px;
+    display: inline-block;
+    margin: 0 0.5rem;
+}

@@ -28,11 +28,96 @@ $reviewStatusLabel = static fn(string $status): string => match ($status) {
 };
 ?>
 <div id="container" class="mt-4 mb-5">
-    <?php require __DIR__ . '/_workspace-context.php'; ?>
-    <section class="card" aria-labelledby="adjustment-workspace-heading">
-        <div class="card-header"><h2 class="h5 mb-0" id="adjustment-workspace-heading">Ajustes administrativos</h2></div>
+    <section class="card mb-4" aria-labelledby="administrative-adjustments-list-heading">
+        <div class="card-header bg-primary text-white d-flex align-items-center gap-2 gap-md-3 flex-wrap">
+            <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-adjustments fs-5"></i></span>
+            <div>
+                <h2 class="h5 mb-0 text-white" id="administrative-adjustments-list-heading">Inventario de ajustes administrativos</h2>
+                <span class="small text-white-50">Consulta de ajustes registrados y su trazabilidad</span>
+            </div>
+            <?php if (!empty($canReadAdministrativeAdjustments)): ?>
+                <button type="button" class="btn bg-white text-primary ms-auto" data-bs-toggle="modal" data-bs-target="#checador-adjustment-search-modal">
+                    <i class="ti ti-search me-1" aria-hidden="true"></i>Buscar / Filtrar
+                </button>
+            <?php endif; ?>
+        </div>
         <div class="card-body">
-            <p class="text-muted">Consulta las evaluaciones y referencias disponibles. Los resultados provienen del servicio; Portal3 no determina faltas ni consecuencias de nómina.</p>
+            <?php if (empty($canReadAdministrativeAdjustments)): ?>
+                <div class="alert alert-warning mb-0" role="status">No tienes permiso de lectura para consultar el inventario de ajustes administrativos en esta localidad.</div>
+            <?php else: ?>
+                <?php $adjustmentFilterDate = is_string($selectedDate ?? null) && preg_match('/\A\d{4}-\d{2}-\d{2}\z/D', $selectedDate) === 1 ? $selectedDate : date('Y-m-d'); ?>
+                <div id="checador-adjustments-read" data-workplace-id="<?= (int) ($selectedWorkplaceId ?? 0) ?>"
+                    data-default-date="<?= $esc($adjustmentFilterDate) ?>"
+                    data-roster-status="<?= $esc($adjustmentRosterStatus ?? 'unavailable') ?>"
+                    data-list-url="/departamento-operativo/recursos-humanos/checador/ajustes/data"
+                    data-detail-url="/departamento-operativo/recursos-humanos/checador/ajustes/detalle">
+                    <div id="adjustments-read-feedback" class="alert d-none" role="status" aria-live="polite"></div>
+                    <div class="table-responsive adjustments-table-wrap"><table id="checador-adjustments-table" class="table table-striped table-bordered align-middle mb-0 w-100">
+                        <caption class="visually-hidden">Ajustes administrativos persistidos para la localidad autorizada</caption>
+                        <thead><tr><th scope="col">Fecha</th><th scope="col">Colaborador</th><th scope="col">Localidad</th><th scope="col">Tipo</th><th scope="col">Motivo</th><th scope="col">Estado</th><th scope="col">Responsable</th><th scope="col" class="text-center">Acción</th></tr></thead>
+                    </table></div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php if (!empty($canReadAdministrativeAdjustments)): ?>
+        <div class="modal fade" id="checador-adjustment-search-modal" tabindex="-1" aria-labelledby="checador-adjustment-search-title" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+                <div class="modal-header modal-colored-header bg-primary text-white">
+                    <div><h2 class="modal-title h5 text-white mb-0" id="checador-adjustment-search-title"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar ajustes administrativos</h2>
+                        <span class="small text-white-50">Selecciona los criterios para consultar los ajustes registrados.</span></div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form id="checador-adjustments-filters" class="adjustments-filter-form">
+                    <div class="modal-body">
+                        <div id="adjustments-search-feedback" class="alert d-none" role="status" aria-live="polite"></div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 adjustments-filter-field"><label class="form-label" for="adjustments-workplace">Localidad autorizada</label>
+                                <input id="adjustments-workplace" class="form-control" value="<?= $esc($selectedWorkplaceName ?? 'Localidad autorizada') ?>" readonly aria-readonly="true"></div>
+                            <div class="col-12 col-md-6 adjustments-filter-field"><label class="form-label" for="adjustments-worker">Colaborador</label><select id="adjustments-worker" class="form-select"><option value="">Todos los colaboradores</option>
+                                <?php foreach (($workerSelectOptions ?? []) as $workerOption): if (!is_array($workerOption) || (int) ($workerOption['worker_id'] ?? 0) < 1) continue; ?>
+                                    <option value="<?= (int) $workerOption['worker_id'] ?>" <?= (int) ($selectedWorkerId ?? 0) === (int) $workerOption['worker_id'] ? 'selected' : '' ?>><?= $esc($workerOption['full_name'] ?? ('Personal #' . (int) $workerOption['worker_id'])) ?></option>
+                                <?php endforeach; ?>
+                            </select><small id="adjustments-roster-feedback" class="form-text"><?php if (($adjustmentRosterStatus ?? '') === 'ready'): ?>Padrón autorizado validado para la fecha seleccionada.<?php elseif (in_array((string) ($adjustmentRosterStatus ?? ''), ['partial', 'current_roster_only'], true)): ?>La lista puede estar incompleta para la fecha seleccionada.<?php else: ?>No se confirmó el padrón autorizado para la fecha seleccionada.<?php endif; ?></small></div>
+                            <div class="col-12 col-md-6 adjustments-filter-field"><label class="form-label" for="adjustments-type">Tipo de ajuste</label><select id="adjustments-type" class="form-select"><option value="">Todos los tipos</option>
+                                <?php foreach (['OVERRIDE_STATUS', 'INTERPRETED_ENTRY_TIME', 'INTERPRETED_EXIT_TIME', 'JUSTIFY_LATENESS'] as $adjustmentType): ?><option value="<?= $esc($adjustmentType) ?>"><?= $esc(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentTypeLabel($adjustmentType)) ?></option><?php endforeach; ?>
+                            </select></div>
+                            <div class="col-12 col-md-6 adjustments-filter-field"><label class="form-label" for="adjustments-status">Estado</label><select id="adjustments-status" class="form-select"><option value="">Todos los estados</option>
+                                <?php foreach (['ACTIVE', 'SUPERSEDED', 'CANCELLED'] as $adjustmentStatus): ?><option value="<?= $esc($adjustmentStatus) ?>"><?= $esc(\App\Services\ChecadorPresentationFormatter::administrativeAdjustmentStatusLabel($adjustmentStatus)) ?></option><?php endforeach; ?>
+                            </select></div>
+                            <div class="col-12 col-md-6 adjustments-filter-field"><label class="form-label" for="adjustments-date-from">Fecha inicial</label><input id="adjustments-date-from" type="date" class="form-control" value="<?= $esc($adjustmentFilterDate) ?>" required></div>
+                            <div class="col-12 col-md-6 adjustments-filter-field"><label class="form-label" for="adjustments-date-to">Fecha final</label><input id="adjustments-date-to" type="date" class="form-control" value="<?= $esc($adjustmentFilterDate) ?>" required></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" id="adjustments-reset-filters"><i class="ti ti-refresh me-1" aria-hidden="true"></i>Limpiar filtros</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary adjustments-filter-btn"><i class="ti ti-search me-1" aria-hidden="true"></i>Consultar ajustes</button>
+                    </div>
+                </form>
+            </div></div>
+        </div>
+        <div class="modal fade" id="checador-adjustment-detail-modal" tabindex="-1" aria-labelledby="checador-adjustment-detail-title" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+                <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title h5 text-white mb-0" id="checador-adjustment-detail-title">Detalle del ajuste administrativo</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+                <div class="modal-body"><div id="adjustment-detail-feedback" class="alert d-none" role="status"></div><dl id="adjustment-detail-fields" class="row mb-3"></dl>
+                    <h3 class="h6">Historial de versiones</h3><div class="table-responsive"><table class="table table-sm table-striped"><thead><tr><th>Revisión</th><th>Estado</th><th>Creado (UTC)</th><th>Responsable</th></tr></thead><tbody id="adjustment-detail-history"></tbody></table></div>
+                    <h3 class="h6 mt-3">Evaluaciones relacionadas</h3><div id="adjustment-linked-evaluations" class="small text-muted">Sin vínculos consultados.</div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+            </div></div>
+        </div>
+    <?php endif; ?>
+    <section class="card" aria-labelledby="adjustment-workspace-heading">
+        <div class="card-header bg-light text-primary d-flex align-items-center gap-2">
+            <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-clipboard-check fs-5"></i></span>
+            <div>
+                <h2 class="h5 mb-0" id="adjustment-workspace-heading">Evaluaciones administrativas</h2>
+                <span class="small text-muted">Consulta de evaluaciones y referencias vinculadas</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">El resultado proviene del servicio institucional; Portal3 no recalcula marcaciones ni resultados de nómina.</p>
             <?php if ($evaluationFeedback !== null
                 && (int) ($evaluationFeedback['workplace_id'] ?? 0) === (int) ($selectedWorkplaceId ?? 0)
                 && (string) ($evaluationFeedback['date'] ?? '') === (string) ($selectedDate ?? '')): ?>
@@ -40,9 +125,16 @@ $reviewStatusLabel = static fn(string $status): string => match ($status) {
                     <?= $esc($evaluationFeedback['message'] ?? 'La evaluación no pudo confirmarse.') ?>
                 </div>
             <?php endif; ?>
-            <?php if (($state ?? '') !== 'success'): ?><div class="alert alert-warning" role="status"><?= $esc(($stateMessage ?? '') !== '' ? $stateMessage : 'La consulta estable no está disponible; no se confirma un resultado vacío.') ?></div><?php endif; ?>
+            <?php if (($state ?? '') !== 'success'): ?>
+                <?php
+                $evaluationStateMessage = ($state ?? '') === 'snapshot_state_unavailable'
+                    ? 'Para consultar evaluaciones, abre primero una asistencia diaria autorizada.'
+                    : (($stateMessage ?? '') !== '' ? $stateMessage : 'La consulta no está disponible; no se confirma un resultado vacío.');
+                ?>
+                <div class="alert <?= ($state ?? '') === 'snapshot_state_unavailable' ? 'alert-info' : 'alert-warning' ?> py-2 small" role="status"><?= $esc($evaluationStateMessage) ?></div>
+            <?php endif; ?>
             <?php foreach ($evaluationErrors as $workerId => $kind): ?><div class="alert alert-warning" role="status">No fue posible consultar las referencias administrativas de personal <?= (int) $workerId ?>.</div><?php endforeach; ?>
-            <?php if (($state ?? '') === 'success' && $evaluations === [] && $evaluationErrors === []): ?><div class="alert alert-info" role="status">La fuente no devolvió evaluaciones para esta consulta. No se infiere que no existan otros registros.</div><?php elseif (($state ?? '') === 'success' && $adjustmentCount === 0 && $evaluationErrors === []): ?><p class="alert alert-secondary" role="status">Las evaluaciones disponibles no incluyen referencias de ajustes para esta consulta.</p><?php endif; ?>
+            <?php if (($state ?? '') === 'success' && $evaluations === [] && $evaluationErrors === []): ?><div class="alert alert-info py-2 mb-3" role="status">La fuente no devolvió evaluaciones para esta consulta. No se infiere que no existan otros registros.</div><?php elseif (($state ?? '') === 'success' && $adjustmentCount === 0 && $evaluationErrors === []): ?><p class="alert alert-secondary py-2 mb-3" role="status">Las evaluaciones disponibles no incluyen referencias de ajustes para esta consulta.</p><?php endif; ?>
             <?php foreach ($evaluations as $workerId => $result): ?>
                 <?php
                 if (!is_array($result)) continue;
@@ -117,7 +209,7 @@ $reviewStatusLabel = static fn(string $status): string => match ($status) {
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
-            <div class="alert alert-light border mb-0" role="note">La autorización final de FALTA permanece separada de la evaluación y requiere permiso específico y confirmación humana.</div>
+            <div class="alert alert-light border mb-0 adjustments-final-falta-note" role="note">La autorización final de FALTA permanece separada de la evaluación y requiere permiso específico y confirmación humana.</div>
         </div>
     </section>
 </div>
