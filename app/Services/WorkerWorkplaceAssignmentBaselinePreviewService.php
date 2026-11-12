@@ -77,6 +77,7 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
                 'live_import_enabled' => false,
                 'database_writes' => false,
                 'counts' => $snapshot['counts'],
+                'excluded_candidates_by_reason' => $snapshot['exclusion_reasons'],
                 'candidate_worker_ids' => array_map(
                     static fn(array $row): int => (int) $row['worker_id'],
                     $snapshot['candidate_rows']->all()
@@ -135,7 +136,11 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
     public function authorizedStationWorkplaceIds(): array
     {
         $context = ($this->authorizationContextResolver)();
-        return array_values(array_unique(array_map('intval', $context['workplace_ids'] ?? [])));
+        return array_values(array_filter(
+            array_unique(array_map('intval', $context['workplace_ids'] ?? [])),
+            static fn(int $workplaceId): bool => $workplaceId > 0
+                && !in_array($workplaceId, self::PROVISIONALLY_EXCLUDED_WORKPLACE_IDS, true)
+        ));
     }
 
     /**
@@ -171,7 +176,7 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
         $mapping = $this->resolvePhysicalStationMapping($workplaceId, $forUpdate);
 
         $sourceQuery = Capsule::table('op_rh_personal as p')
-            ->where('p.id_estacion', $mapping['physical_station_id'])
+            ->where('p.id_estacion', $workplaceId)
             ->orderBy('p.id');
         if ($forUpdate) {
             $sourceQuery->lockForUpdate();
@@ -179,13 +184,14 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
         $sourceRows = $sourceQuery->get([
             'p.id as worker_id', 'p.estado', 'p.id_estacion', 'p.nombre_completo', 'p.no_colaborador',
         ])
-            ->map(static function (object $row) use ($mapping): object {
+            ->map(static function (object $row) use ($mapping, $workplaceId): object {
                 $row->physical_station_id = $mapping['physical_station_id'];
                 $row->physical_numlista = $mapping['numlista'];
                 $row->physical_station_status = $mapping['station_status'];
                 $row->canonical_workplace_id = $mapping['workplace_id'];
+                $row->source_locality_id = (int) $row->id_estacion;
                 $row->canonical_locality_exists = 1;
-                $row->mapping_unique = 1;
+                $row->mapping_unique = $row->source_locality_id === $workplaceId ? 1 : 0;
                 return $row;
             });
 
@@ -239,6 +245,14 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
             'conflicting_assignments' => $conflictCount,
             'baseline_candidates' => $candidateRows->count(),
             'existing_version_rows' => $historyRows->count(),
+            'excluded_workers' => $sourceRows->count() - $candidateRows->count(),
+        ];
+
+        $exclusionReasons = [
+            'inactive_workers' => $counts['inactive_workers'],
+            'unrecognized_worker_status' => $counts['other_status_workers'],
+            'active_workers_with_existing_versions' => $counts['active_with_preexisting_versions'],
+            'active_workers_with_conflicting_assignments' => $counts['conflicting_assignments'],
         ];
 
         $localityReference = [
@@ -264,12 +278,13 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
             'history_rows' => $historyRows,
             'history_worker_ids' => $historyWorkerIds,
             'counts' => $counts,
+            'exclusion_reasons' => $exclusionReasons,
         ];
     }
 
     /**
      * Resolve the physical RH station from a canonical locality through the unique numlista bridge.
-     * The station row is valid only while the institutional catalog marks it active (estatus=1).
+     * The station row is valid only while the institutional catalog marks it active (estatus=0).
      * When requested, all mapping rows remain locked until the caller's transaction completes.
      *
      * @return array{workplace_id:int,locality:string,numlista:int,physical_station_id:int,station_status:int}
@@ -311,7 +326,7 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
             throw new DomainException('The physical station mapping is missing or ambiguous.');
         }
         $station = $stations->first();
-        if ((int) $station->estatus !== 1) {
+        if ((int) $station->estatus !== 0) {
             throw new DomainException('The physical station is not active in the institutional station catalog.');
         }
 
@@ -376,7 +391,7 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
         if ((int) $worker->estado !== 1) {
             throw new DomainException('Candidate worker is no longer active.');
         }
-        if ((int) $worker->id_estacion !== $mapping['physical_station_id']) {
+        if ((int) $worker->id_estacion !== $expectedWorkplaceId) {
             throw new DomainException('Candidate locality changed after preview.');
         }
         if (RhPersonalLocalidadVersion::query()->where('worker_id', $workerId)->exists()) {
@@ -485,14 +500,18 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
         foreach ($rows as $row) {
             $workerId = (int) (is_array($row) ? $row['worker_id'] : $row->worker_id);
             $status = (int) (is_array($row) ? $row['estado'] : $row->estado);
-            $physicalStationId = is_array($row) ? ($row['physical_station_id'] ?? $row['id_estacion']) : ($row->physical_station_id ?? $row->id_estacion);
+            $sourceLocalityId = is_array($row)
+                ? ($row['source_locality_id'] ?? $row['id_estacion'])
+                : ($row->source_locality_id ?? $row->id_estacion);
+            $sourceId = $sourceLocalityId === null ? 'NULL' : (string) (int) $sourceLocalityId;
+            $physicalStationId = is_array($row) ? ($row['physical_station_id'] ?? null) : ($row->physical_station_id ?? null);
             $physicalId = $physicalStationId === null ? 'NULL' : (string) (int) $physicalStationId;
             $exists = (int) (is_array($row) ? $row['canonical_locality_exists'] : $row->canonical_locality_exists);
             $numlista = (int) (is_array($row) ? ($row['physical_numlista'] ?? 0) : ($row->physical_numlista ?? 0));
             $stationStatus = (int) (is_array($row) ? ($row['physical_station_status'] ?? -1) : ($row->physical_station_status ?? -1));
             $canonicalWorkplaceId = (int) (is_array($row) ? ($row['canonical_workplace_id'] ?? 0) : ($row->canonical_workplace_id ?? 0));
             $mappingUnique = (int) (is_array($row) ? ($row['mapping_unique'] ?? 0) : ($row->mapping_unique ?? 0));
-            $records[] = $workerId . ':' . $status . ':' . $physicalId . ':' . $numlista . ':' . $stationStatus
+            $records[] = $workerId . ':' . $status . ':' . $sourceId . ':' . $physicalId . ':' . $numlista . ':' . $stationStatus
                 . ':' . $canonicalWorkplaceId . ':' . $mappingUnique . ':' . $exists;
         }
         sort($records, SORT_STRING);
@@ -511,14 +530,18 @@ final class WorkerWorkplaceAssignmentBaselinePreviewService
         $workplaceIds = [];
         foreach ($stationWorkplaces as $station) {
             $workplaceId = (int) ($station['id'] ?? 0);
-            $locality = $workplaceId > 0 ? RhLocalidad::query()->find($workplaceId) : null;
+            $locality = $workplaceId > 0
+                && !in_array($workplaceId, self::PROVISIONALLY_EXCLUDED_WORKPLACE_IDS, true)
+                ? RhLocalidad::query()->find($workplaceId)
+                : null;
             if ($locality === null || $locality->numlista === null) {
                 continue;
             }
             $numlista = (int) $locality->numlista;
             if ($numlista <= 0
                 || RhLocalidad::query()->where('numlista', $numlista)->count() !== 1
-                || \App\Models\Estacion::query()->where('numlista', $numlista)->count() !== 1) {
+                || \App\Models\Estacion::query()->where('numlista', $numlista)->count() !== 1
+                || (int) \App\Models\Estacion::query()->where('numlista', $numlista)->value('estatus') !== 0) {
                 continue;
             }
             $workplaceIds[] = $workplaceId;

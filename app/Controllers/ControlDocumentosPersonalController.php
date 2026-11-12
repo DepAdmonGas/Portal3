@@ -15,24 +15,14 @@ use App\Services\PersonalExcelService;
 use App\Services\ModuleStationService;
 use App\Services\WorkerWorkplaceAssignmentBaselineImportService;
 use App\Services\WorkerWorkplaceAssignmentBaselinePreviewService;
+use App\Services\WorkerWorkplaceAssignmentHistoryWriteGate;
 use App\Services\KpiPersonalService;
 use App\Services\DropdownYearMesService;
 use App\Models\Operativo\RhPuestos;
 
 class ControlDocumentosPersonalController extends BaseController
 {
-    private const CHECADOR_BASELINE_LOCALITY_ID = 1;
-    private const CHECADOR_SELECTIVE_BASELINE_LOCALITY_ID = 9;
-    /** Only these two Autolavado candidates are in scope for this RH review. */
-    private const CHECADOR_SELECTIVE_BASELINE_WORKER_IDS = [310, 512];
-    private const CHECADOR_BASELINE_VALID_FROM_UTC = '2026-11-06T06:00:00Z';
-    private const CHECADOR_BASELINE_REASON = 'Incorporación inicial prospectiva de membresía Checador V2 desde padrón RH revisado y corte UTC confirmado por el editor autorizado.';
     private const CHECADOR_BASELINE_PREVIEW_SESSION_KEY = 'checador_v2_membership_baseline_preview';
-    private const CHECADOR_BASELINE_EXPECTED_WORKER_IDS = [
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 19, 20,
-        28, 29, 33, 34, 35, 36, 217, 296, 299, 300, 326, 327, 329,
-        381, 400, 413, 444, 446, 477, 478, 504, 507, 515,
-    ];
 
     public function index()
     {
@@ -118,7 +108,7 @@ class ControlDocumentosPersonalController extends BaseController
         return;
     }
 
-    /** Read-only, actor- and station-bound preview of missing locality memberships. */
+    /** Read-only, actor- and station-bound preview of missing canonical locality memberships. */
     public function previewChecadorMembershipBaseline(): void
     {
         $actorId = $this->requireChecadorBaselineEditor();
@@ -130,33 +120,13 @@ class ControlDocumentosPersonalController extends BaseController
 
         try {
             $this->requireSelectedBaselineStation((int) $workplaceId);
-            $isInterlomas = (int) $workplaceId === self::CHECADOR_BASELINE_LOCALITY_ID;
-            $requiresWorkerSelection = (int) $workplaceId === self::CHECADOR_SELECTIVE_BASELINE_LOCALITY_ID;
-            $hasSelectedWorkerIds = array_key_exists('selected_worker_ids', $input);
-            if ($hasSelectedWorkerIds && !$requiresWorkerSelection) {
-                JsonResponse::validation('La selección individual sólo está disponible para la revisión de Autolavado.');
+            if (array_key_exists('selected_worker_ids', $input)
+                || array_key_exists('full_candidate_fingerprint', $input)) {
+                JsonResponse::validation('La vista previa de carga inicial incluye el conjunto elegible completo; no acepta selección parcial.');
             }
-            $selectedWorkerIds = null;
-            if ($requiresWorkerSelection && $hasSelectedWorkerIds) {
-                if (!is_array($input['selected_worker_ids'])) {
-                    JsonResponse::validation('Selecciona trabajadores desde el padrón mostrado.');
-                }
-                try {
-                    $selectedWorkerIds = WorkerWorkplaceAssignmentBaselinePreviewService::normalizeSelectedWorkerIds(
-                        $input['selected_worker_ids'],
-                        requireNonEmpty: false
-                    );
-                } catch (\InvalidArgumentException) {
-                    JsonResponse::validation('La selección debe contener IDs de trabajador únicos y válidos.');
-                }
-                if (array_diff($selectedWorkerIds, self::CHECADOR_SELECTIVE_BASELINE_WORKER_IDS) !== []) {
-                    JsonResponse::validation('Esta revisión RH está limitada a las trabajadoras 310 y 512.');
-                }
-            }
-            $validFromUtc = $this->baselineCutoff((int) $workplaceId, (string) ($input['valid_from_utc'] ?? ''));
-            $requestedReason = is_scalar($input['reason'] ?? null) ? trim((string) $input['reason']) : '';
-            $reason = self::baselineReason((int) $workplaceId, $requestedReason);
-            if ($requiresWorkerSelection && ($reason === '' || mb_strlen($reason) > 500)) {
+            $validFromUtc = $this->baselineCutoff((string) ($input['valid_from_utc'] ?? ''));
+            $reason = is_scalar($input['reason'] ?? null) ? trim((string) $input['reason']) : '';
+            if ($reason === '' || mb_strlen($reason) > 500) {
                 JsonResponse::validation('Escribe el motivo RH para la incorporación, con un máximo de 500 caracteres.');
             }
             $previewService = new WorkerWorkplaceAssignmentBaselinePreviewService();
@@ -165,111 +135,23 @@ class ControlDocumentosPersonalController extends BaseController
             $preview = $previewService->preview((int) $workplaceId);
             $fullCandidateIds = array_values(array_map('intval', $preview['candidate_worker_ids'] ?? []));
             sort($fullCandidateIds, SORT_NUMERIC);
-            $fullCandidateFingerprint = (string) ($preview['candidate_snapshot_sha256'] ?? '');
             $availableCandidateWorkers = is_array($preview['candidate_workers'] ?? null)
                 ? $preview['candidate_workers']
                 : [];
-            if ($requiresWorkerSelection) {
-                $availableCandidateWorkers = array_map(
-                    static function (array $candidate): array {
-                        $candidate['in_review_scope'] = in_array(
-                            (int) ($candidate['worker_id'] ?? 0),
-                            self::CHECADOR_SELECTIVE_BASELINE_WORKER_IDS,
-                            true
-                        );
-                        return $candidate;
-                    },
-                    $availableCandidateWorkers
-                );
-            }
-            $reviewWorkers = [];
-            if ($requiresWorkerSelection) {
-                $activeSourceById = [];
-                foreach (($preview['active_workers'] ?? []) as $sourceWorker) {
-                    $activeSourceById[(int) ($sourceWorker['worker_id'] ?? 0)] = $sourceWorker;
-                }
-                $versionsByWorkerId = [];
-                foreach (($preview['worker_memberships'] ?? []) as $membership) {
-                    $workerId = (int) ($membership['worker_id'] ?? 0);
-                    $versionsByWorkerId[$workerId][] = $membership;
-                }
-                foreach (self::CHECADOR_SELECTIVE_BASELINE_WORKER_IDS as $reviewWorkerId) {
-                    $sourceWorker = $activeSourceById[$reviewWorkerId] ?? null;
-                    $versions = $versionsByWorkerId[$reviewWorkerId] ?? [];
-                    $reviewWorkers[] = [
-                        'worker_id' => $reviewWorkerId,
-                        'full_name' => (string) ($sourceWorker['full_name'] ?? ''),
-                        'employee_number' => $sourceWorker['employee_number'] ?? null,
-                        'active_in_source' => $sourceWorker !== null,
-                        'membership_status' => $sourceWorker === null
-                            ? 'NOT_ACTIVE_OR_NOT_IN_STATION_SOURCE'
-                            : ($versions === [] ? 'MISSING' : 'VERSIONED_HISTORY_EXISTS'),
-                        'membership_status_label' => $sourceWorker === null
-                            ? 'No aparece como personal activo en la fuente de esta estación.'
-                            : ($versions === [] ? 'Sin historial de membresía versionada.' : 'Tiene historial de membresía versionada.'),
-                        'versions' => $versions,
-                        'version_summary' => implode('; ', array_map(
-                            static fn(array $version): string => sprintf(
-                                'versión %d, localidad %d, desde %s%s',
-                                (int) $version['id'],
-                                (int) $version['workplace_id'],
-                                (string) $version['valid_from_utc'],
-                                $version['valid_to_utc'] === null ? ' (vigente)' : ' hasta ' . (string) $version['valid_to_utc']
-                            ),
-                            $versions
-                        )),
-                    ];
-                }
-            }
-            $selectedRows = $availableCandidateWorkers;
-            $selectedIds = $fullCandidateIds;
-            $selectionReady = true;
-            if ($requiresWorkerSelection) {
-                if (!$hasSelectedWorkerIds || $selectedWorkerIds === []) {
-                    $selectedRows = [];
-                    $selectedIds = [];
-                    $selectionReady = false;
-                } else {
-                    try {
-                        $selectedRows = WorkerWorkplaceAssignmentBaselinePreviewService::selectCandidateRows(
-                            $availableCandidateWorkers,
-                            $selectedWorkerIds
-                        );
-                    } catch (\DomainException) {
-                        JsonResponse::validation('Selecciona únicamente trabajadores sin membresía del preview vigente.');
-                    }
-                    $selectedIds = array_map(static fn(array $row): int => (int) $row['worker_id'], $selectedRows);
-                }
-            }
-            $selectedFingerprint = WorkerWorkplaceAssignmentBaselinePreviewService::candidateFingerprint($selectedRows);
-            $selectedCount = count($selectedRows);
-            $expectedIds = self::CHECADOR_BASELINE_EXPECTED_WORKER_IDS;
-            sort($expectedIds, SORT_NUMERIC);
-            $setMatches = $isInterlomas
-                && $fullCandidateIds === $expectedIds
-                && (int) ($preview['counts']['baseline_candidates'] ?? -1) === count($expectedIds)
-                && (int) ($preview['workplace_id'] ?? 0) === self::CHECADOR_BASELINE_LOCALITY_ID
-                && (int) ($preview['locality_reference']['numlista'] ?? 0) === 2
-                && (int) ($preview['counts']['conflicting_assignments'] ?? -1) === 0;
+            $candidateCount = count($availableCandidateWorkers);
+            $candidateFingerprint = (string) ($preview['candidate_snapshot_sha256'] ?? '');
             $snapshotReady = (int) ($preview['counts']['conflicting_assignments'] ?? 1) === 0
                 && (int) ($preview['counts']['invalid_locality_references'] ?? 1) === 0
                 && (int) ($preview['counts']['other_status_workers'] ?? 1) === 0
-                && (int) ($preview['counts']['baseline_candidates'] ?? 0) > 0
-                && (!$isInterlomas || $setMatches);
-            $ready = $snapshotReady && $selectionReady && $selectedCount > 0;
+                && $candidateCount > 0;
+            $ready = $snapshotReady;
 
             Session::set(self::CHECADOR_BASELINE_PREVIEW_SESSION_KEY, [
                 'actor_id' => $actorId,
                 'created_at' => time(),
-                'approved_set_match' => $setMatches,
                 'ready_to_import' => $ready,
-                'is_interlomas' => $isInterlomas,
-                'requires_worker_selection' => $requiresWorkerSelection,
-                'selected_worker_ids' => $requiresWorkerSelection ? $selectedIds : null,
-                'candidate_count' => $selectedCount,
-                'candidate_fingerprint' => $selectedFingerprint,
-                'full_candidate_count' => (int) ($preview['counts']['baseline_candidates'] ?? 0),
-                'full_candidate_fingerprint' => $fullCandidateFingerprint,
+                'candidate_count' => $candidateCount,
+                'candidate_fingerprint' => $candidateFingerprint,
                 'source_fingerprint' => (string) ($preview['source_snapshot_sha256'] ?? ''),
                 'workplace_id' => (int) $workplaceId,
                 'valid_from_utc' => $validFromUtc,
@@ -278,45 +160,30 @@ class ControlDocumentosPersonalController extends BaseController
 
             JsonResponse::send([
                 'success' => true,
-                'message' => $isInterlomas
-                    ? ($setMatches ? 'La vista previa coincide con los 41 IDs autorizados.' : 'El conjunto de Interlomas no coincide con el autorizado; la importación está bloqueada.')
-                    : ($requiresWorkerSelection && !$selectionReady
-                        ? 'Selecciona las trabajadoras autorizadas y vuelve a generar el preview de selección.'
-                        : ($ready ? 'Revisa y confirma el conjunto seleccionado, motivo y corte UTC.' : 'La vista previa tiene datos que requieren revisión RH; la importación está bloqueada.')),
+                'message' => $ready
+                    ? 'Revisa el conjunto completo de la localidad, las exclusiones, el motivo RH y el corte UTC. No se han registrado adscripciones.'
+                    : 'La vista previa tiene datos que requieren conciliación RH; la importación está bloqueada.',
                 'data' => [
-                    'is_interlomas' => $isInterlomas,
-                    'requires_worker_selection' => $requiresWorkerSelection,
-                    'selection_ready' => $selectionReady,
-                    'selected_worker_ids' => $selectedIds,
-                    'available_candidate_workers' => $requiresWorkerSelection ? $availableCandidateWorkers : [],
-                    'candidate_worker_ids' => $selectedIds,
-                    'candidate_count' => $selectedCount,
-                    'candidate_fingerprint' => $selectedFingerprint,
-                    'full_candidate_count' => (int) ($preview['counts']['baseline_candidates'] ?? 0),
-                    'full_candidate_fingerprint' => $fullCandidateFingerprint,
+                    'candidate_worker_ids' => $fullCandidateIds,
+                    'candidate_workers' => $availableCandidateWorkers,
+                    'candidate_count' => $candidateCount,
+                    'candidate_fingerprint' => $candidateFingerprint,
                     'source_fingerprint' => (string) ($preview['source_snapshot_sha256'] ?? ''),
                     'workplace_id' => (int) $workplaceId,
                     'recorded_by' => $actorId,
                     'locality_reference' => $preview['locality_reference'] ?? [],
                     'valid_from_utc' => $validFromUtc,
                     'reason' => $reason,
-                    'selection_effect' => $requiresWorkerSelection ? [
-                        'before' => $selectedIds === []
-                            ? 'No hay trabajadoras seleccionadas; no se propone ningún cambio.'
-                            : 'Las trabajadoras seleccionadas (IDs ' . implode(', ', $selectedIds) . ') deben aparecer sin historial de membresía versionada.',
-                        'after' => $selectedIds === []
-                            ? 'Sin selección no se incorporaría ninguna membresía.'
-                            : 'Sólo se agregaría una membresía prospectiva por ID seleccionado para localidad canónica 9 desde ' . $validFromUtc . ', con actor RH ' . $actorId . ' y motivo capturado.',
-                        'unselected_candidates_changed' => false,
-                    ] : null,
-                    'review_workers' => $reviewWorkers,
                     'active_worker_count' => (int) ($preview['counts']['active_workers'] ?? 0),
                     'active_worker_ids' => $preview['active_worker_ids'] ?? [],
                     'active_workers_with_membership_ids' => $preview['active_workers_with_membership_ids'] ?? [],
                     'existing_version_rows' => (int) ($preview['counts']['existing_version_rows'] ?? 0),
-                    'approved_set_match' => $setMatches,
+                    'counts' => $preview['counts'],
+                    'locality_distribution' => $preview['locality_distribution'] ?? [],
+                    'excluded_candidates_by_reason' => $preview['excluded_candidates_by_reason'] ?? [],
                     'ready_to_import' => $ready,
-                    'requires_roster_confirmation' => !$isInterlomas,
+                    'import_enabled' => WorkerWorkplaceAssignmentHistoryWriteGate::baselineImportEnabled(),
+                    'requires_roster_confirmation' => true,
                     'conflicting_assignments' => (int) ($preview['counts']['conflicting_assignments'] ?? 0),
                     'database_writes' => false,
                 ],
@@ -325,7 +192,7 @@ class ControlDocumentosPersonalController extends BaseController
             if (str_contains($exception->getMessage(), 'cutoff must be prospective')) {
                 JsonResponse::validation('El corte UTC debe ser posterior al momento actual.');
             }
-            JsonResponse::forbidden('No se pudo validar el permiso RH y el alcance de Interlomas.');
+            JsonResponse::forbidden('No se pudo validar el permiso RH y el alcance de la localidad seleccionada.');
         } catch (\InvalidArgumentException) {
             JsonResponse::validation('El corte debe ser una fecha UTC válida y futura.');
         } catch (\Throwable) {
@@ -337,6 +204,9 @@ class ControlDocumentosPersonalController extends BaseController
     public function importChecadorMembershipBaseline(): void
     {
         $actorId = $this->requireChecadorBaselineEditor();
+        if (!WorkerWorkplaceAssignmentHistoryWriteGate::baselineImportEnabled()) {
+            JsonResponse::forbidden('La incorporación requiere el gate de preproducción y una conexión de BD explícitamente verificada.');
+        }
         $input = Request::all();
         $workplaceId = filter_var($input['workplace_id'] ?? null, FILTER_VALIDATE_INT);
         $candidateCount = filter_var($input['candidate_count'] ?? null, FILTER_VALIDATE_INT);
@@ -345,36 +215,9 @@ class ControlDocumentosPersonalController extends BaseController
         $validFromUtc = trim((string) ($input['valid_from_utc'] ?? ''));
         $confirmRoster = filter_var($input['confirm_roster'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $sessionPreview = Session::get(self::CHECADOR_BASELINE_PREVIEW_SESSION_KEY, []);
-        $isSelectiveWorkplace = $workplaceId !== false
-            && $workplaceId !== null
-            && (int) $workplaceId === self::CHECADOR_SELECTIVE_BASELINE_LOCALITY_ID;
-        $selectedWorkerIds = null;
-        $fullCandidateFingerprint = null;
-        if ($isSelectiveWorkplace) {
-            if (!is_array($input['selected_worker_ids'] ?? null)) {
-                JsonResponse::validation('La selección no coincide con el preview vigente de Autolavado.');
-            }
-            try {
-                $selectedWorkerIds = WorkerWorkplaceAssignmentBaselinePreviewService::normalizeSelectedWorkerIds(
-                    $input['selected_worker_ids']
-                );
-            } catch (\InvalidArgumentException) {
-                JsonResponse::validation('Selecciona al menos una trabajadora del preview vigente.');
-            }
-            if (array_diff($selectedWorkerIds, self::CHECADOR_SELECTIVE_BASELINE_WORKER_IDS) !== []) {
-                JsonResponse::validation('Esta revisión RH está limitada a las trabajadoras 310 y 512.');
-            }
-            $fullCandidateFingerprint = strtolower(trim((string) ($input['full_candidate_fingerprint'] ?? '')));
-            if (!preg_match('/\A[a-f0-9]{64}\z/D', $fullCandidateFingerprint)) {
-                JsonResponse::validation('Falta la huella del padrón completo mostrado en el preview.');
-            }
-        } elseif (array_key_exists('selected_worker_ids', $input) || array_key_exists('full_candidate_fingerprint', $input)) {
-            JsonResponse::validation('La selección individual no está autorizada para la localidad solicitada.');
+        if (array_key_exists('selected_worker_ids', $input) || array_key_exists('full_candidate_fingerprint', $input)) {
+            JsonResponse::validation('La importación utiliza el conjunto completo del preview vigente y no acepta IDs seleccionados.');
         }
-        $expectedCandidateFingerprint = WorkerWorkplaceAssignmentBaselinePreviewService::candidateFingerprint(array_map(
-            static fn(int $workerId): array => ['worker_id' => $workerId, 'workplace_id' => self::CHECADOR_BASELINE_LOCALITY_ID],
-            self::CHECADOR_BASELINE_EXPECTED_WORKER_IDS
-        ));
 
         if ($workplaceId === false || $workplaceId === null || $workplaceId <= 0
             || $candidateCount === false || $candidateCount === null || $candidateCount <= 0
@@ -393,26 +236,12 @@ class ControlDocumentosPersonalController extends BaseController
             || time() - (int) ($sessionPreview['created_at'] ?? 0) > 900
             || !hash_equals((string) ($sessionPreview['candidate_fingerprint'] ?? ''), $candidateFingerprint)
             || !hash_equals((string) ($sessionPreview['source_fingerprint'] ?? ''), $sourceFingerprint)
-            || ($isSelectiveWorkplace
-                && (($sessionPreview['requires_worker_selection'] ?? false) !== true
-                    || array_map('intval', $sessionPreview['selected_worker_ids'] ?? []) !== $selectedWorkerIds
-                    || !hash_equals((string) ($sessionPreview['full_candidate_fingerprint'] ?? ''), $fullCandidateFingerprint)))
-            || (!$isSelectiveWorkplace && ($sessionPreview['requires_worker_selection'] ?? false) === true)) {
+            || trim((string) ($sessionPreview['reason'] ?? '')) === '') {
             JsonResponse::conflict('La vista previa expiró o cambió. Genera una nueva antes de importar.');
         }
 
-        $isInterlomas = (int) $workplaceId === self::CHECADOR_BASELINE_LOCALITY_ID;
-        if ($isInterlomas) {
-            if ($candidateCount !== count(self::CHECADOR_BASELINE_EXPECTED_WORKER_IDS)
-                || $validFromUtc !== self::CHECADOR_BASELINE_VALID_FROM_UTC
-                || ($sessionPreview['is_interlomas'] ?? false) !== true
-                || ($sessionPreview['approved_set_match'] ?? false) !== true
-                || !hash_equals($expectedCandidateFingerprint, $candidateFingerprint)) {
-                JsonResponse::validation('La incorporación de Interlomas requiere exactamente el conjunto y corte previamente autorizados.');
-            }
-        } elseif (!$confirmRoster || ($sessionPreview['is_interlomas'] ?? true) !== false
-            || ($isSelectiveWorkplace && ($sessionPreview['ready_to_import'] ?? false) !== true)) {
-            JsonResponse::validation('Confirma el padrón y el corte UTC mostrados en la vista previa.');
+        if (!$confirmRoster) {
+            JsonResponse::validation('Confirma que revisaste el conjunto completo, sus exclusiones, el motivo RH y el corte UTC del preview.');
         }
 
         try {
@@ -426,9 +255,7 @@ class ControlDocumentosPersonalController extends BaseController
                 $validFromUtc,
                 $actorId,
                 $reason,
-                static function (array $result): void {},
-                $selectedWorkerIds,
-                $fullCandidateFingerprint
+                static function (array $result): void {}
             );
             JsonResponse::send([
                 'success' => true,
@@ -443,7 +270,6 @@ class ControlDocumentosPersonalController extends BaseController
                     'workplace_id' => (int) $workplaceId,
                     'valid_from_utc' => $validFromUtc,
                     'recorded_by' => $actorId,
-                    'selected_worker_ids' => $result['selected_worker_ids'] ?? $selectedWorkerIds,
                 ],
             ], 200, ['Cache-Control' => 'private, no-store', 'Pragma' => 'no-cache', 'Vary' => 'Cookie']);
         } catch (\DomainException) {
@@ -478,27 +304,12 @@ class ControlDocumentosPersonalController extends BaseController
         }
     }
 
-    private function baselineCutoff(int $workplaceId, string $requestedCutoff): string
+    private function baselineCutoff(string $requestedCutoff): string
     {
-        if ($workplaceId === self::CHECADOR_BASELINE_LOCALITY_ID) {
-            if ($requestedCutoff !== '' && $requestedCutoff !== self::CHECADOR_BASELINE_VALID_FROM_UTC) {
-                JsonResponse::validation('Interlomas conserva el corte UTC previamente autorizado.');
-            }
-            return self::CHECADOR_BASELINE_VALID_FROM_UTC;
-        }
         if (!preg_match('/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/D', $requestedCutoff)) {
             throw new \InvalidArgumentException('An explicit UTC baseline cutoff is required.');
         }
         return $requestedCutoff;
-    }
-
-    private static function baselineReason(int $workplaceId, string $requestedReason = ''): string
-    {
-        return $workplaceId === self::CHECADOR_BASELINE_LOCALITY_ID
-            ? 'Incorporación inicial prospectiva de membresía Checador V2 para Interlomas conforme a autorización funcional.'
-            : ($workplaceId === self::CHECADOR_SELECTIVE_BASELINE_LOCALITY_ID
-                ? trim($requestedReason)
-                : self::CHECADOR_BASELINE_REASON);
     }
 
     public function add()

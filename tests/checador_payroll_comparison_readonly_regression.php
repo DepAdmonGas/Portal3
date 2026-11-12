@@ -64,10 +64,11 @@ $payrollReadStart = strpos($service, 'private function readPayrollReference(');
 $comparisonBody = $compareStart !== false && $payrollReadStart !== false && $payrollReadStart > $compareStart
     ? substr($service, $compareStart, $payrollReadStart - $compareStart)
     : '';
-$assert(str_contains($service, 'ChecadorAccessService::resolveCanonicalLocalityIdForStation($physicalStationId)')
+$assert(str_contains($comparisonBody, "Capsule::table('op_rh_localidades')->where('id', \$currentBaseLocalityId)->exists()")
+    && str_contains($comparisonBody, "->where('id_estacion', \$currentBaseLocalityId)")
     && str_contains($service, '$this->resolveHistoricalPeriodScope(')
     && str_contains($service, 'assignmentCoversUtcWindow(')
-    && !str_contains($comparisonBody, "->where('id_estacion', \$localityId)"), 'physical station IDs are mapped and historical locality is not checked by numeric equality');
+    && !str_contains($comparisonBody, 'resolveCanonicalLocalityIdForStation('), 'current RH locality stays canonical while historical membership is checked independently');
 $historyGatePosition = strpos($service, '$periodScope = $this->resolveHistoricalPeriodScope(');
 $workerStationPosition = strpos($service, "->select(['id', 'id_estacion'])");
 $workerIdentityPosition = strpos($service, "->select(['id', 'id_estacion', 'nombre_completo', 'no_colaborador'])");

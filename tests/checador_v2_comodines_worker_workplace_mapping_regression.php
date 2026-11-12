@@ -72,13 +72,13 @@ $db->table('tb_estaciones')->insert([
     ['id' => 802, 'numlista' => 88, 'nombre' => 'Mapeo ambiguo B', 'estatus' => 0],
 ]);
 $db->table('op_rh_personal')->insert([
-    ['id' => 1, 'id_estacion' => 501, 'nombre_completo' => 'Bruno Base Válida', 'no_colaborador' => 1001, 'estado' => 1],
-    ['id' => 2, 'id_estacion' => 302, 'nombre_completo' => 'Bruno Colisión Numérica', 'no_colaborador' => 1002, 'estado' => 1],
-    ['id' => 3, 'id_estacion' => 700, 'nombre_completo' => 'Beto Cobertura Cruzada', 'no_colaborador' => 1003, 'estado' => 1],
+    ['id' => 1, 'id_estacion' => 901, 'nombre_completo' => 'Bruno Base Válida', 'no_colaborador' => 1001, 'estado' => 1],
+    ['id' => 2, 'id_estacion' => 904, 'nombre_completo' => 'Bruno Colisión Numérica', 'no_colaborador' => 1002, 'estado' => 1],
+    ['id' => 3, 'id_estacion' => 302, 'nombre_completo' => 'Beto Cobertura Cruzada', 'no_colaborador' => 1003, 'estado' => 1],
     ['id' => 4, 'id_estacion' => 50, 'nombre_completo' => 'Sofía IDs Coincidentes', 'no_colaborador' => 1004, 'estado' => 1],
-    ['id' => 5, 'id_estacion' => 999, 'nombre_completo' => 'Eva Estación Ausente', 'no_colaborador' => 1005, 'estado' => 1],
-    ['id' => 6, 'id_estacion' => 600, 'nombre_completo' => 'Inés Estación Inactiva', 'no_colaborador' => 1006, 'estado' => 1],
-    ['id' => 7, 'id_estacion' => 801, 'nombre_completo' => 'Óscar Mapeo Ambiguo', 'no_colaborador' => 1007, 'estado' => 1],
+    ['id' => 5, 'id_estacion' => 907, 'nombre_completo' => 'Eva Estación Ausente', 'no_colaborador' => 1005, 'estado' => 1],
+    ['id' => 6, 'id_estacion' => 906, 'nombre_completo' => 'Inés Estación Inactiva', 'no_colaborador' => 1006, 'estado' => 1],
+    ['id' => 7, 'id_estacion' => 908, 'nombre_completo' => 'Óscar Mapeo Ambiguo', 'no_colaborador' => 1007, 'estado' => 1],
 ]);
 
 $_ENV['APP_ENV'] = 'dev';
@@ -89,56 +89,60 @@ putenv('CHECADOR_COMODINES_CANONICAL_WRITES=1');
 $differentIds = RolComodinesService::searchCanonicalWorkers('Bruno', [901]);
 $assert(($differentIds['ok'] ?? false) === true
     && array_column($differentIds['workers'] ?? [], 'worker_id') === [1],
-    'search resolves a different physical station ID to its authorized canonical locality');
+    'worker search filters canonical locality 901 even though physical station ID is 501');
 
 $numericCollision = RolComodinesService::searchCanonicalWorkers('Bruno', [302]);
 $assert(($numericCollision['ok'] ?? false) === true && ($numericCollision['workers'] ?? []) === [],
-    'search does not admit a worker because physical station ID numerically equals another locality ID');
+    'a physical ID collision does not change worker canonical locality 904');
 
 $crossBaseSearch = RolComodinesService::searchCanonicalWorkers('Beto', [302]);
 $assert(($crossBaseSearch['ok'] ?? false) === true
     && array_column($crossBaseSearch['workers'] ?? [], 'worker_id') === [3],
-    'search includes the worker whose physical station maps to the authorized base locality');
+    'search includes the worker whose canonical base locality is authorized');
 
 $coincidentIds = RolComodinesService::searchCanonicalWorkers('Sofía', [50]);
 $assert(($coincidentIds['ok'] ?? false) === true
     && array_column($coincidentIds['workers'] ?? [], 'worker_id') === [4],
-    'coincident physical and canonical numeric IDs still work when their unique numlista mapping is valid');
+    'worker search uses a canonical ID directly when physical and canonical IDs happen to match');
 
 $missingMapping = RolComodinesService::searchCanonicalWorkers('Eva', [907]);
 $inactiveMapping = RolComodinesService::searchCanonicalWorkers('Inés', [906]);
 $ambiguousMapping = RolComodinesService::searchCanonicalWorkers('Óscar', [908]);
-$assert(($missingMapping['ok'] ?? true) === false
-    && ($inactiveMapping['ok'] ?? true) === false
-    && ($ambiguousMapping['ok'] ?? true) === false,
-    'missing, inactive, and ambiguous authorized station mappings fail closed');
+$assert(($missingMapping['ok'] ?? false) === true && array_column($missingMapping['workers'] ?? [], 'worker_id') === [5]
+    && ($inactiveMapping['ok'] ?? false) === true && array_column($inactiveMapping['workers'] ?? [], 'worker_id') === [6]
+    && ($ambiguousMapping['ok'] ?? false) === true && array_column($ambiguousMapping['workers'] ?? [], 'worker_id') === [7],
+    'worker search uses canonical locality identity independently of physical-station mapping state');
 
 $baseCheck = new ReflectionMethod(RolComodinesService::class, 'workerBaseWorkplaceIsAuthorized');
 $baseCheck->setAccessible(true);
-$baseIsAuthorized = static fn(int $physicalId, array $localities): bool =>
-    (bool) $baseCheck->invoke(null, $physicalId, $localities);
+$baseIsAuthorized = static fn(int $workerLocalityId, array $localities): bool =>
+    (bool) $baseCheck->invoke(null, $workerLocalityId, $localities);
 
-$assert($baseIsAuthorized(501, [901])
+$assert($baseIsAuthorized(901, [901])
     && !$baseIsAuthorized(501, [302])
-    && !$baseIsAuthorized(302, [302]),
-    'server-side worker base validation uses canonical mapping and rejects out-of-scope/numeric-collision cases');
-$assert(!$baseIsAuthorized(999, [901])
-    && !$baseIsAuthorized(600, [906])
-    && !$baseIsAuthorized(801, [908]),
-    'worker base validation rejects missing, inactive, and ambiguous physical station mappings');
+    && !$baseIsAuthorized(904, [302]),
+    'server-side worker base validation compares canonical locality IDs and rejects physical-ID collisions');
+$assert($baseIsAuthorized(907, [907]) && !$baseIsAuthorized(907, [901]),
+    'department locality affiliation remains in its own explicit canonical scope');
 
 $coverage = new ReflectionMethod(RolComodinesService::class, 'resolvePhysicalStationForWorkplace');
 $coverage->setAccessible(true);
 $authorizedCoverage = $coverage->invoke(null, 905, [905]);
 $deniedCoverage = $coverage->invoke(null, 905, [901]);
-$assert($baseIsAuthorized(501, [901])
+$missingCoverage = $coverage->invoke(null, 907, [907]);
+$inactiveCoverage = $coverage->invoke(null, 906, [906]);
+$ambiguousCoverage = $coverage->invoke(null, 908, [908]);
+$assert($baseIsAuthorized(901, [901])
     && ($authorizedCoverage['ok'] ?? false) === true
     && (int) $authorizedCoverage['station_id'] === 800
-    && ($deniedCoverage['ok'] ?? true) === false,
+    && ($deniedCoverage['ok'] ?? true) === false
+    && ($missingCoverage['ok'] ?? true) === false
+    && ($inactiveCoverage['ok'] ?? true) === false
+    && ($ambiguousCoverage['ok'] ?? true) === false,
     'authorized base locality and separately authorized cross-station coverage remain independent');
 
 $permanentStation = (int) $db->table('op_rh_personal')->where('id', 1)->value('id_estacion');
-$assert($permanentStation === 501 && $db->table('op_rh_rol_comodines')->count() === 0,
+$assert($permanentStation === 901 && $db->table('op_rh_rol_comodines')->count() === 0,
     'eligibility checks preserve permanent worker affiliation and perform no comodines persistence');
 
 printf("CHECADOR_V2_COMODINES_WORKER_WORKPLACE_MAPPING: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);

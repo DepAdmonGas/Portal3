@@ -206,9 +206,9 @@ final class ChecadorPayrollComparisonReadService
         }
 
         try {
-            // RhPersonal.id_estacion is a physical tb_estaciones.id. Resolve
-            // the current base locality through the institutional numlista
-            // bridge; it is not used as the worker's historical assignment.
+            // RH stores the worker's current base in the canonical
+            // op_rh_localidades ID space. Physical station IDs are resolved
+            // only by consumers of physical-station-valued legacy columns.
             $workerBase = RhPersonal::query()
                 ->select(['id', 'id_estacion'])
                 ->where('id', $workerId)
@@ -216,18 +216,18 @@ final class ChecadorPayrollComparisonReadService
             if (!$workerBase || (int) $workerBase->id !== $workerId) {
                 return self::failure('worker_not_available');
             }
-            $physicalStationId = (int) ($workerBase->id_estacion ?? 0);
-            $currentBaseLocalityId = ChecadorAccessService::resolveCanonicalLocalityIdForStation($physicalStationId);
-            if ($currentBaseLocalityId === null) {
+            $currentBaseLocalityId = (int) ($workerBase->id_estacion ?? 0);
+            if ($currentBaseLocalityId <= 0
+                || !Capsule::table('op_rh_localidades')->where('id', $currentBaseLocalityId)->exists()) {
                 return self::failure('worker_not_available');
             }
 
-            // Recheck the physical station while retrieving PII so a concurrent
-            // base-station change cannot bypass the validated mapping.
+            // Recheck the canonical locality while retrieving PII so a
+            // concurrent RH transfer cannot bypass the validated source.
             $worker = RhPersonal::query()
                 ->select(['id', 'id_estacion', 'nombre_completo', 'no_colaborador'])
                 ->where('id', $workerId)
-                ->where('id_estacion', $physicalStationId)
+                ->where('id_estacion', $currentBaseLocalityId)
                 ->first();
             if (!$worker || (int) $worker->id !== $workerId) {
                 return self::failure('worker_not_available');

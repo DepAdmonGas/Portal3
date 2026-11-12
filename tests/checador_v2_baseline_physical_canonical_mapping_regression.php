@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Services\WorkerWorkplaceAssignmentBaselinePreviewService;
 use App\Services\WorkerWorkplaceAssignmentBaselineImportService;
-use App\Services\RolComodinesService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Database\Schema\Blueprint;
 
@@ -67,15 +66,15 @@ $db->table('op_rh_localidades')->insert([
     ['id' => 3, 'numlista' => 33, 'localidad' => 'Colisión numérica'],
 ]);
 $db->table('tb_estaciones')->insert([
-    ['id' => 11, 'numlista' => 10, 'nombre' => 'Autolavado físico', 'estatus' => 1],
+    ['id' => 11, 'numlista' => 10, 'nombre' => 'Autolavado físico', 'estatus' => 0],
     // A different physical station deliberately has ID 9; numeric equality does not map it to Autolavado.
-    ['id' => 9, 'numlista' => 33, 'nombre' => 'Estación de colisión', 'estatus' => 1],
+    ['id' => 9, 'numlista' => 33, 'nombre' => 'Estación de colisión', 'estatus' => 0],
 ]);
 $db->table('op_rh_personal')->insert([
-    ['id' => 310, 'id_estacion' => 11, 'estado' => 1, 'nombre_completo' => 'MARIA JOSE ARELLANO GUTIEREZ', 'no_colaborador' => '0'],
-    ['id' => 512, 'id_estacion' => 11, 'estado' => 1, 'nombre_completo' => 'SHEILY DE LOS SANTOS VARGAS', 'no_colaborador' => '512'],
-    ['id' => 901, 'id_estacion' => 9, 'estado' => 1, 'nombre_completo' => 'WRONG STATION', 'no_colaborador' => '901'],
-    ['id' => 902, 'id_estacion' => 11, 'estado' => 0, 'nombre_completo' => 'INACTIVE', 'no_colaborador' => '902'],
+    ['id' => 310, 'id_estacion' => 9, 'estado' => 1, 'nombre_completo' => 'MARIA JOSE ARELLANO GUTIEREZ', 'no_colaborador' => '0'],
+    ['id' => 512, 'id_estacion' => 9, 'estado' => 1, 'nombre_completo' => 'SHEILY DE LOS SANTOS VARGAS', 'no_colaborador' => '512'],
+    ['id' => 901, 'id_estacion' => 3, 'estado' => 1, 'nombre_completo' => 'OTHER CANONICAL LOCALITY', 'no_colaborador' => '901'],
+    ['id' => 902, 'id_estacion' => 9, 'estado' => 0, 'nombre_completo' => 'INACTIVE', 'no_colaborador' => '902'],
 ]);
 
 $scope = static fn(): array => ['actor_id' => 77, 'workplace_ids' => [9], 'can_edit' => true];
@@ -102,7 +101,7 @@ $assert($mapping === [
     'locality' => 'Autolavado',
     'numlista' => 10,
     'physical_station_id' => 11,
-    'station_status' => 1,
+    'station_status' => 0,
 ], 'unique active station 11 maps to canonical locality 9 through numlista 10');
 $assert($snapshot['counts']['active_workers'] === 2
     && array_column($snapshot['candidate_rows']->all(), 'worker_id') === [310, 512]
@@ -111,11 +110,12 @@ $assert($snapshot['counts']['active_workers'] === 2
     && $snapshot['history_rows']->isEmpty()
     && $snapshot['locality_reference']['physical_station_id'] === 11,
     'read-only baseline preview confirms candidate names, missing membership, physical source station, and canonical workplace IDs');
-$assert($snapshot['source_rows']->every(static fn(object $row): bool => (int) $row->physical_station_status === 1
+$assert($snapshot['source_rows']->every(static fn(object $row): bool => (int) $row->physical_station_status === 0
     && (int) $row->physical_numlista === 10
     && (int) $row->canonical_workplace_id === 9
+    && (int) $row->source_locality_id === 9
     && (int) $row->mapping_unique === 1),
-    'source fingerprint inputs retain the validated physical and canonical mapping');
+    'worker locality is canonical while the physical station mapping remains separate in the source fingerprint');
 $availableForSelection = [
     ['worker_id' => 310, 'workplace_id' => 9, 'full_name' => 'Maria'],
     ['worker_id' => 512, 'workplace_id' => 9, 'full_name' => 'Sheily'],
@@ -130,22 +130,39 @@ $assert($throws(static fn() => WorkerWorkplaceAssignmentBaselinePreviewService::
     && $throws(static fn() => WorkerWorkplaceAssignmentBaselinePreviewService::normalizeSelectedWorkerIds([310, 310]), 'unique positive integers')
     && $throws(static fn() => WorkerWorkplaceAssignmentBaselinePreviewService::normalizeSelectedWorkerIds([]), 'at least one worker'),
     'selective membership input rejects outside IDs, duplicates, and empty imports');
-$comodinesRead = RolComodinesService::getChecadorReadModel(9, [9]);
-$assert(($comodinesRead['ok'] ?? false) === true
-    && ($comodinesRead['station_name'] ?? '') !== '',
-    'Comodines read path accepts active station status 1 through the canonical mapping');
 $lockedSnapshot = $db->transaction(static fn(): array => $service->readScopedSnapshot(9, forUpdate: true, actorId: 77, requireWrite: true));
 $candidate = $db->transaction(static fn(): array => $service->lockAndRevalidateCandidate(310, 9, 77));
 $assert(array_column($lockedSnapshot['candidate_rows']->all(), 'worker_id') === [310, 512]
     && $candidate === ['worker_id' => 310, 'workplace_id' => 9],
     'locked snapshot and candidate revalidation reuse the same canonical mapping');
-$db->table('op_rh_personal')->where('id', 310)->update(['id_estacion' => 9]);
+$db->table('op_rh_personal')->where('id', 310)->update(['id_estacion' => 3]);
 $assert($throws(static fn() => $db->transaction(static fn() => $service->lockAndRevalidateCandidate(310, 9, 77)), 'Candidate locality changed'),
     'locked revalidation rejects a worker moved to a different physical station even when its ID is canonical-looking');
-$db->table('op_rh_personal')->where('id', 310)->update(['id_estacion' => 11]);
+$db->table('op_rh_personal')->where('id', 310)->update(['id_estacion' => 9]);
 
 $cutoff = '2026-11-12T06:00:00.000000Z';
 $reason = 'fixture retry readback';
+$gateKey = \App\Services\WorkerWorkplaceAssignmentHistoryWriteGate::ENVIRONMENT_KEY;
+$previousEnvGate = $_ENV[$gateKey] ?? null;
+$previousServerGate = $_SERVER[$gateKey] ?? null;
+$previousGetenvGate = getenv($gateKey);
+unset($_ENV[$gateKey], $_SERVER[$gateKey]);
+putenv($gateKey);
+$disabledGateBlocksImport = $throws(static fn() => (new WorkerWorkplaceAssignmentBaselineImportService($service))->importFromPreview(
+    9,
+    0,
+    str_repeat('0', 64),
+    str_repeat('0', 64),
+    $cutoff,
+    77,
+    $reason,
+    static function (): void {}
+), 'writes are disabled');
+if ($previousEnvGate !== null) $_ENV[$gateKey] = $previousEnvGate;
+if ($previousServerGate !== null) $_SERVER[$gateKey] = $previousServerGate;
+if ($previousGetenvGate === false) putenv($gateKey);
+else putenv($gateKey . '=' . $previousGetenvGate);
+$assert($disabledGateBlocksImport, 'baseline importer fails closed before database access when the history write gate is unset');
 $db->table('op_rh_personal_localidad_version')->insert([
     'worker_id' => 310,
     'workplace_id' => 9,
@@ -171,16 +188,15 @@ $alreadyApplied = $db->transaction(static fn(): ?array => $retryReadback->invoke
     $reason
 ));
 $assert($alreadyApplied === [['worker_id' => 310, 'workplace_id' => 9]],
-    'idempotent import readback filters by physical station 11 and canonical membership locality 9');
+    'idempotent import readback filters worker affiliation by canonical locality 9');
 
-$db->table('tb_estaciones')->where('id', 11)->update(['estatus' => 0]);
-$assert($throws(static fn() => $service->readScopedSnapshot(9), 'not active')
-    && $throws(static fn() => $db->transaction(static fn() => $service->lockAndRevalidateCandidate(310, 9, 77)), 'not active')
-    && (RolComodinesService::getChecadorReadModel(9, [9])['ok'] ?? true) === false,
-    'canceled status 0 is denied in baseline preview, locked revalidation, and Comodines read path');
 $db->table('tb_estaciones')->where('id', 11)->update(['estatus' => 1]);
+$assert($throws(static fn() => $service->readScopedSnapshot(9), 'not active')
+    && $throws(static fn() => $db->transaction(static fn() => $service->lockAndRevalidateCandidate(310, 9, 77)), 'not active'),
+    'inactive status 1 is denied in baseline preview and locked revalidation');
+$db->table('tb_estaciones')->where('id', 11)->update(['estatus' => 0]);
 
-$db->table('tb_estaciones')->insert(['id' => 12, 'numlista' => 10, 'nombre' => 'Duplicada', 'estatus' => 1]);
+$db->table('tb_estaciones')->insert(['id' => 12, 'numlista' => 10, 'nombre' => 'Duplicada', 'estatus' => 0]);
 $assert($throws(static fn() => $service->readScopedSnapshot(9), 'physical station mapping is missing or ambiguous'),
     'duplicate physical station numlista mapping is rejected');
 $db->table('tb_estaciones')->where('id', 12)->delete();

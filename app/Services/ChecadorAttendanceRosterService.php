@@ -16,9 +16,8 @@ final class ChecadorAttendanceRosterService
 
     /**
      * Active worker options for the authorized attendance filter. This path is
-     * independent of PunchEvent reads. The legacy HR source stores
-     * tb_estaciones.id in op_rh_personal.id_estacion. Resolve that physical
-     * station through the unique active numlista bridge; versioned assignments
+     * independent of PunchEvent reads. The HR source stores canonical
+     * op_rh_localidades.id in op_rh_personal.id_estacion; versioned assignments
      * take precedence and must resolve to exactly one requested Workplace.
      *
      * @return array{status:string,coverage:string,workers:list<array{worker_id:int,full_name:string,employee_number:?string}>,message:string}
@@ -41,10 +40,9 @@ final class ChecadorAttendanceRosterService
             if ($locality === null) {
                 return self::result('unavailable', 'unknown', [], 'La localidad canónica no existe.');
             }
-            $legacyStationId = ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId);
-            $isDepartment = ChecadorAccessService::isDepartmentLocality($workplaceId);
-            $directLocalityId = $legacyStationId ?? ($isDepartment ? $workplaceId : null);
-            $legacyMappingUnavailable = (int) ($locality->numlista ?? 0) > 0 && $legacyStationId === null && !$isDepartment;
+            // The worker source stores the canonical locality ID. Physical
+            // station conversion belongs only to consumers of tb_estaciones.
+            $directLocalityId = $workplaceId;
 
             $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
             $localDevelopment = in_array($environment, ['dev', 'development', 'local'], true);
@@ -72,9 +70,9 @@ final class ChecadorAttendanceRosterService
             $allowUnversionedCurrentSource = $currentOnlyFallback
                 || ($todayAtWorkplace !== null && $todayAtWorkplace === $date);
 
-            // Include active current assignments only through the physical
-            // station resolved above, plus workers with canonical history for
-            // this locality. QA inactive accounts never enter the roster.
+            // Include active current assignments for this canonical locality,
+            // plus workers with canonical history for it. QA inactive accounts
+            // never enter the roster.
             $peopleQuery = RhPersonal::query()->where('estado', 1);
             $peopleQuery->where(static function ($query) use ($workplaceId, $directLocalityId): void {
                 if ($directLocalityId !== null) {
@@ -183,35 +181,11 @@ final class ChecadorAttendanceRosterService
             }
 
             if ($currentOnlyFallback) {
-                if ($legacyMappingUnavailable) {
-                    return self::result(
-                        'partial',
-                        'incomplete',
-                        $currentWorkers,
-                        'No se pudo resolver de forma única el vínculo activo entre la estación y la localidad; el padrón actual puede estar incompleto.'
-                    );
-                }
                 return self::result(
                     ($invalidMembership || $invalidCurrentMembership) ? 'partial' : 'current_roster_only',
                     'current_active_roster',
                     $currentWorkers,
                     'La zona horaria de la localidad no está disponible. Esta lista refleja sólo las adscripciones activas actuales y no acredita pertenencia para la fecha seleccionada.'
-                );
-            }
-            if ($legacyMappingUnavailable) {
-                if (!$allowUnversionedCurrentSource) {
-                    return self::result(
-                        'partial',
-                        'current_roster_historical_unverified',
-                        $currentWorkers,
-                        'No se pudo resolver el vínculo actual entre estación y localidad. El padrón histórico no se completa usando la estación vigente.'
-                    );
-                }
-                return self::result(
-                    'partial',
-                    'incomplete',
-                    $workers,
-                    'No se pudo resolver de forma única el vínculo activo entre la estación y la localidad; el padrón puede estar incompleto.'
                 );
             }
             if ($invalidMembership || $unversionedHistoricalMembership) {
@@ -335,9 +309,7 @@ final class ChecadorAttendanceRosterService
 
             $resolver = new WorkerWorkplaceAssignmentResolver();
             $nowUtc = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.u\Z');
-            $legacyStationId = ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId);
-            $isDepartment = ChecadorAccessService::isDepartmentLocality($workplaceId);
-            $directLocalityId = $legacyStationId ?? ($isDepartment ? $workplaceId : null);
+            $directLocalityId = $workplaceId;
             $workers = [];
             $invalidMembership = false;
             foreach ($people as $person) {
@@ -470,12 +442,9 @@ final class ChecadorAttendanceRosterService
                 return self::result('unavailable', 'unknown', [], 'La localidad canónica no existe.');
             }
 
-            $isAutolavado = $workplaceId === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID;
-            $physicalStationId = ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId);
-            $directLocalityId = $physicalStationId ?? ($isAutolavado ? $workplaceId : null);
-            $physicalMappingUnavailable = $physicalStationId === null && !$isAutolavado;
+            $directLocalityId = $workplaceId;
 
-            // Select the locality's active physical roster and its versioned
+            // Select the locality's active canonical roster and its versioned
             // members before enforcing the safety ceiling. This prevents an
             // unrelated global roster from consuming the first 250 rows.
             $candidates = RhPersonal::query()
@@ -622,18 +591,17 @@ final class ChecadorAttendanceRosterService
                 static fn(array $worker): bool => ($worker['versioned_verified_dates'] ?? []) !== []
             ));
 
-            $partial = $truncated || $physicalMappingUnavailable || $unversionedCandidates > 0 || $membershipGaps || $invalidMembership || $invalidCurrentMembership;
+            $partial = $truncated || $unversionedCandidates > 0 || $membershipGaps || $invalidMembership || $invalidCurrentMembership;
             if (!$partial) {
                 return self::scheduleWeekResult('ready', 'versioned_weekly_membership', $workers, 'La pertenencia de los candidatos se validó para cada día de la semana.', $referenceRosterCount, $weekOnlyCount, $workersWithVersionedMembership, 0);
             }
 
             $reasons = [];
             if ($truncated) $reasons[] = 'La lista local de candidatos excede el límite seguro; se omiten filas no verificadas.';
-            if ($physicalMappingUnavailable) $reasons[] = 'No se resolvió de forma única la relación entre estación física y localidad; el padrón legacy no se atribuye.';
-            if ($unversionedCandidates > 0 || $membershipGaps) $reasons[] = 'El padrón activo de la estación se conserva como referencia; la pertenencia de la semana sólo se confirma en las fechas con membresía verificable.';
+            if ($unversionedCandidates > 0 || $membershipGaps) $reasons[] = 'El padrón activo de la localidad se conserva como referencia; la pertenencia de la semana sólo se confirma en las fechas con membresía verificable.';
             if ($invalidMembership || $invalidCurrentMembership) $reasons[] = 'Algunas membresías no pudieron validarse; se excluyeron de la atribución de localidad y de las fechas afectadas.';
 
-            $unversionedCandidateCount = !$truncated && !$physicalMappingUnavailable ? $unversionedCandidates : null;
+            $unversionedCandidateCount = !$truncated ? $unversionedCandidates : null;
             return self::scheduleWeekResult('partial', 'incomplete', $workers, implode(' ', array_unique($reasons)), $referenceRosterCount, $weekOnlyCount, $workersWithVersionedMembership, $unversionedCandidateCount);
         } catch (Throwable) {
             return self::result('unavailable', 'unknown', [], 'No se pudo consultar de forma segura el padrón local y sus membresías canónicas.');

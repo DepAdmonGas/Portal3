@@ -71,12 +71,13 @@ $db->table('tb_estaciones')->insert([
     ['id' => 505, 'numlista' => 44, 'nombre' => 'Inactiva', 'estatus' => 1],
 ]);
 $db->table('op_rh_personal')->insert([
-    ['id' => 101, 'id_estacion' => 501, 'nombre_completo' => 'Legacy actual', 'no_colaborador' => 101, 'estado' => 1],
-    ['id' => 102, 'id_estacion' => 501, 'nombre_completo' => 'Versionada en otra localidad', 'no_colaborador' => 102, 'estado' => 1],
-    ['id' => 103, 'id_estacion' => 501, 'nombre_completo' => 'Membresía futura', 'no_colaborador' => 103, 'estado' => 1],
-    ['id' => 202, 'id_estacion' => 902, 'nombre_completo' => 'ID coincidente sin puente', 'no_colaborador' => 202, 'estado' => 1],
-    ['id' => 203, 'id_estacion' => 503, 'nombre_completo' => 'Estación ambigua', 'no_colaborador' => 203, 'estado' => 1],
-    ['id' => 204, 'id_estacion' => 505, 'nombre_completo' => 'Estación inactiva', 'no_colaborador' => 204, 'estado' => 1],
+    ['id' => 101, 'id_estacion' => 901, 'nombre_completo' => 'Legacy actual', 'no_colaborador' => 101, 'estado' => 1],
+    ['id' => 102, 'id_estacion' => 901, 'nombre_completo' => 'Versionada en otra localidad', 'no_colaborador' => 102, 'estado' => 1],
+    ['id' => 103, 'id_estacion' => 901, 'nombre_completo' => 'Membresía futura', 'no_colaborador' => 103, 'estado' => 1],
+    ['id' => 202, 'id_estacion' => 902, 'nombre_completo' => 'Pertenencia canónica sin estación', 'no_colaborador' => 202, 'estado' => 1],
+    ['id' => 203, 'id_estacion' => 903, 'nombre_completo' => 'Pertenencia canónica mapeo ambiguo', 'no_colaborador' => 203, 'estado' => 1],
+    ['id' => 204, 'id_estacion' => 904, 'nombre_completo' => 'Pertenencia canónica estación inactiva', 'no_colaborador' => 204, 'estado' => 1],
+    ['id' => 205, 'id_estacion' => 905, 'nombre_completo' => 'Departamento sin estación', 'no_colaborador' => 205, 'estado' => 1],
 ]);
 $db->table('op_rh_personal_localidad_version')->insert([
     [
@@ -106,7 +107,7 @@ $service = new ChecadorAttendanceRosterService();
 $todayRoster = $service->workersForAttendanceFilter(901, $today, 'UTC');
 $todayIds = array_map(static fn(array $worker): int => (int) $worker['worker_id'], $todayRoster['workers'] ?? []);
 $assert(($todayRoster['status'] ?? '') === 'ready' && in_array(101, $todayIds, true),
-    'attendance roster follows the numlista bridge for a nonmatching station and locality ID');
+    'attendance roster reads op_rh_personal.id_estacion directly in canonical locality ID space');
 $assert(!in_array(102, $todayIds, true),
     'a versioned membership in another locality overrides the current station field');
 $assert(!in_array(103, $todayIds, true),
@@ -116,16 +117,20 @@ $missingRoster = $service->workersForAttendanceFilter(902, $today, 'UTC');
 $ambiguousRoster = $service->workersForAttendanceFilter(903, $today, 'UTC');
 $inactiveRoster = $service->workersForAttendanceFilter(904, $today, 'UTC');
 $missingRosterIds = array_map(static fn(array $worker): int => (int) $worker['worker_id'], $missingRoster['workers'] ?? []);
-$assert(($missingRoster['status'] ?? '') === 'partial'
+$assert(($missingRoster['status'] ?? '') === 'ready'
     && in_array(102, $missingRosterIds, true)
-    && !in_array(202, $missingRosterIds, true),
-    'a missing bridge preserves valid versioned membership but rejects accidental numeric equality');
-$assert(($ambiguousRoster['status'] ?? '') === 'partial'
-    && ($ambiguousRoster['workers'] ?? []) === [],
-    'an ambiguous bridge does not expose a legacy roster as complete');
-$assert(($inactiveRoster['status'] ?? '') === 'partial'
-    && ($inactiveRoster['workers'] ?? []) === [],
-    'an inactive station does not expose a legacy roster as complete');
+    && in_array(202, $missingRosterIds, true),
+    'canonical roster membership remains readable when no physical station is mapped');
+$assert(($ambiguousRoster['status'] ?? '') === 'ready'
+    && in_array(203, array_map(static fn(array $worker): int => (int) $worker['worker_id'], $ambiguousRoster['workers'] ?? []), true),
+    'ambiguous physical mapping does not alter canonical worker affiliation');
+$assert(($inactiveRoster['status'] ?? '') === 'ready'
+    && in_array(204, array_map(static fn(array $worker): int => (int) $worker['worker_id'], $inactiveRoster['workers'] ?? []), true),
+    'physical station state does not rewrite the canonical worker locality');
+$departmentRoster = $service->workersForAttendanceFilter(905, $today, 'UTC');
+$assert(($departmentRoster['status'] ?? '') === 'ready'
+    && in_array(205, array_map(static fn(array $worker): int => (int) $worker['worker_id'], $departmentRoster['workers'] ?? []), true),
+    'an authorized caller can read department-locality workers without inventing a physical station');
 
 $historicalResolver = new WorkerWorkplaceAssignmentResolver();
 $historicalMembership = $historicalResolver->resolveAssignments(103, $yesterday . 'T12:00:00Z');

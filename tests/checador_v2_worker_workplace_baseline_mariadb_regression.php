@@ -77,7 +77,7 @@ try {
     Capsule::statement('CREATE TABLE op_rh_localidades (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, numlista INT NULL, localidad VARCHAR(100) NULL, recuperacion_vapores VARCHAR(100) NULL) ENGINE=InnoDB');
     Capsule::statement('CREATE TABLE tb_modulos_config (modulo_key VARCHAR(100) NOT NULL PRIMARY KEY, tipo_departamento VARCHAR(50) NOT NULL, activo TINYINT NOT NULL) ENGINE=InnoDB');
     Capsule::statement('CREATE TABLE tb_usuarios (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY) ENGINE=InnoDB');
-    Capsule::statement('CREATE TABLE tb_estaciones (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, numlista INT NULL, estatus TINYINT NOT NULL DEFAULT 1) ENGINE=InnoDB');
+    Capsule::statement('CREATE TABLE tb_estaciones (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, numlista INT NULL, estatus TINYINT NOT NULL DEFAULT 0) ENGINE=InnoDB');
     Capsule::table('tb_modulos_config')->insert(['modulo_key' => 'control-documentos-personal', 'tipo_departamento' => 'localidades', 'activo' => 1]);
     $interlomas = 9;
     $otherLocality = 2;
@@ -87,15 +87,15 @@ try {
     ]);
     Capsule::table('op_rh_localidades')->insert(['id' => 999, 'numlista' => 9, 'localidad' => 'Synthetic excluded', 'recuperacion_vapores' => '']);
     Capsule::table('tb_estaciones')->insert([
-        ['id' => 11, 'numlista' => 10, 'estatus' => 1],
-        ['id' => 2, 'numlista' => 2, 'estatus' => 1],
-        ['id' => 19, 'numlista' => 9, 'estatus' => 1],
+        ['id' => 11, 'numlista' => 10, 'estatus' => 0],
+        ['id' => 2, 'numlista' => 2, 'estatus' => 0],
+        ['id' => 19, 'numlista' => 9, 'estatus' => 0],
     ]);
     Capsule::table('tb_usuarios')->insert([['id' => 901], ['id' => 902]]);
 
     $workers = [];
-    foreach ([[11, 1], [11, 1], [11, 1], [11, 0], [2, 1], [19, 1]] as [$physicalStationId, $status]) {
-        $workers[] = (int) Capsule::table('op_rh_personal')->insertGetId(['id_estacion' => $physicalStationId, 'estado' => $status]);
+    foreach ([[9, 1], [9, 1], [9, 1], [9, 0], [2, 1], [999, 1]] as [$canonicalLocalityId, $status]) {
+        $workers[] = (int) Capsule::table('op_rh_personal')->insertGetId(['id_estacion' => $canonicalLocalityId, 'estado' => $status]);
     }
     WorkerWorkplaceAssignmentVersionsMigration::up();
 
@@ -127,8 +127,8 @@ try {
             && $snapshot['locality_reference']['numlista'] === 10
             && $snapshot['candidate_worker_ids'] === $expectedIds
             && array_reduce($snapshot['candidate_worker_ids'], static fn(bool $ok, int $id): bool => $ok
-                && (int) Capsule::table('op_rh_personal')->where('id', $id)->value('id_estacion') === 11, true),
-        'physical station 11 maps through numlista 10 to canonical Autolavado locality 9 without numeric-ID assumptions'
+                && (int) Capsule::table('op_rh_personal')->where('id', $id)->value('id_estacion') === 9, true),
+        'worker affiliation uses canonical locality 9 while physical station 11 is resolved only through numlista 10'
     );
     $assert(
         count($snapshot['locality_distribution']) === 1

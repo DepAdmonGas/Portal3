@@ -33,10 +33,11 @@ final class WorkerWorkplaceAssignmentBaselineImportService
         string $validFromUtc,
         int $recordedBy,
         string $reason,
-        callable $afterCommitWhileLocked,
-        ?array $selectedWorkerIds = null,
-        ?string $expectedFullCandidateFingerprint = null
+        callable $afterCommitWhileLocked
     ): array {
+        if (!WorkerWorkplaceAssignmentHistoryWriteGate::baselineImportEnabled()) {
+            throw new DomainException('Preproduction baseline writes are disabled or the connected database identity is not verified.');
+        }
         $this->previewService->assertAuthorizedWorkplace($workplaceId, $recordedBy, requireWrite: true);
         if ($expectedCandidateCount < 0
             || !preg_match('/\A[a-f0-9]{64}\z/D', $expectedCandidateFingerprint)
@@ -45,14 +46,6 @@ final class WorkerWorkplaceAssignmentBaselineImportService
         }
 
         $metadata = $this->previewService->prepareVersionMetadata($validFromUtc, $recordedBy, $reason);
-        if ($selectedWorkerIds !== null) {
-            $selectedWorkerIds = WorkerWorkplaceAssignmentBaselinePreviewService::normalizeSelectedWorkerIds($selectedWorkerIds);
-            if (!preg_match('/\A[a-f0-9]{64}\z/D', (string) $expectedFullCandidateFingerprint)) {
-                throw new DomainException('Selective baseline import requires the full preview candidate fingerprint.');
-            }
-        } elseif ($expectedFullCandidateFingerprint !== null) {
-            throw new DomainException('A full candidate fingerprint requires an explicit worker selection.');
-        }
         $effectiveUtc = (new DateTimeImmutable($metadata['valid_from_utc'], new DateTimeZone('UTC')))
             ->format('Y-m-d\TH:i:s.u\Z');
 
@@ -63,8 +56,6 @@ final class WorkerWorkplaceAssignmentBaselineImportService
             $expectedSourceFingerprint,
             $effectiveUtc,
             $metadata,
-            $selectedWorkerIds,
-            $expectedFullCandidateFingerprint,
             $afterCommitWhileLocked
         ): array {
             $result = Capsule::connection()->transaction(function () use (
@@ -73,9 +64,7 @@ final class WorkerWorkplaceAssignmentBaselineImportService
                 $expectedCandidateFingerprint,
                 $expectedSourceFingerprint,
                 $effectiveUtc,
-                $metadata,
-                $selectedWorkerIds,
-                $expectedFullCandidateFingerprint
+                $metadata
             ): array {
                 $snapshot = $this->previewService->readScopedSnapshot(
                     $workplaceId,
@@ -84,23 +73,7 @@ final class WorkerWorkplaceAssignmentBaselineImportService
                     requireWrite: true
                 );
                 $sourceFingerprint = $snapshot['source_snapshot_sha256'];
-                $allCandidateRows = $snapshot['candidate_rows']->all();
-                $fullCandidateFingerprint = WorkerWorkplaceAssignmentBaselinePreviewService::candidateFingerprint($allCandidateRows);
-                $candidateRows = $allCandidateRows;
-                $selectionMatchesPreview = true;
-                if ($selectedWorkerIds !== null) {
-                    try {
-                        $candidateRows = WorkerWorkplaceAssignmentBaselinePreviewService::selectCandidateRows(
-                            $allCandidateRows,
-                            $selectedWorkerIds
-                        );
-                    } catch (\InvalidArgumentException|DomainException) {
-                        $candidateRows = [];
-                        $selectionMatchesPreview = false;
-                    }
-                    $selectionMatchesPreview = $selectionMatchesPreview
-                        && hash_equals((string) $expectedFullCandidateFingerprint, $fullCandidateFingerprint);
-                }
+                $candidateRows = $snapshot['candidate_rows']->all();
                 $candidateFingerprint = WorkerWorkplaceAssignmentBaselinePreviewService::candidateFingerprint($candidateRows);
 
                 if ($snapshot['counts']['conflicting_assignments'] !== 0) {
@@ -110,8 +83,7 @@ final class WorkerWorkplaceAssignmentBaselineImportService
                     throw new DomainException('The scoped worker/locality source or locality reference changed after preview; refresh the preview.');
                 }
 
-                if (!$selectionMatchesPreview
-                    || !hash_equals($expectedCandidateFingerprint, $candidateFingerprint)
+                if (!hash_equals($expectedCandidateFingerprint, $candidateFingerprint)
                     || count($candidateRows) !== $expectedCandidateCount) {
                     $alreadyAppliedRows = $this->matchingAlreadyAppliedRows(
                         $workplaceId,
@@ -130,7 +102,6 @@ final class WorkerWorkplaceAssignmentBaselineImportService
                             'candidate_snapshot_sha256' => $expectedCandidateFingerprint,
                             'source_snapshot_sha256' => $sourceFingerprint,
                             'workplace_id' => $workplaceId,
-                            'selected_worker_ids' => $selectedWorkerIds,
                         ];
                     }
                     throw new DomainException('The scoped baseline candidate set changed after preview; no versions were inserted.');
@@ -161,7 +132,6 @@ final class WorkerWorkplaceAssignmentBaselineImportService
                     'candidate_snapshot_sha256' => $candidateFingerprint,
                     'source_snapshot_sha256' => $sourceFingerprint,
                     'workplace_id' => $workplaceId,
-                    'selected_worker_ids' => $selectedWorkerIds,
                 ];
             });
 
@@ -191,7 +161,7 @@ final class WorkerWorkplaceAssignmentBaselineImportService
             ->where('v.recorded_by', $actorId)
             ->where('v.reason', $reason)
             ->where('p.estado', 1)
-            ->where('p.id_estacion', $mapping['physical_station_id'])
+            ->where('p.id_estacion', $workplaceId)
             ->orderBy('v.worker_id')
             ->get(['v.worker_id', 'v.workplace_id']);
         $pairs = $rows->map(static fn(object $row): array => [

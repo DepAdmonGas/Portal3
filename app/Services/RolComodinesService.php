@@ -206,30 +206,15 @@ class RolComodinesService
         }
 
         try {
-            // `op_rh_personal.id_estacion` stores a physical `tb_estaciones.id`.
-            // The allowlist above is in canonical `op_rh_localidades.id` space;
-            // resolve each allowed locality through the existing unique, active
-            // numlista bridge before using it to filter the legacy HR column.
-            $physicalStationIds = [];
-            foreach ($authorizedWorkerWorkplaceIds as $workerWorkplaceId) {
-                $mapping = self::resolvePhysicalStationForWorkplace(
-                    $workerWorkplaceId,
-                    $authorizedWorkerWorkplaceIds
-                );
-                if (empty($mapping['ok'])) {
-                    return ['ok' => false, 'reason' => 'worker_workplace_mapping_unavailable'];
-                }
-                $physicalStationIds[] = (int) $mapping['station_id'];
-            }
-            $physicalStationIds = self::positiveIds($physicalStationIds);
-            if ($physicalStationIds === []) {
-                return ['ok' => false, 'reason' => 'worker_workplace_mapping_unavailable'];
-            }
+            // Worker affiliation is stored in canonical op_rh_localidades.id
+            // space. numlista conversion is reserved for legacy rows that
+            // actually persist tb_estaciones.id.
+            $canonicalWorkplaceIds = $authorizedWorkerWorkplaceIds;
 
             $pattern = '%' . addcslashes($search, "\\%_") . '%';
             $people = RhPersonal::query()
                 ->where('estado', 1)
-                ->whereIn('id_estacion', $physicalStationIds)
+                ->whereIn('id_estacion', $canonicalWorkplaceIds)
                 ->where(static function ($query) use ($pattern): void {
                     $query->where('nombre_completo', 'LIKE', $pattern)
                         ->orWhereRaw('CAST(no_colaborador AS CHAR) LIKE ?', [$pattern]);
@@ -1122,17 +1107,17 @@ class RolComodinesService
     }
 
     /**
-     * Validate the worker's legacy physical station against the canonical
+     * Validate the worker's canonical locality against the authorized
      * worker-home allowlist. Coverage locality authorization is checked
      * separately and remains independent from this base-workplace check.
      *
      * @param list<int> $authorizedWorkerWorkplaceIds canonical locality IDs
      */
     private static function workerBaseWorkplaceIsAuthorized(
-        int $physicalStationId,
+        int $workerLocalityId,
         array $authorizedWorkerWorkplaceIds
     ): bool {
-        if ($physicalStationId < 1) {
+        if ($workerLocalityId < 1) {
             return false;
         }
         $authorizedWorkerWorkplaceIds = self::positiveIds($authorizedWorkerWorkplaceIds);
@@ -1140,10 +1125,7 @@ class RolComodinesService
             return false;
         }
 
-        $mapped = self::mapPhysicalStationsToWorkplaces([$physicalStationId]);
-        $canonicalWorkplaceId = $mapped[$physicalStationId] ?? null;
-        return $canonicalWorkplaceId !== null
-            && in_array((int) $canonicalWorkplaceId, $authorizedWorkerWorkplaceIds, true);
+        return in_array($workerLocalityId, $authorizedWorkerWorkplaceIds, true);
     }
 
     /** @param array<int|string,mixed> $values @return list<int> */

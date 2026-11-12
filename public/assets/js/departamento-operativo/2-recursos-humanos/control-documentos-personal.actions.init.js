@@ -184,17 +184,14 @@ this.confirmBaselineRoster = false;
 abrirChecadorBaseline() {
 if (!this.canRunChecadorBaseline()) return;
 this.baselineWorkplaceId = this.selectedBaselineWorkplaceId();
-this.baselineEffectiveFromUtc = this.baselineWorkplaceId === 1 ? '2026-11-06T06:00:00Z' : '';
+this.baselineEffectiveFromUtc = '';
 this.baselineReasonText = '';
 this.clearBaselinePreview();
 bootstrap.Modal.getOrCreateInstance(document.getElementById('checadorMembershipBaselineModal')).show();
 },
 
 baselineSelectionPreviewMatches() {
-if (!this.baselinePreview || !this.baselinePreview.requires_worker_selection) return true;
-var selected = (this.baselineSelectedWorkerIds || []).map(Number).filter(Number.isInteger).sort(function(a, b) { return a - b; });
-var previewed = (this.baselinePreview.selected_worker_ids || []).map(Number).filter(Number.isInteger).sort(function(a, b) { return a - b; });
-return JSON.stringify(selected) === JSON.stringify(previewed);
+return Boolean(this.baselinePreview && this.baselinePreview.candidate_fingerprint && this.baselinePreview.source_fingerprint);
 },
 
 onBaselineWorkerSelectionChange() {
@@ -203,10 +200,8 @@ this.baselineImportResult = null;
 },
 
 async previewChecadorBaseline() {
-if (this.baselineBusy || !this.canRunChecadorBaseline() || this.baselineWorkplaceId !== this.selectedBaselineWorkplaceId()) return;
-var selectedIds = this.baselineWorkplaceId === 9 && this.baselineSelectedWorkerIds.length
-? this.baselineSelectedWorkerIds.map(Number).filter(Number.isInteger).sort(function(a, b) { return a - b; })
-: null;
+if (this.baselineBusy || !this.canRunChecadorBaseline() || this.baselineWorkplaceId !== this.selectedBaselineWorkplaceId()
+    || !this.baselineEffectiveFromUtc.trim() || !this.baselineReasonText.trim()) return;
 this.baselineBusy = true;
 this.baselinePreview = null;
 this.baselineImportResult = null;
@@ -215,20 +210,17 @@ this.confirmBaselineRoster = false;
 try {
 var payload = {
 workplace_id: this.baselineWorkplaceId,
-valid_from_utc: this.baselineEffectiveFromUtc
+valid_from_utc: this.baselineEffectiveFromUtc.trim(),
+reason: this.baselineReasonText.trim()
 };
-if (this.baselineWorkplaceId === 9) {
-payload.reason = this.baselineReasonText.trim();
-if (selectedIds !== null) payload.selected_worker_ids = selectedIds;
-}
 var response = await axios.post('/departamento-operativo/recursos-humanos/control-documentos-personal/checador-membership-preview', payload);
 this.baselinePreview = response.data.data || null;
-this.baselineSelectedWorkerIds = (this.baselinePreview?.selected_worker_ids || []).map(Number).filter(Number.isInteger);
+this.baselineSelectedWorkerIds = [];
 this.baselineError = response.data.success ? '' : (response.data.message || 'La vista previa no está disponible.');
 } catch (error) {
 var payload = error && error.response ? error.response.data : null;
 if (payload && payload.data) this.baselinePreview = payload.data;
-this.baselineSelectedWorkerIds = (this.baselinePreview?.selected_worker_ids || []).map(Number).filter(Number.isInteger);
+this.baselineSelectedWorkerIds = [];
 if (!this.baselinePreview) {
 this.baselineError = payload && payload.message ? payload.message : 'No se pudo completar la vista previa autorizada.';
 this.notify('error', this.baselineError);
@@ -242,12 +234,11 @@ async importChecadorBaseline() {
 if (this.baselineBusy || !this.canRunChecadorBaseline()
     || !this.baselinePreview || !this.baselinePreview.ready_to_import
     || !this.baselineSelectionPreviewMatches()
-    || (!this.baselinePreview.is_interlomas && !this.confirmBaselineRoster)) return;
-var confirmationText = this.baselinePreview.is_interlomas
-? 'Se registrarán exactamente los 41 trabajadores autorizados de Interlomas desde 2026-11-06 06:00 UTC. No se crearán horarios.'
-: (this.baselinePreview.requires_worker_selection
-? 'Se registrarán únicamente los IDs ' + (this.baselinePreview.selected_worker_ids || []).join(', ') + ' de ' + (this.baselinePreview.locality_reference?.locality || 'la estación seleccionada') + ' desde ' + this.baselinePreview.valid_from_utc + '. Motivo: ' + (this.baselinePreview.reason || '') + '. No se crearán horarios.'
-: 'Se registrará únicamente el conjunto mostrado para ' + (this.baselinePreview.locality_reference?.locality || 'la estación seleccionada') + ' desde ' + this.baselinePreview.valid_from_utc + '. No se crearán horarios.');
+    || !this.confirmBaselineRoster) return;
+var confirmationText = 'Se registrará el conjunto completo de ' + this.baselinePreview.candidate_count + ' personas elegibles para '
+    + (this.baselinePreview.locality_reference?.locality || 'la localidad seleccionada') + ' desde '
+    + this.baselinePreview.valid_from_utc + '. Motivo: ' + (this.baselinePreview.reason || '')
+    + '. No se crearán horarios ni se inferirán adscripciones históricas.';
 var confirmation = await Swal.fire({
 icon: 'warning',
 title: 'Confirmar incorporación inicial',
@@ -270,10 +261,6 @@ source_fingerprint: this.baselinePreview.source_fingerprint,
 valid_from_utc: this.baselinePreview.valid_from_utc,
 confirm_roster: this.confirmBaselineRoster
 };
-if (this.baselinePreview.requires_worker_selection) {
-payload.selected_worker_ids = this.baselinePreview.selected_worker_ids;
-payload.full_candidate_fingerprint = this.baselinePreview.full_candidate_fingerprint;
-}
 var response = await axios.post('/departamento-operativo/recursos-humanos/control-documentos-personal/checador-membership-import', payload);
 this.baselineImportResult = response.data || null;
 this.notify('success', response.data.message || 'La importación fue verificada.');
