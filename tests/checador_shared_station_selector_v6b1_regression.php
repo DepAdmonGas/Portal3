@@ -32,11 +32,14 @@ $index = $indexStart !== false && $reportStart !== false ? substr($controller, $
 $report = $reportStart !== false && $dataStart !== false ? substr($controller, $reportStart, $dataStart - $reportStart) : '';
 
 $assert($index !== '' && $report !== ''
-    && substr_count($index, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY") >= 4
+    && str_contains($controller, "public function dailyAttendance(): void")
+    && str_contains($controller, '$this->renderDashboardWorkspace(\'daily-attendance\');')
+    && substr_count($controller, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY") >= 5
     && substr_count($report, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY") === 1
     && preg_match('/ModuleStationService::render\(\s*\$moduleKey/s', $view) === 1
-    && str_contains($layout, '<?= $moduleStationSelector ?? \'\' ?>'),
-    'V6B1 Checador daily, weekly, historical and configuration views plus raw report reuse the existing selector with the independent module key');
+    && str_contains($layout, 'if (!empty($moduleStationSelector))')
+    && str_contains($layout, '<?= $moduleStationSelector ?>'),
+    'V6B1 Checador workspaces and raw report reuse the shared selector with the independent module key');
 $assert(str_contains($moduleStations, 'ChecadorAccessService::authorize()')
     && str_contains($moduleStations, 'getAvailableStations(string $moduleKey)')
     && str_contains($access, 'MultiestacionService::getConfig($user)')
@@ -59,9 +62,11 @@ $assert(str_contains($index, 'ChecadorAccessService::authorize(null)')
     && str_contains($report, '$requestedWorkplace = $selectedWorkplaceForView;'),
     'V6B1 both screens revalidate selection against the current authorized scope');
 $assert(!preg_match('/<select\b[^>]*\bname="workplace_id"/i', $dailyView . $reportView)
-    && preg_match('/<input\b(?=[^>]*\btype="hidden")(?=[^>]*\bname="workplace_id")[^>]*>/i', $dailyView) === 1
-    && preg_match('/<input\b(?=[^>]*\btype="hidden")(?=[^>]*\bname="workplace_id")[^>]*>/i', $reportView) === 1,
-    'V6B1 duplicate content-level station selectors are replaced with synchronized hidden form context');
+    && str_contains($layout, 'if (!empty($moduleStationSelector))')
+    && str_contains($dailyView, 'method="post" action="<?= $esc($baseUrl) ?>" data-checador-filter-form data-checador-ajax')
+    && !preg_match('/<input\b(?=[^>]*\btype="hidden")(?=[^>]*\bname="workplace_id")[^>]*>/i', $dailyView)
+    && str_contains($controller, '$moduleContext[\'id_depto\'] ?? $moduleContext[\'id_estacion\'] ?? null'),
+    'V6B1 the shared layout owns station selection while daily AJAX filters use the server-validated session context');
 $assert(str_contains($navigation, 'url.searchParams.set(\'workplace_id\', nextStationId)')
     && str_contains($navigation, "url.searchParams.delete('source_workplace_id')")
     && str_contains($navigation, "url.searchParams.delete('snapshot_ref')")
@@ -87,13 +92,13 @@ $assert($reportNavigation !== ''
     && str_contains($reportNavigation, "url.searchParams.delete('source_workplace_id')")
     && str_contains($dailyNavigation, 'nextStationId === null || stationChanged')
     && str_contains($index, 'checador.module-station.init.js?v=20261021-1')
-    && str_contains($report, 'checador.module-station.init.js?v=20261022-2'),
+    && str_contains($report, 'checador.module-station.init.js?v=20261027-1'),
     'V6B6 report preserves a valid worker filter across locality changes while daily-screen behavior stays unchanged');
 $assert(str_contains($navigation, "typeof ModuleStationSelector !== 'undefined'")
     && str_contains($navigation, 'currentPath !== reportPath')
     && str_contains($navigation, "selectorApi.init('checador'")
     && str_contains($index, 'checador.module-station.init.js?v=20261021-1')
-    && str_contains($report, 'checador.module-station.init.js?v=20261022-2'),
+    && str_contains($report, 'checador.module-station.init.js?v=20261027-1'),
     'V6B7 report installs the custom URL reload through the shared lexical class while the advanced screen keeps its prior reload path');
 $assert(str_contains($navigation, '(?:estacion|depto)_([1-9][0-9]*)')
     && str_contains($moduleStations, 'value="depto_')

@@ -3554,12 +3554,6 @@ final class ChecadorDailyReadService
 
     private static function resolveBaseUrl(?string $baseUrl): string
     {
-        if ($baseUrl === null) {
-            $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
-            if (!in_array($environment, ['dev', 'development', 'testing'], true)) {
-                throw new \RuntimeException('Checador P03 is enabled only in development.');
-            }
-        }
         $configured = $baseUrl ?? ($_ENV['CHECADOR_API_BASE_URL'] ?? getenv('CHECADOR_API_BASE_URL') ?: '');
         $configured = rtrim(trim((string) $configured), '/') . '/';
         if (!preg_match('~^https?://[^\s/]+(?:/[^\s]*)?/$~i', $configured)) {

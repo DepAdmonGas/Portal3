@@ -89,6 +89,30 @@ $headers = $request instanceof RequestInterface ? $request->getHeaders() : [];
 $assert($request instanceof RequestInterface && isset($headers['Authorization']) && !isset($headers['X-Device-Id']) && !isset($headers['X-Credential-Key']), 'P306 Device Auth headers are absent');
 $assert(!str_contains($sourceView, 'JWT') && !str_contains($sourceView, 'JWT_SECRET') && !str_contains($sourceView, 'Authorization'), 'P307 JWT and signing secret are absent from rendered HTML');
 
+// P307A: P03 API client initialization depends on an explicit API URL, not APP_ENV.
+$hadAppEnv = array_key_exists('APP_ENV', $_ENV);
+$previousAppEnv = $_ENV['APP_ENV'] ?? null;
+$hadApiUrl = array_key_exists('CHECADOR_API_BASE_URL', $_ENV);
+$previousApiUrl = $_ENV['CHECADOR_API_BASE_URL'] ?? null;
+$hadPostsFlag = array_key_exists('CHECADOR_API_REAL_POSTS_ENABLED', $_ENV);
+$previousPostsFlag = $_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] ?? null;
+$_ENV['APP_ENV'] = 'prod';
+$_ENV['CHECADOR_API_BASE_URL'] = $base;
+$_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = '1';
+$environmentHistory = [];
+$environmentStack = HandlerStack::create(new MockHandler([$timezonePayload()]));
+$environmentStack->push(Middleware::history($environmentHistory));
+$environmentService = new ChecadorDailyReadService(
+    new \GuzzleHttp\Client(['handler' => $environmentStack, 'http_errors' => false]),
+    static fn (Usuario $user): string => 'portal3-test-jwt'
+);
+$environmentRead = $environmentService->resolveWorkplaceLocalDay($user, 1, '2026-10-12');
+$assert(($environmentRead['ok'] ?? false) === true && count($environmentHistory) === 1, 'P307A configured P03 read initializes under APP_ENV=prod');
+$assert(ChecadorDailyReadService::realApiPostOperationsEnabled() === false, 'P307B removing the P03 read environment gate does not enable API POST operations');
+if ($hadAppEnv) $_ENV['APP_ENV'] = $previousAppEnv; else unset($_ENV['APP_ENV']);
+if ($hadApiUrl) $_ENV['CHECADOR_API_BASE_URL'] = $previousApiUrl; else unset($_ENV['CHECADOR_API_BASE_URL']);
+if ($hadPostsFlag) $_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = $previousPostsFlag; else unset($_ENV['CHECADOR_API_REAL_POSTS_ENABLED']);
+
 // P308-P314: timezone first, then exact punch parameters and opaque UTC bounds.
 $history = [];
 $service = $make([

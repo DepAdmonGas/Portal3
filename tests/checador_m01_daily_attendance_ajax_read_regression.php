@@ -9,9 +9,12 @@ $route = $read('routes/web.php');
 $view = $read('app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
 $filters = $read('public/assets/js/departamento-operativo/2-recursos-humanos/checador.filters.init.js');
 $table = $read('public/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance.datatable.init.js');
+$rosterService = $read('app/Services/ChecadorAttendanceRosterService.php');
 $handlerStart = strpos($controller, 'public function dailyAttendance(): void');
 $handlerEnd = strpos($controller, 'public function rolComodines(): void', $handlerStart ?: 0);
 $dailyHandler = $handlerStart !== false && $handlerEnd !== false ? substr($controller, $handlerStart, $handlerEnd - $handlerStart) : '';
+$dashboardStart = strpos($controller, 'function renderDashboardWorkspace(');
+$dashboard = $dashboardStart === false ? '' : substr($controller, $dashboardStart);
 
 $checks = [
     'GET and POST use the existing authenticated attendance route' =>
@@ -48,6 +51,15 @@ $checks = [
         && str_contains($controller, "\$workerSelectOptions = array_values(array_filter(")
         && str_contains($view, 'foreach ($workerSelectOptions as $workerOption)')
         && str_contains($filters, 'workerInput.replaceChildren.apply'),
+    'a successful empty API snapshot still renders the active authorized roster, while failed reads remain errors' =>
+        str_contains($dashboard, "if (!\$readResult['ok'])")
+        && str_contains($dashboard, "\$state = 'success';")
+        && strpos($dashboard, "\$state = 'success';") < strpos($dashboard, 'ChecadorAttendanceRosterService())->currentRoster(')
+        && str_contains($dashboard, "\$eventsByWorker[(int) \$workerId] ?? []")
+        && str_contains($rosterService, "where('estado', 1)")
+        && str_contains($view, "if (\$state === 'success')")
+        && str_contains($view, 'No hay colaboradores atribuibles dentro de la información disponible')
+        && str_contains($view, 'La tabla estará disponible cuando la consulta se complete.'),
     'errors preserve visible results and the DataTable can be reinitialized after replacement' =>
         str_contains($filters, 'currentResults.replaceWith(nextResults)')
         && str_contains($filters, "catch (error)")
