@@ -109,6 +109,14 @@ $result[] = [
 'nc_xml' => $row->nc_xml ?? '',
 'comPDF' => $row->comPDF ?? '',
 'comXML' => $row->comXML ?? '',
+'documento_disponible' => self::archivoDisponible($row->documento),
+'pdf_disponible' => self::archivoDisponible($row->pdf),
+'xml_disponible' => self::archivoDisponible($row->xml),
+'comprobante_p_disponible' => self::archivoDisponible($row->comprobante_p),
+'nc_pdf_disponible' => self::archivoDisponible($row->nc_pdf),
+'nc_xml_disponible' => self::archivoDisponible($row->nc_xml),
+'comPDF_disponible' => self::archivoDisponible($row->comPDF),
+'comXML_disponible' => self::archivoDisponible($row->comXML),
 'semaforo' => self::getSemaforoDocs($row),
 'num_comentarios' => $numCom,
 ];
@@ -137,7 +145,7 @@ $docs = ['pdf', 'xml', 'comprobante_p', 'nc_pdf', 'nc_xml', 'comPDF', 'comXML'];
 $tiene = 0;
 $total = count($docs);
 foreach ($docs as $d) {
-if (!empty($row->$d)) $tiene++;
+if (self::archivoDisponible($row->$d)) $tiene++;
 }
 
 if ($tiene === 0) return 0;
@@ -157,9 +165,16 @@ if (!$usuario) {
 return ['success' => false, 'message' => 'Sesión no válida'];
 }
 
+$faltantes = self::camposObligatoriosFaltantes($data, $files, true);
+if ($faltantes) {
+return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'missing_fields' => $faltantes];
+}
+
+try {
 $uploadDir = self::getUploadDir();
-if (!is_dir($uploadDir)) {
-mkdir($uploadDir, 0755, true);
+} catch (\Throwable $e) {
+error_log('Error preparando archivos de embarques: ' . $e->getMessage());
+return ['success' => false, 'message' => 'No se pudo preparar el directorio para almacenar los archivos.'];
 }
 
 $record = [
@@ -168,9 +183,9 @@ $record = [
 'embarque' => $data['embarque'] ?? '',
 'producto' => $data['producto'] ?? '',
 'documentocv' => $data['documentocv'] ?? '',
-'importef' => (float) ($data['importef'] ?? 0),
-'precio_litro' => (float) ($data['precio_litro'] ?? 0),
-'merma' => (float) ($data['merma'] ?? 0),
+'importef' => self::normalizarCantidad($data['importef'] ?? 0),
+'precio_litro' => self::normalizarCantidad($data['precio_litro'] ?? 0),
+'merma' => self::normalizarCantidad($data['merma'] ?? 0),
 'tad' => $data['tad'] ?? '',
 'nom_transporte' => $data['nom_transporte'] ?? '',
 'chofer' => $data['chofer'] ?? '',
@@ -179,13 +194,19 @@ $record = [
 
 $fileFields = ['documento', 'pdf', 'xml', 'comprobante_p', 'nc_pdf', 'nc_xml', 'comPDF', 'comXML'];
 foreach ($fileFields as $field) {
-if (!empty($files[$field]) && $files[$field]['error'] === UPLOAD_ERR_OK) {
+if (empty($files[$field]) || ($files[$field]['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+continue;
+}
+if (($files[$field]['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+return ['success' => false, 'message' => 'No se pudo recibir el archivo ' . $field . '.'];
+}
+
 $ext = pathinfo($files[$field]['name'], PATHINFO_EXTENSION);
 $filename = $field . '_' . time() . '_' . uniqid() . '.' . $ext;
-if (move_uploaded_file($files[$field]['tmp_name'], $uploadDir . '/' . $filename)) {
+if (!move_uploaded_file($files[$field]['tmp_name'], $uploadDir . DIRECTORY_SEPARATOR . $filename)) {
+return ['success' => false, 'message' => 'No se pudo almacenar el archivo ' . $field . '.'];
+}
 $record[$field] = $filename;
-}
-}
 }
 
 self::persistCatalogos($data);
@@ -205,38 +226,50 @@ if (!$embarque) {
 return ['success' => false, 'message' => 'Embarque no encontrado'];
 }
 
+$faltantes = self::camposObligatoriosFaltantes($data, $files, false, $embarque);
+if ($faltantes) {
+return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'missing_fields' => $faltantes];
+}
+
 $embarque->fecha = $data['fecha'] ?? $embarque->fecha;
 $embarque->embarque = $data['embarque'] ?? $embarque->embarque;
 $embarque->producto = $data['producto'] ?? $embarque->producto;
 $embarque->documentocv = $data['documentocv'] ?? $embarque->documentocv;
-$embarque->importef = (float) ($data['importef'] ?? $embarque->importef);
-$embarque->precio_litro = (float) ($data['precio_litro'] ?? $embarque->precio_litro);
-$embarque->merma = (float) ($data['merma'] ?? $embarque->merma);
+$embarque->importef = self::normalizarCantidad($data['importef'] ?? $embarque->importef);
+$embarque->precio_litro = self::normalizarCantidad($data['precio_litro'] ?? $embarque->precio_litro);
+$embarque->merma = self::normalizarCantidad($data['merma'] ?? $embarque->merma);
 $embarque->tad = $data['tad'] ?? $embarque->tad;
 $embarque->nom_transporte = $data['nom_transporte'] ?? $embarque->nom_transporte;
 $embarque->chofer = $data['chofer'] ?? $embarque->chofer;
 $embarque->unidad = $data['unidad'] ?? $embarque->unidad;
 
+try {
 $uploadDir = self::getUploadDir();
-if (!is_dir($uploadDir)) {
-mkdir($uploadDir, 0755, true);
+} catch (\Throwable $e) {
+error_log('Error preparando archivos de embarques: ' . $e->getMessage());
+return ['success' => false, 'message' => 'No se pudo preparar el directorio para almacenar los archivos.'];
 }
 
 $fileFields = ['documento', 'pdf', 'xml', 'comprobante_p', 'nc_pdf', 'nc_xml', 'comPDF', 'comXML'];
 foreach ($fileFields as $field) {
-if (!empty($files[$field]) && $files[$field]['error'] === UPLOAD_ERR_OK) {
-if ($embarque->$field) {
-$oldFile = $uploadDir . '/' . $embarque->$field;
-if (file_exists($oldFile)) {
-unlink($oldFile);
+if (empty($files[$field]) || ($files[$field]['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+continue;
 }
+if (($files[$field]['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+return ['success' => false, 'message' => 'No se pudo recibir el archivo ' . $field . '.'];
 }
+
 $ext = pathinfo($files[$field]['name'], PATHINFO_EXTENSION);
 $filename = $field . '_' . time() . '_' . uniqid() . '.' . $ext;
-if (move_uploaded_file($files[$field]['tmp_name'], $uploadDir . '/' . $filename)) {
+if (!move_uploaded_file($files[$field]['tmp_name'], $uploadDir . DIRECTORY_SEPARATOR . $filename)) {
+return ['success' => false, 'message' => 'No se pudo almacenar el archivo ' . $field . '.'];
+}
+
+$oldPath = self::buscarArchivo($embarque->$field);
+if ($oldPath && is_file($oldPath)) {
+unlink($oldPath);
+}
 $embarque->$field = $filename;
-}
-}
 }
 
 self::persistCatalogos($data);
@@ -256,14 +289,10 @@ if (!$embarque) {
 return ['success' => false, 'message' => 'Embarque no encontrado'];
 }
 
-$uploadDir = self::getUploadDir();
 $fileFields = ['documento', 'pdf', 'xml', 'comprobante_p', 'nc_pdf', 'nc_xml', 'comPDF', 'comXML'];
 foreach ($fileFields as $field) {
-if ($embarque->$field) {
-$filePath = $uploadDir . '/' . $embarque->$field;
-if (file_exists($filePath)) {
+if ($filePath = self::buscarArchivo($embarque->$field)) {
 unlink($filePath);
-}
 }
 }
 
@@ -408,11 +437,62 @@ ListaTransportes::firstOrCreate(
 
 public static function getUploadDir(): string
 {
-$dir = __DIR__ . '/../../public/uploads/archivos/embarques';
-if (!is_dir($dir)) {
-mkdir($dir, 0755, true);
+$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/embarques';
+if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+throw new \RuntimeException('No se pudo crear el directorio de archivos de embarques.');
 }
-return realpath($dir);
+
+$resolved = realpath($dir);
+if ($resolved === false) {
+throw new \RuntimeException('No se pudo resolver el directorio de archivos de embarques.');
+}
+
+return $resolved;
+}
+
+public static function archivoDisponible(?string $filename): bool
+{
+return self::buscarArchivo($filename) !== null;
+}
+
+private static function buscarArchivo(?string $filename): ?string
+{
+if (!$filename || basename($filename) !== $filename) {
+return null;
+}
+
+$rootUploads = dirname(__DIR__, 2) . '/public/uploads/archivos';
+foreach ([$rootUploads . '/embarques', $rootUploads] as $directory) {
+$base = realpath($directory);
+$path = $base ? $base . DIRECTORY_SEPARATOR . $filename : '';
+if ($path && is_file($path)) {
+return realpath($path) ?: null;
+}
+}
+
+return null;
+}
+
+private static function normalizarCantidad($value): float
+{
+return (float) str_replace([',', ' '], '', (string) ($value ?? 0));
+}
+
+private static function camposObligatoriosFaltantes(array $data, array $files, bool $create, ?Embarque $existing = null): array
+{
+$faltantes = [];
+foreach (['fecha', 'embarque', 'producto', 'chofer', 'unidad'] as $field) {
+$value = $data[$field] ?? ($existing ? $existing->$field : '');
+if (trim((string) $value) === '') {
+$faltantes[] = $field;
+}
+}
+
+if ($create && (!isset($files['documento']) || ($files['documento']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK)) {
+$faltantes[] = 'documento';
+}
+
+return $faltantes;
 }
 
 private static function getEstacionIdFromMesIdEmb(int $idMes): int

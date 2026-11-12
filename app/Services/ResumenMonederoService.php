@@ -104,13 +104,13 @@ $row = Prosegur::where('idreporte_dia', $idReporte)
 return $row ? (float) $row->importe : 0;
 }
 
-private static function calcularRow(array $d): array
+private static function calcularRow(array $d, bool $incluirShell): array
 {
 $bancomer = self::getBaucher($d['id'], 'BBVA BANCOMER SA');
 $amex = self::getBaucher($d['id'], 'AMERICAN EXPRESS');
 $inburgas = self::getBaucher($d['id'], 'INBURGAS');
 $inbursa = self::getBaucher($d['id'], 'INBURSA');
-$totalTB = $bancomer + $amex + $inbursa;
+$totalTB = $bancomer + $amex + $inburgas + $inbursa;
 
 $ticketcard = self::getBaucher($d['id'], 'TICKETCARD');
 $g500fleet = self::getBaucher($d['id'], 'G500 FLETT');
@@ -119,7 +119,7 @@ $sodexo = self::getBaucher($d['id'], 'SODEXO');
 $ultragas = self::getBaucher($d['id'], 'ULTRAGAS');
 $energex = self::getBaucher($d['id'], 'ENERGEX');
 $shell = self::getBaucher($d['id'], 'SHELL FLEET NAVIGATOR');
-$totalTarjetas = $ticketcard + $g500fleet + $efecticard + $inburgas + $sodexo + $ultragas + $energex + $shell;
+$totalTarjetas = $ticketcard + $g500fleet + $efecticard + $sodexo + $ultragas + $energex + ($incluirShell ? $shell : 0);
 
 $valAccord = self::getBaucher($d['id'], 'VALE ACCORD');
 $valEfectivale = self::getBaucher($d['id'], 'VALE EFECTIVALE');
@@ -147,6 +147,7 @@ $totalProsegur = $billeteM + $billeteV + $billeteN + $morralla + $deposito + $ch
 
 return [
 'fecha' => $d['fecha'],
+'g500fleet' => $g500fleet,
 'bancomer' => $bancomer,
 'amex' => $amex,
 'inbursa' => $inbursa,
@@ -185,6 +186,8 @@ return [
 
 public static function getData(int $idMesDb): array
 {
+$idEstacion = self::getEstacionIdFromMes($idMesDb);
+$incluirShell = in_array($idEstacion, [2, 14], true);
 $dias = CorteDia::where('id_mes', $idMesDb)
 ->orderBy('fecha')
 ->get(['id', 'fecha']);
@@ -193,7 +196,7 @@ $rows = [];
 $totales = [];
 
 foreach ($dias as $dia) {
-$r = self::calcularRow(['id' => $dia->id, 'fecha' => formatearFecha($dia->fecha->format('Y-m-d'))]);
+$r = self::calcularRow(['id' => $dia->id, 'fecha' => formatearFecha($dia->fecha->format('Y-m-d'))], $incluirShell);
 $rows[] = $r;
 
 foreach ($r as $k => $v) {
@@ -220,6 +223,9 @@ $arr = $doc->toArray();
 $arr['fecha'] = formatearFecha($arr['fecha']);
 $arr['fecha_input'] = $doc->fecha instanceof \Carbon\Carbon ? $doc->fecha->format('Y-m-d') : date('Y-m-d', strtotime($doc->fecha));
 $arr['fecha_evaluacion'] = $arr['fecha_evaluacion'] ? formatearFecha($arr['fecha_evaluacion']) : '';
+foreach (['pdf', 'xml', 'excel', 'sodi'] as $campoArchivo) {
+    $arr[$campoArchivo . '_exists'] = self::archivoExiste(self::getUploadDir(), $arr[$campoArchivo] ?? null);
+}
 $result[] = $arr;
 }
 
@@ -234,10 +240,16 @@ return $doc ? $doc->toArray() : null;
 
 public static function getEdiByDocumento(int $idDocumento): array
 {
-return MonederoEdi::where('id_documento', $idDocumento)
+$rows = MonederoEdi::where('id_documento', $idDocumento)
 ->orderBy('id', 'desc')
-->get()
-->toArray();
+->get();
+
+return $rows->map(function ($edi) {
+    $row = $edi->toArray();
+    $row['pdf_exists'] = self::archivoExiste(self::getUploadDir(), $row['pdf'] ?? null);
+    $row['xml_exists'] = self::archivoExiste(self::getUploadDir(), $row['xml'] ?? null);
+    return $row;
+})->all();
 }
 
 public static function getListaDocumentos(int $idMonedero): array
@@ -249,6 +261,7 @@ $rows = MonederoListaDocumento::where('id_monedero', $idMonedero)
 
 foreach ($rows as &$row) {
 $row['fecha_formateada'] = $row['fecha_hora'] ? formatearFecha($row['fecha_hora']) : '';
+$row['archivo_exists'] = self::archivoExiste(self::getListaUploadDir(), $row['archivo'] ?? null, true);
 }
 unset($row);
 
@@ -343,6 +356,26 @@ mkdir($dir, 0755, true);
 return $dir;
 }
 
+private static function archivoExiste(string $directorio, ?string $nombre, bool $listaDocumentos = false): bool
+{
+    if (!$nombre || basename($nombre) !== $nombre) {
+        return false;
+    }
+
+    if (is_file(rtrim($directorio, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $nombre)) {
+        return true;
+    }
+
+    $directorioAnterior = self::getLegacyUploadDir($listaDocumentos);
+    return is_file(rtrim($directorioAnterior, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $nombre);
+}
+
+public static function getLegacyUploadDir(bool $listaDocumentos = false): string
+{
+    $base = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'departamento-operativo' . DIRECTORY_SEPARATOR . 'archivos';
+    return $listaDocumentos ? $base . DIRECTORY_SEPARATOR . 'resumen-monederos-documentos' : $base;
+}
+
 public static function getListaUploadDir(): string
 {
 $base = self::getUploadDir();
@@ -371,28 +404,46 @@ return 0;
 
 public static function createDocumento(array $data, array $files, string $uploadDir): bool
 {
-$aleatorio = uniqid();
+$aleatorio = uniqid('', true);
 $idMes = (int) ($data['id_mes'] ?? 0);
 $fecha = $data['fecha'] ?? '';
 $monedero = $data['monedero'] ?? '';
-$diferencia = (float) ($data['diferencia'] ?? 0);
+$diferenciaTexto = str_replace(',', '', (string) ($data['diferencia'] ?? ''));
+$diferencia = (float) $diferenciaTexto;
 $year = $data['year'] ?? '';
 $mes = $data['mes'] ?? '';
+
+if (!$idMes || !$fecha || !$monedero || $diferenciaTexto === '' || !is_numeric($diferenciaTexto) || !is_dir($uploadDir)) {
+    return false;
+}
+
+if (!empty(self::getPermisos()['multiestacion'])) {
+    foreach (['PDF_file', 'XML_file'] as $campo) {
+        if (empty($files[$campo]['name']) || ($files[$campo]['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            return false;
+        }
+    }
+}
 
 $documentoPDF = '';
 $documentoXML = '';
 
 if (!empty($files['PDF_file']['name'])) {
-$pdfName = $aleatorio . '-' . $files['PDF_file']['name'];
-if (move_uploaded_file($files['PDF_file']['tmp_name'], $uploadDir . '/' . $pdfName)) {
+$pdfName = $aleatorio . '-' . basename($files['PDF_file']['name']);
+if (($files['PDF_file']['error'] ?? UPLOAD_ERR_OK) === UPLOAD_ERR_OK && move_uploaded_file($files['PDF_file']['tmp_name'], $uploadDir . '/' . $pdfName)) {
 $documentoPDF = $pdfName;
+} else {
+    return false;
 }
 }
 
 if (!empty($files['XML_file']['name'])) {
-$xmlName = $aleatorio . '-' . $files['XML_file']['name'];
-if (move_uploaded_file($files['XML_file']['tmp_name'], $uploadDir . '/' . $xmlName)) {
+$xmlName = $aleatorio . '-' . basename($files['XML_file']['name']);
+if (($files['XML_file']['error'] ?? UPLOAD_ERR_OK) === UPLOAD_ERR_OK && move_uploaded_file($files['XML_file']['tmp_name'], $uploadDir . '/' . $xmlName)) {
 $documentoXML = $xmlName;
+} else {
+    if ($documentoPDF !== '') @unlink($uploadDir . DIRECTORY_SEPARATOR . $documentoPDF);
+    return false;
 }
 }
 
@@ -422,10 +473,14 @@ if (!$doc) return false;
 
 $aleatorio = uniqid();
 
+if (isset($data['fecha']) && trim((string) $data['fecha']) === '') return false;
+if (isset($data['monedero']) && trim((string) $data['monedero']) === '') return false;
+if (isset($data['diferencia']) && (trim((string) $data['diferencia']) === '' || !is_numeric(str_replace(',', '', (string) $data['diferencia'])))) return false;
+
 $updateData = [
 'fecha' => $data['fecha'] ?? $doc->fecha,
 'monedero' => $data['monedero'] ?? $doc->monedero,
-'diferencia' => (float) ($data['diferencia'] ?? $doc->diferencia),
+'diferencia' => (float) str_replace(',', '', (string) ($data['diferencia'] ?? $doc->diferencia)),
 ];
 
 if (!empty($files['PDF_file']['name'])) {
@@ -476,17 +531,29 @@ $aleatorio = uniqid();
 $documentoPDF = '';
 $documentoXML = '';
 
+if ($idDocumento < 1 || trim($complemento) === '' || !is_dir($uploadDir) || !is_writable($uploadDir)) {
+    return false;
+}
+if (empty($files['PDF_file']['name']) && empty($files['XML_file']['name'])) {
+    return false;
+}
+
 if (!empty($files['PDF_file']['name'])) {
-$pdfName = $aleatorio . '-' . $files['PDF_file']['name'];
-if (move_uploaded_file($files['PDF_file']['tmp_name'], $uploadDir . '/' . $pdfName)) {
+$pdfName = $aleatorio . '-' . basename($files['PDF_file']['name']);
+if (($files['PDF_file']['error'] ?? UPLOAD_ERR_OK) === UPLOAD_ERR_OK && move_uploaded_file($files['PDF_file']['tmp_name'], $uploadDir . '/' . $pdfName)) {
 $documentoPDF = $pdfName;
+} else {
+    return false;
 }
 }
 
 if (!empty($files['XML_file']['name'])) {
-$xmlName = $aleatorio . '-' . $files['XML_file']['name'];
-if (move_uploaded_file($files['XML_file']['tmp_name'], $uploadDir . '/' . $xmlName)) {
+$xmlName = $aleatorio . '-' . basename($files['XML_file']['name']);
+if (($files['XML_file']['error'] ?? UPLOAD_ERR_OK) === UPLOAD_ERR_OK && move_uploaded_file($files['XML_file']['tmp_name'], $uploadDir . '/' . $xmlName)) {
 $documentoXML = $xmlName;
+} else {
+    if ($documentoPDF !== '') @unlink($uploadDir . DIRECTORY_SEPARATOR . $documentoPDF);
+    return false;
 }
 }
 
@@ -509,11 +576,15 @@ public static function createListaDocumento(int $idMonedero, string $descripcion
 {
 $documento = '';
 
+if ($idMonedero < 1 || trim($descripcion) === '' || !is_dir($uploadDir) || !is_writable($uploadDir)) {
+    return false;
+}
+
 if (!empty($files['ArchivoPDF_file']['name'])) {
 $file = $files['ArchivoPDF_file'];
 $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-if (!in_array($ext, ['pdf', 'xlsx'])) {
+if (!in_array($ext, ['pdf', 'xlsx'], true) || ($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
 return false;
 }
 

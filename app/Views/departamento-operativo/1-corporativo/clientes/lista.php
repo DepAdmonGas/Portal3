@@ -82,13 +82,13 @@ Nuevo Cliente</h5>
 </div>
 <div class="modal-body">
 <h6 class="form-label">* Cuenta:</h6> 
-<textarea class="form-control rounded-0 mt-1 mb-4" id="Cuenta" x-model="formCuenta"></textarea>
+<textarea class="form-control rounded-0 mt-1 mb-3" id="Cuenta" x-model="formCuenta" :class="validationErrors.cuenta ? 'is-invalid' : ''" @input="validationErrors.cuenta = ''" :aria-invalid="validationErrors.cuenta ? 'true' : 'false'"></textarea>
 
 <h6 class="form-label">* Cliente:</h6> 
-<textarea class="form-control rounded-0 mt-1 mb-4" id="Cliente" x-model="formCliente"></textarea>
+<textarea class="form-control rounded-0 mt-1 mb-3" id="Cliente" x-model="formCliente" :class="validationErrors.cliente ? 'is-invalid' : ''" @input="validationErrors.cliente = ''" :aria-invalid="validationErrors.cliente ? 'true' : 'false'"></textarea>
 
 <h6 class="form-label">* Tipo:</h6> 
-<select class="form-select rounded-0 mt-1 mb-3" id="Tipo" x-model="formTipo">
+<select class="form-select rounded-0 mt-1 mb-3" id="Tipo" x-model="formTipo" :class="validationErrors.tipo ? 'is-invalid' : ''" @change="validationErrors.tipo = ''" :aria-invalid="validationErrors.tipo ? 'true' : 'false'">
 <option value="">Selecciona una opción...</option>
 <option value="Crédito">Crédito</option>
 <option value="Débito">Débito</option>
@@ -97,7 +97,7 @@ Nuevo Cliente</h5>
 <div id="SelCredito" x-cloak x-show="formTipo === 'Crédito' ">
 
 <h6 class="mb-1 form-label">RFC:</h6> 
-<input type="text" class="form-control rounded-0  mb-2" id="RFC" x-model="formRfc">
+<input type="text" class="form-control rounded-0 mb-3" id="RFC" x-model="formRfc">
 <input type="file" class="form-control mb-3" id="ConstanciaRFC" @change="files[4] = $event.target.files[0] || null">
 
 <h6 class="mb-1 form-label">Carta de crédito:</h6> 

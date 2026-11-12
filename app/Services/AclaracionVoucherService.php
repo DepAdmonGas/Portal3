@@ -172,6 +172,8 @@ $data[] = [
 'numero_aclaracion' => $r->numero_aclaracion ?? '',
 'doc_ticket' => $r->doc_ticket,
 'doc_voucher' => $r->doc_voucher,
+'doc_ticket_disponible' => self::archivoDisponible($r->doc_ticket),
+'doc_voucher_disponible' => self::archivoDisponible($r->doc_voucher),
 'pagado' => (int)($r->pagado ?? 0),
 'estado' => (int)($r->estado ?? 0),
 'total_comentarios' => $commentCount,
@@ -182,25 +184,8 @@ return $data;
 
 public static function add(array $input): int
 {
-$aleatorio = uniqid();
-$docTicket = '';
-$docVoucher = '';
-
-if (!empty($input['ticket_file']) && isset($input['ticket_file']['tmp_name']) && $input['ticket_file']['error'] === 0) {
-$ext = pathinfo($input['ticket_file']['name'], PATHINFO_EXTENSION);
-$docTicket = $aleatorio . '-ticket.' . $ext;
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aclaracion-voucher/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
-move_uploaded_file($input['ticket_file']['tmp_name'], $uploadDir . $docTicket);
-}
-
-if (!empty($input['voucher_file']) && isset($input['voucher_file']['tmp_name']) && $input['voucher_file']['error'] === 0) {
-$ext = pathinfo($input['voucher_file']['name'], PATHINFO_EXTENSION);
-$docVoucher = $aleatorio . '-voucher.' . $ext;
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aclaracion-voucher/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
-move_uploaded_file($input['voucher_file']['tmp_name'], $uploadDir . $docVoucher);
-}
+$docTicket = self::guardarArchivo($input['ticket_file'] ?? null, 'ticket');
+$docVoucher = self::guardarArchivo($input['voucher_file'] ?? null, 'voucher');
 
 $record = AclaracionVoucher::create([
 'id_estacion' => $input['id_estacion'],
@@ -227,25 +212,13 @@ public static function update(int $id, array $input): bool
 $record = AclaracionVoucher::find($id);
 if (!$record) return false;
 
-$aleatorio = uniqid();
 $docTicket = $record->doc_ticket;
 $docVoucher = $record->doc_voucher;
 
-if (!empty($input['ticket_file']) && isset($input['ticket_file']['tmp_name']) && $input['ticket_file']['error'] === 0) {
-$ext = pathinfo($input['ticket_file']['name'], PATHINFO_EXTENSION);
-$docTicket = $aleatorio . '-ticket.' . $ext;
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aclaracion-voucher/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
-move_uploaded_file($input['ticket_file']['tmp_name'], $uploadDir . $docTicket);
-}
-
-if (!empty($input['voucher_file']) && isset($input['voucher_file']['tmp_name']) && $input['voucher_file']['error'] === 0) {
-$ext = pathinfo($input['voucher_file']['name'], PATHINFO_EXTENSION);
-$docVoucher = $aleatorio . '-voucher.' . $ext;
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aclaracion-voucher/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
-move_uploaded_file($input['voucher_file']['tmp_name'], $uploadDir . $docVoucher);
-}
+$ticketNuevo = self::guardarArchivo($input['ticket_file'] ?? null, 'ticket');
+$voucherNuevo = self::guardarArchivo($input['voucher_file'] ?? null, 'voucher');
+if ($ticketNuevo !== null) $docTicket = $ticketNuevo;
+if ($voucherNuevo !== null) $docVoucher = $voucherNuevo;
 
 $record->update([
 'nombre_ticket' => $input['nombre_ticket'],
@@ -302,10 +275,11 @@ foreach ($records as $r) {
 $user = Usuario::find($r->id_usuario);
 $data[] = [
 'id' => $r->id,
+'id_usuario' => (int)$r->id_usuario,
 'usuario_nombre' => $user ? $user->nombre : 'Desconocido',
 'comentario' => $r->comentario,
 'fecha_hora' => $r->fecha_hora ? formatearFecha($r->fecha_hora->format('Y-m-d H:i:s')) . ', ' . $r->fecha_hora->format('g:i a') : '-',
-'esPropio' => $r->id_usuario === $idUsuarioActual,
+'esPropio' => (int)$r->id_usuario === $idUsuarioActual,
 ];
 }
 return $data;
@@ -347,6 +321,7 @@ $data[] = [
 'id' => $r->id,
 'descripcion' => $r->descripcion ?? '-',
 'documento' => $r->documento,
+'archivo_disponible' => self::archivoDisponible($r->documento),
 'fecha_creacion' => $r->fecha_creacion ? formatearFecha($r->fecha_creacion->format('Y-m-d H:i:s')) . ', ' . $r->fecha_creacion->format('g:i a') : '-',
 'usuario_nombre' => $user ? $user->nombre : 'Desconocido',
 ];
@@ -356,13 +331,8 @@ return $data;
 
 public static function addAnexo(int $idSolicitud, string $descripcion, array $file, int $idUsuario): bool
 {
-$aleatorio = uniqid();
-$ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-$docName = $aleatorio . '-anexo.' . $ext;
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aclaracion-voucher/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
-
-if (!move_uploaded_file($file['tmp_name'], $uploadDir . $docName)) return false;
+$docName = self::guardarArchivo($file, 'anexo');
+if ($docName === null) return false;
 
 VoucherDocumentos::create([
 'id_reporte' => $idSolicitud,
@@ -371,6 +341,42 @@ VoucherDocumentos::create([
 'documento' => $docName,
 ]);
 return true;
+}
+
+private static function directorioArchivos(): string
+{
+return dirname(__DIR__, 2) . '/public/uploads/archivos/aclaracion-baucher/';
+}
+
+private static function archivoDisponible(?string $nombre): bool
+{
+if (!$nombre || basename($nombre) !== $nombre) return false;
+return is_file(self::directorioArchivos() . $nombre);
+}
+
+/** Guarda un archivo opcional. null significa que el usuario no adjuntó archivo. */
+private static function guardarArchivo(?array $archivo, string $sufijo): ?string
+{
+if (!$archivo || (int)($archivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return null;
+if ((int)($archivo['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK || empty($archivo['tmp_name'])) {
+throw new \RuntimeException('No se pudo recibir el archivo adjunto.');
+}
+
+$extension = strtolower(pathinfo((string)($archivo['name'] ?? ''), PATHINFO_EXTENSION));
+if ($extension === '' || !preg_match('/^[a-z0-9]{1,10}$/', $extension)) {
+throw new \RuntimeException('El archivo adjunto no tiene una extensión válida.');
+}
+
+$directorio = self::directorioArchivos();
+if (!is_dir($directorio) && !mkdir($directorio, 0775, true) && !is_dir($directorio)) {
+throw new \RuntimeException('No se pudo preparar el almacenamiento de archivos.');
+}
+
+$nombre = uniqid('', true) . '-' . $sufijo . '.' . $extension;
+if (!move_uploaded_file($archivo['tmp_name'], $directorio . $nombre)) {
+throw new \RuntimeException('No se pudo guardar el archivo adjunto.');
+}
+return $nombre;
 }
 
 public static function deleteAnexo(int $id): ?array

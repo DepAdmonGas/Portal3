@@ -29,6 +29,8 @@ productos: [],
 prodCols: [],
 subHeaders: [],
 totalRows: [],
+updateStates: {},
+updateStateTimers: {},
 idYear: 0,
 idMes: 0,
 
@@ -115,6 +117,10 @@ formatValue(pc, val) {
 return pc.tipo === 'l' ? this.formatNumber(val) : this.formatMoney(val);
 },
 
+updateKey(dia, columna) {
+return dia.id_dia + ':' + columna;
+},
+
 esNegativo(val) {
 return parseFloat(val || 0) < 0 ? 'text-danger fw-bold' : '';
 },
@@ -132,12 +138,26 @@ if (!key) return;
 dia.despacho[key] = v;
 el.value = this.formatInput(v);
 this.recalcular(dia);
+var updateKey = this.updateKey(dia, columna);
+this.updateStates[updateKey] = 'saving';
+clearTimeout(this.updateStateTimers[updateKey]);
 fetch('/departamento-operativo/despacho-ventas/update-cell', {
 method: 'POST',
-headers: { 'Content-Type': 'application/json' },
+headers: {
+'Content-Type': 'application/json',
+'X-Portal3-Skip-Action-Loader': '1'
+},
 body: JSON.stringify({ id_dia: dia.id_dia, valor: v, despacho: columna })
-}).then(function (r) { return r.json(); }).then(function (data) {
-if (!data.success) console.error('Error al guardar');
+}).then(r => {
+if (!r.ok) throw new Error('No se pudo guardar');
+return r.json();
+}).then(data => {
+if (!data.success) throw new Error('No se pudo guardar');
+this.updateStates[updateKey] = 'saved';
+this.updateStateTimers[updateKey] = setTimeout(() => { delete this.updateStates[updateKey]; }, 1800);
+}).catch(() => {
+this.updateStates[updateKey] = 'error';
+this.updateStateTimers[updateKey] = setTimeout(() => { delete this.updateStates[updateKey]; }, 3000);
 });
 },
 

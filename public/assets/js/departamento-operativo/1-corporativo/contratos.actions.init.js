@@ -86,9 +86,12 @@ var html = '<div x-data="{}">'
 + '<div class="dropdown-menu pointer">'
 + '<a class="dropdown-item" @click="$dispatch(\'contrato:detalle\', { id: ' + d.id + ' })">'
 + '<i class="ti ti-eye me-1"></i> Detalle</a>';
-if (archivo) {
-html += '<a class="dropdown-item pointer" @click="$dispatch(\'contrato:descargar\', { tipo: \'contratos\', archivo: \'' + escStr(archivo) + '\' })">'
+if (d.archivo_disponible && archivo) {
+html += '<a class="dropdown-item pointer" @click="$dispatch(\'contrato:descargar\', { tipo: \'' + escStr(d.tipo_descarga || 'contratos') + '\', archivo: \'' + escStr(archivo) + '\' })">'
 + '<i class="ti ti-download me-1"></i> Descargar</a>';
+} else {
+html += '<span class="dropdown-item" aria-disabled="true">'
++ '<i class="ti ti-file-off me-1"></i> Archivo no disponible</span>';
 }
 if (puedeEditar) {
 html += '<a class="dropdown-item pointer" @click="$dispatch(\'contrato:editar\', { id: ' + d.id + ' })">'
@@ -205,6 +208,7 @@ categoria: '',
 contexto: '',
 puedeEditar: false,
 puedeEliminar: false,
+errors: { fecha: false, descripcion: false, archivo: false },
 
 init: function () {
 this.categoria = this.$el.dataset.categoria || 'Corporativo';
@@ -217,12 +221,16 @@ self.modo = 'agregar';
 self.modalTitle = 'Agregar contrato';
 self.editId = 0;
 self.form = { fecha: '', descripcion: '', objeto: '', proveedor: '', vencimiento: '', firmas: '', comentario: '' };
+self.errors = { fecha: false, descripcion: false, archivo: false };
+self.$nextTick(function () { if (self.$refs.archivoInput) self.$refs.archivoInput.value = ''; });
 }
 });
 this.$el.addEventListener('hidden.bs.modal', function () {
 self.modo = 'detalle';
 self.editId = 0;
 self.detalle = {};
+self.errors = { fecha: false, descripcion: false, archivo: false };
+self.$nextTick(function () { if (self.$refs.archivoInput) self.$refs.archivoInput.value = ''; });
 });
 },
 
@@ -250,6 +258,8 @@ this.modo = 'agregar';
 this.modalTitle = 'Agregar contrato';
 this.editId = 0;
 this.form = { fecha: '', descripcion: '', objeto: '', proveedor: '', vencimiento: '', firmas: '', comentario: '' };
+this.detalle = {};
+this.errors = { fecha: false, descripcion: false, archivo: false };
 var modal = new bootstrap.Modal(document.getElementById('modal-contrato'));
 modal.show();
 },
@@ -266,6 +276,8 @@ params: { id: id }
 }).then(function (res) {
 if (res.data.success) {
 var d = res.data.data;
+self.detalle = d;
+self.errors = { fecha: false, descripcion: false, archivo: false };
 self.form = {
 fecha: d.fecha || '',
 descripcion: d.descripcion === 'S/I' ? '' : d.descripcion,
@@ -287,8 +299,14 @@ if (modal) modal.hide();
 },
 
 guardarContrato: function () {
-if (!this.form.fecha || !this.form.descripcion) {
-this.notify('error', 'Fecha y descripción son requeridos');
+this.errors = {
+fecha: !String(this.form.fecha || '').trim(),
+descripcion: !String(this.form.descripcion || '').trim(),
+archivo: (this.modo === 'agregar' || !this.detalle.archivo_disponible)
+&& !(this.$refs.archivoInput && this.$refs.archivoInput.files && this.$refs.archivoInput.files[0]),
+};
+if (this.errors.fecha || this.errors.descripcion || this.errors.archivo) {
+this.notify('error', 'Completa los campos obligatorios.');
 return;
 }
 if (this.loading) return;
@@ -329,8 +347,8 @@ $('#tabla-contratos').DataTable().ajax.reload(null, false);
 } else {
 self.notify('error', res.data.message || 'Error al guardar');
 }
-}).catch(function () {
-self.notify('error', 'Error de conexión');
+}).catch(function (error) {
+self.notify('error', error.response?.data?.message || 'Error de conexión');
 }).then(function () {
 self.loading = false;
 });

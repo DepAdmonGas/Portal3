@@ -165,6 +165,47 @@ this.estado = r.data.estado;
 }).catch(() => {});
 },
 
+verDocumento(documento) {
+if (!documento) return;
+const params = new URLSearchParams({ tipo: 'documentos-ventas', file: documento, view: '1' });
+window.open(`/download?${params.toString()}`, '_blank', 'noopener,noreferrer');
+},
+
+formatInputNumber(value) {
+if (value === null || value === undefined || value === '') return '';
+const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatNumericInput(event, row, field) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const allowDecimals = field !== 'cantidad';
+const numericPattern = allowDecimals ? /[^0-9.]/g : /[^0-9]/g;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(numericPattern, '').length;
+const normalized = raw.replace(/,/g, '').replace(numericPattern, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const formatted = normalized.includes('.') ? grouped + '.' + decimals : grouped;
+
+row[field] = normalized;
+input.value = formatted;
+
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
+},
 
 
 calcTotalLitros(v) {

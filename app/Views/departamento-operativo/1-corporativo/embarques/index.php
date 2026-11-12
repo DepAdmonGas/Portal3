@@ -35,7 +35,7 @@ x-data="{ ...actions(), ...embarquesComponent() }">
 <?php if ($puedeAgregar): ?>
 <li>
 <a class="dropdown-item pointer" @click.prevent="abrirModalAgregar()">
-<i class="ti ti-plus me-2"></i> Agregar
+<i class="ti ti-plus me-2"></i> Nuevo
 </a>
 </li>
 <?php endif; ?>
@@ -66,6 +66,11 @@ x-data="{ ...actions(), ...embarquesComponent() }">
 <div class="modal fade" id="modalEmbarque" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalEmbarque">
 <div class="modal-dialog modal-xl">
 <div class="modal-content">
+<style>
+#modalEmbarque .select2-modal-field.is-invalid .select2-selection {
+border-color: var(--bs-form-invalid-border-color, #dc3545) !important;
+}
+</style>
 <div class="modal-header bg-primary">
     <h4 class="mb-0 modal-title text-white">
 <i class="ti" :class="editando ? 'ti-edit' : 'ti-truck'"></i>
@@ -100,12 +105,12 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 
 <div class="col-md-4 mb-3">
 <label class="form-label">* Fecha:</label>
-<input type="date" class="form-control" x-model="form.fecha">
+<input type="date" class="form-control" x-model="form.fecha" @input="limpiarError('fecha')" :class="errores.fecha ? 'is-invalid' : ''">
 </div>
 
 <div class="col-md-4 mb-3">
 <label class="form-label">* Embarque:</label>
-<select class="form-select" x-model="form.embarque" @change="onEmbarqueChange()">
+<select class="form-select" x-model="form.embarque" @change="onEmbarqueChange(); limpiarError('embarque')" :class="errores.embarque ? 'is-invalid' : ''">
 <option value="">Selecciona una opción...</option>
 <option value="Pemex">Pemex</option>
 <option value="Delivery">Delivery</option>
@@ -115,7 +120,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 
 <div class="col-md-4 mb-3">
 <label class="form-label">* Producto:</label>
-<select class="form-select" x-model="form.producto">
+<select class="form-select" x-model="form.producto" @change="limpiarError('producto')" :class="errores.producto ? 'is-invalid' : ''">
 <option value="">Selecciona una opción...</option>
 <option value="G SUPER">G SUPER</option>
 <option value="G PREMIUM">G PREMIUM</option>
@@ -125,7 +130,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 
 <div class="col-md-6 mb-3">
 <label class="form-label">* Documento:</label>
-<input type="file" class="form-control" x-ref="documento">
+<input type="file" class="form-control" x-ref="documento" @change="limpiarError('documento')" :class="errores.documento ? 'is-invalid' : ''">
 </div>
 
 <div class="col-md-6 mb-3">
@@ -135,12 +140,12 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 
 <div class="col-md-4 mb-3">
 <label class="form-label">Litros Factura:</label>
-<input type="number" step="any" class="form-control" x-model="form.importef">
+<input type="text" inputmode="decimal" class="form-control" x-model="form.importef" @input="formatearCantidad($event, 'importef')">
 </div>
 
 <div class="col-md-4 mb-3">
 <label class="form-label">Precio por Litro:</label>
-<input type="number" step="any" class="form-control" x-model="form.precio_litro">
+<input type="text" inputmode="decimal" class="form-control" x-model="form.precio_litro" @input="formatearCantidad($event, 'precio_litro')">
 </div>
 
 <div class="col-md-4 mb-3">
@@ -201,7 +206,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 <div class="row">
 <div class="col-md-6 mb-3">
 <label class="form-label mb-1">* Chofer:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="choferWrapper">
+<div class="select2-modal-field is-select2-pending" :class="errores.chofer ? 'is-invalid' : ''" x-ref="choferWrapper">
 <select class="form-select" x-ref="choferSelect" data-width="100%">
 <option value="">Selecciona una opción...</option>
 </select>
@@ -210,7 +215,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 
 <div class="col-md-6 mb-0 mb-md-3">
 <label class="form-label mb-1">* Unidad:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="unidadWrapper">
+<div class="select2-modal-field is-select2-pending" :class="errores.unidad ? 'is-invalid' : ''" x-ref="unidadWrapper">
 <select class="form-select" x-ref="unidadSelect" data-width="100%">
 <option value="">Selecciona una opción...</option>
 </select>
@@ -223,7 +228,7 @@ ANEXO IV: Expediente de Transporte para la Reclamación de Producto
 <div class="row g-2">
 <div class="col-md-6 mb-3">
 <label class="form-label">Merma:</label>
-<input type="number" step="any" class="form-control" x-model="form.merma">
+<input type="text" inputmode="decimal" class="form-control" x-model="form.merma" @input="formatearCantidad($event, 'merma')">
 </div>
 <div class="col-md-6 mb-3">
 <label class="form-label">Nombre del transporte:</label>
@@ -310,7 +315,7 @@ data-bs-dismiss="offcanvas"></button>
         <div class="col-4">
             <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
                 <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
-                    <i class="ti ti-hash fs-5"></i>
+                    <i class="ti ti-hash fs-6"></i>
                 </span>
                 <div class="flex-grow-1 overflow-hidden">
                     <div class="form-label small mb-0">#:</div>
@@ -321,7 +326,7 @@ data-bs-dismiss="offcanvas"></button>
         <div class="col-8">
             <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
                 <span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px;">
-                    <i class="ti ti-calendar-event fs-5"></i>
+                    <i class="ti ti-calendar-event fs-6"></i>
                 </span>
                 <div class="flex-grow-1">
                     <div class="form-label small mb-0">Fecha:</div>
@@ -332,7 +337,7 @@ data-bs-dismiss="offcanvas"></button>
         <div class="col-6">
             <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
                 <span class="d-inline-flex align-items-center justify-content-center rounded bg-info-subtle text-info flex-shrink-0" style="width:34px;height:34px;">
-                    <i class="ti ti-truck-delivery fs-5"></i>
+                    <i class="ti ti-truck-delivery fs-6"></i>
                 </span>
                 <div class="flex-grow-1 overflow-hidden">
                     <div class="form-label small mb-0">Embarque:</div>
@@ -343,7 +348,7 @@ data-bs-dismiss="offcanvas"></button>
         <div class="col-6">
             <div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100">
                 <span class="d-inline-flex align-items-center justify-content-center rounded bg-success-subtle text-success flex-shrink-0" style="width:34px;height:34px;">
-                    <i class="ti ti-gas-station fs-5"></i>
+                    <i class="ti ti-gas-station fs-6"></i>
                 </span>
                 <div class="flex-grow-1 overflow-hidden">
                     <div class="form-label small mb-0">Producto:</div>
@@ -368,7 +373,7 @@ x-ref="chatContainer">
 <div class="d-flex flex-column align-items-center justify-content-center text-center"
 style="min-height: 380px;">
 <i class="ti ti-message-off text-muted mb-2"></i>
-<p class="text-muted mb-0 fs-5">Sin comentarios</p>
+<p class="text-muted mb-0 fs-6">Sin comentarios</p>
 </div>
 </template>
 
@@ -456,7 +461,7 @@ type="button"
 :disabled="guardandoComentario || !nuevoComentario.trim()">
 
 <template x-if="!guardandoComentario">
-<i class="ti ti-send fs-5"></i>
+<i class="ti ti-send fs-6"></i>
 </template>
 
 <template x-if="guardandoComentario">

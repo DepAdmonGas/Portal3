@@ -33,7 +33,9 @@ formData.append('fecha', fecha);
 formData.append('factura', factura);
 formData.append('valor', valor);
 
-axios.post('/departamento-operativo/analisis-compra/status', formData)
+axios.post('/departamento-operativo/analisis-compra/status', formData, {
+headers: { 'X-Portal3-Skip-Action-Loader': '1' }
+})
 .then(response => {
 if (response.data.success) {
 event.target.classList.add('is-valid');

@@ -7,8 +7,6 @@ use App\Models\Operativo\VentasDia;
 use App\Models\Operativo\AceiteLubricante;
 use App\Models\Operativo\CorteMes;
 use App\Models\Operativo\CorteYear;
-use App\Models\Operativo\TarjetasCB;
-use App\Models\Operativo\ClientesControlgas;
 
 class ResumenImpuestosService
 {
@@ -131,51 +129,8 @@ $totalDiaISI = $totalISI + $aceitesSinIva;
 $totalDiaIVA = $totalIV2 + $aceitesIva;
 $totalDia = $totalNeto + $totalAceites;
 
-$bancomer = 0;
-$amex = 0;
-$inburgas = 0;
-$ticketcard = 0;
-$g500fleet = 0;
-$efecticard = 0;
-$sodexo = 0;
-$pagoCredito = 0;
-$consumoCredito = 0;
-$pagoDebito = 0;
-$consumoDebito = 0;
-
-foreach ($idsDia as $idDia) {
-$getBaucher = function ($concepto) use ($idDia) {
-$row = TarjetasCB::where('idreporte_dia', $idDia)
-->where('concepto', $concepto)
-->first();
-return $row ? (float) $row->baucher : 0;
-};
-
-$bancomer += $getBaucher("BBVA BANCOMER SA");
-$amex += $getBaucher("AMERICAN EXPRESS");
-$inburgas += $getBaucher("INBURGAS");
-$ticketcard += $getBaucher("TICKETCARD");
-$g500fleet += $getBaucher("G500 FLETT");
-$efecticard += $getBaucher("EFECTICARD");
-$sodexo += $getBaucher("SODEXO");
-
-$credito = ClientesControlgas::where('idreporte_dia', $idDia)
-->where('concepto', "CRÉDITO (ANEXO)")
-->first();
-$debito = ClientesControlgas::where('idreporte_dia', $idDia)
-->where('concepto', "DEBITO (ANEXO)")
-->first();
-
-$pagoCredito += $credito ? (float) $credito->pago : 0;
-$consumoCredito += $credito ? (float) $credito->consumo : 0;
-$pagoDebito += $debito ? (float) $debito->pago : 0;
-$consumoDebito += $debito ? (float) $debito->consumo : 0;
-}
-
-$totalTB = $bancomer + $amex + $inburgas;
-$totalOtros = $ticketcard + $g500fleet + $efecticard + $sodexo;
-$totalPago = $pagoCredito + $pagoDebito;
-$totalConsumo = $consumoCredito + $consumoDebito;
+$monederoData = ResumenMonederoService::getData($idMesDb);
+$monederoTotales = $monederoData['totales'] ?? [];
 
 return [
 'items' => $items,
@@ -196,21 +151,25 @@ return [
 'total' => $totalDia,
 ],
 'monederos' => [
-'bancomer' => $bancomer,
-'amex' => $amex,
-'inburgas' => $inburgas,
-'total_tb' => $totalTB,
-'ticketcard' => $ticketcard,
-'g500fleet' => $g500fleet,
-'efecticard' => $efecticard,
-'sodexo' => $sodexo,
-'total_otros' => $totalOtros,
-'pago_credito' => $pagoCredito,
-'consumo_credito' => $consumoCredito,
-'pago_debito' => $pagoDebito,
-'consumo_debito' => $consumoDebito,
-'total_pago' => $totalPago,
-'total_consumo' => $totalConsumo,
+'bancomer' => (float) ($monederoTotales['bancomer'] ?? 0),
+'amex' => (float) ($monederoTotales['amex'] ?? 0),
+'inburgas' => (float) ($monederoTotales['inburgas'] ?? 0),
+'inbursa' => (float) ($monederoTotales['inbursa'] ?? 0),
+'total_tb' => (float) ($monederoTotales['total_tb'] ?? 0),
+'ticketcard' => (float) ($monederoTotales['ticketcard'] ?? 0),
+'g500fleet' => (float) ($monederoTotales['g500fleet'] ?? 0),
+'efecticard' => (float) ($monederoTotales['efecticard'] ?? 0),
+'sodexo' => (float) ($monederoTotales['sodexo'] ?? 0),
+'ultragas' => (float) ($monederoTotales['ultragas'] ?? 0),
+'energex' => (float) ($monederoTotales['energex'] ?? 0),
+'shell' => (float) ($monederoTotales['shell'] ?? 0),
+'total_tarjetas' => (float) ($monederoTotales['total_tarjetas'] ?? 0),
+'pago_credito' => (float) ($monederoTotales['credito_pago'] ?? 0),
+'consumo_credito' => (float) ($monederoTotales['credito_consumo'] ?? 0),
+'pago_debito' => (float) ($monederoTotales['debito_pago'] ?? 0),
+'consumo_debito' => (float) ($monederoTotales['debito_consumo'] ?? 0),
+'total_pago' => (float) ($monederoTotales['total_pago'] ?? 0),
+'total_consumo' => (float) ($monederoTotales['total_consumo'] ?? 0),
 ],
 ];
 }

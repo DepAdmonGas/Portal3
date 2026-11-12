@@ -25,8 +25,8 @@ function cls(enabled) { return enabled ? '' : ' disabled'; }
 
 function renderEstado(row) {
 if (row.estado === 1) return '<span class="badge bg-success">Pagado (Finalizado)</span>';
-var tieneTicket = row.doc_ticket && row.doc_ticket !== '';
-var tieneVoucher = row.doc_voucher && row.doc_voucher !== '';
+var tieneTicket = row.doc_ticket_disponible === true;
+var tieneVoucher = row.doc_voucher_disponible === true;
 if (tieneTicket && tieneVoucher) {
 if (row.pagado == 1) return '<span class="badge bg-success">Pagado</span>';
 return '<span class="badge bg-warning text-dark">Falta realizar el pago</span>';
@@ -100,16 +100,16 @@ render: (v) => v || '' },
 { title: 'Hora', data: 'hora', className: 'align-middle text-center text-nowrap' },
 { title: 'Valera', data: 'valera', className: 'align-middle text-center text-nowrap' },
 { title: 'Importe', data: 'importe', className: 'align-middle text-end text-nowrap',
-render: (v) => '$ ' + parseFloat(v || 0).toFixed(2) },
+render: (v) => '$ ' + Number(v || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
 { title: 'No. Aclaración', data: 'numero_aclaracion', className: 'align-middle text-center text-nowrap' },
 { title: 'Ticket Doc', data: 'doc_ticket', className: 'align-middle text-center text-nowrap', orderable: false, searchable: false,
-render: (v) => v
-? '<i class="ti ti-download pointer text-primary fs-5 btn-av-download" data-tipo="aclaracion-voucher" data-file="' + encodeURIComponent(v) + '"></i>'
-: '<span class="text-muted"><i class="ti ti-file-off fs-5"></i></span>' },
+render: (v, t, row) => row.doc_ticket_disponible
+? '<i class="ti ti-download pointer text-primary fs-6 btn-av-download" data-tipo="aclaracion-voucher" data-file="' + encodeURIComponent(v) + '"></i>'
+: '<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>' },
 { title: 'Voucher Doc', data: 'doc_voucher', className: 'align-middle text-center text-nowrap', orderable: false, searchable: false,
-render: (v) => v
-? '<i class="ti ti-download pointer text-primary fs-5 btn-av-download" data-tipo="aclaracion-voucher" data-file="' + encodeURIComponent(v) + '"></i>'
-: '<span class="text-muted"><i class="ti ti-file-off fs-5"></i></span>' },
+render: (v, t, row) => row.doc_voucher_disponible
+? '<i class="ti ti-download pointer text-primary fs-6 btn-av-download" data-tipo="aclaracion-voucher" data-file="' + encodeURIComponent(v) + '"></i>'
+: '<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>' },
 { title: 'Estado', data: null, className: 'align-middle text-center text-nowrap', orderable: false, searchable: false,
 render: (v, t, row) => renderEstado(row) },
 { title: '<i class="ti ti-message fs-7"></i>', data: null, className: 'align-middle text-center text-nowrap', orderable: false, searchable: false,

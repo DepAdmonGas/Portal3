@@ -70,15 +70,16 @@ public function updateCell()
 header('Content-Type: application/json; charset=utf-8');
 
 $input = json_decode(file_get_contents('php://input'), true);
+$input = is_array($input) ? $input : [];
 $id = (int) ($input['id'] ?? 0);
-$valor = (float) ($input['valor'] ?? 0);
 $mes = (int) ($input['mes'] ?? 0);
 
-if (!$id || !$mes) {
+if ($id <= 0 || $mes < 1 || $mes > 12 || !isset($input['valor']) || !is_numeric($input['valor'])) {
 echo json_encode(['success' => false]);
 exit;
 }
 
+$valor = (float) $input['valor'];
 $success = IngresosFacturacionService::updateCell($id, $valor, $mes);
 echo json_encode(['success' => $success]);
 exit;
@@ -129,8 +130,8 @@ public function uploadFile()
 header('Content-Type: application/json; charset=utf-8');
 
 $idReporte = (int) ($_POST['id_reporte'] ?? 0);
-if (!$idReporte || empty($_FILES['archivo'])) {
-echo json_encode(['success' => false]);
+if (!$idReporte || empty($_FILES['archivo']) || ($_FILES['archivo']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 

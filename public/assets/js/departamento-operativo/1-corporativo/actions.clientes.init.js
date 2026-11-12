@@ -31,6 +31,7 @@ modalTipo: '',
 modalFormaPago: '',
 modalComprobante: null,
 guardando: false,
+validationErrors: { cliente: '', total: '', tipo: '', formaPago: '', comprobante: '' },
 
 listaLoading: false,
 listaClientes: [],
@@ -73,7 +74,11 @@ _initDataTable() {
 const self = this;
 
 if ($.fn.DataTable && $.fn.DataTable.isDataTable('#tablaClientes')) {
-$('#tablaClientes').DataTable().destroy();
+const existingTable = $('#tablaClientes').DataTable();
+existingTable.clear();
+existingTable.rows.add(this.rows);
+existingTable.draw(false);
+return;
 }
 
 const cols = [
@@ -104,8 +109,9 @@ data: 'comprobante',
 className: 'align-middle text-center',
 orderable: false,
 searchable: false,
-render: function (d) {
-return d ? '<div x-data="actions()"><a class="pointer" @click="download(\'comprobantes-clientes\', \'' + d + '\')"><i class="ti ti-file-text text-success fs-6"></i></a></div>' : '<span class="text-muted">N/A</span>';
+render: function (d, type, row) {
+if (!d || !row.comprobante_disponible) return '<i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>';
+return '<div x-data="actions()"><a class="pointer" @click="download(\'comprobantes-clientes\', \'' + d + '\')"><i class="ti ti-file-text text-success fs-6"></i></a></div>';
 }
 },
 {
@@ -140,7 +146,6 @@ stateSave: true,
 language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
 pageLength: 10,
 order: [[0, 'asc']],
-destroy: true,
 rowCallback: function (row, rowData) {
 $(row).addClass('pointer').toggleClass('selected', self.selectedClientId === rowData.id);
 },
@@ -180,6 +185,45 @@ console.error('Error cargando clientes:', e);
 if (this.loading) this.loading = false;
 },
 
+formatInputNumber(value) {
+if (value === null || value === undefined || value === '') return '';
+const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatNumericInput(event, row, field) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const formatted = normalized.includes('.') ? grouped + '.' + decimals : grouped;
+
+row[field] = normalized;
+input.value = formatted;
+
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
+},
+
+formatModalTotal(event) {
+this.formatNumericInput(event, this, 'modalTotal');
+if (parseFloat(this.modalTotal) > 0) this.validationErrors.total = '';
+},
+
 async cargarClientes() {
 try {
 const resp = await fetch('/departamento-operativo/clientes/lista');
@@ -208,14 +252,11 @@ this.listaLoading = false;
 },
 
 async abrirModalAgregar() {
-this.modalCliente = '';
-this.modalTotal = '';
-this.modalTipo = '';
-this.modalFormaPago = '';
-this.modalComprobante = null;
+this.modalTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+this.resetModalAgregar();
 await this.cargarClientes();
 const modalEl = document.getElementById('modalAgregar');
-const modal = new bootstrap.Modal(modalEl);
+const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 modal.show();
 this.$nextTick(() => {
 const $select = $('#selectCliente');
@@ -225,25 +266,77 @@ dropdownParent: $('#modalAgregar .modal-content'),
 width: '100%',
 placeholder: 'Selecciona un cliente...',
 });
-$select.off('change.select2modal').on('change.select2modal', (e) => {
-this.modalCliente = $(e.target).val() || '';
-});
 window.dispatchEvent(new Event('resize'));
 const wr = this.$refs.clienteWrapper;
 if (wr) wr.classList.remove('is-select2-pending');
 }
+$select.off('change.clientesModal').on('change.clientesModal', (e) => {
+this.modalCliente = String($(e.target).val() || '');
+if (this.modalCliente) this.validationErrors.cliente = '';
+});
+$select.val(this.modalCliente || '').trigger('change');
 });
 if (!modalEl._select2Cleanup) {
 modalEl._select2Cleanup = true;
+modalEl.addEventListener('hide.bs.modal', () => {
+if (modalEl.contains(document.activeElement)) document.activeElement.blur();
+});
 modalEl.addEventListener('hidden.bs.modal', () => {
 const $select = $('#selectCliente');
+$select.off('.clientesModal');
 if ($select.hasClass('select2-hidden-accessible')) {
 $select.select2('destroy');
 }
 const wr = this.$refs.clienteWrapper;
 if (wr) wr.classList.add('is-select2-pending');
+this.resetModalAgregar();
+if (this.modalTrigger?.isConnected) this.modalTrigger.focus();
 });
 }
+},
+
+resetModalAgregar() {
+this.modalCliente = '';
+this.modalTotal = '';
+this.modalTipo = '';
+this.modalFormaPago = '';
+this.modalComprobante = null;
+this.validationErrors = { cliente: '', total: '', tipo: '', formaPago: '', comprobante: '' };
+
+const select = this.$refs.selectCliente;
+if (select) select.value = '';
+if (this.$refs.totalInput) this.$refs.totalInput.value = '';
+if (this.$refs.comprobanteInput) this.$refs.comprobanteInput.value = '';
+},
+
+validarFormulario() {
+const select = this.$refs.selectCliente;
+const selectedClient = (select ? $(select).val() : '') || (select ? select.value : '') || this.modalCliente;
+this.modalCliente = String(selectedClient || '').trim();
+
+const total = String(this.modalTotal ?? '').replace(/,/g, '').trim();
+this.modalTotal = total;
+const amount = Number(total);
+
+const fileInput = this.$refs.comprobanteInput;
+this.modalComprobante = fileInput?.files?.[0] || this.modalComprobante || null;
+this.validationErrors = { cliente: '', total: '', tipo: '', formaPago: '', comprobante: '' };
+
+if (!this.modalCliente) this.validationErrors.cliente = 'Selecciona un cliente.';
+if (!Number.isFinite(amount) || amount <= 0) this.validationErrors.total = 'Ingresa un total mayor a cero.';
+if (!this.modalTipo) this.validationErrors.tipo = 'Selecciona Consumo o Pago.';
+if (this.modalTipo === 'Pago') {
+if (!this.modalFormaPago) this.validationErrors.formaPago = 'Selecciona una forma de pago.';
+if (['Tarjeta', 'Transferencia'].includes(this.modalFormaPago) && !this.modalComprobante) {
+this.validationErrors.comprobante = 'Adjunta el voucher.';
+}
+}
+
+const firstError = Object.values(this.validationErrors).find(Boolean);
+if (firstError) {
+return false;
+}
+return true;
 },
 
 async abrirListaClientes() {
@@ -264,83 +357,43 @@ window.location.href = '/departamento-operativo/clientes-lista';
 
 async guardar() {
 if (this.guardando) return;
-if (!this.modalCliente) {
-if (window.Notify) Notify.error('Selecciona un cliente');
-return;
-}
-if (!this.modalTotal || parseFloat(this.modalTotal) <= 0) {
-if (window.Notify) Notify.error('Ingresa un total válido');
-return;
-}
-if (!this.modalTipo) {
-if (window.Notify) Notify.error('Selecciona Consumo o Pago');
-return;
-}
-
 this.guardando = true;
+try {
+if (!this.validarFormulario()) return;
 
+const tipoGuardado = this.modalTipo;
+const fd = new FormData();
+fd.append('idReporte', this.idDia);
+fd.append('Cliente', this.modalCliente);
+fd.append('Total', this.modalTotal);
+fd.append('Tipo', this.modalTipo);
+let endpoint = '/departamento-operativo/clientes/agregar/consumo';
 if (this.modalTipo === 'Pago') {
-if (!this.modalFormaPago) {
-if (window.Notify) Notify.error('Selecciona una forma de pago');
-this.guardando = false;
+endpoint = '/departamento-operativo/clientes/agregar/pago';
+fd.append('FormaPago', this.modalFormaPago);
+if (this.modalComprobante) fd.append('Comprobante_file', this.modalComprobante);
+}
+
+const resp = await fetch(endpoint, {
+method: 'POST',
+body: fd,
+});
+const json = await resp.json();
+if (!json.success) {
+if (window.Notify) Notify.error(json.message || 'No se pudo agregar el registro.');
 return;
 }
-const fd = new FormData();
-fd.append('idReporte', this.idDia);
-fd.append('Cliente', this.modalCliente);
-fd.append('Total', this.modalTotal);
-fd.append('FormaPago', this.modalFormaPago);
-fd.append('Tipo', this.modalTipo);
-if (this.modalComprobante) {
-fd.append('Comprobante_file', this.modalComprobante);
-}
 
-try {
-const resp = await fetch('/departamento-operativo/clientes/agregar/pago', {
-method: 'POST',
-body: fd,
-});
-const json = await resp.json();
-if (json.success) {
-const m = bootstrap.Modal.getInstance(document.getElementById('modalAgregar'));
-if (m) m.hide();
+const modal = bootstrap.Modal.getInstance(document.getElementById('modalAgregar'));
+if (modal) modal.hide();
 await this.cargarDatos();
-if (window.Notify) Notify.success('Pago agregado correctamente');
-} else {
-if (window.Notify) Notify.error(json.message || 'Error al agregar el pago');
-}
+if (window.Notify) Notify.success(tipoGuardado === 'Pago' ? 'Pago agregado correctamente' : 'Consumo agregado correctamente');
 } catch (e) {
-console.error('Error:', e);
-if (window.Notify) Notify.error('Error al agregar el pago');
-}
-} else {
-const fd = new FormData();
-fd.append('idReporte', this.idDia);
-fd.append('Cliente', this.modalCliente);
-fd.append('Total', this.modalTotal);
-fd.append('Tipo', this.modalTipo);
-
-try {
-const resp = await fetch('/departamento-operativo/clientes/agregar/consumo', {
-method: 'POST',
-body: fd,
-});
-const json = await resp.json();
-if (json.success) {
-const m = bootstrap.Modal.getInstance(document.getElementById('modalAgregar'));
-if (m) m.hide();
-await this.cargarDatos();
-if (window.Notify) Notify.success('Consumo agregado correctamente');
-} else {
-if (window.Notify) Notify.error(json.message || 'Error al agregar el consumo');
-}
-} catch (e) {
-console.error('Error:', e);
-if (window.Notify) Notify.error('Error al agregar el consumo');
-}
-}
-
+console.error('Error al guardar cliente:', e);
+if (window.Notify) Notify.error(e.message || 'Error al guardar el registro.');
+} finally {
 this.guardando = false;
+}
 },
 
 

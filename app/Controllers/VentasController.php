@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\View;
 use App\Core\Breadcrumb;
+use App\Core\JsonResponse;
 use App\Core\Session;
 use App\Core\Auth;
 use App\Services\VentasService;
@@ -420,42 +421,29 @@ exit;
 
 public function uploadDocumento($idDia)
 {
-header('Content-Type: application/json; charset=utf-8');
 if (!ModuloDptoOperativoService::validaPermiso('corporativo', 'crear')) {
-echo json_encode(['success' => false, 'message' => 'Permiso denegado']);
-exit;
+JsonResponse::forbidden('Permiso denegado');
 }
-$idReporte = (int) $idDia;
-$nombreDocumento = $_POST['NombreDocumento'] ?? '';
-
-if (empty($nombreDocumento)) {
-echo json_encode(['success' => false, 'message' => 'Nombre de documento requerido']);
-exit;
+$idReporte = filter_var($idDia, FILTER_VALIDATE_INT);
+if (!$idReporte || $idReporte < 1) {
+JsonResponse::validation('El corte de ventas no es válido.');
 }
-
-if (!isset($_FILES['Documento_file']) || $_FILES['Documento_file']['error'] !== UPLOAD_ERR_OK) {
-echo json_encode(['success' => false, 'message' => 'Archivo requerido']);
-exit;
+if (!CorteDia::whereKey($idReporte)->exists()) {
+JsonResponse::notFound('No se encontró el corte de ventas solicitado.');
+}
+if (VentasService::getEstado($idReporte) !== 0) {
+JsonResponse::forbidden('No se pueden agregar documentos a un corte finalizado.');
 }
 
-$file = $_FILES['Documento_file'];
-$aleatorio = uniqid();
-$archivo = basename($file['name']);
-$pdfNombre = $aleatorio . '-' . $archivo;
-$uploadFolder = __DIR__ . '/../../public/uploads/archivos/' . $pdfNombre;
-
-$dir = dirname($uploadFolder);
-if (!is_dir($dir)) {
-mkdir($dir, 0755, true);
+$nombreDocumento = trim((string) ($_POST['NombreDocumento'] ?? ''));
+$resultado = VentasService::guardarDocumento($idReporte, $nombreDocumento, $_FILES['Documento_file'] ?? null);
+if (!$resultado['success']) {
+    $status = (int) ($resultado['status'] ?? 422);
+    if ($status === 403) JsonResponse::forbidden($resultado['message']);
+    if ($status === 404) JsonResponse::notFound($resultado['message']);
+    if ($status === 500) JsonResponse::serverError($resultado['message']);
+    JsonResponse::validation($resultado['message']);
 }
-
-move_uploaded_file($file['tmp_name'], $uploadFolder);
-
-CorteDiaArchivo::create([
-'id_reportedia' => $idReporte,
-'detalle' => $nombreDocumento,
-'documento' => $pdfNombre,
-]);
 
 $usuario = Session::get('usuario');
 $idUsuario = $usuario['id'] ?? 0;
@@ -465,8 +453,7 @@ register_shutdown_function(function () use ($idReporte, $idUsuario, $nombreUsuar
 VentasService::notificarSubirDocumento($idReporte, $idUsuario, $nombreUsuario, $nombreDocumento);
 });
 
-echo json_encode(['success' => true]);
-exit;
+JsonResponse::success('Documento agregado correctamente.', ['documento' => $resultado['documento']]);
 }
 
 public function deleteDocumento()
@@ -483,8 +470,14 @@ $doc = CorteDiaArchivo::find($id);
 if ($doc) {
 $idReporte = $doc->id_reportedia;
 $nombreDoc = $doc->nombre_documento ?? '';
-$ruta = realpath(__DIR__ . '/../../public/uploads/archivos/' . $doc->documento);
-if ($ruta && file_exists($ruta)) unlink($ruta);
+$nombreArchivo = basename(str_replace('\\', '/', (string) $doc->documento));
+$directorioArchivos = realpath(VentasService::getDocumentosUploadDir());
+$ruta = $nombreArchivo !== '' && $directorioArchivos
+    ? realpath($directorioArchivos . DIRECTORY_SEPARATOR . $nombreArchivo)
+    : false;
+if ($ruta && str_starts_with($ruta, $directorioArchivos . DIRECTORY_SEPARATOR) && is_file($ruta)) {
+    unlink($ruta);
+}
 $doc->delete();
 
 $usuario = Session::get('usuario');

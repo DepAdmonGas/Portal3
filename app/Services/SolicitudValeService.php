@@ -336,6 +336,7 @@ foreach ($records as $r) {
 $user = Usuario::find($r->id_usuario);
 $data[] = [
 'id' => $r->id,
+'id_usuario' => (int)$r->id_usuario,
 'usuario_nombre' => $user ? $user->nombre : 'Desconocido',
 'comentario' => $r->comentario,
 'fecha_hora' => $r->fecha_hora ? formatearFecha($r->fecha_hora) . ', ' . date('g:i a', strtotime($r->fecha_hora)) : '-',
@@ -362,10 +363,17 @@ $records = SolicitudValeDocumento::where('id_solicitud', $idSolicitud)
 
 $data = [];
 foreach ($records as $r) {
+$archivo = basename((string)($r->documento ?? ''));
+$directorioActual = dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-vales/';
+$directorioImportado = dirname(__DIR__, 2) . '/public/uploads/archivos/vales/';
+$archivoActual = $archivo !== '' && is_file($directorioActual . $archivo);
+$archivoImportado = $archivo !== '' && is_file($directorioImportado . $archivo);
 $data[] = [
 'id' => $r->id,
 'nombre' => $r->nombre ?? '-',
-'documento' => $r->documento,
+'documento' => $archivo,
+'archivo_disponible' => $archivoActual || $archivoImportado,
+'tipo_descarga' => $archivoActual ? 'solicitud-vales' : ($archivoImportado ? 'solicitud-vales-legado' : 'solicitud-vales'),
 ];
 }
 return $data;

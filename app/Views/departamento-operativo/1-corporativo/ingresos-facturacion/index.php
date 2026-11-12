@@ -61,10 +61,13 @@ data-id-estacion="<?= $idEstacion ?>">
 <td class="align-middle text-end p-0">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
-<input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 20px !important; min-width: 80px;"
-x-init="$el.value = formatInput(row[m])"
-@focus="$el.value = (parseFloat(row[m]) || 0).toString(); $el.select()"
-@blur="const v = parseFloat($el.value.replace(/,/g, '')) || 0; row[m] = v; editIF(row.id, m, 1); $el.value = formatInput(v)">
+<input type="text" inputmode="decimal" class="border-0 p-3 pe-4 text-end w-100 bg-transparent" style="padding-left: 20px !important; min-width: 80px;"
+:value="formatInputNumber(row[m])"
+@input="formatNumericInput($event, row, m)"
+@blur="const v = parseFloat(String(row[m] ?? '').replace(/,/g, '')) || 0; row[m] = v; editIF(row.id, m, 1); $el.value = formatInputNumber(v)">
+<i x-show="updateStates[cellUpdateKey(row.id, m)] === 'saving'" class="ti ti-loader-2 ti-spin position-absolute top-50 end-0 translate-middle-y me-1 text-primary fs-6" title="Guardando" aria-label="Guardando"></i>
+<i x-show="updateStates[cellUpdateKey(row.id, m)] === 'saved'" class="ti ti-check position-absolute top-50 end-0 translate-middle-y me-1 text-success fs-6" title="Actualizado" aria-label="Actualizado"></i>
+<i x-show="updateStates[cellUpdateKey(row.id, m)] === 'error'" class="ti ti-alert-circle position-absolute top-50 end-0 translate-middle-y me-1 text-danger fs-6" title="No se pudo actualizar" aria-label="No se pudo actualizar"></i>
 </div>
 </td>
 </template>
@@ -115,10 +118,13 @@ x-init="$el.value = formatInput(row[m])"
 <td class="align-middle text-end p-0">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
-<input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 20px !important; min-width: 80px;"
-x-init="$el.value = formatInput(row[m])"
-@focus="$el.value = (parseFloat(row[m]) || 0).toString(); $el.select()"
-@blur="const v = parseFloat($el.value.replace(/,/g, '')) || 0; row[m] = v; editIF(row.id, m, 2); $el.value = formatInput(v)">
+<input type="text" inputmode="decimal" class="border-0 p-3 pe-4 text-end w-100 bg-transparent" style="padding-left: 20px !important; min-width: 80px;"
+:value="formatInputNumber(row[m])"
+@input="formatNumericInput($event, row, m)"
+@blur="const v = parseFloat(String(row[m] ?? '').replace(/,/g, '')) || 0; row[m] = v; editIF(row.id, m, 2); $el.value = formatInputNumber(v)">
+<i x-show="updateStates[cellUpdateKey(row.id, m)] === 'saving'" class="ti ti-loader-2 ti-spin position-absolute top-50 end-0 translate-middle-y me-1 text-primary fs-6" title="Guardando" aria-label="Guardando"></i>
+<i x-show="updateStates[cellUpdateKey(row.id, m)] === 'saved'" class="ti ti-check position-absolute top-50 end-0 translate-middle-y me-1 text-success fs-6" title="Actualizado" aria-label="Actualizado"></i>
+<i x-show="updateStates[cellUpdateKey(row.id, m)] === 'error'" class="ti ti-alert-circle position-absolute top-50 end-0 translate-middle-y me-1 text-danger fs-6" title="No se pudo actualizar" aria-label="No se pudo actualizar"></i>
 </div>
 </td>
 </template>
@@ -159,13 +165,15 @@ x-init="$el.value = formatInput(row[m])"
 <div class="modal-body">
 <label class="form-label mb-1">* Archivo:</label>
 
-<div class="row g-0 w-100 mt-3 mb-3">
+<div class="row g-0 w-100 mb-3">
     <div class="col-12">
         <div class="input-group">
             <input 
                 class="form-control" 
                 type="file" 
                 id="archivoInput"
+                :class="{ 'is-invalid': archivoInvalido }"
+                @change="archivoInvalido = false"
             >
 
             <button 
@@ -197,8 +205,8 @@ x-init="$el.value = formatInput(row[m])"
 <th class="fw-normal align-middle text-center" x-text="a.fecha_formateada"></th>
 <td class="align-middle text-end">
 <span x-data="actions()">
-<a href="" @click.prevent="download('ingresos-facturacion', a.archivo)">
-<i class="ti ti-download text-primary fs-5"></i>
+<a href="" @click.prevent="a.archivo_disponible && download('ingresos-facturacion', a.archivo)" :aria-disabled="!a.archivo_disponible" :title="a.archivo_disponible ? 'Descargar archivo' : 'Archivo no disponible'">
+<i :class="a.archivo_disponible ? 'ti ti-download text-primary fs-6' : 'ti ti-file-off text-muted fs-6'"></i>
 </a>
 </span>
 </td>

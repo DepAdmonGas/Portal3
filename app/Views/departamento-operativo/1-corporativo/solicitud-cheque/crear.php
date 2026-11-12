@@ -24,13 +24,13 @@ data-id-depto="<?= $idDepto ?>">
 
 <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-3">
 <label class="form-label">* Fecha:</label>
-<input type="date" class="form-control rounded-0" x-model="form.fecha">
+<input type="date" class="form-control rounded-0" x-model="form.fecha" :class="{'is-invalid': errores.fecha}" @input="errores.fecha = false">
 </div>
 
 <template x-if="idEstacion == 8">
 <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12 mb-3">
 <label class="form-label">* Razón Social:</label>
-<select class="form-select rounded-0" x-model="form.razonsocial">
+<select class="form-select rounded-0" x-model="form.razonsocial" :class="{'is-invalid': errores.razonsocial}" @change="errores.razonsocial = false">
 <option value="">Selecciona una opción...</option>
 <option>ADMINISTRADORA DE GASOLINERAS INTERLOMAS</option>
 <option>ADMINISTRADORA DE GASOLINERAS S.A. DE C.V.</option>
@@ -58,7 +58,7 @@ data-id-depto="<?= $idDepto ?>">
 <template x-if="idEstacion == 14">
 <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12 mb-3">
 <label class="form-label">* Razón Social:</label>
-<select class="form-select rounded-0" x-model="form.depto">
+<select class="form-select rounded-0" x-model="form.depto" :class="{'is-invalid': errores.depto}" @change="errores.depto = false">
 <option value="">Selecciona una opcion...</option>
 <option value="23">BANCAMIFEL, SOCIEDAD ANÓNIMA, FIDEICOMISO 2176/2016</option>
 </select>
@@ -69,17 +69,17 @@ data-id-depto="<?= $idDepto ?>">
 <div class="row">
 <div class="col-xl-5 col-lg-5 col-md-5 col-sm-12 mb-3">
 <label class="form-label">* Nombre del Beneficiario:</label>
-<input type="text" class="form-control rounded-0" x-model="form.beneficiario">
+<input type="text" class="form-control rounded-0" x-model="form.beneficiario" :class="{'is-invalid': errores.beneficiario}" @input="errores.beneficiario = false">
 </div>
 
 <div class="col-xl-5 col-lg-5 col-md-5 col-sm-12 mb-3">
 <label class="form-label">* Monto:</label>
-<input type="number" min="0" step="0.01" class="form-control rounded-0" x-model="form.monto">
+<input type="text" inputmode="decimal" autocomplete="off" class="form-control rounded-0" :value="formatMonto(form.monto)" :class="{'is-invalid': errores.monto}" @input="formatearMonto($event); errores.monto = false">
 </div>
 
 <div class="col-xl-2 col-lg-2 col-md-2 col-sm-12 mb-3">
 <label class="form-label">* Moneda:</label>
-<select class="form-select rounded-0" x-model="form.moneda">
+<select class="form-select rounded-0" x-model="form.moneda" :class="{'is-invalid': errores.moneda}" @change="errores.moneda = false">
 <option>MXN</option>
 <option>USD</option>
 </select>
@@ -89,38 +89,38 @@ data-id-depto="<?= $idDepto ?>">
 <div class="row">
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* Factura No.:</label>
-<input type="text" class="form-control rounded-0" x-model="form.no_factura">
+<input type="text" class="form-control rounded-0" x-model="form.no_factura" :class="{'is-invalid': errores.no_factura}" @input="errores.no_factura = false">
 </div>
 
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* Correo Eléctronico:</label>
-<input type="email" class="form-control rounded-0" x-model="form.email">
+<input type="email" class="form-control rounded-0" x-model="form.email" :class="{'is-invalid': errores.email}" @input="errores.email = false">
 </div>
 </div>
 
 <div class="row">
 <div class="col-12 mb-3">
 <label class="form-label">* Concepto:</label>
-<textarea class="form-control rounded-0" rows="3" x-model="form.concepto"></textarea>
+<textarea class="form-control rounded-0" rows="3" x-model="form.concepto" :class="{'is-invalid': errores.concepto}" @input="errores.concepto = false"></textarea>
 </div>
 </div>
 
 <div class="row">
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* Nombre del solicitante:</label>
-<input type="text" class="form-control rounded-0" x-model="form.solicitante">
+<input type="text" class="form-control rounded-0" x-model="form.solicitante" :class="{'is-invalid': errores.solicitante}" @input="errores.solicitante = false">
 </div>
 
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* Teléfono:</label>
-<input type="text" class="form-control rounded-0" x-model="form.telefono">
+<input type="text" class="form-control rounded-0" x-model="form.telefono" :class="{'is-invalid': errores.telefono}" @input="errores.telefono = false">
 </div>
 </div>
 
 <div class="row">
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* Uso del CDFI:</label>
-<select class="form-select rounded-0" x-model="form.cfdi">
+<select class="form-select rounded-0" x-model="form.cfdi" :class="{'is-invalid': errores.cfdi}" @change="errores.cfdi = false">
 <option value="">Selecciona una opción...</option>
 <option value="G01 Adquisicion de Mercancias">G01 Adquisicion de Mercancias</option>
 <option value="G02 Devoluciones, Descuentos o Bonificaciones">G02 Devoluciones, Descuentos o Bonificaciones</option>
@@ -139,7 +139,7 @@ data-id-depto="<?= $idDepto ?>">
 
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* Método de Pago:</label>
-<select class="form-select rounded-0" x-model="form.metodo_pago">
+<select class="form-select rounded-0" x-model="form.metodo_pago" :class="{'is-invalid': errores.metodo_pago}" @change="errores.metodo_pago = false">
 <option value="">Selecciona una opcion...</option>
 <option>PUE Pago en una sola exhibición</option>
 <option>PPD Pago en parcialidades o diferido</option>
@@ -150,31 +150,31 @@ data-id-depto="<?= $idDepto ?>">
 <div class="row">
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* Banco:</label>
-<input type="text" class="form-control rounded-0" x-model="form.banco">
+<input type="text" class="form-control rounded-0" x-model="form.banco" :class="{'is-invalid': errores.banco}" @input="errores.banco = false">
 </div>
 
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* No. de Cuenta:</label>
-<input type="text" class="form-control rounded-0" x-model="form.no_cuenta">
+<input type="text" class="form-control rounded-0" x-model="form.no_cuenta" :class="{'is-invalid': errores.no_cuenta}" @input="errores.no_cuenta = false">
 </div>
 </div>
 
 <div class="row">
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* No. de Cuenta (CLABE):</label>
-<input type="text" class="form-control rounded-0" x-model="form.cuenta_clabe">
+<input type="text" class="form-control rounded-0" x-model="form.cuenta_clabe" :class="{'is-invalid': errores.cuenta_clabe}" @input="errores.cuenta_clabe = false">
 </div>
 
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* Referencia / Convenio:</label>
-<input type="text" class="form-control rounded-0" x-model="form.referencia">
+<input type="text" class="form-control rounded-0" x-model="form.referencia" :class="{'is-invalid': errores.referencia}" @input="errores.referencia = false">
 </div>
 </div>
 
 <div class="row">
 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-3">
 <label class="form-label">* Forma de Pago:</label>
-<select class="form-select rounded-0" x-model="form.forma_pago">
+<select class="form-select rounded-0" x-model="form.forma_pago" :class="{'is-invalid': errores.forma_pago}" @change="errores.forma_pago = false">
 <option value="">Selecciona una opcion...</option>
 <option>01 Efectivo</option>
 <option>02 Cheque nominativo</option>
@@ -332,7 +332,7 @@ data-id-depto="<?= $idDepto ?>">
 
 <!-- Cuerpo con pad en borde punteado -->
 <div class="card-body p-3 pb-0">
-<div id="signature-pad" class="signature-pad-wrapper" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+<div id="signature-pad" class="signature-pad-wrapper" :style="errores.firma ? 'border:2px dashed #dc3545; border-radius:6px; cursor:crosshair;' : 'border:2px dashed #adb5bd; border-radius:6px; cursor:crosshair;'">
 <div class="signature-pad--body">
 <canvas id="canvas" style="width:100%; height:250px; display: block;"></canvas>
 </div>

@@ -61,20 +61,17 @@
 
                                                         <td class="text-end p-0">
                                                             <div class="position-relative">
-                                                                <input type="text" class="border-0 p-3 text-end w-100 bg-transparent"
-                                                                    x-init="$el.value = formatDisplay(p.dato1)" @focus="$el.value = (p.dato1 || 0).toString(); $el.select()"
-                                                                    @blur=" const v = parseFloat($el.value.replace(/,/g, '')) || 0;
-p.dato1 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato1', v)" @input="p.dato1 = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                                <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
+                                                                    :value="formatInputNumber(p.dato1)" @input="formatNumericInput($event, p, 'dato1')"
+                                                                    @blur="editarResumen(p.id, 'dato1', p.dato1)">
                                                             </div>
                                                         </td>
 
                                                         <td class="text-end p-0">
                                                             <div class="position-relative">
-                                                                <input type="text" class="border-0 p-3 text-end w-100 bg-transparent"
-                                                                    x-init="$el.value = formatDisplay(p.dato2)" @focus="$el.value = (p.dato2 || 0).toString(); $el.select()"
-                                                                    @blur=" const v = parseFloat($el.value.replace(/,/g, '')) || 0;
-p.dato2 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato2', v)"
-                                                                    @input="p.dato2 = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                                <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
+                                                                    :value="formatInputNumber(p.dato2)" @input="formatNumericInput($event, p, 'dato2')"
+                                                                    @blur="editarResumen(p.id, 'dato2', p.dato2)">
                                                             </div>
                                                         </td>
 
@@ -87,11 +84,9 @@ p.dato2 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato2', v)"
 
                                                         <td class="text-end p-0">
                                                             <div class="position-relative">
-                                                                <input type="text" class="border-0 p-3 text-end w-100 bg-transparent"
-                                                                    x-init="$el.value = formatDisplay(p.dato3)" @focus="$el.value = (p.dato3 || 0).toString(); $el.select()"
-                                                                    @blur=" const v = parseFloat($el.value.replace(/,/g, '')) || 0; p.dato3 = v;
-$el.value = formatDisplay(v); editarResumen(p.id, 'dato3', v)"
-                                                                    @input="p.dato3 = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                                <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
+                                                                    :value="formatInputNumber(p.dato3)" @input="formatNumericInput($event, p, 'dato3')"
+                                                                    @blur="editarResumen(p.id, 'dato3', p.dato3)">
                                                             </div>
                                                         </td>
 
@@ -107,12 +102,9 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato3', v)"
                                                         <td class="text-end p-0">
                                                             <div class="position-relative">
                                                                 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-                                                                <input type="text" class="border-0 p-3 text-end w-100 bg-transparent"
-                                                                    style="padding-left: 25px !important;" x-init="$el.value = formatDisplay(p.dato5)"
-                                                                    @focus="$el.value = (p.dato5 || 0).toString(); $el.select()"
-                                                                    @blur=" const v = parseFloat($el.value.replace(/,/g, '')) || 0;
-p.dato5 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato5', v)"
-                                                                    @input="p.dato5 = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                                <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
+                                                                    style="padding-left: 25px !important;" :value="formatInputNumber(p.dato5)"
+                                                                    @input="formatNumericInput($event, p, 'dato5')" @blur="editarResumen(p.id, 'dato5', p.dato5)">
                                                             </div>
                                                         </td>
 
@@ -127,11 +119,9 @@ p.dato5 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato5', v)"
 
                                                         <td class="text-end p-0">
                                                             <div class="position-relative">
-                                                                <input type="text" class="border-0 p-3 text-end w-100 bg-transparent"
-                                                                    x-init="$el.value = formatDisplay(p.dato7)" @focus="$el.value = (p.dato7 || 0).toString(); $el.select()"
-                                                                    @blur=" const v = parseFloat($el.value.replace(/,/g, '')) || 0; p.dato7 = v;
-$el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
-                                                                    @input="p.dato7 = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                                <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
+                                                                    :value="formatInputNumber(p.dato7)" @input="formatNumericInput($event, p, 'dato7')"
+                                                                    @blur="editarResumen(p.id, 'dato7', p.dato7)">
                                                             </div>
                                                         </td>
 
@@ -146,10 +136,9 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                         <td class="text-end p-0">
                                                             <div class="position-relative">
                                                                 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-                                                                <input type="text" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;"
-                                                                    x-init="$el.value = formatDisplay(p.dato9)" @focus="$el.value = (p.dato9 || 0).toString(); $el.select()"
-                                                                    @blur=" const v = parseFloat($el.value.replace(/,/g, '')) || 0; p.dato9 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato9', v)"
-                                                                    @input="p.dato9 = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                                <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;"
+                                                                    :value="formatInputNumber(p.dato9)" @input="formatNumericInput($event, p, 'dato9')"
+                                                                    @blur="editarResumen(p.id, 'dato9', p.dato9)">
                                                             </div>
                                                         </td>
 
@@ -163,10 +152,9 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                         <td class="fw-semibold">Despachos L</td>
                                                         <td class="text-end p-0">
                                                             <div class="position-relative">
-                                                                <input type="text" class="border-0 p-3 text-end w-100 bg-transparent" x-init="$el.value = formatDisplay(p.dato11)"
-                                                                    @focus="$el.value = (p.dato11 || 0).toString(); $el.select()"
-                                                                    @blur=" const v = parseFloat($el.value.replace(/,/g, '')) || 0; p.dato11 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato11', v)"
-                                                                    @input="p.dato11 = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                                <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
+                                                                    :value="formatInputNumber(p.dato11)" @input="formatNumericInput($event, p, 'dato11')"
+                                                                    @blur="editarResumen(p.id, 'dato11', p.dato11)">
                                                             </div>
                                                         </td>
 
@@ -183,10 +171,9 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                             <div class="position-relative">
                                                                 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
 
-                                                                <input type="text" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;"
-                                                                    x-init="$el.value = formatDisplay(p.dato13)" @focus="$el.value = (p.dato13 || 0).toString(); $el.select()"
-                                                                    @blur=" const v = parseFloat($el.value.replace(/,/g, '')) || 0; p.dato13 = v; $el.value = formatDisplay(v); editarResumen(p.id, 'dato13', v)"
-                                                                    @input="p.dato13 = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                                <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;"
+                                                                    :value="formatInputNumber(p.dato13)" @input="formatNumericInput($event, p, 'dato13')"
+                                                                    @blur="editarResumen(p.id, 'dato13', p.dato13)">
                                                             </div>
                                                         </td>
 
@@ -261,9 +248,9 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                     <td class="text-center" x-text="formatInt(aceites.piezas)"></td>
                                                     <td class="text-end p-0">
                                                         <div class="position-relative">
-                                                            <input type="text" class="border-0 p-3 text-end w-100 bg-transparent" x-init="$el.value = formatDisplay(aceites.volumetrico)" @focus="$el.value = (aceites.volumetrico || 0).toString(); $el.select()"
-                                                                @blur="const v = parseFloat($el.value.replace(/,/g, '')) || 0; aceites.volumetrico = v; $el.value = formatDisplay(v); editarAceite()"
-                                                                @input="aceites.volumetrico = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                            <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
+                                                                :value="formatInputNumber(aceites.volumetrico)" @input="formatNumericInput($event, aceites, 'volumetrico')"
+                                                                @blur="editarAceite()">
                                                         </div>
                                                     </td>
                                                     <td class="text-end" x-text="'$ ' + formatDisplay(aceites.contables)"></td>
@@ -385,20 +372,29 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                                     <i class="ti ti-dots-vertical fs-6"></i>
                                                                 </a>
                                                                 <ul class="dropdown-menu">
-                                                                    <li>
-                                                                        <span x-data="actions()">
-                                                                            <a class="dropdown-item pointer d-flex align-items-center gap-2" href="#"
-                                                                                @click.prevent="download('control-volumetrico', d.documento)">
-                                                                                <i class="ti ti-download fs-5"></i> Descargar
-                                                                            </a>
-                                                                        </span>
-                                                                    </li>
+                                                                    <template x-if="d.documento_disponible">
+                                                                        <li>
+                                                                            <span x-data="actions()">
+                                                                                <a class="dropdown-item pointer d-flex align-items-center gap-2" href="#"
+                                                                                    @click.prevent="download('control-volumetrico', d.documento)">
+                                                                                    <i class="ti ti-download fs-6"></i> Descargar
+                                                                                </a>
+                                                                            </span>
+                                                                        </li>
+                                                                    </template>
+                                                                    <template x-if="!d.documento_disponible">
+                                                                        <li>
+                                                                            <span class="dropdown-item text-muted d-flex align-items-center gap-2">
+                                                                                <i class="ti ti-file-off fs-6"></i> Archivo no disponible
+                                                                            </span>
+                                                                        </li>
+                                                                    </template>
                                                                     <li>
                                                                         <span x-data="actions()">
                                                                             <a class="dropdown-item pointer d-flex align-items-center gap-2"
                                                                                 href="#"
                                                                                 @click.prevent="async () => { const r = await deleteAction({url: '/departamento-operativo/control-volumetrico/eliminar-documento', id: d.id, name: d.anexos}); if (r && r.success) cargarDatos(); }">
-                                                                                <i class="ti ti-trash fs-5"></i> Eliminar
+                                                                                <i class="ti ti-trash fs-6"></i> Eliminar
                                                                             </a>
                                                                         </span>
                                                                     </li>
@@ -446,10 +442,9 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                                                         <td class="text-end p-0">
                                                             <div class="position-relative">
                                                                 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-                                                                <input type="text" class="border-0 p-3 text-end w-100 bg-transparent"
-                                                                    style="padding-left: 25px !important;" x-init="$el.value = formatDisplay(pf.total)" @focus="$el.value = (pf.total || 0).toString(); $el.select()"
-                                                                    @blur="const v = parseFloat($el.value.replace(/,/g, '')) || 0; pf.total = v; $el.value = formatDisplay(v); editarPrefijo(pf.id)"
-                                                                    @input="pf.total = parseFloat($event.target.value.replace(/,/g, '')) || 0">
+                                                                <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
+                                                                    style="padding-left: 25px !important;" :value="formatInputNumber(pf.total)"
+                                                                    @input="formatNumericInput($event, pf, 'total')" @blur="editarPrefijo(pf.id)">
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -627,11 +622,11 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                     </div>
                     <div class="modal-body">
                         <h6 class="mb-1 form-label">* Fecha:</h6>
-                        <input type="date" id="docFecha" class="form-control mb-3">
+                        <input type="date" id="docFecha" class="form-control mb-3" :class="validationErrors.fecha ? 'is-invalid' : ''" :aria-invalid="validationErrors.fecha ? 'true' : 'false'" @input="validationErrors.fecha = false">
 
                         <h6 class="mb-1 form-label">* Nombre del Anexo:</h6>
-                        <div class="select2-modal-field is-select2-pending mb-3" x-ref="anexosWrapper">
-                            <select id="docAnexos" data-width="100%">
+                        <div class="select2-modal-field is-select2-pending mb-3" x-ref="anexosWrapper" :class="validationErrors.anexos ? 'is-invalid' : ''">
+                            <select id="docAnexos" data-width="100%" :aria-invalid="validationErrors.anexos ? 'true' : 'false'" @change="validationErrors.anexos = false">
                                 <option></option>
                                 <template x-for="opt in anexosOpciones" :key="opt">
                                     <option x-text="opt" :value="opt"></option>
@@ -640,7 +635,7 @@ $el.value = formatDisplay(v); editarResumen(p.id, 'dato7', v)"
                         </div>
 
                         <h6 class="mb-1 form-label">* Documento:</h6>
-                        <input class="form-control" type="file" id="docFile">
+                        <input class="form-control" type="file" id="docFile" :class="validationErrors.documento ? 'is-invalid' : ''" :aria-invalid="validationErrors.documento ? 'true' : 'false'" @change="validationErrors.documento = false">
                     </div>
 
 

@@ -247,35 +247,49 @@ exit;
 public function addDocument()
 {
 header('Content-Type: application/json; charset=utf-8');
+$permisos = ComparativoXmlService::getPermisos();
+if (!$permisos['canEdit']) {
+http_response_code(403);
+echo json_encode(['success' => false, 'message' => 'No tienes permiso para agregar anexos.']);
+exit;
+}
 
 $idEstacion = (int)($_POST['idEstacion'] ?? 0);
 $idYear = (int)($_POST['year'] ?? 0);
 $idMes = (int)($_POST['mes'] ?? 0);
-$anexo = $_POST['Anexos'] ?? '';
-
-if (!$idEstacion || !$idYear || !$idMes || !$anexo) {
-echo json_encode(['success' => false, 'message' => 'Campos requeridos']);
-exit;
-}
+$anexo = trim((string)($_POST['Anexos'] ?? ''));
+$camposFaltantes = [];
+if (!$idEstacion) $camposFaltantes[] = 'idEstacion';
+if (!$idYear) $camposFaltantes[] = 'year';
+if (!$idMes || $idMes < 1 || $idMes > 12) $camposFaltantes[] = 'mes';
+if ($anexo === '') $camposFaltantes[] = 'Anexos';
 
 $file = $_FILES['Archivo_file'] ?? null;
-if (!$file || empty($file['tmp_name'])) {
-echo json_encode(['success' => false, 'message' => 'Archivo requerido']);
+if (!$file || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+$camposFaltantes[] = 'Archivo_file';
+}
+if ($camposFaltantes) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'campos' => $camposFaltantes]);
 exit;
 }
 
 $aleatorio = uniqid();
-$originalName = $file['name'];
-$safeName = $aleatorio . '-' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/comparativo-xml/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
+$originalName = basename((string)$file['name']);
+$nombreSeguro = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
+$safeName = $aleatorio . '-' . ($nombreSeguro ?: 'anexo');
+$uploadDir = dirname(__DIR__, 2) . '/public/uploads/archivos/comparativo-xml/';
+if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
+http_response_code(500);
+echo json_encode(['success' => false, 'message' => 'No se pudo preparar la carpeta de archivos.']);
+exit;
+}
 
 if (!move_uploaded_file($file['tmp_name'], $uploadDir . $safeName)) {
 echo json_encode(['success' => false, 'message' => 'Error al subir archivo']);
 exit;
 }
 
-$permisos = ComparativoXmlService::getPermisos();
 $id = ComparativoXmlService::addDocument($idEstacion, $idYear, $idMes, $anexo, $safeName);
 if ($id) {
 ComparativoXmlService::notificarTelegram('agregar_documento', [
@@ -285,6 +299,8 @@ ComparativoXmlService::notificarTelegram('agregar_documento', [
 'anexo' => $anexo,
 'id_usuario' => $permisos['id_usuario'],
 ]);
+} else {
+@unlink($uploadDir . $safeName);
 }
 
 echo json_encode(['success' => (bool)$id, 'message' => $id ? 'Documento agregado exitosamente.' : 'Error al subir el archivo.']);
@@ -305,7 +321,7 @@ exit;
 
 $deleted = ComparativoXmlService::deleteDocument($id);
 if ($deleted) {
-$filePath = __DIR__ . '/../../public/uploads/archivos/comparativo-xml/' . $deleted['archivo'];
+$filePath = dirname(__DIR__, 2) . '/public/uploads/archivos/comparativo-xml/' . basename($deleted['archivo']);
 if (file_exists($filePath)) unlink($filePath);
 
 $permisos = ComparativoXmlService::getPermisos();

@@ -29,11 +29,12 @@ facturaForm: { fecha: '', concepto: '' },
 facturaArchivo: null,
 csvFile: null,
 diferenciaForm: { id_aceite: 0, idAceiteCode: 0, concepto: '', diferencia: 0, comentario: '' },
-detalleDiferencia: { id: 0, fecha: '', fecha_formateada: '', concepto: '', diferencia: 0, documento: '', comentario: '' },
+detalleDiferencia: { id: 0, fecha: '', fecha_formateada: '', concepto: '', diferencia: 0, documento: '', documento_disponible: false, comentario: '' },
 
 subiendoDocumento: false,
 subiendoFactura: false,
 importando: false,
+descargandoExcel: false,
 _editTimeout: null,
 
 get nombreMes() {
@@ -91,6 +92,48 @@ factura_venta_mostrador: row.factura_venta_mostrador || 0,
 this.tempValues = tv;
 },
 
+formatInputNumber(value) {
+if (value === null || value === undefined || value === '') return '';
+const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatNumericInput(event, row, field) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const formatted = normalized.includes('.') ? grouped + '.' + decimals : grouped;
+this.tempValues[row.id][field] = normalized;
+row[field] = normalized;
+input.value = formatted;
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
+},
+
+limpiarErrorCampo(elemento) {
+if (elemento) elemento.classList.remove('is-invalid');
+},
+
+marcarCamposObligatorios(ids) {
+ids.forEach(id => document.getElementById(id)?.classList.add('is-invalid'));
+Notify['error']('Completa los campos obligatorios.');
+},
+
 seleccionarFila(row) {
 if (this.selectedRowId === row.id) return;
 this.selectedRowId = row.id;
@@ -103,7 +146,7 @@ this.selectedModalRows[tabla] = id;
 
 getDiaria(row, dia, campo) {
 if (!row.diarias || !row.diarias[dia]) return campo === 'importe' ? '0.00' : 0;
-return campo === 'importe' ? formatNum(row.diarias[dia].importe) : (row.diarias[dia].cantidad || 0);
+return campo === 'importe' ? formatNum(row.diarias[dia].importe) : formatNum(row.diarias[dia].cantidad, 0);
 },
 
 totalDiariaCantidad(row) {
@@ -112,7 +155,7 @@ let total = 0;
 for (let d = 1; d <= this.totalDias; d++) {
 if (row.diarias[d]) total += parseFloat(row.diarias[d].cantidad) || 0;
 }
-return (total);
+return formatNum(total, 0);
 },
 
 totalDiariaImporte(row) {
@@ -198,7 +241,7 @@ guardarCampo(row, campo) {
 if (this.finalizado || !this.puedeEditar) return;
 const tv = this.tempValues[row.id];
 if (!tv) return;
-const valor = parseFloat(tv[campo]) || 0;
+const valor = parseFloat(String(tv[campo] ?? '').replace(/,/g, '')) || 0;
 row[campo] = valor;
 if (this._editTimeout) clearTimeout(this._editTimeout);
 this._editTimeout = setTimeout(() => {
@@ -221,7 +264,8 @@ if (resp.data.success) this.documentos = resp.data.data;
 async subirDocumento() {
 if (this.subiendoDocumento) return;
 if (!this.documentoFiles.ficha_deposito && !this.documentoFiles.imagen_bodega && !this.documentoFiles.factura_venta && !this.documentoEditId) {
-Notify['error']('Selecciona al menos un archivo');
+this.marcarCamposObligatorios([]);
+document.querySelectorAll('.aceite-documento-input').forEach(input => input.classList.add('is-invalid'));
 return;
 }
 this.subiendoDocumento = true;
@@ -244,6 +288,7 @@ Notify['success'](resp.data.message);
 this.documentoFiles = { ficha_deposito: null, imagen_bodega: null, factura_venta: null };
 this.documentoEditId = null;
 this.documentoEdit = {};
+document.querySelectorAll('.aceite-documento-input').forEach(input => { input.value = ''; input.classList.remove('is-invalid'); });
 await this.cargarDocumentos();
 } else {
 Notify['error'](resp.data.message);
@@ -279,9 +324,11 @@ if (resp.data.success) this.facturas = resp.data.data;
 
 async subirFactura() {
 if (this.subiendoFactura) return;
-if (!this.facturaForm.fecha) { Notify['error']('Selecciona una fecha'); return; }
-if (!this.facturaForm.concepto) { Notify['error']('Selecciona un concepto'); return; }
-if (!this.facturaArchivo) { Notify['error']('Selecciona un archivo'); return; }
+const faltantes = [];
+if (!this.facturaForm.fecha) faltantes.push('aceite-factura-fecha');
+if (!this.facturaForm.concepto) faltantes.push('aceite-factura-concepto');
+if (!this.facturaArchivo) faltantes.push('aceite-factura-archivo');
+if (faltantes.length) { this.marcarCamposObligatorios(faltantes); return; }
 this.subiendoFactura = true;
 const data = new FormData();
 data.append('id_mes', this.idMesDb);
@@ -294,6 +341,10 @@ if (resp.data.success) {
 Notify['success'](resp.data.message);
 this.facturaForm = { fecha: '', concepto: '' };
 this.facturaArchivo = null;
+['aceite-factura-fecha', 'aceite-factura-concepto', 'aceite-factura-archivo'].forEach(id => {
+const input = document.getElementById(id);
+if (input) { input.classList.remove('is-invalid'); if (input.type === 'file') input.value = ''; }
+});
 await this.cargarFacturas();
 } else {
 Notify['error'](resp.data.message);
@@ -340,6 +391,7 @@ fecha_formateada: diff.fecha_formateada || '',
 concepto: concepto || '',
 diferencia: diff.diferencia || 0,
 documento: diff.documento || '',
+documento_disponible: Boolean(diff.documento_disponible),
 comentario: diff.comentario || ''
 };
 new bootstrap.Modal(this.$refs.modalDetalleDiferencia).show();
@@ -349,17 +401,16 @@ new bootstrap.Modal(this.$refs.modalDetalleDiferencia).show();
 async pagarDiferencia() {
 const fileInput = document.getElementById('docDiferencia');
 if (!fileInput || !fileInput.files[0]) {
-Notify['error']('Selecciona un archivo PDF');
-fileInput.style.border = '2px solid #dc3545';
+this.marcarCamposObligatorios(['docDiferencia']);
 return;
 }
 const ext = fileInput.value.split('.').pop().toLowerCase();
 if (ext !== 'pdf') {
 Notify['error']('Solo se permiten archivos PDF');
-fileInput.style.border = '2px solid #dc3545';
+fileInput.classList.add('is-invalid');
 return;
 }
-fileInput.style.border = '';
+fileInput.classList.remove('is-invalid');
 const data = new FormData();
 data.append('id_aceite', this.diferenciaForm.id_aceite);
 data.append('id_mes', this.idMesDb);
@@ -457,8 +508,40 @@ this.loading = false;
 }
 },
 
-descargarResumenExcel() {
-    window.open('/departamento-operativo/aceites-mes/' + this.year + '/' + this.mes + '/excel', '_blank');
+async descargarResumenExcel() {
+if (this.descargandoExcel) return;
+this.descargandoExcel = true;
+if (window.loader && typeof window.loader.show === 'function') window.loader.show();
+
+try {
+const url = '/departamento-operativo/aceites-mes/' + this.year + '/' + this.mes + '/excel';
+const response = await axios.get(url, { responseType: 'blob' });
+const contentType = response.headers?.['content-type'] || response.data?.type || '';
+if (contentType.includes('text/html') || contentType.includes('application/json')) {
+throw new Error('El servidor no generó el archivo Excel.');
+}
+
+const disposition = response.headers?.['content-disposition'] || '';
+const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+const plainName = disposition.match(/filename="?([^";]+)"?/i);
+const filename = encodedName
+? decodeURIComponent(encodedName[1])
+: (plainName ? plainName[1] : 'Resumen_Aceites_' + this.nombreMes + '_' + this.year + '.xlsx');
+const objectUrl = URL.createObjectURL(new Blob([response.data], { type: contentType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+const link = document.createElement('a');
+link.href = objectUrl;
+link.download = filename;
+document.body.appendChild(link);
+link.click();
+link.remove();
+window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+} catch (error) {
+console.error('Error descargando el resumen de aceites', error);
+Notify['error']('No fue posible descargar el archivo Excel.');
+} finally {
+if (window.loader && typeof window.loader.hide === 'function') window.loader.hide();
+this.descargandoExcel = false;
+}
 },
 
 abrirResumenImpuestos() {

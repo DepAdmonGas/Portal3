@@ -208,19 +208,17 @@ public function uploadDocumento()
 header('Content-Type: application/json; charset=utf-8');
 try {
 $idMes = (int) ($_POST['id_mes'] ?? 0);
-$fecha = $_POST['fecha'] ?? '';
-$anexos = $_POST['anexos'] ?? '';
+$fecha = is_scalar($_POST['fecha'] ?? null) ? trim((string) $_POST['fecha']) : '';
+$anexos = is_scalar($_POST['anexos'] ?? null) ? trim((string) $_POST['anexos']) : '';
 
 if (!$idMes) {
 echo json_encode(['success' => false, 'message' => 'ID de mes requerido']);
 exit;
 }
-if (empty($fecha)) {
-echo json_encode(['success' => false, 'message' => 'La fecha es requerida']);
-exit;
-}
-if (empty($anexos)) {
-echo json_encode(['success' => false, 'message' => 'El anexo es requerido']);
+$fechaValida = \DateTimeImmutable::createFromFormat('!Y-m-d', $fecha);
+if (!$fechaValida || $fechaValida->format('Y-m-d') !== $fecha || $anexos === '') {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 if (!isset($_FILES['documento']) || $_FILES['documento']['error'] !== UPLOAD_ERR_OK) {

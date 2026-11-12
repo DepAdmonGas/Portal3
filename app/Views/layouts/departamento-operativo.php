@@ -22,8 +22,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <!-- Alpine + Axios -->
-    <script defer src="<?= asset('libs/alpinejs/dist/alpinejs.min.js') ?>" onerror="var s=document.createElement('script');s.defer=true;s.src='https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js';document.head.appendChild(s);"></script>
-    <script src="<?= asset('libs/axios/dist/axios.min.js') ?>" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js';document.head.appendChild(s);"></script>
+    <script src="<?= asset('js/core/script-fallbacks.js') ?>?v=<?= @filemtime(PUBLIC_PATH . '/assets/js/core/script-fallbacks.js') ?: 1 ?>"></script>
+    <script defer src="<?= asset('libs/alpinejs/dist/alpinejs.min.js') ?>" data-fallback-src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="<?= asset('libs/axios/dist/axios.min.js') ?>" data-fallback-src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
     <script src="<?= asset('js/core/csrf-http.js') ?>"></script>
@@ -174,7 +175,7 @@ $idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
                             <span class="fs-2"><?= $user->puesto->tipo_puesto ?></span>
                         </div>
                         <!-- SECURITY: BAJO #34 - Logout via POST -->
-                        <a class="border-0 bg-transparent text-primary ms-auto pointer" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir" onclick="performLogout()">
+                        <a class="border-0 bg-transparent text-primary ms-auto pointer" tabindex="0" type="button" aria-label="logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Salir" data-action="logout">
                             <i class="ti ti-power text-danger fs-6"></i>
                         </a>
                     </div>
@@ -268,7 +269,7 @@ $idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
 
                                                 <!-- SECURITY: BAJO #34 - Logout via POST -->
                                                 <div class="d-grid py-4 px-7 pt-8">
-                                                    <a class="btn btn-outline-primary pointer" onclick="performLogout()">Salir</a>
+                                                    <a class="btn btn-outline-primary pointer" data-action="logout">Salir</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -304,7 +305,7 @@ $idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
                                 <div class="ms-auto">
                                     <select class="form-select form-select-sm"
                                         id="sc-selector-estacion"
-                                        onchange="cambiarEstacion(this)"
+                                        data-action="station-change"
                                         style="min-width:260px;">
                                         <option value="all" <?= (!$idEstacion && !$idDepto) ? ' selected' : '' ?>>
                                             <?= htmlspecialchars($nombreFiltro ?? 'Todas las estaciones y departamentos') ?> (<?= $totalPendientes ?>)
@@ -392,6 +393,7 @@ $idExcluido = in_array((int) ($user->id ?? 0), [635, 650], true);
     <script src="<?= asset('js/core/notify.js?v=1.2') ?>"></script>
     <script src="<?= asset('js/core/chat-comments.js?v=1.3') ?>"></script>
     <script src="<?= asset('js/core/actions.alpine.js?v=1.4') ?>"></script>
+    <script src="<?= asset('js/core/inline-handler-remediation.js?v=' . (@filemtime(PUBLIC_PATH . '/assets/js/core/inline-handler-remediation.js') ?: 1)) ?>"></script>
 
     <?php if ($solicitudesFirmaAutorizado): ?>
     <!-- Solicitudes pendientes (Firma) - Departamento Operativo -->

@@ -19,6 +19,8 @@ formPuesto: '',
 formClave: '',
 formDetalle: '',
 guardando: false,
+erroresDirectorio: { cuenta: false, puesto: false, clave: false },
+erroresFactura: { detalle: false, documento: false },
 
 initData(year, mes, estacion, comentario) {
 this.idYear = year;
@@ -51,6 +53,7 @@ this.editandoDirectorio = null;
 this.formCuenta = '';
 this.formPuesto = '';
 this.formClave = '';
+this.erroresDirectorio = { cuenta: false, puesto: false, clave: false };
 new bootstrap.Modal(document.getElementById('modalDirectorio')).show();
 },
 
@@ -59,12 +62,18 @@ this.editandoDirectorio = { id: d.id };
 this.formCuenta = d.cuenta;
 this.formPuesto = d.puesto;
 this.formClave = d.clave;
+this.erroresDirectorio = { cuenta: false, puesto: false, clave: false };
 new bootstrap.Modal(document.getElementById('modalDirectorio')).show();
 },
 
 async guardarDirectorio() {
-if (!this.formCuenta.trim() || !this.formPuesto.trim() || !this.formClave.trim()) {
-if (window.Notify) Notify.error('Todos los campos son obligatorios');
+this.erroresDirectorio = {
+cuenta: !this.formCuenta.trim(),
+puesto: !this.formPuesto.trim(),
+clave: !this.formClave.trim()
+};
+if (Object.values(this.erroresDirectorio).some(Boolean)) {
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
 return;
 }
 this.guardando = true;
@@ -95,9 +104,11 @@ const resp = await fetch(url, { method: method, headers: {'Content-Type': 'appli
 const json = await resp.json();
 if (json.success) {
 bootstrap.Modal.getInstance(document.getElementById('modalDirectorio')).hide();
+this.erroresDirectorio = { cuenta: false, puesto: false, clave: false };
 this.cargarDirectorio();
 if (window.Notify) Notify.success(json.message);
 } else {
+if (json.validation) this.erroresDirectorio = { ...this.erroresDirectorio, ...json.validation };
 if (window.Notify) Notify.error(json.message || 'Error');
 }
 } catch (e) {
@@ -113,17 +124,17 @@ eliminarDirectorio(id) {
 
 abrirModalFacturaTelcel() {
 this.formDetalle = '';
+this.erroresFactura = { detalle: false, documento: false };
+if (this.$refs.facturaFileInput) this.$refs.facturaFileInput.value = '';
 new bootstrap.Modal(document.getElementById('modalFacturaTelcel')).show();
 },
 
 async guardarFacturaTelcel() {
 var fileInput = this.$refs.facturaFileInput;
-if (!this.formDetalle) {
-if (window.Notify) Notify.error('Selecciona un detalle');
-return;
-}
-if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-if (window.Notify) Notify.error('Selecciona un archivo');
+this.erroresFactura.detalle = !this.formDetalle;
+this.erroresFactura.documento = !fileInput || !fileInput.files || !fileInput.files[0];
+if (this.erroresFactura.detalle || this.erroresFactura.documento) {
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
 return;
 }
 this.guardando = true;
@@ -139,10 +150,15 @@ const json = await resp.json();
 if (json.success) {
 bootstrap.Modal.getInstance(document.getElementById('modalFacturaTelcel')).hide();
 this.formDetalle = '';
+this.erroresFactura = { detalle: false, documento: false };
 if (fileInput) fileInput.value = '';
 this.cargarFacturas();
 if (window.Notify) Notify.success('Registro agregado exitosamente.');
 } else {
+if (json.validation) {
+this.erroresFactura.detalle = !!json.validation.detalle;
+this.erroresFactura.documento = !!json.validation.documento;
+}
 if (window.Notify) Notify.error(json.message || 'Error');
 }
 } catch (e) {

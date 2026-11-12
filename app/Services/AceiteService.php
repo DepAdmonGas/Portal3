@@ -266,6 +266,8 @@ if (!in_array($campo, $permitidos)) return false;
 $reporte = AceiteLubricanteReporte::find($id);
 if (!$reporte) return false;
 
+$valor = is_string($valor) ? str_replace(',', '', $valor) : $valor;
+if (!is_numeric($valor)) return false;
 $reporte->$campo = $valor;
 $saved = $reporte->save();
 
@@ -294,6 +296,9 @@ $documentos = AceiteDocumento::where('id_mes', $idMes)
 
 return array_map(function ($f) {
 $f['fecha_formateada'] = !empty($f['fecha']) ? formatearFecha($f['fecha']) : '';
+foreach (['ficha_deposito', 'imagen_bodega', 'factura_venta'] as $campo) {
+$f[$campo . '_disponible'] = !empty($f[$campo]) && self::archivoAceiteDisponible('aceites-documentos', $f[$campo]);
+}
 return $f;
 }, $documentos);
 
@@ -301,8 +306,8 @@ return $f;
 
 public static function subirDocumento(int $idMes, array $files): array
 {
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aceites-documentos/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+$uploadDir = self::directorioCargaAceite('aceites-documentos');
+if (!$uploadDir) return ['success' => false, 'message' => 'No fue posible preparar el almacenamiento de documentos'];
 
 $data = ['id_mes' => $idMes, 'fecha' => date('Y-m-d')];
 $campos = ['ficha_deposito', 'imagen_bodega', 'factura_venta'];
@@ -315,6 +320,8 @@ $nombre = $aleatorio . '-' . basename($files[$campo]['name']);
 if (move_uploaded_file($files[$campo]['tmp_name'], $uploadDir . $nombre)) {
 $data[$campo] = $nombre;
 $saved[] = $campo;
+} else {
+return ['success' => false, 'message' => 'No fue posible guardar uno de los archivos'];
 }
 }
 }
@@ -332,8 +339,8 @@ public static function actualizarDocumento(int $id, int $idMes, array $files): a
 $doc = AceiteDocumento::find($id);
 if (!$doc) return ['success' => false, 'message' => 'Documento no encontrado'];
 
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aceites-documentos/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+$uploadDir = self::directorioCargaAceite('aceites-documentos');
+if (!$uploadDir) return ['success' => false, 'message' => 'No fue posible preparar el almacenamiento de documentos'];
 
 $campos = ['ficha_deposito', 'imagen_bodega', 'factura_venta'];
 foreach ($campos as $campo) {
@@ -345,6 +352,8 @@ $aleatorio = uniqid();
 $nombre = $aleatorio . '-' . basename($files[$campo]['name']);
 if (move_uploaded_file($files[$campo]['tmp_name'], $uploadDir . $nombre)) {
 $doc->$campo = $nombre;
+} else {
+return ['success' => false, 'message' => 'No fue posible guardar uno de los archivos'];
 }
 }
 }
@@ -358,10 +367,11 @@ public static function eliminarDocumento(int $id): array
 $doc = AceiteDocumento::find($id);
 if (!$doc) return ['success' => false, 'message' => 'Documento no encontrado'];
 
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aceites-documentos/';
+$uploadDir = dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-documentos/';
 foreach (['ficha_deposito', 'imagen_bodega', 'factura_venta'] as $campo) {
-if ($doc->$campo && file_exists($uploadDir . $doc->$campo)) {
-unlink($uploadDir . $doc->$campo);
+if ($doc->$campo) {
+$rutaArchivo = self::rutaArchivoAceite('aceites-documentos', $doc->$campo);
+if ($rutaArchivo && str_starts_with($rutaArchivo, $uploadDir) && is_file($rutaArchivo)) unlink($rutaArchivo);
 }
 }
 
@@ -391,14 +401,15 @@ $facturas = AceiteFactura::where('id_mes', $idMes)
 
 return array_map(function ($f) {
 $f['fecha_formateada'] = !empty($f['fecha']) ? formatearFecha($f['fecha']) : '';
+$f['archivo_disponible'] = !empty($f['archivo']) && self::archivoAceiteDisponible('aceites-facturas', $f['archivo']);
 return $f;
 }, $facturas);
 }
 
 public static function subirFactura(int $idMes, string $fecha, string $concepto, array $file): array
 {
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aceites-facturas/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+$uploadDir = self::directorioCargaAceite('aceites-facturas');
+if (!$uploadDir) return ['success' => false, 'message' => 'No fue posible preparar el almacenamiento de facturas'];
 
 if (empty($file) || $file['error'] !== UPLOAD_ERR_OK) {
 return ['success' => false, 'message' => 'Archivo no válido'];
@@ -426,9 +437,10 @@ public static function eliminarFactura(int $id): array
 $factura = AceiteFactura::find($id);
 if (!$factura) return ['success' => false, 'message' => 'Factura no encontrada'];
 
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aceites-facturas/';
-if ($factura->archivo && file_exists($uploadDir . $factura->archivo)) {
-unlink($uploadDir . $factura->archivo);
+$uploadDir = dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-facturas/';
+if ($factura->archivo) {
+$rutaArchivo = self::rutaArchivoAceite('aceites-facturas', $factura->archivo);
+if ($rutaArchivo && $uploadDir && str_starts_with($rutaArchivo, $uploadDir) && is_file($rutaArchivo)) unlink($rutaArchivo);
 }
 
 $factura->delete();
@@ -456,20 +468,23 @@ $diferencias = AceiteLubricanteReportePagoDiferencia::where('id_reporte', $idMes
 
 return array_map(function ($d) {
 $d['fecha_formateada'] = !empty($d['fecha']) ? formatearFecha($d['fecha']) : '';
+$d['documento_disponible'] = !empty($d['documento']) && self::archivoAceiteDisponible('aceites-diferencias', $d['documento']);
 return $d;
 }, $diferencias);
 }
 
 public static function agregarDiferenciaPago(int $idAceite, int $idMes, string $nombreAceite, int $diferencia, string $comentario, array $file): array
 {
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aceites-diferencias/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+$uploadDir = self::directorioCargaAceite('aceites-diferencias');
+if (!$uploadDir) return ['success' => false, 'message' => 'No fue posible preparar el almacenamiento de diferencias'];
 
 $documento = '';
 if (!empty($file) && $file['error'] === UPLOAD_ERR_OK) {
 $aleatorio = uniqid();
 $documento = $aleatorio . '-' . basename($file['name']);
-move_uploaded_file($file['tmp_name'], $uploadDir . $documento);
+if (!move_uploaded_file($file['tmp_name'], $uploadDir . $documento)) {
+return ['success' => false, 'message' => 'No fue posible guardar el documento de pago'];
+}
 }
 
 AceiteLubricanteReportePagoDiferencia::create([
@@ -497,17 +512,59 @@ if (empty($file) || $file['error'] !== UPLOAD_ERR_OK) {
 return ['success' => false, 'message' => 'Seleccione un archivo PDF'];
 }
 
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aceites-diferencias/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+$uploadDir = self::directorioCargaAceite('aceites-diferencias');
+if (!$uploadDir) return ['success' => false, 'message' => 'No fue posible preparar el almacenamiento de diferencias'];
 
 $aleatorio = uniqid();
 $documento = $aleatorio . '-' . basename($file['name']);
-move_uploaded_file($file['tmp_name'], $uploadDir . $documento);
+if (!move_uploaded_file($file['tmp_name'], $uploadDir . $documento)) {
+return ['success' => false, 'message' => 'No fue posible guardar el documento de pago'];
+}
 
 $pago->documento = $documento;
 $pago->save();
 
 return ['success' => true, 'message' => 'Documento actualizado'];
+}
+
+private static function directorioCargaAceite(string $tipo): ?string
+{
+$subdirectorios = [
+'aceites-documentos' => 'aceites-documentos',
+'aceites-facturas' => 'aceites-facturas',
+'aceites-diferencias' => 'aceites-diferencias',
+];
+if (!isset($subdirectorios[$tipo])) return null;
+$directorio = dirname(__DIR__, 2) . '/public/uploads/archivos/' . $subdirectorios[$tipo] . '/';
+if (!is_dir($directorio) && !@mkdir($directorio, 0755, true) && !is_dir($directorio)) return null;
+return rtrim($directorio, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+}
+
+public static function getDirectoriosArchivoAceite(string $tipo): array
+{
+$raizActual = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+$raizAnterior = dirname(__DIR__, 3) . '/departamento-operativo/archivos/';
+$directorios = [
+'aceites-documentos' => [$raizActual . 'aceites-documentos/', $raizActual, $raizAnterior],
+'aceites-facturas' => [$raizActual . 'aceites-facturas/', $raizAnterior . 'aceites-facturas/'],
+'aceites-diferencias' => [$raizActual . 'aceites-diferencias/', $raizActual, $raizAnterior . 'aceites-diferencias/', $raizAnterior],
+];
+return $directorios[$tipo] ?? [];
+}
+
+private static function rutaArchivoAceite(string $tipo, string $nombre): ?string
+{
+$nombre = basename($nombre);
+foreach (self::getDirectoriosArchivoAceite($tipo) as $directorio) {
+$ruta = rtrim($directorio, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $nombre;
+if (is_file($ruta)) return $ruta;
+}
+return null;
+}
+
+private static function archivoAceiteDisponible(string $tipo, string $nombre): bool
+{
+return self::rutaArchivoAceite($tipo, $nombre) !== null;
 }
 
 public static function finalizarInventario(int $idMes): array
@@ -685,6 +742,12 @@ return Aceite::orderBy('id_aceite', 'asc')->get()->toArray();
 
 public static function actualizarAceite(int $id, string $campo, $valor): bool
 {
+$camposNumericos = ['piezas', 'precio'];
+if (in_array($campo, $camposNumericos, true)) {
+$valor = is_string($valor) ? str_replace(',', '', trim($valor)) : $valor;
+if (!is_numeric($valor) || (float) $valor < 0) return false;
+if ($campo === 'piezas' && (float) $valor !== (float) (int) $valor) return false;
+}
 $actualizado = Aceite::where('id', $id)->update([$campo => $valor]);
 return $actualizado > 0;
 }

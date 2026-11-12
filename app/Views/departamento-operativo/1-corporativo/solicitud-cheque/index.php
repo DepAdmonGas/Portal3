@@ -27,6 +27,7 @@ data-puede-gestionar-telcel="<?= $puedeGestionarTelcel ? 'true' : 'false' ?>"
 data-puede-exportar="<?= $puedeExportar ? 'true' : 'false' ?>"
 data-id-usuario="<?= $idUsuario ?>"
 data-es-mes-actual="<?= $esMesActual ? 'true' : 'false' ?>"
+data-periodo-permite-nueva-solicitud="<?= $periodoPermiteNuevaSolicitud ? 'true' : 'false' ?>"
 x-data="{ ...actions(), ...solicitudChequeComponent() }">
 
 <div id="sc-tools-header" class="d-flex align-items-center justify-content-between mb-2 gap-2 mb-3">
@@ -50,7 +51,7 @@ x-data="{ ...actions(), ...solicitudChequeComponent() }">
 <ul class="dropdown-menu">
 <li id="sc-tool-agregar" class="sc-tool-item"><a class="dropdown-item pointer" onclick="irACrearSolicitud()"><i class="ti ti-plus me-1"></i> Nueva solicitud</a></li>
 <li id="sc-tool-telcel" class="sc-tool-item"><a class="dropdown-item pointer" onclick="abrirFacturasTelcelGlobal()"><i class="ti ti-device-mobile me-1"></i> Facturas Telcel</a></li>
-<li id="sc-tool-comprobante" class="sc-tool-item"><a class="dropdown-item pointer" onclick="abrirComprobantePago()"><i class="ti ti-file-invoice me-1"></i> Comprobante Pago</a></li>
+<li id="sc-tool-comprobante" class="sc-tool-item"><a class="dropdown-item pointer" onclick="abrirComprobantePago()"><i class="ti ti-file-invoice me-1"></i> Comprobante de pago</a></li>
 <li id="sc-tool-excel" class="sc-tool-item"><a class="dropdown-item pointer" onclick="descargarExcel()"><i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel</a></li>
 </ul>
 </div>
@@ -82,10 +83,7 @@ Comprobante de Pago</h4>
 <div class="row">
 
 <div class="col-12 mb-3">
-<label class="form-label">* Factura Telcel:</label>
-</div>
-<div class="row g-0 w-100 mt-3 mb-3">
-    <div class="col-12">
+<label class="form-label mb-1">* Factura Telcel:</label>
         <div class="input-group">
             <input 
                 type="file" 
@@ -105,7 +103,7 @@ Comprobante de Pago</h4>
             </button>
         </div>
     </div>
-</div>
+
 
 
 
@@ -128,18 +126,19 @@ Comprobante de Pago</h4>
 <tr>
 
 <td class="text-center">
-<template x-if="t.factura">
-<i class="ti ti-file-text pointer text-primary fs-5" @click.prevent="download('solicitud-cheque', t.factura)"></i>
+<template x-if="t.factura_disponible">
+<i class="ti ti-download pointer text-primary fs-6" @click.prevent="download('solicitud-cheque', t.factura)"></i>
 </template>
+<template x-if="!t.factura_disponible"><i class="ti ti-file-off text-muted fs-6"></i></template>
 </td>
 
 <td class="text-center">
-<template x-if="t.c_pago">
-<i class="ti ti-download pointer text-primary fs-5" @click.prevent="download('solicitud-cheque', t.c_pago)"></i>
+<template x-if="t.c_pago_disponible">
+<i class="ti ti-download pointer text-primary fs-6" @click.prevent="download('solicitud-cheque', t.c_pago)"></i>
 </template>
 
-<template x-if="!t.c_pago">
-<i class="ti ti-file-off text-muted fs-5"></i>
+<template x-if="!t.c_pago_disponible">
+<i class="ti ti-file-off text-muted fs-6"></i>
 </template>
 </td>
 
@@ -381,8 +380,14 @@ $<span x-text="formatNum(detalle.monto)"></span>
 </div>
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-<template x-if="getFirma('A').firma_img_url">
+<template x-if="getFirma('A').firma_img_disponible && getFirma('A').firma_img_url">
 <div><img :src="getFirma('A').firma_img_url" class="img-fluid" style="max-height:90px;object-fit:contain;"></div>
+</template>
+<template x-if="!getFirma('A').firma_img_disponible">
+<div class="d-flex flex-column align-items-center">
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+</div>
 </template>
 </div>
 <div class="card-footer bg-light text-center">
@@ -519,7 +524,10 @@ $<span x-text="formatNum(detalle.monto)"></span>
 <template x-for="d in detalle.documentos" :key="d.id">
 <tr>
 <td x-text="d.nombre"></td>
-<td class="text-center"><i class="ti ti-download pointer text-primary fs-5" @click.prevent="download('solicitud-cheque', d.documento)" title="Descargar"></i></td>
+<td class="text-center">
+<i x-show="d.archivo_disponible" class="ti ti-download pointer text-primary fs-6" @click.prevent="download('solicitud-cheque', d.documento)" title="Descargar"></i>
+<i x-show="!d.archivo_disponible" class="ti ti-file-off text-muted fs-6" title="Archivo no disponible"></i>
+</td>
 </tr>
 </template>
 </template>
@@ -780,7 +788,10 @@ Documentos (#<span x-text="archivoSolicitudId"></span>)</h4>
 <template x-for="d in documentos" :key="d.id">
 <tr>
 <td x-text="d.nombre"></td>
-<td><i class="ti ti-download pointer text-primary fs-5" @click.prevent="download('solicitud-cheque', d.documento)"></i></td>
+<td class="text-center">
+<i x-show="d.archivo_disponible" class="ti ti-download pointer text-primary fs-6" @click.prevent="download('solicitud-cheque', d.documento)"></i>
+<i x-show="!d.archivo_disponible" class="ti ti-file-off text-muted fs-6"></i>
+</td>
 <td><i class="ti ti-trash pointer text-danger fs-5" @click="eliminarDocumento(d.id)"></i></td>
 </tr>
 </template>
@@ -817,16 +828,10 @@ Comprobantes de Pago (#<span x-text="pagoSolicitudId"></span>)</h4>
 </div>
 <div class="modal-body">
 <!-- <template x-if="puedeGestionarPagos"> -->
-<div class="row g-2">
+<div class="row g-3">
 
 <div class="col-12">
-<label class="form-label">Archivo de pago:</label>
-</div>
-</div>
-
-
-<div class="row g-0 w-100 mt-3 mb-3">
-    <div class="col-12">
+<label class="form-label mb-1">Archivo de pago:</label>
         <div class="input-group">
             <input 
                 type="file" 
@@ -864,7 +869,10 @@ Comprobantes de Pago (#<span x-text="pagoSolicitudId"></span>)</h4>
 <template x-for="p in pagos" :key="p.id">
 <tr>
 <td class="text-center" x-text="p.fecha ? formatearFecha(p.fecha) : ''"></td>
-<td class="text-center align-middle"><i class="ti ti-download pointer text-primary fs-5" @click.prevent="download('solicitud-cheque', p.documento)"></i></td>
+<td class="text-center align-middle">
+<i x-show="p.archivo_disponible" class="ti ti-download pointer text-primary fs-6" @click.prevent="download('solicitud-cheque', p.documento)"></i>
+<i x-show="!p.archivo_disponible" class="ti ti-file-off text-muted fs-6"></i>
+</td>
 <td class="text-center align-middle"><i class="ti ti-trash pointer text-danger fs-5" @click="eliminarPago(p.id)"></i></td>
 </tr>
 </template>

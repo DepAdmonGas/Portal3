@@ -641,6 +641,7 @@ $docs[] = [
 'id' => $r->id,
 'anexo' => $r->anexo,
 'archivo' => $r->archivo,
+'archivo_disponible' => self::archivoComparativoDisponible($r->archivo),
 'fecha' => $r->fecha,
 'fecha_formato' => formatearFecha($r->fecha),
 ];
@@ -680,19 +681,31 @@ return $data;
 
 public static function saveObservations(int $idYear, int $idEstacion, string $content): bool
 {
-$dir = __DIR__ . '/../../public/uploads/archivos/comparativo-xml';
-if (!is_dir($dir)) mkdir($dir, 0777, true);
-$filename = "$dir/comparativo-ES{$idEstacion}-{$idYear}.html";
-return file_put_contents($filename, $content) !== false;
+$dir = self::directorioComparativoXml();
+if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) return false;
+$filename = $dir . "/comparativo-ES{$idEstacion}-{$idYear}.html";
+return file_put_contents($filename, $content, LOCK_EX) !== false;
 }
 
 public static function loadObservations(int $idYear, int $idEstacion): string
 {
-$filename = __DIR__ . "/../../public/uploads/archivos/comparativo-xml/comparativo-ES{$idEstacion}-{$idYear}.html";
-if (file_exists($filename)) {
-return file_get_contents($filename);
+$filename = self::directorioComparativoXml() . "/comparativo-ES{$idEstacion}-{$idYear}.html";
+if (is_file($filename)) {
+$content = file_get_contents($filename);
+return $content === false ? '' : $content;
 }
 return '';
+}
+
+private static function directorioComparativoXml(): string
+{
+return dirname(__DIR__, 2) . '/public/uploads/archivos/comparativo-xml';
+}
+
+private static function archivoComparativoDisponible(?string $archivo): bool
+{
+if (!$archivo || basename($archivo) !== $archivo) return false;
+return is_file(self::directorioComparativoXml() . '/' . $archivo);
 }
 
 public static function logAccess(int $idEstacion, int $idYear, int $idUsuario): void

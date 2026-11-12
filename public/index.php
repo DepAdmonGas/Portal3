@@ -31,8 +31,12 @@ use App\Core\Kernel;
 // SECURITY: Headers HTTP esenciales (Vulnerabilidad #3)
 // ============================================================
 
-// Prevenir clickjacking
-header('X-Frame-Options: DENY');
+// Prevenir clickjacking; permitir iframe solo para la vista previa de contratos del mismo origen.
+$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$vistaPreviaContrato = $requestPath === '/download'
+    && in_array($_GET['tipo'] ?? '', ['contratos', 'contratos-legado'], true)
+    && isset($_GET['view']);
+header('X-Frame-Options: ' . ($vistaPreviaContrato ? 'SAMEORIGIN' : 'DENY'));
 
 // Prevenir MIME sniffing
 header('X-Content-Type-Options: nosniff');
@@ -45,7 +49,8 @@ $enforcedCsp = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsd
 header('Content-Security-Policy: ' . $enforcedCsp);
 
 // Report-Only: política candidata más estricta, sin cambiar enforcement.
-header("Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdn.ckeditor.com 'unsafe-eval'; style-src 'self' https://cdn.jsdelivr.net https://cdn.ckeditor.com 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net https://cdn.ckeditor.com; connect-src 'self' https://www.admongas.com.mx; object-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';");
+$frameAncestorsReportOnly = $vistaPreviaContrato ? "'self'" : "'none'";
+header("Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://cdn.ckeditor.com 'unsafe-eval'; style-src 'self' https://cdn.jsdelivr.net https://cdn.ckeditor.com 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net https://cdn.ckeditor.com; connect-src 'self' https://www.admongas.com.mx; object-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors {$frameAncestorsReportOnly};");
 
 // HSTS (solo si HTTPS está configurado)
 if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {

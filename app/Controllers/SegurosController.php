@@ -114,19 +114,27 @@ exit;
 }
 
 $data = [
-'fecha' => $_POST['fecha'] ?? '',
-'hora' => $_POST['hora'] ?? '',
-'asunto' => $_POST['asunto'] ?? '',
-'observaciones' => $_POST['observaciones'] ?? '',
-'solucion' => $_POST['solucion'] ?? '',
+'fecha' => trim((string)($_POST['fecha'] ?? '')),
+'hora' => trim((string)($_POST['hora'] ?? '')),
+'asunto' => trim((string)($_POST['asunto'] ?? '')),
+'observaciones' => trim((string)($_POST['observaciones'] ?? '')),
+'solucion' => trim((string)($_POST['solucion'] ?? '')),
 ];
 
-if (!$data['fecha'] || !$data['hora'] || !$data['asunto'] || !$data['observaciones'] || !$data['solucion']) {
-echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
-exit;
+$camposFaltantes = [];
+foreach ($data as $campo => $valor) {
+if ($valor === '') $camposFaltantes[$campo] = true;
 }
 
 $file = $_FILES['Evidencia_file'] ?? null;
+if (!$file || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+$camposFaltantes['archivo'] = true;
+}
+
+if ($camposFaltantes) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'campos' => $camposFaltantes]);
+exit;
+}
 
 $id = SegurosService::guardarIncidencia((int) $idEstacion, $data, $file);
 if (!$id) {
@@ -152,15 +160,20 @@ exit;
 }
 
 $data = [
-'fecha' => $_POST['fecha'] ?? '',
-'hora' => $_POST['hora'] ?? '',
-'asunto' => $_POST['asunto'] ?? '',
-'observaciones' => $_POST['observaciones'] ?? '',
-'solucion' => $_POST['solucion'] ?? '',
+'fecha' => trim((string)($_POST['fecha'] ?? '')),
+'hora' => trim((string)($_POST['hora'] ?? '')),
+'asunto' => trim((string)($_POST['asunto'] ?? '')),
+'observaciones' => trim((string)($_POST['observaciones'] ?? '')),
+'solucion' => trim((string)($_POST['solucion'] ?? '')),
 ];
 
-if (!$data['fecha'] || !$data['hora'] || !$data['asunto'] || !$data['observaciones'] || !$data['solucion']) {
-echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
+$camposFaltantes = [];
+foreach ($data as $campo => $valor) {
+if ($valor === '') $camposFaltantes[$campo] = true;
+}
+
+if ($camposFaltantes) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'campos' => $camposFaltantes]);
 exit;
 }
 
@@ -274,19 +287,21 @@ exit;
 }
 
 $data = [
-'emision' => $_POST['emision'] ?? '',
-'vencimiento' => $_POST['vencimiento'] ?? '',
+'emision' => trim((string)($_POST['emision'] ?? '')),
+'vencimiento' => trim((string)($_POST['vencimiento'] ?? '')),
 ];
 
-if (!$data['emision'] || !$data['vencimiento']) {
-echo json_encode(['success' => false, 'message' => 'Fechas requeridas']);
-exit;
-}
+$camposFaltantes = [];
+if ($data['emision'] === '') $camposFaltantes['emision'] = true;
+if ($data['vencimiento'] === '') $camposFaltantes['vencimiento'] = true;
 
 $file = $_FILES['Poliza_file'] ?? null;
+if (!$file || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+$camposFaltantes['archivo'] = true;
+}
 
-if (!$file || empty($file['tmp_name'])) {
-echo json_encode(['success' => false, 'message' => 'Archivo PDF requerido']);
+if ($camposFaltantes) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'campos' => $camposFaltantes]);
 exit;
 }
 
@@ -314,12 +329,16 @@ exit;
 }
 
 $data = [
-'emision' => $_POST['emision'] ?? '',
-'vencimiento' => $_POST['vencimiento'] ?? '',
+'emision' => trim((string)($_POST['emision'] ?? '')),
+'vencimiento' => trim((string)($_POST['vencimiento'] ?? '')),
 ];
 
-if (!$data['emision'] || !$data['vencimiento']) {
-echo json_encode(['success' => false, 'message' => 'Fechas requeridas']);
+$camposFaltantes = [];
+if ($data['emision'] === '') $camposFaltantes['emision'] = true;
+if ($data['vencimiento'] === '') $camposFaltantes['vencimiento'] = true;
+
+if ($camposFaltantes) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'campos' => $camposFaltantes]);
 exit;
 }
 

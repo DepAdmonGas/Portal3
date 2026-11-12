@@ -164,7 +164,11 @@ document.addEventListener('ver-documentos', (e) => { this.abrirModalArchivos(e.d
 document.addEventListener('ver-pagos', (e) => { this.abrirModalPagos(e.detail.id); });
 document.addEventListener('ver-telcel', (e) => { this.abrirModalTelcel(e.detail.id); });
 document.addEventListener('ver-pdf', (e) => {
-window.location.href = '/departamento-operativo/solicitud-cheque-pdf/' + e.detail.id;
+descargarArchivoSolicitudCheque(
+    '/departamento-operativo/solicitud-cheque-pdf/' + e.detail.id,
+    'Descargar PDF',
+    'Solicitud_Cheque_' + e.detail.id + '.pdf'
+);
 });
 document.addEventListener('ver-telcel-global', (e) => {
 this.abrirModalTelcelGlobal(e.detail.estacion, e.detail.year, e.detail.mes);
@@ -810,9 +814,10 @@ anchor.appendChild(tmpl.content.cloneNode(true));
 tools = document.getElementById('sc-tools-wrapper');
 if (!tools) return;
 
-// "Nueva solicitud" siempre visible
+// No permitir nuevas solicitudes para periodos anteriores al mes actual.
 var agregar = document.getElementById('sc-tool-agregar');
-if (agregar) agregar.style.display = '';
+var periodoPermiteNuevaSolicitud = c.dataset.periodoPermiteNuevaSolicitud === 'true';
+if (agregar) agregar.style.display = periodoPermiteNuevaSolicitud ? '' : 'none';
 
 // Contexto de departamento → solo "Nueva solicitud"
 // Contexto de estación multiestación → todas las opciones
@@ -823,7 +828,7 @@ var telcel = document.getElementById('sc-tool-telcel');
 if (telcel) telcel.style.display = mostrarExtras ? '' : 'none';
 
 var comprobante = document.getElementById('sc-tool-comprobante');
-if (comprobante) comprobante.style.display = mostrarExtras ? '' : 'none';
+if (comprobante) comprobante.style.display = '';
 
 var excel = document.getElementById('sc-tool-excel');
 if (excel) excel.style.display = mostrarExtras ? '' : 'none';
@@ -834,6 +839,7 @@ tools.style.display = '';
 function irACrearSolicitud() {
 var c = document.getElementById('container');
 if (!c) return;
+if (c.dataset.periodoPermiteNuevaSolicitud !== 'true') return;
 var year = c.dataset.idYear;
 var mes = c.dataset.idMes;
 var esMultiestacion = c.dataset.multiestacion === 'true';
@@ -888,6 +894,17 @@ function abrirComprobantePago() {
 document.dispatchEvent(new CustomEvent('abrir-global-telcel'));
 }
 
+function descargarArchivoSolicitudCheque(url, etiqueta, nombreAlternativo) {
+var enlace = document.createElement('a');
+enlace.href = url;
+enlace.textContent = etiqueta;
+enlace.download = nombreAlternativo;
+enlace.style.display = 'none';
+document.body.appendChild(enlace);
+enlace.click();
+enlace.remove();
+}
+
 function descargarExcel() {
 var c = document.getElementById('container');
 if (!c) return;
@@ -912,7 +929,11 @@ var params = [];
 if (est && est !== '0') params.push('estacion=' + est);
 if (dep && dep !== '0') params.push('depto=' + dep);
 var qs = params.join('&');
-window.location.href = '/departamento-operativo/solicitud-cheque/excel/' + year + '/' + mes + (qs ? '?' + qs : '');
+descargarArchivoSolicitudCheque(
+    '/departamento-operativo/solicitud-cheque/excel/' + year + '/' + mes + (qs ? '?' + qs : ''),
+    'Descargar Excel',
+    'Solicitud_Cheque_' + year + '_' + mes + '.xlsx'
+);
 }
 
 document.addEventListener('DOMContentLoaded', function() {

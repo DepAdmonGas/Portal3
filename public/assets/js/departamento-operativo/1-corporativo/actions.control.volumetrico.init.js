@@ -23,6 +23,7 @@ comentarios: [],
 nuevoComentario: '',
 guardandoComentario: false,
 subiendoDocumento: false,
+validationErrors: { fecha: false, anexos: false, documento: false },
 
 init() {
 const c = document.getElementById('container');
@@ -71,12 +72,12 @@ this.loading = false;
 recalcularTotales() {
 let s3 = 0, s4 = 0, s5 = 0, s6 = 0, s7 = 0, s8 = 0, s9 = 0, s10 = 0, s11 = 0, s12 = 0, s13 = 0, s14 = 0;
 for (const p of this.productos) {
-s3 += p.dato3; s4 += p.dato4;
-s5 += p.dato5; s6 += p.dato6;
-s7 += p.dato7; s8 += p.dato8;
-s9 += p.dato9; s10 += p.dato10;
-s11 += p.dato11; s12 += p.dato12;
-s13 += p.dato13; s14 += p.dato14;
+s3 += parseFloat(p.dato3) || 0; s4 += parseFloat(p.dato4) || 0;
+s5 += parseFloat(p.dato5) || 0; s6 += parseFloat(p.dato6) || 0;
+s7 += parseFloat(p.dato7) || 0; s8 += parseFloat(p.dato8) || 0;
+s9 += parseFloat(p.dato9) || 0; s10 += parseFloat(p.dato10) || 0;
+s11 += parseFloat(p.dato11) || 0; s12 += parseFloat(p.dato12) || 0;
+s13 += parseFloat(p.dato13) || 0; s14 += parseFloat(p.dato14) || 0;
 }
 this.totales = {
 dato3: s3, dato4: s4, dato5: s5, dato6: s6,
@@ -108,7 +109,7 @@ this.prefijoTotals = { sum_gasolina: sg, sum_rentas: sr, sum_sodexo: ss, sum_aut
 
 recalcularGranTotal() {
 let s9 = 0;
-for (const p of this.productos) s9 += p.dato9;
+for (const p of this.productos) s9 += parseFloat(p.dato9) || 0;
 this.granTotal = s9 - this.prefijoTotals.sum_gasolina;
 },
 
@@ -129,6 +130,40 @@ return (typeof val === 'number' && val >= 1.5) ? 'text-danger' : '';
 
 formatDisplay(n) {
 return formatNum(n);
+},
+
+formatInputNumber(value) {
+if (value === null || value === undefined || value === '') return '';
+const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatNumericInput(event, row, field) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const formatted = normalized.includes('.') ? grouped + '.' + decimals : grouped;
+
+row[field] = normalized;
+input.value = formatted;
+
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
 },
 
 
@@ -256,35 +291,48 @@ this.guardandoComentario = false;
 
 abrirModalDocumento() {
 this.subiendoDocumento = false;
+this.validationErrors = { fecha: false, anexos: false, documento: false };
 const modalEl = document.getElementById('modalDocumento');
 const fechaEl = document.getElementById('docFecha');
 if (fechaEl) fechaEl.value = new Date().toISOString().substring(0, 10);
 const fileEl = document.getElementById('docFile');
 if (fileEl) fileEl.value = '';
+const $select = $('#docAnexos');
+if ($select.hasClass('select2-hidden-accessible')) $select.select2('destroy');
+$select.val('').trigger('change');
 
 this.$nextTick(() => {
-const $select = $('#docAnexos');
 if ($select.length) {
-if ($select.hasClass('select2-hidden-accessible')) {
-$select.select2('destroy');
-}
 $select.select2({
 dropdownParent: $('#modalDocumento .modal-content'),
 width: '100%',
 placeholder: 'Seleccionar...',
 allowClear: true,
 });
+$select.off('change.controlVolumetricoValidation').on('change.controlVolumetricoValidation', () => {
+if ($select.val()) this.validationErrors.anexos = false;
+});
 }
 const wr = this.$refs.anexosWrapper;
 if (wr) wr.classList.remove('is-select2-pending');
 });
 
-const modal = new bootstrap.Modal(modalEl);
+const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 modal.show();
 
 if (!modalEl._select2Cleanup) {
 modalEl._select2Cleanup = true;
+modalEl.addEventListener('hide.bs.modal', () => {
+if (modalEl.contains(document.activeElement)) document.activeElement.blur();
+});
 modalEl.addEventListener('hidden.bs.modal', () => {
+this.validationErrors = { fecha: false, anexos: false, documento: false };
+const fecha = document.getElementById('docFecha');
+if (fecha) fecha.value = '';
+const archivo = document.getElementById('docFile');
+if (archivo) archivo.value = '';
+const select = $('#docAnexos');
+if (select.length) select.val('').trigger('change');
 const wr = this.$refs.anexosWrapper;
 if (wr) wr.classList.add('is-select2-pending');
 });
@@ -329,17 +377,23 @@ const fecha = document.getElementById('docFecha').value;
 const $select = $('#docAnexos');
 const anexos = $select.val() || '';
 const fileInput = document.getElementById('docFile');
-
-if (!fecha) { if (window.Notify) Notify.error('* Agregar fecha'); return; }
-if (!anexos) { if (window.Notify) Notify.error('* Agregar Anexo'); return; }
-if (!fileInput || !fileInput.files[0]) { if (window.Notify) Notify.error('* Agregar Documento'); return; }
+const documento = fileInput?.files?.[0] || null;
+this.validationErrors = {
+fecha: !fecha,
+anexos: !anexos,
+documento: !documento,
+};
+if (!fecha || !anexos || !documento) {
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
+return;
+}
 
 this.subiendoDocumento = true;
 const fd = new FormData();
 fd.append('id_mes', this.idMesDb);
 fd.append('fecha', fecha);
 fd.append('anexos', anexos);
-fd.append('documento', fileInput.files[0]);
+fd.append('documento', documento);
 
 try {
 const resp = await fetch('/departamento-operativo/control-volumetrico/subir-documento', {

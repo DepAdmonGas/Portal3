@@ -554,10 +554,17 @@ $rows = ControlVolumetrico::where('id_mes', $idMes)
 
 foreach ($rows as &$row) {
 $row['fecha_formateada'] = $row['fecha_hora'] ? formatearFecha($row['fecha_hora']) : '';
+$archivo = basename(trim((string) ($row['documento'] ?? '')));
+$row['documento_disponible'] = $archivo !== '' && is_file(self::documentosUploadDir() . $archivo);
 }
 unset($row);
 
 return $rows;
+}
+
+private static function documentosUploadDir(): string
+{
+return dirname(__DIR__, 2) . '/public/uploads/archivos/';
 }
 
 public static function getPrefijos(int $idMes): array
@@ -680,29 +687,37 @@ return true;
 
 public static function subirDocumento(int $idMes, array $file, string $fecha, string $anexos): bool
 {
-$aleatorio = uniqid();
-$archivo = basename($file['name']);
-$nombreArchivo = $aleatorio . '-' . $archivo;
-$uploadDir = realpath(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'archivos');
-if (!$uploadDir) {
-$uploadDir = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'archivos';
-if (!is_dir($uploadDir)) {
-mkdir($uploadDir, 0755, true);
+$uploadDir = self::documentosUploadDir();
+if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+return false;
 }
-}
-$uploadPath = $uploadDir . DIRECTORY_SEPARATOR . $nombreArchivo;
 
+if (empty($file['tmp_name']) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+return false;
+}
+
+$archivo = basename(str_replace('\\', '/', (string) ($file['name'] ?? '')));
+if ($archivo === '' || $archivo === '.' || $archivo === '..') {
+return false;
+}
+$nombreArchivo = uniqid('', true) . '-' . $archivo;
+$uploadPath = $uploadDir . $nombreArchivo;
 if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
 return false;
 }
 
+try {
 ControlVolumetrico::create([
 'id_mes' => $idMes,
 'fecha_hora' => $fecha ? $fecha . ' 00:00:00' : date('Y-m-d H:i:s'),
 'anexos' => $anexos,
 'documento' => $nombreArchivo,
 ]);
-
+} catch (\Throwable $e) {
+@unlink($uploadPath);
+error_log('Error al registrar documento de control volumétrico: ' . $e->getMessage());
+return false;
+}
 return true;
 }
 
@@ -711,9 +726,10 @@ public static function eliminarDocumento(int $id): bool
 $row = ControlVolumetrico::find($id);
 if (!$row) return false;
 
-$uploadDir = realpath(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'archivos');
-if ($uploadDir) {
-$ruta = $uploadDir . DIRECTORY_SEPARATOR . $row->documento;
+$uploadDir = self::documentosUploadDir();
+$nombreArchivo = basename(trim((string) $row->documento));
+if ($nombreArchivo !== '' && is_file($uploadDir . $nombreArchivo)) {
+$ruta = $uploadDir . $nombreArchivo;
 if (file_exists($ruta)) unlink($ruta);
 }
 

@@ -13,4 +13,13 @@
             window.history.back();
         }
     });
+
+    document.addEventListener('change', function (event) {
+        const selector = event.target.closest('[data-action="station-change"]');
+        if (!selector) return;
+
+        if (typeof window.cambiarEstacion === 'function') {
+            window.cambiarEstacion(selector);
+        }
+    });
 })();

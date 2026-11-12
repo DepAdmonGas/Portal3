@@ -26,6 +26,11 @@ buscarForm: {
 fecha_inicio: '',
 fecha_termino: '',
 },
+validacion: {
+buscar: { fecha_inicio: false, fecha_termino: false },
+nuevo: { fecha_inicio: false, fecha_termino: false, pdf: false, xml: false },
+editar: { fecha_inicio: false, fecha_termino: false },
+},
 
 init: function () {
 this.cargarData();
@@ -54,8 +59,11 @@ self.notify('error', 'Error al cargar datos');
 },
 
 buscarReporte: function () {
-if (!this.buscarForm.fecha_inicio || !this.buscarForm.fecha_termino) {
-this.notify('error', 'Ambas fechas son requeridas');
+var periodoInvertido = Boolean(this.buscarForm.fecha_inicio && this.buscarForm.fecha_termino && this.buscarForm.fecha_inicio > this.buscarForm.fecha_termino);
+this.validacion.buscar.fecha_inicio = !this.buscarForm.fecha_inicio || periodoInvertido;
+this.validacion.buscar.fecha_termino = !this.buscarForm.fecha_termino || periodoInvertido;
+if (this.validacion.buscar.fecha_inicio || this.validacion.buscar.fecha_termino) {
+this.notify('error', 'Completa los campos obligatorios.');
 return;
 }
 var modal = bootstrap.Modal.getInstance(document.getElementById('modal-buscar'));
@@ -64,18 +72,17 @@ this.cargarData(this.buscarForm.fecha_inicio, this.buscarForm.fecha_termino);
 },
 
 guardarPago: function () {
-if (!this.form.fecha_inicio || !this.form.fecha_termino) {
-this.notify('error', 'Fechas requeridas');
-return;
-}
 var pdfInput = this.$refs.EPDF_file_input;
 var xmlInput = this.$refs.EXML_file_input;
-if (!pdfInput || !pdfInput.files || !pdfInput.files[0]) {
-this.notify('error', 'Archivo PDF requerido');
-return;
-}
-if (!xmlInput || !xmlInput.files || !xmlInput.files[0]) {
-this.notify('error', 'Archivo XML requerido');
+var periodoInvertido = Boolean(this.form.fecha_inicio && this.form.fecha_termino && this.form.fecha_inicio > this.form.fecha_termino);
+this.validacion.nuevo = {
+fecha_inicio: !this.form.fecha_inicio || periodoInvertido,
+fecha_termino: !this.form.fecha_termino || periodoInvertido,
+pdf: !pdfInput || !pdfInput.files || !pdfInput.files[0],
+xml: !xmlInput || !xmlInput.files || !xmlInput.files[0],
+};
+if (Object.values(this.validacion.nuevo).some(Boolean)) {
+this.notify('error', 'Completa los campos obligatorios.');
 return;
 }
 this.loading = true;
@@ -109,6 +116,7 @@ self.loading = false;
 
 abrirModalEditar: function (id) {
 this.editId = id;
+this.validacion.editar = { fecha_inicio: false, fecha_termino: false };
 var self = this;
 axios.get('/departamento-operativo/estimulo-fiscal/detalle', {
 params: { id: id }
@@ -128,8 +136,11 @@ self.notify('error', 'Error al obtener datos');
 },
 
 editarPago: function () {
-if (!this.editForm.fecha_inicio || !this.editForm.fecha_termino) {
-this.notify('error', 'Fechas requeridas');
+var periodoInvertido = Boolean(this.editForm.fecha_inicio && this.editForm.fecha_termino && this.editForm.fecha_inicio > this.editForm.fecha_termino);
+this.validacion.editar.fecha_inicio = !this.editForm.fecha_inicio || periodoInvertido;
+this.validacion.editar.fecha_termino = !this.editForm.fecha_termino || periodoInvertido;
+if (this.validacion.editar.fecha_inicio || this.validacion.editar.fecha_termino) {
+this.notify('error', 'Completa los campos obligatorios.');
 return;
 }
 this.loading = true;

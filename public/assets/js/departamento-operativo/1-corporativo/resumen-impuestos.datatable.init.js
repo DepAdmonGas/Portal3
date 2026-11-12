@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const idYear = parseInt(c.dataset.idYear);
   const idMes = parseInt(c.dataset.idMes);
+  const verShell = [2, 14].includes(parseInt(c.dataset.idEstacion, 10));
   if (!idYear || !idMes) return;
 
   function fmt(val) {
@@ -89,19 +90,29 @@ document.addEventListener('DOMContentLoaded', () => {
       '</tr></tbody></table></div></div>';
 
       var m = json.m;
+      const columnasTarjetas = [
+        ['ticketcard', 'TICKETCARD'],
+        ['g500fleet', 'TICKETCARD+'],
+        ['efecticard', 'EFECTICARD'],
+        ['sodexo', 'SODEXO'],
+        ['ultragas', 'ULTRAGAS'],
+        ['energex', 'ENERGEX'],
+      ];
+      if (verShell) columnasTarjetas.push(['shell', 'SHELL']);
+
       html += '<div class="col-12">' +
         '<div class="table-responsive mb-5">' +
         '<table id="table-resumen-aceites-monedero" class="table table-bordered table-striped mb-0 text-nowrap align-middle">' +
 
           '<thead>' +
-            '<tr><th colspan="15" class="text-center"><strong>Resumen Monederos</strong></th></tr>' +
+            '<tr><th colspan="' + (18 + (verShell ? 1 : 0)) + '" class="text-center"><strong>Resumen Monederos</strong></th></tr>' +
             '<tr>' +
-              '<th class="text-center" colspan="9">Tarjetas</th>' +
+              '<th class="text-center" colspan="' + (12 + (verShell ? 1 : 0)) + '">Tarjetas</th>' +
               '<th class="text-center" colspan="6">Cartera de Clientes ATIO</th>' +
             '</tr>' +
             '<tr>' +
-              '<th class="text-center" colspan="4">Tarjetas Bancarias</th>' +
-              '<th class="text-center" colspan="5">Tarjetas (Otro)</th>' +
+              '<th class="text-center" colspan="5">Tarjetas Bancarias</th>' +
+              '<th class="text-center" colspan="' + (7 + (verShell ? 1 : 0)) + '">Tarjetas</th>' +
               '<th class="text-center" colspan="2">Crédito</th>' +
               '<th class="text-center" colspan="2">Débito</th>' +
               '<th class="text-center">Pagos</th>' +
@@ -110,12 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
             '<tr>' +
               '<th class="text-center">BANCOMER</th>' +
               '<th class="text-center">AMEX</th>' +
+              '<th class="text-center">INBURGAS</th>' +
               '<th class="text-center">INBURSA</th>' +
               '<th class="text-center">Total</th>' +
-              '<th class="text-center">TICKETCARD</th>' +
-              '<th class="text-center">G500 FLETT</th>' +
-              '<th class="text-center">EFECTICARD</th>' +
-              '<th class="text-center">SODEXO</th>' +
+              columnasTarjetas.map(columna => '<th class="text-center">' + columna[1] + '</th>').join('') +
               '<th class="text-center">Total</th>' +
               '<th class="text-center">Pagos</th>' +
               '<th class="text-center">Consumos</th>' +
@@ -128,12 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
               '<td class="text-end align-middle">' + fmt2(m.bancomer) + '</td>' +
               '<td class="text-end align-middle">' + fmt2(m.amex) + '</td>' +
               '<td class="text-end align-middle">' + fmt2(m.inburgas) + '</td>' +
+              '<td class="text-end align-middle">' + fmt2(m.inbursa) + '</td>' +
               '<td class="text-end align-middle"><strong>' + fmt2(m.total_tb) + '</strong></td>' +
-              '<td class="text-end align-middle">' + fmt2(m.ticketcard) + '</td>' +
-              '<td class="text-end align-middle">' + fmt2(m.g500fleet) + '</td>' +
-              '<td class="text-end align-middle">' + fmt2(m.efecticard) + '</td>' +
-              '<td class="text-end align-middle">' + fmt2(m.sodexo) + '</td>' +
-              '<td class="text-end align-middle"><strong>' + fmt2(m.total_otros) + '</strong></td>' +
+              columnasTarjetas.map(columna => '<td class="text-end align-middle">' + fmt2(m[columna[0]]) + '</td>').join('') +
+              '<td class="text-end align-middle"><strong>' + fmt2(m.total_tarjetas) + '</strong></td>' +
               '<td class="text-end align-middle">' + fmt2(m.pago_credito) + '</td>' +
               '<td class="text-end align-middle">' + fmt2(m.consumo_credito) + '</td>' +
               '<td class="text-end align-middle">' + fmt2(m.pago_debito) + '</td>' +

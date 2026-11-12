@@ -29,6 +29,9 @@ idYear: 0,
 idReporte: 0,
 guardando: false,
 archivos: [],
+archivoInvalido: false,
+updateStates: {},
+updateStateTimers: {},
 selectedRows: { posicion1: null, posicion2: null, archivos: null },
 
 init() {
@@ -66,8 +69,42 @@ this.loading = false;
 formatMoney(val) {
 return '$ ' + parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 },
-formatInput(val) {
-return parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+formatInputNumber(value) {
+if (value === null || value === undefined || value === '') return '';
+const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatNumericInput(event, row, field) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const formatted = normalized.includes('.')
+? integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + decimals
+: integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+row[field] = normalized;
+input.value = formatted;
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
+},
+
+cellUpdateKey(id, mes) {
+return `${id}:${mes}`;
 },
 
 calcularMontos() {
@@ -102,14 +139,28 @@ const row = posicion === 1
 ? this.posicion1.find(r => r.id === id)
 : this.posicion2.find(r => r.id === id);
 if (!row) return;
-const valor = parseFloat(row[mes]) || 0;
+const valor = parseFloat(String(row[mes] ?? '').replace(/,/g, '')) || 0;
+const key = this.cellUpdateKey(id, mes);
+this.updateStates[key] = 'saving';
+clearTimeout(this.updateStateTimers[key]);
 this.calcularMontos();
 fetch('/departamento-operativo/ingresos-facturacion/update-cell', {
 method: 'POST',
-headers: { 'Content-Type': 'application/json' },
+headers: {
+'Content-Type': 'application/json',
+'X-Portal3-Skip-Action-Loader': '1'
+},
 body: JSON.stringify({ id, valor, mes: this.meses.indexOf(mes) + 1 })
-}).then(r => r.json()).then(data => {
-if (!data.success) console.error('Error al guardar');
+}).then(r => {
+if (!r.ok) throw new Error('No se pudo guardar el importe');
+return r.json();
+}).then(data => {
+if (!data.success) throw new Error('No se pudo guardar el importe');
+this.updateStates[key] = 'saved';
+this.updateStateTimers[key] = setTimeout(() => { delete this.updateStates[key]; }, 1800);
+}).catch(() => {
+this.updateStates[key] = 'error';
+this.updateStateTimers[key] = setTimeout(() => { delete this.updateStates[key]; }, 3000);
 });
 },
 
@@ -133,9 +184,11 @@ guardarArchivo() {
 if (!this.idReporte) return;
 const input = document.getElementById('archivoInput');
 if (!input.files || !input.files[0]) {
-if (window.Notify) Notify.error('Seleccione un archivo');
+this.archivoInvalido = true;
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
 return;
 }
+this.archivoInvalido = false;
 this.guardando = true;
 const formData = new FormData();
 formData.append('id_reporte', this.idReporte);
@@ -147,6 +200,7 @@ body: formData
 this.guardando = false;
 if (data.success) {
 input.value = '';
+this.archivoInvalido = false;
 this.cargarArchivos(this.idReporte);
 if (window.Notify) Notify.success(data.message || 'Archivo guardado correctamente');
 } else {

@@ -140,27 +140,27 @@ observaciones adicionales.
 </template>
 <div class="col-12">
 <label class="form-label mb-1">* Ticket a solicitar:</label>
-<input type="text" class="form-control mb-3" x-model="form.nombre_ticket" :class="{'is-invalid': errors.nombre_ticket}">
+<input type="text" class="form-control mb-3" x-model="form.nombre_ticket" @input="limpiarError('nombre_ticket')" :class="{'is-invalid': errors.nombre_ticket}">
 </div>
 <div class="col-xl-9 col-lg-9">
 <label class="form-label mb-1">* Fecha:</label>
-<input type="date" class="form-control mb-3" x-model="form.fecha" :class="{'is-invalid': errors.fecha}">
+<input type="date" class="form-control mb-3" x-model="form.fecha" @input="limpiarError('fecha')" :class="{'is-invalid': errors.fecha}">
 </div>
 <div class="col-xl-3 col-lg-3">
 <label class="form-label mb-1">* Hora:</label>
-<input type="time" class="form-control mb-3" x-model="form.hora" :class="{'is-invalid': errors.hora}">
+<input type="time" class="form-control mb-3" x-model="form.hora" @input="limpiarError('hora')" :class="{'is-invalid': errors.hora}">
 </div>
 <div class="col-xl-9 col-lg-9">
 <label class="form-label mb-1">* Valera:</label>
-<input type="text" class="form-control mb-3" x-model="form.valera" :class="{'is-invalid': errors.valera}">
+<input type="text" class="form-control mb-3" x-model="form.valera" @input="limpiarError('valera')" :class="{'is-invalid': errors.valera}">
 </div>
 <div class="col-xl-3 col-lg-3">
 <label class="form-label mb-1">* Importe:</label>
-<input type="number" step="0.01" class="form-control mb-3" x-model="form.importe" :class="{'is-invalid': errors.importe}">
+<input type="text" inputmode="decimal" class="form-control mb-3" x-model="form.importe" @input="formatearImporte($event); limpiarError('importe')" :class="{'is-invalid': errors.importe}">
 </div>
 <div class="col-12">
 <label class="form-label mb-1">* Número de aclaración:</label>
-<input type="text" class="form-control mb-3" x-model="form.numero_aclaracion" :class="{'is-invalid': errors.numero_aclaracion}">
+<input type="text" class="form-control mb-3" x-model="form.numero_aclaracion" @input="limpiarError('numero_aclaracion')" :class="{'is-invalid': errors.numero_aclaracion}">
 </div>
 <template x-if="editando">
 <div class="col-12">
@@ -177,11 +177,11 @@ observaciones adicionales.
 </div>
 </template>
 <div class="col-xl-6 col-lg-6">
-<label class="form-label mb-1">* Ticket:</label>
+<label class="form-label mb-1">Ticket:</label>
 <input type="file" class="form-control mb-3" id="fileTicket" accept=".pdf,.jpg,.jpeg,.png">
 </div>
 <div class="col-xl-6 col-lg-6">
-<label class="form-label mb-1">* Voucher:</label>
+<label class="form-label mb-1">Voucher:</label>
 <input type="file" class="form-control mb-3" id="fileVoucher" accept=".pdf,.jpg,.jpeg,.png">
 </div>
 </div>
@@ -193,7 +193,7 @@ observaciones adicionales.
 <div class="modal-footer">
     <div class="row g-0 ms-auto w-100 justify-content-end">
            <div class="col-12 col-md-auto d-grid me-0 me-md-2 mb-1 mb-md-0">
-<template x-if="editando">
+<template x-if="editando && puedeEditar">
 <button type="button" class="btn bg-primary-subtle text-primary" @click="finalizarSolicitud()">
     <i class="ti ti-circle-check"></i>
 Finalizar</button>
@@ -263,7 +263,7 @@ Detalle de aclaración</h5>
 
 <div class="col-xl-3 col-lg-3">
 <label class="form-label mb-1">Importe:</label>
-<p class="mb-3" x-text="'$ ' + detalle.importe"></p>
+<p class="mb-3" x-text="'$ ' + Number(detalle.importe || 0).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></p>
 </div>
 
 <div class="col-12">
@@ -287,19 +287,19 @@ Detalle de aclaración</h5>
 <tbody>
 <tr class="pointer" :class="{ selected: selectedRows.detalleDocumentos }" @click="seleccionarFila('detalleDocumentos', true)">
 <td class="text-center align-middle">
-<template x-if="detalle.doc_ticket">
-<i class="ti ti-download pointer text-primary fs-5" @click="downloadFile('aclaracion-voucher', detalle.doc_ticket)"></i>
+<template x-if="detalle.doc_ticket_disponible">
+<i class="ti ti-download pointer text-primary fs-6" @click="downloadFile('aclaracion-voucher', detalle.doc_ticket)"></i>
 </template>
-<template x-if="!detalle.doc_ticket">
-<span class="text-muted"><i class="ti ti-file-off fs-5"></i></span>
+<template x-if="!detalle.doc_ticket_disponible">
+<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>
 </template>
 </td>
 <td class="text-center align-middle">
-<template x-if="detalle.doc_voucher">
-<i class="ti ti-download pointer text-primary fs-5" @click="downloadFile('aclaracion-voucher', detalle.doc_voucher)"></i>
+<template x-if="detalle.doc_voucher_disponible">
+<i class="ti ti-download pointer text-primary fs-6" @click="downloadFile('aclaracion-voucher', detalle.doc_voucher)"></i>
 </template>
-<template x-if="!detalle.doc_voucher">
-<span class="text-muted"><i class="ti ti-file-off fs-5"></i></span>
+<template x-if="!detalle.doc_voucher_disponible">
+<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>
 </template>
 </td>
 </tr>
@@ -500,13 +500,13 @@ Anexos de la aclaración</h5>
 <div class="row mb-3">
 <div class="col-12 mb-2">
 <label class="form-label pb-0">* Descripción:</label>
-<input type="text" class="form-control" x-model="anexoForm.descripcion">
+<input type="text" class="form-control" x-model="anexoForm.descripcion" @input="limpiarErrorAnexo('descripcion')" :class="{'is-invalid': errorsAnexo.descripcion}">
 </div>
 
 <div class="mt-2">
 <label class="form-label">* Archivo:</label>
 <div class="input-group">
-<input type="file" class="form-control" id="fileAnexo">
+<input type="file" class="form-control" id="fileAnexo" @change="limpiarErrorAnexo('archivo')" :class="{'is-invalid': errorsAnexo.archivo}">
 
 <button type="button" class="btn btn-labeled2 btn-success" @click="agregarAnexo()" :disabled="subiendoAnexo">
 <span class="btn-label2"><i class="ti ti-plus"></i></span> Agregar
@@ -537,11 +537,11 @@ Anexos de la aclaración</h5>
 <td x-text="a.usuario_nombre"></td>
 <td x-text="a.descripcion"></td>
 <td class="text-center">
-<template x-if="a.documento">
-<i class="ti ti-download pointer text-primary fs-5" @click="downloadFile('aclaracion-voucher', a.documento)"></i>
+<template x-if="a.archivo_disponible">
+<i class="ti ti-download pointer text-primary fs-6" @click="downloadFile('aclaracion-voucher', a.documento)"></i>
 </template>
-<template x-if="!a.documento">
-<span class="text-muted"><i class="ti ti-file-off fs-5"></i></span>
+<template x-if="!a.archivo_disponible">
+<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>
 </template>
 </td>
 <td class="text-center">

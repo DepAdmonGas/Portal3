@@ -328,6 +328,43 @@ exit;
 }
 */
 
+$camposObligatorios = ['fecha', 'monto', 'moneda', 'concepto', 'solicitante', 'departamento', 'autorizado_por', 'metodo_autorizacion', 'observaciones'];
+foreach ($camposObligatorios as $campo) {
+if (!isset($_POST[$campo]) || trim((string)$_POST[$campo]) === '') {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
+}
+
+if (!in_array($_POST['moneda'], ['MXN', 'USD'], true) || !in_array((int)$_POST['departamento'], [2, 4, 5, 8, 13, 15], true)) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
+
+$monto = str_replace(',', '', trim((string)$_POST['monto']));
+if (!is_numeric($monto) || (float)$monto <= 0) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
+
+$fecha = \DateTime::createFromFormat('!Y-m-d', (string)$_POST['fecha']);
+if (!$fecha || $fecha->format('Y-m-d') !== $_POST['fecha']) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
+
+if ((int)($permisos['id_estacion'] ?? 0) === 8 && empty($_POST['estacion']) && trim((string)($_POST['cuenta'] ?? '')) === '') {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
+
+$_POST['monto'] = $monto;
+
 $id = SolicitudValeService::add($_POST + $_FILES);
 if ($id) {
 $record = SolicitudValeService::getRecord($id);
@@ -449,7 +486,8 @@ $id = (int)($input['id'] ?? 0);
 $comentario = trim($input['comentario'] ?? '');
 
 if (!$id || !$comentario) {
-echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 
@@ -495,13 +533,15 @@ header('Content-Type: application/json; charset=utf-8');
 $id = (int)($_POST['id'] ?? 0);
 $nombre = $_POST['nombre'] ?? '';
 
-if (!$id || !$nombre) {
-echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
+if (!$id || !in_array($nombre, ['VALE', 'RECIBO', 'FACTURA', 'PDF', 'XML'], true)) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 
 if (empty($_FILES['archivo']) || $_FILES['archivo']['error'] !== 0) {
-echo json_encode(['success' => false, 'message' => 'Debe seleccionar un archivo.']);
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 

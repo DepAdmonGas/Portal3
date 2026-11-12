@@ -60,6 +60,10 @@ exit;
 
 $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
 $fechaTermino = $_GET['fecha_termino'] ?? date('Y-m-t');
+if (!self::fechaValida($fechaInicio) || !self::fechaValida($fechaTermino) || $fechaInicio > $fechaTermino) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
 
 $resumen = EstimuloFiscalService::getResumen($idEstacion, $fechaInicio, $fechaTermino);
 $pagos = EstimuloFiscalService::getListaPagos($idEstacion);
@@ -79,13 +83,14 @@ public function getDetalle()
 header('Content-Type: application/json; charset=utf-8');
 
 $id = (int) ($_GET['id'] ?? 0);
-if (!$id) {
+if (!$id || !self::puedeGestionar()) {
 echo json_encode(['success' => false]);
 exit;
 }
 
 $detalle = EstimuloFiscalService::getDetalle($id);
-if (!$detalle) {
+$usuario = Session::get('usuario');
+if (!$detalle || (int) $detalle['id_estacion'] !== (int) ($usuario['id_estacion'] ?? 0)) {
 echo json_encode(['success' => false]);
 exit;
 }
@@ -109,16 +114,16 @@ exit;
 $fechaInicio = $_POST['fecha_inicio'] ?? '';
 $fechaTermino = $_POST['fecha_termino'] ?? '';
 
-if (!$fechaInicio || !$fechaTermino) {
-echo json_encode(['success' => false, 'message' => 'Fechas requeridas']);
+if (!self::puedeGestionar() || !self::fechaValida($fechaInicio) || !self::fechaValida($fechaTermino) || $fechaInicio > $fechaTermino) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 
 $filePDF = $_FILES['EPDF_file'] ?? null;
 $fileXML = $_FILES['EXML_file'] ?? null;
 
-if (!$filePDF || empty($filePDF['tmp_name']) || !$fileXML || empty($fileXML['tmp_name'])) {
-echo json_encode(['success' => false, 'message' => 'Archivos PDF y XML requeridos']);
+if (!$filePDF || ($filePDF['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !$fileXML || ($fileXML['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 
@@ -149,13 +154,14 @@ public function editar()
 header('Content-Type: application/json; charset=utf-8');
 
 $id = (int) ($_POST['id'] ?? 0);
-if (!$id) {
+if (!$id || !self::puedeGestionar()) {
 echo json_encode(['success' => false]);
 exit;
 }
 
 $detalleExistente = EstimuloFiscalService::getDetalle($id);
-if (!$detalleExistente) {
+$usuario = Session::get('usuario');
+if (!$detalleExistente || (int) $detalleExistente['id_estacion'] !== (int) ($usuario['id_estacion'] ?? 0)) {
 echo json_encode(['success' => false, 'message' => 'Registro no encontrado']);
 exit;
 }
@@ -165,8 +171,8 @@ $data = [
 'fecha_termino' => $_POST['fecha_termino'] ?? '',
 ];
 
-if (!$data['fecha_inicio'] || !$data['fecha_termino']) {
-echo json_encode(['success' => false, 'message' => 'Fechas requeridas']);
+if (!self::fechaValida($data['fecha_inicio']) || !self::fechaValida($data['fecha_termino']) || $data['fecha_inicio'] > $data['fecha_termino']) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 
@@ -201,12 +207,17 @@ header('Content-Type: application/json; charset=utf-8');
 $input = json_decode(file_get_contents('php://input'), true);
 $id = (int) ($input['id'] ?? 0);
 
-if (!$id) {
+if (!$id || !self::puedeGestionar()) {
 echo json_encode(['success' => false]);
 exit;
 }
 
 $detalle = EstimuloFiscalService::getDetalle($id);
+ $usuario = Session::get('usuario');
+if (!$detalle || (int) $detalle['id_estacion'] !== (int) ($usuario['id_estacion'] ?? 0)) {
+echo json_encode(['success' => false, 'message' => 'Registro no encontrado']);
+exit;
+}
 
 $ok = EstimuloFiscalService::eliminar($id);
 if (!$ok) {
@@ -225,5 +236,18 @@ EstimuloFiscalService::notificarTelegram('eliminar', $notifData);
 
 echo json_encode(['success' => true, 'message' => 'Comprobante eliminado exitosamente.']);
 exit;
+}
+
+private static function fechaValida($fecha): bool
+{
+if (!is_string($fecha) || $fecha === '') return false;
+$date = \DateTime::createFromFormat('!Y-m-d', $fecha);
+return $date !== false && $date->format('Y-m-d') === $fecha;
+}
+
+private static function puedeGestionar(): bool
+{
+$usuario = Session::get('usuario');
+return !empty($usuario['id_estacion']) && (int) ($usuario['id_puesto'] ?? 0) !== 6;
 }
 }

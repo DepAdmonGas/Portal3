@@ -47,14 +47,16 @@ class="form-control form-control p-3 border-primary">
 </template>
 </td>
 <td class="p-0 align-middle">
-<input type="number" min="0" step="1"
-x-model="tempValues[item.id].piezas"
+<input type="text" inputmode="numeric"
+:value="formatInputNumber(tempValues[item.id].piezas)"
+@input="formatNumericInput($event, tempValues[item.id], 'piezas')"
 @change="guardar(item.id, 'piezas', tempValues[item.id].piezas)"
 class="form-control form-control p-3 text-center border-0">
 </td>
 <td class="p-0 align-middle">
-<input type="number" min="0" step="0.01"
-x-model="tempValues[item.id].precio"
+<input type="text" inputmode="decimal"
+:value="formatInputNumber(tempValues[item.id].precio)"
+@input="formatNumericInput($event, tempValues[item.id], 'precio')"
 @change="guardar(item.id, 'precio', tempValues[item.id].precio)"
 class="form-control form-control p-3 text-center border-0">
 </td>

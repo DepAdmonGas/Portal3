@@ -156,61 +156,61 @@ No hay registros de aceites para este mes
 <td class="text-center align-middle" x-text="row.id_aceite"></td>
 <td class="text-start align-middle" x-text="row.concepto"></td>
 <template x-if="multiestacion">
-<td class="text-center align-middle" x-text="row.piezas"></td>
+<td class="text-center align-middle" x-text="formatNum(row.piezas, 0)"></td>
 </template>
 <td class="text-center align-middle" x-text="(multiestacion ? '$ ' : '$ ') + formatNum(row.precio)"></td>
-<td class="text-center align-middle" x-text="row.bodega"></td>
-<td class="text-center align-middle" x-text="row.exibidores"></td>
-<td class="text-center align-middle fw-semibold table-primary" x-text="inventarioInicial(row)"></td>
+<td class="text-center align-middle" x-text="formatNum(row.bodega, 0)"></td>
+<td class="text-center align-middle" x-text="formatNum(row.exibidores, 0)"></td>
+<td class="text-center align-middle fw-semibold table-primary" x-text="formatNum(inventarioInicial(row), 0)"></td>
 <template x-if="multiestacion">
-<td class="text-center align-middle" x-text="row.pedido"></td>
+<td class="text-center align-middle" x-text="formatNum(row.pedido, 0)"></td>
 </template>
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
-x-model="tempValues[row.id].pedido" @change="guardarCampo(row, 'pedido')">
+<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
+:value="formatInputNumber(tempValues[row.id].pedido)" @input="formatNumericInput($event, row, 'pedido')" @change="guardarCampo(row, 'pedido')">
 </template>
 <template x-if="finalizado || !puedeEditar">
-<span x-text="row.pedido"></span>
+<span x-text="formatNum(row.pedido, 0)"></span>
 </template>
 </td>
 </template>
-<td class="text-center align-middle" x-text="row.ventas_mes"></td>
-<td class="text-center align-middle fw-semibold table-primary" x-text="inventarioFinal(row)"></td>
+<td class="text-center align-middle" x-text="formatNum(row.ventas_mes, 0)"></td>
+<td class="text-center align-middle fw-semibold table-primary" x-text="formatNum(inventarioFinal(row), 0)"></td>
 <template x-if="multiestacion">
-<td class="text-center align-middle" x-text="row.inventario_bodega"></td>
+<td class="text-center align-middle" x-text="formatNum(row.inventario_bodega, 0)"></td>
 </template>
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
-x-model="tempValues[row.id].inventario_bodega"
+<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
+:value="formatInputNumber(tempValues[row.id].inventario_bodega)" @input="formatNumericInput($event, row, 'inventario_bodega')"
 @change="guardarCampo(row, 'inventario_bodega')">
 </template>
 <template x-if="finalizado || !puedeEditar">
-<span x-text="row.inventario_bodega"></span>
+<span x-text="formatNum(row.inventario_bodega, 0)"></span>
 </template>
 </td>
 </template>
 <template x-if="multiestacion">
-<td class="text-center align-middle" x-text="row.inventario_exibidores"></td>
+<td class="text-center align-middle" x-text="formatNum(row.inventario_exibidores, 0)"></td>
 </template>
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
-x-model="tempValues[row.id].inventario_exibidores"
+<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
+:value="formatInputNumber(tempValues[row.id].inventario_exibidores)" @input="formatNumericInput($event, row, 'inventario_exibidores')"
 @change="guardarCampo(row, 'inventario_exibidores')">
 </template>
 <template x-if="finalizado || !puedeEditar">
-<span x-text="row.inventario_exibidores"></span>
+<span x-text="formatNum(row.inventario_exibidores, 0)"></span>
 </template>
 </td>
 </template>
-<td class="text-center align-middle" x-text="fisicoFinal(row) === 0 ? '0' : fisicoFinal(row)"></td>
+<td class="text-center align-middle" x-text="formatNum(fisicoFinal(row), 0)"></td>
 <td class="text-center align-middle">
-<span x-text="diferencia(row)"></span>
+<span x-text="formatNum(diferencia(row), 0)"></span>
 <template x-if="!multiestacion">
 <template x-if="diferencia(row) < 0 && finalizado">
 <span>
@@ -233,27 +233,27 @@ title="Agregar diferencia de pago"></i>
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
-x-model="tempValues[row.id].producto_facturado"
+<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
+:value="formatInputNumber(tempValues[row.id].producto_facturado)" @input="formatNumericInput($event, row, 'producto_facturado')"
 @change="guardarCampo(row, 'producto_facturado')">
 </template>
 <template x-if="finalizado || !puedeEditar">
-<span x-text="row.producto_facturado"></span>
+<span x-text="formatNum(row.producto_facturado)"></span>
 </template>
 </td>
 </template>
 <template x-if="multiestacion">
-<td class="text-center align-middle" x-text="row.factura_venta_mostrador"></td>
+<td class="text-center align-middle" x-text="formatNum(row.factura_venta_mostrador)"></td>
 </template>
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="number" step="any"
-x-model="tempValues[row.id].factura_venta_mostrador"
+<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
+:value="formatInputNumber(tempValues[row.id].factura_venta_mostrador)" @input="formatNumericInput($event, row, 'factura_venta_mostrador')"
 @change="guardarCampo(row, 'factura_venta_mostrador')">
 </template>
 <template x-if="finalizado || !puedeEditar">
-<span x-text="row.factura_venta_mostrador"></span>
+<span x-text="formatNum(row.factura_venta_mostrador)"></span>
 </template>
 </td>
 </template>
@@ -314,31 +314,33 @@ Documentos de Aceites</h5>
 <div class="row">
 <div class="col-12 mb-3">
 <h6 class="form-label">Ficha Depósito:</h6>
-<template x-if="documentoEditId && documentoEdit.ficha_deposito">
+<template x-if="documentoEditId && documentoEdit.ficha_deposito_disponible">
 <div class="mt-1">
 <span x-data="actions()"><a href="" @click.prevent="download('aceites-documentos', documentoEdit.ficha_deposito)" class="text-primary">
 <i class="ti ti-download"></i> <span x-text="documentoEdit.ficha_deposito"></span>
 </a></span>
 </div>
 </template>
-<input type="file" class="form-control mt-1" accept=".pdf,.jpg,.png" @change="documentoFiles.ficha_deposito = $event.target.files[0]">
+<template x-if="documentoEditId && documentoEdit.ficha_deposito && !documentoEdit.ficha_deposito_disponible"><i class="ti ti-file-off fs-6 text-muted"></i></template>
+<input type="file" class="form-control mt-1 aceite-documento-input" accept=".pdf,.jpg,.png" @change="documentoFiles.ficha_deposito = $event.target.files[0]; limpiarErrorCampo($event.target)">
 </div>
 
 <div class="col-12 mb-3">
 <h6 class="form-label">Imagen Bodega:</h6>
-<template x-if="documentoEditId && documentoEdit.imagen_bodega">
+<template x-if="documentoEditId && documentoEdit.imagen_bodega_disponible">
 <div class="mt-1">
 <span x-data="actions()"><a href="" @click.prevent="download('aceites-documentos', documentoEdit.imagen_bodega)" class="text-primary">
 <i class="ti ti-download"></i> <span x-text="documentoEdit.imagen_bodega"></span>
 </a></span>
 </div>
 </template>
-<input type="file" class="form-control mt-1" accept=".jpg,.png" @change="documentoFiles.imagen_bodega = $event.target.files[0]">
+<template x-if="documentoEditId && documentoEdit.imagen_bodega && !documentoEdit.imagen_bodega_disponible"><i class="ti ti-file-off fs-6 text-muted"></i></template>
+<input type="file" class="form-control mt-1 aceite-documento-input" accept=".jpg,.png" @change="documentoFiles.imagen_bodega = $event.target.files[0]; limpiarErrorCampo($event.target)">
 </div>
 
 <div class="col-12 mb-3">
 <h6 class="form-label">Factura Venta:</h6>
-<template x-if="documentoEditId && documentoEdit.factura_venta">
+<template x-if="documentoEditId && documentoEdit.factura_venta_disponible">
 <div class="mb-1">
 <span x-data="actions()">
 <a href="" @click.prevent="download('aceites-documentos', documentoEdit.factura_venta)" class="text-primary">
@@ -349,7 +351,8 @@ Documentos de Aceites</h5>
 </span>
 </div>
 </template>
-<input type="file" class="form-control mt-1" @change="documentoFiles.factura_venta = $event.target.files[0]">
+<template x-if="documentoEditId && documentoEdit.factura_venta && !documentoEdit.factura_venta_disponible"><i class="ti ti-file-off fs-6 text-muted"></i></template>
+<input type="file" class="form-control mt-1 aceite-documento-input" @change="documentoFiles.factura_venta = $event.target.files[0]; limpiarErrorCampo($event.target)">
 </div>
 
 <div class="col-12 col-md-auto d-grid ms-md-auto mb-3" x-show="!documentoEditId">
@@ -378,8 +381,8 @@ Documentos de Aceites</h5>
 <th class="text-center align-middle">Ficha Depósito</th>
 <th class="text-center align-middle">Imagen Bodega</th>
 <th class="text-center align-middle">Factura Venta</th>
-<th class="text-center align-middle" width="60px"><i class="ti ti-edit text-info fs-5"></i></th>
-<th class="text-center align-middle" width="60px"><i class="ti ti-trash text-danger fs-5"></i></th>
+<th class="text-center align-middle" width="60px"><i class="ti ti-edit text-info fs-6"></i></th>
+<th class="text-center align-middle" width="60px"><i class="ti ti-trash text-danger fs-6"></i></th>
 </tr>
 </thead>
 <tbody>
@@ -387,40 +390,40 @@ Documentos de Aceites</h5>
 <tr class="pointer" :class="{ selected: selectedModalRows.documentos === doc.id }" @click="seleccionarFilaModal('documentos', doc.id)">
 <td class="text-start align-middle" x-text="doc.fecha_formateada"></td>
 <td class="text-center align-middle">
-<template x-if="doc.ficha_deposito">
+<template x-if="doc.ficha_deposito_disponible">
 <span x-data="actions()">
-<a href="" @click.prevent="download('aceites-documentos', doc.ficha_deposito)" class="text-primary"><i class="ti ti-file fs-5"></i></a>
+<a href="" @click.prevent="download('aceites-documentos', doc.ficha_deposito)" class="text-primary"><i class="ti ti-download fs-6"></i></a>
 </span>
 </template>
-<template x-if="!doc.ficha_deposito"><i class="ti ti-file-off fs-5 text-muted"></i></template>
+<template x-if="!doc.ficha_deposito_disponible"><i class="ti ti-file-off fs-6 text-muted"></i></template>
 </td>
 <td class="text-center align-middle">
-<template x-if="doc.imagen_bodega">
+<template x-if="doc.imagen_bodega_disponible">
 <span x-data="actions()"><a href="" @click.prevent="download('aceites-documentos', doc.imagen_bodega)" class="text-primary">
-<i class="ti ti-file fs-5"></i>
+<i class="ti ti-download fs-6"></i>
 </a></span>
 </template>
-<template x-if="!doc.imagen_bodega">
-<i class="ti ti-file-off fs-5 text-muted"></i>
+<template x-if="!doc.imagen_bodega_disponible">
+<i class="ti ti-file-off fs-6 text-muted"></i>
 </template>
 </td>
 <td class="text-center align-middle">
-<template x-if="doc.factura_venta">
+<template x-if="doc.factura_venta_disponible">
 <span x-data="actions()"><a href="" @click.prevent="download('aceites-documentos', doc.factura_venta)" class="text-primary">
-<i class="ti ti-file fs-5"></i>
+<i class="ti ti-download fs-6"></i>
 </a></span>
 </template>
-<template x-if="!doc.factura_venta">
-<i class="ti ti-file-off fs-5 text-muted"></i>
+<template x-if="!doc.factura_venta_disponible">
+<i class="ti ti-file-off fs-6 text-muted"></i>
 </template>
 </td>
 <td class="text-center align-middle">
-<i class="ti ti-edit text-primary fs-5 pointer" @click="editarDocumento(doc)"></i>
+<i class="ti ti-edit text-primary fs-6 pointer" @click="editarDocumento(doc)"></i>
 </td>
 <td class="text-center align-middle">
 <template x-if="puedeEliminar">
 <span x-data="actions()">
-<i class="ti ti-trash text-danger fs-5 pointer" @click="deleteAction({url: '/departamento-operativo/aceites-mes/eliminar-documento', id: doc.id, name: 'del dia ' + doc.fecha_formateada, table: null}).then(r => r?.success && $dispatch('refresh-documentos'))"></i>
+<i class="ti ti-trash text-danger fs-6 pointer" @click="deleteAction({url: '/departamento-operativo/aceites-mes/eliminar-documento', id: doc.id, name: 'del dia ' + doc.fecha_formateada, table: null}).then(r => r?.success && $dispatch('refresh-documentos'))"></i>
 </span>
 </template>
 </td>
@@ -481,11 +484,11 @@ Archivos Aceites</h5>
 <div class="row">
 <div class="col-12">
 <h6 class="mb-1 form-label" >* Fecha:</h6>
-<input type="date" class="form-control mb-3" x-model="facturaForm.fecha">
+<input type="date" id="aceite-factura-fecha" class="form-control mb-3" x-model="facturaForm.fecha" @change="limpiarErrorCampo($event.target)">
 </div>
 <div class="col-12">
 <h6 class="mb-1 form-label">* Concepto:</h6>
-<select class="form-select mb-3" x-model="facturaForm.concepto">
+<select id="aceite-factura-concepto" class="form-select mb-3" x-model="facturaForm.concepto" @change="limpiarErrorCampo($event.target)">
 <option value="">Selecciona una opción...</option>
 <option value="Nota de remisión QUAKER STATE">Nota de remisión QUAKER STATE</option>
 <option value="Factura QUAKER STATE">Factura QUAKER STATE</option>
@@ -500,13 +503,14 @@ Archivos Aceites</h5>
 </div>
 </div>
 
-<div class="row g-0 w-100 mt-3 mb-3">
+<div class="row g-0 w-100 mb-3">
     <div class="col-12">
         <div class="input-group">
             <input 
                 type="file" 
+                id="aceite-factura-archivo"
                 class="form-control" 
-                @change="facturaArchivo = $event.target.files[0]"
+                @change="facturaArchivo = $event.target.files[0]; limpiarErrorCampo($event.target)"
             >
 
             <button 
@@ -538,8 +542,8 @@ Archivos Aceites</h5>
 <tr>
 <th class="text-center align-middle">Fecha</th>
 <th class="text-center align-middle">Concepto</th>
-<th class="text-center align-middle" width="48px"><i class="ti ti-download text-info fs-5"></i></th>
-<th class="text-center align-middle" width="48px"><i class="ti ti-trash text-danger fs-5"></i></th>
+<th class="text-center align-middle" width="48px"><i class="ti ti-download text-info fs-6"></i></th>
+<th class="text-center align-middle" width="48px"><i class="ti ti-trash text-danger fs-6"></i></th>
 </tr>
 </thead>
 <tbody>
@@ -548,22 +552,22 @@ Archivos Aceites</h5>
 <td class="text-center align-middle" x-text="fac.fecha_formateada"></td>
 <td class="text-center align-middle" x-text="fac.nombre_anexo"></td>
 <td class="text-center align-middle">
-<template x-if="fac.archivo">
+<template x-if="fac.archivo_disponible">
 <span x-data="actions()">
 <a href="" @click.prevent="download('aceites-facturas', fac.archivo)" class="text-primary">
-<i class="ti ti-download text-info fs-5"></i>
+<i class="ti ti-download text-info fs-6"></i>
 </a>
 </span>
 </template>
-<template x-if="!fac.archivo">
-<i class="ti ti-file-off fs-5 text-danger"></i>
+<template x-if="!fac.archivo_disponible">
+<i class="ti ti-file-off fs-6 text-muted"></i>
 </template>
 </td>
 <td class="text-center align-middle">
 <template x-if="puedeEliminar">
 <span x-data="actions()">
 <a href="" @click.prevent="deleteAction({url: '/departamento-operativo/aceites-mes/eliminar-factura', id: fac.id, name: fac.nombre_anexo, table: null}).then(r => r?.success && $dispatch('refresh-facturas'))" class="text-primary">
-<i class="ti ti-trash text-danger fs-5"></i>
+<i class="ti ti-trash text-danger fs-6"></i>
 </a>
 </span>
 </template>
@@ -621,13 +625,13 @@ Cancelar
 <td x-text="d.nomaceite || d.id_aceite"></td>
 <td class="text-end" x-text="d.diferencia"></td>
 <td class="text-center">
-<template x-if="d.documento">
+<template x-if="d.documento_disponible">
 <span x-data="actions()"><a href="" @click.prevent="download('aceites-diferencias', d.documento)" class="text-primary">
-<i class="ti ti-download"></i>
+<i class="ti ti-download fs-6"></i>
 </a></span>
 </template>
-<template x-if="!d.documento">
-<span class="text-muted">Sin archivo</span>
+<template x-if="!d.documento_disponible">
+<i class="ti ti-file-off fs-6 text-muted"></i>
 </template>
 </td>
 <td x-text="d.comentario || 'S/C'"></td>
@@ -664,7 +668,7 @@ Cancelar
 <span class="badge rounded-pill bg-primary mt-1"><strong x-text="diferenciaForm.concepto"></strong></span>
 
 <h6 class="mt-3">* Documento de pago (PDF):</h6>
-<input type="file" class="form-control mt-1 mb-3" id="docDiferencia" accept=".pdf">
+<input type="file" class="form-control mt-1 mb-3" id="docDiferencia" accept=".pdf" @change="limpiarErrorCampo($event.target)">
 <h6>* Comentarios:</h6>
 <textarea class="form-control mt-1" x-model="diferenciaForm.comentario" rows="4"></textarea>
 </div>
@@ -693,14 +697,14 @@ Cancelar
 <span class="badge rounded-pill bg-primary mt-1 mb-3"><strong x-text="detalleDiferencia.concepto"></strong></span>
 
 <h6>Ficha de pago:</h6>
-<template x-if="detalleDiferencia.documento">
+<template x-if="detalleDiferencia.documento && detalleDiferencia.documento_disponible">
 <span x-data="actions()">
 <a href="" @click.prevent="download('aceites-diferencias', detalleDiferencia.documento)">
 <i class="ti ti-download fs-6"></i> Descargar Documento
 </a>
 </span>
 </template>
-<template x-if="!detalleDiferencia.documento">
+<template x-if="!detalleDiferencia.documento_disponible">
 <div class="d-flex gap-2 align-items-center">
 <input type="file" class="form-control" id="docDiferenciaUpdate" accept=".pdf">
 <button class="btn btn-primary" @click="actualizarDocumentoDiferencia()" :disabled="loading">

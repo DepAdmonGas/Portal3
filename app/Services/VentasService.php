@@ -25,6 +25,13 @@ use App\Core\Session;
 
 class VentasService
 {
+private const DOCUMENTOS_MAX_BYTES = 26214400;
+
+public static function getDocumentosUploadDir(): string
+{
+return dirname(__DIR__, 2) . '/public/uploads/archivos/';
+}
+
 public static function asegurarRegistros(int $idReporte, int $idEstacion, int $idYear, int $idMes): void
 {
 self::asegurarVentasDia($idReporte);
@@ -225,7 +232,84 @@ return AceiteLubricante::where('idreporte_dia', $idReporte)
 
 public static function getDocumentos(int $idReporte)
 {
-return CorteDiaArchivo::where('id_reportedia', $idReporte)->get();
+return CorteDiaArchivo::where('id_reportedia', $idReporte)
+->orderBy('id')
+->get()
+->map(static function (CorteDiaArchivo $documento): array {
+    $referencia = str_replace('\\', '/', trim((string) $documento->documento));
+    $nombre = $referencia !== '' ? basename($referencia) : '';
+    $extension = strtolower(pathinfo($nombre, PATHINFO_EXTENSION));
+    $disponible = $nombre !== '' && is_file(self::getDocumentosUploadDir() . $nombre);
+
+    return [
+        'id' => (int) $documento->id,
+        'id_reportedia' => (int) $documento->id_reportedia,
+        'detalle' => (string) $documento->detalle,
+        'documento' => $nombre,
+        'archivo_disponible' => $disponible,
+        'previsualizable' => $disponible && in_array($extension, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'], true),
+    ];
+})
+->all();
+}
+
+/** @return array{success:bool,message:string,status?:int} */
+public static function guardarDocumento(int $idReporte, string $detalle, ?array $file): array
+{
+    $detalle = trim($detalle);
+    if ($idReporte < 1 || $detalle === '' || mb_strlen($detalle) > 255) {
+        return ['success' => false, 'message' => 'El corte y el tipo de documento son obligatorios.', 'status' => 422];
+    }
+    if ($file === null || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        return ['success' => false, 'message' => 'Selecciona un archivo válido.', 'status' => 422];
+    }
+
+    $tmpName = $file['tmp_name'] ?? null;
+    $size = filter_var($file['size'] ?? null, FILTER_VALIDATE_INT);
+    $original = basename(str_replace('\\', '/', (string) ($file['name'] ?? '')));
+    if (!is_string($tmpName) || $tmpName === '' || !is_uploaded_file($tmpName)
+        || $size === false || $size < 1 || $size > self::DOCUMENTOS_MAX_BYTES || $original === '') {
+        return ['success' => false, 'message' => 'El archivo excede el tamaño permitido o no es válido.', 'status' => 422];
+    }
+
+    $extension = strtolower(pathinfo($original, PATHINFO_EXTENSION));
+    $extensionesNoPermitidas = ['php', 'php3', 'php4', 'php5', 'phtml', 'phar', 'cgi', 'pl', 'asp', 'aspx', 'jsp', 'html', 'htm', 'js', 'mjs', 'svg'];
+    if ($extension === '' || in_array($extension, $extensionesNoPermitidas, true)) {
+        return ['success' => false, 'message' => 'El formato del archivo no está permitido.', 'status' => 422];
+    }
+
+    $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($tmpName);
+    if (!is_string($mime) || in_array($mime, ['text/html', 'image/svg+xml', 'application/x-php', 'application/x-httpd-php'], true)) {
+        return ['success' => false, 'message' => 'El archivo no es un documento válido.', 'status' => 422];
+    }
+
+    $directorio = self::getDocumentosUploadDir();
+    if (!is_dir($directorio) && !mkdir($directorio, 0775, true) && !is_dir($directorio)) {
+        return ['success' => false, 'message' => 'No fue posible preparar el almacenamiento de documentos.', 'status' => 500];
+    }
+
+    $nombreSeguro = preg_replace('/[^A-Za-z0-9._-]/', '_', $original) ?: 'documento.' . $extension;
+    $nombre = bin2hex(random_bytes(16)) . '-' . $nombreSeguro;
+    $destino = $directorio . $nombre;
+    if (!move_uploaded_file($tmpName, $destino)) {
+        return ['success' => false, 'message' => 'No fue posible guardar el archivo en el almacenamiento de ventas.', 'status' => 500];
+    }
+
+    try {
+        CorteDiaArchivo::create([
+            'id_reportedia' => $idReporte,
+            'detalle' => $detalle,
+            'documento' => $nombre,
+        ]);
+    } catch (\Throwable $error) {
+        if (is_file($destino)) {
+            @unlink($destino);
+        }
+        error_log('VentasService::guardarDocumento: ' . $error->getMessage());
+        return ['success' => false, 'message' => 'El archivo no pudo vincularse al corte de ventas.', 'status' => 500];
+    }
+
+    return ['success' => true, 'message' => 'Documento guardado correctamente.', 'documento' => $nombre];
 }
 
 public static function getObservaciones(int $idReporte): string

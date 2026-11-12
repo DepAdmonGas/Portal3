@@ -120,7 +120,7 @@ async guardarProveedor() {
             if (!this.formProv.Email.trim()) { this.errorsProv.Email = true; hasError = true; }
 
             if (hasError) {
-                this.notify('error', 'Completa los campos obligatorios marcados en rojo.');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 

@@ -4,6 +4,7 @@ Alpine.data('embarquesComponent', () => ({
 guardando: false,
 editando: false,
 editandoId: null,
+errores: {},
 
 form: {
 fecha: new Date().toISOString().substring(0, 10),
@@ -17,6 +18,85 @@ tad: '',
 nom_transporte: '',
 chofer: '',
 unidad: '',
+},
+
+limpiarError(field) {
+if (this.errores[field]) this.errores[field] = false;
+},
+
+formatearCantidad(event, field) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/[^0-9]/g, '').length;
+const decimalBeforeCursor = raw.slice(0, cursor).includes('.');
+let normalized = raw.replace(/,/g, '').replace(/[^0-9.-]/g, '');
+const negative = normalized.startsWith('-');
+normalized = normalized.replace(/-/g, '');
+const pieces = normalized.split('.');
+normalized = pieces[0] + (pieces.length > 1 ? '.' + pieces.slice(1).join('') : '');
+
+if (!normalized) {
+this.form[field] = negative ? '-' : '';
+input.value = this.form[field];
+input.setSelectionRange(input.value.length, input.value.length);
+return;
+}
+
+const [whole = '', ...decimals] = normalized.split('.');
+const grouped = (whole.replace(/^0+(?=\d)/, '') || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const formatted = (negative ? '-' : '') + grouped + (normalized.includes('.') ? '.' + decimals.join('') : '');
+this.form[field] = formatted;
+input.value = formatted;
+
+let digitsSeen = 0;
+let position = input.value.length;
+if (digitsBeforeCursor === 0) {
+position = input.value.startsWith('-') ? 1 : 0;
+input.setSelectionRange(position, position);
+return;
+}
+for (let index = 0; index < input.value.length; index += 1) {
+if (/\d/.test(input.value[index])) digitsSeen += 1;
+if (digitsSeen >= digitsBeforeCursor) {
+position = index + 1;
+break;
+}
+}
+const decimalPosition = input.value.indexOf('.');
+if (decimalBeforeCursor && decimalPosition !== -1) position = Math.max(position, decimalPosition + 1);
+input.setSelectionRange(position, position);
+},
+
+formatearCantidadExistente(value) {
+if (value === null || value === undefined || value === '') return '';
+const amount = Number(String(value).replace(/,/g, ''));
+return Number.isFinite(amount) ? amount.toLocaleString('en-US', { maximumFractionDigits: 20 }) : '';
+},
+
+valorCantidad(value) {
+const normalized = String(value ?? '').replace(/,/g, '').trim();
+if (!normalized || normalized === '-' || normalized === '.' || normalized === '-.') return '';
+const amount = Number(normalized);
+return Number.isFinite(amount) ? String(amount) : '';
+},
+
+validarFormulario() {
+const archivoDocumento = this.$refs.documento?.files?.length > 0;
+this.errores = {
+fecha: !String(this.form.fecha ?? '').trim(),
+embarque: !String(this.form.embarque ?? '').trim(),
+producto: !String(this.form.producto ?? '').trim(),
+documento: !this.editando && !archivoDocumento,
+chofer: !String(this.form.chofer ?? '').trim(),
+unidad: !String(this.form.unidad ?? '').trim(),
+};
+
+if (Object.values(this.errores).some(Boolean)) {
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
+return false;
+}
+return true;
 },
 
 comentarios: [],
@@ -92,11 +172,14 @@ abrirModalAgregar() {
 this.editando = false;
 this.editandoId = null;
 this.resetForm();
+this.limpiarArchivos();
 this.$nextTick(() => this.initSelect2());
 new bootstrap.Modal(document.getElementById('modalEmbarque')).show();
 },
 
 async abrirModalEditar(id) {
+this.errores = {};
+this.limpiarArchivos();
 const c = document.getElementById('embarques-content');
 const resp = await fetch('/departamento-operativo/embarques/data/' + c.dataset.idYear + '/' + c.dataset.idMes);
 const json = await resp.json();
@@ -112,9 +195,9 @@ fecha: row.fecha_raw || '',
 embarque: row.embarque || '',
 producto: row.producto || '',
 documentocv: row.documentocv || '',
-importef: row.importef ?? '',
-precio_litro: row.precio_litro ?? '',
-merma: row.merma ?? '',
+importef: this.formatearCantidadExistente(row.importef),
+precio_litro: this.formatearCantidadExistente(row.precio_litro),
+merma: this.formatearCantidadExistente(row.merma),
 tad: row.tad || '',
 nom_transporte: row.nom_transporte || '',
 chofer: row.chofer || '',
@@ -126,6 +209,7 @@ new bootstrap.Modal(document.getElementById('modalEmbarque')).show();
 },
 
 resetForm() {
+this.errores = {};
 this.form = {
 fecha: new Date().toISOString().substring(0, 10),
 embarque: '',
@@ -139,6 +223,13 @@ nom_transporte: '',
 chofer: '',
 unidad: '',
 };
+},
+
+limpiarArchivos() {
+['documento', 'pdf', 'xml', 'comprobante_p', 'nc_pdf', 'nc_xml', 'comPDF', 'comXML'].forEach(ref => {
+const input = this.$refs[ref];
+if (input) input.value = '';
+});
 },
 
 initSelect2() {
@@ -155,6 +246,11 @@ const selects = [
 selects.forEach(item => {
 const $sel = $(self.$refs[item.ref]);
 if (!$sel || !$sel.length) return;
+
+$sel.off('change.emb').on('change.emb', function () {
+self.form[item.key] = $(this).val() || '';
+self.limpiarError(item.key);
+});
 
 if ($sel.hasClass('select2-hidden-accessible')) {
 $sel.val(self.form[item.key] || '').trigger('change');
@@ -174,19 +270,11 @@ insertTag: (data, tag) => data.push(tag)
 });
 
 $sel.val(self.form[item.key] || '').trigger('change');
-$sel.off('change.emb').on('change.emb', function () {
-self.form[item.key] = $(this).val() || '';
-});
 });
 },
 
 async guardar() {
-if (!this.form.fecha) { if (window.Notify) Notify.error('* Fecha requerida'); return; }
-if (!this.form.embarque) { if (window.Notify) Notify.error('* Embarque requerido'); return; }
-if (!this.form.producto) { if (window.Notify) Notify.error('* Producto requerido'); return; }
-if (!this.editando && this.$refs.documento && this.$refs.documento.files.length === 0) { if (window.Notify) Notify.error('* Documento requerido'); return; }
-if (!this.form.chofer) { if (window.Notify) Notify.error('* Chofer requerido'); return; }
-if (!this.form.unidad) { if (window.Notify) Notify.error('* Unidad requerida'); return; }
+if (!this.validarFormulario()) return;
 
 this.guardando = true;
 try {
@@ -204,7 +292,10 @@ fd.append('id_mes', c.dataset.idMesDb || '');
 
 const fields = ['fecha', 'embarque', 'producto', 'documentocv', 'importef', 'precio_litro', 'merma', 'tad', 'nom_transporte', 'chofer', 'unidad'];
 for (const f of fields) {
-fd.append(f, this.form[f] ?? '');
+const value = ['importef', 'precio_litro', 'merma'].includes(f)
+? this.valorCantidad(this.form[f])
+: this.form[f];
+fd.append(f, value ?? '');
 }
 
 const fileRefs = ['documento', 'pdf', 'xml', 'comprobante_p', 'nc_pdf', 'nc_xml', 'comPDF', 'comXML'];
@@ -228,12 +319,12 @@ if (dt) dt.ajax.reload(null, false);
 this.editando = false;
 this.editandoId = null;
 this.resetForm();
-['documento', 'pdf', 'xml', 'comprobante_p', 'nc_pdf', 'nc_xml', 'comPDF', 'comXML'].forEach(ref => {
-const input = this.$refs[ref];
-if (input) input.value = '';
-});
+this.limpiarArchivos();
 this.$nextTick(() => this.initSelect2());
 } else {
+if (Array.isArray(json.missing_fields)) {
+json.missing_fields.forEach(field => { this.errores[field] = true; });
+}
 if (window.Notify) Notify.error(json.message || 'Error al guardar');
 }
 } catch (e) {

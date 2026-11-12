@@ -26,6 +26,7 @@ function reporteEstadisticoCreComponent() {
 
         cargando: false,
         descargando: false,
+        comentarioInvalido: false,
 
         // Comentarios
         comentarios: [],
@@ -221,22 +222,64 @@ function reporteEstadisticoCreComponent() {
             if (!this.puedeDescargar || this.descargando) return;
 
             this.descargando = true;
+            window.loader?.show();
 
             const url = this.baseUrl + '/facturas?year=' + encodeURIComponent(this.year);
 
-            // window.location mantiene la descarga aunque el servidor responda
-            // con un error en texto plano (no se puede leer con axios binary).
-            const ventana = window.open(url, '_blank');
+            fetch(url, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(async response => {
+                    const contentType = (response.headers.get('Content-Type') || '').toLowerCase();
 
-            const restaurar = () => { this.descargando = false; };
+                    if (!response.ok || !contentType.includes('application/zip')) {
+                        let mensaje = 'No fue posible descargar las facturas.';
+                        try {
+                            const payload = await response.text();
+                            try {
+                                const error = JSON.parse(payload);
+                                mensaje = error.message || mensaje;
+                            } catch (_) {
+                                if (payload.trim()) mensaje = payload.trim();
+                            }
+                        } catch (_) {
+                            // Conserva el mensaje genérico si la respuesta no se puede leer.
+                        }
+                        throw new Error(mensaje);
+                    }
 
-            if (ventana) {
-                ventana.addEventListener('afterunload', restaurar);
-                setTimeout(restaurar, 4000);
-            } else {
-                window.location.href = url;
-                setTimeout(restaurar, 4000);
-            }
+                    const blob = await response.blob();
+                    if (!blob.size) throw new Error('No se encontraron facturas para descargar.');
+
+                    const disposition = response.headers.get('Content-Disposition') || '';
+                    const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+                    const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+                    let filename = 'Facturas_CRE_' + this.year + '.zip';
+                    if (encodedName) {
+                        try { filename = decodeURIComponent(encodedName); } catch (_) { filename = encodedName; }
+                    } else if (plainName) {
+                        filename = plainName;
+                    }
+
+                    const objectUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = objectUrl;
+                    link.download = filename;
+                    link.hidden = true;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+                })
+                .catch(error => {
+                    this.notify('error', error.message || 'No fue posible descargar las facturas.');
+                })
+                .finally(() => {
+                    this.descargando = false;
+                    window.loader?.hide();
+                });
         },
 
         //------------------------------------------------------------------
@@ -303,7 +346,13 @@ function reporteEstadisticoCreComponent() {
         async guardarComentario() {
             const texto = this.formComentario.trim();
 
-            if (!texto || this.guardandoComentario) return;
+            if (this.guardandoComentario) return;
+            if (!texto) {
+                this.comentarioInvalido = true;
+                this.notify('error', 'Completa los campos obligatorios.');
+                return;
+            }
+            this.comentarioInvalido = false;
 
             this.guardandoComentario = true;
 
@@ -331,6 +380,7 @@ function reporteEstadisticoCreComponent() {
 
                 this.comentarios = cuerpo.data || [];
                 this.formComentario = '';
+                this.comentarioInvalido = false;
                 this.scrollChat();
                 this.actualizarContadores();
             } catch (err) {
