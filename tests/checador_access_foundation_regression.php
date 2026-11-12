@@ -9,6 +9,7 @@ use App\Core\Session;
 use App\Services\ChecadorAccessService;
 use App\Services\ModuleStationService;
 use App\Services\ModuloDptoOperativoService;
+use App\Services\MenuDptoOperativoService;
 use App\Services\RolComodinesService;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
@@ -171,6 +172,13 @@ $keys = static function (int $userId): array {
     $parent = ModuloDptoOperativoService::getPermiso($userId, 'recursos-humanos');
     return array_values(array_map(static fn(array $row): string => $row['clave'], $parent['submenus'] ?? []));
 };
+$menuLabels = static function (int $userId): array {
+    $groups = MenuDptoOperativoService::paraUsuario($userId);
+    return array_values(array_map(
+        static fn(array $item): string => (string) ($item['nombre'] ?? ''),
+        $groups[0]['items'] ?? []
+    ));
+};
 
 // C01: authenticated identity alone does not grant the parent module.
 $login(900);
@@ -186,6 +194,16 @@ $login(600);
 $postMenu = $keys(600);
 $postAccess = ChecadorAccessService::authorize();
 $assert(in_array('checador', $postMenu, true) && $postAccess['allowed'] && array_column($postAccess['workplaces'], 'id') === [201], 'C03 Encargado role assignment authorizes only current home station');
+$encargadoSidebar = $menuLabels(600);
+$assert(in_array('Horario del Personal', $encargadoSidebar, true)
+    && in_array('Programar Horario', $encargadoSidebar, true)
+    && in_array('Checador', $encargadoSidebar, true),
+    'C03 Encargado sidebar uses authorized role submenus without presentation-table dependencies');
+$assert(!in_array('Incidencias de Nomina', $encargadoSidebar, true),
+    'C03 Encargado sidebar omits Dirección-only Recursos Humanos submenu');
+$db->table('tb_usuarios')->where('id', 600)->update(['estatus' => 1]);
+$assert($menuLabels(600) === [], 'C03 inactive Encargado identity receives no sidebar options');
+$db->table('tb_usuarios')->where('id', 600)->update(['estatus' => 0]);
 $encargadoSelectorHtml = ModuleStationService::render('checador');
 $assert(array_column(ModuleStationService::getAvailableStations('checador'), 'id') === [201]
     && str_contains($encargadoSelectorHtml, 'Localidad uno')
@@ -196,6 +214,13 @@ $login(1300);
 $directionAccess = ChecadorAccessService::authorize();
 $assert($directionAccess['allowed'] && ($directionAccess['position_id'] ?? null) === 13
     && array_column($directionAccess['workplaces'], 'id') === [201, 202, 204], 'C03 Dirección receives its fresh effective position and all active, uniquely mapped Checador stations');
+$direccionSidebar = $menuLabels(1300);
+$assert(in_array('Horario del Personal', $direccionSidebar, true)
+    && in_array('Checador', $direccionSidebar, true)
+    && in_array('Incidencias de Nomina', $direccionSidebar, true),
+    'C03 Dirección sidebar uses only its authorized role submenus');
+$assert(!in_array('Programar Horario', $direccionSidebar, true),
+    'C03 Dirección sidebar omits Encargado-only Recursos Humanos submenu');
 $previousModuleContext = ['corte-diario' => ['id_estacion' => 101, 'id_depto' => null]];
 Session::set('module_context', $previousModuleContext);
 ModuleStationService::setContext('checador', 202, null);
@@ -231,6 +256,7 @@ $db->table('tb_multiestacion_puesto')->insert([
 ]);
 $login(300);
 $assert(ChecadorAccessService::authorize()['reason'] === 'parent_module_denied', 'V7C12 position 3 has no Checador access without an explicit functional grant');
+$assert($menuLabels(300) === [], 'V7C12 sidebar denies a profile without an effective parent-menu grant');
 $login(1400);
 $assert(ChecadorAccessService::authorize()['reason'] === 'parent_module_denied', 'V7C12 position 14 has no Checador access without an explicit functional grant');
 $db->table('modulos_usuarios_do')->insert([
@@ -244,6 +270,7 @@ $db->table('modulos_sub_usuarios_do')->insert([
 $login(300);
 $position3Access = ChecadorAccessService::authorize();
 $assert($position3Access['allowed'] && array_column($position3Access['workplaces'], 'id') === [201], 'V7C12 explicitly granted position 3 remains limited to its own station');
+$assert($menuLabels(300) === ['Checador'], 'C04 user-over-position exception exposes only its explicitly assigned Checador submenu');
 $login(1400);
 $position14Access = ChecadorAccessService::authorize();
 $assert($position14Access['allowed'] && array_column($position14Access['workplaces'], 'id') === [201], 'V7C12 explicitly granted position 14 does not inherit global multi-station scope');

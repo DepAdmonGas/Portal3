@@ -566,6 +566,11 @@ $checkNatureLabelFor = static fn(string $nature): string => match ($nature) {
                 <i class="ti ti-calendar me-1" aria-hidden="true"></i>
                 <span><?= $esc($selectedDateDisplay !== '' ? $selectedDateDisplay : 'Fecha no disponible') ?></span>
             </p>
+
+<p class="text-muted">Las acciones disponibles dependen de los permisos del perfil y se confirman mediante la lectura autorizada.</p>
+<?php if (($demoMode ?? false) === true): ?>
+<div class="alert alert-info" role="status">Demostración sintética: estas acciones sólo cambian el historial local. No se modifica información operativa real.</div>
+<?php endif; ?>
             <?php if (is_array($lifecycleFeedback ?? null)): ?>
                 <div class="alert alert-<?= ($lifecycleFeedback['type'] ?? '') === 'success' ? 'success' : 'warning' ?>" role="status">
                     <?= $esc($lifecycleFeedback['message'] ?? 'No fue posible confirmar la acción.') ?>
@@ -671,6 +676,52 @@ $checkNatureLabelFor = static fn(string $nature): string => match ($nature) {
                                     <?php if ($revisions !== []): ?><h5 class="h6">Historial de revisión</h5><ol class="small mb-0">
                                         <?php foreach ($revisions as $revision): ?><?php [$revisionTimestamp, $revisionTimezone] = $revisionTimestampForDisplay($revision['created_at_utc'] ?? null); $revisionActorId = filter_var($revision['created_by_user_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]); ?><li class="mb-2"><div class="d-flex flex-wrap align-items-center gap-2"><strong>Revisión <?= (int) ($revision['revision_number'] ?? 0) ?></strong><span class="badge text-bg-light border text-body-secondary"><?= $esc(\App\Services\ChecadorPresentationFormatter::incidenceStatusLabel($revision['status'] ?? null)) ?></span></div><p class="mb-1 mt-1"><?= $esc($revision['reason'] ?? 'Sin motivo disponible') ?></p><span class="small text-muted"><?= $revisionActorId !== false ? 'Usuario ID ' . (int) $revisionActorId : 'Usuario no disponible' ?> · <?= $esc($revisionTimestamp) ?><?= $revisionTimezone !== '' ? ' · ' . $esc($revisionTimezone) : '' ?></span><?php if (($revision['evidence_reference'] ?? null) !== null): ?><br><span class="text-muted">Evidencia: <?= $esc($revision['evidence_reference']) ?></span><?php endif; ?></li><?php endforeach; ?>
                                     </ol><?php endif; ?>
+                                                <?php
+                                                $incidenceUuid = (string) ($incidence['uuid_incidencia'] ?? '');
+                                                $incidenceStatus = (string) ($incidence['current_status'] ?? 'UNKNOWN');
+                                                $incidenceRevision = (int) ($incidence['current_revision'] ?? 0);
+                                                $incidenceLifecycleKey = is_array($lifecycleKeys[$incidenceUuid] ?? null) ? $lifecycleKeys[$incidenceUuid] : [];
+                                                $canResolve = !empty($lifecyclePermissions['resolve']) && !in_array($incidenceStatus, ['CANCELLED', 'REVOKED'], true);
+                                                $canAuthorize = !empty($lifecyclePermissions['authorize']) && !in_array($incidenceStatus, ['CANCELLED', 'REVOKED', 'REJECTED'], true);
+                                                $canReject = !empty($lifecyclePermissions['reject']) && !in_array($incidenceStatus, ['CANCELLED', 'REVOKED', 'REJECTED'], true);
+                                                $canRevoke = !empty($lifecyclePermissions['revoke']) && !in_array($incidenceStatus, ['CANCELLED', 'REVOKED'], true);
+                                                ?>
+                                                <?php if ($canResolve || $canAuthorize || $canReject || $canRevoke): ?>
+                                                    <div class="border-top mt-3 pt-3" aria-label="Acciones administrativas">
+                                                        <p class="small text-muted mb-2">Cada acción requiere confirmación y conserva la revisión esperada. El estado se vuelve a leer después del envío.</p>
+                                                        <?php foreach (['resolve' => $canResolve, 'authorize' => $canAuthorize, 'reject' => $canReject, 'revoke' => $canRevoke] as $action => $allowedAction): if (!$allowedAction) continue; ?>
+                                                            <?php
+                                                            $actionLabels = ['resolve' => 'Resolver o revisar', 'authorize' => 'Autorizar', 'reject' => 'Rechazar', 'revoke' => 'Revocar'];
+                                                            $actionField = match ($action) {
+                                                                'resolve' => 'resolution_notes',
+                                                                'reject' => 'rejection_reason',
+                                                                default => 'action_notes',
+                                                            };
+                                                            $actionLabel = (string) ($actionLabels[$action] ?? 'Confirmar acción');
+                                                            ?>
+                                                            <form method="post" action="/departamento-operativo/recursos-humanos/checador/incidencias/<?= rawurlencode($incidenceUuid) ?>/<?= $esc($action) ?>" class="border rounded p-2 mb-2">
+                                                                <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
+                                                                <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
+                                                                <input type="hidden" name="worker_id" value="<?= (int) $workerId ?>">
+                                                                <input type="hidden" name="date" value="<?= $esc($selectedDate ?? '') ?>">
+                                                                <input type="hidden" name="snapshot_ref" value="<?= $esc($snapshotRef ?? '') ?>">
+                                                                <input type="hidden" name="expected_current_revision" value="<?= $incidenceRevision ?>">
+                                                                <input type="hidden" name="idempotency_key" value="<?= $esc($incidenceLifecycleKey[$action] ?? '') ?>">
+                                                                <?php if ($action === 'resolve'): ?>
+                                                                    <input type="hidden" name="resolution_action" value="CONFIRM_INCIDENCE_PREVALENCE">
+                                                                <?php endif; ?>
+                                                                <label class="form-label small" for="incidence-action-<?= $esc($action) ?>-<?= $esc($incidenceUuid) ?>"><?= $esc($actionLabel) ?><?= $action === 'reject' ? ' (motivo)' : '' ?></label>
+                                                                <textarea class="form-control form-control-sm mb-2" id="incidence-action-<?= $esc($action) ?>-<?= $esc($incidenceUuid) ?>" name="<?= $esc($actionField) ?>"<?= in_array($action, ['resolve', 'reject'], true) ? ' required' : '' ?>></textarea>
+                                                                <?php if ($action === 'resolve'): ?>
+                                                                    <label class="form-label small" for="incidence-evidence-<?= $esc($incidenceUuid) ?>">Evidencia (opcional)</label>
+                                                                    <input class="form-control form-control-sm mb-2" id="incidence-evidence-<?= $esc($incidenceUuid) ?>" name="evidence_reference">
+                                                                <?php endif; ?>
+                                                                <label class="small d-block mb-2"><input class="form-check-input me-1" type="checkbox" name="confirm_action" value="1" required> Confirmo explícitamente esta acción administrativa.</label>
+                                                                <button type="submit" class="btn btn-sm btn-outline-primary"><?= $esc($actionLabel) ?></button>
+                                                            </form>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                             <div class="modal-footer justify-content-end gap-2"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x" aria-hidden="true"></i> Cerrar</button></div>
                                         </div></div>

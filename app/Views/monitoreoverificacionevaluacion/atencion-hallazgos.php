@@ -12,15 +12,20 @@
 
     <?php else: ?>
 
-        <div class="text-end">
-            <?=
+ <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                        <?=
             !empty($permisos['crear']) ?
                 '<button type="button" class="btn bg-primary-subtle text-primary mb-3" @click="nuevo()">
             <i class="ti ti-plus"></i> Nuevo
             </button>'
                 : ''
-            ?>
-        </div>
+            ?>  
+                    </div>
+                  </div>
+
+        
+      
         <div class="table-responsive">
             <table class="table table-bordered mb-3">
                 <tr>

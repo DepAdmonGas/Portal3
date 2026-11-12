@@ -7,6 +7,7 @@ use App\Models\Estacion;
 use App\Core\Session;
 use App\Services\CalendarioService;
 use App\Services\MultiestacionService;
+use App\Services\SolicitudesFirmaDoService;
 use App\Services\ModuleStationService;
 use App\Controllers\DocumentoController;
 
@@ -47,6 +48,11 @@ class View
             );
         }
 
+        $solicitudesFirmaAutorizado = SolicitudesFirmaDoService::autorizado();
+        $solicitudesFirmaPendientes = $solicitudesFirmaAutorizado
+            ? SolicitudesFirmaDoService::contarParaUsuarioActual()
+            : 0;
+
         return [
             'title'           => 'Portal3',
             'user'            => Auth::user(),
@@ -55,6 +61,8 @@ class View
             'pendientes'     => CalendarioService::pendientes(),
             'doc_sgm' => $DOC_SGM,
             'doc_mpsgm' => $DOC_MPSGM,
+            'solicitudesFirmaAutorizado' => $solicitudesFirmaAutorizado,
+            'solicitudesFirmaPendientes' => $solicitudesFirmaPendientes,
         ];
     }
 
@@ -85,8 +93,23 @@ class View
             // Indica si el selector de estación debe ocultarse.
             $ocultarSelector = !empty($viewData['ocultarSelectorEstacion']);
 
+            // Texto opcional del badge (por ejemplo, la estación o
+            // departamento del ticket que se está viendo).
+            $nombreBadge = (string)($viewData['nombreBadgeEstacion'] ?? '');
+
             // Genera el HTML del selector y valida si el módulo está disponible.
-            $html = ModuleStationService::render($moduleKey, $pendientesData, !$ocultarSelector);
+            $placeholder = $viewData['moduleStationPlaceholder'] ?? null;
+            $stationLabelOverrides = $viewData['moduleStationLabelOverrides'] ?? [];
+            $extraDepartments = $viewData['moduleStationExtraDepartments'] ?? [];
+            $html = ModuleStationService::render(
+                $moduleKey,
+                $pendientesData,
+                !$ocultarSelector,
+                $nombreBadge,
+                $placeholder,
+                $stationLabelOverrides,
+                $extraDepartments
+            );
 
             // Si el módulo está bloqueado (Para id_gas = 8), solo muestra el mensaje de bloqueo.
             if (ModuleStationService::$isBlocked) {

@@ -26,12 +26,14 @@ $servicePath = __DIR__ . '/../app/Services/ChecadorPayrollComparisonReadService.
 $controllerPath = __DIR__ . '/../app/Controllers/ChecadorController.php';
 $routePath = __DIR__ . '/../routes/web.php';
 $viewPath = __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/payroll-comparison.php';
+$indexViewPath = __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php';
 $rawReaderPath = __DIR__ . '/../app/Services/ChecadorRawPunchReadService.php';
 $dailyReaderPath = __DIR__ . '/../app/Services/ChecadorDailyReadService.php';
 $service = (string) file_get_contents($servicePath);
 $controller = (string) file_get_contents($controllerPath);
 $routes = (string) file_get_contents($routePath);
 $view = (string) file_get_contents($viewPath);
+$indexView = (string) file_get_contents($indexViewPath);
 $rawReader = (string) file_get_contents($rawReaderPath);
 $dailyReader = (string) file_get_contents($dailyReaderPath);
 
@@ -123,6 +125,9 @@ $assert(str_contains($controller, "'label' => 'Comparación con Nómina'")
     && str_contains($controller, "'href' => \$base . '/comparacion-nomina'")
     && str_contains($controller, 'ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY)')
     && str_contains($controller, "'available' => \$payrollRead"), 'comparison is reachable from the existing Checador module directory without a parallel menu');
+$assert(str_contains($controller, '$this->renderModuleDirectory();')
+    && str_contains($controller, "'/comparacion-nomina'")
+    && str_contains($indexView, 'data-checador-module-card'), 'comparison is reachable from the existing Checador directory without a parallel module menu');
 $assert(str_contains($view, 'method="get"')
     && str_contains($view, 'No se interpreta como ausencia')
     && str_contains($view, 'No verificada por Portal3')

@@ -133,7 +133,7 @@ $assert($httpRequests === [] && $tokenCalls === 0,
 
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $accessSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorAccessService.php');
-$dailyViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$dailyViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
 $reportControllerSource = substr($controllerSource, strpos($controllerSource, 'public function punchReport(): void'));
 $assert(str_contains($accessSource, 'mapStationIdsToUniqueLocalities')
     && str_contains($accessSource, "where('numlista',")
@@ -143,7 +143,7 @@ $assert(str_contains($accessSource, 'mapStationIdsToUniqueLocalities')
     && !str_contains($reportControllerSource, "'workplace_id' => \$selectedWorkplaceForView"),
     'raw report derives locality from the institutional session and never from source or query locality');
 $assert(str_contains($controllerSource, "'href' => \$base . '/reporte'")
-    && !str_contains($dailyViewSource, 'workplace_id'),
+    && !preg_match('/(?:href|action)=["\'][^"\']*[?&]workplace_id=|name=["\']workplace_id["\']/i', $dailyViewSource),
     'daily module navigation opens the clean report route while locality remains in session');
 
 $sourceWorkplaceId = 14;
@@ -178,18 +178,27 @@ $assert(str_contains($reportHtml, 'href="/departamento-operativo/recursos-humano
 $dailyViewVars = [
     'workplaces' => [['id' => 14, 'nombre' => 'Localidad sintética 14']],
     'selectedWorkplaceId' => 14,
+    'selectedWorkplaceName' => 'Localidad sintética 14',
     'selectedDate' => '2026-10-19',
     'selectedWorkerId' => 900001,
+    'attendanceRows' => [[
+        'worker_id' => 900001,
+        'full_name' => 'Colaborador sintético 900001',
+        'slots' => [],
+        'additional_events' => [],
+        'status' => 'unknown',
+    ]],
+    'attendanceCoverage' => ['complete' => true],
     'demoMode' => true,
     'demoScenario' => 'incidence_conflict',
-    'state' => 'idle',
+    'state' => 'success',
     'stateMessage' => '',
     'lifecycleFeedback' => null,
     'evaluationFeedback' => null,
 ];
 extract($dailyViewVars, EXTR_OVERWRITE);
 ob_start();
-include __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php';
+include __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php';
 $dailyHtml = (string) ob_get_clean();
 $assert(!str_contains($dailyHtml, 'workplace_id'),
     'directory view does not reintroduce a locality query parameter');

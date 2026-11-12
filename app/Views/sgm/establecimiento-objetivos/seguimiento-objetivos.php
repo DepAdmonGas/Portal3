@@ -16,10 +16,9 @@
  <div class="pb-4" x-data="{ ...actions(), ...seguimientoObjetivos() }"
  data-id="<?= $id ?>">
 
-
-    <div class="text-end mt-4">
-
-        <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button
             class="btn btn-success mb-3 mt-3"
             @click="finalizar()"
         >
@@ -27,8 +26,8 @@
             Finalizar
 
         </button>
-
-    </div>
+                    </div>
+                  </div>
 
  <div class="card">
     <div class="card-body">

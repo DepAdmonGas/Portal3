@@ -197,9 +197,11 @@ final class ChecadorAttendanceProjection
             'full_name' => (string) ($profile['full_name'] ?? 'Nombre no disponible'),
             'employee_number' => $profile['employee_number'] ?? null,
             'observed_count' => $observedCount,
-            'evaluated_raw_event_count' => is_int($journey['evaluated_raw_event_count'] ?? null)
-                ? $journey['evaluated_raw_event_count']
-                : null,
+            'evaluated' => is_array($journey) && is_bool($journey['evaluated'] ?? null) ? $journey['evaluated'] : null,
+            'evaluated_raw_event_count' => is_array($journey) && is_int($journey['evaluated_raw_event_count'] ?? null)
+                ? $journey['evaluated_raw_event_count'] : null,
+            'evaluated_raw_events' => is_array($journey) && is_array($journey['evaluated_raw_events'] ?? null)
+                ? $journey['evaluated_raw_events'] : null,
             'additional_segment_count' => $globalStatusTrusted ? count($extraSegmentOrdinals) : 0,
             'slots' => $renderedSlots,
             'additional_events' => $extra,

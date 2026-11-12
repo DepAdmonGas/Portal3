@@ -24,6 +24,7 @@ class CuentaLitrosService
         'Vopack',
         'Monterra',
         'Azcapotzalco',
+        'Tula, Hidalgo',
     ];
 
     public const TADS_DETALLE = [

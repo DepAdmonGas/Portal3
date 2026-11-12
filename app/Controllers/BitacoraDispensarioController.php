@@ -20,7 +20,7 @@ class BitacoraDispensarioController extends BaseController{
 
     public function index(){
 
-    $title = 'Bitácora de registro de eventos PROFECO';
+    $title = 'Bitácora de registro de eventos (PROFECO)';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');

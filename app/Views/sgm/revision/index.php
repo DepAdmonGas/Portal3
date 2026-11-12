@@ -1,19 +1,22 @@
 <div id="container" class="pb-4" x-data="{ ...actions(), ...editRevision(<?= $id ?>)}">
 
-    <div
-class="text-end mb-3"
-x-show="revision.estado==0">
-    
-<button
+    <div class="row g-0 ms-auto w-100 justify-content-end"
+    x-show="revision.estado==0">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                      <button
 class="btn btn-success"
 @click="finalizar()">
 <i class="ti ti-check"></i>
 Finalizar 
 </button>
+                    </div>
+                  </div>
+
+
+    
 
 
 
-</div>
 
 <div class="card">
     <div class="card-body">

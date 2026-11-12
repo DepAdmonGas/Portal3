@@ -24,7 +24,7 @@ $sharedSelector = (string) file_get_contents($root . '/public/assets/js/core/mod
 $dailyReadService = (string) file_get_contents($root . '/app/Services/ChecadorDailyReadService.php');
 $view = (string) file_get_contents($root . '/app/Core/View.php');
 $layout = (string) file_get_contents($root . '/app/Views/layouts/departamento-operativo.php');
-$dailyView = (string) file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
+$dailyView = (string) file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
 $reportView = (string) file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/punch-report.php');
 $navigation = (string) file_get_contents($root . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js');
 
@@ -44,7 +44,7 @@ $workspaceDemoPosition = strpos($workspace, 'ChecadorDailyReadService::demoModeE
 $assert($index !== '' && $report !== ''
     && substr_count($index, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY") >= 4
     && substr_count($report, "'moduleStationKey' => ChecadorAccessService::MODULE_KEY") === 1
-    && str_contains($view, 'ModuleStationService::render($moduleKey')
+    && preg_match('/ModuleStationService::render\(\s*\$moduleKey/s', $view) === 1
     && str_contains($layout, '<?= $moduleStationSelector ?? \'\' ?>'),
     'V6B1 Checador daily, weekly, historical and configuration views plus raw report reuse the existing selector with the independent module key');
 $assert(str_contains($moduleStations, 'ChecadorAccessService::authorize()')

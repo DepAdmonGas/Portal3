@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 
 use App\Models\Estacion;
 use App\Models\Sgm\CalibracionTanque;
@@ -21,7 +22,12 @@ class GestoriaCalibracionTanqueController extends BaseController
     public function index(int $idEstacion)
     {
         $estacion = Estacion::find($idEstacion);
-        $title = 'Calibración de Tanques' . ' (' . $estacion->nombre . ')';
+        if (!$estacion) {
+            http_response_code(404);
+            return;
+        }
+
+        $title = 'Calibración de Tanques';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Gestoria', '/gestoria');
@@ -29,26 +35,34 @@ class GestoriaCalibracionTanqueController extends BaseController
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $mostrarSelectorGestoria = !empty(ModuleStationService::getAvailableStations('gestoria'));
+        ModuleStationService::setContext('gestoria', $idEstacion);
+
         $data = [
-            'title' => $title,
-            'permisos' => $permisos,
-            'modulo' => $this->modulo,
-            'filtro_usuario' => $this->filtro_usuario,
-            'idEstacion' => $idEstacion,
-            'links' => [
+            'title'                => $title,
+            'permisos'             => $permisos,
+            'modulo'               => $this->modulo,
+            'filtro_usuario'       => $this->filtro_usuario,
+            'idEstacion'           => $idEstacion,
+            'moduleStationKey'     => $mostrarSelectorGestoria ? 'gestoria' : null,
+            'nombreBadgeEstacion'  => $estacion->nombre,
+            'links'                => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
             ],
-            'scripts' => [
+            'scripts'              => array_values(array_filter([
                 '/js/vendor.min.js',
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
-
                 '/js/gestoria/calibraciontanque/index.actions.init.js?v=1.2.0',
                 '/js/gestoria/calibraciontanque/index.datatable.init.js?v=1.1.0',
-
-
-            ],
-            'help' => false
+                $mostrarSelectorGestoria ? '/js/core/module-station-selector.js?v=2.0.0' : null,
+            ])),
+            'help'                 => false
         ];
+
+        if ($mostrarSelectorGestoria) {
+            $data['scripts'][] = '/js/core/module-station-selector.js?v=2.0.0';
+            $data['scripts'][] = '/js/gestoria/station-switcher.js?v=' . (@filemtime(PUBLIC_PATH . '/assets/js/gestoria/station-switcher.js') ?: '2.0.1');
+        }
 
         View::render('gestoria/calibracion-tanque', $data, 'main');
     }
@@ -228,7 +242,12 @@ class GestoriaCalibracionTanqueController extends BaseController
         int $idCalibracion
     ) {
         $estacion = Estacion::find($idEstacion);
-        $title = 'Editar Calibración de Tanques' . ' (' . $estacion->nombre . ')';
+        if (!$estacion) {
+            http_response_code(404);
+            return;
+        }
+
+        $title = 'Formulario Calibración de Tanques';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Gestoria', '/gestoria');
@@ -237,22 +256,25 @@ class GestoriaCalibracionTanqueController extends BaseController
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $mostrarSelectorGestoria = !empty(ModuleStationService::getAvailableStations('gestoria'));
+        ModuleStationService::setContext('gestoria', $idEstacion);
+
         $data = [
-            'title' => $title,
-            'permisos' => $permisos,
-            'modulo' => $this->modulo,
-            'filtro_usuario' => $this->filtro_usuario,
-            'idEstacion' => $idEstacion,
-            'idCalibracion' => $idCalibracion,
-            'links' => [],
-            'scripts' => [
+            'title'                => $title,
+            'permisos'             => $permisos,
+            'modulo'               => $this->modulo,
+            'filtro_usuario'       => $this->filtro_usuario,
+            'idEstacion'           => $idEstacion,
+            'idCalibracion'        => $idCalibracion,
+            'moduleStationKey'     => $mostrarSelectorGestoria ? 'gestoria' : null,
+            'nombreBadgeEstacion'  => $estacion->nombre,
+            'links'                => [],
+            'scripts'              => array_values(array_filter([
                 '/js/vendor.min.js',
-
-                '/js/gestoria/calibraciontanque/editar.actions.init.js?v=1.4.0'
-
-
-            ],
-            'help' => false
+                '/js/gestoria/calibraciontanque/editar.actions.init.js?v=1.4.0',
+                $mostrarSelectorGestoria ? '/js/core/module-station-selector.js?v=2.0.0' : null,
+            ])),
+            'help'                 => false
         ];
 
         View::render('gestoria/calibracion-tanque-editar', $data, 'main');

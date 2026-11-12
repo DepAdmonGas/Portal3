@@ -1,730 +1,394 @@
-document.addEventListener('alpine:init', () => {
+/**
+ * Reporte Estadístico de la CRE — Dpto. Operativo.
+ *
+ * Comportamiento heredado del módulo anterior del proyecto portal-sasisopa
+ * (reporte-estadistico-index.php + lista-reporte-cre*.php + descargar-facturas.php).
+ *
+ * El año y el mes viven en el breadcrumb (cambiarYearMes del layout); este
+ * componente sólo carga el contenido del reporte para la estación activa.
+ */
+function reporteEstadisticoCreComponent() {
+    return {
+        // Configuracion general
+        baseUrl: '',
+        year: 0,
+        mes: 0,
+        anios: [],
+        productos: [],
+        meses: [],
+        puedeDescargar: false,
 
-    Alpine.data('reporteCre', (idEstacion) => ({
-
-        idEstacion: Number(idEstacion),
-
-        years: Array.from(
-            {
-                length:
-                    new Date().getFullYear()
-                    - 2019
-                    + 1
-            },
-            (_, index) =>
-                new Date().getFullYear()
-                - index
-        ),
-
-        meses: [
-
-            {
-                id: 0,
-                nombre: 'Todo el año'
-            },
-
-            {
-                id: 1,
-                nombre: 'Enero'
-            },
-
-            {
-                id: 2,
-                nombre: 'Febrero'
-            },
-
-            {
-                id: 3,
-                nombre: 'Marzo'
-            },
-
-            {
-                id: 4,
-                nombre: 'Abril'
-            },
-
-            {
-                id: 5,
-                nombre: 'Mayo'
-            },
-
-            {
-                id: 6,
-                nombre: 'Junio'
-            },
-
-            {
-                id: 7,
-                nombre: 'Julio'
-            },
-
-            {
-                id: 8,
-                nombre: 'Agosto'
-            },
-
-            {
-                id: 9,
-                nombre: 'Septiembre'
-            },
-
-            {
-                id: 10,
-                nombre: 'Octubre'
-            },
-
-            {
-                id: 11,
-                nombre: 'Noviembre'
-            },
-
-            {
-                id: 12,
-                nombre: 'Diciembre'
-            }
-
-        ],
-
-
-        filtros: {
-
-            year: null,
-
-            mes: null
-
-        },
-
+        estacionNombre: '',
         reporte: null,
+        vistaAnual: false,
 
         cargando: false,
+        descargando: false,
 
-        buscado: false,
+        // Comentarios
+        comentarios: [],
+        cargandoComentarios: false,
+        guardandoComentario: false,
+        formComentario: '',
+        contextoMensaje: { idReporte: 0, idFecha: 0, etiqueta: '' },
 
-        requestId: 0,
+        //------------------------------------------------------------------
+        init() {
+            const c = document.getElementById('container');
+            if (!c) return;
 
-        chat: {
+            const config = this.leerJson(c.dataset.creConfig, {});
 
-            dia: null,
+            this.baseUrl = config.baseUrl || c.dataset.baseUrl || '';
+            this.year = parseInt(config.year || c.dataset.idYear, 10) || 0;
+            this.mes = parseInt(config.month || c.dataset.idMes, 10) || 0;
+            this.anios = Array.isArray(config.anios) ? config.anios : this.leerJson(c.dataset.anios, []);
+            this.productos = Array.isArray(config.productos) ? config.productos : this.leerJson(c.dataset.productos, []);
+            this.meses = Array.isArray(config.meses) ? config.meses : this.leerJson(c.dataset.meses, []);
+            this.puedeDescargar = config.puedeDescargar === true || c.dataset.puedeDescargar === 'true';
+            this.estacionNombre = config.estacion || c.dataset.estacion || '';
 
-            mensajes: [],
+            const tieneEstacion = parseInt(config.estacionId || c.dataset.idEstacion, 10) > 0;
 
-            mensaje: '',
+            // Sin estación el backend responde 403: se muestra el mensaje
+            // obligatorio y no se consulta nada.
+            const sinEstacion = document.getElementById('cre-sin-estacion');
+            const contenido = document.getElementById('cre-contenido');
 
-            cargando: false,
+            if (sinEstacion) sinEstacion.style.display = tieneEstacion ? 'none' : '';
+            if (contenido) contenido.style.display = tieneEstacion ? '' : 'none';
 
-            enviando: false,
-
-            offcanvas: null
-
-        },
-
-
-        async init() {
-
-            const fechaActual =
-                new Date();
-
-
-            this.filtros.year =
-                fechaActual.getFullYear();
-
-
-            this.filtros.mes =
-                fechaActual.getMonth() + 1;
-
-
-            await this.buscar();
-
-        },
-
-        async cambiarYear() {
-
-            await this.buscar();
-
-        },
-
-
-        async cambiarMes() {
-
-            await this.buscar();
-
-        },
-
-
-        async buscar() {
-
-            if (!this.filtros.year) {
-
-                return;
-
+            if (tieneEstacion) {
+                this.cargar();
             }
 
-            if (
-                this.filtros.mes === null ||
-                this.filtros.mes === undefined
-            ) {
+            // El cambio de estación desde el selector global recarga la vista.
+            const moduleKey = config.moduleStationKey || c.dataset.moduleStationKey;
 
-                return;
+            if (typeof ModuleStationSelector !== 'undefined' && moduleKey) {
+                ModuleStationSelector.init(moduleKey, {
+                    customReload: (selector) => {
+                        const valor = selector.getValue();
+                        const idEstacion = valor && valor.id_estacion;
 
-            }
+                        if (!idEstacion) {
+                            window.location.reload();
+                            return;
+                        }
 
-            const currentRequest =
-                ++this.requestId;
+                        const partes = window.location.pathname.split('/');
+                        const indiceModulo = partes.indexOf('reporte-cre');
 
+                        if (indiceModulo === -1) {
+                            window.location.reload();
+                            return;
+                        }
 
-            this.cargando = true;
-
-            this.buscado = false;
-
-
-            try {
-
-                const response =
-                    await axios.get(
-                        '/gestoria/reporte-cre/' +
-                        this.idEstacion +
-                        '/data',
-                        {
-                            params: {
-
-                                year:
-                                    Number(
-                                        this.filtros.year
-                                    ),
-
-                                mes:
-                                    Number(
-                                        this.filtros.mes
-                                    )
-
+                        for (let i = indiceModulo + 1; i < partes.length; i++) {
+                            if (/^\d+$/.test(partes[i])) {
+                                partes[i] = String(idEstacion);
+                                break;
                             }
                         }
-                    );
 
-                if (
-                    currentRequest !==
-                    this.requestId
-                ) {
+                        window.location.href = partes.join('/');
+                    }
+                });
+            }
+        },
 
+        //------------------------------------------------------------------
+        // UTILIDADES
+        //------------------------------------------------------------------
+        leerJson(valor, porDefecto) {
+            try {
+                const v = JSON.parse(valor || 'null');
+                return v === null ? porDefecto : v;
+            } catch (e) {
+                return porDefecto;
+            }
+        },
+
+        /**
+         * Etiqueta del periodo visible en la barra superior.
+         *
+         * ES UN METODO Y NO UN GETTER A PROPOSITO: el template usa
+         * x-data="{ ...reporteEstadisticoCreComponent() }". El operador de
+         * dispersion ({...objeto}) copia el VALOR de los getters, no la
+         * funcion, asi que un getter quedaria congelado con el valor del
+         * momento del arranque y nunca se actualizaria.
+         */
+        etiquetaPeriodo() {
+            const m = this.meses.find((x) => x.mes === this.mes);
+            return (m ? m.nombre : '') + ' ' + this.year;
+        },
+
+        /** Dia al que pertenece el comentario que se esta capturando. */
+        etiquetaDiaComentarios() {
+            return this.contextoMensaje.etiqueta || 'Selecciona un día';
+        },
+
+        /** Formato visual 1,234.50 sin tocar el valor almacenado. */
+        /**
+         * Formato visual con separador de miles y EXACTAMENTE dos decimales.
+         *
+         * No recibeparametro de decimales a proposito: el modulo exige dos
+         * decimales en todas las cantidades, y asi ninguna llamada puede
+         * volver a pedir mas. Solo afecta la presentacion; el valor guardado
+         * en la base de datos no se toca.
+         */
+        formatearNumero(valor) {
+            const n = Number(valor || 0);
+            return n.toLocaleString('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        },
+
+        colorProducto(nombre) {
+            const p = (this.productos || []).find((x) => x.nombre === nombre);
+            return p ? p.color : 'secondary';
+        },
+
+        etiquetaPeriodoFactura(periodo) {
+            return { 1: 'Factura', 2: 'Factura inicial', 3: 'Factura final' }[periodo] || 'Factura';
+        },
+
+        etiquetaDocumentoFactura(documento) {
+            const periodo = this.etiquetaPeriodoFactura(documento.periodo);
+            return this.vistaAnual && documento.mes_nombre
+                ? documento.mes_nombre + ' · ' + periodo
+                : periodo;
+        },
+
+        //------------------------------------------------------------------
+        // CARGA
+        //------------------------------------------------------------------
+        async cargar() {
+            this.cargando = true;
+            this.reporte = null;
+
+            const url = this.baseUrl + '/data';
+
+            try {
+                const resp = await axios.get(url, {
+                    params: { year: this.year, mes: this.mes },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                const cuerpo = resp.data || {};
+
+                // JsonResponse::custom() responde sin 'success'; los errores
+                // usan JsonResponse::error/forbidden.
+                if (cuerpo.success === false) {
+                    this.reporte = null;
+                    this.notify('error', cuerpo.message || 'No fue posible cargar el reporte.');
                     return;
-
                 }
 
-
-                this.reporte =
-                    response.data?.data ?? null;
-
-
-            } catch (error) {
-
-                if (
-                    currentRequest !==
-                    this.requestId
-                ) {
-
-                    return;
-
-                }
-
-
-                console.error(
-                    'Error al cargar reporte CRE:',
-                    error
-                );
-
-
+                this.reporte = cuerpo.reporte || null;
+            } catch (err) {
                 this.reporte = null;
 
+                const respuesta = err.response;
+                const cuerpo = respuesta && respuesta.data ? respuesta.data : {};
+                const estado = respuesta ? respuesta.status : 0;
 
-                this.notify(
-                    'error',
-                    'No fue posible cargar el reporte CRE.'
-                );
+                // El backend responde 403 con el mensaje de estación, que ya
+                // se muestra en pantalla; no se duplica como notificación.
+                if (estado === 403 && cuerpo.message) {
+                    console.warn('[CRE] ' + url + ' -> 403: ' + cuerpo.message);
+                    return;
+                }
 
-
+                console.error('[CRE] ' + url + ' -> ' + (estado || 'sin respuesta'), err);
+                this.notify('error', cuerpo.message || ('No fue posible cargar el reporte. (HTTP ' + (estado || '0') + ')'));
             } finally {
-
-                if (
-                    currentRequest ===
-                    this.requestId
-                ) {
-
-                    this.cargando = false;
-
-                    this.buscado = true;
-
-                }
-
+                this.cargando = false;
             }
-
         },
 
-        nombreMes(idMes) {
-
-            const mes =
-                this.meses.find(
-                    item =>
-                        Number(item.id) ===
-                        Number(idMes)
-                );
-
-
-            return mes
-                ? mes.nombre
-                : '';
-
+        irAMes(mes) {
+            // El año/mes viven en la URL (ver year-mes-template). Se navega
+            // directamente porque cambiarYearMes() pertenece al scope Alpine
+            // del layout, no a este componente.
+            window.location.href = this.baseUrl + '/' + this.year + '/' + mes;
         },
 
-        get periodoTexto() {
+        async cambiarVistaAnual() {
+            this.vistaAnual = !this.vistaAnual;
 
-            if (!this.filtros.year) {
-
-                return '';
-
+            if (this.vistaAnual) {
+                await this.cargarAnual();
+            } else {
+                await this.cargar();
             }
-
-            if (
-                Number(
-                    this.filtros.mes
-                ) === 0
-            ) {
-
-                return (
-                    'Año ' +
-                    this.filtros.year
-                );
-
-            }
-
-
-            const mes =
-                this.nombreMes(
-                    this.filtros.mes
-                );
-
-
-            if (!mes) {
-
-                return String(
-                    this.filtros.year
-                );
-
-            }
-
-
-            return (
-                mes +
-                ' del ' +
-                this.filtros.year
-            );
-
         },
 
-        get tieneProductos() {
+        async cargarAnual() {
+            this.cargando = true;
+            this.reporte = null;
 
-            return (
-                this.reporte !== null &&
-                Array.isArray(
-                    this.reporte.productos
-                ) &&
-                this.reporte.productos.length > 0
-            );
+            try {
+                const resp = await axios.get(this.baseUrl + '/anual', {
+                    params: { year: this.year }
+                });
 
-        },
-
-
-        get tieneDias() {
-
-            return (
-                this.reporte !== null &&
-                Array.isArray(
-                    this.reporte.dias
-                ) &&
-                this.reporte.dias.length > 0
-            );
-
-        },
-
-        formatearNumero(valor) {
-
-            const numero =
-                Number(
-                    valor ?? 0
-                );
-
-
-            if (
-                Number.isNaN(numero)
-            ) {
-
-                return '0.00';
-
+                const cuerpo = resp.data || {};
+                this.reporte = cuerpo.reporte || null;
+            } catch (err) {
+                this.reporte = null;
+            } finally {
+                this.cargando = false;
             }
-
-
-            return numero.toLocaleString(
-                'es-MX',
-                {
-                    minimumFractionDigits: 2,
-
-                    maximumFractionDigits: 2
-                }
-            );
-
         },
 
-        formatearMoneda(valor) {
+        //------------------------------------------------------------------
+        // DESCARGA ANUAL
+        //------------------------------------------------------------------
+        descargarFacturas() {
+            if (!this.puedeDescargar || this.descargando) return;
 
-            const numero =
-                Number(
-                    valor ?? 0
-                );
+            this.descargando = true;
 
+            const url = this.baseUrl + '/facturas?year=' + encodeURIComponent(this.year);
 
-            if (
-                Number.isNaN(numero)
-            ) {
+            // window.location mantiene la descarga aunque el servidor responda
+            // con un error en texto plano (no se puede leer con axios binary).
+            const ventana = window.open(url, '_blank');
 
-                return '$0.00';
+            const restaurar = () => { this.descargando = false; };
 
+            if (ventana) {
+                ventana.addEventListener('afterunload', restaurar);
+                setTimeout(restaurar, 4000);
+            } else {
+                window.location.href = url;
+                setTimeout(restaurar, 4000);
             }
-
-
-            return numero.toLocaleString(
-                'es-MX',
-                {
-                    style:
-                        'currency',
-
-                    currency:
-                        'MXN',
-
-                    minimumFractionDigits:
-                        2,
-
-                    maximumFractionDigits:
-                        2
-                }
-            );
-
         },
 
-        formatearFecha(fecha) {
+        //------------------------------------------------------------------
+        // COMENTARIOS
+        //------------------------------------------------------------------
+/**
+         * Abre el panel de comentarios del dia seleccionado.
+         * La etiqueta del encabezado se arma aqui para que el modal indique
+         * de forma explicita a que dia pertenece lo que se capture.
+         */
+        async abrirComentarios(dia) {
+            const m = this.meses.find((x) => x.mes === this.mes);
 
-            if (!fecha) {
+            this.contextoMensaje = {
+                idReporte: dia.id_reporte,
+                idFecha: dia.id_fecha,
+                etiqueta: (dia.dia ? dia.dia : dia.fecha) + ' · '
+                    + (dia.fecha_label || '') + ' · '
+                    + ((m ? m.nombre : '') + ' ' + this.year)
+            };
+            this.formComentario = '';
 
-                return '';
+            const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasComentariosCre'));
+            offcanvas.show();
 
-            }
-
-            const partes =
-                String(fecha)
-                    .split('-');
-
-
-            if (
-                partes.length !== 3
-            ) {
-
-                return fecha;
-
-            }
-
-
-            return (
-                partes[2] +
-                '/' +
-                partes[1] +
-                '/' +
-                partes[0]
-            );
-
+            await this.cargarComentarios();
         },
 
-        //--------------
+        async cargarComentarios() {
+            this.cargandoComentarios = true;
+            this.comentarios = [];
 
-async abrirChat(dia) {
-
-    this.chat.dia = dia;
-
-    this.chat.mensajes = [];
-
-    this.chat.mensaje = '';
-
-    this.chat.cargando = true;
-
-
-    const elemento =
-        document.getElementById(
-            'offcanvasReporteChat'
-        );
-
-
-    if (!elemento) {
-
-        return;
-
-    }
-
-
-    this.chat.offcanvas =
-        bootstrap.Offcanvas.getOrCreateInstance(
-            elemento
-        );
-
-    this.chat.offcanvas.show();
-
-    await this.cargarMensajes();
-
-},
-
-async cargarMensajes() {
-
-    if (!this.chat.dia) {
-
-        return;
-
-    }
-
-
-    this.chat.cargando = true;
-
-
-    try {
-
-        const response =
-            await axios.get(
-                '/gestoria/reporte-cre/' +
-                this.idEstacion +
-                '/mensajes',
-                {
+            try {
+                const resp = await axios.get(this.baseUrl + '/mensajes', {
                     params: {
-
-                        id_reporte:
-                            this.reporte?.id,
-
-                        id_fecha:
-                            this.chat.dia.id_fecha
-
+                        id_reporte: this.contextoMensaje.idReporte,
+                        id_fecha: this.contextoMensaje.idFecha
                     }
-                }
-            );
+                });
 
+                this.comentarios = (resp.data && resp.data.data) || [];
+            } catch (err) {
+                this.comentarios = [];
+            } finally {
+                this.cargandoComentarios = false;
+                this.scrollChat();
+            }
+        },
 
-        this.chat.mensajes =
-            response.data?.data ?? [];
-
-
-        await this.$nextTick();
-
-
-        this.scrollChat();
-
-    } catch (error) {
-
-        console.error(
-            'Error al cargar mensajes:',
-            error
-        );
-
-
-        this.chat.mensajes = [];
-
-
-        this.notify(
-            'error',
-            'No fue posible cargar los mensajes.'
-        );
-
-    } finally {
-
-        this.chat.cargando = false;
-
-    }
-
-},
-
-async enviarMensaje() {
-
-    const mensaje =
-        this.chat.mensaje.trim();
-
-
-    if (
-        !mensaje ||
-        !this.chat.dia ||
-        this.chat.enviando
-    ) {
-
-        return;
-
-    }
-
-
-    this.chat.enviando = true;
-
-
-    try {
-
-        const response =
-            await axios.post(
-                '/gestoria/reporte-cre/' +
-                this.idEstacion +
-                '/mensajes/create',
-                {
-
-                    id_reporte:
-                        this.reporte?.id,
-
-                    id_fecha:
-                        this.chat.dia.id_fecha,
-
-                    mensaje:
-                        mensaje
-
-                }
-            );
-
-
-        const nuevoMensaje =
-            response.data?.data ?? null;
-
-
-        if (nuevoMensaje) {
-
-            this.chat.mensajes.push(
-                nuevoMensaje
-            );
-
-        } else {
-
-            /*
-             * Si el backend no devuelve el mensaje,
-             * volvemos a consultar la conversación.
-             */
-            await this.cargarMensajes();
-
-        }
-
-
-        /*
-         * Limpiar textarea.
+        /**
+         * Guarda el comentario.
+         *
+         * Sin bloqueo por permisos: el modulo anterior (reporte-estadistico-index.php
+         * de portal-sasisopa) permitia comentar a cualquier usuario autenticado,
+         * y asi se conserva.
          */
-        this.chat.mensaje = '';
+        async guardarComentario() {
+            const texto = this.formComentario.trim();
 
+            if (!texto || this.guardandoComentario) return;
 
-        /*
-         * Actualizar contador del día.
-         */
-        this.chat.dia.total_mensajes =
-            Number(
-                this.chat.dia.total_mensajes ?? 0
-            ) + 1;
+            this.guardandoComentario = true;
 
+            try {
+                const resp = await axios.post(this.baseUrl + '/mensajes/create', {
+                    id_reporte: this.contextoMensaje.idReporte,
+                    id_fecha: this.contextoMensaje.idFecha,
+                    mensaje: texto
+                });
 
-        await this.$nextTick();
+                const cuerpo = resp.data || {};
 
+                /*
+                 * El controller responde con JsonResponse::custom(['data' => ...]),
+                 * que NO incluye la clave 'success'. Solo los errores usan
+                 * JsonResponse::error/forbidden y si llevan 'success' => false.
+                 *
+                 * Por eso se compara contra false en lugar de pedir truthy:
+                 * de lo contrario una respuesta correcta se tomaba como error.
+                 */
+                if (cuerpo.success === false) {
+                    this.notify('error', cuerpo.message || 'No fue posible enviar el mensaje.');
+                    return;
+                }
 
-        this.scrollChat();
+                this.comentarios = cuerpo.data || [];
+                this.formComentario = '';
+                this.scrollChat();
+                this.actualizarContadores();
+                this.notify('success', 'Comentario agregado exitosamente.');
+            } catch (err) {
+                const respuesta = err.response;
+                const cuerpo = respuesta && respuesta.data ? respuesta.data : {};
 
-    } catch (error) {
+                console.error('[CRE] error al enviar comentario', err);
 
-        console.error(
-            'Error al enviar mensaje:',
-            error
-        );
+                this.notify('error', cuerpo.message
+                    || ('No fue posible enviar el mensaje. (HTTP ' + (respuesta ? respuesta.status : 0) + ')'));
+            } finally {
+                this.guardandoComentario = false;
+            }
+        },
 
+        /** Refleja en las filas el nuevo conteo sin recargar todo el reporte. */
+        actualizarContadores() {
+            if (!this.reporte || !this.reporte.dias) return;
 
-        this.notify(
-            'error',
-            'No fue posible enviar el mensaje.'
-        );
+            const idFecha = this.contextoMensaje.idFecha;
 
-    } finally {
+            this.reporte.dias.forEach((dia) => {
+                if (dia.id_fecha === idFecha) {
+                    dia.total_mensajes = this.comentarios.length;
+                }
+            });
 
-        this.chat.enviando = false;
+            this.reporte = Object.assign({}, this.reporte);
+        },
 
-    }
-
-},
-
-scrollChat() {
-
-    this.$nextTick(() => {
-
-        const contenedor =
-            this.$refs.chatMensajes;
-
-
-        if (!contenedor) {
-
-            return;
-
+        scrollChat() {
+            this.$nextTick(() => {
+                const cont = this.$refs.chatCre;
+                if (cont) cont.scrollTop = cont.scrollHeight;
+            });
         }
-
-
-        contenedor.scrollTop =
-            contenedor.scrollHeight;
-
-    });
-
-},
-
-descargarFacturasAnual() {
-
-    /*
-     * Solamente debe funcionar cuando:
-     *
-     * 0 = Todo el año.
-     */
-    if (
-        Number(
-            this.filtros.mes
-        ) !== 0
-    ) {
-
-        return;
-
-    }
-
-
-    if (
-        !this.filtros.year
-    ) {
-
-        return;
-
-    }
-
-
-    const year =
-        Number(
-            this.filtros.year
-        );
-
-
-    const url =
-        '/gestoria/reporte-cre/' +
-        this.idEstacion +
-        '/facturas/anual' +
-        '?year=' +
-        encodeURIComponent(
-            year
-        );
-
-
-    /*
-     * La descarga la maneja directamente
-     * el navegador.
-     *
-     * No usamos Axios porque no necesitamos
-     * cargar el ZIP completo en memoria JS.
-     */
-    window.location.href =
-        url;
-
-},
-
-    }));
-
-});
+    };
+}

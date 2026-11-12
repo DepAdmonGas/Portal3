@@ -80,7 +80,8 @@
     <div class="modal fade"
      id="detalleTemaModal"
      tabindex="-1"
-     data-bs-backdrop="static">
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
 
     <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
 
@@ -183,6 +184,21 @@
 
                 </table>
 
+            </div>
+            <div class="modal-footer">
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                       <button
+                    type="button"
+                    class="btn bg-danger-subtle text-danger"
+                    data-bs-dismiss="modal">
+                    <i class="ti ti-x me-1"></i>
+                    Cancelar
+                </button>
+                    </div>
+                  </div>
+
+                
             </div>
 
         </div>

@@ -10,6 +10,9 @@ if (($sourceWorkplaceId ?? null) !== null && ($sourceWorkDate ?? '') !== '') {
         $sourceDailyContext['worker_id'] = (int) $sourceWorkerId;
     }
 }
+$dailyReturnHref = $sourceDailyContext !== []
+    ? '/departamento-operativo/recursos-humanos/checador/asistencia?' . http_build_query($sourceDailyContext, '', '&', PHP_QUERY_RFC3986)
+    : null;
 $periodYear = (int) ($periodYear ?? gmdate('Y'));
 $periodMonth = (int) ($periodMonth ?? gmdate('n'));
 $periodSummaryLabel = (string) ($periodLabel ?? 'Rango personalizado (UTC)');
@@ -80,6 +83,7 @@ try {
             <span class="visually-hidden" id="punch-report-worker-help">Busca por nombre o apellido; el identificador se conserva de forma interna.</span>
         </div>
         <div class="col-12 col-lg-auto d-flex flex-wrap gap-2">
+            <?php if ($dailyReturnHref !== null): ?><a class="btn btn-outline-secondary" href="<?= htmlspecialchars($dailyReturnHref, ENT_QUOTES, 'UTF-8') ?>">Volver a Asistencia</a><?php endif; ?>
             <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#punch-report-filter-modal">
                 <i class="ti ti-filter me-1" aria-hidden="true"></i>Más filtros
             </button>

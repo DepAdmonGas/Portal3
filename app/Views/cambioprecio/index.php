@@ -13,15 +13,20 @@
 <?php else: ?>
 
     <div id="cambioprecio-content">
-        <div class="d-flex justify-content-end">
-            <?= 
+        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                       <?= 
                 !empty($permisos['crear']) ? 
                 '
                   <button class="btn bg-primary-subtle text-primary" @click="openCreate()"><i class="ti ti-plus"></i> Nuevo</a> </button>
                ' 
                 : '' 
                 ?>  
-        </div>
+                    </div>
+                  </div>
+
+           
+
                
                  
 
@@ -53,7 +58,9 @@
 <div class="modal fade"
      id="modalCambioPrecio"
      tabindex="-1"
-     aria-hidden="true">
+     aria-hidden="true"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
 
     <div class="modal-dialog modal-dialog-centered">
 
@@ -169,18 +176,18 @@
 
             <!-- FOOTER -->
             <div class="modal-footer">
-
-                <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                     type="button"
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
-
                     <i class="ti ti-x me-1"></i>
                     Cancelar
-
                 </button>
-
-                <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                     type="button"
                     class="btn btn-success"
                     @click="guardar()"
@@ -197,11 +204,12 @@
                         x-show="!loading"
                         class="ti ti-check me-1">
                     </i>
-
                     <span x-text="loading ? 'Guardando...' : 'Guardar'"></span>
-
                 </button>
 
+                    </div>
+                  </div>
+ 
             </div>
 
         </div>

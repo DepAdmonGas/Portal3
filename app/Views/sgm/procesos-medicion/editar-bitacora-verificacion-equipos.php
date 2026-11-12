@@ -17,17 +17,22 @@
     <template x-if="programa.equipo?.nombre == 'Sensor de nivel y temperatura'">
         <div>
 
-            <div class="text-end mt-3 mb-3">
-
-                <button
+  <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                         <button
                     class="btn btn-success"
                     @click="finalizar()">
                     <i class="ti ti-check"></i>
                     Finalizar 
 
                 </button>
+                    </div>
+                  </div>
 
-            </div>
+
+             
+
+      
 <!--------inicio de la primera card------>
 
 

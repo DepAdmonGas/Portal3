@@ -10,15 +10,20 @@
     </div>
 
 <?php else: ?>
-    <div class="text-end mt-2">
-          <?= 
+ 
+      <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+                         <?= 
           !empty($permisos['crear']) ? 
           '<a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf" type="button" class="btn bg-primary-subtle text-primary">
           <i class="ti ti-download"></i> Descargar
           </a>' 
           : '' 
-          ?>   
-    </div>
+          ?>    
+                    </div>
+                  </div>
+
+      
 
       <div class="datatables">
         <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">

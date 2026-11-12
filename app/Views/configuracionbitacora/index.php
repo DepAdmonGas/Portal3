@@ -11,15 +11,20 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
     </div>
 
 <?php else: ?>
-  <div class="text-end">
-      <?= 
+  <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+                         <?= 
         !empty($permisos['crear']) ? 
         '<button type="button" class="btn bg-primary-subtle text-primary" @click="modalNuevoOpen()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
-        ?>     
-    </div>
+        ?>    
+                    </div>
+                  </div>
+
+    
+ 
 
 <div class="datatables mt-2">
             <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
@@ -42,7 +47,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
 
     <!-- Modal nuevo -->
 
-    <div class="modal fade" id="modalNuevo" tabindex="-1">
+    <div class="modal fade" id="modalNuevo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
 
@@ -114,21 +119,25 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
         </div>
 
             <div class="modal-footer">
-
-                <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                            <button
                 class="btn bg-danger-subtle text-danger"
                 data-bs-dismiss="modal"
                 @click="limpiarNuevo()">
                 <i class="ti ti-x"></i>
                     Cancelar
                 </button>
-
-                <button
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                 class="btn btn-success"
                 @click="guardar()">
                 <i class="ti ti-check"></i>
                     Guardar
                 </button>
+                    </div>
+                  </div>
             </div>
 
         </div>
@@ -137,7 +146,7 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
 
     <!-- Modal Eliminar -->
 
-    <div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal fade" id="modalEliminar" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
 
@@ -173,22 +182,32 @@ x-data="{ ...actions(), ...configuracionBitacora() }">
                 </div>
 
                 <div class="modal-footer">
+<div class="row g-0 ms-auto w-100 justify-content-end">
 
-                    <button
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                         <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal"
                     @click="limpiarEliminar()">
                     <i class="ti ti-x"></i>
                         Cancelar
                     </button>
+                    </div>
 
-                    <button
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                     type="button"
                     class="btn btn-success"
                     @click="eliminar()">
                     <i class="ti ti-check"></i>
                         Eliminar
                     </button>
+                    </div>
+                  </div>
+
+                 
+
+                    
 
                 </div>
 

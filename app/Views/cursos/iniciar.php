@@ -1,13 +1,18 @@
-<a
+
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-2">
+                      <a
     href="/sasisopa/cursos/evaluacion/<?= $calendario->id ?>"
-    class="btn btn-primary btn-lg shadow position-fixed"
+    class="btn bg-primary-subtle text-primary btn-lg "
     style="top:130px; right:25px; z-index:1055;">
 
     <i class="ti ti-clipboard-check me-2"></i>
-
     Iniciar evaluación
-
 </a>
+
+                    </div>
+                  </div>
+
 
 <embed
     src="/uploads/archivos/cursos/<?= $tema->archivo ?>#toolbar=0&navpanes=0&scrollbar=0&zoom=70"

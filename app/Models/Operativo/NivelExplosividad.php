@@ -19,11 +19,12 @@ class NivelExplosividad extends Model
         'estado',
     ];
 
+    // 'fecha' va sin cast date: el legacy guarda los borradores en '0000-00-00' y
+    // Carbon lanza excepción al leerlo. formatearFecha() ya normaliza ese centinela.
     protected $casts = [
         'id' => 'integer',
         'id_estacion' => 'integer',
         'folio' => 'integer',
-        'fecha' => 'date',
         'estado' => 'integer',
     ];
 }

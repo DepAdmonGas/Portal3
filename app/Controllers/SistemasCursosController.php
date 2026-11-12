@@ -36,7 +36,7 @@ class SistemasCursosController extends BaseController
             ->orderBy('num_modulo')
             ->get();
 
-        $title = 'Cursos Configuración';
+        $title = 'Cursos (Configuración)';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add($title, '');

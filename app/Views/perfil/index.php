@@ -1,4 +1,4 @@
-<div
+﻿<div
     x-data="cambiarPassword()"
     x-on:abrir-modal-password.window="abrirModal()">
 
@@ -8,7 +8,9 @@
 
             <div class="col-lg-4">
 
-                <div class="card">
+<div class="row">
+<div class="col-12 mb-4">
+                <div class="card h-100">
 
                     <div class="card-body text-center">
 
@@ -197,9 +199,326 @@
                     </div>
 
                 </div>
+</div>
+
+
+
+<div class="col-12">
+                <div class="card">
+
+                    <div class="card-header">
+
+                        <div class="d-flex align-items-center gap-2">
+
+                            <span
+                                class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                style="width:38px;height:38px;">
+                               <i class="ti ti-brand-telegram fs-5"></i>
+
+                            </span>
+
+                            <div>
+
+                                <h5 class="card-title mb-0">
+                                    Telegram
+                                </h5>
+
+                                <small class="text-muted">
+                                    Recepcion de notificaciones internas
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+<div
+                        class="card-body"
+                        x-data="telegramToken()">
+
+                        <template x-if="cargando">
+
+                            <div class="text-center py-4">
+
+                                <span
+                                    class="spinner-border spinner-border-sm me-2"
+                                    aria-hidden="true"></span>
+
+                                Cargando estado de Telegram...
+
+                            </div>
+
+                        </template>
+
+                        <template x-if="!cargando && error">
+
+                            <div class="alert alert-danger" role="alert">
+
+                                <div class="d-flex align-items-center gap-2">
+
+                                    <i class="ti ti-alert-circle fs-5"></i>
+
+                                    <span x-text="error"></span>
+
+                                </div>
+
+                            </div>
+
+                        </template>
+
+                        <template
+                            x-if="!cargando && !error && (estado === 'sin-registro' || estado === 'pendiente')">
+
+                            <div class="row g-3">
+
+                                <div class="col-12">
+
+                                    <span class="d-block mb-3">
+                                        <b>1. DESCARGA DE MANUAL:</b>
+                                        En el siguiente botón podrás descargar el manual que
+                                        contiene los pasos detallados para configurar las
+                                        "Notificaciones Internas" del portal mediante la app
+                                        de Telegram.
+                                    </span>
+
+                                    <div class="text-center">
+
+                                        <a
+                                            href="/assets/img/pdf/Manual_Telegram_Admongas.pdf"
+                                            download
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="ti ti-file-download me-1"></i>
+                                            Descarga Manual de Configuración de Notificaciones Internas
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="col-12">
+
+                                    <span class="d-block mb-2">
+                                        <b>2. ESCANEAR CÓDIGO QR:</b>
+                                        Al escanear el siguiente código QR serás dirigido al
+                                        chat de recepción de Notificaciones Internas.
+                                    </span>
+
+                                    <div class="text-center">
+
+                                        <img
+                                            src="/assets/img/telegramQR.png"
+                                            alt="Código QR de Telegram"
+                                            class="img-fluid"
+                                            style="max-width:160px;">
+
+                                    </div>
+
+                                </div>
+
+                                <div class="col-12">
+
+                                    <template x-if="estado === 'sin-registro'">
+
+                                        <div class="text-start mb-2">
+
+                                            <b>3. CÓDIGO DE VERIFICACIÓN:</b>
+
+    
+
+                                            Para configurar la recepción de notificaciones
+                                            internas deberás generar tu token por primera vez.
+                                            Haz clic en el botón <b>"Generar un nuevo token"</b> para
+                                            iniciar el proceso.
+
+                                        </div>
+
+                                    </template>
+
+                                    <template x-if="estado === 'pendiente'">
+
+                                        <div>
+
+                                            <div class="text-start mb-3">
+
+                                                <b>3. CÓDIGO DE VERIFICACIÓN:</b>
+
+                                                El siguiente código de verificación debe ser
+                                                ingresado en el chat de recepción de
+                                                Notificaciones Internas.
+
+                                            </div>
+
+                                            <template x-if="digits.length">
+
+                                                <div
+                                                    class="d-flex justify-content-center gap-2 mb-3">
+
+                                                    <template
+                                                        x-for="(d, i) in digits"
+                                                        :key="i">
+
+                                                        <span
+                                                            class="d-flex align-items-center justify-content-center fw-bold text-dark"
+                                                            style="width:40px;height:40px;border-radius:50%;background:#F2F2F2;font-size:18px;">
+                                                            <span x-text="d"></span>
+                                                        </span>
+
+                                                    </template>
+
+                                                </div>
+
+                                            </template>
+
+                                            <template x-if="!expirado">
+
+                                                <div class="text-center">
+                                                    <span
+                                                        class="fw-semibold"
+                                                        
+                                                        x-text="formatearTiempo()"></span>
+                                                </div>
+
+                                            </template>
+
+                                            <template x-if="expirado">
+
+                                                <div class="text-center text-danger fw-semibold">
+                                                    El tiempo ha expirado.
+                                                </div>
+
+                                            </template>
+
+                                            <div class="text-center text-danger mt-3">
+                                                Nota: este código tiene un límite de tiempo de
+                                                2 minutos para ser utilizado, pero puedes
+                                                generar uno nuevo en caso de que expire.
+                                            </div>
+
+                                        </div>
+
+                                    </template>
+
+                                    <div class="d-grid mt-3">
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-success"
+                                            @click="generar()"
+                                            :disabled="generando || (estado === 'pendiente' && segundos > 0)">
+
+                                            <template x-if="!generando">
+                                                <span>
+                                                    <i class="ti ti-refresh me-2"></i>
+                                                    <span x-text="estado === 'pendiente' && segundos > 0 ? 'En espera de verificación (restante ' + segundos + 's)' : 'Generar un nuevo token'"></span>
+                                                </span>
+                                            </template>
+
+                                            <template x-if="generando">
+                                                <span>
+                                                    <span
+                                                        class="spinner-border spinner-border-sm me-2"
+                                                        aria-hidden="true"></span>
+                                                    Generando...
+                                                </span>
+                                            </template>
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </template>
+
+                        <template x-if="!cargando && !error && estado === 'verificado'">
+
+                            <div class="text-center">
+
+                                <div
+                                    class="bg-success-subtle text-success d-inline-flex align-items-center gap-2 rounded-3 px-3 py-2 mb-3">
+
+                                    <i class="ti ti-circle-check fs-5"></i>
+
+                                    <span class="fw-semibold">
+                                        ¡Se ha completado la verificación!
+                                    </span>
+
+                                </div>
+
+                                <p class="mb-4">
+                                    Tu dispositivo se encuentra registrado y recibes las
+                                    notificaciones internas mediante la app de Telegram.
+                                </p>
+
+                                <div class="d-grid gap-2">
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-success text-white"
+                                        @click="enviarPrueba()"
+                                        :disabled="enviando">
+
+                                        <template x-if="!enviando">
+                                            <span>
+                                                <i class="ti ti-send me-1"></i>
+                                                Enviar mensaje de prueba
+                                            </span>
+                                        </template>
+
+                                        <template x-if="enviando">
+                                            <span>
+                                                <span
+                                                    class="spinner-border spinner-border-sm me-2"
+                                                    aria-hidden="true"></span>
+                                                Enviando...
+                                            </span>
+                                        </template>
+
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="btn bg-danger-subtle text-danger"
+                                        @click="revocar()"
+                                        :disabled="revocando">
+
+                                        <template x-if="!revocando">
+                                            <span>
+                                                <i class="ti ti-shield-x me-2"></i>
+                                                Revocar Autorización
+                                            </span>
+                                        </template>
+
+                                        <template x-if="revocando">
+                                            <span>
+                                                <span
+                                                    class="spinner-border spinner-border-sm me-2"
+                                                    aria-hidden="true"></span>
+                                                Revocando...
+                                            </span>
+                                        </template>
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </template>
+
+                    </div>
+
+                    </div>
+</div>
+
+
 
             </div>
-
+</div>
 
             <!-- ========================================================
         | Columna derecha

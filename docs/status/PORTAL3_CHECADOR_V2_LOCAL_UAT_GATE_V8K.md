@@ -1,6 +1,6 @@
 # Portal3 Checador V2 — gate UAT local V8K
 
-**Fecha:** 2026-10-23  
+**Fecha:** 2026-10-23
 **Alcance:** hardening local del gate de operaciones POST y preparación de UAT; no es autorización de despliegue.
 
 ## Resultado
@@ -79,10 +79,10 @@ Todas las solicitudes API de regresión usaron transportes/mock locales; no se l
 
 Cambios de esta actividad, sobre un worktree que ya tenía modificaciones del usuario: `ChecadorDailyReadService.php`, `ChecadorController.php`, vista principal de Checador, prueba enfocada del gate POST, ajuste de setup de la prueba PIN y este documento. No se alteraron los contratos/freeze, API, Lector, ACL, Plesk ni datos. No se creó commit.
 
-**UAT autenticada:** pendiente.  
-**Integración API real:** no verificada.  
-**Preparación de despliegue al subdominio:** `BLOCKED` hasta verificar sesión/ACL, ambiente PHP-FPM, API destino, identidad/scope, fuente SQL de sólo lectura y completar UAT; no es autorización de deploy.  
-**Siguiente intervención mínima:** corregir con alcance de método las aserciones estáticas listadas; después ejecutar el recorrido manual de UAT con perfiles reales y, por separado, aprobar un preflight GET de API y la conectividad SQL privada del subdominio.  
-**DATABASE_MODIFIED:** `NO`  
-**PRODUCTION_MODIFIED:** `NO`  
+**UAT autenticada:** pendiente.
+**Integración API real:** no verificada.
+**Preparación de despliegue al subdominio:** `BLOCKED` hasta verificar sesión/ACL, ambiente PHP-FPM, API destino, identidad/scope, fuente SQL de sólo lectura y completar UAT; no es autorización de deploy.
+**Siguiente intervención mínima:** corregir con alcance de método las aserciones estáticas listadas; después ejecutar el recorrido manual de UAT con perfiles reales y, por separado, aprobar un preflight GET de API y la conectividad SQL privada del subdominio.
+**DATABASE_MODIFIED:** `NO`
+**PRODUCTION_MODIFIED:** `NO`
 **ARCHITECTURE_FREEZE_UNCHANGED:** `YES`

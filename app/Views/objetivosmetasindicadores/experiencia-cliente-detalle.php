@@ -106,7 +106,7 @@ Encuesta de cliente</h4>
 
     </div>
 
-<div class="modal fade" id="modalDetalle" tabindex="-1">
+<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
@@ -129,8 +129,8 @@ Encuesta de cliente</h4>
 
         
 
-
-            <table class="table table-bordered table-striped  text-nowrap align-middle">
+<div class="table-responsive">
+   <table class="table table-bordered table-striped  align-middle">
 
             <thead>
                 <tr>
@@ -161,12 +161,9 @@ Encuesta de cliente</h4>
                 </template>
             </tbody>
                 
-            </table>
-        
-
-
-
-
+            </table> 
+</div>
+            
         <div>
             <div class="form-label">Comentario:</div>
             <p style="font-size:1.1em" x-text="detalle.comentario"></p>
@@ -174,11 +171,16 @@ Encuesta de cliente</h4>
 
       </div>
       <div class="modal-footer">
-               <button type="button"
+        <div class="row g-0 ms-auto w-100 justify-content-end">
+            <div class="col-12 col-md-auto d-grid">
+<button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
-<i class="ti ti-x"></i> Cancelar
+<i class="ti ti-x"></i> Cerrar
 </button>
+            </div>
+        </div>
+               
       </div>
 
     </div>

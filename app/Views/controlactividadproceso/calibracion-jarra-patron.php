@@ -22,8 +22,9 @@ JSON_HEX_QUOT
     <div class="text-end mt-3">
 
 <template x-if="calibracion.estado == 1">
-<div class="d-flex justify-content-end mb-3 mt-3">
-<button
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                      <button
 type="button"
 class="btn btn-success"
 @click="window.history.back()">
@@ -31,7 +32,8 @@ class="btn btn-success"
 <i class="ti ti-check"></i> Finalizar
 
 </button>
-</div>
+                    </div>
+                  </div>
 </template>
 
 

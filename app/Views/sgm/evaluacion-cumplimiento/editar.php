@@ -9,11 +9,12 @@
 <?php else: ?>
 
 <div id="sgm-content" x-data="{ ...actions(), ...evaluacionForm(<?= $id ?>) }">
-<div class="text-end mt-3">
 
-<button class="btn btn-success" @click="finalizar()"><i class="ti ti-check"></i> Finalizar</button>
-
-</div>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3">
+                     <button class="btn btn-success" @click="finalizar()"><i class="ti ti-check"></i> Finalizar</button> 
+                    </div>
+                  </div>
 
 
 <div class="card mt-3">

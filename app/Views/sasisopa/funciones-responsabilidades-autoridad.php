@@ -157,7 +157,7 @@
     </div>
 
       <!-- MODAL -->
-      <div class="modal fade" id="openNuevoModal">
+      <div class="modal fade" id="openNuevoModal" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
           <div class="modal-content">
 
@@ -203,15 +203,22 @@
             </div>
 
             <div class="modal-footer">
-             <button class="btn bg-danger-subtle text-danger"
+              <div class="row g-0 ms-auto w-100 justify-content-end">
+
+                <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+<button class="btn bg-danger-subtle text-danger"
               data-bs-dismiss="modal"
               @click="resetModal()"><i class="ti ti-x"></i> Cancelar</button>
+                </div>
 
-              <button class="btn btn-success" @click="submit()" :disabled="loading">
+                <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+ <button class="btn btn-success" @click="submit()" :disabled="loading">
                 <i class="ti ti-check"></i>
                 <span x-show="!loading">Guardar</span>
                 <span x-show="loading">Guardando...</span>
               </button>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -313,7 +320,7 @@
 
 
 
-<div id="ModalReTe" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+<div id="ModalReTe" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -367,11 +374,16 @@
                       
               </div>
                  <div class="modal-footer">
-                  <button type="button"
+                  <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+              <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cerrar
 </button>
+                    </div>
+                  </div>
+    
 
                  </div>  
         </div>
@@ -381,7 +393,7 @@ data-bs-dismiss="modal">
 
 <!-- ------------------------- -->
 
-<div id="ModalGerente" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+<div id="ModalGerente" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -429,19 +441,22 @@ data-bs-dismiss="modal">
 
 
          <div class="modal-footer">
-          <button type="button"
+          <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                         <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cerrar
 </button>
-
+                    </div>
+                  </div>
          </div>          
         </div>
         </div>
     </div>
 </div>
 <!-- ------------------------- -->
- <div id="ModalJefePiso" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+ <div id="ModalJefePiso" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -479,11 +494,17 @@ referente al SA</td>
                       
               </div>
                <div class="modal-footer">
-                <button type="button"
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                                      <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cerrar
 </button>
+
+                    </div>
+                  </div>
+
 
                </div>    
         </div>
@@ -492,7 +513,7 @@ data-bs-dismiss="modal">
 </div>
 
 <!-- ------------------------- -->
- <div id="ModalFacturista" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+ <div id="ModalFacturista" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -530,11 +551,15 @@ referente al SA</td>
                       
               </div>
                    <div class="modal-footer">
-                    <button type="button"
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                                 <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cerrar
 </button>
+                    </div>
+                  </div>
 
                    </div>
         </div>
@@ -542,7 +567,7 @@ data-bs-dismiss="modal">
     </div>
 </div>
 <!-- ------------------------- -->
- <div id="ModalDespachador" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+ <div id="ModalDespachador" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -580,12 +605,18 @@ referente al SA</td>
                       
               </div>
          <div class="modal-footer">
-          <button type="button"
+          <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                             <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cerrar
 </button>
 
+                    </div>
+                  </div>
+
+   
          </div>          
         </div>
         </div>
@@ -593,7 +624,7 @@ data-bs-dismiss="modal">
 </div>
 
 <!-- ------------------------- -->
- <div id="ModalAuxiliar" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+ <div id="ModalAuxiliar" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -631,11 +662,15 @@ referente al SA</td>
                       
               </div>
                <div class="modal-footer">
-                <button type="button"
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                               <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cerrar
 </button>
+                    </div>
+                  </div>
 
                </div>    
         </div>
@@ -643,7 +678,7 @@ data-bs-dismiss="modal">
     </div>
 </div>
 <!-- ------------------------- -->
- <div id="ModalMantenimiento" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true">
+ <div id="ModalMantenimiento" class="modal fade" tabindex="-1" aria-labelledby="bs-example-modal-md" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
         <div class="modal-content">
               <div class="modal-header modal-colored-header bg-primary text-white">
@@ -684,12 +719,16 @@ al SA</td>
                       
               </div>
           <div class="modal-footer">
+            <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                     
             <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cerrar
-</button>
-
+</button> 
+                    </div>
+                  </div>
           </div>
         </div>
         </div>

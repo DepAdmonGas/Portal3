@@ -29,6 +29,11 @@ jobs:
           tools: composer:stable
       - name: Install locked dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Report independent API contract parity status
+        run: |
+          echo "CROSS_REPOSITORY_PARITY: NOT_VERIFIED"
+          echo "This isolated Portal3 runner does not check out the API repository."
+          echo "Run CHECADOR_API_CONTRACT_REPO=/path/to/authorized/portal-api php tests/checador_contract_parity.php separately."
       - name: Security regression suite
         env:
           APP_ENV: testing

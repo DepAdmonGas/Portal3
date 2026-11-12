@@ -51,7 +51,7 @@ ocultarBoton = "";
 }
 
 contenedor.innerHTML = `
-<button class="btn bg-success text-white mt-3 mt-md-0 ${ocultarBoton}"
+<button class="btn bg-success text-white mt-2 mt-md-0 ${ocultarBoton}"
 :disabled="loadingSeguimiento"
 @click="submitSeguimiento(${siguiente})">
 <i class="ti ti-check"></i> Finalizar</a>

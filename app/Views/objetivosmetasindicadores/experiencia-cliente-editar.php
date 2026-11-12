@@ -2,8 +2,8 @@
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
-<div class="row mt-3">
-    <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12">
+<div class="row g-0 ms-auto w-100 justify-content-between mt-3">
+    <div class="col-12 col-md-auto d-grid mb-3 mb-md-0">
         <div class="items-d-flex aling-start">
         <input type="date" class="form-control" x-model="fecha"
         :class="{'is-invalid': errors.fecha}"
@@ -12,14 +12,14 @@
     </div>
 
     
-<div class="col-xl-9 col-lg-9 col-md-12 col-sm-12">
-        <div class="text-end mt-0 items-d-flex aling-end">
+<div class="col-12 col-md-auto d-grid">
+
             <button class="btn btn-success"
                     @click="finalizarEncuesta()">
                     <i class="ti ti-check"></i>
                 Finalizar 
             </button>
-        </div>
+     
         </div>
 </div>
 
@@ -70,13 +70,16 @@
                 <textarea class="form-control" x-model="comentario"></textarea>
                 </div>
 <div class="card-footer">
-                <div class="text-end mt-0">
-                    <button class="btn bg-primary-subtle text-primary"
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+    <button class="btn bg-primary-subtle text-primary"
                             :disabled="loading"
                             @click="guardar()">
                             <i class="ti ti-plus"></i>
                          Nuevo
                     </button>
+                    </div>
+                
                 </div>
 
 </div>
@@ -105,7 +108,7 @@
         <div style="max-height: 500px; overflow-y: auto;">
          <template x-if="clientes.length > 0">
         <div class="m-0">
-            <table class="table  table-striped table-bordered">
+            <table class="table  table-striped table-bordered mb-0">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -149,7 +152,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
@@ -163,54 +166,57 @@
       </div>
 
       <!-- BODY -->
-      <div class="modal-body">
-        
-      
-<table class="table table-bordered table-striped  text-nowrap align-middle">
-<thead>
-    <tr>
-        <th>Pregunta</th>
-        <th>Respuesta</th>
-    </tr>
-</thead>
+  <div class="modal-body">
 
+    <div class="table-responsive pb-4">
+        <table class="table table-striped table-bordered mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Pregunta</th>
+                    <th class="text-center">Respuesta</th>
+                </tr>
+            </thead>
 
-<tbody>
-        <template x-for="item in detalle.preguntas" :key="item.num_pregunta">
-<tr>
-    
-       <td class="py-3">
-                        <span x-text="item.num_pregunta"></span>.-
-                        <span x-text="item.pregunta"></span>
-                    </td>
+            <tbody>
+                <template x-for="item in detalle.preguntas" :key="item.num_pregunta">
+                    <tr>
+                        <td class="py-3">
+                            <span x-text="item.num_pregunta"></span>.-
+                            <span x-text="item.pregunta"></span>
+                        </td>
 
-                    <td class="text-center py-3" 
-                    >
-                        <span ></span>
+                        <td class="text-center py-3">
+                            <span
+                                class="badge rounded-pill"
+                                :style="'background-color:' + getColor(item.resultado)"
+                                x-text="getTexto(item.resultado)">
+                            </span>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
 
-                        <span class="badge rounded-pill" 
-                         :style="'background-color:' + getColor(item.resultado)" x-text="getTexto(item.resultado)"></span>
-                    </td>
-</tr>
-</template>
-</tbody>
-                 
-                </table>
-<div>
-            <div class="form-label">Comentario:</div>
-            <p x-text="detalle.comentario"></p>
-        </div>
+    <div>
+        <div class="form-label">Comentario:</div>
+        <p x-text="detalle.comentario"></p>
+    </div>
 
-            </div>
+</div>
 
 
   <div class="modal-footer">
-
-            <button type="button"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid">
+      <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cancelar
 </button>
+    </div>
+</div>
+      
         </div>
         
 

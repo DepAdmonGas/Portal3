@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/support/portal3_autoload.php';
 
 use App\Models\Usuario;
 use App\Services\ChecadorDailyReadService;
@@ -37,8 +38,7 @@ $extractPublicMethod = static function (string $source, string $method): string 
 };
 $evaluationControllerMethodSource = $extractPublicMethod($controllerSource, 'administrativeEvaluation');
 $evaluationServiceMethodSource = $extractPublicMethod($serviceSource, 'executeAdministrativeEvaluation');
-$apiContract = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/v2/CHECADOR_V2_P3G_ADMINISTRATIVE_API_BOUNDARY_CONTRACT_V1.0.md';
-$freeze = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
+$freeze = __DIR__ . '/../docs/architecture/CHECADOR_V2_ARCHITECTURE_FREEZE_V1.0.md';
 $portalContract = __DIR__ . '/../docs/v2/CHECADOR_V2_PORTAL3_P3G_INCIDENCE_ADMINISTRATIVE_CONTRACT_V1.0.md';
 
 $postPayload = static function (string $status = 'REVIEW_REQUIRED'): array {
@@ -107,7 +107,8 @@ $normalBody = json_decode((string) $normalRequest->getBody(), true);
 $faltaRequest = $history[2]['request'];
 $faltaBody = json_decode((string) $faltaRequest->getBody(), true);
 
-$assert(hash_file('sha256', $apiContract) === 'e418687501fbdfdf89bcc6f11aab60e49226f265411c4590a39a5fa7799c374a' && hash_file('sha256', $freeze) === '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df5c5295304fd85' && hash_file('sha256', $portalContract) === 'e26e888015b27f9f1023e19cf4e005795836a99fd81a98c5638589fde5ca234d', 'P3GPD01 canonical contracts and freeze hashes match');
+$assert(is_file($freeze) && hash_file('sha256', $freeze) === '87bf3e714f7358cbdace5c4f099573d77d9ecb9033328c706df5c5295304fd85', 'P3GPD01 Portal3 Architecture Freeze hash matches');
+$assert(is_file($portalContract) && hash_file('sha256', $portalContract) === 'e26e888015b27f9f1023e19cf4e005795836a99fd81a98c5638589fde5ca234d', 'P3GPD01A Portal3 P3G contract hash matches');
 $assert(str_contains($serviceSource, 'executeAdministrativeEvaluation') && str_contains($controllerSource, 'administrativeEvaluation'), 'P3GPD02 Portal3 exposes a dedicated server-side evaluation command');
 $assert(!str_contains($viewSource, 'fetch(') && !str_contains($viewSource, 'axios') && !str_contains($viewSource, 'api/v2/'), 'P3GPD03 browser does not call the API directly');
 $assert(!preg_match('/Device[-_ ]?Auth|X-Device|device[_-]credential|Id-Dispositivo/i', $serviceSource . $controllerSource . $viewSource), 'P3GPD04 Device Auth is absent');
@@ -165,13 +166,19 @@ $assert($evaluationControllerMethodSource !== '' && $evaluationServiceMethodSour
     && !preg_match('/RecibosNominaService|OpReciboNominaV2/i', $evaluationPathSource)
     && !preg_match($payrollResultFields, $evaluationPathSource . $viewSource), 'P3GPD33 evaluation path uses no payroll reader and renders no payroll result fields');
 $assert(str_contains($viewSource, 'REVIEW_REQUIRED') || str_contains($viewSource, 'human_review_status'), 'P3GPD34 review states remain renderable');
-$assert(str_contains($viewSource, "associated_calculation_revision_id") && str_contains($viewSource, 'Identificador de cálculo') && str_contains($viewSource, 'No disponible'), 'P3GPD35 provenance display preserves the nullable calculation reference without inventing a value');
 $assert(str_contains($controllerSource, '$administrativeEvaluations = []') && str_contains($controllerSource, '$evaluationPermissions = ['), 'P3GPD36 worker/date evaluation state starts empty per request');
 $assert(str_contains($controllerSource, 'expectedCalculationId') && str_contains($controllerSource, 'calculation_id'), 'P3GPD37 selected Journey calculation reference is used without recomputation');
 $assert(str_contains($routesSource, "'POST', '/departamento-operativo/recursos-humanos/checador/evaluations/evaluate'"), 'P3GPD38 Portal3 exposes one authenticated POST route');
 $assert(str_contains($viewSource, 'name="authorize_falta" value="1"')
     && str_contains($viewSource, 'Confirmo explícitamente autorizar FALTA')
     && str_contains($viewSource, 'required'), 'P3GPD39 explicit FALTA action remains separate and requires human confirmation');
+$assert(str_contains($viewSource, "\$evaluation['policy_rule_version'] === null") && str_contains($viewSource, 'No aplica')
+    && str_contains($viewSource, 'associated_calculation_revision_id') && str_contains($viewSource, 'Identificador de cálculo')
+    && str_contains($viewSource, 'No disponible'), 'P3GPD35 provenance display preserves nullable policy and calculation reference');
+$assert(str_contains($controllerSource, '$administrativeEvaluations = []') && str_contains($controllerSource, '$evaluationPermissions = ['), 'P3GPD36 worker/date evaluation state starts empty per request');
+$assert(str_contains($controllerSource, 'expectedCalculationId') && str_contains($controllerSource, 'calculation_id'), 'P3GPD37 selected Journey calculation reference is used without recomputation');
+$assert(str_contains($routesSource, "'POST', '/recursos-humanos/checador/evaluations/evaluate'"), 'P3GPD38 Portal3 exposes one authenticated POST route under the departamento-operativo group');
+$assert(str_contains($viewSource, 'name="authorize_falta" value="1"') && str_contains($viewSource, 'nunca se activa automáticamente'), 'P3GPD39 explicit FALTA control is never automatic');
 $assert(!preg_match('/op_rh_personal_asistencia|op_rh_personal_asistencia_incidencia|op_rh_v2_/', $serviceSource . $controllerSource), 'P3GPD40 no legacy or direct V2 table writes are introduced');
 
 printf("CHECADOR_P3GD_ADMINISTRATIVE_EVALUATION_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);

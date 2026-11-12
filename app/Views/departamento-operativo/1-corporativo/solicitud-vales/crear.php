@@ -5,6 +5,17 @@ data-id-mes="<?= $idMes ?>"
 data-id-estacion="<?= $idEstacion ?>"
 data-mostrar-cuenta="<?= $mostrarCuenta ? 'true' : 'false' ?>"
 data-estaciones='<?= $estacionesJson ?>'>
+
+<div class="row ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid mb-3">
+    <button type="button" class="btn btn-labeled2 btn-success float-end" @click="guardar()" :disabled="guardando">
+ <i class="ti ti-check"></i>
+    Finalizar
+</button>
+
+</div>
+</div>
+
 <div class="row">
 <div class="col-12 mb-3">
 <div class="card">
@@ -112,24 +123,28 @@ data-estaciones='<?= $estacionesJson ?>'>
 </div>
 
 <div class="col-12 mb-2">
-<label class="form-label">* Observaciones:</label>
-<textarea class="form-control rounded-0" rows="2" x-model="form.observaciones"></textarea>
+    <label class="form-label">* Observaciones:</label>
+    <textarea
+        class="form-control rounded-0"
+        rows="2"
+        placeholder="Escribe tus observaciones"
+        x-model="form.observaciones"
+    ></textarea>
 </div>
 
 <div class="col-12">
-<hr>
-<h5 class="mt-3 mb-3">DOCUMENTACIÓN:</h5>
+<h5 class="mt-3 mb-3">Documentación:</h5>
 <div class="row g-3">
 <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
-<label class="form-label">VALE:</label>
+<label class="form-label">Vale:</label>
 <input type="file" class="form-control rounded-0" x-ref="fileVale">
 </div>
 <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
-<label class="form-label">RECIBO:</label>
+<label class="form-label">Recibo:</label>
 <input type="file" class="form-control rounded-0" x-ref="fileRecibo">
 </div>
 <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
-<label class="form-label">FACTURA:</label>
+<label class="form-label">Factura:</label>
 <input type="file" class="form-control rounded-0" x-ref="fileFactura">
 </div>
 <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
@@ -143,11 +158,7 @@ data-estaciones='<?= $estacionesJson ?>'>
 </div>
 </div>
 
-<div class="col-12 mt-3">
-<button type="button" class="btn btn-labeled2 btn-success float-end" @click="guardar()" :disabled="guardando">
- Guardar
-</button>
-</div>
+
 </div>
 </div>
 </div>

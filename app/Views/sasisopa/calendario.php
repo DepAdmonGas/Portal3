@@ -23,7 +23,7 @@
 
     <div class="calender-sidebar app-calendar mt-3">
 
-        <div class="d-flex justify-content-between align-items-center my-3">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
 
             <!-- Totales -->
             <div class="d-flex align-items-center">
@@ -64,7 +64,8 @@
             <?php if ($modulo === 'sasisopa'): ?>
 
 
-                        <?php if (!empty($permisos['crear'])): ?>
+                    <div class="d-grid d-md-block mb-3 mb-md-0 mt-3 mt-md-0">
+                      <?php if (!empty($permisos['crear'])): ?>
 
                                 <button
                                     class="pointer btn bg-primary-subtle text-primary"
@@ -74,10 +75,7 @@
                                 </button>
 
                         <?php endif; ?>
-
-
-             
-
+                    </div>
             <?php endif; ?>
 
         </div>
@@ -96,7 +94,9 @@
         id="modalDia"
         tabindex="-1"
         aria-labelledby="modalDiaLabel"
-        aria-hidden="true">
+        aria-hidden="true"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false">
 
         <div
             class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">

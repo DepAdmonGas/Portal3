@@ -19,21 +19,29 @@
         ) ?>
     </script>
 
-    <div class="d-flex justify-content-end mb-3 mt-3">
+
 
         <template x-if="calibracion.estado == 0">
-            <button type="button" class="btn btn-success" @click="finalizar('Tanques de almacenamiento')">
+            <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                      <button type="button" class="btn btn-success" @click="finalizar('Tanques de almacenamiento')">
                 <i class="ti ti-check"></i> Finalizar
             </button>
+                    </div>
+                  </div>
         </template>
 
         <template x-if="calibracion.estado == 1">
-            <button type="button" class="btn btn-success " @click="window.history.back()">
+            <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                        <button type="button" class="btn btn-success " @click="window.history.back()">
                 <i class="ti ti-check"></i> Finalizar
             </button>
+                    </div>
+                  </div>    
         </template>
 
-    </div>
+
 
     <div class="card">
         <div class="card-body">
@@ -250,7 +258,9 @@ calibracion.observaciones,
     <div
         class="modal fade"
         id="modalResultados"
-        tabindex="-1">
+        tabindex="-1"
+        data-bs-bacdrop="static"
+        data-bs-keyboard="false">
 
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -289,31 +299,43 @@ calibracion.observaciones,
 
                 </div>
 
-                <div class="modal-footer">
+              <div class="modal-footer">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
 
-                    <button
-                        type="button"
-                        class="btn bg-danger-subtle text-danger"
-                        data-bs-dismiss="modal">
-                        <i class="ti ti-x"></i> Cancelar
-                    </button>
+        <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2">
+            <button
+                type="button"
+                class="btn bg-danger-subtle text-danger"
+                data-bs-dismiss="modal">
+                <i class="ti ti-x"></i> Cancelar
+            </button>
+        </div>
 
-                    <div x-show="tanqueSeleccionado?.resultados">
+        <div class="col-12 col-md-auto mb-1 mb-md-0 me-0 me-md-2"
+             :class="tanqueSeleccionado?.resultados ? 'd-grid' : 'd-none'">
+            <a class="btn bg-primary-subtle text-primary"
+               :href="'/uploads/archivos/calibracion/' + tanqueSeleccionado?.resultados"
+               target="_blank">
+                Resultados de la calibración
+                <i class="ti ti-file-type-pdf fs-6"></i>
+            </a>
+        </div>
 
-                        <a class="btn bg-primary-subtle primary"
-                            :href="'/uploads/archivos/calibracion/' + tanqueSeleccionado.resultados"
-                            target="_blank">
-                            Resultados de la calibración <i class="ti ti-file-type-pdf fs-6"></i>
-                        </a>
+        <div class="col-12 col-md-auto d-grid">
+            <button
+                type="button"
+                class="btn btn-success"
+                @click="subirResultados()">
+                <i class="ti ti-check"></i> Guardar
+            </button>
+        </div>
 
-                    </div>
+    </div>
+</div>
 
-                    <button
-                        type="button"
-                        class="btn btn-success"
-                        @click="subirResultados()">
-                        <i class="ti ti-check"></i> Guardar
-                    </button>
+               
+                  
+                    
 
                 </div>
             </div>

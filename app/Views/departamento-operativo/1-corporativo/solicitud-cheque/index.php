@@ -57,7 +57,7 @@ x-data="{ ...actions(), ...solicitudChequeComponent() }">
 </div>
 </template> 
 
-<div class="table-responsive pb-5" style="overflow-y: visible; overflow-x: auto;">
+<div class="table-responsive pb-5 overflow-x-auto overflow-y-hidden">
 <table id="tabla-solicitud-cheque" class="table table-striped table-bordered mb-0 text-nowrap align-middle"></table>
 </div>
 
@@ -174,12 +174,14 @@ Guardar
 </div>
 </div>
 
-<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" x-ref="modalDetalle">
+<div class="modal fade" id="modalDetalle" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalDetalle">
 <div class="modal-dialog modal-xl">
 <div class="modal-content">
-<div class="modal-header">
-<h4 class="modal-title">Detalle de solicitud (# <span x-text="detalle ? detalle.id : ''"></span>)</h4>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h4 class="modal-title text-white">
+<i class="ti ti-eye"></i>    
+Detalle de solicitud (# <span x-text="detalle ? detalle.id : ''"></span>)</h4>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
 <div class="modal-body pb-0">
@@ -216,18 +218,18 @@ Guardar
 </div>
 </template>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Fecha:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Fecha:</label>
 <div x-text="detalle.fecha_formateada"></div>
 </div>
 
-<div class="col-md-8 mb-2">
-<label class="form-label">Nombre del Beneficiario:</label>
+<div class="col-md-8 mb-3">
+<label class="form-label mb-1">Nombre del Beneficiario:</label>
 <div x-text="detalle.beneficiario"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Monto / Moneda:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Monto / Moneda:</label>
 <div>
 $<span x-text="formatNum(detalle.monto)"></span>
 <span x-text="detalle.moneda"></span>
@@ -235,82 +237,81 @@ $<span x-text="formatNum(detalle.monto)"></span>
 </div>
 
 <template x-if="detalle.importe_letra">
-<div class="col-md-8 mb-2">
-<label class="form-label">Importe con letra:</label>
+<div class="col-md-8 mb-3">
+<label class="form-label mb-1">Importe con letra:</label>
 <div x-text="detalle.importe_letra"></div>
 </div>
 </template>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">No. Factura:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">No. Factura:</label>
 <div x-text="detalle.no_factura"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Correo Electrónico:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Correo Electrónico:</label>
 <div x-text="detalle.email"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Concepto:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Concepto:</label>
 <div x-text="detalle.concepto"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Nombre del Solicitante:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Nombre del Solicitante:</label>
 <div x-text="detalle.solicitante"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Teléfono:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Teléfono:</label>
 <div x-text="detalle.telefono"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Uso del CFDI:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Uso del CFDI:</label>
 <div x-text="detalle.cfdi"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Método de Pago:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Método de Pago:</label>
 <div x-text="detalle.metodo_pago"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Forma de Pago:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Forma de Pago:</label>
 <div x-text="detalle.forma_pago"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Banco:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Banco:</label>
 <div x-text="detalle.banco"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">No. Cuenta:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">No. Cuenta:</label>
 <div x-text="detalle.no_cuenta"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">No. de Cuenta (CLABE):</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">No. de Cuenta (CLABE):</label>
 <div x-text="detalle.cuenta_clabe"></div>
 </div>
 
-<div class="col-md-4 mb-2">
-<label class="form-label">Referencia / Convenio:</label>
+<div class="col-md-4 mb-3">
+<label class="form-label mb-1">Referencia / Convenio:</label>
 <div x-text="detalle.referencia"></div>
 </div>
 
 <template x-if="detalle.observaciones">
-<div class="col-12 mb-2">
-<label class="form-label">Observaciones:</label>
+<div class="col-12 mb-3">
+<label class="form-label mb-1">Observaciones:</label>
 <div x-text="detalle.observaciones"></div>
 </div>
 </template>
 
 </div>
 
-<hr>
 
 <label class="form-label mb-3">Firmas:</label>
 
@@ -485,7 +486,13 @@ $<span x-text="formatNum(detalle.monto)"></span>
 </template>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<i class="ti ti-x"></i>    
+Cerrar</button>
+        </div>
+    </div>
 </div>
 </div>
 </div>
@@ -583,12 +590,14 @@ type="button"
 <!--</template>-->
 </div>
 
-<div class="modal fade" id="modalArchivos" tabindex="-1" data-bs-backdrop="static" x-ref="modalArchivos">
+<div class="modal fade" id="modalArchivos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalArchivos">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-<div class="modal-header">
-<h4 class="modal-title">Documentos (#<span x-text="archivoSolicitudId"></span>)</h4>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h4 class="modal-title text-white">
+<i class="ti ti-clipboard-list"></i>
+Documentos (#<span x-text="archivoSolicitudId"></span>)</h4>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <!-- <template x-if="puedeAgregarDocumentos"> -->
@@ -608,11 +617,16 @@ type="button"
 <label class="form-label">Archivo:</label>
 <input type="file" class="form-control" x-ref="nuevoDocumentoFile">
 </div>
+</div>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid mt-3 mb-3">
+<button class="btn btn-success" @click="subirDocumento()" :disabled="subiendoDocumento">
+<i class="ti ti-check"></i>
+Guardar</button>
+</div>
+</div>
 
-<div class="col-12 mt-3 mb-3 text-end">
-<button class="btn btn-success" @click="subirDocumento()" :disabled="subiendoDocumento">Guardar</button>
-</div>
-</div>
+
 <!-- </template> -->
 
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
@@ -642,18 +656,26 @@ type="button"
 </table>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+<i class="ti ti-x"></i>    
+Cancelar</button>
+        </div>
+    </div>
 </div>
 </div>
 </div>
 </div>
 
-<div class="modal fade" id="modalPagos" tabindex="-1" data-bs-backdrop="static" x-ref="modalPagos">
+<div class="modal fade" id="modalPagos" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalPagos">
 <div class="modal-dialog modal-md">
 <div class="modal-content">
-<div class="modal-header">
-<h4 class="modal-title">Comprobantes de Pago (#<span x-text="pagoSolicitudId"></span>)</h4>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header bg-primary">
+<h4 class="modal-title text-white">
+    <i class="ti ti-file-dollar"></i>
+Comprobantes de Pago (#<span x-text="pagoSolicitudId"></span>)</h4>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
 <!-- <template x-if="puedeGestionarPagos"> -->
@@ -663,18 +685,23 @@ type="button"
 <label class="form-label">Archivo de pago:</label>
 <input type="file" class="form-control" x-ref="nuevoPagoFile">
 </div>
-
-<div class="col-12 text-end mt-3 mb-3">
-<button class="btn btn-success" @click="subirPago()" :disabled="subiendoPago">Guardar</button>
 </div>
 
+<div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid mt-3 mb-3">
+<button class="btn btn-success" @click="subirPago()" :disabled="subiendoPago">
+    <i class="ti ti-check"></i>
+Guardar</button>
 </div>
+</div>
+
+
 <!-- </template> -->
 
 <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 <thead>
 <tr>
-<th>Fecha</th>
+<th class="text-center">Fecha</th>
 <th class="text-center align-middle" width="48px"><i class="ti ti-download text-primary fs-5"></i></th>
 <th class="text-center align-middle" width="48px"><i class="ti ti-trash text-danger fs-5"></i></th>
 </tr>
@@ -683,7 +710,7 @@ type="button"
 <template x-if="pagos.length > 0">
 <template x-for="p in pagos" :key="p.id">
 <tr>
-<td x-text="p.fecha ? formatearFecha(p.fecha) : ''"></td>
+<td class="text-center" x-text="p.fecha ? formatearFecha(p.fecha) : ''"></td>
 <td class="text-center align-middle"><i class="ti ti-download pointer text-primary fs-5" @click.prevent="download('solicitud-cheque', p.documento)"></i></td>
 <td class="text-center align-middle"><i class="ti ti-trash pointer text-danger fs-5" @click="eliminarPago(p.id)"></i></td>
 </tr>
@@ -698,7 +725,13 @@ type="button"
 </table>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+<div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+    <i class="ti ti-x"></i>
+Cancelar</button>
+    </div>
+</div>
 </div>
 </div>
 </div>

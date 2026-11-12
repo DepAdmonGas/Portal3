@@ -24,122 +24,150 @@
             </div>
         </div>
 
-        <div class="table-responsive pb-5" style="overflow-y: hidden; overflow-x: auto;">
-            <table id="tabla-seguros" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+        <div class="table-responsive pb-5 overflow-x-auto overflow-y-hidden" >
+            <table id="tabla-seguros" class="table table-striped table-bordered mb-0 align-middle">
                 <tbody></tbody>
             </table>
         </div>
     </div>
 
-    <div class="modal fade" id="modal-detalle" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal fade" id="modal-detalle" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" >
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalle</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white">
+                        <i class="ti ti-eye"></i>
+                    Detalle</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
 
                     <div class="row">
 
-                        <div class="col-6 col-md-12 mb-3">
-                            <label class="form-label fw-semibold">Fecha:</label>
-                            <p class="mb-0" x-text="detalle.fecha"></p>
+                        <div class="col-6 col-md-12">
+                            <label class="form-label fw-semibold mb-1">Fecha:</label>
+                            <p class="mb-3" x-text="detalle.fecha"></p>
                         </div>
 
-                        <div class="col-6 col-md-12 mb-3">
-                            <label class="form-label fw-semibold">Hora:</label>
-                            <p class="mb-0" x-text="detalle.hora"></p>
+                        <div class="col-6 col-md-12">
+                            <label class="form-label fw-semibold mb-1">Hora:</label>
+                            <p class="mb-3" x-text="detalle.hora"></p>
                         </div>
 
-                        <div class="col-6 col-md-12 mb-3">
-                            <label class="form-label fw-semibold">Asunto:</label>
-                            <p class="mb-0" x-text="detalle.asunto"></p>
+                        <div class="col-6 col-md-12">
+                            <label class="form-label fw-semibold mb-1">Asunto:</label>
+                            <p class="mb-3" x-text="detalle.asunto"></p>
                         </div>
 
-                        <div class="col-6 col-md-12 mb-3">
-                            <label class="form-label fw-semibold">Solución / Resultados Finales:</label>
-                            <p class="mb-0" x-text="detalle.solucion"></p>
+                        <div class="col-6 col-md-12">
+                            <label class="form-label fw-semibold mb-1">Solución / Resultados Finales:</label>
+                            <p class="mb-3" x-text="detalle.solucion"></p>
                         </div>
 
-                        <div class="col-6 col-md-12 mb-3">
-                            <label class="form-label fw-semibold">Solución / Resultados Finales:</label>
-                            <p class="mb-0" x-text="detalle.solucion"></p>
+                        <div class="col-6 col-md-12">
+                            <label class="form-label fw-semibold mb-3">Solución / Resultados Finales:</label>
+                            <p class="mb-3" x-text="detalle.solucion"></p>
                         </div>
 
 
-                        <div class="col-12 mb-3">
-                            <label class="form-label fw-semibold">Observaciones:</label>
-                            <p class="mb-0" x-text="detalle.observaciones"></p>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold mb-1">Observaciones:</label>
+                            <p class="mb-3" x-text="detalle.observaciones"></p>
                         </div>
 
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Evidencia:</label>
+                        <label class="form-label fw-semibold mb-2">Evidencia:</label>
                         <template x-if="detalle.archivo">
                             <iframe class="border-0 mt-1" :src="'/download?tipo=seguros-incidencias&file=' + encodeURIComponent(detalle.archivo) + '&view=1'" width="100%" height="300px"></iframe>
                         </template>
                         <template x-if="!detalle.archivo">
                             <p class="text-muted">S/I</p>
                         </template>
+                   
+                </div>
+
+                <div class="modal-footer">
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                        <div class="col-12 col-md-auto d-grid">
+   <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
+                    <i class="ti ti-x"></i>    
+                    Cerrar</button>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
+
+
+
+
+
         </div>
     </div>
 
-    <div class="modal fade" id="modal-incidencia" tabindex="-1" data-bs-backdrop="static"
+    <div class="modal fade" id="modal-incidencia" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
         @hidden.bs.modal="resetModalIncidencia()">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" x-text="incidenciaModalTitle"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white"> 
+                    <i class="ti" :class="incidenciaModo === 'editar' ? 'ti-edit' : 'ti-clipboard-text'"></i>
+                    <span x-text="incidenciaModalTitle"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">* Fecha:</label>
+                        <label class="form-label fw-semibold mb-1">* Fecha:</label>
                         <input type="date" class="form-control" x-model="incidenciaForm.fecha" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">* Hora:</label>
+                        <label class="form-label fw-semibold mb-1">* Hora:</label>
                         <input type="time" class="form-control" x-model="incidenciaForm.hora" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">* Asunto:</label>
+                        <label class="form-label fw-semibold mb-1">* Asunto:</label>
                         <input type="text" class="form-control" x-model="incidenciaForm.asunto" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">* Observaciones:</label>
+                        <label class="form-label fw-semibold mb-1">* Observaciones:</label>
                         <textarea class="form-control" x-model="incidenciaForm.observaciones" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">* Solución / Resultados Finales:</label>
+                        <label class="form-label fw-semibold mb-1">* Solución / Resultados Finales:</label>
                         <textarea class="form-control" x-model="incidenciaForm.solucion" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">* Evidencia:</label>
+                        <label class="form-label fw-semibold mb-1">* Evidencia:</label>
                         <input type="file" class="form-control" x-ref="incidenciaFileInput">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" @click="cancelarEdicionIncidencia" :disabled="loading">Cancelar</button>
-                    <button type="button" class="btn btn-success" @click="guardarIncidencia" :disabled="loading">Guardar</button>
-                </div>
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                        <div class="col-12 col-md-auto d-grid me-0 me-md-2">
+<button type="button" class="btn bg-danger-subtle text-danger" @click="cancelarEdicionIncidencia" :disabled="loading">
+<i class="ti ti-x"></i>    
+Cancelar</button>
+                        </div>
+                        <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
+ <button type="button" class="btn btn-success" @click="guardarIncidencia" :disabled="loading">
+<i class="ti ti-check"></i>
+ Guardar</button>
+                        </div>
+                    </div>
+                   </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modal-poliza" tabindex="-1" data-bs-backdrop="static" @hidden.bs.modal="resetModalPoliza()">
+    <div class="modal fade" id="modal-poliza" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" @hidden.bs.modal="resetModalPoliza()">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Póliza de Seguro</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white">
+                    <i class="ti ti-file-text-shield"></i> 
+                    Póliza de Seguro</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <label class="form-label fw-semibold">* Fecha de Emisión:</label>
@@ -155,26 +183,9 @@
                     <label class="form-label fw-semibold">* Documento:</label>
                     <input type="file" class="form-control mb-3" x-ref="polizaFileInput">
 
-                    <div class="d-flex justify-content-end gap-2 mt-3">
-                        <button
-                            type="button"
-                            class="btn btn-danger"
-                            @click="cancelarEdicionPoliza"
-                            x-show="polizaModo === 'editar'"
-                            :disabled="loading">
-                            Cancelar
-                        </button>
+             
 
-                        <button
-                            type="button"
-                            class="btn btn-success"
-                            @click="guardarPoliza"
-                            :disabled="loading">
-                            <span x-text="polizaModo === 'editar' ? 'Guardar cambios' : 'Guardar'"></span>
-                        </button>
-                    </div>
-
-                    <div x-show="polizaModo !== 'editar'" class="table-responsive" style="overflow-y: hidden; overflow-x: auto;">
+                    <div x-show="polizaModo !== 'editar'" class="table-responsive overflow-x-auto overflow-y-hidden">
                         <table class="table table-striped table-bordered mb-0 text-nowrap align-middle mt-3">
                             <thead>
                                 <tr>
@@ -199,10 +210,10 @@
                                             </template>
                                         </td>
                                         <td class="text-center">
-                                            <a class="pointer" @click="editarPoliza(p.id)" class="text-warning"><i class="ti ti-pencil fs-6"></i></a>
+                                            <a class="pointer" @click="editarPoliza(p.id)" ><i class="ti ti-pencil fs-6 text-warning"></i></a>
                                         </td>
                                         <td class="text-center">
-                                            <a class="pointer" @click="eliminarPoliza(p.id)" class="text-danger"><i class="ti ti-trash fs-6"></i></a>
+                                            <a class="pointer" @click="eliminarPoliza(p.id)"><i class="ti ti-trash fs-6 text-danger"></i></a>
                                         </td>
                                     </tr>
                                 </template>
@@ -217,6 +228,54 @@
                         </table>
                     </div>
                 </div>
+
+
+<div class="modal-footer">
+
+
+
+
+       <div class="row g-0 ms-auto w-100 justify-content-end">
+                        <div class="col-12 col-md-auto d-grid me-0 me-md-2">
+    <button
+                            type="button"
+                            class="btn bg-danger-subtle text-danger"
+                            @click="cancelarEdicionPoliza"
+                            x-show="polizaModo === 'editar'"
+                            :disabled="loading">
+                            <i class="ti ti-x"></i>
+                            Cancelar
+                        </button>
+                        </div>
+                    <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
+ <button
+                            type="button"
+                            class="btn btn-success"
+                            @click="guardarPoliza"
+                            :disabled="loading"
+                                 x-show="polizaModo === 'editar'">
+                            <i class="ti ti-check"></i>
+                            <span x-text="polizaModo === 'editar' ? 'Guardar' : 'Guardar'"></span>
+                        </button>
+                    </div>
+                    </div>
+
+
+
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid">
+   <button
+                        type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"
+                            x-show="polizaModo === 'agregar'">
+                            <i class="ti ti-x"></i>
+                            Cancelar
+                        </button>
+
+        </div>
+        </div>
+    </div>
+
+                
             </div>
         </div>
     </div>

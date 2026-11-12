@@ -80,8 +80,8 @@ x-data="impuestosComponent()">
 <td class="align-middle text-end" x-text="'$ ' + formatNum(aceitesIva)"></td>
 <td colspan="2" class="align-middle text-end" x-text="'$ ' + formatNum(aceitesTotal)"></td>
 </tr>
-<tr x-show="items.length > 0">
-<th colspan="6" class="align-middle text-end">Total del día</th>
+<tr  class="table-dark" x-show="items.length > 0">
+<th colspan="6" class="align-middle text-end text-white">Total del día</th>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales.importe_sin_iva)"></strong></td>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales.iva)"></strong></td>
 <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales.ieps)"></strong></td>

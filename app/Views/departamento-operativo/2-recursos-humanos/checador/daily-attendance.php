@@ -25,6 +25,8 @@ $persistentQaFixtureMode = ($persistentQaFixtureMode ?? false) === true;
 $workplaceTimezone = is_array($timezone ?? null) && is_string($timezone['timezone'] ?? null) ? $timezone['timezone'] : null;
 $administrativeIncidences = is_array($administrativeIncidences ?? null) ? $administrativeIncidences : [];
 $administrativeErrors = is_array($administrativeErrors ?? null) ? $administrativeErrors : [];
+$baseUrl = '/departamento-operativo/recursos-humanos/checador/asistencia';
+$reportBaseUrl = '/departamento-operativo/recursos-humanos/checador/reporte';
 $contextParams = [
     'date' => $selectedDate !== '' ? $selectedDate : null,
     'snapshot_ref' => is_string($snapshotRef ?? null) && $snapshotRef !== '' ? $snapshotRef : null,
@@ -216,9 +218,26 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         && is_int($attendanceRow['additional_segment_count'] ?? null)
         ? max(0, $attendanceRow['additional_segment_count'])
         : 0;
+    $evaluatedRawEvents = is_array($attendanceRow['evaluated_raw_events'] ?? null)
+        ? $attendanceRow['evaluated_raw_events'] : null;
+    $evaluatedRawEventCount = is_int($attendanceRow['evaluated_raw_event_count'] ?? null)
+        ? $attendanceRow['evaluated_raw_event_count'] : null;
+    $evaluatedRawEventsComplete = ($attendanceRow['evaluated'] ?? null) === true
+        && $evaluatedRawEvents !== null
+        && $evaluatedRawEventCount !== null
+        && $evaluatedRawEventCount === count($evaluatedRawEvents);
     $workerParams = $contextParams + ['worker_id' => $workerId];
     $journeyHref = $buildWorkspaceUrl($journeyBaseUrl, $workerParams);
     $incidenceHref = $buildWorkspaceUrl($incidenceBaseUrl, $workerParams);
+    $reportHref = $selectedWorkplaceId !== null
+        && $selectedWorkplaceId > 0
+        && preg_match('/^\\d{4}-\\d{2}-\\d{2}$/D', $selectedDate) === 1
+        ? $buildWorkspaceUrl($reportBaseUrl, [
+            'source_workplace_id' => $selectedWorkplaceId,
+            'source_work_date' => $selectedDate,
+            'source_worker_id' => $workerId,
+        ])
+        : null;
     $incidenceList = is_array($administrativeIncidences[$workerId] ?? null) ? $administrativeIncidences[$workerId] : null;
     $incidenceError = array_key_exists($workerId, $administrativeErrors);
     $canCreateIncidence = ($incidenceCreateAllowed ?? false) === true
@@ -245,6 +264,9 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         'schedule' => $scheduleText,
         'slots' => $slots,
         'evidence' => $evidence,
+        'evaluated_raw_event_count' => $evaluatedRawEventCount,
+        'evaluated_raw_events' => $evaluatedRawEvents,
+        'evaluated_raw_events_complete' => $evaluatedRawEventsComplete,
         'status' => $status,
         'table_status' => $tableStatus,
         'additional_segment_count' => $additionalSegmentCount,
@@ -258,6 +280,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         'can_create_incidence' => $canCreateIncidence,
         'journey_href' => $journeyHref,
         'incidence_href' => $incidenceHref,
+        'report_href' => $reportHref,
         'modal_id' => 'daily-attendance-detail-' . $workerId . '-' . (int) $rowIndex,
     ];
 }
@@ -479,6 +502,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                         </div>
 
                         <h3 class="h6 mb-2">Ver todas las marcaciones (<?= (int) $viewRow['event_count'] ?>)</h3>
+
                         <?php if ($viewRow['evidence'] === []): ?>
                             <p class="text-muted mb-3">No hay marcaciones atribuibles que mostrar en el detalle de esta consulta.</p>
                         <?php else: ?>

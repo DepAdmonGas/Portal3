@@ -7,6 +7,10 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
+use App\Services\DropdownYearMesService;
+use App\Services\ReporteEstadisticoCreService as Servicio;
+use Carbon\Carbon;
 
 use App\Models\Estacion;
 use App\Models\Sasisopa\ReporteCreMes;
@@ -16,33 +20,57 @@ class GestoriaReporteCreController extends BaseController
 {
     protected string $modulo = 'gestoria';
 
-    public function index(int $idEstacion)
+    public function index(int $idEstacion, int $idYear = 0, int $idMes = 0)
     {
         $estacion = Estacion::find($idEstacion);
-        $title = 'Reporte estadistico CRE' . ' (' . $estacion->nombre . ')';
+
+        if (!$estacion) {
+            http_response_code(404);
+            return;
+        }
+
+        $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
+        $idYear = $validados['idYear'];
+        $idMes = $validados['idMes'];
+
+        ModuleStationService::setContext('gestoria', $idEstacion);
+
+        $title = 'Reporte Estadístico de la CRE';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Gestoria', '/gestoria');
-        Breadcrumb::add($title, '');
+        Breadcrumb::add('Reporte Estadístico de la CRE', '');
+        Breadcrumb::add(DropdownYearMesService::dropdownMes($idYear, $idMes), '');
+        Breadcrumb::add(DropdownYearMesService::dropdownYearManual($idYear, $idMes, Servicio::ANIO_INICIO), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
+        $baseUrl = '/gestoria/reporte-cre/' . $idEstacion;
+        $mostrarSelectorGestoria = !empty(ModuleStationService::getAvailableStations('gestoria'));
 
         $data = [
             'title' => $title,
+            'idYear' => $idYear,
+            'idMes' => $idMes,
+            'idEstacion' => $idEstacion,
+            'estacion' => $estacion->nombre,
+            'anios' => Servicio::aniosConDatos($idEstacion),
+            'productos' => Servicio::productosEstacion($idEstacion),
+            'mesesDisponibles' => Servicio::mesesDisponibles($idEstacion, $idYear),
+            'puedeDescargar' => true,
+            'esMesActual' => Carbon::now()->year === $idYear && Carbon::now()->month === $idMes,
+            'baseUrl' => $baseUrl,
+            'moduleStationKey' => $mostrarSelectorGestoria ? 'gestoria' : null,
+            'yearMesTemplate' => $baseUrl . '/{year}/{mes}',
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
-            'idEstacion' => $idEstacion,
-            'links' => [
-                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
-            ],
-            'scripts' => [
+            'help' => false,
+            'links' => [],
+            'scripts' => array_values(array_filter([
                 '/js/vendor.min.js',
-                '/libs/datatables.net/js/jquery.dataTables.min.js',
-
-                '/js/gestoria/reporte-cre/index.actions.init.js?v=1.6.0',
-            ],
-            'help' => false
+                $mostrarSelectorGestoria ? '/js/core/module-station-selector.js?v=2.0.0' : null,
+                '/js/gestoria/reporte-cre/index.actions.init.js?v=' . (@filemtime(PUBLIC_PATH . '/assets/js/gestoria/reporte-cre/index.actions.init.js') ?: '2.0.1'),
+            ])),
         ];
 
         View::render('gestoria/reporte-cre', $data, 'main');
@@ -50,6 +78,9 @@ class GestoriaReporteCreController extends BaseController
 
     public function data(int $idEstacion): void
     {
+        $this->dataReporte($idEstacion);
+        return;
+
         try {
 
             $year = (int) Request::input('year');
@@ -999,6 +1030,9 @@ class GestoriaReporteCreController extends BaseController
     //--------------------------------------------------------------------------
     public function mensajes(int $idEstacion): void
     {
+        $this->mensajesReporte($idEstacion);
+        return;
+
         try {
 
             $idReporte = (int) Request::input(
@@ -1096,6 +1130,9 @@ class GestoriaReporteCreController extends BaseController
 
     public function createMensaje(int $idEstacion): void
     {
+        $this->crearMensajeReporte($idEstacion);
+        return;
+
         try {
 
             $idReporte = (int) Request::input(
@@ -1299,6 +1336,114 @@ class GestoriaReporteCreController extends BaseController
     }
 
     //------------------------------------------------------------
+
+    public function anual(int $idEstacion): void
+    {
+        if (!Servicio::estacion($idEstacion)) {
+            JsonResponse::notFound('No se encontró la estación.');
+            return;
+        }
+
+        $validados = DropdownYearMesService::validarYearMes(
+            (int) Request::input('year'),
+            1
+        );
+
+        $reporte = Servicio::reporteAnualDetallado($idEstacion, $validados['idYear']);
+
+        JsonResponse::custom([
+            'reporte' => $reporte,
+        ]);
+    }
+
+    public function facturas(int $idEstacion): void
+    {
+        $this->descargarFacturasAnual($idEstacion);
+    }
+
+    private function dataReporte(int $idEstacion): void
+    {
+        if (!Servicio::estacion($idEstacion)) {
+            JsonResponse::notFound('No se encontró la estación.');
+            return;
+        }
+
+        $validados = DropdownYearMesService::validarYearMes(
+            (int) Request::input('year'),
+            (int) Request::input('mes')
+        );
+
+        JsonResponse::custom([
+            'reporte' => Servicio::reporteMensual(
+                $idEstacion,
+                $validados['idYear'],
+                $validados['idMes']
+            ),
+        ]);
+    }
+
+    private function mensajesReporte(int $idEstacion): void
+    {
+        $idReporte = (int) Request::input('id_reporte');
+        $idFecha = (int) Request::input('id_fecha');
+
+        if ($idReporte <= 0 || $idFecha <= 0) {
+            JsonResponse::error('Los datos del reporte no son válidos.');
+            return;
+        }
+
+        if (!Servicio::reportePerteneceAEstacion($idReporte, $idEstacion)) {
+            JsonResponse::error('No se encontró el reporte.');
+            return;
+        }
+
+        JsonResponse::custom([
+            'data' => Servicio::mensajes($idReporte, $idFecha, (int) $this->userId()),
+        ]);
+    }
+
+    private function crearMensajeReporte(int $idEstacion): void
+    {
+        $idReporte = (int) Request::input('id_reporte');
+        $idFecha = (int) Request::input('id_fecha');
+        $texto = trim((string) Request::input('mensaje'));
+
+        if ($idReporte <= 0 || $idFecha <= 0) {
+            JsonResponse::error('Los datos del reporte no son válidos.');
+            return;
+        }
+
+        if ($texto === '') {
+            JsonResponse::error('Escribe un mensaje.');
+            return;
+        }
+
+        if (mb_strlen($texto) > 2000) {
+            JsonResponse::error('El mensaje es demasiado largo.');
+            return;
+        }
+
+        if (!Servicio::reportePerteneceAEstacion($idReporte, $idEstacion)) {
+            JsonResponse::error('No se encontró el reporte.');
+            return;
+        }
+
+        $mensaje = Servicio::crearMensaje(
+            $idReporte,
+            $idFecha,
+            (int) $this->userId(),
+            $texto
+        );
+
+        if (!$mensaje) {
+            JsonResponse::error('No fue posible enviar el mensaje.');
+            return;
+        }
+
+        JsonResponse::custom([
+            'data' => Servicio::mensajes($idReporte, $idFecha, (int) $this->userId()),
+        ]);
+    }
 
     public function descargarFacturasAnual(
         int $idEstacion

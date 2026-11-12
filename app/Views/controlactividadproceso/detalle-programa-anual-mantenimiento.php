@@ -73,7 +73,7 @@
 
     <!-- Modal Nuevo --->
 
-    <div class="modal fade" id="modalNuevo" tabindex="-1">
+    <div class="modal fade" id="modalNuevo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
 
@@ -144,7 +144,9 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                        <button
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         aria-label="Close"
@@ -152,10 +154,17 @@
                         <i class="ti ti-x"></i>
                         Cancelar
                     </button>
-                    <button class="btn btn-success" @click="guardarNuevo()">
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button class="btn btn-success" @click="guardarNuevo()">
                         <i class="ti ti-check"></i>
                         Guardar
                     </button>
+                    </div>
+                  </div>
+
+                  
+                    
                 </div>
             </div>
         </div>
@@ -163,7 +172,7 @@
 
     <!-- Modal editar -->
 
-    <div class="modal fade" id="modalEditar" tabindex="-1">
+    <div class="modal fade" id="modalEditar" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
 
@@ -223,22 +232,28 @@
                 </div>
 
                 <div class="modal-footer">
-
-                    <button
-
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                        <button
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal"
                         @click="limpiarEditar()">
                         <i class="ti ti-x"></i>
                         Cancelar
                     </button>
-
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
                     <button
                         class="btn btn-success"
                         @click="editar()">
                         <i class="ti ti-check"></i>
                         Guardar
                     </button>
+                    </div>
+                  </div>
+
+                  
+
 
                 </div>
 

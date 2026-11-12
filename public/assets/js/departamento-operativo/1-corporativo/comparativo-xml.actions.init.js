@@ -479,6 +479,8 @@ if (container) container.scrollTop = container.scrollHeight;
 } catch (e) {}
 },
 
+
+
 async agregarComentario() {
 if (this.guardandoComentario || !this.nuevoComentario.trim()) return;
 
@@ -497,21 +499,30 @@ method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify(params)
 });
+
 const data = await resp.json();
 this.guardandoComentario = false;
 if (data.success == 1) {
-window.alerts.success('Comentario agregado exitosamente');
+/*window.alerts.success('Comentario agregado exitosamente');*/
 this.nuevoComentario = '';
 await this.cargarComentarios(this.mesActual);
 await this.cargarSatData(this.idEstacion, this.idYear);
 } else {
 window.alerts.error('Error al guardar el comentario');
 }
-} catch (e) {
+
+}
+
+
+catch (e) {
 this.guardandoComentario = false;
 window.alerts.error('Error al guardar el comentario');
 }
 },
+
+
+
+
 
 guardarObservaciones() {
 const contenido = window.editorInstance ? window.editorInstance.getData() : '';

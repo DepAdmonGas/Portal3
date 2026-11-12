@@ -153,6 +153,16 @@ if ($hasLiveObservationSet) {
         ];
     }
 }
+$segmentStatusLabel = static fn(string $status): string => match ($status) {
+    'EXACT_PAIR' => 'Emparejamiento exacto',
+    'PARTIAL_MISSING_IN' => 'Entrada no disponible',
+    'PARTIAL_MISSING_OUT' => 'Salida no disponible',
+    'AMBIGUOUS_PAIRING', 'AMBIGUOUS' => 'Requiere revisión por ambigüedad',
+    'UNMATCHED_NO_PUNCHES' => 'Sin marcaciones emparejadas',
+    'WORKPLACE_MISMATCH' => 'Localidad por revisar',
+    'PENDING_SYNC_COMPLETION' => 'Sincronización pendiente',
+    default => 'Estado de segmento no disponible',
+};
 ?>
 <div id="container" class="mt-4 mb-5">
     <section class="card" aria-labelledby="journey-workspace-heading">
@@ -277,6 +287,14 @@ if ($hasLiveObservationSet) {
                 <?php if (!empty($stateMessage)): ?>
                     <div class="alert alert-warning" role="status"><?= $esc($stateMessage) ?></div>
                 <?php endif; ?>
+
+<?php if (($state ?? '') !== 'success'): ?>
+<div class="alert alert-warning" role="status"><?= $esc(($stateMessage ?? '') !== '' ? $stateMessage : 'La lectura de la fuente no está disponible. No se confirma un resultado vacío.') ?></div>
+<?php endif; ?>
+            <?php endif; ?>
+
+            <?php if (($state ?? '') === 'success' && $persistedJourneysList === null && !$hasLiveObservationSet && $journeyDetails === []): ?>
+                <div class="alert alert-info" role="status">La evaluación no se ejecuta al abrir esta pantalla; esto no determina falta ni ausencia.</div>
             <?php endif; ?>
 
             <?php if ($persistedJourneysList !== null): ?>
@@ -353,7 +371,7 @@ if ($hasLiveObservationSet) {
                 </div>
             <?php elseif ($hasLiveObservationSet): ?>
                 <div class="alert alert-info py-2" role="status">
-                    <strong>Jornada no evaluada en esta consulta.</strong> Se muestran marcaciones observadas y, cuando la API lo confirma, el horario efectivo. No se infiere asistencia correcta, falta, retardo ni tiempo trabajado. La evaluación no se ejecuta al abrir esta pantalla ni al consultar resultados persistidos.
+                    <strong>Jornada no evaluada en esta consulta.</strong> Se muestran marcaciones observadas y, cuando la API lo confirma, el horario efectivo. No se infiere asistencia correcta, falta, retardo ni tiempo trabajado. La evaluación no se ejecuta al abrir esta pantalla ni al consultar resultados persistidos; Nunca se activa automáticamente la FALTA.
                 </div>
                 <?php $coverage = $journeyObservationCoverage; ?>
                 <div class="small text-muted mb-3" aria-live="polite">
@@ -574,7 +592,7 @@ if ($hasLiveObservationSet) {
                                                 }) ?></td>
                                                 <td class="text-break"><code class="text-break"><?= $esc($event['event_uuid'] ?? 'No disponible') ?></code></td>
                                                 <td class="text-break"><?= $esc($event['ocurrido_at_utc'] ?? 'No disponible') ?></td>
-                                                <td><?= isset($event['id_dispositivo']) ? (int) $event['id_dispositivo'] : 'No disponible' ?></td>
+                                                <td><?= is_int($event['id_dispositivo'] ?? null) && $event['id_dispositivo'] > 0 ? (int) $event['id_dispositivo'] : 'No disponible' ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                         </tbody>

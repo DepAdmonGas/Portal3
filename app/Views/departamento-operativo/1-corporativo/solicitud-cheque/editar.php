@@ -6,9 +6,10 @@ data-status="<?= $detalle['status'] ?>"
 data-id-estacion="<?= $idEstacion ?>"
 data-id-depto="<?= $idDepto ?>">
 
-<div class="row">
-<div class="col-12 mb-4">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+<div class="col-12 col-md-auto d-grid mt-3 mb-3">
 <button type="button" class="btn btn-success float-end" @click="guardar()" :disabled="guardando">
+    <i class="ti ti-check"></i>
 <span x-text="guardando ? 'Guardando...' : 'Guardar'"></span>
 </button>
 </div>

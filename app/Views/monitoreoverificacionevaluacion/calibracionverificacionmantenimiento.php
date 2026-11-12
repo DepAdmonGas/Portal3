@@ -52,10 +52,17 @@ x-data="calibracionVerificacion()">
 <div class="card">  
 
 <div class="card-header">
-              <button class="btn bg-primary-subtle text-primary float-end">
-                <a class="dropdown-item pointer" href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-equipos-calibracion"><i class="ti ti-download"></i> Descargar</a>
-              </button>
-            
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                                   <a class="btn bg-primary-subtle text-primary float-end"
+   href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-equipos-calibracion">
+    <i class="ti ti-download"></i> Descargar
+</a>
+    
+                    </div>
+                  </div>
+
+         
 </div>
 
 <div class="card-body">
@@ -162,13 +169,17 @@ x-data="calibracionVerificacion()">
 
     <div class="card">
 <div class="card-header">
-      <div class="d-flex align-items-center">
-      <div class="ms-auto">
-              <button class="btn bg-primary-subtle text-primary float-end">
-                <a class="dropdown-item pointer" href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-calendario-calibracion"><i class="ti ti-download"></i> Descargar</a>
-              </button>
-      </div>
-  </div>
+   
+            <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <a class="btn bg-primary-subtle text-primary float-end"
+   href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-calendario-calibracion">
+    <i class="ti ti-download"></i> Descargar
+</a>
+                    </div>
+                  </div>
+
+      
 </div>
 
   <div class="card-body">

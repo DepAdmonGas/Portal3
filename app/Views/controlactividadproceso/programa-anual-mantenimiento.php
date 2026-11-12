@@ -14,14 +14,16 @@
 
 <?php else: ?>
 
-  <div class="text-end">
-      <?= 
+  <div class="row g-0 w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+    <?= 
         !empty($permisos['crear']) ? 
         '<button type="button" class="btn bg-primary-subtle text-primary" @click="nuevo()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
-        ?>     
+        ?>
+    </div>
     </div>
 
 <div class="row mt-3">

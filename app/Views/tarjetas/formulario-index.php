@@ -2,7 +2,7 @@
 x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimiento="<?= $noSolicitud ?>" data-puesto="<?= $utilitiesUser['idPuestoUser'] ?>">
   
 <div class="row mt-3 mb-3 align-items-center">
-<div class="col-12 col-md-auto d-grid  mb-4 mb-md-0">
+<div class="col-12 col-md-auto d-grid  mb-3 mb-md-0">
 
 <div id="botonDescargaFile"></div>
 
@@ -19,7 +19,7 @@ x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-seguimien
 
 
 
-<div id="botonSeguimiento" class="d-grid">
+<div id="botonSeguimiento" class="d-grid ">
 
 </div>
 </div>
@@ -94,14 +94,22 @@ x-data="{ ...actions(), ...tarjetasForm() }" @open-edit.window="openEdit($event.
 
 <!-- FOOTER -->
 <div class="modal-footer">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+        <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="resetForm()">
 <i class="ti ti-x"></i>    
 Cancelar</button>
+        </div>
+        <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
 <button type="button" class="btn btn-success" @click="submit()" :disabled="loading">
     <i class="ti ti-check"></i>
 <span x-show="!loading">Guardar</span>
 <span x-show="loading">Guardando...</span>
 </button>
+        </div>
+    </div>
+
+
 </div>
 
 </div>

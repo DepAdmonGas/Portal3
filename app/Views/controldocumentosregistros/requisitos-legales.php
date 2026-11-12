@@ -10,12 +10,15 @@
     </div>
 
 <?php else: ?>
-<div class="text-end mt-4">
-          <a type="button" class="btn bg-primary-subtle text-primary" 
+<div class="row g-0 w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+     <a type="button" class="btn bg-primary-subtle text-primary" 
           href="/sasisopa/control-documentos-registros/pdf-requisitos-legales">
             <i class="ti ti-download"></i>
             Descargar
           </a>
+    </div>
+     
         </div>
 
 <?php foreach ($niveles as $key => $titulo): ?>

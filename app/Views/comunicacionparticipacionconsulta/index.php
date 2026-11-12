@@ -129,7 +129,7 @@ Descargar
 
 <!-- Modal Nuevo -->
 
-<div class="modal fade" id="modalComunicacion" tabindex="-1">
+<div class="modal fade" id="modalComunicacion" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-lg modal-dialog-centered">
 <div class="modal-content">
 
@@ -284,14 +284,16 @@ Vía telefónica
 </div>
 
 <div class="modal-footer">
-
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 <button class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal"
 @click="limpiarModalComunicacion()">
 <i class="ti ti-x"></i> Cancelar
 </button>
-
-<button class="btn btn-success"
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button class="btn btn-success"
 @click="mode === 'edit'
 ? updateComunicacion()
 : guardarComunicacion()">
@@ -299,6 +301,8 @@ data-bs-dismiss="modal"
 <span x-text="mode === 'edit' ? 'Actualizar' : 'Guardar'"></span>
 
 </button>
+                    </div>
+                  </div>
 
 </div>
 
@@ -308,7 +312,7 @@ data-bs-dismiss="modal"
 
 <!-- Modal Evidencia -->
 
-<div class="modal fade" id="modalEvidencia" tabindex="-1">
+<div class="modal fade" id="modalEvidencia" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 
 <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -374,20 +378,22 @@ class="img-fluid">
 </div>
 
 <div class="modal-footer">
-
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cancelar
 </button>
-
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
 <button class="btn btn-success"
 @click="guardarEvidencia()">
 <i class="ti ti-check"></i>
 Guardar
 </button>
-
-
+                    </div>
+                  </div>
 
 </div>
 
@@ -401,7 +407,9 @@ Guardar
 
 <div class="modal fade"
 id="modalDetalleComunicacion"
-tabindex="-1">
+tabindex="-1"
+data-bs-backdrop="static" 
+data-bs-keyboard="false">
 
 <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
 
@@ -549,7 +557,7 @@ S/I
 <div class="pt-0" mb-3 >
 
 
-<div class="d-flex justify-content-between align-items-center">
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
 
 <label class="form-label mb-1">
 Detalle:
@@ -557,6 +565,7 @@ Detalle:
 
 <template x-if="detalle.url">
 
+    <div class="d-grid d-md-block">
 <a :href="detalle.url"
 target="_blank"
 class="btn bg-primary-subtle text-primary">
@@ -565,6 +574,9 @@ class="btn bg-primary-subtle text-primary">
 Descargar archivo
 
 </a>
+    </div>
+
+
 
 </template>
 
@@ -607,11 +619,17 @@ Descargar asistencia
 
 </div>
 <div class="modal-footer">
-    <button type="button"
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                        <button type="button"
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cerrar
 </button>
+                    </div>
+                  </div>
+
+  
 
 </div>
 
@@ -626,7 +644,7 @@ data-bs-dismiss="modal">
 
 <!-- Modal Buscar -->
 
-<div class="modal fade" id="modalBuscar" tabindex="-1">
+<div class="modal fade" id="modalBuscar" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 <div class="modal-dialog modal-dialog-centered">
 <div class="modal-content">
 
@@ -647,7 +665,9 @@ Buscar</h4>
 </div>
 
 <div class="modal-footer">
-<button 
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button 
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal"
 aria-label="Close"
@@ -656,9 +676,16 @@ aria-label="Close"
 <span x-text="year ? 'Cancelar' : 'Cancelar'"></span>
 
 </button>
-<button class="btn btn-success" @click="buscarYear()">
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button class="btn btn-success" @click="buscarYear()">
 <i class="ti ti-search"></i> Buscar
 </button>
+                    </div>
+                  </div>
+
+
+
 </div>
 
 </div>
@@ -840,21 +867,24 @@ x-model="qs.confirmacion"
 </div>
 
 <div class="modal-footer">
-
-<button class="btn bg-danger-subtle text-danger"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal"
 aria-label="Close"
 @click="limpiarQS()">
 
 <i class="ti ti-x"></i> Cancelar
 </button>
-
-<button class="btn btn-success"
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button class="btn btn-success"
 @click="guardarQS()">
 
 <i class="ti ti-check"></i> Guardar
 </button>
-
+                    </div>
+                  </div>
 </div>
 
 </div>

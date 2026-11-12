@@ -30,8 +30,9 @@ $user->id = 999;
 $base = 'https://checador.test/';
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
-$viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php');
-$adjustmentsViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
+$viewSource = (string) file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php') . "\n" . (string) file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php');
+$adjustmentsViewSource = (string) file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
+$administrativeViewSource = $adjustmentsViewSource;
 $p04aSource = file_get_contents(__DIR__ . '/checador_p04_level1_snapshot_regression.php');
 
 $make = static function (array $responses, ?array &$history = null, ?string &$token = null) use ($base): ChecadorDailyReadService {

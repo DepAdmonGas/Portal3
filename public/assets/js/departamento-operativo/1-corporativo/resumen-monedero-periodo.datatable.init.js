@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const t = json.totales;
       html += '</tbody><tfoot><tr class="table-dark fw-semibold">' +
-        '<th colspan="2">TOTAL</th>';
+        '<th class="text-white" colspan="2">TOTAL</th>';
       keys.forEach(function (k) {
         html += '<td class="text-end">' + formatMoney(t[k]) + '</td>';
       });

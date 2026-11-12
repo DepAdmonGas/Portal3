@@ -2,83 +2,22 @@
     id="container"
     class="pb-4"
     x-data="reportesIndex()"
-    x-init="init()">
+    @reportes-periodo.window="cambiarPeriodo($event.detail)">
     <style>
         [x-cloak] {
             display: none !important;
         }
 
-        .report-card {
-            height: 100%;
-            transition:
-                transform .15s ease,
-                box-shadow .15s ease;
-        }
-
-        .report-card:hover {
-            transform: translateY(-2px);
-            box-shadow:
-                0 .5rem 1rem rgba(0, 0, 0, .08);
-        }
-
-        .report-icon {
-            width: 48px;
-            height: 48px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            background: var(--bs-primary-bg-subtle);
-            color: var(--bs-primary);
-        }
     </style>
 
 
-    <div
-        class="
-            d-flex
-            flex-column
-            flex-md-row
-            align-items-md-center
-            justify-content-between
-            gap-3
-            mb-4
-            mt-4
-        ">
-        <div>
-
-            <h4
-                class="mb-1"
-                x-text="tituloReporte">
-
-            </h4>
-
-            <div
-                class="text-muted"
-                x-show="reporte.estacion"
-                x-cloak>
-                <i class="ti ti-map-pin me-1"></i>
-
-                <span
-                    x-text="reporte.estacion"></span>
+    <div class="row g-3 align-items-end mt-2 mb-3">
+        <div class="col-12">
+            <div class="text-muted d-flex align-items-center" x-show="Number(filtros.idEstacion) === 0 && Number(filtros.idDepartamento) === 0" x-cloak>
+                <i class="ti ti-map-pin me-1 fs-6"></i>
+                <h5 class="mb-0 text-muted" x-text="reporte.estacion"></h5>
             </div>
-
         </div>
-
-        <button
-            type="button"
-            class="
-                btn
-                btn-primary
-                d-inline-flex
-                align-items-center
-                gap-2
-            "
-            @click="abrirBuscador()">
-            <i class="ti ti-search fs-5"></i>
-
-            Buscar reporte
-        </button>
     </div>
 
     <div
@@ -104,105 +43,37 @@
                 x-for="reporteItem in reportes"
                 :key="reporteItem.id">
 
-                <div
-                    class="
-                        col-12
-                        col-md-6
-                        col-xl-4
-                        col-xxl-3
-                    ">
-                    <div
-                        class="
-                            card
-                            border
-                            report-card
-                        ">
-                        <div class="card-body">
-
-                            <div
-                                class="
-                                    d-flex
-                                    align-items-start
-                                    justify-content-between
-                                    gap-3
-                                    mb-3
-                                ">
-
-                                <div
-                                    class="report-icon">
-                                    <i
-                                        class="ti fs-7"
-                                        :class="reporteItem.icono"></i>
+                <div class="col-12 col-md-6 col-xl-4 d-flex align-items-stretch">
+                    <div class="card shadow-sm h-100 w-100 border card-hover overflow-hidden position-relative">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                                     style="width:60px;height:60px;">
+                                    <i class="ti text-white display-6" :class="reporteItem.icono"></i>
                                 </div>
-
-                                <span
-                                    class="
-                                        badge
-                                        text-bg-light
-                                        border
-                                    "
-                                    x-text="
-                                        reporte.tipo === 'diario'
-                                            ? 'Diario'
-                                            : 'Anual'
-                                    "></span>
-
+                                <div class="flex-grow-1 text-end">
+                                    <span class="badge bg-primary-subtle text-primary fw-bold mb-2"
+                                          x-text="etiquetaReporte"></span>
+                                    <h4 class="fw-bold text-dark mt-1 mb-0 lh-sm" x-text="reporteItem.nombre"></h4>
+                                </div>
                             </div>
-
-                            <h5
-                                class="card-title mb-1"
-                                x-text="reporteItem.nombre"></h5>
-
-                            <p
-                                class="
-                                    text-muted
-                                    small
-                                    mb-4
-                                "
-                                x-text="reporte.nombre"></p>
-
-
-                            <!-- Acciones -->
-
-                            <div
-                                class="
-                                    d-flex
-                                    flex-wrap
-                                    gap-2
-                                ">
-                                <template
-                                    x-for="accion in reporteItem.acciones"
-                                    :key="
-                                        reporteItem.id
-                                        + '-'
-                                        + accion.tipo
-                                    ">
-                                    <button
-                                        type="button"
-                                        class="
-                                            btn
-                                            bg-secondary-subtle 
-                                            text-secondary
-                                            btn-sm
-                                            d-inline-flex
-                                            align-items-center
-                                            gap-3
-                                        "
-                                        @click="
-                                            ejecutarAccion(
-                                                reporteItem,
-                                                accion
-                                            )
-                                        ">
-                                        <i
-                                            class="ti fs-5"
-                                            :class="accion.icono"></i>
-
-                                        <span
-                                            x-text="accion.nombre"></span>
-                                    </button>
+                           
+                            <div class="row g-3 mt-2">
+                                <template x-for="accion in reporteItem.acciones" :key="reporteItem.id + '-' + accion.tipo">
+                                    <div :class="columnaAccion(reporteItem.acciones.length)">
+                                        <button type="button"
+                                                class="btn bg-primary-subtle text-primary w-100 d-inline-flex justify-content-center align-items-center gap-2"
+                                                @click="ejecutarAccion(reporteItem, accion)">
+                                            <i class="ti fs-5" :class="accion.icono"></i>
+                                            <span x-text="accion.nombre"></span>
+                                        </button>
+                                    </div>
                                 </template>
                             </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                            <span class="small">Opciones del reporte</span>
+                            <i class="ti ti-report-search fs-5"></i>
 
                         </div>
                     </div>
@@ -237,315 +108,13 @@
                     No hay reportes disponibles
                 </h5>
 
-                <p class="text-muted mb-0">
-                    Intenta realizar una nueva búsqueda.
-                </p>
+                <p class="text-muted mb-0">No hay reportes para los filtros seleccionados.</p>
 
             </div>
         </div>
 
     </div>
 
-
-    <!-- -- -- -- -->
-    <div
-        class="modal fade"
-        id="modalBuscarReporte"
-        tabindex="-1"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-
-            <div class="modal-content">
-
-                <div class="modal-header bg-primary">
-
-                    <div>
-
-                        <h5 class="modal-title text-white">
-                            Buscar reporte
-                        </h5>
-
-                        <div class="text-white small">
-                            Selecciona estación y periodo.
-                        </div>
-
-                    </div>
-
-                    <button
-                        type="button"
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal"></button>
-
-                </div>
-
-
-                <div class="modal-body">
-
-                    <!-- Estación -->
-
-                    <div class="mb-3">
-
-                        <label
-                            class="form-label">
-                            Estación
-                        </label>
-
-                        <select
-                            class="form-select"
-                            x-model="busqueda.idEstacion"
-                            @change="cambioEstacion()"
-                            :class="{
-                                'is-invalid':
-                                    errors.idEstacion
-                            }">
-                            <option value="">
-                                Selecciona una estación...
-                            </option>
-
-                            <template
-                                x-for="estacion in estaciones"
-                                :key="estacion.id">
-                                <option
-                                    :value="String(estacion.id)"
-                                    x-text="estacion.nombre"></option>
-                            </template>
-
-                            <option value="0">
-                                Todas las estaciones
-                            </option>
-                        </select>
-
-                        <div
-                            class="invalid-feedback"
-                            x-text="errors.idEstacion"></div>
-
-                    </div>
-
-
-                    <!-- Año -->
-
-                    <div class="mb-3">
-
-                        <label
-                            class="form-label">
-                            Año
-                        </label>
-
-                        <select
-                            class="form-select"
-                            x-model="busqueda.year"
-                            @change="cambioYear()"
-                            :disabled="yearDeshabilitado"
-                            :class="{
-                                'is-invalid':
-                                    errors.periodo
-                            }">
-                            <option value="">
-                                Selecciona un año...
-                            </option>
-
-                            <template
-                                x-for="year in years"
-                                :key="year">
-                                <option
-                                    :value="String(year)"
-                                    x-text="year"></option>
-                            </template>
-                        </select>
-
-                    </div>
-
-
-                    <!-- Mes -->
-
-                    <div
-                        class="mb-3"
-                        x-show="busqueda.year">
-                        <label
-                            class="form-label">
-                            Mes
-                        </label>
-
-                        <select
-                            class="form-select"
-                            x-model="busqueda.mes">
-                            <option value="0">
-                                Todos
-                            </option>
-
-                            <option value="1">
-                                Enero
-                            </option>
-
-                            <option value="2">
-                                Febrero
-                            </option>
-
-                            <option value="3">
-                                Marzo
-                            </option>
-
-                            <option value="4">
-                                Abril
-                            </option>
-
-                            <option value="5">
-                                Mayo
-                            </option>
-
-                            <option value="6">
-                                Junio
-                            </option>
-
-                            <option value="7">
-                                Julio
-                            </option>
-
-                            <option value="8">
-                                Agosto
-                            </option>
-
-                            <option value="9">
-                                Septiembre
-                            </option>
-
-                            <option value="10">
-                                Octubre
-                            </option>
-
-                            <option value="11">
-                                Noviembre
-                            </option>
-
-                            <option value="12">
-                                Diciembre
-                            </option>
-                        </select>
-
-                    </div>
-
-
-                    <!-- Día -->
-
-                    <template
-                        x-if="mostrarDia">
-                        <div>
-
-                            <div
-                                class="
-                                    d-flex
-                                    align-items-center
-                                    gap-2
-                                    my-3
-                                ">
-                                <hr class="flex-grow-1">
-
-                                <span
-                                    class="
-                                        text-muted
-                                        small
-                                    ">
-                                    O
-                                </span>
-
-                                <hr class="flex-grow-1">
-                            </div>
-
-                            <div class="mb-2">
-
-                                <label
-                                    class="form-label">
-                                    Día
-                                </label>
-
-                                <input
-                                    type="date"
-                                    class="form-control"
-                                    x-model="busqueda.dia"
-                                    @change="cambioDia()"
-                                    :disabled="diaDeshabilitado"
-                                    :class="{
-                                        'is-invalid':
-                                            errors.periodo
-                                    }">
-
-                            </div>
-
-                        </div>
-                    </template>
-
-
-                    <div
-                        class="
-                            invalid-feedback
-                            d-block
-                        "
-                        x-show="errors.periodo"
-                        x-text="errors.periodo"></div>
-
-                </div>
-
-
-                <div class="modal-footer">
-
-                    <button
-                        type="button"
-                        class="btn bg-danger-subtle text-danger"
-                        data-bs-dismiss="modal">
-                        <i class="ti ti-x me-1"></i>
-                        Cancelar
-                    </button>
-
-                    <button
-                        type="button"
-                        class="
-                            btn
-                            btn-success
-                            d-inline-flex
-                            align-items-center
-                            gap-1
-                        "
-                        @click="buscar()"
-                        :disabled="buscando">
-
-                        <template
-                            x-if="!buscando">
-                            <span
-                                class="
-                                    d-flex
-                                    align-items-center
-                                    gap-1
-                                ">
-                                <i class="ti ti-search"></i>
-                                Buscar
-                            </span>
-                        </template>
-
-                        <template
-                            x-if="buscando">
-                            <span
-                                class="
-                                    d-flex
-                                    align-items-center
-                                    gap-2
-                                ">
-                                <span
-                                    class="
-                                        spinner-border
-                                        spinner-border-sm
-                                    "></span>
-
-                                Buscando...
-                            </span>
-                        </template>
-
-                    </button>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
 
     <!-- -- -- -- -->
     <div
@@ -614,6 +183,47 @@
                                 === 'anual'
                             ">
                             <div>
+
+                                <div class="row g-2 align-items-end mb-3">
+                                    <div class="col-12 col-sm">
+                                        <label class="form-label mb-1" for="autolavado-dia">Consultar ventas por día:</label>
+                                        <input
+                                            id="autolavado-dia"
+                                            type="date"
+                                            class="form-control"
+                                            min="2021-01-01"
+                                            :max="fechaHoy"
+                                            x-model="consultaDia.fecha">
+                                    </div>
+                                    <div class="col-12 col-sm-auto">
+                                        <button
+                                            type="button"
+                                            class="btn btn-primary w-100"
+                                            @click="buscarDiaAutolavado()"
+                                            :disabled="!consultaDia.fecha || cargandoDiaAutolavado">
+                                            <span
+                                                class="spinner-border spinner-border-sm me-1"
+                                                x-show="cargandoDiaAutolavado"
+                                                aria-hidden="true"></span>
+                                            <i class="ti ti-search me-1" x-show="!cargandoDiaAutolavado"></i>
+                                            Consultar día
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="alert alert-primary d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3"
+                                    x-show="resultadoDiaAutolavado"
+                                    x-cloak>
+                                    <div>
+                                        <div class="small">Concentrado diario</div>
+                                        <strong x-text="resultadoDiaAutolavado?.dia_formateado"></strong>
+                                    </div>
+                                    <div class="text-sm-end">
+                                        <div class="small">Total de ventas</div>
+                                        <strong x-text="moneda(resultadoDiaAutolavado?.total)"></strong>
+                                    </div>
+                                </div>
 
                                 <div
                                     class="
@@ -697,57 +307,6 @@
 
                             </div>
                         </template>
-
-
-                        <!-- Diario -->
-
-                        <template
-                            x-if="
-                                detalleAutolavado.tipo
-                                === 'diario'
-                            ">
-                            <div
-                                class="
-                                    text-center
-                                    py-4
-                                ">
-
-                                <div
-                                    class="
-                                        report-icon
-                                        mx-auto
-                                        mb-3
-                                    ">
-                                    <i
-                                        class="
-                                            ti
-                                            ti-car-wash
-                                            fs-3
-                                        "></i>
-                                </div>
-
-                                <div
-                                    class="text-muted mb-1">
-                                    Concentrado de ventas
-                                </div>
-
-                                <div
-                                    class="fw-semibold mb-3"
-                                    x-text="
-                                        detalleAutolavado.dia_formateado
-                                    "></div>
-
-                                <h2
-                                    class="mb-0"
-                                    x-text="
-                                        moneda(
-                                            detalleAutolavado.total
-                                        )
-                                    "></h2>
-
-                            </div>
-                        </template>
-
                     </div>
 
                 </div>

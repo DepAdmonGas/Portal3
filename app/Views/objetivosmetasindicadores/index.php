@@ -285,7 +285,9 @@ altamente capacitado tanto en operación como en mantenimiento.</li>
 <div class="modal fade"
 id="ObjetivosMetas"
 x-ref="modalObjetivosMetas"
-tabindex="-1">
+tabindex="-1"
+data-bs-backdrop="static"
+data-bs-keyboard="false">
 
 <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
 <div class="modal-content">
@@ -482,14 +484,16 @@ tabindex="-1">
 
     <!-- FOOTER -->
     <div class="modal-footer" >
-
-        <button type="button"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+  <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+  <button type="button"
                 class="btn bg-danger-subtle text-danger"
                 data-bs-dismiss="modal"
                 @click="resetObjetivosMetas()">
             <i class="ti ti-x"></i> Cancelar
         </button>
-
+  </div>
+<div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
         <button type="button"
         x-show="mode !== 'view'"
                 class="btn btn-success"
@@ -508,6 +512,10 @@ tabindex="-1">
             <span x-show="loading">Guardando...</span>
 
         </button>
+</div>
+
+</div>
+      
 
     </div>
 
@@ -519,7 +527,9 @@ tabindex="-1">
 <div class="modal fade"
 id="ReporteIndicadores"
 x-ref="modalReporteIndicadores"
-tabindex="-1">
+tabindex="-1"
+data-bs-backdrop="static"
+data-bs-keyboard="false">
 
 <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
 <div class="modal-content">
@@ -623,15 +633,17 @@ tabindex="-1">
 
     <!-- FOOTER -->
     <div class="modal-footer" >
-
-        <button type="button"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+  <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+<button type="button"
                 class="btn bg-danger-subtle text-danger"
                 data-bs-dismiss="modal"
                 @click="$event.target.blur(); resetReporteIndicadores()">
             <i class="ti ti-x"></i> Cancelar
         </button>
-
-        <button type="button"
+  </div>
+  <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+    <button type="button"
         x-show="mode !== 'view'"
                 class="btn btn-success"
                 @click="submitReporteIndicadores()"
@@ -643,6 +655,8 @@ tabindex="-1">
             <span x-show="loading">Guardando...</span>
 
         </button>
+  </div>
+</div>
 
     </div>
 

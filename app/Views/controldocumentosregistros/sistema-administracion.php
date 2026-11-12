@@ -15,12 +15,15 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
 
 <?php else: ?>
 
-<div class="text-end mt-4">
-          <a type="button" class="btn bg-primary-subtle text-primary" 
+<div class="row g-0 w-100 justify-content-end">
+  <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+   <a type="button" class="btn bg-primary-subtle text-primary" 
           href="/sasisopa/control-documentos-registros/pdf-sistema-administracion">
             <i class="ti ti-download"></i>
             Descargar
           </a>
+  </div>
+       
         </div>
 
 

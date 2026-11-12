@@ -52,7 +52,9 @@
             class="modal fade"
             id="ModalBuscar"
             tabindex="-1"
-            aria-hidden="true">
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -131,19 +133,27 @@
 
                     <!-- FOOTER -->
                     <div class="modal-footer">
-
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      
                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal"
                             @click="limpiarBuscar()">
                             <i class="ti ti-x"></i> Cancelar
                         </button>
-
-                        <button
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                             class="btn btn-success"
                             @click="buscar()">
                             <i class="ti ti-search"></i></i> Buscar
                         </button>
+                    </div>
+                  </div>
+
+
+                       
                     </div>
 
                 </div>
@@ -157,8 +167,9 @@
             class="modal fade"
             id="ModalDetalle"
             tabindex="-1"
-            aria-hidden="true">
-
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
             <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
 
                 <div class="modal-content">
@@ -335,13 +346,18 @@
                     </div>
 
                     <div class="modal-footer">
-
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      
                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
 
                             <i class="ti ti-x"></i> Cerrar
                         </button>
+                    </div>
+                  </div>
+
 
                     </div>
 
@@ -356,7 +372,9 @@
             class="modal fade"
             id="ModalEditar"
             tabindex="-1"
-            aria-hidden="true">
+            aria-hidden="true" 
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -421,20 +439,26 @@
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
 
                             <i class="ti ti-x"></i> Cancelar
                         </button>
-
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      
                         <button
                             class="btn btn-success"
                             @click="guardarEditar()">
 
                             <i class="ti ti-check"></i> Actualizar
                         </button>
+                    </div>
+                  </div>
+
 
                     </div>
 
@@ -449,7 +473,9 @@
             class="modal fade"
             id="ModalEvidencia"
             tabindex="-1"
-            aria-hidden="true">
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
 
             <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -587,20 +613,25 @@
                     </div>
 
                     <div class="modal-footer">
-
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                 <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">   
                         <button
                             class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">
 
                             <i class="ti ti-x"></i> Cerrar
                         </button>
-
-                        <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                         <button
                             class="btn btn-success"
                             @click="guardarEvidencias()">
 
                             <i class="ti ti-check"></i> Guardar
                         </button>
+                    </div>
+                  </div>
+
 
                     </div>
 

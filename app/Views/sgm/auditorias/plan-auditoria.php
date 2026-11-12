@@ -1,9 +1,16 @@
 <div
     x-data="{...actions(), ...planauditoria(<?= $id ?>)}">
 
-        <div class="text-end">
-            <button class="btn btn-success mt-3" @click="finalizar"><i class="ti ti-check"></i> Finalizar Auditoria</button>
-        </div>
+
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+
+                    <button class="btn btn-success mt-3" @click="finalizar"><i class="ti ti-check"></i> Finalizar</button>
+
+                    </div>
+                  </div>
+
+
 
 
     <div class="bg-white  mt-3">
@@ -556,32 +563,35 @@ Nombre, denominación o razón social                    </td>
 
         <!-- AGENDA -->
 <div class="card mb-4">
-    <div class="card-header bg-primary">
-        <div class="row align-items-center">
 
-<div class="col-12 col-md-9">
-    <span class="card-title text-white pb-0 mb-0">               
-    V. Agenda
-    </span>
-  
-   <small class="text-white d-block">Nota: Elaborar una agenda para cada sitio a ser auditado.</small>
+<div class="card-header bg-primary">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
 
-    
-</div>
-<div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
-<button
+        <!-- Título y enunciado -->
+        <div class="d-flex flex-column">
+            <span class="card-title text-white pb-0 mb-0">
+                V. Agenda
+            </span>
+            <small class="text-white">
+                Nota: Elaborar una agenda para cada sitio a ser auditado.
+            </small>
+        </div>
+
+        <!-- Botón alineado a la derecha -->
+        <div class="d-grid d-md-block">
+            <button
                 type="button"
                 class="btn bg-success text-white"
                 @click="abrirAgenda()">
+
                 <i class="ti ti-plus"></i>
                 Nueva agenda
             </button>
-
-</div>
- 
         </div>
-      
+
     </div>
+</div>
+
     <div class="card-body p-0">
 
 <div class="table-responsive">
@@ -708,7 +718,7 @@ Nombre, denominación o razón social                    </td>
     </div>
 </div>
         
-<!---------aqio termina la quinta y ultima card------->
+<!---------aqui termina la quinta y ultima card------->
     
     </div>
 
@@ -717,14 +727,13 @@ Nombre, denominación o razón social                    </td>
         class="modal fade"
         id="modalPrincipal"
         tabindex="-1"
-        aria-hidden="true">
+        aria-hidden="true"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false">
 
         <div class="modal-dialog modal-lg">
 
             <div class="modal-content">
-
-
-
 
                 <!-- AUDITOR -->
 
@@ -841,29 +850,28 @@ Nombre, denominación o razón social                    </td>
 
 
                         <div class="modal-footer">
-
-                            <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                                 class="btn bg-danger-subtle text-danger"
                                 data-bs-dismiss="modal">
-
                                 <i class="ti ti-x"></i> Cancelar
 
                             </button>
-
-                            <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                                 type="button"
                                 class="btn btn-success"
                                 @click="guardarAuditor">
                                 <i class="ti ti-check"></i>
-
                                 Guardar
 
                             </button>
-
-                        </div>
-
                     </div>
-
+                  </div>
+                        </div>
+                    </div>
                 </template>
 
 
@@ -939,24 +947,24 @@ Nombre, denominación o razón social                    </td>
 
 
                         <div class="modal-footer">
-
-                            <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                        <button
                                 class="btn bg-danger-subtle text-danger"
                                 data-bs-dismiss="modal">
-
                                 <i class="ti ti-x"></i> Cancelar
-
                             </button>
-
-                            <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                                 type="button"
                                 class="btn btn-success"
                                 @click="guardarAuxiliar">
                                 <i class="ti ti-check"></i>
-
                                 Guardar
-
                             </button>
+                    </div>
+                  </div>              
 
                         </div>
 
@@ -975,7 +983,9 @@ Nombre, denominación o razón social                    </td>
         class="modal fade"
         id="modalAgenda"
         tabindex="-1"
-        aria-hidden="true">
+        aria-hidden="true"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false">
 
         <div class="modal-dialog modal-lg">
 
@@ -1118,30 +1128,26 @@ Nombre, denominación o razón social                    </td>
 
 
                 <div class="modal-footer">
-
-                    <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button
                         type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
                         Cancelar
-
                     </button>
-
-
-                    <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                         type="button"
                         class="btn btn-success"
                         @click="guardarAgenda">
-
                         <i class="ti ti-check"></i>
-
                         Guardar
-
                     </button>
-
+                    </div>
+                  </div>
                 </div>
 
             </div>

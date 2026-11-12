@@ -12,15 +12,19 @@ buscarHallazgos();">
 
 
 
-<div class="text-end mt-3 mb-3">
-
-<button data-action="history-back"
-class="btn btn-success mb-3">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                      <button data-action="history-back"
+class="btn btn-success">
 <i class="ti ti-check"></i>
 Finalizar
 </button>
+                    </div>
+                  </div>
 
-</div>
+
+
+
 
 <div class="card">
 <div class="card-body">
@@ -81,12 +85,11 @@ x-model="tipo_auditoria"
 <div class="card">
 
 <div class="card-header">
-<div class="row align-items-center">
-<div class="col-12 col-md-10">
-<h5 class="modal-title">Hallazgos</h5>
-</div>
+<div class="d-flex flex-column flex-md-row aling-items-ms-center justify-content-between w-100 gap-2">
 
-<div class="col-12 col-md-2 d-grid text-end mt-3 mt-md-0">
+<h5 class="modal-title">Hallazgos</h5>
+
+<div class="d-grid d-md-block">
 <button
 class="btn bg-primary-subtle text-primary"
 @click="abrirModal()">
@@ -214,7 +217,9 @@ No se encontró información
 
 <div class="modal fade"
 id="modalHallazgo"
-tabindex="-1">
+tabindex="-1"
+data-bs-backdrop="static"
+data-bs-keyboard="false">
 
 <div class="modal-dialog modal-dialog-centered">
 
@@ -297,16 +302,18 @@ x-model="hallazgo.fecha"
 </div>
 
 <div class="modal-footer">
-
-<button
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
 
 <i class="ti ti-x"></i> Cancelar
 
 </button>
-
-<button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
 class="btn btn-success"
 @click="guardar()">
 
@@ -322,6 +329,14 @@ Actualizar
 
 </button>
 
+                    </div>
+
+                  </div>
+
+
+
+
+
 </div>
 
 </div>
@@ -334,7 +349,9 @@ Actualizar
 
 <div class="modal fade"
 id="modalEvidencia"
-tabindex="-1">
+tabindex="-1"
+data-bs-backdrop="static"
+data-bs-keyboard="false">
 
 <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -430,6 +447,9 @@ No se encontraron evidencias
 
 </div>
 <div class="modal-footer">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      
 <button
 class="btn bg-danger-subtle text-danger"
 data-bs-dismiss="modal">
@@ -437,6 +457,9 @@ data-bs-dismiss="modal">
 <i class="ti ti-x"></i> Cancelar
 
 </button>
+                    </div>
+                  </div>
+
 </div>
 
 </div>

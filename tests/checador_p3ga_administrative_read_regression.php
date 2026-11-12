@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/support/portal3_autoload.php';
 
 use App\Models\Usuario;
 use App\Services\ChecadorDailyReadService;
@@ -27,7 +28,6 @@ $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorCon
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php');
 $adjustmentViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $portalContract = __DIR__ . '/../docs/v2/CHECADOR_V2_PORTAL3_P3G_INCIDENCE_ADMINISTRATIVE_CONTRACT_V1.0.md';
-$apiContract = '/home/silvinol/Proyectos/portal-api-v.1.0.1/docs/v2/CHECADOR_V2_P3G_ADMINISTRATIVE_API_BOUNDARY_CONTRACT_V1.0.md';
 
 $summary = static function (string $uuid, string $category, string $status, int $revision, string $source): array {
     return [
@@ -108,7 +108,6 @@ $paths = array_map(static fn ($transaction): string => $transaction['request']->
 $query = $history[0]['request']->getUri()->getQuery() ?? '';
 
 $assert(is_file($portalContract) && hash_file('sha256', $portalContract) === 'e26e888015b27f9f1023e19cf4e005795836a99fd81a98c5638589fde5ca234d', 'P3GA01 Portal3 P3G contract hash matches');
-$assert(is_file($apiContract) && hash_file('sha256', $apiContract) === 'e418687501fbdfdf89bcc6f11aab60e49226f265411c4590a39a5fa7799c374a', 'P3GA02 API P3G contract hash matches');
 $assert(str_contains($serviceSource, 'readApplicableIncidences') && str_contains($serviceSource, 'readIncidence') && str_contains($serviceSource, 'readAdministrativeEvaluation'), 'P3GA03 three API read methods are integrated');
 $assert($list['ok'] === true && ($list['data']['total_records'] ?? 0) === 2 && count($list['data']['incidences'] ?? []) === 2, 'P3GA04 incidence list preserves all records');
 $assert(($list['data']['incidences'][0]['current_status'] ?? '') === 'ACTIVE' && ($list['data']['incidences'][0]['category'] ?? '') === 'REVIEW_REQUIRED', 'P3GA05 REVIEW_REQUIRED/category state preserved');

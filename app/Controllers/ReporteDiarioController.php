@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
+use App\Services\DropdownYearMesService;
 use App\Core\Breadcrumb;
 use App\Models\Sasisopa\ReporteCreMes;
 use App\Models\Sasisopa\ReporteCreProducto;
@@ -28,10 +29,12 @@ class ReporteDiarioController extends BaseController
     {
 
         $title = 'REPORTE ESTADÍSTICO DE LA CRE';
+        $yearActual = (int)date('Y');
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add($title, '');
+        Breadcrumb::add($this->dropdownYearReporteDiario($yearActual), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -47,6 +50,7 @@ class ReporteDiarioController extends BaseController
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $estacionId,
+            'year' => $yearActual,
             'moduleStationKey' => 'sasisopa',
             'links' => [],
             'scripts' => [
@@ -58,6 +62,28 @@ class ReporteDiarioController extends BaseController
         ];
 
         View::render('reportediario/index', $data, 'sasisopa');
+    }
+
+    private function dropdownYearReporteDiario(int $yearActual): string
+    {
+        $html = '
+            <a class="dropdown-toggle breadcrumb-item active pointer" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="ti ti-calendar"></i>
+                <span class="ms-1" id="reporte-diario-year-label">' . $yearActual . '</span>
+            </a>
+            <ul class="dropdown-menu animated rubberBand">';
+
+        for ($year = $yearActual; $year >= 2019; $year--) {
+            $html .= '
+                <li>
+                    <a class="dropdown-item pointer" href="#" data-reporte-diario-year="' . $year . '">
+                        <i class="ti ti-calendar"></i>
+                        <span class="ms-1">' . $year . '</span>
+                    </a>
+                </li>';
+        }
+
+        return $html . "\n</ul>";
     }
 
     public function crearMesesReporteCre(int $idEstacion): void
@@ -140,12 +166,19 @@ class ReporteDiarioController extends BaseController
     public function reporteMes(int $mes, int $year)
     {
 
+        $validado = DropdownYearMesService::validarYearMes($year, $mes);
+        $mes = $validado['idMes'];
+        $year = $validado['idYear'];
+        $yearMesTemplate = '/sasisopa/reporte-diario/{mes}/{year}';
+
         $title = 'REPORTE DIARIO ' . strtoupper(nombremes($mes)) . ' ' . $year;
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
         Breadcrumb::add('REPORTE ESTADÍSTICO DE LA CRE', '/sasisopa/reporte-diario');
         Breadcrumb::add($title, '');
+        Breadcrumb::add(DropdownYearMesService::dropdownMes($year, $mes, $yearMesTemplate), '');
+        Breadcrumb::add(DropdownYearMesService::dropdownYearManual($year, $mes, 2019, $yearMesTemplate), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
@@ -158,6 +191,7 @@ class ReporteDiarioController extends BaseController
             'moduleStationKey' => 'sasisopa',
             'mes' => $mes,
             'year' => $year,
+            'yearMesTemplate' => $yearMesTemplate,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
@@ -1702,6 +1736,20 @@ table {
 
         try {
 
+            $fechaDia = date('Y-m-d', $fecha);
+            $reporteValido = ReporteCreMes::where('id_estacion', $this->estacionModulo())
+                ->whereKey($idReporte)
+                ->whereHas('productos', function ($query) use ($fechaDia) {
+                    $query->whereDate('fecha', $fechaDia);
+                })
+                ->exists();
+
+            if (!$reporteValido) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'No se encontró el reporte para esa fecha.']);
+                return;
+            }
+
             $mensajes = ReporteCreMensaje::with('usuario:id,nombre')
                 ->where('id_reporte', $idReporte)
                 ->where('id_fecha', $fecha)
@@ -1751,7 +1799,7 @@ table {
 
             echo json_encode([
                 'success' => false,
-                'message' => $e
+                'message' => 'No fue posible cargar los comentarios.'
             ]);
         }
     }
@@ -1798,12 +1846,29 @@ table {
             if (
                 empty($idReporte) ||
                 empty($fecha) ||
+                !ctype_digit((string)$fecha) ||
                 $mensaje === ''
             ) {
 
                 echo json_encode([
                     'success' => false,
                     'message' => 'Completa la información.'
+                ]);
+                return;
+            }
+
+            $fechaDia = date('Y-m-d', (int)$fecha);
+            $reporteValido = ReporteCreMes::where('id_estacion', $this->estacionModulo())
+                ->whereKey((int)$idReporte)
+                ->whereHas('productos', function ($query) use ($fechaDia) {
+                    $query->whereDate('fecha', $fechaDia);
+                })
+                ->exists();
+
+            if (!$reporteValido) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No se encontró el reporte para esa fecha.'
                 ]);
                 return;
             }

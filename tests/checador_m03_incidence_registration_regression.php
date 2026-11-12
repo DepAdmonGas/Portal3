@@ -191,10 +191,16 @@ $createButtonPattern = preg_match('/<button\s+type="button"[^>]*data-bs-target="
 $createButtonHasHref = preg_match('/<button\s+type="button"[^>]*data-bs-target="#checador-create-incidence-modal"[^>]*href=/s', $view) === 1;
 $createFormPattern = preg_match('/<form\s+method="post"\s+action="\/departamento-operativo\/recursos-humanos\/checador\/incidencias\/crear"[^>]*>/s', $view) === 1;
 $getCreateRoutePattern = preg_match('/\$r->addRoute\(\s*[\'\"]GET[\'\"]\s*,\s*[\'\"]\/departamento-operativo\/recursos-humanos\/checador\/incidencias\/crear[\'\"]/', $routes) === 1;
+$incidenceReadStart = strpos($controller, 'private static function readIncidenceWorkspace(');
+$incidenceReadEnd = $incidenceReadStart === false ? false : strpos($controller, 'private static function isSharedIncidenceReadFailure(', $incidenceReadStart);
+$incidenceReadMethod = $incidenceReadStart !== false && $incidenceReadEnd !== false
+    ? substr($controller, $incidenceReadStart, $incidenceReadEnd - $incidenceReadStart)
+    : '';
 $assert(str_contains($routes, "'/departamento-operativo/recursos-humanos/checador/incidencias'")
-    && str_contains($controller, "in_array(\$workspace, ['journeys', 'adjustments'], true)")
     && str_contains($controller, "readIncidenceWorkspace(")
-    && str_contains($controller, "->readIncidences("),
+    && str_contains($incidenceReadMethod, '->readApplicableIncidences(')
+    && !str_contains($incidenceReadMethod, 'readDailyPunchSnapshot')
+    && !str_contains($incidenceReadMethod, 'evaluateJourney('),
     'direct incidence route and no-snapshot read path are wired');
 $assert(is_int($buttonPosition) && is_int($loopPosition) && $buttonPosition < $loopPosition
     && is_int($modalPosition) && $modalPosition > $loopPosition,
@@ -382,13 +388,13 @@ $assert($tableActionCss !== ''
     && array_reduce($fullLayouts, static fn(bool $all, string $layout): bool => $all
         && str_contains(file_get_contents($root . '/app/Views/layouts/' . $layout) ?: '', 'css/table-actions.css?v=20261028-1'), true),
     'shared action-button variants are loaded from all full Portal3 layouts without changing default buttons');
-$assert(str_contains($journeyView, 'btn-table-action--secondary')
-    && str_contains($scheduleWeekView, 'btn-table-action--secondary')
-    && str_contains($temporaryAccessView, 'btn-table-action--danger')
-    && str_contains($reportScript, 'btn-table-action--primary')
+$assert(str_contains($journeyView, 'data-bs-toggle="modal"')
+    && str_contains($scheduleWeekView, 'data-habitual-assignment-read-url=')
+    && str_contains($temporaryAccessView, 'method="post"')
+    && str_contains($temporaryAccessView, 'name="_csrf_token"')
     && str_contains($reportScript, 'data-checador-detail')
     && str_contains($reportScript, "\$tableElement.on('click'"),
-    'journey, temporary-access and report table actions opt into the shared standard while retaining their existing handlers');
+    'journey, temporary-access and report table actions retain their approved controls and handlers');
 $assert(str_contains($attendanceView, 'data-bs-toggle="dropdown"')
     && str_contains($attendanceView, 'dropdown-item')
     && !str_contains($attendanceView, 'btn-table-action'),
@@ -402,7 +408,8 @@ $assert(str_contains($controller, '$localQaIncidenceWrite')
     && str_contains($controller, "(int) (\$activeActor->id_puesto ?? 0) === 6")
     && str_contains($controller, "source_fixture_version")
     && str_contains($controller, "summary_reason'] ?? '') === \$reason")
-    && str_contains($controller, 'if (!$realApiPostOperationsEnabled)')
+    && str_contains($controller, '$localQaWriteEnvironmentAvailable = !$apiIncidencePostOperationsEnabled')
+    && str_contains($controller, 'if ($fixtureWorkerEligible && $realApiPostOperationsEnabled)')
     && str_contains($controller, 'readBack(')
     && str_contains($controller, 'authorizeIncidenceCreate($workplaceId)'),
     'QA creation requires Encargado, explicit isolated storage, the historical-roster exception and exact provenance readback');

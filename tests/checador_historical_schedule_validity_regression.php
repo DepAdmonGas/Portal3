@@ -13,6 +13,8 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
 
+$scheduleHistoryScript = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js') ?: '';
+
 $_ENV['APP_ENV'] = 'testing';
 $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
 putenv('APP_ENV=testing');
@@ -163,11 +165,13 @@ $navigationMethod = $navigationMethodStart === false
     : substr($controller, $navigationMethodStart, ($navigationMethodEnd ?: strlen($controller)) - $navigationMethodStart);
 $assert(str_contains($navigationMethod, "'label' => 'Horarios y turnos'")
     && str_contains($navigationMethod, "'href' => \$base . '/horarios-turnos'")
-    && str_contains($navigationMethod, "'available' => \$scheduleRead")
+    && str_contains($navigationMethod, "'available' => \$m04TemplateRead")
     && str_contains($mainView, '$moduleNavigation'), 'V8C20 dynamic Checador navigation exposes Horarios y turnos behind the schedule-read permission');
 $assert(str_contains($historyMethod, 'historyItems') && str_contains($historyMethod, '$historyItems')
     && str_contains($historyMethod, 'historyError') && str_contains($historyMethod, '$historyError')
     && str_contains($historyMethod, 'getShiftAssignments'), 'V8C21 controller continues to retain independently queried history and resolver errors');
+$assert(str_contains($mainView, 'data-checador-module-card') && str_contains($mainView, '$href')
+    && str_contains($controller, "'href' => \$base . '/horarios-turnos'"), 'V8C20 main Checador directory links to the dedicated Horarios y turnos route');
 
 $renderData = [
     'selectedWorkplaceId' => 8,
@@ -235,13 +239,17 @@ try {
 $visibleRenderedText = html_entity_decode(strip_tags($rendered), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 $assert($renderError === null
     && str_contains($visibleRenderedText, '22:00')
-    && str_contains($visibleRenderedText, '06:00 (+1 día)')
+    && str_contains($rendered, 'data-m04-time24="22:00" data-m04-day-offset="0"')
+    && str_contains($rendered, 'data-m04-time24="06:00" data-m04-day-offset="1"')
+    && str_contains($scheduleHistoryScript, 'function formatVisibleTime(timeValue, dayOffset = 0)')
+    && str_contains($scheduleHistoryScript, 'offset > 0 ? ` (+${offset} día)` :')
+    && str_contains($scheduleHistoryScript, 'formatTableTimes(document.getElementById(\'m04-template-table\'))')
     && str_contains($visibleRenderedText, 'ENCARGADO 3')
     && str_contains($rendered, 'data-template-key="LEGACY_IL1_220000_060000"')
     && !str_contains($visibleRenderedText, 'LEGACY_IL1_220000_060000')
     && !str_contains($visibleRenderedText, 'Legacy Interlomas')
     && !str_contains($rendered, 'Historial de asignaciones')
-    && !str_contains($rendered, 'Consultar vigencia'), 'V8C22 catalog view presents a clean overnight row and omits historical consultation UI');
+    && !str_contains($rendered, 'Consultar vigencia'), 'V8C22 catalog preserves the overnight offset for the browser formatter and omits historical consultation UI');
 
 echo "RESULTS: {$passes} PASS / {$fails} FAIL\n";
 exit($fails === 0 ? 0 : 1);

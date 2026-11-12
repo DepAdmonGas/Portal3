@@ -11,8 +11,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
     </div>
 
 <?php else: ?>
-
-    <div class="text-end mb-3">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                    
         <?= 
             !empty($permisos['crear']) ? 
             '<button type="button" class="btn bg-primary-subtle text-primary" @click="abrirModalAgregar()">
@@ -20,7 +21,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
             </button>' 
             : '' 
             ?>     
-    </div>
+  
+                    </div>
+                  </div>
 
     <div class="datatables">
     <div class="table-responsive pb-1 overflow-x-auto overflow-y-hidden">
@@ -80,7 +83,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 <div
     class="modal fade"
     id="modalAgregar"
-    tabindex="-1">
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
     <div
         class="modal-dialog modal-xl modal-dialog-centered">
@@ -198,16 +203,18 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
             </div>
 
             <div class="modal-footer">
-
-            <button
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                          <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 <i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
-
-                <button
+                    </div>
+                      <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                         <button
                     type="button"
                     class="btn btn-success"
                     @click="guardarAuditoria()">
@@ -215,6 +222,8 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
                     Guardar
 
                 </button>
+                    </div>
+                  </div>
 
             </div>
 
@@ -229,7 +238,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 <div
     class="modal fade"
     id="modal024"
-    tabindex="-1">
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
     <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -273,8 +284,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
             </div>
 
             <div class="modal-footer">
-
-             <button
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 <i class="ti ti-x"></i>
@@ -282,7 +294,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 
                 </button>
 
-                <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                     type="button"
                     class="btn btn-success"
                     @click="guardar024()">
@@ -290,6 +304,8 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
                     Guardar
 
                 </button>
+                    </div>
+                  </div>
 
             </div>
 
@@ -304,7 +320,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 <div
     class="modal fade"
     id="modal025"
-    tabindex="-1">
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
     <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -349,15 +367,18 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 
             <div class="modal-footer">
 
-             <button
+            <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 <i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
-
-                <button
+                    </div>
+                       <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                     type="button"
                     class="btn btn-success"
                     @click="guardar025()">
@@ -365,6 +386,12 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
                     Guardar
 
                 </button>
+                    </div>
+                  </div>
+
+             
+
+               
 
             </div>
 
@@ -376,7 +403,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 
 <!-- Modal Asea -->
 
-<div class="modal fade" id="modalAsea" tabindex="-1">
+<div class="modal fade" id="modalAsea" tabindex="-1"
+data-bs-backdrop="static"
+    data-bs-keyboard="false">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
@@ -403,13 +432,16 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
         <textarea class="form-control mb-3"
         x-model="comentarioAsea"></textarea>
 
-        <div class="text-end">
-            <button class="btn btn-success"
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                        <button class="btn btn-success"
                     @click="guardarAsea">
                     <i class="ti ti-check"></i>
                 Guardar
             </button>
-        </div>
+                    </div>
+                  </div>
+
 <div class="table-responsive mt-3">
         <table class="table table-bordered table-striped">
             <thead>
@@ -446,13 +478,19 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 </div>
       </div>
       <div class="modal-footer">
-              <button
+        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                         <button
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
 <i class="ti ti-x"></i>
                     Cancelar
 
                 </button>
+                    </div>
+                  </div>
+
+           
       </div>
     </div>
   </div>

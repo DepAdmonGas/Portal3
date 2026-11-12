@@ -4,20 +4,18 @@ data-estacion-id="<?= e($estacionId ?? '') ?>"
 x-data="{ ...actions(), ...informesDesempenoEditar(<?= $idReporte ?>)}">
 
 
-<div class="row  mb-3 mt-3">
-    <div class="col-6">
+<div class="row g-0 w-100 ms-auto justify-content-between mt-3 mb-3">
+    <div class="col-12 col-md-6 d-grid">
 <input type="date" class="form-control"
 x-model="fechaReporte"
 @change="actualizarFechaReporte()" />
 </div>
 
 
-<div class="col-6">
-<div class="text-end">
+<div class="col-12 col-md-auto d-grid mt-2 mt-md-0">
     <button class="btn btn-success" @click="finalizar()">
         <i class="ti ti-check"></i>
     Finalizar</button>
-</div>
 </div>
 </div>
 

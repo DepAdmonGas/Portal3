@@ -7,6 +7,7 @@ use App\Core\Breadcrumb;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Services\ModuloService;
+use App\Services\ModuleStationService;
 
 use App\Models\Estacion;
 use App\Models\Sgm\Documento;
@@ -19,7 +20,7 @@ class GestoriaDocumentosSgmController extends BaseController
     public function index(int $idEstacion)
     {
         $estacion = Estacion::find($idEstacion);
-        $title = 'Control documental del SGM' . ' (' . $estacion->nombre . ')';
+        $title = 'Control documental del SGM';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Gestoria', '/gestoria');
@@ -27,12 +28,16 @@ class GestoriaDocumentosSgmController extends BaseController
 
         $permisos = ModuloService::permisosSesion($this->modulo);
 
+        $mostrarSelectorGestoria = !empty(ModuleStationService::getAvailableStations('gestoria'));
+        ModuleStationService::setContext('gestoria', $idEstacion);
+
         $data = [
             'title' => $title,
             'permisos' => $permisos,
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'idEstacion' => $idEstacion,
+            'moduleStationKey' => $mostrarSelectorGestoria ? 'gestoria' : null,
             'links' => [],
             'scripts' => [
                 '/js/vendor.min.js',
@@ -43,6 +48,11 @@ class GestoriaDocumentosSgmController extends BaseController
             ],
             'help' => false
         ];
+
+        if ($mostrarSelectorGestoria) {
+            $data['scripts'][] = '/js/core/module-station-selector.js?v=2.0.0';
+            $data['scripts'][] = '/js/gestoria/station-switcher.js?v=' . (@filemtime(PUBLIC_PATH . '/assets/js/gestoria/station-switcher.js') ?: '2.0.1');
+        }
 
         View::render('gestoria/control-documental-sgm', $data, 'main');
     }

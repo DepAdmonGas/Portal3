@@ -16,19 +16,21 @@
 <div
     x-data="{ ...actions(), ...objetivosForm() }"
 >
- <div class="text-end mb-3 mb-3">
 
-            <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                       <button
                 class="btn btn-success"
                 @click="guardar()"
             >
             <i class="ti ti-check"></i>
                 Actualizar
             </button>
-
-        </div>
+                    </div>
+                  </div>
+  
 <div class="card">
-    <div class="card-body">
+    <div class="card-body p-0">
 
         <div
             x-ref="editor"

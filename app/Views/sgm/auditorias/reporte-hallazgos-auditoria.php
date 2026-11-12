@@ -1,15 +1,20 @@
 <div class="pb-4" x-data="{...actions(), ...reporte(<?= $id ?>)}">
 
-   <div class="text-end">
 
-            <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid  mt-3">
+                        <button
                 class="btn btn-success"
                 @click="window.history.back()">
                 <i class="ti ti-check"></i>
-                Finalizar Reporte
+                Finalizar
             </button>
+                    </div>
+                  </div>
 
-        </div>
+          
+
+       
 
     <div class="mt-4">
         <div class="card">
@@ -205,16 +210,14 @@
         <div class="card">
             <div class="card-header bg-primary">
 
- <div class="row align-items-center">
+ <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
 
-    <div class="col-12 col-md-9">
         <span class="card-title text-white">
             <i class="ti ti-user-question"></i>
             PERSONAL ENTREVISTADO
         </span>
-    </div>
-
-    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+ 
+    <div class="d-grid d-md-block">
         <button
             type="button"
             class="btn bg-success text-white"
@@ -339,18 +342,14 @@
 <div class="card">
     <div class="card-header bg-primary">
            
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-2">
 
-               <div class="row align-items-center">
-
-    <div class="col-md-9">
         <span class="card-title text-white">
             <i class="ti ti-users-group"></i>    
-
 EQUIPO AUDITOR
         </span>
-    </div>
 
-    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+    <div class="d-grid d-md-block">
    <button
                 type="button"
                 class="btn bg-success text-white"
@@ -360,7 +359,6 @@ EQUIPO AUDITOR
             </button>
 
     </div>
-
 </div>
 
     </div>
@@ -452,9 +450,6 @@ EQUIPO AUDITOR
 
     </div>
     <!-- -- EQUIPO AUDITOR -- -->
-
-
-
 
 
 
@@ -612,15 +607,15 @@ EQUIPO AUDITOR
         <div class="card">
             <div class="card-header bg-primary">
  
-            <div class="row align-items-center">
+            <div class="d-flex flex-column flex-md-row aling-items-md-center justify-content-between w-100 gap-2">
 
-    <div class="col-md-9">
+    
         <span class="card-title text-white">
              III. DOCUMENTACIÓN DE LOS HALLAZGOS NO CONFORMES
         </span>
-    </div>
+  
 
-    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+    <div class="d-grid d-md-block">
          <button
                 type="button"
                 class="btn bg-success text-white"
@@ -632,9 +627,7 @@ EQUIPO AUDITOR
     </div>
 
 </div>
-       
 
-    
             </div>
             <div class="card-body p-0">
  <div class="table-responsive">
@@ -753,15 +746,15 @@ EQUIPO AUDITOR
     <div class="bg-white mt-3">
 <div class="card">
     <div class="card-header bg-primary">
-<div class="row align-items-center">
+<div class="d-flex flex-column flex-md-row aling-items-md-center justify-content-between w-100 gap-2">
 
-    <div class="col-md-9">
+ 
         <span class="card-title text-white">
             IV. OPORTUNIDADES DE MEJORA/OBSERVACIONES
         </span>
-    </div>
 
-    <div class="col-12 col-md-3 d-grid text-end mt-3 mt-md-0">
+
+    <div class="d-grid d-md-block">
         <button
             type="button"
             class="btn bg-success text-white"
@@ -1123,7 +1116,9 @@ EQUIPO AUDITOR
         class="modal fade"
         id="modalPersonalEntrevistado"
         tabindex="-1"
-        aria-hidden="true">
+        aria-hidden="true"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false">
 
         <div class="modal-dialog modal-lg">
 
@@ -1198,29 +1193,27 @@ EQUIPO AUDITOR
 
 
                 <div class="modal-footer">
-
-                    <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                         type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
                         Cancelar
-
                     </button>
+                    </div>
 
-
-                    <button
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                         type="button"
                         class="btn btn-success"
                         @click="guardarEntrevistador()">
-
                         <i class="ti ti-check"></i>
-
                         Guardar
-
                     </button>
+                    </div>
+                  </div>
 
                 </div>
 
@@ -1229,6 +1222,8 @@ EQUIPO AUDITOR
         </div>
 
     </div>
+
+
     <!-- Modal Personal Entrevistado -->
 
     <!-- Modal Auditor Equipo -->
@@ -1236,7 +1231,9 @@ EQUIPO AUDITOR
         class="modal fade"
         id="modalEquipoAuditor"
         tabindex="-1"
-        aria-hidden="true">
+        aria-hidden="true"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false">
 
         <div class="modal-dialog modal-lg">
 
@@ -1371,30 +1368,28 @@ EQUIPO AUDITOR
 
 
                 <div class="modal-footer">
-
-                    <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                         type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
                         Cancelar
-
                     </button>
+                    </div>
 
-
-                    <button
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                         type="button"
                         class="btn btn-success"
                         @click="guardarAuditor()">
-
                         <i class="ti ti-check"></i>
-
                         Guardar
-
                     </button>
+                    </div>
 
+                  </div>
                 </div>
 
             </div>
@@ -1409,7 +1404,9 @@ EQUIPO AUDITOR
         class="modal fade"
         id="modalConforme"
         tabindex="-1"
-        aria-hidden="true">
+        aria-hidden="true"
+        data-bs-backboard="static"
+        data-bs-keyboard="false">
 
         <div class="modal-dialog modal-lg">
 
@@ -1497,29 +1494,29 @@ EQUIPO AUDITOR
 
 
                 <div class="modal-footer">
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 
-                    <button
+                      <button
                         type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
                         Cancelar
-
                     </button>
+                    </div>
 
-
-                    <button
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                         type="button"
                         class="btn btn-success"
                         @click="guardarConforme()">
-
                         <i class="ti ti-check"></i>
-
                         Guardar
-
                     </button>
+                    </div>
+
+                  </div>
 
                 </div>
 
@@ -1536,7 +1533,9 @@ EQUIPO AUDITOR
         class="modal fade"
         id="modalMejora"
         tabindex="-1"
-        aria-hidden="true">
+        aria-hidden="true"
+        data-bs-backboard="static"
+        data-bs-keyboard="false">
 
         <div class="modal-dialog modal-lg">
 
@@ -1582,29 +1581,29 @@ EQUIPO AUDITOR
 
 
                 <div class="modal-footer">
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
 
-                    <button
+                      <button
                         type="button"
                         class="btn bg-danger-subtle text-danger"
                         data-bs-dismiss="modal">
-
                         <i class="ti ti-x"></i>
-
                         Cancelar
-
                     </button>
+                    </div>
 
-
-                    <button
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                         type="button"
                         class="btn btn-success"
                         @click="guardarMejora()">
-
                         <i class="ti ti-check"></i>
-
                         Guardar
-
                     </button>
+                    </div>
+                  </div>
+                    
 
                 </div>
 

@@ -119,6 +119,8 @@ $roleHtml = $render('role-comodines.php', [
 $emptyRoleHtml = $render('role-comodines.php', [
     'state' => 'ready',
     'stateMessage' => '',
+    'coverageReadState' => 'ready',
+    'coverageRows' => [],
     'selectedWorkplaceName' => 'Centro de prueba & estación',
     'returnHref' => '/checador?workplace_id=1',
     'roles' => [],
@@ -143,18 +145,24 @@ $assert(str_contains($routes, "'/recursos-humanos/checador/rol-comodines'")
 $assert(str_contains($layout, 'href="/departamento-operativo/recursos-humanos/checador/rol-comodines"')
     && !str_contains($layout, 'href="/departamento-operativo/recursos-humanos/rol-comodines"'),
     'institutional navigation routes Rol de comodines into Checador instead of the legacy standalone UI');
-$assert(str_contains($roleHtml, 'Programaciones registradas')
+$legacyTableStart = strpos($roleHtml, 'id="checador-role-comodines-legacy-table"');
+$legacyTableEnd = $legacyTableStart === false ? false : strpos($roleHtml, '</table>', $legacyTableStart);
+$legacyTableHtml = $legacyTableStart !== false && $legacyTableEnd !== false
+    ? substr($roleHtml, $legacyTableStart, $legacyTableEnd - $legacyTableStart)
+    : '';
+$assert(str_contains($roleHtml, 'Registros históricos (Legacy)')
+    && str_contains($roleHtml, 'no confirman una cobertura autorizada')
+    && str_contains($legacyTableHtml, 'checador-role-comodines-legacy-table')
     && str_contains($roleHtml, 'Finalizado')
-    && str_contains($roleHtml, 'No acreditada')
-    && !str_contains($roleHtml, 'Guardar')
-    && !str_contains($roleHtml, 'Editar')
-    && !str_contains($roleHtml, 'Eliminar')
-    && !str_contains($roleHtml, 'data-coverage-transition=')
-    && !str_contains($roleHtml, 'data-create-url='), 'legacy programming remains read-only and is never presented as authorized coverage');
-$assert(str_contains($emptyRoleHtml, 'No hay programaciones registradas para esta localidad.')
+    && str_contains($legacyTableHtml, 'Cuenta sin vínculo canónico verificado')
+    && !preg_match('/<(?:button|form)\b|data-coverage-transition=|data-create-url=/i', $legacyTableHtml),
+    'legacy programming remains read-only and is never presented as authorized coverage');
+$assert(str_contains($emptyRoleHtml, 'Aún no hay coberturas registradas')
+    && !str_contains($emptyRoleHtml, '<table id="checador-role-comodines-canonical-table"')
+    && !str_contains($emptyRoleHtml, '<tr data-worker-id=')
     && !str_contains($emptyRoleHtml, 'encabezados sin asignaciones')
-    && !str_contains($emptyRoleHtml, 'Sin periodo válido')
-    && !str_contains($emptyRoleHtml, 'Pendiente'), 'empty station view uses concise wording and does not create placeholder records');
+    && !str_contains($emptyRoleHtml, 'Sin periodo válido'),
+    'empty station view uses the canonical empty state and does not create placeholder coverage records');
 $assert(!str_contains($mainHtml, '<h1')
     && substr_count($mainHtml, '<h2') === 1
     && !str_contains($mainHtml, 'Estación:')

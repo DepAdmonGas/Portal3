@@ -12,14 +12,18 @@ class TerminalesTpvReporte extends Model
 
     protected $fillable = [
         'id_tpv',
+        'id_usuario',
         'fechacreacion',
         'falla',
         'atiende',
+        'atiende_controlux',
         'no_reporte',
         'dia_reporte',
         'dia_solucion',
         'costo',
+        'vida_util',
         'factura',
+        'cotizacion',
         'serie',
         'modelo',
         'conexion',

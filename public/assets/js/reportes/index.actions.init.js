@@ -3,10 +3,10 @@ function reportesIndex() {
     return {
 
         cargando: false,
-        buscando: false,
         cargandoAutolavado: false,
+        cargandoDiaAutolavado: false,
+        descargandoArchivo: false,
 
-        estaciones: [],
         reportes: [],
 
         reporte: {
@@ -17,54 +17,113 @@ function reportesIndex() {
 
         filtros: {
             idEstacion: 0,
+            idDepartamento: 0,
             year: new Date().getFullYear(),
-            dia: '',
             mes: 0,
-        },
-
-        busqueda: {
-            idEstacion: '',
-            year: '',
-            dia: '',
-            mes: '0',
-        },
-
-        errors: {
-            idEstacion: '',
-            periodo: '',
         },
 
         detalleAutolavado: {
             tipo: '',
             year: null,
-            dia: '',
-            dia_formateado: '',
             meses: [],
             total: 0,
         },
 
-        modalBuscar: null,
         modalAutolavado: null,
+
+        consultaDia: {
+            fecha: '',
+        },
+        resultadoDiaAutolavado: null,
+        fechaHoy: (() => {
+            const fecha = new Date();
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            return `${fecha.getFullYear()}-${mes}-${dia}`;
+        })(),
 
         async init() {
 
-            const modalBuscar =
-                document.getElementById(
-                    'modalBuscarReporte'
-                );
+            const navegacion = performance.getEntriesByType('navigation')[0];
+            const recarga = navegacion?.type === 'reload';
+            let periodoGuardado = null;
+            try {
+                if (recarga) {
+                    periodoGuardado = JSON.parse(sessionStorage.getItem('reportes.periodo') || 'null');
+                } else {
+                    sessionStorage.removeItem('reportes.periodo');
+                }
+            } catch (_) {
+                periodoGuardado = null;
+            }
+
+            if (
+                periodoGuardado
+                && Number(periodoGuardado.year) >= 2021
+                && Number(periodoGuardado.year) <= new Date().getFullYear()
+                && Number(periodoGuardado.mes) >= 0
+                && Number(periodoGuardado.mes) <= 12
+            ) {
+                this.filtros.year = Number(periodoGuardado.year);
+                this.filtros.mes = Number(periodoGuardado.mes);
+            }
+
+            this.sincronizarBreadcrumb();
+
+            document.addEventListener('click', (event) => {
+                const enlace = event.target.closest('a[href], [data-action="logout"]');
+                if (!enlace) return;
+
+                if (enlace.matches('[data-action="logout"]')) {
+                    sessionStorage.removeItem('reportes.periodo');
+                    return;
+                }
+
+                const href = enlace.getAttribute('href');
+                if (!href || href === '#') return;
+
+                try {
+                    const destino = new URL(href, window.location.href);
+                    if (
+                        destino.origin !== window.location.origin
+                        || !/^\/reportes(?:\/|$)/.test(destino.pathname)
+                    ) {
+                        sessionStorage.removeItem('reportes.periodo');
+                    }
+                } catch (_) {
+                    sessionStorage.removeItem('reportes.periodo');
+                }
+            }, true);
+
+            window.addEventListener('pageshow', (event) => {
+                if (!event.persisted) return;
+
+                sessionStorage.removeItem('reportes.periodo');
+                this.filtros.year = new Date().getFullYear();
+                this.filtros.mes = 0;
+                this.sincronizarBreadcrumb();
+                this.cargarReportes();
+            });
+
+            document.addEventListener('click', (event) => {
+                const opcion = event.target.closest('[data-reportes-year], [data-reportes-month]');
+                if (!opcion || !document.getElementById('container')) return;
+                event.preventDefault();
+
+                const detalle = {};
+                if (opcion.dataset.reportesYear !== undefined) {
+                    detalle.year = Number(opcion.dataset.reportesYear);
+                }
+                if (opcion.dataset.reportesMonth !== undefined) {
+                    detalle.mes = Number(opcion.dataset.reportesMonth);
+                }
+                window.dispatchEvent(new CustomEvent('reportes-periodo', { detail: detalle }));
+            });
 
             const modalAutolavado =
                 document.getElementById(
                     'modalAutolavado'
                 );
-
-            if (modalBuscar) {
-
-                this.modalBuscar =
-                    new bootstrap.Modal(
-                        modalBuscar
-                    );
-            }
 
             if (modalAutolavado) {
 
@@ -74,71 +133,39 @@ function reportesIndex() {
                     );
             }
 
-            await Promise.all([
-                this.cargarEstaciones(),
-                this.cargarReportes()
-            ]);
+            const selector = typeof ModuleStationSelector !== 'undefined'
+                ? ModuleStationSelector.init('reportes', {
+                    customReload: async (instance) => {
+                        const context = instance.getValue();
+                        this.filtros.idEstacion = Number(context.id_estacion) || 0;
+                        this.filtros.idDepartamento = Number(context.id_depto) || 0;
+                        await this.cargarReportes();
+                    }
+                })
+                : null;
+
+            const context = selector?.getValue();
+            this.filtros.idEstacion = Number(context?.id_estacion) || 0;
+            this.filtros.idDepartamento = Number(context?.id_depto) || 0;
+            await this.cargarReportes();
         },
 
-        get years() {
-
-            const actual =
-                new Date().getFullYear();
-
-            const years = [];
-
-            for (
-                let year = actual;
-                year >= 2021;
-                year--
-            ) {
-
-                years.push(year);
+        get etiquetaReporte() {
+            const year = this.filtros.year || new Date().getFullYear();
+            const mes = Number(this.filtros.mes);
+            if (mes > 0) {
+                return `Reporte Mensual (${this.nombresMeses[mes - 1]} ${year})`;
             }
-
-            return years;
+            return `Reporte Anual ${year}`;
         },
 
-
-        get mostrarDia() {
-
-            return Number(
-                this.busqueda.idEstacion
-            ) === 9;
-        },
-
-
-        get yearDeshabilitado() {
-
-            return (
-                this.mostrarDia
-                && Boolean(
-                    this.busqueda.dia
-                )
-            );
-        },
-
-
-        get diaDeshabilitado() {
-
-            return (
-                !this.mostrarDia
-                || Boolean(
-                    this.busqueda.year
-                )
-            );
-        },
-
-
-        get tituloReporte() {
-
-            if (!this.reporte.nombre) {
-                return '';
-            }
-
-            return (
-                this.reporte.nombre
-            );
+        columnaAccion(total) {
+            const cantidad = Math.max(1, Number(total) || 1);
+            if (cantidad === 1) return 'col-12';
+            if (cantidad === 2) return 'col-6';
+            if (cantidad === 3) return 'col-4';
+            if (cantidad === 4) return 'col-3';
+            return 'col';
         },
 
 
@@ -155,62 +182,56 @@ function reportesIndex() {
                 );
             }
 
-            if (
-                this.detalleAutolavado.tipo
-                === 'diario'
-            ) {
-
-                return (
-                    'Reporte diario '
-                    + (
-                        this.detalleAutolavado
-                            .dia_formateado
-                        ?? ''
-                    )
-                );
-            }
-
             return '';
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Estaciones
-        |--------------------------------------------------------------------------
-        */
-
-        async cargarEstaciones() {
+        async cambiarPeriodo(periodo = {}) {
+            if (periodo.year !== undefined) {
+                this.filtros.year = String(periodo.year);
+            }
+            if (periodo.mes !== undefined) {
+                this.filtros.mes = Number(periodo.mes) || 0;
+            }
+            if (
+                Number(this.filtros.year) === new Date().getFullYear()
+                && Number(this.filtros.mes) > new Date().getMonth() + 1
+            ) {
+                this.filtros.mes = 0;
+            }
 
             try {
+                sessionStorage.setItem('reportes.periodo', JSON.stringify({
+                    year: Number(this.filtros.year),
+                    mes: Number(this.filtros.mes),
+                }));
+            } catch (_) {}
 
-                const response =
-                    await axios.get(
-                        '/reportes/estaciones'
-                    );
+            this.sincronizarBreadcrumb();
+            await this.cargarReportes();
+        },
 
-                if (
-                    response.data?.success
-                ) {
+        get nombresMeses() {
+            return ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        },
 
-                    this.estaciones =
-                        response.data?.data
-                        ?? [];
+        sincronizarBreadcrumb() {
+            const mesLabel = document.getElementById('reportes-mes-label');
+            const yearLabel = document.getElementById('reportes-year-label');
+            if (mesLabel) mesLabel.textContent = this.filtros.mes > 0 ? this.nombresMeses[this.filtros.mes - 1] : 'Todo el año';
+            if (yearLabel) yearLabel.textContent = String(this.filtros.year || new Date().getFullYear());
 
-                    return;
-                }
+            const yearActual = new Date().getFullYear();
+            document.querySelectorAll('[data-reportes-month-option]').forEach((opcion) => {
+                const mes = Number(opcion.dataset.reportesMonthOption);
+                opcion.classList.toggle('d-none', Number(this.filtros.year) === yearActual && mes > new Date().getMonth() + 1);
+            });
+            this.actualizarTituloPagina();
+        },
 
-                this.estaciones = [];
-
-            } catch (error) {
-
-                console.error(
-                    'Error al cargar estaciones:',
-                    error
-                );
-
-                this.estaciones = [];
-            }
+        actualizarTituloPagina() {
+            const titulo = document.getElementById('reportes-page-title');
+            if (titulo) titulo.textContent = this.etiquetaReporte;
         },
 
 
@@ -235,13 +256,12 @@ function reportesIndex() {
                                     this.filtros
                                         .idEstacion,
 
+                                idDepartamento:
+                                    this.filtros.idDepartamento,
+
                                 year:
                                     this.filtros
                                         .year,
-
-                                dia:
-                                    this.filtros
-                                        .dia,
 
                                 mes:
                                     this.filtros
@@ -309,199 +329,7 @@ function reportesIndex() {
         |--------------------------------------------------------------------------
         */
 
-        abrirBuscador() {
-
-            this.limpiarBuscador();
-
-            this.modalBuscar?.show();
-        },
-
-
-        limpiarBuscador() {
-
-            this.busqueda = {
-                idEstacion: '',
-                year: '',
-                dia: '',
-                mes: '0',
-            };
-
-            this.errors = {
-                idEstacion: '',
-                periodo: '',
-            };
-        },
-
-
-        cambioEstacion() {
-
-            this.errors.idEstacion = '';
-            this.errors.periodo = '';
-
-            if (!this.mostrarDia) {
-
-                this.busqueda.dia = '';
-            }
-        },
-
-
-        cambioYear() {
-
-            this.errors.periodo = '';
-
-            if (
-                this.busqueda.year
-                && this.mostrarDia
-            ) {
-
-                this.busqueda.dia = '';
-            }
-        },
-
-
-        cambioDia() {
-
-            this.errors.periodo = '';
-
-            if (this.busqueda.dia) {
-
-                this.busqueda.year = '';
-                this.busqueda.mes = '0';
-            }
-        },
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Buscar
-        |--------------------------------------------------------------------------
-        */
-
-        async buscar() {
-
-            if (this.buscando) {
-                return;
-            }
-
-            this.errors.idEstacion = '';
-            this.errors.periodo = '';
-
-            let valido = true;
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Estación
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                this.busqueda.idEstacion
-                === ''
-            ) {
-
-                this.errors.idEstacion =
-                    'Selecciona una estación.';
-
-                valido = false;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Periodo
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !this.busqueda.year
-                && !this.busqueda.dia
-            ) {
-
-                this.errors.periodo =
-                    'Selecciona un año'
-                    + (
-                        this.mostrarDia
-                            ? ' o un día.'
-                            : '.'
-                    );
-
-                valido = false;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Día solo estación 9
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                this.busqueda.dia
-                && !this.mostrarDia
-            ) {
-
-                this.errors.periodo =
-                    'La búsqueda diaria solo está disponible para esta estación específica.';
-
-                valido = false;
-            }
-
-
-            if (!valido) {
-                return;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Buscar
-            |--------------------------------------------------------------------------
-            */
-
-            try {
-
-                this.buscando = true;
-
-                this.filtros = {
-
-                    idEstacion:
-                        Number(
-                            this.busqueda
-                                .idEstacion
-                        ),
-
-                    year:
-                        this.busqueda.year,
-
-                    dia:
-                        this.busqueda.dia,
-
-                    mes:
-                        Number(
-                            this.busqueda.mes
-                            || 0
-                        ),
-                };
-
-                await this.cargarReportes();
-
-                this.modalBuscar?.hide();
-
-            } finally {
-
-                this.buscando = false;
-            }
-        },
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Acciones
-        |--------------------------------------------------------------------------
-        */
-
-        ejecutarAccion(
+        async ejecutarAccion(
             reporte,
             accion
         ) {
@@ -519,9 +347,85 @@ function reportesIndex() {
             }
 
             if (accion.url) {
+                await this.descargarArchivo(reporte, accion);
+            }
+        },
 
-                window.location.href =
-                    accion.url;
+        async descargarArchivo(reporte, accion) {
+            if (this.descargandoArchivo) return;
+
+            const inicioDescarga = performance.now();
+            this.descargandoArchivo = true;
+            if (window.loader) window.loader.show();
+            window.addEventListener('load', () => {
+                if (this.descargandoArchivo && window.loader) window.loader.show();
+            }, { once: true });
+
+            try {
+                // Permite que el navegador pinte el GIF antes de iniciar la petición.
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+                const response = await fetch(accion.url, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                });
+                const tipoContenido = (response.headers.get('content-type') || '').toLowerCase();
+
+                if (!response.ok || tipoContenido.includes('application/json') || tipoContenido.startsWith('text/')) {
+                    const cuerpo = await response.text();
+                    let mensaje = cuerpo;
+                    try {
+                        mensaje = JSON.parse(cuerpo).message || cuerpo;
+                    } catch (_) {}
+                    throw new Error(mensaje || 'No fue posible generar el archivo.');
+                }
+
+                const archivo = await response.blob();
+                if (!archivo.size) throw new Error('El archivo descargado está vacío.');
+
+                const disposition = response.headers.get('content-disposition') || '';
+                const nombreUtf8 = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+                const nombreNormal = disposition.match(/filename="?([^";]+)"?/i);
+                let nombreArchivo = '';
+
+                if (nombreUtf8) {
+                    try {
+                        nombreArchivo = decodeURIComponent(nombreUtf8[1].trim());
+                    } catch (_) {
+                        nombreArchivo = nombreUtf8[1].trim();
+                    }
+                } else if (nombreNormal) {
+                    nombreArchivo = nombreNormal[1].trim();
+                }
+
+                if (!nombreArchivo) {
+                    const extension = tipoContenido.includes('pdf') || accion.nombre?.toLowerCase() === 'pdf'
+                        ? 'pdf'
+                        : 'xlsx';
+                    nombreArchivo = `${reporte.nombre || 'Reporte'}.${extension}`;
+                }
+
+                const urlArchivo = URL.createObjectURL(archivo);
+                const enlace = document.createElement('a');
+                enlace.href = urlArchivo;
+                enlace.download = nombreArchivo;
+                document.body.appendChild(enlace);
+                enlace.click();
+                enlace.remove();
+                window.setTimeout(() => URL.revokeObjectURL(urlArchivo), 1000);
+            } catch (error) {
+                this.notificar(
+                    'error',
+                    error.message || 'No fue posible descargar el archivo.'
+                );
+            } finally {
+                const tiempoMinimo = 450;
+                const esperaRestante = tiempoMinimo - (performance.now() - inicioDescarga);
+                if (esperaRestante > 0) {
+                    await new Promise(resolve => window.setTimeout(resolve, esperaRestante));
+                }
+                if (window.loader) window.loader.hide();
+                this.descargandoArchivo = false;
             }
         },
 
@@ -534,11 +438,13 @@ function reportesIndex() {
 
         async verDetalleAutolavado() {
 
+            this.consultaDia.fecha = '';
+            this.resultadoDiaAutolavado = null;
+            this.cargandoDiaAutolavado = false;
+
             this.detalleAutolavado = {
                 tipo: '',
                 year: null,
-                dia: '',
-                dia_formateado: '',
                 meses: [],
                 total: 0,
             };
@@ -551,92 +457,16 @@ function reportesIndex() {
                     true;
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | Anual
-                |--------------------------------------------------------------------------
-                */
-
-                if (
-                    this.reporte.tipo
-                    === 'anual'
-                ) {
-
-                    const response =
-                        await axios.get(
-                            '/reportes/autolavado/anual',
-                            {
-                                params: {
-                                    idEstacion:
-                                        this.filtros
-                                            .idEstacion,
-
-                                    year:
-                                        this.filtros
-                                            .year,
-                                }
-                            }
-                        );
-
-                    if (
-                        !response.data?.success
-                    ) {
-
-                        throw new Error(
-                            response.data?.message
-                            ?? 'No fue posible cargar el detalle.'
-                        );
-                    }
-
-                    const data =
-                        response.data?.data
-                        ?? {};
-
-                    this.detalleAutolavado = {
-
-                        tipo: 'anual',
-
-                        year:
-                            data.year
-                            ?? null,
-
-                        dia: '',
-
-                        dia_formateado: '',
-
-                        meses:
-                            data.meses
-                            ?? [],
-
-                        total:
-                            Number(
-                                data.total
-                                ?? 0
-                            ),
-                    };
-
-                    return;
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Diario
-                |--------------------------------------------------------------------------
-                */
-
                 const response =
                     await axios.get(
-                        '/reportes/autolavado/diario',
+                        '/reportes/autolavado/anual',
                         {
                             params: {
                                 idEstacion:
-                                    this.filtros
-                                        .idEstacion,
+                                    this.filtros.idEstacion,
 
-                                dia:
-                                    this.filtros
-                                        .dia,
+                                year:
+                                    this.filtros.year,
                             }
                         }
                     );
@@ -657,25 +487,15 @@ function reportesIndex() {
 
                 this.detalleAutolavado = {
 
-                    tipo: 'diario',
+                    tipo: 'anual',
 
-                    year: null,
+                    year:
+                        data.year
+                        ?? null,
 
-                    dia:
-                        data.dia
-                        ?? '',
+                    meses: data.meses ?? [],
 
-                    dia_formateado:
-                        data.dia_formateado
-                        ?? '',
-
-                    meses: [],
-
-                    total:
-                        Number(
-                            data.total
-                            ?? 0
-                        ),
+                    total: Number(data.total ?? 0),
                 };
 
             } catch (error) {
@@ -698,6 +518,34 @@ function reportesIndex() {
 
                 this.cargandoAutolavado =
                     false;
+            }
+        },
+
+        async buscarDiaAutolavado() {
+            if (!this.consultaDia.fecha || this.cargandoDiaAutolavado) return;
+
+            this.cargandoDiaAutolavado = true;
+            this.resultadoDiaAutolavado = null;
+
+            try {
+                const response = await axios.get('/reportes/autolavado/diario', {
+                    params: { dia: this.consultaDia.fecha },
+                });
+
+                if (!response.data?.success) {
+                    throw new Error(response.data?.message ?? 'No fue posible cargar el concentrado diario.');
+                }
+
+                this.resultadoDiaAutolavado = response.data?.data ?? null;
+            } catch (error) {
+                this.notificar(
+                    'error',
+                    error.response?.data?.message
+                        ?? error.message
+                        ?? 'No fue posible cargar el concentrado diario de autolavado.'
+                );
+            } finally {
+                this.cargandoDiaAutolavado = false;
             }
         },
 

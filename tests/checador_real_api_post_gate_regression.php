@@ -182,13 +182,18 @@ try {
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php') ?: '';
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php') ?: '';
-$assert(strpos($serviceSource, "if (strtoupper(\$method) === 'POST' && !self::realApiPostAllowed(\$method, \$path))") !== false
+$assert(str_contains($serviceSource, 'private static function realApiPostAllowed(')
+    && str_contains($serviceSource, 'if (strtoupper($method) === \'POST\' && !self::realApiPostAllowed($method, $path))')
     && str_contains($serviceSource, "'/api/v2/shift-templates'")
     && str_contains($serviceSource, "#\\A/api/v2/shift-templates/[A-Za-z0-9_-]{1,64}/versions\\z#D")
     && str_contains($serviceSource, '/api/v2/shift-assignments')
     && str_contains($controllerSource, "'api_post_disabled' => ['unavailable', 'Las operaciones de consulta que requieren POST están deshabilitadas")
     && !str_contains($viewSource, 'api_post_disabled'),
     'POST gate remains centralized and localized; the read-only module directory does not expose operation-gate state');
+$attendanceViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php') ?: '';
+$assert(str_contains($controllerSource, "'api_post_disabled' =>")
+    && str_contains($attendanceViewSource, 'Las operaciones POST reales de Checador están deshabilitadas'),
+    'POST gate is enforced centrally, reported in Spanish and surfaced in the UI');
 $assert(str_contains($controllerSource, '$apiPostOperationsEnabled = $demoMode || $realApiPostOperationsEnabled')
     && str_contains($serviceSource, 'if ($this->demoScenario !== null)')
     && str_contains($serviceSource, '$this->demoResponse($method, $path'),

@@ -122,7 +122,8 @@ $assert(str_contains($viewSource, 'UNSCHEDULED_DAY') && str_contains($viewSource
     && str_contains($viewSource, "'UNSCHEDULED' => 'Sin asignación informada'"), 'P4D13 UNSCHEDULED is rendered distinctly in its Journey workspace');
 $assert(!str_contains($viewSource, "'UNSCHEDULED' => 'Descanso programado'"), 'P4D14 UNSCHEDULED does not become DAY_OFF');
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P4D15 UNSCHEDULED does not become SIN MARCACIÓN');
-$assert(!str_contains($viewSource, 'FALTA'), 'P4D16 Journey view does not turn UNSCHEDULED into FALTA');
+$assert(!preg_match('/(?:journey_status|estado_jornada)\s*[^\n]{0,80}FALTA|FALTA\s*(?:=>|\?)/', $viewSource)
+    && str_contains($viewSource, 'Nunca se activa automáticamente'), 'P4D16 Journey view keeps FALTA non-automatic and does not classify UNSCHEDULED as FALTA');
 $assert(str_contains($viewSource, 'Descanso programado'), 'P4D17 DAY_OFF has distinct wording');
 $notEvaluatedHtml = $renderJourney([], 'not_evaluated', false);
 $assert(str_contains($notEvaluatedHtml, 'La evaluación no se ejecuta al abrir esta pantalla')

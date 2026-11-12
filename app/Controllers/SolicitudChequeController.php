@@ -735,6 +735,13 @@ exit;
 public function firmarPage($idSolicitud)
 {
 $detalle = SolicitudChequeService::getDetalle((int)$idSolicitud);
+
+// Los firmantes designados pueden abrir solicitudes que quedan fuera de
+// su alcance de estación/departamento (por ejemplo, cheques de Gestoría).
+if (!$detalle && SolicitudChequeService::puedeFirmarPendiente((int)$idSolicitud)) {
+$detalle = SolicitudChequeService::getDetalle((int)$idSolicitud, false);
+}
+
 if (!$detalle) {
 http_response_code(404);
 echo 'Solicitud no encontrada';

@@ -84,7 +84,7 @@ return $html;
 DROPDOWN YEAR MANUAL (SIN CONSULTA)
 Inicia desde el 2020 hasta el año actual
 ============================================ */
-public static function dropdownYearManual($idYear, $idMes, $yearInicio = 2020)
+public static function dropdownYearManual($idYear, $idMes, $yearInicio = 2020, $yearMesTemplate = null)
 {
 
 $yearActual = date("Y");
@@ -101,7 +101,7 @@ for ($year = $yearActual; $year >= $yearInicio; $year--) {
 $html .= '
 <li class="pointer">
 
-<a class="dropdown-item pointer" x-on:click.prevent="cambiarYearMes('. $year . ',' . $idMes . ')">
+<a class="dropdown-item pointer" x-on:click.prevent="cambiarYearMes('. $year . ',' . $idMes . ', ' . ($yearMesTemplate ? "'" . htmlspecialchars($yearMesTemplate, ENT_QUOTES, 'UTF-8') . "'" : 'null') . ')" >
 <i class="ti ti-calendar"></i> <span class="ms-1">'. $year .'</span>
 </a>
 
@@ -116,7 +116,7 @@ return $html;
 /* ============================================
 DROPDOWN MES
 ============================================ */
-public static function dropdownMes($idYear, $idMes)
+public static function dropdownMes($idYear, $idMes, $yearMesTemplate = null)
 {
 
 $yearActual = date("Y");
@@ -141,7 +141,7 @@ $clase = "d-none";
 
 $html .= '
 <li class="' . $clase . '">
-<a class="dropdown-item pointer" x-on:click.prevent="cambiarYearMes(' . $idYear . ',' . $i . ')">
+<a class="dropdown-item pointer" x-on:click.prevent="cambiarYearMes(' . $idYear . ',' . $i . ', ' . ($yearMesTemplate ? "'" . htmlspecialchars($yearMesTemplate, ENT_QUOTES, 'UTF-8') . "'" : 'null') . ')" >
 <i class="fa-solid fa-calendar-days"></i>
 <i class="ti ti-calendar-stats"></i></i> <span class="ms-1">'. nombremes($i) .'</span>
 </a>

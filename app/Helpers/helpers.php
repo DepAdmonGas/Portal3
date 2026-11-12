@@ -278,15 +278,20 @@ if (!function_exists('mkdir_safe')) {
 
 // ============================================================
 // TELEGRAM: Obtiene el token del bot según el entorno
-// APP_ENV=dev|demo   → usa TELEGRAM_BOT_TOKEN_DEMO (pruebas locales)
-// APP_ENV=prod       → usa TELEGRAM_BOT_TOKEN    (servidor productivo)
+// APP_ENV=local   → usa TELEGRAM_BOT_TOKEN_LOCAL (bot dedicado de pruebas locales)
+// APP_ENV=dev|demo→ usa TELEGRAM_BOT_TOKEN_DEMO  (pruebas en servidor)
+// APP_ENV=prod    → usa TELEGRAM_BOT_TOKEN        (servidor productivo)
 // ============================================================
 if (!function_exists('telegramBotToken')) {
     function telegramBotToken(): string
     {
         $env = $_ENV['APP_ENV'] ?? 'prod';
 
-        if (in_array($env, ['dev', 'demo', 'local'], true)) {
+        if ($env === 'local') {
+            return $_ENV['TELEGRAM_BOT_TOKEN_LOCAL'] ?? $_ENV['TELEGRAM_BOT_TOKEN_DEMO'] ?? $_ENV['TELEGRAM_BOT_TOKEN'] ?? '';
+        }
+
+        if (in_array($env, ['dev', 'demo'], true)) {
             return $_ENV['TELEGRAM_BOT_TOKEN_DEMO'] ?? $_ENV['TELEGRAM_BOT_TOKEN'] ?? '';
         }
 

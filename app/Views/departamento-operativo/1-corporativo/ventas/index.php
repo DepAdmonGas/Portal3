@@ -12,20 +12,34 @@
     data-es-vobo="<?= $esVoBo ? 'true' : 'false' ?>"
     x-data="ventasComponent()">
 
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex align-items-center mb-4">
-                <div class="ms-auto">
-                    <button type="button" class="btn btn-danger me-2" @click="downloadPdf"><i class="ti ti-file-type-pdf me-1"></i>Descargar PDF</button>
 
-                    <template x-if="!multiestacion && estado == 0">
-                        <button type="button" class="btn btn-success" @click="abrirModalFirma"><i class="ti ti-check me-1"></i> Finalizar</button>
-                    </template>
-                </div>
-            </div>
+<div class="row w-100 g-0 mb-3 mt-3"
+     :class="(!multiestacion && estado == 0)
+        ? 'justify-content-between'
+        : 'justify-content-end'">
+
+    <!-- Descargar PDF -->
+    <div class="col-12 col-md-auto d-grid mb-1">
+        <button type="button" class="btn bg-danger-subtle text-danger" @click="downloadPdf">
+            <i class="ti ti-file-type-pdf me-1"></i> Descargar PDF
+        </button>
+    </div>
+
+    <!-- Finalizar -->
+    <template x-if="!multiestacion && estado == 0">
+        <div class="col-12 col-md-auto d-grid mb-1">
+            <button type="button" class="btn btn-success" @click="abrirModalFirma">
+                <i class="ti ti-check me-1"></i> Finalizar
+            </button>
         </div>
+    </template>
+
+</div>
 
 
+
+
+    <div class="row">
         <div class="col-xl-7 col-lg-7 col-md-12 col-sm-12 mb-3">
             <div class="row">
 
@@ -33,9 +47,9 @@
                     <div class="card">
                         <div class="card-header text-bg-primary">
                             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                <h5 class="mb-0 text-white"><i class="ti ti-report-money me-2"></i>CONCENTRADO DE VENTAS</h5>
+                                <h5 class="mb-0 text-white"><i class="ti ti-report-money me-2"></i>Concentrador de Ventas</h5>
                                 <template x-if="!multiestacion && estado == 0">
-                                    <button type="button" class="btn btn-success" @click="newVenta"><i class="ti ti-plus me-1"></i>Nuevo producto</button>
+                                    <button type="button" class="btn btn-success" @click="newVenta"><i class="ti ti-plus me-1"></i>Nuevo</button>
                                 </template>
                             </div>
                         </div>
@@ -50,7 +64,7 @@
 
                                             <thead>
                                                 <tr>
-                                                    <th class="text-center align-middle">Producto</th>
+                                                    <th class="text-start align-middle">Producto</th>
                                                     <th class="text-center align-middle">Litros</th>
                                                     <th class="text-center align-middle">Jarras</th>
                                                     <th class="text-center align-middle">Total Litros</th>
@@ -122,7 +136,7 @@
                                                     </tr>
                                                 </template>
 
-                                                <tr id="trSubTotales" x-show="ventas_dia.length > 0">
+                                                <tr  id="trSubTotale" x-show="ventas_dia.length > 0">
                                                     <td><strong>A SUB-TOTAL (1+2+3)</strong></td>
                                                     <td class="align-middle text-end"><strong x-text="formatNum(totales_ventas.subTLitros)"></strong></td>
                                                     <td class="align-middle text-end"><strong x-text="formatNum(totales_ventas.subJarras)"></strong></td>
@@ -163,8 +177,8 @@
                                                     </tr>
                                                 </template>
 
-                                                <tr id="trTotales" x-show="ventas_dia_otros.length > 0">
-                                                    <th colspan="5" class="text-end">B TOTAL (A+4+5+6)</th>
+                                                <tr class="table-dark text-white" id="trTotales" x-show="ventas_dia_otros.length > 0">
+                                                    <th colspan="5" class="text-end text-white">B TOTAL (A+4+5+6)</th>
                                                     <td class="align-middle text-end "><strong x-text="'$ ' + formatNum(totales_ventas.totalNeto)"></strong></td>
                                                 </tr>
                                             </tbody>
@@ -183,7 +197,7 @@
                     <div class="card">
                         <div class="card-header text-bg-primary">
                             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                <h5 class="mb-0 text-white"><i class="ti ti-engine me-2"></i>RELACION DE VENTA DE ACEITES Y LUBRICANTES</h5>
+                                <h5 class="mb-0 text-white"><i class="ti ti-engine me-2"></i>Relacion de Ventas de Aceites y Lubricantes</h5>
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -197,7 +211,7 @@
                                                     <th class="align-middle text-center">Concepto</th>
                                                     <th class="align-middle text-center">Cantidad</th>
                                                     <th class="align-middle text-center">Precio Unitario</th>
-                                                    <td class="align-middle text-center">Importe</td>
+                                                    <th class="align-middle text-center">Importe</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -257,9 +271,9 @@
                     <div class="card">
                         <div class="card-header text-bg-primary">
                             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                <h5 class="mb-0 text-white"><i class="ti ti-file me-2"></i>DOCUMENTACIÓN</h5>
+                                <h5 class="mb-0 text-white"><i class="ti ti-file me-2"></i>Documentación</h5>
                                 <template x-if="!multiestacion && estado == 0">
-                                    <button type="button" class="btn btn-success" @click="abrirModalDocumento"><i class="ti ti-plus"></i> Nuevo documento</button>
+                                    <button type="button" class="btn btn-success" @click="abrirModalDocumento"><i class="ti ti-plus"></i> Nuevo</button>
                                 </template>
                             </div>
                         </div>
@@ -271,9 +285,9 @@
                                             <thead>
                                                 <tr>
                                                     <th class="text-center align-middle">Descripción</th>
-                                                    <th class="text-center align-middle" width="40px"><i class="ti ti-download text-secondary fs-6"></i></th>
+                                                    <th class="text-center align-middle" width="48px"><i class="ti ti-download text-primary fs-6"></i></th>
                                                     <template x-if="!multiestacion && estado == 0">
-                                                        <th class="text-center align-middle" width="40px"><i class="ti ti-trash text-danger fs-6"></i></th>
+                                                        <th class="text-center align-middle" width="48px"><i class="ti ti-trash text-danger fs-6"></i></th>
                                                     </template>
                                                 </tr>
                                             </thead>
@@ -287,19 +301,19 @@
                                                 </template>
                                                 <template x-for="d in documentos" :key="d.id">
                                                     <tr>
-                                                        <th class="align-middle" x-text="d.detalle"></th>
+                                                        <td class="text-center align-middle" x-text="d.detalle"></td>
                                                         <td class=" text-center" width="40px">
                                                             <span x-data="actions()">
-                                                                <a class="pointer" @click="download('documentos-ventas', d.documento)" class="text-secondary">
-                                                                    <i class="ti ti-download fs-5"></i>
+                                                                <a class="pointer" @click="download('documentos-ventas', d.documento)">
+                                                                    <i class="ti ti-download fs-6 text-primary"></i>
                                                                 </a>
                                                             </span>
                                                         </td>
                                                         <template x-if="!multiestacion && estado == 0">
-                                                            <td class=" text-center" width="40px">
+                                                            <td class=" text-center" width="48px">
                                                                 <span x-data="actions()">
-                                                                    <a @click.prevent="async () => { const r = await deleteAction({url: '/departamento-operativo/ventas/eliminar-documento', id: d.id, name: d.detalle}); if (r && r.success) loadData(); }" class="text-danger">
-                                                                        <i class="ti ti-trash fs-5"></i>
+                                                                    <a @click.prevent="async () => { const r = await deleteAction({url: '/departamento-operativo/ventas/eliminar-documento', id: d.id, name: d.detalle}); if (r && r.success) loadData(); }" class="text-danger pointer">
+                                                                        <i class="ti ti-trash fs-6"></i>
                                                                     </a>
                                                                 </span>
                                                             </td>
@@ -328,7 +342,7 @@
                     <div class="card">
                         <div class="card-header text-bg-primary">
                             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                <h5 class="mb-0 text-white"><i class="ti ti-shield-lock me-2"></i>PROSEGUR</h5>
+                                <h5 class="mb-0 text-white"><i class="ti ti-shield-lock me-2"></i>Prosegur</h5>
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -371,9 +385,9 @@
                                                         </td>
                                                     </tr>
                                                 </template>
-                                                <tr>
-                                                    <th class="text-center" colspan="2">TOTAL 1</th>
-                                                    <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales1234.total1)"></strong></td>
+                                                <tr class="table-dark">
+                                                    <th class="text-center text-white" colspan="2">TOTAL 1</th>
+                                                    <td class="align-middle text-end text-white"><strong x-text="'$ ' + formatNum(totales1234.total1)"></strong></td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -389,7 +403,7 @@
                     <div class="card">
                         <div class="card-header text-bg-primary">
                             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                <h5 class="mb-0 text-white"><i class="ti ti-wallet me-2"></i>MONEDEROS Y BANCOS</h5>
+                                <h5 class="mb-0 text-white"><i class="ti ti-wallet me-2"></i>Monederos y Bancos</h5>
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -428,9 +442,9 @@
                                                         </template>
                                                     </tr>
                                                 </template>
-                                                <tr>
-                                                    <th class="text-center" colspan="2">TOTAL 2</th>
-                                                    <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales1234.total2)"></strong></td>
+                                                <tr class="table-dark">
+                                                    <th class="text-center text-white" colspan="2">TOTAL 2</th>
+                                                    <td class="align-middle text-end text-white"><strong x-text="'$ ' + formatNum(totales1234.total2)"></strong></td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -446,7 +460,7 @@
                     <div class="card">
                         <div class="card-header text-bg-primary">
                             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                <h5 class="mb-0 text-white"><i class="ti ti-users me-2"></i>CLIENTES (ATIO)</h5>
+                                <h5 class="mb-0 text-white"><i class="ti ti-users me-2"></i>Clientes (ATIO)</h5>
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -493,8 +507,8 @@
                                                         </td>
                                                     </tr>
                                                 </template>
-                                                <tr>
-                                                    <th class="text-center">TOTAL 3</th>
+                                                <tr class="table-dark">
+                                                    <th class="text-center text-white">TOTAL 3</th>
                                                     <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(pago_total)"></strong></td>
                                                     <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(totales1234.total3)"></strong></td>
                                                 </tr>
@@ -535,7 +549,7 @@
                     <div class="card">
                         <div class="card-header text-bg-primary">
                             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                <h5 class="mb-0 text-white"><i class="ti ti-cash me-2"></i>PAGO CLIENTES</h5>
+                                <h5 class="mb-0 text-white"><i class="ti ti-cash me-2"></i>Pago clientes</h5>
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -578,8 +592,8 @@
                                                         </td>
                                                     </tr>
                                                 </template>
-                                                <tr>
-                                                    <th class="text-center">TOTAL 4</th>
+                                                <tr class="table-dark">
+                                                    <th class="text-center text-white">TOTAL 4</th>
                                                     <td class="align-middle text-end"><strong x-text="'$ ' + formatNum(total_pago_clientes)"></strong></td>
                                                     <td class="align-middle text-end"></td>
                                                 </tr>
@@ -617,7 +631,7 @@
                     <div class="card">
                         <div class="card-header text-bg-primary">
                             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                <h5 class="mb-0 text-white"><i class="ti ti-eye me-2"></i>OBSERVACIONES</h5>
+                                <h5 class="mb-0 text-white"><i class="ti ti-eye me-2"></i>Observaciones</h5>
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -641,7 +655,7 @@
                                             <i class="ti ti-signature fs-6"></i>
                                         </div>
                                         <div class="ms-3">
-                                            <h5 class="mb-0 text-white">FIRMA DE QUIEN ELABORA</h5>
+                                            <h5 class="mb-0 text-white">Firma de quien elabora</h5>
                                         </div>
                                     </div>
                                 </div>
@@ -691,7 +705,7 @@
                                         <i class="ti ti-signature fs-6"></i>
                                     </div>
                                     <div class="ms-3">
-                                        <h6 class="mb-0 text-white">ELABORÓ</h6>
+                                        <h6 class="mb-0 text-white">Nombre y firma de quien elaboró</h6>
                                     </div>
                                 </div>
                             </div>
@@ -738,7 +752,7 @@
                                     </div>
 
                                     <div class="ms-3">
-                                        <h6 class="mb-0 text-white">SUPERVISÓ</h6>
+                                        <h6 class="mb-0 text-white">Nombre y firma de4 quien supervisó</h6>
                                     </div>
 
                                 </div>
@@ -827,7 +841,7 @@
                                 <div class="d-flex align-items-center">
                                     <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-circle-check fs-6"></i></div>
                                     <div class="ms-3">
-                                        <h6 class="mb-0 text-white">VO.BO.</h6>
+                                        <h6 class="mb-0 text-white">Nombre y firma de Vo.Bo.</h6>
                                     </div>
                                 </div>
                             </div>
@@ -910,15 +924,17 @@
 
     </div>
 
-    <div class="modal fade" id="modalDocumento" tabindex="-1">
+    <div class="modal fade" id="modalDocumento" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Agregar Documento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white">
+                    <i class="ti ti-clipboard-plus"></i>    
+                    Agregar Documento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <h6 class="mb-2">* Documento</h6>
+                    <h6 class="mb-2 form-label">* Documento:</h6>
                     <select class="form-select mb-1" x-model="nuevoDocumento.nombre">
                         <option value="">Selecciona una opcion...</option>
                         <option value="Ficha prosegur">Ficha prosegur</option>
@@ -932,15 +948,27 @@
                         <option value="Documento/archivo adicional">Documento/archivo adicional</option>
                         <option value="Ficha BBVA">Ficha BBVA</option>
                     </select>
-                    <h6 class="mb-2 mt-3">* Documento</h6>
+                    <h6 class="mb-2 mt-3 form-label">* Documento:</h6>
                     <input class="form-control" type="file" id="inputDocumento" @change="nuevoDocumento.file = $event.target.files[0]">
                 </div>
                 <div class="modal-footer">
+                    <div class="row g-0 ms-auto w-100 justify-content-end">
+                        <div class="col-12 col-md-auto d-grid mb-2">
+<button type="button" class="btn bg-danger-subtle text-danger me-0 me-md-2" data-bs-dismiss="modal">
+                        <i class="ti ti-x"></i>    
+                        Cancelar</button>
+                        </div>
+
+<div class="col-12 col-md-auto d-grid mb-2">
                     <button type="button" class="btn btn-success" @click="guardarDocumento" :disabled="subiendoDocumento">
                         <span x-show="subiendoDocumento" class="spinner-border spinner-border-sm me-1"></span>
+                        <i class="ti ti-check"></i>
                         <i x-show="!subiendoDocumento"></i> Guardar
                     </button>
+</div>
                 </div>
+                </div>
+                    
             </div>
         </div>
     </div>

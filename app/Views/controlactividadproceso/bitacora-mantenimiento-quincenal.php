@@ -14,11 +14,18 @@
 
     <?php else: ?>
 
-        <div class="text-end">
+    <div class="row g-0 ms-auto w-100 justify-content-end">
+    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+        <button type="button"
+                class="btn bg-primary-subtle text-primary"
+                @click="openNuevoModal()">
+            <i class="ti ti-plus"></i> Nuevo
+        </button>
+    </div>
+</div>
 
-            <button type="button" class="btn bg-primary-subtle text-primary"><a class="dropdown-item pointer" @click="openNuevoModal()"><i class="ti ti-plus"></i> Nuevo </a></button>
 
-        </div>
+            
 
         <div class="datatables">
             <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
@@ -48,7 +55,10 @@
         <div
             class="modal fade"
             id="ModalCrearMantenimiento"
-            tabindex="-1">
+            tabindex="-1"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false">
+
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content rounded-0 border-0">
 
@@ -126,16 +136,19 @@
                     </div>
 
                     <div class="modal-footer">
-
-                        <button
-                            class="btn bg-danger-subtle text-danger"
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button
+                            class="btn bg-danger-subtle text-danger mb-1 mb-md-0"
                             data-bs-dismiss="modal">
                             <i class="ti ti-x"></i>
                             Cancelar
 
                         </button>
+                    </div>
 
-                        <button
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button
                             type="button"
                             class="btn btn-success"
                             @click="submit()">
@@ -150,6 +163,11 @@
 
                         </button>
 
+                    </div>
+                  </div>
+
+
+                        
                     </div>
 
                 </div>

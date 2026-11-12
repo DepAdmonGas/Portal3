@@ -13,15 +13,21 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
 <?php else: ?>
 
-<div class="text-end">
-      <?= 
+
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                      <?= 
         !empty($permisos['crear']) ? 
         '<button type="button" class="btn bg-primary-subtle text-primary" @click="openModalRequisicion()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
-        ?>     
-    </div>
+        ?>    
+                    </div>
+                  </div>
+
+       
+
 
       <div class="datatables">
     <div class="table-responsive pb-3 overflow-x-auto overflow-y-hidden">
@@ -51,7 +57,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 <div
     class="modal fade"
     id="ModalRequisicionObra"
-    tabindex="-1">
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
     <div class="modal-dialog modal-lg modal-dialog-centered">
 
@@ -140,7 +148,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
             <div class="modal-footer">
 
-                <button
+            <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button
                     type="button"
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal"
@@ -149,8 +159,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     Cancelar
 
                 </button>
-
-                <button
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                         <button
                     type="button"
                     class="btn btn-success"
                     @click="guardarRequisicion()">
@@ -162,6 +173,12 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     </span>
 
                 </button>
+                    </div>
+                  </div>
+
+               
+
+             
 
             </div>
 
@@ -174,7 +191,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 <!-- Modal formato 12 -->
 <div class="modal fade"
      id="ModalFormato12"
-     tabindex="-1">
+     tabindex="-1"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
 
     <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
 
@@ -415,14 +434,19 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                     </div>
 
-                    <div class="text-end mt-3 mb-3">
-                        <button type="button"
+                 <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-2 mt-2">
+                      <button type="button"
                                 class="btn bg-primary-subtle text-primary"
                                 @click="agregarTrabajador()">
                                 <i class="ti ti-plus"></i>
                             Nuevo
                         </button>
                     </div>
+                  </div>
+
+                        
+       
 
                     <table class="table table-striped table-bordered mb-3 text-nowrap mt-2" id="table-trabajadores">
 
@@ -563,20 +587,24 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
             </div>
 
             <div class="modal-footer">
-
-            <button
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                       class="btn bg-danger-subtle text-danger"
                       data-bs-dismiss="modal">
 
                       <i class="ti ti-x"></i> Cancelar
 
                   </button>
-
-                <button type="button"
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button type="button"
                         class="btn btn-success"
                         @click="guardarFormato12">
                     <i class="ti ti-check"></i> Actualizar
                 </button>
+                    </div>
+                  </div>
 
             </div>
 
@@ -590,7 +618,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 <div
     class="modal fade"
     id="modalFormato14"
-    tabindex="-1">
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
     <div class="modal-dialog modal-xl modal-dialog-centered">
 
@@ -814,8 +844,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
             </div>
 
             <div class="modal-footer">
-
-                <button
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                       <button
                     type="button"
                     class="btn bg-danger-subtle text-danger"
                     data-bs-dismiss="modal">
@@ -823,15 +854,23 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     <i class="ti ti-x"></i> Cancelar
 
                 </button>
-
-                <button
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                       <button
                     type="button"
                     class="btn btn-success"
                     @click="guardarFormato14()">
 
                     <i class="ti ti-check"></i> Actualizar
 
-                </button>
+                </button> 
+                    </div>
+                  </div>
+
+
+               
+
+              
 
             </div>
 
@@ -846,7 +885,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     <div
     class="modal fade"
     id="modalFormato15"
-    tabindex="-1">
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
     <div class="modal-dialog modal-xl modal-dialog-centered">
 
@@ -1043,16 +1084,18 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     </div>
 
     <div class="modal-footer">
-
-    <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                        <button
     class="btn bg-danger-subtle text-danger"
     data-bs-dismiss="modal">
 
     <i class="ti ti-x"></i> Cancelar
 
     </button>
-
-    <button
+                    </div>
+                     <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                         <button
     type="button"
     class="btn btn-success"
     @click="guardarFormato15()">
@@ -1060,6 +1103,12 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
     <i class="ti ti-check"></i> Actualizar
 
     </button>
+                    </div>
+                  </div>
+
+  
+
+ 
 
     </div>
 
@@ -1071,7 +1120,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 <div
     class="modal fade"
     id="ModalCartaResponsiva"
-    tabindex="-1">
+    tabindex="-1"
+    data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
     <div class="modal-dialog modal-xl modal-dialog-centered">
 
@@ -1216,8 +1267,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
             </div>
 
             <div class="modal-footer">
-
-             <button
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button
                       class="btn bg-danger-subtle text-danger"
                       data-bs-dismiss="modal">
 
@@ -1225,7 +1277,9 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
 
                   </button>
 
-                <button
+                    </div>
+                      <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                         <button
                     type="button"
                     class="btn btn-success"
                     @click="guardarCartaResponsiva()">
@@ -1233,6 +1287,12 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                     <i class="ti ti-check"></i> Actualizar
 
                 </button>
+                    </div>
+                  </div>
+
+
+             
+             
 
             </div>
 

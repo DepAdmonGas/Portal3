@@ -41,10 +41,10 @@ class MenuService
         $menus = $menus->whereNotIn('id', $denegados)->sortBy('orden')->values();
 
         // 🔹 4. FORMATEAR PARA FRONT
-        return self::formatearMenu($menus);
+        return self::formatearMenu($menus, $usuario_id);
     }
 
-    private static function formatearMenu($menus)
+    private static function formatearMenu($menus, ?int $usuario_id = null)
 {
     $grupos = [];
 
@@ -68,7 +68,10 @@ class MenuService
             'ruta' => $menu->ruta,
             'icono' => $menu->icono,
             'padre_id' => $menu->padre_id ?? null,
-            'orden' => $menu->orden ?? 0
+            'orden' => $menu->orden ?? 0,
+            'badge' => ($usuario_id !== null && $usuario_id > 0)
+                ? MenuBadgeService::contar((int)$menu->id, $usuario_id)
+                : null
         ];
     }
 

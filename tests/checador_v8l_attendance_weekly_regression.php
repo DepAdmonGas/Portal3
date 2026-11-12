@@ -176,9 +176,11 @@ $weeklyRosterMethod = $weeklyRosterStart !== false && $weeklyRosterEnd !== false
     : '';
 $assert($weeklyRosterMethod !== ''
     && str_contains($weeklyRosterMethod, 'resolveActiveStationIdForLocality($workplaceId)')
-    && str_contains($weeklyRosterMethod, '->where(\'id_estacion\', $physicalStationId)')
-    && str_contains($weeklyRosterMethod, '->where(\'workplace_id\', $workplaceId)')
-    && strpos($weeklyRosterMethod, '->where(\'id_estacion\', $physicalStationId)') < strpos($weeklyRosterMethod, '->limit(self::MAX_ROSTER_ROWS + 1)')
+    && str_contains($weeklyRosterMethod, '->where(static function ($query) use ($directLocalityId, $workplaceId)')
+    && str_contains($weeklyRosterMethod, "where('id_estacion', \$directLocalityId)")
+    && str_contains($weeklyRosterMethod, "where('workplace_id', \$workplaceId)")
+    && strpos($weeklyRosterMethod, "where('id_estacion', \$directLocalityId)") < strpos($weeklyRosterMethod, '->limit(self::MAX_ROSTER_ROWS + 1)')
+    && strpos($weeklyRosterMethod, "where('workplace_id', \$workplaceId)") < strpos($weeklyRosterMethod, '->limit(self::MAX_ROSTER_ROWS + 1)')
     && str_contains($weeklyRosterMethod, '$resolver->resolveAssignments($workerId, $effectiveAt)'), 'weekly roster scopes physical and versioned candidates to the authorized locality before its safety limit and resolves each date');
 $assert($weeklyRosterMethod !== ''
     && str_contains($weeklyRosterMethod, 'if (!$currentBelongs && $verifiedDates === [])')
@@ -228,9 +230,9 @@ $assert($scheduleWeekRenderError === null
     && !preg_match('/<h1\b/i', $renderedScheduleWeek)
     && str_contains($renderedScheduleWeek, 'Horario habitual del personal')
     && str_contains($renderedScheduleWeek, 'Programación semanal / Cambios temporales')
-    && str_contains($renderedScheduleWeek, 'no se duplican cada semana')
     && str_contains($renderedScheduleWeek, 'Turno verificado')
-    && substr_count($renderedScheduleWeek, '<caption class="visually-hidden">Horario de lunes a domingo para la semana consultada</caption>') === 2
+    && substr_count($renderedScheduleWeek, '<caption class="visually-hidden">Horario habitual de lunes a domingo para el personal de la estación seleccionada</caption>') === 1
+    && substr_count($renderedScheduleWeek, '<caption class="visually-hidden">Asignaciones de turno de lunes a domingo para la semana seleccionada</caption>') === 1
     && str_contains(file_get_contents(dirname(__DIR__) . '/app/Views/layouts/departamento-operativo.php') ?: '', '<h4 class="fw-semibold mt-3"><?= $title; ?></h4>'),
     'weekly screen renders its matrix without a duplicate page title or PHP view warnings');
 
@@ -414,18 +416,21 @@ $assert(preg_match('/if \(!\$demoMode && \$requestedWorker !== null[\s\S]{0,600}
     'real browser worker filters require an observed event or canonically authorized current roster membership');
 $assert(str_contains($access, 'authorizeScheduling(?int $requestedLocalityId, string $action)')
     && str_contains($access, "getPermiso((int) \$user->id, 'biometricos')"), 'weekly scheduling rechecks read/edit permission and Checador station scope');
-$historyAccessPosition = strpos($controller, "\$scheduleAccess = ChecadorAccessService::authorizeScheduling(\$workplaceId, 'leer')");
+$historyAccessPosition = strpos($controller, "\$scheduleAccess = ChecadorAccessService::isDepartmentLocality(\$workplaceId)");
 $historyReadPosition = strpos($controller, "\$effectiveSchedule = null;", $historyAccessPosition === false ? 0 : $historyAccessPosition);
 $assert($historyAccessPosition !== false && $historyReadPosition !== false && $historyAccessPosition < $historyReadPosition
+    && str_contains(substr($controller, $historyAccessPosition, $historyReadPosition - $historyAccessPosition), "authorizeScheduling(\$workplaceId, 'leer')")
+    && str_contains(substr($controller, $historyAccessPosition, $historyReadPosition - $historyAccessPosition), "\$scheduleAccess['allowed']")
     && str_contains($weeklyView, '$currentWeek = $workplaceZone === null')
     && str_contains($weeklyView, ': null'), 'weekly and historical schedule links require read access; current week is withheld when the workplace timezone is unavailable');
 $assert(str_contains($routes, "Route::auth(['ChecadorController', 'createScheduleAssignment'])")
     && str_contains($routeAuth, "['auth', 'csrf']"), 'individual assignment POST remains behind the existing authentication and CSRF middleware');
-$assert(str_contains($weeklyView, 'no se duplican cada semana')
-    && str_contains($weeklyView, 'Nuevo cambio temporal')
-    && str_contains($weeklyView, 'El cambio temporal sólo sustituye el horario durante la fecha seleccionada')
+$assert(str_contains($weeklyView, 'Horario habitual del personal')
+    && str_contains($weeklyView, 'Cambios temporales')
+    && str_contains($weeklyView, 'Un cambio temporal sólo aplica en las fechas autorizadas.')
     && str_contains($weeklyView, 'Asignar horario habitual')
-    && str_contains($weeklyView, 'value="TEMPORAL"')
+    && str_contains($weeklyView, 'name="tipo_asignacion" value="TEMPORAL"')
+    && str_contains($weeklyView, 'Confirmo este cambio únicamente para la fecha seleccionada; después continúa el horario habitual vigente.')
     && str_contains($controller, 'Request::expectsJson()')
     && str_contains($controller, "'target_date' => \$targetDate")
     && str_contains($controller, 'scheduleApiPostOperationsEnabled()'), 'UI distinguishes recurring habitual assignments from optional date-specific changes and the controller retains the schedule-only write gate');

@@ -11,15 +11,20 @@ x-data="{ ...actions(), ...dispensario()}">
     </div>
 
 <?php else: ?>
-<div class="text-end">
-      <?= 
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3 mt-3">
+                          <?= 
         !empty($permisos['crear']) ? 
         '<button type="button" class="btn bg-primary-subtle text-primary" @click="modalopen()">
         <i class="ti ti-plus"></i> Nuevo
         </button>' 
         : '' 
         ?>     
-    </div>
+                    </div>
+                  </div>
+
+  
+
 
   <div class="datatables mt-3">
         <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
@@ -45,7 +50,7 @@ x-data="{ ...actions(), ...dispensario()}">
 
   <!--- Modal nuevo -->
 
-    <div class="modal fade" id="modalNuevo" tabindex="-1">
+    <div class="modal fade" id="modalNuevo" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
     <div class="modal-content">
 
@@ -106,9 +111,18 @@ x-data="{ ...actions(), ...dispensario()}">
     </div>
 
     <div class="modal-footer">
-        <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
-        <button class="btn btn-success" @click="guardar()"><i class="ti ti-check"></i> Guardar
+      <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                             <button class="btn bg-danger-subtle text-danger" @click="closeModal()"><i class="ti ti-x"></i> Cancelar</button>
+ 
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                        <button class="btn btn-success" @click="guardar()"><i class="ti ti-check"></i> Guardar
         </button>
+                    </div>
+                  </div>
+
+      
     </div>
 
     </div>

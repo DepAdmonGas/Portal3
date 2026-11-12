@@ -43,37 +43,29 @@ x-data="{ ...actions(), ...pedidoPapeleriaComponent() }">
 </a>
 </template>
 
-<!-- Opción para Gestoría: Botón directo -->
-<template x-if="!esMultiestacion && puedeAcceso && hayContexto && esGestoriaOficina && puedeCrear">
-    <a class="btn bg-primary-subtle text-primary" href="javascript:void(0)" @click="nuevoPedido()" title="Nuevo pedido">
-        <i class="ti ti-plus me-1"></i> Nuevo
-    </a>
-</template>
-
-<!-- Opción para NO Gestoría: Menú desplegable completo -->
-<template x-if="!esMultiestacion && puedeAcceso && hayContexto && !esGestoriaOficina">
-    <div class="dropdown dropcenter">
-        <button type="button" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" title="Opciones">
-            <i class="ti ti-dots-vertical fs-6"></i>
-        </button>
-        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <li x-show="puedeCrear" x-cloak>
-                <a class="dropdown-item pointer" href="javascript:void(0)" @click="nuevoPedido()">
-                    <i class="ti ti-plus me-1"></i> Nuevo
-                </a>
-            </li>
-            <li x-show="puedeEditar" x-cloak>
-                <a class="dropdown-item pointer" href="/departamento-operativo/comercializadora/pedido-papeleria/inventario">
-                    <i class="ti ti-paint me-1"></i> Inventario
-                </a>
-            </li>
-            <li x-show="puedeAcceso" x-cloak>
-                <a class="dropdown-item pointer" href="/departamento-operativo/comercializadora/pedido-papeleria/reporte">
-                    <i class="ti ti-report me-1"></i> Reporte
-                </a>
-            </li>
-        </ul>
-    </div>
+<template x-if="!esMultiestacion && puedeAcceso && hayContexto">
+<div class="dropdown dropcenter">
+<button type="button" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" title="Opciones">
+<i class="ti ti-dots-vertical fs-6"></i>
+</button>
+<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+<li x-show="puedeCrear" x-cloak>
+<a class="dropdown-item pointer" href="javascript:void(0)" @click="nuevoPedido()">
+<i class="ti ti-plus me-1"></i> Nuevo
+</a>
+</li>
+<li x-show="puedeEditar && !esGestoriaOficina" x-cloak>
+<a class="dropdown-item pointer" href="/departamento-operativo/comercializadora/pedido-papeleria/inventario">
+<i class="ti ti-paint me-1"></i> Inventario
+</a>
+</li>
+<li x-show="puedeAcceso && !esGestoriaOficina" x-cloak>
+<a class="dropdown-item pointer" href="/departamento-operativo/comercializadora/pedido-papeleria/reporte">
+<i class="ti ti-report me-1"></i> Reporte
+</a>
+</li>
+</ul>
+</div>
 </template>
 
 </div>

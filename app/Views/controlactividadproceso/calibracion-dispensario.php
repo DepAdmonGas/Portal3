@@ -20,11 +20,12 @@
         ) ?>
     </script>
 
-    <div class="text-end mt-3">
+
 
         <template x-if="calibracion.estado == 0">
-            <div class="d-md-flex justify-content-md-end mb-3 mt-3">
-                <button
+            <div class="row g-0 ms-auto w-100 justify-content-end mt-3 mb-3">
+                    <div class="col-12 col-md-auto d-grid">
+                      <button
                     type="button"
                     class="btn btn-success"
                     @click="finalizar('Dispensario')">
@@ -32,14 +33,16 @@
                     <i class="ti ti-check"></i> Finalizar
 
                 </button>
-            </div>
+                    </div>
+                  </div>
         </template>
 
 
 
         <template x-if="calibracion.estado == 1">
-
-            <button
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mt-3 mb-3">
+                        <button
                 type="button"
                 class="btn btn-success"
                 @click="window.location.href='/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos'">
@@ -48,9 +51,13 @@
 
             </button>
 
+                    </div>
+                  </div>
+
+          
         </template>
 
-    </div>
+
 
     <div class="card">
         <div class="card-body">
@@ -184,9 +191,9 @@
 
             </div>
 
-            <div class="text-end mb-3 mt-3">
-
-                <button
+        <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-3">
+                           <button
                     type="button"
                     class="btn bg-primary-subtle text-primary"
                     @click="
@@ -201,8 +208,13 @@
                     <i class="ti ti-plus"></i> Nuevo
 
                 </button>
+                    </div>
+                  </div>
 
-            </div>
+
+           
+
+        
 
             <div class="table-responsive">
                 <table class="table table-striped table-bordered mb-3 text-nowrap align-middle">
@@ -341,7 +353,9 @@
             <div
                 class="modal fade"
                 id="modalDispensario"
-                tabindex="-1">
+                tabindex="-1"
+                data-bs-bacdrop="static"
+                data-bs-keyboard="false">
 
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
@@ -396,11 +410,20 @@
 
 
                         <div class="modal-footer">
-                            <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
-                            <button class="btn btn-success" @click="agregarDispensario()">
+                            <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-3">
+                       <button class="btn btn-success" @click="agregarDispensario()">
                                 <i class="ti ti-check"></i>
                                 Guardar
                             </button>
+                    </div>
+
+                  </div>
+
+                           
                         </div>
 
                     </div>

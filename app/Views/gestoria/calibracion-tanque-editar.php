@@ -1,3 +1,19 @@
+<?php if (!empty($moduleStationKey) && $moduleStationKey === 'gestoria'): ?>
+<style>
+#module-station-selector-gestoria,
+div[data-module-station-key="gestoria"],
+.module-station-selector[data-module-key="gestoria"] {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+</style>
+<?php endif; ?>
 <div
     id="container"
     class="pb-4"

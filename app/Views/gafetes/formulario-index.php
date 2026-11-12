@@ -1,10 +1,10 @@
 <div class="mb-4" x-data="{ ...actions(), ...seguimientoForm() }"
 x-init="init()" id="container" data-estacion="<?= $idEstacion ?>" data-reporte="<?= $noReporte ?>" data-puesto="<?= $utilitiesUser['idPuestoUser'] ?>">
  
-<div class="row g-2 mb-3 mt-3 d-flex justify-content-end align-items-center">
+<div class="row g-0 mb-3 mt-3 d-flex justify-content-end align-items-center">
 
 
-<?= !empty($permisos['crear']) ? ' <div class="col-12 col-md-auto d-grid">
+<?= !empty($permisos['crear']) ? ' <div class="col-12 col-md-auto d-grid me-0 me-md-2">
 <button class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#nuevo">
 <i class="ti ti-plus"></i> Nuevo </button>
 </div>' : '' ?>
@@ -61,14 +61,33 @@ Nuevo registro (No. Reporte: #<?=$noReporte?>)</h4>
 
 <!-- FOOTER -->
 <div class="modal-footer">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="resetForm()">
+<div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
+                      <button 
+type="button" 
+class="btn bg-danger-subtle text-danger" 
+data-bs-dismiss="modal" 
+@click="resetForm()">
 <i class="ti ti-x"></i>    
 Cancelar</button>
-<button type="button" class="btn btn-success" @click="submit()" :disabled="loading">
+                    </div>
+                    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
+                      <button 
+type="button" class="btn btn-success" 
+@click="submit()" 
+:disabled="loading">
     <i class="ti ti-check"></i>
 <span x-show="!loading">Guardar</span>
 <span x-show="loading">Guardando...</span>
 </button>
+                    </div>
+                  </div>
+
+
+
+
+
+
 </div>
 
 </div>
