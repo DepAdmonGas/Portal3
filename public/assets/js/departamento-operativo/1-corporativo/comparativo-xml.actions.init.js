@@ -21,11 +21,13 @@ comentarios: [],
 mesActual: 0,
 mesActualNombre: '',
 nuevoAnexo: '',
+errorsDocumento: {},
 nuevoComentario: '',
 idUsuario: 0,
 editorContent: '',
 guardandoComentario: false,
 guardandoDocumento: false,
+guardandoObservaciones: false,
 
 seleccionarFila(tabla, id) {
 this.selectedRows[tabla] = id;
@@ -102,23 +104,15 @@ this.loading = false;
                     toolbar: {
                         items: [
                             'heading', '|',
-                            'fontSize', 'fontFamily', '|',
-                            'alignment', '|',
-                            'bold', 'italic', 'underline', 'strikethrough', '|',
-                            'subscript', 'superscript', '|',
-                            'link', 'blockQuote', 'code', 'codeBlock', '|',
-                            'bulletedList', 'numberedList', 'todoList', '|',
-                            'imageUpload', 'insertTable', 'tableColumn', 'tableRow', 'mergeTableCells', '|',
-                            'highlight', 'horizontalLine', 'pageBreak', '|',
-                            'removeFormat', 'sourceEditing', 'undo', 'redo'
+                            'bold', 'italic', 'link', '|',
+                            'bulletedList', 'numberedList', 'blockQuote', '|',
+                            'imageUpload', 'insertTable', '|',
+                            'undo', 'redo'
                         ]
                     },
                     language: 'es',
                     image: {
-                        toolbar: [
-                            'imageTextAlternative',
-                            'imageStyle:alignLeft', 'imageStyle:full', 'imageStyle:alignRight', 'imageStyle:side'
-                        ]
+                        toolbar: ['imageTextAlternative']
                     },
                     table: {
                         contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
@@ -167,14 +161,53 @@ this.loading = false;
                 });
         },
 
-_inputTimer: null,
-
 formatInput(val) {
-return parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = this.parseAmount(val);
+return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+},
+
+parseAmount(value) {
+const normalized = String(value ?? '0').replace(/,/g, '').replace(/[^0-9.\-]/g, '');
+const num = Number(normalized);
+return Number.isFinite(num) ? num : 0;
 },
 
 _rawFromDom(el) {
-return parseFloat(el.value.replace(/,/g, '')) || 0;
+return this.parseAmount(el.value);
+},
+
+_indicarGuardado(el, estado) {
+const indicador = el?.parentElement?.querySelector('.comparativo-cell-save-indicator');
+if (!indicador) return;
+indicador.classList.remove('d-none', 'text-success', 'text-danger', 'text-primary');
+if (estado === 'saving') {
+ indicador.innerHTML = '';
+ indicador.classList.add('d-none');
+} else if (estado === 'saved') {
+indicador.classList.add('text-success');
+indicador.innerHTML = '<i class="ti ti-check" aria-label="Cambio guardado"></i>';
+window.setTimeout(() => {
+if (indicador.dataset.estado === 'saved') indicador.classList.add('d-none');
+}, 1800);
+} else {
+indicador.classList.add('text-danger');
+indicador.innerHTML = '<i class="ti ti-alert-circle" aria-label="No se pudo guardar el cambio"></i>';
+}
+indicador.dataset.estado = estado;
+},
+
+_programarGuardado(el, callback) {
+if (el.__comparativoInputTimer) window.clearTimeout(el.__comparativoInputTimer);
+this._indicarGuardado(el, 'saving');
+el.__comparativoInputTimer = window.setTimeout(() => {
+delete el.__comparativoInputTimer;
+callback();
+}, 400);
+},
+
+_cancelarGuardado(el) {
+if (el.__comparativoInputTimer) window.clearTimeout(el.__comparativoInputTimer);
+delete el.__comparativoInputTimer;
 },
 
 limpiarNumero(el) {
@@ -194,26 +227,20 @@ el.setSelectionRange(Math.max(0, start - removed), Math.max(0, end - removed));
 },
 
 _onInput(el, row, cell) {
-const v = parseFloat(el.value.replace(/,/g, '')) || 0;
-if (this._inputTimer) clearTimeout(this._inputTimer);
+const v = this._rawFromDom(el);
 const args = [v, row.id, cell.idTipo, this.idYear, this.idEstacion, row.mes, cell.seccion, cell.nombre];
-this._inputTimer = setTimeout(() => {
-this._inputTimer = null;
-this.editarTabla(...args);
-}, 400);
+this._programarGuardado(el, () => this.editarTabla(...args, el));
 },
 
 _onBlur(el, row, cell) {
-const v = parseFloat(el.value.replace(/,/g, '')) || 0;
-if (this._inputTimer) {
-clearTimeout(this._inputTimer);
-this._inputTimer = null;
-}
-this.editarTabla(v, row.id, cell.idTipo, this.idYear, this.idEstacion, row.mes, cell.seccion, cell.nombre);
+const v = this._rawFromDom(el);
+this._cancelarGuardado(el);
+this._indicarGuardado(el, 'saving');
+this.editarTabla(v, row.id, cell.idTipo, this.idYear, this.idEstacion, row.mes, cell.seccion, cell.nombre, el);
 el.value = this.formatInput(v);
 },
 
-editarTabla(valor, idCampo, idTipo, idYear, idEstacion, idMes, idSeccion, idDescripcion) {
+editarTabla(valor, idCampo, idTipo, idYear, idEstacion, idMes, idSeccion, idDescripcion, input = null) {
 let valorStr = String(valor);
 let valorLimpio = valorStr.replace(/[^0-9.\-]/g, '');
 if (valorLimpio.indexOf('-') > 0) {
@@ -236,19 +263,20 @@ idDescripcion: idDescripcion
 
 fetch('/departamento-operativo/comparativo-xml/update-cell', {
 method: 'POST',
-headers: { 'Content-Type': 'application/json' },
+headers: { 'Content-Type': 'application/json', 'X-Portal3-Skip-Action-Loader': '1' },
 body: JSON.stringify(params)
 })
 .then(r => r.json())
 .then(data => {
 if (data.success == 1) {
+this._indicarGuardado(input, 'saved');
 this.actualizarTotales(idEstacion, idYear);
 } else {
-window.alerts.error('Error al actualizar');
+this._indicarGuardado(input, 'error');
 }
 })
 .catch(() => {
-window.alerts.error('Error al actualizar');
+this._indicarGuardado(input, 'error');
 });
 },
 
@@ -264,29 +292,23 @@ this.totales = data.totales || {};
 },
 
 _onInputComparativo(el, item, month, tipo) {
-const v = parseFloat(el.value.replace(/,/g, '')) || 0;
-if (this._inputTimer) clearTimeout(this._inputTimer);
+const v = this._rawFromDom(el);
 const args = [v, item.id, item.categoria, tipo, this.idYear, this.idEstacion, month.mes];
-this._inputTimer = setTimeout(() => {
-this._inputTimer = null;
-this.actualizarComparativo(...args);
-}, 400);
+this._programarGuardado(el, () => this.actualizarComparativo(...args, el));
 },
 
 _onBlurComparativo(el, item, month, tipo) {
-const v = parseFloat(el.value.replace(/,/g, '')) || 0;
+const v = this._rawFromDom(el);
 if (tipo === 1) item.sat_monto = v;
 else item.despacho_monto = v;
 item.diferencia = (parseFloat(item.sat_monto) || 0) - (parseFloat(item.despacho_monto) || 0);
-if (this._inputTimer) {
-clearTimeout(this._inputTimer);
-this._inputTimer = null;
-}
-this.actualizarComparativo(v, item.id, item.categoria, tipo, this.idYear, this.idEstacion, month.mes);
+this._cancelarGuardado(el);
+this._indicarGuardado(el, 'saving');
+this.actualizarComparativo(v, item.id, item.categoria, tipo, this.idYear, this.idEstacion, month.mes, el);
 el.value = this.formatInput(v);
 },
 
-actualizarComparativo(valor, idCampo, categoria, idTipo, idYear, idEstacion, idMes) {
+actualizarComparativo(valor, idCampo, categoria, idTipo, idYear, idEstacion, idMes, input = null) {
 let valorStr = String(valor);
 let valorLimpio = valorStr.replace(/[^0-9.\-]/g, '');
 if (valorLimpio.indexOf('-') > 0) {
@@ -308,19 +330,20 @@ idEstacion: idEstacion
 
 fetch('/departamento-operativo/comparativo-xml/update-sat-cell', {
 method: 'POST',
-headers: { 'Content-Type': 'application/json' },
+headers: { 'Content-Type': 'application/json', 'X-Portal3-Skip-Action-Loader': '1' },
 body: JSON.stringify(params)
 })
 .then(r => r.json())
 .then(data => {
 if (data.success == 1) {
+this._indicarGuardado(input, 'saved');
 this._recalcularTotalesSat();
 } else {
-window.alerts.error('Error al actualizar');
+this._indicarGuardado(input, 'error');
 }
 })
 .catch(() => {
-window.alerts.error('Error al actualizar');
+this._indicarGuardado(input, 'error');
 });
 },
 
@@ -351,8 +374,9 @@ this.satData.total_anual_diferencia = this.satData.total_anual_sat - this.satDat
 
 descargarExcel() {
 if (this.idEstacion > 0) {
-window.location.href = '/departamento-operativo/comparativo-xml/excel/' + this.idEstacion + '/' + this.idYear;
+return '/departamento-operativo/comparativo-xml/excel/' + this.idEstacion + '/' + this.idYear;
 }
+return '#';
 },
 
 verSeguimiento() {
@@ -362,6 +386,7 @@ verSeguimiento() {
 abrirModalDocumentos(mes) {
 this.mesActual = mes;
 this.selectedRows.documentos = null;
+this.errorsDocumento = {};
 const meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 this.mesActualNombre = meses[mes] || mes;
 this.nuevoAnexo = '';
@@ -384,16 +409,23 @@ this.documentos = data.data || [];
 },
 
 guardarDocumento() {
-const anexo = this.nuevoAnexo;
+const anexo = String(this.nuevoAnexo || '').trim();
 const fileInput = this.$refs.fileInput;
 const file = fileInput?.files[0];
+this.errorsDocumento = {};
+let valido = true;
 
 if (!anexo) {
-window.alerts.error('El campo Anexo es requerido');
-return;
+this.errorsDocumento.Anexos = true;
+valido = false;
 }
 if (!file) {
-window.alerts.error('Debe seleccionar un archivo');
+this.errorsDocumento.Archivo_file = true;
+valido = false;
+}
+if (!valido) {
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
+else if (window.alerts) window.alerts.error('Completa los campos obligatorios.');
 return;
 }
 
@@ -422,6 +454,7 @@ this.nuevoAnexo = '';
 if (fileInput) fileInput.value = '';
 this.cargarDocumentos(this.mesActual);
 } else {
+if (Array.isArray(data.campos)) data.campos.forEach(campo => { this.errorsDocumento[campo] = true; });
 window.alerts.error(data.message || 'Error al subir el archivo.');
 }
 })
@@ -535,6 +568,7 @@ window.alerts.error('Error al guardar el comentario');
 
 
 guardarObservaciones() {
+if (this.guardandoObservaciones) return;
 const contenido = window.editorInstance ? window.editorInstance.getData() : '';
 
 const params = {
@@ -543,8 +577,7 @@ idYear: this.idYear,
 content: contenido
 };
 
-window.loader.show();
-
+this.guardandoObservaciones = true;
 fetch('/departamento-operativo/comparativo-xml/save-observations', {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
@@ -552,14 +585,17 @@ body: JSON.stringify(params)
 })
 .then(r => r.json())
 .then(data => {
-window.loader.hide();
 if (data.success != 1) {
 window.alerts.error('Error al guardar el comentario');
+} else {
+window.alerts.success('Observaciones guardadas');
 }
 })
 .catch(() => {
-window.loader.hide();
 window.alerts.error('Error al guardar el comentario');
+})
+.finally(() => {
+this.guardandoObservaciones = false;
 });
 },
 
@@ -574,7 +610,7 @@ return this.rows.reduce((sum, row) => sum + this.totalFila(row), 0);
 },
 
 formatNumber(value) {
-const num = parseFloat(value) || 0;
+const num = this.parseAmount(value);
 return num.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 };

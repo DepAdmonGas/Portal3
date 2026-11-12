@@ -80,45 +80,45 @@
                                 <td class="text-center" x-text="p.fecha_termino_formateada"></td>
 
                                 <td class="text-center">
-                                    <template x-if="p.pdf">
-                                        <a class="pointer" @click.prevent="p.pdf ? download('estimulo-fiscal', p.pdf) : void 0">
+                                    <template x-if="p.pdf_disponible">
+                                        <a class="pointer" @click.prevent="download('estimulo-fiscal', p.pdf)">
                                             <i class="ti ti-file-type-pdf fs-6 text-danger"></i>
                                         </a>
                                     </template>
-                                    <template x-if="!p.pdf">
+                                    <template x-if="!p.pdf_disponible">
                                         <i class="ti ti-file-off text-muted fs-6"></i>
                                     </template>
                                 </td>
 
                                 <td class="text-center">
-                                    <template x-if="p.xml">
-                                        <a class="pointer" @click.prevent="p.xml ? download('estimulo-fiscal', p.xml) : void 0">
+                                    <template x-if="p.xml_disponible">
+                                        <a class="pointer" @click.prevent="download('estimulo-fiscal', p.xml)">
                                             <i class="ti ti-file-type-xls fs-6 text-success"></i>
                                         </a>
                                     </template>
-                                    <template x-if="!p.xml">
+                                    <template x-if="!p.xml_disponible">
                                         <i class="ti ti-file-off text-muted fs-6"></i>
                                     </template>
                                 </td>
 
                                 <td class="text-center">
-                                    <template x-if="p.co_pdf">
-                                        <a class="pointer" @click.prevent="p.co_pdf ? download('estimulo-fiscal', p.co_pdf) : void 0">
+                                    <template x-if="p.co_pdf_disponible">
+                                        <a class="pointer" @click.prevent="download('estimulo-fiscal', p.co_pdf)">
                                             <i class="ti ti-file-type-pdf fs-6 text-danger"></i>
                                         </a>
                                     </template>
-                                    <template x-if="!p.co_pdf">
+                                    <template x-if="!p.co_pdf_disponible">
                                         <i class="ti ti-file-off text-muted fs-6"></i>
                                     </template>
                                 </td>
 
                                 <td class="text-center">
-                                    <template x-if="p.co_xml">
-                                        <a class="pointer" @click.prevent="p.co_xml ? download('estimulo-fiscal', p.co_xml) : void 0">
+                                    <template x-if="p.co_xml_disponible">
+                                        <a class="pointer" @click.prevent="download('estimulo-fiscal', p.co_xml)">
                                             <i class="ti ti-file-type-xls fs-6 text-success"></i>
                                         </a>
                                     </template>
-                                    <template x-if="!p.co_xml">
+                                    <template x-if="!p.co_xml_disponible">
                                         <i class="ti ti-file-off text-muted fs-6"></i>
                                     </template>
                                 </td>
@@ -170,11 +170,11 @@
                     <div class="row">
                         <div class="col-6">
                             <label class="form-label">* Fecha Inicio:</label>
-                            <input type="date" class="form-control" x-model="buscarForm.fecha_inicio">
+                            <input type="date" class="form-control" x-model="buscarForm.fecha_inicio" :class="{ 'is-invalid': validacion.buscar.fecha_inicio }" @change="validacion.buscar.fecha_inicio = false">
                         </div>
                         <div class="col-6">
                             <label class="form-label">* Fecha Termino:</label>
-                            <input type="date" class="form-control" x-model="buscarForm.fecha_termino">
+                            <input type="date" class="form-control" x-model="buscarForm.fecha_termino" :class="{ 'is-invalid': validacion.buscar.fecha_termino }" @change="validacion.buscar.fecha_termino = false">
                         </div>
                     </div>
                 </div>
@@ -212,21 +212,21 @@ Cancelar</button>
                     <div class="row">
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1">* Fecha Inicio:</label>
-                            <input type="date" class="form-control mb-3" x-model="form.fecha_inicio">
+                            <input type="date" class="form-control mb-3" x-model="form.fecha_inicio" :class="{ 'is-invalid': validacion.nuevo.fecha_inicio }" @change="validacion.nuevo.fecha_inicio = false">
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1">* Fecha Termino:</label>
-                            <input type="date" class="form-control mb-3" x-model="form.fecha_termino">
+                            <input type="date" class="form-control mb-3" x-model="form.fecha_termino" :class="{ 'is-invalid': validacion.nuevo.fecha_termino }" @change="validacion.nuevo.fecha_termino = false">
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-12">
                             <label class="form-label mb-1">* Factura PDF:</label>
-                            <input type="file" class="form-control mb-3" x-ref="EPDF_file_input">
+                            <input type="file" class="form-control mb-3" accept=".pdf,application/pdf" x-ref="EPDF_file_input" :class="{ 'is-invalid': validacion.nuevo.pdf }" @change="validacion.nuevo.pdf = false">
                         </div>
                         <div class="col-12">
                             <label class="form-label mb-1">* Factura XML:</label>
-                            <input type="file" class="form-control mb-3" x-ref="EXML_file_input">
+                            <input type="file" class="form-control mb-3" accept=".xml,application/xml,text/xml" x-ref="EXML_file_input" :class="{ 'is-invalid': validacion.nuevo.xml }" @change="validacion.nuevo.xml = false">
                         </div>
                     </div>
                     <div class="text-danger mt-3 small">NOTA: USO DEL CFDI ES GASTOS EN GENERAL Y LA FORMA DE PAGO ES PPD</div>
@@ -264,11 +264,11 @@ Cancelar</button>
                     <div class="row">
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1">* Fecha Inicio:</label>
-                            <input type="date" class="form-control mb-2" x-model="editForm.fecha_inicio">
+                            <input type="date" class="form-control mb-2" x-model="editForm.fecha_inicio" :class="{ 'is-invalid': validacion.editar.fecha_inicio }" @change="validacion.editar.fecha_inicio = false">
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6">
                             <label class="form-label mb-1">* Fecha Termino:</label>
-                            <input type="date" class="form-control mb-2" x-model="editForm.fecha_termino">
+                            <input type="date" class="form-control mb-2" x-model="editForm.fecha_termino" :class="{ 'is-invalid': validacion.editar.fecha_termino }" @change="validacion.editar.fecha_termino = false">
                         </div>
                     </div>
  

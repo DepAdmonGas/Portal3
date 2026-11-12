@@ -6,6 +6,42 @@ document.addEventListener('alpine:init', () => {
         editandoConcepto: null,
         selectedRowId: null,
 
+        formatInputNumber(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const parts = normalized.split('.');
+            const integer = parts.shift() || '';
+            const decimals = parts.join('');
+            const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+        },
+
+        formatNumericInput(event, row, field) {
+            const input = event.target;
+            const raw = input.value;
+            const cursor = input.selectionStart ?? raw.length;
+            const allowDecimals = field === 'precio';
+            const numericPattern = allowDecimals ? /[^0-9.]/g : /[^0-9]/g;
+            const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(numericPattern, '').length;
+            const normalized = raw.replace(/,/g, '').replace(numericPattern, '');
+            const parts = normalized.split('.');
+            const integer = parts.shift() || '';
+            const decimals = parts.join('');
+            const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const formatted = normalized.includes('.') ? grouped + '.' + decimals : grouped;
+
+            row[field] = normalized;
+            input.value = formatted;
+
+            let nextCursor = 0;
+            let numericChars = 0;
+            while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+                if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+                nextCursor++;
+            }
+            input.setSelectionRange(nextCursor, nextCursor);
+        },
+
         async init() {
             try {
                 const res = await fetch('/departamento-operativo/corporativo/lista-aceites/data');
@@ -58,18 +94,28 @@ document.addEventListener('alpine:init', () => {
         },
 
         async guardar(id, campo, valor) {
+            const esCantidad = campo === 'piezas' || campo === 'precio';
+            const edicionEnLinea = esCantidad || campo === 'concepto';
+            if (esCantidad) {
+                const limpio = String(valor ?? '').replace(/,/g, '').trim();
+                if (limpio === '' || !Number.isFinite(Number(limpio))) {
+                    Notify['error']('Ingresa una cantidad válida.');
+                    return;
+                }
+                valor = campo === 'piezas' ? parseInt(limpio, 10) : Number(limpio);
+            }
             try {
-                const res = await fetch('/departamento-operativo/corporativo/lista-aceites/guardar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, campo, valor }),
-                });
-                const json = await res.json();
+                const headers = { 'Content-Type': 'application/json' };
+                if (edicionEnLinea) headers['X-Portal3-Skip-Action-Loader'] = '1';
+                const res = await axios.post(
+                    '/departamento-operativo/corporativo/lista-aceites/guardar',
+                    { id, campo, valor },
+                    { headers }
+                );
+                const json = res.data;
                 if (json.success) {
                     const item = this.items.find(i => i.id === id);
                     if (item) item[campo] = valor;
-                    const nombreCampo = { concepto: 'Concepto', piezas: 'Piezas', precio: 'Precio' }[campo] || campo;
-                    Notify['success'](nombreCampo + ' actualizado correctamente.');
                 } else {
                     Notify['error'](json.message || 'Error al guardar');
                 }

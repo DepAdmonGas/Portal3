@@ -28,12 +28,12 @@ data-estaciones='<?= $estacionesJson ?>'>
 
 <div class="col-xl-5 col-lg-5 col-md-12 col-sm-12 mb-2">
 <label class="form-label">* Monto:</label>
-<input type="number" min="0" step="0.01" class="form-control rounded-0" x-model="form.monto" :class="{'is-invalid': errors.monto}">
+<input type="text" inputmode="decimal" class="form-control rounded-0" x-model="form.monto" @input="formatearMonto($event)" :class="{'is-invalid': errors.monto}">
 </div>
 
 <div class="col-xl-2 col-lg-2 col-md-12 col-sm-12 mb-2">
 <label class="form-label">* Moneda:</label>
-<select class="form-select rounded-0" x-model="form.moneda">
+<select class="form-select rounded-0" x-model="form.moneda" :class="{'is-invalid': errors.moneda}">
 <option>MXN</option>
 <option>USD</option>
 </select>
@@ -51,7 +51,7 @@ data-estaciones='<?= $estacionesJson ?>'>
 
 <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 mb-2">
 <label class="form-label">* Departamento:</label>
-<select class="form-select rounded-0" x-model="form.departamento">
+<select class="form-select rounded-0" x-model="form.departamento" :class="{'is-invalid': errors.departamento}">
 <option value="">Selecciona una opción...</option>
 <option value="2">Sistemas</option>
 <option value="4">Comercializadora</option>
@@ -69,7 +69,7 @@ data-estaciones='<?= $estacionesJson ?>'>
 <div class="row g-3">
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-2">
 <label class="form-label">* Estación:</label>
-                    <select class="form-select rounded-0" x-model="form.estacion" x-ref="estacionSelect" @change="toggleCuentaCampos">
+                    <select class="form-select rounded-0" x-model="form.estacion" x-ref="estacionSelect" @change="toggleCuentaCampos" :class="{'is-invalid': errors.estacion}">
 <option value="">Selecciona una opción...</option>
 <template x-for="est in estaciones" :key="est.id">
 <option :value="est.id" x-text="est.nombre"></option>
@@ -78,7 +78,7 @@ data-estaciones='<?= $estacionesJson ?>'>
 </div>
 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-2">
 <label class="form-label">* Cuenta:</label>
-<input class="form-control rounded-0" type="text" list="listaCuentas" x-model="form.cuenta" x-ref="cuentaInput" @input="toggleCuentaCampos">
+<input class="form-control rounded-0" type="text" list="listaCuentas" x-model="form.cuenta" x-ref="cuentaInput" @input="toggleCuentaCampos" :class="{'is-invalid': errors.cuenta}">
 <datalist id="listaCuentas">
 <option value="Club deportivo">
 <option value="Gasera">
@@ -129,6 +129,7 @@ data-estaciones='<?= $estacionesJson ?>'>
         rows="2"
         placeholder="Escribe tus observaciones"
         x-model="form.observaciones"
+        :class="{'is-invalid': errors.observaciones}"
     ></textarea>
 </div>
 

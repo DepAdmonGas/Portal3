@@ -157,6 +157,7 @@ $archivos = IngresosFacturacionArchivo::where('id_year', $idReporte)
 
 foreach ($archivos as &$a) {
 $a['fecha_formateada'] = !empty($a['fecha']) ? formatearFecha($a['fecha']) : '';
+$a['archivo_disponible'] = self::getExistingArchivoPath((string) ($a['archivo'] ?? '')) !== null;
 }
 
 return $archivos;
@@ -164,24 +165,19 @@ return $archivos;
 
 public static function saveArchivo(int $idReporte, array $file): bool
 {
-$aleatorio = uniqid();
-$filePdf = $file['name'];
 $uploadDir = self::getUploadDir();
+if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name']) || !$uploadDir) return false;
 
-if ($file['error'] !== UPLOAD_ERR_OK) return false;
+$filePdf = basename(str_replace('\\', '/', (string) ($file['name'] ?? '')));
+if ($filePdf === '') return false;
+$nombreGuardado = uniqid('', true) . '-' . $filePdf;
+$folderPDF = $uploadDir . $nombreGuardado;
 
-$folderPDF = $uploadDir . $aleatorio . '-' . $filePdf;
-
-$pdf = '';
-if (move_uploaded_file($file['tmp_name'], $folderPDF)) {
-$pdf = $aleatorio . '-' . $filePdf;
-}
-
-if (!$pdf) return false;
+if (!move_uploaded_file($file['tmp_name'], $folderPDF)) return false;
 
 IngresosFacturacionArchivo::create([
 'id_year' => $idReporte,
-'archivo' => $pdf,
+'archivo' => $nombreGuardado,
 'fecha' => date('Y-m-d H:i:s'),
 ]);
 
@@ -193,26 +189,43 @@ public static function deleteArchivo(int $id): bool
 $archivo = IngresosFacturacionArchivo::find($id);
 if (!$archivo) return false;
 
-$uploadDir = self::getUploadDir();
-$ruta = $uploadDir . $archivo->archivo;
-if (file_exists($ruta)) {
+$ruta = self::getExistingArchivoPath((string) $archivo->archivo);
+if ($ruta !== null && is_file($ruta)) {
 unlink($ruta);
 }
 
 return $archivo->delete();
 }
 
-private static function getUploadDir(): string
+private static function getUploadDir(): ?string
 {
-$dir = realpath(__DIR__ . '/../../public/uploads/archivos/ingresos-facturacion');
-if (!$dir) {
-$dir = __DIR__ . '/../../public/uploads/archivos/ingresos-facturacion';
-if (!is_dir($dir)) {
-mkdir($dir, 0755, true);
+$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/ingresos-facturacion';
+if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) return null;
+$realDir = realpath($dir);
+return $realDir !== false ? $realDir . DIRECTORY_SEPARATOR : null;
 }
-$dir = realpath($dir);
+
+/** Busca primero la ubicación actual y luego el directorio raíz usado al importar archivos legacy. */
+private static function getExistingArchivoPath(string $filename): ?string
+{
+$filename = basename(str_replace('\\', '/', $filename));
+if ($filename === '' || $filename === '.' || $filename === '..') return null;
+
+$root = dirname(__DIR__, 2) . '/public/uploads/archivos';
+$candidates = [
+$root . '/ingresos-facturacion/' . $filename,
+$root . '/' . $filename,
+];
+
+foreach ($candidates as $candidate) {
+$realPath = realpath($candidate);
+$realRoot = realpath($root);
+if ($realPath && $realRoot && is_file($realPath) && str_starts_with($realPath, $realRoot . DIRECTORY_SEPARATOR)) {
+return $realPath;
 }
-return $dir . '/';
+}
+
+return null;
 }
 
 public static function getPermisos(): array

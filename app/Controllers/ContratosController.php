@@ -133,6 +133,24 @@ echo json_encode(['success' => false, 'message' => 'Sin estación']);
 exit;
 }
 
+if (!$this->fechaContratoValida($_POST['fecha'] ?? '') || trim((string)($_POST['descripcion'] ?? '')) === '') {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
+
+$file = $_FILES['archivo'] ?? null;
+if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
+if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'No se pudo cargar el archivo seleccionado.']);
+exit;
+}
+
 $data = [
 'id_estacion' => $idEstacion,
 'fecha' => $_POST['fecha'] ?? '',
@@ -145,15 +163,9 @@ $data = [
 'categoria' => $_POST['categoria'] ?? 'Corporativo',
 ];
 
-if (!$data['fecha'] || !$data['descripcion']) {
-echo json_encode(['success' => false, 'message' => 'Campos requeridos faltantes']);
-exit;
-}
-
-$file = $_FILES['archivo'] ?? null;
-
 $id = ContratosService::guardar($data, $file);
 if (!$id) {
+http_response_code(422);
 echo json_encode(['success' => false, 'message' => 'Error al guardar']);
 exit;
 }
@@ -175,6 +187,20 @@ echo json_encode(['success' => false]);
 exit;
 }
 
+if (!$this->fechaContratoValida($_POST['fecha'] ?? '') || trim((string)($_POST['descripcion'] ?? '')) === '') {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
+
+$file = $_FILES['archivo'] ?? null;
+if ($file && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE
+&& (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name']))) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'No se pudo cargar el archivo seleccionado.']);
+exit;
+}
+
 $data = [
 'fecha' => $_POST['fecha'] ?? '',
 'descripcion' => $_POST['descripcion'] ?? '',
@@ -186,8 +212,6 @@ $data = [
 ];
 
 $detalleExistente = ContratosService::getDetalle($id);
-
-$file = $_FILES['archivo'] ?? null;
 
 $ok = ContratosService::editar($id, $data, $file);
 if (!$ok) {
@@ -246,5 +270,11 @@ exit;
 private function detectContext(): string
 {
 return str_contains($_SERVER['REQUEST_URI'], '/almacen/') ? 'almacen' : 'corporativo';
+}
+
+private function fechaContratoValida(string $fecha): bool
+{
+$parsed = \DateTime::createFromFormat('!Y-m-d', $fecha);
+return $parsed !== false && $parsed->format('Y-m-d') === $fecha;
 }
 }

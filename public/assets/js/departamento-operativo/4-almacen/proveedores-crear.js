@@ -77,7 +77,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (hasError) {
-                this.notify('error', 'Completa los campos obligatorios marcados en rojo.');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return false;
             }
 

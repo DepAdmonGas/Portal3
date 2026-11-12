@@ -60,10 +60,15 @@ data-id-estacion="<?= $idEstacion ?>">
 <th class="text-center">Despacho</th>
 <template x-for="pc in prodCols" :key="'dp-'+pc.key">
 <td class="p-0">
-<input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
+<div class="position-relative">
+<input type="text" inputmode="decimal" class="border-0 p-3 pe-4 text-end w-100 bg-transparent"
 x-init="$el.value = formatInput(dia.despacho[pc.key])"
 @focus="$el.value = (parseFloat(dia.despacho[pc.key]) || 0).toString(); $el.select()"
 @blur="actualizarDespacho(dia, pc.col, $el)">
+<i x-show="updateStates[updateKey(dia, pc.col)] === 'saving'" class="ti ti-loader-2 ti-spin position-absolute top-50 end-0 translate-middle-y me-2 text-primary fs-6" title="Guardando" aria-label="Guardando"></i>
+<i x-show="updateStates[updateKey(dia, pc.col)] === 'saved'" class="ti ti-check position-absolute top-50 end-0 translate-middle-y me-2 text-success fs-6" title="Actualizado" aria-label="Actualizado"></i>
+<i x-show="updateStates[updateKey(dia, pc.col)] === 'error'" class="ti ti-alert-circle position-absolute top-50 end-0 translate-middle-y me-2 text-danger fs-6" title="No se pudo actualizar" aria-label="No se pudo actualizar"></i>
+</div>
 </td>
 </template>
 <td class="fw-semibold text-end" x-text="formatNumber(dia.despacho.lt)"></td>

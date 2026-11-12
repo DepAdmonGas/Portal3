@@ -723,42 +723,23 @@ class ReporteEstadisticoCreService
     //======================================================================
 
     /**
-     * Directorio físico de las facturas CRE.
+     * Directorio físico canónico de las facturas CRE en Portal3.
      *
-     * La BD guarda rutas relativas al proyecto anterior (archivos/cre/x.pdf).
-     * Se busca primero dentro de Portal3 y, si el archivo aún vive en el
-     * proyecto anterior, se usa ese como respaldo para no romper la descarga
-     * de documentos ya existentes sin necesidad de moverlos.
+     * La BD conserva rutas relativas heredadas (archivos/cre/x.pdf); se usa
+     * sólo su nombre para resolverlas dentro de la carpeta configurada en
+     * DownloadController: public/uploads/archivos/cre/.
      */
     public static function directorioFacturas(): ?string
     {
-        static $directorios = null;
+        $directorio = dirname(__DIR__, 2) . '/public/uploads/archivos/cre/';
 
-        if ($directorios !== null) {
-            return $directorios[0] ?? null;
-        }
-
-        $raizPortal = dirname(__DIR__, 2);
-        $candidatos = [
-            $raizPortal . '/public/uploads/archivos/cre/',
-            dirname($raizPortal, 1) . '/portal-sasisopa/archivos/cre/',
-        ];
-
-        foreach ($candidatos as $candidato) {
-            if (is_dir($candidato)) {
-                $directorios = [$candidato];
-                return $candidato;
-            }
-        }
-
-        $directorios = [null];
-
-        return null;
+        return is_dir($directorio) ? $directorio : null;
     }
 
     /**
-     * Ubica un archivo de factura. Devuelve null si no existe en ninguno de
-     * los directorios soportados, para no exponer enlaces rotos.
+     * Ubica una factura únicamente en la carpeta servida por DownloadController.
+     * Los archivos heredados se consideran disponibles después de importarlos
+     * a public/uploads/archivos/cre/ con su nombre original.
      */
     public static function resolverFactura(string $ruta): ?string
     {
@@ -768,19 +749,14 @@ class ReporteEstadisticoCreService
             return null;
         }
 
-        $raizPortal = dirname(__DIR__, 2);
-        $candidatos = [
-            $raizPortal . '/public/uploads/archivos/cre/' . $archivo,
-            dirname($raizPortal, 1) . '/portal-sasisopa/archivos/cre/' . $archivo,
-        ];
-
-        foreach ($candidatos as $candidato) {
-            if (is_file($candidato)) {
-                return $candidato;
-            }
+        $directorio = self::directorioFacturas();
+        if ($directorio === null) {
+            return null;
         }
 
-        return null;
+        $candidato = $directorio . $archivo;
+
+        return is_file($candidato) ? $candidato : null;
     }
 
     /** Ruta relativa que espera DownloadController para el tipo 'cre'. */

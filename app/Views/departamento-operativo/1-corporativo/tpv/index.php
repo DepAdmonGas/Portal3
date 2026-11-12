@@ -99,13 +99,13 @@ x-model="item.no_cierre_lote"
 <td class="align-middle text-end p-0">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
-<input type="number"
-min="0"
-step="any"
+<input type="text"
+inputmode="decimal"
 class="border-0 p-3 text-end w-100 bg-transparent"
 style="padding-left: 20px !important; min-width: 80px;"
-x-model="item.importe"
-@change="editarCierre(item.id, 'importe', $event.target.value)">
+:value="formatInputNumber(item.importe)"
+@input="formatNumericInput($event, item, 'importe')"
+@change="editarCierre(item.id, 'importe', item.importe)">
 </div>
 </td>
 </template>
@@ -118,12 +118,13 @@ x-model="item.importe"
 
 <td class="align-middle text-center p-0">
 <template x-if="!multiestacion && puedeEditar && !finalizado">
-<input type="number"
-min="0"
+<input type="text"
+inputmode="numeric"
 class="border-0 p-3 text-center w-100 bg-transparent"
 style="min-width: 60px;"
-x-model="item.ticktes"
-@change="editarCierre(item.id, 'ticktes', $event.target.value)">
+:value="formatInputNumber(item.ticktes)"
+@input="formatNumericInput($event, item, 'ticktes')"
+@change="editarCierre(item.id, 'ticktes', item.ticktes)">
 </template>
 
 <template x-if="!puedeEditar || multiestacion || finalizado">

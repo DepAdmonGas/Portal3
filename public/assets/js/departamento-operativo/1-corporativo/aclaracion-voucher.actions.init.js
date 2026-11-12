@@ -74,7 +74,7 @@ avActualizarPendientes();
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('aclaracionVoucherComponent', () => ({
-detalle: { id: 0, solicitante_nombre: '', fecha_creacion: '', nombre_ticket: '', fecha: '', hora: '', valera: '', importe: 0, numero_aclaracion: '', doc_ticket: null, doc_voucher: null, pagado: 0, estado: 0 },
+detalle: { id: 0, solicitante_nombre: '', fecha_creacion: '', nombre_ticket: '', fecha: '', hora: '', valera: '', importe: 0, numero_aclaracion: '', doc_ticket: null, doc_voucher: null, doc_ticket_disponible: false, doc_voucher_disponible: false, pagado: 0, estado: 0 },
 editando: false,
 editandoId: 0,
 puedeCrear: false,
@@ -93,6 +93,7 @@ detalleComentario: null,
 
 anexos: [],
 anexoForm: { descripcion: '' },
+errorsAnexo: {},
 anexoSolicitudId: null,
 subiendoAnexo: false,
 guardando: false,
@@ -131,6 +132,7 @@ abrirModalAgregar() {
 this.editando = false;
 this.editandoId = 0;
 this.errors = {};
+this.errorsAnexo = {};
 this.form = { nombre_ticket: '', fecha: '', hora: '', valera: '', importe: '', numero_aclaracion: '', pagado: '0', solicitante_nombre: '', fecha_creacion: '' };
 var ft = document.getElementById('fileTicket'); if (ft) ft.value = '';
 var fv = document.getElementById('fileVoucher'); if (fv) fv.value = '';
@@ -145,11 +147,12 @@ if (!row) return;
 this.editando = true;
 this.editandoId = id;
 this.errors = {};
+this.errorsAnexo = {};
 var ft = document.getElementById('fileTicket'); if (ft) ft.value = '';
 var fv = document.getElementById('fileVoucher'); if (fv) fv.value = '';
 this.form = {
 nombre_ticket: row.nombre_ticket, fecha: row.fecha_raw || '', hora: row.hora_raw || '',
-valera: row.valera, importe: row.importe, numero_aclaracion: row.numero_aclaracion,
+valera: row.valera, importe: this.formatearImporteValor(row.importe), numero_aclaracion: row.numero_aclaracion,
 pagado: String(row.pagado), solicitante_nombre: row.solicitante_nombre,
 fecha_creacion: row.fecha_creacion
 };
@@ -164,9 +167,10 @@ if (!this.form.nombre_ticket) { this.errors.nombre_ticket = true; valido = false
 if (!this.form.fecha) { this.errors.fecha = true; valido = false; }
 if (!this.form.hora) { this.errors.hora = true; valido = false; }
 if (!this.form.valera) { this.errors.valera = true; valido = false; }
-if (!this.form.importe || parseFloat(this.form.importe) <= 0) { this.errors.importe = true; valido = false; }
+var importeNormalizado = String(this.form.importe ?? '').replace(/,/g, '');
+if (importeNormalizado === '' || !Number.isFinite(Number(importeNormalizado))) { this.errors.importe = true; valido = false; }
 if (!this.form.numero_aclaracion) { this.errors.numero_aclaracion = true; valido = false; }
-if (!valido) return;
+if (!valido) { if (window.Notify) Notify.error('Completa los campos obligatorios.'); return; }
 
 this.guardando = true;
 var c = document.getElementById('container');
@@ -208,7 +212,7 @@ fd.append('nombre_ticket', this.form.nombre_ticket);
 fd.append('fecha', this.form.fecha);
 fd.append('hora', this.form.hora);
 fd.append('valera', this.form.valera);
-fd.append('importe', this.form.importe);
+fd.append('importe', String(this.form.importe).replace(/,/g, ''));
 fd.append('numero_aclaracion', this.form.numero_aclaracion);
 
 var ticketFile = document.getElementById('fileTicket');
@@ -228,6 +232,7 @@ bootstrap.Modal.getInstance('#modalAclaracion').hide();
 var dt = $('#tabla-aclaracion-voucher').DataTable();
 if (dt) dt.ajax.reload(null, false);
 } else {
+if (Array.isArray(json.campos)) json.campos.forEach(function (campo) { self.errors[campo] = true; });
 if (window.Notify) Notify.error(json.message || 'Error al guardar.');
 }
 })
@@ -277,7 +282,7 @@ if (!dt) return;
 var row = dt.rows().data().toArray().find(function (r) { return r.id === id; });
 if (row) {
 this.detalle = row;
-this.detalle.importe = parseFloat(row.importe || 0).toFixed(2);
+this.detalle.importe = Number(row.importe || 0).toFixed(2);
 new bootstrap.Modal('#modalDetalle').show();
 }
 },
@@ -357,6 +362,7 @@ async abrirAnexos(id) {
 this.anexoSolicitudId = id;
 this.selectedRows.anexos = null;
 this.anexoForm = { descripcion: '' };
+this.errorsAnexo = {};
 var fa = document.getElementById('fileAnexo'); if (fa) fa.value = '';
 this.anexos = [];
 try {
@@ -369,9 +375,12 @@ new bootstrap.Modal('#modalAnexos').show();
 
 async agregarAnexo() {
 if (this.subiendoAnexo) return;
-if (!this.anexoForm.descripcion.trim()) { if (window.Notify) Notify.error('La descripción es requerida.'); return; }
+this.errorsAnexo = {};
+var valido = true;
+if (!this.anexoForm.descripcion.trim()) { this.errorsAnexo.descripcion = true; valido = false; }
 var fileInput = document.getElementById('fileAnexo');
-if (!fileInput || !fileInput.files[0]) { if (window.Notify) Notify.error('Debe seleccionar un archivo.'); return; }
+if (!fileInput || !fileInput.files[0]) { this.errorsAnexo.archivo = true; valido = false; }
+if (!valido) { if (window.Notify) Notify.error('Completa los campos obligatorios.'); return; }
 this.subiendoAnexo = true;
 var fd = new FormData();
 fd.append('id', this.anexoSolicitudId);
@@ -388,6 +397,7 @@ var resp2 = await fetch('/departamento-operativo/corporativo/aclaracion-voucher/
 var json2 = await resp2.json();
 if (json2.success) this.anexos = json2.data || [];
 } else {
+if (Array.isArray(json.campos)) json.campos.forEach((campo) => { this.errorsAnexo[campo] = true; });
 if (window.Notify) Notify.error(json.message || 'Error al agregar el anexo.');
 }
 } catch (e) {
@@ -418,7 +428,43 @@ return;
 }
 var url = '/download?tipo=' + encodeURIComponent(tipo) + '&file=' + encodeURIComponent(archivo);
 window.open(url, '_blank');
+},
+
+formatearImporte(event) {
+var input = event.target;
+var raw = input.value;
+var cursor = input.selectionStart ?? raw.length;
+var digitosAntes = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+var normalizado = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+var partes = normalizado.split('.');
+var entero = partes.shift() || '';
+var decimales = partes.join('');
+var agrupado = entero.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+var formateado = normalizado.includes('.') ? agrupado + '.' + decimales : agrupado;
+this.form.importe = formateado;
+input.value = formateado;
+
+var nuevaPosicion = 0;
+var digitos = 0;
+while (nuevaPosicion < formateado.length && digitos < digitosAntes) {
+if (/[0-9.]/.test(formateado[nuevaPosicion])) digitos++;
+nuevaPosicion++;
 }
+input.setSelectionRange(nuevaPosicion, nuevaPosicion);
+},
+
+formatearImporteValor(value) {
+if (value === null || value === undefined || value === '') return '';
+var normalizado = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+var partes = normalizado.split('.');
+var entero = partes.shift() || '';
+var decimales = partes.join('');
+var agrupado = entero.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalizado.includes('.') ? agrupado + '.' + decimales : agrupado;
+},
+
+limpiarError(campo) { this.errors[campo] = false; },
+limpiarErrorAnexo(campo) { this.errorsAnexo[campo] = false; }
 }));
 
 });

@@ -134,14 +134,15 @@ public function crear()
 header('Content-Type: application/json; charset=utf-8');
 try {
 $moduleCtx = ModuleStationService::getContext('corte-diario');
-$idEstacion = (int) ($_POST['idEstacion'] ?? $moduleCtx['id_estacion'] ?? $this->estacionId());
-$cuenta = $_POST['Cuenta'] ?? '';
-$cliente = $_POST['Cliente'] ?? '';
-$tipo = $_POST['Tipo'] ?? '';
-$rfc = $_POST['RFC'] ?? '';
+$idEstacion = (int) ($moduleCtx['id_estacion'] ?? $this->estacionId());
+$cuenta = is_scalar($_POST['Cuenta'] ?? null) ? trim((string) $_POST['Cuenta']) : '';
+$cliente = is_scalar($_POST['Cliente'] ?? null) ? trim((string) $_POST['Cliente']) : '';
+$tipo = is_scalar($_POST['Tipo'] ?? null) ? trim((string) $_POST['Tipo']) : '';
+$rfc = is_scalar($_POST['RFC'] ?? null) ? trim((string) $_POST['RFC']) : '';
 
-if ($cuenta === '' || $cliente === '' || $tipo === '') {
-echo json_encode(['success' => false, 'message' => 'Campos requeridos incompletos']);
+if ($idEstacion <= 0 || $cuenta === '' || $cliente === '' || !in_array($tipo, ['Crédito', 'Débito'], true)) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa Cuenta, Cliente y Tipo con valores válidos.']);
 exit;
 }
 

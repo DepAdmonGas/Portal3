@@ -55,6 +55,7 @@ window.open(`/download?tipo=${tipo}&file=${encodeURIComponent(archivo)}`, '_blan
             comentarios: [],
             nuevoComentario: '',
             guardandoComentario: false,
+            comentarioInvalido: false,
             comentarioIdActual: null,
             detalleComentario: null,
             idUsuario: 0,
@@ -64,6 +65,7 @@ documentos: [],
 documentosModal: [],
 selectedRows: { detalleDocumentos: null, documentosModal: null },
 documentoForm: { nombre: 'VALE' },
+documentoErrors: { nombre: false, archivo: false },
 subiendoDocumento: false,
 
 init() {
@@ -76,7 +78,7 @@ window.abrirDetalle = (id) => this.abrirDetalle(id);
 window.abrirComentarios = (id) => this.abrirComentarios(id);
 window.abrirDocumentacion = (id) => this.abrirDocumentacion(id);
 window.confirmarEliminar = (id, name) => this.confirmarEliminar(id, name);
-window.downloadFile = (archivo) => this.download('solicitud-vales', archivo);
+window.downloadFile = (archivo, tipo = 'solicitud-vales') => this.download(tipo, archivo);
 
 document.addEventListener('ver-detalle', (e) => { this.abrirDetalle(e.detail.id); });
 document.addEventListener('abrir-comentarios', (e) => { this.abrirComentarios(e.detail.id); });
@@ -104,6 +106,7 @@ if (el) el.scrollTop = el.scrollHeight;
 
 async abrirComentarios(id) {
 this.comentarioIdActual = id;
+this.comentarioInvalido = false;
 this.detalleComentario = null;
 this.nuevoComentario = '';
 this.comentarios = [];
@@ -163,6 +166,9 @@ new bootstrap.Modal(document.getElementById('modalDetalle')).show();
 async abrirDocumentacion(id) {
 this.comentarioIdActual = id;
 this.selectedRows.documentosModal = null;
+this.documentoErrors = { nombre: false, archivo: false };
+const inputArchivo = document.getElementById('fileDocumento');
+if (inputArchivo) inputArchivo.value = '';
 try {
 const res = await axios.get('/departamento-operativo/corporativo/solicitud-vales/get-documentos', { params: { id } });
 if (res.data.success) {
@@ -186,7 +192,11 @@ table: '#tabla-solicitud-vales'
 
 async agregarComentario() {
 if (this.guardandoComentario) return;
-if (!this.nuevoComentario.trim()) return;
+if (!this.nuevoComentario.trim()) {
+this.comentarioInvalido = true;
+this.notify('error', 'Completa los campos obligatorios.');
+return;
+}
 if (!this.comentarioIdActual) return;
 
 this.guardandoComentario = true;
@@ -202,6 +212,7 @@ const json = await resp.json();
 
 if (json.success) {
 this.nuevoComentario = '';
+this.comentarioInvalido = false;
 const resp2 = await fetch('/departamento-operativo/corporativo/solicitud-vales/get-comentarios?id=' + solicitudId);
 const json2 = await resp2.json();
 if (json2.success) {
@@ -239,8 +250,12 @@ this.guardandoComentario = false;
 async agregarDocumento() {
 if (!this.comentarioIdActual) return;
 const fileInput = document.getElementById('fileDocumento');
-if (!fileInput || !fileInput.files[0]) {
-this.notify('error', 'Debe seleccionar un archivo');
+this.documentoErrors = {
+nombre: !this.documentoForm.nombre,
+archivo: !fileInput || !fileInput.files[0],
+};
+if (this.documentoErrors.nombre || this.documentoErrors.archivo) {
+this.notify('error', 'Completa los campos obligatorios.');
 return;
 }
 
@@ -264,7 +279,7 @@ this.notify('success', 'Documento agregado');
 this.notify('error', res.data.message || 'Error');
 }
 } catch (e) {
-this.notify('error', 'Error al subir documento');
+this.notify('error', e.response?.data?.message || 'Error al subir documento');
 } finally {
 this.subiendoDocumento = false;
 }

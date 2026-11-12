@@ -122,8 +122,9 @@
                                                 <ul class="dropdown-menu">
                                                     <li>
                                                         <span x-data="actions()">
-                                                            <a class="dropdown-item pointer d-flex align-items-center gap-2 pointer" @click.prevent="download('solicitud-cheque', f.factura)">
-                                                                <i class="ti ti-download fs-5"></i> Descargar
+                                                            <a class="dropdown-item pointer d-flex align-items-center gap-2 pointer" :class="{'disabled': !f.archivo_disponible}" @click.prevent="f.archivo_disponible && download('solicitud-cheque', f.factura)">
+                                                                <i class="ti fs-6" :class="f.archivo_disponible ? 'ti-download' : 'ti-file-off'"></i>
+                                                                <span x-text="f.archivo_disponible ? 'Descargar' : 'Archivo no disponible'"></span>
                                                             </a>
                                                         </span>
                                                     </li>
@@ -177,15 +178,15 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">* Cuenta:</label>
-                            <input type="text" class="form-control" x-model="formCuenta">
+                            <input type="text" class="form-control" x-model="formCuenta" :class="{'is-invalid': erroresDirectorio.cuenta}" @input="erroresDirectorio.cuenta = false">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">* Puesto:</label>
-                            <input type="text" class="form-control" x-model="formPuesto">
+                            <input type="text" class="form-control" x-model="formPuesto" :class="{'is-invalid': erroresDirectorio.puesto}" @input="erroresDirectorio.puesto = false">
                         </div>
                         <div>
                             <label class="form-label">* Clave:</label>
-                            <input type="text" class="form-control" x-model="formClave">
+                            <input type="text" class="form-control" x-model="formClave" :class="{'is-invalid': erroresDirectorio.clave}" @input="erroresDirectorio.clave = false">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -226,7 +227,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label mb-1">* Detalle:</label>
-                            <select class="form-select" x-model="formDetalle">
+                            <select class="form-select" x-model="formDetalle" :class="{'is-invalid': erroresFactura.detalle}" @change="erroresFactura.detalle = false">
                                 <option value="">Selecciona una opción...</option>
                                 <option value="Factura">Factura</option>
                                 <option value="Pago">Pago</option>
@@ -238,7 +239,7 @@
                         </div>
                         <div>
                             <label class="form-label mb-1">* Documento:</label>
-                            <input type="file" class="form-control" x-ref="facturaFileInput" accept=".pdf,.jpg,.png">
+                            <input type="file" class="form-control" x-ref="facturaFileInput" accept=".pdf,.jpg,.png" :class="{'is-invalid': erroresFactura.documento}" @change="erroresFactura.documento = false">
                         </div>
                     </div>
                     <div class="modal-footer">

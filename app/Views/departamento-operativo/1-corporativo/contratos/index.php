@@ -13,7 +13,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar los 
 <?php endif; ?>
 
 <div class="row ms-auto w-100 justify-content-end">
-  <div class="col-12 col-md-auto d-grid mb-2 mt-2">
+  <div class="col-12 col-md-auto d-grid mb-3 mt-3">
 <button type="button" id="contratos-nuevo-btn" class="btn bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#modal-contrato" style="display:<?= $global ? 'none' : '' ?>">
 <i class="ti ti-plus"></i> Nuevo
 </button>
@@ -70,11 +70,11 @@ x-data="{ ...actions(), ...contratosComponent() }"
 </div>
 <div class="col-12">
 <label class="form-label mb-3">PDF:</label>
-<template x-if="detalle.archivo">
-<iframe class="border-0 mb-3" :src="'/download?tipo=contratos&file=' + encodeURIComponent(detalle.archivo) + '&view=1'" width="100%" height="400px"></iframe>
+<template x-if="detalle.archivo_disponible">
+<iframe class="border-0 mb-3" :src="'/download?tipo=' + encodeURIComponent(detalle.tipo_descarga) + '&file=' + encodeURIComponent(detalle.archivo) + '&view=1'" width="100%" height="400px"></iframe>
 </template>
-<template x-if="!detalle.archivo">
-<p class="text-muted">No se cuenta con un archivo adjunto.</p>
+<template x-if="!detalle.archivo_disponible">
+<p class="text-muted"><i class="ti ti-file-off fs-6 me-1"></i><span x-text="detalle.archivo ? 'El archivo registrado no está disponible.' : 'No se cuenta con un archivo adjunto.'"></span></p>
 </template>
 </div>
 <div class="col-xl-4 col-lg-4 col-md-6">
@@ -105,15 +105,15 @@ x-data="{ ...actions(), ...contratosComponent() }"
 <div class="row">
 <div class="col-12">
 <label class="form-label mb-1">* Fecha:</label>
-<input type="date" class="form-control mb-3" x-model="form.fecha" required>
+<input type="date" class="form-control mb-3" x-model="form.fecha" @input="errors.fecha = false" :class="{'is-invalid': errors.fecha}">
 </div>
 <div class="col-12">
 <label class="form-label mb-1">* Descripcion del contrato:</label>
-<textarea class="form-control mb-3" x-model="form.descripcion" required></textarea>
+<textarea class="form-control mb-3" x-model="form.descripcion" @input="errors.descripcion = false" :class="{'is-invalid': errors.descripcion}"></textarea>
 </div>
 <div class="col-12">
-<label class="form-label mb-1">* PDF:</label>
-<input type="file" class="form-control mb-3" x-ref="archivoInput" accept=".pdf,.doc,.docx">
+<label class="form-label mb-1" x-text="modo === 'editar' && detalle.archivo_disponible ? 'PDF (opcional para reemplazar):' : '* PDF:'"></label>
+<input type="file" class="form-control mb-3" x-ref="archivoInput" accept=".pdf,.doc,.docx" @change="errors.archivo = false" :class="{'is-invalid': errors.archivo}">
 </div>
 <div class="col-12">
 <label class="form-label mb-1">Objeto:</label>

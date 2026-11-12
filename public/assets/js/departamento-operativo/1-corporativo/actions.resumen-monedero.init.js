@@ -17,14 +17,17 @@ modalFacturaVista: 'lista',
 modalFacturaTitulo: 'Facturas',
 
 facturaForm: { id: null, fecha: '', monedero: '', diferencia: '' },
+erroresFactura: {},
 guardandoFactura: false,
 
 ediForm: { idDocumento: null, complemento: '' },
+erroresEdi: {},
 ediLista: [],
 ediDocumentoNombre: '',
 guardandoEdi: false,
 
 docForm: { idMonedero: null, descripcion: '' },
+erroresDoc: {},
 docLista: [],
 guardandoDoc: false,
 
@@ -50,12 +53,6 @@ params: { id_mes: idMesDb }
 if (res.data.success) {
 this.rows = res.data.rows;
 this.totales = res.data.totales;
-this.rows.forEach(row => {
-row.g500fleet = Number(row.total_tarjetas) - Number(row.ticketcard) - Number(row.efecticard) - Number(row.inburgas) - Number(row.sodexo) - Number(row.ultragas) - Number(row.energex) - Number(row.shell);
-row.total_tb_fixed = Number(row.bancomer) + Number(row.amex) + Number(row.inburgas) + Number(row.inbursa);
-});
-this.totales.g500fleet = Number(this.totales.total_tarjetas) - Number(this.totales.ticketcard) - Number(this.totales.efecticard) - Number(this.totales.inburgas) - Number(this.totales.sodexo) - Number(this.totales.ultragas) - Number(this.totales.energex) - Number(this.totales.shell);
-this.totales.total_tb_fixed = Number(this.totales.bancomer) + Number(this.totales.amex) + Number(this.totales.inburgas) + Number(this.totales.inbursa);
 this.documentos = res.data.documentos;
 this.verProsegur = res.data.ver_prosegur || verProsegur;
 this.puedeEliminarDoc = res.data.puede_eliminar_doc !== undefined ? res.data.puede_eliminar_doc : true;
@@ -77,6 +74,38 @@ if (val === null || val === undefined) return '0.00';
 return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 },
 
+formatearNumero(value) {
+if (value === null || value === undefined || value === '') return '';
+const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatearDiferencia(event) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const caracteresAntes = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+this.facturaForm.diferencia = normalized.includes('.') ? grouped.replace(/,/g, '') + '.' + decimals : grouped.replace(/,/g, '');
+input.value = normalized.includes('.') ? grouped + '.' + decimals : grouped;
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < input.value.length && numericChars < caracteresAntes) {
+if (/[0-9.]/.test(input.value[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
+this.erroresFactura.diferencia = false;
+},
+
 seleccionarFila(row) {
 if (this.selectedRowFecha === row.fecha) return;
 this.selectedRowFecha = row.fecha;
@@ -85,14 +114,6 @@ this.selectedRowFecha = row.fecha;
 seleccionarFactura(doc) {
 if (this.selectedFacturaId === doc.id) return;
 this.selectedFacturaId = doc.id;
-},
-
-descargarExcel() {
-const container = document.getElementById('container');
-const idYear = container.dataset.idYear;
-const idMes = container.dataset.idMes;
-const idEstacion = container.dataset.idEstacion;
-window.location.href = '/departamento-operativo/resumen-monedero/excel/' + idYear + '/' + idMes + '/' + idEstacion;
 },
 
 resumenPorPeriodo() {
@@ -129,6 +150,7 @@ this.documentos = res.data.documentos;
 
 nuevaFactura() {
 this.facturaForm = { id: null, fecha: '', monedero: '', diferencia: '' };
+this.erroresFactura = {};
 this.modalFacturaVista = 'form';
 this.modalFacturaTitulo = 'Agregar factura';
 },
@@ -140,6 +162,7 @@ fecha: doc.fecha_input || doc.fecha,
 monedero: doc.monedero,
 diferencia: doc.diferencia
 };
+this.erroresFactura = {};
 this.modalFacturaVista = 'form';
 this.modalFacturaTitulo = 'Editar factura (' + (doc.monedero || '') + ')';
 },
@@ -147,13 +170,24 @@ this.modalFacturaTitulo = 'Editar factura (' + (doc.monedero || '') + ')';
 cancelarFormulario() {
 this.modalFacturaVista = 'lista';
 this.modalFacturaTitulo = 'Facturas';
+this.erroresFactura = {};
 this.cargarDocumentos();
 },
 
 guardarFactura() {
 const f = this.facturaForm;
-if (!f.fecha || !f.monedero || f.diferencia === '') {
-Notify.error('Todos los campos son requeridos');
+const pdfInput = document.getElementById('facturaPDF');
+const xmlInput = document.getElementById('facturaXML');
+const requiereArchivos = this.multiestacion && !f.id;
+this.erroresFactura = {
+fecha: !f.fecha,
+monedero: !f.monedero,
+diferencia: f.diferencia === '' || !Number.isFinite(Number(String(f.diferencia).replace(/,/g, ''))),
+pdf: requiereArchivos && !(pdfInput && pdfInput.files[0]),
+xml: requiereArchivos && !(xmlInput && xmlInput.files[0]),
+};
+if (Object.values(this.erroresFactura).some(Boolean)) {
+Notify.error('Completa los campos obligatorios.');
 return;
 }
 
@@ -167,8 +201,6 @@ formData.append('diferencia', f.diferencia);
 formData.append('year', container.dataset.idYear);
 formData.append('mes', container.dataset.idMes);
 
-const pdfInput = document.getElementById('facturaPDF');
-const xmlInput = document.getElementById('facturaXML');
 if (pdfInput && pdfInput.files[0]) formData.append('PDF_file', pdfInput.files[0]);
 if (xmlInput && xmlInput.files[0]) formData.append('XML_file', xmlInput.files[0]);
 
@@ -206,6 +238,7 @@ this.cargarDocumentos();
 
 abrirEdi(idDocumento) {
 this.ediForm = { idDocumento: idDocumento, complemento: '' };
+this.erroresEdi = {};
 this.modalFacturaVista = 'edi';
 
 const doc = this.documentos.find(d => d.id === idDocumento);
@@ -221,21 +254,26 @@ this.ediLista = res.data.edi;
 });
 },
 
-guardarEdi() {
-if (!this.ediForm.complemento) {
-Notify.error('Seleccione un complemento');
-return;
-}
-
+limpiarErrorEdiArchivo() {
 const pdfInput = document.getElementById('ediPDF');
 const xmlInput = document.getElementById('ediXML');
-const hasPdf = pdfInput && pdfInput.files[0];
-const hasXml = xmlInput && xmlInput.files[0];
+if ((pdfInput && pdfInput.files[0]) || (xmlInput && xmlInput.files[0])) {
+this.erroresEdi.archivos = false;
+}
+},
 
-if (!hasPdf && !hasXml) {
-Notify.error('Debe seleccionar al menos un archivo PDF o XML');
+guardarEdi() {
+const pdfInput = document.getElementById('ediPDF');
+const xmlInput = document.getElementById('ediXML');
+const tieneArchivo = !!(pdfInput && pdfInput.files[0]) || !!(xmlInput && xmlInput.files[0]);
+this.erroresEdi = { complemento: !this.ediForm.complemento, archivos: !tieneArchivo };
+if (Object.values(this.erroresEdi).some(Boolean)) {
+Notify.error('Completa los campos obligatorios.');
 return;
 }
+
+const hasPdf = pdfInput && pdfInput.files[0];
+const hasXml = xmlInput && xmlInput.files[0];
 
 this.guardandoEdi = true;
 const formData = new FormData();
@@ -266,6 +304,7 @@ this.guardandoEdi = false;
 
 abrirDocumentacion(idMonedero) {
 this.docForm = { idMonedero: idMonedero, descripcion: '' };
+this.erroresDoc = {};
 this.modalFacturaVista = 'documentacion';
 
 const doc = this.documentos.find(d => d.id === idMonedero);
@@ -281,14 +320,13 @@ this.docLista = res.data.lista;
 },
 
 guardarDocumentacion() {
-if (!this.docForm.descripcion) {
-Notify.error('El nombre del documento es requerido');
-return;
-}
-
 const fileInput = document.getElementById('docArchivoPDF');
-if (!fileInput || !fileInput.files[0]) {
-Notify.error('Debe seleccionar un archivo PDF o XLSX');
+this.erroresDoc = {
+descripcion: !String(this.docForm.descripcion || '').trim(),
+archivo: !(fileInput && fileInput.files[0]),
+};
+if (Object.values(this.erroresDoc).some(Boolean)) {
+Notify.error('Completa los campos obligatorios.');
 return;
 }
 

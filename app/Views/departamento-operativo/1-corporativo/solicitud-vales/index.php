@@ -115,9 +115,14 @@ Detalle de Solicitud</h5>
 <tr class="pointer" :class="{ selected: selectedRows.detalleDocumentos === doc.id }" @click="seleccionarFilaDocumentos('detalleDocumentos', doc.id)">
 <td class="text-center fw-normal" x-text="doc.nombre"></td>
 <td class="text-center">
-<a href="" @click.prevent="downloadFile(doc.documento)">
-<i class="ti ti-download text-primary fs-5"></i>
+<template x-if="doc.archivo_disponible">
+<a href="" @click.prevent="downloadFile(doc.documento, doc.tipo_descarga)">
+<i class="ti ti-download text-primary fs-6"></i>
 </a>
+</template>
+<template x-if="!doc.archivo_disponible">
+<i class="ti ti-file-off text-muted fs-6" aria-label="Archivo no disponible"></i>
+</template>
 </td>
 </tr>
 </template>
@@ -324,6 +329,8 @@ rows="1"
 placeholder="Escribe un comentario..."
 style="resize:none;"
 x-model="nuevoComentario"
+@input="comentarioInvalido = false"
+:class="{'is-invalid': comentarioInvalido}"
 @keydown.enter.prevent="agregarComentario()"></textarea>
 </div>
 
@@ -332,7 +339,7 @@ x-model="nuevoComentario"
 style="width:44px; height:44px;"
 type="button"
 @click="agregarComentario()"
-:disabled="guardandoComentario || !nuevoComentario.trim()">
+:disabled="guardandoComentario">
 
 <template x-if="!guardandoComentario">
 <i class="ti ti-send fs-5"></i>
@@ -366,7 +373,7 @@ Documentación</h5>
 <div class="row">
 
 <div class="mb-3">
-    <select class="form-select" x-model="documentoForm.nombre">
+    <select class="form-select" x-model="documentoForm.nombre" @change="documentoErrors.nombre = false" :class="{'is-invalid': documentoErrors.nombre}">
         <option value="">Selecciona una opción...</option>
         <option value="VALE">VALE</option>
         <option value="RECIBO">RECIBO</option>
@@ -377,7 +384,7 @@ Documentación</h5>
 </div>
 
 <div class="input-group mb-3">
-    <input type="file" class="form-control" id="fileDocumento">
+    <input type="file" class="form-control" id="fileDocumento" @change="documentoErrors.archivo = false" :class="{'is-invalid': documentoErrors.archivo}">
 
     <button type="button"
             class="btn btn-success text-nowrap"
@@ -403,7 +410,14 @@ Documentación</h5>
 <template x-for="doc in documentosModal" :key="doc.id">
 <tr class="pointer" :class="{ selected: selectedRows.documentosModal === doc.id }" @click="seleccionarFilaDocumentos('documentosModal', doc.id)">
 <th class="text-center fw-normal" x-text="doc.nombre"></th>
-<td class="text-center"><a href="" @click.prevent="downloadFile(doc.documento)"><i class="ti ti-download text-primary fs-5"></i></a></td>
+<td class="text-center">
+<template x-if="doc.archivo_disponible">
+<a href="" @click.prevent="downloadFile(doc.documento, doc.tipo_descarga)"><i class="ti ti-download text-primary fs-6"></i></a>
+</template>
+<template x-if="!doc.archivo_disponible">
+<i class="ti ti-file-off text-muted fs-6" aria-label="Archivo no disponible"></i>
+</template>
+</td>
 <td class="text-center"><a href="" @click.prevent="eliminarDocumento(doc.id)"><i class="ti ti-trash text-danger fs-5"></i></a></td>
 </tr>
 </template>

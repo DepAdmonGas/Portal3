@@ -342,10 +342,10 @@ public function uploadFactura()
 header('Content-Type: application/json; charset=utf-8');
 
 $idMes = (int) ($_POST['id_mes'] ?? 0);
-$fecha = $_POST['fecha'] ?? date('Y-m-d');
+$fecha = trim($_POST['fecha'] ?? '');
 $concepto = $_POST['concepto'] ?? '';
 
-if (!$idMes || !$concepto) {
+if (!$idMes || !$fecha || !$concepto) {
 echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
 exit;
 }
@@ -437,13 +437,19 @@ $idMes = (int) ($_POST['id_mes'] ?? 0);
 $nombreAceite = $_POST['nombre_aceite'] ?? '';
 $diferencia = (int) ($_POST['diferencia'] ?? 0);
 $comentario = $_POST['comentario'] ?? '';
+$documento = $_FILES['documento'] ?? [];
 
-if (!$idAceite || !$idMes) {
+if (!$idAceite || !$idMes || empty($documento) || ($documento['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
 echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
 exit;
 }
 
-$result = AceiteService::agregarDiferenciaPago($idAceite, $idMes, $nombreAceite, $diferencia, $comentario, $_FILES['documento'] ?? []);
+if (strtolower(pathinfo($documento['name'] ?? '', PATHINFO_EXTENSION)) !== 'pdf') {
+echo json_encode(['success' => false, 'message' => 'Solo se permiten archivos PDF']);
+exit;
+}
+
+$result = AceiteService::agregarDiferenciaPago($idAceite, $idMes, $nombreAceite, $diferencia, $comentario, $documento);
 
 if ($result['success']) {
 $usuario = Session::get('usuario');

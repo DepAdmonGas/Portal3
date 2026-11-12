@@ -72,6 +72,7 @@ $totalConsumo = 0; $totalPago = 0;
 
 foreach ($rows as &$row) {
 $row['total'] = (float) $row['total'];
+$row['comprobante_disponible'] = self::comprobanteDisponible((string) ($row['comprobante'] ?? ''));
 if ($row['consumo_tipo'] === 'Consumo') {
 $totalConsumo += $row['total'];
 if ($row['tipo'] === 'Débito') $dc += $row['total'];
@@ -99,6 +100,17 @@ return [
 ];
 }
 
+private static function comprobanteDisponible(string $archivo): bool
+{
+$nombre = basename(trim($archivo));
+if ($nombre === '' || $nombre === '.' || $nombre === '..') {
+return false;
+}
+
+$archivosDir = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+return is_file($archivosDir . $nombre) || is_file($archivosDir . 'clientes/' . $nombre);
+}
+
 public static function getClientes(int $idEstacion): array
 {
 return Cliente::where('id_estacion', $idEstacion)
@@ -117,11 +129,25 @@ $credito = Cliente::where('id_estacion', $idEstacion)
 ->get()
 ->toArray();
 
+foreach ($credito as &$row) {
+foreach (['doc_cc', 'doc_ac', 'doc_cd', 'doc_io', 'doc_rfc', 'doc_oc', 'doc_np'] as $campo) {
+$row[$campo . '_disponible'] = self::comprobanteDisponible((string) ($row[$campo] ?? ''));
+}
+}
+unset($row);
+
 $debito = Cliente::where('id_estacion', $idEstacion)
 ->where('tipo', 'Débito')
 ->orderBy('cliente')
 ->get()
 ->toArray();
+
+foreach ($debito as &$row) {
+foreach (['doc_cd', 'doc_io', 'doc_rfc'] as $campo) {
+$row[$campo . '_disponible'] = self::comprobanteDisponible((string) ($row[$campo] ?? ''));
+}
+}
+unset($row);
 
 return [
 'credito' => $credito,
@@ -143,12 +169,35 @@ if (!$file || empty($file['name']) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !==
 return null;
 }
 
-$dir = __DIR__ . '/../../public/uploads/archivos/clientes/';
-if (!is_dir($dir)) {
-mkdir($dir, 0755, true);
+$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+return null;
 }
 
-$nombre = uniqid() . '-' . basename($file['name']);
+$nombreOriginal = basename(str_replace('\\', '/', (string) $file['name']));
+if ($nombreOriginal === '' || $nombreOriginal === '.' || $nombreOriginal === '..') {
+return null;
+}
+$nombre = uniqid('', true) . '-' . $nombreOriginal;
+if (!move_uploaded_file($file['tmp_name'], $dir . $nombre)) {
+return null;
+}
+
+return $nombre;
+}
+
+public static function guardarComprobante(?array $file): ?string
+{
+if (!$file || empty($file['name']) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+return null;
+}
+
+$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+return null;
+}
+
+$nombre = uniqid('', true) . '-' . basename($file['name']);
 if (!move_uploaded_file($file['tmp_name'], $dir . $nombre)) {
 return null;
 }
@@ -166,36 +215,53 @@ $nuevo->tipo = $tipo;
 $nuevo->rfc = $rfc;
 $nuevo->estado = 1;
 
-try {
-$saved = $nuevo->save();
-} catch (\Throwable $e) {
-return ['success' => false, 'message' => 'Error al guardar el cliente: ' . $e->getMessage()];
-}
-
-if ($saved) {
-try {
-$fieldMap = [];
 if ($tipo === 'Crédito') {
 $fieldMap = [
 0 => 'doc_cc', 1 => 'doc_ac', 2 => 'doc_cd',
 3 => 'doc_io', 4 => 'doc_rfc', 5 => 'doc_oc', 6 => 'doc_np',
 ];
-} elseif ($tipo === 'Débito') {
+} else {
 $fieldMap = [2 => 'doc_cd', 3 => 'doc_io', 4 => 'doc_rfc'];
 }
+
+$archivosCargados = [];
 foreach ($fieldMap as $idx => $column) {
 $file = $files[$idx] ?? null;
+if (!$file || empty($file['name']) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+continue;
+}
+if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+foreach ($archivosCargados as $archivo) {
+@unlink(dirname(__DIR__, 2) . '/public/uploads/archivos/' . $archivo);
+}
+return ['success' => false, 'message' => 'No se pudo cargar uno de los documentos seleccionados.'];
+}
 $nombre = self::guardarArchivo($file);
-if ($nombre) {
-Cliente::where('id', $nuevo->id)
-->where('id_estacion', $idEstacion)
-->update([$column => $nombre]);
+if (!$nombre) {
+foreach ($archivosCargados as $archivo) {
+@unlink(dirname(__DIR__, 2) . '/public/uploads/archivos/' . $archivo);
 }
+return ['success' => false, 'message' => 'No se pudo guardar uno de los documentos en public/uploads/archivos.'];
 }
+$nuevo->$column = $nombre;
+$archivosCargados[] = $nombre;
+}
+
+try {
+$saved = $nuevo->save();
 } catch (\Throwable $e) {
-return ['success' => false, 'message' => 'Error al procesar archivos: ' . $e->getMessage()];
+foreach ($archivosCargados as $archivo) {
+@unlink(dirname(__DIR__, 2) . '/public/uploads/archivos/' . $archivo);
 }
+return ['success' => false, 'message' => 'Error al guardar el cliente: ' . $e->getMessage()];
+}
+
+if ($saved) {
 return ['success' => true, 'message' => 'Cliente creado exitosamente'];
+}
+
+foreach ($archivosCargados as $archivo) {
+@unlink(dirname(__DIR__, 2) . '/public/uploads/archivos/' . $archivo);
 }
 
 return ['success' => false, 'message' => 'No se pudo crear el cliente'];
@@ -230,10 +296,17 @@ $fieldMap = [2 => 'doc_cd', 3 => 'doc_io', 4 => 'doc_rfc'];
 }
 foreach ($fieldMap as $idx => $column) {
 $file = $files[$idx] ?? null;
-$nombre = self::guardarArchivo($file);
-if ($nombre) {
-Cliente::where('id', $idCliente)->update([$column => $nombre]);
+if (!$file || empty($file['name']) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+continue;
 }
+if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+return ['success' => false, 'message' => 'No se pudo cargar uno de los documentos seleccionados.'];
+}
+$nombre = self::guardarArchivo($file);
+if (!$nombre) {
+return ['success' => false, 'message' => 'No se pudo guardar uno de los documentos en public/uploads/archivos.'];
+}
+Cliente::where('id', $idCliente)->update([$column => $nombre]);
 }
 } catch (\Throwable $e) {
 return ['success' => false, 'message' => 'Error al procesar archivos: ' . $e->getMessage()];
@@ -246,7 +319,7 @@ return ['success' => false, 'message' => 'No se pudo actualizar el cliente'];
 
 public static function agregarPago(int $idReporte, int $idCliente, float $total, string $formaPago, ?array $file): bool
 {
-$pdfNombre = self::guardarArchivo($file) ?? '';
+$pdfNombre = self::guardarComprobante($file) ?? '';
 
 $consumoPago = new ConsumosPago();
 $consumoPago->id_reportedia = $idReporte;

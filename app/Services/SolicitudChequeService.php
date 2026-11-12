@@ -568,6 +568,7 @@ $documentos = SolicitudChequeDocumento::where('id_solicitud', $id)
 ->orderBy('id', 'asc')
 ->get()
 ->toArray();
+$documentos = self::marcarDisponibilidadDocumentos($documentos);
 
 // Map eager-loaded usuario data into firmas
 foreach ($firmas as &$f) {
@@ -579,15 +580,20 @@ $fechaF = !empty($fechaStr) ? substr($fechaStr, 0, 10) : '';
 $horaF = !empty($fechaStr) && strlen($fechaStr) > 11 ? date("g:i a", strtotime(substr($fechaStr, 11))) : '';
 if ($tipo === 'A') {
 $f['tipo_label'] = 'NOMBRE Y FIRMA DEL ENCARGADO';
-$f['firma_img_url'] = '/uploads/firmas/solicitud-cheque/' . ($f['firma'] ?? '');
+$f['firma_img_disponible'] = self::getFirmaPath((string)($f['firma'] ?? '')) !== null;
+$f['firma_img_url'] = $f['firma_img_disponible']
+    ? '/download?tipo=solicitud-cheque-firmas&file=' . rawurlencode((string)($f['firma'] ?? '')) . '&view=1'
+    : null;
 $f['firma_texto'] = null;
 } elseif ($tipo === 'B') {
 $f['tipo_label'] = 'NOMBRE Y FIRMA DE VOBO';
 $f['firma_img_url'] = null;
+$f['firma_img_disponible'] = false;
 $f['firma_texto'] = '<b>Fecha: ' . formatearFecha($fechaF) . ', ' . $horaF . '</b> <br> La solicitud de cheque se firmó por un medio electrónico.';
 } elseif ($tipo === 'C') {
 $f['tipo_label'] = 'NOMBRE Y FIRMA DE AUTORIZACIÓN';
 $f['firma_img_url'] = null;
+$f['firma_img_disponible'] = false;
 $f['firma_texto'] = '<b>Fecha: ' . formatearFecha($fechaF) . ', ' . $horaF . '</b> <br> La solicitud de cheque se firmó por un medio electrónico.';
 }
 
@@ -700,6 +706,9 @@ $idMes = (int)($data['id_mes'] ?? 0);
 if (!$idYear || !$idMes) {
 return ['success' => false, 'message' => 'Año/mes no válido'];
 }
+if (Carbon::createFromDate($idYear, $idMes, 1)->startOfMonth()->lt(Carbon::now()->copy()->startOfMonth())) {
+return ['success' => false, 'message' => 'No se pueden crear solicitudes para periodos anteriores al mes actual.'];
+}
 
 $fecha = $data['fecha'] ?? '';
 $beneficiario = $data['beneficiario'] ?? '';
@@ -731,6 +740,31 @@ $valDepto = (int)$depto;
 } elseif ((int)$depto > 0) {
 $valIdEstacion = 8;
 $valDepto = (int)$depto;
+}
+
+$validacion = [
+    'fecha' => trim((string)$fecha) === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$fecha),
+    'beneficiario' => trim((string)$beneficiario) === '',
+    'monto' => !is_numeric($data['monto'] ?? null) || (float)$monto < 0,
+    'moneda' => trim((string)$moneda) === '',
+    'no_factura' => trim((string)$noFactura) === '',
+    'email' => !filter_var($correo, FILTER_VALIDATE_EMAIL),
+    'concepto' => trim((string)$concepto) === '',
+    'solicitante' => trim((string)$solicitante) === '',
+    'telefono' => trim((string)$telefono) === '',
+    'cfdi' => trim((string)$cfdi) === '',
+    'metodo_pago' => trim((string)$metodoPago) === '',
+    'forma_pago' => trim((string)$formaPago) === '',
+    'banco' => trim((string)$banco) === '',
+    'no_cuenta' => trim((string)$noCuenta) === '',
+    'cuenta_clabe' => trim((string)$cuentaClabe) === '',
+    'referencia' => trim((string)$referencia) === '',
+    'firma' => trim((string)($data['firma_base64'] ?? '')) === '',
+];
+if ($idEstacion === 8) $validacion['razonsocial'] = trim((string)$razonSocial) === '';
+if ($idEstacion === 14) $validacion['depto'] = (int)$depto <= 0;
+if (in_array(true, $validacion, true)) {
+    return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'validation' => $validacion];
 }
 
 $id = self::nextId();
@@ -878,11 +912,11 @@ public static function getDocumentos(int $idSolicitud): array
 {
 if (!self::findAuthorizedSolicitudCheque($idSolicitud)) return [];
 
-return SolicitudChequeDocumento::where('id_solicitud', $idSolicitud)
+return self::marcarDisponibilidadDocumentos(SolicitudChequeDocumento::where('id_solicitud', $idSolicitud)
 ->where('nombre', '!=', 'PAGO')
 ->orderBy('id', 'asc')
 ->get()
-->toArray();
+->toArray());
 }
 
 private static function notificarDocumento(int $idSolicitud, int $idUsuario, string $accion, string $tipoDocumento = '', string $nombreArchivo = ''): void
@@ -1554,12 +1588,12 @@ public static function getTelcel(int $idSolicitud): array
 $row = SolicitudCheque::find($idSolicitud);
 if (!$row) return [];
 
-return SolicitudChequeTelcel::where('id_year', $row->id_year)
+return self::marcarArchivosTelcel(SolicitudChequeTelcel::where('id_year', $row->id_year)
 ->where('id_mes', $row->id_mes)
 ->where('id_estacion', $row->id_estacion)
 ->orderBy('id', 'asc')
 ->get()
-->toArray();
+->toArray());
 }
 
 public static function storeTelcel(int $idSolicitud, array $data, array $files): array
@@ -1660,12 +1694,12 @@ return ['success' => false, 'message' => 'Error al actualizar: ' . $e->getMessag
 
 public static function getTelcelByFilter(int $idYear, int $idMes, int $idEstacion): array
 {
-return SolicitudChequeTelcel::where('id_year', $idYear)
+return self::marcarArchivosTelcel(SolicitudChequeTelcel::where('id_year', $idYear)
 ->where('id_mes', $idMes)
 ->where('id_estacion', $idEstacion)
 ->orderBy('id', 'asc')
 ->get()
-->toArray();
+->toArray());
 }
 
 public static function storeTelcelGlobal(int $idYear, int $idMes, int $idEstacion, array $files): array
@@ -1717,11 +1751,11 @@ return ['success' => false, 'message' => 'Error al eliminar: ' . $e->getMessage(
 
 public static function getPagos(int $idSolicitud): array
 {
-return SolicitudChequeDocumento::where('id_solicitud', $idSolicitud)
+return self::marcarDisponibilidadDocumentos(SolicitudChequeDocumento::where('id_solicitud', $idSolicitud)
 ->where('nombre', 'PAGO')
 ->orderBy('id', 'asc')
 ->get()
-->toArray();
+->toArray());
 }
 
 public static function storePago(int $idSolicitud, array $file): array
@@ -2104,16 +2138,22 @@ return ($max ?: 0) + 1;
 
 private static function guardarFirmaImagen(int $idSolicitud, int $idUsuario, string $tipoFirma, string $base64): void
 {
-$img = str_replace('data:image/png;base64,', '', $base64);
-$fileData = base64_decode($img);
+$img = preg_replace('#^data:image/png;base64,#i', '', trim($base64));
+$fileData = base64_decode((string)$img, true);
+if ($fileData === false || $fileData === '') {
+throw new \RuntimeException('La firma no tiene un formato PNG válido.');
+}
 $fileName = uniqid() . '.png';
 $firmaDir = self::getFirmaDir();
 
-if (!is_dir($firmaDir)) {
-mkdir($firmaDir, 0755, true);
+if (!is_dir($firmaDir) && !mkdir($firmaDir, 0755, true) && !is_dir($firmaDir)) {
+throw new \RuntimeException('No se pudo crear el directorio de firmas de solicitud de cheque.');
 }
 
-if (file_put_contents($firmaDir . '/' . $fileName, $fileData)) {
+if (file_put_contents($firmaDir . DIRECTORY_SEPARATOR . $fileName, $fileData) === false) {
+throw new \RuntimeException('No se pudo guardar la firma de solicitud de cheque.');
+}
+
 SolicitudChequeFirma::create([
 'id_solicitud' => $idSolicitud,
 'id_usuario' => $idUsuario,
@@ -2122,7 +2162,6 @@ SolicitudChequeFirma::create([
 'fecha' => Carbon::now(),
 ]);
 }
-}
 
 private static function editarFirmaImagen(int $idSolicitud, int $idUsuario, string $tipoFirma, string $base64): void
 {
@@ -2130,19 +2169,25 @@ $firmaExistente = SolicitudChequeFirma::where('id_solicitud', $idSolicitud)
 ->where('tipo_firma', $tipoFirma)
 ->first();
 
-$img = str_replace('data:image/png;base64,', '', $base64);
-$fileData = base64_decode($img);
+$img = preg_replace('#^data:image/png;base64,#i', '', trim($base64));
+$fileData = base64_decode((string)$img, true);
+if ($fileData === false || $fileData === '') {
+throw new \RuntimeException('La firma no tiene un formato PNG válido.');
+}
 $fileName = uniqid() . '.png';
 $firmaDir = self::getFirmaDir();
 
-if (!is_dir($firmaDir)) {
-mkdir($firmaDir, 0755, true);
+if (!is_dir($firmaDir) && !mkdir($firmaDir, 0755, true) && !is_dir($firmaDir)) {
+throw new \RuntimeException('No se pudo crear el directorio de firmas de solicitud de cheque.');
 }
 
-if (file_put_contents($firmaDir . '/' . $fileName, $fileData)) {
+if (file_put_contents($firmaDir . DIRECTORY_SEPARATOR . $fileName, $fileData) === false) {
+throw new \RuntimeException('No se pudo guardar la firma de solicitud de cheque.');
+}
+
 if ($firmaExistente) {
-$oldFile = $firmaDir . '/' . $firmaExistente->firma;
-if (file_exists($oldFile)) unlink($oldFile);
+$oldFile = self::getFirmaPath((string)$firmaExistente->firma);
+if ($oldFile !== null && is_file($oldFile)) unlink($oldFile);
 $firmaExistente->id_usuario = $idUsuario;
 $firmaExistente->firma = $fileName;
 $firmaExistente->save();
@@ -2154,7 +2199,6 @@ SolicitudChequeFirma::create([
 'firma' => $fileName,
 'fecha' => Carbon::now(),
 ]);
-}
 }
 }
 
@@ -2183,16 +2227,29 @@ $documentTypes = [
 ];
 
 $uploadDir = self::getUploadDir();
-if (!is_dir($uploadDir)) {
-mkdir($uploadDir, 0755, true);
-}
 
 foreach ($documentTypes as $idx => $nombre) {
 $fieldName = 'doc_' . $idx;
-if (!empty($files[$fieldName]) && $files[$fieldName]['error'] === UPLOAD_ERR_OK) {
+if (empty($files[$fieldName]) || ($files[$fieldName]['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+continue;
+}
+if (($files[$fieldName]['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+throw new \RuntimeException('No se pudo recibir el archivo de ' . strtolower($nombre) . '.');
+}
+
+$nombreOriginal = basename(str_replace('\\', '/', (string)($files[$fieldName]['name'] ?? '')));
+if ($nombreOriginal === '') {
+throw new \RuntimeException('El nombre de uno de los archivos está vacío.');
+}
+
 $aleatorio = uniqid();
-$archivoNombre = $aleatorio . '-' . $files[$fieldName]['name'];
-if (move_uploaded_file($files[$fieldName]['tmp_name'], $uploadDir . '/' . $archivoNombre)) {
+$archivoNombre = $aleatorio . '-' . $nombreOriginal;
+$rutaDestino = $uploadDir . DIRECTORY_SEPARATOR . $archivoNombre;
+if (!move_uploaded_file($files[$fieldName]['tmp_name'], $rutaDestino)) {
+throw new \RuntimeException('No se pudo guardar el archivo de ' . strtolower($nombre) . '.');
+}
+
+try {
 SolicitudChequeDocumento::create([
 'id_solicitud' => $idSolicitud,
 'nombre' => $nombre,
@@ -2202,7 +2259,9 @@ SolicitudChequeDocumento::create([
 if ($nombre === 'COTIZACIÓN') {
 self::storeComentarioInterno($idSolicitud, $idUsuario, 'Factura contra entrega');
 }
-}
+} catch (\Throwable $e) {
+if (is_file($rutaDestino)) unlink($rutaDestino);
+throw $e;
 }
 }
 }
@@ -2277,20 +2336,70 @@ SolicitudChequeToken::where('id_solicitud', $idSolicitud)->delete();
 
 public static function getUploadDir(): string
 {
-$dir = __DIR__ . '/../../public/uploads/archivos/solicitud-cheque';
-if (!is_dir($dir)) {
-mkdir($dir, 0755, true);
+$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-cheque';
+if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+throw new \RuntimeException('No se pudo crear el directorio de archivos de solicitud de cheque.');
 }
 return realpath($dir) ?: $dir;
 }
 
+private static function archivoSolicitudDisponible(?string $nombreArchivo): bool
+{
+    $nombreArchivo = basename(trim((string)$nombreArchivo));
+    if ($nombreArchivo === '' || $nombreArchivo === '.') return false;
+
+    $base = dirname(__DIR__, 2) . '/public/uploads/archivos';
+    return is_file($base . '/solicitud-cheque/' . $nombreArchivo)
+        || is_file($base . '/' . $nombreArchivo);
+}
+
+private static function marcarDisponibilidadDocumentos(array $documentos): array
+{
+    foreach ($documentos as &$documento) {
+        $documento['archivo_disponible'] = self::archivoSolicitudDisponible($documento['documento'] ?? '');
+    }
+    unset($documento);
+    return $documentos;
+}
+
+private static function marcarArchivosTelcel(array $registros): array
+{
+    foreach ($registros as &$registro) {
+        $registro['factura_disponible'] = self::archivoSolicitudDisponible($registro['factura'] ?? '');
+        $registro['c_pago_disponible'] = self::archivoSolicitudDisponible($registro['c_pago'] ?? '');
+    }
+    unset($registro);
+    return $registros;
+}
+
 public static function getFirmaDir(): string
 {
-$dir = __DIR__ . '/../../public/uploads/firmas/solicitud-cheque';
-if (!is_dir($dir)) {
-mkdir($dir, 0755, true);
+$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-cheque-firmas';
+if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+throw new \RuntimeException('No se pudo crear el directorio de firmas de solicitud de cheque.');
 }
 return realpath($dir) ?: $dir;
+}
+
+public static function getFirmaPath(string $nombreArchivo): ?string
+{
+$nombreArchivo = basename(trim($nombreArchivo));
+if ($nombreArchivo === '' || $nombreArchivo === '.') return null;
+
+$raiz = dirname(__DIR__, 2) . '/public/uploads/archivos';
+$directorios = [
+    $raiz . '/solicitud-cheque-firmas',
+    $raiz,
+    dirname(__DIR__, 2) . '/public/uploads/firmas/solicitud-cheque',
+    dirname(__DIR__, 2) . '/public/imgs/firma',
+];
+
+foreach ($directorios as $directorio) {
+    $ruta = rtrim($directorio, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $nombreArchivo;
+    if (is_file($ruta)) return $ruta;
+}
+
+return null;
 }
 
 private static function notificarCreacion(int $idSolicitud, int $idUsuario, string $nameEstacion, int $idEstacion, int $depto, string $fecha, float $monto, string $moneda, string $concepto, string $beneficiario, string $razonSocial = '', string $solicitante = '', string $noFactura = '', int $idYear = 0, int $idMes = 0): void
@@ -2729,6 +2838,14 @@ return Directorio::where('id_mes', $idReporte)->orderBy('id', 'asc')->get()->toA
 
 public static function storeDirectorio(int $idEstacion, int $idYear, int $idMes, array $data): array
 {
+$validacion = [
+    'cuenta' => trim((string)($data['cuenta'] ?? '')) === '',
+    'puesto' => trim((string)($data['puesto'] ?? '')) === '',
+    'clave' => trim((string)($data['clave'] ?? '')) === '',
+];
+if (in_array(true, $validacion, true)) {
+    return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'validation' => $validacion];
+}
 $idReporte = self::ensureMesId($idEstacion, $idYear, $idMes);
 try {
 Directorio::create([
@@ -2751,6 +2868,14 @@ public static function updateDirectorio(int $id, array $data): array
 {
 $row = Directorio::find($id);
 if (!$row) return ['success' => false, 'message' => 'No encontrado'];
+$validacion = [
+    'cuenta' => trim((string)($data['cuenta'] ?? $row->cuenta)) === '',
+    'puesto' => trim((string)($data['puesto'] ?? $row->puesto)) === '',
+    'clave' => trim((string)($data['clave'] ?? $row->clave)) === '',
+];
+if (in_array(true, $validacion, true)) {
+    return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'validation' => $validacion];
+}
 try {
 $row->cuenta = $data['cuenta'] ?? $row->cuenta;
 $row->puesto = $data['puesto'] ?? $row->puesto;
@@ -2793,34 +2918,60 @@ public static function getFacturasTelcelList(int $idEstacion, int $idYear, int $
 {
 $idReporte = self::getMesId($idEstacion, $idYear, $idMes);
 if (!$idReporte) return [];
-return FacturaTelcel::where('id_mes', $idReporte)->orderBy('id', 'desc')->get()->toArray();
+$facturas = FacturaTelcel::where('id_mes', $idReporte)->orderBy('id', 'desc')->get()->toArray();
+$directorioActual = dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-cheque';
+$directorioImportado = dirname(__DIR__, 2) . '/public/uploads/archivos';
+
+foreach ($facturas as &$factura) {
+    $nombre = basename((string)($factura['factura'] ?? ''));
+    $factura['archivo_disponible'] = $nombre !== '' && (
+        is_file($directorioActual . DIRECTORY_SEPARATOR . $nombre)
+        || is_file($directorioImportado . DIRECTORY_SEPARATOR . $nombre)
+    );
+}
+unset($factura);
+
+return $facturas;
 }
 
 public static function storeFacturaTelcel(int $idEstacion, int $idYear, int $idMes, array $data, array $files): array
 {
+$detalle = trim((string)($data['detalle'] ?? ''));
+$archivo = $files['documento'] ?? null;
+if ($detalle === '' || !$archivo || (int)($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+    return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'validation' => ['detalle' => $detalle === '', 'documento' => true]];
+}
+
+$nombreOriginal = basename((string)($archivo['name'] ?? ''));
+$extension = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
+if (!in_array($extension, ['pdf', 'jpg', 'png'], true)) {
+    return ['success' => false, 'message' => 'El documento debe ser PDF, JPG o PNG.', 'validation' => ['documento' => true]];
+}
+
 $idReporte = self::ensureMesId($idEstacion, $idYear, $idMes);
-$factura = '';
-if (!empty($files['documento']) && $files['documento']['error'] === UPLOAD_ERR_OK) {
-$aleatorio = uniqid();
-$nombreArchivo = $aleatorio . '-' . $files['documento']['name'];
 $uploadDir = self::getUploadDir();
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-if (move_uploaded_file($files['documento']['tmp_name'], $uploadDir . '/' . $nombreArchivo)) {
-$factura = $nombreArchivo;
+$nombreArchivo = bin2hex(random_bytes(12)) . '.' . $extension;
+$rutaArchivo = $uploadDir . DIRECTORY_SEPARATOR . $nombreArchivo;
+if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+    return ['success' => false, 'message' => 'No se pudo preparar el almacenamiento del documento.'];
 }
+if (!move_uploaded_file($archivo['tmp_name'], $rutaArchivo)) {
+    return ['success' => false, 'message' => 'No se pudo guardar el documento.'];
 }
+
 try {
 FacturaTelcel::create([
 'id_mes' => $idReporte,
-'detalle' => $data['detalle'] ?? '',
-'factura' => $factura,
+'detalle' => $detalle,
+'factura' => $nombreArchivo,
 ]);
 $usuario = Auth::user();
 if ($usuario) {
-self::notificarFacturaTelcel($idEstacion, $idYear, $idMes, $usuario->id, 'agregar_factura', $data['detalle'] ?? '');
+self::notificarFacturaTelcel($idEstacion, $idYear, $idMes, $usuario->id, 'agregar_factura', $detalle);
 }
 return ['success' => true, 'message' => 'Factura agregada.'];
 } catch (\Exception $e) {
+if (is_file($rutaArchivo)) unlink($rutaArchivo);
 return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
 }
 }

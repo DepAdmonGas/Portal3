@@ -60,6 +60,9 @@ $nombreFiltro = $estacionModel ? $estacionModel->nombre : 'Estación #' . $idEst
 }
 
 $esMesActual = (Carbon::now()->year == $idYear && Carbon::now()->month == $idMes);
+$periodoPermiteNuevaSolicitud = Carbon::createFromDate($idYear, $idMes, 1)
+    ->startOfMonth()
+    ->greaterThanOrEqualTo(Carbon::now()->copy()->startOfMonth());
 
 $titleWithPeriod = 'Solicitud de Cheques (' . nombremes($idMes) . ' ' . $idYear . ')';
 $titleH4 = $titleWithPeriod;
@@ -131,6 +134,7 @@ $data = [
 'idEstacion' => $idEstacion,
 'idDepto' => $idDepto,
 'esMesActual' => $esMesActual,
+'periodoPermiteNuevaSolicitud' => $periodoPermiteNuevaSolicitud,
 'esEstacionNormal' => $esEstacionNormal,
 'multiestacion' => $esMultiestacion,
 'yearMesTemplate' => $yearMesTemplate,
@@ -184,6 +188,15 @@ public function crear($idYear, $idMes, $idEstacion = 0, $idDepto = 0)
 $validados = DropdownYearMesService::validarYearMes($idYear, $idMes);
 $idYear = $validados['idYear'];
 $idMes = $validados['idMes'];
+
+$periodoPermiteNuevaSolicitud = Carbon::createFromDate($idYear, $idMes, 1)
+    ->startOfMonth()
+    ->greaterThanOrEqualTo(Carbon::now()->copy()->startOfMonth());
+if (!$periodoPermiteNuevaSolicitud) {
+http_response_code(403);
+View::render('errors/403', [], 'departamento-operativo');
+return;
+}
 
 $puedeCrear = ModuloDptoOperativoService::validaPermiso('corporativo', 'leer');
 if (!$puedeCrear) {
@@ -970,14 +983,14 @@ $html .= '<div class="text-secondary text-center">';
 $html .= '<div>' . $h($f['usuario_nombre'] ?? '') . '</div>';
 
 if ($f['tipo_firma'] === 'A' && !empty($f['firma'])) {
-$rutaArchivo = SolicitudChequeService::getFirmaDir() . '/' . $f['firma'];
-if (file_exists($rutaArchivo)) {
+$rutaArchivo = SolicitudChequeService::getFirmaPath((string)$f['firma']);
+if ($rutaArchivo !== null && file_exists($rutaArchivo)) {
 $imgData = file_get_contents($rutaArchivo);
 $ext = pathinfo($rutaArchivo, PATHINFO_EXTENSION);
 $base64 = 'data:image/' . $ext . ';base64,' . base64_encode($imgData);
 $html .= '<div><img src="' . $base64 . '" style="width:200px;"></div>';
 } else {
-$html .= '<div style="padding:10px;"><small>¡Falta la Firma!</small></div>';
+$html .= '<div style="padding:10px;"><small>La firma está registrada, pero su imagen no está disponible.</small></div>';
 }
 $html .= '<div style="margin-top:10px;"><b>NOMBRE Y FIRMA DEL ENCARGADO</b></div>';
 } elseif ($f['tipo_firma'] === 'B') {

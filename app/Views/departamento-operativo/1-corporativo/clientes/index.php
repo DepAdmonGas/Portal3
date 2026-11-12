@@ -101,28 +101,31 @@ Nuevos consumos y pagos</h5>
 <div class="modal-body">
 <div class="mb-1">
 <h6 class="mb-1 form-label">* Nombre del cliente:</h6> 
-<div class="select2-modal-field is-select2-pending mb-3" x-ref="clienteWrapper">
-<select id="selectCliente" x-ref="selectCliente" data-width="100%">
+<div class="select2-modal-field is-select2-pending mb-1" x-ref="clienteWrapper" :class="validationErrors.cliente ? 'is-invalid' : ''">
+<select id="selectCliente" x-ref="selectCliente" data-width="100%" x-model="modalCliente" :aria-invalid="validationErrors.cliente ? 'true' : 'false'">
 <option value="">Selecciona una opción...</option>
 <template x-for="cliente in clientes" :key="cliente.id">
 <option :value="cliente.id" x-text="cliente.cliente + ' (' + cliente.cuenta + ')'"></option>
 </template>
 </select>
 </div>
+<div class="invalid-feedback mb-3" :class="validationErrors.cliente ? 'd-block' : ''" x-show="validationErrors.cliente" x-text="validationErrors.cliente"></div>
 </div>
 
 <div class="mb-3">
 <h6 class="mb-1 form-label">* Total:</h6>
-<input type="number" class="form-control" min="0" step="0.01" x-ref="totalInput" x-model="modalTotal">
+<input type="text" inputmode="decimal" class="form-control" x-ref="totalInput" :class="validationErrors.total ? 'is-invalid' : ''" :value="formatInputNumber(modalTotal)" @input="formatModalTotal($event)">
+<div class="invalid-feedback" x-show="validationErrors.total" x-text="validationErrors.total"></div>
 </div>
 
 <div class="mb-3">
 <h6 class="mb-1 form-label">* Consumo o Pago:</h6>
-<select class="form-select" x-ref="tipoSelect" x-model="modalTipo">
+<select class="form-select" x-ref="tipoSelect" x-model="modalTipo" :class="validationErrors.tipo ? 'is-invalid' : ''" @change="validationErrors.tipo = ''">
 <option value="">Selecciona una opción...</option>
 <option value="Consumo">Consumo</option>
 <option value="Pago">Pago</option>
 </select>
+<div class="invalid-feedback" x-show="validationErrors.tipo" x-text="validationErrors.tipo"></div>
 </div>
 
 <div x-cloak x-show="modalTipo === 'Pago'">
@@ -130,7 +133,7 @@ Nuevos consumos y pagos</h5>
 <h6 class="mb-1 form-label">
 * Forma de pago:
 </h6>
-<select class="form-select" x-ref="formaPagoSelect" x-model="modalFormaPago">
+<select class="form-select" x-ref="formaPagoSelect" x-model="modalFormaPago" :class="validationErrors.formaPago ? 'is-invalid' : ''" @change="validationErrors.formaPago = ''; validationErrors.comprobante = ''">
 <option value="">Forma de pago</option>
 <option value="Efectivo">Efectivo</option>
 <option value="Tarjeta">Tarjeta</option>
@@ -138,9 +141,11 @@ Nuevos consumos y pagos</h5>
 <option value="Cheque">Cheque</option>
 <option value="Monederos">Monederos</option>
 </select>
+<div class="invalid-feedback" x-show="validationErrors.formaPago" x-text="validationErrors.formaPago"></div>
 <div x-cloak x-show="modalFormaPago === 'Tarjeta' || modalFormaPago === 'Transferencia'">
 <h6 class="mb-1 mt-3 form-label">* Voucher:</h6>
-<input class="form-control" type="file" id="Comprobante" @change="modalComprobante = $event.target.files[0] || null">
+<input class="form-control" type="file" id="Comprobante" x-ref="comprobanteInput" :class="validationErrors.comprobante ? 'is-invalid' : ''" @change="modalComprobante = $event.target.files[0] || null; validationErrors.comprobante = ''">
+<div class="invalid-feedback" x-show="validationErrors.comprobante" x-text="validationErrors.comprobante"></div>
 </div>
 </div>
 </div>

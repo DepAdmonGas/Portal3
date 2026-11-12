@@ -107,12 +107,27 @@ public function agregarPago()
 header('Content-Type: application/json; charset=utf-8');
 $idReporte = (int) ($_POST['idReporte'] ?? 0);
 $idCliente = (int) ($_POST['Cliente'] ?? 0);
-$total = (float) ($_POST['Total'] ?? 0);
+$totalRaw = $_POST['Total'] ?? '';
+$totalRaw = is_scalar($totalRaw) ? str_replace(',', '', trim((string) $totalRaw)) : '';
+$total = is_numeric($totalRaw) ? (float) $totalRaw : 0.0;
 $formaPago = $_POST['FormaPago'] ?? '';
+$formaPago = is_scalar($formaPago) ? trim((string) $formaPago) : '';
 $file = $_FILES['Comprobante_file'] ?? null;
 
 if ($idReporte <= 0 || $idCliente <= 0 || $total <= 0 || $formaPago === '') {
 echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+exit;
+}
+
+$formasPagoPermitidas = ['Efectivo', 'Tarjeta', 'Transferencia', 'Cheque', 'Monederos'];
+if (!in_array($formaPago, $formasPagoPermitidas, true)) {
+echo json_encode(['success' => false, 'message' => 'Selecciona una forma de pago válida']);
+exit;
+}
+
+if (in_array($formaPago, ['Tarjeta', 'Transferencia'], true)
+&& (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK)) {
+echo json_encode(['success' => false, 'message' => 'Adjunta el voucher de la forma de pago seleccionada']);
 exit;
 }
 
@@ -146,7 +161,9 @@ public function agregarConsumo()
 header('Content-Type: application/json; charset=utf-8');
 $idReporte = (int) ($_POST['idReporte'] ?? 0);
 $idCliente = (int) ($_POST['Cliente'] ?? 0);
-$total = (float) ($_POST['Total'] ?? 0);
+$totalRaw = $_POST['Total'] ?? '';
+$totalRaw = is_scalar($totalRaw) ? str_replace(',', '', trim((string) $totalRaw)) : '';
+$total = is_numeric($totalRaw) ? (float) $totalRaw : 0.0;
 
 if ($idReporte <= 0 || $idCliente <= 0 || $total <= 0) {
 echo json_encode(['success' => false, 'message' => 'Datos incompletos']);

@@ -78,11 +78,11 @@
                     </div>
 
                         <label class="form-label fw-semibold mb-2">Evidencia:</label>
-                        <template x-if="detalle.archivo">
+                        <template x-if="detalle.archivo_disponible">
                             <iframe class="border-0 mt-1" :src="'/download?tipo=seguros-incidencias&file=' + encodeURIComponent(detalle.archivo) + '&view=1'" width="100%" height="300px"></iframe>
                         </template>
-                        <template x-if="!detalle.archivo">
-                            <p class="text-muted">S/I</p>
+                        <template x-if="!detalle.archivo_disponible">
+                            <p class="text-muted"><i class="ti ti-file-off fs-6 me-1"></i><span x-text="detalle.archivo ? 'Archivo no disponible' : 'S/I'"></span></p>
                         </template>
                    
                 </div>
@@ -119,27 +119,27 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold mb-1">* Fecha:</label>
-                        <input type="date" class="form-control" x-model="incidenciaForm.fecha" required>
+                        <input type="date" class="form-control" x-model="incidenciaForm.fecha" @input="incidenciaErrores.fecha = false" :class="{'is-invalid': incidenciaErrores.fecha}" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold mb-1">* Hora:</label>
-                        <input type="time" class="form-control" x-model="incidenciaForm.hora" required>
+                        <input type="time" class="form-control" x-model="incidenciaForm.hora" @input="incidenciaErrores.hora = false" :class="{'is-invalid': incidenciaErrores.hora}" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold mb-1">* Asunto:</label>
-                        <input type="text" class="form-control" x-model="incidenciaForm.asunto" required>
+                        <input type="text" class="form-control" x-model="incidenciaForm.asunto" @input="incidenciaErrores.asunto = false" :class="{'is-invalid': incidenciaErrores.asunto}" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold mb-1">* Observaciones:</label>
-                        <textarea class="form-control" x-model="incidenciaForm.observaciones" required></textarea>
+                        <textarea class="form-control" x-model="incidenciaForm.observaciones" @input="incidenciaErrores.observaciones = false" :class="{'is-invalid': incidenciaErrores.observaciones}" required></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold mb-1">* Solución / Resultados Finales:</label>
-                        <textarea class="form-control" x-model="incidenciaForm.solucion" required></textarea>
+                        <textarea class="form-control" x-model="incidenciaForm.solucion" @input="incidenciaErrores.solucion = false" :class="{'is-invalid': incidenciaErrores.solucion}" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold mb-1">* Evidencia:</label>
-                        <input type="file" class="form-control" x-ref="incidenciaFileInput">
+                        <label class="form-label fw-semibold mb-1" x-text="incidenciaModo === 'agregar' ? '* Evidencia:' : 'Evidencia (opcional al editar):'"></label>
+                        <input type="file" class="form-control" x-ref="incidenciaFileInput" @change="incidenciaErrores.archivo = false" :class="{'is-invalid': incidenciaErrores.archivo}">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -171,17 +171,12 @@ Cancelar</button>
                 </div>
                 <div class="modal-body">
                     <label class="form-label fw-semibold">* Fecha de Emisión:</label>
-                    <input type="date" class="form-control mb-3" x-model="polizaForm.emision" @change="calcularVencimiento">
+                    <input type="date" class="form-control mb-3" x-model="polizaForm.emision" @input="polizaErrores.emision = false" @change="calcularVencimiento" :class="{'is-invalid': polizaErrores.emision}">
 
                     <label class="form-label fw-semibold">* Fecha de Vencimiento:</label>
-                    <template x-if="!polizaForm.vencimiento">
-                        <div class="text-muted mb-3">S/I</div>
-                    </template>
-                    <template x-if="polizaForm.vencimiento">
-                        <input type="date" class="form-control mb-3" x-model="polizaForm.vencimiento">
-                    </template>
-                    <label class="form-label fw-semibold">* Documento:</label>
-                    <input type="file" class="form-control mb-3" x-ref="polizaFileInput">
+                    <input type="date" class="form-control mb-3" x-model="polizaForm.vencimiento" @input="polizaErrores.vencimiento = false" :class="{'is-invalid': polizaErrores.vencimiento}">
+                    <label class="form-label fw-semibold" x-text="polizaModo === 'agregar' ? '* Documento:' : 'Documento (opcional al editar):'"></label>
+                    <input type="file" class="form-control mb-3" x-ref="polizaFileInput" @change="polizaErrores.archivo = false" :class="{'is-invalid': polizaErrores.archivo}">
 
              
 
@@ -202,11 +197,11 @@ Cancelar</button>
                                         <td class="text-center align-middle" x-text="p.emision"></td>
                                         <td class="text-center align-middle" x-text="p.vencimiento"></td>
                                         <td class="text-center align-middle">
-                                            <template x-if="p.archivo">
+                                            <template x-if="p.archivo_disponible">
                                                 <a href="" @click.prevent="download('seguros-polizas', p.archivo)"><i class="ti ti-file-download text-primary fs-6"></i></a>
                                             </template>
-                                            <template x-if="!p.archivo">
-                                                <i class="ti ti-ban text-muted"></i>
+                                            <template x-if="!p.archivo_disponible">
+                                                <i class="ti ti-file-off fs-6 text-muted" :title="p.archivo ? 'Archivo no disponible' : 'Sin archivo registrado'"></i>
                                             </template>
                                         </td>
                                         <td class="text-center align-middle">

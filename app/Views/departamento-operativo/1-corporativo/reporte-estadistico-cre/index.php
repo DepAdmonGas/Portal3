@@ -58,17 +58,14 @@ x-data="{ ...actions(), ...reporteEstadisticoCreComponent() }">
             class="btn bg-success text-white"
             @click="descargarFacturas()"
             x-show="puedeDescargar"
-            :disabled="descargando">
+            :disabled="descargando"
+            :aria-busy="descargando">
 
-            <template x-if="!descargando">
-                <i class="ti ti-file-zip me-1"></i>
-            </template>
-
-            <template x-if="descargando">
-                <span class="spinner-border spinner-border-sm me-1"></span>
-            </template>
-
-            <span x-text="descargando ? 'Generando...' : 'Descargar facturas del año'"></span>
+            <i class="ti ti-file-zip me-1" x-show="!descargando"></i>
+            <span class="spinner-border spinner-border-sm me-1" role="status" x-show="descargando">
+                <span class="visually-hidden">Descargando facturas...</span>
+            </span>
+            <span x-text="descargando ? 'Descargando...' : 'Descargar facturas del año'"></span>
         </button>
 
         <button
@@ -110,14 +107,22 @@ x-data="{ ...actions(), ...reporteEstadisticoCreComponent() }">
 <div class="row g-3">
 <template x-for="d in p.documentos" :key="d.periodo">
 <div class="col-4">
+<template x-if="d.existe">
 <a class="btn bg-primary-subtle text-primary border d-flex flex-column align-items-center justify-content-center py-2 w-100 h-100 gap-1"
-x-show="d.existe"
 :href="'/download?tipo=cre&file=' + encodeURIComponent(d.archivo) + '&view=1'"
 target="_blank"
 :title="d.titulo + ' · ' + d.archivo">
-<i class="ti ti-file-description fs-5"></i>
+<i class="ti ti-file-description fs-6"></i>
 <span class="small text-truncate w-100" x-text="etiquetaPeriodoFactura(d.periodo)"></span>
 </a>
+</template>
+<template x-if="!d.existe">
+<span class="btn bg-light text-muted border d-flex flex-column align-items-center justify-content-center py-2 w-100 h-100 gap-1"
+:title="d.titulo + ' · Archivo no disponible'">
+<i class="ti ti-file-off fs-6"></i>
+<span class="small text-truncate w-100" x-text="etiquetaPeriodoFactura(d.periodo)"></span>
+</span>
+</template>
 </div>
 </template>
 </div>
@@ -352,14 +357,23 @@ target="_blank"
                         <h6 class="d-block mb-2 fw-semibold">Facturas registradas:</h6>
                         <div class="row g-3">
                             <template x-for="f in p.facturas" :key="f.mes + '-' + f.periodo">
-                                <div class="col-4" x-show="f.existe">
+                                <div class="col-4">
+                                    <template x-if="f.existe">
                                     <a class="btn bg-primary-subtle text-primary border d-flex flex-column align-items-center justify-content-center py-2 w-100 h-100 gap-1"
                                        :href="'/download?tipo=cre&file=' + encodeURIComponent(f.archivo) + '&view=1'"
                                        target="_blank"
                                        :title="f.titulo + ' · ' + f.archivo">
-                                        <i class="ti ti-file-description fs-5"></i>
+                                        <i class="ti ti-file-description fs-6"></i>
                                         <span class="small text-truncate w-100 text-center" x-text="f.mes_nombre"></span>
                                     </a>
+                                    </template>
+                                    <template x-if="!f.existe">
+                                    <span class="btn bg-light text-muted border d-flex flex-column align-items-center justify-content-center py-2 w-100 h-100 gap-1"
+                                          :title="f.titulo + ' · Archivo no disponible'">
+                                        <i class="ti ti-file-off fs-6"></i>
+                                        <span class="small text-truncate w-100 text-center" x-text="f.mes_nombre"></span>
+                                    </span>
+                                    </template>
                                 </div>
                             </template>
                         </div>
@@ -460,11 +474,13 @@ target="_blank"
 <div class="px-3 py-3 border-top bg-white flex-shrink-0">
 <div class="d-flex align-items-center gap-2">
 <div class="flex-grow-1">
-<textarea class="form-control border-0 bg-light rounded-pill"
+<textarea class="form-control bg-light rounded-pill"
 rows="1"
 placeholder="Escribe un comentario..."
 style="resize:none;"
 x-model="formComentario"
+@input="comentarioInvalido = false"
+:class="{'is-invalid': comentarioInvalido}"
 @keydown.enter.prevent="guardarComentario()"></textarea>
 </div>
 <div class="flex-shrink-1">
@@ -472,7 +488,7 @@ x-model="formComentario"
 style="width:44px; height:44px;" type="button"
 title="Guardar comentario"
 @click="guardarComentario()"
-:disabled="guardandoComentario || !formComentario.trim()">
+:disabled="guardandoComentario">
 <template x-if="!guardandoComentario"><i class="ti ti-send fs-5"></i></template>
 <template x-if="guardandoComentario"><span class="spinner-border spinner-border-sm"></span></template>
 </button>

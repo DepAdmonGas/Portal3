@@ -55,9 +55,13 @@ $data[] = [
 'fecha_termino' => $p['fecha_termino'],
 'fecha_termino_formateada' => formatearFecha($p['fecha_termino']),
 'pdf' => $p['pdf'] ?? '',
+'pdf_disponible' => self::getExistingArchivoPath((string) ($p['pdf'] ?? '')) !== null,
 'xml' => $p['xml'] ?? '',
+'xml_disponible' => self::getExistingArchivoPath((string) ($p['xml'] ?? '')) !== null,
 'co_pdf' => $p['co_pdf'] ?? '',
+'co_pdf_disponible' => self::getExistingArchivoPath((string) ($p['co_pdf'] ?? '')) !== null,
 'co_xml' => $p['co_xml'] ?? '',
+'co_xml_disponible' => self::getExistingArchivoPath((string) ($p['co_xml'] ?? '')) !== null,
 ];
 }
 
@@ -75,38 +79,31 @@ return [
 'fecha_inicio' => $p->fecha_inicio instanceof \Carbon\Carbon ? $p->fecha_inicio->format('Y-m-d') : (string) $p->fecha_inicio,
 'fecha_termino' => $p->fecha_termino instanceof \Carbon\Carbon ? $p->fecha_termino->format('Y-m-d') : (string) $p->fecha_termino,
 'pdf' => $p->pdf ?? '',
+'pdf_disponible' => self::getExistingArchivoPath((string) ($p->pdf ?? '')) !== null,
 'xml' => $p->xml ?? '',
+'xml_disponible' => self::getExistingArchivoPath((string) ($p->xml ?? '')) !== null,
 'co_pdf' => $p->co_pdf ?? '',
+'co_pdf_disponible' => self::getExistingArchivoPath((string) ($p->co_pdf ?? '')) !== null,
 'co_xml' => $p->co_xml ?? '',
+'co_xml_disponible' => self::getExistingArchivoPath((string) ($p->co_xml ?? '')) !== null,
 ];
 }
 
 public static function guardar(int $idEstacion, array $data, ?array $filePDF, ?array $fileXML): int
 {
-$aleatorio = uniqid();
-$pdf = '';
-$xml = '';
+$archivosGuardados = [];
+$pdf = self::storeUploadedFile($filePDF);
+if (!$pdf) return 0;
+$archivosGuardados[] = $pdf;
 
-if ($filePDF && !empty($filePDF['tmp_name'])) {
-$nombre = $aleatorio . '-' . $filePDF['name'];
-$ruta = __DIR__ . '/../../public/uploads/archivos/estimulo-fiscal/' . $nombre;
-$dir = dirname($ruta);
-if (!is_dir($dir)) mkdir($dir, 0755, true);
-if (move_uploaded_file($filePDF['tmp_name'], $ruta)) {
-$pdf = $nombre;
+$xml = self::storeUploadedFile($fileXML);
+if (!$xml) {
+self::removeStoredFiles($archivosGuardados);
+return 0;
 }
-}
+$archivosGuardados[] = $xml;
 
-if ($fileXML && !empty($fileXML['tmp_name'])) {
-$nombre = $aleatorio . '-' . $fileXML['name'];
-$ruta = __DIR__ . '/../../public/uploads/archivos/estimulo-fiscal/' . $nombre;
-$dir = dirname($ruta);
-if (!is_dir($dir)) mkdir($dir, 0755, true);
-if (move_uploaded_file($fileXML['tmp_name'], $ruta)) {
-$xml = $nombre;
-}
-}
-
+try {
 $pago = EstimuloFiscalPago::create([
 'id_estacion' => $idEstacion,
 'fecha_inicio' => $data['fecha_inicio'],
@@ -114,8 +111,11 @@ $pago = EstimuloFiscalPago::create([
 'pdf' => $pdf,
 'xml' => $xml,
 ]);
-
 return $pago->id;
+} catch (\Throwable $e) {
+self::removeStoredFiles($archivosGuardados);
+return 0;
+}
 }
 
 public static function editar(int $id, array $data, ?array $files): bool
@@ -128,23 +128,35 @@ $update = [
 'fecha_termino' => $data['fecha_termino'],
 ];
 
-$aleatorio = uniqid();
 $fileFields = ['EPDF_file' => 'pdf', 'EXML_file' => 'xml', 'CPDF_file' => 'co_pdf', 'CXML_file' => 'co_xml'];
+$archivosGuardados = [];
+$archivosAnteriores = [];
 
 foreach ($fileFields as $field => $column) {
 $file = $files[$field] ?? null;
-if ($file && !empty($file['tmp_name'])) {
-$nombre = $aleatorio . '-' . $file['name'];
-$ruta = __DIR__ . '/../../public/uploads/archivos/estimulo-fiscal/' . $nombre;
-$dir = dirname($ruta);
-if (!is_dir($dir)) mkdir($dir, 0755, true);
-if (move_uploaded_file($file['tmp_name'], $ruta)) {
-$update[$column] = $nombre;
-}
-}
+if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) continue;
+if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+self::removeStoredFiles($archivosGuardados);
+return false;
 }
 
-return $pago->update($update);
+$nombre = self::storeUploadedFile($file);
+if (!$nombre) {
+self::removeStoredFiles($archivosGuardados);
+return false;
+}
+$archivosGuardados[] = $nombre;
+if (!empty($pago->$column)) $archivosAnteriores[] = (string) $pago->$column;
+$update[$column] = $nombre;
+}
+
+$actualizado = $pago->update($update);
+if (!$actualizado) {
+self::removeStoredFiles($archivosGuardados);
+return false;
+}
+self::removeStoredFiles($archivosAnteriores);
+return true;
 }
 
 public static function eliminar(int $id): bool
@@ -155,14 +167,58 @@ if (!$pago) return false;
 $fields = ['pdf', 'xml', 'co_pdf', 'co_xml'];
 foreach ($fields as $field) {
 if ($pago->$field) {
-$ruta = __DIR__ . '/../../public/uploads/archivos/estimulo-fiscal/' . $pago->$field;
-if (file_exists($ruta)) {
-unlink($ruta);
-}
+self::removeStoredFiles([(string) $pago->$field]);
 }
 }
 
 return $pago->delete();
+}
+
+private static function storeUploadedFile(?array $file): ?string
+{
+if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) return null;
+
+$originalName = basename(str_replace('\\', '/', (string) ($file['name'] ?? '')));
+if ($originalName === '') return null;
+
+$directory = self::getUploadDir();
+if (!$directory) return null;
+$filename = uniqid('', true) . '-' . $originalName;
+return move_uploaded_file($file['tmp_name'], $directory . $filename) ? $filename : null;
+}
+
+private static function getUploadDir(): ?string
+{
+$directory = dirname(__DIR__, 2) . '/public/uploads/archivos/estimulo-fiscal';
+if (!is_dir($directory) && !@mkdir($directory, 0755, true) && !is_dir($directory)) return null;
+$realDirectory = realpath($directory);
+return $realDirectory !== false ? $realDirectory . DIRECTORY_SEPARATOR : null;
+}
+
+private static function getExistingArchivoPath(string $filename): ?string
+{
+$filename = basename(str_replace('\\', '/', $filename));
+if ($filename === '' || $filename === '.' || $filename === '..') return null;
+
+$root = dirname(__DIR__, 2) . '/public/uploads/archivos';
+$candidates = [
+$root . '/estimulo-fiscal/' . $filename,
+$root . '/' . $filename,
+];
+foreach ($candidates as $candidate) {
+$realPath = realpath($candidate);
+$realRoot = realpath($root);
+if ($realPath && $realRoot && is_file($realPath) && str_starts_with($realPath, $realRoot . DIRECTORY_SEPARATOR)) return $realPath;
+}
+return null;
+}
+
+private static function removeStoredFiles(array $filenames): void
+{
+foreach ($filenames as $filename) {
+$path = self::getExistingArchivoPath((string) $filename);
+if ($path && is_file($path)) @unlink($path);
+}
 }
 
 public static function getPermisos(): array

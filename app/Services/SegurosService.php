@@ -54,6 +54,7 @@ class SegurosService
                 'observaciones' => $r->observaciones,
                 'solucion' => $r->solucion,
                 'archivo' => $r->archivo ?? '',
+                'archivo_disponible' => self::archivoDisponible($r->archivo ?? '', 'incidencias-poliza-es'),
                 'localidad_nombre' => $localidades[(int) $r->id_estacion] ?? '',
             ];
         }
@@ -77,12 +78,14 @@ return [
 'observaciones' => $r->observaciones,
 'solucion' => $r->solucion,
 'archivo' => $r->archivo ?? '',
+'archivo_disponible' => self::archivoDisponible($r->archivo ?? '', 'incidencias-poliza-es'),
 ];
 }
 
 public static function guardarIncidencia(int $idEstacion, array $data, ?array $file): int
 {
 $archivo = self::uploadFile($file, 'incidencias-poliza-es');
+if ($archivo === '') return 0;
 
 $inc = PolizaIncidencia::create([
 'id_estacion' => $idEstacion,
@@ -111,6 +114,7 @@ $update = [
 ];
 
 $archivo = self::uploadFile($file, 'incidencias-poliza-es');
+if ($file && !empty($file['tmp_name']) && $archivo === '') return false;
 if ($archivo) {
 $update['archivo'] = $archivo;
 }
@@ -146,6 +150,7 @@ foreach ($rows as $r) {
 $data[] = [
 'id' => $r->id_poliza,
 'archivo' => $r->archivo ?? '',
+'archivo_disponible' => self::archivoDisponible($r->archivo ?? '', 'poliza-estacion'),
 'emision_raw' => $r->emision instanceof \Carbon\Carbon ? $r->emision->format('Y-m-d') : (string) $r->emision,
 'emision' => formatearFecha($r->emision),
 'vencimiento_raw' => $r->vencimiento instanceof \Carbon\Carbon ? $r->vencimiento->format('Y-m-d') : (string) $r->vencimiento,
@@ -167,12 +172,14 @@ return [
 'emision' => $r->emision instanceof \Carbon\Carbon ? $r->emision->format('Y-m-d') : (string) $r->emision,
 'vencimiento' => $r->vencimiento instanceof \Carbon\Carbon ? $r->vencimiento->format('Y-m-d') : (string) $r->vencimiento,
 'archivo' => $r->archivo ?? '',
+'archivo_disponible' => self::archivoDisponible($r->archivo ?? '', 'poliza-estacion'),
 ];
 }
 
 public static function guardarPoliza(int $idEstacion, array $data, ?array $file): int
 {
 $archivo = self::uploadFile($file, 'poliza-estacion');
+if ($archivo === '') return 0;
 
 $p = PolizaEs::create([
 'id_estacion' => $idEstacion,
@@ -195,6 +202,7 @@ $update = [
 ];
 
 $archivo = self::uploadFile($file, 'poliza-estacion');
+if ($file && !empty($file['tmp_name']) && $archivo === '') return false;
 if ($archivo) {
 $update['archivo'] = $archivo;
 }
@@ -222,20 +230,33 @@ return date('Y-m-d', strtotime($emision . '+ 1 year'));
 
 private static function uploadFile(?array $file, string $subdir): string
 {
-if (!$file || empty($file['tmp_name'])) return '';
+if (!$file || empty($file['tmp_name']) || (int)($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) return '';
 
-$aleatorio = uniqid();
-$nombre = $aleatorio . '-' . $file['name'];
-$ruta = __DIR__ . '/../../public/uploads/archivos/' . $subdir . '/' . $nombre;
+$original = basename((string)($file['name'] ?? 'archivo'));
+$original = preg_replace('/[\x00-\x1F\x7F\/\\\\]+/u', '_', $original);
+if ($original === '' || $original === '.' || $original === '..') return '';
+
+$nombre = uniqid('', true) . '-' . $original;
+$raiz = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+$ruta = $raiz . $subdir . '/' . $nombre;
 $dir = dirname($ruta);
 
-if (!is_dir($dir)) mkdir($dir, 0755, true);
+if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) return '';
 
 if (move_uploaded_file($file['tmp_name'], $ruta)) {
 return $nombre;
 }
 
 return '';
+}
+
+private static function archivoDisponible(?string $archivo, string $subdir): bool
+{
+$nombre = basename(trim((string)$archivo));
+if ($nombre === '' || $nombre === '.' || $nombre === '..') return false;
+
+$ruta = dirname(__DIR__, 2) . '/public/uploads/archivos/' . $subdir . '/' . $nombre;
+return is_file($ruta);
 }
 
 public static function getPermisos(): array

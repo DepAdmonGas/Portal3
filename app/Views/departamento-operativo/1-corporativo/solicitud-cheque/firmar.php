@@ -270,8 +270,11 @@ $firmaCRec = current(array_filter($detalle['firmas'], fn($f) => $f['tipo_firma']
 </div>
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-<?php if ($firmaARec['tipo_firma'] === 'A' && $firmaARec['firma_img_url']): ?>
+<?php if ($firmaARec['tipo_firma'] === 'A' && !empty($firmaARec['firma_img_disponible']) && $firmaARec['firma_img_url']): ?>
 <img src="<?= $firmaARec['firma_img_url'] ?>" class="img-fluid" style="max-height:90px;object-fit:contain;">
+<?php elseif ($firmaARec['tipo_firma'] === 'A'): ?>
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
 <?php else: ?>
 <i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
 <small class="text-dark"><?= $firmaARec['firma_texto'] ?? '' ?></small>
@@ -345,12 +348,12 @@ Si aún no cuenta con uno, haga clic en alguno de los siguientes botones para ge
 <div class="row w-100">
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-success w-100" @click="crearTokenTelegram()" :disabled="botonesDeshabilitados">
-<i class="ti ti-brand-telegram me-1"></i> Generar token vía Telegram
+<i class="ti ti-brand-telegram me-1"></i><span x-text="solicitandoToken && viaSolicitada === 'telegram' ? 'Enviando…' : (segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Telegram')"></span>
 </button>
 </div>
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-info text-white w-100" @click="crearTokenEmail()" :disabled="botonesDeshabilitados">
-<i class="ti ti-mail me-1"></i> Generar token vía Email
+<i class="ti ti-mail me-1"></i><span x-text="solicitandoToken && viaSolicitada === 'email' ? 'Enviando…' : (segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Email')"></span>
 </button>
 </div>
 <div class="col-12">
@@ -431,12 +434,12 @@ Si aún no cuenta con uno, haga clic en alguno de los siguientes botones para ge
 <div class="row w-100">
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-success w-100" @click="crearTokenTelegram()" :disabled="botonesDeshabilitados">
-<i class="ti ti-brand-telegram me-1"></i> Generar token vía Telegram
+<i class="ti ti-brand-telegram me-1"></i><span x-text="solicitandoToken && viaSolicitada === 'telegram' ? 'Enviando…' : (segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Telegram')"></span>
 </button>
 </div>
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-info text-white w-100" @click="crearTokenEmail()" :disabled="botonesDeshabilitados">
-<i class="ti ti-mail me-1"></i> Generar token vía Email
+<i class="ti ti-mail me-1"></i><span x-text="solicitandoToken && viaSolicitada === 'email' ? 'Enviando…' : (segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Email')"></span>
 </button>
 </div>
 <div class="col-12">

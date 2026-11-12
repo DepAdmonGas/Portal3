@@ -82,13 +82,13 @@ var html = '<div x-data="{}">'
 + '<div class="dropdown-menu">'
 + '<a class="dropdown-item pointer" @click="$dispatch(\'seguros:detalle\', { id: ' + d.id + ' })">'
 + '<i class="ti ti-eye me-1"></i> Detalle</a>';
-if (archivo) {
+if (d.archivo_disponible) {
 var escArchivo = (archivo || '').replace(/'/g, "\\'");
 html += '<a class="dropdown-item pointer" @click="download(\'seguros-incidencias\', \'' + escArchivo + '\')">'
 + '<i class="ti ti-download me-1"></i> Descargar archivo</a>';
 } else {
-html += '<a class="dropdown-item pointer grayscale">'
-+ '<i class="ti ti-download me-1"></i> Descargar archivo</a>';
+html += '<a class="dropdown-item disabled">'
++ '<i class="ti ti-file-off me-1"></i> Descargar archivo</a>';
 }
 html += '<a class="dropdown-item pointer" @click="$dispatch(\'seguros:editar\', { id: ' + d.id + ' })">'
 + '<i class="ti ti-edit me-1"></i> Editar</a>'
@@ -185,12 +185,14 @@ asunto: '',
 observaciones: '',
 solucion: '',
 },
+incidenciaErrores: { fecha: false, hora: false, asunto: false, observaciones: false, solucion: false, archivo: false },
 incidenciaModo: 'agregar',
 incidenciaEditId: 0,
 polizaForm: {
 emision: '',
 vencimiento: '',
 },
+polizaErrores: { emision: false, vencimiento: false, archivo: false },
 polizaModo: 'agregar',
 polizaEditId: 0,
 polizas: [],
@@ -221,6 +223,7 @@ this.incidenciaModalTitle = 'Agregar (en caso de incidencias)';
 this.incidenciaModo = 'agregar';
 this.incidenciaEditId = 0;
 this.incidenciaForm = { fecha: '', hora: '', asunto: '', observaciones: '', solucion: '' };
+this.incidenciaErrores = { fecha: false, hora: false, asunto: false, observaciones: false, solucion: false, archivo: false };
 var modal = new bootstrap.Modal(document.getElementById('modal-incidencia'));
 modal.show();
 },
@@ -228,6 +231,7 @@ modal.show();
 resetModalIncidencia: function () {
 this.incidenciaModo = 'agregar';
 this.incidenciaEditId = 0;
+this.incidenciaErrores = { fecha: false, hora: false, asunto: false, observaciones: false, solucion: false, archivo: false };
 },
 
 abrirModalEditar: function (id) {
@@ -247,6 +251,7 @@ asunto: d.asunto || '',
 observaciones: d.observaciones || '',
 solucion: d.solucion || '',
 };
+self.incidenciaErrores = { fecha: false, hora: false, asunto: false, observaciones: false, solucion: false, archivo: false };
 var modal = new bootstrap.Modal(document.getElementById('modal-incidencia'));
 modal.show();
 }
@@ -261,17 +266,18 @@ self.notify('error', 'Error al obtener datos');
         },
 
 guardarIncidencia: function () {
-if (!this.incidenciaForm.fecha || !this.incidenciaForm.hora || !this.incidenciaForm.asunto || !this.incidenciaForm.observaciones || !this.incidenciaForm.solucion) {
-this.notify('error', 'Todos los campos son requeridos');
-return;
-}
-
-if (this.incidenciaModo === 'agregar') {
 var fileInput = this.$refs.incidenciaFileInput;
-if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-this.notify('error', 'Archivo de evidencia requerido');
+this.incidenciaErrores = {
+fecha: !this.incidenciaForm.fecha,
+hora: !this.incidenciaForm.hora,
+asunto: !String(this.incidenciaForm.asunto || '').trim(),
+observaciones: !String(this.incidenciaForm.observaciones || '').trim(),
+solucion: !String(this.incidenciaForm.solucion || '').trim(),
+archivo: this.incidenciaModo === 'agregar' && (!fileInput || !fileInput.files || !fileInput.files[0])
+};
+if (Object.values(this.incidenciaErrores).some(Boolean)) {
+this.notify('error', 'Completa los campos obligatorios.');
 return;
-}
 }
 
 this.loading = true;
@@ -304,8 +310,10 @@ self.notify('success', res.data.message);
 var modal = bootstrap.Modal.getInstance(document.getElementById('modal-incidencia'));
 if (modal) modal.hide();
 self.incidenciaForm = { fecha: '', hora: '', asunto: '', observaciones: '', solucion: '' };
+self.incidenciaErrores = { fecha: false, hora: false, asunto: false, observaciones: false, solucion: false, archivo: false };
 reloadTable();
 } else {
+if (res.data.campos) self.incidenciaErrores = Object.assign(self.incidenciaErrores, res.data.campos);
 self.notify('error', res.data.message || 'Error al guardar');
 }
 }).catch(function () {
@@ -332,6 +340,7 @@ this.polizaModo = 'agregar';
 this.polizaEditId = 0;
 this.selectedPolizaId = null;
 this.polizaForm = { emision: '', vencimiento: '' };
+this.polizaErrores = { emision: false, vencimiento: false, archivo: false };
 this.cargarPolizas();
 var fileInput = this.$refs.polizaFileInput;
 if (fileInput) fileInput.value = '';
@@ -349,28 +358,33 @@ self.polizas = res.data.data || [];
 },
 
 calcularVencimiento: function () {
-if (!this.polizaForm.emision) return;
+this.polizaErrores.emision = false;
+this.polizaErrores.vencimiento = false;
+if (!this.polizaForm.emision) {
+this.polizaForm.vencimiento = '';
+return;
+}
 var self = this;
 axios.get('/departamento-operativo/seguros/vencimiento', {
 params: { emision: this.polizaForm.emision }
 }).then(function (res) {
 if (res.data.success) {
 self.polizaForm.vencimiento = res.data.vencimiento;
+self.polizaErrores.vencimiento = false;
 }
 }).catch(function () {});
 },
 
 guardarPoliza: function () {
-if (!this.polizaForm.emision || !this.polizaForm.vencimiento) {
-this.notify('error', 'Fechas de emisión y vencimiento requeridas');
-return;
-}
-if (this.polizaModo === 'agregar') {
 var fileInput = this.$refs.polizaFileInput;
-if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-this.notify('error', 'Archivo PDF requerido');
+this.polizaErrores = {
+emision: !this.polizaForm.emision,
+vencimiento: !this.polizaForm.vencimiento,
+archivo: this.polizaModo === 'agregar' && (!fileInput || !fileInput.files || !fileInput.files[0])
+};
+if (Object.values(this.polizaErrores).some(Boolean)) {
+this.notify('error', 'Completa los campos obligatorios.');
 return;
-}
 }
 this.loading = true;
 var self = this;
@@ -397,8 +411,10 @@ self.cargarPolizas();
 self.polizaForm = { emision: '', vencimiento: '' };
 self.polizaModo = 'agregar';
 self.polizaEditId = 0;
+self.polizaErrores = { emision: false, vencimiento: false, archivo: false };
 if (fileInput) fileInput.value = '';
 } else {
+self.polizaErrores = Object.assign(self.polizaErrores, res.data.campos || {});
 self.notify('error', res.data.message || 'Error al guardar');
 }
 }).catch(function () {
@@ -421,6 +437,7 @@ self.polizaForm = {
 emision: d.emision || '',
 vencimiento: d.vencimiento || '',
 };
+self.polizaErrores = { emision: false, vencimiento: false, archivo: false };
 var fileInput = self.$refs.polizaFileInput;
 if (fileInput) fileInput.value = '';
 }
@@ -433,6 +450,7 @@ cancelarEdicionPoliza: function () {
 this.polizaModo = 'agregar';
 this.polizaEditId = 0;
 this.polizaForm = { emision: '', vencimiento: '' };
+this.polizaErrores = { emision: false, vencimiento: false, archivo: false };
 var fileInput = this.$refs.polizaFileInput;
 if (fileInput) fileInput.value = '';
 },
@@ -440,6 +458,8 @@ if (fileInput) fileInput.value = '';
 resetModalPoliza: function () {
 this.polizaModo = 'agregar';
 this.polizaEditId = 0;
+this.polizaForm = { emision: '', vencimiento: '' };
+this.polizaErrores = { emision: false, vencimiento: false, archivo: false };
 },
 
 async eliminarPoliza(id) {

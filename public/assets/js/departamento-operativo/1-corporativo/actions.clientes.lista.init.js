@@ -41,9 +41,11 @@ formCliente: '',
 formTipo: '',
 formRfc: '',
 files: [null, null, null, null, null, null, null],
+validationErrors: { cuenta: '', cliente: '', tipo: '' },
 
 guardandoCrear: false,
 guardandoEditar: false,
+modalTrigger: null,
 
 editId: 0,
 editCuenta: '',
@@ -75,10 +77,10 @@ this.formRfc = '';
 });
 },
 
-_renderDocIcon(val) {
-return val
-? '<div x-data="actions()"><a class="pointer" @click="download(\'comprobantes-clientes\', \'' + val + '\')"><i class="ti ti-file-check text-success fs-6"></i></a></div>'
-: '<i class="ti ti-file-off text-muted fs-6"></i>';
+_renderDocIcon(val, disponible) {
+if (!val || !disponible) return '<i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible"></i>';
+const url = '/download?tipo=comprobantes-clientes&amp;file=' + encodeURIComponent(String(val));
+return '<a class="pointer" href="' + url + '" target="_blank" rel="noopener" title="Descargar archivo"><i class="ti ti-file-check text-success fs-6"></i></a>';
 },
 
 _renderStatus(val) {
@@ -110,13 +112,13 @@ const cCols = [
 { title: "#", data: null, className: 'text-center align-middle fw-normal', render: function (d, t, r, m) { return m.row + 1; } },
 { title: "Cuenta", data: 'cuenta', className: 'align-middle text-center' },
 { title: "Cliente", data: 'cliente', className: 'align-middle' },
-{ title: "RFC", data: 'doc_rfc', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
-{ title: "CC", data: 'doc_cc', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
-{ title: "AC", data: 'doc_ac', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
-{ title: "CD", data: 'doc_cd', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
-{ title: "ID", data: 'doc_io', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
-{ title: "OC", data: 'doc_oc', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
-{ title: "NP", data: 'doc_np', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
+{ title: "RFC", data: 'doc_rfc', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_rfc_disponible); }, orderable: false, searchable: false },
+{ title: "CC", data: 'doc_cc', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_cc_disponible); }, orderable: false, searchable: false },
+{ title: "AC", data: 'doc_ac', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_ac_disponible); }, orderable: false, searchable: false },
+{ title: "CD", data: 'doc_cd', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_cd_disponible); }, orderable: false, searchable: false },
+{ title: "ID", data: 'doc_io', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_io_disponible); }, orderable: false, searchable: false },
+{ title: "OC", data: 'doc_oc', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_oc_disponible); }, orderable: false, searchable: false },
+{ title: "NP", data: 'doc_np', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_np_disponible); }, orderable: false, searchable: false },
 { title: "Estatus", data: 'estado', width: '100px', className: 'text-center align-middle', render: function (d) { return self._renderStatus(d); } },
 { title: "<i class='ti ti-dots-vertical fs-6'></i>", data: null, width: '1%', className: 'text-center align-middle td-small', orderable: false, searchable: false, render: function (d, t, row) { return self._renderToggle(row); } },
 ];
@@ -125,23 +127,25 @@ const dCols = [
 { title: "#", data: null, className: 'text-center align-middle fw-normal', render: function (d, t, r, m) { return m.row + 1; } },
 { title: "Cuenta", data: 'cuenta', className: 'align-middle text-center' },
 { title: "Cliente", data: 'cliente', className: 'align-middle' },
-{ title: "CD", data: 'doc_cd', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
-{ title: "ID", data: 'doc_io', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
-{ title: "RFC", data: 'doc_rfc', className: 'align-middle text-center', render: function (d) { return self._renderDocIcon(d); }, orderable: false, searchable: false },
+{ title: "CD", data: 'doc_cd', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_cd_disponible); }, orderable: false, searchable: false },
+{ title: "ID", data: 'doc_io', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_io_disponible); }, orderable: false, searchable: false },
+{ title: "RFC", data: 'doc_rfc', className: 'align-middle text-center', render: function (d, t, r) { return self._renderDocIcon(d, r.doc_rfc_disponible); }, orderable: false, searchable: false },
 { title: "Estatus", data: 'estado', width: '100px', className: 'text-center align-middle', render: function (d) { return self._renderStatus(d); } },
 { title: "<i class='ti ti-dots-vertical fs-6'></i>", data: null, width: '1%', className: 'text-center align-middle td-small', orderable: false, searchable: false, render: function (d, t, row) { return self._renderToggle(row); } },
 ];
-
-['#tablaCredito', '#tablaDebito'].forEach(function(id) {
-if ($.fn.DataTable && $.fn.DataTable.isDataTable(id)) {
-$(id).DataTable().destroy();
-}
-});
 
 const cols = { '#tablaCredito': cCols, '#tablaDebito': dCols };
 const data = { '#tablaCredito': this.credito, '#tablaDebito': this.debito };
 
 Object.keys(cols).forEach(function(id) {
+if ($.fn.DataTable && $.fn.DataTable.isDataTable(id)) {
+const table = $(id).DataTable();
+table.clear();
+table.rows.add(data[id]);
+table.draw(false);
+return;
+}
+
 $(id).DataTable({
 data: data[id],
 columns: cols[id],
@@ -150,17 +154,11 @@ stateSave: false,
 language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
 pageLength: 10,
 order: [[1, 'asc']],
-destroy: true,
 createdRow: function (row, rowData) {
 if (rowData.estado == 0) $(row).css('background-color', '#ffb6af');
 },
 rowCallback: function (row, rowData) {
 $(row).addClass('pointer').toggleClass('selected', self.selectedRows[id] === rowData.id);
-},
-drawCallback: function () {
-if (window.Alpine) {
-Alpine.initTree(this);
-}
 },
 });
 });
@@ -213,39 +211,71 @@ return meta ? meta.getAttribute('content') : '';
 
 _marcarError(id) {
 const el = document.getElementById(id);
-if (el) el.style.borderColor = '#dc3545';
+if (el) {
+el.classList.add('is-invalid');
+el.setAttribute('aria-invalid', 'true');
+}
 },
 
 _limpiarErrores() {
 ['Cuenta', 'Cliente', 'Tipo', 'EditCuenta', 'EditCliente'].forEach(function (id) {
 const el = document.getElementById(id);
-if (el) el.style.borderColor = '';
+if (el) {
+el.classList.remove('is-invalid');
+el.removeAttribute('aria-invalid');
+}
 });
 },
 
-abrirModalCrear() {
+_resetCrearModal() {
 this.formCuenta = '';
 this.formCliente = '';
 this.formTipo = '';
 this.formRfc = '';
 this.files = [null, null, null, null, null, null, null];
+this.validationErrors = { cuenta: '', cliente: '', tipo: '' };
+const modalEl = this.$refs.modalCrear;
+if (modalEl) modalEl.querySelectorAll('input[type="file"]').forEach((input) => { input.value = ''; });
 this._limpiarErrores();
-const modal = new bootstrap.Modal(document.getElementById('Modal'));
+},
+
+_bindCrearModalLifecycle() {
+const modalEl = this.$refs.modalCrear;
+if (!modalEl || modalEl.dataset.lifecycleBound === 'true') return;
+modalEl.dataset.lifecycleBound = 'true';
+modalEl.addEventListener('hide.bs.modal', () => {
+if (modalEl.contains(document.activeElement)) document.activeElement.blur();
+});
+modalEl.addEventListener('hidden.bs.modal', () => {
+this._resetCrearModal();
+if (this.modalTrigger?.isConnected) this.modalTrigger.focus();
+});
+},
+
+abrirModalCrear() {
+this.modalTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+this._resetCrearModal();
+this._bindCrearModalLifecycle();
+const modal = bootstrap.Modal.getOrCreateInstance(this.$refs.modalCrear);
 modal.show();
 },
 
 guardarCrear() {
-this._limpiarErrores();
+if (this.guardandoCrear) return;
+this.validationErrors = { cuenta: '', cliente: '', tipo: '' };
 let valido = true;
 
-const Cuenta = this.formCuenta.trim();
-const Cliente = this.formCliente.trim();
+const Cuenta = String(this.formCuenta || '').trim();
+const Cliente = String(this.formCliente || '').trim();
 const Tipo = this.formTipo;
 
-if (!Cuenta) { this._marcarError('Cuenta'); valido = false; }
-if (!Cliente) { this._marcarError('Cliente'); valido = false; }
-if (!Tipo) { this._marcarError('Tipo'); valido = false; }
-if (!valido) return;
+if (!Cuenta) { this.validationErrors.cuenta = 'Ingresa la cuenta.'; this._marcarError('Cuenta'); valido = false; }
+if (!Cliente) { this.validationErrors.cliente = 'Ingresa el nombre del cliente.'; this._marcarError('Cliente'); valido = false; }
+if (!['Crédito', 'Débito'].includes(Tipo)) { this.validationErrors.tipo = 'Selecciona el tipo de cliente.'; this._marcarError('Tipo'); valido = false; }
+if (!valido) {
+Notify.error('Completa los campos obligatorios.');
+return;
+}
 this.guardandoCrear = true;
 
 const self = this;
@@ -254,14 +284,15 @@ form.append('Cuenta', this.formCuenta);
 form.append('Cliente', this.formCliente);
 form.append('Tipo', this.formTipo);
 form.append('RFC', this.formRfc);
+form.append('_csrf_token', this._getCsrfToken());
 
-form.append('CartaCredito_file', this.files[0]);
-form.append('ActaConstitutiva_file', this.files[1]);
-form.append('ComprobanteDom_file', this.files[2]);
-form.append('Identificacion_file', this.files[3]);
-form.append('ConstanciaRFC_file', this.files[4]);
-form.append('PoderNotarial_file', this.files[5]);
-form.append('OpinionCumplimiento_file', this.files[6]);
+this.files.forEach((file, index) => {
+if (file) form.append([
+'CartaCredito_file', 'ActaConstitutiva_file', 'ComprobanteDom_file',
+'Identificacion_file', 'ConstanciaRFC_file', 'PoderNotarial_file',
+'OpinionCumplimiento_file'
+][index], file);
+});
 
 axios.post('/departamento-operativo/clientes-lista/crear', form, {
 headers: { 'X-CSRF-TOKEN': this._getCsrfToken() }
@@ -269,12 +300,7 @@ headers: { 'X-CSRF-TOKEN': this._getCsrfToken() }
 .then(function (r) {
 self.guardandoCrear = false;
 if (r.data.success) {
-bootstrap.Modal.getInstance(document.getElementById('Modal'))?.hide();
-self.formCuenta = '';
-self.formCliente = '';
-self.formTipo = '';
-self.formRfc = '';
-self.files = [null, null, null, null, null, null, null];
+bootstrap.Modal.getInstance(self.$refs.modalCrear)?.hide();
 self.cargarDatos();
 Notify.success('Cliente agregado exitosamente');
 } else {
@@ -321,6 +347,7 @@ form.append('idCliente', this.editId);
 form.append('Cuenta', this.editCuenta);
 form.append('Cliente', this.editCliente);
 form.append('Tipo', this.editTipo);
+form.append('_csrf_token', this._getCsrfToken());
 
 const RFC = this.editTipo === 'Crédito' ? this.editRfcCredito : this.editRfcDebito;
 form.append('RFC', RFC);

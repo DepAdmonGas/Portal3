@@ -14,6 +14,16 @@ box-shadow: none !important;
 #ck-editor-container .ck-toolbar {
 border-radius: 0 !important;
 }
+.comparativo-cell-save-indicator {
+position: absolute;
+top: 50%;
+right: .35rem;
+transform: translateY(-50%);
+z-index: 2;
+padding: 0 .2rem;
+background: var(--bs-body-bg);
+pointer-events: none;
+}
 </style>
 
 <div class="pb-5" id="container" data-module-station-key="comparativo-xml">
@@ -51,7 +61,7 @@ Debes de seleccionar una estación del menú superior para poder visualizar el C
 <i class="ti ti-dots-vertical"></i>
 </button>
 <ul class="dropdown-menu">
-<li><a class="dropdown-item pointer" @click="descargarExcel()"><i class="ti ti-file-spreadsheet"></i> Descargar Excel</a></li>
+<li><a class="dropdown-item pointer" :href="descargarExcel()" :class="{'disabled': !idEstacion}" :aria-disabled="!idEstacion"><i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel</a></li>
 <li><a class="dropdown-item pointer" @click="verSeguimiento()"><i class="ti ti-users"></i> Seguimiento</a></li>
 </ul>
 </div>
@@ -60,9 +70,9 @@ Debes de seleccionar una estación del menú superior para poder visualizar el C
 <template x-if="!esDireccionOperaciones">
 <div class="row g-0 ms-auto w-100 justify-content-end mb-1 mt-3">
                     <div class="col-12 col-md-auto d-grid">
-                     <button type="button" class="btn btn-labeled2 btn-success float-end" @click="descargarExcel()">
-<span class="btn-label2"><i class="ti ti-file-spreadsheet"></i></span>Descargar Excel
-</button> 
+                     <a class="btn btn-labeled2 btn-success float-end" :href="descargarExcel()" :class="{'disabled': !idEstacion}" :aria-disabled="!idEstacion">
+<i class="ti ti-file-spreadsheet me-1"></i>Descargar Excel
+</a>
                     </div>
                   </div>
 
@@ -171,9 +181,10 @@ Debes de seleccionar una estación del menú superior para poder visualizar el C
 <td class="align-middle text-center p-0">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
+<span class="comparativo-cell-save-indicator d-none" aria-live="polite"></span>
 <input type="text" inputmode="decimal"
 class="border-0 p-3 text-end w-100 bg-transparent"
-style="padding-left: 20px !important; min-width: 80px;"
+style="padding-left: 20px !important; padding-right: 2rem !important; min-width: 80px;"
 x-init="$el.value = formatInput(cell.valor)"
 :disabled="!canEdit"
 @focus="$event.target.value = _rawFromDom($event.target).toString(); $event.target.select()"
@@ -289,11 +300,12 @@ x-init="$el.value = formatInput(cell.valor)"
 <td class="text-center align-middle p-0">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
+<span class="comparativo-cell-save-indicator d-none" aria-live="polite"></span>
 <input
 type="text"
 inputmode="decimal"
 class="border-0 p-3 text-end w-100 bg-transparent"
-style="padding-left:20px !important;"
+style="padding-left:20px !important; padding-right:2rem !important;"
 x-init="$el.value = formatInput(item.sat_monto)"
 :disabled="!canEdit"
 @focus="$event.target.value = _rawFromDom($event.target).toString(); $event.target.select()"
@@ -305,11 +317,12 @@ x-init="$el.value = formatInput(item.sat_monto)"
 <td class="align-middle text-end p-0">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
+<span class="comparativo-cell-save-indicator d-none" aria-live="polite"></span>
 <input
 type="text"
 inputmode="decimal"
 class="border-0 p-3 text-end w-100 bg-transparent"
-style="padding-left:20px !important;"
+style="padding-left:20px !important; padding-right:2rem !important;"
 x-init="$el.value = formatInput(item.despacho_monto)"
 :disabled="!canEdit"
 @focus="$event.target.value = _rawFromDom($event.target).toString(); $event.target.select()"
@@ -396,7 +409,8 @@ x-init="$el.value = formatInput(item.despacho_monto)"
 type="button"
 class="btn btn-success"
 @click="guardarObservaciones()">
-<i class="ti ti-check"></i>
+<i class="ti ti-check me-1" x-show="!guardandoObservaciones"></i>
+<span class="spinner-border spinner-border-sm me-1" role="status" x-show="guardandoObservaciones"></span>
 Guardar
 </button>
 </div>
@@ -425,22 +439,21 @@ Guardar
     <div class="col-12 mb-3">
         <label class="form-label mb-1">* Anexo:</label>
         <input class="form-control" type="text" x-model="nuevoAnexo"
+               @input="errorsDocumento.Anexos = false"
+               :class="{'is-invalid': errorsDocumento.Anexos}"
                placeholder="Nombre del anexo" id="anexoInput">
     </div>
 
     <div class="col-12 mb-3">
         <label class="form-label mb-1">* Archivo:</label>
-    </div>
-    
-   
-<div class="row g-0 w-100 mt-2 mb-3">
-    <div class="col-12">
         <div class="input-group">
             <input
                 class="form-control"
                 type="file"
                 x-ref="fileInput"
                 id="docFile"
+                @change="errorsDocumento.Archivo_file = false"
+                :class="{'is-invalid': errorsDocumento.Archivo_file}"
             >
 
             <button
@@ -458,7 +471,6 @@ Guardar
             </button>
         </div>
     </div>
-</div>
 
 </div>
 </template>
@@ -485,13 +497,18 @@ Guardar
 <td class="text-center align-middle" x-text="doc.fecha_formato"></td>
 <td class="align-middle" x-text="doc.anexo"></td>
 <td class="text-center align-middle">
+<template x-if="doc.archivo_disponible">
 <a href="" @click.prevent="download('comparativo-xml', doc.archivo)">
-<i class="ti ti-download text-primary fs-5 pointer"></i>
+<i class="ti ti-download text-primary fs-6 pointer"></i>
 </a>
+</template>
+<template x-if="!doc.archivo_disponible">
+<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>
+</template>
 </td>
 <template x-if="canEdit">
 <td class="text-center align-middle">
-<i class="ti ti-trash text-danger fs-5 pointer" @click="deleteAction({url: '/departamento-operativo/comparativo-xml/delete-document', id: doc.id, name: doc.anexo, table: null}).then(r => r?.success && cargarDocumentos(mesActual))"></i>
+<i class="ti ti-trash text-danger fs-6 pointer" @click="deleteAction({url: '/departamento-operativo/comparativo-xml/delete-document', id: doc.id, name: doc.anexo, table: null}).then(r => r?.success && cargarDocumentos(mesActual))"></i>
 </td>
 </template>
 </tr>

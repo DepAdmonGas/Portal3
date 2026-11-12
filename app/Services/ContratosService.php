@@ -32,13 +32,16 @@ $estaciones[(int) $e->id] = $e->nombre;
 $data = [];
 $idx = 1;
 foreach ($contratos as $c) {
+$archivo = self::estadoArchivo($c['archivo'] ?? '');
 $data[] = [
 'id' => $c['id_contratos'],
 'num' => $idx++,
 'fecha' => $c['fecha'],
 'fecha_formateada' => formatearFecha($c['fecha']),
 'descripcion' => $c['descripcion'],
-'archivo' => $c['archivo'] ?? '',
+'archivo' => $archivo['archivo'],
+'archivo_disponible' => $archivo['archivo_disponible'],
+'tipo_descarga' => $archivo['tipo_descarga'],
 'estacion_nombre' => $estaciones[(int) $c['id_estacion']] ?? '',
 ];
 }
@@ -56,6 +59,7 @@ $vencimientoRaw = null;
 if ($c->vencimiento && $c->vencimiento !== '0000-00-00') {
 $vencimientoRaw = $c->vencimiento instanceof \Carbon\Carbon ? $c->vencimiento->format('Y-m-d') : (string) $c->vencimiento;
 }
+$archivo = self::estadoArchivo($c->archivo);
 
 return [
 'id' => $c->id_contratos,
@@ -63,7 +67,9 @@ return [
 'fecha' => $fecha,
 'fecha_formateada' => formatearFecha($c->fecha),
 'descripcion' => $c->descripcion ?: 'S/I',
-'archivo' => $c->archivo,
+'archivo' => $archivo['archivo'],
+'archivo_disponible' => $archivo['archivo_disponible'],
+'tipo_descarga' => $archivo['tipo_descarga'],
 'objeto' => $c->objeto ?: 'S/I',
 'proveedor' => $c->proveedor ?: 'S/I',
 'vencimiento' => $c->vencimiento && $c->vencimiento !== '0000-00-00'
@@ -78,18 +84,18 @@ return [
 public static function guardar(array $data, ?array $file): int
 {
 $archivo = '';
-if ($file && $file['tmp_name']) {
-$aleatorio = uniqid();
-$nombre = $aleatorio . '-' . $file['name'];
-$ruta = __DIR__ . '/../../public/uploads/archivos/contratos/' . $nombre;
-$dir = dirname($ruta);
-if (!is_dir($dir)) {
-mkdir($dir, 0755, true);
+if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+return 0;
 }
-if (move_uploaded_file($file['tmp_name'], $ruta)) {
+$directorio = dirname(__DIR__, 2) . '/public/uploads/archivos/contratos/';
+if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+return 0;
+}
+$nombre = uniqid() . '-' . basename((string)$file['name']);
+if (!move_uploaded_file($file['tmp_name'], $directorio . $nombre)) {
+return 0;
+}
 $archivo = $nombre;
-}
-}
 
 $contrato = Contrato::create([
 'id_estacion' => $data['id_estacion'],
@@ -123,16 +129,15 @@ $update = [
 ];
 
 if ($file && $file['tmp_name']) {
-$aleatorio = uniqid();
-$nombre = $aleatorio . '-' . $file['name'];
-$ruta = __DIR__ . '/../../public/uploads/archivos/contratos/' . $nombre;
-$dir = dirname($ruta);
-if (!is_dir($dir)) {
-mkdir($dir, 0755, true);
+$directorio = dirname(__DIR__, 2) . '/public/uploads/archivos/contratos/';
+if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+return false;
 }
-if (move_uploaded_file($file['tmp_name'], $ruta)) {
+$nombre = uniqid() . '-' . basename((string)$file['name']);
+if (!move_uploaded_file($file['tmp_name'], $directorio . $nombre)) {
+return false;
+}
 $update['archivo'] = $nombre;
-}
 }
 
 return $contrato->update($update);
@@ -144,9 +149,13 @@ $contrato = Contrato::find($id);
 if (!$contrato) return false;
 
 if ($contrato->archivo) {
-$ruta = __DIR__ . '/../../public/uploads/archivos/contratos/' . $contrato->archivo;
-if (file_exists($ruta)) {
+$nombreArchivo = basename((string)$contrato->archivo);
+foreach (['contratos', 'contratos-es'] as $directorio) {
+$ruta = dirname(__DIR__, 2) . '/public/uploads/archivos/' . $directorio . '/' . $nombreArchivo;
+if (is_file($ruta)) {
 unlink($ruta);
+break;
+}
 }
 }
 
@@ -160,6 +169,24 @@ return [
 'multiestacion' => !empty($usuario['multiestacion']),
 'id_puesto' => $usuario['id_puesto'] ?? 0,
 ];
+}
+
+private static function estadoArchivo(?string $nombre): array
+{
+$archivo = basename((string)$nombre);
+$base = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+$rutas = [
+'contratos' => 'contratos/',
+'contratos-legado' => 'contratos-es/',
+];
+
+foreach ($rutas as $tipo => $directorio) {
+if ($archivo !== '' && is_file($base . $directorio . $archivo)) {
+return ['archivo' => $archivo, 'archivo_disponible' => true, 'tipo_descarga' => $tipo];
+}
+}
+
+return ['archivo' => $archivo, 'archivo_disponible' => false, 'tipo_descarga' => 'contratos'];
 }
 
 public static function notificarTelegram(string $accion, array $data): void

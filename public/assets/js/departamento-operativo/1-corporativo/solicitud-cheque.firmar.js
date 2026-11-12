@@ -4,6 +4,10 @@ Alpine.data('solicitudChequeFirmarComponent', () => ({
 idSolicitud: 0,
 token: '',
 botonesDeshabilitados: false,
+segundosRestantes: 0,
+solicitandoToken: false,
+viaSolicitada: '',
+temporizadorToken: null,
 detalle: null,
 
 init() {
@@ -19,8 +23,7 @@ init() {
   if (disableTime) {
     const elapsed = new Date().getTime() - parseInt(disableTime);
     if (elapsed < 30000) {
-      this.botonesDeshabilitados = true;
-      setTimeout(() => { this.botonesDeshabilitados = false; }, 30000 - elapsed);
+      this.iniciarTemporizadorToken(30000 - elapsed);
     } else {
       localStorage.removeItem('sc_disableTime');
     }
@@ -41,8 +44,33 @@ crearTokenEmail() {
   this.crearToken('email');
 },
 
+iniciarTemporizadorToken(duracion) {
+  window.clearInterval(this.temporizadorToken);
+  const venceEn = Date.now() + Math.max(0, duracion);
+  const actualizar = () => {
+    const restante = Math.max(0, venceEn - Date.now());
+    this.segundosRestantes = Math.ceil(restante / 1000);
+    this.botonesDeshabilitados = this.segundosRestantes > 0 || this.solicitandoToken;
+
+    if (this.segundosRestantes <= 0) {
+      window.clearInterval(this.temporizadorToken);
+      this.temporizadorToken = null;
+      this.botonesDeshabilitados = this.solicitandoToken;
+      localStorage.removeItem('sc_disableTime');
+    }
+  };
+
+  actualizar();
+  if (this.segundosRestantes > 0) {
+    this.temporizadorToken = window.setInterval(actualizar, 250);
+  }
+},
+
 async crearToken(via) {
+  if (this.botonesDeshabilitados) return;
   this.botonesDeshabilitados = true;
+  this.solicitandoToken = true;
+  this.viaSolicitada = via;
   try {
     const fd = new FormData();
     fd.append('id_solicitud', this.idSolicitud);
@@ -62,11 +90,8 @@ async crearToken(via) {
       } else {
         if (window.Notify) Notify.success('El token fue enviado por correo electrónico');
       }
-      if (window.Notify) Notify.warning('Deberá esperar 30 seg para volver a crear un nuevo token');
-
-      const disableTime = new Date().getTime();
-      localStorage.setItem('sc_disableTime', disableTime);
-      setTimeout(() => { this.botonesDeshabilitados = false; }, 30000);
+      localStorage.setItem('sc_disableTime', String(Date.now()));
+      this.iniciarTemporizadorToken(30000);
     } else {
       this.botonesDeshabilitados = false;
       if (window.Notify) Notify.error(json.message || 'Error al crear el token');
@@ -75,6 +100,10 @@ async crearToken(via) {
     this.botonesDeshabilitados = false;
     console.error('Error creating token:', e);
     if (window.Notify) Notify.error('Error al crear el token');
+  } finally {
+    this.solicitandoToken = false;
+    this.viaSolicitada = '';
+    if (this.segundosRestantes <= 0) this.botonesDeshabilitados = false;
   }
 },
 
@@ -97,6 +126,10 @@ async firmarSolicitud(tipoFirma) {
     const json = await resp.json();
 
     if (json.success) {
+      window.clearInterval(this.temporizadorToken);
+      this.temporizadorToken = null;
+      this.segundosRestantes = 0;
+      this.botonesDeshabilitados = false;
       localStorage.removeItem('sc_disableTime');
       Swal.fire({
           icon: 'success',

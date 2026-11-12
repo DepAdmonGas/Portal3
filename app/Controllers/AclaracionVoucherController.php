@@ -111,18 +111,25 @@ exit;
 $idEstacion = (int)($_POST['id_estacion'] ?? 0);
 $idYear = (int)($_POST['year'] ?? 0);
 $idMes = (int)($_POST['mes'] ?? 0);
-$nombreTicket = $_POST['nombre_ticket'] ?? '';
-$fecha = $_POST['fecha'] ?? '';
-$hora = $_POST['hora'] ?? '';
-$valera = $_POST['valera'] ?? '';
-$importe = (float)($_POST['importe'] ?? 0);
-$numeroAclaracion = $_POST['numero_aclaracion'] ?? '';
-
-if (!$idEstacion || !$idYear || !$idMes || !$nombreTicket || !$fecha || !$hora || !$valera || !$importe || !$numeroAclaracion) {
-echo json_encode(['success' => false, 'message' => 'Campos requeridos']);
+$nombreTicket = trim((string)($_POST['nombre_ticket'] ?? ''));
+$fecha = trim((string)($_POST['fecha'] ?? ''));
+$hora = trim((string)($_POST['hora'] ?? ''));
+$valera = trim((string)($_POST['valera'] ?? ''));
+$importeTexto = trim((string)($_POST['importe'] ?? ''));
+$importe = is_numeric($importeTexto) ? (float)$importeTexto : null;
+$numeroAclaracion = trim((string)($_POST['numero_aclaracion'] ?? ''));
+$camposFaltantes = [];
+foreach (['nombre_ticket' => $nombreTicket, 'fecha' => $fecha, 'hora' => $hora, 'valera' => $valera, 'numero_aclaracion' => $numeroAclaracion] as $campo => $valor) {
+if ($valor === '') $camposFaltantes[] = $campo;
+}
+if ($importe === null) $camposFaltantes[] = 'importe';
+if (!$idEstacion || !$idYear || !$idMes || $camposFaltantes) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'campos' => $camposFaltantes]);
 exit;
 }
 
+try {
 $id = AclaracionVoucherService::add([
 'id_estacion' => $idEstacion,
 'year' => $idYear,
@@ -137,6 +144,11 @@ $id = AclaracionVoucherService::add([
 'ticket_file' => $_FILES['ticket_file'] ?? null,
 'voucher_file' => $_FILES['voucher_file'] ?? null,
 ]);
+} catch (\Throwable $e) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+exit;
+}
 
 if ($id) {
 AclaracionVoucherService::notificarTelegram('agregar', [
@@ -156,19 +168,27 @@ header('Content-Type: application/json; charset=utf-8');
 $permisos = AclaracionVoucherService::getPermisos();
 
 $id = (int)($_POST['id'] ?? 0);
-$nombreTicket = $_POST['nombre_ticket'] ?? '';
-$fecha = $_POST['fecha'] ?? '';
-$hora = $_POST['hora'] ?? '';
-$valera = $_POST['valera'] ?? '';
-$importe = (float)($_POST['importe'] ?? 0);
-$numeroAclaracion = $_POST['numero_aclaracion'] ?? '';
+$nombreTicket = trim((string)($_POST['nombre_ticket'] ?? ''));
+$fecha = trim((string)($_POST['fecha'] ?? ''));
+$hora = trim((string)($_POST['hora'] ?? ''));
+$valera = trim((string)($_POST['valera'] ?? ''));
+$importeTexto = trim((string)($_POST['importe'] ?? ''));
+$importe = is_numeric($importeTexto) ? (float)$importeTexto : null;
+$numeroAclaracion = trim((string)($_POST['numero_aclaracion'] ?? ''));
 $pagado = (int)($_POST['pagado'] ?? 0);
 
-if (!$id || !$nombreTicket || !$fecha || !$hora || !$valera || !$importe || !$numeroAclaracion) {
-echo json_encode(['success' => false, 'message' => 'Campos requeridos']);
+$camposFaltantes = [];
+foreach (['nombre_ticket' => $nombreTicket, 'fecha' => $fecha, 'hora' => $hora, 'valera' => $valera, 'numero_aclaracion' => $numeroAclaracion] as $campo => $valor) {
+if ($valor === '') $camposFaltantes[] = $campo;
+}
+if ($importe === null) $camposFaltantes[] = 'importe';
+if (!$id || $camposFaltantes) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'campos' => $camposFaltantes]);
 exit;
 }
 
+try {
 $updated = AclaracionVoucherService::update($id, [
 'nombre_ticket' => $nombreTicket, 'fecha' => $fecha, 'hora' => $hora,
 'valera' => $valera, 'importe' => $importe, 'numero_aclaracion' => $numeroAclaracion,
@@ -176,6 +196,11 @@ $updated = AclaracionVoucherService::update($id, [
 'ticket_file' => $_FILES['ticket_file'] ?? null,
 'voucher_file' => $_FILES['voucher_file'] ?? null,
 ]);
+} catch (\Throwable $e) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+exit;
+}
 
 if ($updated) {
 $record = AclaracionVoucherService::getRecord($id);
@@ -211,7 +236,7 @@ exit;
 
 $deleted = AclaracionVoucherService::delete($id);
 if ($deleted) {
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aclaracion-voucher/';
+$uploadDir = dirname(__DIR__, 2) . '/public/uploads/archivos/aclaracion-baucher/';
 if ($deleted['doc_ticket'] && file_exists($uploadDir . $deleted['doc_ticket'])) unlink($uploadDir . $deleted['doc_ticket']);
 if ($deleted['doc_voucher'] && file_exists($uploadDir . $deleted['doc_voucher'])) unlink($uploadDir . $deleted['doc_voucher']);
 
@@ -323,12 +348,23 @@ $idSolicitud = (int)($_POST['id'] ?? 0);
 $descripcion = trim($_POST['descripcion'] ?? '');
 $file = $_FILES['archivo'] ?? null;
 
-if (!$idSolicitud || !$descripcion || !$file || $file['error'] !== 0) {
-echo json_encode(['success' => false, 'message' => 'Campos requeridos']);
+$camposFaltantes = [];
+if (!$idSolicitud) $camposFaltantes[] = 'id';
+if ($descripcion === '') $camposFaltantes[] = 'descripcion';
+if (!$file || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) $camposFaltantes[] = 'archivo';
+if ($camposFaltantes) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'campos' => $camposFaltantes]);
 exit;
 }
 
+try {
 $saved = AclaracionVoucherService::addAnexo($idSolicitud, $descripcion, $file, $permisos['id_usuario']);
+} catch (\Throwable $e) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+exit;
+}
 if ($saved) {
 $record = AclaracionVoucherService::getRecord($idSolicitud);
 if ($record) {
@@ -366,7 +402,7 @@ exit;
 
 $deleted = AclaracionVoucherService::deleteAnexo($id);
 if ($deleted) {
-$uploadDir = __DIR__ . '/../../public/uploads/archivos/aclaracion-voucher/';
+$uploadDir = dirname(__DIR__, 2) . '/public/uploads/archivos/aclaracion-baucher/';
 if ($deleted['documento'] && file_exists($uploadDir . $deleted['documento'])) unlink($uploadDir . $deleted['documento']);
 
 $record = AclaracionVoucherService::getRecord($deleted['id_reporte']);

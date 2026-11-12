@@ -105,7 +105,6 @@ public static function getDatos(int $idReporte): array
 $credito = ConsumosPagosResumen::join('op_cliente', 'op_consumos_pagos_resumen.id_cliente', '=', 'op_cliente.id')
 ->where('op_consumos_pagos_resumen.id_mes', $idReporte)
 ->where('op_cliente.tipo', 'Crédito')
-->where('op_cliente.estado', 1)
 ->orderBy('op_cliente.cliente', 'asc')
 ->select(
 'op_consumos_pagos_resumen.id',
@@ -123,7 +122,6 @@ $credito = ConsumosPagosResumen::join('op_cliente', 'op_consumos_pagos_resumen.i
 $debito = ConsumosPagosResumen::join('op_cliente', 'op_consumos_pagos_resumen.id_cliente', '=', 'op_cliente.id')
 ->where('op_consumos_pagos_resumen.id_mes', $idReporte)
 ->where('op_cliente.tipo', 'Débito')
-->where('op_cliente.estado', 1)
 ->orderBy('op_cliente.cliente', 'asc')
 ->select(
 'op_consumos_pagos_resumen.id',

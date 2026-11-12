@@ -152,6 +152,14 @@
         window.fetch = function (input, init) {
             const method = init?.method || input?.method || 'GET';
             const url = typeof input === 'string' || input instanceof URL ? input : input?.url;
+            // Permite que una acción declare explícitamente un indicador local
+            // y evite el loader global sin afectar las demás solicitudes.
+            try {
+                const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined));
+                if (headers.get('X-Portal3-Skip-Action-Loader') === '1') {
+                    return originalFetch(input, init);
+                }
+            } catch (_) {}
             if (!shouldTrackRequest(method, url)) return originalFetch(input, init);
 
             begin();

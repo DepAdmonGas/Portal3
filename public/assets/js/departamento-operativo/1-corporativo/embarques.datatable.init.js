@@ -27,8 +27,8 @@ const $table = $('#tabla-embarques');
 if (!$table.length) return;
 let selectedEmbarqueId = null;
 
-function docLink(v, label, icon) {
-if (!v) return '<i class="ti ti-file-off text-muted fs-6"></i>';
+function docLink(v, disponible, label, icon) {
+if (!v || !disponible) return '<i class="ti ti-file-off text-muted fs-6"></i>';
 return '<span x-data="actions()"><i class="' + icon + ' fs-6 pointer" @click.prevent="download(\'embarques\', \'' + v + '\')" title="' + label + '"></i></span>';
 }
 
@@ -89,27 +89,28 @@ title: 'Documento',
 data: 'documento',
 className: 'align-middle text-center',
 orderable: false,
-render: (v) => docLink(v, 'Documento', 'ti ti-file-text text-primary')
+render: (v, type, d) => docLink(v, d.documento_disponible, 'Documento', 'ti ti-file-text text-primary')
 },
 { title: 'No. Doc. CV', data: 'documentocv', className: 'align-middle text-center' },
 {
 title: 'Litros Factura',
 data: 'importef',
 className: 'align-middle text-end',
-render: (v) => v != null ? window.formatNum(v) : ''
+render: (v, type) => v != null ? (type === 'display' ? window.formatNum(v) : (parseFloat(v) || 0)) : ''
 },
 {
 title: '$ / Litro',
 data: 'precio_litro',
 className: 'align-middle text-end',
-render: (v) => v != null ? window.formatNum(v) : ''
+render: (v, type) => v != null ? (type === 'display' ? window.formatNum(v) : (parseFloat(v) || 0)) : ''
 },
 {
 title: 'Merma',
 data: 'merma',
 className: 'align-middle text-end',
-render: (v) => {
+render: (v, type) => {
 if (v == null) return '';
+if (type !== 'display') return parseFloat(v) || 0;
 const cls = parseFloat(v) < 0 ? 'text-danger fw-bold' : '';
 return '<span class="' + cls + '">' + window.formatNum(v) + '</span>';
 }
@@ -123,49 +124,49 @@ title: 'PDF',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
-render: (d) => isPemexDelivery(d) ? prohibido() : docLink(d.pdf, 'Factura PDF', 'ti ti-file-type-pdf text-danger')
+render: (d) => isPemexDelivery(d) ? prohibido() : docLink(d.pdf, d.pdf_disponible, 'Factura PDF', 'ti ti-file-type-pdf text-danger')
 },
 {
 title: 'XML',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
-render: (d) => isPemexDelivery(d) ? prohibido() : docLink(d.xml, 'Factura XML', 'ti ti-file-type-xml text-primary')
+render: (d) => isPemexDelivery(d) ? prohibido() : docLink(d.xml, d.xml_disponible, 'Factura XML', 'ti ti-file-type-xml text-primary')
 },
 {
 title: 'CoPa',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
-render: (d) => isPemexDelivery(d) ? prohibido() : docLink(d.comprobante_p, 'Comprobante de pago', 'ti ti-file-type-pdf text-danger')
+render: (d) => isPemexDelivery(d) ? prohibido() : docLink(d.comprobante_p, d.comprobante_p_disponible, 'Comprobante de pago', 'ti ti-file-type-pdf text-danger')
 },
 {
 title: 'NC <br> (PDF)',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
-render: (d) => (isPemexDelivery(d) || isSipci(d)) ? prohibido() : docLink(d.nc_pdf, 'Nota de crédito PDF', 'ti ti-file-type-pdf text-danger')
+render: (d) => (isPemexDelivery(d) || isSipci(d)) ? prohibido() : docLink(d.nc_pdf, d.nc_pdf_disponible, 'Nota de crédito PDF', 'ti ti-file-type-pdf text-danger')
 },
 {
 title: 'NC <br> (XML)',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
-render: (d) => (isPemexDelivery(d) || isSipci(d) || isPetroAsfaltosSantaFe(d)) ? prohibido() : docLink(d.nc_xml, 'Nota de crédito XML', 'ti ti-file-type-xml text-primary')
+render: (d) => (isPemexDelivery(d) || isSipci(d) || isPetroAsfaltosSantaFe(d)) ? prohibido() : docLink(d.nc_xml, d.nc_xml_disponible, 'Nota de crédito XML', 'ti ti-file-type-xml text-primary')
 },
 {
 title: 'Com <br> (PDF)',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
-render: (d) => (isPemexDelivery(d) || isSipci(d)) ? prohibido() : docLink(d.comPDF, 'Complemento PDF', 'ti ti-file-type-pdf text-danger')
+render: (d) => (isPemexDelivery(d) || isSipci(d)) ? prohibido() : docLink(d.comPDF, d.comPDF_disponible, 'Complemento PDF', 'ti ti-file-type-pdf text-danger')
 },
 {
 title: 'Com <br> (XML)',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
-render: (d) => (isPemexDelivery(d) || isSipci(d)) ? prohibido() : docLink(d.comXML, 'Complemento XML', 'ti ti-file-type-xml text-primary')
+render: (d) => (isPemexDelivery(d) || isSipci(d)) ? prohibido() : docLink(d.comXML, d.comXML_disponible, 'Complemento XML', 'ti ti-file-type-xml text-primary')
 },
 {
 title: '<i class="ti ti-message fs-7"></i>',
@@ -193,13 +194,13 @@ orderable: false,
 render: (d) => estadoBadge(d.semaforo)
 },
 {
-title: '<i class="ti ti-dots-vertical fs-5"></i>',
+title: '<i class="ti ti-dots-vertical fs-6"></i>',
 data: null,
 className: 'align-middle text-center',
 orderable: false,
 render: (d) => {
 const p = window.__embarquesPermisos || {};
-let html = '<div class="dropdown"><a class="btn btn-sm btn-icon-only text-dropdown-light" type="button" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">';
+let html = '<div class="dropdown"><a class="btn btn-sm btn-icon-only text-dropdown-light" type="button" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a><div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">';
 if (p.puede_editar) {
 html += '<a class="dropdown-item pointer btn-editar" data-id="' + d.id + '"><i class="ti ti-pencil me-1"></i> Editar</a>';
 }

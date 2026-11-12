@@ -2,6 +2,7 @@ document.addEventListener('alpine:init', () => {
 Alpine.data('solicitudChequeCrearComponent', () => ({
 guardando: false,
 signaturePad: null,
+errores: {},
 idEstacion: parseInt(document.querySelector('[data-id-estacion]')?.dataset.idEstacion || 0),
 idDepto: parseInt(document.querySelector('[data-id-depto]')?.dataset.idDepto || 0),
 
@@ -44,6 +45,7 @@ var w = document.getElementById('signature-pad');
 var cv = w ? w.querySelector('canvas') : null;
 if (cv && typeof SignaturePad !== 'undefined') {
 this.signaturePad = new SignaturePad(cv, { backgroundColor: 'rgb(255, 255, 255)' });
+this.signaturePad.onEnd = () => { this.errores.firma = false; };
 this._redimensionarCanvas();
 window.addEventListener('resize', () => this._redimensionarCanvas());
 }
@@ -66,29 +68,67 @@ this.signaturePad.clear();
 }
 },
 
+formatMonto(value) {
+if (value === null || value === undefined || value === '') return '';
+const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatearMonto(event) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const formatted = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (normalized.includes('.') ? '.' + decimals : '');
+
+this.form.monto = normalized;
+input.value = formatted;
+
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
+},
+
 _notify(type, message) {
 if (window.Notify) Notify.show(type, message);
 },
 
 async guardar() {
-if (!this.form.fecha) { this._notify('error', 'Falta ingresar la fecha'); return; }
-if (!this.form.beneficiario) { this._notify('error', 'Falta ingresar el beneficiario'); return; }
-if (!this.form.monto) { this._notify('error', 'Falta ingresar el monto'); return; }
-if (!this.form.no_factura) { this._notify('error', 'Falta ingresar el No. de factura'); return; }
-if (!this.form.email) { this._notify('error', 'Falta ingresar el correo electrónico'); return; }
-if (!this.form.concepto) { this._notify('error', 'Falta ingresar el concepto'); return; }
-if (!this.form.solicitante) { this._notify('error', 'Falta ingresar el solicitante'); return; }
-if (!this.form.telefono) { this._notify('error', 'Falta ingresar el teléfono'); return; }
-if (!this.form.cfdi) { this._notify('error', 'Falta ingresar el CFDI'); return; }
-if (!this.form.metodo_pago) { this._notify('error', 'Falta ingresar el método de pago'); return; }
-if (!this.form.forma_pago) { this._notify('error', 'Falta ingresar la forma de pago'); return; }
-if (!this.form.banco) { this._notify('error', 'Falta ingresar el banco'); return; }
-if (!this.form.no_cuenta) { this._notify('error', 'Falta ingresar el No. de cuenta'); return; }
-if (!this.form.cuenta_clabe) { this._notify('error', 'Falta ingresar la cuenta CLABE'); return; }
-if (!this.form.referencia) { this._notify('error', 'Falta ingresar la referencia'); return; }
-
-if (!this.signaturePad || this.signaturePad.isEmpty()) {
-this._notify('error', 'Falta ingresar la firma');
+this.errores = {
+fecha: !/^\d{4}-\d{2}-\d{2}$/.test(String(this.form.fecha || '').trim()),
+beneficiario: !String(this.form.beneficiario || '').trim(),
+monto: String(this.form.monto ?? '').trim() === '' || !Number.isFinite(Number(this.form.monto)) || Number(this.form.monto) < 0,
+moneda: !String(this.form.moneda || '').trim(),
+no_factura: !String(this.form.no_factura || '').trim(),
+email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(this.form.email || '').trim()),
+concepto: !String(this.form.concepto || '').trim(),
+solicitante: !String(this.form.solicitante || '').trim(),
+telefono: !String(this.form.telefono || '').trim(),
+cfdi: !String(this.form.cfdi || '').trim(),
+metodo_pago: !String(this.form.metodo_pago || '').trim(),
+forma_pago: !String(this.form.forma_pago || '').trim(),
+banco: !String(this.form.banco || '').trim(),
+no_cuenta: !String(this.form.no_cuenta || '').trim(),
+cuenta_clabe: !String(this.form.cuenta_clabe || '').trim(),
+referencia: !String(this.form.referencia || '').trim(),
+firma: !this.signaturePad || this.signaturePad.isEmpty(),
+};
+if (this.idEstacion === 8) this.errores.razonsocial = !String(this.form.razonsocial || '').trim();
+if (this.idEstacion === 14) this.errores.depto = !String(this.form.depto || '').trim();
+if (Object.values(this.errores).some(Boolean)) {
+this._notify('error', 'Completa los campos obligatorios.');
 return;
 }
 
@@ -156,6 +196,7 @@ const json = await resp.json();
             window.location.href = '/departamento-operativo/solicitud-cheque/' + idYear + '/' + idMes;
         });
     } else {
+        if (json.validation) this.errores = { ...this.errores, ...json.validation };
         this._notify('error', json.message || 'Error al crear la solicitud');
     }
 } catch (e) {
