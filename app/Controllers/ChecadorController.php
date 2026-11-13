@@ -3617,8 +3617,7 @@ final class ChecadorController extends BaseController
         $workers = $roster['workers'] ?? null;
 
         $verifiedRoster = ($status === 'current_roster_only' && $coverage === 'current_active_roster')
-            || ($status === 'ready' && $coverage === 'historical_versioned_membership')
-            || ($status === 'partial' && $coverage === 'current_roster_historical_unverified');
+            || ($status === 'ready' && in_array($coverage, ['current_active_roster', 'historical_versioned_membership'], true));
 
         return $verifiedRoster
             && is_array($workers)

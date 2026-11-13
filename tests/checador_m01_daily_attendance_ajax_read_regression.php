@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__);
+require_once $root . '/vendor/autoload.php';
 $read = static fn(string $path): string => file_get_contents($root . '/' . $path) ?: '';
 $controller = $read('app/Controllers/ChecadorController.php');
 $route = $read('routes/web.php');
@@ -24,6 +25,68 @@ $fallbackPolicyEnd = $fallbackPolicyStart === false
 $fallbackPolicy = $fallbackPolicyStart !== false && $fallbackPolicyEnd !== false
     ? substr($controller, $fallbackPolicyStart, $fallbackPolicyEnd - $fallbackPolicyStart)
     : '';
+$fallbackPolicyMethod = new ReflectionMethod(\App\Controllers\ChecadorController::class, 'canDisplayAttendanceRosterFallback');
+$fallbackPolicyMethod->setAccessible(true);
+$currentVerifiedRoster = [
+    'status' => 'ready',
+    'coverage' => 'current_active_roster',
+    'workers' => array_map(
+        static fn(int $id): array => ['worker_id' => $id, 'full_name' => 'Interlomas ' . $id],
+        range(1, 36)
+    ),
+];
+$simulatedPunchRead = ['ok' => false, 'error' => ['kind' => 'api_unavailable']];
+$simulatedState = ($simulatedPunchRead['ok'] ?? false) ? 'success' : 'unavailable';
+$currentRosterFallbackAllowed = $fallbackPolicyMethod->invoke(null, $currentVerifiedRoster);
+$state = $simulatedState;
+$selectedWorkplaceId = 1;
+$selectedWorkplaceName = 'Interlomas';
+$selectedWorkplaceKind = 'Estación';
+$selectedDate = (new DateTimeImmutable('now', new DateTimeZone('America/Mexico_City')))->format('Y-m-d');
+$selectedWorkerId = null;
+$attendanceRosterFallbackAllowed = $currentRosterFallbackAllowed;
+$attendanceRoster = $currentVerifiedRoster + ['message' => 'Personal activo con membresía vigente.'];
+$attendanceRows = array_map(static fn(array $worker): array => $worker + [
+    'schedule' => null,
+    'schedule_error' => 'schedule_not_loaded',
+    'slots' => [],
+    'additional_events' => [],
+    'status' => 'punches_unavailable',
+    'worked_seconds' => null,
+    'worked_time_source' => null,
+    'incidence_count' => null,
+    'incidences' => [],
+], $currentVerifiedRoster['workers']);
+$attendanceCoverage = ['status' => 'not_available', 'complete' => false];
+$administrativeIncidences = [];
+$administrativeErrors = [];
+$workerSelectOptions = [];
+$snapshotRef = null;
+$demoMode = false;
+$realApiPostOperationsEnabled = false;
+$dashboardHref = '/departamento-operativo/recursos-humanos/checador';
+ob_start();
+require $root . '/app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php';
+$simulatedAttendanceHtml = (string) ob_get_clean();
+$renderedCurrentRosterCount = count(array_filter(
+    $currentVerifiedRoster['workers'],
+    static fn(array $worker): bool => str_contains($simulatedAttendanceHtml, (string) $worker['full_name'])
+));
+$historicalUnverifiedRoster = [
+    'status' => 'partial',
+    'coverage' => 'current_roster_historical_unverified',
+    'workers' => $currentVerifiedRoster['workers'],
+];
+$incompleteRoster = [
+    'status' => 'partial',
+    'coverage' => 'incomplete',
+    'workers' => $currentVerifiedRoster['workers'],
+];
+$verifiedHistoricalRoster = [
+    'status' => 'ready',
+    'coverage' => 'historical_versioned_membership',
+    'workers' => $currentVerifiedRoster['workers'],
+];
 
 $checks = [
     'GET and POST use the existing authenticated attendance route' =>
@@ -79,6 +142,19 @@ $checks = [
         && str_contains($fallbackPolicy, 'current_active_roster')
         && str_contains($fallbackPolicy, 'historical_versioned_membership')
         && !str_contains($fallbackPolicy, "'incomplete'"),
+    '36-worker current Interlomas roster survives a failed punch read without reporting success' =>
+        $simulatedPunchRead['ok'] === false
+        && $simulatedState === 'unavailable'
+        && $currentRosterFallbackAllowed === true
+        && $renderedCurrentRosterCount === 36
+        && str_contains($simulatedAttendanceHtml, 'Marcaciones no disponibles')
+        && str_contains($simulatedAttendanceHtml, 'Padrón autorizado de referencia')
+        && str_contains($view, '$state !== \'success\'')
+        && str_contains($view, '$attendanceRosterFallbackAllowed'),
+    'unverified historical and incomplete rosters remain fail-closed while verified history remains available' =>
+        $fallbackPolicyMethod->invoke(null, $historicalUnverifiedRoster) === false
+        && $fallbackPolicyMethod->invoke(null, $incompleteRoster) === false
+        && $fallbackPolicyMethod->invoke(null, $verifiedHistoricalRoster) === true,
     'errors preserve visible results and the DataTable can be reinitialized after replacement' =>
         str_contains($filters, 'currentResults.replaceWith(nextResults)')
         && str_contains($filters, "catch (error)")
