@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 $esc = static fn(mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 $selectedWorkplaceId = isset($selectedWorkplaceId) ? (int) $selectedWorkplaceId : null;
+$selectedWorkplaceName = is_string($selectedWorkplaceName ?? null) ? trim($selectedWorkplaceName) : '';
 $selectedDate = is_string($selectedDate ?? null) ? $selectedDate : '';
+$selectedDateLabel = $selectedDate;
+if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $selectedDate, $dateParts) === 1
+    && checkdate((int) $dateParts[2], (int) $dateParts[3], (int) $dateParts[1])) {
+    $monthNames = [1 => 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    $selectedDateLabel = (int) $dateParts[3] . ' de ' . $monthNames[(int) $dateParts[2]] . ' de ' . $dateParts[1];
+}
 $selectedWorkerId = isset($selectedWorkerId) ? (int) $selectedWorkerId : null;
 $workerSelectOptions = is_array($workerSelectOptions ?? null) ? $workerSelectOptions : [];
 $workerSelectAvailable = $workerSelectOptions !== [];
@@ -39,10 +46,10 @@ $stateMessageForAttendance = match ($state) {
     default => 'La asistencia no está disponible para esta consulta.',
 };
 $slotDefinitions = [
-    'ENTRY:1' => 'Entrada 1',
-    'EXIT:1' => 'Salida 1',
-    'ENTRY:2' => 'Entrada 2',
-    'EXIT:2' => 'Salida 2',
+    'ENTRY:1' => '1.ª entrada',
+    'EXIT:1' => '1.ª salida',
+    'ENTRY:2' => '2.ª entrada',
+    'EXIT:2' => '2.ª salida',
 ];
 $statusPresentation = static fn(string $status): array => match ($status) {
     'evaluated' => ['Evaluación disponible', 'text-bg-success'],
@@ -67,6 +74,17 @@ $incidenceCategoryLabel = static fn(mixed $category): string => match ((string) 
     'INCAPACITY' => 'Incapacidad',
     'JUSTIFICATION' => 'Justificación',
     default => 'Tipo no disponible',
+};
+$relationshipPresentation = static fn(mixed $relationship): ?array => match ($relationship) {
+    'habitual' => ['Padrón habitual actual', 'text-bg-primary'],
+    'habitual_and_scheduled' => ['Padrón habitual · programación registrada', 'text-bg-primary'],
+    'historical_membership' => ['Adscripción histórica verificada', 'text-bg-primary'],
+    'historical_and_scheduled' => ['Adscripción histórica · programación registrada', 'text-bg-primary'],
+    'current_roster_historical_unverified' => ['Padrón actual · pertenencia histórica no verificada', 'text-bg-warning'],
+    'scheduled_comodine' => ['Comodín programado · autorización no acreditada', 'text-bg-warning'],
+    'observed_outside_roster' => ['Marcación observada · fuera del padrón habitual', 'text-bg-info'],
+    'observed' => ['Marcación observada', 'text-bg-light border'],
+    default => null,
 };
 
 $viewRows = [];
@@ -169,6 +187,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
     $viewRows[] = [
         'worker_id' => $workerId,
         'name' => $name,
+        'relationship' => $relationshipPresentation($attendanceRow['attendance_relationship'] ?? null),
         'employee_number' => trim((string) ($attendanceRow['employee_number'] ?? '')),
         'schedule' => $scheduleText,
         'slots' => $slots,
@@ -215,7 +234,7 @@ if ($rosterFallbackDisplayed) {
                 </span>
                 <?php if ($selectedDate !== ''): ?>
                     <span aria-hidden="true">·</span>
-                    <span>Fecha laboral: <strong class="text-body"><?= $esc($selectedDate) ?></strong></span>
+                    <span>Fecha laboral: <strong class="text-body"><?= $esc($selectedDateLabel) ?></strong></span>
                 <?php endif; ?>
             </div>
         </div>
@@ -290,6 +309,7 @@ if ($rosterFallbackDisplayed) {
                                 <tr>
                                     <th scope="row" class="text-wrap">
                                         <span class="fw-semibold"><?= $esc($viewRow['name']) ?></span>
+                                        <?php if ($viewRow['relationship'] !== null): ?><span class="d-block mt-1"><span class="badge <?= $esc($viewRow['relationship'][1]) ?>"><?= $esc($viewRow['relationship'][0]) ?></span></span><?php endif; ?>
                                         <?php if ($viewRow['employee_number'] !== ''): ?><span class="d-block small text-muted">N.º <?= $esc($viewRow['employee_number']) ?></span><?php elseif ($viewRow['name'] === 'Nombre no disponible'): ?><span class="d-block small text-muted">Referencia <?= (int) $viewRow['worker_id'] ?></span><?php endif; ?>
                                     </th>
                                     <td class="text-wrap"><?= $esc($viewRow['schedule']) ?></td>
@@ -319,18 +339,21 @@ if ($rosterFallbackDisplayed) {
                                         <?php if ($rosterFallbackDisplayed): ?>
                                             <span class="small text-muted">Detalle y acciones no disponibles sin respuesta de marcaciones.</span>
                                         <?php else: ?>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#<?= $esc($viewRow['modal_id']) ?>">
-                                                <i class="ti ti-eye me-1" aria-hidden="true"></i>Ver detalle
-                                            </button>
-                                            <a class="btn btn-sm btn-outline-secondary" href="<?= $esc($viewRow['journey_href']) ?>">Jornada</a>
-                                            <a class="btn btn-sm btn-outline-secondary" href="<?= $esc($viewRow['incidence_href']) ?>">Incidencias</a>
-                                            <?php if ($viewRow['report_href'] !== null): ?>
-                                                <a class="btn btn-sm btn-outline-secondary" href="<?= $esc($viewRow['report_href']) ?>">Marcaciones</a>
-                                            <?php endif; ?>
-                                            <?php if ($viewRow['can_create_incidence']): ?>
-                                                <a class="btn btn-sm btn-outline-primary" href="<?= $esc($viewRow['incidence_href']) ?>">Registrar incidencia</a>
-                                            <?php endif; ?>
+                                        <div class="d-flex gap-1 justify-content-center">
+                                            <div class="dropdown dropstart">
+                                                <button type="button" class="text-muted pointer border-0 bg-transparent p-0" data-bs-toggle="dropdown" data-checador-attendance-actions aria-expanded="false" aria-haspopup="true" aria-controls="daily-attendance-actions-<?= (int) $viewRow['worker_id'] ?>" aria-label="Acciones para <?= $esc($viewRow['name']) ?>">
+                                                    <i class="ti ti-dots-vertical fs-6" aria-hidden="true"></i>
+                                                </button>
+                                                <ul class="dropdown-menu" id="daily-attendance-actions-<?= (int) $viewRow['worker_id'] ?>">
+                                                    <li><button type="button" class="dropdown-item pointer d-flex align-items-center gap-3" data-bs-toggle="modal" data-bs-target="#<?= $esc($viewRow['modal_id']) ?>"><i class="fs-4 ti ti-eye" aria-hidden="true"></i>Ver detalle</button></li>
+                                                    <li><a class="dropdown-item pointer d-flex align-items-center gap-3" href="<?= $esc($viewRow['journey_href']) ?>"><i class="fs-4 ti ti-calendar-time" aria-hidden="true"></i>Jornada</a></li>
+                                                    <li><a class="dropdown-item pointer d-flex align-items-center gap-3" href="<?= $esc($viewRow['incidence_href']) ?>"><i class="fs-4 ti ti-alert-circle" aria-hidden="true"></i>Incidencias</a></li>
+                                                    <?php if ($viewRow['report_href'] !== null): ?><li><a class="dropdown-item pointer d-flex align-items-center gap-3" href="<?= $esc($viewRow['report_href']) ?>"><i class="fs-4 ti ti-list-details" aria-hidden="true"></i>Marcaciones</a></li><?php endif; ?>
+                                                    <?php if ($viewRow['can_create_incidence']): ?>
+                                                        <li><a class="dropdown-item pointer d-flex align-items-center gap-3" href="<?= $esc($viewRow['incidence_href']) ?>"><i class="fs-4 ti ti-plus" aria-hidden="true"></i>Registrar incidencia</a></li>
+                                                    <?php endif; ?>
+                                                </ul>
+                                            </div>
                                         </div>
                                         <?php endif; ?>
                                     </td>
