@@ -1001,6 +1001,7 @@ $r->addRoute('GET', '/importacion/analisis-compra/{year:\d+}/{mes:\d+}', Route::
 
 //----- 4. Almacen
 $r->addRoute('GET', '/almacen', Route::auth(['DptoOperativoController', 'almacenIndex']));
+
 $r->addRoute('GET', '/almacen/mantenimiento', Route::auth(['DptoOperativoController', 'almacenMantenimientoIndex']));
 
 // --- PEDIDO DE MATERIALES (Orden de Mantenimiento legacy) ---

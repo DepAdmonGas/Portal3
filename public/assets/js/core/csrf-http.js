@@ -5,6 +5,9 @@
 // Debe incluirse DESPUÉS de axios.
 // ============================================================
 (function() {
+    if (window.__portal3CsrfHttpConfigured) return;
+    window.__portal3CsrfHttpConfigured = true;
+
     function getCsrfToken() {
         const meta = document.querySelector('meta[name="csrf-token"]');
         return meta ? meta.getAttribute('content') : null;
@@ -12,19 +15,20 @@
 
     const csrfToken = getCsrfToken();
     if (csrfToken && window.axios) {
-        axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-
-        axios.interceptors.request.use(
-            function(config) {
+        window.axios.interceptors.request.use(function(config) {
+            const method = String(config.method || 'get').toUpperCase();
+            const mutating = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+            const url = config.url ? new URL(config.url, config.baseURL || window.location.href) : new URL(window.location.href);
+            if (mutating && url.origin === window.location.origin) {
+                config.headers = config.headers || {};
                 config.headers['X-CSRF-TOKEN'] = getCsrfToken();
-                return config;
-            },
-            function(error) {
-                return Promise.reject(error);
             }
-        );
+            return config;
+        }, function(error) {
+            return Promise.reject(error);
+        });
 
-        axios.interceptors.response.use(
+        window.axios.interceptors.response.use(
             function(response) {
                 return response;
             },
@@ -34,11 +38,9 @@
                     const newToken = error.response.data && error.response.data.new_token;
                     if (meta && newToken) {
                         meta.setAttribute('content', newToken);
-                        if (error.config && !error.config._csrfRetried) {
-                            error.config._csrfRetried = true;
-                            return axios(error.config);
-                        }
                     }
+                    // Never replay a failed mutation automatically. Reloading
+                    // obtains a fresh token; the user can explicitly retry.
                     window.location.reload();
                 }
                 return Promise.reject(error);

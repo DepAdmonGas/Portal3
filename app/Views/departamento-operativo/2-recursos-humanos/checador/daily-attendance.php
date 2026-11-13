@@ -6,6 +6,8 @@ $esc = static fn(mixed $value): string => htmlspecialchars((string) $value, ENT_
 $selectedWorkplaceId = isset($selectedWorkplaceId) ? (int) $selectedWorkplaceId : null;
 $selectedDate = is_string($selectedDate ?? null) ? $selectedDate : '';
 $selectedWorkerId = isset($selectedWorkerId) ? (int) $selectedWorkerId : null;
+$workerSelectOptions = is_array($workerSelectOptions ?? null) ? $workerSelectOptions : [];
+$workerSelectAvailable = $workerSelectOptions !== [];
 $attendanceRows = is_array($attendanceRows ?? null) ? $attendanceRows : [];
 $administrativeIncidences = is_array($administrativeIncidences ?? null) ? $administrativeIncidences : [];
 $administrativeErrors = is_array($administrativeErrors ?? null) ? $administrativeErrors : [];
@@ -45,7 +47,7 @@ $statusPresentation = static fn(string $status): array => match ($status) {
     'review' => ['Requiere revisión', 'text-bg-warning'],
     'ambiguous' => ['Registros por revisar', 'text-bg-warning'],
     'incomplete' => ['Información insuficiente', 'text-bg-info'],
-    'classification_pending' => ['Registros pendientes de clasificación', 'text-bg-secondary'],
+    'classification_pending' => ['Pendiente de clasificación', 'text-bg-secondary'],
     'no_observed_event' => ['Sin marcación observada', 'text-bg-light border text-body-secondary'],
     default => ['No determinado', 'text-bg-light border text-body-secondary'],
 };
@@ -216,11 +218,12 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         <div class="alert alert-info py-2" role="status">Las operaciones POST reales de Checador están deshabilitadas mientras se valida el ambiente y la integración del servicio.</div>
     <?php endif; ?>
 
+    <div data-checador-attendance-results data-attendance-state="<?= $esc($state) ?>" data-workplace-id="<?= $selectedWorkplaceId ?? '' ?>">
     <section class="card mb-3" aria-label="Filtros activos">
         <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
             <span><strong>Fecha laboral:</strong> <?= $esc($selectedDate !== '' ? $selectedDate : 'No disponible') ?></span>
             <?php if ($selectedWorkerId !== null): ?><span><strong>Colaborador:</strong> <?= $selectedWorkerId ?></span><?php else: ?><span class="text-muted">Todos los colaboradores atribuibles</span><?php endif; ?>
-            <span class="text-muted small ms-auto">Un espacio vacío sólo indica que no se mostró una marcación en esta consulta.</span>
+            <span class="text-muted small ms-auto">Una celda vacía no confirma una ausencia.</span>
         </div>
     </section>
 
@@ -229,7 +232,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
             <?= $esc($stateMessageForAttendance) ?>
         </div>
     <?php elseif (($attendanceCoverage['complete'] ?? false) !== true): ?>
-        <div class="alert alert-info py-2" role="status">La información disponible es parcial; se muestran sólo los registros que pudieron atribuirse.</div>
+        <div class="alert alert-info py-2" role="status">Cobertura no confirmada: esta consulta no confirma que se hayan recibido todas las marcaciones del período.</div>
     <?php endif; ?>
 
     <section class="card" aria-labelledby="daily-attendance-table-title">
@@ -439,6 +442,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
             </div>
         </div>
     <?php endforeach; ?>
+    </div>
 </div>
 
 <div class="modal fade" id="checador-filter-modal" tabindex="-1" aria-labelledby="checador-filter-modal-title" aria-hidden="true" data-checador-filter-modal>
@@ -448,22 +452,34 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                 <h2 class="modal-title h5" id="checador-filter-modal-title">Filtros de asistencia</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar filtros"></button>
             </div>
-            <form id="checador-filter-form" method="get" action="<?= $esc($baseUrl) ?>" data-checador-filter-form>
+            <form id="checador-filter-form" method="post" action="<?= $esc($baseUrl) ?>" data-checador-filter-form data-checador-ajax>
                 <div class="modal-body">
-                    <?php if ($selectedWorkplaceId !== null): ?><input id="workplace_id" name="workplace_id" type="hidden" value="<?= $selectedWorkplaceId ?>"><?php endif; ?>
+                    <div class="alert alert-danger py-2 d-none" data-checador-search-error role="alert" aria-live="polite"></div>
                     <div class="mb-3">
                         <label for="date" class="form-label">Fecha laboral</label>
                         <input id="date" name="date" type="date" class="form-control" value="<?= $esc($selectedDate) ?>" required>
                     </div>
                     <div>
                         <label for="worker_id" class="form-label">Colaborador (opcional)</label>
-                        <input id="worker_id" name="worker_id" type="number" min="1" step="1" class="form-control" value="<?= $selectedWorkerId === null ? '' : $selectedWorkerId ?>" inputmode="numeric">
+                        <select id="worker_id" name="worker_id" class="form-select"<?= !$workerSelectAvailable ? ' disabled' : '' ?>>
+                            <option value=""<?= $selectedWorkerId === null ? ' selected' : '' ?>>Todos los colaboradores</option>
+                            <?php foreach ($workerSelectOptions as $workerOption): ?>
+                                <?php
+                                if (!is_array($workerOption)) continue;
+                                $optionWorkerId = filter_var($workerOption['worker_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+                                $optionName = trim((string) ($workerOption['full_name'] ?? ''));
+                                if ($optionWorkerId === false || $optionName === '' || preg_match('/^Trabajador\s+\d+$/u', $optionName) === 1) continue;
+                                $optionNumber = trim((string) ($workerOption['employee_number'] ?? ''));
+                                ?>
+                                <option value="<?= (int) $optionWorkerId ?>"<?= $selectedWorkerId === (int) $optionWorkerId ? ' selected' : '' ?>><?= $esc($optionName) ?><?= $optionNumber !== '' ? ' · N.º ' . $esc($optionNumber) : '' ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-outline-secondary" formnovalidate data-checador-clear-filters>Limpiar filtros</button>
+                    <button type="button" class="btn btn-outline-secondary" data-checador-search-action="clear">Limpiar filtros</button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                    <button type="button" class="btn btn-primary" data-checador-search-action="search">Aplicar filtros</button>
                 </div>
             </form>
         </div>
