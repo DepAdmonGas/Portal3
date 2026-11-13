@@ -88,6 +88,26 @@ $request = $history[0]['request'] ?? null;
 $headers = $request instanceof RequestInterface ? $request->getHeaders() : [];
 $assert($request instanceof RequestInterface && isset($headers['Authorization']) && !isset($headers['X-Device-Id']) && !isset($headers['X-Credential-Key']), 'P306 Device Auth headers are absent');
 $assert(!str_contains($sourceView, 'JWT') && !str_contains($sourceView, 'JWT_SECRET') && !str_contains($sourceView, 'Authorization'), 'P307 JWT and signing secret are absent from rendered HTML');
+$diagnosticStart = strpos($sourceService, 'private function logMvpApiDiagnostic(');
+$diagnosticEnd = $diagnosticStart === false ? false : strpos($sourceService, 'private static function logMvpApiInitializationFailure(', $diagnosticStart);
+$diagnosticSource = $diagnosticStart !== false && $diagnosticEnd !== false
+    ? substr($sourceService, $diagnosticStart, $diagnosticEnd - $diagnosticStart)
+    : '';
+$initializationDiagnosticStart = strpos($sourceService, 'private static function logMvpApiInitializationFailure(');
+$initializationDiagnosticEnd = $initializationDiagnosticStart === false
+    ? false
+    : strpos($sourceService, 'private static function safeBaseUrl(', $initializationDiagnosticStart);
+$initializationDiagnosticSource = $initializationDiagnosticStart !== false && $initializationDiagnosticEnd !== false
+    ? substr($sourceService, $initializationDiagnosticStart, $initializationDiagnosticEnd - $initializationDiagnosticStart)
+    : '';
+$assert(str_contains($diagnosticSource, "PHP_SAPI === 'cli'")
+    && !str_contains($diagnosticSource, "['prod', 'production']")
+    && str_contains($diagnosticSource, 'self::safeBaseUrl($this->baseUrl)')
+    && str_contains($diagnosticSource, 'self::safeCorrelationId(')
+    && !str_contains($diagnosticSource, "'token' =>")
+    && !str_contains($diagnosticSource, "'payload' =>")
+    && str_contains($initializationDiagnosticSource, "PHP_SAPI === 'cli'")
+    && str_contains($initializationDiagnosticSource, 'self::safeBaseUrl('), 'P307C web-runtime failure logs expose only sanitized diagnostics without APP_ENV gating, JWTs or response payloads');
 
 // P307A: P03 API client initialization depends on an explicit API URL, not APP_ENV.
 $hadAppEnv = array_key_exists('APP_ENV', $_ENV);
@@ -130,6 +150,10 @@ $read = $service->readObservedPunches($user, 1, $tz['data']);
 $firstUri = (string) ($history[0]['request']->getUri() ?? '');
 $secondUri = (string) ($history[1]['request']->getUri() ?? '');
 $assert(count($history) === 2 && str_contains($firstUri, '/api/v2/workplaces/1/timezone'), 'P308 timezone endpoint is called before Punch Read');
+$assert(($history[0]['request'] ?? null) instanceof RequestInterface
+    && ($history[1]['request'] ?? null) instanceof RequestInterface
+    && $history[0]['request']->getMethod() === 'GET'
+    && $history[1]['request']->getMethod() === 'GET', 'P308A attendance timezone and punch reads remain HTTP GETs without API writes');
 $unresolvedHistory = [];
 $unresolvedService = $make([new Response(404, [], json_encode(['status' => 'WORKPLACE_TIMEZONE_UNRESOLVED'], JSON_THROW_ON_ERROR))], $unresolvedHistory);
 $unresolvedService->resolveWorkplaceLocalDay($user, 1, '2026-10-11');

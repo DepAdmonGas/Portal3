@@ -9,6 +9,8 @@ $selectedWorkerId = isset($selectedWorkerId) ? (int) $selectedWorkerId : null;
 $workerSelectOptions = is_array($workerSelectOptions ?? null) ? $workerSelectOptions : [];
 $workerSelectAvailable = $workerSelectOptions !== [];
 $attendanceRows = is_array($attendanceRows ?? null) ? $attendanceRows : [];
+$attendanceRoster = is_array($attendanceRoster ?? null) ? $attendanceRoster : [];
+$attendanceRosterFallbackAllowed = ($attendanceRosterFallbackAllowed ?? false) === true;
 $administrativeIncidences = is_array($administrativeIncidences ?? null) ? $administrativeIncidences : [];
 $administrativeErrors = is_array($administrativeErrors ?? null) ? $administrativeErrors : [];
 $baseUrl = '/departamento-operativo/recursos-humanos/checador/asistencia';
@@ -49,6 +51,7 @@ $statusPresentation = static fn(string $status): array => match ($status) {
     'incomplete' => ['Información insuficiente', 'text-bg-info'],
     'classification_pending' => ['Pendiente de clasificación', 'text-bg-secondary'],
     'no_observed_event' => ['Sin marcación observada', 'text-bg-light border text-body-secondary'],
+    'punches_unavailable' => ['Marcaciones no disponibles', 'text-bg-warning'],
     default => ['No determinado', 'text-bg-light border text-body-secondary'],
 };
 $scheduleStatusLabel = static fn(string $status): string => match ($status) {
@@ -184,6 +187,21 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         'modal_id' => 'daily-attendance-detail-' . $workerId . '-' . (int) $rowIndex,
     ];
 }
+
+$rosterFallbackDisplayed = $state !== 'success'
+    && $attendanceRosterFallbackAllowed
+    && $viewRows !== [];
+if ($rosterFallbackDisplayed) {
+    $rosterMessage = trim((string) ($attendanceRoster['message'] ?? ''));
+    $stateMessageForAttendance = 'Marcaciones no disponibles. '
+        . ($rosterMessage !== ''
+            ? $rosterMessage
+            : 'Se muestra únicamente el padrón autorizado disponible; no se confirma pertenencia histórica.');
+} elseif ($state !== 'success') {
+    // Only a roster explicitly marked displayable by the authenticated
+    // controller may survive an unsuccessful API read.
+    $viewRows = [];
+}
 ?>
 
 <div id="container" class="mt-4 mb-5">
@@ -237,16 +255,16 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
 
     <section class="card" aria-labelledby="daily-attendance-table-title">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <h2 class="h5 mb-0" id="daily-attendance-table-title">Personal y registros observados</h2>
-            <?php if ($state === 'success'): ?>
-                <span class="badge text-bg-light border"><?= count($viewRows) ?> colaborador<?= count($viewRows) === 1 ? '' : 'es' ?></span>
+            <h2 class="h5 mb-0" id="daily-attendance-table-title"><?= $rosterFallbackDisplayed ? 'Padrón autorizado y marcaciones' : 'Personal y registros observados' ?></h2>
+            <?php if ($state === 'success' || $rosterFallbackDisplayed): ?>
+                <span class="badge text-bg-light border"><?= count($viewRows) ?> colaborador<?= count($viewRows) === 1 ? '' : 'es' ?><?= $rosterFallbackDisplayed ? ' en padrón disponible' : '' ?></span>
             <?php endif; ?>
         </div>
         <div class="card-body">
             <div class="datatables">
                 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
                     <table class="table table-striped table-bordered text-nowrap align-middle mb-0" id="checador-daily-attendance-table">
-                    <caption class="visually-hidden">Asistencia observada por colaborador para la fecha laboral seleccionada. Las cuatro posiciones son neutrales y no clasifican automáticamente salidas a comer.</caption>
+                    <caption class="visually-hidden"><?= $rosterFallbackDisplayed ? 'Padrón autorizado de referencia; no constituye evidencia de asistencia en la fecha consultada.' : 'Asistencia observada por colaborador para la fecha laboral seleccionada.' ?> Las cuatro posiciones son neutrales y no clasifican automáticamente salidas a comer.</caption>
                     <thead>
                         <tr>
                             <th scope="col">Nombre completo</th>
@@ -261,10 +279,10 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($state !== 'success' || $viewRows === []): ?>
+                        <?php if ($viewRows === []): ?>
                             <tr>
                                 <td colspan="9" class="text-center text-muted py-4">
-                                    <?php if ($state === 'success'): ?>No hay colaboradores atribuibles dentro de la información disponible para esta consulta.<?php else: ?>La tabla estará disponible cuando la consulta se complete.<?php endif; ?>
+                                    <?php if ($state === 'success'): ?>No hay colaboradores atribuibles dentro de la información disponible para esta consulta.<?php else: ?>El padrón no está disponible y no se muestran personas sin una membresía autorizada verificable.<?php endif; ?>
                                 </td>
                             </tr>
                         <?php else: ?>
@@ -298,6 +316,9 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                                         <?php else: ?><span class="text-muted">No disponible</span><?php endif; ?>
                                     </td>
                                     <td>
+                                        <?php if ($rosterFallbackDisplayed): ?>
+                                            <span class="small text-muted">Detalle y acciones no disponibles sin respuesta de marcaciones.</span>
+                                        <?php else: ?>
                                         <div class="d-flex flex-wrap gap-1">
                                             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#<?= $esc($viewRow['modal_id']) ?>">
                                                 <i class="ti ti-eye me-1" aria-hidden="true"></i>Ver detalle
@@ -311,6 +332,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                                                 <a class="btn btn-sm btn-outline-primary" href="<?= $esc($viewRow['incidence_href']) ?>">Registrar incidencia</a>
                                             <?php endif; ?>
                                         </div>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -322,7 +344,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         </div>
     </section>
 
-    <?php foreach ($viewRows as $viewRow): ?>
+    <?php foreach ($rosterFallbackDisplayed ? [] : $viewRows as $viewRow): ?>
         <div class="modal fade" id="<?= $esc($viewRow['modal_id']) ?>" tabindex="-1" aria-labelledby="<?= $esc($viewRow['modal_id']) ?>-title" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-xl">
                 <div class="modal-content">

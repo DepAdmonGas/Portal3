@@ -1873,7 +1873,11 @@ final class ChecadorDailyReadService
     private function logMvpApiDiagnostic(string $operation, array $details, bool $success = false): void
     {
         $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
-        if (PHP_SAPI === 'cli' || !in_array($environment, ['dev', 'development', 'testing'], true)) {
+        $developmentDiagnostic = in_array($environment, ['dev', 'development', 'testing'], true);
+        // Failures are useful to diagnose in any web runtime. The payload is
+        // strictly allowlisted below; APP_ENV does not control P03 reads or
+        // whether a sanitized failure is visible to server operators.
+        if (PHP_SAPI === 'cli' || ($success && !$developmentDiagnostic)) {
             return;
         }
 
@@ -1908,7 +1912,7 @@ final class ChecadorDailyReadService
     private static function logMvpApiInitializationFailure(?string $providedBaseUrl, \Throwable $exception): void
     {
         $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
-        if (PHP_SAPI === 'cli' || !in_array($environment, ['dev', 'development', 'testing'], true)) {
+        if (PHP_SAPI === 'cli') {
             return;
         }
 
@@ -1945,8 +1949,9 @@ final class ChecadorDailyReadService
             return '[invalid-base-url]';
         }
         $port = isset($parts['port']) ? ':' . (int) $parts['port'] : '';
-        $path = isset($parts['path']) ? rtrim((string) $parts['path'], '/') : '';
-        return strtolower((string) $parts['scheme']) . '://' . strtolower((string) $parts['host']) . $port . $path;
+        // Log only the origin. A deployment may place opaque credentials or
+        // routing data in the base path, so never emit it to application logs.
+        return strtolower((string) $parts['scheme']) . '://' . strtolower((string) $parts['host']) . $port;
     }
 
     private static function safeApiErrorCode(string $code): ?string

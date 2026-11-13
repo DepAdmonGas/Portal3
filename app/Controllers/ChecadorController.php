@@ -685,6 +685,7 @@ final class ChecadorController extends BaseController
         $attendanceEvents = [];
         $attendanceCoverage = ['status' => 'not_available', 'complete' => false, 'message' => 'No se pudo confirmar la cobertura de marcaciones.'];
         $attendanceRoster = ['status' => 'not_available', 'coverage' => 'unknown', 'workers' => [], 'message' => 'Padrón no disponible.'];
+        $attendanceRosterFallbackAllowed = false;
         $attendanceRows = [];
         $workerSelectOptions = [];
         $journeys = [];
@@ -748,10 +749,17 @@ final class ChecadorController extends BaseController
                 $stateMessage = 'La sesión ya no es válida. Inicia sesión nuevamente.';
             } else {
                 try {
-                    $reader = new ChecadorDailyReadService();
                     if ($workspace === 'daily-attendance' && !$demoMode) {
                         $workerCatalog = (new \App\Services\ChecadorAttendanceRosterService())
                             ->workersForAttendanceFilter($requestedWorkplace, $date, null, false);
+                        // Resolve the authorized local roster before API
+                        // initialization. Missing API configuration must not
+                        // prevent an independent roster read.
+                        try {
+                            $reader = new ChecadorDailyReadService();
+                        } catch (\Throwable) {
+                            $reader = null;
+                        }
                         $rawAttendance = self::readDailyRawAttendance(
                             $reader,
                             $user,
@@ -770,6 +778,7 @@ final class ChecadorController extends BaseController
                         $attendanceEvents = $rawAttendance['attendance_events'];
                         $attendanceCoverage = $rawAttendance['attendance_coverage'];
                         $attendanceRoster = $rawAttendance['attendance_roster'];
+                        $attendanceRosterFallbackAllowed = $rawAttendance['roster_fallback_allowed'];
                         $workerSelectOptions = $rawAttendance['worker_options'];
                         $requestedWorker = $rawAttendance['selected_worker_id'];
                         $scheduledComodines = $rawAttendance['scheduled_comodines'];
@@ -777,6 +786,7 @@ final class ChecadorController extends BaseController
                         $effectiveSchedules = $rawAttendance['effective_schedules'];
                         $effectiveScheduleErrors = $rawAttendance['effective_schedule_errors'];
                     } else {
+                    $reader = new ChecadorDailyReadService();
                     $snapshotState = null;
 
                     if ($snapshotRefProvided && $snapshotRef === null) {
@@ -1257,6 +1267,7 @@ final class ChecadorController extends BaseController
                 'attendanceRows' => array_values($attendanceRows),
                 'attendanceCoverage' => $attendanceCoverage,
                 'attendanceRoster' => $attendanceRoster,
+                'attendanceRosterFallbackAllowed' => $attendanceRosterFallbackAllowed,
                 'pagination' => $pagination,
                 'paginationLinks' => $paginationLinks,
                 'snapshotMeta' => $snapshotMeta === null ? null : [
@@ -3599,8 +3610,23 @@ final class ChecadorController extends BaseController
         return is_string($value) && preg_match('/\A[a-f0-9]{32}\z/', $value) ? $value : null;
     }
 
+    private static function canDisplayAttendanceRosterFallback(array $roster): bool
+    {
+        $status = (string) ($roster['status'] ?? '');
+        $coverage = (string) ($roster['coverage'] ?? '');
+        $workers = $roster['workers'] ?? null;
+
+        $verifiedRoster = ($status === 'current_roster_only' && $coverage === 'current_active_roster')
+            || ($status === 'ready' && $coverage === 'historical_versioned_membership')
+            || ($status === 'partial' && $coverage === 'current_roster_historical_unverified');
+
+        return $verifiedRoster
+            && is_array($workers)
+            && $workers !== [];
+    }
+
     private static function readDailyRawAttendance(
-        ChecadorDailyReadService $reader,
+        ?ChecadorDailyReadService $reader,
         \App\Models\Usuario $user,
         int $workplaceId,
         string $date,
@@ -3618,6 +3644,7 @@ final class ChecadorController extends BaseController
             'attendance_events' => [],
             'attendance_coverage' => ['status' => 'not_available', 'complete' => false, 'message' => 'No se pudo confirmar la cobertura de la lectura.'],
             'attendance_roster' => $workerCatalog,
+            'roster_fallback_allowed' => self::canDisplayAttendanceRosterFallback($workerCatalog),
             'worker_options' => [],
             'worker_options_status' => (string) ($workerCatalog['status'] ?? 'unavailable'),
             'worker_options_message' => '',
@@ -3688,6 +3715,21 @@ final class ChecadorController extends BaseController
         if ($requestedWorkerInvalid) {
             $empty['state'] = 'error';
             $empty['state_message'] = 'El filtro de colaborador no es válido.';
+            $empty['roster_fallback_allowed'] = false;
+            $empty['attendance_rows'] = [];
+            return $empty;
+        }
+
+        if ($reader === null) {
+            if ($requestedWorkerId !== null && !isset($workerOptionsById[$requestedWorkerId])) {
+                $empty['state_message'] = 'El colaborador seleccionado no pertenece a la localidad autorizada para esta consulta.';
+                $empty['roster_fallback_allowed'] = false;
+                $empty['attendance_rows'] = [];
+                return $empty;
+            }
+            $empty['selected_worker_id'] = $requestedWorkerId;
+            $empty['state'] = 'unavailable';
+            $empty['state_message'] = 'Marcaciones no disponibles. No se pudo inicializar la conexión de lectura.';
             return $empty;
         }
 
@@ -3736,6 +3778,7 @@ final class ChecadorController extends BaseController
             ? $dateWorkerCatalog
             : $workerCatalog;
         $empty['attendance_roster'] = $attendanceRoster;
+        $empty['roster_fallback_allowed'] = self::canDisplayAttendanceRosterFallback($attendanceRoster);
         $empty['attendance_rows'] = $rowsWithoutPunches(
             $attendanceRoster,
             (string) ($timezoneResult['data']['timezone'] ?? ''),
@@ -3744,6 +3787,7 @@ final class ChecadorController extends BaseController
         if ($requestedWorkerId !== null && !isset($workerOptionsById[$requestedWorkerId])) {
             $empty['state'] = 'error';
             $empty['state_message'] = 'El colaborador seleccionado no pertenece a la localidad autorizada para esta consulta.';
+            $empty['roster_fallback_allowed'] = false;
             $empty['attendance_rows'] = [];
             return $empty;
         }
@@ -3917,6 +3961,7 @@ final class ChecadorController extends BaseController
                 'station_mismatch_count' => $stationMismatchCount,
             ],
             'attendance_roster' => $attendanceRoster,
+            'roster_fallback_allowed' => false,
             'worker_options' => $empty['worker_options'],
             'worker_options_status' => $empty['worker_options_status'],
             'worker_options_message' => $empty['worker_options_message'],
