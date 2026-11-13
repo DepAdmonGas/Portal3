@@ -126,7 +126,46 @@ $errorVars['attendanceCoverage'] = ['complete' => false];
 $errorVars['attendanceRows'] = [];
 $errorHtml = $render($errorVars);
 $assert(str_contains($errorHtml, 'No fue posible cargar la asistencia')
-    && str_contains($errorHtml, 'La tabla estará disponible cuando la consulta se complete.'), 'failed attendance read remains an error rather than an empty or complete result');
+    && str_contains($errorHtml, 'El padrón no está disponible y no se muestran personas sin una membresía autorizada verificable.'), 'failed attendance and unavailable roster remain distinct errors rather than empty or complete results');
+$unavailableRosterRow = $row;
+$unavailableRosterRow['status'] = 'punches_unavailable';
+$unavailableRosterRow['schedule'] = null;
+$unavailableRosterRow['schedule_error'] = 'schedule_not_loaded';
+$unavailableRosterRow['incidence_count'] = null;
+$unavailableRosterRow['additional_events'] = [];
+foreach ($unavailableRosterRow['slots'] as &$unavailableSlot) {
+    $unavailableSlot = ['event' => null, 'time_local' => null, 'ambiguous' => false];
+}
+unset($unavailableSlot);
+$rosterFallbackVars = $vars;
+$rosterFallbackVars['state'] = 'unavailable';
+$rosterFallbackVars['attendanceRosterFallbackAllowed'] = true;
+$rosterFallbackVars['attendanceRoster'] = [
+    'status' => 'current_roster_only',
+    'coverage' => 'current_active_roster',
+    'workers' => [['worker_id' => 900001, 'full_name' => 'Ana García', 'employee_number' => 'EMP-009']],
+    'message' => 'El padrón activo actual se muestra como referencia; no acredita pertenencia histórica para la fecha solicitada.',
+];
+$rosterFallbackVars['attendanceRows'] = [$unavailableRosterRow];
+$rosterFallbackVars['attendanceCoverage'] = ['complete' => false];
+$rosterFallbackVars['administrativeIncidences'] = [];
+$rosterFallbackVars['administrativeErrors'] = [];
+$rosterFallbackVars['incidenceCreateAllowed'] = true;
+$rosterFallbackHtml = $render($rosterFallbackVars);
+preg_match('/<table class="table table-striped table-bordered text-nowrap align-middle mb-0" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $rosterFallbackHtml, $fallbackTableMatch);
+$fallbackTable = $fallbackTableMatch[0] ?? '';
+$assert(str_contains($fallbackTable, 'Ana García')
+    && str_contains($fallbackTable, 'Marcaciones no disponibles')
+    && str_contains($rosterFallbackHtml, 'no acredita pertenencia histórica')
+    && !str_contains($fallbackTable, 'Registrar incidencia')
+    && !preg_match('/\b(?:FALTA|AUSENTE)\b/i', $fallbackTable), 'a verified active roster remains visible on API failure with historical limits, unavailable punches and no invented actions or absences');
+$unverifiedFallbackVars = $rosterFallbackVars;
+$unverifiedFallbackVars['attendanceRosterFallbackAllowed'] = false;
+$unverifiedFallbackHtml = $render($unverifiedFallbackVars);
+preg_match('/<table class="table table-striped table-bordered text-nowrap align-middle mb-0" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $unverifiedFallbackHtml, $unverifiedTableMatch);
+$unverifiedTable = $unverifiedTableMatch[0] ?? '';
+$assert(!str_contains($unverifiedTable, 'Ana García')
+    && str_contains($unverifiedTable, 'El padrón no está disponible'), 'unverified roster rows remain hidden when the API read fails');
 $assert(str_contains($mainTable, 'Ver detalle')
     && str_contains($html, 'id="daily-attendance-detail-900001-0"')
     && str_contains($html, 'Marcaciones originales y trazabilidad')
