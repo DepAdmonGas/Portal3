@@ -137,7 +137,15 @@ exit;
 }
 */
 
-$id = FacturaMonederoService::add($_POST + $_FILES);
+$input = $_POST + $_FILES;
+$errors = $this->validarCamposFactura($input, true);
+if ($errors) {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'errors' => $errors]);
+    exit;
+}
+
+$id = FacturaMonederoService::add($input);
 echo json_encode(['success' => (bool)$id, 'message' => $id ? 'Registro creado exitosamente.' : 'Error al crear el registro.']);
 exit;
 }
@@ -166,9 +174,36 @@ echo json_encode(['success' => false, 'message' => 'ID no proporcionado.']);
 exit;
 }
 
+$errors = $this->validarCamposFactura($input, false);
+if ($errors) {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'errors' => $errors]);
+    exit;
+}
+
 $updated = FacturaMonederoService::update($id, $input);
 echo json_encode(['success' => $updated, 'message' => $updated ? 'Registro actualizado exitosamente.' : 'Error al actualizar el registro.']);
 exit;
+}
+
+private function validarCamposFactura(array $input, bool $requiereArchivos): array
+{
+    $errors = [];
+    if (trim((string)($input['no_factura'] ?? '')) === '') $errors['no_factura'] = true;
+
+    $monto = str_replace(',', '', trim((string)($input['monto'] ?? '')));
+    if ($monto === '' || !is_numeric($monto) || (float)$monto <= 0) $errors['monto'] = true;
+
+    if ($requiereArchivos) {
+        foreach (['archivo_factura', 'archivo_factura_xml'] as $field) {
+            $file = $input[$field] ?? null;
+            if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+                $errors[$field] = true;
+            }
+        }
+    }
+
+    return $errors;
 }
 
 public function delete()

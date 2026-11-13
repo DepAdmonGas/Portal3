@@ -12,6 +12,7 @@ puedeDescargarBaja: c?.dataset.puedeDescargarBaja === 'true',
 archivosBaja: bajaData.archivos_baja || [],
 selectedArchivoBajaId: null,
 bajaForm: { descripcion: '' },
+bajaErrors: { descripcion: false, archivo: false },
 subiendoArchivo: false,
 
 comentarios: bajaData.comentarios || [],
@@ -20,6 +21,12 @@ guardandoComentario: false,
 
 init() {
 this.scrollChatToBottom();
+const modal = document.getElementById('modalSubirArchivoBaja');
+modal?.addEventListener('hidden.bs.modal', () => {
+this.bajaForm = { descripcion: '' };
+this.bajaErrors = { descripcion: false, archivo: false };
+if (this.$refs.bajaFileInputModal) this.$refs.bajaFileInputModal.value = '';
+});
 },
 
 scrollChatToBottom() {
@@ -31,11 +38,15 @@ if (el) el.scrollTop = el.scrollHeight;
 
 async subirArchivoBaja() {
 if (this.subiendoArchivo) return;
-if (!this.bajaForm.descripcion.trim()) return;
+this.bajaErrors = { descripcion: false, archivo: false };
 
 const fileInput = this.$refs.bajaFileInputModal;
-if (!fileInput || !fileInput.files.length) {
-if (window.Notify) Notify.warning('Selecciona un archivo.');
+const descripcion = String(this.bajaForm.descripcion || '').trim();
+const tieneArchivo = !!(fileInput && fileInput.files && fileInput.files.length);
+if (!descripcion || !tieneArchivo) {
+this.bajaErrors.descripcion = !descripcion;
+this.bajaErrors.archivo = !tieneArchivo;
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
 return;
 }
 
@@ -43,7 +54,7 @@ this.subiendoArchivo = true;
 try {
 const fd = new FormData();
 fd.append('id_baja', this.idBaja);
-fd.append('descripcion', this.bajaForm.descripcion.trim());
+fd.append('descripcion', descripcion);
 fd.append('archivo', fileInput.files[0]);
 
 const resp = await fetch('/departamento-operativo/recursos-humanos/control-documentos-personal/upload-baja-archivo', {
@@ -53,6 +64,7 @@ body: fd
 const json = await resp.json();
 if (json.success) {
 this.bajaForm.descripcion = '';
+this.bajaErrors = { descripcion: false, archivo: false };
 fileInput.value = '';
 if (window.Notify) Notify.success(json.message || 'Archivo subido correctamente.');
 await this.recargarArchivosBaja();

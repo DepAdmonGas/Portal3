@@ -274,12 +274,12 @@ style="width:28px;height:28px;">11</span>
 
 <div class="col-lg-5 mb-3">
 <label class="form-label">* Fecha ingreso:</label>
-<input type="date" class="form-control" x-model="form.fecha_ingreso" :style="errors.fecha_ingreso ? 'border:2px solid #A52525' : ''">
+<input type="date" class="form-control" x-model="form.fecha_ingreso" @input="errors.fecha_ingreso = false" :class="errors.fecha_ingreso ? 'is-invalid' : ''" :style="errors.fecha_ingreso ? 'border:2px solid #A52525' : ''">
 </div>
 
 <div class="col-lg-4 mb-0" x-show="puedeCrear || esMultiestacion || modoForm === 'editar'">
 <label class="form-label">* No. Colaborador:</label>
-<input type="number" class="form-control" x-model="form.no_colaborador">
+<input type="text" inputmode="numeric" autocomplete="off" class="form-control" :value="formatInputNumber(form.no_colaborador, false)" @input="formatNumericInput($event, 'no_colaborador', false); errors.no_colaborador = false" :class="errors.no_colaborador ? 'is-invalid' : ''" :style="errors.no_colaborador ? 'border:2px solid #A52525' : ''">
 </div>
 
 </div>
@@ -296,7 +296,7 @@ style="width:28px;height:28px;">11</span>
 
 <div class="col-12 mb-3">
 <label class="form-label">* Nombre Completo:</label>
-<input type="text" class="form-control" x-model="form.nombre_completo" :style="errors.nombre_completo ? 'border:2px solid #A52525' : ''">
+<input type="text" class="form-control" x-model="form.nombre_completo" @input="errors.nombre_completo = false" :class="errors.nombre_completo ? 'is-invalid' : ''" :style="errors.nombre_completo ? 'border:2px solid #A52525' : ''">
 </div>
 
 <div class="col-lg-8 mb-3">
@@ -315,7 +315,7 @@ style="width:28px;height:28px;">11</span>
 <label class="form-label">Salario Diario:</label>
 <div class="input-group">
 <span class="input-group-text">$</span>
-<input type="number" step="0.01" class="form-control" x-model="form.sd">
+<input type="text" inputmode="decimal" autocomplete="off" class="form-control" :value="formatInputNumber(form.sd, true)" @input="formatNumericInput($event, 'sd', true)">
 </div>
 </div>
 
@@ -345,7 +345,7 @@ style="width:28px;height:28px;">11</span>
         accept=".pdf,.jpg,.jpeg,.png"
     >
 
-    <template x-if="modoForm === 'editar' && form.documentos[campo]">
+    <template x-if="modoForm === 'editar' && form.documentos[campo] && form.documentos_disponibles[campo]">
         <button
             type="button"
             class="btn bg-light text-dark border px-3 d-inline-flex align-items-center justify-content-center"
@@ -353,8 +353,11 @@ style="width:28px;height:28px;">11</span>
             title="Descargar archivo actual"
             aria-label="Descargar archivo actual"
         >
-            <i class="ti ti-download"></i>
+            <i class="ti ti-download fs-6"></i>
         </button>
+    </template>
+    <template x-if="modoForm === 'editar' && form.documentos[campo] && !form.documentos_disponibles[campo]">
+        <span class="input-group-text text-muted" title="Archivo no disponible" aria-label="Archivo no disponible"><i class="ti ti-file-off fs-6"></i></span>
     </template>
 </div>
 
@@ -558,18 +561,19 @@ Baja de Personal (<span x-text="bajaPersonalNombre"></span>)</h5>
 <div class="row g-3">
 <div class="col-md-6">
 <label class="form-label">* Fecha de baja:</label>
-<input type="date" class="form-control" x-model="bajaForm.fecha_baja">
+<input type="date" class="form-control" x-model="bajaForm.fecha_baja" @input="bajaErrors.fecha_baja = false" :class="bajaErrors.fecha_baja ? 'is-invalid' : ''" :style="bajaErrors.fecha_baja ? 'border:2px solid #A52525' : ''">
 </div>
 <div class="col-md-6">
 <label class="form-label">* Motivo:</label>
-<input type="text" class="form-control" x-model="bajaForm.motivo" list="listaMotivosBaja" placeholder="Selecciona o escribe un motivo...">
-<datalist id="listaMotivosBaja">
-<option value="Renuncia voluntaria">
-<option value="Terminacion de contrato">
-<option value="Mala practica">
-<option value="Reduccion de personal">
-<option value="Otro">
-</datalist>
+<div class="position-relative">
+<input type="text" class="form-control" x-model="bajaForm.motivo" @focus="mostrarMotivosBaja = true" @input="bajaErrors.motivo = false; mostrarMotivosBaja = true" @keydown.escape="mostrarMotivosBaja = false" @blur="setTimeout(() => mostrarMotivosBaja = false, 150)" :class="bajaErrors.motivo ? 'is-invalid' : ''" :style="bajaErrors.motivo ? 'border:2px solid #A52525' : ''" placeholder="Selecciona o escribe un motivo..." autocomplete="off">
+<div class="dropdown-menu w-100 shadow-sm" :class="mostrarMotivosBaja ? 'show' : ''" style="max-height:180px;overflow-y:auto;">
+<template x-for="opcion in motivosBajaFiltrados()" :key="opcion">
+<button type="button" class="dropdown-item" @click="bajaForm.motivo = opcion; bajaErrors.motivo = false; mostrarMotivosBaja = false" x-text="opcion"></button>
+</template>
+<div class="dropdown-item text-muted" x-show="motivosBajaFiltrados().length === 0">Sin coincidencias; puedes conservar el texto escrito.</div>
+</div>
+</div>
 </div>
 <div class="col-12">
 <label class="form-label">Detalle:</label>
@@ -640,7 +644,7 @@ Guardar
 </div>
 
 <h4 class="fw-bold mb-1">Control de Acceso</h4>
-<small class="text-muted" x-text="accesoSoloLectura ? 'Consulta de acceso del colaborador (solo lectura)' : 'Consulta y administración del acceso del colaborador'"></small>
+<small class="text-muted">Consulta de acceso del colaborador</small>
 </div>
 
 <!-- Contenedor -->
@@ -665,67 +669,7 @@ style="width:52px;height:52px;">
 <span class="badge rounded-pill" :class="accesoData.huella ? 'bg-success' : 'bg-danger'" x-text="accesoData.huella ? 'Registrada' : 'No registrada'"></span>
 </div>
 
-<hr class="m-0">
-
-<!-- PIN -->
-<div class="p-3" x-show="accesoData.nombre_puesto !== 'Encargado' && accesoData.nombre_puesto !== 'Asistente Administrativo'">
-<template x-if="!showEditPin">
-
-<div>
-
-<!-- Primera fila -->
-<div class="d-flex justify-content-between align-items-center">
-
-<div class="d-flex align-items-center">
-<div class="rounded-3 bg-opacity-10 d-flex align-items-center justify-content-center me-3" 
-:class="accesoData.pin ? 'bg-primary text-primary' : 'bg-danger text-danger'" style="width:52px;height:52px;">
-<i class="ti ti-lock fs-5"></i>
-</div>
-
-<div>
-<div class="fw-semibold">PIN de Acceso</div>
-<small class="text-muted">Código utilizado para ingresar</small>
-</div>
-</div>
-
-<span class="badge rounded-pill"
-:class="accesoData.pin ? 'bg-success' : 'bg-danger'"
-x-text="accesoData.pin ? accesoData.pin : 'No registrado'">
-</span>
-
-</div>
-
-</div>
-</template>
-
-<!-- Editar -->
-<div x-show="showEditPin && !accesoSoloLectura" x-cloak>
-<div class="input-group">
-<span class="input-group-text bg-light"><i class="ti ti-key text-primary fs-6"></i></span>
-
-<input type="text" class="form-control form-control" placeholder="Nuevo PIN (mínimo 5 caracteres)" x-model="accesoPinInput"
-:class="accesoPinError ? 'is-invalid' : ''" @keydown.enter.prevent="editarPin()">
-
-<button type="button" class="btn btn-success" @click="editarPin()" :disabled="accesoGuardando">
-<template x-if="accesoGuardando"><span class="spinner-border spinner-border-sm"></span></template>
-<template x-if="!accesoGuardando"><i class="ti ti-check"></i></template>
-</button>
-
-<button type="button" class="btn bg-danger-subtle text-danger" @click="toggleEditPin()">
-<i class="ti ti-x"></i>
-</button>
-
-</div>
-
-<template x-if="accesoPinError">
-<small
-class="text-danger d-block mt-2"
-x-text="accesoPinError">
-</small>
-</template>
-</div>
-
-</div>
+<!-- La administración del PIN se oculta temporalmente en este modal. -->
 </div>
 </div>
 
@@ -740,16 +684,6 @@ data-bs-dismiss="modal">
 Cancelar
 </button>
                     </div>
-    <template x-if="!showEditPin && !accesoSoloLectura">
-    <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
-        <button type="button"
-                class="btn bg-primary-subtle text-primary"
-                @click="toggleEditPin()">
-                <i class="ti ti-lock-password"></i>
-            Editar PIN
-        </button>
-    </div>
-</template>
                   </div>
 
 

@@ -48,4 +48,13 @@ Usuario::class,
 );
 }
 
+public function modulo()
+{
+return $this->belongsTo(
+ModuloDptoOperativo::class,
+'id_modulo',
+'id'
+);
+}
+
 }

@@ -119,12 +119,17 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 <tr class="pointer" :class="{ selected: selectedPlantillaId === row.id }" @click="seleccionarFilaPlantilla(row.id)">
 <td class="text-center align-middle fw-bold" x-text="row.id"></td>
 <td class="p-0 align-middle">
-<input type="text" class="form-control form-control p-3 border-0" x-model="row.descripcion" @change="actualizarCampoPlantilla(row.id, 'descripcion', row.descripcion)">
+<div class="position-relative">
+<input type="text" class="form-control p-3 pe-5 border-0" x-model="row.descripcion" @change="actualizarCampoPlantilla(row.id, 'descripcion', row.descripcion, row)">
+<i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="row._savedField === 'descripcion'" x-cloak aria-label="Cambio guardado"></i>
+</div>
 </td>
 <td class="p-0 align-middle">
 <div class="position-relative">
-<input type="text" class="form-control form-control p-3 border-0" x-model="row.nombre_completo" x-ref="nombreInput_$idx"
+<input type="text" class="form-control p-3 pe-5 border-0" x-model="row.nombre_completo" x-ref="nombreInput_$idx"
+placeholder="Selecciona o escribe un nombre" @focus="buscarPersonal(row.idEstacion || idEstacionActual, idx, $event)"
 @input="buscarPersonal(row.idEstacion || idEstacionActual, idx, $event)" @change="asignarNombrePlantilla(row, idx)" :list="'personal-list-' + idx">
+<i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="row._savedField === 'nombre'" x-cloak aria-label="Cambio guardado"></i>
 <datalist :id="'personal-list-' + idx">
 <template x-for="p in resultadosPersonal[idx] || []" :key="p.id">
 <option :value="p.nombre" :data-id="p.id"></option>
@@ -135,9 +140,15 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 
 
 <!------------- PERFIL ------------>
-<template x-if="row.documento_perfil">
+<template x-if="row.documento_perfil && row.documento_perfil_disponible">
 <td class="text-center align-middle" width="98px">
 <i class="ti ti-download fs-6 text-primary pointer" @click.prevent="download('organigrama-documentos', row.documento_perfil)"></i>
+</td>
+</template>
+
+<template x-if="row.documento_perfil && !row.documento_perfil_disponible">
+<td class="text-center align-middle" width="98px">
+<i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
 </td>
 </template>
 
@@ -160,9 +171,15 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 </template>
 
 <!-------------  CONTRATO ------------>
-<template x-if="row.documento_contrato">
+<template x-if="row.documento_contrato && row.documento_contrato_disponible">
 <td class="text-center align-middle" width="98px">
 <i class="ti ti-download fs-6 text-primary pointer" @click.prevent="download('organigrama-documentos', row.documento_contrato)"></i>
+</td>
+</template>
+
+<template x-if="row.documento_contrato && !row.documento_contrato_disponible">
+<td class="text-center align-middle" width="98px">
+<i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
 </td>
 </template>
 
@@ -228,64 +245,65 @@ Debes de seleccionar una estación o departamento del menú superior para poder 
 <tr class="pointer" :class="{ selected: selectedEmpresaFila === 'registro_patronal' }" @click="seleccionarFilaEmpresa('registro_patronal')">
 <th class="text-start align-middle">Registro Patronal</th>
 <td class="p-0 align-middle">
-<input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.registro_patronal" 
+<div class="position-relative"><input type="text" class="form-control border-0 rounded-0 pe-5" x-model="stationInfo.registro_patronal"
 @change="actualizarStationInfo('registro_patronal', stationInfo.registro_patronal)">
+<i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="stationInfo._savedField === 'registro_patronal'" x-cloak aria-label="Cambio guardado"></i></div>
 </td>
 </tr>
 
 <tr class="pointer" :class="{ selected: selectedEmpresaFila === 'calle' }" @click="seleccionarFilaEmpresa('calle')">
 <th class="text-start align-middle">Calle</th>
 <td class="p-0 align-middle">
-<input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.calle" @change="actualizarStationInfo('calle', stationInfo.calle)">
+<div class="position-relative"><input type="text" class="form-control border-0 rounded-0 pe-5" x-model="stationInfo.calle" @change="actualizarStationInfo('calle', stationInfo.calle)"><i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="stationInfo._savedField === 'calle'" x-cloak aria-label="Cambio guardado"></i></div>
 </td>
 </tr>
 
 <tr class="pointer" :class="{ selected: selectedEmpresaFila === 'numero_exterior' }" @click="seleccionarFilaEmpresa('numero_exterior')">
 <th class="text-start align-middle">Número Ext.</th>
 <td class="p-0 align-middle">
-<input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.numero_exterior" @change="actualizarStationInfo('numero_exterior', stationInfo.numero_exterior)">
+<div class="position-relative"><input type="text" class="form-control border-0 rounded-0 pe-5" x-model="stationInfo.numero_exterior" @change="actualizarStationInfo('numero_exterior', stationInfo.numero_exterior)"><i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="stationInfo._savedField === 'numero_exterior'" x-cloak aria-label="Cambio guardado"></i></div>
 </td>
 </tr>
 
 <tr class="pointer" :class="{ selected: selectedEmpresaFila === 'numero_interior' }" @click="seleccionarFilaEmpresa('numero_interior')">
 <th class="text-start align-middle">Número Int.</th>
 <td class="p-0 align-middle">
-<input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.numero_interior" @change="actualizarStationInfo('numero_interior', stationInfo.numero_interior)">
+<div class="position-relative"><input type="text" class="form-control border-0 rounded-0 pe-5" x-model="stationInfo.numero_interior" @change="actualizarStationInfo('numero_interior', stationInfo.numero_interior)"><i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="stationInfo._savedField === 'numero_interior'" x-cloak aria-label="Cambio guardado"></i></div>
 </td>
 </tr>
 
 <tr class="pointer" :class="{ selected: selectedEmpresaFila === 'colonia' }" @click="seleccionarFilaEmpresa('colonia')">
 <th class="text-start align-middle">Colonia</th>
 <td class="p-0 align-middle">
-<input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.colonia" @change="actualizarStationInfo('colonia', stationInfo.colonia)">
+<div class="position-relative"><input type="text" class="form-control border-0 rounded-0 pe-5" x-model="stationInfo.colonia" @change="actualizarStationInfo('colonia', stationInfo.colonia)"><i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="stationInfo._savedField === 'colonia'" x-cloak aria-label="Cambio guardado"></i></div>
 </td>
 </tr>
 
 <tr class="pointer" :class="{ selected: selectedEmpresaFila === 'codigo_postal' }" @click="seleccionarFilaEmpresa('codigo_postal')">
 <th class="text-start align-middle">Código Postal</th>
 <td class="p-0 align-middle">
-<input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.codigo_postal" @change="actualizarStationInfo('codigo_postal', stationInfo.codigo_postal)">
+<div class="position-relative"><input type="text" class="form-control border-0 rounded-0 pe-5" x-model="stationInfo.codigo_postal" @change="actualizarStationInfo('codigo_postal', stationInfo.codigo_postal)"><i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="stationInfo._savedField === 'codigo_postal'" x-cloak aria-label="Cambio guardado"></i></div>
 </td>
 </tr>
 
 <tr class="pointer" :class="{ selected: selectedEmpresaFila === 'estado' }" @click="seleccionarFilaEmpresa('estado')">
 <th class="text-start align-middle">Estado</th>
 <td class="p-0 align-middle">
-<input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.estado" @change="actualizarStationInfo('estado', stationInfo.estado)">
+<div class="position-relative"><input type="text" class="form-control border-0 rounded-0 pe-5" x-model="stationInfo.estado" @change="actualizarStationInfo('estado', stationInfo.estado)"><i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="stationInfo._savedField === 'estado'" x-cloak aria-label="Cambio guardado"></i></div>
 </td>
 </tr>
 
 <tr class="pointer" :class="{ selected: selectedEmpresaFila === 'municipio' }" @click="seleccionarFilaEmpresa('municipio')">
 <th class="text-start align-middle">Municipio</th>
 <td class="p-0 align-middle">
-<input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.municipio" @change="actualizarStationInfo('municipio', stationInfo.municipio)">
+<div class="position-relative"><input type="text" class="form-control border-0 rounded-0 pe-5" x-model="stationInfo.municipio" @change="actualizarStationInfo('municipio', stationInfo.municipio)"><i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="stationInfo._savedField === 'municipio'" x-cloak aria-label="Cambio guardado"></i></div>
 </td>
 </tr>
 
 <tr class="pointer" :class="{ selected: selectedEmpresaFila === 'numero_telefono' }" @click="seleccionarFilaEmpresa('numero_telefono')">
 <th class="text-start align-middle">Número de teléfono</th>
 <td class="p-0 align-middle">
-<input type="text" class="form-control border-0 rounded-0" x-model="stationInfo.numero_telefono" @change="actualizarStationInfo('numero_telefono', stationInfo.numero_telefono)">
+<div class="position-relative"><input type="text" class="form-control border-0 rounded-0 pe-5" x-model="stationInfo.numero_telefono" @change="actualizarStationInfo('numero_telefono', stationInfo.numero_telefono)"><i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-3" x-show="stationInfo._savedField === 'numero_telefono'" x-cloak aria-label="Cambio guardado"></i></div>
 </td>
 </tr>
 
@@ -313,7 +331,7 @@ Nuevo organigrama</h5>
 <div class="modal-body">
 <div class="mb-3">
 <label class="form-label">* Imagen (JPG, PNG):</label>
-<input type="file" class="form-control" x-ref="fileArchivo" accept=".jpg,.jpeg,.png">
+<input type="file" class="form-control" x-ref="fileArchivo" accept=".jpg,.jpeg,.png" @change="errors.archivo = false" :class="errors.archivo ? 'is-invalid' : ''">
 </div>
 
 <label class="form-label">Observaciones:</label>
@@ -365,7 +383,7 @@ class="btn btn-success"
 <div class="modal-body">
 
 <label class="form-label">* Documento (PDF):</label>
-<input type="file" class="form-control" x-ref="fileDocumento" accept=".pdf">
+<input type="file" class="form-control" x-ref="fileDocumento" accept=".pdf" @change="errors.documento = false" :class="errors.documento ? 'is-invalid' : ''">
 
 </div>
 <div class="modal-footer">

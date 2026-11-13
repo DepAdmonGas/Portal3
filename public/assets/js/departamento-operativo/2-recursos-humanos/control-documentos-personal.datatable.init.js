@@ -58,15 +58,15 @@ if (esMultiestacion) {
 var initialUrlInactivos = buildUrlInactivos() || EMPTY_URL_INACTIVOS;
 }
 
-function docIcon(archivo, campo) {
-if (archivo) {
+function docIcon(archivo, campo, disponible) {
+if (archivo && disponible) {
 return '<i class="ti ti-download fs-6 text-primary pointer cd-doc-download" data-archivo="' + archivo + '" data-campo="' + campo + '"></i>';
 }
 return '<i class="ti ti-file-off fs-6 text-muted"></i>';
 }
 
-function docPersonalIcon(archivo) {
-if (archivo) {
+function docPersonalIcon(archivo, disponible) {
+if (archivo && disponible) {
 return '<i class="ti ti-download fs-6 text-primary pointer cd-doc-download" data-archivo="' + archivo + '" data-campo="documentos"></i>';
 }
 return '<i class="ti ti-file-off fs-6 text-muted"></i>';
@@ -92,7 +92,7 @@ var docTitulos = ['RP','CV','IO','AN','CD','CAI','CE','CR','CURP','ARI','CSF','C
 
 function renderAccionesActivas(row) {
 var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
-html += '<a class="dropdown-item pointer cd-btn-asistencia" data-id="' + row.id + '"><i class="ti ti-clock me-1"></i> Asistencia</a>';
+// Asistencia queda oculta temporalmente desde el menú de acciones.
 html += '<a class="dropdown-item pointer cd-btn-acceso" data-id="' + row.id + '" data-nombre="' + row.nombre_completo + '"><i class="ti ti-key me-1"></i> Acceso</a>';
 html += '<a class="dropdown-item pointer cd-btn-editar" data-id="' + row.id + '"><i class="ti ti-edit me-1"></i> Editar informacion</a>';
 if (puedeEliminar) {
@@ -107,7 +107,7 @@ var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="d
 if (row.baja && row.baja.id_baja) {
 html += '<a class="dropdown-item pointer cd-btn-detalle-baja" data-id-baja="' + row.baja.id_baja + '"><i class="ti ti-eye me-1"></i> Detalle de baja</a>';
 }
-html += '<a class="dropdown-item pointer cd-btn-asistencia-inactivo" data-id="' + row.id + '"><i class="ti ti-clock me-1"></i> Asistencia</a>';
+// Asistencia queda oculta temporalmente desde el menú de acciones.
 html += '<a class="dropdown-item pointer cd-btn-acceso-inactivo" data-id="' + row.id + '" data-nombre="' + row.nombre_completo + '"><i class="ti ti-key me-1"></i> Acceso</a>';
 if (!row.baja || !row.baja.id_baja) {
 html += '<a class="dropdown-item pointer cd-btn-eliminar-inactivo" data-id="' + row.id + '" data-nombre="' + row.nombre_completo + '"><i class="ti ti-user-off me-1"></i> Dar de Baja</a>';
@@ -141,7 +141,7 @@ data: null,
 className: 'align-middle text-center',
 orderable: false,
 searchable: false,
-render: function(v, t, row) { return docIcon(row.documentos[campo], campo); }
+render: function(v, t, row) { return docIcon(row.documentos[campo], campo, row.documentos_disponibles?.[campo]); }
 });
 });
 return cols;
@@ -151,12 +151,12 @@ var activasColumns = [
 { title: '#', data: 'id', className: 'align-middle text-center', width: '30px' },
 { title: 'Estacion/Departamento', data: 'nombre_estacion', className: 'align-middle text-start text-nowrap', visible: false },
 { title: 'Fecha ingreso', data: 'fecha_ingreso_format', className: 'align-middle text-center text-nowrap' },
-{ title: 'No. Colaborador', data: 'no_colaborador', className: 'align-middle text-center' },
+{ title: 'No. Colaborador', data: 'no_colaborador', className: 'align-middle text-center', render: function(v, type) { return type === 'sort' || type === 'type' ? Number(v || 0) : Number(v || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }); } },
 { title: 'Nombre completo', data: 'nombre_completo', className: 'align-middle text-start text-nowrap' },
 { title: 'Puesto', data: 'puesto', className: 'align-middle text-center text-nowrap' },
-{ title: 'SD', data: 'sd', className: 'align-middle text-center', render: function(v) { return parseFloat(v || 0).toFixed(2); } },
+{ title: 'SD', data: 'sd', className: 'align-middle text-center', render: function(v) { return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } },
 { title: 'Documentos Personales', data: 'documentos_archivo', className: 'align-middle text-center', orderable: false, searchable: false,
-render: function(v) { return docPersonalIcon(v); } }
+render: function(v, t, row) { return docPersonalIcon(v, row.documentos_archivo_disponible); } }
 ];
 
 activasColumns = activasColumns.concat(buildDocColumns());
@@ -192,12 +192,12 @@ var inactivasColumns = [
 { title: 'Fecha ingreso', data: 'fecha_ingreso_format', className: 'align-middle text-center text-nowrap' },
 { title: 'Fecha de baja', data: null, className: 'align-middle text-center text-nowrap',
 render: function(v, t, row) { return renderFechaBaja(row); } },
-{ title: 'No. Colaborador', data: 'no_colaborador', className: 'align-middle text-center' },
+{ title: 'No. Colaborador', data: 'no_colaborador', className: 'align-middle text-center', render: function(v, type) { return type === 'sort' || type === 'type' ? Number(v || 0) : Number(v || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }); } },
 { title: 'Nombre completo', data: 'nombre_completo', className: 'align-middle text-start text-nowrap' },
 { title: 'Puesto', data: 'puesto', className: 'align-middle text-center text-nowrap' },
-{ title: 'SD', data: 'sd', className: 'align-middle text-center', render: function(v) { return parseFloat(v || 0).toFixed(2); } },
+{ title: 'SD', data: 'sd', className: 'align-middle text-center', render: function(v) { return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } },
 { title: 'Documentos Personales', data: 'documentos_archivo', className: 'align-middle text-center', orderable: false, searchable: false,
-render: function(v) { return docPersonalIcon(v); } }
+render: function(v, t, row) { return docPersonalIcon(v, row.documentos_archivo_disponible); } }
 ];
 
 inactivasColumns = inactivasColumns.concat(buildDocColumns());
@@ -356,12 +356,6 @@ var nombre = this.dataset.nombre;
 if (window.controlDocsComponentInstance) {
 window.controlDocsComponentInstance.abrirComentarios(id, nombre);
 }
-});
-
-$tbl.on('click', '.cd-btn-asistencia, .cd-btn-asistencia-inactivo', function(e) {
-e.preventDefault();
-var id = parseInt(this.dataset.id);
-window.location.href = '/departamento-operativo/recursos-humanos/control-documentos-personal/asistencia/' + id;
 });
 
 $tbl.on('click', '.cd-btn-acceso', function(e) {

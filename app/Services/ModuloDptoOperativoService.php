@@ -71,11 +71,11 @@ return [];
 
 /* ---------- VERIFICAR PRIORIDAD: USUARIO > PUESTO ----------*/
 $tienePermisosUsuario = ModuloDptoOperativo::whereHas(
-'usuarios',
+    'usuarios',
 function ($q) use ($usuario_id) {
 $q->where('id_usuario', $usuario_id);
 }
-)->exists();
+)->where('activo', 1)->exists();
 
 // La configuración explícita resuelve submódulos por módulo. Acceso Temporal
 // conserva su resolver independiente y el permiso principal de Recursos
@@ -106,6 +106,10 @@ if ($configModel->getConnection()->getSchemaBuilder()->hasTable($configModel->ge
 // Si no hay modo explícito, se toma como personalizada para ese módulo;
 // el modo actual permite conservar de forma intencional la regla histórica.
 $idsConSubmodulosUsuario = ModuloSubDptoOperativo::query()
+    ->where('activo', 1)
+    ->whereHas('modulo', static function ($query) {
+        $query->where('activo', 1);
+    })
     ->whereHas('usuarios', static function ($query) use ($usuario_id) {
         $query->where('id_usuario', $usuario_id);
     })
@@ -136,6 +140,10 @@ $q->where('id_puesto', $usuario->id_puesto);
 $q->where('id_usuario', $usuario_id);
 },
 
+'submenus' => function ($q) {
+$q->where('activo', 1);
+},
+
 'submenus.roles' => function ($q) use ($usuario) {
 $q->where('id_puesto', $usuario->id_puesto);
 },
@@ -151,6 +159,9 @@ $q->where('id_usuario', $usuario_id);
 if ($clave) {
 $query->where('clave', $clave);
 }
+
+// El catálogo activo es un requisito previo al permiso asignado.
+$query->where('activo', 1);
 
 /* ---------- APLICAR LA PRIORIDAD ----------*/
 $query->where(function ($accessQuery) use ($tienePermisosUsuario, $usuario_id, $usuario, $modosPorModulo, $modulosConModoEspecifico) {
@@ -360,6 +371,19 @@ return !empty($permisos[$accion]);
 /* ---------- VALIDAR LOS PERMISOS ----------*/
 public static function validaPermiso($modulo, $accion)
 {
+try {
+    $catalogoActivo = ModuloDptoOperativo::query()
+        ->where('clave', $modulo)
+        ->where('activo', 1)
+        ->exists();
+} catch (\Throwable $exception) {
+    return false;
+}
+
+if (!$catalogoActivo) {
+return false;
+}
+
 $permisos = self::permisosSesion($modulo);
 
 if (empty($permisos)) {
@@ -371,6 +395,87 @@ $permisos = self::permisosSesion($modulo);
 }
 
 return !empty($permisos[$accion]);
+}
+
+/**
+ * Confirma que la ruta de Departamento Operativo pertenezca a un módulo y
+ * submódulo activos. Se usa como segunda barrera para accesos directos y
+ * endpoints, aunque la sesión todavía conserve permisos anteriores.
+ */
+public static function rutaCatalogoActiva(string $requestUri): bool
+{
+$path = parse_url($requestUri, PHP_URL_PATH);
+$path = '/' . trim(preg_replace('#/+#', '/', (string) $path), '/');
+
+if ($path !== '/departamento-operativo'
+    && !str_starts_with($path, '/departamento-operativo/')) {
+    return true;
+}
+
+try {
+    $modulos = ModuloDptoOperativo::query()->get(['id', 'ruta', 'activo']);
+    $submodulos = ModuloSubDptoOperativo::query()->get(['id', 'id_modulo', 'ruta', 'activo']);
+} catch (\Throwable $exception) {
+    return false;
+}
+
+$activosPorModulo = [];
+$candidatos = [];
+
+foreach ($modulos as $modulo) {
+    $activosPorModulo[(int) $modulo->id] = (int) $modulo->activo === 1;
+    $ruta = self::normalizarRutaCatalogo((string) $modulo->ruta);
+    if ($ruta !== '') {
+        $candidatos[] = [
+            'ruta' => $ruta,
+            'activo' => (int) $modulo->activo === 1,
+            'id_modulo' => (int) $modulo->id,
+        ];
+    }
+}
+
+foreach ($submodulos as $submodulo) {
+    $ruta = self::normalizarRutaCatalogo((string) $submodulo->ruta);
+    if ($ruta !== '') {
+        $candidatos[] = [
+            'ruta' => $ruta,
+            'activo' => (int) $submodulo->activo === 1,
+            'id_modulo' => (int) $submodulo->id_modulo,
+        ];
+    }
+}
+
+$coincidencias = array_values(array_filter(
+    $candidatos,
+    static fn (array $item): bool => $path === $item['ruta']
+        || str_starts_with($path, $item['ruta'] . '/')
+));
+
+if ($coincidencias === []) {
+    return true;
+}
+
+$longitudMaxima = max(array_map(static fn (array $item): int => strlen($item['ruta']), $coincidencias));
+$coincidenciasMasEspecificas = array_filter(
+    $coincidencias,
+    static fn (array $item): bool => strlen($item['ruta']) === $longitudMaxima
+);
+
+foreach ($coincidenciasMasEspecificas as $coincidencia) {
+    if (!$coincidencia['activo']
+        || !($activosPorModulo[$coincidencia['id_modulo']] ?? false)) {
+        return false;
+    }
+}
+
+return true;
+}
+
+private static function normalizarRutaCatalogo(string $ruta): string
+{
+    $ruta = '/' . trim(preg_replace('#/+#', '/', trim($ruta)), '/');
+
+    return $ruta === '/' ? '' : $ruta;
 }
 
 }

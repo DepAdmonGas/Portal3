@@ -8,6 +8,7 @@ use App\Models\Operativo\RhPersonalComentarios;
 use App\Models\Operativo\RhPersonalBaja;
 use App\Models\Operativo\RhPersonalBajaArchivos;
 use App\Models\Operativo\RhPersonalBajaComentarios;
+use App\Models\Operativo\RhPersonalListaNegra;
 use App\Models\Operativo\RhPersonalAcceso;
 use App\Models\Operativo\RhPersonalAsistencia;
 use App\Models\Operativo\RhPersonalAsistenciaIncidencia;
@@ -19,6 +20,8 @@ use App\Models\Estacion;
 
 class ControlDocumentosPersonalService
 {
+private static array $incidenciaColumnasCache = [];
+
 const BAJAS_MODULE_KEY = 'bajas-personal';
 
 const DOCUMENT_TYPES = [
@@ -277,12 +280,14 @@ $nombrePuesto = $puesto ? $puesto->puesto : '';
 $nombreEstacion = self::resolveNombreEstacion((int)$p->id_estacion);
 
 $docs = [];
+$docsDisponibles = [];
 $docsPresentes = 0;
 $docsRequeridos = 0;
 foreach (self::DOCUMENT_TYPES as $campo => $info) {
 $valor = $p->{$campo} ?? '';
 $docs[$campo] = $valor;
-if (!empty($valor)) $docsPresentes++;
+$docsDisponibles[$campo] = self::personalDocumentAvailable((string)$valor, $info['folder']);
+if ($docsDisponibles[$campo]) $docsPresentes++;
 }
 $docsRequeridos = count(self::DOCUMENT_TYPES);
 
@@ -312,7 +317,9 @@ $data[] = [
 'puesto'           => $nombrePuesto,
 'sd'               => $p->sd ?? 0,
 'documentos'       => $docs,
+'documentos_disponibles' => $docsDisponibles,
 'documentos_archivo' => $p->documentos ?? '',
+'documentos_archivo_disponible' => self::personalDocumentAvailable((string)($p->documentos ?? ''), ''),
 'estatus'          => $estatus,
 'num_comentarios'  => $numComentarios,
 ];
@@ -349,12 +356,14 @@ $nombrePuesto = $puesto ? $puesto->puesto : '';
 $nombreEstacion = self::resolveNombreEstacion((int)$p->id_estacion);
 
 $docs = [];
+$docsDisponibles = [];
 $docsPresentes = 0;
 $docsRequeridos = count(self::DOCUMENT_TYPES);
 foreach (self::DOCUMENT_TYPES as $campo => $info) {
 $valor = $p->{$campo} ?? '';
 $docs[$campo] = $valor;
-if (!empty($valor)) $docsPresentes++;
+$docsDisponibles[$campo] = self::personalDocumentAvailable((string)$valor, $info['folder']);
+if ($docsDisponibles[$campo]) $docsPresentes++;
 }
 
 $requiereC_antecedentes = ($nombrePuesto === 'Despachador');
@@ -396,7 +405,9 @@ $data[] = [
 'puesto'           => $nombrePuesto,
 'sd'               => $p->sd ?? 0,
 'documentos'       => $docs,
+'documentos_disponibles' => $docsDisponibles,
 'documentos_archivo' => $p->documentos ?? '',
+'documentos_archivo_disponible' => self::personalDocumentAvailable((string)($p->documentos ?? ''), ''),
 'estatus'          => $estatus,
 'num_comentarios'  => $numComentarios,
 'baja'             => $bajaInfo,
@@ -408,19 +419,21 @@ return $data;
 
 public static function addPersonal(array $input, array $files): ?int
 {
+$validationErrors = self::validatePersonalInput($input);
+if ($validationErrors) return null;
+
 $ctx = ModuleStationService::getContext('control-documentos-personal');
 $idEstacion = (int)($input['id_estacion'] ?? 0);
-if (!$idEstacion) $idEstacion = $ctx['id_estacion'] ?? 0;
+if (!$idEstacion) $idEstacion = (int)($ctx['id_estacion'] ?? $ctx['id_depto'] ?? 0);
 if (!$idEstacion) return null;
 
-$uploadDir = self::getUploadDir();
 $data = [
 'id_estacion'      => $idEstacion,
 'fecha_ingreso'    => normalizarFecha($input['fecha_ingreso'] ?? ''),
-'no_colaborador'   => (int)($input['no_colaborador'] ?? 0),
+'no_colaborador'   => self::parseCollaboratorNumber($input['no_colaborador'] ?? 0),
 'nombre_completo'  => trim($input['nombre_completo'] ?? ''),
 'puesto'           => (int)($input['puesto'] ?? 0),
-'sd'               => (float)($input['sd'] ?? 0),
+'sd'               => self::parseSalary($input['sd'] ?? 0),
 'estado'           => 1,
 ];
 
@@ -453,13 +466,18 @@ public static function editPersonal(int $id, array $input, array $files): bool
 $record = RhPersonal::find($id);
 if (!$record) return false;
 
+$validationErrors = self::validatePersonalInput($input, (int)$record->id_estacion);
+if ($validationErrors) return false;
+
+$idEstacionNuevo = (int)($input['id_estacion'] ?? $record->id_estacion);
+
 $record->update([
-'id_estacion'     => (int)($input['id_estacion'] ?? $record->id_estacion),
+'id_estacion'     => $idEstacionNuevo,
 'fecha_ingreso'   => normalizarFecha($input['fecha_ingreso'] ?? ''),
-'no_colaborador'  => (int)($input['no_colaborador'] ?? 0),
+'no_colaborador'  => self::parseCollaboratorNumber($input['no_colaborador'] ?? 0),
 'nombre_completo' => trim($input['nombre_completo'] ?? ''),
 'puesto'          => (int)($input['puesto'] ?? 0),
-'sd'              => (float)($input['sd'] ?? 0),
+'sd'              => self::parseSalary($input['sd'] ?? 0),
 ]);
 
 $nombrePersonal = $record->nombre_completo;
@@ -569,8 +587,7 @@ if (!$record) return false;
 if (!isset(self::DOCUMENT_TYPES[$tipo])) return false;
 
 $nombrePersonal = $record->nombre_completo;
-self::uploadFile($idPersonal, $tipo, $file, $nombrePersonal);
-return true;
+return self::uploadFile($idPersonal, $tipo, $file, $nombrePersonal);
 }
 
 public static function deleteDocumento(int $idPersonal, string $tipo): bool
@@ -584,44 +601,119 @@ $campo = $tipo;
 $filename = $record->{$campo};
 if (!empty($filename)) {
 $info = self::DOCUMENT_TYPES[$tipo];
-$dir = self::getUploadDir() . $info['folder'] . '/';
-if (file_exists($dir . $filename)) {
-unlink($dir . $filename);
-}
+self::deletePersonalDocumentFile($filename, $info['folder']);
 $record->update([$campo => '']);
 }
 
 return true;
 }
 
-private static function uploadFile(int $idPersonal, string $campo, array $file, string $nombrePersonal): void
+private static function uploadFile(int $idPersonal, string $campo, array $file, string $nombrePersonal): bool
 {
 $info = self::DOCUMENT_TYPES[$campo];
 $uploadDir = self::getUploadDir() . $info['folder'] . '/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
+if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) return false;
+if ((int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) return false;
 
 $aleatorio1 = rand(1, 1000000);
 $aleatorio2 = rand(1000, 9999);
 $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-$filename = $aleatorio1 . '-' . $info['prefix'] . '-' . $nombrePersonal . '-' . $aleatorio2 . '.' . $ext;
+$safeName = preg_replace('/[\x00-\x1F\/\\\\]+/u', '-', trim($nombrePersonal));
+$filename = $aleatorio1 . '-' . $info['prefix'] . '-' . $safeName . '-' . $aleatorio2 . '.' . $ext;
 
-move_uploaded_file($file['tmp_name'], $uploadDir . $filename);
+if (!move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) return false;
 
 $record = RhPersonal::find($idPersonal);
 if ($record) {
 $oldFile = $record->{$campo};
-if (!empty($oldFile) && file_exists($uploadDir . $oldFile)) {
-unlink($uploadDir . $oldFile);
+if (!$record->update([$campo => $filename])) {
+@unlink($uploadDir . $filename);
+return false;
 }
-$record->update([$campo => $filename]);
+if (!empty($oldFile)) self::deletePersonalDocumentFile((string)$oldFile, $info['folder']);
+return true;
 }
+@unlink($uploadDir . $filename);
+return false;
 }
 
 public static function getUploadDir(): string
 {
-$dir = __DIR__ . '/../../storage/private/documentos-personal/';
+$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/';
 if (!is_dir($dir)) mkdir($dir, 0750, true);
 return $dir;
+}
+
+public static function getIncidenciaUploadDir(): string
+{
+    $dir = dirname(__DIR__, 2) . '/public/uploads/archivos/incidencias/';
+    if (!is_dir($dir)) mkdir($dir, 0750, true);
+    return $dir;
+}
+
+public static function incidenciaDocumentoDisponible(string $filename): bool
+{
+    if ($filename === '' || basename($filename) !== $filename) return false;
+    $currentPath = dirname(__DIR__, 2) . '/public/uploads/archivos/incidencias/' . $filename;
+    $previousPortal3Path = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/incidencias/' . $filename;
+    return is_file($currentPath) || is_file($previousPortal3Path);
+}
+
+public static function validatePersonalInput(array $input, int $estacionActual = 0): array
+{
+$errors = [];
+$ctx = ModuleStationService::getContext('control-documentos-personal');
+$idEstacion = (int)($input['id_estacion'] ?? 0);
+if (!$idEstacion) $idEstacion = (int)($ctx['id_estacion'] ?? $ctx['id_depto'] ?? $estacionActual);
+if ($idEstacion <= 0) $errors['id_estacion'] = true;
+
+$fecha = trim((string)($input['fecha_ingreso'] ?? ''));
+if ($fecha === '' || !normalizarFecha($fecha)) $errors['fecha_ingreso'] = true;
+
+$noColaborador = trim((string)($input['no_colaborador'] ?? ''));
+if (!preg_match('/^(?:\d+|\d{1,3}(?:,\d{3})+)$/', $noColaborador)
+|| self::parseCollaboratorNumber($noColaborador) < 1) $errors['no_colaborador'] = true;
+
+if (trim((string)($input['nombre_completo'] ?? '')) === '') $errors['nombre_completo'] = true;
+
+$puesto = filter_var($input['puesto'] ?? null, FILTER_VALIDATE_INT);
+if (!$puesto || !RhPuestos::where('id', $puesto)->exists()) $errors['puesto'] = true;
+
+return $errors;
+}
+
+private static function parseSalary($value): float
+{
+$number = str_replace(',', '', trim((string)$value));
+return is_numeric($number) ? (float)$number : 0.0;
+}
+
+private static function parseCollaboratorNumber($value): int
+{
+$number = trim(str_replace(',', '', (string)$value));
+return ctype_digit($number) ? (int)$number : 0;
+}
+
+private static function personalDocumentAvailable(string $filename, string $folder): bool
+{
+if ($filename === '' || basename($filename) !== $filename) return false;
+$relativeFolder = $folder === '' ? '' : $folder . '/';
+$publicPath = self::getUploadDir() . $relativeFolder . $filename;
+$privatePath = dirname(__DIR__, 2) . '/storage/private/documentos-personal/' . $relativeFolder . $filename;
+return is_file($publicPath) || is_file($privatePath);
+}
+
+private static function deletePersonalDocumentFile(string $filename, string $folder): void
+{
+if ($filename === '' || basename($filename) !== $filename) return;
+$relativeFolder = $folder === '' ? '' : $folder . '/';
+$paths = [
+self::getUploadDir() . $relativeFolder . $filename,
+dirname(__DIR__, 2) . '/storage/private/documentos-personal/' . $relativeFolder . $filename,
+];
+foreach ($paths as $path) {
+if (is_file($path)) @unlink($path);
+}
 }
 
 public static function getEstaciones(): array
@@ -647,8 +739,10 @@ $puesto = RhPuestos::find($p->puesto);
 $nombreEstacion = self::resolveNombreEstacion((int)$p->id_estacion);
 
 $docs = [];
+$docsDisponibles = [];
 foreach (self::DOCUMENT_TYPES as $campo => $info) {
 $docs[$campo] = $p->{$campo} ?? '';
+$docsDisponibles[$campo] = self::personalDocumentAvailable((string)$docs[$campo], $info['folder']);
 }
 
 return [
@@ -662,6 +756,7 @@ return [
 'puesto_nombre'    => $puesto ? $puesto->puesto : '',
 'sd'               => $p->sd ?? 0,
 'documentos'       => $docs,
+'documentos_disponibles' => $docsDisponibles,
 ];
 }
 
@@ -685,7 +780,7 @@ $fechaBaja = normalizarFecha($input['fecha_baja'] ?? '');
 $motivo = trim((string)($input['motivo'] ?? ''));
 if (!$fechaBaja || $motivo === '') return false;
 
-$baja = RhPersonalBaja::create([
+$bajaData = [
 'id_personal'     => $idPersonal,
 'fecha_baja'      => $fechaBaja,
 'motivo'          => $motivo,
@@ -693,7 +788,9 @@ $baja = RhPersonalBaja::create([
 'solucion'        => '',
 'proceso'         => '',
 'estado_proceso'  => 0,
-]);
+];
+$baja = RhPersonalBaja::create($bajaData);
+$idBaja = (int)$baja->getKey();
 
 $uploadDir = self::getBajaUploadDir();
 
@@ -707,7 +804,7 @@ $filename = $aleatorio1 . '-' . $label . '-' . $aleatorio2 . '.' . preg_replace(
 if (!move_uploaded_file($files[$key]['tmp_name'], $uploadDir . $filename)) continue;
 
 RhPersonalBajaArchivos::create([
-'id_baja'     => $baja->id,
+'id_baja'     => $idBaja,
 'descripcion' => $label,
 'archivo'     => $filename,
 ]);
@@ -717,7 +814,8 @@ RhPersonalBajaArchivos::create([
 $record->update(['estado' => 0]);
 
 if (($input['motivo'] ?? '') === 'Mala practica') {
-$record->lista_negra()->create([
+RhPersonalListaNegra::create([
+'id_personal' => $idPersonal,
 'fecha'   => normalizarFecha($input['fecha_baja'] ?? ''),
 'motivo'  => $input['motivo'] ?? '',
 'detalle' => $input['detalle'] ?? '',
@@ -830,7 +928,7 @@ $nombrePuesto = $puesto ? $puesto->puesto : '';
 
 return [
 'huella'       => $acceso->huella ?? '',
-'pin'          => $acceso->pin ?? 0,
+'pin_registrado' => !empty($acceso->pin),
 'nombre_puesto' => $nombrePuesto,
 ];
 }
@@ -849,6 +947,7 @@ $data[] = [
 'id'          => $a->id,
 'descripcion' => $a->descripcion ?? '',
 'archivo'     => $a->archivo ?? '',
+'disponible'  => self::bajaFileAvailable((string)($a->archivo ?? '')),
 'url'         => ($a->archivo ?? '') ? '/download?tipo=docs-personal-baja&file=' . urlencode($a->archivo) : '',
 ];
 }
@@ -1007,6 +1106,7 @@ $archivosBaja[] = [
 'id'          => $a->id,
 'descripcion' => $a->descripcion ?? '',
 'archivo'     => $a->archivo ?? '',
+'disponible'  => self::bajaFileAvailable((string)($a->archivo ?? '')),
 'url'         => ($a->archivo ?? '') ? '/download?tipo=docs-personal-baja&file=' . urlencode($a->archivo) : '',
 ];
 }
@@ -1061,12 +1161,12 @@ return [
 'badge_label'       => $badgeLabel,
 'documentos'        => $docs,
 'documentos_archivo' => $personal->documentos ?? '',
-'has_docs_archivo'  => !empty($personal->documentos),
-'has_ine'           => !empty($personal->ine),
-'has_curp'          => !empty($personal->curp),
-'has_rfc'           => !empty($personal->rfc),
-'has_nss'           => !empty($personal->nss),
-'has_contrato'      => !empty($personal->contrato),
+'has_docs_archivo'  => self::personalDocumentAvailable((string)($personal->documentos ?? ''), ''),
+'has_ine'           => self::personalDocumentAvailable((string)($personal->ine ?? ''), 'ine'),
+'has_curp'          => self::personalDocumentAvailable((string)($personal->curp ?? ''), 'curp'),
+'has_rfc'           => self::personalDocumentAvailable((string)($personal->rfc ?? ''), 'rfc'),
+'has_nss'            => self::personalDocumentAvailable((string)($personal->nss ?? ''), 'nss'),
+'has_contrato'       => self::personalDocumentAvailable((string)($personal->contrato ?? ''), 'contrato'),
 'archivos_baja'     => $archivosBaja,
 'comentarios'       => $comentariosData,
 'total_comentarios' => count($comentariosData),
@@ -1078,6 +1178,12 @@ private static function getBajaUploadDir(): string
     $dir = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/solicitud-baja/';
     if (!is_dir($dir)) mkdir($dir, 0750, true);
     return $dir;
+}
+
+private static function bajaFileAvailable(string $filename): bool
+{
+    if ($filename === '' || basename($filename) !== $filename) return false;
+    return is_file(self::getBajaUploadDir() . $filename);
 }
 
 public static function getAsistenciaPersonal(int $idPersonal): ?array
@@ -1231,6 +1337,7 @@ return [
 'incidencia' => '',
 'comentario' => '',
 'documento'  => '',
+'documento_disponible' => false,
 ];
 }
 
@@ -1249,6 +1356,7 @@ return [
 'incidencia'  => $incidencia->incidencia ?? '',
 'comentario'  => $incidencia->comentario ?? '',
 'documento'   => $incidencia->documento ?? '',
+'documento_disponible' => self::incidenciaDocumentoDisponible((string)($incidencia->documento ?? '')),
 'requiere_documento' => $requiereDocumento,
 'puntos'      => $puntos,
 'fecha_inicio'     => $incidencia->fecha_inicio ? formatearFecha($incidencia->fecha_inicio) : '',
@@ -1289,17 +1397,18 @@ return ['success' => false, 'message' => 'Ya existe una incidencia registrada pa
 }
 
 try {
-RhPersonalAsistenciaIncidencia::create([
+$incidenciaData = [
 'id_asistencia' => $idAsistencia,
 'fecha'         => $ahora->format('Y-m-d H:i:s'),
 'incidencia'    => $detalle,
 'comentario'    => trim($comentario),
 'documento'     => $documentoRuta ?? '',
-'fecha_inicio'  => $fechaInicio,
-'fecha_fin'     => $fechaFin,
-'sueldo_dia'    => $sueldoDia,
 'estado'        => 1,
-]);
+];
+foreach (['fecha_inicio' => $fechaInicio, 'fecha_fin' => $fechaFin, 'sueldo_dia' => $sueldoDia] as $columna => $valor) {
+if (self::incidenciaTieneColumna($columna)) $incidenciaData[$columna] = $valor;
+}
+RhPersonalAsistenciaIncidencia::create($incidenciaData);
 
 $asistencia->incidencia = $idIncidenciaCatalogo;
 $asistencia->save();
@@ -1344,13 +1453,13 @@ return ['success' => false, 'message' => 'No se encontró una incidencia registr
 
 try {
 $incidencia->documento = $documentoRuta;
-if ($fechaInicio !== null) {
+if ($fechaInicio !== null && self::incidenciaTieneColumna('fecha_inicio')) {
 $incidencia->fecha_inicio = $fechaInicio;
 }
-if ($fechaFin !== null) {
+if ($fechaFin !== null && self::incidenciaTieneColumna('fecha_fin')) {
 $incidencia->fecha_fin = $fechaFin;
 }
-if ($sueldoDia !== null) {
+if ($sueldoDia !== null && self::incidenciaTieneColumna('sueldo_dia')) {
 $incidencia->sueldo_dia = $sueldoDia;
 }
 $incidencia->save();
@@ -1389,6 +1498,18 @@ error_log("Error Telegram documento incapacidad: " . $e->getMessage());
 }
 
 return ['success' => true, 'message' => 'Documento guardado correctamente.'];
+}
+
+private static function incidenciaTieneColumna(string $columna): bool
+{
+if (!array_key_exists($columna, self::$incidenciaColumnasCache)) {
+$model = new RhPersonalAsistenciaIncidencia();
+self::$incidenciaColumnasCache[$columna] = $model->getConnection()
+->getSchemaBuilder()
+->hasColumn($model->getTable(), $columna);
+}
+
+return self::$incidenciaColumnasCache[$columna];
 }
 
 public static function crearIncidencia(int $idAsistencia, string $incidencia, string $comentario, ?string $documento): array

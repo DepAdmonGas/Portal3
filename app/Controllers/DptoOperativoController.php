@@ -180,6 +180,10 @@ $cards = \App\Models\ModuloSubDptoOperativo::whereIn('clave', [
 ])
 ->where('id_modulo', 4)
 ->where('activo', 1)
+->whereIn('id', array_map(
+    static fn (array $submenu): int => (int) ($submenu['id_sub_modulo'] ?? 0),
+    $modulo['submenus'] ?? []
+))
 ->get();
 
 $submenus = [];

@@ -23,11 +23,13 @@ no_colaborador: '',
 fecha_ingreso: '',
 sd: 0,
 id_estacion: '',
-documentos: {}
+documentos: {},
+documentos_disponibles: {}
 },
 errors: {
 id_estacion: false,
 fecha_ingreso: false,
+no_colaborador: false,
 nombre_completo: false,
 puesto: false,
 },
@@ -47,10 +49,13 @@ fecha_baja: '',
 motivo: '',
 detalle: ''
 },
+bajaMotivos: ['Renuncia voluntaria', 'Mala practica', 'Abandono laboral'],
+mostrarMotivosBaja: false,
+bajaErrors: { fecha_baja: false, motivo: false },
 
 accesoPersonalId: 0,
 accesoPersonalNombre: '',
-accesoData: { huella: '', pin: 0, nombre_puesto: '' },
+accesoData: { huella: '', pin_registrado: false, nombre_puesto: '' },
 accesoPinInput: '',
 accesoPinError: '',
 showEditPin: false,
@@ -106,6 +111,13 @@ namespace: 'cdPuesto'
 });
 
 var self = this;
+var modalBaja = document.getElementById('modalBajaPersonal');
+if (modalBaja) {
+modalBaja.addEventListener('hidden.bs.modal', function() {
+self.resetBajaForm();
+});
+}
+
 document.getElementById('modalAgregarPersonal').addEventListener('hidden.bs.modal', function() {
 self.modoForm = 'agregar';
 self.personalId = 0;
@@ -113,14 +125,18 @@ self.nombreEstacionActual = '';
 self.actualizarNombreEstacion();
 self.form = {
 nombre_completo: '', puesto: '', no_colaborador: '',
-fecha_ingreso: '', sd: 0, id_estacion: self.idEstacionActual || '',
-documentos: {}
+fecha_ingreso: '', sd: '0.00', id_estacion: self.idEstacionActual || '',
+documentos: {}, documentos_disponibles: {}
 };
 self.clearErrors();
 });
 
 this.$watch('form.puesto', (value) => {
 this.onPuestoChange();
+});
+
+this.$watch('form.id_estacion', (value) => {
+if (value) this.errors.id_estacion = false;
 });
 
 document.addEventListener('cd:estacion-cambio', () => {
@@ -186,7 +202,43 @@ console.error('Error cargando estaciones:', e);
 },
 
 clearErrors() {
-this.errors = { id_estacion: false, fecha_ingreso: false, nombre_completo: false, puesto: false };
+this.errors = { id_estacion: false, fecha_ingreso: false, no_colaborador: false, nombre_completo: false, puesto: false };
+},
+
+formatInputNumber(value, allowDecimals) {
+if (value === null || value === undefined || value === '') return '';
+var pattern = allowDecimals ? /[^0-9.]/g : /[^0-9]/g;
+var normalized = String(value).replace(/,/g, '').replace(pattern, '');
+var parts = normalized.split('.');
+var integer = parts.shift() || '';
+var decimals = parts.join('');
+var grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return allowDecimals && normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatNumericInput(event, field, allowDecimals) {
+var input = event.target;
+var raw = input.value;
+var cursor = input.selectionStart ?? raw.length;
+var pattern = allowDecimals ? /[^0-9.]/g : /[^0-9]/g;
+var digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(pattern, '').length;
+var normalized = raw.replace(/,/g, '').replace(pattern, '');
+var parts = normalized.split('.');
+var integer = parts.shift() || '';
+var decimals = parts.join('');
+var grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+var formatted = allowDecimals && normalized.includes('.') ? grouped + '.' + decimals : grouped;
+
+this.form[field] = normalized;
+input.value = formatted;
+
+var nextCursor = 0;
+var numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
 },
 
 abrirModalAgregar() {
@@ -197,8 +249,8 @@ this.nombreEstacionActual = '';
 this.actualizarNombreEstacion();
 this.form = {
 nombre_completo: '', puesto: '', no_colaborador: '',
-fecha_ingreso: '', sd: 0, id_estacion: this.idEstacionActual || '',
-documentos: {}
+fecha_ingreso: '', sd: '0.00', id_estacion: this.idEstacionActual || '',
+documentos: {}, documentos_disponibles: {}
 };
 this.resetFileInputs();
 bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAgregarPersonal')).show();
@@ -229,11 +281,12 @@ await new Promise(function(r) { setTimeout(r, 100); });
 this.form = {
 nombre_completo: personalData.nombre_completo,
 puesto: String(personalData.puesto),
-no_colaborador: personalData.no_colaborador,
+no_colaborador: String(parseInt(personalData.no_colaborador || 0, 10) || ''),
 fecha_ingreso: personalData.fecha_ingreso,
-sd: personalData.sd,
+sd: String(Number(personalData.sd || 0)),
 id_estacion: String(personalData.id_estacion),
-documentos: personalData.documentos || {}
+documentos: personalData.documentos || {},
+documentos_disponibles: personalData.documentos_disponibles || {}
 };
 this.nombreEstacionActual = personalData.nombre_estacion || '';
 
@@ -286,6 +339,7 @@ inputs.forEach(function(input) { input.value = ''; });
 
 onPuestoChange() {
 var puesto = this.form.puesto;
+if (puesto) this.errors.puesto = false;
 var puestoObj = this.puestos.find(function(p) { return p.id == puesto; });
 var nombrePuesto = puestoObj ? puestoObj.puesto : '';
 var cartasPenales = document.getElementById('Cartas_Penales');
@@ -307,6 +361,10 @@ if (!this.form.fecha_ingreso) {
 this.errors.fecha_ingreso = true;
 hasError = true;
 }
+if (!this.form.no_colaborador || parseInt(this.form.no_colaborador, 10) < 1) {
+this.errors.no_colaborador = true;
+hasError = true;
+}
 if (!this.form.nombre_completo) {
 this.errors.nombre_completo = true;
 hasError = true;
@@ -317,7 +375,7 @@ hasError = true;
 }
 
 if (hasError) {
-this.notify('error', '* Completa los campos obligatorios');
+this.notify('error', 'Completa los campos obligatorios.');
 return;
 }
 
@@ -326,9 +384,9 @@ try {
 var data = new FormData();
 data.append('nombre_completo', this.form.nombre_completo);
 data.append('puesto', this.form.puesto);
-data.append('no_colaborador', this.form.no_colaborador);
+data.append('no_colaborador', String(this.form.no_colaborador || '').replace(/,/g, ''));
 data.append('fecha_ingreso', this.form.fecha_ingreso);
-data.append('sd', this.form.sd);
+data.append('sd', String(this.form.sd || '0').replace(/,/g, ''));
 data.append('id_estacion', this.form.id_estacion || this.idEstacionActual);
 
 var fileInputs = document.querySelectorAll('#modalAgregarPersonal input[type="file"][name^="doc_"]');
@@ -359,7 +417,8 @@ if (window.tablaControlDocs) window.tablaControlDocs.ajax.reload(null, false);
 if (window.tablaControlDocsInactivos) window.tablaControlDocsInactivos.ajax.reload(null, false);
 }
 } catch (err) {
-this.notify('error', 'Error al guardar');
+if (err.response?.data?.errors) this.errors = { ...this.errors, ...err.response.data.errors };
+this.notify('error', err.response?.data?.message || 'Error al guardar');
 } finally {
 this.guardando = false;
 }
@@ -460,15 +519,40 @@ this.guardandoComentario = false;
 },
 
 abrirBaja(id, nombre) {
+this.resetBajaForm();
 this.bajaPersonalId = id;
 this.bajaPersonalNombre = nombre;
-this.bajaForm = { fecha_baja: '', motivo: '', detalle: '' };
 bootstrap.Modal.getOrCreateInstance(document.getElementById('modalBajaPersonal')).show();
 },
 
+resetBajaForm() {
+this.bajaPersonalId = 0;
+this.bajaPersonalNombre = '';
+this.bajaForm = { fecha_baja: '', motivo: '', detalle: '' };
+this.mostrarMotivosBaja = false;
+this.bajaErrors = { fecha_baja: false, motivo: false };
+['fileActaHechos', 'fileCartaRenuncia', 'fileFiniquito'].forEach((ref) => {
+if (this.$refs[ref]) this.$refs[ref].value = '';
+});
+},
+
+motivosBajaFiltrados() {
+var busqueda = String(this.bajaForm.motivo || '').trim().toLocaleLowerCase('es-MX');
+return this.bajaMotivos.filter(function(motivo) {
+return !busqueda || motivo.toLocaleLowerCase('es-MX').includes(busqueda);
+});
+},
+
 async guardarBaja() {
+this.bajaErrors = { fecha_baja: false, motivo: false };
+var faltanDatos = false;
 if (!this.bajaForm.fecha_baja || !this.bajaForm.motivo) {
-this.notify('error', '* Completa los campos obligatorios');
+if (!this.bajaForm.fecha_baja) this.bajaErrors.fecha_baja = true;
+if (!String(this.bajaForm.motivo || '').trim()) this.bajaErrors.motivo = true;
+faltanDatos = true;
+}
+if (faltanDatos) {
+this.notify('error', 'Completa los campos obligatorios.');
 return;
 }
 
@@ -503,7 +587,8 @@ if (window.tablaControlDocs) window.tablaControlDocs.ajax.reload(null, false);
 if (window.tablaControlDocsInactivos) window.tablaControlDocsInactivos.ajax.reload(null, false);
 }
 } catch (err) {
-this.notify('error', 'Error al registrar baja');
+if (err.response?.data?.errors) this.bajaErrors = { ...this.bajaErrors, ...err.response.data.errors };
+this.notify('error', err.response?.data?.message || 'Error al registrar baja');
 } finally {
 this.guardando = false;
 }
@@ -517,7 +602,7 @@ async abrirAcceso(id, nombre, soloLectura) {
 this.accesoPersonalId = id;
 this.accesoPersonalNombre = nombre;
 this.accesoSoloLectura = !!soloLectura;
-this.accesoData = { huella: '', pin: 0, nombre_puesto: '' };
+this.accesoData = { huella: '', pin_registrado: false, nombre_puesto: '' };
 this.accesoPinInput = '';
 this.accesoPinError = '';
 this.showEditPin = false;
@@ -539,7 +624,7 @@ this.notify('error', 'Error al cargar datos de acceso');
 toggleEditPin() {
 if (this.accesoSoloLectura) return;
 this.showEditPin = !this.showEditPin;
-this.accesoPinInput = this.showEditPin ? (this.accesoData.pin || '') : '';
+this.accesoPinInput = '';
 this.accesoPinError = '';
 },
 
@@ -548,8 +633,14 @@ if (this.accesoSoloLectura) return;
 if (this.accesoGuardando) return;
 
 var pin = (this.accesoPinInput || '').trim();
+if (!pin) {
+this.accesoPinError = 'required';
+this.notify('error', 'Completa los campos obligatorios.');
+return;
+}
 if (pin.length < 5) {
-this.accesoPinError = 'El PIN debe contener al menos 5 caracteres.';
+this.accesoPinError = 'invalid';
+this.notify('error', 'El PIN debe contener al menos 5 caracteres.');
 return;
 }
 
@@ -565,15 +656,17 @@ body: JSON.stringify({ id_personal: this.accesoPersonalId, pin: pin })
 var json = await resp.json();
 
 if (json.success) {
-this.accesoData.pin = parseInt(pin);
+this.accesoData.pin_registrado = true;
 this.showEditPin = false;
 this.accesoPinInput = '';
 if (window.Notify) Notify.success(json.message || 'PIN actualizado correctamente.');
 } else {
-this.accesoPinError = json.message || 'Error al actualizar PIN.';
+this.accesoPinError = 'invalid';
+this.notify('error', json.message || 'Error al actualizar PIN.');
 }
 } catch (e) {
-this.accesoPinError = 'Error al conectar con el servidor.';
+this.accesoPinError = 'invalid';
+this.notify('error', 'Error al conectar con el servidor.');
 } finally {
 this.accesoGuardando = false;
 }
