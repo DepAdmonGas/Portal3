@@ -58,9 +58,9 @@ x-cloak>
 </div>
 
 <div class="form-label mb-1">Sueldo día:</div>
-<div x-text="modalIncidencia.puntos ?? '—'"></div>
+<div x-text="formatIncidenciaNumero(modalIncidencia.puntos)"></div>
 
-<div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documento">
+<div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documentoDisponible">
 
 <div class="form-label mb-1 mt-2">Documento:</div>
 
@@ -70,6 +70,8 @@ x-cloak>
         class="form-control"
         accept=".pdf"
         id="cdFileDetalleIncidencia"
+        :class="{'is-invalid': modalIncidencia.errorArchivo}"
+        @change="modalIncidencia.errorArchivo = !$event.target.files.length"
     >
 
     <button
@@ -89,7 +91,7 @@ x-cloak>
 
 </div>
 
-<div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento">
+<div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documentoDisponible">
 
 <div class="form-label mb-1 mt-3">Documento:</div>
 
@@ -97,13 +99,16 @@ x-cloak>
                     <div class="col-12 col-md-auto d-grid mb-0 mt-2">
                       <a href="" @click.prevent="download('docs-personal-incidencias', modalIncidencia.documento)"
 class="btn  bg-danger-subtle text-danger">
-<i class="ti ti-file-text me-1"></i>Descargar PDF
+<i class="ti ti-file-text fs-6 me-1"></i>Descargar PDF
 </a>
                     </div>
                   </div>
 
 
 
+</div>
+<div class="text-muted mt-2" x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento && !modalIncidencia.documentoDisponible">
+<i class="ti ti-file-off fs-6 me-1" title="Archivo no disponible"></i>Archivo no disponible
 </div>
 </div>
 </template>
@@ -159,31 +164,40 @@ class="btn  bg-danger-subtle text-danger">
 <label class="form-label mb-1">Comentario:</label>
 <div x-text="modalIncidencia.comentario || '—'"></div>
 </div>
-<div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documento">
+<div x-show="modalIncidencia.requiereDocumento && !modalIncidencia.documentoDisponible">
 <hr class="my-2">
 <label class="form-label mb-1">* Documento:</label>
-<input type="file" class="form-control mt-1" accept=".pdf" id="cdFileIncidenciaExistente">
+<input type="file" class="form-control mt-1" accept=".pdf" id="cdFileIncidenciaExistente"
+:class="{'is-invalid': modalIncidencia.errorArchivo}"
+@change="modalIncidencia.errorArchivo = !$event.target.files.length">
 <div class="mt-4">
 <label class="form-label mb-1">Fecha de inicio y termino de la incapacidad:</label>
 </div>
 <div class="row g-2 mt-1">
 <div class="col-md-6">
 <label class="form-label mb-1">* Fecha Inicio:</label>
-<input type="date" class="form-control mb-2" x-model="modalIncidencia.fechaInicio">
+<input type="date" class="form-control mb-2" x-model="modalIncidencia.fechaInicio"
+:class="{'is-invalid': modalIncidencia.errorFechaInicio}"
+@change="modalIncidencia.errorFechaInicio = !$event.target.value">
 </div>
 <div class="col-md-6">
 <label class="form-label mb-1">* Fecha Fin:</label>
 <input type="date"
 class="form-control mb-2"
-x-model="modalIncidencia.fechaFin">
+x-model="modalIncidencia.fechaFin"
+:class="{'is-invalid': modalIncidencia.errorFechaFin}"
+@change="modalIncidencia.errorFechaFin = !$event.target.value">
 </div>
 </div>
 <div class="mt-2">
 <label class="form-label mb-1">* Sueldo día:</label>
-<input type="number" step="0.01" min="0" class="form-control" x-model="modalIncidencia.sueldoDia">
+<input type="text" inputmode="decimal" class="form-control"
+:value="modalIncidencia.sueldoDia"
+@input="formatIncidenciaInput($event, 'sueldoDia')"
+:class="{'is-invalid': modalIncidencia.errorSueldoDia}">
 </div>
 </div>
-<div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento">
+<div x-show="modalIncidencia.requiereDocumento && modalIncidencia.documentoDisponible">
 <label class="form-label mb-1">Documento:</label>
 
 <div class="row g-0 ms-auto w-100 justify-content-start">
@@ -192,7 +206,7 @@ x-model="modalIncidencia.fechaFin">
 href=""
 @click.prevent="download('docs-personal-incidencias', modalIncidencia.documento)"
 class="btn bg-primary-subtle text-primary ">
-<i class="ti ti-download me-2"></i>
+<i class="ti ti-download fs-6 me-2"></i>
 Descargar documento
 </a>
                     </div>
@@ -200,6 +214,9 @@ Descargar documento
 
 
 
+</div>
+<div class="text-muted mt-2" x-show="modalIncidencia.requiereDocumento && modalIncidencia.documento && !modalIncidencia.documentoDisponible">
+<i class="ti ti-file-off fs-6 me-1" title="Archivo no disponible"></i>Archivo no disponible
 </div>
 </div>
 </template>
@@ -215,7 +232,8 @@ type="radio"
 name="cdRadioIncidencia"
 :id="'cdIncidencia' + item.id"
 :value="item.id"
-x-model="modalIncidencia.idIncidenciaSeleccionada">
+x-model="modalIncidencia.idIncidenciaSeleccionada"
+@change="modalIncidencia.errorRadio = false">
 <label class="form-check-label fw-light"
 :for="'cdIncidencia' + item.id"
 x-text="item.detalle"></label>
@@ -229,7 +247,8 @@ x-text="item.detalle"></label>
 rows="2"
 placeholder="Escribe un comentario..."
 :class="{'is-invalid': modalIncidencia.errorComentario}"
-x-model="modalIncidencia.comentario"></textarea>
+x-model="modalIncidencia.comentario"
+@input="modalIncidencia.errorComentario = false"></textarea>
 </div>
 
 <template x-if="requiereDocumento">
@@ -240,7 +259,9 @@ x-model="modalIncidencia.comentario"></textarea>
 <input type="file"
 class="form-control"
 accept=".pdf"
-id="cdFileIncidenciaNueva">
+id="cdFileIncidenciaNueva"
+:class="{'is-invalid': modalIncidencia.errorArchivo}"
+@change="modalIncidencia.errorArchivo = !$event.target.files.length">
 </div>
 <div class="mb-2">
 <div class="form-label mb-1">Fecha de inicio y termino de la incapacidad:</div>
@@ -261,11 +282,11 @@ x-model="modalIncidencia.fechaFin">
 </div>
 <div class="mb-2">
 <label class="form-label mb-1">Sueldo día:</label>
-<input type="number"
-step="0.01"
-min="0"
+<input type="text"
+inputmode="decimal"
 class="form-control"
-x-model="modalIncidencia.sueldoDia">
+:value="modalIncidencia.sueldoDia"
+@input="formatIncidenciaInput($event, 'sueldoDia')">
 </div>
 </div>
 </template>
@@ -305,7 +326,7 @@ Cancelar
 </template>
 
 <!-- Botón para guardar una incidencia existente -->
-<template x-if="!modalIncidencia.cargando && modalIncidencia.existe">
+<template x-if="!modalIncidencia.cargando && modalIncidencia.existe && modalIncidencia.requiereDocumento && !modalIncidencia.documentoDisponible">
     <div class="col-12 col-md-auto d-grid mt-1 mt-md-0">
         <button
             type="button"

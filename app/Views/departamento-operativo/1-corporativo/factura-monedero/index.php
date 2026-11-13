@@ -92,7 +92,7 @@ data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 
 <div class="col-md-6 mb-3">
 <label class="form-label mb-1">* Monto:</label>
-<input type="number" min="0" step="0.01" class="form-control" x-model="form.monto" :class="{'is-invalid': errors.monto}">
+<input type="text" inputmode="decimal" autocomplete="off" class="form-control" :value="formatInputNumber(form.monto)" @input="formatearMonto($event)" :class="{'is-invalid': errors.monto}">
 </div>
 
 <div class="col-12">
@@ -100,45 +100,53 @@ data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 </div>
 
 <div class="col-md-6 mb-3">
-<label class="form-label mb-1">Factura (PDF):</label>
+<label class="form-label mb-1"><span x-show="!editando">*</span> Factura (PDF):</label>
 
 <div class="input-group">
 <input
 type="file"
 class="form-control"
 x-ref="fileFactura"
+:class="{'is-invalid': errors.archivo_factura}"
 accept=".pdf,.jpg,.jpeg,.png">
 
-<template x-if="editando && form.archivo_factura">
+<template x-if="editando && form.archivo_factura && form.archivo_factura_disponible">
 <button
 type="button"
 class="btn btn-outline-primary"
 @click="downloadFile('factura-monedero', form.archivo_factura)"
 title="Descargar factura">
-<i class="ti ti-download"></i>
+<i class="ti ti-download fs-6"></i>
 </button>
+</template>
+<template x-if="editando && form.archivo_factura && !form.archivo_factura_disponible">
+<span class="input-group-text text-muted" title="Archivo no disponible"><i class="ti ti-file-off fs-6"></i></span>
 </template>
 </div>
 </div>
 
 <div class="col-md-6 mb-0 mb-md-3">
-<label class="form-label mb-1">Factura (XML):</label>
+<label class="form-label mb-1"><span x-show="!editando">*</span> Factura (XML):</label>
 
 <div class="input-group">
 <input
 type="file"
 class="form-control"
 x-ref="fileXml"
+:class="{'is-invalid': errors.archivo_factura_xml}"
 accept=".xml">
 
-<template x-if="editando && form.archivo_factura_xml">
+<template x-if="editando && form.archivo_factura_xml && form.archivo_factura_xml_disponible">
 <button
 type="button"
 class="btn btn-outline-primary"
 @click="downloadFile('factura-monedero', form.archivo_factura_xml)"
 title="Descargar XML">
-<i class="ti ti-download"></i>
+<i class="ti ti-download fs-6"></i>
 </button>
+</template>
+<template x-if="editando && form.archivo_factura_xml && !form.archivo_factura_xml_disponible">
+<span class="input-group-text text-muted" title="Archivo no disponible"><i class="ti ti-file-off fs-6"></i></span>
 </template>
 </div>
 </div>
@@ -154,14 +162,17 @@ class="form-control"
 x-ref="fileComprobante"
 accept=".pdf,.jpg,.jpeg,.png">
 
-<template x-if="form.archivo_comprobante_pago">
+<template x-if="form.archivo_comprobante_pago && form.archivo_comprobante_pago_disponible">
 <button
 type="button"
 class="btn btn-outline-info"
 @click="downloadFile('factura-monedero', form.archivo_comprobante_pago)"
 title="Descargar comprobante">
-<i class="ti ti-download"></i>
+<i class="ti ti-download fs-6"></i>
 </button>
+</template>
+<template x-if="form.archivo_comprobante_pago && !form.archivo_comprobante_pago_disponible">
+<span class="input-group-text text-muted" title="Archivo no disponible"><i class="ti ti-file-off fs-6"></i></span>
 </template>
 </div>
 </div>
@@ -245,27 +256,27 @@ Detalle de factura monedero</h5>
 <tbody>
 <tr class="pointer" :class="{ selected: detalleDocumentosSeleccionados }" @click="seleccionarDocumentosDetalle()">
 <td class="text-center align-middle">
-<template x-if="detalle.archivo_factura">
-<i class="ti ti-download pointer text-primary fs-5" @click="downloadFile('factura-monedero', detalle.archivo_factura)"></i>
+<template x-if="detalle.archivo_factura && detalle.archivo_factura_disponible">
+<i class="ti ti-download pointer text-primary fs-6" @click="downloadFile('factura-monedero', detalle.archivo_factura)"></i>
 </template>
-<template x-if="!detalle.archivo_factura">
-<span class="text-muted"><i class="ti ti-file-off fs-5"></i></span>
-</template>
-</td>
-<td class="text-center align-middle">
-<template x-if="detalle.archivo_factura_xml">
-<i class="ti ti-download pointer text-primary fs-5" @click="downloadFile('factura-monedero', detalle.archivo_factura_xml)"></i>
-</template>
-<template x-if="!detalle.archivo_factura_xml">
-<span class="text-muted"><i class="ti ti-file-off fs-5"></i></span>
+<template x-if="!detalle.archivo_factura || !detalle.archivo_factura_disponible">
+<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>
 </template>
 </td>
 <td class="text-center align-middle">
-<template x-if="detalle.archivo_comprobante_pago">
-<i class="ti ti-download pointer text-primary fs-5" @click="downloadFile('factura-monedero', detalle.archivo_comprobante_pago)"></i>
+<template x-if="detalle.archivo_factura_xml && detalle.archivo_factura_xml_disponible">
+<i class="ti ti-download pointer text-primary fs-6" @click="downloadFile('factura-monedero', detalle.archivo_factura_xml)"></i>
 </template>
-<template x-if="!detalle.archivo_comprobante_pago">
-<span class="text-muted"><i class="ti ti-file-off fs-5"></i></span>
+<template x-if="!detalle.archivo_factura_xml || !detalle.archivo_factura_xml_disponible">
+<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>
+</template>
+</td>
+<td class="text-center align-middle">
+<template x-if="detalle.archivo_comprobante_pago && detalle.archivo_comprobante_pago_disponible">
+<i class="ti ti-download pointer text-primary fs-6" @click="downloadFile('factura-monedero', detalle.archivo_comprobante_pago)"></i>
+</template>
+<template x-if="!detalle.archivo_comprobante_pago || !detalle.archivo_comprobante_pago_disponible">
+<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>
 </template>
 </td>
 </tr>

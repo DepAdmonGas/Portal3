@@ -88,7 +88,22 @@ public function add()
 header('Content-Type: application/json; charset=utf-8');
 $permisos = OrganigramaService::getPermisos();
 
-$id = OrganigramaService::addVersion($_POST + $_FILES);
+$input = $_POST + $_FILES;
+$archivo = $input['archivo'] ?? null;
+$errors = [];
+if (!is_array($archivo) || ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($archivo['tmp_name'])) {
+$errors['archivo'] = true;
+} elseif (!in_array(strtolower(pathinfo($archivo['name'] ?? '', PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png'], true)) {
+$errors['archivo'] = true;
+}
+
+if ($errors) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'errors' => $errors]);
+exit;
+}
+
+$id = OrganigramaService::addVersion($input);
 echo json_encode(['success' => (bool)$id, 'message' => $id ? 'Organigrama agregado correctamente.' : 'Error al agregar organigrama.']);
 exit;
 }
@@ -202,7 +217,20 @@ exit;
 }
 
 if (empty($_FILES['archivo'])) {
-echo json_encode(['success' => false, 'message' => 'Archivo no proporcionado.']);
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'errors' => ['documento' => true]]);
+exit;
+}
+
+if (($_FILES['archivo']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($_FILES['archivo']['tmp_name'])) {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'errors' => ['documento' => true]]);
+exit;
+}
+
+if (strtolower(pathinfo($_FILES['archivo']['name'] ?? '', PATHINFO_EXTENSION)) !== 'pdf') {
+http_response_code(422);
+echo json_encode(['success' => false, 'message' => 'Solo se permiten archivos PDF.', 'errors' => ['documento' => true]]);
 exit;
 }
 

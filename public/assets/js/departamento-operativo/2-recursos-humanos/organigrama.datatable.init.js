@@ -35,7 +35,11 @@ function cls(enabled) { return enabled ? '' : ' disabled'; }
 
 function renderAcciones(row) {
 var html = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">';
+if (row.archivo && row.archivo_disponible) {
 html += '<a class="dropdown-item pointer btn-org-ver" data-archivo="' + row.archivo + '"><i class="ti ti-eye me-1"></i> Ver imagen</a>';
+} else {
+html += '<span class="dropdown-item text-muted disabled"><i class="ti ti-file-off me-1"></i> Archivo no disponible</span>';
+}
 html += '<a class="dropdown-item pointer btn-org-eliminar' + cls(puedeEliminar) + '" data-id="' + row.id + '" data-version="' + row.version + '"><i class="ti ti-trash me-1"></i> Eliminar</a>';
 html += '</div></div>';
 return html;
@@ -77,12 +81,14 @@ $(row).addClass('pointer').toggleClass('selected', selectedOrganigramaId === row
 drawCallback: function () {
 var api = this.api();
 var total = api.rows({ filter: 'applied' }).count();
-if (!window._orgVersionActual && total > 0) {
-var firstData = api.row(0).data();
-if (firstData && firstData.archivo) {
-window._orgVersionActual = firstData.version;
+if (!window._orgVersionActual && total > 0 && !window._orgSeleccionandoPosteriorEliminar) {
+var firstAvailable = api.rows().data().toArray().find(function (row) {
+return row.archivo && row.archivo_disponible;
+});
+if (firstAvailable) {
+window._orgVersionActual = firstAvailable.version;
 document.dispatchEvent(new CustomEvent('org:ver-imagen', {
-detail: { archivo: firstData.archivo, version: firstData.version }
+detail: { archivo: firstAvailable.archivo, version: firstAvailable.version }
 }));
 }
 }
@@ -102,6 +108,22 @@ $table.find('tbody tr').removeClass('selected');
 $(this).addClass('selected');
 });
 
+document.addEventListener('org:seleccionar-version', function (event) {
+var id = Number(event.detail?.id || 0);
+var dt = window.tablaOrganigrama;
+if (!id || !dt) return;
+
+selectedOrganigramaId = id;
+var index = dt.rows().indexes().toArray().find(function (rowIndex) {
+var data = dt.row(rowIndex).data();
+return data && Number(data.id) === id;
+});
+if (index === undefined) return;
+
+// Mantén visible la fila vecina que quedó seleccionada después del borrado.
+dt.page(Math.floor(index / dt.page.len())).draw('page');
+});
+
 function recargarTabla() {
 var url = buildUrl();
 var dt = window.tablaOrganigrama;
@@ -118,6 +140,7 @@ if (archivo) {
 var tr = $(this).closest('tr');
 var row = window.tablaOrganigrama.row(tr);
 var rowData = row.data();
+if (!rowData || !rowData.archivo_disponible) return;
 window._orgVersionActual = rowData.version;
 document.dispatchEvent(new CustomEvent('org:ver-imagen', {
 detail: { archivo: archivo, version: rowData.version }

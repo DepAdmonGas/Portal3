@@ -89,7 +89,7 @@ class Route
     public static function auth(array $handler): callable
     {
         return self::middleware(
-            ['auth', 'csrf'],
+            ['auth', 'csrf', 'dpto-operativo-activo'],
             $handler
         );
     }

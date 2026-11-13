@@ -94,7 +94,8 @@ return ModuloPuestoSubDptoOperativo::where('id_puesto', $idPuesto)
 ->whereIn('id_sub_modulo', function ($q) use ($idModulo) {
 $q->select('id')
 ->from('modulos_sub_dpto_operativo')
-->where('id_modulo', $idModulo);
+->where('id_modulo', $idModulo)
+->where('activo', 1);
 })
 ->count();
 }
@@ -107,7 +108,8 @@ return ModuloUsuarioSubDptoOperativo::where('id_usuario', $idUsuario)
 ->whereIn('id_sub_modulo', function ($q) use ($idModulo) {
 $q->select('id')
 ->from('modulos_sub_dpto_operativo')
-->where('id_modulo', $idModulo);
+->where('id_modulo', $idModulo)
+->where('activo', 1);
 })
 ->count();
 }
