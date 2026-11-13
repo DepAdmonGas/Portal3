@@ -15,6 +15,15 @@ $handlerEnd = strpos($controller, 'public function rolComodines(): void', $handl
 $dailyHandler = $handlerStart !== false && $handlerEnd !== false ? substr($controller, $handlerStart, $handlerEnd - $handlerStart) : '';
 $dashboardStart = strpos($controller, 'function renderDashboardWorkspace(');
 $dashboard = $dashboardStart === false ? '' : substr($controller, $dashboardStart);
+$dailyRosterLookup = strpos($dashboard, '->workersForAttendanceFilter(');
+$dailyReaderInitialization = strpos($dashboard, '$reader = new ChecadorDailyReadService()');
+$fallbackPolicyStart = strpos($controller, 'private static function canDisplayAttendanceRosterFallback');
+$fallbackPolicyEnd = $fallbackPolicyStart === false
+    ? false
+    : strpos($controller, 'private static function readDailyRawAttendance', $fallbackPolicyStart);
+$fallbackPolicy = $fallbackPolicyStart !== false && $fallbackPolicyEnd !== false
+    ? substr($controller, $fallbackPolicyStart, $fallbackPolicyEnd - $fallbackPolicyStart)
+    : '';
 
 $checks = [
     'GET and POST use the existing authenticated attendance route' =>
@@ -57,9 +66,19 @@ $checks = [
         && strpos($dashboard, "\$state = 'success';") < strpos($dashboard, 'ChecadorAttendanceRosterService())->currentRoster(')
         && str_contains($dashboard, "\$eventsByWorker[(int) \$workerId] ?? []")
         && str_contains($rosterService, "where('estado', 1)")
-        && str_contains($view, "if (\$state === 'success')")
+        && str_contains($view, "if (\$state === 'success' || \$rosterFallbackDisplayed)")
         && str_contains($view, 'No hay colaboradores atribuibles dentro de la información disponible')
-        && str_contains($view, 'La tabla estará disponible cuando la consulta se complete.'),
+        && str_contains($view, 'El padrón no está disponible y no se muestran personas sin una membresía autorizada verificable.'),
+    'verified roster is read before API initialization and can survive a read-client configuration failure' =>
+        $dailyRosterLookup !== false
+        && $dailyReaderInitialization !== false
+        && $dailyRosterLookup < $dailyReaderInitialization
+        && str_contains($dashboard, '$reader = null;')
+        && str_contains($controller, '?ChecadorDailyReadService $reader')
+        && str_contains($view, '$attendanceRosterFallbackAllowed')
+        && str_contains($fallbackPolicy, 'current_active_roster')
+        && str_contains($fallbackPolicy, 'historical_versioned_membership')
+        && !str_contains($fallbackPolicy, "'incomplete'"),
     'errors preserve visible results and the DataTable can be reinitialized after replacement' =>
         str_contains($filters, 'currentResults.replaceWith(nextResults)')
         && str_contains($filters, "catch (error)")
