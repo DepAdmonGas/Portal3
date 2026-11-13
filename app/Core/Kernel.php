@@ -13,6 +13,8 @@ class Kernel
 
         'csrf' => \App\Middleware\CsrfMiddleware::class,
 
+        'dpto-operativo-activo' => \App\Middleware\DptoOperativoActivoMiddleware::class,
+
     ];
 
 

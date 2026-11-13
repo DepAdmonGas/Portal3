@@ -59,13 +59,19 @@ return $dir;
 
 public static function getDocumentUploadDir(): string
 {
-$dir = __DIR__ . '/../../public/uploads/archivos/organigrama-documentos/';
+$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos/';
 if (!is_dir($dir)) mkdir($dir, 0775, true);
 return $dir;
 }
 
+private static function documentoDisponible(?string $archivo, string $directorio): bool
+{
+return !empty($archivo) && is_file($directorio . basename($archivo));
+}
+
 public static function getOrganigramaVersions(int $idEstacion): array
 {
+$uploadDir = self::getUploadDir();
 $records = RhOrganigramaEstacion::where('id_estacion', $idEstacion)
 ->orderBy('version', 'desc')
 ->get();
@@ -76,6 +82,7 @@ $data[] = [
 'id' => $r->id,
 'version' => $r->version,
 'archivo' => $r->archivo ?? '',
+'archivo_disponible' => self::documentoDisponible($r->archivo ?? '', $uploadDir),
 'observaciones' => $r->observaciones ?? '',
 'fechacreacion' => $r->fechacreacion ? $r->fechacreacion->format('Y-m-d H:i:s') : '',
 'fechacreacion_format' => $r->fechacreacion
@@ -116,7 +123,9 @@ $archivo = '';
 if (!empty($input['archivo']) && isset($input['archivo']['tmp_name']) && $input['archivo']['error'] === 0) {
 $ext = pathinfo($input['archivo']['name'], PATHINFO_EXTENSION);
 $archivo = $aleatorio . '-organigrama.' . $ext;
-move_uploaded_file($input['archivo']['tmp_name'], $uploadDir . $archivo);
+if (!move_uploaded_file($input['archivo']['tmp_name'], $uploadDir . $archivo)) return null;
+} else {
+return null;
 }
 
 $record = RhOrganigramaEstacion::create([
@@ -133,6 +142,8 @@ self::notifyOrganigrama($idEstacion, 'agregó', [
 'id_depto' => $ctx['id_depto'] ?? null,
 ]);
 }
+
+if (!$record && $archivo && is_file($uploadDir . $archivo)) unlink($uploadDir . $archivo);
 
 return $record ? $record->id : null;
 }
@@ -237,6 +248,7 @@ error_log('Error notificando organigrama: ' . $e->getMessage());
 
 public static function getPlantilla(int $idEstacion): array
 {
+$uploadDir = self::getDocumentUploadDir();
 $records = OrganigramaPlantilla::where('id_estacion', $idEstacion)
 ->where('status', 0)
 ->orderBy('id', 'asc')
@@ -259,7 +271,9 @@ $data[] = [
 'nombre_completo' => $nombreCompleto,
 'descripcion' => $r->descripcion ?? '',
 'documento_perfil' => $r->documento_perfil ?? '',
+'documento_perfil_disponible' => self::documentoDisponible($r->documento_perfil ?? '', $uploadDir),
 'documento_contrato' => $r->documento_contrato ?? '',
+'documento_contrato_disponible' => self::documentoDisponible($r->documento_contrato ?? '', $uploadDir),
 'status' => (int)($r->status ?? 0),
 ];
 }
@@ -317,16 +331,16 @@ $uploadDir = self::getDocumentUploadDir();
 $aleatorio = uniqid();
 $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
 $filename = $aleatorio . '-' . $tipo . '.' . $ext;
-move_uploaded_file($file['tmp_name'], $uploadDir . $filename);
+if (!move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) return false;
 
 if ($tipo === 'perfil') {
-if ($record->documento_perfil && file_exists($uploadDir . $record->documento_perfil)) {
-unlink($uploadDir . $record->documento_perfil);
+if ($record->documento_perfil && is_file($uploadDir . basename($record->documento_perfil))) {
+unlink($uploadDir . basename($record->documento_perfil));
 }
 $record->update(['documento_perfil' => $filename]);
 } elseif ($tipo === 'contrato') {
-if ($record->documento_contrato && file_exists($uploadDir . $record->documento_contrato)) {
-unlink($uploadDir . $record->documento_contrato);
+if ($record->documento_contrato && is_file($uploadDir . basename($record->documento_contrato))) {
+unlink($uploadDir . basename($record->documento_contrato));
 }
 $record->update(['documento_contrato' => $filename]);
 } else {
@@ -343,13 +357,13 @@ if (!$record) return false;
 
 $uploadDir = self::getDocumentUploadDir();
 if ($tipo === 'perfil') {
-if ($record->documento_perfil && file_exists($uploadDir . $record->documento_perfil)) {
-unlink($uploadDir . $record->documento_perfil);
+if ($record->documento_perfil && is_file($uploadDir . basename($record->documento_perfil))) {
+unlink($uploadDir . basename($record->documento_perfil));
 }
 $record->update(['documento_perfil' => '']);
 } elseif ($tipo === 'contrato') {
-if ($record->documento_contrato && file_exists($uploadDir . $record->documento_contrato)) {
-unlink($uploadDir . $record->documento_contrato);
+if ($record->documento_contrato && is_file($uploadDir . basename($record->documento_contrato))) {
+unlink($uploadDir . basename($record->documento_contrato));
 }
 $record->update(['documento_contrato' => '']);
 } else {

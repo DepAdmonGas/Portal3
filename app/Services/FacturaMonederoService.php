@@ -108,8 +108,11 @@ $data[] = [
 'id_estacion' => (int)($r->id_estacion ?? 0),
 'estacion_nombre' => $estacionNombre,
 'archivo_factura' => $r->archivo_factura ?? '',
+'archivo_factura_disponible' => self::fileExists($r->archivo_factura ?? ''),
 'archivo_comprobante_pago' => $r->archivo_comprobante_pago ?? '',
+'archivo_comprobante_pago_disponible' => self::fileExists($r->archivo_comprobante_pago ?? ''),
 'archivo_factura_xml' => $r->archivo_factura_xml ?? '',
+'archivo_factura_xml_disponible' => self::fileExists($r->archivo_factura_xml ?? ''),
 'estado' => (int)($r->estado ?? 0),
 'total_comentarios' => $commentCount,
 ];
@@ -160,8 +163,11 @@ return [
 'no_factura' => $r->no_factura ?? '',
 'monto' => (float)($r->monto ?? 0),
 'archivo_factura' => $r->archivo_factura ?? '',
+'archivo_factura_disponible' => self::fileExists($r->archivo_factura ?? ''),
 'archivo_comprobante_pago' => $r->archivo_comprobante_pago ?? '',
+'archivo_comprobante_pago_disponible' => self::fileExists($r->archivo_comprobante_pago ?? ''),
 'archivo_factura_xml' => $r->archivo_factura_xml ?? '',
+'archivo_factura_xml_disponible' => self::fileExists($r->archivo_factura_xml ?? ''),
 'estado' => (int)($r->estado ?? 0),
 ];
 }
@@ -178,9 +184,25 @@ return $last ? $last->folio + 1 : 1;
 
 public static function getUploadDir(): string
 {
-$dir = __DIR__ . '/../../public/uploads/archivos/factura-monedero/';
+$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/facturas-monederos/';
 if (!is_dir($dir)) mkdir($dir, 0775, true);
 return $dir;
+}
+
+private static function fileExists(string $filename): bool
+{
+return $filename !== '' && is_file(self::getUploadDir() . basename($filename));
+}
+
+private static function getStoredFilePath(string $filename): string
+{
+return self::getUploadDir() . basename($filename);
+}
+
+private static function normalizeAmount($value): float
+{
+$normalized = str_replace(',', '', trim((string)$value));
+return is_numeric($normalized) ? (float)$normalized : 0.0;
 }
 
 public static function add(array $input): ?int
@@ -211,14 +233,17 @@ $archivoXml = '';
 
 if (!empty($input['archivo_factura']) && isset($input['archivo_factura']['tmp_name']) && $input['archivo_factura']['error'] === 0) {
 $ext = pathinfo($input['archivo_factura']['name'], PATHINFO_EXTENSION);
-$archivoFactura = $aleatorio . '-factura.' . $ext;
-move_uploaded_file($input['archivo_factura']['tmp_name'], $uploadDir . $archivoFactura);
+ $archivoFactura = $aleatorio . '-factura.' . $ext;
+if (!move_uploaded_file($input['archivo_factura']['tmp_name'], $uploadDir . $archivoFactura)) return null;
 }
 
 if (!empty($input['archivo_factura_xml']) && isset($input['archivo_factura_xml']['tmp_name']) && $input['archivo_factura_xml']['error'] === 0) {
 $ext = pathinfo($input['archivo_factura_xml']['name'], PATHINFO_EXTENSION);
-$archivoXml = $aleatorio . '-xml.' . $ext;
-move_uploaded_file($input['archivo_factura_xml']['tmp_name'], $uploadDir . $archivoXml);
+ $archivoXml = $aleatorio . '-xml.' . $ext;
+if (!move_uploaded_file($input['archivo_factura_xml']['tmp_name'], $uploadDir . $archivoXml)) {
+if ($archivoFactura !== '' && is_file($uploadDir . $archivoFactura)) unlink($uploadDir . $archivoFactura);
+return null;
+}
 }
 
 $record = FacturaMonederosPago::create([
@@ -228,7 +253,7 @@ $record = FacturaMonederosPago::create([
 'folio' => $folio,
 'fecha_creacion' => date('Y-m-d H:i:s'),
 'no_factura' => $input['no_factura'] ?? '',
-'monto' => (float)($input['monto'] ?? 0),
+'monto' => self::normalizeAmount($input['monto'] ?? 0),
 'archivo_factura' => $archivoFactura,
 'archivo_factura_xml' => $archivoXml,
 'estado' => 0,
@@ -247,44 +272,55 @@ $uploadDir = self::getUploadDir();
 $archivoFactura = $record->archivo_factura;
 $archivoComprobante = $record->archivo_comprobante_pago;
 $archivoXml = $record->archivo_factura_xml;
+$archivoFacturaAnterior = $record->archivo_factura;
+$archivoComprobanteAnterior = $record->archivo_comprobante_pago;
+$archivoXmlAnterior = $record->archivo_factura_xml;
 $comprobanteNuevo = false;
+$archivosNuevos = [];
 
 if (!empty($input['archivo_factura']) && isset($input['archivo_factura']['tmp_name']) && $input['archivo_factura']['error'] === 0) {
 $ext = pathinfo($input['archivo_factura']['name'], PATHINFO_EXTENSION);
-$archivoFactura = $aleatorio . '-factura.' . $ext;
-move_uploaded_file($input['archivo_factura']['tmp_name'], $uploadDir . $archivoFactura);
-if ($record->archivo_factura && file_exists($uploadDir . $record->archivo_factura)) {
-unlink($uploadDir . $record->archivo_factura);
-}
+$nuevo = $aleatorio . '-factura.' . $ext;
+if (!move_uploaded_file($input['archivo_factura']['tmp_name'], $uploadDir . $nuevo)) return false;
+$archivosNuevos[] = $uploadDir . $nuevo;
+$archivoFactura = $nuevo;
 }
 
 if (!empty($input['archivo_comprobante_pago']) && isset($input['archivo_comprobante_pago']['tmp_name']) && $input['archivo_comprobante_pago']['error'] === 0) {
 $ext = pathinfo($input['archivo_comprobante_pago']['name'], PATHINFO_EXTENSION);
-$archivoComprobante = $aleatorio . '-comprobante.' . $ext;
-move_uploaded_file($input['archivo_comprobante_pago']['tmp_name'], $uploadDir . $archivoComprobante);
-$comprobanteNuevo = true;
-if ($record->archivo_comprobante_pago && file_exists($uploadDir . $record->archivo_comprobante_pago)) {
-unlink($uploadDir . $record->archivo_comprobante_pago);
+$nuevo = $aleatorio . '-comprobante.' . $ext;
+if (!move_uploaded_file($input['archivo_comprobante_pago']['tmp_name'], $uploadDir . $nuevo)) {
+foreach ($archivosNuevos as $path) if (is_file($path)) unlink($path);
+return false;
 }
+$archivosNuevos[] = $uploadDir . $nuevo;
+$archivoComprobante = $nuevo;
+$comprobanteNuevo = true;
 }
 
 if (!empty($input['archivo_factura_xml']) && isset($input['archivo_factura_xml']['tmp_name']) && $input['archivo_factura_xml']['error'] === 0) {
 $ext = pathinfo($input['archivo_factura_xml']['name'], PATHINFO_EXTENSION);
-$archivoXml = $aleatorio . '-xml.' . $ext;
-move_uploaded_file($input['archivo_factura_xml']['tmp_name'], $uploadDir . $archivoXml);
-if ($record->archivo_factura_xml && file_exists($uploadDir . $record->archivo_factura_xml)) {
-unlink($uploadDir . $record->archivo_factura_xml);
+$nuevo = $aleatorio . '-xml.' . $ext;
+if (!move_uploaded_file($input['archivo_factura_xml']['tmp_name'], $uploadDir . $nuevo)) {
+foreach ($archivosNuevos as $path) if (is_file($path)) unlink($path);
+return false;
 }
+$archivosNuevos[] = $uploadDir . $nuevo;
+$archivoXml = $nuevo;
 }
 
 $record->update([
 'no_factura' => $input['no_factura'] ?? $record->no_factura,
-'monto' => (float)($input['monto'] ?? $record->monto),
+'monto' => self::normalizeAmount($input['monto'] ?? $record->monto),
 'archivo_factura' => $archivoFactura,
 'archivo_comprobante_pago' => $archivoComprobante,
 'archivo_factura_xml' => $archivoXml,
 'estado' => $comprobanteNuevo ? 1 : $record->estado,
 ]);
+
+if ($archivoFacturaAnterior && $archivoFacturaAnterior !== $archivoFactura && is_file(self::getStoredFilePath($archivoFacturaAnterior))) unlink(self::getStoredFilePath($archivoFacturaAnterior));
+if ($archivoComprobanteAnterior && $archivoComprobanteAnterior !== $archivoComprobante && is_file(self::getStoredFilePath($archivoComprobanteAnterior))) unlink(self::getStoredFilePath($archivoComprobanteAnterior));
+if ($archivoXmlAnterior && $archivoXmlAnterior !== $archivoXml && is_file(self::getStoredFilePath($archivoXmlAnterior))) unlink(self::getStoredFilePath($archivoXmlAnterior));
 
 return true;
 }
@@ -295,9 +331,9 @@ $record = FacturaMonederosPago::find($id);
 if (!$record) return null;
 
 $uploadDir = self::getUploadDir();
-if ($record->archivo_factura && file_exists($uploadDir . $record->archivo_factura)) unlink($uploadDir . $record->archivo_factura);
-if ($record->archivo_comprobante_pago && file_exists($uploadDir . $record->archivo_comprobante_pago)) unlink($uploadDir . $record->archivo_comprobante_pago);
-if ($record->archivo_factura_xml && file_exists($uploadDir . $record->archivo_factura_xml)) unlink($uploadDir . $record->archivo_factura_xml);
+if ($record->archivo_factura && is_file(self::getStoredFilePath($record->archivo_factura))) unlink(self::getStoredFilePath($record->archivo_factura));
+if ($record->archivo_comprobante_pago && is_file(self::getStoredFilePath($record->archivo_comprobante_pago))) unlink(self::getStoredFilePath($record->archivo_comprobante_pago));
+if ($record->archivo_factura_xml && is_file(self::getStoredFilePath($record->archivo_factura_xml))) unlink(self::getStoredFilePath($record->archivo_factura_xml));
 
 $data = [
 'id_estacion' => $record->id_estacion,

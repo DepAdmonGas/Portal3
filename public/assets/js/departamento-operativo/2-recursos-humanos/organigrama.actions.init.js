@@ -15,6 +15,8 @@ plantilla: [],
 selectedPlantillaId: null,
 selectedEmpresaFila: null,
 resultadosPersonal: {},
+busquedasPersonal: {},
+solicitudesPersonal: {},
 stationInfo: null,
 stationInfoEstaciones: [1, 2, 3, 4, 5, 6, 7, 14],
 
@@ -24,6 +26,7 @@ observaciones: '',
 documentoPlantillaId: 0,
 documentoTipo: 'perfil',
 documentoModo: 'agregar',
+errors: {},
 
 init() {
 var c = document.getElementById('container');
@@ -101,6 +104,7 @@ this.versionActual = version || 0;
 
 abrirModalAgregar() {
 this.form.observaciones = '';
+this.errors = {};
 if (this.$refs.fileArchivo) this.$refs.fileArchivo.value = '';
 bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAgregarOrganigrama')).show();
 },
@@ -114,12 +118,14 @@ return;
 
 var archivo = this.$refs.fileArchivo ? this.$refs.fileArchivo.files[0] : null;
 if (!archivo) {
-this.notify('error', '* Selecciona una imagen');
+this.errors.archivo = true;
+this.notify('error', 'Completa los campos obligatorios.');
 return;
 }
 
 var ext = archivo.name.split('.').pop().toLowerCase();
 if (['jpg', 'jpeg', 'png'].includes(ext) === false) {
+this.errors.archivo = true;
 this.notify('error', 'Solo se permiten imágenes JPG/PNG');
 return;
 }
@@ -144,19 +150,60 @@ window._orgVersionActual = null;
 }
 this.handleResponse(resp, '#tabla-organigrama-versions');
 } catch (err) {
-this.notify('error', 'Error al guardar');
+if (err.response?.data?.errors) this.errors = err.response.data.errors;
+this.notify('error', err.response?.data?.message || 'Error al guardar');
 } finally {
 this.guardando = false;
 }
 },
 
-confirmarEliminar(id, version) {
-window._orgVersionActual = null;
-this.deleteAction({
+async confirmarEliminar(id, version) {
+var response = await this.deleteAction({
 url: '/departamento-operativo/recursos-humanos/organigrama/delete',
 id: id,
 name: 'Versión ' + version,
-table: '#tabla-organigrama-versions'
+table: null
+});
+if (!response?.success) return;
+
+// Al borrar la versión activa, no dejes su imagen en la previsualización.
+this.imagenUrl = '';
+this.versionActual = 0;
+window._orgVersionActual = null;
+window._orgSeleccionandoPosteriorEliminar = true;
+
+var tabla = window.tablaOrganigrama;
+if (!tabla) {
+window._orgSeleccionandoPosteriorEliminar = false;
+return;
+}
+
+await new Promise((resolve) => {
+tabla.ajax.reload(() => {
+var filas = tabla.rows().data().toArray();
+var cercana = filas.reduce((mejor, fila) => {
+if (!mejor) return fila;
+return Math.abs(Number(fila.version) - Number(version)) < Math.abs(Number(mejor.version) - Number(version))
+? fila
+: mejor;
+}, null);
+
+if (cercana) {
+document.dispatchEvent(new CustomEvent('org:seleccionar-version', { detail: { id: cercana.id } }));
+if (cercana.archivo && cercana.archivo_disponible) {
+document.dispatchEvent(new CustomEvent('org:ver-imagen', {
+detail: { archivo: cercana.archivo, version: cercana.version }
+}));
+} else {
+this.imagenUrl = '';
+this.versionActual = 0;
+window._orgVersionActual = null;
+}
+}
+
+window._orgSeleccionandoPosteriorEliminar = false;
+resolve();
+}, false);
 });
 },
 
@@ -225,76 +272,91 @@ this.notify('error', 'Error al agregar fila.');
 }
 },
 
-async actualizarCampoPlantilla(id, campo, valor) {
+async actualizarCampoPlantilla(id, campo, valor, row) {
+if (row) row._savingField = campo;
 try {
 var resp = await fetch('/departamento-operativo/recursos-humanos/organigrama/update-plantilla', {
 method: 'POST',
-headers: { 'Content-Type': 'application/json' },
+headers: { 'Content-Type': 'application/json', 'X-Portal3-Skip-Action-Loader': '1' },
 body: JSON.stringify({ id: id, campo: campo, valor: valor })
 });
 var json = await resp.json();
 if (json.success) {
-this.notify('success', 'Campo modificado exitosamente.');
+if (row) {
+row._savedField = campo;
+setTimeout(() => { if (row._savedField === campo) row._savedField = ''; }, 2200);
+}
 } else {
 this.notify('error', json.message || 'Error al guardar el cambio.');
 }
 } catch (e) {
 this.notify('error', 'Error al guardar el cambio.');
+} finally {
+if (row) row._savingField = '';
 }
 },
 
 async buscarPersonal(idEstacion, idx, event) {
-var query = event.target.value;
-if (query.length < 1) {
+var query = (event?.target?.value || '').trim();
+if (!idEstacion) {
 this.resultadosPersonal[idx] = [];
 return;
 }
 
+// La versión anterior mostraba el catálogo de la estación al abrir el campo
+// y también al borrar la búsqueda; después permite filtrar o escribir libremente.
+
+var solicitud = (this.solicitudesPersonal[idx] || 0) + 1;
+this.solicitudesPersonal[idx] = solicitud;
+this.busquedasPersonal[idx] = query;
+
 try {
-var resp = await fetch('/departamento-operativo/recursos-humanos/organigrama/search-personal?id_estacion=' + idEstacion + '&query=' + encodeURIComponent(query));
+var params = new URLSearchParams({ id_estacion: String(idEstacion), query: query });
+var resp = await fetch('/departamento-operativo/recursos-humanos/organigrama/search-personal?' + params.toString());
 var json = await resp.json();
-if (json.success) {
-this.resultadosPersonal[idx] = json.data || [];
-}
+// Evita que una respuesta anterior reemplace los resultados de una búsqueda
+// más reciente o de otra estación seleccionada mientras se escribía.
+if (solicitud !== this.solicitudesPersonal[idx]
+|| this.busquedasPersonal[idx] !== query
+|| String(idEstacion) !== String(this.obtenerEstacionActual())) return;
+if (json.success) this.resultadosPersonal[idx] = json.data || [];
 } catch (e) {
 console.error('Error buscando personal:', e);
 }
 },
 
 async asignarNombrePlantilla(row, idx) {
+row._savingField = 'nombre';
+var valor = (row.nombre_completo || '').trim();
+var persona = (this.resultadosPersonal[idx] || []).find((p) => p.nombre === valor);
 var datalist = document.getElementById('personal-list-' + idx);
-if (!datalist) return;
-var options = datalist.querySelectorAll('option');
-var match = null;
-for (var opt of options) {
-if (opt.value === row.nombre_completo) {
-match = opt;
-break;
-}
+if (!persona && datalist) {
+var option = Array.from(datalist.options).find((opt) => opt.value === valor);
+if (option && option.dataset.id) persona = { id: option.dataset.id, nombre: option.value };
 }
 
 try {
-var resp;
-if (match) {
-var idUsuario = parseInt(match.dataset.id);
-resp = await fetch('/departamento-operativo/recursos-humanos/organigrama/update-plantilla-usuario', {
+var idUsuario = persona ? parseInt(persona.id, 10) : 0;
+var nombrePersonalizado = idUsuario ? '' : valor;
+var resp = await fetch('/departamento-operativo/recursos-humanos/organigrama/update-plantilla-usuario', {
 method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ id: row.id, id_usuario: idUsuario, nombre: '' })
+headers: { 'Content-Type': 'application/json', 'X-Portal3-Skip-Action-Loader': '1' },
+body: JSON.stringify({ id: row.id, id_usuario: idUsuario, nombre: nombrePersonalizado })
 });
-} else {
-resp = await fetch('/departamento-operativo/recursos-humanos/organigrama/update-plantilla-usuario', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ id: row.id, id_usuario: 0, nombre: row.nombre_completo })
-});
-}
 var json = await resp.json();
 if (json.success) {
-this.notify('success', 'Campo modificado exitosamente.');
+row.id_usuario = idUsuario;
+row.nombre = nombrePersonalizado;
+row.nombre_completo = persona ? persona.nombre : nombrePersonalizado;
+row._savedField = 'nombre';
+setTimeout(() => { if (row._savedField === 'nombre') row._savedField = ''; }, 2200);
+} else {
+this.notify('error', json.message || 'Error al guardar el cambio.');
 }
 } catch (e) {
 this.notify('error', 'Error al guardar el cambio.');
+} finally {
+row._savingField = '';
 }
 },
 
@@ -312,6 +374,7 @@ if (this.selectedPlantillaId === id) this.selectedPlantillaId = null;
 },
 
 abrirModalDocumento(idPlantilla, tipo, editar) {
+this.errors = {};
 this.documentoPlantillaId = idPlantilla;
 this.documentoTipo = tipo;
 this.documentoModo = editar ? 'editar' : 'agregar';
@@ -322,11 +385,13 @@ bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDocumento')).s
 async guardarDocumento() {
 var archivo = this.$refs.fileDocumento ? this.$refs.fileDocumento.files[0] : null;
 if (!archivo) {
-this.notify('error', 'Selecciona un archivo PDF');
+this.errors.documento = true;
+this.notify('error', 'Completa los campos obligatorios.');
 return;
 }
 
-if (archivo.type !== 'application/pdf') {
+if (archivo.type !== 'application/pdf' && archivo.name.split('.').pop().toLowerCase() !== 'pdf') {
+this.errors.documento = true;
 this.notify('error', 'Solo se permiten archivos PDF');
 return;
 }
@@ -353,7 +418,8 @@ this.cargarPlantilla();
 this.notify('error', resp.data.message || 'Error');
 }
 } catch (e) {
-this.notify('error', 'Error al subir documento');
+if (e.response?.data?.errors) this.errors = e.response.data.errors;
+this.notify('error', e.response?.data?.message || 'Error al subir documento');
 } finally {
 this.guardando = false;
 }
@@ -401,21 +467,27 @@ this.stationInfo = null;
 async actualizarStationInfo(campo, valor) {
 var idEstacion = this.obtenerEstacionActual();
 if (!idEstacion) return;
+this.stationInfo._savingField = campo;
 
 try {
 var resp = await fetch('/departamento-operativo/recursos-humanos/organigrama/update-station-info', {
 method: 'POST',
-headers: { 'Content-Type': 'application/json' },
+headers: { 'Content-Type': 'application/json', 'X-Portal3-Skip-Action-Loader': '1' },
 body: JSON.stringify({ id_estacion: idEstacion, campo: campo, valor: valor })
 });
 var json = await resp.json();
 if (json.success) {
-this.notify('success', json.message || 'Guardado');
+this.stationInfo._savedField = campo;
+setTimeout(() => {
+if (this.stationInfo && this.stationInfo._savedField === campo) this.stationInfo._savedField = '';
+}, 2200);
 } else {
 this.notify('error', json.message || 'Error al guardar');
 }
 } catch (e) {
 this.notify('error', 'Error al guardar');
+} finally {
+if (this.stationInfo) this.stationInfo._savingField = '';
 }
 },
 

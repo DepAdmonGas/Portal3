@@ -130,28 +130,28 @@ x-cloak>
 <tbody class="text-center">
 <tr>
 <td class="align-middle">
-<i class="ti ti-download fs-5 text-primary pointer" title="Documentos Personales" x-show="baja.has_docs_archivo && puedeDescargarBaja" @click="download('docs-personal-documentos', '<?= htmlspecialchars($baja['documentos_archivo']) ?>')"></i>
-<i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_docs_archivo"></i>
+<i class="ti ti-download fs-6 text-primary pointer" title="Documentos Personales" x-show="baja.has_docs_archivo && puedeDescargarBaja" @click="download('docs-personal-documentos', '<?= htmlspecialchars($baja['documentos_archivo']) ?>')"></i>
+<i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible" x-show="!baja.has_docs_archivo"></i>
 </td>
 <td class="align-middle">
-<i class="ti ti-download fs-5 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['ine']['label']) ?>" x-show="baja.has_ine && puedeDescargarBaja" @click="download('docs-personal-ine', '<?= htmlspecialchars($baja['documentos']['ine']['archivo']) ?>')"></i>
-<i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_ine"></i>
+<i class="ti ti-download fs-6 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['ine']['label']) ?>" x-show="baja.has_ine && puedeDescargarBaja" @click="download('docs-personal-ine', '<?= htmlspecialchars($baja['documentos']['ine']['archivo']) ?>')"></i>
+<i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible" x-show="!baja.has_ine"></i>
 </td>
 <td class="align-middle">
-<i class="ti ti-download fs-5 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['curp']['label']) ?>" x-show="baja.has_curp && puedeDescargarBaja" @click="download('docs-personal-curp', '<?= htmlspecialchars($baja['documentos']['curp']['archivo']) ?>')"></i>
-<i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_curp"></i>
+<i class="ti ti-download fs-6 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['curp']['label']) ?>" x-show="baja.has_curp && puedeDescargarBaja" @click="download('docs-personal-curp', '<?= htmlspecialchars($baja['documentos']['curp']['archivo']) ?>')"></i>
+<i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible" x-show="!baja.has_curp"></i>
 </td>
 <td class="align-middle">
-<i class="ti ti-download fs-5 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['rfc']['label']) ?>" x-show="baja.has_rfc && puedeDescargarBaja" @click="download('docs-personal-rfc', '<?= htmlspecialchars($baja['documentos']['rfc']['archivo']) ?>')"></i>
-<i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_rfc"></i>
+<i class="ti ti-download fs-6 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['rfc']['label']) ?>" x-show="baja.has_rfc && puedeDescargarBaja" @click="download('docs-personal-rfc', '<?= htmlspecialchars($baja['documentos']['rfc']['archivo']) ?>')"></i>
+<i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible" x-show="!baja.has_rfc"></i>
 </td>
 <td class="align-middle">
-<i class="ti ti-download fs-5 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['nss']['label']) ?>" x-show="baja.has_nss && puedeDescargarBaja" @click="download('docs-personal-nss', '<?= htmlspecialchars($baja['documentos']['nss']['archivo']) ?>')"></i>
-<i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_nss"></i>
+<i class="ti ti-download fs-6 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['nss']['label']) ?>" x-show="baja.has_nss && puedeDescargarBaja" @click="download('docs-personal-nss', '<?= htmlspecialchars($baja['documentos']['nss']['archivo']) ?>')"></i>
+<i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible" x-show="!baja.has_nss"></i>
 </td>
 <td class="align-middle">
-<i class="ti ti-download fs-5 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['contrato']['label']) ?>" x-show="baja.has_contrato && puedeDescargarBaja" @click="download('docs-personal-contrato', '<?= htmlspecialchars($baja['documentos']['contrato']['archivo']) ?>')"></i>
-<i class="ti ti-file-off text-muted fs-5" x-show="!baja.has_contrato"></i>
+<i class="ti ti-download fs-6 text-primary pointer" title="<?= htmlspecialchars($baja['documentos']['contrato']['label']) ?>" x-show="baja.has_contrato && puedeDescargarBaja" @click="download('docs-personal-contrato', '<?= htmlspecialchars($baja['documentos']['contrato']['archivo']) ?>')"></i>
+<i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible" x-show="!baja.has_contrato"></i>
 </td>
 </tr>
 </tbody>
@@ -199,11 +199,12 @@ x-cloak>
 <tr class="pointer" :class="{ selected: selectedArchivoBajaId === Number(a.id) }" @click="selectedArchivoBajaId = Number(a.id)">
 <td class="align-middle text-start" x-text="a.descripcion"></td>
 <td class="align-middle">
-<i class="ti ti-download fs-5 text-primary pointer" title="Descargar" x-show="puedeDescargarBaja" @click="download('docs-personal-baja', a.archivo)"></i>
-<i class="ti ti-lock fs-5 text-muted" title="Sin permiso de descarga" x-show="!puedeDescargarBaja"></i>
+<i class="ti ti-download fs-6 text-primary pointer" title="Descargar" x-show="a.disponible && puedeDescargarBaja" @click="download('docs-personal-baja', a.archivo)"></i>
+<i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible" x-show="!a.disponible"></i>
+<i class="ti ti-lock fs-6 text-muted" title="Sin permiso de descarga" x-show="a.disponible && !puedeDescargarBaja"></i>
 </td>
 <td class="align-middle">
-<i class="ti ti-trash fs-5 text-danger pointer" x-show="puedeEliminarBaja" @click="deleteAction({ url: '/departamento-operativo/recursos-humanos/control-documentos-personal/delete-baja-archivo', id: a.id, name: a.descripcion }).then(() => recargarArchivosBaja())" title="Eliminar"></i>
+<i class="ti ti-trash fs-6 text-danger pointer" x-show="puedeEliminarBaja" @click="deleteAction({ url: '/departamento-operativo/recursos-humanos/control-documentos-personal/delete-baja-archivo', id: a.id, name: a.descripcion }).then(() => recargarArchivosBaja())" title="Eliminar"></i>
 </td>
 </tr>
 </template>
@@ -286,7 +287,9 @@ Nuevo archivo de baja</h5>
 <div class="mb-3">
 <label class="form-label">* Descripción:</label>
 <input type="text" class="form-control" list="listaDescBajaModal"
-x-model="bajaForm.descripcion">
+x-model="bajaForm.descripcion" @input="bajaErrors.descripcion = false"
+:class="bajaErrors.descripcion ? 'is-invalid' : ''"
+:style="bajaErrors.descripcion ? 'border:2px solid #A52525' : ''">
 <datalist id="listaDescBajaModal">
 <option>Acta de hechos</option>
 <option>Carta de Renuncia</option>
@@ -295,7 +298,9 @@ x-model="bajaForm.descripcion">
 </div>
 <div class="mb-3">
 <label class="form-label">* Archivo:</label>
-<input type="file" class="form-control" x-ref="bajaFileInputModal">
+<input type="file" class="form-control" x-ref="bajaFileInputModal" @change="bajaErrors.archivo = false"
+:class="bajaErrors.archivo ? 'is-invalid' : ''"
+:style="bajaErrors.archivo ? 'border:2px solid #A52525' : ''">
 </div>
 </div>
 <div class="modal-footer">
@@ -312,7 +317,7 @@ Cancelar
                       <button type="button" 
 class="btn btn-success"
 @click="subirArchivoBaja()"
-:disabled="subiendoArchivo || !bajaForm.descripcion.trim()">
+:disabled="subiendoArchivo">
 <i class="ti ti-check"></i>
 <template x-if="!subiendoArchivo"><span> Guardar</span></template>
 <template x-if="subiendoArchivo"><span class="spinner-border spinner-border-sm"></span></template>

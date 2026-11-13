@@ -16,6 +16,7 @@ fecha: '',
 incidencia: '',
 comentario: '',
 documento: '',
+documentoDisponible: false,
 requiereDocumento: false,
 puntos: 0,
 fechaInicio: '',
@@ -24,6 +25,10 @@ sueldoDia: '',
 idIncidenciaSeleccionada: null,
 errorRadio: false,
 errorComentario: false,
+errorArchivo: false,
+errorFechaInicio: false,
+errorFechaFin: false,
+errorSueldoDia: false,
 guardando: false,
 },
 
@@ -63,6 +68,7 @@ this.modalIncidencia.fecha = '';
 this.modalIncidencia.incidencia = '';
 this.modalIncidencia.comentario = '';
 this.modalIncidencia.documento = '';
+this.modalIncidencia.documentoDisponible = false;
 this.modalIncidencia.requiereDocumento = false;
 this.modalIncidencia.puntos = 0;
 this.modalIncidencia.fechaInicio = '';
@@ -71,6 +77,10 @@ this.modalIncidencia.sueldoDia = '';
 this.modalIncidencia.idIncidenciaSeleccionada = null;
 this.modalIncidencia.errorRadio = false;
 this.modalIncidencia.errorComentario = false;
+this.modalIncidencia.errorArchivo = false;
+this.modalIncidencia.errorFechaInicio = false;
+this.modalIncidencia.errorFechaFin = false;
+this.modalIncidencia.errorSueldoDia = false;
 this.modalIncidencia.guardando = false;
 
 var fileInput = document.getElementById('cdFileDetalleIncidencia');
@@ -135,11 +145,11 @@ var tieneIncidencia = parseInt(row.total_incidencias || 0) > 0;
 
 if (deadline && deadline < hoyStr) {
 var cls = tieneIncidencia ? 'ti ti-alert-triangle text-warning' : 'ti ti-eye text-primary';
-return '<i class=" fs-7 pointer ' + cls + ' cd-btn-detalle-incidencia" data-id="' + row.id + '"></i>';
+return '<i class="fs-6 pointer ' + cls + ' cd-btn-detalle-incidencia" data-id="' + row.id + '"></i>';
 }
 
 var cls2 = tieneIncidencia ? 'ti ti-alert-triangle text-warning' : 'ti ti-alert-triangle text-primary';
-return '<i class="fs-7 pointer ' + cls2 + ' cd-btn-agregar-incidencia" data-id="' + row.id + '"></i>';
+return '<i class="fs-6 pointer ' + cls2 + ' cd-btn-agregar-incidencia" data-id="' + row.id + '"></i>';
 }
 }
 ];
@@ -220,6 +230,61 @@ if (inst) inst.hide();
 setTimeout(function() { document.activeElement.blur(); }, 100);
 },
 
+formatIncidenciaNumero(value) {
+if (value === null || value === undefined || value === '') return '—';
+var number = Number(String(value).replace(/,/g, ''));
+return Number.isFinite(number)
+? number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+: '—';
+},
+
+formatIncidenciaInput(event, field) {
+var input = event.target;
+var raw = input.value;
+var cursor = input.selectionStart ?? raw.length;
+var before = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+var normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+var parts = normalized.split('.');
+var integer = parts.shift() || '';
+var decimals = parts.join('');
+var formatted = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+if (normalized.includes('.')) formatted += '.' + decimals;
+this.modalIncidencia[field] = formatted;
+if (normalized !== '' && Number.isFinite(Number(normalized)) && Number(normalized) >= 0) {
+this.modalIncidencia.errorSueldoDia = false;
+}
+input.value = formatted;
+var next = 0;
+var counted = 0;
+while (next < formatted.length && counted < before) {
+if (/[0-9.]/.test(formatted[next])) counted++;
+next++;
+}
+input.setSelectionRange(next, next);
+},
+
+isPdfFile(file) {
+return !!file && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || ''));
+},
+
+async postWithCsrfRetry(url, body) {
+var meta = document.querySelector('meta[name="csrf-token"]');
+var headers = new Headers({ 'Accept': 'application/json' });
+var token = meta ? meta.getAttribute('content') : '';
+if (token) headers.set('X-CSRF-TOKEN', token);
+
+var response = await fetch(url, { method: 'POST', headers: headers, body: body });
+if (response.status !== 419) return response;
+
+var csrfResult = null;
+try { csrfResult = await response.clone().json(); } catch (e) {}
+if (!csrfResult || !csrfResult.new_token) return response;
+
+if (meta) meta.setAttribute('content', csrfResult.new_token);
+headers.set('X-CSRF-TOKEN', csrfResult.new_token);
+return fetch(url, { method: 'POST', headers: headers, body: body });
+},
+
 verDetalleIncidencia(idAsistencia) {
 var self = this;
 var record = this.findRecord(idAsistencia);
@@ -244,11 +309,12 @@ self.modalIncidencia.fecha = json.data.fecha;
 self.modalIncidencia.incidencia = json.data.incidencia || '';
 self.modalIncidencia.comentario = json.data.comentario || '';
 self.modalIncidencia.documento = json.data.documento || '';
+self.modalIncidencia.documentoDisponible = json.data.documento_disponible === true;
 self.modalIncidencia.requiereDocumento = json.data.requiere_documento || false;
 self.modalIncidencia.puntos = json.data.puntos || 0;
 self.modalIncidencia.fechaInicio = json.data.fecha_inicio_raw || '';
 self.modalIncidencia.fechaFin = json.data.fecha_fin_raw || '';
-self.modalIncidencia.sueldoDia = json.data.sueldo_dia !== undefined && json.data.sueldo_dia !== null ? json.data.sueldo_dia : '';
+self.modalIncidencia.sueldoDia = json.data.sueldo_dia !== undefined && json.data.sueldo_dia !== null && json.data.sueldo_dia !== '' ? self.formatIncidenciaNumero(json.data.sueldo_dia) : '';
 }
 })
 .catch(function() {
@@ -280,11 +346,12 @@ self.modalIncidencia.fecha = json.data.fecha;
 self.modalIncidencia.incidencia = json.data.incidencia || '';
 self.modalIncidencia.comentario = json.data.comentario || '';
 self.modalIncidencia.documento = json.data.documento || '';
+self.modalIncidencia.documentoDisponible = json.data.documento_disponible === true;
 self.modalIncidencia.requiereDocumento = json.data.requiere_documento || false;
 self.modalIncidencia.puntos = json.data.puntos || 0;
 self.modalIncidencia.fechaInicio = json.data.fecha_inicio_raw || '';
 self.modalIncidencia.fechaFin = json.data.fecha_fin_raw || '';
-self.modalIncidencia.sueldoDia = json.data.sueldo_dia !== undefined && json.data.sueldo_dia !== null ? json.data.sueldo_dia : '';
+self.modalIncidencia.sueldoDia = json.data.sueldo_dia !== undefined && json.data.sueldo_dia !== null && json.data.sueldo_dia !== '' ? self.formatIncidenciaNumero(json.data.sueldo_dia) : '';
 } else {
 self.modalIncidencia.existe = false;
 self.modalIncidencia.fecha = record.fecha;
@@ -301,13 +368,15 @@ var m = this.modalIncidencia;
 
 m.errorRadio = !m.idIncidenciaSeleccionada;
 m.errorComentario = !m.comentario || !m.comentario.trim();
-
-if (m.errorRadio) {
-Notify.error('Selecciona un tipo de incidencia.');
+if (m.errorRadio || m.errorComentario) {
+Notify.error('Completa los campos obligatorios.');
 return;
 }
-if (m.errorComentario) {
-Notify.error('Escribe un comentario.');
+
+var newFileInput = document.getElementById('cdFileIncidenciaNueva');
+if (newFileInput && newFileInput.files.length && !this.isPdfFile(newFileInput.files[0])) {
+m.errorArchivo = true;
+Notify.error('El archivo debe ser formato PDF.');
 return;
 }
 
@@ -333,17 +402,14 @@ formData.append('comentario', m.comentario.trim());
 
 if (m.fechaInicio) formData.append('fecha_inicio', m.fechaInicio);
 if (m.fechaFin) formData.append('fecha_fin', m.fechaFin);
-if (m.sueldoDia !== '' && m.sueldoDia !== undefined) formData.append('sueldo_dia', m.sueldoDia);
+if (m.sueldoDia !== '' && m.sueldoDia !== undefined) formData.append('sueldo_dia', String(m.sueldoDia).replace(/,/g, ''));
 
-var fileInput = document.getElementById('cdFileIncidenciaNueva');
+var fileInput = newFileInput;
 if (fileInput && fileInput.files.length > 0) {
 formData.append('documento', fileInput.files[0]);
 }
 
-var response = await fetch('/departamento-operativo/recursos-humanos/control-documentos-personal/agregar-incidencia', {
-method: 'POST',
-body: formData
-});
+var response = await this.postWithCsrfRetry('/departamento-operativo/recursos-humanos/control-documentos-personal/agregar-incidencia', formData);
 
 var resp = await response.json();
 m.guardando = false;
@@ -385,12 +451,14 @@ var m = this.modalIncidencia;
 
 var fileInput = document.getElementById('cdFileDetalleIncidencia');
 if (!fileInput || !fileInput.files.length) {
-Notify.error('Selecciona un archivo PDF.');
+m.errorArchivo = true;
+Notify.error('Completa los campos obligatorios.');
 return;
 }
 
 var file = fileInput.files[0];
-if (file.type !== 'application/pdf') {
+if (!this.isPdfFile(file)) {
+m.errorArchivo = true;
 Notify.error('El archivo debe ser formato PDF.');
 return;
 }
@@ -414,10 +482,7 @@ var formData = new FormData();
 formData.append('id_asistencia', m.idAsistencia);
 formData.append('documento', file);
 
-var response = await fetch('/departamento-operativo/recursos-humanos/control-documentos-personal/subir-documento-incidencia', {
-method: 'POST',
-body: formData
-});
+var response = await this.postWithCsrfRetry('/departamento-operativo/recursos-humanos/control-documentos-personal/subir-documento-incidencia', formData);
 
 var resp = await response.json();
 m.guardando = false;
@@ -458,26 +523,24 @@ var self = this;
 var m = this.modalIncidencia;
 
 var fileInput = document.getElementById('cdFileIncidenciaExistente');
-if (!fileInput || !fileInput.files.length) {
-Notify.error('Selecciona un archivo PDF.');
+m.errorArchivo = !fileInput || !fileInput.files.length;
+m.errorFechaInicio = !m.fechaInicio;
+m.errorFechaFin = !m.fechaFin;
+var rawSalary = String(m.sueldoDia ?? '').replace(/,/g, '').trim();
+m.errorSueldoDia = rawSalary === '' || !Number.isFinite(Number(rawSalary)) || Number(rawSalary) < 0;
+if (m.errorArchivo || m.errorFechaInicio || m.errorFechaFin || m.errorSueldoDia) {
+Notify.error('Completa los campos obligatorios.');
 return;
 }
 
 var file = fileInput.files[0];
-if (file.type !== 'application/pdf') {
+if (!this.isPdfFile(file)) {
+m.errorArchivo = true;
 Notify.error('El archivo debe ser formato PDF.');
 return;
 }
-
-if (!m.fechaInicio) {
-Notify.error('Ingresa la fecha de inicio de incapacidad.');
-return;
-}
-if (!m.fechaFin) {
-Notify.error('Ingresa la fecha fin de incapacidad.');
-return;
-}
 if (m.fechaInicio > m.fechaFin) {
+m.errorFechaFin = true;
 Notify.error('La fecha fin debe ser mayor o igual a la fecha de inicio.');
 return;
 }
@@ -502,14 +565,9 @@ formData.append('id_asistencia', m.idAsistencia);
 formData.append('documento', file);
 formData.append('fecha_inicio', m.fechaInicio);
 formData.append('fecha_fin', m.fechaFin);
-if (m.sueldoDia !== '' && m.sueldoDia !== undefined) {
-formData.append('sueldo_dia', m.sueldoDia);
-}
+formData.append('sueldo_dia', rawSalary);
 
-var response = await fetch('/departamento-operativo/recursos-humanos/control-documentos-personal/subir-documento-incidencia', {
-method: 'POST',
-body: formData
-});
+var response = await this.postWithCsrfRetry('/departamento-operativo/recursos-humanos/control-documentos-personal/subir-documento-incidencia', formData);
 
 var resp = await response.json();
 m.guardando = false;

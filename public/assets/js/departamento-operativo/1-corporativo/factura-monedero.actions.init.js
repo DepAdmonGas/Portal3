@@ -91,6 +91,7 @@ Alpine.data('facturaMonederoComponent', () => ({
 
 loading: false,
 guardando: false,
+descargandoReporte: false,
 editando: false,
 editandoId: 0,
 comentarioSolicitudId: null,
@@ -109,6 +110,9 @@ fecha_creacion: '',
 archivo_factura: '',
 archivo_comprobante_pago: '',
 archivo_factura_xml: '',
+archivo_factura_disponible: false,
+archivo_comprobante_pago_disponible: false,
+archivo_factura_xml_disponible: false,
 },
 errors: {},
 
@@ -188,6 +192,9 @@ fecha_creacion: '',
 archivo_factura: '',
 archivo_comprobante_pago: '',
 archivo_factura_xml: '',
+archivo_factura_disponible: false,
+archivo_comprobante_pago_disponible: false,
+archivo_factura_xml_disponible: false,
 };
 this.errors = {};
 if (this.$refs.fileFactura) this.$refs.fileFactura.value = '';
@@ -215,6 +222,9 @@ this.form.fecha_creacion = d.fecha_creacion || '';
 this.form.archivo_factura = d.archivo_factura || '';
 this.form.archivo_comprobante_pago = d.archivo_comprobante_pago || '';
 this.form.archivo_factura_xml = d.archivo_factura_xml || '';
+this.form.archivo_factura_disponible = !!d.archivo_factura_disponible;
+this.form.archivo_comprobante_pago_disponible = !!d.archivo_comprobante_pago_disponible;
+this.form.archivo_factura_xml_disponible = !!d.archivo_factura_xml_disponible;
 bootstrap.Modal.getOrCreateInstance(document.getElementById('modalFacturaMonedero')).show();
 } else {
 this.notify('error', 'Error al cargar el registro');
@@ -226,31 +236,62 @@ this.notify('error', 'Error al cargar el registro');
 
 validar() {
 this.errors = {};
-const campos = [
-{ key: 'no_factura', label: 'No. Factura', check: () => !this.form.no_factura },
-{ key: 'monto', label: 'Monto', check: () => !this.form.monto || parseFloat(this.form.monto) <= 0 },
-];
-for (const c of campos) {
-this.errors[c.key] = false;
-if (c.check()) {
-this.errors[c.key] = true;
-this.notify('error', '* ' + c.label + ' requerido');
-return false;
+let valido = true;
+if (!String(this.form.no_factura || '').trim()) {
+this.errors.no_factura = true;
+valido = false;
 }
+const monto = parseFloat(String(this.form.monto ?? '').replace(/,/g, ''));
+if (!Number.isFinite(monto) || monto <= 0) {
+this.errors.monto = true;
+valido = false;
 }
 if (!this.editando) {
 const factura = this.$refs.fileFactura ? this.$refs.fileFactura.files[0] : null;
 if (!factura) {
-this.notify('error', '* Factura (PDF) requerido');
-return false;
+this.errors.archivo_factura = true;
+valido = false;
 }
 const xml = this.$refs.fileXml ? this.$refs.fileXml.files[0] : null;
 if (!xml) {
-this.notify('error', '* Factura (XML) requerido');
-return false;
+this.errors.archivo_factura_xml = true;
+valido = false;
 }
 }
-return true;
+if (!valido) this.notify('error', 'Completa los campos obligatorios.');
+return valido;
+},
+
+formatInputNumber(value) {
+if (value === null || value === undefined || value === '') return '';
+const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatearMonto(event) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const formatted = normalized.includes('.') ? grouped + '.' + decimals : grouped;
+this.form.monto = normalized;
+input.value = formatted;
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
 },
 
 async guardar() {
@@ -316,6 +357,7 @@ this.notify('error', res.message || 'Error');
 }
 }
 } catch (err) {
+if (err.response?.data?.errors) this.errors = err.response.data.errors;
 const mensaje = err.response?.data?.message || err.message || 'Error en la solicitud';
 this.notify('error', mensaje);
 } finally {
@@ -443,24 +485,68 @@ if (!archivo) { this.notify('error', 'Archivo no disponible'); return; }
 window.open('/download?tipo=' + encodeURIComponent(tipo) + '&file=' + encodeURIComponent(archivo), '_blank');
 },
 
-descargarExcel() {
-var container = document.getElementById('container');
-if (!container) { return; }
-var idYear = container.dataset.idYear;
-var idMes = container.dataset.idMes;
-var idEstacion = this.obtenerEstacionActual();
-if (!idEstacion) { return; }
-window.location.href = '/departamento-operativo/corporativo/factura-monedero-excel/' + idYear + '/' + idMes + '/' + idEstacion;
+async descargarReporte(url, nombreAlterno) {
+if (this.descargandoReporte) return;
+this.descargandoReporte = true;
+if (window.loader) window.loader.show();
+let objectUrl = null;
+try {
+const response = await axios.get(url, { responseType: 'blob' });
+const contentType = response.headers?.['content-type'] || '';
+if (contentType.includes('application/json')) {
+const body = JSON.parse(await response.data.text());
+throw new Error(body.message || 'No fue posible descargar el archivo.');
+}
+
+let filename = nombreAlterno;
+const disposition = response.headers?.['content-disposition'] || '';
+const filenameMatch = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+if (filenameMatch) {
+const value = filenameMatch[1] || filenameMatch[2];
+try { filename = decodeURIComponent(value); } catch (_) { filename = value; }
+}
+
+objectUrl = URL.createObjectURL(response.data);
+const link = document.createElement('a');
+link.href = objectUrl;
+link.download = filename;
+document.body.appendChild(link);
+link.click();
+link.remove();
+} catch (error) {
+let message = error.response?.data?.message || error.message || 'Error al descargar el archivo.';
+if (error.response?.data instanceof Blob) {
+try {
+const body = JSON.parse(await error.response.data.text());
+message = body.message || message;
+} catch (_) {}
+}
+this.notify('error', message);
+} finally {
+if (objectUrl) setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+if (window.loader) window.loader.hide();
+this.descargandoReporte = false;
+}
 },
 
-descargarPdf() {
+async descargarExcel() {
 var container = document.getElementById('container');
 if (!container) { return; }
 var idYear = container.dataset.idYear;
 var idMes = container.dataset.idMes;
 var idEstacion = this.obtenerEstacionActual();
 if (!idEstacion) { return; }
-window.location.href = '/departamento-operativo/corporativo/factura-monedero-pdf/' + idYear + '/' + idMes + '/' + idEstacion;
+return this.descargarReporte('/departamento-operativo/corporativo/factura-monedero-excel/' + idYear + '/' + idMes + '/' + idEstacion, 'Factura_Monedero.xlsx');
+},
+
+async descargarPdf() {
+var container = document.getElementById('container');
+if (!container) { return; }
+var idYear = container.dataset.idYear;
+var idMes = container.dataset.idMes;
+var idEstacion = this.obtenerEstacionActual();
+if (!idEstacion) { return; }
+return this.descargarReporte('/departamento-operativo/corporativo/factura-monedero-pdf/' + idYear + '/' + idMes + '/' + idEstacion, 'Factura_Monedero.pdf');
 },
 }));
 });

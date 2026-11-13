@@ -27,9 +27,9 @@ if (row.estado === 1) return '<span class="badge bg-success text-white">Finaliza
 return '<span class="badge bg-warning text-white">Pendiente</span>';
 }
 
-function renderDocumentoCol(file, tipo) {
-if (!file) return '<span class="text-muted"><i class="ti ti-file-off fs-5"></i></span>';
-return '<i class="ti ti-download pointer text-primary fs-5 btn-fm-download" data-tipo="factura-monedero" data-file="' + encodeURIComponent(file) + '" title="' + tipo + '"></i>';
+function renderDocumentoCol(file, disponible, tipo) {
+if (!file || !disponible) return '<span class="text-muted"><i class="ti ti-file-off fs-6"></i></span>';
+return '<i class="ti ti-download pointer text-primary fs-6 btn-fm-download" data-tipo="factura-monedero" data-file="' + encodeURIComponent(file) + '" title="' + tipo + '"></i>';
 }
 
 function renderComentarios(row) {
@@ -87,11 +87,11 @@ render: (v) => v || '' },
 { title: 'Monto', data: 'monto', className: 'align-middle text-end text-nowrap',
 render: (v) => '$ ' + parseFloat(v || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
 { title: 'Factura (PDF)', data: 'archivo_factura', className: 'align-middle text-center text-nowrap', orderable: false, searchable: false,
-render: (v) => renderDocumentoCol(v, 'Factura PDF') },
+render: (v, t, row) => renderDocumentoCol(v, row.archivo_factura_disponible, 'Factura PDF') },
 { title: 'Factura (XML)', data: 'archivo_factura_xml', className: 'align-middle text-center text-nowrap', orderable: false, searchable: false,
-render: (v) => renderDocumentoCol(v, 'Factura XML') },
+render: (v, t, row) => renderDocumentoCol(v, row.archivo_factura_xml_disponible, 'Factura XML') },
 { title: 'Comprobante pago', data: 'archivo_comprobante_pago', className: 'align-middle text-center text-nowrap', orderable: false, searchable: false,
-render: (v) => renderDocumentoCol(v, 'Comprobante de pago') },
+render: (v, t, row) => renderDocumentoCol(v, row.archivo_comprobante_pago_disponible, 'Comprobante de pago') },
 { title: 'Estado', data: null, className: 'align-middle text-center text-nowrap', orderable: false, searchable: false,
 render: (v, t, row) => renderEstado(row) },
 { title: '<i class="ti ti-message fs-7"></i>', data: null, className: 'align-middle text-center text-nowrap', orderable: false, searchable: false,

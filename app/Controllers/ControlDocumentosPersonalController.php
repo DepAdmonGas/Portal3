@@ -6,6 +6,7 @@ use App\Core\View;
 use App\Core\Breadcrumb;
 use App\Core\JsonResponse;
 use App\Core\Request;
+use App\Core\Logger;
 use App\Services\ControlDocumentosPersonalService;
 use App\Services\PersonalExcelService;
 use App\Services\ModuleStationService;
@@ -134,6 +135,16 @@ class ControlDocumentosPersonalController extends BaseController
     public function add()
     {
         header('Content-Type: application/json');
+        $errors = ControlDocumentosPersonalService::validatePersonalInput($_POST);
+        if ($errors) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa los campos obligatorios.',
+                'errors' => $errors,
+            ]);
+            return;
+        }
         $id = ControlDocumentosPersonalService::addPersonal($_POST, $_FILES);
         echo json_encode([
             'success' => (bool)$id,
@@ -149,6 +160,17 @@ class ControlDocumentosPersonalController extends BaseController
 
         if (!$id) {
             echo json_encode(['success' => false, 'message' => 'ID no proporcionado.']);
+            return;
+        }
+
+        $errors = ControlDocumentosPersonalService::validatePersonalInput($_POST);
+        if ($errors) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa los campos obligatorios.',
+                'errors' => $errors,
+            ]);
             return;
         }
 
@@ -308,7 +330,37 @@ class ControlDocumentosPersonalController extends BaseController
     {
         $idPersonal = filter_var(Request::input('id_personal'), FILTER_VALIDATE_INT);
         if (!$idPersonal) JsonResponse::validation('El identificador del colaborador no es válido.');
-        if (!ControlDocumentosPersonalService::addBajaPersonal((int)$idPersonal, Request::all(), $_FILES)) {
+        $errors = [];
+        if (!normalizarFecha(Request::input('fecha_baja', ''))) $errors['fecha_baja'] = true;
+        if (trim((string)Request::input('motivo', '')) === '') $errors['motivo'] = true;
+        if ($errors) JsonResponse::validation('Completa los campos obligatorios.', $errors);
+        try {
+            $registrada = ControlDocumentosPersonalService::addBajaPersonal((int)$idPersonal, Request::all(), $_FILES);
+        } catch (\Illuminate\Database\QueryException $exception) {
+            $driverCode = (int)($exception->errorInfo[1] ?? 0);
+            $driverMessage = (string)($exception->errorInfo[2] ?? '');
+            $foreignConstraint = null;
+            $childTable = null;
+            if ($driverCode === 1452) {
+                if (preg_match("/CONSTRAINT [`']([^`']+)[`']/i", $driverMessage, $matches)) $foreignConstraint = $matches[1];
+                if (preg_match("/fails \(`[^`]+`\.`([^`]+)`/i", $driverMessage, $matches)) $childTable = $matches[1];
+            }
+            $detail = match ($driverCode) {
+                1048, 1054, 1364 => preg_match("/(?:Unknown column|Field) '([^']+)'/i", $driverMessage, $matches) ? 'column:' . $matches[1] : 'column_schema_mismatch',
+                1062 => preg_match("/for key '([^']+)'/i", $driverMessage, $matches) ? 'duplicate_key:' . $matches[1] : 'duplicate_key',
+                1452 => 'foreign_key_constraint',
+                default => 'database_write_failure',
+            };
+            Logger::error('No se pudo registrar la baja de personal por un error de base de datos.', [
+                'sqlstate' => (string)$exception->getCode(),
+                'driver_code' => $driverCode,
+                'detail' => $detail,
+                'constraint' => $foreignConstraint,
+                'child_table' => $childTable,
+            ]);
+            JsonResponse::error('No fue posible registrar la baja por un error de base de datos (' . $driverCode . ').', 500);
+        }
+        if (!$registrada) {
             JsonResponse::forbidden('No fue posible registrar la baja. Verifica permisos, datos y contexto.');
         }
         JsonResponse::success('Baja registrada correctamente.');
@@ -338,6 +390,12 @@ class ControlDocumentosPersonalController extends BaseController
 
         if (!$idPersonal) {
             echo json_encode(['success' => false, 'message' => 'ID no proporcionado.']);
+            return;
+        }
+
+        if (mb_strlen(trim((string)$pin), 'UTF-8') < 5) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => 'El PIN debe contener al menos 5 caracteres.']);
             return;
         }
 
@@ -527,26 +585,38 @@ return;
         $comentario           = sanitize_input($_POST['comentario'] ?? null, 'string');
         $fechaInicio          = !empty($_POST['fecha_inicio']) ? sanitize_input($_POST['fecha_inicio'], 'string') : null;
         $fechaFin             = !empty($_POST['fecha_fin']) ? sanitize_input($_POST['fecha_fin'], 'string') : null;
-        $sueldoDia            = isset($_POST['sueldo_dia']) && $_POST['sueldo_dia'] !== '' ? sanitize_input($_POST['sueldo_dia'], 'float') : null;
+        $sueldoDiaRaw          = str_replace(',', '', trim((string)($_POST['sueldo_dia'] ?? '')));
+        $sueldoDia            = $sueldoDiaRaw !== '' && is_numeric($sueldoDiaRaw) ? (float)$sueldoDiaRaw : null;
 
-        if (!$idAsistencia || !$idIncidenciaCatalogo) {
-            echo json_encode(['success' => false, 'message' => 'Faltan datos requeridos.']);
+        if (!$idAsistencia || !$idIncidenciaCatalogo || trim((string)$comentario) === '') {
+            echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
             return;
         }
 
         $documentoRuta = null;
-        if (!empty($_FILES['documento']) && is_array($_FILES['documento']) && !empty($_FILES['documento']['tmp_name']) && $_FILES['documento']['error'] === UPLOAD_ERR_OK) {
-            $carpeta = ControlDocumentosPersonalService::getUploadDir() . 'incidencias/';
-            if (!is_dir($carpeta)) mkdir($carpeta, 0777, true);
-            $ext = strtolower(pathinfo($_FILES['documento']['name'], PATHINFO_EXTENSION));
-            $nombre = 'incidencia_' . $idAsistencia . '_' . time() . '.' . $ext;
+        $archivoEnviado = isset($_FILES['documento'])
+            && is_array($_FILES['documento'])
+            && (int)($_FILES['documento']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+        if ($archivoEnviado) {
+            if (!$this->isPdfUpload($_FILES['documento'])) {
+                echo json_encode(['success' => false, 'message' => 'El archivo debe ser un PDF válido.']);
+                return;
+            }
+            $carpeta = ControlDocumentosPersonalService::getIncidenciaUploadDir();
+            $nombre = 'incidencia_' . $idAsistencia . '_' . bin2hex(random_bytes(6)) . '.pdf';
 
             if (move_uploaded_file($_FILES['documento']['tmp_name'], $carpeta . $nombre)) {
                 $documentoRuta = $nombre;
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No fue posible guardar el archivo PDF.']);
+                return;
             }
         }
 
         $result = ControlDocumentosPersonalService::agregarIncidencia($idAsistencia, $idIncidenciaCatalogo, $comentario, $fechaInicio, $fechaFin, $sueldoDia, $documentoRuta);
+        if (empty($result['success']) && $documentoRuta) {
+            @unlink(ControlDocumentosPersonalService::getIncidenciaUploadDir() . $documentoRuta);
+        }
         echo json_encode($result);
         return;
     }
@@ -557,7 +627,8 @@ return;
         $idAsistencia = sanitize_input($_POST['id_asistencia'] ?? null, 'int');
         $fechaInicio  = !empty($_POST['fecha_inicio']) ? sanitize_input($_POST['fecha_inicio'], 'string') : null;
         $fechaFin     = !empty($_POST['fecha_fin']) ? sanitize_input($_POST['fecha_fin'], 'string') : null;
-        $sueldoDia    = isset($_POST['sueldo_dia']) && $_POST['sueldo_dia'] !== '' ? sanitize_input($_POST['sueldo_dia'], 'float') : null;
+        $sueldoDiaRaw = str_replace(',', '', trim((string)($_POST['sueldo_dia'] ?? '')));
+        $sueldoDia    = $sueldoDiaRaw !== '' && is_numeric($sueldoDiaRaw) ? (float)$sueldoDiaRaw : null;
 
         if (!$idAsistencia) {
             echo json_encode(['success' => false, 'message' => 'Faltan datos requeridos.']);
@@ -569,10 +640,23 @@ return;
             return;
         }
 
-        $carpeta = ControlDocumentosPersonalService::getUploadDir() . 'incidencias/';
-        if (!is_dir($carpeta)) mkdir($carpeta, 0777, true);
-        $ext = strtolower(pathinfo($_FILES['documento']['name'], PATHINFO_EXTENSION));
-        $nombre = 'incidencia_' . $idAsistencia . '_' . time() . '.' . $ext;
+        if (!$this->isPdfUpload($_FILES['documento'])) {
+            echo json_encode(['success' => false, 'message' => 'El archivo debe ser un PDF válido.']);
+            return;
+        }
+
+        $metadatosParciales = $fechaInicio !== null || $fechaFin !== null || $sueldoDiaRaw !== '';
+        if ($metadatosParciales && (!$fechaInicio || !$fechaFin || $sueldoDia === null || $sueldoDia < 0)) {
+            echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+            return;
+        }
+        if ($fechaInicio && $fechaFin && $fechaFin < $fechaInicio) {
+            echo json_encode(['success' => false, 'message' => 'La fecha fin debe ser mayor o igual a la fecha de inicio.']);
+            return;
+        }
+
+        $carpeta = ControlDocumentosPersonalService::getIncidenciaUploadDir();
+        $nombre = 'incidencia_' . $idAsistencia . '_' . bin2hex(random_bytes(6)) . '.pdf';
         $documentoRuta = null;
 
         if (move_uploaded_file($_FILES['documento']['tmp_name'], $carpeta . $nombre)) {
@@ -585,8 +669,31 @@ return;
         }
 
         $result = ControlDocumentosPersonalService::subirDocumentoIncidencia($idAsistencia, $documentoRuta, $fechaInicio, $fechaFin, $sueldoDia);
+        if (empty($result['success'])) {
+            @unlink($carpeta . $documentoRuta);
+        }
         echo json_encode($result);
         return;
+    }
+
+    private function isPdfUpload(array $file): bool
+    {
+        if ((int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
+            || strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION)) !== 'pdf'
+            || empty($file['tmp_name']) || !is_file($file['tmp_name'])) {
+            return false;
+        }
+
+        if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo) {
+                $mime = finfo_file($finfo, $file['tmp_name']);
+                finfo_close($finfo);
+                return $mime === 'application/pdf';
+            }
+        }
+
+        return true;
     }
 
     public function getIncidenciasCatalogo()
