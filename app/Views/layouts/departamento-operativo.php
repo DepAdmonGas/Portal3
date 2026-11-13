@@ -27,7 +27,7 @@
     <script src="<?= asset('libs/axios/dist/axios.min.js') ?>" data-fallback-src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <meta name="csrf-token" content="<?= \App\Core\CsrfToken::token() ?>">
-    <script src="<?= asset('js/core/csrf-http.js') ?>"></script>
+    <script src="<?= asset('js/core/csrf-request-setup.js?v=20261112-1') ?>"></script>
 </head>
 
 <body class="link-sidebar">

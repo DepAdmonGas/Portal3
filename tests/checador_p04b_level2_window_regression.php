@@ -135,7 +135,10 @@ $assert(($networkError['error']['kind'] ?? '') === 'api_unavailable' && !isset($
 $assert(str_contains($controllerSource, '$level2Meta = null') && str_contains($controllerSource, 'Fail closed'), 'P3B25 a failed fresh request cannot retain a prior VERIFIED state');
 
 // P3B26-P3B30: preserve P04A/P03 and keep scope/token details server-side.
-$assert(str_contains($p04aSource, 'createDailyPunchSnapshot') && str_contains($controllerSource, 'createDailyPunchSnapshot'), 'P3B26 P04A snapshot behavior remains intact');
+$assert(str_contains($p04aSource, 'createDailyPunchSnapshot')
+    && str_contains($controllerSource, 'readDailyPunchSnapshotPage')
+    && str_contains($controllerSource, 'readDailyRawAttendance')
+    && !str_contains($controllerSource, 'createDailyPunchSnapshot('), 'P3B26 snapshot operations remain available while attendance rendering uses read-only paths');
 $assert(str_contains($serviceSource, 'readObservedPunches'), 'P3B27 P03 raw-read behavior remains intact');
 $assert(str_contains($controllerSource, 'authorize($requestedWorkplace)') && str_contains($controllerSource, 'selectedWorkplaceId'), 'P3B28 client input cannot broaden workplace scope');
 $assert(!preg_match('/\bmanifest_digest\b/', $viewSource) && !preg_match('/(?<!level2_)evaluation_ref\b/', $viewSource), 'P3B29 internal evidence is not unnecessarily exposed to normal UI');

@@ -153,6 +153,34 @@ final class ChecadorAccessService
     }
 
     /** Schedule API uses the existing biometricos ACL, not the Checador menu grant alone. */
+    /** Preserve legacy Biométricos scheduling checks used by Comodines. */
+    public static function authorizeBiometricosScheduling(?int $requestedLocalityId, string $action): array
+    {
+        if (!in_array($action, ['leer', 'editar'], true)) {
+            return ['allowed' => false, 'reason' => 'unknown_biometricos_action', 'workplaces' => []];
+        }
+        $scope = self::authorize($requestedLocalityId);
+        if (!($scope['allowed'] ?? false)) return $scope;
+        try {
+            $authenticated = Auth::user();
+            if (!$authenticated) return ['allowed' => false, 'reason' => 'unauthenticated', 'workplaces' => []];
+            $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
+            if (!$user) return ['allowed' => false, 'reason' => 'inactive_user', 'workplaces' => []];
+            $permissions = ModuloDptoOperativoService::getPermiso((int) $user->id, 'biometricos');
+            if (empty($permissions[$action])) {
+                return ['allowed' => false, 'reason' => 'biometricos_permission_denied', 'workplaces' => []];
+            }
+            return [
+                'allowed' => true,
+                'reason' => 'authorized',
+                'workplaces' => $scope['workplaces'],
+                'station_workplaces' => $scope['station_workplaces'] ?? [],
+            ];
+        } catch (Throwable) {
+            return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
+        }
+    }
+
     public static function authorizeScheduling(?int $requestedLocalityId, string $action): array
     {
         if (!in_array($action, ['leer', 'editar'], true)) {
@@ -598,6 +626,38 @@ final class ChecadorAccessService
      * @param array<int,int> $stationIds in tb_estaciones ID space
      * @return array<int, array{id:int,nombre:string}>
      */
+    public static function resolveActiveStationIdForLocality(int $localityId): ?int
+    {
+        if ($localityId < 1) {
+            return null;
+        }
+
+        try {
+            // Reuse the established station/locality converter, then validate
+            // its result through this service's unique, active station bridge.
+            $stationIds = MultiestacionService::convertIds(
+                [$localityId],
+                MultiestacionService::TABLA_RH_LOCALIDADES,
+                MultiestacionService::TABLA_ESTACIONES
+            );
+            if (count($stationIds) !== 1) {
+                return null;
+            }
+
+            $stationId = (int) $stationIds[0];
+            $mappedLocalities = self::mapStationIdsToUniqueLocalities([$stationId]);
+            if ($stationId < 1
+                || count($mappedLocalities) !== 1
+                || (int) ($mappedLocalities[0]['id'] ?? 0) !== $localityId) {
+                return null;
+            }
+
+            return $stationId;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
     private static function mapStationIdsToUniqueLocalities(array $stationIds): array
     {
         $mapped = [];

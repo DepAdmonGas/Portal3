@@ -69,6 +69,11 @@ $vars = [
     'state' => 'success',
     'attendanceCoverage' => ['complete' => true],
     'attendanceRows' => [$row],
+    'workerSelectOptions' => [[
+        'worker_id' => 900001,
+        'full_name' => 'Ana García',
+        'employee_number' => 'EMP-009',
+    ]],
     'administrativeIncidences' => [900001 => [[
         'category' => 'PERMISSION',
         'date_range' => ['start_date' => '2026-10-23', 'end_date' => '2026-10-23'],
@@ -95,9 +100,11 @@ $assert(str_contains($html, '<h1 class="h3 mb-1">Asistencia del día</h1>')
 $assert(str_contains($html, 'data-bs-target="#checador-filter-modal"')
     && str_contains($html, 'id="checador-filter-modal"')
     && str_contains($html, 'id="date" name="date" type="date"')
-    && str_contains($html, 'id="worker_id" name="worker_id" type="number"')
-    && str_contains($html, 'name="workplace_id"')
-    && str_contains($html, 'data-checador-clear-filters'), 'filter modal preserves required date, optional worker, station scope, apply and clear controls');
+    && str_contains($html, 'id="worker_id" name="worker_id" class="form-select"')
+    && str_contains($html, '<option value="900001">Ana García · N.º EMP-009</option>')
+    && str_contains($html, 'data-checador-ajax')
+    && !str_contains($html, 'name="workplace_id"')
+    && str_contains($html, 'data-checador-search-action="clear"'), 'filter modal submits only attendance filters through the authenticated read endpoint; station scope remains server-derived');
 $assert(count(array_filter($renderedIds, static fn(int $count): bool => $count > 1)) === 0
     && !preg_match('/\sstyle="/i', $html), 'rendered daily view has unique control IDs and no inline styles');
 $assert(str_contains($mainTable, 'Ana García') && str_contains($mainTable, 'EMP-009')
@@ -106,7 +113,20 @@ $assert(str_contains($mainTable, 'Ana García') && str_contains($mainTable, 'EMP
     && str_contains($mainTable, 'Información insuficiente'), 'main row prioritizes full name, effective schedule, neutral P3-H positions and translated status');
 $assert(str_contains($mainTable, 'overflow-x-auto') === false
     && str_contains($html, 'table-responsive overflow-x-auto overflow-y-hidden pb-4')
-    && str_contains($html, 'Un espacio vacío sólo indica'), 'table uses institutional horizontal responsive wrapper and avoids absence inference');
+    && str_contains($html, 'Una celda vacía no confirma una ausencia.')
+    && !preg_match('/\b(?:FALTA|AUSENTE)\b/i', $html), 'table keeps the institutional responsive wrapper and never classifies an empty cell as absence');
+$incompleteVars = $vars;
+$incompleteVars['attendanceCoverage'] = ['complete' => false];
+$incompleteHtml = $render($incompleteVars);
+$assert(str_contains($incompleteHtml, 'Cobertura no confirmada')
+    && str_contains($incompleteHtml, 'Una celda vacía no confirma una ausencia.'), 'incomplete attendance coverage remains explicitly uncertain');
+$errorVars = $vars;
+$errorVars['state'] = 'error';
+$errorVars['attendanceCoverage'] = ['complete' => false];
+$errorVars['attendanceRows'] = [];
+$errorHtml = $render($errorVars);
+$assert(str_contains($errorHtml, 'No fue posible cargar la asistencia')
+    && str_contains($errorHtml, 'La tabla estará disponible cuando la consulta se complete.'), 'failed attendance read remains an error rather than an empty or complete result');
 $assert(str_contains($mainTable, 'Ver detalle')
     && str_contains($html, 'id="daily-attendance-detail-900001-0"')
     && str_contains($html, 'Marcaciones originales y trazabilidad')
@@ -130,7 +150,8 @@ $vars['incidenceCreateKeys'] = [900001 => 'create-key'];
 $authorizedHtml = $render($vars);
 $assert(str_contains($authorizedHtml, 'Registrar incidencia')
     && str_contains($authorizedHtml, 'href="/departamento-operativo/recursos-humanos/checador/incidencias?workplace_id=14&amp;date=2026-10-23&amp;snapshot_ref=snapshot%2Fref-1&amp;worker_id=900001"')
-    && !str_contains($authorizedHtml, 'method="post"'), 'incidence entry link appears only with existing server-provided permission and key and does not submit a write');
+    && !str_contains($authorizedHtml, 'action="/departamento-operativo/recursos-humanos/checador/incidencias/crear"')
+    && !str_contains($authorizedHtml, 'name="idempotency_key"'), 'incidence entry link appears only with existing server-provided permission and key and does not submit a write');
 
 printf("CHECADOR_V8P_DAILY_ATTENDANCE_UI: %d PASS / %d FAIL\n", $assertions - $failures, $failures);
 exit($failures === 0 ? 0 : 1);

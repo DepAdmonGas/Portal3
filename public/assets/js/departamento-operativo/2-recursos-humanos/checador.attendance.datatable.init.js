@@ -1,10 +1,21 @@
-document.addEventListener('DOMContentLoaded', function () {
-    var tableElement = document.getElementById('checador-daily-attendance-table');
-    if (!tableElement || !window.jQuery || !jQuery.fn || !jQuery.fn.DataTable) return;
+window.initChecadorAttendanceDataTable = function (root) {
+    root = root || document;
+    var tableElement = root.querySelector('#checador-daily-attendance-table');
+    if (!tableElement || !window.jQuery || !jQuery.fn || !jQuery.fn.DataTable) return false;
 
     var body = tableElement.tBodies && tableElement.tBodies[0];
-    if (!body || body.rows.length === 0 || body.rows[0].cells.length !== 9) return;
-    if (jQuery.fn.DataTable.isDataTable(tableElement)) return;
+    if (!body) return false;
+    if (body.rows.length > 0 && body.rows[0].cells.length !== 9) {
+        var resultsRoot = tableElement.closest
+            ? tableElement.closest('[data-checador-attendance-results]')
+            : null;
+        var emptyStateRow = body.rows.length === 1
+            && body.rows[0].cells.length === 1
+            && body.rows[0].cells[0].colSpan === 9;
+        if (!emptyStateRow || !resultsRoot || resultsRoot.dataset.attendanceState !== 'success') return false;
+        body.removeChild(body.rows[0]);
+    }
+    if (jQuery.fn.DataTable.isDataTable(tableElement)) return true;
 
     jQuery(tableElement).DataTable({
         processing: false,
@@ -24,4 +35,9 @@ document.addEventListener('DOMContentLoaded', function () {
             zeroRecords: 'No hay colaboradores que coincidan con la búsqueda.'
         }
     });
+    return true;
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    window.initChecadorAttendanceDataTable(document);
 });

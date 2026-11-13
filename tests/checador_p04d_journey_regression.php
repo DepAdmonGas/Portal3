@@ -146,7 +146,11 @@ $assert(($failed['error']['kind'] ?? '') === 'api_unavailable', 'P4D35 HTTP fail
 $assert(str_contains($controllerSource, '$journeys = []') && str_contains($controllerSource, '$journeyErrors = []'), 'P4D36 stale Journey is cleared before refresh');
 $assert(str_contains($controllerSource, 'getEffectiveSchedule') && str_contains($serviceSource, 'api/v2/workers/'), 'P4D37 P04C schedule integration is preserved');
 $assert(str_contains($controllerSource, 'getLevel2WindowStatus'), 'P4D38 P04B Level 2 integration is preserved');
-$assert(str_contains($controllerSource, 'createDailyPunchSnapshot') && str_contains($serviceSource, 'readDailyPunchSnapshotPage'), 'P4D39 P04A/P03 behavior is preserved');
+$assert(str_contains($serviceSource, 'createDailyPunchSnapshot')
+    && str_contains($serviceSource, 'readDailyPunchSnapshotPage')
+    && str_contains($controllerSource, 'readDailyPunchSnapshotPage')
+    && str_contains($controllerSource, 'readDailyRawAttendance')
+    && !str_contains($controllerSource, 'createDailyPunchSnapshot('), 'P4D39 explicit snapshot service and read-only attendance paths are preserved');
 $administrativeStateCode = 'RESOLVED_PENDING_AUTHORIZATION';
 $assert(!str_contains($incidenceViewSource, $administrativeStateCode)
     && str_contains($incidenceViewSource, 'ChecadorPresentationFormatter::incidenceStatusLabel')

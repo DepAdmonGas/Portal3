@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Operativo\RhPersonal;
+use App\Models\Operativo\RhPersonalLocalidadVersion;
+use App\Models\Operativo\RhLocalidad;
 use Throwable;
 
 /** Read-only current-day roster constrained by canonical bitemporal workplace membership. */
@@ -36,6 +38,217 @@ final class ChecadorAttendanceRosterService
     /**
      * @return array{status:string,coverage:string,workers:list<array{worker_id:int,full_name:string,employee_number:?string}>,message:string}
      */
+    public function workersForAttendanceFilter(
+        int $workplaceId,
+        string $date,
+        ?string $timezone = null,
+        bool $demoMode = false
+    ): array {
+        if ($workplaceId < 1 || !self::isCivilDate($date)) {
+            return self::result('unavailable', 'unknown', [], 'No se pudo validar la fecha o localidad del filtro.');
+        }
+        if ($demoMode && ChecadorDailyReadService::demoModeEnabled()) {
+            return self::result('demo_unavailable', 'synthetic_only', [], 'El filtro local no usa personal operativo en modo demostración.');
+        }
+
+        try {
+            $locality = RhLocalidad::query()->whereKey($workplaceId)->first(['id', 'localidad', 'numlista']);
+            if ($locality === null) {
+                return self::result('unavailable', 'unknown', [], 'La localidad canónica no existe.');
+            }
+            $legacyStationId = ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId);
+            $isDepartment = ChecadorAccessService::isDepartmentLocality($workplaceId);
+            $directLocalityId = $legacyStationId ?? ($isDepartment ? $workplaceId : null);
+            $legacyMappingUnavailable = (int) ($locality->numlista ?? 0) > 0 && $legacyStationId === null && !$isDepartment;
+
+            $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
+            $localDevelopment = in_array($environment, ['dev', 'development', 'local'], true);
+            $timezone = is_string($timezone) && ChecadorOperationalPeriod::isIanaTimezone($timezone)
+                ? $timezone
+                : null;
+            if ($timezone === null
+                && $localDevelopment
+                && $workplaceId === 1
+                && mb_strtolower(trim((string) $locality->localidad)) === 'interlomas') {
+                $configuredTimezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? getenv('APP_TIMEZONE') ?: ''));
+                if (ChecadorOperationalPeriod::isIanaTimezone($configuredTimezone)) {
+                    $timezone = $configuredTimezone;
+                }
+            }
+            $nowUtc = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+            $currentOnlyFallback = $timezone === null;
+            $effectiveAt = $currentOnlyFallback
+                ? $nowUtc->format('Y-m-d\TH:i:s.u\Z')
+                : (new \DateTimeImmutable($date . ' 12:00:00', new \DateTimeZone($timezone)))
+                    ->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
+            $todayAtWorkplace = $currentOnlyFallback
+                ? null
+                : ChecadorOperationalPeriod::currentLocalDate($timezone, $nowUtc);
+            $allowUnversionedCurrentSource = $currentOnlyFallback
+                || ($todayAtWorkplace !== null && $todayAtWorkplace === $date);
+
+            // Include active current assignments only through the physical
+            // station resolved above, plus workers with canonical history for
+            // this locality. QA inactive accounts never enter the roster.
+            $peopleQuery = RhPersonal::query()->where('estado', 1);
+            $peopleQuery->where(static function ($query) use ($workplaceId, $directLocalityId): void {
+                if ($directLocalityId !== null) {
+                    $query->where('id_estacion', $directLocalityId)
+                        ->orWhereIn('id', RhPersonalLocalidadVersion::query()
+                            ->where('workplace_id', $workplaceId)
+                            ->select('worker_id')
+                            ->distinct());
+                } else {
+                    $query->whereIn('id', RhPersonalLocalidadVersion::query()
+                        ->where('workplace_id', $workplaceId)
+                        ->select('worker_id')
+                        ->distinct());
+                }
+            });
+            $people = $peopleQuery
+                ->orderBy('id')
+                ->get(['id', 'id_estacion', 'nombre_completo', 'no_colaborador', 'estado']);
+            $workerIds = $people->map(static fn($person): int => (int) $person->id)->all();
+            $versionedWorkerIds = $workerIds === []
+                ? []
+                : array_fill_keys(array_map('intval', RhPersonalLocalidadVersion::query()
+                    ->whereIn('worker_id', $workerIds)
+                    ->distinct()
+                    ->pluck('worker_id')
+                    ->all()), true);
+
+            $resolver = new WorkerWorkplaceAssignmentResolver();
+            $workers = [];
+            $currentWorkers = [];
+            $invalidMembership = false;
+            $invalidCurrentMembership = false;
+            $unversionedHistoricalMembership = false;
+            foreach ($people as $person) {
+                $workerId = (int) $person->id;
+                $currentBelongs = false;
+                if (isset($versionedWorkerIds[$workerId])) {
+                    $currentMembership = $resolver->resolveAssignments(
+                        $workerId,
+                        $nowUtc->format('Y-m-d\TH:i:s.u\Z')
+                    );
+                    if (($currentMembership['status'] ?? '') === 'DATA_INVALID') {
+                        $invalidCurrentMembership = true;
+                    } else {
+                        $currentAssignments = $currentMembership['assignments'] ?? [];
+                        $currentBelongs = ($currentMembership['status'] ?? '') === 'RESOLVED_SINGLE'
+                            && count($currentAssignments) === 1
+                            && (int) ($currentAssignments[0]['workplace_id'] ?? 0) === $workplaceId;
+                    }
+                } else {
+                    $currentBelongs = $directLocalityId !== null
+                        && (int) ($person->id_estacion ?? 0) === $directLocalityId;
+                }
+
+                $name = trim((string) $person->nombre_completo);
+                if ($workerId > 0 && $name !== '' && $name !== 'Nombre no disponible' && $currentBelongs) {
+                    $employeeNumber = $person->no_colaborador === null
+                        ? ''
+                        : trim((string) $person->no_colaborador);
+                    $currentWorkers[] = [
+                        'worker_id' => $workerId,
+                        'full_name' => $name,
+                        'employee_number' => $employeeNumber !== '' && $employeeNumber !== '0' ? $employeeNumber : null,
+                    ];
+                }
+
+                if (isset($versionedWorkerIds[$workerId])) {
+                    $membership = $resolver->resolveAssignments($workerId, $effectiveAt);
+                    $assignments = $membership['assignments'] ?? [];
+                    if (($membership['status'] ?? '') === 'DATA_INVALID') {
+                        $invalidMembership = true;
+                        continue;
+                    }
+                    if (($membership['status'] ?? '') !== 'RESOLVED_SINGLE'
+                        || count($assignments) !== 1
+                        || (int) ($assignments[0]['workplace_id'] ?? 0) !== $workplaceId) {
+                        continue;
+                    }
+                } elseif (!$allowUnversionedCurrentSource) {
+                    if ($directLocalityId !== null
+                        && (int) ($person->id_estacion ?? 0) === $directLocalityId) {
+                        $unversionedHistoricalMembership = true;
+                    }
+                    // The current HR locality cannot establish historical
+                    // membership, so it is deliberately not rendered as such.
+                    continue;
+                } elseif ($directLocalityId === null
+                    || (int) ($person->id_estacion ?? 0) !== $directLocalityId) {
+                    // Without a versioned history, the legacy HR source is only
+                    // current evidence and is never used to reconstruct a past roster.
+                    continue;
+                }
+
+                $name = trim((string) $person->nombre_completo);
+                if ($workerId < 1 || $name === '' || $name === 'Nombre no disponible') {
+                    continue;
+                }
+                $employeeNumber = $person->no_colaborador === null
+                    ? ''
+                    : trim((string) $person->no_colaborador);
+                $workers[] = [
+                    'worker_id' => $workerId,
+                    'full_name' => $name,
+                    'employee_number' => $employeeNumber !== '' && $employeeNumber !== '0' ? $employeeNumber : null,
+                ];
+            }
+
+            if ($currentOnlyFallback) {
+                if ($legacyMappingUnavailable) {
+                    return self::result(
+                        'partial',
+                        'incomplete',
+                        $currentWorkers,
+                        'No se pudo resolver de forma única el vínculo activo entre la estación y la localidad; el padrón actual puede estar incompleto.'
+                    );
+                }
+                return self::result(
+                    ($invalidMembership || $invalidCurrentMembership) ? 'partial' : 'current_roster_only',
+                    'current_active_roster',
+                    $currentWorkers,
+                    'La zona horaria de la localidad no está disponible. Esta lista refleja sólo las adscripciones activas actuales y no acredita pertenencia para la fecha seleccionada.'
+                );
+            }
+            if ($legacyMappingUnavailable) {
+                if (!$allowUnversionedCurrentSource) {
+                    return self::result(
+                        'partial',
+                        'current_roster_historical_unverified',
+                        $currentWorkers,
+                        'No se pudo resolver el vínculo actual entre estación y localidad. El padrón histórico no se completa usando la estación vigente.'
+                    );
+                }
+                return self::result(
+                    'partial',
+                    'incomplete',
+                    $workers,
+                    'No se pudo resolver de forma única el vínculo activo entre la estación y la localidad; el padrón puede estar incompleto.'
+                );
+            }
+            if ($invalidMembership || $unversionedHistoricalMembership) {
+                if (!$allowUnversionedCurrentSource) {
+                    return self::result(
+                        'partial',
+                        'current_roster_historical_unverified',
+                        $invalidCurrentMembership ? [] : $currentWorkers,
+                        'La fecha es histórica y el padrón histórico canónico no está completo. Se muestra el padrón activo actual como referencia, sin atribuirlo a la fecha consultada; las marcaciones verificadas de esa fecha se presentan por separado.'
+                    );
+                }
+                return self::result('partial', 'incomplete', $workers, 'El catálogo autorizado es parcial porque algunas membresías no pudieron validarse.');
+            }
+            if (!$allowUnversionedCurrentSource) {
+                return self::result('ready', 'historical_versioned_membership', $workers, 'Pertenencia histórica validada mediante asignaciones canónicas vigentes para la fecha.');
+            }
+            return self::result('ready', 'current_active_roster', $workers, 'Personal activo atribuido mediante localidad canónica vigente.');
+        } catch (Throwable) {
+            return self::result('unavailable', 'unknown', [], 'No se pudo consultar el catálogo local autorizado.');
+        }
+    }
+
     public function currentRoster(int $workplaceId, string $date, string $timezone, bool $demoMode): array
     {
         if ($workplaceId < 1 || !ChecadorOperationalPeriod::isIanaTimezone($timezone)) {
