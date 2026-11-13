@@ -623,6 +623,7 @@ $r->addRoute('GET', '/recursos-humanos/vacaciones/nuevo/{idLocalidad:\d+}', Rout
 $r->addRoute('GET', '/recursos-humanos/vacaciones/editar/{idFormulario:\d+}', Route::auth(['VacacionesController', 'editar']));
 $r->addRoute('GET', '/recursos-humanos/checador', Route::auth(['ChecadorController', 'index']));
 $r->addRoute('GET', '/recursos-humanos/checador/asistencia', Route::auth(['ChecadorController', 'dailyAttendance']));
+$r->addRoute('POST', '/recursos-humanos/checador/asistencia', Route::auth(['ChecadorController', 'dailyAttendance']));
 $r->addRoute('GET', '/recursos-humanos/checador/jornadas', Route::auth(['ChecadorController', 'journeys']));
 $r->addRoute('GET', '/recursos-humanos/checador/incidencias', Route::auth(['ChecadorController', 'incidences']));
 $r->addRoute('GET', '/recursos-humanos/checador/ajustes', Route::auth(['ChecadorController', 'adjustments']));
