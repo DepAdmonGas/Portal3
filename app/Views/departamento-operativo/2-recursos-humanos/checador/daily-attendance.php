@@ -223,7 +223,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
             <span><strong>Fecha laboral:</strong> <?= $esc($selectedDate !== '' ? $selectedDate : 'No disponible') ?></span>
             <?php if ($selectedWorkerId !== null): ?><span><strong>Colaborador:</strong> <?= $selectedWorkerId ?></span><?php else: ?><span class="text-muted">Todos los colaboradores atribuibles</span><?php endif; ?>
-            <span class="text-muted small ms-auto">Sin marcaciones observadas para esta consulta. Un espacio vacío no confirma una ausencia.</span>
+            <span class="text-muted small ms-auto">Una celda vacía no confirma una ausencia.</span>
         </div>
     </section>
 

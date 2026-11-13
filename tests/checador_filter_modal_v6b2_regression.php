@@ -23,8 +23,11 @@ $filtersJs = (string) file_get_contents($root . '/public/assets/js/departamento-
 
 $assert(str_contains($daily, 'id="checador-filter-modal"')
     && str_contains($daily, 'id="date" name="date" type="date"')
-    && str_contains($daily, 'id="worker_id" name="worker_id" type="number"')
-    && str_contains($daily, 'name="workplace_id"'), 'advanced screen modal retains date, optional worker and authorized station context');
+    && str_contains($daily, 'id="worker_id" name="worker_id" class="form-select"')
+    && str_contains($daily, 'data-checador-ajax')
+    && !str_contains($daily, 'name="workplace_id"')
+    && str_contains($controller, 'ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY)')
+    && str_contains($controller, 'ChecadorAccessService::authorize($requestedWorkplace)'), 'M01 filter keeps date and roster worker controls while station scope remains server-authorized');
 $assert(str_contains($report, 'id="punch-report-filter-modal"')
     && str_contains($report, 'id="from_date" name="from_date" type="date"')
     && str_contains($report, 'id="to_date" name="to_date" type="date"')

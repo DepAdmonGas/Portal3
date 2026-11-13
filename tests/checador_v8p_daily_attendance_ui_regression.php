@@ -113,7 +113,20 @@ $assert(str_contains($mainTable, 'Ana García') && str_contains($mainTable, 'EMP
     && str_contains($mainTable, 'Información insuficiente'), 'main row prioritizes full name, effective schedule, neutral P3-H positions and translated status');
 $assert(str_contains($mainTable, 'overflow-x-auto') === false
     && str_contains($html, 'table-responsive overflow-x-auto overflow-y-hidden pb-4')
-    && str_contains($html, 'Un espacio vacío sólo indica'), 'table uses institutional horizontal responsive wrapper and avoids absence inference');
+    && str_contains($html, 'Una celda vacía no confirma una ausencia.')
+    && !preg_match('/\b(?:FALTA|AUSENTE)\b/i', $html), 'table keeps the institutional responsive wrapper and never classifies an empty cell as absence');
+$incompleteVars = $vars;
+$incompleteVars['attendanceCoverage'] = ['complete' => false];
+$incompleteHtml = $render($incompleteVars);
+$assert(str_contains($incompleteHtml, 'Cobertura no confirmada')
+    && str_contains($incompleteHtml, 'Una celda vacía no confirma una ausencia.'), 'incomplete attendance coverage remains explicitly uncertain');
+$errorVars = $vars;
+$errorVars['state'] = 'error';
+$errorVars['attendanceCoverage'] = ['complete' => false];
+$errorVars['attendanceRows'] = [];
+$errorHtml = $render($errorVars);
+$assert(str_contains($errorHtml, 'No fue posible cargar la asistencia')
+    && str_contains($errorHtml, 'La tabla estará disponible cuando la consulta se complete.'), 'failed attendance read remains an error rather than an empty or complete result');
 $assert(str_contains($mainTable, 'Ver detalle')
     && str_contains($html, 'id="daily-attendance-detail-900001-0"')
     && str_contains($html, 'Marcaciones originales y trazabilidad')

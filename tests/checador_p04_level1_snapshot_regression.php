@@ -141,7 +141,7 @@ $assert(($failed->readDailyPunchSnapshotPage($user, 'failed')['error']['kind'] ?
 
 // P420-P424 and P431: observed-only wording and integrity preservation.
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P420 successful empty snapshot does not render SIN MARCACIÓN');
-$assert(str_contains($viewSource, 'Sin marcaciones observadas para esta consulta.')
+$assert(str_contains($viewSource, 'Una celda vacía no confirma una ausencia.')
     && str_contains($viewSource, 'Pendiente de clasificación')
     && !preg_match('/\bFALTA\b|\bAUSENTE\b/i', $viewSource), 'P421 daily attendance keeps empty reads neutral and never infers absence');
 $assert(!str_contains($viewSource, 'AUSENTE'), 'P422 successful empty snapshot does not render AUSENTE');
