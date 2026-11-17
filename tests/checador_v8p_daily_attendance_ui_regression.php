@@ -6,7 +6,13 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 $viewPath = __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php';
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
+$dashboardWorkspaceStart = strpos($controllerSource, 'private function renderDashboardWorkspace');
+$configurationMethodStart = strpos($controllerSource, 'public function configuration(): void');
+$dashboardWorkspaceSource = $dashboardWorkspaceStart !== false && $configurationMethodStart !== false
+    ? substr($controllerSource, $dashboardWorkspaceStart, $configurationMethodStart - $dashboardWorkspaceStart)
+    : '';
 $attendanceDataTableSource = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance.datatable.init.js') ?: '';
+$dataTablesRuntime = file_get_contents(__DIR__ . '/../public/assets/libs/datatables.net/js/jquery.dataTables.min.js') ?: '';
 $render = static function (array $vars) use ($viewPath): string {
     extract($vars, EXTR_SKIP);
     ob_start();
@@ -90,31 +96,42 @@ $idMatches = [];
 preg_match_all('/\bid="([^"]+)"/', $html, $idMatches);
 $renderedIds = array_count_values($idMatches[1] ?? []);
 
-preg_match('/<table class="table table-striped table-bordered text-nowrap align-middle mb-0" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $html, $tableMatch);
+preg_match('/<table class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $html, $tableMatch);
 $mainTable = $tableMatch[0] ?? '';
-preg_match_all('/<th scope="col">/', $mainTable, $columnMatches);
+preg_match_all('/<th scope="col"[^>]*>/', $mainTable, $columnMatches);
 $assert(count($columnMatches[0] ?? []) === 9, 'daily table exposes the nine operational columns without repeating date');
-$assert(str_contains($html, '<h1 class="h3 mb-1">Asistencia del día</h1>')
+$assert(str_contains($html, '<h1 class="visually-hidden">Asistencia del día</h1>')
     && str_contains($html, 'Estación:') && str_contains($html, 'Estación &amp; centro')
-    && str_contains($html, '2026-10-23') && str_contains($html, 'Regresar a Checador'), 'header retains authorized station, work date and return navigation');
+    && str_contains($html, '23 de octubre de 2026')
+    && str_contains($html, 'ti-building-store') && str_contains($html, 'ti-calendar')
+    && str_contains($html, 'id="checador-search-modal-toggle"')
+    && !str_contains($html, 'Regresar a Checador'), 'compact header restores the prior station/date presentation and primary search action');
 $assert(str_contains($html, 'data-bs-target="#checador-filter-modal"')
     && str_contains($html, 'id="checador-filter-modal"')
+    && str_contains($html, 'modal-colored-header bg-primary text-white')
+    && str_contains($html, 'Búsqueda avanzada')
     && str_contains($html, 'id="date" name="date" type="date"')
     && str_contains($html, 'id="worker_id" name="worker_id" class="form-select"')
+    && str_contains($html, 'select2-modal-field is-select2-pending')
     && str_contains($html, '<option value="900001">Ana García · N.º EMP-009</option>')
     && str_contains($html, 'data-checador-ajax')
     && !str_contains($html, 'name="workplace_id"')
-    && str_contains($html, 'data-checador-search-action="clear"'), 'filter modal submits only attendance filters through the authenticated read endpoint; station scope remains server-derived');
+    && str_contains($html, 'data-checador-search-action="search"')
+    && str_contains($html, 'Cancelar') && str_contains($html, 'Buscar')
+    && !str_contains($html, 'Limpiar filtros'), 'filter modal retains only Cancel and Search, with server-derived station scope');
 $assert(count(array_filter($renderedIds, static fn(int $count): bool => $count > 1)) === 0
     && !preg_match('/\sstyle="/i', $html), 'rendered daily view has unique control IDs and no inline styles');
 $assert(str_contains($mainTable, 'Ana García') && str_contains($mainTable, 'EMP-009')
-    && str_contains($mainTable, '08:00') && str_contains($mainTable, 'Entrada 1')
-    && str_contains($mainTable, 'Salida 1') && str_contains($mainTable, 'Entrada 2') && str_contains($mainTable, 'Salida 2')
-    && str_contains($mainTable, 'Información insuficiente'), 'main row prioritizes full name, effective schedule, neutral P3-H positions and translated status');
-$assert(str_contains($mainTable, 'overflow-x-auto') === false
-    && str_contains($html, 'table-responsive overflow-x-auto overflow-y-hidden pb-4')
+    && str_contains($mainTable, '08:00') && str_contains($mainTable, '1.ª entrada')
+    && str_contains($mainTable, '1.ª salida') && str_contains($mainTable, '2.ª entrada') && str_contains($mainTable, '2.ª salida')
+    && str_contains($mainTable, 'Horario efectivo') && str_contains($mainTable, 'Estado'), 'main row retains the prior column layout with current schedule and status labels');
+$assert(str_contains($html, 'table-responsive overflow-x-auto overflow-y-hidden pb-4')
+    && str_contains($mainTable, 'dropdown-menu dropdown-menu-end')
+    && str_contains($mainTable, 'data-worker-id="900001"')
+    && str_contains($mainTable, 'ti-dots-vertical')
     && str_contains($html, 'Una celda vacía no confirma una ausencia.')
-    && !preg_match('/\b(?:FALTA|AUSENTE)\b/i', $html), 'table keeps the institutional responsive wrapper and never classifies an empty cell as absence');
+    && !str_contains($html, 'aria-label="Filtros activos"')
+    && !preg_match('/\b(?:FALTA|AUSENTE)\b/i', $html), 'flat legacy DataTables layout and three-dot actions return without classifying empty cells as absence');
 $incompleteVars = $vars;
 $incompleteVars['attendanceCoverage'] = ['complete' => false];
 $incompleteHtml = $render($incompleteVars);
@@ -141,10 +158,10 @@ $rosterFallbackVars = $vars;
 $rosterFallbackVars['state'] = 'unavailable';
 $rosterFallbackVars['attendanceRosterFallbackAllowed'] = true;
 $rosterFallbackVars['attendanceRoster'] = [
-    'status' => 'current_roster_only',
+    'status' => 'ready',
     'coverage' => 'current_active_roster',
     'workers' => [['worker_id' => 900001, 'full_name' => 'Ana García', 'employee_number' => 'EMP-009']],
-    'message' => 'El padrón activo actual se muestra como referencia; no acredita pertenencia histórica para la fecha solicitada.',
+    'message' => 'Personal activo atribuido mediante localidad canónica vigente.',
 ];
 $rosterFallbackVars['attendanceRows'] = [$unavailableRosterRow];
 $rosterFallbackVars['attendanceCoverage'] = ['complete' => false];
@@ -152,17 +169,27 @@ $rosterFallbackVars['administrativeIncidences'] = [];
 $rosterFallbackVars['administrativeErrors'] = [];
 $rosterFallbackVars['incidenceCreateAllowed'] = true;
 $rosterFallbackHtml = $render($rosterFallbackVars);
-preg_match('/<table class="table table-striped table-bordered text-nowrap align-middle mb-0" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $rosterFallbackHtml, $fallbackTableMatch);
+preg_match('/<table class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $rosterFallbackHtml, $fallbackTableMatch);
 $fallbackTable = $fallbackTableMatch[0] ?? '';
 $assert(str_contains($fallbackTable, 'Ana García')
     && str_contains($fallbackTable, 'Marcaciones no disponibles')
-    && str_contains($rosterFallbackHtml, 'no acredita pertenencia histórica')
-    && !str_contains($fallbackTable, 'Registrar incidencia')
+    && str_contains($rosterFallbackHtml, 'padrón vigente autorizado como referencia')
+    && str_contains($rosterFallbackHtml, 'no confirma pertenencia histórica, asistencia ni horario')
+    && str_contains($fallbackTable, 'ti-dots-vertical')
+    && str_contains($fallbackTable, 'dropdown-menu dropdown-menu-end')
+    && str_contains($fallbackTable, 'aria-label="Acciones para Ana García. No disponibles: marcaciones y adscripción histórica sin confirmar"')
+    && str_contains($fallbackTable, 'title="Acciones no disponibles sin marcaciones y adscripción histórica confirmadas."')
+    && str_contains($fallbackTable, '<div class="dropdown-menu dropdown-menu-end')
+    && !str_contains($fallbackTable, '<ul class="dropdown-menu')
+    && !str_contains($fallbackTable, '<li>')
+    && !str_contains($fallbackTable, 'Acciones deshabilitadas: no hay marcaciones ni adscripción histórica confirmadas.')
+    && str_contains($fallbackTable, 'dropdown-item pointer disabled" aria-disabled="true" tabindex="-1"')
+    && !preg_match('/<a\b[^>]*href=/', $fallbackTable)
     && !preg_match('/\b(?:FALTA|AUSENTE)\b/i', $fallbackTable), 'a verified active roster remains visible on API failure with historical limits, unavailable punches and no invented actions or absences');
 $unverifiedFallbackVars = $rosterFallbackVars;
 $unverifiedFallbackVars['attendanceRosterFallbackAllowed'] = false;
 $unverifiedFallbackHtml = $render($unverifiedFallbackVars);
-preg_match('/<table class="table table-striped table-bordered text-nowrap align-middle mb-0" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $unverifiedFallbackHtml, $unverifiedTableMatch);
+preg_match('/<table class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $unverifiedFallbackHtml, $unverifiedTableMatch);
 $unverifiedTable = $unverifiedTableMatch[0] ?? '';
 $assert(!str_contains($unverifiedTable, 'Ana García')
     && str_contains($unverifiedTable, 'El padrón no está disponible'), 'unverified roster rows remain hidden when the API read fails');
@@ -175,17 +202,31 @@ $assert(str_contains($mainTable, 'Ver detalle')
 $assert(str_contains($html, '<div class="datatables">')
     && str_contains($controllerSource, "\$workspace === 'daily-attendance'")
     && str_contains($controllerSource, 'jquery.dataTables.min.js')
+    && !str_contains($dashboardWorkspaceSource, 'dataTables.bootstrap5.min.js')
+    && str_contains($controllerSource, '/assets/libs/select2/dist/js/select2.full.min.js')
+    && str_contains($controllerSource, '/assets/libs/select2/dist/css/select2.min.css')
     && str_contains($attendanceDataTableSource, 'serverSide: false')
+    && str_contains($attendanceDataTableSource, 'pageLength: 15')
+    && str_contains($attendanceDataTableSource, 'lengthMenu: [15, 30, 50, 100]')
+    && str_contains($attendanceDataTableSource, 'searching: true')
+    && str_contains($attendanceDataTableSource, 'rowCallback: function (row)')
+    && str_contains($attendanceDataTableSource, 'click.portal3AttendanceSelection')
+    && str_contains($attendanceDataTableSource, "popperConfig: { strategy: 'fixed' }")
+    && str_contains($dataTablesRuntime, 'DataTables 1.13.5')
     && str_contains($attendanceDataTableSource, "targets: [8]")
-    && str_contains($attendanceDataTableSource, "url: '/assets/libs/datatables.net/js/es-ES.json'"), 'daily attendance reuses the installed Bootstrap DataTables integration for the authorized result set');
+    && str_contains($attendanceDataTableSource, "url: '/assets/libs/datatables.net/js/es-ES.json'"), 'daily attendance matches Permissions DataTables controls and dropdown handling for the authorized result set');
 $assert(str_contains($html, 'Incidencias relacionadas')
     && str_contains($html, 'Permiso') && str_contains($html, 'Activa') && str_contains($html, 'INCIDENCE-001')
     && !str_contains($mainTable, 'Registrar incidencia'), 'incidence detail is readable while the closed create gate shows no write action');
-$assert(substr_count($html, '>Demo</span>') === 1
-    && str_contains($html, 'snapshot_ref=snapshot%2Fref-1'), 'demo marker is discreet and detail navigation preserves encoded snapshot context');
+$assert(str_contains($html, 'snapshot_ref=snapshot%2Fref-1'), 'detail navigation preserves encoded snapshot context in the restored presentation');
 
 $vars['incidenceCreateAllowed'] = true;
 $vars['incidenceCreateKeys'] = [900001 => 'create-key'];
+$authorizedHtml = $render($vars);
+$assert(!str_contains($authorizedHtml, 'Registrar incidencia')
+    && str_contains($authorizedHtml, 'Incidencias · No disponible en demostración')
+    && !str_contains($authorizedHtml, 'idempotency_key'), 'synthetic M01 presentation keeps administrative actions disabled even when a write key is supplied');
+$vars['demoMode'] = false;
 $authorizedHtml = $render($vars);
 $assert(str_contains($authorizedHtml, 'Registrar incidencia')
     && str_contains($authorizedHtml, 'href="/departamento-operativo/recursos-humanos/checador/incidencias?workplace_id=14&amp;date=2026-10-23&amp;snapshot_ref=snapshot%2Fref-1&amp;worker_id=900001"')

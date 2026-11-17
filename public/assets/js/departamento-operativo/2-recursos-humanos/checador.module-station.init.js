@@ -1,8 +1,9 @@
 (function (window) {
     'use strict';
 
-    var dailyPath = '/departamento-operativo/recursos-humanos/checador';
-    var reportPath = dailyPath + '/reporte';
+    var checadorPath = '/departamento-operativo/recursos-humanos/checador';
+    var dailyPath = checadorPath + '/asistencia';
+    var reportPath = checadorPath + '/reporte';
 
     function isCivilDate(value) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
@@ -25,28 +26,25 @@
         if (!isDaily && !isReport) return url.toString();
 
         var nextStationId = selectedLocalityId(selectorValue);
-        var previousStationId = url.searchParams.get('workplace_id');
-        var stationChanged = previousStationId !== nextStationId;
-
         if (nextStationId === null) {
-            url.searchParams.delete('workplace_id');
-        } else {
-            url.searchParams.set('workplace_id', nextStationId);
+            // The empty selection is explicit: return to the directory after
+            // the shared selector clears the saved module context.
+            return new URL(checadorPath, window.location.origin).toString();
         }
 
+        var previousStationId = url.searchParams.get('workplace_id');
+        var stationChanged = previousStationId !== nextStationId;
+        // The shared selector has already persisted this authorized canonical
+        // locality through /api/module-context/set. Normal navigation reloads
+        // from session context; the server validates and normalizes legacy
+        // workplace_id links before rendering M01.
+        url.searchParams.delete('workplace_id');
+
         if (isDaily) {
-            var date = url.searchParams.get('date') || '';
-            if (nextStationId === null || !isCivilDate(date)) {
-                url.searchParams.delete('date');
-            }
-            if (nextStationId === null || stationChanged) {
-                url.searchParams.delete('worker_id');
-            } else if (!/^[1-9][0-9]*$/.test(url.searchParams.get('worker_id') || '')) {
-                url.searchParams.delete('worker_id');
-            }
-            url.searchParams.delete('snapshot_ref');
-            url.searchParams.delete('page');
-            url.searchParams.delete('per_page');
+            // Attendance filters are submitted through the existing JSON POST
+            // endpoint. The ordinary M01 navigation path carries no filters.
+            ['date', 'worker_id', 'snapshot_ref', 'page', 'per_page']
+                .forEach(function (key) { url.searchParams.delete(key); });
         } else {
             var fromDate = url.searchParams.get('from_date') || '';
             var toDate = url.searchParams.get('to_date') || '';
@@ -82,11 +80,10 @@
         ? ModuleStationSelector
         : window.ModuleStationSelector;
     var currentPath = window.location.pathname.replace(/\/$/, '');
-    if (!selectorApi || currentPath !== reportPath) return;
+    if (!selectorApi || (currentPath !== dailyPath && currentPath !== reportPath)) return;
 
-    // Keep the advanced screen's existing reload behavior unchanged. The
-    // report needs a URL replacement because its current URL contains the
-    // explicit workplace_id that would otherwise win over saved session state.
+    // Persist the server-authorized context first, then replace the URL so its
+    // explicit workplace_id cannot override that context on the next request.
     selectorApi.init('checador', {
         customReload: function (selector) {
             var url = buildUrl(window.location.href, selector.selector ? selector.selector.value : '');

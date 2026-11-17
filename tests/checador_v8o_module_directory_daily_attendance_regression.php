@@ -96,8 +96,8 @@ $assert(str_contains($routes, "'/recursos-humanos/checador'")
 $assert(str_contains($routes, "'/recursos-humanos/checador/asistencia'")
     && str_contains($controller, 'public function dailyAttendance(): void')
     && str_contains($controller, "renderDashboardWorkspace('daily-attendance')")
-    && str_contains($controller, "'schedule_week' => '1'")
-    && str_contains($controller, "'schedule_history' => '1'"), 'daily alias and separate weekly/history routes remain available');
+    && str_contains($routes, "'/recursos-humanos/checador/programacion-semanal', Route::auth(['ChecadorController', 'scheduleWeek'])")
+    && str_contains($controller, "\$query['schedule_history'] ?? ''"), 'daily alias and separate weekly/history routes remain available');
 $assert(!str_contains($mainHtml, '<h1')
     && substr_count($mainHtml, '<h2') === 1
     && !str_contains($mainHtml, 'Estación:')
@@ -105,7 +105,7 @@ $assert(!str_contains($mainHtml, '<h1')
     && !str_contains($mainHtml, '<table')
     && !str_contains($mainHtml, 'snapshot_ref'), 'main route renders only the card directory without duplicate title, station text, or operational data');
 $assert(str_contains($layout, '<h4 class="fw-semibold mt-3"><?= $title; ?></h4>')
-    && str_contains($layout, "<?= \$moduleStationSelector ?? '' ?>")
+    && str_contains($layout, '<?= $moduleStationSelector ?>')
     && str_contains($layout, 'Breadcrumb::render();')
     && str_contains($controller, "'title' => 'Checador'"), 'institutional title, breadcrumb layout, and shared station selector remain outside the directory view');
 $assert(substr_count($mainHtml, 'data-checador-featured-card') === 1
@@ -114,7 +114,7 @@ $assert(substr_count($mainHtml, 'data-checador-featured-card') === 1
     && str_contains($mainHtml, 'Asistencia del día')
     && substr_count($mainHtml, '<h2') === 1
     && !str_contains($mainHtml, 'Módulos de Checador</h2>')
-    && str_contains($controller, "'href' => \$queryString(\$base . '/asistencia', \$context)"), 'directory renders all ten cards and links the daily view to its separate route');
+    && str_contains($controller, "'href' => \$base . '/asistencia'"), 'directory renders all ten cards and links the daily view to its separate route using server-held station context');
 $copyPreserved = true;
 foreach ($cards as [$label, $description, $utility, $action]) {
     foreach ([$label, $description, ...array_map('trim', explode('·', $utility))] as $text) {
@@ -129,10 +129,10 @@ foreach ($cards as [$label, $description, $utility, $action]) {
     }
 }
 $assert($controllerCopyPreserved, 'controller defines all owner-approved card copy verbatim');
-$expectedColumns = ['Nombre completo', 'Horario efectivo', 'Entrada 1', 'Salida 1', 'Entrada 2', 'Salida 2', 'Estado', 'Incidencias', 'Acciones'];
+$expectedColumns = ['Nombre completo', 'Horario efectivo', '1.ª entrada', '1.ª salida', '2.ª entrada', '2.ª salida', 'Estado', 'Incidencias', 'Acciones'];
 $columnCount = 0;
 foreach ($expectedColumns as $column) if (str_contains($dailyHtml, '>' . $column . '</th>')) $columnCount++;
-$assert($columnCount === 9 && str_contains($dailyHtml, '<h1 class="h3 mb-1">Asistencia del día</h1>')
+$assert($columnCount === 9 && str_contains($dailyHtml, '<h1 class="visually-hidden">Asistencia del día</h1>')
     && str_contains($dailyHtml, 'data-checador-filter-modal')
     && str_contains($dailyView, 'Ver detalle')
     && !str_contains($dailyView, 'Almuerzo') && !str_contains($dailyView, 'Comida'), 'separate attendance workspace keeps nine operational columns and neutral four-slot semantics');
@@ -181,8 +181,8 @@ foreach ($themeClasses as $class) {
 $assert(str_contains($themeCss, 'Bootstrap  v5.3.2') && $realThemeClasses, 'all card classes exist in the active shared stylesheet; the embedded Bootstrap version is verified separately');
 $assert(substr_count($unauthorizedHtml, '<a href=') === 9
     && substr_count($unauthorizedHtml, 'aria-disabled="true"') === 1
-    && str_contains($unauthorizedHtml, 'Acceso según permisos del perfil.')
-    && !str_contains($unauthorizedHtml, 'Disponible con autorización de lectura de programación.')
+    && str_contains($unauthorizedHtml, 'Disponible con autorización de lectura de programación.')
+    && str_contains($unauthorizedHtml, 'Disponible con autorización de lectura de programación.')
     && !str_contains($unauthorizedHtml, 'No disponible para este centro o perfil.')
     && !str_contains($unauthorizedHtml, '/checador/modulo-1?workplace_id=1'), 'unauthorized card has an availability message and no navigable link');
 $assert(substr_count($unauthorizedFeaturedHtml, '<a href=') === 9

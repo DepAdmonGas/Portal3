@@ -9,6 +9,35 @@ document.addEventListener('DOMContentLoaded', function () {
         var appliedDate = dateInput ? dateInput.value : '';
         var appliedWorker = workerInput ? workerInput.value : '';
         var busy = false;
+        var workerSelectWrapper = form.querySelector('#checador-worker-select-wrapper');
+
+        function setWorkerValue(value) {
+            if (!workerInput) return;
+            workerInput.value = value;
+            if (window.jQuery && jQuery.fn && jQuery.fn.select2
+                && jQuery(workerInput).hasClass('select2-hidden-accessible')) {
+                jQuery(workerInput).trigger('change.select2');
+            }
+        }
+
+        function restoreDataTableScrollStructure(table) {
+            if (!table || !table.closest) return;
+
+            var wrapper = table.closest('.dataTables_wrapper[data-scroll-isolated="true"]');
+            var scrollContainer = table.closest('.table-responsive');
+            if (!wrapper || !scrollContainer || !wrapper.contains(scrollContainer)) return;
+
+            var scrollContent = table.closest('.dt-row');
+            if (!scrollContent || !wrapper.contains(scrollContent)) scrollContent = table;
+            if (!scrollContainer.contains(scrollContent) || !wrapper.parentElement) return;
+
+            // datatables-scroll-isolation nests the responsive container inside
+            // the wrapper. Restore the original parent chain before DataTables
+            // uses its saved reinsertion anchor during destroy().
+            wrapper.insertBefore(scrollContent, scrollContainer);
+            wrapper.parentElement.insertBefore(scrollContainer, wrapper.nextSibling);
+            scrollContainer.appendChild(wrapper);
+        }
 
         function showError(message) {
             if (!errorElement) return;
@@ -18,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function resetDraft() {
             if (dateInput) dateInput.value = appliedDate;
-            if (workerInput) workerInput.value = appliedWorker;
+            setWorkerValue(appliedWorker);
             if (errorElement) {
                 errorElement.textContent = '';
                 errorElement.classList.add('d-none');
@@ -47,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 allOption.value = '';
                 allOption.textContent = 'Todos los colaboradores';
                 workerInput.replaceChildren(allOption);
-                workerInput.value = '';
+                setWorkerValue('');
                 workerInput.disabled = true;
                 appliedWorker = '';
             }
@@ -102,6 +131,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 var currentTable = currentResults && currentResults.querySelector('#checador-daily-attendance-table');
                 var nextDate = nextRoot && nextRoot.querySelector('[data-checador-filter-controls] input[name="date"]');
                 var nextWorker = nextRoot && nextRoot.querySelector('[data-checador-filter-controls] [name="worker_id"]');
+                var nextContextWorkplace = nextRoot && nextRoot.querySelector('[data-checador-context-workplace]');
+                var nextContextDate = nextRoot && nextRoot.querySelector('[data-checador-context-date]');
                 if (!nextResults || !currentResults) {
                     throw new Error('invalid_fragment');
                 }
@@ -109,13 +140,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearResultsForUnverifiedContext('Cambió el centro autorizado. Recarga la página para confirmar el contexto antes de consultar nuevamente.');
                     throw new Error('attendance_context_changed');
                 }
-                if (nextResults.dataset.attendanceState !== 'success'
+                var nextRosterFallback = nextResults.dataset.attendanceRosterFallback === 'true';
+                if ((nextResults.dataset.attendanceState !== 'success' && !nextRosterFallback)
                     || !nextTable || !nextDate || !nextWorker) {
                     throw new Error('invalid_fragment');
                 }
 
                 if (currentTable && window.jQuery && jQuery.fn && jQuery.fn.DataTable
                     && jQuery.fn.DataTable.isDataTable(currentTable)) {
+                    restoreDataTableScrollStructure(currentTable);
                     jQuery(currentTable).DataTable().destroy();
                 }
                 currentResults.replaceWith(nextResults);
@@ -139,6 +172,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     throw new Error('table_update_failed');
                 }
 
+                var currentContextWorkplace = root.querySelector('[data-checador-context-workplace]');
+                var currentContextDate = root.querySelector('[data-checador-context-date]');
+                if (currentContextWorkplace && nextContextWorkplace) {
+                    currentContextWorkplace.textContent = nextContextWorkplace.textContent;
+                }
+                if (currentContextDate && nextContextDate) {
+                    currentContextDate.textContent = nextContextDate.textContent;
+                }
                 appliedDate = nextDate.value;
                 appliedWorker = nextWorker.value;
                 if (dateInput) dateInput.value = appliedDate;
@@ -149,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }));
                         workerInput.disabled = nextWorker.disabled;
                     }
-                    workerInput.value = appliedWorker;
+                    setWorkerValue(appliedWorker);
                 }
                 if (modal && window.bootstrap && window.bootstrap.Modal) {
                     var modalInstance = window.bootstrap.Modal.getInstance(modal);
@@ -175,6 +216,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (modal) {
+            if (workerInput && window.jQuery && jQuery.fn && jQuery.fn.select2
+                && !jQuery(workerInput).hasClass('select2-hidden-accessible')) {
+                jQuery(workerInput).select2({
+                    dropdownParent: jQuery(modal),
+                    width: '100%',
+                    placeholder: 'Todos los colaboradores',
+                    minimumResultsForSearch: 0
+                });
+                if (workerSelectWrapper) workerSelectWrapper.classList.remove('is-select2-pending');
+            }
             modal.addEventListener('show.bs.modal', resetDraft);
             modal.addEventListener('hidden.bs.modal', resetDraft);
         }

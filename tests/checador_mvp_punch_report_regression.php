@@ -117,13 +117,13 @@ $handler = $resolved[1] ?? null;
 $config = $handler instanceof Closure ? (new ReflectionFunction($handler))->getStaticVariables() : [];
 $assert(($resolved[0] ?? null) === \FastRoute\Dispatcher::FOUND
     && $handler instanceof Closure
-    && ($config['middlewares'] ?? null) === ['auth', 'csrf']
+    && ($config['middlewares'] ?? null) === ['auth', 'csrf', 'dpto-operativo-activo']
     && ($config['handler'] ?? null) === ['ChecadorController', 'punchReport'], 'report route retains existing authentication and CSRF middleware');
 $dataRoute = $routeDispatcher->dispatch('GET', '/departamento-operativo/recursos-humanos/checador/reporte/data');
 $dataHandler = $dataRoute[1] ?? null;
 $dataConfig = $dataHandler instanceof Closure ? (new ReflectionFunction($dataHandler))->getStaticVariables() : [];
 $assert(($dataRoute[0] ?? null) === \FastRoute\Dispatcher::FOUND
-    && ($dataConfig['middlewares'] ?? null) === ['auth', 'csrf']
+    && ($dataConfig['middlewares'] ?? null) === ['auth', 'csrf', 'dpto-operativo-activo']
     && ($dataConfig['handler'] ?? null) === ['ChecadorController', 'punchReportData'], 'DataTables JSON route is protected by the existing authenticated middleware');
 $workerRoute = $routeDispatcher->dispatch('GET', '/departamento-operativo/recursos-humanos/checador/reporte/colaboradores');
 $workerHandler = $workerRoute[1] ?? null;
@@ -132,7 +132,7 @@ $workerStart = strpos($controller, 'public function punchReportWorkers(): void')
 $workerEnd = strpos($controller, 'public function punchReportData(): void', $workerStart === false ? 0 : $workerStart);
 $workerMethod = $workerStart !== false && $workerEnd !== false ? substr($controller, $workerStart, $workerEnd - $workerStart) : '';
 $assert(($workerRoute[0] ?? null) === \FastRoute\Dispatcher::FOUND
-    && ($workerConfig['middlewares'] ?? null) === ['auth', 'csrf']
+    && ($workerConfig['middlewares'] ?? null) === ['auth', 'csrf', 'dpto-operativo-activo']
     && ($workerConfig['handler'] ?? null) === ['ChecadorController', 'punchReportWorkers']
     && str_contains($workerMethod, 'ChecadorAccessService::authorize(null)')
     && str_contains($workerMethod, 'ModuleStationService::getContext'), 'name search route is authenticated and derives its locality from authorized server context');

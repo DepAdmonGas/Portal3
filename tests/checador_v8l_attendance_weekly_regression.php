@@ -158,10 +158,11 @@ $jsonResponse = static fn(int $status, array $body): Response => new Response(
 $requestHistory = [];
 $stack = HandlerStack::create(new MockHandler([
     $jsonResponse(200, ['status' => 'success', 'data' => ['page' => 1, 'per_page' => 100, 'items' => [
-        ['id' => 5, 'clave' => 'DAY', 'version' => 1, 'nombre' => 'Diurno', 'tipo_turno' => 'REGULAR', 'es_activo' => 1],
+        ['id' => 5, 'clave' => 'DAY', 'version' => 1, 'nombre' => 'Diurno', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 3, 'es_activo' => 1],
     ]]]),
     $jsonResponse(200, ['status' => 'success', 'data' => [
         'id' => 5, 'clave' => 'DAY', 'version' => 1, 'nombre' => 'Diurno', 'tipo_turno' => 'REGULAR', 'es_activo' => 1,
+        'scope' => 'STATION', 'id_estacion' => 3,
         'segmentos' => [['ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00:00', 'hora_fin_local' => '16:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0]],
     ]]),
     $jsonResponse(201, ['status' => 'success', 'data' => [
@@ -177,8 +178,8 @@ $scheduleReader = new ChecadorDailyReadService(
 );
 $scheduleUser = new Usuario();
 $scheduleUser->id = 7;
-$templateList = $scheduleReader->getShiftTemplates($scheduleUser, 1, 100);
-$template = $scheduleReader->getShiftTemplateVersion($scheduleUser, 'DAY', 1);
+$templateList = $scheduleReader->getShiftTemplates($scheduleUser, 1, 100, 3);
+$template = $scheduleReader->getShiftTemplateVersion($scheduleUser, 'DAY', 1, 3);
 // This isolated test enables the development-only POST gate only while a
 // Guzzle MockHandler is installed; no network transport is available here.
 $_ENV['APP_ENV'] = 'dev';
@@ -198,8 +199,12 @@ $postBody = $postRequest instanceof RequestInterface
     ? json_decode((string) $postRequest->getBody(), true)
     : null;
 $assert(($templateList['ok'] ?? false) && ($template['ok'] ?? false)
-    && ($template['data']['segmentos'][0]['dia_offset_fin'] ?? null) === 0,
-    'shift catalog and version detail are read from contract-shaped API responses');
+    && ($template['data']['segmentos'][0]['dia_offset_fin'] ?? null) === 0
+    && ($templateList['data']['items'][0]['scope'] ?? '') === 'STATION'
+    && ($templateList['data']['items'][0]['id_estacion'] ?? 0) === 3
+    && (string) ($requestHistory[0]['request']->getUri() ?? '') === 'https://checador.mock/api/v2/shift-templates?page=1&per_page=100&station_id=3'
+    && (string) ($requestHistory[1]['request']->getUri() ?? '') === 'https://checador.mock/api/v2/shift-templates/DAY/versions/1?station_id=3',
+    'station-scoped shift catalog and version detail preserve API scope and contract metadata');
 $assert(($assignment['ok'] ?? false) && ($assignment['data']['id'] ?? 0) === 99
     && $postRequest instanceof RequestInterface && $postRequest->getMethod() === 'POST'
     && str_contains((string) $postRequest->getUri(), '/api/v2/shift-assignments')
@@ -241,17 +246,28 @@ $assert(preg_match('/if \(!\$demoMode && \$requestedWorker !== null[\s\S]{0,600}
     && !preg_match('/if \(!\$demoMode && \$requestedWorker !== null\)\s*\{\s*\$canonicalWorkerIds\[\$requestedWorker\] = true;/', $controller),
     'real browser worker filters require an observed event or canonically authorized current roster membership');
 $assert(str_contains($access, 'authorizeScheduling(?int $requestedLocalityId, string $action)')
-    && str_contains($access, "getPermiso((int) \$user->id, 'biometricos')"), 'weekly scheduling rechecks read/edit permission and Checador station scope');
+    && str_contains($access, 'ChecadorV2PermissionService::SCHEDULE_READ')
+    && str_contains($access, 'ChecadorV2PermissionService::SCHEDULE_EDIT')
+    && str_contains($access, 'self::ENCARGADO_PUESTO_ID, self::DIRECCION_OPERACIONES_PUESTO_ID')
+    && str_contains($access, "'station_workplaces'")
+    && str_contains($access, "getPermiso((int) \$user->id, 'biometricos')"), 'weekly scheduling uses its independent read/edit ACL and station scope while the separate legacy Biométricos ACL remains available');
+$assert(str_contains($routes, "'/recursos-humanos/checador/programacion-semanal', Route::auth(['ChecadorController', 'scheduleWeek'])")
+    && str_contains($controller, "if (Request::method() === 'GET' && (\$query['schedule_week'] ?? '') === '1')")
+    && str_contains($controller, "'schedule-week' => 'Programación semanal'")
+    && str_contains($weeklyView, 'action="/departamento-operativo/recursos-humanos/checador/programacion-semanal"'), 'canonical weekly route and legacy URL compatibility retain the existing authenticated workspace');
 $historyAccessPosition = strpos($controller, "\$scheduleAccess = ChecadorAccessService::authorizeScheduling(\$workplaceId, 'leer')");
 $historyReadPosition = strpos($controller, "\$effectiveSchedule = null;", $historyAccessPosition === false ? 0 : $historyAccessPosition);
 $assert($historyAccessPosition !== false && $historyReadPosition !== false && $historyAccessPosition < $historyReadPosition
     && str_contains($weeklyView, '$currentWeek = $workplaceZone === null')
     && str_contains($weeklyView, ': null'), 'weekly and historical schedule links require read access; current week is withheld when the workplace timezone is unavailable');
 $assert(str_contains($routes, "Route::auth(['ChecadorController', 'createScheduleAssignment'])")
-    && str_contains($routeAuth, "['auth', 'csrf']"), 'individual assignment POST remains behind the existing authentication and CSRF middleware');
-$assert(str_contains($weeklyView, 'no copia semanal ni asignación masiva')
-    && str_contains($weeklyView, 'Confirmar día')
-    && str_contains($controller, 'CHECADOR_API_REAL_POSTS_ENABLED'), 'UI distinguishes individual contract-supported assignment from unavailable copy/mass operations and controller guards real writes');
+    && str_contains($routeAuth, "['auth', 'csrf', 'dpto-operativo-activo']"), 'individual assignment POST remains behind the existing authentication, CSRF and department-active middleware');
+$dailyReadSource = file_get_contents($root . '/app/Services/ChecadorDailyReadService.php') ?: '';
+$assert(str_contains($weeklyView, 'Asignar horario habitual')
+    && str_contains($weeklyView, 'Cambios temporales')
+    && str_contains($controller, 'scheduleApiPostOperationsEnabled()')
+    && str_contains($dailyReadSource, 'CHECADOR_SHIFT_SCHEDULING_POSTS_ENABLED'),
+    'restored habitual and temporary UI routes writes through the explicit local schedule gate');
 $assert(str_contains($view, 'Entrada 1') && str_contains($view, 'Salida 1')
     && str_contains($view, 'Entrada 2') && str_contains($view, 'Salida 2')
     && str_contains($controller, "'segundos_trabajados_totales'")

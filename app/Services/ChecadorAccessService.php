@@ -29,6 +29,38 @@ final class ChecadorAccessService
     private const AUTOLAVADO_LOCALITY_ID = 9;
 
     /**
+     * Whether the canonical locality is explicitly configured as a Checador
+     * department. This classifies a department catalog entry; authorization
+     * for the current user remains enforced separately by authorize().
+     */
+    public static function isDepartmentLocality(int $localityId): bool
+    {
+        if ($localityId < 1) {
+            return false;
+        }
+
+        try {
+            $moduleConfig = ModuloConfig::query()
+                ->where('modulo_key', self::MODULE_KEY)
+                ->where('activo', 1)
+                ->first();
+            if (!$moduleConfig
+                || (string) $moduleConfig->tipo !== 'stations_and_departments'
+                || (string) $moduleConfig->tipo_departamento !== 'localidades'
+                || (bool) $moduleConfig->allow_all) {
+                return false;
+            }
+
+            $supportedDepartmentIds = self::positiveIdList($moduleConfig->departamentos_soportados);
+            return $supportedDepartmentIds !== null
+                && in_array($localityId, $supportedDepartmentIds, true)
+                && RhLocalidad::query()->whereKey($localityId)->exists();
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    /**
      * Resolve menu grant and server-authorized workplace scope. No client
      * station value is used to derive or expand the scope.
      *
@@ -152,8 +184,7 @@ final class ChecadorAccessService
         }
     }
 
-    /** Schedule API uses the existing biometricos ACL, not the Checador menu grant alone. */
-    /** Preserve legacy Biométricos scheduling checks used by Comodines. */
+    /** Preserve the independent legacy Biométricos ACL used by Comodines. */
     public static function authorizeBiometricosScheduling(?int $requestedLocalityId, string $action): array
     {
         if (!in_array($action, ['leer', 'editar'], true)) {
@@ -193,11 +224,48 @@ final class ChecadorAccessService
             if (!$authenticated) return ['allowed' => false, 'reason' => 'unauthenticated', 'workplaces' => []];
             $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
             if (!$user) return ['allowed' => false, 'reason' => 'inactive_user', 'workplaces' => []];
-            $permissions = ModuloDptoOperativoService::getPermiso((int) $user->id, 'biometricos');
-            if (empty($permissions[$action])) {
+            $positionId = (int) ($user->id_puesto ?? 0);
+            if (!in_array($positionId, [self::ENCARGADO_PUESTO_ID, self::DIRECCION_OPERACIONES_PUESTO_ID], true)) {
                 return ['allowed' => false, 'reason' => 'scheduling_permission_denied', 'workplaces' => []];
             }
-            return ['allowed' => true, 'reason' => 'authorized', 'workplaces' => $scope['workplaces']];
+            $permission = $action === 'editar'
+                ? ChecadorV2PermissionService::SCHEDULE_EDIT
+                : ChecadorV2PermissionService::SCHEDULE_READ;
+            if (!ChecadorV2PermissionService::allows((int) $user->id, $positionId, $permission)) {
+                return ['allowed' => false, 'reason' => 'scheduling_permission_denied', 'workplaces' => []];
+            }
+
+            // Weekly scheduling is station-scoped. A department grant in the
+            // shared selector does not enlarge the scheduling permission.
+            $stationWorkplaces = is_array($scope['station_workplaces'] ?? null)
+                ? $scope['station_workplaces']
+                : [];
+            $schedulableWorkplaces = $stationWorkplaces;
+            $schedulableIds = array_values(array_map(
+                static fn(array $workplace): int => (int) ($workplace['id'] ?? 0),
+                $schedulableWorkplaces
+            ));
+            if ($requestedLocalityId !== null && !in_array($requestedLocalityId, $schedulableIds, true)) {
+                return ['allowed' => false, 'reason' => 'requested_station_out_of_scope', 'workplaces' => []];
+            }
+            if ($requestedLocalityId !== null) {
+                $schedulableWorkplaces = array_values(array_filter(
+                    $schedulableWorkplaces,
+                    static fn(array $workplace): bool => (int) ($workplace['id'] ?? 0) === $requestedLocalityId
+                ));
+            }
+            if ($schedulableWorkplaces === []) {
+                return ['allowed' => false, 'reason' => 'empty_station_scope', 'workplaces' => []];
+            }
+
+            return [
+                'allowed' => true,
+                'reason' => 'authorized',
+                'position_id' => $positionId,
+                'workplaces' => $schedulableWorkplaces,
+                'station_workplaces' => $schedulableWorkplaces,
+                'descargar' => false,
+            ];
         } catch (Throwable) {
             return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
         }

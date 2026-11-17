@@ -3,9 +3,15 @@ declare(strict_types=1);
 
 $moduleNavigation = is_array($moduleNavigation ?? null) ? $moduleNavigation : [];
 $isModuleDirectory = ($isModuleDirectory ?? false) === true;
+$requiresExplicitWorkplaceSelection = ($requiresExplicitWorkplaceSelection ?? false) === true;
 $featuredModule = $moduleNavigation[0] ?? null;
 $secondaryModules = array_slice($moduleNavigation, 1);
 ?>
+<?php if ($isModuleDirectory && $requiresExplicitWorkplaceSelection && $moduleNavigation === []): ?>
+    <div class="alert alert-info mt-3" role="status">
+        Selecciona una estación o departamento para consultar los módulos de Checador.
+    </div>
+<?php endif; ?>
 <?php if ($moduleNavigation !== []): ?>
     <section class="<?= $isModuleDirectory ? 'mt-3 mb-4' : 'mt-4' ?>" aria-label="Directorio de módulos de Checador">
         <nav aria-label="Módulos de Checador" class="d-grid gap-3">
@@ -61,6 +67,7 @@ $secondaryModules = array_slice($moduleNavigation, 1);
                     $icon = (string) ($module['icon'] ?? 'ti-layout-grid');
                     $href = is_string($module['href'] ?? null) ? $module['href'] : '';
                     $available = ($module['available'] ?? false) === true && $href !== '';
+                    $unavailableText = (string) ($module['unavailable'] ?? 'Acceso según permisos del perfil.');
                     ?>
                     <div class="col" data-checador-module-card>
                         <?php if ($available): ?>
@@ -80,7 +87,7 @@ $secondaryModules = array_slice($moduleNavigation, 1);
                                         <?php endforeach; ?>
                                     </ul>
                                     <?php if (!$available): ?>
-                                        <small class="mt-2 text-secondary"><i class="ti ti-lock me-1" aria-hidden="true"></i>Acceso según permisos del perfil.</small>
+                                        <small class="mt-2 text-secondary"><i class="ti ti-lock me-1" aria-hidden="true"></i><?= htmlspecialchars($unavailableText, ENT_QUOTES, 'UTF-8') ?></small>
                                     <?php endif; ?>
                                 </div>
                                 <?php if ($available): ?>
