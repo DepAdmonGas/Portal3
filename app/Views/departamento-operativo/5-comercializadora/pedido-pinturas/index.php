@@ -37,7 +37,7 @@ x-data="{ ...actions(), ...pedidoPinturasComponent() }">
 <template x-if="!esMultiestacion && puedeAcceso && hayContexto">
 <div class="dropdown dropcenter">
 <button type="button" class="btn btn-light dropdown-toggle text-dark" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" title="Opciones">
-<i class="ti ti-dots-vertical fs-6"></i>
+<i class="ti ti-dots-vertical fs-5"></i>
 </button>
 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 <li x-show="puedeCrear" x-cloak>
@@ -129,7 +129,7 @@ x-data="{ ...actions(), ...pedidoPinturasComponent() }">
 <td class="text-center align-middle" x-text="it.num"></td>
 <td class="text-center align-middle" x-text="it.unidad"></td>
 <td class="text-center align-middle" x-text="it.producto"></td>
-<td class="text-center align-middle" x-text="it.piezas"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.piezas)"></td>
 <td class="text-center align-middle" x-text="it.para_que || '—'"></td>
 </tr>
 </template>
@@ -153,7 +153,7 @@ x-data="{ ...actions(), ...pedidoPinturasComponent() }">
 
 <div class="col-md-6">
   <!-- YA TIENE FIRMA A -->
-  <template x-if="pedidoActual.firmas && pedidoActual.firmas.A">
+  <template x-if="pedidoActual?.firmas && getFirma('A')">
     <div class="card border h-100">
       <div class="card-header bg-primary text-white py-3 border-0">
         <div class="d-flex align-items-center">
@@ -161,27 +161,29 @@ x-data="{ ...actions(), ...pedidoPinturasComponent() }">
             <i class="ti ti-user-check fs-6"></i>
           </div>
           <div class="ms-3 overflow-hidden">
-            <h6 class="mb-0 text-white" x-text="pedidoActual.firmas.A.tipo_label"></h6>
+            <h6 class="mb-0 text-white" x-text="getFirma('A')?.tipo_label"></h6>
           </div>
         </div>
       </div>
       <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-        <template x-if="pedidoActual.firmas.A.firma_img_url">
-          <img :src="pedidoActual.firmas.A.firma_img_url" class="img-fluid" style="max-height:90px;object-fit:contain;">
+        <template x-if="getFirma('A')?.firma_img_url">
+          <img :src="getFirma('A')?.firma_img_url" @error="if (getFirma('A')) getFirma('A').firma_img_url = ''" class="img-fluid" style="max-height:90px;object-fit:contain;">
         </template>
-        <template x-if="!pedidoActual.firmas.A.firma_img_url">
-          <i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
-          <small class="text-dark" x-text="pedidoActual.firmas.A.firma_texto || ''"></small>
-        </template>
+        <template x-if="!getFirma('A')?.firma_img_url">
+<div class="d-flex flex-column align-items-center">
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+</div>
+</template>
       </div>
       <div class="card-footer bg-light text-center">
-        <h6 class="mb-0 fw-semibold text-truncate" x-text="pedidoActual.firmas.A.usuario_nombre"></h6>
+        <h6 class="mb-0 fw-semibold text-truncate" x-text="getFirma('A')?.usuario_nombre"></h6>
       </div>
     </div>
   </template>
 
   <!-- FALTA FIRMA A -->
-  <template x-if="!pedidoActual.firmas || !pedidoActual.firmas.A">
+  <template x-if="!pedidoActual?.firmas || !getFirma('A')">
     <div class="card border h-100">
       <div class="card-header bg-primary text-white py-3 border-0">
         <div class="d-flex align-items-center">
@@ -213,47 +215,39 @@ x-data="{ ...actions(), ...pedidoPinturasComponent() }">
 <div class="card-header bg-primary text-white py-3 border-0">
 <div class="d-flex align-items-center">
 <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
-<template x-if="pedidoActual.firmas && pedidoActual.firmas.B">
+<template x-if="pedidoActual?.firmas && getFirma('B')">
 <i class="ti ti-circle-check fs-6"></i>
 </template>
-<template x-if="!pedidoActual.firmas || !pedidoActual.firmas.B">
+<template x-if="!pedidoActual?.firmas || !getFirma('B')">
 <i class="ti ti-clock-hour-4 fs-6"></i>
 </template>
 </div>
 <div class="ms-3 overflow-hidden">
-<h6 class="mb-0 text-white" x-text="(pedidoActual.firmas && pedidoActual.firmas.B && pedidoActual.firmas.B.tipo_label) ? pedidoActual.firmas.B.tipo_label : 'VO.BO.'"></h6>
+<h6 class="mb-0 text-white" x-text="(pedidoActual?.firmas && getFirma('B') && getFirma('B')?.tipo_label) ? getFirma('B')?.tipo_label : 'VO.BO.'"></h6>
 </div>
 </div>
 </div>
 
 <!-- YA FIRMÓ -->
-<template x-if="pedidoActual.firmas && pedidoActual.firmas.B">
+<template x-if="pedidoActual?.firmas && getFirma('B')">
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
 <i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
 <h6 class="text-dark mb-1">El formato se firmó por un medio electrónico.</h6>
-<h6 class="text-dark mb-0"><strong x-text="pedidoActual.firmas.B.fecha || ''"></strong></h6>
-</div>
-</template>
-
-<!-- NO PUEDE FIRMAR -->
-<template x-if="(!pedidoActual.firmas || !pedidoActual.firmas.B) && !esVoBo">
-<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
-<h6 class="text-muted mb-0">¡Falta la firma de Vo.Bo.!</h6>
+<h6 class="text-dark mb-0"><strong x-text="getFirma('B')?.fecha || ''"></strong></h6>
 </div>
 </template>
 
 <!-- Footer: Cuando YA FIRMÓ -->
-<template x-if="pedidoActual.firmas && pedidoActual.firmas.B">
+<template x-if="pedidoActual?.firmas && getFirma('B')">
 <div class="card-footer bg-light text-center mt-auto">
 <div>
-<h6 class="mb-0 fw-semibold text-truncate" x-text="pedidoActual.firmas.B.usuario_nombre"></h6>
+<h6 class="mb-0 fw-semibold text-truncate" x-text="getFirma('B')?.usuario_nombre"></h6>
 </div>
 </div>
 </template>
 
 <!-- CUERPO Y FOOTER: Cuando FALTA LA FIRMA -->
-<template x-if="!pedidoActual.firmas || !pedidoActual.firmas.B">
+<template x-if="!pedidoActual?.firmas || !getFirma('B')">
 <div class="d-flex flex-column h-100">
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
 <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
@@ -261,7 +255,7 @@ x-data="{ ...actions(), ...pedidoPinturasComponent() }">
 </div>
 <div class="card-footer bg-light text-center mt-auto border-top-0">
 <!-- Texto dinámico: si es firma A dice elaboración, si no, electrónica -->
-<small class="text-muted" x-text="pedidoActual.firmas.B ? 'Pendiente de firma de elaboración' : 'Pendiente de firma electrónica'"></small>
+<small class="text-muted" x-text="getFirma('B') ? 'Pendiente de firma de elaboración' : 'Pendiente de firma electrónica'"></small>
 </div>
 </div>
 </template>

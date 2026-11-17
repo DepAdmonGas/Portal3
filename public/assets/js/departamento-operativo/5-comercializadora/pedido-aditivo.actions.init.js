@@ -19,6 +19,7 @@ solicitudActual: { id: 0, tambos: [], status: 0, total_tambos: 0 },
 pagosSolicitud: { id: 0, folio: '' },
 documentos: [],
 nuevoDocumentoArchivo: null,
+validationErrors: {},
 subiendoDocumento: false,
 cargandoDocumentos: false,
 
@@ -32,6 +33,10 @@ solicitudComentariosFolio: '',
 solicitudComentariosDetalle: null,
 
 BASE: '/departamento-operativo/comercializadora/pedido-aditivo',
+
+displayQuantity(value) {
+return Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+},
 
 async _confirmarEliminar(nombre) {
 const result = await Swal.fire({
@@ -206,6 +211,7 @@ async abrirModalPagos(id) {
 this.pagosSolicitud = { id: id, folio: 'Solicitud #00' + id };
 this.documentos = [];
 this.nuevoDocumentoArchivo = null;
+this.validationErrors = {};
 const input = document.getElementById('inputPagosDocumento');
 if (input) input.value = '';
 const m = document.getElementById('modalPagosSolicitud');
@@ -230,13 +236,15 @@ this.cargandoDocumentos = false;
 
 onPagosArchivo($event) {
 this.nuevoDocumentoArchivo = ($event.target.files && $event.target.files[0]) || null;
+if (this.nuevoDocumentoArchivo) this.validationErrors.archivo = true;
 },
 
 async subirDocumentoPagos() {
 if (this.subiendoDocumento) return;
 
 if (!this.nuevoDocumentoArchivo) {
-if (window.Notify) Notify.error('Selecciona un archivo');
+this.validationErrors.archivo = false;
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
 return;
 }
 

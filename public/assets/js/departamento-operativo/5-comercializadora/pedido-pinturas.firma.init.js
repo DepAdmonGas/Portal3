@@ -1,10 +1,13 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoPinturasFirmaComponent', () => ({
+...window.PedidoPinturasForm(),
 
 pedido: null,
 token: '',
 botonesDeshabilitados: false,
+segundosRestantes: 0,
+temporizadorToken: null,
 firmandoVobo: false,
 
 BASE: '/departamento-operativo/comercializadora/pedido-pinturas',
@@ -28,8 +31,7 @@ const disableTime = localStorage.getItem('pedido_pinturas_token_disableTime');
 if (disableTime) {
 const elapsed = new Date().getTime() - parseInt(disableTime, 10);
 if (elapsed < 30000) {
-this.botonesDeshabilitados = true;
-setTimeout(() => { this.botonesDeshabilitados = false; }, 30000 - elapsed);
+this.iniciarTemporizadorToken(30000 - elapsed);
 } else {
 localStorage.removeItem('pedido_pinturas_token_disableTime');
 }
@@ -56,6 +58,26 @@ crearTokenEmail() {
 this.crearToken('email');
 },
 
+iniciarTemporizadorToken(duracion) {
+window.clearInterval(this.temporizadorToken);
+const venceEn = Date.now() + Math.max(0, duracion);
+const actualizar = () => {
+this.segundosRestantes = Math.ceil(Math.max(0, venceEn - Date.now()) / 1000);
+this.botonesDeshabilitados = this.segundosRestantes > 0;
+if (this.segundosRestantes === 0) {
+window.clearInterval(this.temporizadorToken);
+this.temporizadorToken = null;
+localStorage.removeItem('pedido_pinturas_token_disableTime');
+}
+};
+actualizar();
+if (this.segundosRestantes > 0) this.temporizadorToken = window.setInterval(actualizar, 250);
+},
+
+destroy() {
+window.clearInterval(this.temporizadorToken);
+},
+
 async crearToken(via) {
 if (this.botonesDeshabilitados || this.firmandoVobo) return;
 if (!this.id) {
@@ -80,7 +102,7 @@ Notify.success(via === 'email'
 Notify.warning('Deberá esperar 30 seg para volver a crear un nuevo token');
 }
 localStorage.setItem('pedido_pinturas_token_disableTime', String(new Date().getTime()));
-setTimeout(() => { this.botonesDeshabilitados = false; }, 30000);
+this.iniciarTemporizadorToken(30000);
 } else {
 this.botonesDeshabilitados = false;
 if (window.Notify) Notify.error(json.message || 'Error al crear el token');
@@ -95,10 +117,7 @@ if (window.Notify) Notify.error('Error al crear el token');
 async firmarVobo() {
 if (this.firmandoVobo) return;
 
-if (!this.token.trim()) {
-if (window.Notify) Notify.error('Ingresa el token de seguridad');
-return;
-}
+if (!this.validateFields({ token: !!this.token.trim() })) return;
 
 this.firmandoVobo = true;
 try {
@@ -118,11 +137,7 @@ text: json.message || 'El VoBo se ha firmado exitosamente',
 timer: 2000,
 showConfirmButton: false
 }).then(() => {
-if (document.referrer && document.referrer.indexOf(window.location.origin) === 0) {
-history.back();
-} else {
 window.location.href = this.BASE;
-}
 });
 } else {
 this.firmandoVobo = false;

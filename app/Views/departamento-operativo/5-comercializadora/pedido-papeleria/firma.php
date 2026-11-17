@@ -7,6 +7,7 @@ data-module-station-key="pedido-papeleria"
 x-data="{ ...actions(), ...pedidoPapeleriaFirmaComponent() }">
 
 <?php
+$firmaAVista = $pedido['firmas']['A'] ?? null;
 $firmaBVista = $pedido['firmas']['B'] ?? null;
 ?>
 
@@ -87,7 +88,7 @@ foreach ($itemsFirma as $item): ?>
 <tr>
 <td class="text-center align-middle"><?= $item['num'] ?></td>
 <td class="text-start align-middle"><?= htmlspecialchars($item['producto']) ?></td>
-<td class="text-center align-middle"><?= $item['piezas'] ?></td>
+<td class="text-center align-middle"><?= number_format((float)$item['piezas'], 2, '.', ',') ?></td>
 </tr>
 <?php endforeach; ?>
 <?php if (empty($itemsFirma)): ?>
@@ -100,7 +101,7 @@ foreach ($itemsFirma as $item): ?>
 <tfoot>
 <tr class="table-dark">
 <td colspan="2" class="text-end align-middle">Total de piezas:</td>
-<td class="text-center align-middle"><?= array_sum(array_column($itemsFirma, 'piezas')) ?></td>
+<td class="text-center align-middle"><?= number_format(array_sum(array_column($itemsFirma, 'piezas')), 2, '.', ',') ?></td>
 </tr>
 </tfoot>
 <?php endif; ?>
@@ -117,6 +118,37 @@ foreach ($itemsFirma as $item): ?>
 <!---------- FIRMAS ---------->
 <div class="row">
 
+<!-- Card A: ELABORÓ / ENCARGADO -->
+<div class="col-xl-6 col-lg-6 col-md-6 mb-4">
+
+<div class="card border h-100">
+<div class="card-header bg-primary text-white py-3 border-0">
+<div class="d-flex align-items-center">
+<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+<i class="ti ti-user-check fs-6"></i>
+</div>
+<div class="ms-3 overflow-hidden">
+<h6 class="mb-0 text-white"><?= htmlspecialchars($firmaAVista['tipo_label'] ?? 'ELABORÓ / ENCARGADO') ?></h6>
+</div>
+</div>
+</div>
+<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+<?php if (!empty($firmaAVista['firma_img_url'])): ?>
+<img src="<?= htmlspecialchars($firmaAVista['firma_img_url']) ?>" class="img-fluid" style="max-height:90px;object-fit:contain;">
+<?php else: ?>
+<div class="d-flex flex-column align-items-center">
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<h6 class="text-muted mb-0 fw-normal"><?= ($firmaAVista || (int)$pedido['status'] > 0) ? 'La firma está registrada, pero su imagen no está disponible.' : 'Sin firma registrada.' ?></h6>
+</div>
+<small class="text-dark"><?= htmlspecialchars($firmaAVista['firma_texto'] ?? '') ?></small>
+<?php endif; ?>
+</div>
+<div class="card-footer bg-light text-center">
+<h6 class="mb-0 fw-semibold text-truncate"><?= htmlspecialchars($firmaAVista['usuario_nombre'] ?? $pedido['personal'] ?? '') ?></h6>
+<small class="text-muted"><?= htmlspecialchars($firmaAVista['fecha'] ?? '') ?></small>
+</div>
+</div>
+</div>
 <!-- Card B: VOBO -->
 <div class="col-xl-6 col-lg-6 col-md-6 mb-4">
 <?php if ($firmaBVista): ?>
@@ -161,18 +193,18 @@ Si aún no cuenta con uno, haga clic en alguno de los siguientes botones para ge
 <div class="row w-100">
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-success w-100" @click="crearTokenTelegram()" :disabled="botonesDeshabilitados">
-<i class="ti ti-brand-telegram me-1"></i> Generar token vía Telegram
+<i class="ti ti-brand-telegram me-1"></i> <span x-text="segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Telegram'"></span>
 </button>
 </div>
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-info text-white w-100" @click="crearTokenEmail()" :disabled="botonesDeshabilitados">
-<i class="ti ti-mail me-1"></i> Generar token vía Email
+<i class="ti ti-mail me-1"></i> <span x-text="segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Email'"></span>
 </button>
 </div>
 <div class="col-12">
 <div class="input-group">
-<input type="text" class="form-control" placeholder="Token de seguridad" x-model="token" inputmode="numeric" maxlength="6">
-<button class="btn btn-outline-success" type="button" @click="firmarVobo()" :disabled="firmandoVobo || !token.trim()">
+<input type="text" class="form-control" placeholder="Token de seguridad" x-model="token" :class="{ 'border-danger': invalid('token') }" @input="if (token.trim()) clearField('token')" inputmode="numeric" maxlength="6">
+<button class="btn btn-outline-success" type="button" @click="firmarVobo()" :disabled="firmandoVobo">
 Firmar
 </button>
 </div>

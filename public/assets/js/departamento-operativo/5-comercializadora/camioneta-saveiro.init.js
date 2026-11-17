@@ -148,13 +148,17 @@ init() {
                         searchable: false, 
                         width: '48px',
                         render: (row) => {
+                            const documentoDisponible = row.archivo_disponible === true;
+                            const accionDocumento = documentoDisponible
+                                ? `<a class="dropdown-item pointer btn-descargar" data-archivo="${row.archivo}"><i class="ti ti-file-text"></i> Documento</a>`
+                                : `<span class="dropdown-item disabled" aria-disabled="true"><i class="ti ti-file-off"></i> Documento no disponible</span>`;
                             return `
                                 <div class="dropdown dropstart">
                                     <a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a>
                                     <div class="dropdown-menu">
-                                        <a class="dropdown-item pointer btn-descargar" data-archivo="${row.archivo}"><i class="ti ti-file-text me-1"></i> Documento</a>
-                                        <a class="dropdown-item pointer btn-editar" data-row='${JSON.stringify(row)}'><i class="ti ti-pencil me-1"></i> Editar</a>
-                                        <a class="dropdown-item pointer btn-eliminar" data-id="${row.id}" data-descripcion="${row.descripcion}"><i class="ti ti-trash me-1"></i> Eliminar</a>
+                                        ${accionDocumento}
+                                        <a class="dropdown-item pointer btn-editar" data-row='${JSON.stringify(row)}'><i class="ti ti-pencil"></i> Editar</a>
+                                        <a class="dropdown-item pointer btn-eliminar" data-id="${row.id}" data-descripcion="${row.descripcion}"><i class="ti ti-trash"></i> Eliminar</a>
                                     </div>
                                 </div>
                             `;
@@ -335,7 +339,7 @@ init() {
 
             if (!this.nuevoComentario.trim()) {
                 this.errorComentario = true;
-                this.notify('error', 'Ingresa un comentario válido.');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 

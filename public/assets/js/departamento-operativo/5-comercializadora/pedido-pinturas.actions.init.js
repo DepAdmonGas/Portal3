@@ -1,6 +1,7 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoPinturasComponent', () => ({
+...window.PedidoPinturasForm(),
 
 puedeAcceso: false,
 puedeCrear: false,
@@ -14,7 +15,7 @@ idEstacion: 0,
 idUsuario: 0,
 hayContexto: false,
 
-pedidoActual: { id: 0, detalle: [], status: 0 },
+pedidoActual: { id: 0, detalle: [], firmas: {}, status: 0 },
 
 BASE: '/departamento-operativo/comercializadora/pedido-pinturas',
 BASE_FIRMA: '/departamento-operativo/comercializadora/pedido-pinturas-firma',

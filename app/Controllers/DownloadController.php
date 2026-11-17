@@ -21,6 +21,9 @@ class DownloadController
 
         // MAPA DE CARPETAS (CONTROLADO)
         $rutas = [
+            'pedido-papeleria'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'pedido-pinturas'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'pedido-articulos-limpieza'             => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'bitacora-aditivo'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/bitacora-aditivo/',
             'analisis-riesgo'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/analisis-riesgo/',
             'solicitud-gafetes'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-gafetes/',
@@ -82,7 +85,7 @@ class DownloadController
             'formato-descarga-merma'               => dirname(__DIR__, 2) . '/public/uploads/archivos/formato-descarga-merma/',
             'formato-descarga-merma-firma'         => dirname(__DIR__, 2) . '/public/uploads/archivos/formato-descarga-merma-firmas/',
             'camioneta-saveiro'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/camioneta-saveiro/',
-            'pedido-aditivo'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/pedido-aditivo/',
+            'pedido-aditivo'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'recibos-nomina'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/acuses/',
             'recibos-nomina-firma'                 => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/firmados/',
             'vacaciones'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/vacaciones/',

@@ -1,6 +1,7 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoLimpiezaCatalogoComponent', () => ({
+...window.PedidoLimpiezaForm(),
 
 puedeAcceso: false,
 puedeEditar: false,
@@ -128,22 +129,21 @@ columns: columnasCatalogos
 
 modalNuevoProducto() {
 this.productoForm = { id: 0, unidad: '', producto: '' };
+this.validationErrors = {};
 const m = document.getElementById('modalNuevoProducto');
 bootstrap.Modal.getOrCreateInstance(m).show();
 },
 
 modalEditarProducto(row) {
 this.productoForm = { id: row.id, unidad: row.unidad, producto: row.producto };
+this.validationErrors = {};
 const m = document.getElementById('modalNuevoProducto');
 bootstrap.Modal.getOrCreateInstance(m).show();
 },
 
 async guardarProducto() {
 if (this.guardandoProducto) return;
-if (!this.productoForm.unidad.trim() || !this.productoForm.producto.trim()) {
-if (window.Notify) Notify.error('Campos obligatorios faltantes');
-return;
-}
+if (!this.validateFields({ producto: !!this.productoForm.producto?.trim(), unidad: !!this.productoForm.unidad?.trim() })) return;
 
 this.guardandoProducto = true;
 try {

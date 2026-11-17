@@ -39,6 +39,17 @@ class PedidoAditivoService
 
     public const PARA_COMERCIALIZADORA = 'Comercializadora de artículos gasolineros SA de CV';
     public const PARA_QUITARGA = 'Quitarga';
+    public const REQUIRED_MESSAGE = 'Completa los campos obligatorios.';
+
+    public static function normalizarCantidad(int|string $value): ?int
+    {
+        $value = trim((string)$value);
+        if (!preg_match('/^(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)$/D', $value)) return null;
+        $number = filter_var(ltrim(str_replace(',', '', $value), '0') ?: '0', FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1, 'max_range' => 2147483647],
+        ]);
+        return $number === false ? null : $number;
+    }
 
     public const FIRMAS = [
         'A' => 'ELABORÓ / SOLICITÓ',
@@ -161,13 +172,12 @@ class PedidoAditivoService
         return SolicitudAditivo::query()
             ->whereIn('id_estacion', $stationIds)
             ->where('status', 1)
-            ->whereYear('fecha', (int)date('Y'))
             ->whereDoesntHave('firmas', function ($query): void {
                 $query->where('tipo_firma', 'B');
             });
     }
 
-    /** Pendientes de Vo.Bo. del año actual para el usuario firmante. */
+    /** Solicitudes que siguen esperando Vo.Bo., sin excluir pendientes antiguos. */
     public static function getPendientesFirmaVoBoCard(): int
     {
         $permisos = self::getPermisos();
@@ -215,7 +225,10 @@ class PedidoAditivoService
         }
 
         $q = SolicitudAditivo::query()
-            ->where('status', 1);
+            ->where('status', 1)
+            ->whereDoesntHave('firmas', function ($query): void {
+                $query->where('tipo_firma', 'B');
+            });
 
         if ($idEstacion) {
             $q->where('id_estacion', $idEstacion);
@@ -231,7 +244,6 @@ class PedidoAditivoService
 
     public static function getPendingCountsFlat(): array
     {
-        $esFirmanteVoBo = (int)(Session::get('usuario')['id'] ?? 0) === self::FIRMANTE_VOBO;
         $pendientes = ['total' => 0];
         $ids = [];
         foreach (ModuleStationService::getAvailableStations(self::MODULE_KEY) as $s) {
@@ -244,14 +256,10 @@ class PedidoAditivoService
             $query = SolicitudAditivo::query()
                 ->selectRaw('id_estacion, COUNT(*) as total')
                 ->whereIn('id_estacion', $ids)
-                ->where('status', 1);
-
-            if ($esFirmanteVoBo) {
-                $query->whereYear('fecha', (int)date('Y'))
-                    ->whereDoesntHave('firmas', function ($firmaQuery): void {
-                        $firmaQuery->where('tipo_firma', 'B');
-                    });
-            }
+                ->where('status', 1)
+                ->whereDoesntHave('firmas', function ($firmaQuery): void {
+                    $firmaQuery->where('tipo_firma', 'B');
+                });
 
             $rows = $query->groupBy('id_estacion')->get();
 
@@ -285,6 +293,14 @@ class PedidoAditivoService
             }
 
             $fechaEntregaRaw = (string)$solicitud->getRawOriginal('fecha_entrega');
+            $tieneFirmaB = SolicitudAditivoFirma::where('id_reporte', $solicitud->id)
+                ->where('tipo_firma', 'B')
+                ->exists();
+            if ($tieneFirmaB && (int)$solicitud->status !== 2) {
+                $solicitud->status = 2;
+                $solicitud->save();
+            }
+            $status = $tieneFirmaB ? 2 : (int)$solicitud->status;
 
             $result[] = [
                 'id'               => (int)$solicitud->id,
@@ -302,9 +318,10 @@ class PedidoAditivoService
                 'total_comentarios'=> (int)SolicitudAditivoComentario::where('id_reporte', $solicitud->id)->count(),
                 'total_tambos'     => $totalTambos,
                 'num_tambos'       => $tambos->count(),
-                'status'           => (int)$solicitud->status,
-                'status_label'     => self::ESTATUS_PEDIDO[(int)$solicitud->status] ?? 'Desconocido',
-                'tiene_firma'      => SolicitudAditivoFirma::where('id_reporte', $solicitud->id)->where('tipo_firma', 'B')->exists(),
+                'status'           => $status,
+                'status_label'     => self::ESTATUS_PEDIDO[$status] ?? 'Desconocido',
+                'tiene_firma'      => $tieneFirmaB,
+                'tiene_firma_a'    => SolicitudAditivoFirma::where('id_reporte', $solicitud->id)->where('tipo_firma', 'A')->exists(),
             ];
         }
 
@@ -340,6 +357,10 @@ class PedidoAditivoService
         $firmas = [];
         foreach (SolicitudAditivoFirma::where('id_reporte', $id)->orderBy('id', 'asc')->get() as $firma) {
             $tipo = $firma->tipo_firma;
+            $firmaRaw = (string)($firma->firma ?? '');
+            $esImagen = $tipo === 'A' && $firmaRaw !== '' && strpos($firmaRaw, 'Firma:') !== 0;
+            $archivoFirma = $esImagen ? basename(str_replace('\\', '/', $firmaRaw)) : null;
+            $firmaDisponible = $esImagen && self::existeDocumentoAditivo($firmaRaw);
             $fechaFirmaObj = $firma->fecha;
             $fechaCompuesta = '';
             if ($fechaFirmaObj instanceof \DateTimeInterface) {
@@ -348,21 +369,29 @@ class PedidoAditivoService
                 $fechaCompuesta = formatearFecha($fechaFirmaObj);
             }
 
-            $firmaTexto = ($fechaCompuesta !== '' && $fechaCompuesta !== ', ')
-                ? '<b>Fecha: ' . $fechaCompuesta . '</b> <br> La solicitud de aditivo se firmó por un medio electrónico.'
-                : '';
+            $firmaTexto = 'La solicitud de aditivo se firmó por un medio electrónico.';
 
             $firmas[$tipo] = [
                 'tipo_firma'     => $tipo,
                 'tipo_label'     => self::FIRMAS[$tipo] ?? 'FIRMA',
                 'id_usuario'     => (int)$firma->id_usuario,
-                'firma'          => $firma->firma ?? 'Sin información',
+                'firma'          => $firmaRaw !== '' ? $firmaRaw : 'Sin información',
                 'fecha'          => $fechaCompuesta,
-                'firma_texto'    => $firmaTexto,
+                'firma_texto'    => $tipo === 'A' ? '' : $firmaTexto,
+                'firma_img_url'  => $firmaDisponible ? '/download?tipo=pedido-aditivo&view=1&file=' . rawurlencode($archivoFirma) : '',
+                'archivo_faltante' => $esImagen && !$firmaDisponible,
                 'personal'       => self::getPersonal($firma->id_usuario)['nombre'],
                 'usuario_nombre' => self::getPersonal($firma->id_usuario)['nombre'],
             ];
         }
+
+        // La firma B confirma el cierre aunque un guardado anterior haya dejado
+        // desactualizado el campo status de la solicitud.
+        if (isset($firmas['B']) && (int)$solicitud->status !== 2) {
+            $solicitud->status = 2;
+            $solicitud->save();
+        }
+        $status = isset($firmas['B']) ? 2 : (int)$solicitud->status;
 
         $fechaEntregaRaw = (string)$solicitud->getRawOriginal('fecha_entrega');
 
@@ -381,8 +410,8 @@ class PedidoAditivoService
             'fecha_entrega_iso'=> self::fechaEntregaValida($fechaEntregaRaw) ? substr($fechaEntregaRaw, 0, 10) : '',
             'has_fecha_entrega'=> self::fechaEntregaValida($fechaEntregaRaw),
             'comentarios'      => (string)$solicitud->comentarios,
-            'status'           => (int)$solicitud->status,
-            'status_label'     => self::ESTATUS_PEDIDO[(int)$solicitud->status] ?? 'Desconocido',
+            'status'           => $status,
+            'status_label'     => self::ESTATUS_PEDIDO[$status] ?? 'Desconocido',
             'total_tambos'     => $totalTambos,
             'total_kilogramos' => $totalKilogramos,
             'tambos'           => $tambos,
@@ -449,7 +478,7 @@ class PedidoAditivoService
         return ['success' => true, 'message' => 'Datos guardados correctamente'];
     }
 
-    public static function agregarTambo(int $idReporte, string $producto, int $cantidad): array
+    public static function agregarTambo(int $idReporte, string $producto, int|string $cantidad): array
     {
         $solicitud = SolicitudAditivo::find($idReporte);
         if (!$solicitud) {
@@ -465,9 +494,8 @@ class PedidoAditivoService
             return ['success' => false, 'message' => 'Debe seleccionar un producto válido'];
         }
 
-        if ($cantidad <= 0) {
-            return ['success' => false, 'message' => 'Debe ingresar una cantidad mayor a cero'];
-        }
+        $cantidad = self::normalizarCantidad($cantidad);
+        if ($cantidad === null) return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
 
         Capsule::beginTransaction();
 
@@ -501,7 +529,7 @@ class PedidoAditivoService
         return ['success' => true, 'message' => 'Tambo agregado correctamente'];
     }
 
-    public static function editarTambo(int $id, int $cantidad, ?string $producto = null): array
+    public static function editarTambo(int $id, int|string $cantidad, ?string $producto = null): array
     {
         $tambo = SolicitudAditivoTambo::find($id);
         if (!$tambo) {
@@ -513,9 +541,8 @@ class PedidoAditivoService
             return ['success' => false, 'message' => 'Solo los borradores pueden editarse'];
         }
 
-        if ($cantidad <= 0) {
-            return ['success' => false, 'message' => 'La cantidad debe ser mayor a cero'];
-        }
+        $cantidad = self::normalizarCantidad($cantidad);
+        if ($cantidad === null) return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
 
         if ($producto !== null) {
             $producto = strtoupper(trim($producto));
@@ -550,8 +577,22 @@ class PedidoAditivoService
         return ['success' => true, 'message' => 'Tambo eliminado correctamente'];
     }
 
-    public static function finalizarSolicitud(int $id, int $idUsuario): array
+    public static function finalizarSolicitud(int $id, int $idUsuario, string $firmaBase64 = ''): array
     {
+        $permisos = self::getPermisos();
+        if ($idUsuario <= 0 || $idUsuario !== $permisos['id_usuario']
+            || (!$permisos['esEncargado'] && !$permisos['puedeEditar'])) {
+            return ['success' => false, 'message' => 'No tienes permiso para finalizar solicitudes'];
+        }
+        if ($firmaBase64 === '' || !str_starts_with($firmaBase64, 'data:image/png;base64,')) {
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+        }
+        $dataFirma = base64_decode(substr($firmaBase64, strlen('data:image/png;base64,')), true);
+        if ($dataFirma === false || $dataFirma === '' || strlen($dataFirma) > 5 * 1024 * 1024
+            || !($image = @getimagesizefromstring($dataFirma)) || $image[2] !== IMAGETYPE_PNG) {
+            return ['success' => false, 'message' => 'La firma no es válida'];
+        }
+
         $solicitud = SolicitudAditivo::find($id);
         if (!$solicitud) {
             return ['success' => false, 'message' => 'Solicitud no encontrada'];
@@ -561,13 +602,39 @@ class PedidoAditivoService
             return ['success' => false, 'message' => 'Solo los borradores pueden finalizarse'];
         }
 
-        $totalTambos = (int)SolicitudAditivoTambo::where('id_reporte', $id)->sum('cantidad');
-        if ($totalTambos <= 0) {
-            return ['success' => false, 'message' => 'Agrega al menos un tambo a la solicitud'];
+        $filePath = null;
+        try {
+            Capsule::connection()->transaction(function () use ($id, $idUsuario, $dataFirma, &$filePath): void {
+                $locked = SolicitudAditivo::where('id', $id)->lockForUpdate()->first();
+                if (!$locked || (int)$locked->status !== 0) throw new \RuntimeException('La solicitud ya no está pendiente');
+                if (!in_array((int)$locked->id_estacion, self::getAllowedStationIds(), true)) throw new \RuntimeException('No tienes permiso para finalizar esta solicitud');
+                if (!self::fechaEntregaValida((string)$locked->getRawOriginal('fecha_entrega'))) {
+                    throw new \InvalidArgumentException(self::REQUIRED_MESSAGE);
+                }
+                if (!SolicitudAditivoTambo::where('id_reporte', $id)->exists()
+                    || SolicitudAditivoTambo::where('id_reporte', $id)->where('cantidad', '<=', 0)->exists()) {
+                    throw new \InvalidArgumentException(self::REQUIRED_MESSAGE);
+                }
+                if (SolicitudAditivoFirma::where('id_reporte', $id)->where('tipo_firma', 'A')->exists()) {
+                    throw new \RuntimeException('La firma ya fue registrada');
+                }
+                $root = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+                if (!is_dir($root) && !@mkdir($root, 0775, true) && !is_dir($root)) throw new \RuntimeException('No se pudo preparar el directorio de firmas');
+                $filename = 'aditivo-' . $id . '-' . bin2hex(random_bytes(16)) . '.png';
+                $filePath = $root . $filename;
+                if (@file_put_contents($filePath, $dataFirma, LOCK_EX) !== strlen($dataFirma)) throw new \RuntimeException('No se pudo guardar la firma');
+                SolicitudAditivoFirma::create([
+                    'id_reporte' => $id, 'id_usuario' => $idUsuario, 'fecha' => Carbon::now(),
+                    'tipo_firma' => 'A', 'firma' => $filename,
+                ]);
+                $locked->status = 1;
+                $locked->save();
+            });
+        } catch (\Throwable $e) {
+            if ($filePath && is_file($filePath)) @unlink($filePath);
+            error_log('Error al finalizar solicitud de aditivo: ' . $e->getMessage());
+            return ['success' => false, 'message' => $e instanceof \InvalidArgumentException ? self::REQUIRED_MESSAGE : ($e->getMessage() ?: 'No se pudo guardar la firma y finalizar la solicitud')];
         }
-
-        $solicitud->status = 1;
-        $solicitud->save();
 
         self::notificarFinalizarSolicitud($id, $idUsuario);
 
@@ -608,6 +675,14 @@ class PedidoAditivoService
         $solicitud = SolicitudAditivo::find($id);
         if (!$solicitud) {
             return ['success' => false, 'message' => 'Solicitud no encontrada'];
+        }
+
+        if (SolicitudAditivoFirma::where('id_reporte', $id)->where('tipo_firma', 'B')->exists()) {
+            if ((int)$solicitud->status !== 2) {
+                $solicitud->status = 2;
+                $solicitud->save();
+            }
+            return ['success' => false, 'message' => 'El VoBo ya fue firmado'];
         }
 
         if ((int)$solicitud->status !== 1) {
@@ -666,49 +741,62 @@ class PedidoAditivoService
 
     public static function firmarVoBo(int $id, int $idUsuario, string $token): array
     {
-        $solicitud = SolicitudAditivo::find($id);
-        if (!$solicitud) {
-            return ['success' => false, 'message' => 'Solicitud no encontrada'];
-        }
-
-        $tokenRegistro = SolicitudAditivoToken::where('id_reporte', $id)
-            ->where('id_usuario', $idUsuario)
-            ->where('token', (int)$token)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if (!$tokenRegistro) {
-            return ['success' => false, 'message' => 'El token no es válido'];
-        }
-
-        if (SolicitudAditivoFirma::where('id_reporte', $id)->where('tipo_firma', 'B')->exists()) {
-            return ['success' => false, 'message' => 'El VoBo ya fue firmado'];
-        }
-
-        if ((int)$solicitud->status !== 1) {
-            return ['success' => false, 'message' => 'La solicitud no está en espera de firma'];
-        }
-
-        $firma = 'Firma: ' . bin2hex(random_bytes(64)) . '.' . uniqid();
-
         try {
-            SolicitudAditivoFirma::create([
-                'id_reporte' => $id,
-                'id_usuario' => $idUsuario,
-                'fecha'      => Carbon::now(),
-                'tipo_firma' => 'B',
-                'firma'      => $firma,
-            ]);
+            $estadoFirma = Capsule::connection()->transaction(function () use ($id, $idUsuario, $token): string {
+                $solicitud = SolicitudAditivo::where('id', $id)->lockForUpdate()->first();
+                if (!$solicitud) return 'not_found';
 
-            $solicitud->status = 2;
-            $solicitud->save();
+                $firmaExistente = SolicitudAditivoFirma::where('id_reporte', $id)
+                    ->where('tipo_firma', 'B')
+                    ->exists();
+                if ($firmaExistente) {
+                    // Repara la inconsistencia histórica firma B + estado 1.
+                    if ((int)$solicitud->status !== 2) {
+                        $solicitud->status = 2;
+                        $solicitud->save();
+                    }
+                    return 'already_signed';
+                }
 
-            SolicitudAditivoToken::where('id_reporte', $id)
-                ->where('id_usuario', $idUsuario)
-                ->delete();
+                if ((int)$solicitud->status !== 1) return 'not_waiting';
+
+                $tokenRegistro = SolicitudAditivoToken::where('id_reporte', $id)
+                    ->where('id_usuario', $idUsuario)
+                    ->where('token', (int)$token)
+                    ->orderBy('id', 'desc')
+                    ->lockForUpdate()
+                    ->first();
+                if (!$tokenRegistro) return 'invalid_token';
+
+                SolicitudAditivoFirma::create([
+                    'id_reporte' => $id,
+                    'id_usuario' => $idUsuario,
+                    'fecha'      => Carbon::now(),
+                    'tipo_firma' => 'B',
+                    'firma'      => 'Firma: ' . bin2hex(random_bytes(64)) . '.' . uniqid(),
+                ]);
+
+                $solicitud->status = 2;
+                $solicitud->save();
+                SolicitudAditivoToken::where('id_reporte', $id)
+                    ->where('id_usuario', $idUsuario)
+                    ->delete();
+
+                return 'signed';
+            });
         } catch (\Throwable $e) {
             error_log('Error firma VoBo solicitud aditivo: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Error al firmar el VoBo'];
+        }
+
+        $errores = [
+            'not_found' => 'Solicitud no encontrada',
+            'already_signed' => 'El VoBo ya fue firmado',
+            'not_waiting' => 'La solicitud no está en espera de firma',
+            'invalid_token' => 'El token no es válido',
+        ];
+        if ($estadoFirma !== 'signed') {
+            return ['success' => false, 'message' => $errores[$estadoFirma] ?? 'Error al firmar el VoBo'];
         }
 
         self::notificarFirmarVoBo($id, $idUsuario);
@@ -717,6 +805,23 @@ class PedidoAditivoService
     }
 
     /* ================= DOCUMENTOS / PAGOS (op_solicitud_aditivo_documento) ================= */
+
+    private static function rutaDocumentoAditivo(string $referencia): ?string
+    {
+        $nombre = basename(str_replace('\\', '/', trim($referencia)));
+        if ($nombre === '' || $nombre === '.' || $nombre === '..') return null;
+        $root = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+        $real = realpath($root . $nombre);
+        $base = realpath($root);
+        return $real && $base && is_file($real) && str_starts_with($real, $base . DIRECTORY_SEPARATOR)
+            ? $real
+            : null;
+    }
+
+    private static function existeDocumentoAditivo(string $referencia): bool
+    {
+        return self::rutaDocumentoAditivo($referencia) !== null;
+    }
 
     public static function getDocumentos(int $idReporte): array
     {
@@ -739,6 +844,7 @@ class PedidoAditivoService
                 'nombre'     => (string)$doc->nombre,
                 'tipo_label' => self::DOCUMENTO_TIPOS[$doc->nombre] ?? (string)$doc->nombre,
                 'documento'  => (string)$doc->documento,
+                'archivo_disponible' => self::existeDocumentoAditivo((string)$doc->documento),
                 'fecha'      => $fechaStr,
             ];
         }
@@ -771,7 +877,7 @@ class PedidoAditivoService
             return ['success' => false, 'message' => 'El tipo de archivo no está permitido'];
         }
 
-        $uploadDir = __DIR__ . '/../../public/uploads/archivos/pedido-aditivo/';
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/archivos/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0775, true);
         }
@@ -799,7 +905,7 @@ class PedidoAditivoService
             return ['success' => false, 'message' => 'Documento no encontrado'];
         }
 
-        $uploadDir = __DIR__ . '/../../public/uploads/archivos/pedido-aditivo/';
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/archivos/';
         if ($doc->documento && file_exists($uploadDir . $doc->documento)) {
             unlink($uploadDir . $doc->documento);
         }
@@ -888,8 +994,8 @@ class PedidoAditivoService
                 . '<td class="text-center">' . $num . '</td>'
                 . '<td class="text-center">' . htmlspecialchars((string)$tambo->producto, ENT_QUOTES, 'UTF-8') . '</td>'
                 . '<td>' . htmlspecialchars((string)$tambo->aditivo, ENT_QUOTES, 'UTF-8') . '</td>'
-                . '<td class="text-center">' . (int)$tambo->cantidad . '</td>'
-                . '<td class="text-center">' . (int)$tambo->kilogramo . '</td>'
+                . '<td class="text-center">' . number_format((int)$tambo->cantidad) . '</td>'
+                . '<td class="text-center">' . number_format((int)$tambo->kilogramo) . '</td>'
                 . '</tr>';
             $num++;
         }
@@ -898,14 +1004,21 @@ class PedidoAditivoService
         $firmaB = '';
         $firmaARow = SolicitudAditivoFirma::where('id_reporte', $id)->where('tipo_firma', 'A')->first();
         if ($firmaARow) {
-            $rutaFirma = dirname(__DIR__, 2) . '/public/uploads/firmas/pedido-aditivo/' . $firmaARow->firma;
-            if (strpos($firmaARow->firma ?? '', 'Firma:') !== 0 && is_file($rutaFirma)) {
+            $nombreFirma = basename(str_replace('\\', '/', (string)$firmaARow->firma));
+            $rutaFirma = self::rutaDocumentoAditivo((string)$firmaARow->firma);
+            if ($nombreFirma !== '' && strpos($firmaARow->firma ?? '', 'Firma:') !== 0 && $rutaFirma !== null) {
                 $dataFirma = file_get_contents($rutaFirma);
                 $nombreFirmante = self::getPersonal($firmaARow->id_usuario)['nombre'];
                 $firmaA = '<div class="text-center" style="margin-top: 10px;"><div>' . $nombreFirmante . '</div>'
                     . '<img src="data:image/png;base64,' . base64_encode($dataFirma) . '" style="width: 200px;"></div>'
                     . '<div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DEL ENCARGADO</div>';
+            } else {
+                $firmaA = '<div class="text-center" style="margin-top: 10px;"><div>' . htmlspecialchars(self::getPersonal((int)$firmaARow->id_usuario)['nombre'], ENT_QUOTES, 'UTF-8') . '</div>'
+                    . '<div style="padding: 20px 0; color: #6c757d;">La firma está registrada, pero su imagen no está disponible.</div>'
+                    . '<div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DEL ENCARGADO</div></div>';
             }
+        } else {
+            $firmaA = '<div class="text-center" style="margin-top: 10px;"><div style="padding: 20px 0; color: #6c757d;">Sin firma registrada.</div><div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DEL ENCARGADO</div></div>';
         }
 
         $firmaBRow = SolicitudAditivoFirma::where('id_reporte', $id)->where('tipo_firma', 'B')->first();
@@ -913,8 +1026,10 @@ class PedidoAditivoService
             $fechaFirmaB = self::formatearFechaHora($firmaBRow->fecha);
             $nombreFirmanteB = self::getPersonal($firmaBRow->id_usuario)['nombre'];
             $firmaB = '<div class="text-center" style="margin-top: 10px;"><div>' . $nombreFirmanteB . '</div>'
-                . '<div class="border-bottom text-center p-2" style="margin-top: 10px;"><small>La solicitud de aditivo se firmó por un medio electrónico.<br> <b>Fecha: ' . $fechaFirmaB . '</b></small></div>'
+                . '<div class="border-bottom text-center p-2" style="margin-top: 10px;"><small><b>Fecha: ' . $fechaFirmaB . '</b><br>La solicitud de aditivo se firmó por un medio electrónico.</small></div>'
                 . '<div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DE VOBO</div></div>';
+        } else {
+            $firmaB = '<div class="text-center" style="margin-top: 10px;"><div style="padding: 20px 0; color: #6c757d;">¡Falta la firma de Vo.Bo.!</div><div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DE VOBO</div></div>';
         }
 
         $comentariosHtml = $comentarios !== ''
@@ -940,14 +1055,14 @@ th { background: #F2F2F2; font-weight: bold; }
             . '<div class="text-center" style="font-size: 1.2em; margin-top:10px; margin-bottom:10px;">' . htmlspecialchars($razonSocial, ENT_QUOTES, 'UTF-8') . '</div>'
             . '<table><tbody>'
             . '<tr><td>#</td><td class="text-center">' . htmlspecialchars((string)$solicitud->id, ENT_QUOTES, 'UTF-8') . '</td><td><b>Personal</b></td><td><b>Fecha</b></td></tr>'
-            . '<tr><td>Orden de compra</td><td class="text-center">' . (int)$solicitud->orden_compra . '</td><td>' . htmlspecialchars($personal['nombre'], ENT_QUOTES, 'UTF-8') . '</td><td>' . $fecha . '</td></tr>'
+            . '<tr><td>Orden de compra</td><td class="text-center">' . number_format((int)$solicitud->orden_compra) . '</td><td>' . htmlspecialchars($personal['nombre'], ENT_QUOTES, 'UTF-8') . '</td><td>' . $fecha . '</td></tr>'
             . '<tr><td>Para</td><td colspan="3">' . htmlspecialchars($para, ENT_QUOTES, 'UTF-8') . '</td></tr>'
             . '<tr><td>Fecha de entrega</td><td colspan="3">' . $fechaEntregaTexto . '</td></tr>'
             . '</tbody></table>'
             . '<table style="margin-top:10px;"><thead><tr>'
             . '<td class="text-center"><b>#</b></td><td class="text-center"><b>Producto</b></td><td><b>Aditivo</b></td><td class="text-center"><b>Cantidad de tambos</b></td><td class="text-center"><b>Kilogramo</b></td>'
             . '</tr></thead><tbody>' . $rows
-            . '<tr><td colspan="3" class="text-right">Total de tambos:</td><td class="text-center"><b>' . $totalTambos . '</b></td><td class="text-center"><b>' . $totalKilogramos . '</b></td></tr>'
+            . '<tr><td colspan="3" class="text-right">Total de tambos:</td><td class="text-center"><b>' . number_format($totalTambos) . '</b></td><td class="text-center"><b>' . number_format($totalKilogramos) . '</b></td></tr>'
             . '</tbody></table>'
             . $comentariosHtml
             . '<table style="width: 100%; margin-top: 20px;"><tr><td class="p-2">' . $firmaA . '</td><td class="p-2">' . $firmaB . '</td></tr></table>'

@@ -78,7 +78,7 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 <td class="text-center align-middle" x-text="it.num"></td>
 <td class="text-center align-middle" x-text="it.unidad"></td>
 <td class="text-start align-middle" x-text="it.producto"></td>
-<td class="text-center align-middle" x-text="it.piezas"></td>
+<td class="text-center align-middle" x-text="Number(it.piezas || 0).toLocaleString('en-US')"></td>
 </tr>
 </template>
 <tr x-show="!pedido || !pedido.detalle || !pedido.detalle.length">
@@ -88,7 +88,7 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 <tfoot>
 <tr class="table-dark">
 <td colspan="3" class="text-center fw-semibold text-white">Total de piezas</td>
-<td class="text-center fw-semibold text-white" x-text="pedido ? (pedido.total_piezas || 0) : 0"></td>
+<td class="text-center fw-semibold text-white" x-text="Number(pedido?.total_piezas || 0).toLocaleString('en-US')"></td>
 </tr>
 </tfoot>
 </table>
@@ -103,6 +103,39 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 
 <!---------- FIRMA VOBO ---------->
 <div class="row">
+
+<div class="col-xl-6 col-lg-6 col-md-6 mb-4">
+
+<template x-if="pedido" x-cloak>
+<div class="card border h-100">
+<div class="card-header bg-primary text-white py-3 border-0">
+<div class="d-flex align-items-center">
+<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+<i class="ti ti-user-check fs-6"></i>
+</div>
+<div class="ms-3 overflow-hidden">
+<h6 class="mb-0 text-white">FIRMA DE QUIEN ELABORÓ</h6>
+</div>
+</div>
+</div>
+<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+<template x-if="pedido.firmas?.A?.firma_img_url">
+<img :src="pedido.firmas.A.firma_img_url" @error="if (pedido.firmas.A) pedido.firmas.A.firma_img_url = ''" class="img-fluid" style="max-height:90px;object-fit:contain;">
+</template>
+<template x-if="!pedido.firmas?.A?.firma_img_url">
+<div class="d-flex flex-column align-items-center">
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<h6 class="text-muted mb-0 fw-normal" x-text="pedido.firmas?.A ? 'La firma está registrada, pero su imagen no está disponible.' : 'Sin firma registrada.'"></h6>
+</div>
+</template>
+</div>
+<div class="card-footer bg-light text-center">
+<h6 class="mb-0 fw-semibold text-truncate" x-text="pedido.firmas?.A?.usuario_nombre || pedido.personal || ''"></h6>
+<small class="text-muted" x-text="pedido.firmas?.A?.fecha || ''"></small>
+</div>
+</div>
+</template>
+</div>
 
 <div class="col-xl-6 col-lg-6 col-md-6 mb-4">
 
@@ -150,12 +183,12 @@ Si aún no cuenta con uno, haga clic en alguno de los siguientes botones para ge
 <div class="row w-100">
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-success w-100" @click="crearTokenTelegram()" :disabled="botonesDeshabilitados">
-<i class="ti ti-brand-telegram me-1"></i> Generar token vía Telegram
+<i class="ti ti-brand-telegram me-1"></i> <span x-text="botonesDeshabilitados ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Telegram'"></span>
 </button>
 </div>
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-info text-white w-100" @click="crearTokenEmail()" :disabled="botonesDeshabilitados">
-<i class="ti ti-mail me-1"></i> Generar token vía Email
+<i class="ti ti-mail me-1"></i> <span x-text="botonesDeshabilitados ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Email'"></span>
 </button>
 </div>
 <div class="col-12">

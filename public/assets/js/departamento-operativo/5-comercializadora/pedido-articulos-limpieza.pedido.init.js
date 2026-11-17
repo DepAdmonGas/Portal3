@@ -1,6 +1,7 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoLimpiezaPedidoComponent', () => ({
+...window.PedidoLimpiezaForm(),
 
 puedeAcceso: false,
 puedeEditar: false,
@@ -16,6 +17,7 @@ usarOtroProducto: false,
 finalizando: false,
 entregando: false,
 guardandoProducto: false,
+reintentosFirma: 0,
 
 BASE: '/departamento-operativo/comercializadora/pedido-articulos-limpieza',
 
@@ -37,6 +39,65 @@ try { this.pedidoActual = JSON.parse(c.dataset.pedido); } catch (e) { console.er
 window.pedidoLimpiezaPedidoComponentInstance = this;
 
 this.cargarCatalogos();
+this.initSignaturePad();
+},
+
+initSignaturePad() {
+this.$nextTick(() => {
+requestAnimationFrame(() => {
+if (Number(this.pedidoActual?.status) !== 0 || !(this.esEncargado || this.puedeEditar)) return;
+if (window.SignaturePad == null) { console.error('SignaturePad no disponible'); return; }
+const canvas = document.querySelector('#signature-pad canvas');
+if (!canvas) return;
+if (canvas.getBoundingClientRect().width <= 0 || canvas.getBoundingClientRect().height <= 0) {
+if (this.reintentosFirma < 10) {
+this.reintentosFirma++;
+setTimeout(() => this.initSignaturePad(), 100);
+}
+return;
+}
+this.reintentosFirma = 0;
+if (this.signaturePad) this.signaturePad.off();
+this.signaturePad = new SignaturePad(canvas, {
+backgroundColor: 'rgb(255, 255, 255)', minWidth: 1, maxWidth: 2.5, penColor: '#000000',
+onEnd: () => { this.firmaVacia = this.signaturePad.isEmpty(); if (!this.firmaVacia) this.clearField('firma'); }
+});
+this.signaturePad.addEventListener('endStroke', () => {
+this.firmaVacia = this.signaturePad.isEmpty();
+if (!this.firmaVacia) this.clearField('firma');
+});
+this._redimensionarCanvas();
+this.resizeFirma = () => this._redimensionarCanvas();
+window.addEventListener('resize', this.resizeFirma);
+this.firmaVacia = this.signaturePad.isEmpty();
+});
+});
+},
+
+_redimensionarCanvas() {
+const wrapper = document.getElementById('signature-pad');
+const canvas = wrapper?.querySelector('canvas');
+if (!canvas) return;
+const width = canvas.getBoundingClientRect().width;
+const height = canvas.getBoundingClientRect().height;
+if (width <= 0 || height <= 0) return;
+const data = this.signaturePad && !this.signaturePad.isEmpty() ? this.signaturePad.toData() : null;
+const ratio = Math.max(window.devicePixelRatio || 1, 1);
+canvas.width = Math.max(1, Math.round(width * ratio));
+canvas.height = Math.max(1, Math.round(height * ratio));
+canvas.getContext('2d').scale(ratio, ratio);
+if (this.signaturePad && data) this.signaturePad.fromData(data);
+if (this.signaturePad) this.firmaVacia = this.signaturePad.isEmpty();
+},
+
+limpiarFirma() {
+if (this.signaturePad) this.signaturePad.clear();
+this.firmaVacia = true;
+},
+
+destroy() {
+if (this.resizeFirma) window.removeEventListener('resize', this.resizeFirma);
+if (this.signaturePad) this.signaturePad.off();
 },
 
 async cargarPedido() {
@@ -69,6 +130,7 @@ return 'bg-secondary';
 },
 
 async modalAgregarProducto() {
+this.validationErrors = {};
 if (!this.catalogos || !this.catalogos.length) {
 await this.cargarCatalogos();
 }
@@ -80,6 +142,7 @@ bootstrap.Modal.getOrCreateInstance(m).show();
 },
 
 syncUsarOtroProducto() {
+if (this.usarOtroProducto) this.clearField('producto');
 const sel = this.$refs.productoPedidoSelect;
 if (!sel || !window.jQuery || !jQuery.fn.select2) return;
 const $sel = jQuery(sel);
@@ -133,20 +196,9 @@ if (this.guardandoProducto) return;
 const idProducto = this.usarOtroProducto ? '' : this.nuevoItem.id_producto;
 const otroProducto = (this.nuevoItem.otro_producto || '').trim();
 const unidad = (this.nuevoItem.unidad || '').trim();
-const piezas = parseInt(this.nuevoItem.piezas || '0', 10);
-
-if (!idProducto && !otroProducto) {
-if (window.Notify) Notify.error('Selecciona un producto o escribe uno');
-return;
-}
-if (this.usarOtroProducto && !unidad) {
-if (window.Notify) Notify.error('Selecciona la unidad del producto');
-return;
-}
-if (!piezas || piezas <= 0) {
-if (window.Notify) Notify.error('Ingresa una cantidad de piezas válida');
-return;
-}
+const piezas = String(this.nuevoItem.piezas ?? '').replace(/,/g, '');
+if (!this.validateFields({ producto: !!(idProducto || otroProducto), otro: !this.usarOtroProducto || !!unidad,
+piezas: this.positiveQuantity(piezas) })) return;
 
 this.guardandoProducto = true;
 try {
@@ -161,6 +213,7 @@ const json = resp.data;
 if (json.success) {
 const m = document.getElementById('modalAgregarProductoPedido');
 bootstrap.Modal.getOrCreateInstance(m).hide();
+this.clearField('productos');
 this.nuevoItem = { id_producto: '', otro_producto: '', unidad: '', piezas: 1 };
 this.usarOtroProducto = false;
 this._inicializarSelectProductoPedido();
@@ -178,9 +231,8 @@ this.guardandoProducto = false;
 },
 
 async editarPiezas(id, valor) {
-const piezas = parseInt(valor || '0', 10);
-if (!piezas || piezas <= 0) {
-if (window.Notify) Notify.error('La cantidad debe ser mayor a cero');
+const piezas = String(valor ?? '').replace(/,/g, '');
+if (!this.validateFields({ ['piezas_' + id]: this.positiveQuantity(piezas) })) {
 await this.cargarPedido();
 return;
 }
@@ -232,10 +284,9 @@ if (window.Notify) Notify.error(e.response?.data?.message || 'Error al eliminar 
 async finalizarPedido() {
 if (this.finalizando) return;
 
-if (!this.pedidoActual.detalle || !this.pedidoActual.detalle.length) {
-if (window.Notify) Notify.error('Agrega al menos un producto al pedido');
-return;
-}
+const tieneDetalle = !!(this.pedidoActual.detalle && this.pedidoActual.detalle.length);
+this.firmaVacia = !this.signaturePad || this.signaturePad.isEmpty();
+if (!this.validateFields({ productos: tieneDetalle, firma: !this.firmaVacia })) return;
 
 const confirm = await Swal.fire({
 title: '¿Finalizar pedido?',
@@ -249,7 +300,10 @@ if (!confirm.isConfirmed) return;
 
 this.finalizando = true;
 try {
-const resp = await axios.post(this.BASE + '/finalizar', { id: this.pedidoActual.id });
+const resp = await axios.post(this.BASE + '/finalizar', {
+id: this.pedidoActual.id,
+firma_base64: this.signaturePad.toDataURL('image/png')
+});
 const json = resp.data;
 if (json.success) {
 Swal.fire({

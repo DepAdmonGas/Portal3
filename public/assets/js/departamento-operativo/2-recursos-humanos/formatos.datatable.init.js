@@ -124,7 +124,7 @@ render: function(v, t, row) { return renderFirma(row); } },
 render: function(v, t, row) { return renderComentarios(row); } },
 { title: 'Estatus', data: 'status_label', className: 'align-middle text-center text-nowrap',
 render: function(v, t, row) { return estatusBadge(row.status); } },
-{ title: '<i class="fas fa-ellipsis-v"></i>', data: null, className: 'align-middle text-center', orderable: false, searchable: false,
+{ title: '<i class="ti ti-dots-vertical fs-5"></i>', data: null, className: 'align-middle text-center', orderable: false, searchable: false,
 render: function(v, t, row) { return renderAcciones(row); } },
 ];
 

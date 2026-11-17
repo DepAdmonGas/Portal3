@@ -5,7 +5,7 @@ data-puede-editar="<?= $puedeEditar ? 'true' : 'false' ?>"
 data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
 data-id-usuario="<?= $idUsuario ?>"
 data-module-station-key="pedido-articulos-limpieza"
-x-data="{ ...actions(), ...pedidoLimpiezaReporteDetalleComponent() }">
+x-data="{ ...actions(), ...window.PedidoLimpiezaForm(), ...pedidoLimpiezaReporteDetalleComponent() }">
 
 <div class="row">
 
@@ -26,11 +26,11 @@ x-data="{ ...actions(), ...pedidoLimpiezaReporteDetalleComponent() }">
 <div class="row g-3">
 <div class="col-md-6">
 <div class="mb-1 form-label">* Fecha:</div>
-<input type="date" class="form-control" x-model="reporteForm.fecha" @input="programarAutosave()">
+<input type="date" class="form-control" x-model="reporteForm.fecha" :class="{ 'border-danger': invalid('fecha') }" @input="clearField('fecha'); programarAutosave()">
 </div>
 <div class="col-md-6">
 <div class="mb-1 form-label">* Hora:</div>
-<input type="time" class="form-control" x-model="reporteForm.hora" @input="programarAutosave()">
+<input type="time" class="form-control" x-model="reporteForm.hora" :class="{ 'border-danger': invalid('hora') }" @input="clearField('hora'); programarAutosave()">
 </div>
 <div class="col-12">
 <div class="mb-1 form-label">Detalle:</div>
@@ -99,7 +99,7 @@ x-data="{ ...actions(), ...pedidoLimpiezaReporteDetalleComponent() }">
 <td class="text-center align-middle" x-text="i + 1"></td>
 <td class="text-center align-middle" x-text="it.unidad"></td>
 <td class="text-center align-middle" x-text="it.producto"></td>
-<td class="text-center align-middle" x-text="it.piezas"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.piezas)"></td>
 <td class="text-center align-middle" x-text="it.observaciones || 'Sin observaciones'"></td>
 <td class="text-center align-middle" x-show="reporteActual.status === 0">
 <i class="ti ti-trash text-danger pointer fs-6" @click="eliminarProductoReporte(it)"></i>
@@ -113,7 +113,7 @@ x-data="{ ...actions(), ...pedidoLimpiezaReporteDetalleComponent() }">
 <tfoot x-show="reporteActual.detalle_items.length">
 <tr class="table-dark">
 <td colspan="3" class="text-center fw-semibold text-white">Total de piezas</td>
-<td class="text-center fw-semibold text-white" x-text="reporteActual.total_piezas"></td>
+<td class="text-center fw-semibold text-white" x-text="displayQuantity(reporteActual.total_piezas)"></td>
 <td></td>
 <td x-show="reporteActual.status === 0"></td>
 </tr>
@@ -136,15 +136,15 @@ x-data="{ ...actions(), ...pedidoLimpiezaReporteDetalleComponent() }">
 <div class="row g-3">
 <div class="col-12">
 <div class="mb-1 form-label">* Artículo de limpieza:</div>
-<div class="select2-modal-field" x-ref="productoWrapper">
-<select class="form-select" x-ref="productoSelect" data-width="100%">
+<div class="select2-modal-field" x-ref="productoWrapper" :class="{ 'is-invalid': invalid('producto') }">
+<select class="form-select" x-ref="productoSelect" data-width="100%" :class="{ 'border-danger': invalid('producto') }" @change="clearField('producto')">
 <option value="0">Selecciona una opción...</option>
 </select>
 </div>
 </div>
 <div class="col-12">
 <div class="mb-1 form-label">* Piezas utilizadas:</div>
-<input type="number" min="1" class="form-control" x-model.number="reporteItem.unidad">
+<input type="text" inputmode="numeric" class="form-control" x-model="reporteItem.unidad" :class="{ 'border-danger': invalid('piezas') }" @input="reporteItem.unidad = formatInputNumber($event.target.value); $event.target.value = reporteItem.unidad; if (positiveQuantity(reporteItem.unidad)) clearField('piezas')">
 </div>
 <div class="col-12">
 <div class="mb-1 form-label">Observaciones:</div>

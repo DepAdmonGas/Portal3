@@ -1,6 +1,7 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoPinturasCatalogoComponent', () => ({
+...window.PedidoPinturasForm(),
 
 puedeAcceso: false,
 puedeEditar: false,
@@ -130,12 +131,14 @@ columns: columnasCatalogos
 },
 
 modalNuevoProducto() {
+this.validationErrors = {};
 this.productoForm = { id: 0, unidad: '', producto: '' };
 const m = document.getElementById('modalNuevoProducto');
 bootstrap.Modal.getOrCreateInstance(m).show();
 },
 
 modalEditarProducto(row) {
+this.validationErrors = {};
 this.productoForm = { id: row.id, unidad: row.unidad, producto: row.producto };
 const m = document.getElementById('modalNuevoProducto');
 bootstrap.Modal.getOrCreateInstance(m).show();
@@ -143,10 +146,7 @@ bootstrap.Modal.getOrCreateInstance(m).show();
 
 async guardarProducto() {
 if (this.guardandoProducto) return;
-if (!this.productoForm.unidad.trim() || !this.productoForm.producto.trim()) {
-if (window.Notify) Notify.error('Campos obligatorios faltantes');
-return;
-}
+if (!this.validateFields({ unidad: !!String(this.productoForm.unidad || '').trim(), producto: !!String(this.productoForm.producto || '').trim() })) return;
 
 this.guardandoProducto = true;
 try {
@@ -166,7 +166,7 @@ if (window.Notify) Notify.error(json.message || 'Error al guardar el producto');
 }
 } catch (e) {
 console.error('Error guardando producto:', e);
-if (window.Notify) Notify.error('Error al guardar el producto');
+if (window.Notify) Notify.error(e.response?.data?.message || 'Error al guardar el producto');
 } finally {
 this.guardandoProducto = false;
 }

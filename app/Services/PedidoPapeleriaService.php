@@ -20,6 +20,48 @@ use Carbon\Carbon;
 
 class PedidoPapeleriaService
 {
+    public const REQUIRED_MESSAGE = 'Completa los campos obligatorios.';
+
+    /** Las columnas de piezas/unidad son enteras; nunca truncar decimales o comas. */
+    public static function normalizarPiezas(mixed $value): ?int
+    {
+        if (!is_int($value) && !is_string($value)) return null;
+        $value = trim((string)$value);
+        if (!preg_match('/^(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)$/D', $value)) return null;
+        $number = filter_var(ltrim(str_replace(',', '', $value), '0') ?: '0', FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1, 'max_range' => 2147483647],
+        ]);
+        return $number === false ? null : $number;
+    }
+
+    public static function nombreArchivo(?string $reference): ?string
+    {
+        $reference = str_replace('\\', '/', trim((string)$reference));
+        foreach (['/public/uploads/archivos/', 'public/uploads/archivos/', '/uploads/archivos/', 'uploads/archivos/', '../../../archivos/', '../archivos/', 'archivos/', '../imgs/firma/', 'imgs/firma/'] as $prefix) {
+            if (str_starts_with($reference, $prefix)) { $reference = substr($reference, strlen($prefix)); break; }
+        }
+        if ($reference === '' || str_contains($reference, "\0") || $reference !== basename($reference)
+            || in_array($reference, ['.', '..'], true)) return null;
+        return $reference;
+    }
+
+    public static function archivosRoot(): string
+    {
+        return dirname(__DIR__, 2) . '/public/uploads/archivos/';
+    }
+
+    /** Sólo archivos importados en Portal3; no depende del proyecto hermano. */
+    public static function rutaArchivo(?string $reference, bool $firma = false): ?string
+    {
+        $name = self::nombreArchivo($reference);
+        if ($name === null) return null;
+        $roots = [self::archivosRoot()];
+        foreach ($roots as $root) {
+            $base = realpath($root); $path = realpath($root . $name);
+            if ($base && $path && is_file($path) && str_starts_with($path, $base . DIRECTORY_SEPARATOR)) return $path;
+        }
+        return null;
+    }
 
     public const MODULE_KEY = 'pedido-papeleria';
     public const MODULO_PADRE_CLAVE = 'comercializadora';
@@ -200,7 +242,6 @@ class PedidoPapeleriaService
 
         return PedidoPapeleria::query()
             ->where('status', 1)
-            ->whereYear('fecha', (int)date('Y'))
             ->whereDoesntHave('firmas', function ($query): void {
                 $query->where('tipo_firma', 'B');
             })
@@ -218,7 +259,7 @@ class PedidoPapeleriaService
             });
     }
 
-    /** Pendientes de firma de Vo.Bo. del año actual para el usuario firmante. */
+    /** Pendientes de firma de Vo.Bo. de todo el historial autorizado. */
     public static function getPendientesFirmaVoBoCard(): int
     {
         $permisos = self::getPermisos();
@@ -268,7 +309,7 @@ class PedidoPapeleriaService
         }
 
         $q = PedidoPapeleria::query()
-            ->where('status', '>', 0)
+            ->where('status', '>=', 0)
             ->where('status', '<=', 1);
 
         if ($idDepto) {
@@ -304,14 +345,8 @@ class PedidoPapeleriaService
         }
 
         if (!empty($ids)) {
-            $convertidos = MultiestacionService::convertIds(
-                $ids,
-                MultiestacionService::TABLA_RH_LOCALIDADES,
-                MultiestacionService::TABLA_ESTACIONES
-            );
-
-            foreach ($ids as $i => $rhId) {
-                $estId = isset($convertidos[$i]) ? (int)$convertidos[$i] : 0;
+            foreach ($ids as $rhId) {
+                $estId = self::estacionDesdeLocalidad($rhId);
                 if ($estId && $estId !== self::ID_ESTACION_DEPARTAMENTOS) {
                     $mapaEstacionALocalidad[$estId] = $rhId;
                 }
@@ -321,12 +356,11 @@ class PedidoPapeleriaService
                 $query = PedidoPapeleria::query()
                     ->selectRaw('id_estacion, COUNT(*) as total')
                     ->whereIn('id_estacion', array_keys($mapaEstacionALocalidad))
-                    ->where('status', '>', 0)
+                    ->where('status', '>=', 0)
                     ->where('status', '<=', 1);
 
                 if ($esFirmanteVoBo) {
-                    $query->whereYear('fecha', (int)date('Y'))
-                        ->whereDoesntHave('firmas', function ($firmaQuery): void {
+                    $query->where('status', 1)->whereDoesntHave('firmas', function ($firmaQuery): void {
                             $firmaQuery->where('tipo_firma', 'B');
                         });
                 }
@@ -346,12 +380,11 @@ class PedidoPapeleriaService
             $query = PedidoPapeleria::query()
                 ->where('id_estacion', self::ID_ESTACION_DEPARTAMENTOS)
                 ->where('depto', $idDepto)
-                ->where('status', '>', 0)
+                ->where('status', '>=', 0)
                 ->where('status', '<=', 1);
 
             if ($esFirmanteVoBo) {
-                $query->whereYear('fecha', (int)date('Y'))
-                    ->whereDoesntHave('firmas', function ($firmaQuery): void {
+                $query->whereDoesntHave('firmas', function ($firmaQuery): void {
                         $firmaQuery->where('tipo_firma', 'B');
                     });
             }
@@ -383,7 +416,7 @@ class PedidoPapeleriaService
     public static function guardarProducto(int $id, string $producto): array
     {
         if (trim($producto) === '') {
-            return ['success' => false, 'message' => 'Campos obligatorios faltantes'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         if ($id === 0) {
@@ -446,7 +479,7 @@ class PedidoPapeleriaService
     public static function agregarInventario(int $idEstacion, int $idProducto, int $piezas): array
     {
         if (!$idEstacion || !$idProducto || $piezas <= 0) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $inventario = InventarioPapeleria::where('id_estacion', $idEstacion)
@@ -543,6 +576,7 @@ class PedidoPapeleriaService
         $firmas = [];
         foreach (PedidoPapeleriaFirma::where('id_pedido', $id)->get() as $firma) {
             $tipo = $firma->tipo_firma;
+            $esImagen = $tipo === 'A';
             $fechaFirmaObj = $firma->fecha;
             $fechaCompuesta = '';
             if ($fechaFirmaObj instanceof \DateTimeInterface) {
@@ -556,8 +590,10 @@ class PedidoPapeleriaService
                 'tipo_label'     => $tipo === 'A' ? 'ELABORÓ / ENCARGADO' : 'FIRMA DE VO.BO.',
                 'id_usuario'     => (int)$firma->id_usuario,
                 'firma'          => $firma->firma ?? 'S/I',
-                'firma_texto'    => $firma->firma ?? 'S/I',
-                'firma_img_url'  => '',
+                'firma_texto'    => $esImagen ? '' : ($firma->firma ?? 'S/I'),
+                'firma_img_url'  => $esImagen && self::rutaArchivo($firma->firma, true)
+                    ? '/download?tipo=pedido-papeleria&view=1&file=' . rawurlencode(self::nombreArchivo($firma->firma)) : '',
+                'archivo_faltante' => $esImagen && self::rutaArchivo($firma->firma, true) === null,
                 'fecha'          => $fechaCompuesta !== '' && $fechaCompuesta !== ', ' ? $fechaCompuesta : '',
                 'personal'       => self::getPersonal($firma->id_usuario)['nombre'],
                 'usuario_nombre' => self::getPersonal($firma->id_usuario)['nombre'],
@@ -600,14 +636,14 @@ class PedidoPapeleriaService
     public static function crearPedido(int $idEstacion, int $idUsuario, int $idDepto = 0): array
     {
         if (!$idUsuario) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         if ($idDepto > 0) {
             $estacionId = self::ID_ESTACION_DEPARTAMENTOS;
         } else {
             if (!$idEstacion) {
-                return ['success' => false, 'message' => 'Datos incompletos'];
+                return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
             }
             $estacionId = self::estacionDesdeLocalidad($idEstacion);
             if ($estacionId === null) {
@@ -629,7 +665,7 @@ class PedidoPapeleriaService
     public static function agregarProducto(int $idPedido, string $idProducto, string $otroProducto, int $piezas): array
     {
         if (!$idPedido || $piezas <= 0) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $valProducto = '';
@@ -646,7 +682,7 @@ class PedidoPapeleriaService
         }
 
         if (trim($valProducto) === '') {
-            return ['success' => false, 'message' => 'Debe seleccionar un producto'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $existing = PedidoPapeleriaDetalle::where('id_pedido', $idPedido)
@@ -670,7 +706,7 @@ class PedidoPapeleriaService
     public static function editarPiezas(int $id, int $piezas): array
     {
         if ($piezas <= 0) {
-            return ['success' => false, 'message' => 'La cantidad debe ser mayor a cero'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $item = PedidoPapeleriaDetalle::find($id);
@@ -696,23 +732,67 @@ class PedidoPapeleriaService
         return ['success' => true, 'message' => 'Producto eliminado correctamente'];
     }
 
-    public static function finalizarPedido(int $id, int $idUsuario): array
+    public static function finalizarPedido(int $id, int $idUsuario, string $base64): array
     {
-        $pedido = PedidoPapeleria::find($id);
-        if (!$pedido) {
-            return ['success' => false, 'message' => 'Pedido no encontrado'];
+        $permisos = self::getPermisos();
+        if ($idUsuario <= 0 || $idUsuario !== $permisos['id_usuario']
+            || (!$permisos['esEncargado'] && !$permisos['puedeEditar'])) {
+            return ['success' => false, 'message' => 'No tienes permiso para finalizar pedidos'];
+        }
+        if ($base64 === '') return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+        if (!str_starts_with($base64, 'data:image/png;base64,')) {
+            return ['success' => false, 'message' => 'Firma no válida'];
+        }
+        $data = base64_decode(substr($base64, strlen('data:image/png;base64,')), true);
+        if ($data === false || $data === '' || strlen($data) > 5 * 1024 * 1024
+            || !($image = @getimagesizefromstring($data)) || $image[2] !== IMAGETYPE_PNG) {
+            return ['success' => false, 'message' => 'Firma no válida'];
         }
 
-        if ((int)$pedido->status > 0) {
-            return ['success' => false, 'message' => 'El pedido ya fue finalizado'];
+        $filePath = null;
+        try {
+            $result = Capsule::connection()->transaction(function () use ($id, $idUsuario, $data, $permisos, &$filePath): array {
+                $pedido = PedidoPapeleria::where('id', $id)->lockForUpdate()->first();
+                if (!$pedido) return ['success' => false, 'message' => 'Pedido no encontrado'];
+                $allowed = !empty($permisos['esGestoriaOficina'])
+                    ? (int)$pedido->id_estacion === self::ID_ESTACION_DEPARTAMENTOS && (int)$pedido->depto === self::ID_DEPTO_GESTION
+                    : ((int)$pedido->depto > 0
+                        ? (int)$pedido->id_estacion === self::ID_ESTACION_DEPARTAMENTOS
+                            && in_array((int)$pedido->depto, array_map('intval', array_column(ModuleStationService::getAvailableDepartments(self::MODULE_KEY), 'id')), true)
+                        : in_array((int)$pedido->id_estacion, self::getAllowedStationIds(), true));
+                if (!$allowed) return ['success' => false, 'message' => 'No tienes permiso para finalizar este pedido'];
+                if ((int)$pedido->status !== 0) return ['success' => false, 'message' => 'El pedido ya fue finalizado'];
+                if (PedidoPapeleriaFirma::where('id_pedido', $id)->where('tipo_firma', 'A')->exists()) {
+                    return ['success' => false, 'message' => 'La firma ya fue registrada'];
+                }
+                if (!PedidoPapeleriaDetalle::where('id_pedido', $id)->exists()
+                    || PedidoPapeleriaDetalle::where('id_pedido', $id)->where('piezas', '<=', 0)->exists()) {
+                    return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+                }
+                $root = self::archivosRoot();
+                if (!is_dir($root) && !@mkdir($root, 0775, true) && !is_dir($root)) {
+                    throw new \RuntimeException('No se pudo preparar el directorio de firmas');
+                }
+                $filename = 'papeleria-' . $id . '-' . bin2hex(random_bytes(16)) . '.png';
+                $filePath = $root . $filename;
+                if (@file_put_contents($filePath, $data, LOCK_EX) !== strlen($data)) {
+                    throw new \RuntimeException('No se pudo guardar la imagen de firma');
+                }
+                PedidoPapeleriaFirma::create([
+                    'id_pedido' => $id, 'id_usuario' => $idUsuario, 'fecha' => Carbon::now(),
+                    'tipo_firma' => 'A', 'firma' => $filename,
+                ]);
+                $pedido->status = 1;
+                $pedido->save();
+                return ['success' => true, 'message' => 'Pedido finalizado correctamente'];
+            });
+        } catch (\Throwable $e) {
+            if ($filePath !== null && is_file($filePath)) @unlink($filePath);
+            error_log('Error al guardar firma de pedido de papelería: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'No se pudo guardar la firma y finalizar el pedido'];
         }
-
-        $pedido->status = 1;
-        $pedido->save();
-
-        self::notificarFinalizarPedido($id, $idUsuario);
-
-        return ['success' => true, 'message' => 'Pedido finalizado correctamente'];
+        if ($result['success']) self::notificarFinalizarPedido($id, $idUsuario);
+        return $result;
     }
 
     public static function eliminarPedido(int $id, int $idUsuario): array
@@ -792,6 +872,7 @@ class PedidoPapeleriaService
 
     public static function firmarVoBo(int $id, int $idUsuario, string $token): array
     {
+        if (trim($token) === '') return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         $pedido = PedidoPapeleria::find($id);
         if (!$pedido) {
             return ['success' => false, 'message' => 'Pedido no encontrado'];
@@ -977,7 +1058,7 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Papelería</b> en el 
         if ($str === '' || $str === '00:00:00') {
             return false;
         }
-        return (bool)preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $str);
+        return (bool)preg_match('/^(?:[01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?$/D', $str);
     }
 
     public static function getReportes(int $idEstacion): array
@@ -1065,7 +1146,7 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Papelería</b> en el 
     public static function crearReporte(int $idEstacion, int $idUsuario): array
     {
         if (!$idEstacion || !$idUsuario) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $reporte = ReportePapeleria::create([
@@ -1082,6 +1163,10 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Papelería</b> en el 
 
     public static function guardarReporteDatos(int $id, string $fecha, string $hora, string $detalle): array
     {
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $fecha);
+        if (!$date || $date->format('Y-m-d') !== $fecha || !self::esHoraReporteValida($hora)) {
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+        }
         $reporte = ReportePapeleria::find($id);
         if (!$reporte) {
             return ['success' => false, 'message' => 'Reporte no encontrado'];
@@ -1111,7 +1196,7 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Papelería</b> en el 
     public static function agregarProductoReporte(int $idReporte, int $idEstacion, int $idProducto, int $unidad, string $observaciones = ''): array
     {
         if (!$idReporte || !$idEstacion || !$idProducto || $unidad <= 0) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $reporte = ReportePapeleria::find($idReporte);
@@ -1246,8 +1331,11 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Papelería</b> en el 
             return ['success' => false, 'message' => 'Reporte no encontrado'];
         }
 
-        $fechaCarbon = self::obtenerFechaReporte($reporte->fecha)
-            ?? Carbon::now();
+        $fechaCarbon = self::obtenerFechaReporte($reporte->fecha);
+        if (!$fechaCarbon || !self::esHoraReporteValida($reporte->hora)
+            || !ReportePapeleriaDetalle::where('id_reporte', $id)->exists()) {
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+        }
         $reporte->fecha = $fechaCarbon->format('Y-m-d');
         $horaEsValida = self::esHoraReporteValida($reporte->hora);
         $reporte->hora = $horaEsValida ? trim((string)$reporte->hora) : Carbon::now()->format('H:i:s');
@@ -1280,12 +1368,36 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Papelería</b> en el 
             $rows .= '<tr>'
                 . '<td class="text-center">' . $num . '</td>'
                 . '<td>' . htmlspecialchars($item->producto ?? '', ENT_QUOTES, 'UTF-8') . '</td>'
-                . '<td class="text-center">' . (int)$item->piezas . '</td>'
+                . '<td class="text-center">' . number_format((float)$item->piezas, 2, '.', ',') . '</td>'
                 . '</tr>';
             $num++;
         }
 
+        $firmaA = '';
         $firmaB = '';
+        $firmaARow = PedidoPapeleriaFirma::where('id_pedido', $id)->where('tipo_firma', 'A')->first();
+        if ($firmaARow) {
+            $nombreFirmante = htmlspecialchars(self::getPersonal($firmaARow->id_usuario)['nombre'], ENT_QUOTES, 'UTF-8');
+            $fechaFirmaA = $firmaARow->fecha ? formatearFecha($firmaARow->fecha) . ', ' . $firmaARow->fecha->format('g:i a') : '';
+            $rutaFirma = self::rutaArchivo($firmaARow->firma, true);
+            $dataFirma = $rutaFirma !== null ? @file_get_contents($rutaFirma) : false;
+            $contenidoFirmaA = $dataFirma !== false && $dataFirma !== ''
+                ? '<img src="data:image/png;base64,' . base64_encode($dataFirma) . '" style="width: 200px;">'
+                : '<div style="margin-top: 10px;"><small>La firma está registrada, pero su imagen no está disponible.'
+                    . ($fechaFirmaA !== '' ? '<br><b>Fecha: ' . htmlspecialchars($fechaFirmaA, ENT_QUOTES, 'UTF-8') . '</b>' : '') . '</small></div>';
+            $firmaA = '<div class="text-center" style="margin-top: 10px;"><div>' . $nombreFirmante . '</div>' . $contenidoFirmaA . '</div>'
+                . '<div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DEL ENCARGADO</div>';
+        }
+
+        if (!$firmaARow) {
+            $avisoElaborador = (int)$pedido->status > 0
+                ? 'La firma está registrada, pero su imagen no está disponible.' : 'Sin firma registrada.';
+            $nombreElaborador = htmlspecialchars(self::getPersonal((int)$pedido->id_personal)['nombre'], ENT_QUOTES, 'UTF-8');
+            $firmaA = '<div class="text-center" style="margin-top: 10px;"><div>' . $nombreElaborador . '</div>'
+                . '<div style="margin-top: 10px;"><small>' . $avisoElaborador . '</small></div></div>'
+                . '<div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DEL ENCARGADO</div>';
+        }
+
         $firmaBRow = PedidoPapeleriaFirma::where('id_pedido', $id)->where('tipo_firma', 'B')->first();
         if ($firmaBRow) {
             $fechaFirmaB  = $firmaBRow->fecha ? formatearFecha($firmaBRow->fecha) . ', ' . date('g:i a', strtotime($firmaBRow->fecha)) : '';
@@ -1321,9 +1433,9 @@ th { background: #F2F2F2; font-weight: bold; }
             . '<table style="margin-top:10px;"><thead><tr>'
             . '<td class="text-center"><b>#</b></td><td><b>Producto</b></td><td class="text-center"><b>Piezas</b></td>'
             . '</tr></thead><tbody>' . $rows
-            . '<tr><td colspan="2" class="text-right">Total piezas:</td><td class="text-center"><b>' . $totalPiezas . '</b></td></tr>'
+            . '<tr><td colspan="2" class="text-right">Total piezas:</td><td class="text-center"><b>' . number_format((float)$totalPiezas, 2, '.', ',') . '</b></td></tr>'
             . '</tbody></table>'
-            . '<table style="width: 100%; margin-top: 20px;"><tr><td class="p-2">' . $firmaB . '</td></tr></table>'
+            . '<table style="width: 100%; margin-top: 20px;"><tr>' . ($firmaA !== '' ? '<td class="p-2">' . $firmaA . '</td>' : '') . '<td class="p-2">' . $firmaB . '</td></tr></table>'
             . '<div class="text-center" style="font-size: 0.9em;margin-top:30px;">' . htmlspecialchars($direccion, ENT_QUOTES, 'UTF-8') . '</div>'
             . '</body></html>';
 
