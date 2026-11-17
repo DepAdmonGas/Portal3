@@ -51,11 +51,11 @@ x-data="{ ...actions(), ...pedidoLimpiezaCatalogoComponent() }">
 <div class="row g-3">
 <div class="col-12 col-sm-12">
 <div class="mb-1 form-label">* Nombre del producto:</div>
-<input type="text" class="form-control" x-model="productoForm.producto">
+<input type="text" class="form-control" x-model="productoForm.producto" :class="{ 'border-danger': invalid('producto') }" @input="clearField('producto')">
 </div>
 <div class="col-12">
     <div class="mb-1 form-label">* Unidad:</div>
-    <select class="form-select" x-model="productoForm.unidad">
+    <select class="form-select" x-model="productoForm.unidad" :class="{ 'border-danger': invalid('unidad') }" @change="clearField('unidad')">
         <option value="">Selecciona una opción...</option>
         <option value="1 KG">1 KG</option>
         <option value="BULTO">BULTO</option>

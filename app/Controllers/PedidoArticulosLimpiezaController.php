@@ -50,6 +50,7 @@ class PedidoArticulosLimpiezaController extends BaseController
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/assets/js/core/module-station-selector.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.datatable.init.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.actions.init.js?v=' . time(),
             ],
@@ -104,6 +105,7 @@ class PedidoArticulosLimpiezaController extends BaseController
         $this->vistarIndex('Catálogo de artículos de limpieza', 'catalogo', false, [
             '/assets/js/vendor.min.js?v=' . time(),
             '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+            '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.form.js?v=' . time(),
             '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.catalogo.init.js?v=' . time(),
         ], [
             '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -117,6 +119,7 @@ class PedidoArticulosLimpiezaController extends BaseController
             '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
             '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
             '/assets/js/core/module-station-selector.js?v=' . time(),
+            '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.form.js?v=' . time(),
             '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.inventario.init.js?v=' . time(),
         ], [
             '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -131,6 +134,7 @@ class PedidoArticulosLimpiezaController extends BaseController
             '/assets/js/vendor.min.js?v=' . time(),
             '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
             '/assets/js/core/module-station-selector.js?v=' . time(),
+            '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.form.js?v=' . time(),
             '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.reporte.init.js?v=' . time(),
         ], [
             '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -176,6 +180,7 @@ class PedidoArticulosLimpiezaController extends BaseController
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.reporte-detalle.init.js?v=' . time(),
             ],
             'links' => [
@@ -224,7 +229,9 @@ class PedidoArticulosLimpiezaController extends BaseController
             'help'             => false,
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js',
                 '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-articulos-limpieza.pedido.init.js?v=' . time(),
             ],
             'links' => [
@@ -350,11 +357,17 @@ class PedidoArticulosLimpiezaController extends BaseController
 
     public function agregarProducto()
     {
+        $permisos = PedidoArticulosLimpiezaService::getPermisos();
+        if (!$permisos['puedeEditar'] && !$permisos['esEncargado']) {
+            JsonResponse::forbidden('No tienes permiso para modificar pedidos');
+        }
         $idPedido = (int)($_POST['id_pedido'] ?? 0);
         $idProducto = (string)($_POST['id_producto'] ?? '');
         $otroProducto = (string)($_POST['otro_producto'] ?? '');
-        $piezas = (int)($_POST['piezas'] ?? 0);
+        $piezas = PedidoArticulosLimpiezaService::normalizarPiezas($_POST['piezas'] ?? '');
         $unidad = (string)($_POST['unidad'] ?? '');
+
+        if ($piezas === null) JsonResponse::validation(PedidoArticulosLimpiezaService::REQUIRED_MESSAGE, ['piezas' => true]);
 
         $result = PedidoArticulosLimpiezaService::agregarProducto($idPedido, $idProducto, $otroProducto, $piezas, $unidad);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -362,8 +375,13 @@ class PedidoArticulosLimpiezaController extends BaseController
 
     public function editarPiezas()
     {
+        $permisos = PedidoArticulosLimpiezaService::getPermisos();
+        if (!$permisos['puedeEditar'] && !$permisos['esEncargado']) {
+            JsonResponse::forbidden('No tienes permiso para modificar pedidos');
+        }
         $id = (int)($_POST['id'] ?? 0);
-        $piezas = (int)($_POST['piezas'] ?? 0);
+        $piezas = PedidoArticulosLimpiezaService::normalizarPiezas($_POST['piezas'] ?? '');
+        if ($piezas === null) JsonResponse::validation(PedidoArticulosLimpiezaService::REQUIRED_MESSAGE, ['piezas' => true]);
 
         $result = PedidoArticulosLimpiezaService::editarPiezas($id, $piezas);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -390,11 +408,12 @@ class PedidoArticulosLimpiezaController extends BaseController
             JsonResponse::forbidden('No tienes permiso para finalizar pedidos');
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
         $id = (int)($input['id'] ?? ($_POST['id'] ?? 0));
+        $firma = (string)($input['firma_base64'] ?? ($_POST['firma_base64'] ?? ''));
         $idUsuario = (int)(Session::get('usuario')['id'] ?? 0);
 
-        $result = PedidoArticulosLimpiezaService::finalizarPedido($id, $idUsuario);
+        $result = PedidoArticulosLimpiezaService::finalizarPedido($id, $idUsuario, $firma);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
     }
 
@@ -540,7 +559,8 @@ class PedidoArticulosLimpiezaController extends BaseController
         $input = json_decode(file_get_contents('php://input'), true);
         $idEstacion = (int)($input['id_estacion'] ?? ($_POST['id_estacion'] ?? $this->resolverEstacion()));
         $idProducto = (int)($input['id_producto'] ?? ($_POST['id_producto'] ?? 0));
-        $piezas = (int)($input['piezas'] ?? ($_POST['piezas'] ?? 0));
+        $piezas = PedidoArticulosLimpiezaService::normalizarPiezas($input['piezas'] ?? ($_POST['piezas'] ?? ''));
+        if ($piezas === null) JsonResponse::validation(PedidoArticulosLimpiezaService::REQUIRED_MESSAGE, ['piezas' => true]);
 
         $result = PedidoArticulosLimpiezaService::agregarInventario($idEstacion, $idProducto, $piezas);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -625,7 +645,8 @@ class PedidoArticulosLimpiezaController extends BaseController
         $idReporte = (int)($input['id_reporte'] ?? ($_POST['id_reporte'] ?? 0));
         $idEstacion = (int)($input['id_estacion'] ?? ($_POST['id_estacion'] ?? $this->resolverEstacion()));
         $idProducto = (int)($input['id_producto'] ?? ($_POST['id_producto'] ?? 0));
-        $unidad = (int)($input['unidad'] ?? ($_POST['unidad'] ?? 0));
+        $unidad = PedidoArticulosLimpiezaService::normalizarPiezas($input['unidad'] ?? ($_POST['unidad'] ?? ''));
+        if ($unidad === null) JsonResponse::validation(PedidoArticulosLimpiezaService::REQUIRED_MESSAGE, ['unidad' => true]);
         $observaciones = (string)($input['observaciones'] ?? ($_POST['observaciones'] ?? ''));
 
         $result = PedidoArticulosLimpiezaService::agregarProductoReporte($idReporte, $idEstacion, $idProducto, $unidad, $observaciones);

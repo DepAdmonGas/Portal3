@@ -57,7 +57,7 @@ function initTablaInventario() {
 var columnsInventario = [
 { title: '#', data: 'id', className: 'align-middle text-center', width: '50px' },
 { title: 'Nombre del producto', data: 'producto', className: 'align-middle text-start text-nowrap' },
-{ title: 'Piezas', data: 'piezas', className: 'align-middle text-center text-nowrap', width:'96px' },
+{ title: 'Piezas', data: 'piezas', render: (v, t) => t === 'display' ? window.PedidoPapeleriaForm().displayQuantity(v) : v, className: 'align-middle text-center text-nowrap', width:'96px' },
 { title: '<i class="ti ti-trash text-danger fs-6"></i>', data: null, className: 'align-middle text-center', orderable: false, searchable: false, width:'48px',
 render: function (v, t, row) {
 var inst = window.pedidoPapeleriaInventarioComponentInstance;
@@ -107,6 +107,7 @@ window.pedidoPapeleriaInventarioComponentInstance.eliminarInventarioItem(id, nom
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoPapeleriaInventarioComponent', () => ({
+...window.PedidoPapeleriaForm(),
 
 puedeAcceso: false,
 puedeEditar: false,
@@ -207,6 +208,7 @@ width: '100%'
 
 $sel.off('change.papeleria').on('change.papeleria', () => {
 this.inventarioForm.id_producto = parseInt($sel.val() || '0', 10);
+if (this.inventarioForm.id_producto) this.clearField('producto');
 });
 },
 
@@ -221,6 +223,7 @@ jQuery(sel).val('0').trigger('change');
 },
 
 reiniciarFormInventario() {
+this.validationErrors = {};
 this.inventarioForm = { id_producto: 0, piezas: 1 };
 },
 
@@ -232,20 +235,13 @@ if (!ctx || this.esTodasEstaciones()) {
 if (window.Notify) Notify.info('Selecciona una estación o departamento específica.');
 return;
 }
-if (!this.inventarioForm.id_producto) {
-if (window.Notify) Notify.error('Selecciona un producto.');
-return;
-}
-if (!this.inventarioForm.piezas || this.inventarioForm.piezas <= 0) {
-if (window.Notify) Notify.error('Ingresa un número de piezas válido.');
-return;
-}
+if (!this.validateFields({ producto: this.inventarioForm.id_producto > 0, piezas: this.positiveQuantity(this.inventarioForm.piezas) })) return;
 
 this.guardandoInventario = true;
 try {
 const body = {
 id_producto: this.inventarioForm.id_producto,
-piezas: this.inventarioForm.piezas
+piezas: String(this.inventarioForm.piezas).replace(/,/g, '')
 };
 body[ctx.tipo === 'depto' ? 'id_depto' : 'id_estacion'] = ctx.id;
 const resp = await axios.post(this.BASE + '/agregar-inventario', body);

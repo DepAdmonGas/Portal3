@@ -1,6 +1,7 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoPinturasPedidoComponent', () => ({
+...window.PedidoPinturasForm(),
 
 puedeAcceso: false,
 puedeEditar: false,
@@ -9,7 +10,7 @@ puedeDescargar: false,
 puedeFirmar: false,
 esEncargado: false,
 
-pedidoActual: null,
+pedidoActual: { id: 0, detalle: [], firmas: {}, status: 0 },
 catalogos: [],
 nuevoItem: { id_producto: '', otro_producto: '', piezas: 1, para_que: '' },
 observaciones: '',
@@ -85,6 +86,7 @@ maxWidth: 2.5,
 penColor: '#000000',
 onEnd: () => { this.firmaVacia = this.signaturePad.isEmpty(); }
 });
+this.signaturePad.addEventListener('endStroke', () => { this.firmaVacia = this.signaturePad.isEmpty(); if (!this.firmaVacia) this.clearField('firma'); });
 this._redimensionarCanvas();
 window.addEventListener('resize', () => this._redimensionarCanvas());
 this.firmaVacia = this.signaturePad.isEmpty();
@@ -129,6 +131,7 @@ async modalAgregarProducto() {
 if (!this.catalogos || !this.catalogos.length) {
 await this.cargarCatalogos();
 }
+this.validationErrors = {};
 this.nuevoItem = { id_producto: '', otro_producto: '', piezas: 1, para_que: '' };
 this._inicializarSelectProductoPedido();
 this._actualizarEstadoOtroProducto();
@@ -143,6 +146,8 @@ return !!(this.nuevoItem && this.nuevoItem.id_producto);
 syncOtroProducto() {
 const tieneOtro = (this.nuevoItem.otro_producto || '').trim() !== '';
 if (tieneOtro) {
+this.clearField('producto');
+this.clearField('otro');
 this.nuevoItem.id_producto = '';
 }
 this._actualizarEstadoOtroProducto();
@@ -185,6 +190,8 @@ $sel.prop('disabled', false).trigger('change');
 $sel.on('change.pinturas', () => {
 this.nuevoItem.id_producto = $sel.val() ? String($sel.val()) : '';
 if (this.nuevoItem.id_producto) {
+this.clearField('producto');
+this.clearField('otro');
 this.nuevoItem.otro_producto = '';
 }
 this._actualizarEstadoOtroProducto();
@@ -203,17 +210,11 @@ if (this.guardandoProducto) return;
 
 const idProducto = this.nuevoItem.id_producto;
 const otroProducto = (this.nuevoItem.otro_producto || '').trim();
-const piezas = parseInt(this.nuevoItem.piezas || '0', 10);
+const piezas = String(this.nuevoItem.piezas ?? '').replace(/,/g, '');
 const paraQue = (this.nuevoItem.para_que || '').trim();
 
-if (!idProducto && !otroProducto) {
-if (window.Notify) Notify.error('Selecciona un producto o escribe uno');
-return;
-}
-if (!piezas || piezas <= 0) {
-if (window.Notify) Notify.error('Ingresa una cantidad de piezas válida');
-return;
-}
+const productoValido = !!idProducto || !!otroProducto;
+if (!this.validateFields({ producto: productoValido, otro: productoValido, piezas: this.positiveQuantity(piezas) })) return;
 
 this.guardandoProducto = true;
 try {
@@ -230,6 +231,7 @@ const m = document.getElementById('modalAgregarProductoPedido');
 bootstrap.Modal.getOrCreateInstance(m).hide();
 this.nuevoItem = { id_producto: '', otro_producto: '', piezas: 1, para_que: '' };
 this._inicializarSelectProductoPedido();
+this.clearField('productos');
 if (window.Notify) Notify.success(json.message || 'Producto agregado correctamente');
 await this.cargarPedido();
 } else {
@@ -244,12 +246,8 @@ this.guardandoProducto = false;
 },
 
 async editarPiezas(id, valor) {
-const piezas = parseInt(valor || '0', 10);
-if (!piezas || piezas <= 0) {
-if (window.Notify) Notify.error('La cantidad debe ser mayor a cero');
-await this.cargarPedido();
-return;
-}
+const piezas = String(valor ?? '').replace(/,/g, '');
+if (!this.validateFields({ ['piezas_' + id]: this.positiveQuantity(piezas) })) return;
 try {
 const fd = new FormData();
 fd.append('id', id);
@@ -314,15 +312,10 @@ if (window.Notify) Notify.error(e.response?.data?.message || 'Error al eliminar 
 async finalizarPedido() {
 if (this.finalizando) return;
 
-if (!this.pedidoActual.detalle || !this.pedidoActual.detalle.length) {
-if (window.Notify) Notify.error('Agrega al menos un producto al pedido');
-return;
-}
-
-if (!this.signaturePad || this.signaturePad.isEmpty()) {
-if (window.Notify) Notify.error('Debe firmar el pedido antes de finalizar');
-return;
-}
+if (!this.validateFields({
+productos: !!this.pedidoActual.detalle?.length && this.pedidoActual.detalle.every(it => this.positiveQuantity(it.piezas)),
+firma: !!this.signaturePad && !this.signaturePad.isEmpty()
+})) return;
 
 const base64 = this.signaturePad.toDataURL();
 

@@ -8,6 +8,11 @@ puedeEliminar: false,
 puedeDescargar: false,
 puedeFirmar: false,
 esEncargado: false,
+signaturePad: null,
+firmaVacia: true,
+validationErrors: {},
+resizeFirma: null,
+reintentosFirma: 0,
 
 solicitudActual: null,
 form: { fecha: '', para: '', fecha_entrega: '', comentarios: '' },
@@ -42,7 +47,89 @@ try { this.solicitudActual = JSON.parse(c.dataset.solicitud); } catch (e) { cons
 window.pedidoAditivoPedidoComponentInstance = this;
 
 this.sincronizarForm();
+this.initSignaturePad();
 },
+
+invalid(field) { return this.validationErrors[field] === false; },
+
+validateFields(fields) {
+this.validationErrors = fields;
+const valid = Object.values(fields).every(Boolean);
+if (!valid && window.Notify) Notify.error('Completa los campos obligatorios.');
+return valid;
+},
+
+clearField(field) { this.validationErrors[field] = true; },
+
+positiveQuantity(value) {
+const normalized = String(value ?? '').replace(/,/g, '');
+return /^\d+$/.test(normalized) && Number.isSafeInteger(Number(normalized))
+&& Number(normalized) > 0 && Number(normalized) <= 2147483647;
+},
+
+formatNumericInput(event, row, field) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/\D/g, '').length;
+const normalized = raw.replace(/,/g, '').replace(/\D/g, '');
+const formatted = normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+row[field] = normalized;
+input.value = formatted;
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/\d/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
+if (this.positiveQuantity(normalized)) this.clearField(field);
+},
+
+formatInputNumber(value) {
+return String(value ?? '').replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+},
+
+displayQuantity(value) {
+return Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+},
+
+initSignaturePad() {
+this.$nextTick(() => requestAnimationFrame(() => {
+if (Number(this.solicitudActual?.status) !== 0 || !(this.esEncargado || this.puedeEditar)) return;
+if (!window.SignaturePad) { console.error('SignaturePad no disponible'); return; }
+const canvas = document.querySelector('#signature-pad-aditivo');
+if (!canvas || canvas.getBoundingClientRect().width <= 0 || canvas.getBoundingClientRect().height <= 0) {
+if (this.reintentosFirma++ < 10) setTimeout(() => this.initSignaturePad(), 100);
+return;
+}
+this.reintentosFirma = 0;
+this.signaturePad?.off();
+this.signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255,255,255)', minWidth: 1, maxWidth: 2.5, penColor: '#000000', onEnd: () => { this.firmaVacia = this.signaturePad.isEmpty(); if (!this.firmaVacia) this.clearField('firma'); } });
+this.redimensionarCanvasFirma();
+this.resizeFirma = () => this.redimensionarCanvasFirma();
+window.addEventListener('resize', this.resizeFirma);
+this.firmaVacia = this.signaturePad.isEmpty();
+}));
+},
+
+redimensionarCanvasFirma() {
+const canvas = document.getElementById('signature-pad-aditivo');
+if (!canvas) return;
+const width = canvas.getBoundingClientRect().width;
+const height = canvas.getBoundingClientRect().height;
+if (width <= 0 || height <= 0) return;
+const data = this.signaturePad && !this.signaturePad.isEmpty() ? this.signaturePad.toData() : null;
+const ratio = Math.max(window.devicePixelRatio || 1, 1);
+canvas.width = Math.round(width * ratio);
+canvas.height = Math.round(height * ratio);
+canvas.getContext('2d').scale(ratio, ratio);
+if (data) this.signaturePad.fromData(data);
+},
+
+limpiarFirma() { if (this.signaturePad) this.signaturePad.clear(); this.firmaVacia = true; },
+
+destroy() { if (this.resizeFirma) window.removeEventListener('resize', this.resizeFirma); this.signaturePad?.off(); },
 
 sincronizarForm() {
 if (!this.solicitudActual) return;
@@ -81,6 +168,8 @@ return 'bg-success-subtle text-success-emphasis';
 async guardarDatos() {
 if (this.guardandoDatos) { this.repetirGuardado = true; return; }
 
+if (this.form.fecha_entrega) this.clearField('fecha_entrega');
+
 if (!this.form.fecha) {
 if (window.Notify) Notify.error('La fecha es obligatoria');
 return;
@@ -98,10 +187,11 @@ fd.append('fecha', this.form.fecha);
 fd.append('para', this.form.para);
 fd.append('fecha_entrega', this.form.fecha_entrega || '');
 fd.append('comentarios', this.form.comentarios || '');
-const resp = await axios.post(this.BASE + '/guardar-datos', fd);
+const resp = await axios.post(this.BASE + '/guardar-datos', fd, {
+headers: { 'X-Portal3-Skip-Action-Loader': '1' }
+});
 const json = resp.data;
 if (json.success) {
-if (window.Notify) Notify.success(json.message || 'Datos guardados correctamente');
 await this.cargarSolicitud();
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al guardar los datos');
@@ -130,16 +220,8 @@ async agregarTambo() {
 if (this.guardandoTambo) return;
 
 const producto = this.nuevoTambo.producto || '';
-const cantidad = parseInt(this.nuevoTambo.cantidad || '0', 10);
-
-if (!producto) {
-if (window.Notify) Notify.error('Selecciona un producto');
-return;
-}
-if (!cantidad || cantidad <= 0) {
-if (window.Notify) Notify.error('Ingresa una cantidad de tambos válida');
-return;
-}
+const cantidad = String(this.nuevoTambo.cantidad || '').trim();
+if (!this.validateFields({ producto: !!producto, cantidad: this.positiveQuantity(cantidad) })) return;
 
 this.guardandoTambo = true;
 try {
@@ -175,12 +257,14 @@ this.editarTamboRow(it);
 },
 
 editarTamboCantidad(id, valor) {
-const cantidad = parseInt(valor || '0', 10);
-if (!cantidad || cantidad <= 0) {
-if (window.Notify) Notify.error('La cantidad debe ser mayor a cero');
+const cantidad = String(valor || '').trim();
+if (!this.positiveQuantity(cantidad)) {
+ this.validationErrors['cantidad_' + id] = false;
+ if (window.Notify) Notify.error('Completa los campos obligatorios.');
 this.cargarSolicitud();
 return;
 }
+this.clearField('cantidad_' + id);
 const it = (this.solicitudActual.tambos || []).find(function (t) { return t.id === id; });
 if (!it) return;
 it.cantidad = cantidad;
@@ -193,11 +277,11 @@ const fd = new FormData();
 fd.append('id', it.id);
 fd.append('cantidad', it.cantidad);
 fd.append('producto', it.producto || '');
-const resp = await axios.post(this.BASE + '/editar-tambo', fd);
+const resp = await axios.post(this.BASE + '/editar-tambo', fd, {
+headers: { 'X-Portal3-Skip-Action-Loader': '1' }
+});
 const json = resp.data;
-if (json.success) {
-if (window.Notify) Notify.success(json.message || 'Tambo actualizado correctamente');
-} else {
+if (!json.success) {
 if (window.Notify) Notify.error(json.message || 'Error al actualizar el tambo');
 }
 await this.cargarSolicitud();
@@ -239,10 +323,12 @@ if (window.Notify) Notify.error(e.response?.data?.message || 'Error al eliminar 
 async finalizarSolicitud() {
 if (this.finalizando) return;
 
-if (!this.solicitudActual.tambos || !this.solicitudActual.tambos.length) {
-if (window.Notify) Notify.error('Agrega al menos un tambo a la solicitud');
-return;
-}
+this.firmaVacia = !this.signaturePad || this.signaturePad.isEmpty();
+if (!this.validateFields({
+fecha_entrega: !!this.form.fecha_entrega,
+productos: !!(this.solicitudActual.tambos && this.solicitudActual.tambos.length),
+firma: !this.firmaVacia
+})) return;
 
 const confirm = await Swal.fire({
 title: '¿Finalizar solicitud?',
@@ -256,7 +342,7 @@ if (!confirm.isConfirmed) return;
 
 this.finalizando = true;
 try {
-const resp = await axios.post(this.BASE + '/finalizar', { id: this.solicitudActual.id });
+const resp = await axios.post(this.BASE + '/finalizar', { id: this.solicitudActual.id, firma_base64: this.signaturePad.toDataURL('image/png') });
 const json = resp.data;
 if (json.success) {
 Swal.fire({
@@ -266,11 +352,7 @@ text: json.message || 'Solicitud finalizada correctamente',
 timer: 2000,
 showConfirmButton: false
 }).then(() => {
-if (document.referrer && document.referrer.indexOf(window.location.origin) === 0) {
-history.back();
-} else {
-window.location.href = this.BASE;
-}
+window.location.reload();
 });
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al finalizar la solicitud');

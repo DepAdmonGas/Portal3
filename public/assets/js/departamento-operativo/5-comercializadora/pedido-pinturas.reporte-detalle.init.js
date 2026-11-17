@@ -1,6 +1,7 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoPinturasReporteDetalleComponent', () => ({
+...window.PedidoPinturasForm(),
 
 puedeAcceso: false,
 puedeEditar: false,
@@ -89,6 +90,7 @@ this.guardadoPendiente = true;
 return;
 }
 
+if (!this.validateFields({ fecha: !!this.reporteForm.fecha, hora: !!this.reporteForm.hora }, !silencioso)) return false;
 this.guardandoReporte = true;
 try {
 const resp = await axios.post(this.BASE + '/guardar-reporte-datos', {
@@ -131,6 +133,7 @@ this.programarAutosave();
 },
 
 async modalAgregarProducto() {
+this.validationErrors = {};
 this.reporteItem = { id_producto: 0, unidad: 1, observaciones: '' };
 await this.cargarInventarioDisponible();
 this._inicializarSelectProducto(null);
@@ -178,6 +181,7 @@ $sel.val(String(valorActual));
 
 $sel.on('change.pinturas', () => {
 this.reporteItem.id_producto = parseInt($sel.val() || '0', 10);
+if (this.reporteItem.id_producto) this.clearField('producto');
 });
 },
 
@@ -190,14 +194,7 @@ return 'bg-secondary text-white';
 async agregarProductoReporte() {
 if (this.guardandoReporteItem) return;
 
-if (!this.reporteItem.id_producto) {
-if (window.Notify) Notify.error('Selecciona un producto del inventario');
-return;
-}
-if (!this.reporteItem.unidad || this.reporteItem.unidad <= 0) {
-if (window.Notify) Notify.error('Ingresa un número de piezas válido');
-return;
-}
+if (!this.validateFields({ producto: this.reporteItem.id_producto > 0, unidad: this.positiveQuantity(this.reporteItem.unidad) })) return;
 
 this.guardandoReporteItem = true;
 try {
@@ -205,7 +202,7 @@ const resp = await axios.post(this.BASE + '/agregar-producto-reporte', {
 id_reporte: this.reporteActual.id,
 id_estacion: this.reporteActual.id_estacion,
 id_producto: this.reporteItem.id_producto,
-unidad: this.reporteItem.unidad,
+unidad: String(this.reporteItem.unidad).replace(/,/g, ''),
 observaciones: this.reporteItem.observaciones || ''
 });
 const json = resp.data;
@@ -213,6 +210,7 @@ if (json.success) {
 const m = document.getElementById('modalAgregarProductoReporte');
 bootstrap.Modal.getOrCreateInstance(m).hide();
 this.reporteItem = { id_producto: 0, unidad: 1, observaciones: '' };
+this.clearField('productos');
 if (window.Notify) Notify.success(json.message || 'Producto agregado correctamente');
 await this.cargarReporte();
 await this.cargarInventarioDisponible();
@@ -262,6 +260,7 @@ if (window.Notify) Notify.error(e.response?.data?.message || 'Error al eliminar 
 
 async aprobarReporte() {
 if (this.guardandoReporte) return;
+if (!this.validateFields({ fecha: !!this.reporteForm.fecha, hora: !!this.reporteForm.hora, productos: !!this.reporteActual.detalle_items?.length })) return;
 
 const result = await Swal.fire({
 title: '¿Finalizar reporte?',
@@ -274,9 +273,7 @@ cancelButtonText: 'Cancelar'
 if (!result.isConfirmed) return;
 
 if (this.formularioSucio) {
-this.guardandoReporte = true;
 const guardar = await this.guardarReporteDatos(true);
-this.guardandoReporte = false;
 if (!guardar) return;
 }
 

@@ -1,6 +1,7 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoPapeleriaComponent', () => ({
+...window.PedidoPapeleriaForm(),
 
 puedeAcceso: false,
 puedeCrear: false,
@@ -19,7 +20,7 @@ idDepto: 0,
 idUsuario: 0,
 hayContexto: false,
 
-pedidoActual: { id: 0, detalle: [], status: 0 },
+pedidoActual: { id: 0, detalle: [], firmas: {}, status: 0 },
 
 BASE: '/departamento-operativo/comercializadora/pedido-papeleria',
 BASE_FIRMA: '/departamento-operativo/comercializadora/pedido-papeleria-firma',
