@@ -4,227 +4,216 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Estacion;
-use App\Models\Operativo\RhLocalidad;
-use App\Models\Operativo\RhLocalidadesHorario;
-use App\Models\Operativo\RhLocalidadesPerfil;
 use App\Models\Operativo\RhPuestos;
+use App\Models\Operativo\RhLocalidadesPerfil;
 use App\Models\Usuario;
 use Throwable;
 
-/** Read-only configuration projection for the Checador V2 shell. */
+/** Read-only projection of the approved Checador V2 configuration sources. */
 final class ChecadorConfigurationReadService
 {
-    /**
-     * Load separately-labelled API V2 and legacy configuration sources.
-     * Demo mode never reads legacy operational tables.
-     *
-     * @return array<string,mixed>
-     */
+    /** @return array<string,mixed> */
     public function read(Usuario $user, int $workplaceId, bool $demoMode, ?int $workerId = null, string $date = ''): array
     {
-        $denied = ChecadorAccessService::authorize($workplaceId);
-        if (empty($denied['allowed'])) {
-            return self::emptyResult('workplace_out_of_scope');
-        }
+        $scope = ChecadorAccessService::authorize($workplaceId);
+        if (!($scope['allowed'] ?? false)) return self::emptyResult('workplace_out_of_scope');
 
-        $permission = ModuloDptoOperativoService::getPermiso((int) $user->id, 'biometricos');
-        $canRead = (int) ($permission['leer'] ?? 0) === 1;
-        $canCreate = (int) ($permission['crear'] ?? 0) === 1;
-        $canEdit = (int) ($permission['editar'] ?? 0) === 1;
-        $canDelete = (int) ($permission['eliminar'] ?? 0) === 1;
-        $positionsRead = BiometricosService::hasActionPermission('recursos-humanos', 'leer');
-        $positionsCreate = BiometricosService::hasActionPermission('recursos-humanos', 'crear');
-        $positionsEdit = BiometricosService::hasActionPermission('recursos-humanos', 'editar');
-        $positionsDelete = BiometricosService::hasActionPermission('recursos-humanos', 'eliminar');
+        $policyRead = ChecadorAccessService::authorizeAttendancePolicy($workplaceId, 'leer');
+        $policyEdit = ChecadorAccessService::authorizeAttendancePolicy($workplaceId, 'editar');
+        $scheduleRead = ChecadorAccessService::authorizeScheduling($workplaceId, 'leer');
+        $scheduleEdit = ChecadorAccessService::authorizeScheduling($workplaceId, 'editar');
+        $templateEdit = ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId);
+        $readerRead = ChecadorAccessService::authorizeReaderProfiles($workplaceId, 'leer');
+        $readerEdit = ChecadorAccessService::authorizeReaderProfiles($workplaceId, 'editar');
+        $positionRead = ChecadorAccessService::authorizePositionCatalog($workplaceId, 'leer');
+        $positionEdit = ChecadorAccessService::authorizePositionCatalog($workplaceId, 'editar');
+        $deviceRead = ChecadorAccessService::authorizeAdministrativeDevices($workplaceId);
 
-        $result = [
-            'status' => 'ready',
-            'demo_mode' => $demoMode,
-            'workplace_id' => $workplaceId,
-            'workplace_kind' => in_array($workplaceId, array_map('intval', array_column($denied['department_workplaces'] ?? [], 'id')), true)
-                ? 'department' : 'station',
-            'permissions' => [
-                'read' => $canRead,
-                'legacy_create' => $canRead && $canCreate,
-                'legacy_edit' => $canRead && $canEdit,
-                'legacy_delete' => $canRead && $canDelete,
-                // Legacy biometricos flags do not authorize V2 schedule writes.
-                'v2_schedule_edit' => $canRead && $canEdit && (ChecadorAccessService::authorizeScheduling($workplaceId, 'editar')['allowed'] ?? false),
-                'positions_read' => $positionsRead,
-                'positions_create' => $positionsRead && $positionsCreate,
-                'positions_edit' => $positionsRead && $positionsEdit,
-                'positions_delete' => $positionsRead && $positionsDelete,
-            ],
-            'mapping' => ['status' => 'not_checked', 'physical_station_id' => null, 'name' => null, 'legacy_scope_authorized' => false],
-            'api_templates' => ['status' => 'not_requested', 'items' => [], 'message' => ''],
-            'api_history' => ['status' => 'not_requested', 'effective_schedule' => null, 'assignments' => [], 'message' => ''],
-            'legacy_schedules' => ['status' => 'not_read', 'items' => []],
-            'legacy_rules' => ['status' => 'not_read', 'configured' => false, 'retardo' => null, 'incidencia' => null],
-            'legacy_profiles' => ['status' => 'not_read', 'active_count' => null],
-            'positions' => ['status' => 'not_read', 'items' => []],
-            'device_auth' => ['status' => 'not_integrated', 'message' => 'La autenticación de dispositivos V2 no se consulta desde este catálogo legacy.'],
+        $result = self::emptyResult('ready');
+        $result['demo_mode'] = $demoMode;
+        $result['workplace_id'] = $workplaceId;
+        $departmentIds = array_map('intval', array_column($scope['department_workplaces'] ?? [], 'id'));
+        $result['workplace_kind'] = in_array($workplaceId, $departmentIds, true) ? 'department' : 'station';
+        $result['permissions'] = [
+            'read' => (bool) ($policyRead['allowed'] ?? false),
+            'policy_read' => (bool) ($policyRead['allowed'] ?? false),
+            'policy_edit' => (bool) ($policyEdit['allowed'] ?? false),
+            'legacy_create' => false,
+            'legacy_edit' => false,
+            'legacy_delete' => false,
+            'v2_schedule_edit' => (bool) ($scheduleEdit['allowed'] ?? false),
+            'station_template_edit' => (bool) ($templateEdit['allowed'] ?? false),
+            'schedule_read' => (bool) ($scheduleRead['allowed'] ?? false),
+            'reader_profile_read' => (bool) ($readerRead['allowed'] ?? false),
+            'reader_profile_edit' => (bool) ($readerEdit['allowed'] ?? false),
+            'positions_read' => (bool) ($positionRead['allowed'] ?? false),
+            'positions_create' => (bool) ($positionEdit['allowed'] ?? false),
+            'positions_edit' => (bool) ($positionEdit['allowed'] ?? false),
+            'positions_delete' => false,
+            'device_read' => (bool) ($deviceRead['allowed'] ?? false),
         ];
+        $result['api_templates'] = ['status' => 'permission_denied', 'items' => [], 'message' => ''];
+        $result['api_history'] = ['status' => 'not_requested', 'effective_schedule' => null, 'assignments' => [], 'message' => ''];
+        $result['legacy_schedules'] = ['status' => 'not_used_as_v2_source', 'items' => []];
+        $result['legacy_rules'] = ['status' => 'not_used_as_v2_source', 'configured' => false, 'retardo' => null, 'incidencia' => null];
+        $result['legacy_profiles'] = ['status' => 'not_used_as_v2_source', 'active_count' => null];
+        $isStation = $result['workplace_kind'] === 'station';
+        $result['reader_profiles'] = $demoMode
+            ? ['status' => 'not_read_in_demo', 'items' => []]
+            : (!$isStation ? ['status' => 'not_applicable', 'items' => []]
+                : self::readReaderProfiles($workplaceId, (bool) ($readerRead['allowed'] ?? false)));
+        $result['positions'] = $demoMode
+            ? ['status' => 'not_read_in_demo', 'items' => []]
+            : self::readPositions((bool) ($positionRead['allowed'] ?? false));
+        $result['device_auth'] = ['status' => $demoMode ? 'not_read_in_demo' : 'permission_denied', 'completeness' => 'UNKNOWN', 'items' => [], 'partial_reasons' => []];
 
         if ($demoMode) {
             $result['status'] = 'demo_isolated';
-            $result['api_templates'] = ['status' => $canRead ? 'pending' : 'permission_denied', 'items' => [],
-                'message' => $canRead ? 'El catálogo se resolverá únicamente con la fuente local de demostración.' : 'Se requiere el permiso biometricos.leer.'];
-            if ($canRead) {
-                $reader = new ChecadorDailyReadService();
-                $templates = $reader->getShiftTemplates($user, 1, 50);
-                if (($templates['ok'] ?? false) === true) {
-                    $items = $templates['data']['items'];
-                    $detailsComplete = true;
-                    foreach (array_slice($items, 0, 10) as $index => $template) {
-                        $detail = $reader->getShiftTemplateVersion($user, (string) $template['clave'], (int) $template['version']);
-                        if (($detail['ok'] ?? false) === true) {
-                            $items[$index]['segments'] = $detail['data']['segmentos'];
-                        } else {
-                            $detailsComplete = false;
-                            $items[$index]['segments'] = null;
-                        }
-                    }
-                    $partial = count($items) > 10 || !$detailsComplete;
-                    $result['api_templates'] = ['status' => $partial ? 'demo_fixture_partial' : 'demo_fixture', 'items' => $items,
-                        'message' => $partial
-                            ? 'Catálogo sintético local; algunos detalles no están disponibles o exceden el límite de vista. No representa plantillas ni asignaciones persistidas.'
-                            : 'Catálogo sintético local; no representa plantillas ni asignaciones persistidas.'];
-                } else {
-                    $result['api_templates'] = ['status' => 'unavailable', 'items' => [], 'message' => 'El escenario demo no ofrece un catálogo de turnos para este contexto.'];
-                }
-                if ($workerId !== null && self::isCivilDate($date)) {
-                    if (ChecadorAccessService::authorizeScheduling($workplaceId, 'leer')['allowed'] ?? false) {
-                        $effective = $reader->getEffectiveSchedule($user, $workerId, $workplaceId, $date);
-                        $history = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 50);
-                        if (($effective['ok'] ?? false) && ($history['ok'] ?? false)) {
-                            $result['api_history'] = ['status' => 'demo_fixture', 'effective_schedule' => $effective['data'],
-                                'assignments' => $history['data']['items'],
-                                'message' => 'Respuesta sintética local de los lectores V2; no es historial persistido.'];
-                        } else {
-                            $result['api_history'] = ['status' => 'unavailable', 'effective_schedule' => null, 'assignments' => [],
-                                'message' => 'El escenario demo no ofrece horario efectivo e historial para este contexto.'];
-                        }
-                    } else {
-                        $result['api_history'] = ['status' => 'permission_denied', 'effective_schedule' => null, 'assignments' => [],
-                            'message' => 'Se requiere autorización de lectura de programación para consultar este historial.'];
-                    }
-                }
+            $result['api_templates'] = self::readTemplates($user, $workplaceId, true, (bool) ($scheduleRead['allowed'] ?? false));
+            $result['policy'] = ['status' => 'not_read_in_demo', 'data' => null];
+            if ($workerId !== null && self::isCivilDate($date) && ($scheduleRead['allowed'] ?? false)) {
+                $result['api_history'] = self::readHistory($user, $workerId, $workplaceId, $date, true);
+            } elseif ($workerId !== null && self::isCivilDate($date)) {
+                $result['api_history'] = ['status' => 'permission_denied', 'effective_schedule' => null, 'assignments' => [], 'message' => 'Se requiere autorización de lectura de programación.'];
             }
-            $result['mapping'] = ['status' => 'not_read_in_demo', 'physical_station_id' => null, 'name' => null];
-            $result['legacy_schedules'] = ['status' => 'not_read_in_demo', 'items' => []];
-            $result['legacy_rules'] = ['status' => 'not_read_in_demo', 'configured' => false, 'retardo' => null, 'incidencia' => null];
-            $result['legacy_profiles'] = ['status' => 'not_read_in_demo', 'active_count' => null];
-            $result['positions'] = ['status' => $positionsRead ? 'not_read_in_demo' : 'permission_denied', 'items' => []];
-            if ($workerId !== null && self::isCivilDate($date) && !$canRead) {
-                $result['api_history'] = ['status' => 'permission_denied', 'effective_schedule' => null, 'assignments' => [],
-                    'message' => 'Se requiere el permiso biometricos.leer para consultar el horario demo.'];
-            }
+            $result['positions'] = ['status' => 'not_read_in_demo', 'items' => []];
             return $result;
         }
 
-        if (!$canRead) {
-            $result['api_templates'] = ['status' => 'permission_denied', 'items' => [], 'message' => 'Se requiere biometricos.leer para consultar turnos V2.'];
-            $result['legacy_schedules'] = ['status' => 'permission_denied', 'items' => []];
-            $result['legacy_rules'] = ['status' => 'permission_denied', 'configured' => false, 'retardo' => null, 'incidencia' => null];
-            $result['legacy_profiles'] = ['status' => 'permission_denied', 'active_count' => null];
-            $result['positions'] = self::readPositions($positionsRead);
-            return $result;
-        }
-
-        $reader = new ChecadorDailyReadService();
-        $templates = $reader->getShiftTemplates($user, 1, 50);
-        if (($templates['ok'] ?? false) === true) {
-            $items = $templates['data']['items'];
-            // Keep this configuration page bounded; the full catalogue stays
-            // available from the existing weekly scheduling screen.
-            $detailLimit = 10;
-            $detailsComplete = true;
-            foreach (array_slice($items, 0, $detailLimit) as $index => $template) {
-                $detail = $reader->getShiftTemplateVersion($user, (string) $template['clave'], (int) $template['version']);
-                if (($detail['ok'] ?? false) === true) {
-                    $items[$index]['segments'] = $detail['data']['segmentos'];
-                } else {
-                    $detailsComplete = false;
-                    $items[$index]['segments'] = null;
-                }
+        $result['api_templates'] = self::readTemplates($user, $workplaceId, false, (bool) ($scheduleRead['allowed'] ?? false));
+        if (!$isStation) {
+            $result['policy'] = ['status' => 'not_applicable', 'data' => null];
+        } elseif ($policyRead['allowed'] ?? false) {
+            try {
+                $policy = (new ChecadorDailyReadService())->readCurrentAttendancePolicy($user, $workplaceId);
+                $result['policy'] = ($policy['ok'] ?? false)
+                    ? ['status' => 'ready', 'data' => $policy['data']]
+                    : ['status' => (string) ($policy['error']['kind'] ?? 'unavailable'), 'data' => null];
+            } catch (Throwable) {
+                $result['policy'] = ['status' => 'unavailable', 'data' => null];
             }
-            $partial = count($items) > $detailLimit || !$detailsComplete;
-            $result['api_templates'] = ['status' => $partial ? 'partial' : 'ready',
-                'items' => $items, 'message' => $partial
-                    ? 'La vista limita los detalles a 10 y/o alguna respuesta de detalle no estuvo disponible; consulta la programación semanal para el catálogo completo y su contexto individual.'
-                    : 'Catálogo contractual de API V2. El catálogo no asigna turnos por sí solo.'];
         } else {
-            $result['api_templates'] = ['status' => 'unavailable', 'items' => [], 'message' => 'No se pudo consultar el catálogo contractual de turnos V2.'];
+            $result['policy'] = ['status' => 'permission_denied', 'data' => null];
         }
 
-        if ($workerId !== null && self::isCivilDate($date)
-            && (ChecadorAccessService::authorizeScheduling($workplaceId, 'leer')['allowed'] ?? false)) {
-            $effective = $reader->getEffectiveSchedule($user, $workerId, $workplaceId, $date);
-            $history = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 50);
-            if (($effective['ok'] ?? false) === true && ($history['ok'] ?? false) === true) {
-                $result['api_history'] = ['status' => count($history['data']['items']) === 50 ? 'possibly_partial' : 'ready',
-                    'effective_schedule' => $effective['data'], 'assignments' => $history['data']['items'],
-                    'message' => 'Lectura API V2 por trabajador, localidad y fecha. No se calcula ni modifica la asignación.'];
-            } else {
-                $result['api_history'] = ['status' => 'unavailable', 'effective_schedule' => null, 'assignments' => [],
-                    'message' => 'No se pudo confirmar el horario efectivo y su historial en API V2.'];
-            }
-        } elseif ($workerId !== null && self::isCivilDate($date)) {
-            $result['api_history'] = ['status' => 'permission_denied', 'effective_schedule' => null, 'assignments' => [],
-                'message' => 'Se requiere autorización de lectura de programación para consultar este historial.'];
+        if ($workerId !== null && self::isCivilDate($date)) {
+            $result['api_history'] = ($scheduleRead['allowed'] ?? false)
+                ? self::readHistory($user, $workerId, $workplaceId, $date, false)
+                : ['status' => 'permission_denied', 'effective_schedule' => null, 'assignments' => [], 'message' => 'Se requiere autorización de lectura de programación.'];
         }
 
-        if ($result['workplace_kind'] === 'department') {
-            $result['mapping'] = ['status' => 'department_has_no_legacy_station_mapping', 'physical_station_id' => null, 'name' => null];
-            $result['legacy_schedules'] = ['status' => 'not_applicable', 'items' => []];
-            $result['legacy_rules'] = ['status' => 'not_applicable', 'configured' => false, 'retardo' => null, 'incidencia' => null];
-            $result['legacy_profiles'] = ['status' => 'not_applicable', 'active_count' => null];
-        } else {
-            $mapping = self::resolveUniquePhysicalStation($workplaceId);
-            $physicalStationId = $mapping['physical_station_id'];
-            $legacyScopeAuthorized = $physicalStationId !== null
-                && in_array($physicalStationId, BiometricosService::authorizedLegacyStationIds(), true);
-            $mapping['legacy_scope_authorized'] = $legacyScopeAuthorized;
-            $result['mapping'] = $mapping;
-            if (!$legacyScopeAuthorized) {
-                $legacyStatus = $physicalStationId === null ? 'mapping_or_module_scope_unavailable' : 'legacy_station_not_authorized';
-                $result['legacy_schedules'] = ['status' => $legacyStatus, 'items' => []];
-                $result['legacy_rules'] = ['status' => $legacyStatus, 'configured' => false, 'retardo' => null, 'incidencia' => null];
-                $result['legacy_profiles'] = ['status' => $legacyStatus, 'active_count' => null];
-            } else {
-                try {
-                    $schedules = RhLocalidadesHorario::query()->where('id_estacion', $physicalStationId)
-                        ->orderBy('id')->get(['id', 'titulo', 'hora_entrada', 'hora_salida']);
-                    $result['legacy_schedules'] = ['status' => 'legacy_catalog', 'items' => $schedules->map(static fn($row): array => [
-                        'id' => (int) $row->id, 'title' => (string) $row->titulo,
-                        'start' => (string) $row->hora_entrada, 'end' => (string) $row->hora_salida,
-                    ])->all()];
-                } catch (Throwable) {
-                    $result['legacy_schedules'] = ['status' => 'unavailable', 'items' => []];
-                }
-                try {
-                    $rules = BiometricosService::getRetardoIncidencia($physicalStationId);
-                    $ruleStatus = empty($rules['available']) ? 'permission_denied'
-                        : (!empty($rules['configured']) ? 'legacy_configured' : 'legacy_unconfigured');
-                    $result['legacy_rules'] = ['status' => $ruleStatus,
-                        'configured' => (bool) ($rules['configured'] ?? false), 'retardo' => $rules['retardo'] ?? null,
-                        'incidencia' => $rules['incidencia'] ?? null];
-                } catch (Throwable) {
-                    $result['legacy_rules'] = ['status' => 'unavailable', 'configured' => false, 'retardo' => null, 'incidencia' => null];
-                }
-                try {
-                    $profileCount = RhLocalidadesPerfil::query()->where('id_estacion', $physicalStationId)->where('status', 1)->count();
-                    $result['legacy_profiles'] = ['status' => 'legacy_metadata_only', 'active_count' => $profileCount];
-                } catch (Throwable) {
-                    $result['legacy_profiles'] = ['status' => 'unavailable', 'active_count' => null];
-                }
+        if ($deviceRead['allowed'] ?? false) {
+            try {
+                $deviceResult = (new ChecadorDailyReadService())->readAdministrativeDevices($user, $workplaceId);
+                $result['device_auth'] = ($deviceResult['ok'] ?? false)
+                    ? array_merge(['status' => 'ready'], $deviceResult['data'])
+                    : ['status' => (string) ($deviceResult['error']['kind'] ?? 'unavailable'), 'completeness' => 'UNKNOWN', 'items' => [], 'partial_reasons' => []];
+            } catch (Throwable) {
+                $result['device_auth'] = ['status' => 'unavailable', 'completeness' => 'UNKNOWN', 'items' => [], 'partial_reasons' => []];
             }
         }
-
-        $result['positions'] = self::readPositions($positionsRead);
 
         return $result;
+    }
+
+    /** @return array{status:string,items:list<array{id:int,usuario:string}>} */
+    private static function readReaderProfiles(int $workplaceId, bool $allowed): array
+    {
+        if (!$allowed) return ['status' => 'permission_denied', 'items' => []];
+        $physicalStationId = ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId);
+        if ($physicalStationId === null) return ['status' => 'mapping_unavailable', 'items' => []];
+        try {
+            $profiles = RhLocalidadesPerfil::query()->where('id_estacion', $physicalStationId)
+                ->where('status', 1)->orderBy('id')->get(['id', 'usuario']);
+            $items = [];
+            foreach ($profiles as $profile) {
+                $username = \App\Services\BiometricosService::decrypt((string) $profile->usuario);
+                if ($username === '' || mb_strlen($username) > 120) return ['status' => 'unavailable', 'items' => []];
+                $items[] = ['id' => (int) $profile->id, 'usuario' => $username];
+            }
+            return ['status' => 'station_scoped', 'items' => $items];
+        } catch (Throwable) {
+            return ['status' => 'unavailable', 'items' => []];
+        }
+    }
+
+    /** @return array<string,mixed> */
+    private static function readTemplates(Usuario $user, int $workplaceId, bool $demoMode, bool $allowed): array
+    {
+        if (!$allowed) return ['status' => 'permission_denied', 'items' => [], 'message' => 'Se requiere el permiso de lectura de programación de Checador.'];
+        try {
+            $reader = new ChecadorDailyReadService();
+            // The caller supplies only the selected, server-authorized canonical
+            // locality. API V2 validates it again and scopes both list and detail reads.
+            $pageSize = 100;
+            $maximumPages = 10;
+            $items = [];
+            $allPagesRead = false;
+            for ($page = 1; $page <= $maximumPages; $page++) {
+                $templates = $reader->getShiftTemplates($user, $page, $pageSize, $workplaceId);
+                if (!($templates['ok'] ?? false)) {
+                    return ['status' => 'unavailable', 'items' => [], 'message' => 'El catálogo contractual de plantillas no está disponible.'];
+                }
+                $pageItems = $templates['data']['items'] ?? [];
+                foreach ($pageItems as $template) {
+                    $scope = strtoupper((string) ($template['scope'] ?? ''));
+                    $stationId = $template['id_estacion'] ?? null;
+                    if (!in_array($scope, ['GLOBAL', 'STATION'], true)
+                        || ($scope === 'GLOBAL' && $stationId !== null)
+                        || ($scope === 'STATION' && (int) $stationId !== $workplaceId)) {
+                        return ['status' => 'unavailable', 'items' => [], 'message' => 'La API devolvió una plantilla fuera del alcance canónico seleccionado.'];
+                    }
+                }
+                array_push($items, ...$pageItems);
+                if (count($pageItems) < $pageSize) {
+                    $allPagesRead = true;
+                    break;
+                }
+            }
+
+            $detailsComplete = true;
+            foreach ($items as $index => $template) {
+                $detail = $reader->getShiftTemplateVersion($user, (string) $template['clave'], (int) $template['version'], $workplaceId);
+                if (!($detail['ok'] ?? false)) {
+                    $items[$index]['segments'] = null;
+                    $detailsComplete = false;
+                    continue;
+                }
+                $detailData = $detail['data'];
+                if ((int) ($detailData['id'] ?? 0) !== (int) ($template['id'] ?? 0)
+                    || (string) ($detailData['scope'] ?? '') !== (string) ($template['scope'] ?? '')
+                    || ($detailData['scope'] === 'STATION' && (int) ($detailData['id_estacion'] ?? 0) !== $workplaceId)
+                    || ($detailData['scope'] === 'GLOBAL' && ($detailData['id_estacion'] ?? null) !== null)) {
+                    return ['status' => 'unavailable', 'items' => [], 'message' => 'El detalle de una plantilla no coincide con el catálogo del centro seleccionado.'];
+                }
+                $items[$index]['segments'] = $detailData['segmentos'];
+            }
+            $partial = !$allPagesRead || !$detailsComplete;
+            return ['status' => $demoMode ? ($partial ? 'demo_fixture_partial' : 'demo_fixture') : ($partial ? 'partial' : 'ready'),
+                'items' => $items, 'message' => $demoMode
+                    ? 'Catálogo sintético local; no representa plantillas ni asignaciones persistidas.'
+                    : 'Catálogo leído con el contexto canónico autorizado del centro seleccionado. La API mantiene la distinción entre plantillas globales y personalizadas por estación.'];
+        } catch (Throwable) {
+            return ['status' => 'unavailable', 'items' => [], 'message' => 'No fue posible consultar el catálogo de plantillas.'];
+        }
+    }
+
+    /** @return array<string,mixed> */
+    private static function readHistory(Usuario $user, int $workerId, int $workplaceId, string $date, bool $demoMode): array
+    {
+        try {
+            $reader = new ChecadorDailyReadService();
+            $effective = $reader->getEffectiveSchedule($user, $workerId, $workplaceId, $date);
+            $history = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 50);
+            if (($effective['ok'] ?? false) && ($history['ok'] ?? false)) {
+                return ['status' => $demoMode ? 'demo_fixture' : (count($history['data']['items'] ?? []) === 50 ? 'possibly_partial' : 'ready'),
+                    'effective_schedule' => $effective['data'], 'assignments' => $history['data']['items'] ?? [],
+                    'message' => $demoMode ? 'Respuesta sintética local; no es historial persistido.' : 'Lectura API V2 por trabajador, localidad y fecha.'];
+            }
+            return ['status' => 'unavailable', 'effective_schedule' => null, 'assignments' => [], 'message' => 'No fue posible confirmar el horario efectivo y su historial.'];
+        } catch (Throwable) {
+            return ['status' => 'unavailable', 'effective_schedule' => null, 'assignments' => [], 'message' => 'No fue posible consultar el historial autorizado.'];
+        }
     }
 
     /** @return array{status:string,items:list<array{id:int,name:string}>} */
@@ -241,43 +230,25 @@ final class ChecadorConfigurationReadService
         }
     }
 
-    /** @return array{status:string,physical_station_id:?int,name:?string} */
-    private static function resolveUniquePhysicalStation(int $workplaceId): array
-    {
-        try {
-            $locality = RhLocalidad::query()->where('id', $workplaceId)->first(['id', 'numlista', 'localidad']);
-            if (!$locality || (int) $locality->numlista < 1) {
-                return ['status' => 'mapping_unavailable', 'physical_station_id' => null, 'name' => null];
-            }
-            $rows = Estacion::query()->where('numlista', (int) $locality->numlista)->get(['id', 'numlista', 'nombre', 'estatus']);
-            if ($rows->count() !== 1 || (int) $rows->first()->estatus !== 0) {
-                return ['status' => 'mapping_not_unique_or_inactive', 'physical_station_id' => null, 'name' => null];
-            }
-            return ['status' => 'unique_numlista_mapping', 'physical_station_id' => (int) $rows->first()->id,
-                'name' => (string) $locality->localidad];
-        } catch (Throwable) {
-            return ['status' => 'mapping_unavailable', 'physical_station_id' => null, 'name' => null];
-        }
-    }
-
     private static function isCivilDate(string $date): bool
     {
         $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date, new \DateTimeZone('UTC'));
-        return $parsed !== false && $parsed->format('Y-m-d') === $date
-            && !array_filter(\DateTimeImmutable::getLastErrors() ?: []);
+        return $parsed !== false && $parsed->format('Y-m-d') === $date && !array_filter(\DateTimeImmutable::getLastErrors() ?: []);
     }
 
+    /** @return array<string,mixed> */
     private static function emptyResult(string $status): array
     {
         return ['status' => $status, 'demo_mode' => false, 'workplace_id' => null, 'workplace_kind' => 'unknown',
-            'permissions' => ['read' => false, 'legacy_create' => false, 'legacy_edit' => false, 'legacy_delete' => false, 'v2_schedule_edit' => false,
-                'positions_read' => false, 'positions_create' => false, 'positions_edit' => false, 'positions_delete' => false],
-            'mapping' => ['status' => 'not_checked', 'physical_station_id' => null, 'name' => null],
+            'permissions' => [], 'mapping' => ['status' => 'not_used', 'physical_station_id' => null, 'name' => null],
+            'policy' => ['status' => 'not_requested', 'data' => null],
             'api_templates' => ['status' => 'not_requested', 'items' => [], 'message' => ''],
             'api_history' => ['status' => 'not_requested', 'effective_schedule' => null, 'assignments' => [], 'message' => ''],
-            'legacy_schedules' => ['status' => 'not_read', 'items' => []],
-            'legacy_rules' => ['status' => 'not_read', 'configured' => false, 'retardo' => null, 'incidencia' => null],
-            'legacy_profiles' => ['status' => 'not_read', 'active_count' => null], 'positions' => ['status' => 'not_read', 'items' => []],
-            'device_auth' => ['status' => 'not_integrated', 'message' => 'La autenticación de dispositivos V2 no se consulta desde este catálogo legacy.']];
+            'legacy_schedules' => ['status' => 'not_used_as_v2_source', 'items' => []],
+            'legacy_rules' => ['status' => 'not_used_as_v2_source', 'configured' => false, 'retardo' => null, 'incidencia' => null],
+            'legacy_profiles' => ['status' => 'not_used_as_v2_source', 'active_count' => null],
+            'reader_profiles' => ['status' => 'not_integrated', 'items' => []],
+            'positions' => ['status' => 'not_requested', 'items' => []],
+            'device_auth' => ['status' => 'not_integrated', 'message' => 'La lectura de autenticación de dispositivos no está integrada en esta vista.']];
     }
 }

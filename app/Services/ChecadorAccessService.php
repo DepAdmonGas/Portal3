@@ -203,6 +203,167 @@ final class ChecadorAccessService
         }
     }
 
+    /** M04 station template administration is an explicit Encargado grant and remains station-scoped. */
+    public static function authorizeStationTemplateAdministration(?int $requestedLocalityId = null): array
+    {
+        $scope = self::authorize($requestedLocalityId);
+        if (!($scope['allowed'] ?? false)) return $scope;
+        try {
+            $authenticated = Auth::user();
+            if (!$authenticated || !Auth::check()) return ['allowed' => false, 'reason' => 'unauthenticated', 'workplaces' => []];
+            $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
+            if (!$user || (int) ($user->id_puesto ?? 0) !== self::ENCARGADO_PUESTO_ID
+                || !ChecadorV2PermissionService::allows((int) $user->id, self::ENCARGADO_PUESTO_ID,
+                    ChecadorV2PermissionService::STATION_TEMPLATE_ADMIN)) {
+                return ['allowed' => false, 'reason' => 'station_template_administration_denied', 'workplaces' => []];
+            }
+            $stations = is_array($scope['station_workplaces'] ?? null) ? $scope['station_workplaces'] : [];
+            $ids = array_map('intval', array_column($stations, 'id'));
+            if ($requestedLocalityId !== null && !in_array($requestedLocalityId, $ids, true)) {
+                return ['allowed' => false, 'reason' => 'requested_station_out_of_scope', 'workplaces' => []];
+            }
+            return ['allowed' => $stations !== [], 'reason' => $stations !== [] ? 'authorized' : 'empty_station_scope',
+                'position_id' => self::ENCARGADO_PUESTO_ID, 'workplaces' => $stations,
+                'station_workplaces' => $stations, 'descargar' => false];
+        } catch (Throwable) {
+            return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
+        }
+    }
+
+    /** Dedicated M11 attendance-policy capability; it never inherits Biométricos ACL. */
+    public static function authorizeAttendancePolicy(?int $requestedLocalityId, string $action = 'leer'): array
+    {
+        return self::authorizeM11StationCapability(
+            $requestedLocalityId,
+            $action,
+            ChecadorV2PermissionService::ATTENDANCE_POLICY_READ,
+            ChecadorV2PermissionService::ATTENDANCE_POLICY_EDIT,
+            'attendance_policy'
+        );
+    }
+
+    /** Reader application profiles are independently permissioned and station-scoped. */
+    public static function authorizeReaderProfiles(?int $requestedLocalityId, string $action = 'leer'): array
+    {
+        return self::authorizeM11StationCapability(
+            $requestedLocalityId,
+            $action,
+            ChecadorV2PermissionService::READER_PROFILE_READ,
+            ChecadorV2PermissionService::READER_PROFILE_EDIT,
+            'reader_profile'
+        );
+    }
+
+    /** M11 device inventory is a separate read grant for authenticated Checador users. */
+    public static function authorizeAdministrativeDevices(?int $requestedLocalityId): array
+    {
+        return self::authorizeM11StationCapability(
+            $requestedLocalityId,
+            'leer',
+            ChecadorV2PermissionService::DEVICE_READ,
+            ChecadorV2PermissionService::DEVICE_READ,
+            'administrative_devices'
+        );
+    }
+
+    /** The shared institutional position catalog is Dirección-only. */
+    public static function authorizePositionCatalog(?int $requestedLocalityId, string $action = 'leer'): array
+    {
+        if (!in_array($action, ['leer', 'editar'], true)) {
+            return ['allowed' => false, 'reason' => 'position_catalog_action_invalid', 'workplaces' => []];
+        }
+        $scope = self::authorize($requestedLocalityId);
+        if (!($scope['allowed'] ?? false)) return $scope;
+        try {
+            $authenticated = Auth::user();
+            if (!$authenticated || !Auth::check()) return ['allowed' => false, 'reason' => 'unauthenticated', 'workplaces' => []];
+            $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
+            if (!$user) return ['allowed' => false, 'reason' => 'inactive_user', 'workplaces' => []];
+            $positionId = (int) ($user->id_puesto ?? 0);
+            $permission = $action === 'editar'
+                ? ChecadorV2PermissionService::POSITION_CATALOG_EDIT
+                : ChecadorV2PermissionService::POSITION_CATALOG_READ;
+            if ($positionId !== self::DIRECCION_OPERACIONES_PUESTO_ID
+                || !ChecadorV2PermissionService::allows((int) $user->id, $positionId, $permission)) {
+                return ['allowed' => false, 'reason' => 'position_catalog_permission_denied', 'workplaces' => []];
+            }
+            return [
+                'allowed' => true,
+                'reason' => 'authorized',
+                'position_id' => $positionId,
+                'workplaces' => $scope['workplaces'] ?? [],
+                'station_workplaces' => $scope['station_workplaces'] ?? [],
+                'descargar' => false,
+            ];
+        } catch (Throwable) {
+            return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
+        }
+    }
+
+    /** M11 capabilities require an explicit M11 grant plus an authorized physical station. */
+    private static function authorizeM11StationCapability(
+        ?int $requestedLocalityId,
+        string $action,
+        string $readPermission,
+        string $editPermission,
+        string $capability
+    ): array {
+        $deny = static fn(string $reason): array => [
+            'allowed' => false,
+            'reason' => $reason,
+            'workplaces' => [],
+            'station_workplaces' => [],
+        ];
+        if (!in_array($action, ['leer', 'editar'], true)) return $deny($capability . '_action_invalid');
+        $scope = self::authorize($requestedLocalityId);
+        if (!($scope['allowed'] ?? false)) return $scope;
+        try {
+            $authenticated = Auth::user();
+            if (!$authenticated || !Auth::check()) return $deny('unauthenticated');
+            $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
+            if (!$user) return $deny('inactive_user');
+            $positionId = (int) ($user->id_puesto ?? 0);
+            if (!in_array($positionId, [self::ENCARGADO_PUESTO_ID, self::DIRECCION_OPERACIONES_PUESTO_ID], true)) {
+                return $deny($capability . '_position_not_mapped');
+            }
+            $permission = $action === 'editar' ? $editPermission : $readPermission;
+            if (!ChecadorV2PermissionService::allows((int) $user->id, $positionId, $permission)) {
+                return $deny($capability . '_permission_denied');
+            }
+            $stationWorkplaces = is_array($scope['station_workplaces'] ?? null) ? $scope['station_workplaces'] : [];
+            $stationIds = array_map('intval', array_column($stationWorkplaces, 'id'));
+            if ($requestedLocalityId === null) {
+                if ($stationWorkplaces === []) return $deny('empty_station_scope');
+                return [
+                    'allowed' => true,
+                    'reason' => 'authorized',
+                    'position_id' => $positionId,
+                    'workplaces' => $stationWorkplaces,
+                    'station_workplaces' => $stationWorkplaces,
+                    'descargar' => false,
+                ];
+            }
+            if (!in_array($requestedLocalityId, $stationIds, true)) {
+                return $deny('requested_station_out_of_scope');
+            }
+            $selected = array_values(array_filter(
+                $stationWorkplaces,
+                static fn(array $workplace): bool => (int) ($workplace['id'] ?? 0) === $requestedLocalityId
+            ));
+            if ($selected === []) return $deny('empty_station_scope');
+            return [
+                'allowed' => true,
+                'reason' => 'authorized',
+                'position_id' => $positionId,
+                'workplaces' => $selected,
+                'station_workplaces' => $stationWorkplaces,
+                'descargar' => false,
+            ];
+        } catch (Throwable) {
+            return $deny('authorization_lookup_failed');
+        }
+    }
+
     /**
      * Re-resolve the independent Temporary Access ACL and physical-station
      * scope for each supervisor operation. Departments are never accepted as

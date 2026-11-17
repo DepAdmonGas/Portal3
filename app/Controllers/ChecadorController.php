@@ -1421,18 +1421,296 @@ final class ChecadorController extends BaseController
                 'selectedWorkplaceName' => $workplaceName,
                 'configuration' => $configuration,
                 'demoMode' => $demoMode,
+                'configurationFeedback' => Session::pull('checador_configuration_feedback', null),
+                'attendancePolicyWritesEnabled' => ChecadorDailyReadService::attendancePolicyPostOperationsEnabled(),
+                'm11ConfigurationWritesEnabled' => ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled(),
+                'scheduleTemplateWritesEnabled' => ChecadorDailyReadService::scheduleApiPostOperationsEnabled(),
                 'workerId' => $workerId,
                 'date' => $date,
                 'historyInputInvalid' => $historyInputInvalid,
                 'temporaryAccessAvailable' => $temporaryAccessAvailable,
                 'canReadScheduling' => $canReadScheduling,
-                'links' => [],
-                'scripts' => ['/assets/js/core/module-station-selector.js'],
+                'links' => [
+                    '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                ],
+                'scripts' => [
+                    '/assets/js/vendor.min.js',
+                    '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                    '/assets/js/core/module-station-selector.js',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.configuration.datatable.init.js?v=20261117-2',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-template.init.js',
+                ],
                 'moduleStationKey' => ChecadorAccessService::MODULE_KEY,
                 'help' => false,
             ],
             'departamento-operativo'
         );
+    }
+
+    /** Save the Dirección-only institutional position catalog under the M11 gate. */
+    public function saveConfigurationPosition(): void
+    {
+        $input = Request::all();
+        $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        $positionId = self::positiveInteger($input['position_id'] ?? null);
+        $name = is_string($input['name'] ?? null) ? trim($input['name']) : '';
+        $redirect = self::configurationHref($workplaceId);
+        $user = Auth::user();
+        if (!$user) {
+            self::configurationFeedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.', $workplaceId);
+            self::redirect($redirect);
+        }
+        if ($workplaceId === null || $name === '' || ($input['confirm_position'] ?? '') !== '1') {
+            self::configurationFeedback('error', 'Completa el nombre y confirma el cambio. No se guardó ningún puesto.', $workplaceId);
+            self::redirect($redirect);
+        }
+        if (ChecadorDailyReadService::demoModeEnabled()) {
+            self::configurationFeedback('error', 'La demostración no permite modificar el catálogo operativo.', $workplaceId);
+            self::redirect($redirect);
+        }
+        $saved = (new \App\Services\ChecadorConfigurationWriteService())->savePosition($user, $workplaceId, $positionId, $name);
+        if ($saved['ok'] ?? false) {
+            self::configurationFeedback('success', 'El puesto se guardó y se confirmó mediante lectura posterior.', $workplaceId);
+        } else {
+            $message = match ($saved['error'] ?? '') {
+                'permission_denied' => 'No tienes permiso para administrar el catálogo institucional de puestos.',
+                'm11_write_disabled' => 'La escritura M11 está desactivada en este entorno. No se guardó ningún cambio.',
+                'duplicate_position' => 'Ya existe un puesto activo con ese nombre.',
+                'position_not_found' => 'El puesto seleccionado ya no está disponible.',
+                'invalid_position_name' => 'El nombre del puesto no es válido.',
+                default => 'No fue posible guardar y confirmar el puesto.',
+            };
+            self::configurationFeedback('error', $message, $workplaceId);
+        }
+        self::redirect($redirect);
+    }
+
+    /** Update an authorized station's reader profile; credentials are write-only. */
+    public function updateConfigurationReaderProfile(): void
+    {
+        $input = Request::all();
+        $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        $profileId = self::positiveInteger($input['profile_id'] ?? null);
+        $username = is_string($input['username'] ?? null) ? trim($input['username']) : '';
+        $newPassword = is_string($input['new_password'] ?? null) ? $input['new_password'] : '';
+        $passwordConfirmation = is_string($input['new_password_confirmation'] ?? null) ? $input['new_password_confirmation'] : '';
+        $redirect = self::configurationHref($workplaceId);
+        $user = Auth::user();
+        if (!$user) {
+            self::configurationFeedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.', $workplaceId);
+            self::redirect($redirect);
+        }
+        if ($workplaceId === null || $profileId === null || $username === ''
+            || ($newPassword !== '' && !hash_equals($newPassword, $passwordConfirmation))
+            || ($input['confirm_reader_profile'] ?? '') !== '1') {
+            self::configurationFeedback('error', 'Revisa el usuario, la confirmación y los campos de credencial. No se guardó el perfil.', $workplaceId);
+            self::redirect($redirect);
+        }
+        if (ChecadorDailyReadService::demoModeEnabled()) {
+            self::configurationFeedback('error', 'La demostración no permite modificar perfiles operativos.', $workplaceId);
+            self::redirect($redirect);
+        }
+        $saved = (new \App\Services\ChecadorConfigurationWriteService())->updateReaderProfile(
+            $user, $workplaceId, $profileId, $username, $newPassword
+        );
+        if ($saved['ok'] ?? false) {
+            self::configurationFeedback('success', 'El perfil se guardó y el usuario se confirmó mediante lectura posterior.', $workplaceId);
+        } else {
+            $message = match ($saved['error'] ?? '') {
+                'permission_denied' => 'No tienes permiso para editar perfiles de lector en este centro.',
+                'm11_write_disabled' => 'La escritura M11 está desactivada en este entorno. No se guardó ningún cambio.',
+                'profile_not_found' => 'El perfil ya no está disponible en el centro seleccionado.',
+                'duplicate_profile_username' => 'Ya existe ese usuario para el lector del centro seleccionado.',
+                'station_mapping_unresolved' => 'No se pudo confirmar el mapeo único de la estación física.',
+                'invalid_profile_input' => 'Los datos del perfil no tienen un formato válido.',
+                default => 'No fue posible guardar y confirmar el perfil del lector.',
+            };
+            self::configurationFeedback('error', $message, $workplaceId);
+        }
+        self::redirect($redirect);
+    }
+
+    /** Create a station-local template or append a new immutable version through the existing V2 contract. */
+    public function saveConfigurationScheduleTemplate(): void
+    {
+        $input = Request::all();
+        $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        $operation = is_string($input['operation'] ?? null) ? trim($input['operation']) : '';
+        $key = is_string($input['template_key'] ?? null) ? trim($input['template_key']) : '';
+        $name = is_string($input['template_name'] ?? null) ? trim($input['template_name']) : '';
+        $type = is_string($input['template_type'] ?? null) ? strtoupper(trim($input['template_type'])) : '';
+        $redirect = self::configurationHref($workplaceId) . '#schedule-configuration';
+        $user = Auth::user();
+        if (!$user) {
+            self::configurationFeedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.', $workplaceId);
+            self::redirect($redirect);
+        }
+        if ($workplaceId === null || !in_array($operation, ['create', 'version'], true)
+            || ($input['confirm_template'] ?? '') !== '1') {
+            self::configurationFeedback('error', 'Revisa el centro y confirma la operación solicitada. No se envió la plantilla.', $workplaceId);
+            self::redirect($redirect);
+        }
+        if (ChecadorDailyReadService::demoModeEnabled()) {
+            self::configurationFeedback('error', 'El modo demostración es de consulta y no permite escribir plantillas operativas.', $workplaceId);
+            self::redirect($redirect);
+        }
+        if (!ChecadorDailyReadService::scheduleApiPostOperationsEnabled()) {
+            self::configurationFeedback('error', 'La escritura de horarios está protegida por el gate local específico. No se envió la solicitud.', $workplaceId);
+            self::redirect($redirect);
+        }
+        if (!(ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false)) {
+            self::configurationFeedback('error', 'No tienes permiso explícito para administrar plantillas de esta estación.', $workplaceId);
+            self::redirect($redirect);
+        }
+
+        $segmentsInput = is_array($input['segments'] ?? null) ? array_values($input['segments']) : [];
+        $segments = [];
+        foreach ($segmentsInput as $segment) {
+            if (!is_array($segment)) continue;
+            $start = is_string($segment['hora_inicio_local'] ?? null) ? trim($segment['hora_inicio_local']) : '';
+            $end = is_string($segment['hora_fin_local'] ?? null) ? trim($segment['hora_fin_local']) : '';
+            if ($start === '' && $end === '') continue;
+            $segments[] = [
+                'ordinal' => count($segments) + 1,
+                'tipo_segmento' => is_string($segment['tipo_segmento'] ?? null) ? strtoupper(trim($segment['tipo_segmento'])) : 'WORK',
+                'hora_inicio_local' => $start,
+                'hora_fin_local' => $end,
+                'dia_offset_inicio' => isset($segment['dia_offset_inicio']) ? (int) $segment['dia_offset_inicio'] : 0,
+                'dia_offset_fin' => isset($segment['dia_offset_fin']) ? (int) $segment['dia_offset_fin'] : 0,
+            ];
+        }
+        if ($name === '' || $type === '' || $segments === []) {
+            self::configurationFeedback('error', 'Indica nombre, tipo y al menos un segmento horario válido.', $workplaceId);
+            self::redirect($redirect);
+        }
+        if ($operation === 'create') {
+            $normalizedKey = strtoupper((string) (iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name));
+            $normalizedKey = trim((string) preg_replace('/[^A-Z0-9]+/', '_', $normalizedKey), '_');
+            $key = substr('ST' . $workplaceId . '_' . $normalizedKey . '_' . strtoupper(bin2hex(random_bytes(4))), 0, 64);
+        }
+
+        try {
+            $reader = new ChecadorDailyReadService();
+            $result = $operation === 'create'
+                ? $reader->createStationShiftTemplate($user, $workplaceId, [
+                    'clave' => $key, 'nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $segments,
+                ])
+                : $reader->createStationShiftTemplateVersion($user, $workplaceId, $key, [
+                    'nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $segments,
+                ]);
+        } catch (\Throwable) {
+            $result = ['ok' => false, 'error' => ['kind' => 'unavailable']];
+        }
+        self::configurationFeedback(($result['ok'] ?? false) ? 'success' : 'error',
+            ($result['ok'] ?? false)
+                ? 'La plantilla y sus segmentos se guardaron y se confirmaron mediante lectura de API V2.'
+                : 'La API no confirmó el guardado y la lectura posterior de la plantilla. Consulta el catálogo; no se declara guardada.',
+            $workplaceId);
+        self::redirect($redirect);
+    }
+
+    private static function configurationHref(?int $workplaceId): string
+    {
+        return '/departamento-operativo/recursos-humanos/checador/configuracion'
+            . ($workplaceId !== null ? '?workplace_id=' . $workplaceId : '');
+    }
+
+    private static function configurationFeedback(string $type, string $message, ?int $workplaceId): void
+    {
+        Session::set('checador_configuration_feedback', [
+            'type' => $type,
+            'message' => $message,
+            'workplace_id' => $workplaceId,
+        ]);
+    }
+
+    /** Create and verify a prospective, API-owned M11 attendance policy version. */
+    public function saveAttendancePolicy(): void
+    {
+        $input = Request::all();
+        $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        $effectiveDate = is_string($input['effective_from_local_date'] ?? null) ? trim($input['effective_from_local_date']) : '';
+        $tolerance = $input['retardo_tolerance_minutes'] ?? null;
+        $deadline = $input['incidence_deadline_days'] ?? null;
+        $idempotencyKey = is_string($input['idempotency_key'] ?? null) ? trim($input['idempotency_key']) : '';
+        $redirect = '/departamento-operativo/recursos-humanos/checador/configuracion'
+            . ($workplaceId !== null ? '?workplace_id=' . $workplaceId : '');
+        $feedback = static function (string $type, string $message) use ($workplaceId): void {
+            Session::set('checador_configuration_feedback', [
+                'type' => $type,
+                'message' => $message,
+                'workplace_id' => $workplaceId,
+            ]);
+        };
+
+        if ($workplaceId === null || !self::isCivilDate($effectiveDate)
+            || !is_scalar($tolerance) || !is_scalar($deadline)
+            || !preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/', $idempotencyKey)
+            || (string) ($input['confirm_policy'] ?? '') !== '1') {
+            $feedback('error', 'Completa los valores y la fecha de vigencia solicitados. No se guardó ningún cambio.');
+            self::redirect($redirect);
+        }
+
+        $authorization = ChecadorAccessService::authorizeAttendancePolicy($workplaceId, 'editar');
+        $readAuthorization = ChecadorAccessService::authorizeAttendancePolicy($workplaceId, 'leer');
+        if (!($authorization['allowed'] ?? false) || !($readAuthorization['allowed'] ?? false)) {
+            $feedback('error', 'No tienes permiso específico para editar políticas en el centro seleccionado.');
+            self::redirect($redirect);
+        }
+        if (ChecadorDailyReadService::demoModeEnabled()) {
+            $feedback('error', 'El modo demostración no permite guardar políticas operativas.');
+            self::redirect($redirect);
+        }
+        if (!ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()) {
+            $feedback('error', 'La escritura M11 permanece deshabilitada en esta configuración local. No se guardó ningún cambio.');
+            self::redirect($redirect);
+        }
+
+        $user = Auth::user();
+        if (!$user) {
+            $feedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.');
+            self::redirect($redirect);
+        }
+
+        try {
+            $reader = new ChecadorDailyReadService();
+            $created = $reader->createAttendancePolicy($user, [
+                'workplace_id' => $workplaceId,
+                'effective_from_local_date' => $effectiveDate,
+                'retardo_tolerance_minutes' => $tolerance,
+                'incidence_deadline_days' => $deadline,
+            ], $idempotencyKey);
+        } catch (\Throwable) {
+            $created = ['ok' => false];
+            $reader = null;
+        }
+        if (!($created['ok'] ?? false)) {
+            $feedback('error', 'La política no pudo guardarse. Revisa permisos, vigencia y disponibilidad del servicio; no se confirmó ningún cambio.');
+            self::redirect($redirect);
+        }
+
+        try {
+            $readback = $reader?->readAttendancePolicy($user, $workplaceId, $effectiveDate) ?? ['ok' => false];
+        } catch (\Throwable) {
+            $readback = ['ok' => false];
+        }
+        $policy = $readback['data']['policy'] ?? null;
+        $createdData = $created['data'] ?? [];
+        $confirmed = ($readback['ok'] ?? false) === true
+            && is_array($policy)
+            && (int) ($policy['id'] ?? 0) === (int) ($createdData['id'] ?? -1)
+            && (int) ($policy['workplace_id'] ?? 0) === $workplaceId
+            && (int) ($policy['policy_version'] ?? 0) === (int) ($createdData['policy_version'] ?? -1)
+            && (string) ($policy['effective_from_local_date'] ?? '') === $effectiveDate
+            && (int) ($policy['retardo_tolerance_minutes'] ?? -1) === (int) $tolerance
+            && (int) ($policy['incidence_deadline_days'] ?? -1) === (int) $deadline;
+        if (!$confirmed) {
+            $feedback('error', 'La solicitud se envió, pero la lectura posterior no confirmó los valores exactos. No se muestra como guardada.');
+            self::redirect($redirect);
+        }
+
+        $feedback('success', 'La política prospectiva se guardó y se confirmó mediante lectura de API V2.');
+        self::redirect($redirect);
     }
 
     /** Read-only schedule validity view, independent of the PunchEvent snapshot. */

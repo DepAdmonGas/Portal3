@@ -90,6 +90,36 @@ final class ChecadorDailyReadService
             && in_array($flag, ['1', 'true', 'yes', 'on'], true);
     }
 
+    /** Keep approved local schedule writes isolated from unrelated API POSTs. */
+    public static function scheduleApiPostOperationsEnabled(): bool
+    {
+        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
+        $flag = strtolower(trim((string) ($_ENV['CHECADOR_SHIFT_SCHEDULING_POSTS_ENABLED'] ?? getenv('CHECADOR_SHIFT_SCHEDULING_POSTS_ENABLED') ?: '')));
+
+        return in_array($environment, ['dev', 'development', 'local'], true)
+            && (self::realApiPostOperationsEnabled() || in_array($flag, ['1', 'true', 'yes', 'on'], true));
+    }
+
+    /** M11 policy writes use an independent local opt-in and never inherit the global API POST gate. */
+    public static function attendancePolicyPostOperationsEnabled(): bool
+    {
+        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
+        $flag = strtolower(trim((string) ($_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED']
+            ?? getenv('CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED') ?: '')));
+        return in_array($environment, ['dev', 'development', 'local'], true)
+            && in_array($flag, ['1', 'true', 'yes', 'on'], true);
+    }
+
+    /** Local M11 catalog/profile writes remain separately gated. */
+    public static function m11ConfigurationPostOperationsEnabled(): bool
+    {
+        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
+        $flag = strtolower(trim((string) ($_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED']
+            ?? getenv('CHECADOR_M11_CONFIGURATION_POSTS_ENABLED') ?: '')));
+        return in_array($environment, ['dev', 'development', 'local'], true)
+            && in_array($flag, ['1', 'true', 'yes', 'on'], true);
+    }
+
     /** @return string|null A safe scenario name, or null when demo mode is disabled. */
     public static function configuredDemoScenario(): ?string
     {
@@ -618,6 +648,172 @@ final class ChecadorDailyReadService
      *
      * @return array{ok:bool,data?:array<string,mixed>,error?:array{kind:string,status:int}}
      */
+    /** Read the API-owned M11 policy for one canonical locality and effective date. */
+    public function readAttendancePolicy(Usuario $user, int $workplaceId, string $effectiveDate): array
+    {
+        if ($this->demoScenario !== null) return self::failure('demo_operation_blocked', 403);
+        if ($workplaceId < 1 || !self::isCivilDate($effectiveDate)) return self::failure('bad_request', 400);
+        $response = $this->request($user, 'GET', 'api/v2/attendance-policies', [
+            'workplace_id' => $workplaceId,
+            'effective_date' => $effectiveDate,
+        ], 'attendance_policy_read');
+        if (!($response['ok'] ?? false)) return $response;
+        $data = $response['payload']['data'] ?? null;
+        if (!self::validAttendancePolicyEnvelope($data, $workplaceId, $effectiveDate)) {
+            return self::failure('administrative_unavailable', 502);
+        }
+        return ['ok' => true, 'data' => $data];
+    }
+
+    /** Resolve the API's locality date first, then read exactly that date's policy. */
+    public function readCurrentAttendancePolicy(Usuario $user, int $workplaceId): array
+    {
+        $seedDate = gmdate('Y-m-d');
+        $seed = $this->readAttendancePolicy($user, $workplaceId, $seedDate);
+        if (!($seed['ok'] ?? false)) return $seed;
+        $localDate = (string) ($seed['data']['current_local_date'] ?? '');
+        if (!self::isCivilDate($localDate)) return self::failure('administrative_unavailable', 502);
+        if ($localDate === $seedDate) return $seed;
+        $local = $this->readAttendancePolicy($user, $workplaceId, $localDate);
+        if (!($local['ok'] ?? false) || (string) ($local['data']['current_local_date'] ?? '') !== $localDate) {
+            return self::failure('administrative_unavailable', 502);
+        }
+        return $local;
+    }
+
+    /** Read the API-owned, authorized administrative device inventory for one canonical locality. */
+    public function readAdministrativeDevices(Usuario $user, int $workplaceId): array
+    {
+        if ($this->demoScenario !== null) return self::failure('demo_operation_blocked', 403);
+        if ($workplaceId < 1) return self::failure('bad_request', 400);
+        $response = $this->request($user, 'GET', 'api/v2/administrative-devices', [
+            'workplace_id' => $workplaceId,
+        ], 'administrative_devices_read');
+        if (!($response['ok'] ?? false)) return $response;
+
+        $payload = $response['payload'] ?? [];
+        $completeness = strtoupper((string) ($payload['completeness'] ?? ''));
+        $items = $payload['items'] ?? null;
+        if (($payload['status'] ?? '') !== 'OK'
+            || !in_array($completeness, ['COMPLETE', 'PARTIAL', 'UNKNOWN'], true)
+            || !is_array($items) || count($items) > 500
+            || !is_string($payload['read_at_utc'] ?? null)
+            || !is_array($payload['partial_reasons'] ?? [])) {
+            return self::failure('administrative_unavailable', 502);
+        }
+
+        $safeItems = [];
+        foreach ($items as $item) {
+            $device = is_array($item['device'] ?? null) ? $item['device'] : [];
+            $station = is_array($item['physical_station'] ?? null) ? $item['physical_station'] : [];
+            $workplace = is_array($item['workplace'] ?? null) ? $item['workplace'] : [];
+            $assignment = is_array($item['assignment'] ?? null) ? $item['assignment'] : [];
+            $telemetry = is_array($item['last_communication'] ?? null) ? $item['last_communication'] : [];
+            $assignmentStatus = strtoupper((string) ($assignment['status'] ?? ''));
+            if (self::positiveInt($device['id'] ?? null) === null
+                || !is_string($device['uuid'] ?? null) || trim($device['uuid']) === ''
+                || !is_string($device['name'] ?? null)
+                || !in_array(strtoupper((string) ($device['persisted_status'] ?? '')), ['ACTIVE', 'INACTIVE'], true)
+                || self::positiveInt($station['id'] ?? null) === null
+                || !is_string($station['name'] ?? null)
+                || self::positiveInt($workplace['id'] ?? null) !== $workplaceId
+                || !is_string($workplace['name'] ?? null)
+                || strtoupper((string) ($workplace['mapping_status'] ?? '')) !== 'VERIFIED'
+                || !in_array($assignmentStatus, ['ASSIGNED', 'UNASSIGNED', 'UNKNOWN'], true)) {
+                return self::failure('administrative_unavailable', 502);
+            }
+            $safeItems[] = [
+                'device' => ['id' => (int) $device['id'], 'uuid' => $device['uuid'], 'name' => $device['name'],
+                    'persisted_status' => strtoupper((string) $device['persisted_status'])],
+                'physical_station' => ['id' => (int) $station['id'], 'name' => $station['name'], 'numlista' => self::positiveInt($station['numlista'] ?? null)],
+                'workplace' => ['id' => $workplaceId, 'name' => $workplace['name'], 'mapping_status' => 'VERIFIED'],
+                'assignment' => ['status' => $assignmentStatus,
+                    'valid_from_utc' => is_string($assignment['valid_from_utc'] ?? null) ? $assignment['valid_from_utc'] : null,
+                    'valid_to_utc' => is_string($assignment['valid_to_utc'] ?? null) ? $assignment['valid_to_utc'] : null,
+                    'source' => is_string($assignment['source'] ?? null) ? $assignment['source'] : null],
+                'last_communication' => ['last_server_received_at_utc' => is_string($telemetry['last_server_received_at_utc'] ?? null)
+                    ? $telemetry['last_server_received_at_utc'] : null],
+            ];
+        }
+
+        $reasons = array_values(array_filter($payload['partial_reasons'] ?? [], static fn(mixed $reason): bool =>
+            is_string($reason) && preg_match('/\A[A-Z0-9_]{1,64}\z/D', $reason) === 1));
+        return ['ok' => true, 'data' => [
+            'completeness' => $completeness,
+            'read_at_utc' => $payload['read_at_utc'],
+            'partial_reasons' => array_slice($reasons, 0, 20),
+            'items' => $safeItems,
+        ]];
+    }
+
+    /** Create one prospective M11 policy through the single API writer and dedicated gate. */
+    public function createAttendancePolicy(Usuario $user, array $input, string $idempotencyKey): array
+    {
+        if ($this->demoScenario !== null) return self::failure('demo_write_blocked', 403);
+        $workplaceId = self::positiveInt($input['workplace_id'] ?? null);
+        $effectiveDate = is_string($input['effective_from_local_date'] ?? null) ? trim($input['effective_from_local_date']) : '';
+        $tolerance = self::strictInteger($input['retardo_tolerance_minutes'] ?? null);
+        $deadline = self::strictInteger($input['incidence_deadline_days'] ?? null);
+        $idempotencyKey = trim($idempotencyKey);
+        if ($workplaceId === null || !self::isCivilDate($effectiveDate)
+            || $tolerance === null || $tolerance < 0 || $tolerance > 120
+            || $deadline === null || $deadline < 0 || $deadline > 30
+            || preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/', $idempotencyKey) !== 1) {
+            return self::failure('bad_request', 400);
+        }
+        if (!self::attendancePolicyPostOperationsEnabled()) return self::failure('api_post_disabled', 403);
+        $response = $this->requestJson($user, 'POST', 'api/v2/attendance-policies', [
+            'workplace_id' => $workplaceId,
+            'effective_from_local_date' => $effectiveDate,
+            'retardo_tolerance_minutes' => $tolerance,
+            'incidence_deadline_days' => $deadline,
+        ], $idempotencyKey);
+        if (!($response['ok'] ?? false)) return $response;
+        $data = $response['payload']['data'] ?? null;
+        if (!is_array($data)
+            || self::positiveInt($data['id'] ?? null) === null
+            || (int) ($data['workplace_id'] ?? 0) !== $workplaceId
+            || !is_int($data['policy_version'] ?? null) || $data['policy_version'] < 1
+            || (string) ($data['effective_from_local_date'] ?? '') !== $effectiveDate
+            || (int) ($data['retardo_tolerance_minutes'] ?? -1) !== $tolerance
+            || (int) ($data['incidence_deadline_days'] ?? -1) !== $deadline
+            || !is_string($data['timezone_id'] ?? null)
+            || !ChecadorOperationalPeriod::isIanaTimezone($data['timezone_id'])
+            || !is_int($data['actor_portal_user_id'] ?? null)
+            || (string) ($data['source'] ?? '') !== 'PORTAL3_ADMIN') {
+            return self::failure('administrative_unavailable', 502);
+        }
+        return ['ok' => true, 'http_status' => (int) ($response['http_status'] ?? 200), 'data' => $data];
+    }
+
+    private static function validAttendancePolicyEnvelope(mixed $data, int $workplaceId, string $date): bool
+    {
+        if (!is_array($data) || (int) ($data['workplace_id'] ?? 0) !== $workplaceId
+            || (string) ($data['effective_date'] ?? '') !== $date
+            || !self::isCivilDate((string) ($data['current_local_date'] ?? ''))
+            || !is_string($data['timezone_id'] ?? null)
+            || !ChecadorOperationalPeriod::isIanaTimezone($data['timezone_id'])
+            || !in_array(($data['status'] ?? null), ['VERSIONED', 'LEGACY_UNVERSIONED'], true)
+            || !array_key_exists('policy', $data)) return false;
+        if ($data['status'] === 'LEGACY_UNVERSIONED') return $data['policy'] === null;
+        $policy = $data['policy'];
+        return is_array($policy)
+            && (int) ($policy['workplace_id'] ?? 0) === $workplaceId
+            && self::isCivilDate((string) ($policy['effective_from_local_date'] ?? ''))
+            && (string) $policy['effective_from_local_date'] <= $date
+            && is_int($policy['retardo_tolerance_minutes'] ?? null)
+            && $policy['retardo_tolerance_minutes'] >= 0 && $policy['retardo_tolerance_minutes'] <= 120
+            && is_int($policy['incidence_deadline_days'] ?? null)
+            && $policy['incidence_deadline_days'] >= 0 && $policy['incidence_deadline_days'] <= 30;
+    }
+
+    private static function strictInteger(mixed $value): ?int
+    {
+        if (is_int($value)) return $value;
+        if (!is_string($value) || preg_match('/\A(?:0|[1-9][0-9]*)\z/', $value) !== 1) return null;
+        return filter_var($value, FILTER_VALIDATE_INT) === false ? null : (int) $value;
+    }
+
     public function getEffectiveSchedule(
         Usuario $user,
         int $workerId,
@@ -771,10 +967,12 @@ final class ChecadorDailyReadService
     }
 
     /** @return array{ok:bool,data?:array{page:int,per_page:int,items:list<array<string,mixed>>},error?:array{kind:string,status:int}} */
-    public function getShiftTemplates(Usuario $user, int $page = 1, int $perPage = 100): array
+    public function getShiftTemplates(Usuario $user, int $page = 1, int $perPage = 100, ?int $workplaceId = null): array
     {
         if ($page < 1 || $page > 10000 || $perPage < 1 || $perPage > 200) return self::failure('bad_request', 400);
-        $response = $this->request($user, 'GET', 'api/v2/shift-templates', ['page' => $page, 'per_page' => $perPage]);
+        $queryParams = ['page' => $page, 'per_page' => $perPage];
+        if ($workplaceId !== null && $workplaceId > 0) $queryParams['station_id'] = $workplaceId;
+        $response = $this->request($user, 'GET', 'api/v2/shift-templates', $queryParams);
         if (!$response['ok']) return $response;
         $data = $response['payload']['data'] ?? null;
         $items = is_array($data) ? ($data['items'] ?? null) : null;
@@ -787,20 +985,28 @@ final class ChecadorDailyReadService
             $key = is_array($item) ? trim((string) ($item['clave'] ?? '')) : '';
             $name = is_array($item) ? trim((string) ($item['nombre'] ?? '')) : '';
             $active = is_array($item) ? filter_var($item['es_activo'] ?? null, FILTER_VALIDATE_INT) : false;
+            $scope = is_array($item) ? strtoupper(trim((string) ($item['scope'] ?? 'GLOBAL'))) : 'GLOBAL';
+            $stationId = is_array($item) && isset($item['id_estacion']) && $item['id_estacion'] !== null ? self::positiveInt($item['id_estacion']) : null;
+            $lineage = is_array($item['derived_from_global'] ?? null) ? $item['derived_from_global'] : null;
+            $customization = is_array($item['station_customization'] ?? null) ? $item['station_customization'] : null;
             if ($id === null || $version === null || $key === '' || strlen($key) > 100 || $name === '' || !in_array($active, [0, 1], true)) {
                 return self::failure('schedule_templates_unavailable', 502);
             }
             $normalized[] = ['id' => $id, 'clave' => $key, 'version' => $version, 'nombre' => $name,
-                'tipo_turno' => (string) ($item['tipo_turno'] ?? ''), 'es_activo' => (int) $active];
+                'tipo_turno' => (string) ($item['tipo_turno'] ?? ''), 'scope' => $scope, 'id_estacion' => $stationId,
+                'es_activo' => (int) $active,
+                'derived_from_global' => $lineage === null ? null : ['clave' => trim((string) ($lineage['clave'] ?? '')), 'version' => self::positiveInt($lineage['version'] ?? null)],
+                'station_customization' => $customization === null ? null : ['clave' => trim((string) ($customization['clave'] ?? '')), 'source_version' => self::positiveInt($customization['source_version'] ?? null)]];
         }
         return ['ok' => true, 'data' => ['page' => $page, 'per_page' => $perPage, 'items' => $normalized]];
     }
 
     /** @return array{ok:bool,data?:array<string,mixed>,error?:array{kind:string,status:int}} */
-    public function getShiftTemplateVersion(Usuario $user, string $templateKey, int $version): array
+    public function getShiftTemplateVersion(Usuario $user, string $templateKey, int $version, ?int $workplaceId = null): array
     {
         if ($templateKey === '' || strlen($templateKey) > 100 || str_contains($templateKey, '/') || $version < 1) return self::failure('bad_request', 400);
-        $response = $this->request($user, 'GET', 'api/v2/shift-templates/' . rawurlencode($templateKey) . '/versions/' . $version);
+        $queryParams = $workplaceId !== null && $workplaceId > 0 ? ['station_id' => $workplaceId] : [];
+        $response = $this->request($user, 'GET', 'api/v2/shift-templates/' . rawurlencode($templateKey) . '/versions/' . $version, $queryParams);
         if (!$response['ok']) return $response;
         $data = $response['payload']['data'] ?? null;
         $segments = is_array($data) ? ($data['segmentos'] ?? null) : null;
@@ -821,7 +1027,106 @@ final class ChecadorDailyReadService
         }
         return ['ok' => true, 'data' => ['id' => self::positiveInt($data['id'] ?? null), 'clave' => $templateKey,
             'version' => $version, 'nombre' => (string) ($data['nombre'] ?? ''), 'tipo_turno' => (string) ($data['tipo_turno'] ?? ''),
-            'es_activo' => (int) ($data['es_activo'] ?? 0), 'segmentos' => $normalizedSegments]];
+            'es_activo' => (int) ($data['es_activo'] ?? 0), 'scope' => strtoupper((string) ($data['scope'] ?? '')),
+            'id_estacion' => isset($data['id_estacion']) ? self::positiveInt($data['id_estacion']) : null,
+            'derived_from_global' => is_array($data['derived_from_global'] ?? null) ? ['clave' => trim((string) ($data['derived_from_global']['clave'] ?? '')),
+                'version' => self::positiveInt($data['derived_from_global']['version'] ?? null)] : null,
+            'segmentos' => $normalizedSegments]];
+    }
+
+    /** Create an explicitly station-scoped template and confirm its immutable version via GET. */
+    public function createStationShiftTemplate(Usuario $user, int $workplaceId, array $template): array
+    {
+        $body = self::normalizeStationTemplateInput($workplaceId, $template, true);
+        if ($body === null) return self::failure('bad_request', 400);
+        if (!self::scheduleApiPostOperationsEnabled()) return self::failure('api_post_disabled', 403);
+        $response = $this->requestJson($user, 'POST', 'api/v2/shift-templates', $body);
+        if (!($response['ok'] ?? false)) return $response;
+        $created = $response['payload']['data'] ?? null;
+        if (!is_array($created) || (string) ($created['clave'] ?? '') !== $body['clave']
+            || self::positiveInt($created['version'] ?? null) !== 1
+            || strtoupper((string) ($created['scope'] ?? '')) !== 'STATION'
+            || self::positiveInt($created['id_estacion'] ?? null) !== $workplaceId) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+        $readback = $this->getShiftTemplateVersion($user, $body['clave'], 1, $workplaceId);
+        if (!($readback['ok'] ?? false) || !self::stationTemplateMatches($body, $created, $readback['data'] ?? [], $workplaceId)) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+        return ['ok' => true, 'data' => $readback['data']];
+    }
+
+    /** Create the next immutable version of an existing station template and verify it by GET. */
+    public function createStationShiftTemplateVersion(Usuario $user, int $workplaceId, string $templateKey, array $template): array
+    {
+        $body = self::normalizeStationTemplateInput($workplaceId, $template, false);
+        $templateKey = trim($templateKey);
+        if ($body === null || preg_match('/\\A[A-Za-z0-9_-]{1,64}\\z/D', $templateKey) !== 1) {
+            return self::failure('bad_request', 400);
+        }
+        $body['clave'] = $templateKey;
+        if (!self::scheduleApiPostOperationsEnabled()) return self::failure('api_post_disabled', 403);
+        $response = $this->requestJson($user, 'POST', 'api/v2/shift-templates/' . rawurlencode($templateKey) . '/versions', $body);
+        if (!($response['ok'] ?? false)) return $response;
+        $created = $response['payload']['data'] ?? null;
+        $version = is_array($created) ? self::positiveInt($created['version'] ?? null) : null;
+        if (!is_array($created) || (string) ($created['clave'] ?? '') !== $templateKey || $version === null
+            || strtoupper((string) ($created['scope'] ?? '')) !== 'STATION'
+            || self::positiveInt($created['id_estacion'] ?? null) !== $workplaceId) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+        $readback = $this->getShiftTemplateVersion($user, $templateKey, $version, $workplaceId);
+        if (!($readback['ok'] ?? false) || !self::stationTemplateMatches($body, $created, $readback['data'] ?? [], $workplaceId)) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+        return ['ok' => true, 'data' => $readback['data']];
+    }
+
+    /** @return array<string,mixed>|null */
+    private static function normalizeStationTemplateInput(int $workplaceId, array $template, bool $includeKey): ?array
+    {
+        $name = is_string($template['nombre'] ?? null) ? trim($template['nombre']) : '';
+        $type = strtoupper(trim((string) ($template['tipo_turno'] ?? '')));
+        $key = is_string($template['clave'] ?? null) ? trim($template['clave']) : '';
+        $segments = $template['segmentos'] ?? null;
+        if ($workplaceId < 1 || $name === '' || mb_strlen($name) > 120
+            || !in_array($type, ['REGULAR', 'NOCTURNO', 'MIXTO', 'ROTATIVO'], true)
+            || !is_array($segments) || count($segments) < 1 || count($segments) > 255
+            || ($includeKey && preg_match('/\\A[A-Za-z0-9_-]{1,64}\\z/D', $key) !== 1)) return null;
+        $normalizedSegments = [];
+        foreach (array_values($segments) as $index => $segment) {
+            if (!is_array($segment)) return null;
+            $ordinal = $index + 1;
+            $kind = strtoupper(trim((string) ($segment['tipo_segmento'] ?? '')));
+            $start = trim((string) ($segment['hora_inicio_local'] ?? ''));
+            $end = trim((string) ($segment['hora_fin_local'] ?? ''));
+            $startOffset = filter_var($segment['dia_offset_inicio'] ?? 0, FILTER_VALIDATE_INT);
+            $endOffset = filter_var($segment['dia_offset_fin'] ?? 0, FILTER_VALIDATE_INT);
+            if (!in_array($kind, ['WORK', 'BREAK', 'MEAL', 'REST'], true)
+                || preg_match('/\\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\\z/D', $start) !== 1
+                || preg_match('/\\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\\z/D', $end) !== 1
+                || !in_array($startOffset, [0, 1], true) || !in_array($endOffset, [0, 1], true)
+                || ($endOffset < $startOffset) || ($endOffset === $startOffset && $end <= $start)) return null;
+            $normalizedSegments[] = ['ordinal' => $ordinal, 'tipo_segmento' => $kind,
+                'hora_inicio_local' => strlen($start) === 5 ? $start . ':00' : $start,
+                'hora_fin_local' => strlen($end) === 5 ? $end . ':00' : $end,
+                'dia_offset_inicio' => $startOffset, 'dia_offset_fin' => $endOffset];
+        }
+        $body = ['nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $normalizedSegments,
+            'scope' => 'STATION', 'id_estacion' => $workplaceId];
+        if ($includeKey) $body['clave'] = $key;
+        return $body;
+    }
+
+    private static function stationTemplateMatches(array $request, array $created, array $readback, int $workplaceId): bool
+    {
+        return self::positiveInt($readback['id'] ?? null) !== null
+            && self::positiveInt($created['id'] ?? null) === self::positiveInt($readback['id'] ?? null)
+            && (string) ($readback['nombre'] ?? '') === (string) ($request['nombre'] ?? '')
+            && (string) ($readback['tipo_turno'] ?? '') === (string) ($request['tipo_turno'] ?? '')
+            && (string) ($readback['scope'] ?? '') === 'STATION'
+            && self::positiveInt($readback['id_estacion'] ?? null) === $workplaceId
+            && ($readback['segmentos'] ?? null) === ($request['segmentos'] ?? null);
     }
 
     /** Caller must verify the write by canonical GET readback before presenting success. */
@@ -2018,7 +2323,10 @@ final class ChecadorDailyReadService
             if ($this->demoScenario !== null) {
                 $response = $this->demoResponse($method, $path, [], $body, $user, $idempotencyKey, $demoLocalityId);
             } else {
-                if (strtoupper($method) === 'POST' && !self::realApiPostOperationsEnabled()) {
+                $templateWrite = preg_match('#\\Aapi/v2/shift-templates(?:/[A-Za-z0-9_-]{1,64}/versions)?\\z#D', ltrim($path, '/')) === 1;
+                if (strtoupper($method) === 'POST'
+                    && !self::realApiPostOperationsEnabled()
+                    && !($templateWrite && self::scheduleApiPostOperationsEnabled())) {
                     return self::failure('api_post_disabled', 403);
                 }
 

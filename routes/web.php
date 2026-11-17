@@ -628,6 +628,10 @@ $r->addRoute('GET', '/recursos-humanos/checador/incidencias', Route::auth(['Chec
 $r->addRoute('GET', '/recursos-humanos/checador/ajustes', Route::auth(['ChecadorController', 'adjustments']));
 $r->addRoute('GET', '/recursos-humanos/checador/acceso-temporal', Route::auth(['ChecadorController', 'temporaryAccess']));
 $r->addRoute('GET', '/recursos-humanos/checador/configuracion', Route::auth(['ChecadorController', 'configuration']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/plantillas', Route::auth(['ChecadorController', 'saveConfigurationScheduleTemplate']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/puestos', Route::auth(['ChecadorController', 'saveConfigurationPosition']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/perfiles-lector', Route::auth(['ChecadorController', 'updateConfigurationReaderProfile']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/politica-asistencia', Route::auth(['ChecadorController', 'saveAttendancePolicy']));
 $r->addRoute('POST', '/recursos-humanos/checador/programacion-semanal/asignar', Route::auth(['ChecadorController', 'createScheduleAssignment']));
 $r->addRoute('GET', '/recursos-humanos/checador/reporte', Route::auth(['ChecadorController', 'punchReport']));
 $r->addRoute('GET', '/recursos-humanos/checador/reporte/data', Route::auth(['ChecadorController', 'punchReportData']));
