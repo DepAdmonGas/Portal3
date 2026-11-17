@@ -21,14 +21,16 @@ use Illuminate\Database\Capsule\Manager as Capsule;
  *   - Cheque: sólo el mes en curso (las firmas de periodos anteriores ya no
  *     aplican).
  *   - Resto de solicitudes: mes actual y anterior (en enero: enero y
- *     diciembre), como en el sistema anterior.
+ *     diciembre), como en el sistema anterior. Aditivo para VO.BO. usa el
+ *     estado vigente del módulo y todas las estaciones permitidas.
  *   - Cheque se filtra por id_year/id_mes; el resto por fecha.
  *   - Los estatus dependen del usuario firmante:
  *       Cheque        usuario 2 => 1, usuario 19 => 0,
  *                     usuario 30 => 0 sólo para Gestoría
  *       Formatos      usuario 2 => 2, usuario 19 => 1
- *       Pinturas, Papelería, Limpieza, Aditivo
+ *       Pinturas, Papelería, Limpieza
  *                     usuario 19 => 1, usuario 2 => 4
+ *       Aditivo       usuario 19 => status 1 y sin firma tipo B
  *
  * Orden de Mantenimiento utiliza el flujo de firmas nativo de Portal3 y se
  * agrega sólo para los usuarios a quienes corresponde la etapa.
@@ -53,7 +55,7 @@ class SolicitudesFirmaDoService
 
     /** Etiquetas del selector, en el orden del sistema anterior. */
     private const ETIQUETAS = [
-        'Cheque' => 'Cheques',
+        'Cheque' => 'Solicitud de cheques',
         'Pinturas' => 'Pedido de Pinturas',
         'Papeleria' => 'Pedido de Papelería',
         'Limpieza' => 'Pedido de Artículos de Limpieza',
@@ -262,6 +264,14 @@ class SolicitudesFirmaDoService
 
         $rangoFecha = 'fecha >= ? AND fecha < ?';
 
+        $unionAditivoLegacy = $idUsuario === 19 ? '' : "
+            UNION ALL
+
+            SELECT 'Aditivo', id, fecha, NULL, 0, NULL, NULL, comentarios
+            FROM op_solicitud_aditivo
+            WHERE status = ? AND {$rangoFecha}
+        ";
+
         $sql = "
             SELECT 'Cheque' AS tipo, id, fecha, beneficiario, monto, concepto, NULL AS formato, NULL AS comentarios
             FROM op_solicitud_cheque
@@ -291,11 +301,7 @@ class SolicitudesFirmaDoService
             FROM op_pedido_limpieza
             WHERE status = ? AND {$rangoFecha}
 
-            UNION ALL
-
-            SELECT 'Aditivo', id, fecha, NULL, 0, NULL, NULL, comentarios
-            FROM op_solicitud_aditivo
-            WHERE status = ? AND {$rangoFecha}
+            {$unionAditivoLegacy}
 
             ORDER BY fecha ASC, tipo ASC, id ASC
         ";
@@ -306,10 +312,29 @@ class SolicitudesFirmaDoService
             $condOtros, $desde, $hasta,
             $condOtros, $desde, $hasta,
             $condOtros, $desde, $hasta,
-            $condOtros, $desde, $hasta,
         ];
 
-        return Capsule::select($sql, $bindings);
+        if ($idUsuario !== 19) {
+            array_push($bindings, $condOtros, $desde, $hasta);
+        }
+
+        $filas = Capsule::select($sql, $bindings);
+
+        if ($idUsuario === 19) {
+            $filas = array_merge($filas, PedidoAditivoService::getSolicitudesPendientesFirmaVoBo());
+        }
+
+        usort($filas, static function (object $a, object $b): int {
+            $fechaA = $a->fecha ?? '';
+            $fechaB = $b->fecha ?? '';
+            $fechaA = $fechaA instanceof \DateTimeInterface ? $fechaA->format('Y-m-d H:i:s') : (string)$fechaA;
+            $fechaB = $fechaB instanceof \DateTimeInterface ? $fechaB->format('Y-m-d H:i:s') : (string)$fechaB;
+
+            return [$fechaA, (string)($a->tipo ?? ''), (int)($a->id ?? 0)]
+                <=> [$fechaB, (string)($b->tipo ?? ''), (int)($b->id ?? 0)];
+        });
+
+        return $filas;
     }
 
     /**
@@ -325,6 +350,7 @@ class SolicitudesFirmaDoService
 
         return [
             'tipo' => $tipo,
+            'tipo_label' => $tipo === 'Cheque' ? self::ETIQUETAS[$tipo] : null,
             'id' => $id,
             'fecha' => formatearFecha($fila->fecha ?? null),
             'concepto' => self::concepto($tipo, $fila),
