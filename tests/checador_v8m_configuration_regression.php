@@ -28,6 +28,50 @@ $render = static function (array $configuration, bool $temporaryAccess = true, b
     include dirname(__DIR__) . '/app/Views/departamento-operativo/2-recursos-humanos/checador/configuration.php';
     return (string) ob_get_clean();
 };
+$renderTemplateAdmin = static function (array $catalog, bool $authorized, bool $writesEnabled = true): string {
+    $selectedWorkplaceId = 1;
+    $selectedWorkplaceName = 'Interlomas';
+    $selectedDate = '';
+    $selectedWorkerId = null;
+    $selectedWorkerName = '';
+    $effectiveSchedule = null;
+    $effectiveScheduleError = null;
+    $effectiveScheduleErrorMessage = '';
+    $historyItems = [];
+    $historyError = null;
+    $historyErrorMessage = '';
+    $historyPage = 1;
+    $historyHasPrevious = false;
+    $historyHasNext = false;
+    $validityCheck = null;
+    $feedback = null;
+    $workplaces = [];
+    $scheduleTemplates = $catalog['items'] ?? [];
+    $localByKey = [];
+    foreach ($scheduleTemplates as &$template) {
+        $template['segmentos'] = $template['segments'] ?? [];
+        $template['edit_fields'] = ['start_time' => '08:00', 'end_time' => '16:00', 'break_start' => '', 'break_end' => ''];
+        if (($template['scope'] ?? '') === 'STATION') $localByKey[(string) ($template['clave'] ?? '')] = $template;
+    }
+    unset($template);
+    foreach ($scheduleTemplates as &$template) {
+        if (($template['scope'] ?? '') !== 'GLOBAL') continue;
+        if (is_array($template['station_customization'] ?? null)) {
+            $localCopy = $localByKey[(string) ($template['station_customization']['clave'] ?? '')] ?? null;
+            if ($localCopy !== null) $template['station_customization']['template'] = $localCopy;
+        } else {
+            $template['customize_fields'] = ['start_time' => '08:00', 'end_time' => '16:00', 'break_start' => '', 'break_end' => ''];
+        }
+    }
+    unset($template);
+    $canManageStationTemplates = $authorized;
+    $templateWritesEnabled = $writesEnabled;
+    $templateCatalogStatus = ($catalog['status'] ?? '') === 'ready' ? 'received' : 'unavailable';
+    $demoMode = false;
+    ob_start();
+    include dirname(__DIR__) . '/app/Views/departamento-operativo/2-recursos-humanos/checador/schedule-history.php';
+    return (string) ob_get_clean();
+};
 
 $fixture = [
     'status' => 'ready',
@@ -55,7 +99,7 @@ $fixture = [
             'segments' => [
                 ['ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '06:00:00', 'hora_fin_local' => '12:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
                 ['ordinal' => 2, 'tipo_segmento' => 'BREAK', 'hora_inicio_local' => '12:00:00', 'hora_fin_local' => '13:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
-                ['ordinal' => 3, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '22:00:00', 'hora_fin_local' => '06:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 1],
+                ['ordinal' => 3, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '13:00:00', 'hora_fin_local' => '22:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
             ],
         ]],
     ],
@@ -94,28 +138,23 @@ try {
 }
 
 $assert($renderError === null && str_contains($html, 'id="attendance-policy-v2"'), 'configuration view renders from an authorized synthetic projection');
-$sectionIds = ['attendance-policy-v2', 'people-positions', 'reader-access', 'm11-devices', 'm11-station-readers', 'm11-effective-permissions', 'm11-change-history', 'schedule-configuration'];
+$sectionIds = ['attendance-policy-v2', 'people-positions', 'reader-access', 'm11-devices', 'm11-station-readers', 'm11-effective-permissions', 'm11-change-history'];
 $sectionOrder = array_map(static fn(string $id): int|false => strpos($html, 'id="' . $id . '"'), $sectionIds);
 $sortedSectionOrder = $sectionOrder;
 sort($sortedSectionOrder);
 $assert(!in_array(false, $sectionOrder, true) && $sectionOrder === $sortedSectionOrder, 'configuration restores original section order and keeps the catalog after the original sections');
 $assert(str_contains($html, '/departamento-operativo/recursos-humanos/checador/programacion-semanal')
     && !str_contains($html, 'schedule_week=1') && !str_contains($html, 'id="configuration-navigation"'), 'configuration links to the clean weekly module and omits horizontal section navigation');
-$assert(str_contains($html, 'schedule_history=1') && str_contains($html, 'worker_id=558') && str_contains($html, 'date=2026-10-19'), 'history link carries the selected worker, workplace and date');
+$assert(!str_contains($html, 'Horarios y turnos') && !str_contains($html, 'Abrir Horarios y turnos')
+    && !str_contains($html, 'ti-calendar-time') && !str_contains($html, 'schedule-configuration'), 'M11 contains no duplicate schedule card, description, icon or access button');
 $assert(!str_contains($html, 'Los horarios de catálogos anteriores no se convierten')
     && !str_contains($html, 'Abrir configuración anterior') && !str_contains($html, 'API V2 es la autoridad'), 'legacy schedules are not presented as Checador V2 configuration');
 $assert(!str_contains($html, 'pairing_role') && !str_contains($html, 'segment_ordinal')
     && !str_contains($html, 'SCHEDULED'), 'configuration translates schedule results without exposing internal identifiers');
 $assert(!str_contains($html, 'Estos registros conservan su propio centro seleccionado.') && !str_contains($html, '/biometricos/'), 'Checador configuration does not redirect to a Biométricos implementation');
-$assert(str_contains($html, 'Horarios disponibles para el centro seleccionado.')
-    && str_contains($html, 'Global') && !str_contains($html, 'id="weekly-matrix"'), 'station-scoped templates retain their global or local scope without implying worker assignment');
-$assert(str_contains($html, 'TURNO 1 / ENCARGADO 1 — 06:00–14:00')
-    && !str_contains($html, 'Legacy Interlomas')
-    && str_contains($html, '06:00–12:00')
-    && str_contains($html, 'Descanso · 12:00–13:00')
-    && str_contains($html, '22:00–06:00 (+1 día)')
-    && !preg_match('/<li>\s*WORK\b/', $html), 'schedule names and segments are formatted for display without changing source data');
-$assert(substr_count($html, 'data-checador-configuration-datatable') === 7
+$assert(!str_contains($html, 'El catálogo de turnos') && !str_contains($html, 'acciones autorizadas')
+    && !str_contains($html, 'station-template-create-modal') && !str_contains($html, 'data-bs-target="#station-template-version-'), 'M11 excludes the schedule administration card and its duplicated controls');
+$assert(substr_count($html, 'data-checador-configuration-datatable') === 5
     && !str_contains($html, 'class="table-responsive"'), 'all configuration data tables are paginatable and use small-screen-only horizontal wrappers');
 $assert(str_contains($html, 'No hay una configuración vigente para la fecha consultada')
     && !str_contains($html, '0 minutos</dd>') && !str_contains($html, '0 días</dd>'), 'missing V2 policy is not displayed as a persisted default');
@@ -128,13 +167,13 @@ $assert(str_contains($html, 'Perfil del lector') && str_contains($html, 'Adminis
     && str_contains($html, 'Estaciones y lectores asignados') && str_contains($html, 'Permisos efectivos')
     && str_contains($html, 'Historial de cambios'), 'reader, device, scope, permission and history sections render');
 $assert(str_contains($html, 'Acceso temporal autorizado'), 'temporary access link is rendered only for the authorized fixture');
-$assert(str_contains($html, 'Turno &lt;script&gt;alert(1)&lt;/script&gt;') && !str_contains($html, '<script>alert(1)</script>'), 'dynamic catalogue labels are escaped in HTML');
+$assert(!str_contains($html, 'Turno &lt;script&gt;alert(1)&lt;/script&gt;') && !str_contains($html, '<script>alert(1)</script>'), 'M11 no longer renders the schedule catalog or its duplicate administration surface');
 
 $noTemporaryAccessHtml = $render($fixture, false);
 $assert(!str_contains($noTemporaryAccessHtml, 'Acceso temporal autorizado'), 'temporary-access section is omitted when its independent ACL is absent');
 $noSchedulingReadHtml = $render($fixture, true, false, false);
 $assert(!str_contains($noSchedulingReadHtml, 'schedule_week=1')
-    && !str_contains($noSchedulingReadHtml, 'schedule_history=1'), 'weekly and historical schedule links are omitted without the independent read permission');
+    && !str_contains($noSchedulingReadHtml, '/checador/horarios-turnos'), 'weekly and historical schedule links are omitted without the independent read permission');
 
 $outOfLegacyScope = $fixture;
 $outOfLegacyScope['mapping']['legacy_scope_authorized'] = false;
@@ -227,53 +266,46 @@ $writeFixture['permissions']['reader_profile_edit'] = true;
 $writeFixture['permissions']['station_template_edit'] = true;
 $writeFixture['permissions']['policy_edit'] = true;
 $writeFixture['reader_profiles'] = ['status' => 'station_scoped', 'items' => [['id' => 8, 'usuario' => 'Sensor-test']]];
-$writeFixture['api_templates']['items'][0]['scope'] = 'STATION';
-$writeFixture['api_templates']['items'][0]['tipo_turno'] = 'REGULAR';
-$writeFixture['api_templates']['items'][0]['id_estacion'] = 1;
-$writeFixture['api_templates']['items'][0]['segments'] = [['ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00:00',
-    'hora_fin_local' => '16:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0]];
-$writeFixture['api_templates']['items'][1]['scope'] = 'GLOBAL';
-$writeFixture['api_templates']['items'][1]['id_estacion'] = null;
-$writeFixture['api_templates']['items'][1]['tipo_turno'] = 'NOCTURNO';
-$writeFixture['api_templates']['items'][] = array_replace($writeFixture['api_templates']['items'][1], [
-    'id' => 12, 'clave' => 'GLOBAL-WITH-CUSTOMIZATION', 'nombre' => 'Global ya adaptada',
-    'station_customization' => ['clave' => 'ST1_EXISTING', 'version' => 2],
-]);
 $writeHtml = $render($writeFixture, true, false, true, true, true, true);
-$scheduleHeaderStart = strpos($writeHtml, 'id="schedule-configuration"');
-$scheduleTableStart = strpos($writeHtml, 'caption class="visually-hidden">Turnos disponibles');
-$scheduleTableEnd = $scheduleTableStart === false ? false : strpos($writeHtml, '</table>', $scheduleTableStart);
-$scheduleTableHtml = $scheduleTableStart === false || $scheduleTableEnd === false
-    ? ''
-    : substr($writeHtml, $scheduleTableStart, $scheduleTableEnd - $scheduleTableStart);
-$readOnlyTableStart = strpos($html, 'caption class="visually-hidden">Turnos disponibles');
-$readOnlyTableEnd = $readOnlyTableStart === false ? false : strpos($html, '</table>', $readOnlyTableStart);
-$readOnlyTableHtml = $readOnlyTableStart === false || $readOnlyTableEnd === false
-    ? ''
-    : substr($html, $readOnlyTableStart, $readOnlyTableEnd - $readOnlyTableStart);
+$segments = [['ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00:00', 'hora_fin_local' => '16:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0]];
+$adminCatalog = ['status' => 'ready', 'items' => [
+    ['id' => 10, 'clave' => 'STATION-ONLY', 'version' => 1, 'nombre' => 'Legacy Interlomas — TURNO LOCAL', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 1, 'es_activo' => 1, 'segments' => $segments],
+    ['id' => 11, 'clave' => 'GLOBAL-NEW', 'version' => 1, 'nombre' => 'Turno global nuevo', 'tipo_turno' => 'NOCTURNO', 'scope' => 'GLOBAL', 'id_estacion' => null, 'es_activo' => 1, 'segments' => $segments, 'station_customization' => null],
+    ['id' => 12, 'clave' => 'GLOBAL-EXISTING', 'version' => 1, 'nombre' => 'Turno global adaptado', 'tipo_turno' => 'NOCTURNO', 'scope' => 'GLOBAL', 'id_estacion' => null, 'es_activo' => 1, 'segments' => $segments, 'station_customization' => ['clave' => 'ST1_EXISTING', 'source_version' => 1]],
+    ['id' => 13, 'clave' => 'ST1_EXISTING', 'version' => 2, 'nombre' => 'Personalización de estación', 'tipo_turno' => 'NOCTURNO', 'scope' => 'STATION', 'id_estacion' => 1, 'es_activo' => 1, 'segments' => $segments],
+    ['id' => 14, 'clave' => 'BAD-TYPE', 'version' => 1, 'nombre' => 'No editable', 'tipo_turno' => 'SPECIAL', 'scope' => 'STATION', 'id_estacion' => 1, 'es_activo' => 1, 'segments' => $segments],
+]];
+$templateAdminHtml = $renderTemplateAdmin($adminCatalog, true);
+$scheduleHeaderStart = strpos($templateAdminHtml, 'id="m04-template-catalog-heading"');
+$scheduleTableStart = strpos($templateAdminHtml, 'caption class="visually-hidden">Horarios disponibles');
+$readOnlyAdminHtml = $renderTemplateAdmin($adminCatalog, false);
 $assert(str_contains($writeHtml, 'Acciones') && str_contains($writeHtml, 'Consultar horarios y turnos')
     && str_contains($writeHtml, 'data-bs-target="#policy-edit-modal"')
     && substr_count($writeHtml, 'Consultar horarios y turnos') === 1, 'attendance policy actions share one permission-aware dropdown without changing their targets');
-$assert(substr_count($writeHtml, 'Nueva plantilla de estación') === 1
-    && $scheduleHeaderStart !== false && $scheduleTableStart !== false && strpos($writeHtml, 'Nueva plantilla de estación') < $scheduleTableStart,
-    'station-template action is shown once in the schedule card header');
-$assert(!str_contains($scheduleTableHtml, 'TURNO-DEMO') && !str_contains($scheduleTableHtml, 'LEGACY-TURNO-1')
-    && !str_contains($writeHtml, '>Nueva versión de')
-    && str_contains($scheduleTableHtml, 'data-bs-target="#station-template-version-10"')
-    && str_contains($scheduleTableHtml, '>Nueva versión</button>')
-    && str_contains($scheduleTableHtml, 'data-bs-target="#station-template-create-modal"')
-    && str_contains($scheduleTableHtml, '>Personalizar para esta estación</button>')
-    && substr_count($scheduleTableHtml, '>Personalizar para esta estación</button>') === 1
-    && !str_contains($scheduleTableHtml, 'data-bs-target="#station-template-version-11"')
-    && str_contains($writeHtml, 'name="template_key" value="TURNO-DEMO"')
-    && str_contains($writeHtml, 'name="operation" value="create"')
-    && !str_contains($scheduleTableHtml, 'LEGACY-TURNO-1'),
-    'authorized local rows expose immutable versioning while global rows create a station-only copy without exposing keys');
-$assert(!str_contains($readOnlyTableHtml, 'data-bs-toggle="dropdown"')
-    && !str_contains($readOnlyTableHtml, 'Acciones para'),
-    'station template row actions are absent without the effective versioning permission and write gate');
+$assert(substr_count($templateAdminHtml, 'id="m04-btn-new-template"') === 1
+    && $scheduleHeaderStart !== false && $scheduleTableStart !== false
+    && strpos($templateAdminHtml, 'id="m04-btn-new-template"') < $scheduleTableStart,
+    'authorized template creation uses the original schedule catalog header');
+$globalExistingPosition = strpos($templateAdminHtml, 'Turno global adaptado');
+$globalExistingRowStart = $globalExistingPosition === false ? false : strrpos(substr($templateAdminHtml, 0, $globalExistingPosition), '<tr>');
+$globalExistingRowEnd = $globalExistingPosition === false ? false : strpos($templateAdminHtml, '</tr>', $globalExistingPosition);
+$globalExistingRow = $globalExistingRowStart === false || $globalExistingRowEnd === false
+    ? ''
+    : substr($templateAdminHtml, $globalExistingRowStart, $globalExistingRowEnd + 5 - $globalExistingRowStart);
+$assert(!str_contains($templateAdminHtml, 'Legacy Interlomas') && str_contains($templateAdminHtml, 'TURNO LOCAL')
+    && str_contains($templateAdminHtml, 'data-m04-edit-template=')
+    && str_contains($templateAdminHtml, 'data-m04-customize-template=')
+    && str_contains($globalExistingRow, 'Editar personalización')
+    && str_contains($templateAdminHtml, 'm04-create-template-modal')
+    && str_contains($templateAdminHtml, 'm04-edit-template-modal'),
+    'the original row actions edit local schedules, personalize global ones, and edit existing station copies');
+$assert(!str_contains($readOnlyAdminHtml, 'id="m04-btn-new-template"')
+    && !str_contains($readOnlyAdminHtml, 'data-m04-edit-template=')
+    && !str_contains($readOnlyAdminHtml, 'data-m04-customize-template=')
+    && !str_contains($readOnlyAdminHtml, 'm04-create-template-modal'),
+    'original schedule actions remain absent without the effective versioning permission and write gate');
 $assert(str_contains($writeHtml, '/configuracion/puestos') && str_contains($writeHtml, '/configuracion/perfiles-lector')
-    && str_contains($writeHtml, '/configuracion/plantillas') && str_contains($writeHtml, 'Guardar nueva vigencia'), 'authorized configuration surfaces use existing protected POST routes and confirmation forms');
+    && str_contains($templateAdminHtml, '/horarios-turnos/plantillas') && str_contains($templateAdminHtml, 'Guardar turno'), 'M11 settings remain separate while the original M04 form posts through its protected V2 adapter');
 $assert(str_contains($writeHtml, 'name="new_password"') && !str_contains($writeHtml, 'name="password" value=')
     && str_contains($writeHtml, 'Deja ambos campos vacíos para conservar la credencial existente'), 'reader credentials are write-only and blank preserves the stored secret');
 $assert(str_contains($checadorController, 'saveConfigurationPosition') && str_contains($checadorController, 'updateConfigurationReaderProfile')
@@ -284,24 +316,27 @@ $assert(str_contains($writeService = file_get_contents(dirname(__DIR__) . '/app/
     && str_contains($writeService, 'POSITION_CATALOG_EDIT') && str_contains($writeService, 'READER_PROFILE_EDIT')
     && str_contains($writeService, 'op_rh_v2_m11_configuration_audit') && !str_contains($writeService, 'delete'), 'local catalog/profile writes require explicit M11 authorization, transactional audit, and no unsupported delete');
 $assert(str_contains($checadorController, 'authorizeStationTemplateAdministration($workplaceId)')
-    && str_contains($dailyReadService, 'createStationShiftTemplateVersion') && str_contains($routes, "'saveConfigurationScheduleTemplate'"), 'station template writes remain behind the explicit Encargado grant and API readback');
-$assert(str_contains($writeHtml, 'station-template-create-modal') && str_contains($writeHtml, 'data-schedule-add-segment')
-    && str_contains($dailyReadService, 'schedule_template_readback_unconfirmed'), 'template forms reuse the existing segment editor and do not claim an unconfirmed write');
-$templateJs = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-template.init.js') ?: '';
+    && str_contains($dailyReadService, 'createStationShiftTemplateVersion')
+    && str_contains($routes, "Route::auth(['ChecadorController', 'saveConfigurationScheduleTemplate'])"), 'station template writes remain behind the explicit Encargado grant and API readback');
+$assert(str_contains($templateAdminHtml, 'm04-turn-name') && str_contains($templateAdminHtml, 'm04-turn-start')
+    && str_contains($templateAdminHtml, 'm04-turn-end') && str_contains($templateAdminHtml, 'm04-turn-break-start')
+    && str_contains($templateAdminHtml, 'm04-turn-break-end')
+    && !str_contains($templateAdminHtml, 'Tipo de segmento')
+    && str_contains($dailyReadService, 'schedule_template_readback_unconfirmed'), 'original template forms keep only the original schedule controls and V2 readback');
+$templateJs = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js') ?: '';
 $templateAccessService = file_get_contents(dirname(__DIR__) . '/app/Services/ChecadorAccessService.php') ?: '';
-$assert(str_contains($scheduleTableHtml, 'data-template-name="TURNO 1 / ENCARGADO 1 — 06:00–14:00"')
-    && str_contains($scheduleTableHtml, 'data-template-type="NOCTURNO"')
-    && str_contains($scheduleTableHtml, 'data-template-segments=')
-    && str_contains($templateJs, 'show.bs.modal') && str_contains($templateJs, 'setSegments(segments)')
-    && str_contains($templateJs, "title.textContent = 'Personalizar turno para esta estación'")
+$assert(str_contains($templateAdminHtml, 'data-m04-customize-template=')
+    && str_contains($templateJs, 'openCustomize(source)')
+    && str_contains($templateJs, 'this.customizationSource = { key: String(source.key), version: Number(source.version) }')
+    && str_contains($templateJs, "operation: 'customize'")
     && str_contains($templateAccessService, 'authorizeStationTemplateAdministration')
     && str_contains($templateAccessService, 'STATION_TEMPLATE_ADMIN'),
-    'global personalization preloads its displayed values in the shared create modal and server-side station administration authorization remains required');
+    'the original global personalization flow posts to the V2 adapter under station administration authorization');
 $assert(str_contains($dailyReadService, "'scope' => 'STATION'")
-    && str_contains($dailyReadService, 'createStationShiftTemplate(Usuario $user, int $workplaceId')
-    && str_contains($dailyReadService, 'normalizeStationTemplateInput($workplaceId, $template, true)')
+    && str_contains($dailyReadService, 'customizeGlobalShiftTemplate(')
+    && str_contains($dailyReadService, "'derived_from_global' => ['clave' => \$sourceKey, 'version' => \$sourceVersion]")
     && !str_contains($dailyReadService, 'createGlobalShiftTemplate'),
-    'global personalization uses only the existing station-scoped create/readback contract');
+    'global personalization uses the existing API V2 station-copy lineage and readback contract');
 
 printf("CHECADOR_V8M_CONFIGURATION: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

@@ -1125,6 +1125,55 @@ final class ChecadorDailyReadService
             'segmentos' => $normalizedSegments]];
     }
 
+    /** Create or safely recover the existing station copy of a visible global template. */
+    public function customizeGlobalShiftTemplate(Usuario $user, array $source, array $template, string $idempotencyKey, int $workplaceId): array
+    {
+        $sourceKey = trim((string) ($source['clave'] ?? ''));
+        $sourceVersion = self::positiveInt($source['version'] ?? null);
+        $name = trim((string) ($template['nombre'] ?? ''));
+        $type = strtoupper(trim((string) ($template['tipo_turno'] ?? '')));
+        $rawSegments = $template['segmentos'] ?? null;
+        if (preg_match('/\\A[A-Za-z0-9_-]{1,100}\\z/', $sourceKey) !== 1 || $sourceVersion === null || $workplaceId < 1
+            || $name === '' || self::unicodeLength($name) > 128 || !in_array($type, ['REGULAR', 'NOCTURNO', 'MIXTO', 'ROTATIVO'], true)
+            || !is_array($rawSegments) || !array_is_list($rawSegments) || $rawSegments === [] || count($rawSegments) > 255
+            || trim($idempotencyKey) === '') return self::failure('bad_request', 400);
+        $segments = [];
+        foreach ($rawSegments as $index => $segment) {
+            if (!is_array($segment) || (int) ($segment['ordinal'] ?? 0) !== $index + 1) return self::failure('bad_request', 400);
+            $segmentType = strtoupper(trim((string) ($segment['tipo_segmento'] ?? '')));
+            $start = (string) ($segment['hora_inicio_local'] ?? ''); $end = (string) ($segment['hora_fin_local'] ?? '');
+            $startOffset = filter_var($segment['dia_offset_inicio'] ?? null, FILTER_VALIDATE_INT); $endOffset = filter_var($segment['dia_offset_fin'] ?? null, FILTER_VALIDATE_INT);
+            $normalize = static function (string $time): ?string {
+                if (preg_match('/\\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\\z/', $time) !== 1) return null;
+                return strlen($time) === 5 ? $time . ':00' : $time;
+            };
+            $start = $normalize($start); $end = $normalize($end);
+            if (!in_array($segmentType, ['WORK', 'BREAK'], true) || $start === null || $end === null
+                || !in_array($startOffset, [0, 1], true) || !in_array($endOffset, [0, 1], true)) return self::failure('bad_request', 400);
+            $segments[] = ['ordinal' => $index + 1, 'tipo_segmento' => $segmentType, 'hora_inicio_local' => $start,
+                'hora_fin_local' => $end, 'dia_offset_inicio' => $startOffset, 'dia_offset_fin' => $endOffset];
+        }
+        $response = $this->requestJson($user, 'POST', 'api/v2/shift-templates', [
+            'scope' => 'STATION', 'derived_from_global' => ['clave' => $sourceKey, 'version' => $sourceVersion],
+            'nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $segments,
+        ], $idempotencyKey, $workplaceId);
+        if (!($response['ok'] ?? false)) return $response;
+        $data = $response['payload']['data'] ?? null;
+        if (!is_array($data) || ($response['payload']['status'] ?? null) !== 'success'
+            || (string) ($data['scope'] ?? '') !== 'STATION' || (int) ($data['id_estacion'] ?? 0) !== $workplaceId
+            || (int) ($data['version'] ?? 0) < 1 || (string) ($data['derived_from_global']['clave'] ?? '') !== $sourceKey
+            || (int) ($data['derived_from_global']['version'] ?? 0) !== $sourceVersion) return self::failure('schedule_template_readback_unconfirmed', 502);
+        $localKey = (string) ($data['clave'] ?? ''); $localVersion = (int) $data['version'];
+        $detail = $this->getShiftTemplateVersion($user, $localKey, $localVersion, $workplaceId);
+        if (!($detail['ok'] ?? false) || (int) ($detail['data']['id'] ?? 0) !== (int) ($data['id'] ?? 0)
+            || (string) ($detail['data']['derived_from_global']['clave'] ?? '') !== $sourceKey
+            || (int) ($detail['data']['derived_from_global']['version'] ?? 0) !== $sourceVersion
+            || (string) ($detail['data']['nombre'] ?? '') !== $name || ($detail['data']['segmentos'] ?? null) !== $segments) {
+            return self::failure('schedule_template_readback_unconfirmed', 502);
+        }
+        return ['ok' => true, 'created' => (int) ($response['http_status'] ?? 0) === 201, 'data' => $detail['data']];
+    }
+
     /** Create an explicitly station-scoped template and confirm its immutable version via GET. */
     public function createStationShiftTemplate(Usuario $user, int $workplaceId, array $template): array
     {

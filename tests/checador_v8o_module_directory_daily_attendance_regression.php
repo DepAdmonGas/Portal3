@@ -97,7 +97,7 @@ $assert(str_contains($routes, "'/recursos-humanos/checador/asistencia'")
     && str_contains($controller, 'public function dailyAttendance(): void')
     && str_contains($controller, "renderDashboardWorkspace('daily-attendance')")
     && str_contains($routes, "'/recursos-humanos/checador/programacion-semanal', Route::auth(['ChecadorController', 'scheduleWeek'])")
-    && str_contains($controller, "\$query['schedule_history'] ?? ''"), 'daily alias and separate weekly/history routes remain available');
+    && str_contains($routes, "'/recursos-humanos/checador/horarios-turnos', Route::auth(['ChecadorController', 'scheduleHistory'])"), 'daily alias and separate weekly/history routes remain available');
 $assert(!str_contains($mainHtml, '<h1')
     && substr_count($mainHtml, '<h2') === 1
     && !str_contains($mainHtml, 'Estación:')

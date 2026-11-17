@@ -622,6 +622,8 @@ $r->addRoute('POST', '/recursos-humanos/vacaciones/eliminar', Route::auth(['Vaca
 $r->addRoute('GET', '/recursos-humanos/vacaciones/nuevo/{idLocalidad:\d+}', Route::auth(['VacacionesController', 'nuevo']));
 $r->addRoute('GET', '/recursos-humanos/vacaciones/editar/{idFormulario:\d+}', Route::auth(['VacacionesController', 'editar']));
 $r->addRoute('GET', '/recursos-humanos/checador', Route::auth(['ChecadorController', 'index']));
+$r->addRoute('GET', '/recursos-humanos/checador/horarios-turnos', Route::auth(['ChecadorController', 'scheduleHistory']));
+$r->addRoute('POST', '/recursos-humanos/checador/horarios-turnos/plantillas', Route::auth(['ChecadorController', 'saveConfigurationScheduleTemplate']));
 $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines', Route::auth(['ChecadorController', 'rolComodines']));
 $r->addRoute('GET', '/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['ChecadorComodinesController', 'coverageList']));
 $r->addRoute('POST', '/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['ChecadorComodinesController', 'requestCoverage']));

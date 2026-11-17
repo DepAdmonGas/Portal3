@@ -343,6 +343,63 @@ final class ChecadorAttendanceRosterService
         return $this->workersForAttendanceFilter($workplaceId, $date, $timezone, false);
     }
 
+    /** Return one profile only if the requested local date resolves to this workplace. */
+    public function scheduleHistoryWorkerForDate(int $workerId, int $workplaceId, string $date, string $timezone): ?array
+    {
+        if ($workerId < 1 || $workplaceId < 1 || !self::isCivilDate($date)
+            || !ChecadorOperationalPeriod::isIanaTimezone($timezone)) return null;
+        try {
+            $person = RhPersonal::query()->whereKey($workerId)
+                ->first(['id', 'id_estacion', 'nombre_completo', 'no_colaborador', 'estado']);
+            if ($person === null || !self::hasScheduleHistoryMembership(
+                $person,
+                $workplaceId,
+                ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId),
+                $date,
+                $timezone
+            )) return null;
+            $name = trim((string) $person->nombre_completo);
+            if ($name === '') return null;
+            return [
+                'worker_id' => (int) $person->id,
+                'full_name' => $name,
+                'employee_number' => $person->no_colaborador === null ? null : (string) $person->no_colaborador,
+            ];
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private static function hasScheduleHistoryMembership(
+        RhPersonal $person,
+        int $workplaceId,
+        ?int $physicalStationId,
+        string $date,
+        string $timezone
+    ): bool {
+        $workerId = (int) $person->id;
+        $membershipRows = RhPersonalLocalidadVersion::query()
+            ->where('worker_id', $workerId)
+            ->where('recorded_at_utc', '<=', (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s.u'))
+            ->orderBy('id')
+            ->get(['id', 'workplace_id', 'valid_from_utc']);
+        $effectiveAt = (new \DateTimeImmutable($date . ' 12:00:00', new \DateTimeZone($timezone)))
+            ->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\\TH:i:s.u\\Z');
+        $membership = (new WorkerWorkplaceAssignmentResolver())->resolveAssignments($workerId, $effectiveAt);
+        if (($membership['status'] ?? '') === 'RESOLVED_SINGLE'
+            && count($membership['assignments'] ?? []) === 1
+            && (int) ($membership['assignments'][0]['workplace_id'] ?? 0) === $workplaceId) return true;
+
+        if ($membershipRows->isNotEmpty()) return false;
+        return (int) ($person->estado ?? 0) === 1
+            && $physicalStationId !== null
+            && (int) ($person->id_estacion ?? 0) === $physicalStationId
+            && ChecadorOperationalPeriod::currentLocalDate(
+                $timezone,
+                new \DateTimeImmutable('now', new \DateTimeZone('UTC'))
+            ) === $date;
+    }
+
     /** Active workers with verified canonical membership across a schedule week. */
     public function workersForScheduleWeek(
         int $workplaceId,

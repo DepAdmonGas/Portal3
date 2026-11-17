@@ -388,7 +388,7 @@
                                         <?php else: ?><span class="small text-muted"><?= htmlspecialchars((string) ($cell['label'] ?? 'No disponible'), ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
                                     </td>
                                 <?php endforeach; ?>
-                                <td><a class="btn btn-sm btn-outline-secondary" href="/departamento-operativo/recursos-humanos/checador?<?= htmlspecialchars(http_build_query(['schedule_history' => '1', 'workplace_id' => (int) $selectedWorkplaceId, 'worker_id' => (int) $row['worker_id'], 'date' => (string) $weekStart]), ENT_QUOTES, 'UTF-8') ?>">Ver</a></td>
+                                <td><a class="btn btn-sm btn-outline-secondary" href="/departamento-operativo/recursos-humanos/checador/horarios-turnos?<?= htmlspecialchars(http_build_query(['worker_id' => (int) $row['worker_id'], 'date' => (string) $weekStart]), ENT_QUOTES, 'UTF-8') ?>">Ver</a></td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>
