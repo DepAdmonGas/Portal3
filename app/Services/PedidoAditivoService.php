@@ -189,6 +189,36 @@ class PedidoAditivoService
         return $query ? (int)$query->count() : 0;
     }
 
+    /** Solicitudes pendientes de VO.BO. para integrarlas en el modal global de firmas. */
+    public static function getSolicitudesPendientesFirmaVoBo(): array
+    {
+        $permisos = self::getPermisos();
+        if ($permisos['id_usuario'] !== self::FIRMANTE_VOBO) {
+            return [];
+        }
+
+        $query = self::queryPendientesFirmaVoBoActual(self::getAllowedStationIds());
+        if ($query === null) {
+            return [];
+        }
+
+        return $query
+            ->orderBy('fecha', 'asc')
+            ->orderBy('id', 'asc')
+            ->get(['id', 'fecha', 'comentarios'])
+            ->map(static fn ($solicitud): object => (object) [
+                'tipo' => 'Aditivo',
+                'id' => (int) $solicitud->id,
+                'fecha' => $solicitud->fecha,
+                'beneficiario' => null,
+                'monto' => null,
+                'concepto' => null,
+                'formato' => null,
+                'comentarios' => $solicitud->comentarios,
+            ])
+            ->all();
+    }
+
     private static function formatearFechaHora($fecha): string
     {
         if ($fecha instanceof \DateTimeInterface) {
