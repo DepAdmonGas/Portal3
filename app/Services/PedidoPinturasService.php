@@ -19,6 +19,49 @@ use Carbon\Carbon;
 
 class PedidoPinturasService
 {
+    public const REQUIRED_MESSAGE = 'Completa los campos obligatorios.';
+
+    /** Las columnas de piezas/unidad son enteras; nunca truncar decimales o comas. */
+    public static function normalizarPiezas(mixed $value): ?int
+    {
+        if (!is_int($value) && !is_string($value)) return null;
+        $value = trim((string)$value);
+        if (!preg_match('/^(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)$/D', $value)) return null;
+        $number = filter_var(ltrim(str_replace(',', '', $value), '0') ?: '0', FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1, 'max_range' => 2147483647],
+        ]);
+        return $number === false ? null : $number;
+    }
+
+    public static function nombreArchivo(?string $reference): ?string
+    {
+        $reference = str_replace('\\', '/', trim((string)$reference));
+        foreach (['/public/uploads/archivos/', 'public/uploads/archivos/', '/uploads/archivos/', 'uploads/archivos/', '../../../archivos/', '../archivos/', 'archivos/', '../imgs/firma/', 'imgs/firma/'] as $prefix) {
+            if (str_starts_with($reference, $prefix)) { $reference = substr($reference, strlen($prefix)); break; }
+        }
+        if ($reference === '' || str_contains($reference, "\0") || $reference !== basename($reference)
+            || in_array($reference, ['.', '..'], true)) return null;
+        return $reference;
+    }
+
+    public static function archivosRoot(): string
+    {
+        return dirname(__DIR__, 2) . '/public/uploads/archivos/';
+    }
+
+    /** Sólo archivos importados en Portal3; no depende del proyecto hermano. */
+    public static function rutaArchivo(?string $reference, bool $firma = false): ?string
+    {
+        $name = self::nombreArchivo($reference);
+        if ($name === null) return null;
+        $roots = [self::archivosRoot()];
+        if ($firma) $roots[] = dirname(__DIR__, 2) . '/public/uploads/firmas/pedido-pinturas/';
+        foreach ($roots as $root) {
+            $base = realpath($root); $path = realpath($root . $name);
+            if ($base && $path && is_file($path) && str_starts_with($path, $base . DIRECTORY_SEPARATOR)) return $path;
+        }
+        return null;
+    }
 
     public const MODULE_KEY = 'pedido-pinturas';
     public const MODULO_PADRE_CLAVE = 'comercializadora';
@@ -248,7 +291,7 @@ class PedidoPinturasService
     public static function guardarProducto(int $id, string $unidad, string $producto): array
     {
         if (trim($unidad) === '' || trim($producto) === '') {
-            return ['success' => false, 'message' => 'Campos obligatorios faltantes'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         if ($id === 0) {
@@ -314,7 +357,7 @@ class PedidoPinturasService
     public static function agregarInventario(int $idEstacion, int $idProducto, int $piezas): array
     {
         if (!$idEstacion || !$idProducto || $piezas <= 0) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $inventario = InventarioPintura::where('id_estacion', $idEstacion)
@@ -423,7 +466,11 @@ class PedidoPinturasService
                 'id_usuario'     => (int)$firma->id_usuario,
                 'firma'          => $firma->firma ?? 'S/I',
                 'firma_texto'    => $esImagen ? '' : ($firma->firma ?? 'S/I'),
-                'firma_img_url'  => $esImagen ? '/uploads/firmas/pedido-pinturas/' . $firma->firma : '',
+                'firma_img_url'  => $esImagen && ($path = self::rutaArchivo($firma->firma, true))
+                    ? (str_contains(str_replace('\\', '/', $path), '/firmas/pedido-pinturas/')
+                        ? '/uploads/firmas/pedido-pinturas/' . rawurlencode(self::nombreArchivo($firma->firma))
+                        : '/download?tipo=pedido-pinturas&view=1&file=' . rawurlencode(self::nombreArchivo($firma->firma))) : '',
+                'archivo_faltante' => $esImagen && self::rutaArchivo($firma->firma, true) === null,
                 'fecha'          => $fechaCompuesta !== '' && $fechaCompuesta !== ', ' ? $fechaCompuesta : '',
                 'personal'       => self::getPersonal($firma->id_usuario)['nombre'],
                 'usuario_nombre' => self::getPersonal($firma->id_usuario)['nombre'],
@@ -467,7 +514,7 @@ class PedidoPinturasService
     public static function crearPedido(int $idEstacion, int $idUsuario): array
     {
         if (!$idEstacion || !$idUsuario) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $pedido = PedidoPinturasComplementos::create([
@@ -484,7 +531,7 @@ class PedidoPinturasService
     public static function agregarProducto(int $idPedido, string $idProducto, string $otroProducto, int $piezas, string $paraQue): array
     {
         if (!$idPedido || $piezas <= 0) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $valProducto = '';
@@ -504,7 +551,7 @@ class PedidoPinturasService
         }
 
         if (trim($valProducto) === '') {
-            return ['success' => false, 'message' => 'Debe seleccionar un producto'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $existing = PedidoPinturasDetalle::where('id_pedido', $idPedido)
@@ -530,7 +577,7 @@ class PedidoPinturasService
     public static function editarPiezas(int $id, int $piezas): array
     {
         if ($piezas <= 0) {
-            return ['success' => false, 'message' => 'La cantidad debe ser mayor a cero'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $item = PedidoPinturasDetalle::find($id);
@@ -587,6 +634,10 @@ class PedidoPinturasService
         $pedido = PedidoPinturasComplementos::find($id);
         if (!$pedido) {
             return ['success' => false, 'message' => 'Pedido no encontrado'];
+        }
+
+        if (!PedidoPinturasDetalle::where('id_pedido', $id)->exists()) {
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         if (PedidoPinturasComplementosFirma::where('id_pedido', $id)
@@ -687,6 +738,7 @@ class PedidoPinturasService
 
     public static function firmarVoBo(int $id, int $idUsuario, string $token): array
     {
+        if (trim($token) === '') return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         $pedido = PedidoPinturasComplementos::find($id);
         if (!$pedido) {
             return ['success' => false, 'message' => 'Pedido no encontrado'];
@@ -733,15 +785,16 @@ class PedidoPinturasService
         $img = str_replace('data:image/png;base64,', '', (string)$base64);
         $img = str_replace('data:image/jpeg;base64,', '', $img);
         if ($img === '') {
-            return ['success' => false, 'message' => 'Falta la firma'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $fileData = base64_decode($img, true);
-        if ($fileData === false || $fileData === '') {
+        if ($fileData === false || $fileData === '' || strlen($fileData) > 5 * 1024 * 1024
+            || !($image = @getimagesizefromstring($fileData)) || $image[2] !== IMAGETYPE_PNG) {
             return ['success' => false, 'message' => 'Firma no válida'];
         }
 
-        $directorio = dirname(__DIR__, 2) . '/public/uploads/firmas/pedido-pinturas';
+        $directorio = rtrim(self::archivosRoot(), '/');
         if (!is_dir($directorio)) {
             @mkdir($directorio, 0775, true);
         }
@@ -926,7 +979,7 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Pinturas</b> en el ap
         if ($str === '' || $str === '00:00:00') {
             return false;
         }
-        return (bool)preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $str);
+        return (bool)preg_match('/^(?:[01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?$/D', $str);
     }
 
     public static function getReportes(int $idEstacion): array
@@ -1015,7 +1068,7 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Pinturas</b> en el ap
     public static function crearReporte(int $idEstacion, int $idUsuario): array
     {
         if (!$idEstacion || !$idUsuario) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $reporte = ReportePinturas::create([
@@ -1032,6 +1085,10 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Pinturas</b> en el ap
 
     public static function guardarReporteDatos(int $id, string $fecha, string $hora, string $detalle): array
     {
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $fecha);
+        if (!$date || $date->format('Y-m-d') !== $fecha || !self::esHoraReporteValida($hora)) {
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+        }
         $reporte = ReportePinturas::find($id);
         if (!$reporte) {
             return ['success' => false, 'message' => 'Reporte no encontrado'];
@@ -1061,7 +1118,7 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Pinturas</b> en el ap
     public static function agregarProductoReporte(int $idReporte, int $idEstacion, int $idProducto, int $unidad, string $observaciones = ''): array
     {
         if (!$idReporte || !$idEstacion || !$idProducto || $unidad <= 0) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
         }
 
         $reporte = ReportePinturas::find($idReporte);
@@ -1196,8 +1253,11 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Pinturas</b> en el ap
             return ['success' => false, 'message' => 'Reporte no encontrado'];
         }
 
-        $fechaCarbon = self::obtenerFechaReporte($reporte->fecha)
-            ?? Carbon::now();
+        $fechaCarbon = self::obtenerFechaReporte($reporte->fecha);
+        if (!$fechaCarbon || !self::esHoraReporteValida($reporte->hora)
+            || !ReportePinturasDetalle::where('id_reporte', $id)->exists()) {
+            return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+        }
         $reporte->fecha = $fechaCarbon->format('Y-m-d');
         $horaEsValida = self::esHoraReporteValida($reporte->hora);
         $reporte->hora = $horaEsValida ? trim((string)$reporte->hora) : Carbon::now()->format('H:i:s');
@@ -1231,7 +1291,7 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Pinturas</b> en el ap
                 . '<td class="text-center">' . $num . '</td>'
                 . '<td>' . htmlspecialchars($item->unidad ?? '', ENT_QUOTES, 'UTF-8') . '</td>'
                 . '<td>' . htmlspecialchars($item->producto ?? '', ENT_QUOTES, 'UTF-8') . '</td>'
-                . '<td class="text-center">' . (int)$item->piezas . '</td>'
+                . '<td class="text-center">' . number_format((float)$item->piezas, 2, '.', ',') . '</td>'
                 . '</tr>';
             $num++;
         }
@@ -1240,14 +1300,16 @@ $paraCarmen = '✅ Se ha <b>finalizado</b> el <b>Pedido de Pinturas</b> en el ap
         $firmaB = '';
         $firmaARow = PedidoPinturasComplementosFirma::where('id_pedido', $id)->where('tipo_firma', 'A')->first();
         if ($firmaARow) {
-            $rutaFirma = dirname(__DIR__, 2) . '/public/uploads/firmas/pedido-pinturas/' . $firmaARow->firma;
-            if (is_file($rutaFirma)) {
-                $dataFirma = file_get_contents($rutaFirma);
-                $nombreFirmante = self::getPersonal($firmaARow->id_usuario)['nombre'];
-                $firmaA = '<div class="text-center" style="margin-top: 10px;"><div>' . $nombreFirmante . '</div>'
-                    . '<img src="data:image/png;base64,' . base64_encode($dataFirma) . '" style="width: 200px;"></div>'
-                    . '<div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DEL ENCARGADO</div>';
-            }
+            $nombreFirmante = htmlspecialchars(self::getPersonal($firmaARow->id_usuario)['nombre'], ENT_QUOTES, 'UTF-8');
+            $fechaFirmaA = $firmaARow->fecha ? formatearFecha($firmaARow->fecha) . ', ' . $firmaARow->fecha->format('g:i a') : '';
+            $rutaFirma = self::rutaArchivo($firmaARow->firma, true);
+            $dataFirma = $rutaFirma !== null ? @file_get_contents($rutaFirma) : false;
+            $contenidoFirmaA = $dataFirma !== false && $dataFirma !== ''
+                ? '<img src="data:image/png;base64,' . base64_encode($dataFirma) . '" style="width: 200px;">'
+                : '<div style="margin-top: 10px;"><small>La firma está registrada, pero su imagen no está disponible.'
+                    . ($fechaFirmaA !== '' ? '<br><b>Fecha: ' . htmlspecialchars($fechaFirmaA, ENT_QUOTES, 'UTF-8') . '</b>' : '') . '</small></div>';
+            $firmaA = '<div class="text-center" style="margin-top: 10px;"><div>' . $nombreFirmante . '</div>' . $contenidoFirmaA . '</div>'
+                . '<div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DEL ENCARGADO</div>';
         }
 
         $firmaBRow = PedidoPinturasComplementosFirma::where('id_pedido', $id)->where('tipo_firma', 'B')->first();
@@ -1283,7 +1345,7 @@ th { background: #F2F2F2; font-weight: bold; }
             . '<table style="margin-top:10px;"><thead><tr>'
             . '<td class="text-center"><b>#</b></td><td><b>Unidad</b></td><td><b>Nombre Producto</b></td><td class="text-center"><b>Piezas</b></td>'
             . '</tr></thead><tbody>' . $rows
-            . '<tr><td colspan="3" class="text-right">Total piezas:</td><td class="text-center"><b>' . $totalPiezas . '</b></td></tr>'
+            . '<tr><td colspan="3" class="text-right">Total piezas:</td><td class="text-center"><b>' . number_format((float)$totalPiezas, 2, '.', ',') . '</b></td></tr>'
             . '</tbody></table>'
             . '<table style="margin-top:10px;"><tr><td>Observaciones</td></tr><tr><td>' . htmlspecialchars($pedido->observaciones ?? '', ENT_QUOTES, 'UTF-8') . '</td></tr></table>'
             . '<table style="width: 100%; margin-top: 20px;"><tr><td class="p-2">' . $firmaA . '</td><td class="p-2">' . $firmaB . '</td></tr></table>'

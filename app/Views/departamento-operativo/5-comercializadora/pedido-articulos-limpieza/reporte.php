@@ -6,7 +6,7 @@ data-puede-crear="<?= $puedeCrear ? 'true' : 'false' ?>"
 data-puede-editar="<?= $puedeEditar ? 'true' : 'false' ?>"
 data-puede-eliminar="<?= $puedeEliminar ? 'true' : 'false' ?>"
 data-module-station-key="pedido-articulos-limpieza"
-x-data="{ ...actions(), ...pedidoLimpiezaReporteComponent() }">
+x-data="{ ...actions(), ...window.PedidoLimpiezaForm(), ...pedidoLimpiezaReporteComponent() }">
 
 <div class="row">
 
@@ -94,7 +94,7 @@ x-data="{ ...actions(), ...pedidoLimpiezaReporteComponent() }">
 <td class="text-center align-middle" x-text="i + 1"></td>
 <td class="text-center align-middle" x-text="it.unidad"></td>
 <td class="text-center align-middle" x-text="it.producto"></td>
-<td class="text-center align-middle" x-text="it.piezas"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.piezas)"></td>
 <td class="text-center align-middle" x-text="it.observaciones || '—'"></td>
 </tr>
 </template>
@@ -105,7 +105,7 @@ x-data="{ ...actions(), ...pedidoLimpiezaReporteComponent() }">
 <tfoot x-show="reporteActual.detalle_items.length">
 <tr class="table-dark">
 <td colspan="3" class="text-center fw-semibold text-white">Total de piezas</td>
-<td class="text-center fw-semibold text-white" x-text="reporteActual.total_piezas"></td>
+<td class="text-center fw-semibold text-white" x-text="displayQuantity(reporteActual.total_piezas)"></td>
 <td></td>
 </tr>
 </tfoot>

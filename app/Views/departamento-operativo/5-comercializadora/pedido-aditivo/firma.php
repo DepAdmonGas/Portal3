@@ -44,7 +44,7 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 <div class="card-body">
 <div class="row g-3">
 <div class="col-md-4"><div class="form-label mb-1">Folio:</div><div x-text="solicitud ? '#00' + solicitud.id : '—'"></div></div>
-<div class="col-md-4"><div class="form-label mb-1">Orden de compra:</div><div x-text="solicitud ? (solicitud.orden_compra || '—') : '—'"></div></div>
+<div class="col-md-4"><div class="form-label mb-1">Orden de compra:</div><div x-text="solicitud ? (solicitud.orden_compra ? displayQuantity(solicitud.orden_compra) : '—') : '—'"></div></div>
 <div class="col-md-4"><div class="form-label mb-1">Nombre del personal:</div><div x-text="solicitud ? solicitud.personal : '—'"></div></div>
 <div class="col-md-4"><div class="form-label mb-1">Puesto:</div><div x-text="solicitud ? solicitud.puesto : '—'"></div></div>
 </div>
@@ -95,11 +95,11 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 <template x-for="it in (solicitud ? (solicitud.tambos || []) : [])" :key="it.id">
 <tr>
 <td class="text-center align-middle" x-text="it.num"></td>
-<td class="text-center align-middle" x-text="it.cantidad"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.cantidad)"></td>
 <td class="text-center align-middle" x-text="it.producto"></td>
 <td class="text-start align-middle" x-text="it.aditivo"></td>
-<td class="text-center align-middle" x-text="it.kilogramo"></td>
-<td class="text-center align-middle" x-text="it.cantidad * it.kilogramo"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.kilogramo)"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.cantidad * it.kilogramo)"></td>
 </tr>
 </template>
 <tr x-show="!solicitud || !solicitud.tambos || !solicitud.tambos.length">
@@ -109,10 +109,10 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 <tfoot x-show="solicitud && solicitud.tambos && solicitud.tambos.length">
 <tr class="table-dark">
 <td colspan="1" class="text-center fw-semibold text-white">Totales</td>
-<td class="text-center fw-semibold text-white" x-text="solicitud ? (solicitud.total_tambos || 0) : 0"></td>
+<td class="text-center fw-semibold text-white" x-text="displayQuantity(solicitud ? (solicitud.total_tambos || 0) : 0)"></td>
 <td colspan="2"></td>
-<td class="text-center fw-semibold text-white" x-text="solicitud && solicitud.tambos ? solicitud.tambos.reduce((acc, it) => acc + Number(it.kilogramo || 0), 0) : 0"></td>
-<td class="text-center fw-semibold text-white" x-text="solicitud ? (solicitud.total_kilogramos || 0) : 0"></td>
+<td class="text-center fw-semibold text-white" x-text="displayQuantity(solicitud && solicitud.tambos ? solicitud.tambos.reduce((acc, it) => acc + Number(it.kilogramo || 0), 0) : 0)"></td>
+<td class="text-center fw-semibold text-white" x-text="displayQuantity(solicitud ? (solicitud.total_kilogramos || 0) : 0)"></td>
 </tr>
 </tfoot>
 </table>
@@ -126,6 +126,19 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 
 <!---------- FIRMA VOBO ---------->
 <div class="row">
+
+<div class="col-xl-6 col-lg-6 col-md-6 mb-3">
+<template x-if="solicitud && solicitud.firmas && solicitud.firmas.A" x-cloak>
+<div class="card border h-100">
+<div class="card-header bg-primary text-white py-3 border-0"><div class="d-flex align-items-center"><div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-user-check fs-6"></i></div><div class="ms-3"><h6 class="mb-0 text-white">FIRMA DE QUIEN ELABORÓ</h6></div></div></div>
+<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4"><template x-if="solicitud.firmas.A.firma_img_url"><img :src="solicitud.firmas.A.firma_img_url" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma de quien elaboró"></template><template x-if="!solicitud.firmas.A.firma_img_url"><div class="d-flex flex-column align-items-center"><i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i><h6 class="text-muted mb-0 fw-normal">La firma está registrada, pero su imagen no está disponible.</h6></div></template></div>
+<div class="card-footer bg-light text-center"><h6 class="mb-0 fw-semibold text-truncate" x-text="solicitud.firmas.A.usuario_nombre"></h6><small class="text-muted" x-text="solicitud.firmas.A.fecha || ''"></small></div>
+</div>
+</template>
+<template x-if="solicitud && !(solicitud.firmas && solicitud.firmas.A)" x-cloak>
+<div class="card border h-100"><div class="card-header bg-primary text-white py-3 border-0"><div class="d-flex align-items-center"><div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-clock-hour-4 fs-6"></i></div><div class="ms-3"><h6 class="mb-0 text-white">FIRMA DE QUIEN ELABORÓ</h6></div></div></div><div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4"><i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i><h6 class="text-muted mb-0 fw-normal">Sin firma registrada.</h6></div><div class="card-footer bg-light text-center"><h6 class="mb-0 fw-semibold text-truncate" x-text="solicitud.personal || ''"></h6></div></div>
+</template>
+</div>
 
 <div class="col-xl-6 col-lg-6 col-md-6">
 
@@ -143,13 +156,11 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
 <i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
-<small class="text-dark" x-text="solicitud.firmas.B.firma_texto || ''"></small>
+<h6 class="text-dark mb-1"><strong>Fecha: <span x-text="solicitud.firmas.B.fecha || ''"></span></strong></h6>
+<small class="text-dark">La solicitud de aditivo se firmó por un medio electrónico.</small>
 </div>
 <div class="card-footer bg-light text-center">
 <h6 class="mb-0 fw-semibold text-truncate" x-text="solicitud.firmas.B.usuario_nombre"></h6>
-<template x-if="solicitud.firmas.B.fecha" x-cloak>
-<small class="text-muted" x-text="solicitud.firmas.B.fecha"></small>
-</template>
 </div>
 </div>
 </template>
@@ -170,15 +181,15 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 Ingrese el token de seguridad que recibió por Telegram o correo electrónico.
 Si aún no cuenta con uno, haga clic en alguno de los siguientes botones para generarlo.
 </small>
-<div class="row w-100">
+<div class="row w-100 mt-3">
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-success w-100" @click="crearTokenTelegram()" :disabled="botonesDeshabilitados">
-<i class="ti ti-brand-telegram me-1"></i> Generar token vía Telegram
+<i class="ti ti-brand-telegram me-1 fs-6"></i><span x-text="botonesDeshabilitados ? 'Espera ' + tokenSegundos + ' s' : 'Generar token vía Telegram'"></span>
 </button>
 </div>
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-info text-white w-100" @click="crearTokenEmail()" :disabled="botonesDeshabilitados">
-<i class="ti ti-mail me-1"></i> Generar token vía Email
+<i class="ti ti-mail me-1 fs-6"></i><span x-text="botonesDeshabilitados ? 'Espera ' + tokenSegundos + ' s' : 'Generar token vía Email'"></span>
 </button>
 </div>
 <div class="col-12">
@@ -205,7 +216,7 @@ Firmar
 <i class="ti ti-clock-hour-4 fs-6"></i>
 </div>
 <div class="ms-3">
-<h6 class="mb-0 text-white">VO.BO.</h6>
+<h6 class="mb-0 text-white">FIRMA DE VO.BO.</h6>
 </div>
 </div>
 </div>

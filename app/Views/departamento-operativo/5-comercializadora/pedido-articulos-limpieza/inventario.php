@@ -53,15 +53,15 @@ x-data="{ ...actions(), ...pedidoLimpiezaInventarioComponent() }">
 <div class="row g-3">
 <div class="col-12">
 <div class="mb-1 form-label">* Nombre del producto:</div>
-<div class="select2-modal-field" x-ref="productoWrapper">
-<select class="form-select" x-ref="productoSelect" data-width="100%">
+<div class="select2-modal-field" x-ref="productoWrapper" :class="{ 'is-invalid': invalid('producto') }">
+<select class="form-select" x-ref="productoSelect" data-width="100%" :class="{ 'border-danger': invalid('producto') }" @change="clearField('producto')">
 <option value="0">Selecciona un producto...</option>
 </select>
 </div>
 </div>
 <div class="col-12">
 <div class="mb-1 form-label">* Piezas:</div>
-<input type="number" min="1" class="form-control" x-model.number="inventarioForm.piezas">
+<input type="text" inputmode="numeric" class="form-control" x-model="inventarioForm.piezas" :class="{ 'border-danger': invalid('piezas') }" @input="inventarioForm.piezas = formatInputNumber($event.target.value); $event.target.value = inventarioForm.piezas; if (positiveQuantity(inventarioForm.piezas)) clearField('piezas')">
 </div>
 </div>
 </div>

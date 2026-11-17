@@ -58,7 +58,7 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 
 <div class="card-body p-0">
 <div class="table-responsive mb-0">
-<table class="table table-bordered table-striped align-middle text-nowrap mb-0">
+<table class="table table-bordered table-striped align-middle text-nowrap mb-0" :class="{ 'border-danger': invalid('productos') }">
 <thead>
 <tr>
 <th class="text-center align-middle" width="96px">#</th>
@@ -77,7 +77,7 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 <td class="text-center align-middle" x-text="it.unidad"></td>
 <td class="text-center align-middle"x-text="it.producto"></td>
 <td class="p-0">
-<input type="number" min="1" class="form-control form-control border-0 p-3 text-center align-middle" :value="it.piezas" @change="editarPiezas(it.id, $event.target.value)">
+<input type="text" inputmode="numeric" class="form-control p-3 text-center align-middle" :class="invalid('piezas_' + it.id) ? 'border-danger' : 'border-0'" :value="formatInputNumber(it.piezas)" @input="formatNumericInput($event, it, 'piezas'); if (positiveQuantity(it.piezas)) clearField('piezas_' + it.id)" @change="editarPiezas(it.id, it.piezas)">
 </td>
 <td class="p-0">
 <input type="text" class="form-control form-control border-0 p-3 text-center align-middle" :value="it.para_que" @change="editarDetalle(it.id, $event.target.value)" placeholder="¿Para qué?">
@@ -92,7 +92,7 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 <td class="text-center" x-text="it.num"></td>
 <td x-text="it.unidad"></td>
 <td x-text="it.producto"></td>
-<td class="text-center" x-text="it.piezas"></td>
+<td class="text-center" x-text="displayQuantity(it.piezas)"></td>
 <td x-text="it.para_que || '—'"></td>
 </tr>
 </template>
@@ -133,7 +133,7 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 </div>
 </div>
 <div class="card-body p-3 ">
-<div id="signature-pad" class="signature-pad-wrapper" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+<div id="signature-pad" class="signature-pad-wrapper" :class="{ 'border-danger': invalid('firma') }" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
 <div class="signature-pad--body">
 <canvas id="signature-pad-pedido" style="width:100%; height:250px; display: block;"></canvas>
 </div>
@@ -150,7 +150,7 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 <div class="row g-3">
 
 <div class="col-md-6">
-<template x-if="pedidoActual.firmas && pedidoActual.firmas.A">
+<template x-if="pedidoActual?.firmas && getFirma('A')">
 <div class="card border h-100">
 <div class="card-header bg-primary text-white py-3 border-0">
 <div class="d-flex align-items-center">
@@ -158,26 +158,28 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 <i class="ti ti-user-check fs-6"></i>
 </div>
 <div class="ms-3 overflow-hidden">
-<h6 class="mb-0 text-white" x-text="pedidoActual.firmas.A.tipo_label"></h6>
+<h6 class="mb-0 text-white" x-text="getFirma('A')?.tipo_label"></h6>
 </div>
 </div>
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-<template x-if="pedidoActual.firmas.A.firma_img_url">
-<img :src="pedidoActual.firmas.A.firma_img_url" class="img-fluid" style="max-height:90px;object-fit:contain;">
+<template x-if="getFirma('A')?.firma_img_url">
+<img :src="getFirma('A')?.firma_img_url" @error="if (getFirma('A')) getFirma('A').firma_img_url = ''" class="img-fluid" style="max-height:90px;object-fit:contain;">
 </template>
-<template x-if="!pedidoActual.firmas.A.firma_img_url">
-<i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
-<small class="text-dark" x-text="pedidoActual.firmas.A.firma_texto || ''"></small>
+<template x-if="!getFirma('A')?.firma_img_url">
+<div class="d-flex flex-column align-items-center">
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+</div>
 </template>
 </div>
 <div class="card-footer bg-light text-center">
-<h6 class="mb-0 fw-semibold text-truncate" x-text="pedidoActual.firmas.A.usuario_nombre"></h6>
-<small class="text-muted" x-text="pedidoActual.firmas.A.fecha || ''"></small>
+<h6 class="mb-0 fw-semibold text-truncate" x-text="getFirma('A')?.usuario_nombre"></h6>
+<small class="text-muted" x-text="getFirma('A')?.fecha || ''"></small>
 </div>
 </div>
 </template>
-<template x-if="!pedidoActual.firmas || !pedidoActual.firmas.A">
+<template x-if="!pedidoActual?.firmas || !getFirma('A')">
 <div class="card border h-100">
 <div class="card-header bg-primary text-white py-3 border-0">
 <div class="d-flex align-items-center">
@@ -201,7 +203,7 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 </div>
 
 <div class="col-md-6">
-<template x-if="pedidoActual.firmas && pedidoActual.firmas.B">
+<template x-if="pedidoActual?.firmas && getFirma('B')">
 <div class="card border h-100">
 <div class="card-header bg-primary text-white py-3 border-0">
 <div class="d-flex align-items-center">
@@ -209,21 +211,21 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 <i class="ti ti-user-check fs-6"></i>
 </div>
 <div class="ms-3 overflow-hidden">
-<h6 class="mb-0 text-white" x-text="pedidoActual.firmas.B.tipo_label"></h6>
+<h6 class="mb-0 text-white" x-text="getFirma('B')?.tipo_label"></h6>
 </div>
 </div>
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
 <i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
-<small class="text-dark" x-text="pedidoActual.firmas.B.firma_texto || ''"></small>
+<small class="text-dark" x-text="getFirma('B')?.firma_texto || ''"></small>
 </div>
 <div class="card-footer bg-light text-center">
-<h6 class="mb-0 fw-semibold text-truncate" x-text="pedidoActual.firmas.B.usuario_nombre"></h6>
-<small class="text-muted" x-text="pedidoActual.firmas.B.fecha || ''"></small>
+<h6 class="mb-0 fw-semibold text-truncate" x-text="getFirma('B')?.usuario_nombre"></h6>
+<small class="text-muted" x-text="getFirma('B')?.fecha || ''"></small>
 </div>
 </div>
 </template>
-<template x-if="!pedidoActual.firmas || !pedidoActual.firmas.B">
+<template x-if="!pedidoActual?.firmas || !getFirma('B')">
 <div class="card border h-100">
 <div class="card-header bg-primary text-white py-3 border-0">
 <div class="d-flex align-items-center">
@@ -264,8 +266,8 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 
 <div class="col-md-6">
 <div class="mb-1 form-label">* Producto:</div>
-<div class="select2-modal-field" x-ref="productoPedidoWrapper">
-<select class="form-select" x-ref="productoPedidoSelect" data-width="100%">
+<div class="select2-modal-field" x-ref="productoPedidoWrapper" :class="{ 'is-invalid': invalid('producto') }">
+<select class="form-select" x-ref="productoPedidoSelect" x-model="nuevoItem.id_producto" :class="{ 'border-danger': invalid('producto') }" @change="clearField('producto'); clearField('otro')" data-width="100%">
 <option value="">Selecciona un producto</option>
 </select>
 </div>
@@ -273,12 +275,12 @@ x-data="{ ...actions(), ...pedidoPinturasPedidoComponent() }">
 
 <div class="col-md-6">
 <div class="mb-1 form-label">* Otro:</div>
-<input type="text" class="form-control" x-model="nuevoItem.otro_producto" @input="syncOtroProducto()" x-ref="otroProductoInput" :disabled="productoSeleccionado" placeholder="Producto libre">
+<input type="text" class="form-control" x-model="nuevoItem.otro_producto" :class="{ 'border-danger': invalid('otro') }" @input="syncOtroProducto()" x-ref="otroProductoInput" :disabled="productoSeleccionado" placeholder="Producto libre">
 </div>
 
 <div class="col-12">
 <div class="mb-1 form-label">* Piezas:</div>
-<input type="number" min="1" class="form-control" x-model.number="nuevoItem.piezas">
+<input type="text" inputmode="numeric" class="form-control" :value="formatInputNumber(nuevoItem.piezas)" :class="{ 'border-danger': invalid('piezas') }" @input="formatNumericInput($event, nuevoItem, 'piezas')">
 </div>
 
 <div class="col-12">

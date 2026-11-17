@@ -69,15 +69,15 @@ var eliminarDisabled = esMultiestacion || row.status !== 0 || !puedeEliminar;
 
 var items = '';
 items += '<a class="dropdown-item pointer pp-btn-detalle' + (detalleDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
-items += '<a class="dropdown-item pointer pp-btn-pdf' + (pdfDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-file-text me-1"></i> Descargar PDF</a>';
+items += '<a class="dropdown-item pointer pp-btn-pdf' + (pdfDisabled ? ' disabled' : '') + '" href="' + (pdfDisabled ? '#' : BASE + '/pdf/' + row.id) + '" aria-disabled="' + pdfDisabled + '" data-id="' + row.id + '"><i class="ti ti-file-text me-1"></i> Descargar PDF</a>';
 items += '<a class="dropdown-item pointer pp-btn-editar' + (editarDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-pencil me-1"></i> Editar</a>';
 items += '<a class="dropdown-item pointer pp-btn-eliminar' + (eliminarDisabled ? ' disabled' : '') + '" data-id="' + row.id + '" data-nombre="Pedido #00' + row.id + '"><i class="ti ti-trash me-1"></i> Eliminar</a>';
 
-return '<div class="dropdown dropstart"><a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-5"></i></a><div class="dropdown-menu">' + items + '</div></div>';
+return '<div class="dropdown dropstart"><a href="javascript:void(0)" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a><div class="dropdown-menu">' + items + '</div></div>';
 }
 
 var columnasPedidos = [
-{ title: '#', data: 'id', className: 'align-middle text-center', width: '40px',
+{ title: '#', data: 'id', className: 'align-middle text-center', width: '48px',
 render: function (data) { return '00' + data; } },
 { title: 'Nombre del personal', data: 'personal', className: 'align-middle text-start text-nowrap' },
 { title: 'Puesto', data: 'puesto', className: 'align-middle text-center text-nowrap' },
@@ -88,7 +88,7 @@ visible: esTodasEstaciones() },
 render: function (v, t, row) { return renderFirma(row); } },
 { title: 'Estatus', data: 'status_label', className: 'align-middle text-center text-nowrap', width: '100px',
 render: function (v, t, row) { return estatusPedidoBadge(row.status); } },
-{ title: '<i class="ti ti-dots-vertical fs-5"></i>', data: null, className: 'align-middle text-center', orderable: false, searchable: false,
+{ title: '<i class="ti ti-dots-vertical fs-6"></i>', data: null, className: 'align-middle text-center', width: '48px', orderable: false, searchable: false,
 render: function (v, t, row) { return renderAccionesPedido(row); } },
 ];
 
@@ -159,15 +159,6 @@ e.preventDefault();
 if (this.classList.contains('disabled')) return;
 var id = parseInt(this.dataset.id);
 window.location.href = BASE + '/' + id;
-});
-
-$('#tabla-pedidos').on('click', '.pp-btn-pdf', function (e) {
-e.preventDefault();
-if (this.classList.contains('disabled')) return;
-var id = parseInt(this.dataset.id);
-if (window.pedidoPinturasComponentInstance && window.pedidoPinturasComponentInstance.descargarPdf) {
-window.pedidoPinturasComponentInstance.descargarPdf(id);
-}
 });
 
 $('#tabla-pedidos').on('click', '.pp-btn-eliminar', function (e) {

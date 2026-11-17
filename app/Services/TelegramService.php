@@ -13,7 +13,9 @@ private ?string $lastError = null;
 
 public function __construct(?string $botToken = null)
 {
-$token = $botToken ?? telegramBotToken();
+$token = trim((string) ($botToken ?? telegramBotToken()));
+// Telegram tokens are the numeric id and secret; the API URL adds "bot" itself.
+$token = preg_replace('/^bot(?=\d+:)/i', '', $token) ?? $token;
         $this->apiUrl = $token !== '' ? "https://api.telegram.org/bot{$token}" : '';
 }
 

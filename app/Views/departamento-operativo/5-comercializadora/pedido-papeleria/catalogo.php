@@ -51,7 +51,7 @@ x-data="{ ...actions(), ...pedidoPapeleriaCatalogoComponent() }">
 <div class="row g-3">
 <div class="col-12 col-sm-12">
 <div class="mb-1 form-label">* Nombre del producto:</div>
-<input type="text" class="form-control" x-model="productoForm.producto">
+<input type="text" class="form-control" x-model="productoForm.producto" :class="{ 'border-danger': invalid('producto') }" @input="if (productoForm.producto.trim()) clearField('producto')">
 </div>
 </div>
 </div>

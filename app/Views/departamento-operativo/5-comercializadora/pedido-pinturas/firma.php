@@ -76,11 +76,11 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 <table class="table table-bordered table-striped align-middle text-nowrap mb-0">
 <thead>
 <tr>
-<th class="text-center" style="width:40px;">#</th>
-<th>Unidad</th>
-<th>Producto</th>
-<th class="text-center">Piezas</th>
-<th>¿Para qué?</th>
+<th class="text-center align-middle" width="48px">#</th>
+<th class="text-center align-middle">Unidad</th>
+<th class="text-start align-middle">Producto</th>
+<th class="text-center align-middle">Piezas</th>
+<th class="text-center align-middle">¿Para qué?</th>
 </tr>
 </thead>
 <tbody>
@@ -88,11 +88,11 @@ Para completar el proceso, es necesario que realice la <strong>firma del Visto B
 $itemsFirma = $pedido['detalle'] ?? [];
 foreach ($itemsFirma as $item): ?>
 <tr>
-<td class="text-center"><?= $item['num'] ?></td>
-<td><?= htmlspecialchars($item['unidad']) ?></td>
-<td><?= htmlspecialchars($item['producto']) ?></td>
-<td class="text-center"><?= $item['piezas'] ?></td>
-<td><?= htmlspecialchars($item['para_que'] ?: '—') ?></td>
+<td class="text-center align-middle"><?= $item['num'] ?></td>
+<td class="text-center align-middle"><?= htmlspecialchars($item['unidad']) ?></td>
+<td class="text-start align-middle"><?= htmlspecialchars($item['producto']) ?></td>
+<td class="text-center align-middle"><?= number_format((float)$item['piezas'], 2, '.', ',') ?></td>
+<td class="text-center align-middle"><?= htmlspecialchars($item['para_que'] ?: 'Sin información') ?></td>
 </tr>
 <?php endforeach; ?>
 <?php if (empty($itemsFirma)): ?>
@@ -149,7 +149,10 @@ foreach ($itemsFirma as $item): ?>
 <?php if (!empty($firmaAVista['firma_img_url'])): ?>
 <img src="<?= htmlspecialchars($firmaAVista['firma_img_url']) ?>" class="img-fluid" style="max-height:90px;object-fit:contain;">
 <?php else: ?>
-<i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
+<div class="d-flex flex-column align-items-center">
+<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+</div>
 <small class="text-dark"><?= htmlspecialchars($firmaAVista['firma_texto'] ?? '') ?></small>
 <?php endif; ?>
 </div>
@@ -224,18 +227,18 @@ Si aún no cuenta con uno, haga clic en alguno de los siguientes botones para ge
 <div class="row w-100">
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-success w-100" @click="crearTokenTelegram()" :disabled="botonesDeshabilitados">
-<i class="ti ti-brand-telegram me-1"></i> Generar token vía Telegram
+<i class="ti ti-brand-telegram me-1"></i> <span x-text="segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Telegram'"></span>
 </button>
 </div>
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-info text-white w-100" @click="crearTokenEmail()" :disabled="botonesDeshabilitados">
-<i class="ti ti-mail me-1"></i> Generar token vía Email
+<i class="ti ti-mail me-1"></i> <span x-text="segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Email'"></span>
 </button>
 </div>
 <div class="col-12">
 <div class="input-group">
-<input type="text" class="form-control" placeholder="Token de seguridad" x-model="token" inputmode="numeric" maxlength="6">
-<button class="btn btn-outline-success" type="button" @click="firmarVobo()" :disabled="firmandoVobo || !token.trim()">
+<input type="text" class="form-control" placeholder="Token de seguridad" x-model="token" :class="{ 'border-danger': invalid('token') }" @input="if (token.trim()) clearField('token')" inputmode="numeric" maxlength="6">
+<button class="btn btn-outline-success" type="button" @click="firmarVobo()" :disabled="firmandoVobo">
 Firmar
 </button>
 </div>

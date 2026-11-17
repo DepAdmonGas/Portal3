@@ -21,6 +21,7 @@ window.tablaPedidos = null;
 
 function getContexto() {
 var sel = document.getElementById('module-station-selector-' + moduleStationKey);
+if (sel && sel.value === '') return null;
 if (sel && sel.value) {
 var p = sel.value.split('_');
 if (p.length === 2 && p[1]) {
@@ -73,7 +74,7 @@ return '<a href="' + BASE_FIRMA + '/' + row.id + '" title="Firmar VoBo" class="f
 }
 return '<span class="text-muted" title="En espera de VoBo"><i class="ti ti-clock-hour-4 fs-8" style="width:20px;height:20px;filter:grayscale(1) opacity(0.5);cursor:default;"></i></span>';
 }
-return '<i class="ti ti-signature text-success fs-10" style="width:20px;height:20px;filter:grayscale(1) opacity(0.5);cursor:default;"></i>';
+return '<i class="ti ti-signature text-success fs-9" style="width:20px;height:20px;filter:grayscale(1) opacity(0.5);cursor:default;"></i>';
 }
 
 function renderAccionesPedido(row) {
@@ -84,7 +85,7 @@ var eliminarDisabled = esMultiestacion || row.status !== 0 || !puedeEliminar;
 
 var items = '';
 items += '<a class="dropdown-item pointer pp-btn-detalle' + (detalleDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
-items += '<a class="dropdown-item pointer pp-btn-pdf' + (pdfDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-file-text me-1"></i> Descargar PDF</a>';
+items += '<a class="dropdown-item pointer pp-btn-pdf' + (pdfDisabled ? ' disabled' : '') + '" href="' + (pdfDisabled ? '#' : BASE + '/pdf/' + row.id) + '" aria-disabled="' + pdfDisabled + '" data-id="' + row.id + '"><i class="ti ti-file-text me-1"></i> Descargar PDF</a>';
 items += '<a class="dropdown-item pointer pp-btn-editar' + (editarDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-pencil me-1"></i> Editar</a>';
 items += '<a class="dropdown-item pointer pp-btn-eliminar' + (eliminarDisabled ? ' disabled' : '') + '" data-id="' + row.id + '" data-nombre="Pedido #00' + row.id + '"><i class="ti ti-trash me-1"></i> Eliminar</a>';
 
@@ -176,14 +177,6 @@ var id = parseInt(this.dataset.id);
 window.location.href = BASE + '/' + id;
 });
 
-$('#tabla-pedidos').on('click', '.pp-btn-pdf', function (e) {
-e.preventDefault();
-if (this.classList.contains('disabled')) return;
-var id = parseInt(this.dataset.id);
-if (window.pedidoPapeleriaComponentInstance && window.pedidoPapeleriaComponentInstance.descargarPdf) {
-window.pedidoPapeleriaComponentInstance.descargarPdf(id);
-}
-});
 
 $('#tabla-pedidos').on('click', '.pp-btn-eliminar', function (e) {
 e.preventDefault();

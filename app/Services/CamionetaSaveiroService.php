@@ -12,6 +12,23 @@ class CamionetaSaveiroService
 {
     public const UPLOAD_FOLDER = 'public/uploads/archivos/camioneta-saveiro/';
 
+    private static function archivoDisponible(string $archivo): bool
+    {
+        $nombre = basename(str_replace('\\', '/', trim($archivo)));
+        if ($nombre === '' || $nombre === '.' || $nombre === '..') {
+            return false;
+        }
+
+        $directorio = dirname(__DIR__, 2) . '/' . self::UPLOAD_FOLDER;
+        $baseReal = realpath($directorio);
+        $archivoReal = realpath($directorio . $nombre);
+
+        return $baseReal !== false
+            && $archivoReal !== false
+            && is_file($archivoReal)
+            && str_starts_with($archivoReal, $baseReal . DIRECTORY_SEPARATOR);
+    }
+
     /**
      * Obtiene el listado de documentos formateando la fecha con formatearFecha()
      */
@@ -35,6 +52,7 @@ class CamionetaSaveiroService
                 'fecha_raw'          => $rawFecha,
                 'descripcion'        => $item->descripcion,
                 'archivo'            => $item->archivo,
+                'archivo_disponible' => self::archivoDisponible((string)$item->archivo),
                 'total_comentarios'  => (int)$item->comentarios_count,
             ];
         })->toArray();
@@ -50,7 +68,7 @@ class CamionetaSaveiroService
         $descripcion = trim($data['descripcion'] ?? '');
 
         if ($tipo === '' || $fecha === '' || $descripcion === '' || empty($file['tmp_name'])) {
-            return ['success' => false, 'message' => 'Todos los campos son obligatorios.', 'code' => 422];
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
         }
 
         $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -60,8 +78,8 @@ class CamionetaSaveiroService
         $nuevoNombre = $numeroAleatorio1 . '-Archivo-' . $nombreLimpio . $numeroAleatorio2 . '.' . $extension;
 
         $directorioDestino = dirname(__DIR__, 2) . '/' . self::UPLOAD_FOLDER;
-        if (!is_dir($directorioDestino)) {
-            mkdir($directorioDestino, 0775, true);
+        if (!is_dir($directorioDestino) && !@mkdir($directorioDestino, 0775, true) && !is_dir($directorioDestino)) {
+            return ['success' => false, 'message' => 'No se pudo preparar el directorio de archivos.', 'code' => 500];
         }
 
         if (!move_uploaded_file($file['tmp_name'], $directorioDestino . $nuevoNombre)) {
@@ -99,7 +117,7 @@ class CamionetaSaveiroService
         $descripcion = trim($data['descripcion'] ?? '');
 
         if ($id <= 0 || $fecha === '' || $descripcion === '') {
-            return ['success' => false, 'message' => 'La fecha y la descripción son obligatorias.', 'code' => 422];
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
         }
 
         $documento = CamionetaSaveiroDocumento::find($id);
@@ -118,12 +136,16 @@ class CamionetaSaveiroService
             $nuevoNombre = $numeroAleatorio1 . '-Archivo-' . $nombreLimpio . $numeroAleatorio2 . '.' . $extension;
 
             $directorioDestino = dirname(__DIR__, 2) . '/' . self::UPLOAD_FOLDER;
-            if (move_uploaded_file($file['tmp_name'], $directorioDestino . $nuevoNombre)) {
-                if ($documento->archivo && file_exists($directorioDestino . $documento->archivo)) {
-                    @unlink($directorioDestino . $documento->archivo);
-                }
-                $documento->archivo = $nuevoNombre;
+            if (!is_dir($directorioDestino) && !@mkdir($directorioDestino, 0775, true) && !is_dir($directorioDestino)) {
+                return ['success' => false, 'message' => 'No se pudo preparar el directorio de archivos.', 'code' => 500];
             }
+            if (!move_uploaded_file($file['tmp_name'], $directorioDestino . $nuevoNombre)) {
+                return ['success' => false, 'message' => 'No se pudo guardar el archivo reemplazado.', 'code' => 500];
+            }
+            if ($documento->archivo && file_exists($directorioDestino . $documento->archivo)) {
+                @unlink($directorioDestino . $documento->archivo);
+            }
+            $documento->archivo = $nuevoNombre;
         }
 
         $documento->save();
@@ -204,7 +226,7 @@ class CamionetaSaveiroService
         $comentarioTexto = trim($comentarioTexto);
 
         if ($idDocumento <= 0 || $comentarioTexto === '') {
-            return ['success' => false, 'message' => 'El comentario es requerido.', 'code' => 422];
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
         }
 
         $documento = CamionetaSaveiroDocumento::find($idDocumento);

@@ -26,11 +26,11 @@ x-data="{ ...actions(), ...pedidoPinturasReporteDetalleComponent() }">
 <div class="row g-3">
 <div class="col-md-6">
 <div class="mb-1 form-label">* Fecha:</div>
-<input type="date" class="form-control" x-model="reporteForm.fecha" @input="programarAutosave()">
+<input type="date" class="form-control" x-model="reporteForm.fecha" :class="{ 'border-danger': invalid('fecha') }" @input="if (reporteForm.fecha) clearField('fecha'); programarAutosave()">
 </div>
 <div class="col-md-6">
 <div class="mb-1 form-label">* Hora:</div>
-<input type="time" class="form-control" x-model="reporteForm.hora" @input="programarAutosave()">
+<input type="time" class="form-control" x-model="reporteForm.hora" :class="{ 'border-danger': invalid('hora') }" @input="if (reporteForm.hora) clearField('hora'); programarAutosave()">
 </div>
 <div class="col-12">
 <div class="mb-1 form-label">Detalle:</div>
@@ -93,7 +93,7 @@ x-data="{ ...actions(), ...pedidoPinturasReporteDetalleComponent() }">
 <tr>
 <td class="text-center align-middle" x-text="i + 1"></td>
 <td class="text-center align-middle" x-text="it.producto"></td>
-<td class="text-center align-middle" x-text="it.piezas"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.piezas)"></td>
 <td class="text-center align-middle" x-text="it.observaciones || 'Sin observaciones'"></td>
 <td class="text-center align-middle" x-show="reporteActual.status === 0">
 <i class="ti ti-trash text-danger pointer fs-6" @click="eliminarProductoReporte(it)"></i>
@@ -122,15 +122,15 @@ x-data="{ ...actions(), ...pedidoPinturasReporteDetalleComponent() }">
 <div class="row g-3">
 <div class="col-12">
 <div class="mb-1 form-label">* Pintura o complemento:</div>
-<div class="select2-modal-field" x-ref="productoWrapper">
-<select class="form-select" x-ref="productoSelect" data-width="100%">
+<div class="select2-modal-field" x-ref="productoWrapper" :class="{ 'is-invalid': invalid('producto') }">
+<select class="form-select" x-ref="productoSelect" x-model="reporteItem.id_producto" :class="{ 'border-danger': invalid('producto') }" @change="clearField('producto')" data-width="100%">
 <option value="0">Selecciona una opción...</option>
 </select>
 </div>
 </div>
 <div class="col-12">
 <div class="mb-1 form-label">* Piezas utilizadas:</div>
-<input type="number" min="1" class="form-control" x-model.number="reporteItem.unidad">
+<input type="text" inputmode="numeric" class="form-control" :value="formatInputNumber(reporteItem.unidad)" :class="{ 'border-danger': invalid('unidad') }" @input="formatNumericInput($event, reporteItem, 'unidad')">
 </div>
 <div class="col-12">
 <div class="mb-1 form-label">Observaciones:</div>

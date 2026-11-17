@@ -1,6 +1,7 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoPapeleriaPedidoComponent', () => ({
+...window.PedidoPapeleriaForm(),
 
 puedeAcceso: false,
 puedeEditar: false,
@@ -9,11 +10,14 @@ puedeDescargar: false,
 puedeFirmar: false,
 esEncargado: false,
 
-pedidoActual: null,
+pedidoActual: { id: 0, detalle: [], firmas: {}, status: 0 },
 catalogos: [],
 nuevoItem: { id_producto: '', otro_producto: '', piezas: 1 },
 finalizando: false,
 guardandoProducto: false,
+signaturePad: null,
+firmaVacia: true,
+resizeFirma: null,
 
 BASE: '/departamento-operativo/comercializadora/pedido-papeleria',
 BASE_FIRMA: '/departamento-operativo/comercializadora/pedido-papeleria-firma',
@@ -36,6 +40,7 @@ try { this.pedidoActual = JSON.parse(c.dataset.pedido); } catch (e) { console.er
 window.pedidoPapeleriaPedidoComponentInstance = this;
 
 this.cargarCatalogos();
+this.initSignaturePad();
 },
 
 async cargarPedido() {
@@ -60,6 +65,62 @@ console.error('Error cargando catálogos:', e);
 }
 },
 
+initSignaturePad() {
+this.$nextTick(() => {
+if (this.pedidoActual.status !== 0 || !(this.esEncargado || this.puedeEditar)) return;
+if (window.SignaturePad == null) {
+console.error('SignaturePad no disponible');
+return;
+}
+var w = document.getElementById('signature-pad');
+var cv = w ? w.querySelector('canvas') : null;
+if (!cv) {
+this.firmaVacia = true;
+return;
+}
+this.signaturePad = new SignaturePad(cv, {
+backgroundColor: 'rgb(255, 255, 255)',
+minWidth: 1,
+maxWidth: 2.5,
+penColor: '#000000',
+onEnd: () => { this.firmaVacia = this.signaturePad.isEmpty(); }
+});
+this.signaturePad.addEventListener('endStroke', () => { this.firmaVacia = this.signaturePad.isEmpty(); if (!this.firmaVacia) this.clearField('firma'); });
+this._redimensionarCanvas();
+this.resizeFirma = () => this._redimensionarCanvas();
+window.addEventListener('resize', this.resizeFirma);
+this.firmaVacia = this.signaturePad.isEmpty();
+});
+},
+
+_redimensionarCanvas() {
+var w = document.getElementById('signature-pad');
+var cv = w ? w.querySelector('canvas') : null;
+if (!cv) return;
+var data = null;
+if (this.signaturePad && !this.signaturePad.isEmpty()) {
+data = this.signaturePad.toData();
+}
+var r = Math.max(window.devicePixelRatio || 1, 1);
+cv.width = cv.offsetWidth * r;
+cv.height = cv.offsetHeight * r;
+cv.getContext('2d').scale(r, r);
+if (this.signaturePad) {
+if (data) this.signaturePad.fromData(data);
+this.firmaVacia = this.signaturePad.isEmpty();
+}
+},
+
+limpiarFirma() {
+if (this.signaturePad) this.signaturePad.clear();
+this.firmaVacia = true;
+},
+
+destroy() {
+if (this.resizeFirma) window.removeEventListener('resize', this.resizeFirma);
+if (this.signaturePad) this.signaturePad.off();
+},
+
 firmaUrl(id) {
 return this.BASE_FIRMA + '/' + id;
 },
@@ -72,6 +133,7 @@ return 'bg-secondary';
 },
 
 async modalAgregarProducto() {
+this.validationErrors = {};
 if (!this.catalogos || !this.catalogos.length) {
 await this.cargarCatalogos();
 }
@@ -88,7 +150,10 @@ return !!(this.nuevoItem && this.nuevoItem.id_producto);
 
 syncOtroProducto() {
 const tieneOtro = (this.nuevoItem.otro_producto || '').trim() !== '';
+if (tieneOtro) this.clearField('producto');
 if (tieneOtro) {
+this.clearField('producto');
+this.clearField('producto');
 this.nuevoItem.id_producto = '';
 }
 this._actualizarEstadoOtroProducto();
@@ -132,6 +197,8 @@ $sel.prop('disabled', false).trigger('change');
 $sel.on('change.papeleria', () => {
 this.nuevoItem.id_producto = $sel.val() ? String($sel.val()) : '';
 if (this.nuevoItem.id_producto) {
+this.clearField('producto');
+this.clearField('otro');
 this.nuevoItem.otro_producto = '';
 }
 this._actualizarEstadoOtroProducto();
@@ -150,16 +217,9 @@ if (this.guardandoProducto) return;
 
 const idProducto = this.nuevoItem.id_producto;
 const otroProducto = (this.nuevoItem.otro_producto || '').trim();
-const piezas = parseInt(this.nuevoItem.piezas || '0', 10);
+const piezas = String(this.nuevoItem.piezas ?? '').replace(/,/g, '');
 
-if (!idProducto && !otroProducto) {
-if (window.Notify) Notify.error('Selecciona un producto o escribe uno');
-return;
-}
-if (!piezas || piezas <= 0) {
-if (window.Notify) Notify.error('Ingresa una cantidad de piezas válida');
-return;
-}
+if (!this.validateFields({ producto: !!(idProducto || otroProducto), piezas: this.positiveQuantity(piezas) })) return;
 
 this.guardandoProducto = true;
 try {
@@ -176,6 +236,7 @@ bootstrap.Modal.getOrCreateInstance(m).hide();
 this.nuevoItem = { id_producto: '', otro_producto: '', piezas: 1 };
 this._inicializarSelectProductoPedido();
 if (window.Notify) Notify.success(json.message || 'Producto agregado correctamente');
+this.clearField('productos');
 await this.cargarPedido();
 } else {
 if (window.Notify) Notify.error(json.message || 'Error al agregar el producto');
@@ -189,12 +250,8 @@ this.guardandoProducto = false;
 },
 
 async editarPiezas(id, valor) {
-const piezas = parseInt(valor || '0', 10);
-if (!piezas || piezas <= 0) {
-if (window.Notify) Notify.error('La cantidad debe ser mayor a cero');
-await this.cargarPedido();
-return;
-}
+const piezas = String(valor ?? '').replace(/,/g, '');
+if (!this.validateFields({ ['piezas_' + id]: this.positiveQuantity(piezas) })) return;
 try {
 const fd = new FormData();
 fd.append('id', id);
@@ -243,14 +300,15 @@ if (window.Notify) Notify.error(e.response?.data?.message || 'Error al eliminar 
 async finalizarPedido() {
 if (this.finalizando) return;
 
-if (!this.pedidoActual.detalle || !this.pedidoActual.detalle.length) {
-if (window.Notify) Notify.error('Agrega al menos un producto al pedido');
-return;
-}
+if (!this.validateFields({
+productos: !!this.pedidoActual.detalle?.length && this.pedidoActual.detalle.every(it => this.positiveQuantity(it.piezas)),
+firma: !!this.signaturePad && !this.signaturePad.isEmpty()
+})) return;
+const base64 = this.signaturePad.toDataURL('image/png');
 
 const confirm = await Swal.fire({
 title: '¿Finalizar pedido?',
-text: 'El pedido pasará a espera de VoBo',
+text: 'El pedido pasará a espera de VoBo y se registrará la firma del encargado',
 icon: 'question',
 showCancelButton: true,
 confirmButtonText: 'Sí, finalizar',
@@ -261,7 +319,8 @@ if (!confirm.isConfirmed) return;
 this.finalizando = true;
 try {
 const resp = await axios.post(this.BASE + '/finalizar', {
-id: this.pedidoActual.id
+id: this.pedidoActual.id,
+firma: base64
 });
 const json = resp.data;
 if (json.success) {

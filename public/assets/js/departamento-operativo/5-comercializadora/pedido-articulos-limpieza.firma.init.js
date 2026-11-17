@@ -5,6 +5,8 @@ Alpine.data('pedidoLimpiezaFirmaComponent', () => ({
 pedido: null,
 token: '',
 botonesDeshabilitados: false,
+segundosRestantes: 0,
+temporizadorToken: null,
 firmandoVobo: false,
 puedeFirmarVoBo: false,
 
@@ -31,13 +33,29 @@ const disableTime = localStorage.getItem('pedido_articulos_limpieza_token_disabl
 if (disableTime) {
 const elapsed = new Date().getTime() - parseInt(disableTime, 10);
 if (elapsed < 30000) {
-this.botonesDeshabilitados = true;
-setTimeout(() => { this.botonesDeshabilitados = false; }, 30000 - elapsed);
+this.iniciarContadorToken(Math.ceil((30000 - elapsed) / 1000));
 } else {
 localStorage.removeItem('pedido_articulos_limpieza_token_disableTime');
 }
 }
 },
+
+iniciarContadorToken(segundos = 30) {
+if (this.temporizadorToken) clearInterval(this.temporizadorToken);
+this.botonesDeshabilitados = true;
+this.segundosRestantes = Math.max(0, Number(segundos) || 0);
+this.temporizadorToken = setInterval(() => {
+this.segundosRestantes = Math.max(0, this.segundosRestantes - 1);
+if (this.segundosRestantes === 0) {
+clearInterval(this.temporizadorToken);
+this.temporizadorToken = null;
+this.botonesDeshabilitados = false;
+localStorage.removeItem('pedido_articulos_limpieza_token_disableTime');
+}
+}, 1000);
+},
+
+destroy() { if (this.temporizadorToken) clearInterval(this.temporizadorToken); },
 
 get id() {
 if (this.pedido) {
@@ -66,7 +84,7 @@ if (window.Notify) Notify.error('No se encontró el pedido');
 return;
 }
 
-this.botonesDeshabilitados = true;
+this.iniciarContadorToken(30);
 try {
 const fd = new FormData();
 fd.append('id', this.id);
@@ -83,13 +101,18 @@ Notify.success(via === 'email'
 Notify.warning('Deberá esperar 30 seg para volver a crear un nuevo token');
 }
 localStorage.setItem('pedido_articulos_limpieza_token_disableTime', String(new Date().getTime()));
-setTimeout(() => { this.botonesDeshabilitados = false; }, 30000);
 } else {
+clearInterval(this.temporizadorToken);
+this.temporizadorToken = null;
 this.botonesDeshabilitados = false;
+this.segundosRestantes = 0;
 if (window.Notify) Notify.error(json.message || 'Error al crear el token');
 }
 } catch (e) {
+clearInterval(this.temporizadorToken);
+this.temporizadorToken = null;
 this.botonesDeshabilitados = false;
+this.segundosRestantes = 0;
 console.error('Error creando token:', e);
 if (window.Notify) Notify.error('Error al crear el token');
 }

@@ -5,10 +5,16 @@ Alpine.data('pedidoAditivoFirmaComponent', () => ({
 solicitud: null,
 token: '',
 botonesDeshabilitados: false,
+tokenSegundos: 0,
+timerToken: null,
 firmandoVobo: false,
 puedeFirmarVoBo: false,
 
 BASE: '/departamento-operativo/comercializadora/pedido-aditivo',
+
+displayQuantity(value) {
+return Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+},
 
 init() {
 const c = document.getElementById('container');
@@ -27,17 +33,19 @@ this.puedeFirmarVoBo = c.dataset.puedeFirmar === 'true';
 
 window.pedidoAditivoFirmaComponentInstance = this;
 
-const disableTime = localStorage.getItem('pedido_aditivo_token_disableTime');
-if (disableTime) {
-const elapsed = new Date().getTime() - parseInt(disableTime, 10);
-if (elapsed < 30000) {
-this.botonesDeshabilitados = true;
-setTimeout(() => { this.botonesDeshabilitados = false; }, 30000 - elapsed);
-} else {
-localStorage.removeItem('pedido_aditivo_token_disableTime');
-}
-}
+this.actualizarContadorToken();
+this.timerToken = window.setInterval(() => this.actualizarContadorToken(), 1000);
 },
+
+actualizarContadorToken() {
+const disableTime = parseInt(localStorage.getItem('pedido_aditivo_token_disableTime') || '0', 10);
+const restante = disableTime ? Math.max(0, Math.ceil((30000 - (Date.now() - disableTime)) / 1000)) : 0;
+this.tokenSegundos = restante;
+this.botonesDeshabilitados = restante > 0;
+if (!restante && disableTime) localStorage.removeItem('pedido_aditivo_token_disableTime');
+},
+
+destroy() { if (this.timerToken) window.clearInterval(this.timerToken); },
 
 get id() {
 if (this.solicitud) {
@@ -66,7 +74,8 @@ if (window.Notify) Notify.error('No se encontró la solicitud');
 return;
 }
 
-this.botonesDeshabilitados = true;
+localStorage.setItem('pedido_aditivo_token_disableTime', String(Date.now()));
+this.actualizarContadorToken();
 try {
 const fd = new FormData();
 fd.append('id', this.id);
@@ -82,14 +91,14 @@ Notify.success(via === 'email'
 : 'El token fue enviado por Telegram');
 Notify.warning('Deberá esperar 30 seg para volver a crear un nuevo token');
 }
-localStorage.setItem('pedido_aditivo_token_disableTime', String(new Date().getTime()));
-setTimeout(() => { this.botonesDeshabilitados = false; }, 30000);
 } else {
-this.botonesDeshabilitados = false;
+localStorage.removeItem('pedido_aditivo_token_disableTime');
+this.actualizarContadorToken();
 if (window.Notify) Notify.error(json.message || 'Error al crear el token');
 }
 } catch (e) {
-this.botonesDeshabilitados = false;
+localStorage.removeItem('pedido_aditivo_token_disableTime');
+this.actualizarContadorToken();
 console.error('Error creando token:', e);
 if (window.Notify) Notify.error('Error al crear el token');
 }
@@ -121,11 +130,7 @@ text: json.message || 'El VoBo se ha firmado exitosamente',
 timer: 2000,
 showConfirmButton: false
 }).then(() => {
-if (document.referrer && document.referrer.indexOf(window.location.origin) === 0) {
-history.back();
-} else {
 window.location.href = this.BASE;
-}
 });
 } else {
 this.firmandoVobo = false;

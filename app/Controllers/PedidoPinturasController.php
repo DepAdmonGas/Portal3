@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Breadcrumb;
 use App\Core\JsonResponse;
 use App\Core\Session;
+use App\Core\Request;
 use App\Core\View;
 use App\Services\PedidoPinturasService;
 use App\Services\ModuleStationService;
@@ -50,6 +51,7 @@ class PedidoPinturasController extends BaseController
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/assets/js/core/module-station-selector.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.datatable.init.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.actions.init.js?v=' . time(),
             ],
@@ -63,6 +65,7 @@ class PedidoPinturasController extends BaseController
 
     protected function vistarIndex(string $title, string $view, bool $showSelector = false, array $scripts = [], array $links = []): void
     {
+        array_unshift($scripts, '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.form.js?v=' . time());
         $permisos = PedidoPinturasService::getPermisos();
         $esMultiestacion = $permisos['multiestacion'];
         $idEstacion = $esMultiestacion ? 0 : $permisos['id_estacion'];
@@ -176,6 +179,7 @@ class PedidoPinturasController extends BaseController
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.reporte-detalle.init.js?v=' . time(),
             ],
             'links' => [
@@ -226,6 +230,7 @@ class PedidoPinturasController extends BaseController
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js',
                 '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.pedido.init.js?v=' . time(),
             ],
             'links' => [
@@ -273,9 +278,23 @@ class PedidoPinturasController extends BaseController
             'help'             => false,
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-pinturas.firma.init.js?v=' . time(),
             ],
         ], 'departamento-operativo');
+    }
+
+    private function cantidadEntrada(string $field): int
+    {
+        $value = PedidoPinturasService::normalizarPiezas(Request::input($field));
+        if ($value === null) JsonResponse::validation(PedidoPinturasService::REQUIRED_MESSAGE, [$field => true]);
+        return $value;
+    }
+
+    private function textoEntrada(string $field): string
+    {
+        $value = Request::input($field, '');
+        return is_string($value) || is_int($value) || is_float($value) ? trim((string)$value) : '';
     }
 
     private function resolverEstacion(): int
@@ -352,9 +371,9 @@ class PedidoPinturasController extends BaseController
     public function agregarProducto()
     {
         $idPedido = (int)($_POST['id_pedido'] ?? 0);
-        $idProducto = (string)($_POST['id_producto'] ?? '');
-        $otroProducto = (string)($_POST['otro_producto'] ?? '');
-        $piezas = (int)($_POST['piezas'] ?? 0);
+        $idProducto = $this->textoEntrada('id_producto');
+        $otroProducto = $this->textoEntrada('otro_producto');
+        $piezas = $this->cantidadEntrada('piezas');
         $paraQue = (string)($_POST['para_que'] ?? '');
 
         $result = PedidoPinturasService::agregarProducto($idPedido, $idProducto, $otroProducto, $piezas, $paraQue);
@@ -364,7 +383,7 @@ class PedidoPinturasController extends BaseController
     public function editarPiezas()
     {
         $id = (int)($_POST['id'] ?? 0);
-        $piezas = (int)($_POST['piezas'] ?? 0);
+        $piezas = $this->cantidadEntrada('piezas');
 
         $result = PedidoPinturasService::editarPiezas($id, $piezas);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -503,8 +522,8 @@ class PedidoPinturasController extends BaseController
 
         $input = json_decode(file_get_contents('php://input'), true);
         $id = (int)($input['id'] ?? ($_POST['id'] ?? 0));
-        $unidad = (string)($input['unidad'] ?? ($_POST['unidad'] ?? ''));
-        $producto = (string)($input['producto'] ?? ($_POST['producto'] ?? ''));
+        $unidad = $this->textoEntrada('unidad');
+        $producto = $this->textoEntrada('producto');
 
         $result = PedidoPinturasService::guardarProducto($id, $unidad, $producto);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -546,7 +565,7 @@ class PedidoPinturasController extends BaseController
         $input = json_decode(file_get_contents('php://input'), true);
         $idEstacion = (int)($input['id_estacion'] ?? ($_POST['id_estacion'] ?? $this->resolverEstacion()));
         $idProducto = (int)($input['id_producto'] ?? ($_POST['id_producto'] ?? 0));
-        $piezas = (int)($input['piezas'] ?? ($_POST['piezas'] ?? 0));
+        $piezas = $this->cantidadEntrada('piezas');
 
         $result = PedidoPinturasService::agregarInventario($idEstacion, $idProducto, $piezas);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -612,8 +631,8 @@ class PedidoPinturasController extends BaseController
 
         $input = json_decode(file_get_contents('php://input'), true);
         $id = (int)($input['id'] ?? ($_POST['id'] ?? 0));
-        $fecha = (string)($input['fecha'] ?? ($_POST['fecha'] ?? ''));
-        $hora = (string)($input['hora'] ?? ($_POST['hora'] ?? ''));
+        $fecha = $this->textoEntrada('fecha');
+        $hora = $this->textoEntrada('hora');
         $detalle = (string)($input['detalle'] ?? ($_POST['detalle'] ?? ''));
 
         $result = PedidoPinturasService::guardarReporteDatos($id, $fecha, $hora, $detalle);
@@ -631,7 +650,7 @@ class PedidoPinturasController extends BaseController
         $idReporte = (int)($input['id_reporte'] ?? ($_POST['id_reporte'] ?? 0));
         $idEstacion = (int)($input['id_estacion'] ?? ($_POST['id_estacion'] ?? $this->resolverEstacion()));
         $idProducto = (int)($input['id_producto'] ?? ($_POST['id_producto'] ?? 0));
-        $unidad = (int)($input['unidad'] ?? ($_POST['unidad'] ?? 0));
+        $unidad = $this->cantidadEntrada('unidad');
         $observaciones = (string)($input['observaciones'] ?? ($_POST['observaciones'] ?? ''));
 
         $result = PedidoPinturasService::agregarProductoReporte($idReporte, $idEstacion, $idProducto, $unidad, $observaciones);

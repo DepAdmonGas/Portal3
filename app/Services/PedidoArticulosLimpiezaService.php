@@ -20,6 +20,40 @@ use Carbon\Carbon;
 class PedidoArticulosLimpiezaService
 {
 
+    public const REQUIRED_MESSAGE = 'Completa los campos obligatorios.';
+
+    public static function normalizarPiezas(mixed $value): ?int
+    {
+        if (!is_int($value) && !is_string($value)) return null;
+        $value = trim((string)$value);
+        if (!preg_match('/^(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)$/D', $value)) return null;
+        $number = filter_var(ltrim(str_replace(',', '', $value), '0') ?: '0', FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1, 'max_range' => 2147483647],
+        ]);
+        return $number === false ? null : $number;
+    }
+
+    public static function nombreArchivo(?string $reference): ?string
+    {
+        $reference = str_replace('\\', '/', trim((string)$reference));
+        foreach (['/public/uploads/archivos/', 'public/uploads/archivos/', '/uploads/archivos/', 'uploads/archivos/', '../../../archivos/', '../archivos/', 'archivos/', '../imgs/firma/', 'imgs/firma/'] as $prefix) {
+            if (str_starts_with($reference, $prefix)) { $reference = substr($reference, strlen($prefix)); break; }
+        }
+        if ($reference === '' || str_contains($reference, "\0") || $reference !== basename($reference)
+            || in_array($reference, ['.', '..'], true)) return null;
+        return $reference;
+    }
+
+    public static function rutaArchivo(?string $reference): ?string
+    {
+        $name = self::nombreArchivo($reference);
+        if ($name === null) return null;
+        $root = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+        $base = realpath($root);
+        $path = realpath($root . $name);
+        return $base && $path && is_file($path) && str_starts_with($path, $base . DIRECTORY_SEPARATOR) ? $path : null;
+    }
+
     public const MODULE_KEY = 'pedido-articulos-limpieza';
     public const MODULO_PADRE_CLAVE = 'comercializadora';
 
@@ -436,6 +470,7 @@ class PedidoArticulosLimpiezaService
         foreach ($pedido->firmas as $firma) {
             $tipo = $firma->tipo_firma;
             $esImagen = $tipo === 'A' && $firma->firma && strpos($firma->firma, 'Firma:') !== 0;
+            $archivoFirma = $esImagen ? self::nombreArchivo($firma->firma) : null;
             $fechaFirmaObj = $firma->fecha;
             $fechaCompuesta = '';
             if ($fechaFirmaObj instanceof \DateTimeInterface) {
@@ -450,7 +485,9 @@ class PedidoArticulosLimpiezaService
                 'id_usuario'     => (int)$firma->id_usuario,
                 'firma'          => $firma->firma ?? 'Sin información',
                 'firma_texto'    => $esImagen ? '' : ($firma->firma ?? 'Sin información'),
-                'firma_img_url'  => $esImagen ? '/uploads/firmas/pedido-articulos-limpieza/' . $firma->firma : '',
+                'firma_img_url'  => $esImagen && self::rutaArchivo($firma->firma) !== null
+                    ? '/download?tipo=pedido-articulos-limpieza&view=1&file=' . rawurlencode((string)$archivoFirma) : '',
+                'archivo_faltante' => $esImagen && self::rutaArchivo($firma->firma) === null,
                 'fecha'          => $fechaCompuesta !== '' && $fechaCompuesta !== ', ' ? $fechaCompuesta : '',
                 'personal'       => self::getPersonal($firma->id_usuario)['nombre'],
                 'usuario_nombre' => self::getPersonal($firma->id_usuario)['nombre'],
@@ -520,70 +557,50 @@ class PedidoArticulosLimpiezaService
 
     public static function agregarProducto(int $idPedido, string $idProducto, string $otroProducto, int $piezas, string $unidad): array
     {
-        if (!$idPedido || $piezas <= 0) {
-            return ['success' => false, 'message' => 'Debe seleccionar un producto y una cantidad mayor a cero'];
-        }
-
-        $valProducto = '';
-        $unidadFinal = '';
-        $idProductoFinal = 0;
-
-        if ((string)$idProducto !== '' && (int)$idProducto > 0) {
-            $productoCat = LimpiezaLista::find((int)$idProducto);
-            if ($productoCat) {
-                $valProducto = $productoCat->producto;
-                $unidadFinal = $productoCat->unidad;
-                $idProductoFinal = (int)$idProducto;
-            }
-        }
-
-        if ($valProducto === '') {
-            $valProducto = trim($otroProducto);
-            $unidadFinal = trim($unidad);
-            $idProductoFinal = 0;
-        }
-
-        if (trim($valProducto) === '') {
-            return ['success' => false, 'message' => 'Debe seleccionar o escribir un producto'];
-        }
-
-        Capsule::beginTransaction();
+        if (!$idPedido || $piezas <= 0) return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
 
         try {
-            $query = PedidoLimpiezaDetalle::query()
-                ->where('id_pedido', $idPedido)
-                ->lockForUpdate();
+            return Capsule::connection()->transaction(function () use ($idPedido, $idProducto, $otroProducto, $piezas, $unidad): array {
+                $pedido = PedidoLimpieza::where('id', $idPedido)->lockForUpdate()->first();
+                if (!$pedido || (int)$pedido->status !== 0) {
+                    return ['success' => false, 'message' => 'El pedido no está disponible para editar'];
+                }
+                if (!in_array((int)$pedido->id_estacion, self::getAllowedStationIds(), true)) {
+                    return ['success' => false, 'message' => 'No tienes permiso para modificar este pedido'];
+                }
 
-            if ($idProductoFinal > 0) {
-                $query->where('id_producto', $idProductoFinal);
-            } else {
-                $query->where('id_producto', 0)
-                    ->where('producto', $valProducto)
-                    ->where('unidad', $unidadFinal);
-            }
+                $idProductoFinal = (int)$idProducto;
+                if ($idProductoFinal > 0) {
+                    $producto = LimpiezaLista::where('id', $idProductoFinal)->where('estatus', 1)->first();
+                    if (!$producto) return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+                } else {
+                    $nombre = trim($otroProducto);
+                    $unidad = trim($unidad);
+                    if ($nombre === '' || $unidad === '') return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+                    // La tabla heredada de detalle sólo almacena id_producto y piezas.
+                    // Igual que el flujo anterior, los productos personalizados se guardan en el catálogo.
+                    $producto = LimpiezaLista::create(['producto' => $nombre, 'unidad' => $unidad, 'estatus' => 1]);
+                    $idProductoFinal = (int)$producto->id;
+                }
 
-            $existing = $query->first();
-
-            if ($existing) {
-                $existing->piezas = (int)$existing->piezas + $piezas;
-                $existing->save();
-            } else {
-                PedidoLimpiezaDetalle::create([
-                    'id_pedido'  => $idPedido,
-                    'id_producto' => $idProductoFinal,
-                    'producto'   => $valProducto,
-                    'unidad'     => $unidadFinal,
-                    'piezas'     => $piezas,
-                ]);
-            }
-
-            Capsule::commit();
+                $existing = PedidoLimpiezaDetalle::where('id_pedido', $idPedido)
+                    ->where('id_producto', $idProductoFinal)->lockForUpdate()->first();
+                if ($existing) {
+                    $existing->piezas = (int)$existing->piezas + $piezas;
+                    $existing->save();
+                } else {
+                    PedidoLimpiezaDetalle::create([
+                        'id_pedido' => $idPedido,
+                        'id_producto' => $idProductoFinal,
+                        'piezas' => $piezas,
+                    ]);
+                }
+                return ['success' => true, 'message' => 'Producto agregado correctamente'];
+            });
         } catch (\Throwable $e) {
-            Capsule::rollBack();
-            return ['success' => false, 'message' => 'Error al agregar el producto', 'error' => $e->getMessage()];
+            error_log('Error agregando producto de pedido limpieza: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Error al agregar el producto'];
         }
-
-        return ['success' => true, 'message' => 'Producto agregado correctamente'];
     }
 
     public static function editarPiezas(int $id, int $piezas): array
@@ -595,6 +612,11 @@ class PedidoArticulosLimpiezaService
         $item = PedidoLimpiezaDetalle::find($id);
         if (!$item) {
             return ['success' => false, 'message' => 'Producto no encontrado'];
+        }
+        $pedido = PedidoLimpieza::find($item->id_pedido);
+        if (!$pedido || (int)$pedido->status !== 0
+            || !in_array((int)$pedido->id_estacion, self::getAllowedStationIds(), true)) {
+            return ['success' => false, 'message' => 'No tienes permiso para modificar este pedido'];
         }
 
         $item->piezas = $piezas;
@@ -609,29 +631,73 @@ class PedidoArticulosLimpiezaService
         if (!$item) {
             return ['success' => false, 'message' => 'Producto no encontrado'];
         }
+        $pedido = PedidoLimpieza::find($item->id_pedido);
+        if (!$pedido || (int)$pedido->status !== 0
+            || !in_array((int)$pedido->id_estacion, self::getAllowedStationIds(), true)) {
+            return ['success' => false, 'message' => 'No tienes permiso para modificar este pedido'];
+        }
 
         $item->delete();
 
         return ['success' => true, 'message' => 'Producto eliminado correctamente'];
     }
 
-    public static function finalizarPedido(int $id, int $idUsuario): array
+    public static function finalizarPedido(int $id, int $idUsuario, string $base64 = ''): array
     {
-        $pedido = PedidoLimpieza::find($id);
-        if (!$pedido) {
-            return ['success' => false, 'message' => 'Pedido no encontrado'];
+        $permisos = self::getPermisos();
+        if ($idUsuario <= 0 || $idUsuario !== $permisos['id_usuario']
+            || (!$permisos['esEncargado'] && !$permisos['puedeEditar'])) {
+            return ['success' => false, 'message' => 'No tienes permiso para finalizar pedidos'];
+        }
+        if ($base64 === '') return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+        if (!str_starts_with($base64, 'data:image/png;base64,')) return ['success' => false, 'message' => 'Firma no válida'];
+        $data = base64_decode(substr($base64, strlen('data:image/png;base64,')), true);
+        if ($data === false || $data === '' || strlen($data) > 5 * 1024 * 1024
+            || !($image = @getimagesizefromstring($data)) || $image[2] !== IMAGETYPE_PNG) {
+            return ['success' => false, 'message' => 'Firma no válida'];
         }
 
-        if ((int)$pedido->status !== 0) {
-            return ['success' => false, 'message' => 'Solo los pedidos pendientes pueden finalizarse'];
+        $filePath = null;
+        try {
+            $result = Capsule::connection()->transaction(function () use ($id, $idUsuario, $data, &$filePath): array {
+                $pedido = PedidoLimpieza::where('id', $id)->lockForUpdate()->first();
+                if (!$pedido) return ['success' => false, 'message' => 'Pedido no encontrado'];
+                if (!in_array((int)$pedido->id_estacion, self::getAllowedStationIds(), true)) {
+                    return ['success' => false, 'message' => 'No tienes permiso para finalizar este pedido'];
+                }
+                if ((int)$pedido->status !== 0) return ['success' => false, 'message' => 'Solo los pedidos pendientes pueden finalizarse'];
+                if (PedidoLimpiezaFirma::where('id_pedido', $id)->where('tipo_firma', 'A')->exists()) {
+                    return ['success' => false, 'message' => 'La firma ya fue registrada'];
+                }
+                if (!PedidoLimpiezaDetalle::where('id_pedido', $id)->exists()
+                    || PedidoLimpiezaDetalle::where('id_pedido', $id)->where('piezas', '<=', 0)->exists()) {
+                    return ['success' => false, 'message' => self::REQUIRED_MESSAGE];
+                }
+                $root = dirname(__DIR__, 2) . '/public/uploads/archivos/';
+                if (!is_dir($root) && !@mkdir($root, 0775, true) && !is_dir($root)) {
+                    throw new \RuntimeException('No se pudo preparar el directorio de firmas');
+                }
+                $filename = 'limpieza-' . $id . '-' . bin2hex(random_bytes(16)) . '.png';
+                $filePath = $root . $filename;
+                if (@file_put_contents($filePath, $data, LOCK_EX) !== strlen($data)) {
+                    throw new \RuntimeException('No se pudo guardar la imagen de firma');
+                }
+                PedidoLimpiezaFirma::create([
+                    'id_pedido' => $id, 'id_usuario' => $idUsuario, 'fecha' => Carbon::now(),
+                    'tipo_firma' => 'A', 'firma' => $filename,
+                ]);
+                $pedido->status = 1;
+                $pedido->save();
+                return ['success' => true, 'message' => 'Pedido finalizado correctamente'];
+            });
+        } catch (\Throwable $e) {
+            if ($filePath !== null && is_file($filePath)) @unlink($filePath);
+            error_log('Error al guardar firma de pedido de limpieza: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'No se pudo guardar la firma y finalizar el pedido'];
         }
 
-        $pedido->status = 1;
-        $pedido->save();
-
-        self::notificarFinalizarPedido($id, $idUsuario);
-
-        return ['success' => true, 'message' => 'Pedido finalizado correctamente'];
+        if ($result['success']) self::notificarFinalizarPedido($id, $idUsuario);
+        return $result;
     }
 
     public static function eliminarPedido(int $id, int $idUsuario): array
@@ -1300,7 +1366,7 @@ class PedidoArticulosLimpiezaService
                 . '<td class="text-center">' . $num . '</td>'
                 . '<td class="text-center">' . htmlspecialchars($producto->unidad ?? '', ENT_QUOTES, 'UTF-8') . '</td>'
                 . '<td>' . htmlspecialchars($producto->producto ?? '', ENT_QUOTES, 'UTF-8') . '</td>'
-                . '<td class="text-center">' . (int)$item->piezas . '</td>'
+                . '<td class="text-center">' . number_format((int)$item->piezas, 0, '.', ',') . '</td>'
                 . '</tr>';
             $num++;
         }
@@ -1309,14 +1375,21 @@ class PedidoArticulosLimpiezaService
         $firmaB = '';
         $firmaARow = PedidoLimpiezaFirma::where('id_pedido', $id)->where('tipo_firma', 'A')->first();
         if ($firmaARow) {
-            $rutaFirma = dirname(__DIR__, 2) . '/public/uploads/firmas/pedido-articulos-limpieza/' . $firmaARow->firma;
-            if (strpos($firmaARow->firma ?? '', 'Firma:') !== 0 && is_file($rutaFirma)) {
-                $dataFirma = file_get_contents($rutaFirma);
-                $nombreFirmante = self::getPersonal($firmaARow->id_usuario)['nombre'];
-                $firmaA = '<div class="text-center" style="margin-top: 10px;"><div>' . $nombreFirmante . '</div>'
-                    . '<img src="data:image/png;base64,' . base64_encode($dataFirma) . '" style="width: 200px;"></div>'
-                    . '<div style="font-size: 1em; font-weight: bold; text-align: center; border-top: 1px solid #dee2e6; padding-top: 10px;">NOMBRE Y FIRMA DEL ENCARGADO</div>';
-            }
+            $rutaFirma = self::rutaArchivo($firmaARow->firma);
+            $dataFirma = $rutaFirma !== null ? @file_get_contents($rutaFirma) : false;
+            $nombreFirmante = htmlspecialchars(self::getPersonal($firmaARow->id_usuario)['nombre'], ENT_QUOTES, 'UTF-8');
+            $fechaFirmaA = self::formatearFechaHora($firmaARow->fecha);
+            $contenidoFirma = $dataFirma !== false && $dataFirma !== ''
+                ? '<img src="data:image/png;base64,' . base64_encode($dataFirma) . '" style="width:200px;">'
+                : '<div style="margin-top:10px;"><small>La firma está registrada, pero su imagen no está disponible.'
+                    . ($fechaFirmaA !== '' ? '<br><b>Fecha: ' . htmlspecialchars($fechaFirmaA, ENT_QUOTES, 'UTF-8') . '</b>' : '') . '</small></div>';
+            $firmaA = '<div class="text-center" style="margin-top:10px;"><div>' . $nombreFirmante . '</div>' . $contenidoFirma . '</div>'
+                . '<div style="font-size:1em;font-weight:bold;text-align:center;border-top:1px solid #dee2e6;padding-top:10px;">NOMBRE Y FIRMA DEL ENCARGADO</div>';
+        } else {
+            $nombreFirmante = htmlspecialchars($personal['nombre'], ENT_QUOTES, 'UTF-8');
+            $firmaA = '<div class="text-center" style="margin-top:10px;"><div>' . $nombreFirmante . '</div>'
+                . '<div style="margin-top:10px;"><small>Sin firma registrada.</small></div></div>'
+                . '<div style="font-size:1em;font-weight:bold;text-align:center;border-top:1px solid #dee2e6;padding-top:10px;">NOMBRE Y FIRMA DEL ENCARGADO</div>';
         }
 
         $firmaBRow = PedidoLimpiezaFirma::where('id_pedido', $id)->where('tipo_firma', 'B')->first();
@@ -1349,7 +1422,7 @@ th { background: #F2F2F2; font-weight: bold; }
             . '<table style="margin-top:10px;"><thead><tr>'
             . '<td class="text-center"><b>#</b></td><td class="text-center"><b>Unidad</b></td><td><b>Nombre del roducto</b></td><td class="text-center"><b>Piezas</b></td>'
             . '</tr></thead><tbody>' . $rows
-            . '<tr><td colspan="3" class="text-right">Total piezas:</td><td class="text-center"><b>' . $totalPiezas . '</b></td></tr>'
+            . '<tr><td colspan="3" class="text-right">Total piezas:</td><td class="text-center"><b>' . number_format($totalPiezas, 0, '.', ',') . '</b></td></tr>'
             . '</tbody></table>'
             . '<table style="width: 100%; margin-top: 20px;"><tr><td class="p-2">' . $firmaA . '</td><td class="p-2">' . $firmaB . '</td></tr></table>'
             . '</body></html>';

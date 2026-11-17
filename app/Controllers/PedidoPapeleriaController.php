@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Breadcrumb;
 use App\Core\JsonResponse;
 use App\Core\Session;
+use App\Core\Request;
 use App\Core\View;
 use App\Services\PedidoPapeleriaService;
 use App\Services\ModuleStationService;
@@ -65,6 +66,7 @@ class PedidoPapeleriaController extends BaseController
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/assets/js/core/module-station-selector.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.datatable.init.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.actions.init.js?v=' . time(),
             ],
@@ -78,6 +80,7 @@ class PedidoPapeleriaController extends BaseController
 
     protected function vistarIndex(string $title, string $view, bool $showSelector = false, array $scripts = [], array $links = []): void
     {
+        array_unshift($scripts, '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.form.js?v=' . time());
         $permisos = PedidoPapeleriaService::getPermisos();
 
         if ($permisos['esGestoriaOficina']) {
@@ -209,6 +212,7 @@ class PedidoPapeleriaController extends BaseController
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.reporte-detalle.init.js?v=' . time(),
             ],
             'links' => [
@@ -257,7 +261,9 @@ class PedidoPapeleriaController extends BaseController
             'help'             => false,
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js',
                 '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.pedido.init.js?v=' . time(),
             ],
             'links' => [
@@ -305,9 +311,23 @@ class PedidoPapeleriaController extends BaseController
             'help'             => false,
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.form.js?v=' . time(),
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-papeleria.firma.init.js?v=' . time(),
             ],
         ], 'departamento-operativo');
+    }
+
+    private function cantidadEntrada(string $field): int
+    {
+        $value = PedidoPapeleriaService::normalizarPiezas(Request::input($field));
+        if ($value === null) JsonResponse::validation(PedidoPapeleriaService::REQUIRED_MESSAGE, [$field => true]);
+        return $value;
+    }
+
+    private function textoEntrada(string $field): string
+    {
+        $value = Request::input($field, '');
+        return is_string($value) || is_int($value) || is_float($value) ? trim((string)$value) : '';
     }
 
     private function resolverFiltro(): array
@@ -321,6 +341,11 @@ class PedidoPapeleriaController extends BaseController
         if ($idEstacion) {
             $converted = PedidoPapeleriaService::estacionDesdeLocalidad($idEstacion);
             return ['id_estacion' => $converted ?? 0, 'id_depto' => 0];
+        }
+
+        if (array_key_exists('id_estacion', $_GET) && (string)$_GET['id_estacion'] === '0'
+            && !empty(PedidoPapeleriaService::getPermisos()['multiestacion'])) {
+            return ['id_estacion' => 0, 'id_depto' => 0];
         }
 
         $ctx = PedidoPapeleriaService::getContextoEfectivo();
@@ -445,9 +470,9 @@ class PedidoPapeleriaController extends BaseController
     public function agregarProducto()
     {
         $idPedido = (int)($_POST['id_pedido'] ?? 0);
-        $idProducto = (string)($_POST['id_producto'] ?? '');
-        $otroProducto = (string)($_POST['otro_producto'] ?? '');
-        $piezas = (int)($_POST['piezas'] ?? 0);
+        $idProducto = $this->textoEntrada('id_producto');
+        $otroProducto = $this->textoEntrada('otro_producto');
+        $piezas = $this->cantidadEntrada('piezas');
 
         $result = PedidoPapeleriaService::agregarProducto($idPedido, $idProducto, $otroProducto, $piezas);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -456,7 +481,7 @@ class PedidoPapeleriaController extends BaseController
     public function editarPiezas()
     {
         $id = (int)($_POST['id'] ?? 0);
-        $piezas = (int)($_POST['piezas'] ?? 0);
+        $piezas = $this->cantidadEntrada('piezas');
 
         $result = PedidoPapeleriaService::editarPiezas($id, $piezas);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -487,7 +512,7 @@ class PedidoPapeleriaController extends BaseController
         $id = (int)($input['id'] ?? ($_POST['id'] ?? 0));
         $idUsuario = (int)(Session::get('usuario')['id'] ?? 0);
 
-        $result = PedidoPapeleriaService::finalizarPedido($id, $idUsuario);
+        $result = PedidoPapeleriaService::finalizarPedido($id, $idUsuario, $this->textoEntrada('firma'));
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
     }
 
@@ -579,7 +604,7 @@ class PedidoPapeleriaController extends BaseController
 
         $input = json_decode(file_get_contents('php://input'), true);
         $id = (int)($input['id'] ?? ($_POST['id'] ?? 0));
-        $producto = (string)($input['producto'] ?? ($_POST['producto'] ?? ''));
+        $producto = $this->textoEntrada('producto');
 
         $result = PedidoPapeleriaService::guardarProducto($id, $producto);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -634,7 +659,7 @@ class PedidoPapeleriaController extends BaseController
         $idEstacion = PedidoPapeleriaService::estacionDesdeLocalidad((int)($input['id_estacion'] ?? ($_POST['id_estacion'] ?? 0)))
             ?? $this->resolverEstacion();
         $idProducto = (int)($input['id_producto'] ?? ($_POST['id_producto'] ?? 0));
-        $piezas = (int)($input['piezas'] ?? ($_POST['piezas'] ?? 0));
+        $piezas = $this->cantidadEntrada('piezas');
 
         $result = PedidoPapeleriaService::agregarInventario($idEstacion, $idProducto, $piezas);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -720,8 +745,8 @@ class PedidoPapeleriaController extends BaseController
 
         $input = json_decode(file_get_contents('php://input'), true);
         $id = (int)($input['id'] ?? ($_POST['id'] ?? 0));
-        $fecha = (string)($input['fecha'] ?? ($_POST['fecha'] ?? ''));
-        $hora = (string)($input['hora'] ?? ($_POST['hora'] ?? ''));
+        $fecha = $this->textoEntrada('fecha');
+        $hora = $this->textoEntrada('hora');
         $detalle = (string)($input['detalle'] ?? ($_POST['detalle'] ?? ''));
 
         $result = PedidoPapeleriaService::guardarReporteDatos($id, $fecha, $hora, $detalle);
@@ -744,7 +769,7 @@ class PedidoPapeleriaController extends BaseController
         $idEstacion = PedidoPapeleriaService::estacionDesdeLocalidad((int)($input['id_estacion'] ?? ($_POST['id_estacion'] ?? 0)))
             ?? $this->resolverEstacion();
         $idProducto = (int)($input['id_producto'] ?? ($_POST['id_producto'] ?? 0));
-        $unidad = (int)($input['unidad'] ?? ($_POST['unidad'] ?? 0));
+        $unidad = $this->cantidadEntrada('unidad');
         $observaciones = (string)($input['observaciones'] ?? ($_POST['observaciones'] ?? ''));
 
         $result = PedidoPapeleriaService::agregarProductoReporte($idReporte, $idEstacion, $idProducto, $unidad, $observaciones);
