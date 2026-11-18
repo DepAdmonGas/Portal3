@@ -999,19 +999,26 @@ class AlmacenMaquinariaEquiposBitacoraService
 
         $fechaInicio = (isset($data['fechaInicio']) && trim((string)$data['fechaInicio']) !== '')
             ? substr(trim((string)$data['fechaInicio']), 0, 10)
-            : date('Y-m-d');
+            : '';
 
         if (!self::esFechaValida($fechaInicio)) {
-            return self::fail('La fecha de inicio no es válida.', 422);
+            return self::fail('La fecha de inicio es obligatoria y debe ser válida.', 422);
         }
 
         $fallaDescripcion = trim((string)($data['fallaDescripcion'] ?? ''));
+        if ($tipoMantenimiento === self::TIPO_CORRECTIVO && $fallaDescripcion === '') {
+            return self::fail('La descripción de la falla es obligatoria para mantenimiento correctivo.', 422);
+        }
         $observaciones    = trim((string)($data['observaciones'] ?? ''));
-        $costo            = (isset($data['costoMantenimiento']) && trim((string)$data['costoMantenimiento']) !== '')
-            ? (float)$data['costoMantenimiento']
-            : 0.0;
+        $costoRaw         = str_replace(',', '', trim((string)($data['costoMantenimiento'] ?? '')));
+        $costo            = $costoRaw === '' ? 0.0 : (is_numeric($costoRaw) ? (float)$costoRaw : -1.0);
+        if ($costo < 0) {
+            return self::fail('El costo debe ser un número mayor o igual a cero.', 422);
+        }
         $estadoActual     = trim((string)($data['estadoActual'] ?? ''));
-        $estadoActual     = in_array($estadoActual, self::ESTADO_ACTUAL_OPCIONES, true) ? $estadoActual : 'En operación';
+        if (!in_array($estadoActual, self::ESTADO_ACTUAL_OPCIONES, true)) {
+            return self::fail('El estado actual de la maquinaria es obligatorio.', 422);
+        }
 
         $idUsuario = self::usuarioId();
 
@@ -1257,6 +1264,10 @@ class AlmacenMaquinariaEquiposBitacoraService
 
     public static function editarCostoRegistro(int $idOcurrencia, float $costo): array
     {
+        if (!is_finite($costo) || $costo < 0) {
+            return self::fail('El costo debe ser un número mayor o igual a cero.', 422);
+        }
+
         $idUsuario = self::usuarioId();
         $oc        = MaquinariaMantenimientoOcurrencia::find($idOcurrencia);
 

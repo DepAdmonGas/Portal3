@@ -10,6 +10,31 @@ class ProveedoresService
 {
     public const UPLOAD_FOLDER = 'public/uploads/archivos/proveedores/';
 
+    private static function camposProveedorCompletos(array $data): bool
+    {
+        $campos = [
+            'Fecha', 'RazonSocial', 'ActividadEco', 'Email', 'RFC', 'Ciudad',
+            'Telefono1', 'Direccion', 'Beneficiario', 'Banco', 'CFDI',
+            'Moneda', 'FormaPago', 'Descripcion'
+        ];
+
+        foreach ($campos as $campo) {
+            if (trim((string)($data[$campo] ?? '')) === '') {
+                return false;
+            }
+        }
+
+        $metodoPago = $data['Metodopago'] ?? $data['MetodoPago'] ?? '';
+        return trim((string)$metodoPago) !== '';
+    }
+
+    private static function archivoPdfValido(array $file): bool
+    {
+        return (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK
+            && !empty($file['tmp_name'])
+            && strtolower(pathinfo(basename((string)($file['name'] ?? '')), PATHINFO_EXTENSION)) === 'pdf';
+    }
+
     public static function getUploadDir(): string
     {
         $dir = dirname(__DIR__, 2) . '/' . self::UPLOAD_FOLDER;
@@ -98,6 +123,7 @@ class ProveedoresService
                 'fecha'        => $fechaFmt,
                 'fecha_raw'    => $d->fecha ?? '',
                 'archivo'      => (string)($d->archivo ?? ''),
+                'archivo_existe' => !empty($d->archivo) && is_file(dirname(__DIR__, 2) . '/' . self::UPLOAD_FOLDER . basename((string)$d->archivo)),
                 'esta_vencido' => $vencido
             ];
         }
@@ -132,6 +158,22 @@ class ProveedoresService
 
     public static function store(array $data, array $files): array
     {
+        if (!self::camposProveedorCompletos($data)) {
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
+        }
+
+        foreach (['FechaConstancia', 'FechaCaratula'] as $campoFecha) {
+            if (trim((string)($data[$campoFecha] ?? '')) === '') {
+                return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
+            }
+        }
+
+        foreach (['ConstanciaS_file', 'CaratulaB_file'] as $campoArchivo) {
+            if (!self::archivoPdfValido($files[$campoArchivo] ?? [])) {
+                return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
+            }
+        }
+
         $dir = self::getUploadDir();
         $folio = self::getNextFolio();
 
@@ -161,7 +203,7 @@ class ProveedoresService
         }
 
         if (!empty($files['ConstanciaS_file']['tmp_name'])) {
-            $nomConstancia = uniqid() . '-' . $files['ConstanciaS_file']['name'];
+            $nomConstancia = uniqid() . '-' . basename($files['ConstanciaS_file']['name']);
             if (move_uploaded_file($files['ConstanciaS_file']['tmp_name'], $dir . $nomConstancia)) {
                 OpAlmacenProveedorDocumento::create([
                     'id_proveedor' => $proveedor->id,
@@ -173,7 +215,7 @@ class ProveedoresService
         }
 
         if (!empty($files['CaratulaB_file']['tmp_name'])) {
-            $nomCaratula = uniqid() . '-' . $files['CaratulaB_file']['name'];
+            $nomCaratula = uniqid() . '-' . basename($files['CaratulaB_file']['name']);
             if (move_uploaded_file($files['CaratulaB_file']['tmp_name'], $dir . $nomCaratula)) {
                 OpAlmacenProveedorDocumento::create([
                     'id_proveedor' => $proveedor->id,
@@ -189,6 +231,10 @@ class ProveedoresService
 
     public static function update(int $id, array $data): array
     {
+        if (!self::camposProveedorCompletos($data)) {
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
+        }
+
         $proveedor = OpAlmacenProveedor::find($id);
         if (!$proveedor) {
             return ['success' => false, 'message' => 'Proveedor no encontrado.', 'code' => 404];
@@ -218,12 +264,17 @@ class ProveedoresService
 
     public static function actualizarArchivo(int $idProveedor, string $tipoArchivo, string $fechaDoc, array $file): array
     {
-        if ($idProveedor <= 0 || empty($tipoArchivo) || empty($fechaDoc) || empty($file['tmp_name'])) {
-            return ['success' => false, 'message' => 'Todos los campos y el archivo son obligatorios.', 'code' => 422];
+        if ($idProveedor <= 0 || !in_array($tipoArchivo, ['Caratula Bancaria', 'Constancia de Situacion Fiscal'], true)
+            || trim($fechaDoc) === '' || !self::archivoPdfValido($file)) {
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
+        }
+
+        if (!OpAlmacenProveedor::find($idProveedor)) {
+            return ['success' => false, 'message' => 'Proveedor no encontrado.', 'code' => 404];
         }
 
         $dir = self::getUploadDir();
-        $nombreArchivo = uniqid() . '-' . $file['name'];
+        $nombreArchivo = uniqid() . '-' . basename($file['name']);
 
         if (!move_uploaded_file($file['tmp_name'], $dir . $nombreArchivo)) {
             return ['success' => false, 'message' => 'Error al subir el archivo físico.', 'code' => 500];

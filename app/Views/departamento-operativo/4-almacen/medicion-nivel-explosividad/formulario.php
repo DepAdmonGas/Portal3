@@ -128,7 +128,9 @@ $baseUrl = '/departamento-operativo/almacen/medicion-nivel-explosividad';
 <template x-for="n in ppm" :key="n">
 <div class="col-12 col-md-4 col-xl-3">
 <label class="form-label mb-1" x-text="etiquetas[n] + ':'"></label>
-<input type="number" class="form-control" step="1" min="0" x-model="form['Elemento' + n]">
+<input type="text" inputmode="numeric" autocomplete="off" class="form-control"
+       :value="formatearPPM(form['Elemento' + n])"
+       @input="capturarPPM($event, n)">
 </div>
 </template>
 
@@ -164,7 +166,7 @@ $baseUrl = '/departamento-operativo/almacen/medicion-nivel-explosividad';
 <template x-for="p in pozos" :key="p.id">
 <tr>
 <td class="text-center align-middle" x-text="p.pozo"></td>
-<td class="text-center align-middle" x-text="p.ppm"></td>
+<td class="text-center align-middle" x-text="formatearPPM(p.ppm)"></td>
 <td class="text-center align-middle" x-text="p.ubicacion"></td>
 <td class="text-center align-middle">
 <i class="ti ti-trash text-danger fs-6 pointer" @click="eliminarPozo(p)"></i>
@@ -290,9 +292,10 @@ x-model="form.Observaciones"></textarea>
 
 <div class="col-12 col-md-4">
 <label class="form-label mb-1">* PPM:</label>
-<input type="number" step="1" class="form-control" x-model="pozo.ppm"
+<input type="text" inputmode="numeric" autocomplete="off" class="form-control"
+       :value="formatearPPM(pozo.ppm)"
        :style="erroresPozo.ppm ? 'border: 2px solid #A52525 !important;' : ''"
-       @input="erroresPozo.ppm = false">
+       @input="capturarPPM($event, 'ppm', 'pozo')">
 </div>
 
 <div class="col-12">

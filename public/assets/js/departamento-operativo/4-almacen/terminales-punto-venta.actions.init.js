@@ -36,6 +36,7 @@ document.addEventListener('alpine:init', () => {
 
         // Campos que el legacy dejaba sin llenar; se conservan como opcionales.
         camposOpcionales: ['no_lote', 'estatus_tpv', 'tipo_tpv'],
+        camposCantidad: ['rollos', 'cargadores', 'pedestales', 'no_impresiones'],
 
         form: {},
         detalle: null,
@@ -101,6 +102,39 @@ document.addEventListener('alpine:init', () => {
 
         esOpcionTipoTpv(v) {
             return this.catalogos.tipo_tpv.includes(v);
+        },
+
+        formatearCantidad(campo, evento) {
+            const input = evento && evento.target;
+            if (!input) return;
+
+            const posicion = input.selectionStart || 0;
+            const digitosAntes = input.value.slice(0, posicion).replace(/\D/g, '').length;
+            const valorOriginal = input.value;
+            const soloCantidad = /^[\d,]*$/.test(valorOriginal);
+            const digitos = soloCantidad ? valorOriginal.replace(/\D/g, '') : '';
+            const formateado = soloCantidad
+                ? digitos.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                : valorOriginal;
+            input.value = formateado;
+            this.form[campo] = formateado;
+
+            let nuevaPosicion = 0;
+            let contados = 0;
+            while (nuevaPosicion < formateado.length && contados < digitosAntes) {
+                if (/\d/.test(formateado[nuevaPosicion])) contados++;
+                nuevaPosicion++;
+            }
+            if (soloCantidad && typeof input.setSelectionRange === 'function') {
+                input.setSelectionRange(nuevaPosicion, nuevaPosicion);
+            }
+        },
+
+        formatearValorCantidad(valor) {
+            const texto = String(valor ?? '');
+            if (!/^[\d,]*$/.test(texto)) return texto;
+            const digitos = texto.replace(/\D/g, '');
+            return digitos.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         },
 
         abrirNuevo() {
@@ -170,7 +204,9 @@ document.addEventListener('alpine:init', () => {
             const fd = new FormData();
             fd.append('id_estacion', String(this.form.id_estacion || '').trim());
             this.campos.forEach((c) => {
-                fd.append(c, String(this.form[c] === undefined || this.form[c] === null ? '' : this.form[c]).trim());
+                let valor = String(this.form[c] === undefined || this.form[c] === null ? '' : this.form[c]).trim();
+                if (this.camposCantidad.includes(c)) valor = valor.replace(/,/g, '');
+                fd.append(c, valor);
             });
             return fd;
         },
@@ -222,11 +258,15 @@ document.addEventListener('alpine:init', () => {
                         this.form[campo] = d[campo] === undefined || d[campo] === null ? '' : String(d[campo]);
                     });
 
+                    ['rollos', 'cargadores', 'pedestales'].forEach((campo) => {
+                        this.form[campo] = this.formatearValorCantidad(this.form[campo]);
+                    });
+
                     // El número de impresiones viaja crudo para el input numérico
                     // (el detalle lo devuelve formateado con separador de miles).
-                    this.form.no_impresiones = d.no_impresiones_raw !== undefined
+                    this.form.no_impresiones = this.formatearValorCantidad(d.no_impresiones_raw !== undefined
                         ? d.no_impresiones_raw
-                        : (d.no_impresiones === undefined ? '' : String(d.no_impresiones).replace(/,/g, ''));
+                        : (d.no_impresiones === undefined ? '' : d.no_impresiones));
 
                     this.form.id_estacion = String(d.estacion_id || '');
                 } else {

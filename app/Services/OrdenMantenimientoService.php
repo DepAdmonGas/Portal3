@@ -35,6 +35,88 @@ final class OrdenMantenimientoService
         'Cuarto de residuos', 'Bodega aceites', 'Baños clientes',
     ];
 
+    /** Posiciones y productos del archivo POSICIONES (1).xlsx, hoja "Hoja1 (2)". */
+    private static function dispatchPositionMap(): array
+    {
+        $regular = ['GSUPER', 'GPREMIUM'];
+        $allProducts = ['GSUPER', 'GPREMIUM', 'GDIESEL'];
+        $superDiesel = ['GSUPER', 'GDIESEL'];
+        $diesel = ['GDIESEL'];
+
+        return [
+            'PALOSOLO' => [
+                1 => [1 => $regular, 2 => $regular], 2 => [3 => $regular, 4 => $regular],
+                3 => [5 => $regular, 6 => $regular], 4 => [7 => $regular, 8 => $regular],
+            ],
+            'INTERLOMAS' => [
+                1 => [1 => $allProducts, 2 => $allProducts], 2 => [3 => $allProducts, 4 => $allProducts],
+                3 => [5 => $regular, 6 => $regular], 4 => [7 => $regular, 8 => $regular],
+                5 => [9 => $regular, 10 => $regular], 6 => [11 => $regular, 12 => $regular],
+            ],
+            'SANAGUSTIN' => [
+                1 => [1 => $regular, 2 => $regular], 2 => [3 => $regular, 4 => $regular],
+                3 => [5 => $regular, 6 => $regular], 4 => [7 => $regular, 8 => $regular],
+                5 => [9 => $regular, 10 => $regular], 6 => [11 => $regular, 12 => $regular],
+                7 => [13 => $superDiesel, 14 => $superDiesel], 8 => [15 => $superDiesel, 16 => $superDiesel],
+                9 => [17 => $diesel, 18 => $diesel],
+            ],
+            'GASOMIRA' => [
+                1 => [1 => $allProducts, 2 => $allProducts], 2 => [3 => $allProducts, 4 => $allProducts],
+                3 => [5 => $regular, 6 => $regular], 4 => [7 => $regular, 8 => $regular],
+                5 => [9 => $allProducts, 10 => $allProducts], 6 => [11 => $allProducts, 12 => $allProducts],
+                7 => [13 => $diesel, 14 => $diesel],
+            ],
+            'VALLEDEGPE' => [
+                1 => [1 => $regular, 2 => $regular], 2 => [3 => $regular, 4 => $regular],
+                3 => [5 => $allProducts, 6 => $allProducts], 4 => [7 => $superDiesel, 8 => $superDiesel],
+            ],
+            'ESMEGAS' => [
+                1 => [1 => $regular, 2 => $regular], 2 => [3 => $regular, 4 => $regular],
+                3 => [5 => $regular, 6 => $regular], 4 => [7 => $regular, 8 => $regular],
+                5 => [9 => $regular, 10 => $regular], 6 => [11 => $regular, 12 => $regular],
+            ],
+            'XOCHIMILCO' => [
+                1 => [1 => $regular, 2 => $regular], 2 => [3 => $regular, 4 => $regular],
+                3 => [5 => $regular, 6 => $regular], 4 => [7 => $regular, 8 => $regular],
+            ],
+            'BOSQUEREAL' => [
+                1 => [1 => $allProducts, 2 => $allProducts], 2 => [3 => $allProducts, 4 => $allProducts],
+                3 => [5 => $allProducts, 6 => $allProducts], 4 => [7 => $allProducts, 8 => $allProducts],
+                5 => [9 => $allProducts, 10 => $allProducts], 6 => [11 => $diesel, 12 => $diesel],
+            ],
+        ];
+    }
+
+    private static function dispatchStationKey(int $stationId): string
+    {
+        $name = (string)(Estacion::where('id', $stationId)->value('nombre') ?? '');
+        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
+        $key = preg_replace('/[^A-Z0-9]/', '', strtoupper($ascii !== false ? $ascii : $name));
+        return str_starts_with($key, 'VALLE') ? 'VALLEDEGPE' : $key;
+    }
+
+    /** @return array<int, array{nombre:string, dispensario:int, posicion:int, producto:string}>|null */
+    private static function dispatchPositionOptions(int $stationId): ?array
+    {
+        $positions = self::dispatchPositionMap()[self::dispatchStationKey($stationId)] ?? null;
+        if ($positions === null) return null;
+
+        $options = [];
+        foreach ($positions as $dispenser => $dispenserPositions) {
+            foreach ($dispenserPositions as $position => $products) {
+                foreach ($products as $product) {
+                    $options[] = [
+                        'nombre' => 'Dispensario: '.$dispenser.', Posición: '.$position.', Producto: '.$product,
+                        'dispensario' => (int)$dispenser,
+                        'posicion' => (int)$position,
+                        'producto' => (string)$product,
+                    ];
+                }
+            }
+        }
+        return $options;
+    }
+
     public static function permissions(): array
     {
         $user = Auth::user();
@@ -179,7 +261,10 @@ final class OrdenMantenimientoService
                 'comentarios' => (int)($commentCounts[$record->id] ?? 0),
                 'firma_b' => $hasFirmaB,
                 'firma_c' => $hasFirmaC,
-                'puede_editar' => $currentPeriod && $permissions['editar'] && in_array($status, [0, 1], true),
+                // Bloquear la edición mientras la orden espera el VO.BO.;
+                // después de esa firma, conserva el comportamiento de edición existente.
+                'puede_editar' => $currentPeriod && $permissions['editar']
+                    && ($status === 0 || ($status === 1 && $hasFirmaB)),
                 'puede_eliminar' => $periodActionsAllowed && $permissions['eliminar'] && ($status === 0 || $permissions['id_usuario'] === 19),
                 'puede_descargar' => $periodActionsAllowed && $permissions['descargar'] && in_array($status, [2, 3], true),
                 'id_movimiento_salida' => $linkedExitId,
@@ -234,6 +319,7 @@ final class OrdenMantenimientoService
         if (!$record) return null;
         $recordDate = (string)$record->getRawOriginal('fecha');
         $contexts = self::contexts();
+        $stationId = (int)$record->id_estacion;
         $areas = PedidoMaterialesArea::where('id_pedido', $id)->orderBy('id')->get();
         $subareas = PedidoMaterialesAreaOtros::whereIn('id_area', $areas->pluck('id'))
             ->orderBy('id')->get()->groupBy('id_area');
@@ -249,7 +335,6 @@ final class OrdenMantenimientoService
         $expiredPending = $status < 2 && substr($recordDate, 0, 7) < date('Y-m');
         $hasInstall = PedidoMaterialesInstalacion::where('id_pedido', $id)->exists();
         $hasCause = PedidoMaterialesCausa::where('id_reporte', $id)->exists();
-        $stationId = (int)$record->id_estacion;
         $razonSocial = $stationId === 9
             ? 'Autolavado'
             : trim((string)(Estacion::where('id', $stationId)->value('razonsocial') ?? ''));
@@ -302,24 +387,49 @@ final class OrdenMantenimientoService
             'estatus' => $status,
             'usa_refacciones_catalogo' => $usesCurrentCatalog,
             'estatus_texto' => $expiredPending ? 'No autorizado' : self::statusText($status, $hasInstall, $hasCause),
-            'areas' => $areas->map(static fn($row) => [
-                'id' => (int)$row->id,
-                'area' => (string)$row->area,
-                'estatus' => (int)$row->estatus,
-                'subareas' => $subareas->get($row->id, collect())
-                    ->filter(static fn($subarea) => (int)$row->estatus === 1 && (int)$subarea->estatus === 1)
-                    ->map(static fn($subarea) => [
-                    'id' => (int)$subarea->id,
-                    'nombre' => (string)$subarea->sub_area,
-                    'estatus' => (int)$subarea->estatus,
-                ])->all(),
-                'subareas_disponibles' => $subareas->get($row->id, collect())
-                    ->map(static fn($subarea) => [
-                        'id' => (int)$subarea->id,
-                        'nombre' => (string)$subarea->sub_area,
-                        'estatus' => (int)$subarea->estatus,
-                    ])->all(),
-            ])->all(),
+            'areas' => $areas->map(static function ($row) use ($subareas, $stationId): array {
+                $savedSubareas = $subareas->get($row->id, collect());
+                $dispatchOptions = (string)$row->area === 'Zona de despacho'
+                    ? self::dispatchPositionOptions($stationId)
+                    : null;
+                if ($dispatchOptions !== null) {
+                    $savedByName = $savedSubareas->keyBy('sub_area');
+                    $available = array_map(static function (array $option) use ($savedByName): array {
+                        $saved = $savedByName->get($option['nombre']);
+                        return $option + [
+                            'id' => (int)($saved->id ?? 0),
+                            'estatus' => (int)($saved->estatus ?? 0),
+                        ];
+                    }, $dispatchOptions);
+                    $selected = array_values(array_filter($available, static fn(array $option): bool => (int)$option['estatus'] === 1));
+                    return [
+                        'id' => (int)$row->id,
+                        'area' => (string)$row->area,
+                        'estatus' => (int)$row->estatus,
+                        'subareas' => (int)$row->estatus === 1 ? $selected : [],
+                        'subareas_disponibles' => $available,
+                    ];
+                }
+
+                return [
+                    'id' => (int)$row->id,
+                    'area' => (string)$row->area,
+                    'estatus' => (int)$row->estatus,
+                    'subareas' => $savedSubareas
+                        ->filter(static fn($subarea) => (int)$row->estatus === 1 && (int)$subarea->estatus === 1)
+                        ->map(static fn($subarea) => [
+                            'id' => (int)$subarea->id,
+                            'nombre' => (string)$subarea->sub_area,
+                            'estatus' => (int)$subarea->estatus,
+                        ])->all(),
+                    'subareas_disponibles' => $savedSubareas
+                        ->map(static fn($subarea) => [
+                            'id' => (int)$subarea->id,
+                            'nombre' => (string)$subarea->sub_area,
+                            'estatus' => (int)$subarea->estatus,
+                        ])->all(),
+                ];
+            })->all(),
             'materiales' => $usesCurrentCatalog
                 ? $catalogDetails->map(static fn($row) => [
                     'id' => (int)$row->id, 'concepto' => (string)$row->nombre,
@@ -349,6 +459,9 @@ final class OrdenMantenimientoService
         $record = self::authorizedRecord($id, true);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La solicitud ya no permite edición.', 409);
+        if ((int)$record->estatus === 1 && !PedidoMaterialesFirma::where('id_pedido', $id)->where('tipo_firma', 'B')->exists()) {
+            return self::fail('La solicitud está en espera del VO.BO. y ya no permite edición.', 409);
+        }
 
         $allowed = ['afectacion' => 2000, 'comentarios' => 4000];
         $values = [];
@@ -428,19 +541,45 @@ final class OrdenMantenimientoService
         }
     }
 
-    public static function toggleSubarea(int $subareaId, int $status): array
+    public static function toggleSubarea(int $subareaId, int $status, int $areaId = 0, string $optionName = ''): array
     {
-        $subarea = PedidoMaterialesAreaOtros::find($subareaId);
-        if (!$subarea) return self::fail('Subárea no encontrada.', 404);
-        $area = PedidoMaterialesArea::find((int)$subarea->id_area);
+        $subarea = $subareaId > 0 ? PedidoMaterialesAreaOtros::find($subareaId) : null;
+        $area = $subarea
+            ? PedidoMaterialesArea::find((int)$subarea->id_area)
+            : PedidoMaterialesArea::find($areaId);
         $record = $area ? self::authorizedRecord((int)$area->id_pedido, true) : null;
         if (!$record) return self::fail('Subárea fuera de tu alcance.', 404);
         if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite cambios.', 409);
         if (!in_array($status, [0, 1], true)) return self::fail('Estado de subárea inválido.', 422);
+
+        if (!$subarea) {
+            $optionName = trim($optionName);
+            $validOption = (string)$area->area === 'Zona de despacho'
+                ? collect(self::dispatchPositionOptions((int)$record->id_estacion) ?? [])
+                    ->first(static fn(array $option): bool => $option['nombre'] === $optionName)
+                : null;
+            if (!$validOption || (int)$area->id !== $areaId) return self::fail('La posición de despacho no es válida para esta estación.', 422);
+
+            $subarea = PedidoMaterialesAreaOtros::where('id_area', (int)$area->id)
+                ->where('categoria', 1)
+                ->where('sub_area', $optionName)
+                ->first();
+            if (!$subarea && $status === 0) {
+                return ['success' => true, 'message' => 'Posición actualizada.', 'id' => 0, 'code' => 200];
+            }
+        }
+
         try {
+            if (!$subarea) {
+                $subarea = new PedidoMaterialesAreaOtros([
+                    'id_area' => (int)$area->id,
+                    'categoria' => 1,
+                    'sub_area' => $optionName,
+                ]);
+            }
             $subarea->estatus = $status;
             $subarea->save();
-            return ['success' => true, 'message' => 'Subárea actualizada.', 'code' => 200];
+            return ['success' => true, 'message' => 'Subárea actualizada.', 'id' => (int)$subarea->id, 'code' => 200];
         } catch (\Throwable $e) {
             error_log('[OrdenMantenimiento] toggleSubarea: '.$e->getMessage());
             return self::fail('No se pudo actualizar la subárea.', 500);
@@ -1154,6 +1293,18 @@ final class OrdenMantenimientoService
             default => 0,
         };
         if ($category === 1) {
+            $dispatchOptions = self::dispatchPositionOptions($contextId);
+            if ($dispatchOptions !== null) {
+                foreach ($dispatchOptions as $option) {
+                    PedidoMaterialesAreaOtros::firstOrCreate([
+                        'id_area' => (int)$area->id,
+                        'categoria' => 1,
+                        'sub_area' => $option['nombre'],
+                    ], ['estatus' => 0]);
+                }
+                return;
+            }
+
             $dispensarios = DB::table('tb_dispensarios')->where('id_estacion', $contextId)->orderBy('no_dispensario')->get(['no_dispensario']);
             foreach ($dispensarios as $dispensario) {
                 foreach (['A', 'B'] as $side) $items[] = 'Dispensario: '.$dispensario->no_dispensario.', Lado: '.$side;

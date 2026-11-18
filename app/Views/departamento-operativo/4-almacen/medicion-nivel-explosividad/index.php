@@ -45,7 +45,7 @@ $baseUrl = '/departamento-operativo/almacen/medicion-nivel-explosividad';
 <div class="col-12">
 <div class="datatables">
 <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-<table id="tabla-medicion-nivel-explosividad" class="table table-bordered mb-0 text-nowrap align-middle w-100">
+<table id="tabla-medicion-nivel-explosividad" class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100">
 <thead></thead>
 <tbody></tbody>
 </table>

@@ -132,6 +132,47 @@ document.addEventListener('alpine:init', () => {
             if (editar) editar.value = '';
         },
 
+        parseCosto(valor) {
+            const limpio = String(valor ?? '').replace(/,/g, '').trim();
+            if (limpio === '') return NaN;
+            const numero = Number(limpio);
+            return Number.isFinite(numero) ? numero : NaN;
+        },
+
+        formatoCosto(valor) {
+            const numero = Number(String(valor ?? '').replace(/,/g, '').trim());
+            return Number.isFinite(numero)
+                ? numero.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+                : '';
+        },
+
+        capturarCosto(evento) {
+            const input = evento && evento.target;
+            if (!input) return;
+
+            const caret = input.selectionStart ?? input.value.length;
+            const digitosAntes = input.value.slice(0, caret).replace(/[^0-9.]/g, '').length;
+            let limpio = input.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const punto = limpio.indexOf('.');
+            if (punto !== -1) {
+                limpio = limpio.slice(0, punto + 1) + limpio.slice(punto + 1).replace(/\./g, '').slice(0, 2);
+            }
+
+            const partes = limpio.split('.');
+            const entero = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const formateado = partes.length > 1 ? `${entero}.${partes[1]}` : entero;
+            input.value = formateado;
+            this.form.costo = formateado;
+
+            let nuevaPosicion = 0;
+            let contados = 0;
+            while (nuevaPosicion < formateado.length && contados < digitosAntes) {
+                if (/[0-9.]/.test(formateado[nuevaPosicion])) contados++;
+                nuevaPosicion++;
+            }
+            input.setSelectionRange(nuevaPosicion, nuevaPosicion);
+        },
+
         async cargarEncargados(idEstacion) {
             this.cargandoEncargados = true;
 
@@ -243,7 +284,7 @@ document.addEventListener('alpine:init', () => {
                     this.form.tipo = this.detalle.tipo_descripcion || '';
                     this.form.fecha = this.detalle.fecha === '0000-00-00' ? '' : this.detalle.fecha;
                     this.form.fecha2 = this.detalle.fecha2 === '0000-00-00' ? '' : this.detalle.fecha2;
-                    this.form.costo = this.detalle.costo;
+                    this.form.costo = this.formatoCosto(this.detalle.costo);
                     this.form.observaciones = this.detalle.observaciones;
 
                     await this.cargarEncargados(this.detalle.id_estacion);
@@ -307,7 +348,13 @@ document.addEventListener('alpine:init', () => {
                 hayError = true;
             }
 
-            if (this.form.costo === '' || isNaN(parseFloat(this.form.costo)) || parseFloat(this.form.costo) < 0) {
+            if (!this.form.fecha2) {
+                this.errores.fecha2 = true;
+                hayError = true;
+            }
+
+            const costo = this.parseCosto(this.form.costo);
+            if (!Number.isFinite(costo) || costo < 0) {
                 this.errores.costo = true;
                 hayError = true;
             }
@@ -326,7 +373,7 @@ document.addEventListener('alpine:init', () => {
             fd.append('tipo_mantenimiento', String(this.form.tipo).trim());
             fd.append('fecha', this.form.fecha);
             fd.append('fecha2', this.form.fecha2 || '');
-            fd.append('costo', this.form.costo);
+            fd.append('costo', String(this.parseCosto(this.form.costo)));
             fd.append('observaciones', this.form.observaciones || '');
             return fd;
         },

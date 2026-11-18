@@ -171,13 +171,13 @@ x-model="form.periodo"
 <button type="button"
 class="btn btn-primary d-inline-flex align-items-center gap-2"
 @click="descargar(detalle.archivo)">
-<i class="ti ti-file-type-pdf fs-5"></i>
+<i class="ti ti-file-type-pdf fs-6"></i>
 <span>Descargar PDF</span>
 </button>
 </template>
 <template x-if="!detalle.archivo_existe">
 <div class="text-muted">
-<i class="ti ti-file-off me-1"></i>
+<i class="ti ti-file-off fs-6 me-1"></i>
 No hay archivo almacenado para este registro.
 </div>
 </template>

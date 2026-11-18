@@ -294,7 +294,9 @@ Evidencias (#0<span x-text="evidenciaRegistroLabel"></span>)
     <label class="form-label mb-1">* Evidencia:</label>
     <div class="input-group">
         <input type="file" class="form-control" id="inputEvidenciaModal"
-        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf">
+        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf"
+        :style="errorEvidencia ? 'border: 2px solid #A52525 !important;' : ''"
+        @change="errorEvidencia = false">
         <button type="button" class="btn btn-success" @click="subirEvidenciaModal()" :disabled="subiendo">
             <i class="ti ti-check me-1"></i> Guardar
         </button>
@@ -310,11 +312,12 @@ Evidencias (#0<span x-text="evidenciaRegistroLabel"></span>)
         <!-- Badge redondo en la esquina superior derecha -->
         <div class="position-absolute top-0 end-0 p-2" style="z-index: 2;">
             <span class="badge bg-white text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2" style="width: 32px; height: 32px;">
-                <i :class="(e.es_pdf == 1 || e.es_pdf === true) ? 'ti ti-file-type-pdf text-danger' : 'ti ti-photo text-primary'" class="fs-6"></i>
+                <i :class="e.existe ? ((e.es_pdf == 1 || e.es_pdf === true) ? 'ti ti-file-type-pdf text-danger' : 'ti ti-photo text-primary') : 'ti ti-file-off text-muted'" class="fs-6" :title="e.existe ? 'Archivo disponible' : 'Archivo no disponible'"></i>
             </span>
         </div>
 
         <!-- Vista previa exclusiva: Imagen o PDF dentro del rectángulo de 140px -->
+        <template x-if="e.existe">
         <a :href="e.url + '&view=1'" target="_blank" class="text-decoration-none overflow-hidden d-block position-relative" style="height: 140px;">
             <!-- Si NO es PDF, muestra la imagen -->
             <img x-show="!(e.es_pdf == 1 || e.es_pdf === true)" :src="e.url + '&view=1'" class="w-100 h-100" style="object-fit: cover;" alt="">
@@ -324,13 +327,20 @@ Evidencias (#0<span x-text="evidenciaRegistroLabel"></span>)
                 <i class="ti ti-file-type-pdf text-danger display-4"></i>
             </div>
         </a>
+        </template>
+        <template x-if="!e.existe">
+        <div class="text-center p-4 bg-white d-flex align-items-center justify-content-center h-100 w-100" style="height: 140px;">
+            <span class="small text-muted"><i class="ti ti-file-off fs-6 me-1" aria-hidden="true"></i>Archivo no disponible</span>
+        </div>
+        </template>
 
         <!-- Cuerpo de la tarjeta -->
         <div class="card-body border-top pb-2 bg-white">
             <div>
-                <a :href="e.url + '&view=1'" target="_blank" class="text-dark text-decoration-none">
+                <template x-if="e.existe"><a :href="e.url + '&view=1'" target="_blank" class="text-dark text-decoration-none">
                     <p class="small fw-bold text-truncate mb-0" :title="e.nombre_original" x-text="e.nombre_original"></p>
-                </a>
+                </a></template>
+                <template x-if="!e.existe"><p class="small fw-bold text-truncate mb-0" :title="e.nombre_original" x-text="e.nombre_original"></p></template>
                 <span class="small text-muted d-block text-truncate">
                     <i class="ti ti-user me-1"></i><span x-text="e.subido_por_nombre"></span>
                 </span>
@@ -340,9 +350,12 @@ Evidencias (#0<span x-text="evidenciaRegistroLabel"></span>)
         <!-- Pie de tarjeta con botones de acción al 50% -->
         <div class="card-footer bg-white">
             <div class="d-flex align-items-center gap-2">
-                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="e.url" target="_blank" title="Descargar">
+                <a x-show="e.existe" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="e.url" target="_blank" title="Descargar">
                     <i class="ti ti-download"></i> <span class="">Descargar</span>
                 </a>
+                <button x-show="!e.existe" type="button" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" disabled title="Archivo no disponible">
+                    <i class="ti ti-file-off fs-6"></i> <span class="">No disponible</span>
+                </button>
                 
                 <button class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1" @click.prevent="eliminarEvidencia(e)" title="Eliminar">
                     <i class="ti ti-trash"></i> <span class="">Eliminar</span>
@@ -404,7 +417,14 @@ Editar costo (#0<span x-text="editarRegistroLabel"></span>)
 
 <div x-show="editarReg.puede_editar_costo">
 <div class="mb-1 form-label">* Costo del mantenimiento:</div>
-<input type="number" step="0.01" min="0" class="form-control" x-model="costoEdicion">
+<input type="text"
+inputmode="decimal"
+autocomplete="off"
+class="form-control"
+:value="formatoCostoModal(costoEdicion)"
+:style="errorCostoEdicion ? 'border: 2px solid #A52525 !important;' : ''"
+@input="capturarCostoModal($event)"
+placeholder="0.00">
 </div>
 
 </div>

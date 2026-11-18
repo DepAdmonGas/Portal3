@@ -636,7 +636,7 @@ class AlmacenMaquinariaEquiposService
             return $fail('La fecha de instalación es obligatoria y debe ser válida.');
         }
 
-        $costoRaw = trim((string)($data['Costo_compra'] ?? $data['costo_compra'] ?? ''));
+        $costoRaw = str_replace(',', '', trim((string)($data['Costo_compra'] ?? $data['costo_compra'] ?? '')));
 
         if ($costoRaw === '' || !is_numeric($costoRaw) || (float)$costoRaw < 0) {
             return $fail('El costo de compra es obligatorio y debe ser un número mayor o igual a cero.');

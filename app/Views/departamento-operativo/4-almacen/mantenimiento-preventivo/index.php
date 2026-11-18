@@ -152,7 +152,7 @@ x-model="form.fecha"
 </div>
 
 <div class="col-md-6">
-<label class="form-label mb-1">Próxima fecha de mantenimiento:</label>
+<label class="form-label mb-1">* Próxima fecha de mantenimiento:</label>
 <input type="date"
 class="form-control"
 x-model="form.fecha2"
@@ -162,13 +162,12 @@ x-model="form.fecha2"
 
 <div class="col-12">
 <label class="form-label mb-1">* Costo:</label>
-<input type="number"
+<input type="text"
 class="form-control"
-step="0.01"
-min="0"
+inputmode="decimal"
 x-model="form.costo"
 :style="errores.costo ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.costo = false">
+@input="capturarCosto($event); errores.costo = false">
 </div>
 
 <div class="col-12">
@@ -210,7 +209,7 @@ x-model="form.observaciones"></textarea>
 <div class="modal-header bg-primary">
 <div class="d-flex align-items-center gap-2">
 <i class="ti ti-pencil text-white fs-5"></i>
-<h5 class="modal-title text-white mb-0">Editar Mantenimiento Preventivo (#<span class="fw-semibold" x-text="detalle.folio_label"></span>)</h5>
+<h5 class="modal-title text-white mb-0">Editar Mantenimiento Preventivo (#<span class="fw-semibold" x-text="detalle ? detalle.folio_label : ''"></span>)</h5>
 </div>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 </div>
@@ -261,7 +260,7 @@ x-model="form.fecha"
 </div>
 
 <div class="col-md-6">
-<label class="form-label mb-1">Próxima fecha de mantenimiento:</label>
+<label class="form-label mb-1">* Próxima fecha de mantenimiento:</label>
 <input type="date"
 class="form-control"
 x-model="form.fecha2"
@@ -271,13 +270,12 @@ x-model="form.fecha2"
 
 <div class="col-12">
 <label class="form-label mb-1">* Costo:</label>
-<input type="number"
+<input type="text"
 class="form-control"
-step="0.01"
-min="0"
+inputmode="decimal"
 x-model="form.costo"
 :style="errores.costo ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.costo = false">
+@input="capturarCosto($event); errores.costo = false">
 </div>
 
 <div class="col-12">
@@ -294,15 +292,15 @@ class="btn btn-outline-primary px-3 d-inline-flex align-items-center justify-con
 @click="descargarOrden(detalle.orden_servicio)"
 title="Descargar orden de servicio actual"
 aria-label="Descargar orden de servicio actual">
-<i class="ti ti-download"></i>
+<i class="ti ti-download fs-6"></i>
 </button>
 </template>
 </div>
 <template x-if="!detalle.orden_servicio_existe && detalle.orden_servicio">
-<small class="text-muted d-block mt-1"><i class="ti ti-file-off me-1"></i>El archivo no está disponible en el servidor.</small>
+<small class="text-muted d-block mt-1"><i class="ti ti-file-off fs-6 me-1"></i>El archivo no está disponible en el servidor.</small>
 </template>
 <template x-if="!detalle.orden_servicio">
-<small class="text-muted d-block mt-1"><i class="ti ti-file-off me-1"></i>Sin orden de servicio registrada.</small>
+<small class="text-muted d-block mt-1"><i class="ti ti-file-off fs-6 me-1"></i>Sin orden de servicio registrada.</small>
 </template>
 </div>
 
@@ -340,7 +338,7 @@ class="btn btn-success"
 <div class="modal-content">
 <div class="modal-header bg-primary">
 <div class="d-flex align-items-center gap-2">
-<i class="ti ti-vial text-white fs-5"></i>
+<i class="ti ti-flask text-white fs-5"></i>
 <h5 class="modal-title text-white mb-0">Prueba de Eficiencia</h5>
 </div>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -372,7 +370,7 @@ accept=".pdf,application/pdf"
 <button type="button" class="btn btn-success mb-3" @click="guardarArchivoPrueba()" :disabled="guardando">
 <template x-if="!guardando"><i class="ti ti-plus me-1"></i></template>
 <template x-if="guardando"><span class="spinner-border spinner-border-sm me-1"></span></template>
-<span x-text="guardando ? 'Guardando...' : 'Agregar'"></span>
+<span x-text="guardando ? 'Guardando...' : 'Nuevo'"></span>
 </button>
 </div>
 
@@ -381,8 +379,8 @@ accept=".pdf,application/pdf"
 <thead>
 <tr>
 <th class="text-center align-middle">Fecha</th>
-<th class="text-center align-middle" width="60"><i class="ti ti-file-type-pdf"></i></th>
-<th class="text-center align-middle" width="60"><i class="ti ti-trash"></i></th>
+<th class="text-center align-middle" width="60"><i class="ti ti-file-download fs-6 text-primary"></i></th>
+<th class="text-center align-middle" width="60"><i class="ti ti-trash fs-6 text-danger"></i></th>
 </tr>
 </thead>
 <tbody>
@@ -404,17 +402,17 @@ accept=".pdf,application/pdf"
 <td class="text-center align-middle">
 <template x-if="doc.archivo_existe">
 <a href="javascript:void(0)" class="pointer" @click="descargar(doc.archivo)" title="Descargar PDF">
-<i class="ti ti-file-type-pdf fs-5 text-danger"></i>
+<i class="ti ti-file-download fs-6 text-primary"></i>
 </a>
 </template>
 <template x-if="!doc.archivo_existe">
-<i class="ti ti-file-off text-muted"></i>
+<i class="ti ti-file-off fs-6 text-muted"></i>
 </template>
 </td>
 <td class="text-center align-middle">
 <template x-if="puedeEliminar">
 <a href="javascript:void(0)" class="pointer" @click="eliminarDocumento(doc.id)" title="Eliminar">
-<i class="ti ti-trash fs-5 text-danger"></i>
+<i class="ti ti-trash fs-6 text-danger"></i>
 </a>
 </template>
 </td>
