@@ -19,7 +19,7 @@ document.addEventListener('alpine:init', () => {
 
         colaboradorEditando: null,
         formEdicion: {
-            importe: 0,
+            importe: '0',
             original: 0,
             prima_vacacional: 0
         },
@@ -41,6 +41,39 @@ document.addEventListener('alpine:init', () => {
 
         subiendoAcuseMexdesa: false,
         subiendoAguinaldo: false,
+
+        marcarCampoInvalido(elemento, invalido) {
+            if (!elemento) return;
+            elemento.classList.toggle('is-invalid', !!invalido);
+            if (elemento.id === 'select-personal-agregar') {
+                const selection = elemento.nextElementSibling?.querySelector('.select2-selection');
+                if (selection) selection.classList.toggle('is-invalid', !!invalido);
+            }
+        },
+
+        formatoImporte(event) {
+            const input = event.target;
+            const raw = input.value;
+            const cursor = input.selectionStart ?? raw.length;
+            const caracteresAntes = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+            const normalizado = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const partes = normalizado.split('.');
+            const enteros = partes.shift() || '';
+            const decimales = partes.join('');
+            const agrupado = enteros.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const formato = normalizado.includes('.') ? agrupado + '.' + decimales : agrupado;
+            this.formEdicion.importe = formato;
+            input.value = formato;
+
+            let posicion = 0;
+            let vistos = 0;
+            while (posicion < formato.length && vistos < caracteresAntes) {
+                if (/[0-9.]/.test(formato[posicion])) vistos++;
+                posicion++;
+            }
+            input.setSelectionRange(posicion, posicion);
+            this.marcarCampoInvalido(input, formato.trim() === '' || !Number.isFinite(Number(normalizado)));
+        },
 
         get baseUrl() {
             return window.location.pathname.includes('/departamento-operativo')
@@ -439,11 +472,20 @@ document.addEventListener('alpine:init', () => {
             if (this.$refs.docNominaFile) this.$refs.docNominaFile.value = '';
             if (this.$refs.docNominaFirmaFile) this.$refs.docNominaFirmaFile.value = '';
             if (this.$refs.docAguinaldoFile) this.$refs.docAguinaldoFile.value = '';
+            document.querySelectorAll('#modalEditarNomina .is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
             bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarNomina')).show();
         },
 
         async guardarEdicion() {
+            const importeInput = document.querySelector('#modalEditarNomina [x-model="formEdicion.importe"]');
+            const rawImporte = String(this.formEdicion.importe ?? '').replace(/,/g, '').trim();
+            const importeValido = this.esMexdesa || (rawImporte !== '' && Number.isFinite(Number(rawImporte)) && Number(rawImporte) >= 0);
+            this.marcarCampoInvalido(importeInput, !importeValido);
+            if (!importeValido) {
+                window.alerts.error('Completa los campos obligatorios.');
+                return;
+            }
             this.guardandoEdicion = true;
             try {
                 const fd = new FormData();
@@ -452,7 +494,7 @@ document.addEventListener('alpine:init', () => {
                 // Solo se envían los campos que el rol puede modificar
                 // (matriz de modal-editar-info-nomina.php del legacy).
                 if (!this.esMexdesa) {
-                    fd.append('importe', this.formEdicion.importe);
+                    fd.append('importe', rawImporte);
 
                     if (this.$refs.docNominaFile && this.$refs.docNominaFile.files[0]) {
                         fd.append('doc_nomina', this.$refs.docNominaFile.files[0]);
@@ -648,9 +690,11 @@ document.addEventListener('alpine:init', () => {
             const $sel = $('#select-personal-agregar');
             const ids = $sel.length ? ($sel.val() || []) : [];
             if (!ids.length) {
-                window.alerts.error('Selecciona al menos un colaborador');
+                this.marcarCampoInvalido($sel[0], true);
+                window.alerts.error('Completa los campos obligatorios.');
                 return;
             }
+            this.marcarCampoInvalido($sel[0], false);
 
             this.guardandoPersonal = true;
             try {
@@ -701,9 +745,11 @@ document.addEventListener('alpine:init', () => {
         async guardarAcusePeriodo() {
             const file = this.$refs.archivoAcusePeriodo && this.$refs.archivoAcusePeriodo.files[0];
             if (!file) {
-                window.alerts.error('Selecciona un archivo para subir');
+                this.marcarCampoInvalido(this.$refs.archivoAcusePeriodo, true);
+                window.alerts.error('Completa los campos obligatorios.');
                 return;
             }
+            this.marcarCampoInvalido(this.$refs.archivoAcusePeriodo, false);
 
             this.subiendoAcusePeriodo = true;
             try {
@@ -753,9 +799,11 @@ document.addEventListener('alpine:init', () => {
             }
             const file = this.$refs.archivoAcuseMexdesa && this.$refs.archivoAcuseMexdesa.files[0];
             if (!file) {
-                window.alerts.error('Selecciona un archivo para subir');
+                this.marcarCampoInvalido(this.$refs.archivoAcuseMexdesa, true);
+                window.alerts.error('Completa los campos obligatorios.');
                 return;
             }
+            this.marcarCampoInvalido(this.$refs.archivoAcuseMexdesa, false);
 
             this.subiendoAcuseMexdesa = true;
             try {
@@ -827,9 +875,11 @@ document.addEventListener('alpine:init', () => {
             }
             const file = this.$refs.archivoAguinaldo && this.$refs.archivoAguinaldo.files[0];
             if (!file) {
-                window.alerts.error('Selecciona un archivo para subir');
+                this.marcarCampoInvalido(this.$refs.archivoAguinaldo, true);
+                window.alerts.error('Completa los campos obligatorios.');
                 return;
             }
+            this.marcarCampoInvalido(this.$refs.archivoAguinaldo, false);
 
             this.subiendoAguinaldo = true;
             try {

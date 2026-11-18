@@ -39,23 +39,26 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 
 <div class="col-12 mb-4 text-end">
 <div><div class="form-label mb-1">Formato:</div><div class="text-primary" x-text="cabecera.codigo || ''"></div></div>
-<div><div class="form-label mb-1">No. de control:</div><div class="text-primary" x-text="esEdicion ? (cabecera.no_control || '—') : '—'"></div></div>
+<div><div class="form-label mb-1">No. de control:</div><div class="text-primary" x-text="esEdicion ? (cabecera.no_control || 'Sin información') : 'Sin información'"></div></div>
 <div class="" x-text="'Huixquilucan, Edo. de México a ' + (cabecera.fecha || '')"></div>
 </div>
 
 <div class="col-12 mb-4">
 <div class="" x-text="cabecera.dirigido_a || ''"></div>
 <template x-if="formato === 7">
-<p class="mb-0">
-<span x-text="cabecera.intro || ''"></span>
-<span>, correspondiente al periodo de</span>
-<select name="periodo" class="form-select d-inline-block ms-2" style="width: 140px;" @change="valores.periodo = Number($event.target.value)">
+<div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+<span x-text="cabecera.intro || ''"></span><br>
+<label for="formato-periodo" class="mb-0">Correspondiente al periodo de:</label>
+<div class="position-relative d-inline-block">
+<select id="formato-periodo" name="periodo" class="form-select"  @change="valores.periodo = Number($event.target.value); campoFormato7Modificado = 'periodo'">
 <option value="">Selecciona un periodo...</option>
 <template x-for="anio in periodos" :key="anio">
 <option :value="anio" x-text="anio" :selected="Number(valores.periodo) === Number(anio)"></option>
 </template>
 </select>
-</p>
+<i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-4" x-show="campoFormato7Guardado === 'periodo'" x-cloak aria-label="Cambio guardado"></i>
+</div>
+</div>
 </template>
 <template x-if="formato !== 7">
 <p class="mb-0" x-text="cabecera.intro || ''"></p>
@@ -98,31 +101,31 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 <template x-for="(fila, i) in filas" :key="'fila-' + i">
 <tr class="pointer" :class="{ selected: selectedFilaIndex === i }" @click="selectedFilaIndex = i">
 <td class="text-center" x-text="i + 1"></td>
-<td x-show="formato === 1" x-text="fila.nombre || '—'"></td>
+<td x-show="formato === 1" x-text="fila.nombre || 'Sin información'"></td>
 <td class="text-center" x-show="formato === 1" x-text="estacionNombre(fila.id_estacion)"></td>
 <td class="text-center" x-show="formato === 1" x-text="puestoNombre(fila.puesto)"></td>
-<td class="text-center" x-show="formato === 1" x-text="fila.fecha_ingreso || '—'"></td>
-<td class="text-center" x-show="formato === 1" x-text="fila.sd !== '' && fila.sd != null ? '$' + formatNum(fila.sd) : '—'"></td>
+<td class="text-center" x-show="formato === 1" x-text="fila.fecha_ingreso || 'Sin información'"></td>
+<td class="text-center" x-show="formato === 1" x-text="fila.sd !== '' && fila.sd != null ? '$' + formatNum(fila.sd) : 'Sin información'"></td>
 <td class="text-center" x-show="formato === 1">
 <i class="ti ti-file-text text-primary fs-5 pointer" @click="verArchivosEmpleado(fila)" title="Ver documentos del empleado"></i>
 </td>
 <td x-show="formato === 2" x-text="nombrePersonal(fila.id_personal)"></td>
 <td class="text-center" x-show="formato === 2" x-text="estacionNombre(fila.id_estacion)"></td>
-<td class="text-center" x-show="formato === 2" x-text="fila.fecha_baja || '—'"></td>
-<td class="text-center" x-show="formato === 2" x-text="fila.motivo || '—'"></td>
-<td class="text-center" x-show="formato === 2" x-text="fila.detalle || '—'"></td>
+<td class="text-center" x-show="formato === 2" x-text="fila.fecha_baja || 'Sin información'"></td>
+<td class="text-center" x-show="formato === 2" x-text="fila.motivo || 'Sin información'"></td>
+<td class="text-center" x-show="formato === 2" x-text="fila.detalle || 'Sin información'"></td>
 <td x-show="formato === 3" x-text="nombrePersonal(fila.id_personal)"></td>
-<td class="text-center" x-show="formato === 3" x-text="fila.dias_falta || '—'"></td>
+<td class="text-center" x-show="formato === 3" x-text="fila.dias_falta || 'Sin información'"></td>
 <td class="text-center" x-show="formato === 3" x-text="estacionNombre(fila.id_estacion)"></td>
 <td x-show="formato === 4" x-text="nombrePersonal(fila.id_personal)"></td>
 <td class="text-center" x-show="formato === 4" x-text="estacionNombre(fila.id_estacion)"></td>
 <td class="text-center" x-show="formato === 4" x-text="estacionNombre(fila.id_estacion_cambio)"></td>
-<td class="text-center" x-show="formato === 4" x-text="fila.fecha || '—'"></td>
+<td class="text-center" x-show="formato === 4" x-text="fila.fecha || 'Sin información'"></td>
 <td x-show="formato === 5" x-text="nombrePersonal(fila.id_personal)"></td>
 <td class="text-center" x-show="formato === 5" x-text="puestoPersonal(fila.id_personal)"></td>
-<td class="text-center" x-show="formato === 5" x-text="fila.salario_actual !== '' && fila.salario_actual != null ? '$' + formatNum(fila.salario_actual) : '—'"></td>
-<td class="text-center" x-show="formato === 5" x-text="fila.salario_ajustado !== '' && fila.salario_ajustado != null ? '$' + formatNum(fila.salario_ajustado) : '—'"></td>
-<td class="text-center" x-show="formato === 5" x-text="fila.fecha_aplicacion || '—'"></td>
+<td class="text-center" x-show="formato === 5" x-text="fila.salario_actual !== '' && fila.salario_actual != null ? '$' + formatNum(fila.salario_actual) : 'Sin información'"></td>
+<td class="text-center" x-show="formato === 5" x-text="fila.salario_ajustado !== '' && fila.salario_ajustado != null ? '$' + formatNum(fila.salario_ajustado) : 'Sin información'"></td>
+<td class="text-center" x-show="formato === 5" x-text="fila.fecha_aplicacion || 'Sin información'"></td>
 <td class="text-center">
 
 
@@ -131,7 +134,7 @@ data-formatos='<?= $datos['formatos_data'] ?? '{}' ?>'>
 @click="deleteAction({
 url: '/departamento-operativo/recursos-humanos/formatos/eliminar-fila',
 id: detalleId,
-name: formato === 1 ? (fila.nombre || '—') : nombrePersonal(fila.id_personal),
+name: formato === 1 ? (fila.nombre || 'Sin información') : nombrePersonal(fila.id_personal),
 table: null,
 data: {
 formato: formato,
@@ -160,7 +163,7 @@ title="Quitar empleado"></i>
 <template x-if="formato === 6">
 <div class="col-12">
 <div class="table-responsive mb-3">
-<table class="table table-striped table-bordered text-nowrap align-middle">
+<table class="table table-striped table-bordered align-middle" data-portal-table-selection="false">
 
 <tr>
 <th class="text-center">Área o Departamento</th>
@@ -169,19 +172,27 @@ title="Quitar empleado"></i>
 </tr>
 
 <tr>
-<td class="text-center align-middle" x-text="localidad || '—'"></td>
+<td class="text-center align-middle" x-text="localidad || 'Sin información'"></td>
 <td class="text-center align-middle p-0">
-<div class="select2-modal-field select2-form-bordered is-select2-pending " x-ref="f6PersonalWrapper">
-<select name="id_personal" x-ref="f6PersonalSelect" class="form-select border-0 p-3 w-100 h-100">
-<option value="">Selecciona un empleado...</option>
-<template x-for="p in personal" :key="p.id">
-<option :value="p.id" x-text="p.nombre_completo" :selected="Number(valores.id_personal) === Number(p.id)"></option>
-</template>
-</select>
-</div>
+    <!-- 1. Quitamos 'select2-form-bordered' y agregamos 'select2-sin-bordes' y 'w-100 h-100' -->
+    <div class="select2-modal-field select2-sin-bordes is-select2-pending position-relative w-100 h-100" x-ref="f6PersonalWrapper">
+        
+        <!-- 2. El select puede quedar limpio, Select2 lo va a ocultar de todos modos -->
+        <select name="id_personal" x-ref="f6PersonalSelect" class="form-select w-100 h-100">
+            <option value="">Selecciona un empleado...</option>
+            <template x-for="p in personal" :key="p.id">
+                <option :value="p.id" x-text="p.nombre_completo" :selected="Number(valores.id_personal) === Number(p.id)"></option>
+            </template>
+        </select>
+        
+        <i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-5" x-show="autosaveGuardado && campoAutosaveActivo === 'id_personal'" x-cloak aria-label="Cambio guardado"></i>
+    </div>
 </td>
 <td class="text-center align-middle p-0">
-<input type="number" min="1" name="num_dias" class="form-control text-center p-3 border-0" :value="valores.num_dias || ''">
+<div class="position-relative">
+<input type="text" inputmode="numeric" name="num_dias" class="form-control text-center p-3 pe-5 border-0" :value="formatearNumeroEntrada(valores.num_dias || '', false)" @input="actualizarNumeroCampo($event.target, false)">
+<i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-5" x-show="autosaveGuardado && campoAutosaveActivo === 'num_dias'" x-cloak aria-label="Cambio guardado"></i>
+</div>
 </td>
 </tr>
 
@@ -192,13 +203,22 @@ title="Quitar empleado"></i>
 </tr>
 <tr>
 <td class="text-center align-middle p-0">
+<div class="position-relative">
 <input type="date" name="fecha_inicio" class="form-control text-center p-3 border-0" :value="valores.fecha_inicio || ''">
+<i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-5" x-show="autosaveGuardado && campoAutosaveActivo === 'fecha_inicio'" x-cloak aria-label="Cambio guardado"></i>
+</div>
 </td>
 <td class="text-center align-middle p-0">
+<div class="position-relative">
 <input type="date" name="fecha_termino" class="form-control text-center p-3 border-0" :value="valores.fecha_termino || ''">
+<i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-5" x-show="autosaveGuardado && campoAutosaveActivo === 'fecha_termino'" x-cloak aria-label="Cambio guardado"></i>
+</div>
 </td>
 <td class="text-center align-middle p-0">
+<div class="position-relative">
 <input type="date" name="fecha_regreso" class="form-control text-center p-3 border-0" :value="valores.fecha_regreso || ''">
+<i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-5" x-show="autosaveGuardado && campoAutosaveActivo === 'fecha_regreso'" x-cloak aria-label="Cambio guardado"></i>
+</div>
 </td>
 </tr>
 <tr>
@@ -206,7 +226,10 @@ title="Quitar empleado"></i>
 </tr>
 <tr>
 <td colspan="3" class="p-0">
-<textarea name="observaciones" class="form-control border-0" placeholder="Escriba sus observaciones aqui" rows="5" x-text="valores.observaciones || ''"></textarea>
+<div class="position-relative">
+<textarea name="observaciones" class="form-control border-0 pe-5" placeholder="Escriba sus observaciones aqui" rows="5" x-text="valores.observaciones || ''"></textarea>
+<i class="ti ti-check text-success position-absolute top-0 end-0 mt-3 me-3" x-show="autosaveGuardado && campoAutosaveActivo === 'observaciones'" x-cloak aria-label="Cambio guardado"></i>
+</div>
 </td>
 </tr>
 </table>
@@ -217,29 +240,35 @@ title="Quitar empleado"></i>
 <template x-if="formato === 7">
 <div class="col-12">
 <div class="table-responsive mb-3">
-<table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<table class="table table-striped table-bordered mb-0 align-middle formato-prima-vacacional" data-portal-table-selection="false">
 <thead>
 <tr>
-<th class="text-center align-middle">Nombre del empleado</th>
-<th class="text-center align-middle">Fecha de ingreso</th>
-<th class="text-center align-middle">Estación / Departamento</th>
+<th class="text-center align-middle" style="width: 40%;">Nombre del empleado</th>
+<th class="text-center align-middle" style="width: 30%;">Fecha de ingreso</th>
+<th class="text-center align-middle" style="width: 30%;">Estación / Departamento</th>
 
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="text-center align-middle">
-<div class="select2-modal-field select2-form-bordered is-select2-pending" x-ref="f7PersonalWrapper">
-<select name="id_personal" class="form-select" x-ref="f7PersonalSelect">
+<td class="text-center align-middle p-0">
+<!-- Se agrega w-100 y h-100 para que el div ocupe toda la celda -->
+<div class="select2-modal-field position-relative w-100 h-100" x-ref="f7PersonalWrapper">
+
+<!-- Agregamos: border-0, shadow-none, w-100 -->
+<select name="id_personal" class="form-select p-3 bg-transparent border-0 shadow-none w-100" x-ref="f7PersonalSelect">
 <option value="">Selecciona un colaborador...</option>
 <template x-for="p in personal" :key="p.id">
 <option :value="p.id" x-text="p.nombre_completo" :selected="Number(valores.id_personal) === Number(p.id)"></option>
 </template>
 </select>
+
+<!-- El ícono se mantiene igual. me-5 (48px) está perfecto para no chocar con la flecha del select -->
+<i class="ti ti-check text-success position-absolute top-50 end-0 translate-middle-y me-5" x-show="campoFormato7Guardado === 'id_personal'" x-cloak aria-label="Cambio guardado"></i>
 </div>
 </td>
-<td class="text-center align-middle" x-text="fechaIngresoSeleccionado() || '—'"></td>
-<td class="text-center align-middle" x-text="localidad || '—'"></td>
+<td class="text-center align-middle" x-text="fechaIngresoSeleccionado() || 'Sin información'"></td>
+<td class="text-center align-middle" x-text="localidad || 'Sin información'"></td>
 </tr>
 </tbody>
 </table>
@@ -352,7 +381,7 @@ title="Quitar empleado"></i>
 </div>
 <div class="col-md-6 mb-3">
 <label class="form-label mb-1">* Salario diario:</label>
-<input type="number" step="0.01" min="0" class="form-control" x-model="fila.sd" data-campo="sd">
+<input type="text" inputmode="decimal" class="form-control" :value="formatearNumeroEntrada(fila.sd, true)" @input="actualizarNumeroFila('sd', $event.target, true)" data-campo="sd">
 </div>
 <div class="col-12 mb-3">
 <div class="alert alert-primary mb-0" role="alert">Documentación a anexar</div>
@@ -460,11 +489,11 @@ title="Quitar empleado"></i>
 </div>
 <div class="col-md-6 mb-3">
 <label class="form-label mb-1">* Salario actual:</label>
-<input type="number" step="0.01" min="0" class="form-control" x-model="fila.salario_actual" data-campo="salario_actual" disabled>
+<input type="text" inputmode="decimal" class="form-control" :value="formatearNumeroEntrada(fila.salario_actual, true)" data-campo="salario_actual" disabled>
 </div>
 <div class="col-md-6 mb-3">
 <label class="form-label mb-1">* Ajuste a:</label>
-<input type="number" step="0.01" min="0" class="form-control" x-model="fila.salario_ajustado" data-campo="salario_ajustado">
+<input type="text" inputmode="decimal" class="form-control" :value="formatearNumeroEntrada(fila.salario_ajustado, true)" @input="actualizarNumeroFila('salario_ajustado', $event.target, true)" data-campo="salario_ajustado">
 </div>
 <div class="col-md-6 mb-3">
 <label class="form-label mb-1">* Aplicar a parte del:</label>
@@ -518,7 +547,7 @@ Guardar
 
 <div class="modal-header bg-primary">
 <h4 class="modal-title text-white d-flex align-items-center gap-2">
-<i class="ti ti-file-text me-1"></i> Documentación de <span class="fw-bold" x-text="archivosEmpleadoNombre || '—'"></span></h5>
+<i class="ti ti-file-text me-1"></i> Documentación de <span class="fw-bold" x-text="archivosEmpleadoNombre || 'Sin información'"></span></h5>
 </h4>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 </div>
@@ -532,7 +561,29 @@ Guardar
 </template>
 <template x-if="archivosEmpleado.length > 0">
 <div class="table-responsive">
-
+<table class="table table-striped table-bordered mb-0 align-middle">
+<thead>
+<tr>
+<th>Documento</th>
+<th><i class="ti ti-download text-primary fs-6"></i>
+</th>
+</tr>
+</thead>
+<tbody>
+<template x-for="(documento, indice) in archivosEmpleado" :key="documento.campo + '-' + indice">
+<tr>
+<td>
+<div class="d-flex align-items-center justify-content-between gap-3">
+<span x-text="documento.label"></span>
+<i x-show="documento.disponible" class="ti ti-download text-primary fs-6 pointer" role="button" tabindex="0" title="Descargar documento" @click="descargarArchivoEmpleado(documento)" @keydown.enter.prevent="descargarArchivoEmpleado(documento)"></i>
+<i x-show="!documento.disponible" class="ti ti-file-off text-muted fs-6" title="Archivo no disponible"></i>
+</div>
+</td>
+</tr>
+</template>
+</tbody>
+</table>
+</div>
 </template>
 </div>
 <div class="modal-footer">

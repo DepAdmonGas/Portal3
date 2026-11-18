@@ -18,6 +18,16 @@ init() {
   if (c.dataset.detalle) {
     try { this.detalle = JSON.parse(c.dataset.detalle); } catch (e) {}
   }
+  document.addEventListener('error', function (event) {
+    var img = event.target;
+    if (!(img instanceof HTMLImageElement) || !img.matches('.cheque-firma-registrada-img')) return;
+    img.classList.add('d-none');
+    var fallback = document.getElementById(img.dataset.firmaFallback || '');
+    if (fallback) {
+      fallback.classList.remove('d-none');
+      fallback.classList.add('d-flex');
+    }
+  }, true);
 
   const disableTime = localStorage.getItem('sc_disableTime');
   if (disableTime) {

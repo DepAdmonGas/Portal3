@@ -60,8 +60,8 @@ class PermisosRrhhService
             'puedeEditar'    => !empty($permisosDb['editar']),
             'puedeEliminar'  => !empty($permisosDb['eliminar']),
             'puedeDescargar' => !empty($permisosDb['descargar']),
-            // Sustituto del usuario 318 (Dirección de RH): firma el Visto Bueno.
-            'puedeVoBo'      => $esDireccion,
+            // El Visto Bueno de Permisos está asignado exclusivamente al usuario 19.
+            'puedeVoBo'      => $idUsuario === 19,
         ];
     }
 
@@ -146,6 +146,9 @@ class PermisosRrhhService
     public static function getPersonal(int $estacion): array
     {
         $items = [];
+        if (!self::existeLocalidad($estacion)) {
+            return $items;
+        }
 
         if ($estacion === 9) {
             $rows = RhPersonal::where('id_estacion', 9)
@@ -207,21 +210,32 @@ class PermisosRrhhService
     }
 
     /**
-     * Estaciones disponibles para el campo "Estación de quien cubre":
-     * las localidades permitidas del módulo más Comodines (id 8).
+     * Catálogo operativo de estaciones/departamentos permitido en Permisos.
+     * Algunas localidades viven en tb_estaciones y otras en op_rh_localidades.
      */
     public static function getEstacionesCubre(): array
     {
-        $items = self::getLocalidadesDisponibles();
-
-        if (!in_array(8, array_column($items, 'id'), true)) {
-            $items[] = [
-                'id'     => 8,
-                'nombre' => self::getNombreLocalidad(8) ?: 'Comodines',
-            ];
+        // El selector de quien cubre conserva el catálogo operativo usado
+        // por Permisos: estaciones autorizadas, Autolavado y Comodines.
+        $idsPermitidos = [2, 1, 3, 4, 5, 6, 7, 14, 9];
+        $items = [];
+        foreach ($idsPermitidos as $id) {
+            $nombre = self::getNombreLocalidad($id);
+            if ($nombre !== '') {
+                $items[] = ['id' => $id, 'nombre' => $nombre];
+            }
         }
 
+        $items[] = ['id' => 8, 'nombre' => self::getNombreLocalidad(8) ?: 'Comodines'];
+
         return $items;
+    }
+
+    private static function existeLocalidad(int $idLocalidad): bool
+    {
+        return $idLocalidad === 8
+            || RhLocalidad::where('id', $idLocalidad)->exists()
+            || Estacion::where('id', $idLocalidad)->exists();
     }
 
     /**
@@ -242,6 +256,39 @@ class PermisosRrhhService
             return (int)$u->id_puesto === 6;
         }
         return true;
+    }
+
+    private static function usuarioPerteneceALocalidad(int $idUsuario, int $idLocalidad): bool
+    {
+        if ($idUsuario <= 0 || $idLocalidad <= 0) {
+            return false;
+        }
+
+        $usuario = Auth::user();
+        if (!$usuario || (int)$usuario->id !== $idUsuario || (int)$usuario->id_gas !== $idLocalidad || (int)$usuario->estatus !== 0) {
+            return false;
+        }
+
+        return $idLocalidad !== 8 || (int)$usuario->id_puesto === 6;
+    }
+
+    public static function puedeFirmarCubreRegistro(RhPermisos $permiso, ?int $idUsuario = null): bool
+    {
+        $idUsuario = $idUsuario ?? self::getPermisos()['id_usuario'];
+        if ((int)$permiso->estado !== 0 || RhPermisosFirma::where('id_permiso', $permiso->id)->where('tipo_firma', 'B')->exists()) {
+            return false;
+        }
+
+        return $idUsuario === (int)$permiso->cubre_turno
+            || self::usuarioPerteneceALocalidad($idUsuario, (int)$permiso->estacion_cubre);
+    }
+
+    public static function puedeFirmarVoBoRegistro(RhPermisos $permiso): bool
+    {
+        $permisos = self::getPermisos();
+        return $permisos['puedeVoBo']
+            && (int)$permiso->estado === 1
+            && !RhPermisosFirma::where('id_permiso', $permiso->id)->where('tipo_firma', 'C')->exists();
     }
 
     /**
@@ -285,7 +332,6 @@ class PermisosRrhhService
 
         $permisos = self::getPermisos();
         $idUsuario = $permisos['id_usuario'];
-        $puedeVoBo = $permisos['puedeVoBo'];
         $puedeEditar = $permisos['puedeEditar'];
         $puedeEliminar = $permisos['puedeEliminar'];
 
@@ -306,7 +352,6 @@ class PermisosRrhhService
             $id = (int)$r->id;
             $estado = (int)$r->estado;
             $tieneA = !empty($mapaFirmas[$id]['A']);
-            $tieneB = !empty($mapaFirmas[$id]['B']);
             $tieneC = !empty($mapaFirmas[$id]['C']);
 
             $rows[] = [
@@ -328,8 +373,8 @@ class PermisosRrhhService
                 'observaciones'    => $r->observaciones ?? '',
                 'estado'           => $estado,
                 'estado_label'     => self::ESTADO_LABELS[$estado] ?? 'Desconocido',
-                'puede_firmar_cubre' => ($tieneA && $idUsuario === (int)$r->cubre_turno && $estado <= 1 && !$tieneB),
-                'puede_firmar_vobo'  => ($tieneA && $puedeVoBo && $estado === 1 && $tieneB && !$tieneC),
+                'puede_firmar_cubre' => ($tieneA && self::puedeFirmarCubreRegistro($r, $idUsuario)),
+                'puede_firmar_vobo'  => ($permisos['puedeVoBo'] && $estado === 1 && !$tieneC),
                 'tiene_firma_a'      => $tieneA,
                 'puede_editar'     => ($puedeEditar && $estado < 2),
                 'puede_eliminar'   => ($puedeEliminar && $estado < 2),
@@ -347,13 +392,11 @@ class PermisosRrhhService
         }
 
         $estado = (int)$r->estado;
-        $tieneB = RhPermisosFirma::where('id_permiso', $id)->where('tipo_firma', 'B')->exists();
-        $tieneC = RhPermisosFirma::where('id_permiso', $id)->where('tipo_firma', 'C')->exists();
         $permisos = self::getPermisos();
 
         $permisosFirma = [
-            'puedeFirmarCubre' => ($permisos['id_usuario'] === (int)$r->cubre_turno && $estado <= 1 && !$tieneB),
-            'puedeFirmarVoBo'  => ($permisos['puedeVoBo'] && $estado === 1 && $tieneB && !$tieneC),
+            'puedeFirmarCubre' => self::puedeFirmarCubreRegistro($r, $permisos['id_usuario']),
+            'puedeFirmarVoBo'  => self::puedeFirmarVoBoRegistro($r),
             'puedeEditar'      => ($permisos['puedeEditar'] && $estado < 2),
             'puedeEliminar'    => ($permisos['puedeEliminar'] && $estado < 2),
         ];
@@ -399,7 +442,11 @@ class PermisosRrhhService
             $fechaStr = $f->fecha ? date('Y-m-d H:i:s', strtotime($f->fecha)) : '';
             $fechaLabel = $fechaStr ? formatearFecha(substr($fechaStr, 0, 10)) . ', ' . date('g:i a', strtotime($fechaStr)) : '';
 
-            $esImagen = in_array($tipo, ['A', 'B'], true);
+            $tipoImagen = in_array($tipo, ['A', 'B'], true);
+            $nombreArchivo = basename((string)$f->firma);
+            $archivoDisponible = $tipoImagen && $nombreArchivo !== '' && (
+                is_file(self::UPLOAD_DIR . $nombreArchivo)
+            );
 
             $data[] = [
                 'id'            => (int)$f->id,
@@ -407,8 +454,10 @@ class PermisosRrhhService
                 'usuario_nombre' => $nombre,
                 'tipo_firma'    => $tipo,
                 'tipo_label'    => self::TIPO_LABELS[$tipo] ?? ('FIRMA ' . $tipo),
-                'es_imagen'     => $esImagen,
-                'firma_img_url' => $esImagen ? '/download?tipo=permisos-firma&file=' . rawurlencode($f->firma) . '&view=1' : '',
+                'tipo_imagen'   => $tipoImagen,
+                'es_imagen'     => $archivoDisponible,
+                'archivo_disponible' => $archivoDisponible,
+                'firma_img_url' => $tipoImagen ? '/download?tipo=permisos-firma&file=' . rawurlencode($nombreArchivo) . '&view=1' : '',
                 'firma_texto'   => $tipo === 'C'
                     ? '<b>Fecha: ' . $fechaLabel . '</b> <br> El permiso se firmó por un medio electrónico.'
                     : '',
@@ -454,7 +503,7 @@ class PermisosRrhhService
         if ($cubre <= 0) {
             return ['success' => false, 'message' => 'Selecciona a quien cubre'];
         }
-        if (!self::puedeVerLocalidad($estacionCubre) && $estacionCubre !== 8) {
+        if (!self::existeLocalidad($estacionCubre)) {
             return ['success' => false, 'message' => 'La estación de quien cubre no es válida'];
         }
         if (!self::personaPerteneceALocalidad($cubre, $estacionCubre)) {
@@ -532,6 +581,9 @@ class PermisosRrhhService
         }
         if ($cubre <= 0) {
             return ['success' => false, 'message' => 'Selecciona a quien cubre'];
+        }
+        if (!self::existeLocalidad($estacionCubre)) {
+            return ['success' => false, 'message' => 'La estación de quien cubre no es válida'];
         }
         if (!self::personaPerteneceALocalidad($cubre, $estacionCubre)) {
             return ['success' => false, 'message' => 'La persona que cubre no pertenece a la estación indicada'];
@@ -612,8 +664,8 @@ class PermisosRrhhService
         if ((int)$permiso->estado === 2) {
             return ['success' => false, 'message' => 'El permiso ya fue autorizado'];
         }
-        if ($idUsuario !== (int)$permiso->cubre_turno) {
-            return ['success' => false, 'message' => 'Solo puede firmar quien cubre el permiso'];
+        if ($idUsuario !== (int)$permiso->cubre_turno && !self::usuarioPerteneceALocalidad($idUsuario, (int)$permiso->estacion_cubre)) {
+            return ['success' => false, 'message' => 'Solo puede firmar quien cubre el permiso o el personal de su estación'];
         }
         if (RhPermisosFirma::where('id_permiso', $id)->where('tipo_firma', 'B')->exists()) {
             return ['success' => false, 'message' => 'La firma de quien cubre ya fue registrada'];
