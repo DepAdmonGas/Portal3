@@ -15,6 +15,19 @@ use App\Core\Session;
 
 class FormatoDescargaMermaController extends BaseController
 {
+    private function parseNumericInput($value): float
+    {
+        return (float)str_replace(',', '', trim((string)$value));
+    }
+
+    private function isUploadedFile(?array $file): bool
+    {
+        return is_array($file)
+            && ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK
+            && !empty($file['tmp_name'])
+            && is_uploaded_file($file['tmp_name']);
+    }
+
     public function index()
     {
         $permisos = FormatoDescargaMermaService::getPermisos();
@@ -170,14 +183,14 @@ class FormatoDescargaMermaController extends BaseController
             'producto'            => trim((string)($input['producto'] ?? '')),
             'sellos'              => trim((string)($input['sellos'] ?? 'No')),
             'detuvo_venta'        => trim((string)($input['detuvo_venta'] ?? 'No')),
-            'merma'               => (float)($input['merma'] ?? 0),
+            'merma'               => $this->parseNumericInput($input['merma'] ?? 0),
             'operador'            => trim((string)($input['operador'] ?? '')),
             'transportista'       => trim((string)($input['transportista'] ?? '')),
             'no_factura_remision' => trim((string)($input['no_factura_remision'] ?? '')),
-            'litros'              => (float)($input['litros'] ?? 0),
-            'precio_litro'        => (float)($input['precio_litro'] ?? 0),
+            'litros'              => $this->parseNumericInput($input['litros'] ?? 0),
+            'precio_litro'        => $this->parseNumericInput($input['precio_litro'] ?? 0),
             'unidad'              => trim((string)($input['unidad'] ?? '')),
-            'cuenta_litros'       => (float)($input['cuenta_litros'] ?? 0),
+            'cuenta_litros'       => $this->parseNumericInput($input['cuenta_litros'] ?? 0),
         ];
 
         $archivos = [
@@ -195,8 +208,19 @@ class FormatoDescargaMermaController extends BaseController
         if ($formData['fecha_llegada'] === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $formData['fecha_llegada'])) {
             JsonResponse::error('La fecha de llegada es obligatoria.');
         }
+        if ($formData['hora_llegada'] === '') {
+            JsonResponse::error('La hora de llegada es obligatoria.');
+        }
         if ($formData['producto'] === '') {
             JsonResponse::error('El producto es obligatorio.');
+        }
+        if ($formData['no_factura_remision'] === '' || $formData['unidad'] === '' || $formData['operador'] === '' || $formData['transportista'] === '' || $formData['litros'] <= 0 || $formData['precio_litro'] <= 0 || $formData['cuenta_litros'] <= 0) {
+            JsonResponse::error('Completa los campos obligatorios.');
+        }
+        foreach (array_keys(FormatoDescargaMermaService::FILE_FIELDS) as $field) {
+            if (!$this->isUploadedFile($files[$field] ?? null)) {
+                JsonResponse::error('Completa los campos obligatorios.');
+            }
         }
         if ($firmaEncargado === '') {
             JsonResponse::error('La firma del encargado es obligatoria.');
@@ -271,6 +295,7 @@ class FormatoDescargaMermaController extends BaseController
             'help'             => false,
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/js/departamento-operativo/3-importacion/formato-descarga-merma.detalle.init.js?v=' . time(),
             ],
         ], 'departamento-operativo');
 
@@ -383,14 +408,14 @@ class FormatoDescargaMermaController extends BaseController
             'producto'            => trim((string)($input['producto'] ?? '')),
             'sellos'              => trim((string)($input['sellos'] ?? 'No')),
             'detuvo_venta'        => trim((string)($input['detuvo_venta'] ?? 'No')),
-            'merma'               => (float)($input['merma'] ?? 0),
+            'merma'               => $this->parseNumericInput($input['merma'] ?? 0),
             'operador'            => trim((string)($input['operador'] ?? '')),
             'transportista'       => trim((string)($input['transportista'] ?? '')),
             'no_factura_remision' => trim((string)($input['no_factura_remision'] ?? '')),
-            'litros'              => (float)($input['litros'] ?? 0),
-            'precio_litro'        => (float)($input['precio_litro'] ?? 0),
+            'litros'              => $this->parseNumericInput($input['litros'] ?? 0),
+            'precio_litro'        => $this->parseNumericInput($input['precio_litro'] ?? 0),
             'unidad'              => trim((string)($input['unidad'] ?? '')),
-            'cuenta_litros'       => (float)($input['cuenta_litros'] ?? 0),
+            'cuenta_litros'       => $this->parseNumericInput($input['cuenta_litros'] ?? 0),
         ];
 
         $archivos = [
@@ -404,6 +429,18 @@ class FormatoDescargaMermaController extends BaseController
 
         $firmaEncargado = trim((string)($input['firma_encargado'] ?? ''));
         $firmaOperador = trim((string)($input['firma_operador'] ?? ''));
+
+        if ($formData['fecha_llegada'] === '' || $formData['hora_llegada'] === '' || $formData['producto'] === '' || $formData['no_factura_remision'] === '' || $formData['unidad'] === '' || $formData['operador'] === '' || $formData['transportista'] === '' || $formData['litros'] <= 0 || $formData['precio_litro'] <= 0 || $formData['cuenta_litros'] <= 0) {
+            JsonResponse::error('Completa los campos obligatorios.');
+        }
+        foreach (array_keys(FormatoDescargaMermaService::FILE_FIELDS) as $field) {
+            $savedName = basename((string)($registro[$field] ?? ''));
+            $saved = $savedName !== '' && is_file(FormatoDescargaMermaService::getUploadPath() . $savedName);
+            $newUpload = $this->isUploadedFile($files[$field] ?? null);
+            if (!$saved && !$newUpload) {
+                JsonResponse::error('Completa los campos obligatorios.');
+            }
+        }
 
         try {
             $ok = FormatoDescargaMermaService::editar(
@@ -554,22 +591,35 @@ class FormatoDescargaMermaController extends BaseController
             exit;
         }
 
-        $firmasHtml = '';
-        if (!empty($registro['firmas'])) {
-            $firmasHtml .= '<div class="text-secondary mt-2" style="font-size:1.4em"><b>Firmas:</b></div>';
-            $firmasHtml .= '<table class="table table-sm mt-2" style="font-size:1.4em"><tr>';
-            $firmaPath = FormatoDescargaMermaService::getFirmaPath();
-            foreach ($registro['firmas'] as $tipo => $archivo) {
-                $firmaSrc = \App\Helpers\ImageHelper::base64($firmaPath . $archivo);
-                if ($firmaSrc) {
-                    $firmasHtml .= '<td class="p-2">';
-                    $firmasHtml .= '<div style="border: 1px solid #dee2e6;"><div class="text-center" style="margin-top:10px"><b>' . htmlspecialchars($tipo) . '</b></div>';
-                    $firmasHtml .= '<div class="text-center"><img src="' . $firmaSrc . '" style="width:200px;"></div></div>';
-                    $firmasHtml .= '</td>';
-                }
+        $firmasHtml = '<div style="color:#6c757d;font-size:1.2em;margin-top:12px;margin-bottom:6px;"><b>Firmas:</b></div>';
+        $firmasHtml .= '<table width="100%" cellspacing="0" cellpadding="6" style="border-collapse:collapse;margin-bottom:10px;"><tr>';
+        $firmaPath = FormatoDescargaMermaService::getFirmaPath();
+        $firmas = $registro['firmas'] ?? [];
+        foreach (['Encargado de estación', 'Operador'] as $tipo) {
+            $firmaRegistrada = array_key_exists($tipo, $firmas);
+            $archivo = $firmas[$tipo] ?? '';
+            $firmaFilePath = $archivo !== '' ? $firmaPath . basename($archivo) : '';
+            $firmaSrc = $firmaFilePath !== '' && is_file($firmaFilePath)
+                ? \App\Helpers\ImageHelper::base64($firmaFilePath)
+                : '';
+            $nombreFirmante = $tipo === 'Encargado de estación'
+                ? ($registro['responsable'] ?? '')
+                : ($registro['operador'] ?? '');
+            $firmasHtml .= '<td width="50%" valign="top" style="border:0;padding:4px;">';
+            $firmasHtml .= '<table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border:1px solid #dee2e6;">';
+            $firmasHtml .= '<tr><td align="left" style="background-color:#5d83f9;color:#ffffff;padding:14px;"><b>' . htmlspecialchars(strtoupper($tipo)) . '</b></td></tr>';
+            if ($firmaSrc) {
+                $firmasHtml .= '<tr><td align="center" valign="middle" height="125" style="padding:10px;"><img src="' . $firmaSrc . '" height="90" style="max-width:90%;"></td></tr>';
+            } else {
+                $mensaje = $firmaRegistrada
+                    ? 'La firma está registrada, pero su imagen no está disponible.'
+                    : 'Sin firma registrada';
+                $firmasHtml .= '<tr><td align="center" valign="middle" height="125" style="color:#778399;padding:12px;">' . htmlspecialchars($mensaje) . '</td></tr>';
             }
-            $firmasHtml .= '</tr></table>';
+            $firmasHtml .= '<tr><td align="center" style="background-color:#f4f8fb;padding:12px;"><b>' . htmlspecialchars($nombreFirmante) . '</b></td></tr>';
+            $firmasHtml .= '</table></td>';
         }
+        $firmasHtml .= '</tr></table>';
 
         $adjuntoImages = '';
         $adjuntoFields = [
@@ -624,15 +674,20 @@ class FormatoDescargaMermaController extends BaseController
 
         $fechallegada = formatearFecha($registro['fecha_llegada']);
         $horallegada = date('g:i a', strtotime($registro['hora_llegada']));
-        $litros = $registro['litros_raw'];
-        $cuentaLitros = $registro['cuenta_litros_raw'];
-        $valortolerancia = $litros * 0.55 / 100;
-        $tolerancia = round($valortolerancia);
-        $merma = $litros - $cuentaLitros;
-        $calculaNC = $merma - $tolerancia;
-        $preciolitro = $registro['precio_litro_raw'];
-        if ($cuentaLitros != 0) {
-            $NC = number_format($calculaNC * $preciolitro, 2);
+        $litrosRaw = (float)$registro['litros_raw'];
+        $cuentaLitrosRaw = (float)$registro['cuenta_litros_raw'];
+        $precioLitroRaw = (float)$registro['precio_litro_raw'];
+        $toleranciaRaw = round($litrosRaw * 0.55 / 100);
+        $mermaRaw = $litrosRaw - $cuentaLitrosRaw;
+        $calculaNCRaw = $mermaRaw - $toleranciaRaw;
+        $litros = number_format($litrosRaw, 2, '.', ',');
+        $cuentaLitros = number_format($cuentaLitrosRaw, 2, '.', ',');
+        $preciolitro = number_format($precioLitroRaw, 2, '.', ',');
+        $tolerancia = number_format($toleranciaRaw, 2, '.', ',');
+        $merma = number_format($mermaRaw, 2, '.', ',');
+        $calculaNC = number_format($calculaNCRaw, 2, '.', ',');
+        if ($cuentaLitrosRaw != 0) {
+            $NC = number_format($calculaNCRaw * $precioLitroRaw, 2, '.', ',');
         } else {
             $NC = 0;
         }
@@ -706,9 +761,7 @@ class FormatoDescargaMermaController extends BaseController
         $html .= '<td class="p-2"><div class="text-secondary">Se detuvo venta durante la descarga:</div><div class="mt-1">' . htmlspecialchars($registro['detuvo_venta']) . '</div></td>';
         $html .= '</tr></table>';
 
-        if ($firmasHtml) {
-            $html .= $firmasHtml;
-        }
+        $html .= $firmasHtml;
 
         $html .= '</body></html>';
 
@@ -790,6 +843,9 @@ class FormatoDescargaMermaController extends BaseController
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1);
             $cell = $sheet->getCell($colLetter . '2');
             $cell->setValue($value);
+            if ($col >= 5 && $col <= 11) {
+                $cell->getStyle()->getNumberFormat()->setFormatCode('#,##0.00');
+            }
             $cell->getStyle()->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $cell->getStyle()->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
         }

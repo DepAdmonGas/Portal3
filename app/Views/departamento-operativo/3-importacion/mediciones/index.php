@@ -14,12 +14,14 @@
 </style>
 
     <div class="row g-0 ms-auto w-100 justify-content-end">
-                    <div class="col-12 col-md-auto d-grid mb-3">
-                      <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirNuevo()">
-        <i class="ti ti-plus me-1"></i> Nuevo
-    </button>
-                    </div>
-                  </div>
+        <?php if ($puedeCrear): ?>
+            <div class="col-12 col-md-auto d-grid mb-4">
+                <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirNuevo()">
+                    <i class="ti ti-plus me-1"></i> Nuevo
+                </button>
+            </div>
+        <?php endif; ?>
+    </div>
 
 
 
@@ -48,28 +50,43 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Fecha: <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" x-model="nuevoForm.fecha">
+                            <label class="form-label">* Fecha:</label>
+                            <input type="date" class="form-control" x-model="nuevoForm.fecha"
+                                   :style="errors.fecha ? 'border: 2px solid #A52525 !important;' : ''"
+                                   @input="errors.fecha = false">
                         </div>
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Factura: <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" x-model="nuevoForm.factura">
+                            <label class="form-label">* Factura:</label>
+                            <input type="text" class="form-control" x-model="nuevoForm.factura"
+                                   :style="errors.factura ? 'border: 2px solid #A52525 !important;' : ''"
+                                   @input="errors.factura = false">
                         </div>
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Neto: <span class="text-danger">*</span></label>
-                            <input type="number" step="any" min="0" class="form-control" x-model="nuevoForm.neto">
+                            <label class="form-label">* Neto:</label>
+                            <input type="text" inputmode="decimal" class="form-control"
+                                   :value="formatInputNumber(nuevoForm.neto)"
+                                   @input="formatNumericInput($event, 'neto')"
+                                   :style="errors.neto ? 'border: 2px solid #A52525 !important;' : ''">
                         </div>
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Bruto: <span class="text-danger">*</span></label>
-                            <input type="number" step="any" min="0" class="form-control" x-model="nuevoForm.bruto">
+                            <label class="form-label">* Bruto:</label>
+                            <input type="text" inputmode="decimal" class="form-control"
+                                   :value="formatInputNumber(nuevoForm.bruto)"
+                                   @input="formatNumericInput($event, 'bruto')"
+                                   :style="errors.bruto ? 'border: 2px solid #A52525 !important;' : ''">
                         </div>
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Cuenta litros: <span class="text-danger">*</span></label>
-                            <input type="number" step="any" min="0" class="form-control" x-model="nuevoForm.cuentaLitros">
+                            <label class="form-label">* Cuenta litros:</label>
+                            <input type="text" inputmode="decimal" class="form-control"
+                                   :value="formatInputNumber(nuevoForm.cuentaLitros)"
+                                   @input="formatNumericInput($event, 'cuentaLitros')"
+                                   :style="errors.cuentaLitros ? 'border: 2px solid #A52525 !important;' : ''">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Proveedor: <span class="text-danger">*</span></label>
-                            <select class="form-select" x-model="nuevoForm.proveedor">
+                            <label class="form-label">* Proveedor:</label>
+                            <select class="form-select" x-model="nuevoForm.proveedor"
+                                    :style="errors.proveedor ? 'border: 2px solid #A52525 !important;' : ''"
+                                    @change="errors.proveedor = false">
                                 <option value="">Selecciona un proveedor...</option>
                                 <option value="Pemex">Pemex</option>
                                 <option value="Delivery">Delivery</option>

@@ -18,6 +18,7 @@ x-data="{ ...actions(), ...cuentaLitrosFormatoComponent() }">
 @media (min-width: 992px) {
 #container .table-responsive { overflow-x: auto; }
 }
+.select2-modal-field.is-invalid .select2-selection { border-color: var(--bs-danger) !important; }
 </style>
 
 <div class="d-flex align-items-center justify-content-end flex-wrap gap-2 mb-4">
@@ -81,11 +82,11 @@ include __DIR__ . '/_tarjeta.php';
 <div class="row g-3">
 <div class="col-6 col-md-3">
 <label class="form-label">* Hora:</label>
-<input type="time" class="form-control" x-model="form.hora">
+<input type="time" class="form-control" x-model="form.hora" :class="{ 'is-invalid': errores.hora }" @input="errores.hora = false">
 </div>
 <div class="col-6 col-md-3">
 <label class="form-label">* Embarque:</label>
-<select class="form-select" x-model="form.embarque">
+<select class="form-select" x-model="form.embarque" :class="{ 'is-invalid': errores.embarque }" @change="errores.embarque = false; if (form.embarque === 'Pemex') errores.transporte = false">
 <option value=""></option>
 <?php foreach ($embarques as $emb): ?>
 <option value="<?= htmlspecialchars($emb, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($emb, ENT_QUOTES, 'UTF-8') ?></option>
@@ -94,11 +95,11 @@ include __DIR__ . '/_tarjeta.php';
 </div>
 <div class="col-6 col-md-3">
 <label class="form-label">* Tanque:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.tanque">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.tanque)" :class="{ 'is-invalid': errores.tanque }" @input="formatearCampoNumerico($event, 'tanque')">
 </div>
 <div class="col-6 col-md-3">
 <label class="form-label">* TAD:</label>
-<select class="form-select" x-model="form.tad">
+<select class="form-select" x-model="form.tad" :class="{ 'is-invalid': errores.tad }" @change="errores.tad = false">
 <option value=""></option>
 <?php foreach ($tads as $tad): ?>
 <option value="<?= htmlspecialchars($tad, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($tad, ENT_QUOTES, 'UTF-8') ?></option>
@@ -108,8 +109,8 @@ include __DIR__ . '/_tarjeta.php';
 
 <div class="col-12" x-show="form.embarque === 'Delivery' || form.embarque === 'Pick Up'">
 <label class="form-label">* Nombre del transporte:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="wrapTransporteAgregar">
-<select class="form-select" x-ref="selTransporteAgregar">
+<div class="select2-modal-field is-select2-pending" x-ref="wrapTransporteAgregar" :class="{ 'is-invalid': errores.transporte }">
+<select class="form-select" x-ref="selTransporteAgregar" @change="errores.transporte = false">
 <option value=""></option>
 <?php foreach ($transportes as $t): ?>
 <option value="<?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?></option>
@@ -120,7 +121,7 @@ include __DIR__ . '/_tarjeta.php';
 
 <div class="col-12 col-md-6">
 <label class="form-label">* Producto:</label>
-<select class="form-select" x-model="form.producto">
+<select class="form-select" x-model="form.producto" :class="{ 'is-invalid': errores.producto }" @change="errores.producto = false">
 <option value=""></option>
 <?php foreach ($productos as $p): ?>
 <option value="<?= htmlspecialchars($p, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($p, ENT_QUOTES, 'UTF-8') ?></option>
@@ -130,8 +131,8 @@ include __DIR__ . '/_tarjeta.php';
 
 <div class="col-12 col-md-6">
 <label class="form-label">* Unidad:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="wrapUnidadAgregar">
-<select class="form-select" x-ref="selUnidadAgregar">
+<div class="select2-modal-field is-select2-pending" x-ref="wrapUnidadAgregar" :class="{ 'is-invalid': errores.unidad }">
+<select class="form-select" x-ref="selUnidadAgregar" @change="errores.unidad = false">
 <option value=""></option>
 <?php foreach ($unidades as $u): ?>
 <option value="<?= htmlspecialchars($u, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($u, ENT_QUOTES, 'UTF-8') ?></option>
@@ -142,33 +143,33 @@ include __DIR__ . '/_tarjeta.php';
 
 <div class="col-6 col-md-4">
 <label class="form-label">* Factura (litros):</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.litros">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.litros)" :class="{ 'is-invalid': errores.litros }" @input="formatearCampoNumerico($event, 'litros')">
 </div>
 <div class="col-6 col-md-4">
 <label class="form-label">* Tirilla de descarga neto:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.descarga_neto">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.descarga_neto)" :class="{ 'is-invalid': errores.descarga_neto }" @input="formatearCampoNumerico($event, 'descarga_neto')">
 </div>
 <div class="col-6 col-md-4">
 <label class="form-label">* Tirilla de descarga bruto:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.descarga_bruto">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.descarga_bruto)" :class="{ 'is-invalid': errores.descarga_bruto }" @input="formatearCampoNumerico($event, 'descarga_bruto')">
 </div>
 
 <div class="col-6 col-md-4">
 <label class="form-label">* Cuenta litros a 20° C:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.litros_c">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.litros_c)" :class="{ 'is-invalid': errores.litros_c }" @input="formatearCampoNumerico($event, 'litros_c')">
 </div>
 <div class="col-6 col-md-4">
 <label class="form-label">* Venta al momento:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.venta_momento">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.venta_momento)" :class="{ 'is-invalid': errores.venta_momento }" @input="formatearCampoNumerico($event, 'venta_momento')">
 </div>
 <div class="col-6 col-md-4">
 <label class="form-label">* Folio de merma:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.folio_merma">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.folio_merma)" :class="{ 'is-invalid': errores.folio_merma }" @input="formatearCampoNumerico($event, 'folio_merma')">
 </div>
 
 <div class="col-12">
 <label class="form-label">* Imagen:</label>
-<input type="file" accept="image/*" class="form-control" x-ref="archivoAgregar">
+<input type="file" accept="image/*" class="form-control" x-ref="archivoAgregar" :class="{ 'is-invalid': errores.archivo }" @change="errores.archivo = false">
 </div>
 
 <div class="col-12">
@@ -205,11 +206,11 @@ Guardar
 <div class="row g-3">
 <div class="col-6 col-md-3">
 <label class="form-label">* Hora:</label>
-<input type="time" class="form-control" x-model="form.hora">
+<input type="time" class="form-control" x-model="form.hora" :class="{ 'is-invalid': errores.hora }" @input="errores.hora = false">
 </div>
 <div class="col-6 col-md-3">
 <label class="form-label">* Embarque:</label>
-<select class="form-select" x-model="form.embarque">
+<select class="form-select" x-model="form.embarque" :class="{ 'is-invalid': errores.embarque }" @change="errores.embarque = false; if (form.embarque === 'Pemex') errores.transporte = false">
 <option value=""></option>
 <?php foreach ($embarques as $emb): ?>
 <option value="<?= htmlspecialchars($emb, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($emb, ENT_QUOTES, 'UTF-8') ?></option>
@@ -218,11 +219,11 @@ Guardar
 </div>
 <div class="col-6 col-md-3">
 <label class="form-label">* Tanque:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.tanque">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.tanque)" :class="{ 'is-invalid': errores.tanque }" @input="formatearCampoNumerico($event, 'tanque')">
 </div>
 <div class="col-6 col-md-3">
 <label class="form-label">* TAD:</label>
-<select class="form-select" x-model="form.tad">
+<select class="form-select" x-model="form.tad" :class="{ 'is-invalid': errores.tad }" @change="errores.tad = false">
 <option value=""></option>
 <?php foreach ($tads_editar as $tad): ?>
 <option value="<?= htmlspecialchars($tad, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($tad, ENT_QUOTES, 'UTF-8') ?></option>
@@ -232,8 +233,8 @@ Guardar
 
 <div class="col-12" x-show="form.embarque === 'Delivery' || form.embarque === 'Pick Up'">
 <label class="form-label">* Nombre del transporte:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="wrapTransporteEditar">
-<select class="form-select" x-ref="selTransporteEditar">
+<div class="select2-modal-field is-select2-pending" x-ref="wrapTransporteEditar" :class="{ 'is-invalid': errores.transporte }">
+<select class="form-select" x-ref="selTransporteEditar" @change="errores.transporte = false">
 <option value=""></option>
 <?php foreach ($transportes as $t): ?>
 <option value="<?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?></option>
@@ -244,7 +245,7 @@ Guardar
 
 <div class="col-12 col-md-6">
 <label class="form-label">* Producto:</label>
-<select class="form-select" x-model="form.producto">
+<select class="form-select" x-model="form.producto" :class="{ 'is-invalid': errores.producto }" @change="errores.producto = false">
 <option value=""></option>
 <?php foreach ($productos_editar as $p): ?>
 <option value="<?= htmlspecialchars($p, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($p, ENT_QUOTES, 'UTF-8') ?></option>
@@ -254,8 +255,8 @@ Guardar
 
 <div class="col-12 col-md-6">
 <label class="form-label">* Unidad:</label>
-<div class="select2-modal-field is-select2-pending" x-ref="wrapUnidadEditar">
-<select class="form-select" x-ref="selUnidadEditar">
+<div class="select2-modal-field is-select2-pending" x-ref="wrapUnidadEditar" :class="{ 'is-invalid': errores.unidad }">
+<select class="form-select" x-ref="selUnidadEditar" @change="errores.unidad = false">
 <option value=""></option>
 <?php foreach ($unidades as $u): ?>
 <option value="<?= htmlspecialchars($u, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($u, ENT_QUOTES, 'UTF-8') ?></option>
@@ -266,28 +267,28 @@ Guardar
 
 <div class="col-6 col-md-4">
 <label class="form-label">* Factura (litros):</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.litros">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.litros)" :class="{ 'is-invalid': errores.litros }" @input="formatearCampoNumerico($event, 'litros')">
 </div>
 <div class="col-6 col-md-4">
 <label class="form-label">* Tirilla de descarga neto:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.descarga_neto">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.descarga_neto)" :class="{ 'is-invalid': errores.descarga_neto }" @input="formatearCampoNumerico($event, 'descarga_neto')">
 </div>
 <div class="col-6 col-md-4">
 <label class="form-label">* Tirilla de descarga bruto:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.descarga_bruto">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.descarga_bruto)" :class="{ 'is-invalid': errores.descarga_bruto }" @input="formatearCampoNumerico($event, 'descarga_bruto')">
 </div>
 
 <div class="col-6 col-md-4">
 <label class="form-label">* Cuenta litros a 20° C:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.litros_c">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.litros_c)" :class="{ 'is-invalid': errores.litros_c }" @input="formatearCampoNumerico($event, 'litros_c')">
 </div>
 <div class="col-6 col-md-4">
 <label class="form-label">* Venta al momento:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.venta_momento">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.venta_momento)" :class="{ 'is-invalid': errores.venta_momento }" @input="formatearCampoNumerico($event, 'venta_momento')">
 </div>
 <div class="col-6 col-md-4">
 <label class="form-label">* Folio de merma:</label>
-<input type="number" min="0" step="any" class="form-control" x-model="form.folio_merma">
+<input type="text" inputmode="decimal" class="form-control" :value="formatoNumero(form.folio_merma)" :class="{ 'is-invalid': errores.folio_merma }" @input="formatearCampoNumerico($event, 'folio_merma')">
 </div>
 
 <div class="col-12" x-show="form.archivo_actual">
@@ -336,7 +337,7 @@ Guardar
 <div class="row g-3">
 <div class="col-12">
 <label class="form-label">Fecha:</label>
-<input type="date" class="form-control" x-model="fechaForm.fecha">
+<input type="date" class="form-control" x-model="fechaForm.fecha" :class="{ 'is-invalid': errorFecha }" @input="errorFecha = false">
 </div>
 </div>
 </div>

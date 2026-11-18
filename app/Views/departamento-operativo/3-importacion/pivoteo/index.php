@@ -173,101 +173,52 @@
                             </template>
 
                             <!-- Firmas -->
-<!-- SECCIÓN DE FIRMAS / SUPERVISIÓN -->
-<template x-if="detalleData.firmas.length > 0">
+<!-- Firmas de elaboración y Vo.Bo. -->
+<template x-if="detalleData.firmas && detalleData.firmas.length === 2">
     <div class="row mt-2">
         <template x-for="(firma, i) in detalleData.firmas" :key="i">
-            <div class="col-12 mb-4">
+            <div class="col-12 col-md-6 mb-3">
                 <div class="card h-100 shadow-sm">
-
-                    <!-- Header de la Card -->
                     <div class="card-header bg-primary text-white py-3 border-0">
                         <div class="d-flex align-items-center">
                             <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
                                 <i class="ti ti-shield-check fs-6"></i>
                             </div>
                             <div class="ms-3">
-                                <!-- Muestra el título dependiendo del rol o tipo de firma, ej. "SUPERVISÓ" o el rol que venga en firma -->
-                                <h6 class="mb-0 text-white" x-text="firma.rol || 'NOMBRE Y FIRMA DEL VO.BO'"></h6>
+                                <h6 class="mb-0 text-white" x-text="firma.tipo_label || tipoFirmaTexto(firma.tipo)"></h6>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Body de la Card -->
-                    <div class="card-body d-flex justify-content-center align-items-center text-center p-4">
-
-                        <!-- 1. YA FIRMÓ (Si la firma ya cuenta con fecha o estado registrado) -->
-                        <template x-if="firma.fecha || firma.firmado">
-                            <div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-                                <i class="ti ti-signature text-primary mb-3" style="font-size:80px;"></i>
-                                <h6 class="text-dark mb-2">El formato se firmó por un medio electrónico.</h6>
-                                <h6 class="text-dark mb-0"><strong x-text="'Fecha: ' + firma.fecha"></strong></h6>
+                    <div class="card-body d-flex justify-content-center align-items-center text-center p-4" style="min-height:190px;">
+                        <template x-if="firma.fecha && firma.tipo === 'A' && firma.firma_img_disponible && firma.firma_img_url">
+                            <div class="w-100 d-flex flex-column justify-content-center align-items-center">
+                                <img :src="firma.firma_img_url" class="img-fluid mb-2" style="max-height:100px;object-fit:contain;" alt="Firma de quien elaboró">
+                                <strong class="text-dark" x-text="'Fecha: ' + firma.fecha"></strong>
                             </div>
                         </template>
-
-                        <!-- 2. PUEDE FIRMAR (Condición si el usuario actual es quien debe firmar y aun no lo hace) -->
-                        <template x-if="!firma.fecha && !firma.firmado && firma.es_usuario_actual">
-                            <div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-                                <h4 class="text-primary">Recepción de Token</h4>
-                                <small class="text-secondary mb-3">Ingrese el token de seguridad que recibió por Telegram o correo electrónico:</small>
-
-                                <div class="row w-100">
-                                    <div class="col-md-6 mb-3">
-                                        <button class="btn btn-success w-100" @click="crearToken('telegram', firma)" :disabled="enviandoToken">
-                                            <span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>
-                                            <i class="ti ti-brand-telegram me-1" x-show="!enviandoToken"></i> Telegram
-                                        </button>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <button class="btn btn-info text-white w-100" @click="crearToken('email', firma)" :disabled="enviandoToken">
-                                            <span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span>
-                                            <i class="ti ti-mail me-1" x-show="!enviandoToken"></i> Email
-                                        </button>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" placeholder="Token de seguridad" x-model="tokenInput">
-                                            <button class="btn btn-outline-success" type="button" @click="firmarConToken(firma)" :disabled="enviandoToken">
-                                                <span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span> Firmar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <template x-if="tokenError">
-                                    <small class="text-danger mt-2" x-text="tokenError"></small>
-                                </template>
+                        <template x-if="firma.fecha && firma.tipo === 'A' && (!firma.firma_img_disponible || !firma.firma_img_url)">
+                            <div class="w-100 d-flex flex-column justify-content-center align-items-center">
+                                <i class="ti ti-signature-off text-muted mb-3" style="font-size:64px;"></i>
+                                <span class="text-muted" x-text="firma.firma_texto || 'La firma está registrada, pero su imagen no está disponible.'"></span>
                             </div>
                         </template>
-
-                        <!-- 3. NO PUEDE FIRMAR / PENDIENTE (Falta la firma y le pertenece a otro usuario) -->
-                        <template x-if="!firma.fecha && !firma.firmado && !firma.es_usuario_actual">
-                            <div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-                                <i class="ti ti-signature-off text-muted mb-3" style="font-size:80px;"></i>
-                                <h6 class="text-muted mb-0">¡Falta la firma de <span x-text="firma.nombre"></span>!</h6>
+                        <template x-if="firma.fecha && firma.tipo === 'B'">
+                            <div class="w-100 d-flex flex-column justify-content-center align-items-center">
+                                <i class="ti ti-signature text-primary mb-3" style="font-size:64px;"></i>
+                                <span class="text-dark" x-text="firma.firma_texto"></span>
+                                <strong class="text-dark mt-1" x-text="'Fecha: ' + firma.fecha"></strong>
                             </div>
                         </template>
-
+                        <template x-if="!firma.fecha">
+                            <div class="w-100 d-flex flex-column justify-content-center align-items-center">
+                                <i class="ti ti-signature-off text-muted mb-3" style="font-size:64px;"></i>
+                                <span class="text-muted" x-text="firma.firma_texto"></span>
+                            </div>
+                        </template>
                     </div>
-
-                    <!-- Footer de la Card -->
                     <div class="card-footer bg-light text-center py-2">
-                        <template x-if="firma.fecha || firma.firmado">
-                            <div>
-                                <h6 class="mb-0 fw-semibold" x-text="firma.nombre"></h6>
-                            </div>
-                        </template>
-
-                        <template x-if="!firma.fecha && !firma.firmado">
-                            <div>
-                                <h6 class="mb-0 fw-semibold text-dark" x-text="firma.nombre"></h6>
-                                <small class="text-muted">Pendiente de firma</small>
-                            </div>
-                        </template>
+                        <h6 class="mb-0 fw-semibold" x-text="firma.nombre || (firma.tipo === 'A' ? 'Elaboró / Encargado' : 'Vo.Bo.')"></h6>
                     </div>
-
                 </div>
             </div>
         </template>

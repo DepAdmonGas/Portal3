@@ -273,7 +273,7 @@ class InventariosDiariosService
 
     protected static function valorInt($valor): int
     {
-        $valor = trim((string)$valor);
+        $valor = str_replace(',', '', trim((string)$valor));
         return $valor === '' ? 0 : (int)$valor;
     }
 }

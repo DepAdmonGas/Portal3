@@ -456,6 +456,7 @@ class FormatoDescargaMermaService
             }
             $rows[] = [
                 'id'             => (int)$c->id,
+                'id_usuario'     => (int)$c->id_usuario,
                 'usuario_nombre' => $u ? $u->nombre : 'Sistema',
                 'comentario'     => (string)$c->comentario,
                 'fecha_hora'     => $fechaHoraDisplay,
@@ -535,7 +536,15 @@ class FormatoDescargaMermaService
             return '';
         }
 
-        return '/download?tipo=' . $tipo . '&file=' . urlencode($fileName) . '&view=1';
+        $directory = $tipo === 'formato-descarga-merma-firma'
+            ? self::getFirmaPath()
+            : self::getUploadPath();
+        $safeName = basename($fileName);
+        if (!is_file($directory . $safeName)) {
+            return '';
+        }
+
+        return '/download?tipo=' . $tipo . '&file=' . urlencode($safeName) . '&view=1';
     }
 
     public static function getAdjuntoUrl(?string $fileName): string

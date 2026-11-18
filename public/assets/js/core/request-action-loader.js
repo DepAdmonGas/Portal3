@@ -9,6 +9,8 @@
 
     let activeRequests = 0;
     let loaderWasVisible = false;
+    let loaderShownAt = 0;
+    let pendingHideTimer = 0;
     let pendingIntent = null;
     let pendingIntentTimer = 0;
 
@@ -34,9 +36,14 @@
         if (element) element.style.display = 'none';
     };
     const begin = () => {
+        window.clearTimeout(pendingHideTimer);
+        pendingHideTimer = 0;
         if (activeRequests === 0) {
             loaderWasVisible = isLoaderVisible();
-            if (!loaderWasVisible) showLoader();
+            if (!loaderWasVisible) {
+                showLoader();
+                loaderShownAt = performance.now();
+            }
         }
         activeRequests += 1;
     };
@@ -44,8 +51,17 @@
         if (activeRequests === 0) return;
         activeRequests -= 1;
         if (activeRequests === 0) {
-            if (!loaderWasVisible) hideLoader();
-            loaderWasVisible = false;
+            if (!loaderWasVisible) {
+                const espera = Math.max(0, 300 - (performance.now() - loaderShownAt));
+                pendingHideTimer = window.setTimeout(() => {
+                    if (activeRequests === 0) hideLoader();
+                    loaderWasVisible = false;
+                    loaderShownAt = 0;
+                    pendingHideTimer = 0;
+                }, espera);
+            } else {
+                loaderWasVisible = false;
+            }
         }
     };
     const clearIntent = () => {
@@ -265,6 +281,11 @@
     document.addEventListener('click', event => {
         const control = event.target.closest('button, a, input[type="button"], input[type="submit"], [role="button"]');
         if (!control || control.disabled || control.getAttribute('aria-disabled') === 'true' || opensModal(control)) return;
+
+        if (control.dataset.actionLoader === 'navigation' && samePageLink(control)) {
+            startNavigationLoader();
+            return;
+        }
 
         const intent = getIntent(control);
         if (!intent) return;

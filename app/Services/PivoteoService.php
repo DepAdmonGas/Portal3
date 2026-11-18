@@ -13,6 +13,7 @@ use App\Models\Operativo\PivoteoToken;
 use App\Models\PivoteoChofer;
 use App\Models\UnidadesTransporte;
 use App\Models\Usuario;
+use Illuminate\Database\Capsule\Manager as Capsule;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Carbon\Carbon;
@@ -25,7 +26,7 @@ class PivoteoService
     public const ESTATUS_FINALIZADO = 1;
     public const ESTATUS_FIRMADO = 2;
 
-    public const TIPOS_FIRMA = ['A', 'B', 'C'];
+    public const TIPOS_FIRMA = ['A', 'B'];
 
     /**
      * Usuarios autorizados para firmar por defecto.
@@ -214,6 +215,8 @@ class PivoteoService
             'Tuxpan',
             'Puebla',
             'Vopack',
+            'Monterra',
+            'Azcapotzalco',
         ];
     }
 
@@ -260,9 +263,9 @@ class PivoteoService
     }
 
     /**
-     * Contador de pendientes por estación para el selector de multiestación.
-     * Se consideran pendientes los pivoteos finalizados (estatus 1) que aún
-     * requieren firma. Devuelve el mapa que consume ModuleStationService:
+     * Contador de Vo.Bo. pendientes por estación para el selector de multiestación.
+     * Se consideran pendientes los pivoteos en proceso y los finalizados cuyo
+     * registro de Vo.Bo. no contiene datos válidos. Devuelve el mapa de ModuleStationService:
      * ['total' => N, 'estacion_<id>' => N].
      */
     public static function getPendientes(): array
@@ -278,16 +281,22 @@ class PivoteoService
             return $mapa;
         }
 
-        $conteos = Pivoteo::where('estatus', self::ESTATUS_FINALIZADO)
+        $registros = Pivoteo::whereIn('estatus', [self::ESTATUS_FINALIZADO, self::ESTATUS_FIRMADO])
             ->whereIn('id_estacion', $permitidas)
-            ->selectRaw('id_estacion, COUNT(*) as total')
-            ->groupBy('id_estacion')
-            ->pluck('total', 'id_estacion')
-            ->toArray();
+            ->get(['id', 'id_estacion', 'estatus']);
+        $firmas = self::cargarFirmas($registros->pluck('id')->map(static fn ($id) => (int)$id)->all());
 
-        foreach ($conteos as $idEstacion => $total) {
-            $mapa['estacion_' . (int)$idEstacion] = (int)$total;
-            $mapa['total'] += (int)$total;
+        foreach ($registros as $registro) {
+            $id = (int)$registro->id;
+            $estatus = (int)$registro->estatus;
+            $firmaB = array_values(array_filter($firmas[$id] ?? [], static fn ($firma) => $firma['tipo'] === 'B'))[0] ?? null;
+            $pendiente = $estatus === self::ESTATUS_FINALIZADO || empty($firmaB['registro_valido']);
+            if (!$pendiente) {
+                continue;
+            }
+            $key = 'estacion_' . (int)$registro->id_estacion;
+            $mapa[$key] = ($mapa[$key] ?? 0) + 1;
+            $mapa['total']++;
         }
 
         return $mapa;
@@ -339,6 +348,9 @@ class PivoteoService
         $filas = [];
         foreach ($registros as $r) {
             $estatus = (int)$r->estatus;
+            $firmasRegistro = $mapaFirmas[(int)$r->id] ?? [];
+            $firmaBRegistro = array_values(array_filter($firmasRegistro, static fn ($firma) => $firma['tipo'] === 'B'))[0] ?? null;
+            $firmaVoBoValida = $estatus === self::ESTATUS_FIRMADO && !empty($firmaBRegistro['registro_valido']);
 
             // Regla de edición/eliminación:
             //  - No multiestación: solo estatus 0 (Pendiente).
@@ -358,18 +370,22 @@ class PivoteoService
                 'causa'         => (string)$r->causa,
                 'estatus'       => $estatus,
                 'estatus_texto' => self::estatusTexto($estatus),
-                'firmas'        => $mapaFirmas[(int)$r->id] ?? [],
+                'firmaVoBoValida' => $firmaVoBoValida,
+                'firmas'        => self::filtrarVoBoSegunEstatus($estatus, $firmasRegistro),
                 'rowClass'      => $estatus === self::ESTATUS_BORRADOR ? '#ffb6af' : ($estatus === self::ESTATUS_FINALIZADO ? '#fcfcda' : '#b0f2c2'),
                 'estacion_id'   => (int)$r->id_estacion,
                 'estacion'      => isset($mapaEstaciones[$r->id_estacion])
                     ? $mapaEstaciones[$r->id_estacion]->nombre
                     : 'Estación #' . $r->id_estacion,
                 'puedeVer'      => $estatus !== self::ESTATUS_BORRADOR,
-                'puedePDF'      => $estatus === self::ESTATUS_FIRMADO,
-                'puedeGmail'    => $estatus === self::ESTATUS_FIRMADO && $permisos['puedeEnviarCorreo'],
+                'puedePDF'      => $estatus === self::ESTATUS_FIRMADO && $firmaVoBoValida,
+                'puedeGmail'    => $estatus === self::ESTATUS_FIRMADO && $firmaVoBoValida && $permisos['puedeEnviarCorreo'],
                 'puedeEditar'   => $permisos['puedeEditar'] && $permiteAccion,
                 'puedeEliminar' => $permisos['puedeEliminar'] && $permiteAccion,
-                'puedeFirmar'   => $permisos['puedeFirmar'] && $estatus === self::ESTATUS_FINALIZADO,
+                'puedeFirmar'   => $permisos['puedeFirmar'] && (
+                    $estatus === self::ESTATUS_FINALIZADO
+                    || ($estatus === self::ESTATUS_FIRMADO && !$firmaVoBoValida)
+                ),
                 'puedeCrear'    => $permisos['puedeCrear'],
             ];
         }
@@ -429,6 +445,9 @@ class PivoteoService
         }
 
         $esMulti = !empty($permisos['multiestacion']);
+        $firmasExistentes = self::cargarFirmas([$id])[$id] ?? [];
+        $firmaBRegistro = array_values(array_filter($firmasExistentes, static fn ($firma) => $firma['tipo'] === 'B'))[0] ?? null;
+        $firmaVoBoValida = $estatus === self::ESTATUS_FIRMADO && !empty($firmaBRegistro['registro_valido']);
         // Edición/eliminación: multiestación en estatus 0 y 1; el resto solo en 0.
         $permiteAccion = $esMulti
             ? in_array($estatus, [self::ESTATUS_BORRADOR, self::ESTATUS_FINALIZADO], true)
@@ -454,11 +473,18 @@ class PivoteoService
             'puedeAgregar'     => $permisos['puedeEditar'] && $permiteAccion,
             'puedeEliminarDetalle' => $permisos['puedeEditar'] && $permiteAccion,
             'puedeEditarCabecera'  => $permisos['puedeEditar'] && $esMulti && $estatus !== self::ESTATUS_FIRMADO,
-            'puedeFinalizarBase'   => (($permisos['puedeFinalizar'] || $esMulti) && $estatus !== self::ESTATUS_FIRMADO),
-            'puedeFinalizar'   => (($permisos['puedeFinalizar'] || $esMulti) && $estatus !== self::ESTATUS_FIRMADO && count($filas) >= 1),
-            'puedeFirmar'      => $permisos['puedeFirmar'] && $estatus === self::ESTATUS_FINALIZADO,
-            'puedePDF'         => $permisos['puedeGenerarPDF'] && $estatus === self::ESTATUS_FIRMADO,
-            'puedeGmail'       => $permisos['puedeEnviarCorreo'] && $estatus === self::ESTATUS_FIRMADO,
+            'puedeEditarFecha' => $permisos['puedeEditar'] && (
+                $estatus === self::ESTATUS_BORRADOR
+                || ($esMulti && $estatus === self::ESTATUS_FINALIZADO)
+            ),
+            'puedeFinalizarBase'   => (($permisos['puedeFinalizar'] || $esMulti) && $estatus === self::ESTATUS_BORRADOR),
+            'puedeFinalizar'   => (($permisos['puedeFinalizar'] || $esMulti) && $estatus === self::ESTATUS_BORRADOR && count($filas) >= 1),
+            'puedeFirmar'      => $permisos['puedeFirmar'] && (
+                $estatus === self::ESTATUS_FINALIZADO
+                || ($estatus === self::ESTATUS_FIRMADO && !$firmaVoBoValida)
+            ),
+            'puedePDF'         => $permisos['puedeGenerarPDF'] && $estatus === self::ESTATUS_FIRMADO && $firmaVoBoValida,
+            'puedeGmail'       => $permisos['puedeEnviarCorreo'] && $estatus === self::ESTATUS_FIRMADO && $firmaVoBoValida,
             'productos'        => self::getProductosEstacion((int)$cabecera->id_estacion),
             'choferes'         => self::getChoferes(),
             'unidades'         => self::getUnidades(),
@@ -467,7 +493,9 @@ class PivoteoService
             'estaciones'       => self::getCatalogoEstaciones(),
             'correo_default'   => self::CORREO_PREDETERMINADO,
             'historial_correos'=> self::getHistorialCorreos($id),
-            'firmas'           => self::cargarFirmas([$id])[$id] ?? [],
+            'firmas'           => self::firmasParaDetalle($id, $estatus, $firmaVoBoValida, $firmasExistentes),
+            'puedeFirmarElaborador' => $estatus === self::ESTATUS_BORRADOR
+                && ($permisos['puedeFinalizar'] || $esMulti),
             'filas'            => $filas,
         ];
     }
@@ -652,8 +680,12 @@ class PivoteoService
             return true;
         }
 
-        if ($opcion === 11 && !is_numeric($valor)) {
-            throw new \InvalidArgumentException('El campo "Litros" debe ser numérico.');
+        if ($opcion === 11) {
+            $valor = str_replace(',', '', $valor);
+            if (!is_numeric($valor) || (float)$valor <= 0) {
+                throw new \InvalidArgumentException('El campo "Litros" debe ser numérico y mayor a cero.');
+            }
+            $valor = (string)(float)$valor;
         }
 
         $detalle = PivoteoDetalle::find($id);
@@ -679,10 +711,6 @@ class PivoteoService
         if (!$permisos['puedeEditar']) {
             throw new \DomainException('No tienes permiso para cambiar la fecha.');
         }
-        if (empty($permisos['multiestacion'])) {
-            throw new \DomainException('Solo los usuarios multiestación pueden cambiar la fecha.');
-        }
-
         $cabecera->update(['fecha' => $fecha]);
         return true;
     }
@@ -708,7 +736,12 @@ class PivoteoService
 
         if ($destino === '') {
             $resuelto = self::resolverDestino($estacion);
+            if ($resuelto < 0) {
+                throw new \InvalidArgumentException('Completa los campos obligatorios.');
+            }
             $destino = (string)$resuelto;
+        } elseif (!ctype_digit($destino)) {
+            throw new \InvalidArgumentException('Completa los campos obligatorios.');
         }
 
         if ($categoria === 1) {
@@ -752,7 +785,7 @@ class PivoteoService
         return (bool)$detalle->delete();
     }
 
-    public static function finalizar(int $id): bool
+    public static function finalizar(int $id, string $firmaBase64 = ''): bool
     {
         $cabecera = self::buscarAutorizado($id);
 
@@ -760,16 +793,127 @@ class PivoteoService
             throw new \DomainException('El pivoteo ya fue firmado, no se puede finalizar.');
         }
         if ((int)$cabecera->estatus === self::ESTATUS_FINALIZADO) {
-            return true;
+            throw new \DomainException('El pivoteo ya está En proceso; falta la firma de Vo.Bo.');
         }
 
-        $totalDetalles = PivoteoDetalle::where('id_pivoteo', $id)->count();
-        if ($totalDetalles < 1) {
-            throw new \DomainException('Debes agregar al menos una línea antes de finalizar el pivoteo.');
+        $permisos = self::getPermisos();
+        if (!$permisos['puedeFinalizar'] && empty($permisos['multiestacion'])) {
+            throw new \DomainException('No tienes permiso para finalizar el pivoteo.');
+        }
+        if (!str_starts_with($firmaBase64, 'data:image/png;base64,')) {
+            throw new \InvalidArgumentException('Completa los campos obligatorios.');
         }
 
-        $cabecera->update(['estatus' => self::ESTATUS_FINALIZADO]);
+        $dataFirma = base64_decode(substr($firmaBase64, strlen('data:image/png;base64,')), true);
+        $imagenFirma = $dataFirma !== false ? @getimagesizefromstring($dataFirma) : false;
+        if ($dataFirma === false || $dataFirma === '' || strlen($dataFirma) > 5 * 1024 * 1024
+            || !$imagenFirma || ($imagenFirma[2] ?? null) !== IMAGETYPE_PNG) {
+            throw new \InvalidArgumentException('La firma de quien elaboró no es válida.');
+        }
+
+        $directorioFirmas = PUBLIC_PATH . '/uploads/archivos/';
+        if (!is_dir($directorioFirmas) && !@mkdir($directorioFirmas, 0775, true) && !is_dir($directorioFirmas)) {
+            throw new \RuntimeException('No se pudo preparar el directorio de firmas.');
+        }
+        $nombreFirma = 'pivoteo-' . $id . '-firma-a-' . bin2hex(random_bytes(12)) . '.png';
+        $rutaFirma = $directorioFirmas . $nombreFirma;
+        if (@file_put_contents($rutaFirma, $dataFirma, LOCK_EX) !== strlen($dataFirma)) {
+            throw new \RuntimeException('No se pudo guardar la firma de quien elaboró.');
+        }
+
+        try {
+            Capsule::connection()->transaction(function () use ($id, $permisos, $nombreFirma): void {
+                $cabeceraBloqueada = Pivoteo::where('id', $id)->lockForUpdate()->first();
+                if (!$cabeceraBloqueada || !self::estacionAutorizada((int)$cabeceraBloqueada->id_estacion)) {
+                    throw new \DomainException('La estación del pivoteo no está autorizada para tu usuario.');
+                }
+                if ((int)$cabeceraBloqueada->estatus !== self::ESTATUS_BORRADOR) {
+                    throw new \DomainException('Solo los pivoteos pendientes pueden finalizarse.');
+                }
+
+                $fecha = self::fechaFormatoRaw($cabeceraBloqueada->fecha);
+                if ($fecha === '' || !self::fechaValida($fecha)) {
+                    throw new \InvalidArgumentException('Completa los campos obligatorios.');
+                }
+
+                $detalles = PivoteoDetalle::where('id_pivoteo', $id)->orderBy('id')->get();
+                if ($detalles->isEmpty()) {
+                    throw new \DomainException('Debes agregar al menos una línea antes de finalizar el pivoteo.');
+                }
+
+                if (self::detectarCamposFaltantes($detalles, !empty($permisos['multiestacion']))) {
+                    throw new \InvalidArgumentException('Completa los campos obligatorios.');
+                }
+
+                $datosFirma = [
+                    'id_pivoteo' => $id,
+                    'id_usuario' => (int)$permisos['id_usuario'],
+                    'fecha' => Carbon::now(),
+                    'tipo_firma' => 'A',
+                    'firma' => $nombreFirma,
+                ];
+                $firmaElaborador = PivoteoFirma::where('id_pivoteo', $id)
+                    ->where('tipo_firma', 'A')
+                    ->orderBy('id', 'asc')
+                    ->first();
+                if ($firmaElaborador) {
+                    $firmaElaborador->update($datosFirma);
+                } else {
+                    PivoteoFirma::create($datosFirma);
+                }
+                $cabeceraBloqueada->update(['estatus' => self::ESTATUS_FINALIZADO]);
+            });
+        } catch (\Throwable $e) {
+            if (is_file($rutaFirma)) @unlink($rutaFirma);
+            throw $e;
+        }
+
         return true;
+    }
+
+    /** Devuelve los campos de detalle que impiden finalizar, con las mismas reglas del servidor. */
+    public static function camposFaltantesFinalizacion(int $id): array
+    {
+        $cabecera = self::buscarAutorizado($id);
+        if ((int)$cabecera->estatus !== self::ESTATUS_BORRADOR) {
+            return [];
+        }
+        $permisos = self::getPermisos();
+        $detalles = PivoteoDetalle::where('id_pivoteo', $id)->orderBy('id', 'asc')->get();
+        $faltantes = self::detectarCamposFaltantes($detalles, !empty($permisos['multiestacion']));
+        $fecha = self::fechaFormatoRaw($cabecera->fecha);
+        if ($fecha === '' || !self::fechaValida($fecha)) {
+            array_unshift($faltantes, ['id_detalle' => 0, 'campo' => 'fecha']);
+        }
+
+        return $faltantes;
+    }
+
+    private static function detectarCamposFaltantes($detalles, bool $multiestacion): array
+    {
+        $campos = ['producto_fc', 'tanque_fc', 'litros', 'tad', 'unidad', 'chofer'];
+        if ($multiestacion) {
+            $campos = array_merge($campos, [
+                'estacion_fc', 'destino_fc', 'factura_fc', 'estacion_fn', 'factura_fn',
+            ]);
+        }
+
+        $faltantes = [];
+        foreach ($detalles as $detalle) {
+            foreach ($campos as $campo) {
+                $valor = trim((string)$detalle->{$campo});
+                $falta = $campo === 'litros'
+                    ? (!is_numeric($valor) || (float)$valor <= 0)
+                    : ($campo === 'destino_fc'
+                        ? !ctype_digit($valor)
+                        : $valor === '');
+                if ($falta) {
+                    $faltantes[] = ['id_detalle' => (int)$detalle->id, 'campo' => $campo];
+                }
+            }
+        }
+
+        return $faltantes;
     }
 
     public static function eliminar(int $id): bool
@@ -803,8 +947,14 @@ class PivoteoService
         $idUsuario = (int)(Session::get('usuario')['id'] ?? 0);
 
         $cabecera = self::buscarAutorizado($id);
-        if ((int)$cabecera->estatus !== self::ESTATUS_FINALIZADO) {
-            return ['success' => false, 'message' => 'El pivoteo debe estar finalizado para generar un token de firma.'];
+        $estatus = (int)$cabecera->estatus;
+        $reparacionVoBo = $estatus === self::ESTATUS_FIRMADO && !self::tieneFirmaVoBoValida($id);
+        if ($estatus !== self::ESTATUS_FINALIZADO && !$reparacionVoBo) {
+            return ['success' => false, 'message' => 'El pivoteo debe estar En proceso para generar el token de Vo.Bo.'];
+        }
+
+        if (!PivoteoFirma::where('id_pivoteo', $id)->where('tipo_firma', 'A')->exists()) {
+            return ['success' => false, 'message' => 'Primero debe registrarse la firma de quien elaboró.'];
         }
 
         $permisos = self::getPermisos();
@@ -862,13 +1012,19 @@ $telegram = new TelegramService();
     {
         $idUsuario = (int)(Session::get('usuario')['id'] ?? 0);
 
-        if (!in_array($tipoFirma, self::TIPOS_FIRMA, true)) {
+        if ($tipoFirma !== 'B') {
             return ['success' => false, 'message' => 'El tipo de firma no es válido.'];
         }
 
         $cabecera = self::buscarAutorizado($id);
-        if ((int)$cabecera->estatus !== self::ESTATUS_FINALIZADO) {
-            return ['success' => false, 'message' => 'El pivoteo debe estar finalizado para poder firmarlo.'];
+        $estatus = (int)$cabecera->estatus;
+        $reparacionVoBo = $estatus === self::ESTATUS_FIRMADO && !self::tieneFirmaVoBoValida($id);
+        if ($estatus !== self::ESTATUS_FINALIZADO && !$reparacionVoBo) {
+            return ['success' => false, 'message' => 'El pivoteo debe estar En proceso para firmar el Vo.Bo.'];
+        }
+
+        if (!PivoteoFirma::where('id_pivoteo', $id)->where('tipo_firma', 'A')->exists()) {
+            return ['success' => false, 'message' => 'Primero debe registrarse la firma de quien elaboró.'];
         }
 
         $permisos = self::getPermisos();
@@ -893,13 +1049,22 @@ $telegram = new TelegramService();
 
         $firmaHash = 'Firma: ' . bin2hex(random_bytes(64)) . '.' . uniqid();
 
-        PivoteoFirma::create([
+        $datosFirmaVoBo = [
             'id_pivoteo' => $id,
             'id_usuario' => $idUsuario,
             'tipo_firma' => $tipoFirma,
             'firma'      => $firmaHash,
             'fecha'      => Carbon::now(),
-        ]);
+        ];
+        $firmaVoBo = PivoteoFirma::where('id_pivoteo', $id)
+            ->where('tipo_firma', 'B')
+            ->orderBy('id', 'desc')
+            ->first();
+        if ($firmaVoBo) {
+            $firmaVoBo->update($datosFirmaVoBo);
+        } else {
+            PivoteoFirma::create($datosFirmaVoBo);
+        }
 
         if ($tipoFirma === 'B') {
             $cabecera->update([
@@ -928,9 +1093,12 @@ $telegram = new TelegramService();
         if ((int)$cabecera->estatus !== self::ESTATUS_FIRMADO) {
             throw new \DomainException('El pivoteo debe estar firmado para generar el PDF.');
         }
+        if (!self::tieneFirmaVoBoValida($id)) {
+            throw new \DomainException('No hay datos completos de la firma de Vo.Bo.; debe regularizarse con token antes de generar el PDF.');
+        }
 
         $detalles = PivoteoDetalle::where('id_pivoteo', $id)->orderBy('id', 'asc')->get();
-        $firmas = PivoteoFirma::where('id_pivoteo', $id)->orderBy('id', 'asc')->get();
+        $firmas = PivoteoFirma::where('id_pivoteo', $id)->orderBy('id', 'desc')->get();
 
         $contenido = self::htmlPdf((array)$cabecera->getAttributes(), $detalles, $firmas);
 
@@ -1070,7 +1238,7 @@ $telegram = new TelegramService();
         }
 
         $firmas = PivoteoFirma::whereIn('id_pivoteo', $idsPivoteos)
-            ->orderBy('id', 'asc')
+            ->orderBy('id', 'desc')
             ->get();
         if ($firmas->isEmpty()) {
             return [];
@@ -1087,15 +1255,97 @@ $telegram = new TelegramService();
 
         $mapa = [];
         foreach ($firmas as $f) {
-            $mapa[(int)$f->id_pivoteo][] = [
-                'tipo'       => (string)$f->tipo_firma,
+            $tipo = (string)$f->tipo_firma;
+            if (!in_array($tipo, self::TIPOS_FIRMA, true)) {
+                continue;
+            }
+            $idPivoteo = (int)$f->id_pivoteo;
+            if (isset($mapa[$idPivoteo]) && array_filter($mapa[$idPivoteo], static fn ($registro) => $registro['tipo'] === $tipo)) {
+                continue;
+            }
+            $imagen = $tipo === 'A' ? self::resolverImagenFirma((string)$f->firma) : null;
+            $fecha = self::fechaFormatoLargo($f->fecha);
+            if ($fecha !== '' && $f->fecha) {
+                $fecha .= ', ' . date('g:i a', strtotime((string)$f->fecha));
+            }
+            $mapa[$idPivoteo][] = [
+                'tipo'       => $tipo,
+                'tipo_label' => self::etiquetaFirma($tipo),
                 'id_usuario' => (int)$f->id_usuario,
                 'nombre'     => (string)($nombres[(int)$f->id_usuario] ?? ''),
-                'fecha'      => self::fechaFormatoLargo($f->fecha),
+                'fecha'      => $fecha,
+                'es_imagen'  => $tipo === 'A',
+                'firma_img_disponible' => $imagen !== null,
+                'firma_img_url' => $imagen['url'] ?? '',
+                'firma_texto' => $tipo === 'A'
+                    ? ($imagen ? '' : 'La firma está registrada, pero su imagen no está disponible.')
+                    : 'El pivoteo se firmó por un medio electrónico.',
+                'registro_valido' => $tipo === 'B'
+                    ? ((int)$f->id_usuario > 0 && trim((string)$f->firma) !== '' && !empty($f->fecha) && trim((string)($nombres[(int)$f->id_usuario] ?? '')) !== '')
+                    : true,
             ];
         }
 
         return $mapa;
+    }
+
+    public static function tieneFirmaVoBoValida(int $idPivoteo): bool
+    {
+        $firma = PivoteoFirma::where('id_pivoteo', $idPivoteo)
+            ->where('tipo_firma', 'B')
+            ->orderBy('id', 'desc')
+            ->first();
+        if (!$firma || (int)$firma->id_usuario <= 0 || trim((string)$firma->firma) === '' || empty($firma->fecha)) {
+            return false;
+        }
+
+        $nombre = Usuario::where('id', (int)$firma->id_usuario)->value('nombre');
+        return trim((string)$nombre) !== '';
+    }
+
+    private static function filtrarVoBoSegunEstatus(int $estatus, array $firmas): array
+    {
+        if ($estatus !== self::ESTATUS_FIRMADO) {
+            return array_values(array_filter($firmas, static fn ($firma) => $firma['tipo'] !== 'B'));
+        }
+
+        return array_values(array_filter($firmas, static fn ($firma) => $firma['tipo'] !== 'B' || !empty($firma['registro_valido'])));
+    }
+
+    /** Devuelve siempre las dos tarjetas de firma, incluyendo su estado pendiente. */
+    private static function firmasParaDetalle(int $idPivoteo, int $estatus, bool $firmaVoBoValida, ?array $existentes = null): array
+    {
+        $existentes = $existentes ?? (self::cargarFirmas([$idPivoteo])[$idPivoteo] ?? []);
+        $porTipo = [];
+        foreach ($existentes as $firma) {
+            $porTipo[$firma['tipo']] = $firma;
+        }
+        if ($estatus !== self::ESTATUS_FIRMADO || !$firmaVoBoValida
+            || empty($porTipo['B']['registro_valido'])) {
+            unset($porTipo['B']);
+        }
+
+        $firmas = [];
+        foreach (self::TIPOS_FIRMA as $tipo) {
+            $firmas[] = $porTipo[$tipo] ?? [
+                'tipo' => $tipo,
+                'tipo_label' => self::etiquetaFirma($tipo),
+                'id_usuario' => 0,
+                'nombre' => '',
+                'fecha' => '',
+                'es_imagen' => $tipo === 'A',
+                'firma_img_disponible' => false,
+                'firma_img_url' => '',
+                'firma_texto' => $tipo === 'A'
+                    ? 'Sin firma registrada.'
+                    : ($estatus === self::ESTATUS_FIRMADO
+                        ? 'El registro de Vo.Bo. no contiene todos los datos de firma.'
+                        : 'Pendiente de firma electrónica.'),
+                'registro_valido' => false,
+            ];
+        }
+
+        return $firmas;
     }
 
     private static function validarDetalle(array $datos): array
@@ -1115,9 +1365,9 @@ $telegram = new TelegramService();
             }
         }
 
-        $litros = trim((string)$datos['litros']);
-        if (!is_numeric($litros)) {
-            throw new \InvalidArgumentException('El campo "Litros" debe ser numérico.');
+        $litros = str_replace(',', '', trim((string)$datos['litros']));
+        if (!is_numeric($litros) || (float)$litros <= 0) {
+            throw new \InvalidArgumentException('El campo "Litros" debe ser numérico y mayor a cero.');
         }
 
         return [
@@ -1300,33 +1550,53 @@ $telegram = new TelegramService();
 
         $html .= '<div style="margin-top:10px;">Sin más por el momento agradezco su apoyo.</div>';
 
-        $html .= '<table class="mt-2" style="margin-top:30px; border:1px solid #dee2e6;">';
-        $html .= '<tr>';
-
+        $firmasPorTipo = [];
         foreach ($firmas as $firma) {
-            $tipoFirma = (string)$firma->tipo_firma;
-            if ($tipoFirma === 'A') {
-                $titulo = 'NOMBRE Y FIRMA DEL ENCARGADO';
-                $detalle = '<div><small>Firma electrónica</small></div>';
-            } elseif ($tipoFirma === 'B') {
-                $titulo = 'Depto Operativo';
-                $detalle = '<div class="border-bottom text-center" style="padding:10px;"><small>El pivoteo se firmó por un medio electrónico.<br><b>Fecha: ' . self::fechaFormatoLargo($firma->fecha) . '</b></small></div>';
-            } else {
-                $titulo = 'NOMBRE Y FIRMA DE AUTORIZACIÓN';
-                $detalle = '<div class="border-bottom text-center" style="padding:10px;"><small>El pivoteo se firmó por un medio electrónico.<br><b>Fecha: ' . self::fechaFormatoLargo($firma->fecha) . '</b></small></div>';
+            $tipo = (string)$firma->tipo_firma;
+            if (in_array($tipo, self::TIPOS_FIRMA, true) && !isset($firmasPorTipo[$tipo])) {
+                $firmasPorTipo[$tipo] = $firma;
             }
-
-            $nombre = '';
-            $usuario = Usuario::find((int)$firma->id_usuario);
-            if ($usuario) {
-                $nombre = htmlspecialchars((string)$usuario->nombre, ENT_QUOTES, 'UTF-8');
-            }
-
-            $html .= '<td><div class="text-secondary text-center"><div class="text-center">Atentamente</div>';
-            $html .= '<div>' . $nombre . '</div>' . $detalle;
-            $html .= '<div style="margin-top:10px;">' . $titulo . '</div></div></td>';
         }
 
+        $html .= '<div style="margin-top:18px; font-weight:bold;">Firmas:</div>';
+        $html .= '<table style="margin-top:8px; border:1px solid #dee2e6;"><tr>';
+        foreach (self::TIPOS_FIRMA as $tipoFirma) {
+            $titulo = self::etiquetaFirma($tipoFirma);
+            $firma = $firmasPorTipo[$tipoFirma] ?? null;
+            $nombre = '';
+            $detalleFirma = '<div style="color:#7b8794; padding:24px 4px;">Sin firma registrada.</div>';
+
+            if ($firma) {
+                $usuario = Usuario::find((int)$firma->id_usuario);
+                $nombre = htmlspecialchars((string)($usuario->nombre ?? ''), ENT_QUOTES, 'UTF-8');
+                $fechaFirma = self::fechaFormatoLargo($firma->fecha);
+                if ($fechaFirma !== '' && $firma->fecha) {
+                    $fechaFirma .= ', ' . date('g:i a', strtotime((string)$firma->fecha));
+                }
+
+                if ($tipoFirma === 'A') {
+                    $imagen = self::resolverImagenFirma((string)$firma->firma);
+                    if ($imagen) {
+                        $contenido = @file_get_contents($imagen['path']);
+                        $detalleFirma = $contenido !== false
+                            ? '<div style="padding:10px;"><img src="data:' . $imagen['mime'] . ';base64,' . base64_encode($contenido) . '" style="max-height:80px; max-width:190px;"></div>'
+                            : '<div style="color:#7b8794; padding:20px 4px;">La firma está registrada, pero su imagen no está disponible.</div>';
+                    } else {
+                        $detalleFirma = '<div style="color:#7b8794; padding:20px 4px;">La firma está registrada, pero su imagen no está disponible.</div>';
+                    }
+                } else {
+                    $detalleFirma = '<div style="padding:20px 4px;">El pivoteo se firmó por un medio electrónico.'
+                        . ($fechaFirma !== '' ? '<br><b>Fecha: ' . htmlspecialchars($fechaFirma, ENT_QUOTES, 'UTF-8') . '</b>' : '')
+                        . '</div>';
+                }
+            }
+
+            $html .= '<td style="width:50%; text-align:center; vertical-align:middle;">'
+                . '<div style="background:#0d6efd; color:#fff; padding:8px; font-weight:bold;">' . htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') . '</div>'
+                . '<div style="min-height:110px;">' . $detalleFirma . '</div>'
+                . '<div style="background:#f8f9fa; padding:8px; font-weight:bold;">' . ($nombre !== '' ? $nombre : 'Pendiente de firma') . '</div>'
+                . '</td>';
+        }
         $html .= '</tr></table>';
         $html .= '</body></html>';
 
@@ -1340,5 +1610,51 @@ $telegram = new TelegramService();
             return 'data:image/png;base64,' . base64_encode((string)file_get_contents($ruta));
         }
         return '';
+    }
+
+    private static function etiquetaFirma(string $tipo): string
+    {
+        return match ($tipo) {
+            'A' => 'FIRMA DE QUIEN ELABORA',
+            'B' => 'FIRMA DE VO.BO.',
+            default => 'FIRMA',
+        };
+    }
+
+    private static function resolverImagenFirma(string $referencia): ?array
+    {
+        $nombre = str_replace('\\', '/', trim($referencia));
+        foreach ([
+            '/public/uploads/archivos/', 'public/uploads/archivos/', '/uploads/archivos/', 'uploads/archivos/',
+            '../imgs/firma/', 'imgs/firma/',
+        ] as $prefijo) {
+            if (str_starts_with($nombre, $prefijo)) {
+                $nombre = substr($nombre, strlen($prefijo));
+                break;
+            }
+        }
+
+        $nombre = basename($nombre);
+        if ($nombre === '' || $nombre === '.' || $nombre === '..' || str_contains($nombre, "\0")) {
+            return null;
+        }
+
+        $directorio = realpath(PUBLIC_PATH . '/uploads/archivos');
+        $ruta = $directorio ? realpath($directorio . DIRECTORY_SEPARATOR . $nombre) : false;
+        if (!$directorio || !$ruta || !is_file($ruta) || !str_starts_with($ruta, $directorio . DIRECTORY_SEPARATOR)) {
+            return null;
+        }
+
+        $imagen = @getimagesize($ruta);
+        $mimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!$imagen || empty($imagen['mime']) || !in_array($imagen['mime'], $mimes, true)) {
+            return null;
+        }
+
+        return [
+            'path' => $ruta,
+            'mime' => $imagen['mime'],
+            'url'  => '/download?tipo=pivoteo-firma&file=' . rawurlencode($nombre) . '&view=1',
+        ];
     }
 }

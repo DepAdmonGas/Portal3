@@ -10,6 +10,7 @@ document.addEventListener('alpine:init', () => {
         moduleStationKey: 'cuenta-litros',
         guardando: false,
         nuevoForm: { fecha: '' },
+        errorFecha: false,
 
         init() {
             const c = document.getElementById('container');
@@ -60,6 +61,7 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
             this.nuevoForm = { fecha: this.hoyISO() };
+            this.errorFecha = false;
             new bootstrap.Modal(document.getElementById('modalNuevo')).show();
         },
 
@@ -69,9 +71,11 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
             if (!this.nuevoForm.fecha) {
-                this.notify('error', 'La fecha es obligatoria.');
+                this.errorFecha = true;
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
+            this.errorFecha = false;
 
             this.guardando = true;
 
