@@ -56,10 +56,12 @@ $insert('READER_PROFILE', 'UPDATE_USERNAME', 2, ChecadorV2PermissionService::REA
 $insert('POSITION', 'UPDATE', 1, ChecadorV2PermissionService::POSITION_CATALOG_EDIT, '2026-11-18 13:00:00');
 $insert('READER_PROFILE', 'UPDATE_USERNAME', 2, ChecadorV2PermissionService::READER_PROFILE_EDIT, '2026-11-18 13:01:00');
 $insert('READER_PROFILE', 'UPDATE_USERNAME', 1, ChecadorV2PermissionService::POSITION_CATALOG_EDIT, '2026-11-18 13:02:00');
+$insert('attendance_policy', 'CREATE_VERSION', 1, ChecadorV2PermissionService::ATTENDANCE_POLICY_EDIT, '2026-11-18 13:03:00');
+$insert('attendance_policy', 'CREATE_VERSION', 2, ChecadorV2PermissionService::ATTENDANCE_POLICY_EDIT, '2026-11-18 13:04:00');
 
 $reader = new ReflectionMethod(ChecadorConfigurationReadService::class, 'readM11AuditHistory');
 $reader->setAccessible(true);
-$read = static fn(int $workplace, int $page, bool $positions, bool $profiles): array => $reader->invoke(null, $workplace, $page, $positions, $profiles);
+$read = static fn(int $workplace, int $page, bool $positions, bool $profiles, bool $policy = false): array => $reader->invoke(null, $workplace, $page, $positions, $profiles, $policy);
 
 $serviceSource = file_get_contents(dirname(__DIR__) . '/app/Services/ChecadorConfigurationReadService.php') ?: '';
 $assert(str_contains($serviceSource, "authorizePositionCatalog(\$workplaceId, 'leer')")
@@ -67,32 +69,35 @@ $assert(str_contains($serviceSource, "authorizePositionCatalog(\$workplaceId, 'l
     && str_contains($serviceSource, 'self::readM11AuditHistory('), 'history reader is reached only through independent effective read authorizers');
 $assert(str_contains($serviceSource, "->whereNull('workplace_id')")
     && str_contains($serviceSource, "->where('workplace_id', \$workplaceId)")
-    && str_contains($serviceSource, "->orderByDesc('created_at_utc')->orderByDesc('id')"), 'query scopes global and local events and orders deterministically');
+    && str_contains($serviceSource, "->where('entity_type', 'attendance_policy')")
+    && str_contains($serviceSource, "->orderByDesc('created_at_utc')->orderByDesc('id')"), 'query scopes global and local events, including policy versions, and orders deterministically');
 
-$direction = $read(1, 1, true, true);
+$direction = $read(1, 1, true, true, true);
 $assert(($direction['status'] ?? '') === 'ready'
-    && ($direction['pagination']['total_records'] ?? 0) === 16
+    && ($direction['pagination']['total_records'] ?? 0) === 17
     && count($direction['items'] ?? []) === 15
     && ($direction['pagination']['total_pages'] ?? 0) === 2,
     'Dirección sees global positions plus only the selected locality, with bounded server pagination');
-$assert(($direction['items'][0]['module'] ?? '') === 'Perfil del lector'
-    && ($direction['items'][0]['action'] ?? '') === 'Actualización de perfil'
+$assert(($direction['items'][0]['module'] ?? '') === 'Configuración de asistencia'
+    && ($direction['items'][0]['action'] ?? '') === 'Nueva vigencia'
     && ($direction['items'][0]['id'] ?? 0) > ($direction['items'][1]['id'] ?? PHP_INT_MAX),
-    'timestamp ties use descending IDs and reader updates are not mislabeled as username changes');
-$directionPageTwo = $read(1, 2, true, true);
-$assert(count($directionPageTwo['items'] ?? []) === 1
+    'timestamp ties use descending IDs and policy-version events are labeled accurately');
+$assert(($direction['items'][0]['module'] ?? '') === 'Configuración de asistencia'
+    && ($direction['items'][0]['action'] ?? '') === 'Nueva vigencia', 'authorized history shows real policy-version events from the shared M11 audit table');
+$directionPageTwo = $read(1, 2, true, true, true);
+$assert(count($directionPageTwo['items'] ?? []) === 2
     && ($directionPageTwo['pagination']['has_previous'] ?? false) === true
     && ($directionPageTwo['pagination']['has_next'] ?? true) === false,
     'second history page returns the remaining event and correct navigation state');
 
-$encargado = $read(1, 1, false, true);
+$encargado = $read(1, 1, false, true, true);
 $assert(($encargado['status'] ?? '') === 'ready'
-    && ($encargado['pagination']['total_records'] ?? 0) === 12
+    && ($encargado['pagination']['total_records'] ?? 0) === 13
     && count(array_filter($encargado['items'], static fn(array $item): bool => $item['module'] === 'Puestos')) === 0,
     'Encargado sees only local reader events and never global position events');
-$otherLocality = $read(2, 1, false, true);
-$assert(($otherLocality['pagination']['total_records'] ?? 0) === 2
-    && ($otherLocality['items'][0]['timestamp_utc'] ?? '') === '2026-11-18 13:01:00',
+$otherLocality = $read(2, 1, false, true, true);
+$assert(($otherLocality['pagination']['total_records'] ?? 0) === 3
+    && ($otherLocality['items'][0]['timestamp_utc'] ?? '') === '2026-11-18 13:04:00',
     'changing locality returns only events for the newly authorized locality');
 $denied = $read(1, 1, false, false);
 $assert(($denied['status'] ?? '') === 'permission_denied' && ($denied['items'] ?? []) === [],

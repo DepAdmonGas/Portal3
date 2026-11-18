@@ -87,15 +87,10 @@ final class ChecadorConfigurationReadService
             $result['policy'] = ['status' => 'not_applicable', 'data' => null];
         } elseif ($policyRead['allowed'] ?? false) {
             try {
-                $policy = (new ChecadorDailyReadService())->readCurrentAttendancePolicy($user, $workplaceId);
+                $policy = (new ChecadorAttendancePolicyStoreService())->readCurrent($workplaceId);
                 $result['policy'] = ($policy['ok'] ?? false)
                     ? ['status' => 'ready', 'data' => $policy['data']]
-                    : [
-                        'status' => (string) ($policy['error']['kind'] ?? 'unavailable'),
-                        'http_status' => isset($policy['error']['status']) ? (int) $policy['error']['status'] : null,
-                        'api_code' => isset($policy['error']['api_code']) ? (string) $policy['error']['api_code'] : null,
-                        'data' => null,
-                    ];
+                    : ['status' => (string) ($policy['error'] ?? 'unavailable'), 'data' => null];
             } catch (Throwable) {
                 $result['policy'] = ['status' => 'unavailable', 'data' => null];
             }
@@ -124,16 +119,17 @@ final class ChecadorConfigurationReadService
             $workplaceId,
             $auditPage,
             (bool) ($positionRead['allowed'] ?? false),
-            (bool) ($readerRead['allowed'] ?? false)
+            (bool) ($readerRead['allowed'] ?? false),
+            (bool) ($policyRead['allowed'] ?? false)
         );
 
         return $result;
     }
 
     /** Read only the event classes covered by independent, effective M11 read grants. */
-    private static function readM11AuditHistory(int $workplaceId, int $page, bool $canReadPositions, bool $canReadReaderProfiles): array
+    private static function readM11AuditHistory(int $workplaceId, int $page, bool $canReadPositions, bool $canReadReaderProfiles, bool $canReadPolicy = false): array
     {
-        if (!$canReadPositions && !$canReadReaderProfiles) {
+        if (!$canReadPositions && !$canReadReaderProfiles && !$canReadPolicy) {
             return ['status' => 'permission_denied', 'items' => [], 'pagination' => self::emptyAuditPagination()];
         }
 
@@ -156,6 +152,14 @@ final class ChecadorConfigurationReadService
                     ->where('workplace_id', $workplaceId)
                     ->where('permission_key', ChecadorV2PermissionService::READER_PROFILE_EDIT)
                     ->whereIn('action', ['UPDATE_USERNAME', 'ROTATE_OR_UPDATE']);
+            };
+        }
+        if ($canReadPolicy && $workplaceId > 0) {
+            $filters[] = static function ($query) use ($workplaceId): void {
+                $query->where('entity_type', 'attendance_policy')
+                    ->where('workplace_id', $workplaceId)
+                    ->where('permission_key', ChecadorV2PermissionService::ATTENDANCE_POLICY_EDIT)
+                    ->where('action', 'CREATE_VERSION');
             };
         }
         if ($filters === []) {
@@ -187,12 +191,17 @@ final class ChecadorConfigurationReadService
                     'actor_label' => (int) $row->actor_portal_user_id > 0
                         ? 'Usuario #' . (int) $row->actor_portal_user_id
                         : 'No disponible',
-                    'module' => $entity === 'POSITION' ? 'Puestos' : 'Perfil del lector',
+                    'module' => match ($entity) {
+                        'POSITION' => 'Puestos',
+                        'attendance_policy' => 'Configuración de asistencia',
+                        default => 'Perfil del lector',
+                    },
                     'action' => match ($action) {
                         'CREATE' => 'Creación',
                         'UPDATE' => 'Actualización',
                         'UPDATE_USERNAME' => 'Cambio de usuario',
                         'ROTATE_OR_UPDATE' => 'Actualización de perfil',
+                        'CREATE_VERSION' => 'Nueva vigencia',
                         default => 'Operación registrada',
                     },
                 ];

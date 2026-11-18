@@ -53,15 +53,15 @@ document.addEventListener('alpine:init', () => {
             if (!detail || !detail.policy) return;
             const policy = detail.policy;
             const currentDate = detail.current_local_date || '';
-            const latest = detail.latest_scheduled_policy && detail.latest_scheduled_policy.id
-                ? detail.latest_scheduled_policy : policy;
+            const next = detail.next_scheduled_policy && detail.next_scheduled_policy.id
+                ? detail.next_scheduled_policy : null;
 
             if (policy.effective_from_local_date <= currentDate) {
                 this.current = policy;
             }
-            this.next = latest.effective_from_local_date > currentDate ? latest : null;
+            this.next = next && next.effective_from_local_date > currentDate ? next : null;
 
-            this.updateEditorDefaults(latest);
+            this.updateEditorDefaults(next || policy);
             this.error = '';
             this.success = detail.message || 'La configuración se guardó y quedó confirmada.';
         },

@@ -5,12 +5,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Models\Usuario;
+use App\Models\Operativo\AttendancePolicyVersion;
+use App\Services\ChecadorAttendancePolicyStoreService;
 use App\Services\ChecadorDailyReadService;
-use GuzzleHttp\Client;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
-use GuzzleHttp\Psr7\Response;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Schema\Blueprint;
 
 $passes = 0;
 $fails = 0;
@@ -29,108 +28,128 @@ $restore = static function () use ($keys, $original): void {
         if ($processValue === false) putenv($key); else putenv($key . '=' . $processValue);
     }
 };
+
 $_ENV['APP_ENV'] = 'dev';
 $_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'] = 'true';
 $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
-unset($_ENV['CHECADOR_API_REAL_POSTS_ENABLED']);
-putenv('CHECADOR_API_REAL_POSTS_ENABLED');
+$_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'false';
 
-$makeClient = static function (array $responses, array &$history): Client {
-    $stack = HandlerStack::create(new MockHandler($responses));
-    $stack->push(Middleware::history($history));
-    return new Client(['base_uri' => 'https://api-v2-mock.invalid/', 'handler' => $stack, 'http_errors' => false]);
-};
-$json = static fn(int $status, array $payload): Response => new Response(
-    $status,
-    ['Content-Type' => 'application/json'],
-    json_encode($payload, JSON_THROW_ON_ERROR)
-);
-$user = new Usuario();
-$user->id = 234;
-$policy = [
-    'id' => 81,
-    'workplace_id' => 1,
-    'policy_version' => 3,
-    'effective_from_local_date' => '2026-11-19',
-    'retardo_tolerance_minutes' => 30,
-    'incidence_deadline_days' => 6,
-    'timezone_id' => 'America/Mexico_City',
-    'actor_portal_user_id' => 234,
-    'source' => 'PORTAL3_ADMIN',
-];
-$readPayload = ['status' => 'success', 'data' => [
-    'workplace_id' => 1,
-    'effective_date' => '2026-11-19',
-    'current_local_date' => '2026-11-18',
-    'timezone_id' => 'America/Mexico_City',
-    'status' => 'VERSIONED',
-    'policy' => $policy,
-    'latest_scheduled_policy' => $policy,
-]];
-$input = [
-    'workplace_id' => 1,
-    'effective_from_local_date' => '2026-11-19',
-    'retardo_tolerance_minutes' => '30',
-    'incidence_deadline_days' => '6',
-];
-$key = 'm11-policy-same-request-01';
+$capsule = new Capsule();
+$capsule->addConnection(['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
+$capsule->setAsGlobal();
+$capsule->bootEloquent();
+$schema = Capsule::schema();
+$schema->create('op_rh_localidades', static function (Blueprint $table): void {
+    $table->increments('id');
+    $table->string('localidad');
+    $table->unsignedInteger('numlista')->nullable();
+});
+$schema->create('op_rh_v2_localidades_zonas_horarias', static function (Blueprint $table): void {
+    $table->increments('id');
+    $table->unsignedInteger('id_localidad');
+    $table->string('timezone_iana');
+    $table->date('valido_desde');
+    $table->date('valido_hasta')->nullable();
+});
+$schema->create('op_rh_v2_attendance_policy_versions', static function (Blueprint $table): void {
+    $table->increments('id');
+    $table->unsignedInteger('workplace_id');
+    $table->unsignedInteger('policy_version');
+    $table->date('effective_from_local_date');
+    $table->string('timezone_id');
+    $table->unsignedInteger('retardo_tolerance_minutes');
+    $table->unsignedInteger('incidence_deadline_days');
+    $table->unsignedInteger('actor_portal_user_id');
+    $table->string('source');
+    $table->string('idempotency_key');
+    $table->dateTime('created_at_utc')->nullable();
+    $table->unique(['workplace_id', 'policy_version']);
+    $table->unique(['workplace_id', 'effective_from_local_date']);
+    $table->unique(['workplace_id', 'idempotency_key']);
+});
+$schema->create('op_rh_v2_m11_configuration_audit', static function (Blueprint $table): void {
+    $table->increments('id');
+    $table->unsignedInteger('actor_portal_user_id')->nullable();
+    $table->string('permission_key');
+    $table->unsignedInteger('workplace_id')->nullable();
+    $table->string('entity_type');
+    $table->unsignedInteger('entity_id')->nullable();
+    $table->string('action');
+    $table->dateTime('created_at_utc');
+});
+Capsule::table('op_rh_localidades')->insert(['id' => 1, 'localidad' => 'Interlomas', 'numlista' => 1]);
+Capsule::table('op_rh_v2_localidades_zonas_horarias')->insert([
+    'id_localidad' => 1, 'timezone_iana' => 'America/Mexico_City', 'valido_desde' => '2020-01-01', 'valido_hasta' => null,
+]);
+
+$actor = new Usuario();
+$actor->id = 234;
+$clock = static fn(): DateTimeImmutable => new DateTimeImmutable('2026-11-18 12:00:00', new DateTimeZone('UTC'));
+$service = new ChecadorAttendancePolicyStoreService($clock, static fn(Usuario $identity, int $workplace): bool => $identity->id === 234 && $workplace === 1);
+$input = ['workplace_id' => 1, 'effective_from_local_date' => '2026-11-19', 'retardo_tolerance_minutes' => '30', 'incidence_deadline_days' => '7'];
+$key = 'isolated-m11-write-001';
 
 try {
-    $history = [];
-    $service = new ChecadorDailyReadService(
-        $makeClient([$json(201, ['status' => 'success', 'data' => $policy]), $json(200, $readPayload)], $history),
-        static fn(Usuario $identity): string => 'isolated-mock-jwt',
-        'https://api-v2-mock.invalid/'
-    );
-    $created = $service->createAttendancePolicy($user, $input, $key);
-    $readback = $service->readAttendancePolicy($user, 1, '2026-11-19');
-    $post = $history[0]['request'] ?? null;
-    $body = is_object($post) ? json_decode((string) $post->getBody(), true) : null;
-    $assert(($created['ok'] ?? false) === true && ($readback['data']['policy']['id'] ?? 0) === 81,
-        'isolated API success is confirmed by the exact policy readback');
-    $assert(is_object($post) && $post->getMethod() === 'POST'
-        && $post->getUri()->getPath() === '/api/v2/attendance-policies'
-        && $post->getHeaderLine('Idempotency-Key') === $key
-        && $post->getHeaderLine('Authorization') === 'Bearer isolated-mock-jwt'
-        && ($body['workplace_id'] ?? 0) === 1
-        && ($body['effective_from_local_date'] ?? '') === '2026-11-19'
-        && ($body['retardo_tolerance_minutes'] ?? -1) === 30
-        && ($body['incidence_deadline_days'] ?? -1) === 6,
-        'isolated request sends the expected V2 payload and reuses the caller idempotency key');
+    $created = $service->create($actor, 1, '2026-11-19', '30', '7', $key);
+    $readback = $service->readForEffectiveDate(1, '2026-11-19');
+    $assert(($created['ok'] ?? false) && ($created['created'] ?? false)
+        && ($created['policy']['policy_version'] ?? 0) === 1
+        && ($readback['data']['policy']['retardo_tolerance_minutes'] ?? -1) === 30
+        && ($readback['data']['policy']['incidence_deadline_days'] ?? -1) === 7,
+        'isolated SQLite write is confirmed by a subsequent SQL readback');
+    $assert(Capsule::table('op_rh_v2_m11_configuration_audit')->count() === 1
+        && Capsule::table('op_rh_v2_m11_configuration_audit')->value('entity_type') === 'attendance_policy'
+        && Capsule::table('op_rh_v2_m11_configuration_audit')->value('action') === 'CREATE_VERSION',
+        'policy creation and its audit event persist atomically in the isolated schema');
 
-    $conflictHistory = [];
-    $conflictService = new ChecadorDailyReadService(
-        $makeClient([$json(409, ['error' => ['code' => 'IDEMPOTENCY_CONFLICT']])], $conflictHistory),
-        static fn(Usuario $identity): string => 'isolated-mock-jwt',
-        'https://api-v2-mock.invalid/'
-    );
-    $conflict = $conflictService->createAttendancePolicy($user, $input, $key);
-    $retryHistory = [];
-    $retryService = new ChecadorDailyReadService(
-        $makeClient([$json(201, ['status' => 'success', 'data' => $policy])], $retryHistory),
-        static fn(Usuario $identity): string => 'isolated-mock-jwt',
-        'https://api-v2-mock.invalid/'
-    );
-    $retryService->createAttendancePolicy($user, $input, $key);
-    $assert(($conflict['error']['kind'] ?? '') === 'idempotency_conflict'
-        && ($conflict['error']['status'] ?? 0) === 409
-        && ($conflict['error']['api_code'] ?? '') === 'IDEMPOTENCY_CONFLICT'
-        && ($conflictHistory[0]['request']->getHeaderLine('Idempotency-Key') ?? '') === $key
-        && ($retryHistory[0]['request']->getHeaderLine('Idempotency-Key') ?? '') === $key,
-        'API conflict stays distinguishable and a retry carries the same idempotency key');
+    $updateBlocked = false;
+    try {
+        $historical = AttendancePolicyVersion::query()->firstOrFail();
+        $historical->retardo_tolerance_minutes = 31;
+        $historical->save();
+    } catch (\LogicException) {
+        $updateBlocked = true;
+    }
+    $deleteBlocked = false;
+    try {
+        AttendancePolicyVersion::query()->firstOrFail()->delete();
+    } catch (\LogicException) {
+        $deleteBlocked = true;
+    }
+    $assert($updateBlocked && $deleteBlocked && Capsule::table('op_rh_v2_attendance_policy_versions')->count() === 1
+        && (int) Capsule::table('op_rh_v2_attendance_policy_versions')->value('retardo_tolerance_minutes') === 30,
+        'persisted policy versions cannot be updated or deleted through the model');
 
-    $blockedHistory = [];
-    $blockedService = new ChecadorDailyReadService(
-        $makeClient([], $blockedHistory),
-        static fn(Usuario $identity): string => 'isolated-mock-jwt',
-        'https://api-v2-mock.invalid/'
-    );
-    $unrelatedPost = $blockedService->createIncidence($user, [
-        'worker_id' => 12, 'workplace_id' => 1, 'category' => 'VACATION',
-        'start_date' => '2026-11-20', 'end_date' => '2026-11-20', 'reason' => 'isolated test',
-    ], 'not-m11-policy-write');
-    $assert(($unrelatedPost['error']['kind'] ?? '') === 'api_post_disabled' && $blockedHistory === [],
-        'the policy-specific opt-in does not enable unrelated API V2 POST operations');
+    $replay = $service->create($actor, 1, '2026-11-19', '30', '7', $key);
+    $assert(($replay['ok'] ?? false) && !($replay['created'] ?? true)
+        && Capsule::table('op_rh_v2_attendance_policy_versions')->count() === 1
+        && Capsule::table('op_rh_v2_m11_configuration_audit')->count() === 1,
+        'same idempotency key replays without duplicating version or audit');
+    $sameDate = $service->create($actor, 1, '2026-11-19', '30', '7', 'isolated-m11-write-006');
+    $assert(($sameDate['ok'] ?? false) && !($sameDate['created'] ?? true)
+        && Capsule::table('op_rh_v2_attendance_policy_versions')->count() === 1,
+        'matching existing effective date is returned without creating a duplicate version');
+    $keyConflict = $service->create($actor, 1, '2026-11-19', '31', '7', $key);
+    $dateConflict = $service->create($actor, 1, '2026-11-19', '31', '7', 'isolated-m11-write-002');
+    $assert(($keyConflict['error'] ?? '') === 'idempotency_conflict'
+        && ($dateConflict['error'] ?? '') === 'policy_date_conflict',
+        'idempotency and same-date payload conflicts are rejected');
+
+    $past = $service->create($actor, 1, '2026-11-18', '20', '5', 'isolated-m11-write-003');
+    $badRange = $service->create($actor, 1, '2026-11-20', '121', '5', 'isolated-m11-write-004');
+    $deniedService = new ChecadorAttendancePolicyStoreService($clock, static fn(): bool => false);
+    $denied = $deniedService->create($actor, 1, '2026-11-20', '20', '5', 'isolated-m11-write-005');
+    $assert(($past['error'] ?? '') === 'policy_must_be_prospective'
+        && ($badRange['error'] ?? '') === 'invalid_policy_input'
+        && ($denied['error'] ?? '') === 'permission_denied'
+        && Capsule::table('op_rh_v2_attendance_policy_versions')->count() === 1,
+        'past dates, out-of-range values, and denied scope fail closed without writes');
+
+    $current = $service->readCurrent(1);
+    $assert(($current['ok'] ?? false) && ($current['data']['status'] ?? '') === 'LEGACY_UNVERSIONED'
+        && ($current['data']['next_scheduled_policy']['effective_from_local_date'] ?? '') === '2026-11-19'
+        && ($current['data']['timezone_id'] ?? '') === 'America/Mexico_City',
+        'current read resolves workplace timezone and returns the next persisted version');
 
     $_ENV['APP_ENV'] = 'prod';
     $_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'] = 'true';
@@ -139,12 +158,12 @@ try {
     $assert(ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()
         && ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled()
         && !ChecadorDailyReadService::realApiPostOperationsEnabled(),
-        'production M11 gates require their dedicated flags while the global real-POST gate stays closed');
+        'production dedicated M11 gates remain independent from the global API POST gate');
     $_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'] = 'false';
     $_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED'] = 'false';
     $assert(!ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()
         && !ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled(),
-        'production M11 write gates fail closed when either dedicated opt-in is absent');
+        'production write gates fail closed when dedicated flags are absent');
 } finally {
     $restore();
 }
@@ -153,23 +172,24 @@ $controller = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorControlle
 $controllerStart = strpos($controller, 'public function saveAttendancePolicy(): void');
 $controllerEnd = strpos($controller, 'private function renderScheduleHistory(', $controllerStart ?: 0);
 $method = $controllerStart === false ? '' : substr($controller, $controllerStart, $controllerEnd === false ? null : $controllerEnd - $controllerStart);
-$javascript = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance-policy.init.js') ?: '';
-$view = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/configuration.php') ?: '';
-$assert(strpos($method, 'readAttendancePolicy($user, $workplaceId, $effectiveDate)') < strpos($method, 'createAttendancePolicy($user, [')
-    && str_contains($method, 'policy_date_conflict') && str_contains($method, 'retry_idempotency_key'),
-    'controller reads the requested date before POST, blocks duplicate/conflicting versions and preserves retry identity on uncertainty');
-$assert(str_contains(file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php') ?: '', '$attendancePolicyWrite && self::attendancePolicyPostOperationsEnabled()'),
-    'central API POST gate honors only the dedicated M11 attendance-policy operation gate for that route');
-$assert(str_contains($method, "'api_http_status' => \$apiStatus") && str_contains($method, "'api_error_code' => \$created['error']['api_code'] ?? null")
-    && str_contains($javascript, 'body.api_error_code'),
-    'API HTTP status and sanitized error code reach the interface without exposing credentials');
-$assert(str_contains($method, 'authorizeAttendancePolicy($workplaceId, \'editar\')')
-    && str_contains($method, 'authorizeAttendancePolicy($workplaceId, \'leer\')')
-    && str_contains($javascript, 'new FormData(form)')
-    && str_contains($javascript, "Accept: 'application/json'")
-    && str_contains($javascript, 'consult_url')
-    && str_contains($view, 'Consultar estado antes de reintentar'),
-    'save path retains server read/edit authorization and exposes a read-before-retry path for browser submissions');
+$configurationRead = file_get_contents(__DIR__ . '/../app/Services/ChecadorConfigurationReadService.php') ?: '';
+$policyService = file_get_contents(__DIR__ . '/../app/Services/ChecadorAttendancePolicyStoreService.php') ?: '';
+$assert(str_contains($method, 'ChecadorAttendancePolicyStoreService')
+    && !str_contains($method, 'readAttendancePolicy(') && !str_contains($method, 'createAttendancePolicy(')
+    && !str_contains($method, '/api/v2/attendance-policies'),
+    'M11 controller writes through the direct SQL store and has no attendance-policy HTTP call');
+$assert(str_contains($method, "authorizeAttendancePolicy(\$workplaceId, 'editar')")
+    && str_contains($method, "authorizeAttendancePolicy(\$workplaceId, 'leer')")
+    && str_contains($method, 'HTTP_X_CSRF_TOKEN') && str_contains($method, 'idempotency_key'),
+    'controller enforces server read/edit grants, CSRF, and request idempotency');
+$assert(str_contains($configurationRead, "(new ChecadorAttendancePolicyStoreService())->readCurrent(\$workplaceId)")
+    && !str_contains($configurationRead, 'readCurrentAttendancePolicy($user'),
+    'configuration policy read is sourced from the direct SQL store');
+$assert(str_contains($policyService, "lockForUpdate()")
+    && str_contains($policyService, 'Capsule::connection()->transaction')
+    && str_contains($policyService, 'idempotency_key')
+    && str_contains($policyService, 'policy_readback_mismatch'),
+    'write service uses transactional locking, idempotency, and persisted-value readback');
 
-printf("CHECADOR_M11_ATTENDANCE_POLICY_WRITE_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
+printf("CHECADOR_M11_ATTENDANCE_POLICY_SQL_WRITE_RESULT: %d PASS / %d FAIL / isolated SQLite only\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

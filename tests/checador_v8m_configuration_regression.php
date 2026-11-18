@@ -177,10 +177,10 @@ $assert(str_contains($html, 'data-checador-configuration-datatable') && str_cont
 $assert(str_contains($html, 'No hay una política V2 confirmada vigente')
     && !str_contains($html, '0 minutos</dd>') && !str_contains($html, '0 días</dd>'), 'missing V2 policy is not displayed as a persisted default');
 $failedPolicy = $fixture;
-$failedPolicy['policy'] = ['status' => 'api_authorization', 'http_status' => 403, 'api_code' => 'WORKPLACE_FORBIDDEN', 'data' => null];
+$failedPolicy['policy'] = ['status' => 'attendance_policy_read_failed', 'data' => null];
 $failedPolicyHtml = $render($failedPolicy);
-$assert(str_contains($failedPolicyHtml, 'HTTP 403') && str_contains($failedPolicyHtml, 'WORKPLACE_FORBIDDEN')
-    && !str_contains($failedPolicyHtml, 'Aún no hay una configuración registrada'), 'API authorization failures show safe diagnostic status instead of an empty-policy state');
+$assert(str_contains($failedPolicyHtml, 'No fue posible consultar la configuración persistida')
+    && !str_contains($failedPolicyHtml, 'Aún no hay una configuración registrada'), 'SQL read failures show unavailable instead of an empty-policy state');
 $scheduledFixture = $fixture;
 $scheduledFixture['policy']['data']['status'] = 'VERSIONED';
 $scheduledFixture['policy']['data']['policy'] = [
@@ -195,6 +195,7 @@ $scheduledFixture['policy']['data']['latest_scheduled_policy'] = [
     'retardo_tolerance_minutes' => 30, 'incidence_deadline_days' => 7,
     'timezone_id' => 'America/Mexico_City',
 ];
+$scheduledFixture['policy']['data']['next_scheduled_policy'] = $scheduledFixture['policy']['data']['latest_scheduled_policy'];
 $scheduledFixture['policy']['data']['current_local_date'] = '2026-11-18';
 $scheduledHtml = $render($scheduledFixture);
 $nextPolicyAttribute = preg_match('/data-next-policy="([^"]*)"/', $scheduledHtml, $nextPolicyMatch) === 1
@@ -204,13 +205,14 @@ $assert(is_array($nextPolicyAttribute)
     && ($nextPolicyAttribute['id'] ?? 0) === 71
     && ($nextPolicyAttribute['effective_from_local_date'] ?? '') === '2026-11-19'
     && ($nextPolicyAttribute['incidence_deadline_days'] ?? 0) === 7,
-    'future API V2 policy remains visible in the configuration view after a full reload');
+    'future SQL policy remains visible in the configuration view after a full reload');
 $crossLocalityScheduled = $scheduledFixture;
 $crossLocalityScheduled['workplace_id'] = 2;
 $crossLocalityScheduled['workplace_name'] = 'Palo Solo';
 $crossLocalityScheduled['policy']['data']['workplace_id'] = 2;
 $crossLocalityScheduled['policy']['data']['policy']['workplace_id'] = 2;
 $crossLocalityScheduled['policy']['data']['latest_scheduled_policy']['workplace_id'] = 1;
+$crossLocalityScheduled['policy']['data']['next_scheduled_policy']['workplace_id'] = 1;
 $crossLocalityHtml = $render($crossLocalityScheduled);
 $crossLocalityNextPolicy = preg_match('/data-next-policy="([^"]*)"/', $crossLocalityHtml, $crossLocalityMatch) === 1
     ? json_decode(html_entity_decode($crossLocalityMatch[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'), true)
@@ -362,8 +364,10 @@ $assert(str_contains($readService, '$detailsComplete = false') && str_contains($
     && str_contains($readService, "'partial' : 'ready'"), 'template-detail failures are reported as partial instead of appearing complete');
 
 $policyReaderPath = $methodSlice($readService, "} elseif (\$policyRead['allowed'] ?? false) {", "if (\$workerId !== null && self::isCivilDate(\$date)) {");
-$assert(str_contains($readService, 'authorizeAttendancePolicy') && str_contains($policyReaderPath, 'readCurrentAttendancePolicy')
-    && !str_contains($policyReaderPath, 'BiometricosService'), 'policy reading uses the Checador V2 permission and API reader without depending on the legacy profile codec');
+$assert(str_contains($readService, 'authorizeAttendancePolicy') && str_contains($policyReaderPath, 'ChecadorAttendancePolicyStoreService')
+    && str_contains($policyReaderPath, 'readCurrent($workplaceId)')
+    && !str_contains($policyReaderPath, 'readCurrentAttendancePolicy')
+    && !str_contains($policyReaderPath, '/api/v2/attendance-policies'), 'policy reading uses the Checador V2 permission and direct SQL store');
 $assert(str_contains($readService, 'getShiftTemplates($user, $page, $pageSize, $workplaceId)')
     && str_contains($readService, 'getShiftTemplateVersion($user, (string) $template[\'clave\'], (int) $template[\'version\'], $workplaceId)')
     && str_contains($readService, "['GLOBAL', 'STATION']")
@@ -394,7 +398,7 @@ $scheduleTableStart = strpos($templateAdminHtml, 'caption class="visually-hidden
 $readOnlyAdminHtml = $renderTemplateAdmin($adminCatalog, false);
 $assert(str_contains($writeHtml, 'id="attendance-policy-edit-button"')
     && !str_contains($writeHtml, 'openHistoryModal()')
-    && str_contains($writeHtml, 'href="/departamento-operativo/recursos-humanos/checador/horarios-turnos"'), 'original policy edit/history actions and schedule shortcut retain their independent targets');
+    && str_contains($writeHtml, 'href="/departamento-operativo/recursos-humanos/checador/horarios-turnos"'), 'policy edit action and schedule shortcut retain their independent targets');
 $assert(substr_count($templateAdminHtml, 'id="m04-btn-new-template"') === 1
     && $scheduleHeaderStart !== false && $scheduleTableStart !== false
     && strpos($templateAdminHtml, 'id="m04-btn-new-template"') < $scheduleTableStart,

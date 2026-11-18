@@ -14,8 +14,6 @@ $attendancePolicyState = [
     'data' => $policyData,
 ];
 $attendancePolicy = $policyData;
-$policyHttpStatus = isset($policy['http_status']) ? (int) $policy['http_status'] : null;
-$policyApiCode = preg_replace('/[^A-Z0-9_]/', '', strtoupper((string) ($policy['api_code'] ?? '')));
 $activeAttendancePolicy = $policyRecord;
 $latestAttendancePolicy = [];
 $attendancePolicyFormDefaults = [
@@ -70,9 +68,9 @@ $attendancePolicyFormValues = array_merge($attendancePolicyFormDefaults, is_arra
 $attendancePolicyHistory = [];
 $nextAttendancePolicy = [];
 $currentPolicyDate = (string) ($attendancePolicy['current_local_date'] ?? '');
-$latestScheduledAttendancePolicy = is_array($attendancePolicy['latest_scheduled_policy'] ?? null)
-    ? $attendancePolicy['latest_scheduled_policy']
-    : [];
+$latestScheduledAttendancePolicy = is_array($attendancePolicy['next_scheduled_policy'] ?? null)
+    ? $attendancePolicy['next_scheduled_policy']
+    : (is_array($attendancePolicy['latest_scheduled_policy'] ?? null) ? $attendancePolicy['latest_scheduled_policy'] : []);
 $latestScheduledDate = (string) ($latestScheduledAttendancePolicy['effective_from_local_date'] ?? '');
 $scheduledPolicyWorkplaceId = (int) ($latestScheduledAttendancePolicy['workplace_id'] ?? 0);
 $scheduledPolicyScopeMismatch = $latestScheduledAttendancePolicy !== []
@@ -282,9 +280,7 @@ $readerProfileItemsJson = htmlspecialchars(
                                 <p class="alert alert-info py-2 mb-0" role="status">No hay una política V2 confirmada vigente para esta localidad. Los valores anteriores no se presentan como configuración V2 persistida.</p>
                             <?php elseif (!in_array(($attendancePolicyState['status'] ?? ''), ['VERSIONED', 'LEGACY_UNVERSIONED'], true)): ?>
                                 <p class="alert alert-warning py-2 mb-0" role="status">
-                                    No fue posible confirmar la configuración para esta localidad.
-                                    <?php if ($policyHttpStatus !== null): ?>HTTP <?= $policyHttpStatus ?>.<?php endif; ?>
-                                    <?php if ($policyApiCode !== ''): ?>Código <?= $esc($policyApiCode) ?>.<?php endif; ?>
+                                    No fue posible consultar la configuración persistida para esta localidad. No se muestran valores como confirmados.
                                 </p>
                             <?php else: ?>
                                 <p class="alert alert-info py-2 mb-0" role="status">Aún no hay una configuración registrada para esta localidad.</p>
@@ -720,7 +716,7 @@ $readerProfileItemsJson = htmlspecialchars(
                         </div>
                     <?php endif; ?>
                 <?php endif; ?>
-                <p class="small text-muted mt-3 mb-0">La fuente registra cambios de puestos y perfiles del lector; no contiene eventos de dispositivos ni permisos.</p>
+                <p class="small text-muted mt-3 mb-0">La fuente registra cambios de políticas de asistencia, puestos y perfiles del lector; no contiene eventos de dispositivos ni permisos.</p>
             <?php elseif (($m11AuditRead['status'] ?? '') === 'permission_denied'): ?>
                 <p class="mb-0">No tienes autorización para consultar este historial.</p>
             <?php elseif (($m11AuditRead['status'] ?? '') === 'not_read_in_demo'): ?>
