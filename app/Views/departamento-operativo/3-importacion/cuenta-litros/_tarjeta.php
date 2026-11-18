@@ -6,7 +6,7 @@
 <div class="row align-items-stretch g-3">
 
 <!-- Columna de la Tabla / Datos -->
-<div class="<?= (!empty($fila['archivo_existe']) && $fila['archivo_url'] !== '') ? 'col-lg-8' : 'col-lg-12' ?>">
+<div class="col-lg-8">
 <div class="table-responsive h-100">
 <table class="table table-bordered align-middle text-center mb-0 h-100" style="width: 100%;">
 <thead>
@@ -40,10 +40,10 @@
 <td class="text-white" style="background: #84b6f4;">Cuenta Litros a 20° C</td>
 </tr>
 <tr class="text-center align-middle">
-<td class="fw-bold" rowspan="2"><?= htmlspecialchars($fila['litros'], ENT_QUOTES, 'UTF-8') ?></td>
-<td class="fw-bold"><?= htmlspecialchars($fila['descarga_neto'], ENT_QUOTES, 'UTF-8') ?></td>
-<td class="fw-bold"><?= htmlspecialchars($fila['descarga_bruto'], ENT_QUOTES, 'UTF-8') ?></td>
-<td class="fw-bold"><?= htmlspecialchars($fila['litros_c'], ENT_QUOTES, 'UTF-8') ?></td>
+<td class="fw-bold" rowspan="2"><?= number_format((float)$fila['litros'], 2, '.', ',') ?></td>
+<td class="fw-bold"><?= number_format((float)$fila['descarga_neto'], 2, '.', ',') ?></td>
+<td class="fw-bold"><?= number_format((float)$fila['descarga_bruto'], 2, '.', ',') ?></td>
+<td class="fw-bold"><?= number_format((float)$fila['litros_c'], 2, '.', ',') ?></td>
 </tr>
 <tr class="text-center align-middle" style="background: #f4b084;">
 <td style="background: #f4b084;"><?= htmlspecialchars($fila['res_neto'], ENT_QUOTES, 'UTF-8') ?></td>
@@ -69,11 +69,11 @@
 </tr>
 <tr class="text-center align-middle">
 <td colspan="2" class="fw-bold text-white bg-success">Venta al momento</td>
-<td colspan="2" class="fw-bold bg-white"><?= htmlspecialchars($fila['venta_momento'], ENT_QUOTES, 'UTF-8') ?></td>
+<td colspan="2" class="fw-bold bg-white"><?= number_format((float)$fila['venta_momento'], 2, '.', ',') ?></td>
 </tr>
 <tr class="text-center align-middle">
 <td colspan="2" class="fw-bold text-white bg-success">Folio de merma</td>
-<td colspan="2" class="fw-bold bg-white"><?= htmlspecialchars($fila['folio_merma'], ENT_QUOTES, 'UTF-8') ?></td>
+<td colspan="2" class="fw-bold bg-white"><?= number_format((float)$fila['folio_merma'], 2, '.', ',') ?></td>
 </tr>
 <tr>
 <td colspan="1" class="fw-bold bg-white text-start align-middle">Comentarios:</td>
@@ -85,22 +85,27 @@
 </div>
 
 <!-- Columna de la Imagen Adaptada al tamaño de la Tabla -->
-<?php if (!empty($fila['archivo_existe']) && $fila['archivo_url'] !== ''): ?>
 <div class="col-lg-4 d-flex">
 <div class="p-3 border rounded bg-light w-100 d-flex flex-column">
 <span class="d-block fw-semibold text-center">IMAGEN DE DESCARGA</span>
 <hr>
 <div class="flex-grow-1 overflow-hidden rounded position-relative w-100">
+<?php if (!empty($fila['archivo_existe']) && $fila['archivo_url'] !== ''): ?>
 <img src="<?= htmlspecialchars($fila['archivo_url'], ENT_QUOTES, 'UTF-8') ?>"
 alt="Imagen de descarga"
 class="position-absolute top-0 start-0 w-100 h-100"
 style="object-fit: cover; cursor: pointer;"
 data-img-viewer="1"
 title="Clic para ampliar imagen">
-</div>
-</div>
+<?php else: ?>
+<div class="h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+    <i class="ti ti-file-off fs-6" aria-label="Archivo no disponible"></i>
+    <span class="mt-2">Imagen no disponible</span>
 </div>
 <?php endif; ?>
+</div>
+</div>
+</div>
 
 </div>
 </div>

@@ -8,6 +8,9 @@ document.addEventListener('alpine:init', function () {
         _saveTimers: {},
         puedeCrear: false,
         puedeEditar: false,
+        errors: { fecha: false, Sucursal: false, Destino1: false, Destino2: false },
+        updateStates: {},
+        updateStateTimers: {},
         form: {
             Sucursal: '',
             Destino1: '',
@@ -37,40 +40,59 @@ document.addEventListener('alpine:init', function () {
         },
         celdaTexto(valor) {
             const n = Number(valor);
-            return n > 0 ? n : '';
+            return n > 0 ? Math.trunc(n).toLocaleString('en-US') : '';
+        },
+        formatearModal(event, campo) {
+            const input = event.target;
+            const limpio = String(input.value || '').replace(/[^\d]/g, '');
+            const numero = limpio ? Number(limpio) : '';
+            this.form[campo] = numero === '' ? '' : numero.toLocaleString('en-US');
+            input.value = this.form[campo];
         },
         editarDestino(e, id, tipo) {
-            var valor = e.target ? e.target.value : '';
+            var input = e.target;
+            var valor = input ? String(input.value || '').replace(/[^\d]/g, '') : '';
             var campos = { 1: 'destino', 2: 'oct87', 3: 'oct91', 4: 'diesel' };
             var campo = campos[tipo];
             if (!campo) return;
+            if (input) input.value = valor ? Number(valor).toLocaleString('en-US') : '';
 
             var key = id + '-' + tipo;
             clearTimeout(this._saveTimers[key]);
+            this.updateStates[key] = 'saving';
+            clearTimeout(this.updateStateTimers[key]);
 
             this._saveTimers[key] = setTimeout(function () {
                 axios.post(this.base + '/update', { id, tipo, valor }, {
-                    headers: { 'X-CSRF-TOKEN': this.csrf() }
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrf(),
+                        'X-Portal3-Skip-Action-Loader': '1'
+                    }
                 })
                 .then(function (r) {
-                    if (r.data.success) {
-                        var n = Number(valor);
+                    if (r.data.success && r.data.ok) {
+                        var n = Number(valor) || 0;
                         this.sucursales = this.sucursales.map(function (s) {
                             if (Number(s.id) === Number(id)) {
-                                s[campo] = n > 0 ? n : 0;
+                                s[campo] = n;
                             }
                             return s;
                         });
+                        this.updateStates[key] = 'saved';
+                        this.updateStateTimers[key] = setTimeout(function () { delete this.updateStates[key]; }.bind(this), 1800);
                     } else {
-                        Notify.error(r.data.message || 'Error al editar');
+                        this.updateStates[key] = 'error';
+                        this.updateStateTimers[key] = setTimeout(function () { delete this.updateStates[key]; }.bind(this), 3000);
                     }
                 }.bind(this))
                 .catch(function (err) {
-                    Notify.error(this.errorMessage(err));
+                    this.updateStates[key] = 'error';
+                    this.updateStateTimers[key] = setTimeout(function () { delete this.updateStates[key]; }.bind(this), 3000);
                 }.bind(this));
             }.bind(this), 700);
         },
         abrirModal() {
+            this.errors = { fecha: false, Sucursal: false, Destino1: false, Destino2: false };
             var modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAgregarSucursal'));
             modal.show();
         },
@@ -78,14 +100,14 @@ document.addEventListener('alpine:init', function () {
             if (this.guardando) return;
 
             var input = document.getElementById('inputSucursal');
-            if (!this.form.Sucursal.trim()) {
-                if (input) {
-                    input.style.border = '2px solid #A52525';
-                    input.focus();
-                }
+            this.errors.Sucursal = !String(this.form.Sucursal || '').trim();
+            this.errors.Destino1 = !String(this.form.Destino1 || '').trim();
+            this.errors.Destino2 = !String(this.form.Destino2 || '').trim();
+            if (this.errors.Sucursal || this.errors.Destino1 || this.errors.Destino2) {
+                Notify.error('Completa los campos obligatorios.');
+                if (this.errors.Sucursal && input) input.focus();
                 return;
             }
-            if (input) input.style.border = '';
 
             this.guardando = true;
 
@@ -123,11 +145,13 @@ document.addEventListener('alpine:init', function () {
             if (this.guardando) return;
 
             if (!this.fecha) {
+                this.errors.fecha = true;
                 var fechaWrapper = document.getElementById('fecha-programacion-wrapper');
                 if (fechaWrapper) fechaWrapper.classList.add('is-invalid');
-                Notify.error('Selecciona una fecha para el inventario');
+                Notify.error('Completa los campos obligatorios.');
                 return;
             }
+            this.errors.fecha = false;
             var fechaWrapper = document.getElementById('fecha-programacion-wrapper');
             if (fechaWrapper) fechaWrapper.classList.remove('is-invalid');
 

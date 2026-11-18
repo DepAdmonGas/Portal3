@@ -20,7 +20,8 @@
             <input type="date"
                    class="form-control border-0 bg-transparent fw-semibold flex-grow-1"
                    id="Fecha"
-                   x-model="fecha">
+                   x-model="fecha"
+                   @input="errors.fecha = false; document.getElementById('fecha-programacion-wrapper')?.classList.remove('is-invalid')">
         </div>
     </div>
 
@@ -91,22 +92,43 @@
                             <td class="text-start align-middle fw-semibold"><span x-text="s.sucursal"></span></td>
                             <td class="align-middle text-center" x-text="celdaTexto(s.destino)"></td>
                             <td class="p-0 align-middle text-center">
-                           <input type="number" min="0" class="border-0 p-3 w-100 bg-transparent text-center"
+                                <div class="position-relative">
+                           <input type="text" inputmode="numeric" min="0" class="border-0 p-3 pe-5 w-100 bg-transparent text-center"
        :value="celdaTexto(s.oct87)"
        :disabled="!puedeEditar"
-       x-on:input.debounce="editarDestino($event, s.id, 2)">
+       x-on:input="editarDestino($event, s.id, 2)">
+                                    <span class="position-absolute top-50 end-0 translate-middle-y me-2 text-muted" x-show="updateStates[s.id + '-2']" x-cloak>
+                                        <template x-if="updateStates[s.id + '-2'] === 'saving'"><span class="spinner-border spinner-border-sm" aria-label="Guardando"></span></template>
+                                        <i x-show="updateStates[s.id + '-2'] === 'saved'" class="ti ti-check text-success" aria-label="Guardado"></i>
+                                        <i x-show="updateStates[s.id + '-2'] === 'error'" class="ti ti-alert-circle text-danger" aria-label="Error al guardar"></i>
+                                    </span>
+                                </div>
                             </td>
                             <td class="p-0 align-middle text-center">
-                       <input type="number" min="0" class="border-0 p-3 w-100 bg-transparent text-center"
+                                <div class="position-relative">
+                       <input type="text" inputmode="numeric" min="0" class="border-0 p-3 pe-5 w-100 bg-transparent text-center"
        :value="celdaTexto(s.oct91)"
        :disabled="!puedeEditar"
-       x-on:input.debounce="editarDestino($event, s.id, 3)">
+       x-on:input="editarDestino($event, s.id, 3)">
+                                    <span class="position-absolute top-50 end-0 translate-middle-y me-2 text-muted" x-show="updateStates[s.id + '-3']" x-cloak>
+                                        <template x-if="updateStates[s.id + '-3'] === 'saving'"><span class="spinner-border spinner-border-sm" aria-label="Guardando"></span></template>
+                                        <i x-show="updateStates[s.id + '-3'] === 'saved'" class="ti ti-check text-success" aria-label="Guardado"></i>
+                                        <i x-show="updateStates[s.id + '-3'] === 'error'" class="ti ti-alert-circle text-danger" aria-label="Error al guardar"></i>
+                                    </span>
+                                </div>
                             </td>
                             <td class="p-0 align-middle text-center">
-                           <input type="number" min="0" class="border-0 p-3 w-100 bg-transparent text-center"
+                                <div class="position-relative">
+                           <input type="text" inputmode="numeric" min="0" class="border-0 p-3 pe-5 w-100 bg-transparent text-center"
        :value="celdaTexto(s.diesel)"
        :disabled="!puedeEditar"
-       x-on:input.debounce="editarDestino($event, s.id, 4)">
+       x-on:input="editarDestino($event, s.id, 4)">
+                                    <span class="position-absolute top-50 end-0 translate-middle-y me-2 text-muted" x-show="updateStates[s.id + '-4']" x-cloak>
+                                        <template x-if="updateStates[s.id + '-4'] === 'saving'"><span class="spinner-border spinner-border-sm" aria-label="Guardando"></span></template>
+                                        <i x-show="updateStates[s.id + '-4'] === 'saved'" class="ti ti-check text-success" aria-label="Guardado"></i>
+                                        <i x-show="updateStates[s.id + '-4'] === 'error'" class="ti ti-alert-circle text-danger" aria-label="Error al guardar"></i>
+                                    </span>
+                                </div>
                             </td>
                             <td class="align-middle text-center" x-show="puedeEditar">
                                 <i class="ti ti-trash text-danger fs-6 pointer" x-on:click="eliminarDetalle(s.id)"></i>
@@ -139,7 +161,7 @@
 
                 <div class="modal-body">
                     <label class="form-label">* Sucursal:</label>
-                    <input type="text" class="form-control mb-3" id="inputSucursal" x-model="form.Sucursal">
+                    <input type="text" class="form-control mb-3" id="inputSucursal" x-model="form.Sucursal" :class="{ 'is-invalid': errors.Sucursal }" @input="errors.Sucursal = false">
 
 
                     <h5 class="text-primary">INVENTARIOS REALES</h5>
@@ -147,19 +169,19 @@
                                 <div class="row">
                                     <div class="col-xl-6 col-lg-3 col-md-12 col-sm-12">
                                         <label class="form-label">* Destino:</label>
-                                        <input type="number" class="form-control mb-3" x-model="form.Destino1">
+                                        <input type="text" inputmode="numeric" class="form-control mb-3" x-model="form.Destino1" :class="{ 'is-invalid': errors.Destino1 }" @input="formatearModal($event, 'Destino1'); errors.Destino1 = false">
                                     </div>
                                     <div class="col-xl-6 col-lg-3 col-md-12 col-sm-12">
                                         <label class="form-label">87 OCT:</label>
-                                        <input type="number" class="form-control mb-3" x-model="form.Oct871">
+                                        <input type="text" inputmode="numeric" class="form-control mb-3" x-model="form.Oct871" @input="formatearModal($event, 'Oct871')">
                                     </div>
                                     <div class="col-xl-6 col-lg-3 col-md-12 col-sm-12">
                                         <label class="form-label">91 OCT:</label>
-                                        <input type="number" class="form-control mb-3" x-model="form.Oct911">
+                                        <input type="text" inputmode="numeric" class="form-control mb-3" x-model="form.Oct911" @input="formatearModal($event, 'Oct911')">
                                     </div>
                                     <div class="col-xl-6 col-lg-3 col-md-12 col-sm-12">
                                         <label class="form-label">Diesel:</label>
-                                        <input type="number" class="form-control" x-model="form.Diesel1">
+                                        <input type="text" inputmode="numeric" class="form-control" x-model="form.Diesel1" @input="formatearModal($event, 'Diesel1')">
                                     </div>
                                 </div>
 
@@ -168,19 +190,19 @@
                                                            <div class="row">
                                     <div class="col-xl-6 col-lg-3 col-md-12 col-sm-12">
                                         <label class="form-label">* Destino:</label>
-                                        <input type="number" class="form-control mb-3" x-model="form.Destino2">
+                                        <input type="text" inputmode="numeric" class="form-control mb-3" x-model="form.Destino2" :class="{ 'is-invalid': errors.Destino2 }" @input="formatearModal($event, 'Destino2'); errors.Destino2 = false">
                                     </div>
                                     <div class="col-xl-6 col-lg-3 col-md-12 col-sm-12">
                                         <label class="form-label">87 OCT:</label>
-                                        <input type="number" class="form-control mb-3" x-model="form.Oct872">
+                                        <input type="text" inputmode="numeric" class="form-control mb-3" x-model="form.Oct872" @input="formatearModal($event, 'Oct872')">
                                     </div>
                                     <div class="col-xl-6 col-lg-3 col-md-12 col-sm-12">
                                         <label class="form-label">91 OCT:</label>
-                                        <input type="number" class="form-control mb-3" x-model="form.Oct912">
+                                        <input type="text" inputmode="numeric" class="form-control mb-3" x-model="form.Oct912" @input="formatearModal($event, 'Oct912')">
                                     </div>
                                     <div class="col-xl-6 col-lg-3 col-md-12 col-sm-12">
                                         <label class="form-label">Diesel:</label>
-                                        <input type="number" class="form-control" x-model="form.Diesel2">
+                                        <input type="text" inputmode="numeric" class="form-control" x-model="form.Diesel2" @input="formatearModal($event, 'Diesel2')">
                                     </div>
                                 </div>
 

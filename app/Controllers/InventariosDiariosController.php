@@ -165,8 +165,21 @@ class InventariosDiariosController extends BaseController
         $input = Request::all();
         $idReporte = (int)($input['idReporte'] ?? 0);
 
-        if ($idReporte <= 0 || trim((string)($input['Sucursal'] ?? '')) === '') {
-            JsonResponse::error('La sucursal es obligatoria.');
+        $camposObligatorios = ['Sucursal', 'Destino1', 'Destino2'];
+        foreach ($camposObligatorios as $campo) {
+            if (trim((string)($input[$campo] ?? '')) === '') {
+                JsonResponse::error('Completa los campos obligatorios.');
+            }
+        }
+
+        foreach (['Destino1', 'Destino2'] as $campo) {
+            if (!is_numeric(str_replace(',', '', (string)$input[$campo]))) {
+                JsonResponse::error('Completa los campos obligatorios.');
+            }
+        }
+
+        if ($idReporte <= 0) {
+            JsonResponse::error('Parámetros inválidos.');
         }
 
         $ok = InventariosDiariosService::agregarSucursal($idReporte, $input);

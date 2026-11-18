@@ -31,12 +31,14 @@
                 </button>
             </div>
 
-            <div x-show="puedeCrear" class="d-grid d-md-block ">
+            <?php if (!$multiestacion && $puedeCrear): ?>
+            <div class="d-grid d-md-block">
                 <a href="/departamento-operativo/importacion/formato-descarga-merma-nuevo"
                    class="btn bg-primary-subtle text-primary">
                     <i class="ti ti-plus me-1"></i> Nuevo
                 </a>
             </div>
+            <?php endif; ?>
 
         </div>
     </div>

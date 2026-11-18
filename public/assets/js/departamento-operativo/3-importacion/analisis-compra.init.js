@@ -10,6 +10,8 @@ document.addEventListener('alpine:init', () => {
         puedeEditar: false,
         _guardando: false,
         _reintento: 0,
+        updateStates: {},
+        updateStateTimers: {},
 
         init() {
             const c = document.getElementById('container-analisis-compra');
@@ -35,9 +37,27 @@ document.addEventListener('alpine:init', () => {
             }).format(n);
         },
 
-        actualizarVistaLocal(event) {
+        valorNumerico(valor) {
+            const limpio = String(valor ?? '').replace(/,/g, '').trim();
+            return limpio === '' ? NaN : Number(limpio);
+        },
+
+        formatearNumero(valor) {
+            const limpio = String(valor ?? '').replace(/[^\d]/g, '');
+            return limpio === '' ? '' : Number(limpio).toLocaleString('en-US');
+        },
+
+        actualizarVistaLocal(event, id, opcion) {
             const input = event && event.target ? event.target : null;
             if (!input) return;
+            input.value = this.formatearNumero(input.value);
+            input.classList.remove('is-invalid');
+            input.style.border = '';
+            if (id && opcion) {
+                const key = id + '-' + opcion;
+                clearTimeout(this.updateStateTimers[key]);
+                delete this.updateStates[key];
+            }
             this._recalcularDesdeInput(input);
         },
 
@@ -70,7 +90,7 @@ document.addEventListener('alpine:init', () => {
                     id: inp.getAttribute('data-embarque-id'),
                     opcion: inp.getAttribute('data-opcion') === '2' ? 2 : 1,
                     lts: lts,
-                    valor: parseFloat(inp.value) || 0
+                    valor: this.valorNumerico(inp.value) || 0
                 });
             });
 
@@ -146,53 +166,82 @@ document.addEventListener('alpine:init', () => {
             const input = event && event.target ? event.target : null;
             if (!input) return;
 
-            const valor = (input.value || '').trim();
+            const valorVisible = (input.value || '').trim();
+            const valor = this.valorNumerico(valorVisible);
             const original = input.getAttribute('value') || '';
+            const key = id + '-' + opcion;
+            clearTimeout(this.updateStateTimers[key]);
 
-            if (valor === '' || isNaN(Number(valor)) || Number(valor) < 0) {
-                if (window.Notify) Notify.error('Ingresa un valor numérico válido.');
-                input.value = original;
+            if (valorVisible === '') {
+                input.classList.add('is-invalid');
+                input.style.border = '2px solid #A52525';
+                this.updateStates[key] = 'error';
+                if (window.Notify) Notify.error('Completa los campos obligatorios.');
+                return;
+            }
+
+            if (!Number.isFinite(valor) || valor < 0) {
+                input.classList.add('is-invalid');
+                input.style.border = '2px solid #A52525';
+                this.updateStates[key] = 'error';
+                if (window.Notify) Notify.error('Completa los campos obligatorios.');
                 this._recalcularDesdeInput(input);
                 input.focus();
                 return;
             }
 
-            if (this._guardando) return;
-            this._guardando = true;
+            this.updateStates[key] = 'saving';
 
             try {
                 const res = await axios.post(
                     '/departamento-operativo/importacion/analisis-compra/update',
                     { id: id, opcion: opcion, valor: valor },
-                    { headers: { 'X-CSRF-TOKEN': this.getCsrfToken() } }
+                    { headers: {
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
+                        'X-Portal3-Skip-Action-Loader': '1'
+                    } }
                 );
 
                 if (res.data && res.data.success) {
-                    const guardado = (res.data.valor !== undefined && res.data.valor !== null) ? String(res.data.valor) : valor;
+                    const guardado = (res.data.valor !== undefined && res.data.valor !== null) ? String(res.data.valor) : String(valor);
 
-                    if (this._reintento < 1 && (input.value || '').trim() !== guardado) {
+                    if (this._reintento < 1 && this.valorNumerico(input.value) !== Number(guardado)) {
                         this._reintento++;
-                        input.setAttribute('value', guardado);
-                        this._guardando = false;
+                        input.setAttribute('value', this.formatearNumero(guardado));
+                        input.value = this.formatearNumero(guardado);
                         await this.actualizarBrutoNeto({ target: input }, id, opcion);
                         return;
                     }
                     this._reintento = 0;
 
-                    this._reemplazarSeccion(res.data, id, opcion, input, guardado);
-                    if (window.Notify) Notify.success(res.data.message || 'Registro actualizado correctamente.');
+                    this._reemplazarSeccion(res.data, id, opcion, input, this.formatearNumero(guardado));
+                    const inputActualizado = this.$el.querySelector('input[data-embarque-id="' + id + '"][data-opcion="' + opcion + '"]');
+                    if (inputActualizado) {
+                        inputActualizado.classList.remove('is-invalid');
+                        inputActualizado.style.border = '';
+                    }
+                    this.updateStates[key] = 'saved';
+                    this.updateStateTimers[key] = setTimeout(() => { delete this.updateStates[key]; }, 1800);
                 } else {
-                    input.value = original;
+                    input.classList.add('is-invalid');
+                    input.style.border = '2px solid #A52525';
+                    this.updateStates[key] = 'error';
                     this._recalcularDesdeInput(input);
                     if (window.Notify) Notify.error((res.data && res.data.message) || 'No fue posible actualizar el registro.');
                 }
             } catch (err) {
-                input.value = original;
+                input.classList.add('is-invalid');
+                input.style.border = '2px solid #A52525';
+                this.updateStates[key] = 'error';
                 this._recalcularDesdeInput(input);
                 const msg = (err.response && err.response.data && err.response.data.message) || 'Error de conexión al actualizar.';
                 if (window.Notify) Notify.error(msg);
             } finally {
-                this._guardando = false;
+                input.setAttribute('value', input.value || original);
+                if (this.updateStates[key] === 'error') {
+                    clearTimeout(this.updateStateTimers[key]);
+                    this.updateStateTimers[key] = setTimeout(() => { delete this.updateStates[key]; }, 3000);
+                }
             }
         },
 
@@ -238,6 +287,7 @@ document.addEventListener('alpine:init', () => {
 
             if (nuevoInput) {
                 nuevoInput.setAttribute('value', guardado);
+                nuevoInput.dataset.originalValue = guardado;
                 nuevoInput.value = guardado;
                 nuevoInput.focus();
             } else if (inputOriginal) {
