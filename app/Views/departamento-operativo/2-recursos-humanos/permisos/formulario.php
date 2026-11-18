@@ -1,3 +1,14 @@
+<style>
+#container [data-permisos-obligatorio].is-invalid,
+#container .select2-selection.is-invalid,
+#container .is-invalid-field .select2-selection,
+#container #signature-pad.border-danger {
+    border-color: var(--bs-form-invalid-border-color, #fa896b) !important;
+    box-shadow: 0 0 0 .15rem rgba(250, 137, 107, .15) !important;
+}
+#container #signature-pad.border-danger { border-style: solid !important; }
+</style>
+
 <div id="container" class="mt-4 mb-5"
      x-data="permisosFormComponent()"
      data-modo="<?= $modo === 'editar' ? 'editar' : 'nuevo' ?>"
@@ -47,7 +58,7 @@
 
                         <div class="col-md-12 mb-3">
                             <label class="form-label mb-1">* Colaborador:</label>
-                            <select id="select-colaborador" class="form-select" x-model="colaborador">
+                            <select id="select-colaborador" class="form-select" data-permisos-obligatorio :class="{ 'is-invalid': errores.colaborador }" x-model="colaborador">
                                 <option value="">Selecciona una opción...</option>
                                 <template x-for="p in personal" :key="p.id">
                                     <option :value="p.id" x-text="p.nombre"></option>
@@ -57,7 +68,7 @@
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label mb-1">* Estación de quien cubre:</label>
-                            <select class="form-select" x-model="estacionCubre" @change="onEstacionCubreChange($event)">
+                            <select id="estacion-cubre-permiso" class="form-select" data-permisos-obligatorio :class="{ 'is-invalid': errores.estacionCubre }" x-model="estacionCubre" @change="onEstacionCubreChange($event)">
                                 <option value="">Selecciona una opción...</option>
                                 <?php foreach (($estacionesCubre ?? []) as $estacionOpcion): ?>
                                     <?php $idEstacionOpcion = (int)($estacionOpcion['id'] ?? 0); ?>
@@ -68,7 +79,7 @@
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label mb-1">* Quien cubre el turno:</label>
-                            <select id="select-cubre" class="form-select" x-model="cubre" disabled>
+                            <select id="select-cubre" class="form-select" data-permisos-obligatorio :class="{ 'is-invalid': errores.cubre }" x-model="cubre" disabled>
                                 <option value="">Selecciona una opción...</option>
                             </select>
                             <div class="form-text" x-show="estacionCubre && cargandoCubre">Cargando personal...</div>
@@ -76,11 +87,11 @@
 
                         <div class="col-md-4 mb-3">
                             <label class="form-label mb-1">* Del</label>
-                            <input type="date" class="form-control" x-model="fechaInicio">
+                            <input id="fecha-inicio-permiso" type="date" class="form-control" data-permisos-obligatorio :class="{ 'is-invalid': errores.fechaInicio }" x-model="fechaInicio">
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label mb-1">* Al</label>
-                            <input type="date" class="form-control" x-model="fechaTermino">
+                            <input id="fecha-termino-permiso" type="date" class="form-control" data-permisos-obligatorio :class="{ 'is-invalid': errores.fechaTermino }" x-model="fechaTermino">
                         </div>
 
                         <div class="col-md-4  mb-3">
@@ -90,7 +101,7 @@
 
                         <div class="col-12 mb-3">
                             <label class="form-label mb-1">* Motivo</label>
-                            <input type="text" class="form-control" x-model="motivo">
+                            <input id="motivo-permiso" type="text" class="form-control" data-permisos-obligatorio :class="{ 'is-invalid': errores.motivo }" x-model="motivo">
                         </div>
 
                         <div class="col-12 mb-3">
@@ -135,7 +146,7 @@
 
     <!-- Cuerpo con pad punteado ocupando el 100% del espacio restante -->
     <div class="card-body p-3 flex-fill d-flex flex-column">
-        <div id="signature-pad" class="signature-pad-wrapper flex-fill d-flex" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+        <div id="signature-pad" class="signature-pad-wrapper flex-fill d-flex" :class="{ 'border-danger': errores.firma }" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
             <div class="signature-pad--body w-100 h-100 d-flex">
                 <canvas 
                     id="firma-canvas-form" 

@@ -19,7 +19,8 @@
  <div class="d-grid d-md-block">
     <a href="/departamento-operativo/recursos-humanos/permisos-nuevo"
            class="btn bg-primary-subtle text-primary"
-           x-show="contextoEspecifico && puedeCrear">
+           x-show="contextoEspecifico && puedeCrear"
+           x-cloak>
             <i class="ti ti-plus"></i> Nuevo
         </a>
  </div>
@@ -35,7 +36,7 @@
 
 <!-- Modal Detalle -->
 <div class="modal fade" id="modalDetallePermiso" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-lg-down">
         <div class="modal-content">
             <div class="modal-header modal-colored-header bg-primary text-white d-flex align-items-center">
                 <h5 class="modal-title text-white mb-0">

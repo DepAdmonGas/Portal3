@@ -73,12 +73,12 @@ hr { border: none; border-top: 1px solid #999; margin: 12px 0; }
 table.custom-table thead { display: table-header-group; }
 
 .firmas-contenedor { width: 100%; }
-table.firmas { width: 100%; border-collapse: collapse; }
+table.firmas { width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid #dee2e6; }
 table.firmas > tbody > tr > td.firma-col {
-    width: 25%;
-    padding: 0 1px;
+    padding: 0;
     vertical-align: top;
     text-align: center;
+    border-left: 1px solid #dee2e6;
 }
 
 table.firma {
@@ -88,18 +88,20 @@ table.firma {
     page-break-inside: avoid;
 }
 table.firma th {
-    padding: 10px;
+    padding: 8px;
     font-size: 10.5px;
     text-align: center;
     vertical-align: middle;
-    border-top: 1px solid #dee2e6;
+    border: 0;
     overflow-wrap: break-word;
     word-wrap: break-word;
 }
-table.firma thead th { background-color: #215D98; color: #ffffff; font-weight: bold; }
-table.firma tbody th { background-color: #f2f2f2; font-weight: bold; }
+table.firma thead th { background-color: #ffffff; color: #6c757d; font-weight: normal; }
+table.firma tbody th { background-color: #ffffff; font-weight: bold; }
 
-.firma img { width: 70%; max-width: 100%; }
+.firma img { width: 70%; max-width: 100%; max-height: 95px; object-fit: contain; }
+.firma-detalle { height: 88px; font-weight: normal !important; border-bottom: 1px solid #dee2e6 !important; }
+.firma-estado { font-weight: normal; }
 .clearfix { clear: both; }
 </style>
 </head>
@@ -163,10 +165,10 @@ table.firma tbody th { background-color: #f2f2f2; font-weight: bold; }
 <div class="firmas-contenedor">
 <table class="firmas">
 <tbody>
-<?php foreach (array_chunk($firmas, 4) as $fila): ?>
 <tr>
-<?php foreach ($fila as $f): ?>
-<td class="firma-col">
+<?php $firmaColumna = 100 / count($firmas); ?>
+<?php foreach ($firmas as $f): ?>
+<td class="firma-col" style="width: <?= $firmaColumna ?>%;">
 <table class="firma">
 <thead class="tables-bg">
 <tr><th><?= htmlspecialchars($f['usuario_nombre'] ?? $f['nombre']) ?></th></tr>
@@ -174,10 +176,24 @@ table.firma tbody th { background-color: #f2f2f2; font-weight: bold; }
 <tbody>
 <tr>
 <th class="firma-detalle">
-<?php if (!empty($f['firma_img_url'])): ?>
-<img src="<?= base_url() . $f['firma_img_url'] ?>">
+<?php $imagenFirma = $f['firma_img_data'] ?? ''; ?>
+<?php if ($imagenFirma === '' && !empty($f['firma_img_url'])): ?>
+<?php $imagenFirma = base_url() . $f['firma_img_url']; ?>
+<?php endif; ?>
+<?php if ($imagenFirma !== ''): ?>
+<img src="<?= htmlspecialchars($imagenFirma, ENT_QUOTES, 'UTF-8') ?>">
+<?php elseif (in_array($f['tipo_firma'], ['B', 'C'], true)): ?>
+<?php if (!empty($f['fecha_pdf']) && $f['fecha_pdf'] !== 'Fecha no disponible'): ?>
+<div class="firma-estado">La solicitud se firmó por un medio electrónico.</div>
+<div><b>Fecha: <?= htmlspecialchars($f['fecha_pdf']) ?></b></div>
 <?php elseif (!empty($f['firma_texto'])): ?>
 <?= $f['firma_texto'] ?>
+<?php else: ?>
+<div class="firma-estado">La solicitud se firmó por un medio electrónico.</div>
+<div><b>Fecha: <?= htmlspecialchars($f['fecha_pdf'] ?? 'Fecha no disponible') ?></b></div>
+<?php endif; ?>
+<?php elseif (in_array($f['tipo_firma'], ['A', 'D'], true)): ?>
+<div class="firma-estado">La firma está registrada, pero su imagen no está disponible.</div>
 <?php endif; ?>
 </th>
 </tr>
@@ -188,11 +204,7 @@ table.firma tbody th { background-color: #f2f2f2; font-weight: bold; }
 </table>
 </td>
 <?php endforeach; ?>
-<?php for ($i = count($fila); $i < 4; $i++): ?>
-<td class="firma-col"></td>
-<?php endfor; ?>
 </tr>
-<?php endforeach; ?>
 </tbody>
 </table>
 <div class="clearfix"></div>

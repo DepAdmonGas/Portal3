@@ -51,8 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/>/g, '&gt;');
     }
 
-    function descargarArchivo(file, tipo, icono, color) {
-        if (!file) return '<i class="ti ti-file-off text-muted fs-6"></i>';
+    function descargarArchivo(file, disponible, tipo, icono, color) {
+        if (!file || !disponible) return '<i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible"></i>';
         if (!puedeDescargar) {
             return `<i class="${icono} ${color} fs-6 opacity-50 pointer" title="Sin permiso de descarga"></i>`;
         }
@@ -191,19 +191,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 data: null,
                 className: 'align-middle text-center',
                 orderable: false,
-                render: (row) => descargarArchivo(row.doc_nomina, 'recibos-nomina', 'ti ti-file-text fs-7', 'text-primary')
+                render: (row) => descargarArchivo(row.doc_nomina, row.doc_nomina_disponible, 'recibos-nomina', 'ti ti-file-text', 'text-primary')
             },
             {
                 data: null,
                 className: 'align-middle text-center',
                 orderable: false,
-                render: (row) => descargarArchivo(row.doc_nomina_firma, 'recibos-nomina-firma', 'ti ti-signature fs-8', 'text-success')
+                render: (row) => descargarArchivo(row.doc_nomina_firma, row.doc_nomina_firma_disponible, 'recibos-nomina-firma', 'ti ti-signature', 'text-success')
             },
             {
                 data: null,
                 className: 'align-middle text-center',
                 orderable: false,
-                render: (row) => descargarArchivo(row.doc_nomina_aguinaldo, 'recibos-aguinaldo', 'ti ti-gift fs-7', 'text-warning')
+                render: (row) => descargarArchivo(row.doc_nomina_aguinaldo, row.doc_nomina_aguinaldo_disponible, 'recibos-aguinaldo', 'ti ti-gift', 'text-warning')
             },
             {
                 data: 'nomina_original',

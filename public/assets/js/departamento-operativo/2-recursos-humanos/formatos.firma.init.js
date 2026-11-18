@@ -3,6 +3,10 @@ document.addEventListener('alpine:init', () => {
         idFormato: 0,
         token: '',
         botonesDeshabilitados: false,
+        segundosRestantes: 0,
+        solicitandoToken: false,
+        viaSolicitada: '',
+        temporizadorToken: null,
         firmandoVerificacion: false,
         signaturePad: null,
         status: 0,
@@ -29,9 +33,7 @@ document.addEventListener('alpine:init', () => {
             if (disableTime) {
                 var elapsed = new Date().getTime() - parseInt(disableTime);
                 if (elapsed < 30000) {
-                    this.botonesDeshabilitados = true;
-                    var self = this;
-                    setTimeout(function () { self.botonesDeshabilitados = false; }, 30000 - elapsed);
+                    this.iniciarTemporizadorToken(30000 - elapsed);
                 } else {
                     localStorage.removeItem('fmt_disableTime');
                 }
@@ -40,6 +42,33 @@ document.addEventListener('alpine:init', () => {
                 var self = this;
                 setTimeout(function () { self.initSignaturePad(); }, 500);
             }
+            document.addEventListener('error', function (event) {
+                var img = event.target;
+                if (!(img instanceof HTMLImageElement) || !img.matches('.firma-registrada-img')) return;
+                img.classList.add('d-none');
+                var fallback = document.getElementById(img.dataset.firmaFallback || '');
+                if (fallback) {
+                    fallback.classList.remove('d-none');
+                    fallback.classList.add('d-flex');
+                }
+            }, true);
+        },
+
+        iniciarTemporizadorToken(duracion) {
+            window.clearInterval(this.temporizadorToken);
+            var venceEn = Date.now() + Math.max(0, duracion);
+            var actualizar = () => {
+                this.segundosRestantes = Math.ceil(Math.max(0, venceEn - Date.now()) / 1000);
+                this.botonesDeshabilitados = this.segundosRestantes > 0 || this.solicitandoToken;
+                if (this.segundosRestantes <= 0) {
+                    window.clearInterval(this.temporizadorToken);
+                    this.temporizadorToken = null;
+                    this.botonesDeshabilitados = this.solicitandoToken;
+                    localStorage.removeItem('fmt_disableTime');
+                }
+            };
+            actualizar();
+            if (this.segundosRestantes > 0) this.temporizadorToken = window.setInterval(actualizar, 250);
         },
 
         initSignaturePad() {
@@ -79,6 +108,8 @@ document.addEventListener('alpine:init', () => {
         crearToken(via) {
             var self = this;
             self.botonesDeshabilitados = true;
+            self.solicitandoToken = true;
+            self.viaSolicitada = via;
             if (window.loader) window.loader.show();
 
             var fd = new FormData();
@@ -100,18 +131,19 @@ document.addEventListener('alpine:init', () => {
                     if (window.Notify) Notify.warning('Deber\u00e1 esperar 30 seg para volver a crear un nuevo token');
                     var disableTime = new Date().getTime();
                     localStorage.setItem('fmt_disableTime', disableTime);
-                    setTimeout(function () { self.botonesDeshabilitados = false; }, 30000);
+                    self.iniciarTemporizadorToken(30000);
                 } else {
-                    self.botonesDeshabilitados = false;
                     if (window.Notify) Notify.error(json.message || 'Error al crear el token');
                 }
             })
             .catch(function (e) {
-                self.botonesDeshabilitados = false;
                 console.error('Error creating token:', e);
                 if (window.Notify) Notify.error('Error al crear el token');
             })
             .finally(function () {
+                self.solicitandoToken = false;
+                self.viaSolicitada = '';
+                if (self.segundosRestantes <= 0) self.botonesDeshabilitados = false;
                 if (window.loader) window.loader.hide();
             });
         },

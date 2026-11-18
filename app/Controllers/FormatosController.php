@@ -448,6 +448,13 @@ JsonResponse::custom([
 public function downloadPdf($id)
 {
 $id = (int)$id;
+$permisos = FormatosService::getPermisos();
+if (empty($permisos['puedeDescargar'])) {
+http_response_code(403);
+echo 'No tienes permiso para descargar este formato.';
+return;
+}
+
 $detalle = FormatosService::getDetalleFormato(0, $id);
 if (!$detalle) {
 http_response_code(404);
@@ -455,7 +462,62 @@ echo 'Formato no encontrado';
 return;
 }
 
+if (!FormatosService::puedeGestionarLocalidad((int)$detalle['id_localidad'])) {
+http_response_code(403);
+echo 'No tienes acceso a este formato.';
+return;
+}
+
 $firmas = FormatosService::getFirmas($id);
+$firmasPorTipo = [];
+foreach ($firmas as $firma) {
+$firmasPorTipo[$firma['tipo_firma']] = $firma;
+}
+
+// El PDF se habilita al completar elaboración, Vo.Bo. y autorización.
+// La verificación es una etapa posterior y no forma parte del formato imprimible.
+$tiposRequeridos = ['A', 'B', 'C'];
+$tiposFaltantes = array_values(array_diff($tiposRequeridos, array_keys($firmasPorTipo)));
+if ((int)$detalle['status'] < 3 || $tiposFaltantes !== []) {
+http_response_code(409);
+echo 'No se puede descargar el PDF: faltan firmas obligatorias de elaboración, Vo.Bo. o autorización.';
+return;
+}
+
+$firmasPdf = [];
+// La verificación D es posterior: se imprime si ya fue registrada.
+$tiposPdf = array_merge($tiposRequeridos, isset($firmasPorTipo['D']) ? ['D'] : []);
+foreach ($tiposPdf as $tipo) {
+$firma = $firmasPorTipo[$tipo];
+$firma['firma_img_data'] = '';
+$firma['tipo_label'] = [
+'A' => 'NOMBRE Y FIRMA DE QUIEN ELABORÓ',
+'B' => 'NOMBRE Y FIRMA DEL VOBO',
+'C' => 'NOMBRE Y FIRMA DE AUTORIZACIÓN',
+'D' => 'NOMBRE Y FIRMA DE VERIFICACIÓN',
+][$tipo];
+$firma['fecha_pdf'] = '';
+$fechaFirma = trim((string)($firma['fecha_raw'] ?? ''));
+if ($fechaFirma !== '' && strtotime($fechaFirma) !== false) {
+$firma['fecha_pdf'] = formatearFechaLarga(substr($fechaFirma, 0, 10));
+}
+// Conserva la fecha que ya genera el servicio si el dato crudo no está disponible.
+if ($firma['fecha_pdf'] === '') {
+$firma['fecha_pdf'] = trim((string)($firma['fecha'] ?? ''));
+}
+if ($firma['fecha_pdf'] === '') {
+$firma['fecha_pdf'] = 'Fecha no disponible';
+}
+if (in_array($tipo, ['A', 'D'], true)) {
+$nombreImagen = basename((string)($firma['firma'] ?? ''));
+$rutaImagen = dirname(__DIR__, 2) . '/public/uploads/firmas/formatos/' . $nombreImagen;
+if ($nombreImagen !== '' && is_file($rutaImagen)) {
+$mime = mime_content_type($rutaImagen) ?: 'image/png';
+$firma['firma_img_data'] = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($rutaImagen));
+}
+}
+$firmasPdf[] = $firma;
+}
 
 if (!empty($detalle['tabla']['headers'])) {
 $detalle['tabla']['headers'] = array_values(array_filter(
@@ -484,7 +546,7 @@ $titulo = ($titulos[$detalle['formato']] ?? $detalle['formato_nombre']) . ' ' . 
 ob_start();
 extract([
 'detalle' => $detalle,
-'firmas'  => $firmas,
+'firmas'  => $firmasPdf,
 'titulo'  => $titulo,
 ], EXTR_SKIP);
 require __DIR__ . '/../Views/departamento-operativo/2-recursos-humanos/formatos/pdf.php';

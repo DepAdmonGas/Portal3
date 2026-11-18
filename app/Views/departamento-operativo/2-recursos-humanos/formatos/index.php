@@ -66,7 +66,7 @@ x-data="{ ...actions(), ...formatosComponent() }">
 
 <!---------- MODAL DETALLE ---------->
 <div class="modal fade" id="modalDetalleFormato" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-<div class="modal-dialog modal-dialog-centered modal-xl">
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 <div class="modal-content">
 <div class="modal-header bg-primary">
 <h4 class="modal-title text-white d-flex align-items-center gap-2" id="modalDetalleFormatoTitle">

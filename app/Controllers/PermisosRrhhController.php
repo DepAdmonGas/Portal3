@@ -213,7 +213,13 @@ class PermisosRrhhController extends BaseController
 
         $permisos = PermisosRrhhService::getPermisos();
 
-        if (!PermisosRrhhService::puedeVerLocalidad((int)$detalle['id_estacion'])) {
+        $permisosFirma = $detalle['permisos_firma'] ?? [];
+        $puedeAccederFirma = PermisosRrhhService::puedeVerLocalidad((int)$detalle['id_estacion'])
+            || !empty($permisosFirma['puedeFirmarCubre'])
+            // El usuario 19 debe poder abrir el seguimiento para ver el
+            // Visto Bueno incluso mientras todavía espera la firma de quien cubre.
+            || !empty($permisos['puedeVoBo']);
+        if (!$puedeAccederFirma) {
             View::render('errors/403', [], 'departamento-operativo');
             return;
         }
@@ -229,7 +235,7 @@ class PermisosRrhhController extends BaseController
         View::render('departamento-operativo/2-recursos-humanos/permisos/firmar', [
             'title'            => $title,
             'detalle'          => $detalle,
-            'permisosFirma'    => $detalle['permisos_firma'],
+            'permisosFirma'    => $permisosFirma,
             'idUsuario'        => $permisos['id_usuario'],
             'moduleStationKey' => PermisosRrhhService::MODULE_KEY . '-oculto',
             'ocultarSelectorEstacion' => true,
