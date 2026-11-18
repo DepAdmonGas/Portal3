@@ -67,7 +67,7 @@ return html;
 }
 
 var columnasReportes = [
-{ title: '#', data: 'id', className: 'align-middle text-center', width: '98px',
+{ title: '#', data: 'id', className: 'align-middle text-center', width: '96px',
 render: function (data) { return '00' + data; } },
 { title: 'Nombre del personal', data: 'personal', className: 'align-middle text-start text-nowrap' },
 { title: 'Estación', data: 'nombre_estacion', className: 'align-middle text-center text-nowrap',
@@ -76,7 +76,7 @@ visible: esTodasEstaciones() },
 { title: 'Detalle', data: 'detalle', className: 'align-middle text-center' },
 { title: 'Estatus', data: 'status_label', className: 'align-middle text-center text-nowrap', width: '120px',
 render: function (v, t, row) { return estatusReporteBadge(row.status); } },
-{ title: '<i class="fas fa-ellipsis-v"></i>', data: null, className: 'align-middle text-center', orderable: false, searchable: false,
+{ title: '<i class="ti ti-dots-vertical fs-5"></i>', data: null, className: 'align-middle text-center', width: '48px' , orderable: false, searchable: false,
 render: function (v, t, row) { return renderAccionesReporte(row); } },
 ];
 
@@ -153,6 +153,7 @@ window.pedidoPapeleriaReporteComponentInstance.eliminarReporte(id, nombre);
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoPapeleriaReporteComponent', () => ({
+...window.PedidoPapeleriaForm(),
 
 puedeAcceso: false,
 puedeCrear: false,

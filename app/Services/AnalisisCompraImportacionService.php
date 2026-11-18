@@ -541,7 +541,7 @@ $nombre = htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8');
 if (empty($columnas)) {
 $html .= '<div class="col-12" data-producto="' . $nombre . '">';
 $html .= '<div class="alert mb-3 text-center text-white" role="alert" style="background: ' . $color . ';">';
-$html .= 'No se encontró información para mostrar (' . $nombre . ')';
+$html .= 'No se encontró información del producto: ' . $nombre . '.';
 $html .= '</div>';
 $html .= '</div>';
 continue;
@@ -586,7 +586,8 @@ $html .= '<tr><th class="text-center align-middle fw-semibold">Bruto</th>';
 foreach ($columnas as $columna) {
 $html .= '<td class="p-0 text-center align-middle">';
 if ($puedeEditar) {
-$html .= '<input type="number" min="0" step="1" class="border-0 p-3 text-center w-100 bg-transparent" value="' . (int)$columna['bruto'] . '" data-embarque-id="' . (int)$columna['id'] . '" data-opcion="1" data-lts-factura="' . (float)$columna['lts_factura'] . '" x-on:input="actualizarVistaLocal($event, ' . (int)$columna['id'] . ', 1)" x-on:change="actualizarBrutoNeto($event, ' . (int)$columna['id'] . ', 1)">';} else {
+$keyEstado = (int)$columna['id'] . '-1';
+$html .= '<div class="position-relative"><input type="text" inputmode="numeric" min="0" step="1" class="border-0 p-3 pe-5 text-center w-100 bg-transparent" value="' . number_format((int)$columna['bruto'], 0, '.', ',') . '" data-embarque-id="' . (int)$columna['id'] . '" data-opcion="1" data-lts-factura="' . (float)$columna['lts_factura'] . '" x-on:input="actualizarVistaLocal($event, ' . (int)$columna['id'] . ', 1)" x-on:change="actualizarBrutoNeto($event, ' . (int)$columna['id'] . ', 1)"><span class="position-absolute top-50 end-0 translate-middle-y me-2 text-muted" x-show="updateStates[\'' . $keyEstado . '\']" x-cloak><template x-if="updateStates[\'' . $keyEstado . '\'] === \'saving\'"><span class="spinner-border spinner-border-sm" aria-label="Guardando"></span></template><i x-show="updateStates[\'' . $keyEstado . '\'] === \'saved\'" class="ti ti-check fs-6 text-success" aria-label="Guardado"></i><i x-show="updateStates[\'' . $keyEstado . '\'] === \'error\'" class="ti ti-alert-circle fs-6 text-danger" aria-label="Error al guardar"></i></span></div>';} else {
 $html .= '<div class="text-center">' . formatearCantidad($columna['bruto']) . '</div>';
 }
 $html .= '</td>';
@@ -603,7 +604,8 @@ $html .= '<tr><th class="text-center align-middle fw-semibold">Neto</th>';
 foreach ($columnas as $columna) {
 $html .= '<td class="p-0 text-center align-middle">';
 if ($puedeEditar) {
-$html .= '<input type="number" min="0" step="1" class="border-0 p-3 text-center w-100 bg-transparent" value="' . (int)$columna['neto'] . '" data-embarque-id="' . (int)$columna['id'] . '" data-opcion="2" data-lts-factura="' . (float)$columna['lts_factura'] . '" x-on:input="actualizarVistaLocal($event, ' . (int)$columna['id'] . ', 2)" x-on:change="actualizarBrutoNeto($event, ' . (int)$columna['id'] . ', 2)">';} else {
+$keyEstado = (int)$columna['id'] . '-2';
+$html .= '<div class="position-relative"><input type="text" inputmode="numeric" min="0" step="1" class="border-0 p-3 pe-5 text-center w-100 bg-transparent" value="' . number_format((int)$columna['neto'], 0, '.', ',') . '" data-embarque-id="' . (int)$columna['id'] . '" data-opcion="2" data-lts-factura="' . (float)$columna['lts_factura'] . '" x-on:input="actualizarVistaLocal($event, ' . (int)$columna['id'] . ', 2)" x-on:change="actualizarBrutoNeto($event, ' . (int)$columna['id'] . ', 2)"><span class="position-absolute top-50 end-0 translate-middle-y me-2 text-muted" x-show="updateStates[\'' . $keyEstado . '\']" x-cloak><template x-if="updateStates[\'' . $keyEstado . '\'] === \'saving\'"><span class="spinner-border spinner-border-sm" aria-label="Guardando"></span></template><i x-show="updateStates[\'' . $keyEstado . '\'] === \'saved\'" class="ti ti-check fs-6 text-success" aria-label="Guardado"></i><i x-show="updateStates[\'' . $keyEstado . '\'] === \'error\'" class="ti ti-alert-circle fs-6 text-danger" aria-label="Error al guardar"></i></span></div>';} else {
 $html .= '<div class="text-center">' . formatearCantidad($columna['neto']) . '</div>';
 }
 $html .= '</td>';

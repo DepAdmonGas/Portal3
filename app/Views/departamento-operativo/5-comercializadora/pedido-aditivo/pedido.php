@@ -14,7 +14,7 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 
 <!---------- BOTÓN FINALIZAR / REGRESAR ---------->
 <div class="col-12 mb-3 d-flex justify-content-end">
-    <template x-if="solicitudActual.status === 0" x-cloak>
+    <template x-if="solicitudActual.status === 0 && (esEncargado || puedeEditar)" x-cloak>
         <button type="button" class="btn btn-success" @click="finalizarSolicitud()" :disabled="finalizando">
             <i class="ti ti-check me-1"></i> Finalizar
         </button>
@@ -32,7 +32,7 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 <div class="card-body">
 <div class="row g-3">
 <div class="col-md-3"><div class="form-label mb-1">Folio:</div><div class="" x-text="solicitudActual.id ? '# 00' + solicitudActual.id : '—'"></div></div>
-<div class="col-md-3"><div class="form-label mb-1">Orden de compra:</div><div class="" x-text="solicitudActual.orden_compra || '—'"></div></div>
+<div class="col-md-3"><div class="form-label mb-1">Orden de compra:</div><div class="" x-text="solicitudActual.orden_compra ? displayQuantity(solicitudActual.orden_compra) : '—'"></div></div>
 <div class="col-md-3"><div class="form-label mb-1">Nombre del personal:</div><div class="" x-text="solicitudActual.personal || '—'"></div></div>
 <div class="col-md-3"><div class="form-label mb-1">Puesto:</div><div class="" x-text="solicitudActual.puesto || '—'"></div></div>
 </div>
@@ -60,7 +60,7 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 </div>
 <div class="col-md-4">
 <div class="mb-1 form-label">Fecha de entrega:</div>
-<input type="date" class="form-control" x-model="form.fecha_entrega" @change="guardarDatos()">
+<input type="date" class="form-control" :class="invalid('fecha_entrega') ? 'is-invalid border-danger' : ''" x-model="form.fecha_entrega" @change="guardarDatos()">
 </div>
 <div class="col-md-12">
 <div class="mb-1 form-label">Comentarios:</div>
@@ -100,7 +100,7 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 </div>
 
 <div class="card-body p-0">
-<div class="table-responsive mb-0">
+<div class="table-responsive mb-0" :class="invalid('productos') ? 'border border-danger rounded' : ''">
 <table class="table table-bordered table-striped align-middle text-nowrap mb-0">
 <thead>
 <tr>
@@ -119,7 +119,7 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 <tr>
 <td class="text-center align-middle" x-text="it.num"></td>
 <td class="p-0">
-<input type="number" min="1" class="form-control form-control border-0 p-3 text-center align-middle" :value="it.cantidad" @change="editarTamboCantidad(it.id, $event.target.value)">
+<input type="text" inputmode="numeric" class="form-control border-0 p-3 text-center align-middle" :class="invalid('cantidad_' + it.id) ? 'border-danger' : ''" :value="formatInputNumber(it.cantidad)" @input="formatNumericInput($event, it, 'cantidad')" @change="editarTamboCantidad(it.id, $event.target.value)">
 </td>
 <td class="p-0">
 <select class="form-control form-control border-0 p-3 text-center align-middle" x-model="it.producto" @change="cambiarProducto(it)">
@@ -128,8 +128,8 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 </select>
 </td>
 <td class="p-0 text-center align-middle" x-text="it.aditivo"></td>
-<td class="p-0 text-center align-middle" x-text="it.kilogramo"></td>
-<td class="text-center align-middle" x-text="it.cantidad * it.kilogramo"></td>
+<td class="p-0 text-center align-middle" x-text="displayQuantity(it.kilogramo)"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.cantidad * it.kilogramo)"></td>
 <td class="text-center">
 <i class="ti ti-trash text-danger pointer fs-6" @click="eliminarTambo(it.id)"></i>
 </td>
@@ -138,11 +138,11 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 <template x-if="solicitudActual.status > 0">
 <tr>
 <td class="text-center align-middle" x-text="it.num"></td>
-<td class="text-center align-middle" x-text="it.cantidad"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.cantidad)"></td>
 <td class="text-center align-middle" x-text="it.producto"></td>
 <td class="text-center align-middle" x-text="it.aditivo"></td>
-<td class="text-center align-middle" x-text="it.kilogramo"></td>
-<td class="text-center align-middle" x-text="it.cantidad * it.kilogramo"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.kilogramo)"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.cantidad * it.kilogramo)"></td>
 </tr>
 </template>
 </template>
@@ -153,10 +153,10 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 <tfoot x-show="solicitudActual.tambos.length">
 <tr class="table-dark">
 <td colspan="1" class="text-center align-middle fw-semibold text-white">Totales</td>
-<td class="text-center align-middle fw-semibold text-white" x-text="solicitudActual.total_tambos"></td>
+<td class="text-center align-middle fw-semibold text-white" x-text="displayQuantity(solicitudActual.total_tambos)"></td>
 <td colspan="2"></td>
-<td class="text-center align-middle fw-semibold text-white" x-text="solicitudActual.tambos.reduce((acc, it) => acc + Number(it.kilogramo || 0), 0)"></td>
-<td class="text-center align-middle fw-semibold text-white" x-text="solicitudActual.total_kilogramos"></td>
+<td class="text-center align-middle fw-semibold text-white" x-text="displayQuantity(solicitudActual.tambos.reduce((acc, it) => acc + Number(it.kilogramo || 0), 0))"></td>
+<td class="text-center align-middle fw-semibold text-white" x-text="displayQuantity(solicitudActual.total_kilogramos)"></td>
 <td x-show="solicitudActual.status === 0"></td>
 </tr>
 </tfoot>
@@ -167,11 +167,35 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 </div>
 </div>
 
+<!---------- FIRMA DE QUIEN ELABORÓ (captura pendiente) ---------->
+<div class="col-md-6 mt-4" x-show="solicitudActual.status === 0 && (esEncargado || puedeEditar)" x-cloak>
+<div class="card border">
+<div class="card-header bg-primary text-white py-3 border-0"><div class="d-flex align-items-center"><div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-user-check fs-6"></i></div><div class="ms-3"><h6 class="mb-0 text-white">FIRMA DE QUIEN ELABORÓ</h6></div></div></div>
+<div class="card-body p-3">
+<div id="signature-pad" class="signature-pad-wrapper" :class="{ 'border-danger': invalid('firma') }" style="border:2px dashed #adb5bd;border-radius:6px;cursor:crosshair;touch-action:none;">
+<div class="signature-pad--body"><canvas id="signature-pad-aditivo" style="width:100%;height:230px;display:block;touch-action:none;user-select:none;"></canvas></div>
+</div>
+</div>
+<button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" style="border-bottom-left-radius:6px;border-bottom-right-radius:6px;" @click="limpiarFirma()"><i class="ti ti-eraser me-1"></i> Limpiar firma</button>
+</div>
+</div>
+
 <!---------- FIRMAS REGISTRADAS (status > 0) ---------->
 <div class="col-12 mt-4" x-show="solicitudActual.status > 0" x-cloak>
 <div class="row g-3">
 
-<div class="col-12">
+<div class="col-md-6">
+<template x-if="solicitudActual.firmas && solicitudActual.firmas.A">
+<div class="card border h-100">
+<div class="card-header bg-primary text-white py-3 border-0"><div class="d-flex align-items-center"><div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-user-check fs-6"></i></div><div class="ms-3"><h6 class="mb-0 text-white">FIRMA DE QUIEN ELABORÓ</h6></div></div></div>
+<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4"><template x-if="solicitudActual.firmas.A.firma_img_url"><img :src="solicitudActual.firmas.A.firma_img_url" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma de quien elaboró"></template><template x-if="!solicitudActual.firmas.A.firma_img_url"><div class="d-flex flex-column align-items-center"><i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i><h6 class="text-muted mb-0 fw-normal">La firma está registrada, pero su imagen no está disponible.</h6></div></template></div>
+<div class="card-footer bg-light text-center"><h6 class="mb-0 fw-semibold text-truncate" x-text="solicitudActual.firmas.A.usuario_nombre"></h6><small class="text-muted" x-text="solicitudActual.firmas.A.fecha || ''"></small></div>
+</div>
+</template>
+<template x-if="!solicitudActual.firmas || !solicitudActual.firmas.A"><div class="card border h-100"><div class="card-header bg-primary text-white py-3 border-0"><div class="d-flex align-items-center"><div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-clock-hour-4 fs-6"></i></div><div class="ms-3"><h6 class="mb-0 text-white">FIRMA DE QUIEN ELABORÓ</h6></div></div></div><div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4"><i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i><h6 class="text-muted mb-0 fw-normal">Sin firma registrada.</h6></div><div class="card-footer bg-light text-center"><h6 class="mb-0 fw-semibold text-truncate" x-text="solicitudActual.personal || ''"></h6></div></div></template>
+</div>
+
+<div class="col-md-6">
 <template x-if="solicitudActual.firmas && solicitudActual.firmas.B">
 <div class="card border h-100">
 <div class="card-header bg-primary text-white py-3 border-0">
@@ -186,11 +210,11 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
 <i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
-<small class="text-dark" x-text="solicitudActual.firmas.B.firma_texto || ''"></small>
+<h6 class="text-dark mb-1"><strong>Fecha: <span x-text="solicitudActual.firmas.B.fecha || ''"></span></strong></h6>
+<small class="text-dark">La solicitud de aditivo se firmó por un medio electrónico.</small>
 </div>
 <div class="card-footer bg-light text-center">
 <h6 class="mb-0 fw-semibold text-truncate" x-text="solicitudActual.firmas.B.usuario_nombre"></h6>
-<small class="text-muted" x-text="solicitudActual.firmas.B.fecha || ''"></small>
 </div>
 </div>
 </template>
@@ -202,7 +226,7 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 <i class="ti ti-clock-hour-4 fs-6"></i>
 </div>
 <div class="ms-3">
-<h6 class="mb-0 text-white">VO.BO.</h6>
+<h6 class="mb-0 text-white">FIRMA DE VO.BO.</h6>
 </div>
 </div>
 </div>
@@ -235,7 +259,7 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 
 <div class="col-12">
 <div class="mb-1 form-label">* Producto:</div>
-<select class="form-select" x-model="nuevoTambo.producto">
+<select class="form-select" :class="invalid('producto') ? 'is-invalid border-danger' : ''" x-model="nuevoTambo.producto" @change="clearField('producto')">
 <option value="">Selecciona una opción...</option>
 <option value="GASOLINA">GASOLINA</option>
 <option value="DIESEL">DIESEL</option>
@@ -244,7 +268,7 @@ x-data="{ ...actions(), ...pedidoAditivoPedidoComponent() }">
 
 <div class="col-12">
 <div class="mb-1 form-label">* Cantidad de tambos:</div>
-<input type="number" min="1" class="form-control" x-model.number="nuevoTambo.cantidad">
+<input type="text" inputmode="numeric" class="form-control" :class="invalid('cantidad') ? 'is-invalid border-danger' : ''" :value="formatInputNumber(nuevoTambo.cantidad)" @input="formatNumericInput($event, nuevoTambo, 'cantidad')">
 </div>
 
 </div>

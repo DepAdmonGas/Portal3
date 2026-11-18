@@ -602,12 +602,15 @@ class CuentaLitrosService
 
     public static function archivoUrl(string $nombre): string
     {
-        return '/uploads/archivos/' . self::CARPETA_ARCHIVOS . '/' . $nombre;
+        return '/download?tipo=cuenta-litros&file=' . rawurlencode(basename($nombre)) . '&view=1';
     }
 
     public static function archivoExiste(string $nombre): bool
     {
-        return is_file(PUBLIC_PATH . '/uploads/archivos/' . self::CARPETA_ARCHIVOS . '/' . $nombre);
+        $nombre = basename($nombre);
+        $actual = PUBLIC_PATH . '/uploads/archivos/' . self::CARPETA_ARCHIVOS . '/' . $nombre;
+        $legado = dirname(__DIR__, 3) . '/departamento-operativo/archivos/' . self::CARPETA_ARCHIVOS . '/' . $nombre;
+        return is_file($actual) || is_file($legado);
     }
 
     public static function calcular(array $d, int $idCabecera): array
@@ -728,6 +731,12 @@ private static function mensajeTelegram(
 
     private static function validarCampos(array $datos): array
     {
+        foreach (['tanque', 'litros', 'descarga_neto', 'descarga_bruto', 'litros_c', 'venta_momento', 'folio_merma'] as $campoNumerico) {
+            if (isset($datos[$campoNumerico])) {
+                $datos[$campoNumerico] = str_replace(',', '', trim((string)$datos[$campoNumerico]));
+            }
+        }
+
         $obligatorios = [
             'hora'            => 'Hora',
             'embarque'        => 'Tipo de embarque',
@@ -740,6 +749,7 @@ private static function mensajeTelegram(
             'descarga_bruto'  => 'Tirilla de descarga bruto',
             'litros_c'        => 'Cuenta litros a 20 °C',
             'venta_momento'   => 'Venta al momento',
+            'folio_merma'     => 'Folio de merma',
         ];
 
         foreach ($obligatorios as $campo => $etiqueta) {
@@ -769,10 +779,7 @@ private static function mensajeTelegram(
             }
         }
 
-        $folioMerma = $datos['folio_merma'] ?? 0;
-        if ($folioMerma === '' || $folioMerma === null) {
-            $folioMerma = 0;
-        }
+        $folioMerma = $datos['folio_merma'];
         if (!is_numeric($folioMerma)) {
             throw new \InvalidArgumentException('El campo "Folio de merma" debe ser numérico.');
         }
@@ -790,12 +797,12 @@ private static function mensajeTelegram(
             'producto'        => trim((string)$datos['producto']),
             'tad'             => trim((string)$datos['tad']),
             'unidad'          => trim((string)$datos['unidad']),
-            'litros'          => (int)$datos['litros'],
-            'descarga_neto'   => (int)$datos['descarga_neto'],
-            'descarga_bruto'  => (int)$datos['descarga_bruto'],
-            'litros_c'        => (int)$datos['litros_c'],
-            'venta_momento'   => (int)$datos['venta_momento'],
-            'folio_merma'     => (int)$folioMerma,
+            'litros'          => (float)$datos['litros'],
+            'descarga_neto'   => (float)$datos['descarga_neto'],
+            'descarga_bruto'  => (float)$datos['descarga_bruto'],
+            'litros_c'        => (float)$datos['litros_c'],
+            'venta_momento'   => (float)$datos['venta_momento'],
+            'folio_merma'     => (float)$folioMerma,
             'comentario'      => $comentario,
         ];
     }

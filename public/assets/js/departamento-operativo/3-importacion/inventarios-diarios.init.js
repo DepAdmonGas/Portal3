@@ -35,7 +35,7 @@ document.addEventListener('alpine:init', function () {
 
         celdaTexto(valor) {
             const n = Number(valor);
-            return n > 0 ? n : '';
+            return n > 0 ? Math.trunc(n).toLocaleString('en-US') : '';
         },
 
         colorCelda(valor, colorBase) {

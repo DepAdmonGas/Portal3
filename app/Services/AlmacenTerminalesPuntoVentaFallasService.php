@@ -447,6 +447,8 @@ class AlmacenTerminalesPuntoVentaFallasService
 
                 'factura'           => (string)$f->factura,
                 'cotizacion'        => (string)$f->cotizacion,
+                'factura_disponible' => self::archivoDisponible((string)$f->factura),
+                'cotizacion_disponible' => self::archivoDisponible((string)$f->cotizacion),
 
                 'status'            => $status,
                 'status_label'      => self::STATUS[$status] ?? 'Desconocido',
@@ -511,6 +513,8 @@ class AlmacenTerminalesPuntoVentaFallasService
 
             'factura'         => (string)$f->factura,
             'cotizacion'      => (string)$f->cotizacion,
+            'factura_disponible' => self::archivoDisponible((string)$f->factura),
+            'cotizacion_disponible' => self::archivoDisponible((string)$f->cotizacion),
 
             'status'          => $status,
             'status_label'    => self::STATUS[$status] ?? 'Desconocido',
@@ -942,6 +946,7 @@ class AlmacenTerminalesPuntoVentaFallasService
                 'id'          => (int)$a->id,
                 'descripcion' => (string)$a->descripcion,
                 'documento'   => (string)$a->documento,
+                'documento_disponible' => self::archivoDisponible((string)$a->documento, true),
             ])
             ->all();
     }
@@ -1071,6 +1076,18 @@ class AlmacenTerminalesPuntoVentaFallasService
     public static function getUploadDirAnexos(): string
     {
         return self::prepararDir(dirname(__DIR__, 2) . '/' . self::UPLOAD_FOLDER_ANEXOS);
+    }
+
+    /** Confirma que el archivo registrado exista dentro de su carpeta autorizada. */
+    private static function archivoDisponible(string $nombre, bool $esAnexo = false): bool
+    {
+        $nombre = basename(trim($nombre));
+        if ($nombre === '' || $nombre === '.' || $nombre === '..') {
+            return false;
+        }
+
+        $carpeta = dirname(__DIR__, 2) . '/' . ($esAnexo ? self::UPLOAD_FOLDER_ANEXOS : self::UPLOAD_FOLDER);
+        return is_file($carpeta . $nombre);
     }
 
     private static function prepararDir(string $dir): string

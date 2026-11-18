@@ -34,19 +34,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return c.dataset.estacionFija === 'false';
     }
 
-    function renderDocumento(nombre, etiqueta) {
-        if (!nombre) {
-            return '<i class="ti ti-file-off fs-7 text-muted" title="Documento no disponible"></i>';
+    function renderDocumento(nombre, disponible, etiqueta) {
+        if (!nombre || !disponible) {
+            return '<i class="ti ti-file-off fs-6 text-muted" title="Documento no disponible"></i>';
         }
 
         if (!puedeDescargar) {
-            return '<i class="ti ti-file-off fs-7 text-muted" title="No tienes permiso de descarga."></i>';
+            return '<i class="ti ti-file-download fs-6 text-muted" title="No tienes permiso de descarga."></i>';
         }
 
         return '<a href="javascript:void(0)" class="pointer btn-falla-descargar"'
              + ' data-file="' + encodeURIComponent(nombre) + '"'
              + ' title="Descargar ' + etiqueta + '">'
-             + '<i class="ti ti-file-download fs-7 text-primary"></i></a>';
+             + '<i class="ti ti-file-download fs-6 text-primary"></i></a>';
     }
 
     function renderComentarios(count, idFalla) {
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 width: '48px',
-                render: (v) => renderDocumento(v, 'cotización')
+                render: (v, t, row) => renderDocumento(v, row.cotizacion_disponible, 'cotización')
             },
             {
                 title: 'Factura',
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 orderable: false,
                 searchable: false,
                 width: '48px',
-                render: (v) => renderDocumento(v, 'factura')
+                render: (v, t, row) => renderDocumento(v, row.factura_disponible, 'factura')
             },
             {
                 title: 'Estado',

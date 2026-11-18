@@ -329,14 +329,14 @@ class="btn btn-primary"
 <div class="col-md-6">
 <label class="form-label mb-1">Cotización:</label>
 <div>
-<template x-if="detalleRegistro.cotizacion">
+<template x-if="detalleRegistro.cotizacion_disponible">
     <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" @click="descargarDocumento(detalleRegistro.cotizacion)" title="Descargar cotización">
         <i class="ti ti-file-download fs-5"></i>
         <span>Descargar documento</span>
     </button>
 </template>
-<template x-if="!detalleRegistro.cotizacion">
-<span class="text-muted">Documento no disponible</span>
+<template x-if="!detalleRegistro.cotizacion_disponible">
+<i class="ti ti-file-off fs-6 text-muted" title="Documento no disponible"></i>
 </template>
 </div>
 </div>
@@ -344,14 +344,14 @@ class="btn btn-primary"
 <div class="col-md-6">
 <label class="form-label mb-1">Factura:</label>
 <div>
-<template x-if="detalleRegistro.factura">
+<template x-if="detalleRegistro.factura_disponible">
     <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" @click="descargarDocumento(detalleRegistro.factura)" title="Descargar factura">
         <i class="ti ti-file-download fs-5"></i>
         <span>Descargar documento</span>
     </button>
 </template>
-<template x-if="!detalleRegistro.factura">
-<span class="text-muted">Documento no disponible</span>
+<template x-if="!detalleRegistro.factura_disponible">
+<i class="ti ti-file-off fs-6 text-muted" title="Documento no disponible"></i>
 </template>
 </div>
 </div>
@@ -525,9 +525,14 @@ accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.xls,.xlsx,.doc,.docx"
 <th class="align-middle text-center" x-text="a.id"></th>
 <th class="align-middle text-start" x-text="a.descripcion"></th>
 <th class="align-middle text-center">
+<template x-if="a.documento_disponible">
 <a class="pointer" @click="descargarDocumento(a.documento, true)" title="Descargar anexo">
 <i class="ti ti-file-download fs-6 text-primary"></i>
 </a>
+</template>
+<template x-if="!a.documento_disponible">
+<i class="ti ti-file-off fs-6 text-muted" title="Documento no disponible"></i>
+</template>
 </th>
 <th class="align-middle text-center">
 <a class="pointer text-danger" @click="eliminarAnexo(a.id)" title="Eliminar anexo">

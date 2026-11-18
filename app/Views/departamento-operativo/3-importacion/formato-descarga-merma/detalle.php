@@ -10,14 +10,14 @@ x-data="{ ...actions() }">
 
         <div class="col-12 col-md-auto d-grid mb-1 mb-md-0">
             <a href="/departamento-operativo/importacion/formato-descarga-merma/pdf/<?= $registro['id'] ?>"
-               class="btn btn-outline-danger" target="_blank">
+               class="btn btn-outline-danger" data-merma-export="pdf">
                 <i class="ti ti-file-type-pdf me-1"></i> Descargar PDF
             </a>
         </div>
 
         <div class="col-12 col-md-auto d-grid">
             <a href="/departamento-operativo/importacion/formato-descarga-merma/excel/<?= $registro['id'] ?>"
-               class="btn btn-outline-success">
+               class="btn btn-outline-success" data-merma-export="xlsx">
                 <i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel
             </a>
         </div>
@@ -151,23 +151,17 @@ $adjuntoFields = [
 'metro_contador'     => 'Metro Contador',
 'metro_contador20'   => 'Metro Contador 20°',
 ];
-$hasAdjuntos = false;
-foreach ($adjuntoFields as $campo => $label) {
-if (!empty($registro[$campo])) { $hasAdjuntos = true; break; }
-}
 ?>
 
-<?php if ($hasAdjuntos): ?>
 <div class="row g-4">
     <?php foreach ($adjuntoFields as $campo => $label): ?>
-        <?php if (!empty($registro[$campo])): ?>
-            <?php
-            $url = \App\Services\FormatoDescargaMermaService::getAdjuntoUrl($registro[$campo]);
-            $nombreArchivo = basename($registro[$campo]);
-            $ext = strtolower(pathinfo($registro[$campo], PATHINFO_EXTENSION));
-            $isImg = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-            $isPdf = ($ext === 'pdf');
-            ?>
+        <?php
+        $nombreArchivo = (string)($registro[$campo] ?? '');
+        $url = \App\Services\FormatoDescargaMermaService::getAdjuntoUrl($nombreArchivo);
+        $ext = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
+        $isImg = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+        $isPdf = ($ext === 'pdf');
+        ?>
             <div class="col-sm-6 col-lg-4">
                 <div class="card h-100 bg-primary-subtle">
                     
@@ -179,8 +173,12 @@ if (!empty($registro[$campo])) { $hasAdjuntos = true; break; }
                         <?php if ($url): ?>
                             <!-- Botón superior para descargar -->
                             <a href="<?= $url ?>" download="<?= htmlspecialchars($nombreArchivo) ?>" class="btn btn-sm btn-icon btn-ghost-secondary rounded-circle" data-bs-toggle="tooltip" title="Descargar archivo">
-                                <i class="ti ti-download fs-5"></i>
+                                <i class="ti ti-download fs-6"></i>
                             </a>
+                        <?php else: ?>
+                            <span class="text-muted" title="Documento no disponible">
+                                <i class="ti ti-file-off fs-6"></i>
+                            </span>
                         <?php endif; ?>
                     </div>
 
@@ -199,21 +197,24 @@ if (!empty($registro[$campo])) { $hasAdjuntos = true; break; }
                            
                             </div>
 
-                        <?php else: ?>
+                        <?php elseif ($url): ?>
                             <!-- Para otros formatos: Descarga directa -->
                             <div class="text-center py-3 text-muted">
                                 <i class="ti ti-file-text d-block mb-2" style="font-size: 6rem;"></i>
                      
+                            </div>
+                        <?php else: ?>
+                            <div class="text-center text-muted py-3">
+                                <i class="ti ti-file-off fs-6 d-block mb-2"></i>
+                                <span>Documento no disponible</span>
                             </div>
                         <?php endif; ?>
                     </div>
 
                 </div>
             </div>
-        <?php endif; ?>
     <?php endforeach; ?>
 </div>
-<?php endif; ?>
 
 
 </div>
@@ -224,46 +225,49 @@ if (!empty($registro[$campo])) { $hasAdjuntos = true; break; }
 <!---------- CARD FIRMAS ---------->
 <div class="col-12">
 
-<?php if (!empty($registro['firmas'])): ?>
 <div class="row g-3">
-    <?php foreach ($registro['firmas'] as $tipo => $archivo): ?>
-        <?php $firmaUrl = \App\Services\FormatoDescargaMermaService::getFirmaUrl($archivo); ?>
+    <?php foreach (['Encargado de estación', 'Operador'] as $tipo): ?>
+        <?php
+        $firmas = $registro['firmas'] ?? [];
+        $firmaRegistrada = array_key_exists($tipo, $firmas);
+        $archivo = $firmas[$tipo] ?? '';
+        $firmaUrl = \App\Services\FormatoDescargaMermaService::getFirmaUrl($archivo);
+        $nombreFirmante = $tipo === 'Encargado de estación'
+            ? ($registro['responsable'] ?? '')
+            : ($registro['operador'] ?? '');
+        ?>
         <div class="col-md-6">
-            <div class="card border-0 bg-white  h-100">
-                
-                <!-- Encabezado con ícono y tipo de firma dinámico -->
-                <div class="card-header text-bg-primary py-3 border-0">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
-                                <i class="ti ti-signature fs-6"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h5 class="mb-0 text-white text-uppercase"><?= htmlspecialchars($tipo) ?></h5>
-                            </div>
+            <div class="card border h-100">
+                <div class="card-header bg-primary text-white py-3 border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                            <i class="ti <?= $firmaRegistrada ? 'ti-user-check' : 'ti-clock-hour-4' ?> fs-6"></i>
+                        </div>
+                        <div class="ms-3 overflow-hidden">
+                            <h6 class="mb-0 text-white text-uppercase"><?= htmlspecialchars($tipo === 'Encargado de estación' ? 'Encargado de estación' : 'Operador') ?></h6>
                         </div>
                     </div>
                 </div>
-
-                <!-- Cuerpo de la tarjeta con contenedor punteado -->
-                <div class="card-body p-3 d-flex align-items-center justify-content-center">
-                    <div class="signature-pad-wrapper w-100 d-flex align-items-center justify-content-center bg-white-subtle" style="min-height: 250px;">
-                        <?php if ($firmaUrl): ?>
-                            <img src="<?= $firmaUrl ?>" class="img-fluid p-2" style="max-height: 150px; object-fit: contain;" alt="Firma <?= htmlspecialchars($tipo) ?>">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+                    <?php if ($firmaUrl): ?>
+                        <img src="<?= $firmaUrl ?>" class="img-fluid mb-3" style="max-height:90px;object-fit:contain;" alt="Firma <?= htmlspecialchars($tipo) ?>">
+                    <?php else: ?>
+                        <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+                        <?php if ($firmaRegistrada): ?>
+                            <small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
                         <?php else: ?>
-                            <div class="text-center text-muted py-4">
-                                <i class="ti ti-signature-off fs-1 d-block mb-1 opacity-50"></i>
-                                <span class="fw-semibold small">Sin firma registrada</span>
-                            </div>
+                            <h6 class="text-muted mb-0">Sin firma registrada</h6>
                         <?php endif; ?>
-                    </div>
+                    <?php endif; ?>
                 </div>
-
+                <div class="card-footer bg-light text-center">
+                    <h6 class="mb-0 fw-semibold text-truncate"><?= htmlspecialchars($nombreFirmante) ?></h6>
+                    <?php if (!$firmaRegistrada): ?><small class="text-muted">Pendiente de firma</small><?php endif; ?>
+                </div>
             </div>
         </div>
     <?php endforeach; ?>
 </div>
-<?php endif; ?>
 </div>
 
 

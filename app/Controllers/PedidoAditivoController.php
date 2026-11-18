@@ -110,6 +110,7 @@ class PedidoAditivoController extends BaseController
             'help'             => false,
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
+                '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js',
                 '/assets/js/departamento-operativo/5-comercializadora/pedido-aditivo.pedido.init.js?v=' . time(),
             ],
         ], 'departamento-operativo');
@@ -255,7 +256,7 @@ class PedidoAditivoController extends BaseController
 
         $idReporte = (int)($_POST['id_reporte'] ?? 0);
         $producto = (string)($_POST['producto'] ?? '');
-        $cantidad = (int)($_POST['cantidad'] ?? 0);
+        $cantidad = (string)($_POST['cantidad'] ?? '0');
 
         $result = PedidoAditivoService::agregarTambo($idReporte, $producto, $cantidad);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
@@ -269,7 +270,7 @@ class PedidoAditivoController extends BaseController
         }
 
         $id = (int)($_POST['id'] ?? 0);
-        $cantidad = (int)($_POST['cantidad'] ?? 0);
+        $cantidad = (string)($_POST['cantidad'] ?? '0');
         $producto = (string)($_POST['producto'] ?? '');
 
         $result = PedidoAditivoService::editarTambo($id, $cantidad, $producto !== '' ? $producto : null);
@@ -297,11 +298,12 @@ class PedidoAditivoController extends BaseController
             JsonResponse::forbidden('No tienes permiso para finalizar solicitudes');
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
         $id = (int)($input['id'] ?? ($_POST['id'] ?? 0));
         $idUsuario = (int)(Session::get('usuario')['id'] ?? 0);
+        $firma = (string)($input['firma_base64'] ?? ($_POST['firma_base64'] ?? ''));
 
-        $result = PedidoAditivoService::finalizarSolicitud($id, $idUsuario);
+        $result = PedidoAditivoService::finalizarSolicitud($id, $idUsuario, $firma);
         JsonResponse::custom($result, $result['success'] ? 200 : 400);
     }
 

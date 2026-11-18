@@ -72,7 +72,15 @@ $contextId = $context['id'] ?? null;
                             <select class="form-select" data-entry-product data-required>
                                 <option value="">Selecciona una refacción</option>
                                 <?php foreach ($productOptions as $product): ?>
-                                    <option value="<?= (int) $product['id'] ?>"><?= $escape($product['sku'] . ' · ' . $product['nombre']) ?></option>
+                                    <?php $nombreCompleto = implode(' ', array_filter(array_map('trim', [
+                                        (string) ($product['nombre'] ?? ''),
+                                        (string) ($product['medida'] ?? ''),
+                                        (string) ($product['modelo'] ?? ''),
+                                        (string) ($product['marca'] ?? ''),
+                                    ]))); ?>
+                                    <?php $etiqueta = trim((string) ($product['sku'] ?? '')); ?>
+                                    <?php if ($nombreCompleto !== '') $etiqueta .= ($etiqueta !== '' ? ' · ' : '') . $nombreCompleto; ?>
+                                    <option value="<?= (int) $product['id'] ?>"><?= $escape($etiqueta) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

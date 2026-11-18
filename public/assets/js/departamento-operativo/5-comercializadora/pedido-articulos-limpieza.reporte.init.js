@@ -65,7 +65,7 @@ visible: esTodasEstaciones() },
 { title: 'Detalle', data: 'detalle', className: 'align-middle text-center' },
 { title: 'Estatus', data: 'status_label', className: 'align-middle text-center text-nowrap', width: '120px',
 render: function (v, t, row) { return estatusReporteBadge(row.status); } },
-{ title: '<i class="fas fa-ellipsis-v"></i>', data: null, className: 'align-middle text-center', orderable: false, searchable: false,
+{ title: '<i class="ti ti-dots-vertical fs-5"></i>', data: null, className: 'align-middle text-center', orderable: false, searchable: false,
 render: function (v, t, row) { return renderAccionesReporte(row); } },
 ];
 

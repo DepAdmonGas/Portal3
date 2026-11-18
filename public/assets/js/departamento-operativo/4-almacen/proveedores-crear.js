@@ -36,6 +36,7 @@ document.addEventListener('alpine:init', () => {
             Banco: false,
             Metodopago: false,
             CFDI: false,
+            Moneda: false,
             FormaPago: false,
             Descripcion: false,
             FechaConstancia: false,
@@ -49,7 +50,7 @@ document.addEventListener('alpine:init', () => {
             const fields = [
                 'Fecha', 'RazonSocial', 'ActividadEco', 'Email',
                 'RFC', 'Ciudad', 'Telefono1', 'Direccion',
-                'Beneficiario', 'Banco', 'Metodopago', 'CFDI',
+                'Beneficiario', 'Banco', 'Metodopago', 'CFDI', 'Moneda',
                 'FormaPago', 'Descripcion', 'FechaConstancia', 'FechaCaratula'
             ];
 
@@ -111,7 +112,7 @@ document.addEventListener('alpine:init', () => {
                 }
             } catch (err) {
                 console.error(err);
-                this.notify('error', 'Error en el servidor al intentar registrar el proveedor.');
+                this.notify('error', err.response?.data?.message || 'Error en el servidor al intentar registrar el proveedor.');
                 this.guardando = false;
             }
         }

@@ -47,7 +47,7 @@ var columnsInventario = [
 { title: '#', data: 'id', className: 'align-middle text-center', width: '50px' },
 { title: 'Nombre del producto', data: 'producto', className: 'align-middle text-start text-nowrap' },
 { title: 'Unidad', data: 'unidad', className: 'align-middle text-center text-nowrap', width:'96px' },
-{ title: 'Piezas', data: 'piezas', className: 'align-middle text-center text-nowrap', width:'96px' },
+{ title: 'Piezas', data: 'piezas', className: 'align-middle text-center text-nowrap', width:'96px', render: function (value, type) { return type === 'display' ? Number(value || 0).toLocaleString('en-US') : value; } },
 { title: '<i class="ti ti-trash text-danger fs-6"></i>', data: null, className: 'align-middle text-center', orderable: false, searchable: false, width:'48px',
 render: function (v, t, row) {
 var inst = window.pedidoLimpiezaInventarioComponentInstance;
@@ -97,6 +97,7 @@ window.pedidoLimpiezaInventarioComponentInstance.eliminarInventarioItem(id, nomb
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoLimpiezaInventarioComponent', () => ({
+...window.PedidoLimpiezaForm(),
 
 puedeAcceso: false,
 puedeEditar: false,
@@ -205,6 +206,7 @@ jQuery(sel).val('0').trigger('change');
 
 reiniciarFormInventario() {
 this.inventarioForm = { id_producto: 0, piezas: 1 };
+this.validationErrors = {};
 },
 
 async agregarInventario() {
@@ -215,21 +217,15 @@ if (!idEstacion || this.esTodasEstaciones()) {
 if (window.Notify) Notify.info('Selecciona una estación específica.');
 return;
 }
-if (!this.inventarioForm.id_producto) {
-if (window.Notify) Notify.error('Selecciona un producto.');
-return;
-}
-if (!this.inventarioForm.piezas || this.inventarioForm.piezas <= 0) {
-if (window.Notify) Notify.error('Ingresa un número de piezas válido.');
-return;
-}
+const piezas = String(this.inventarioForm.piezas ?? '').replace(/,/g, '');
+if (!this.validateFields({ producto: !!this.inventarioForm.id_producto, piezas: this.positiveQuantity(piezas) })) return;
 
 this.guardandoInventario = true;
 try {
 const resp = await axios.post(this.BASE + '/agregar-inventario', {
 id_estacion: idEstacion,
 id_producto: this.inventarioForm.id_producto,
-piezas: this.inventarioForm.piezas
+piezas
 });
 const json = resp.data;
 if (json.success) {

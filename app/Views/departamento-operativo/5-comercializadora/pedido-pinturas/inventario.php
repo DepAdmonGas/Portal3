@@ -53,15 +53,15 @@ x-data="{ ...actions(), ...pedidoPinturasInventarioComponent() }">
 <div class="row g-3">
 <div class="col-12">
 <div class="mb-1 form-label">* Nombre del producto:</div>
-<div class="select2-modal-field" x-ref="productoWrapper">
-<select class="form-select" x-ref="productoSelect" data-width="100%">
+<div class="select2-modal-field" x-ref="productoWrapper" :class="{ 'is-invalid': invalid('producto') }">
+<select class="form-select" x-ref="productoSelect" x-model="inventarioForm.id_producto" :class="{ 'border-danger': invalid('producto') }" @change="clearField('producto')" data-width="100%">
 <option value="0">Selecciona un producto...</option>
 </select>
 </div>
 </div>
 <div class="col-12">
 <div class="mb-1 form-label">* Piezas:</div>
-<input type="number" min="1" class="form-control" x-model.number="inventarioForm.piezas">
+<input type="text" inputmode="numeric" class="form-control" :value="formatInputNumber(inventarioForm.piezas)" :class="{ 'border-danger': invalid('piezas') }" @input="formatNumericInput($event, inventarioForm, 'piezas')">
 </div>
 </div>
 </div>

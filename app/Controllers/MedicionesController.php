@@ -90,28 +90,27 @@ class MedicionesController extends BaseController
 
         $fecha = trim((string)($input['fecha'] ?? ''));
         $factura = trim((string)($input['factura'] ?? ''));
-        $neto = $input['neto'] ?? '';
-        $bruto = $input['bruto'] ?? '';
-        $cuentaLitros = $input['cuenta_litros'] ?? '';
+        $neto = trim((string)($input['neto'] ?? ''));
+        $bruto = trim((string)($input['bruto'] ?? ''));
+        $cuentaLitros = trim((string)($input['cuenta_litros'] ?? ''));
         $proveedor = trim((string)($input['proveedor'] ?? ''));
 
-        if ($fecha === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
-            JsonResponse::error('La fecha es obligatoria.');
-        }
-        if ($factura === '') {
-            JsonResponse::error('La factura es obligatoria.');
-        }
-        if ($neto === '' || !is_numeric($neto)) {
-            JsonResponse::error('El neto es obligatorio.');
-        }
-        if ($bruto === '' || !is_numeric($bruto)) {
-            JsonResponse::error('El bruto es obligatorio.');
-        }
-        if ($cuentaLitros === '' || !is_numeric($cuentaLitros)) {
-            JsonResponse::error('La cuenta de litros es obligatoria.');
-        }
-        if (!in_array($proveedor, MedicionesService::PROVEEDORES, true)) {
-            JsonResponse::error('Selecciona un proveedor válido.');
+        $normalizarNumero = static function (string $valor): ?string {
+            if (!preg_match('/^(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?|\.\d+)$/D', $valor)) {
+                return null;
+            }
+            return str_replace(',', '', $valor);
+        };
+
+        $netoNormalizado = $normalizarNumero($neto);
+        $brutoNormalizado = $normalizarNumero($bruto);
+        $cuentaLitrosNormalizada = $normalizarNumero($cuentaLitros);
+        $fechaValida = preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) === 1
+            && checkdate((int)substr($fecha, 5, 2), (int)substr($fecha, 8, 2), (int)substr($fecha, 0, 4));
+
+        if (!$fechaValida || $factura === '' || $netoNormalizado === null || $brutoNormalizado === null
+            || $cuentaLitrosNormalizada === null || !in_array($proveedor, MedicionesService::PROVEEDORES, true)) {
+            JsonResponse::error('Completa los campos obligatorios.');
         }
 
         try {
@@ -119,9 +118,9 @@ class MedicionesController extends BaseController
                 $idEstacion,
                 $fecha,
                 $factura,
-                (float)$neto,
-                (float)$bruto,
-                (float)$cuentaLitros,
+                (float)$netoNormalizado,
+                (float)$brutoNormalizado,
+                (float)$cuentaLitrosNormalizada,
                 $proveedor
             );
 

@@ -129,9 +129,9 @@ class PreciosCombustibleController extends BaseController
         $transporteTarifas = [];
         foreach ($transporte as $t) {
             $precio = (float)$t->precio;
-            $iva = number_format($precio * 0.16, 4);
-            $retencion = number_format($precio * 0.04, 4);
-            $tarifa = number_format($precio + $iva - $retencion, 4);
+            $iva = $precio * 0.16;
+            $retencion = $precio * 0.04;
+            $tarifa = $precio + $iva - $retencion;
             $transporteTarifas[] = [
                 'id'        => $t->id,
                 'detalle'   => $t->detalle,

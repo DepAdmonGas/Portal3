@@ -33,7 +33,7 @@
 <div class="d-flex align-items-center gap-2">
 <i class="ti ti-building text-white fs-5"></i>
 <h5 class="modal-title text-white mb-0">
-Detalle del Proveedor <span x-show="detalle && detalle.razon_social" x-text="'(' + detalle.razon_social + ')'"></span>
+Detalle del Proveedor <span x-show="detalle && detalle.razon_social" x-text="detalle && detalle.razon_social ? '(' + detalle.razon_social + ')' : ''"></span>
 </h5>
 </div>
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -140,9 +140,16 @@ Detalle del Proveedor <span x-show="detalle && detalle.razon_social" x-text="'('
 <tr>
 <td class="text-start align-middle" x-text="d.nombre"></td>
 <td class="text-center align-middle">
+<template x-if="d.archivo_existe">
 <a href="javascript:void(0)" class="text-primary" @click="download('proveedores', d.archivo)">
 <i class="ti ti-download fs-6 text-primary"></i>
 </a>
+</template>
+<template x-if="!d.archivo_existe">
+<span class="text-muted" title="Documento no disponible" aria-label="Documento no disponible">
+<i class="ti ti-file-off fs-6"></i>
+</span>
+</template>
 </td>
 </tr>
 </template>
@@ -247,9 +254,16 @@ Actualizada
 </template>
 </td>
 <td class="text-center align-middle">
+<template x-if="d.archivo_existe">
 <a href="javascript:void(0)" @click="download('proveedores', d.archivo)">
-<i class="ti ti-download text-primary fs-5"></i>
+<i class="ti ti-download text-primary fs-6"></i>
 </a>
+</template>
+<template x-if="!d.archivo_existe">
+<span class="text-muted" title="Documento no disponible" aria-label="Documento no disponible">
+<i class="ti ti-file-off fs-6"></i>
+</span>
+</template>
 </td>
 </tr>
 </template>

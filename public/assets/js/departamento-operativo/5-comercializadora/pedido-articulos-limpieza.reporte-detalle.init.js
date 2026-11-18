@@ -1,6 +1,7 @@
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('pedidoLimpiezaReporteDetalleComponent', () => ({
+...window.PedidoLimpiezaForm(),
 
 puedeAcceso: false,
 puedeEditar: false,
@@ -132,6 +133,7 @@ this.programarAutosave();
 
 async modalAgregarProducto() {
 this.reporteItem = { id_producto: 0, unidad: 1, observaciones: '' };
+this.validationErrors = {};
 await this.cargarInventarioDisponible();
 this._inicializarSelectProducto(null);
 const m = document.getElementById('modalAgregarProductoReporte');
@@ -190,15 +192,8 @@ return 'bg-secondary text-white';
 
 async agregarProductoReporte() {
 if (this.guardandoReporteItem) return;
-
-if (!this.reporteItem.id_producto) {
-if (window.Notify) Notify.error('Selecciona un producto del inventario');
-return;
-}
-if (!this.reporteItem.unidad || this.reporteItem.unidad <= 0) {
-if (window.Notify) Notify.error('Ingresa un número de piezas válido');
-return;
-}
+const cantidad = String(this.reporteItem.unidad ?? '').replace(/,/g, '');
+if (!this.validateFields({ producto: !!this.reporteItem.id_producto, piezas: this.positiveQuantity(cantidad) })) return;
 
 this.guardandoReporteItem = true;
 try {
@@ -206,7 +201,7 @@ const resp = await axios.post(this.BASE + '/agregar-producto-reporte', {
 id_reporte: this.reporteActual.id,
 id_estacion: this.reporteActual.id_estacion,
 id_producto: this.reporteItem.id_producto,
-unidad: this.reporteItem.unidad,
+unidad: cantidad,
 observaciones: this.reporteItem.observaciones || ''
 });
 const json = resp.data;
@@ -263,6 +258,7 @@ if (window.Notify) Notify.error(e.response?.data?.message || 'Error al eliminar 
 
 async aprobarReporte() {
 if (this.guardandoReporte) return;
+if (!this.validateFields({ fecha: !!this.reporteForm.fecha, hora: !!this.reporteForm.hora })) return;
 
 const result = await Swal.fire({
 title: '¿Finalizar reporte?',

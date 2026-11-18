@@ -135,13 +135,13 @@ x-model="form.fecha_instalacion"
 
 <div class="col-md-6">
 <label class="form-label mb-1">* Costo de compra:</label>
-<input type="number"
+<input type="text"
 class="form-control"
-step="0.01"
-min="0"
-x-model="form.costo_compra"
+inputmode="decimal"
+autocomplete="off"
+:value="formatearCosto(form.costo_compra)"
 :style="errores.costo_compra ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.costo_compra = false">
+@input="capturarCosto($event)">
 </div>
 
 <div class="col-md-6">
@@ -270,13 +270,13 @@ x-model="form.fecha_instalacion"
 
 <div class="col-md-6">
 <label class="form-label mb-1">* Costo de compra:</label>
-<input type="number"
+<input type="text"
 class="form-control"
-step="0.01"
-min="0"
-x-model="form.costo_compra"
+inputmode="decimal"
+autocomplete="off"
+:value="formatearCosto(form.costo_compra)"
 :style="errores.costo_compra ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.costo_compra = false">
+@input="capturarCosto($event)">
 </div>
 
 <div class="col-md-6">

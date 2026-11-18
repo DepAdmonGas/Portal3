@@ -123,6 +123,13 @@ class AlmacenTerminalesPuntoVentaService
         return 'bg-success-subtle text-success';
     }
 
+    /** Agrupa miles sólo cuando el dato heredado es una cantidad entera. */
+    private static function formatearCantidad($valor): string
+    {
+        $texto = trim((string)$valor);
+        return ctype_digit($texto) ? number_format((int)$texto, 0, '.', ',') : $texto;
+    }
+
     /**
      * Normaliza y sanea la entrada del formulario (los 14 campos del legacy).
      *
@@ -143,9 +150,11 @@ class AlmacenTerminalesPuntoVentaService
             $datos[$campo] = is_scalar($valor) ? trim((string)$valor) : '';
         }
 
-        // no_impresiones viaja formateado con separador de miles en el detalle:
-        // se limpia para no truncar el valor al guardar ("31,901" => "31901").
-        $datos['no_impresiones'] = str_replace(',', '', $datos['no_impresiones']);
+        // Las cantidades se muestran agrupadas en el formulario; se guardan
+        // sin separador para mantener los valores heredados y la BD limpios.
+        foreach (['rollos', 'cargadores', 'pedestales', 'no_impresiones'] as $campoCantidad) {
+            $datos[$campoCantidad] = str_replace(',', '', $datos[$campoCantidad]);
+        }
 
         return $datos;
     }
@@ -256,9 +265,9 @@ class AlmacenTerminalesPuntoVentaService
                 'no_afiliacion'      => (string)$t->no_afiliacion,
                 'telefono'           => (string)$t->telefono,
                 'estado'             => (string)$t->estado,
-                'rollos'             => (string)$t->rollos,
-                'cargadores'         => (string)$t->cargadores,
-                'pedestales'         => (string)$t->pedestales,
+                'rollos'             => self::formatearCantidad($t->rollos),
+                'cargadores'         => self::formatearCantidad($t->cargadores),
+                'pedestales'         => self::formatearCantidad($t->pedestales),
                 'estatus_tpv'        => (string)$t->estatus_tpv,
                 'no_impresiones'     => (int)$t->no_impresiones,
                 'no_impresiones_label' => number_format((int)$t->no_impresiones, 0, '.', ','),
@@ -314,9 +323,9 @@ class AlmacenTerminalesPuntoVentaService
             'no_afiliacion' => (string)$terminal->no_afiliacion,
             'telefono'      => (string)$terminal->telefono,
             'estado'        => (string)$terminal->estado,
-            'rollos'        => (string)$terminal->rollos,
-            'cargadores'    => (string)$terminal->cargadores,
-            'pedestales'    => (string)$terminal->pedestales,
+            'rollos'        => self::formatearCantidad($terminal->rollos),
+            'cargadores'    => self::formatearCantidad($terminal->cargadores),
+            'pedestales'    => self::formatearCantidad($terminal->pedestales),
             'estatus_tpv'   => (string)$terminal->estatus_tpv,
             'estatus_tpv_badge' => self::badgeEstatusTpv((string)$terminal->estatus_tpv),
             'no_impresiones' => number_format((int)$terminal->no_impresiones, 0, '.', ','),

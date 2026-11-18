@@ -24,6 +24,27 @@ data-detalle='<?= htmlspecialchars(json_encode($detalle, JSON_HEX_APOS | JSON_HE
     padding-right: 1.75rem;
 }
 #container select[data-select2-inline] + .select2-container .select2-selection__placeholder { color: #6c757d; }
+#modalAgregar .select2-modal-field.is-invalid .select2-selection,
+#modalEstacion .select2-modal-field.is-invalid .select2-selection { border-color: var(--bs-danger) !important; }
+#container select[data-select2-inline] + .select2-container .select2-selection.is-invalid {
+    border: 1px solid var(--bs-danger) !important;
+    box-shadow: 0 0 0 .15rem rgba(var(--bs-danger-rgb), .15) !important;
+}
+#container [data-required-field].is-invalid,
+#container td.border-danger {
+    border: 2px solid var(--bs-danger) !important;
+    border-color: var(--bs-danger) !important;
+    box-shadow: inset 0 0 0 1px var(--bs-danger) !important;
+    background-color: #fff1f0 !important;
+}
+#container .pivoteo-save-cell { position: relative; }
+#container .pivoteo-save-indicator {
+    position: absolute; z-index: 4; right: .35rem; top: 50%; transform: translateY(-50%);
+    display: inline-flex; align-items: center; gap: .2rem; padding: .1rem .3rem;
+    border-radius: .25rem; background: rgba(255,255,255,.96); color: #198754;
+    font-size: .7rem; line-height: 1.2; pointer-events: none; white-space: nowrap;
+}
+#container textarea ~ .pivoteo-save-indicator { top: .35rem; transform: none; }
 </style>
 
 <!-- Barra de acciones -->
@@ -43,6 +64,20 @@ Finalizar
                     </div>
                   </div>
 
+<template x-if="camposFaltantes.length > 0">
+    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert" aria-live="assertive">
+        <i class="ti ti-alert-circle fs-5 mt-1"></i>
+        <div class="w-100">
+            <strong>Completa los campos obligatorios:</strong>
+            <ul class="mb-0 mt-1 ps-3">
+                <template x-for="campo in camposFaltantes" :key="campo.key">
+                    <li x-text="campo.etiqueta"></li>
+                </template>
+            </ul>
+        </div>
+    </div>
+</template>
+
 
 
 
@@ -61,7 +96,7 @@ Finalizar
 <template x-if="puedeEditarCabecera">
 <textarea class="form-control border-0 rounded-0 text-center" rows="1"
 x-text="detalle.sucursal"
-@change="guardarCabecera(7, $el.value)"></textarea>
+@change="guardarCabecera(7, $el.value, $el)"></textarea>
 </template>
 <template x-if="!puedeEditarCabecera">
 <div class="ps-2" x-text="detalle.sucursal"></div>
@@ -74,11 +109,12 @@ x-text="detalle.sucursal"
 <td class="align-middle p-0">
 <template x-if="puedeEditarCabecera">
 <input type="date" class="form-control border-0 rounded-0 text-center"
+:data-required-detail="0" data-required-field="fecha"
 :value="detalle.fecha"
-@change="guardarFechaDirecta($el.value)">
+@change="guardarFechaDirecta($el.value, $el)">
 </template>
 <template x-if="!puedeEditarCabecera">
-<div class="ps-2 text-center" x-text="detalle.fecha_display"></div>
+<div class="ps-2 text-center" x-text="detalle.fecha_display" data-required-detail="0" data-required-field="fecha"></div>
 </template>
 </td>
 </tr>
@@ -89,6 +125,21 @@ x-text="detalle.sucursal"
 </tbody>
 </table>
 </div>
+</template>
+
+<template x-if="!multiestacion">
+    <div class="row mb-3">
+        <div class="col-12 col-md-4">
+            <label class="form-label fw-semibold">Fecha:</label>
+            <template x-if="puedeEditarFecha">
+                <input type="date" class="form-control" data-required-detail="0" data-required-field="fecha"
+                       :value="detalle.fecha" @change="guardarFechaDirecta($el.value, $el)">
+            </template>
+            <template x-if="!puedeEditarFecha">
+                <div class="form-control bg-light" data-required-detail="0" data-required-field="fecha" x-text="detalle.fecha_display || ''"></div>
+            </template>
+        </div>
+    </div>
 </template>
 
 <!-- Causa -->
@@ -104,7 +155,7 @@ x-text="detalle.sucursal"
 <template x-if="puedeEditarCabecera">
 <textarea class="form-control border-0 rounded-0 p-3" rows="4"
 x-text="detalle.causa"
-@change="guardarCabecera(9, $el.value)"></textarea>
+@change="guardarCabecera(9, $el.value, $el)"></textarea>
 </template>
 <template x-if="!puedeEditarCabecera">
 <div class="ps-2 py-2 p-3" x-text="detalle.causa"></div>
@@ -133,7 +184,7 @@ x-text="detalle.causa"
                   <!-- Estación -->
                                     <tr class="align-middle">
                                         <td class="text-center fw-semibold">Estación:</td>
-                                        <td x-text="fila.estacion_fc"></td>
+                                        <td x-text="fila.estacion_fc" :data-required-detail="fila.id_detalle" data-required-field="estacion_fc"></td>
                                         <td class="p-0" width="98px">
                                             <template x-if="inlineEditable">
                                                 <button type="button" class="btn bg-primary-subtle text-primary btn-sm w-100 h-100 rounded-0"
@@ -143,7 +194,7 @@ x-text="detalle.causa"
                                             </template>
                                         </td>
                                         <td class="text-center fw-semibold">Estación:</td>
-                                        <td x-text="fila.estacion_fn"></td>
+                                        <td x-text="fila.estacion_fn" :data-required-detail="fila.id_detalle" data-required-field="estacion_fn"></td>
                                         <td class="p-0" width="98px">
                                             <template x-if="inlineEditable">
                                                 <button type="button" class="btn bg-primary-subtle text-primary btn-sm w-100 h-100 rounded-0"
@@ -157,9 +208,9 @@ x-text="detalle.causa"
                                     <!-- Destino -->
                                     <tr class="align-middle">
                                         <td class="text-center fw-semibold">Destino:</td>
-                                        <td colspan="2" x-text="fila.destino_fc"></td>
+                                        <td colspan="2" x-text="fila.destino_fc" :data-required-detail="fila.id_detalle" data-required-field="destino_fc"></td>
                                         <td class="text-center fw-semibold">Destino:</td>
-                                        <td colspan="2" x-text="fila.destino_fn"></td>
+                                        <td colspan="2" x-text="fila.destino_fn" :data-required-detail="fila.id_detalle" data-required-field="destino_fn"></td>
                                     </tr>
 
                                     <!-- Producto -->
@@ -168,18 +219,20 @@ x-text="detalle.causa"
                                         <td class="p-0" colspan="2">
                                             <template x-if="inlineEditable">
                                                 <select class="form-select border-0 rounded-0 text-center"
-                                                        @change="editarCampo(fila.id_detalle, 12, $el.value)">
+                                                        :data-required-detail="fila.id_detalle" data-required-field="producto_fc"
+                                                        @change="editarCampo(fila.id_detalle, 12, $el.value, $el)">
+                                                    <option value="" :selected="!String(fila.producto_fc || '').trim()">Selecciona una opción...</option>
                                                     <template x-for="(op, oi) in opciones(productos, fila.producto_fc)" :key="'pfc-' + oi">
                                                         <option :value="op" :selected="op === String(fila.producto_fc)" x-text="op"></option>
                                                     </template>
                                                 </select>
                                             </template>
                                             <template x-if="!inlineEditable">
-                                                <div class="ps-2" x-text="fila.producto_fc"></div>
+                                                <div class="ps-2" x-text="fila.producto_fc" :data-required-detail="fila.id_detalle" data-required-field="producto_fc"></div>
                                             </template>
                                         </td>
                                         <td class="text-center fw-semibold">Producto:</td>
-                                        <td colspan="2" x-text="fila.producto_fc"></td>
+                                        <td colspan="2" x-text="fila.producto_fc" :data-required-detail="fila.id_detalle" data-required-field="producto_fc"></td>
                                     </tr>
 
                                     <!-- Tanque -->
@@ -188,18 +241,20 @@ x-text="detalle.causa"
                                         <td class="p-0" colspan="2">
                                             <template x-if="inlineEditable">
                                                 <select class="form-select border-0 rounded-0 text-center"
-                                                        @change="editarCampo(fila.id_detalle, 10, $el.value)">
+                                                        :data-required-detail="fila.id_detalle" data-required-field="tanque_fc"
+                                                        @change="editarCampo(fila.id_detalle, 10, $el.value, $el)">
+                                                    <option value="" :selected="!String(fila.tanque_fc || '').trim()">Selecciona una opción...</option>
                                                     <template x-for="(op, oi) in opciones(tanques, fila.tanque_fc)" :key="'tfc-' + oi">
                                                         <option :value="op" :selected="op === String(fila.tanque_fc)" x-text="op"></option>
                                                     </template>
                                                 </select>
                                             </template>
                                             <template x-if="!inlineEditable">
-                                                <div class="ps-2" x-text="fila.tanque_fc"></div>
+                                                <div class="ps-2" x-text="fila.tanque_fc" :data-required-detail="fila.id_detalle" data-required-field="tanque_fc"></div>
                                             </template>
                                         </td>
                                         <td class="text-center fw-semibold">Tanque:</td>
-                                        <td colspan="2" x-text="fila.tanque_fn"></td>
+                                        <td colspan="2" x-text="fila.tanque_fn" :data-required-detail="fila.id_detalle" data-required-field="tanque_fc"></td>
                                     </tr>
 
                                     <!-- Factura -->
@@ -209,10 +264,11 @@ x-text="detalle.causa"
                                             <template x-if="inlineEditable">
                                                 <input type="text" class="form-control border-0 rounded-0 text-center"
                                                        :value="fila.factura_fc"
-                                                       @change="editarCampo(fila.id_detalle, 1, $el.value)">
+                                                       :data-required-detail="fila.id_detalle" data-required-field="factura_fc"
+                                                       @change="editarCampo(fila.id_detalle, 1, $el.value, $el)">
                                             </template>
                                             <template x-if="!inlineEditable">
-                                                <div class="ps-2" x-text="fila.factura_fc"></div>
+                                                <div class="ps-2" x-text="fila.factura_fc" :data-required-detail="fila.id_detalle" data-required-field="factura_fc"></div>
                                             </template>
                                         </td>
                                         <td class="text-center fw-semibold">Factura:</td>
@@ -220,10 +276,11 @@ x-text="detalle.causa"
                                             <template x-if="inlineEditable">
                                                 <input type="text" class="form-control border-0 rounded-0 text-center"
                                                        :value="fila.factura_fn"
-                                                       @change="editarCampo(fila.id_detalle, 2, $el.value)">
+                                                       :data-required-detail="fila.id_detalle" data-required-field="factura_fn"
+                                                       @change="editarCampo(fila.id_detalle, 2, $el.value, $el)">
                                             </template>
                                             <template x-if="!inlineEditable">
-                                                <div class="ps-2" x-text="fila.factura_fn"></div>
+                                                <div class="ps-2" x-text="fila.factura_fn" :data-required-detail="fila.id_detalle" data-required-field="factura_fn"></div>
                                             </template>
                                         </td>
                                     </tr>
@@ -233,16 +290,18 @@ x-text="detalle.causa"
                                         <td class="text-center fw-semibold">Litros:</td>
                                         <td class="p-0" colspan="2">
                                             <template x-if="inlineEditable">
-                                                <input type="number" step="any" class="form-control border-0 rounded-0 text-center"
-                                                       :value="fila.litros"
-                                                       @change="editarCampo(fila.id_detalle, 11, $el.value)">
+                                                <input type="text" inputmode="decimal" class="form-control border-0 rounded-0 text-center"
+                                                       :value="formatoLitros(fila.litros)"
+                                                       :data-required-detail="fila.id_detalle" data-required-field="litros"
+                                                       @input="formatearNumeroInput($event)"
+                                                       @change="editarCampo(fila.id_detalle, 11, $el.value, $el)">
                                             </template>
                                             <template x-if="!inlineEditable">
-                                                <div class="ps-2" x-text="formatoLitros(fila.litros)"></div>
+                                                <div class="ps-2" x-text="formatoLitros(fila.litros)" :data-required-detail="fila.id_detalle" data-required-field="litros"></div>
                                             </template>
                                         </td>
                                         <td class="text-center fw-semibold">Litros:</td>
-                                        <td colspan="2" x-text="formatoLitros(fila.litros)"></td>
+                                        <td colspan="2" x-text="formatoLitros(fila.litros)" :data-required-detail="fila.id_detalle" data-required-field="litros"></td>
                                     </tr>
 
                                     <!-- TAD -->
@@ -251,18 +310,20 @@ x-text="detalle.causa"
                                         <td class="p-0" colspan="2">
                                             <template x-if="inlineEditable">
                                                 <select class="form-select border-0 rounded-0 text-center"
-                                                        @change="editarCampo(fila.id_detalle, 3, $el.value)">
+                                                        :data-required-detail="fila.id_detalle" data-required-field="tad"
+                                                        @change="editarCampo(fila.id_detalle, 3, $el.value, $el)">
+                                                    <option value="" :selected="!String(fila.tad || '').trim()">Selecciona una opción...</option>
                                                     <template x-for="(op, oi) in opciones(tads, fila.tad)" :key="'tad-' + oi">
                                                         <option :value="op" :selected="op === String(fila.tad)" x-text="op"></option>
                                                     </template>
                                                 </select>
                                             </template>
                                             <template x-if="!inlineEditable">
-                                                <div class="ps-2" x-text="fila.tad"></div>
+                                                <div class="ps-2" x-text="fila.tad" :data-required-detail="fila.id_detalle" data-required-field="tad"></div>
                                             </template>
                                         </td>
                                         <td class="text-center fw-semibold">TAD:</td>
-                                        <td colspan="2" x-text="fila.tad"></td>
+                                        <td colspan="2" x-text="fila.tad" :data-required-detail="fila.id_detalle" data-required-field="tad"></td>
                                     </tr>
 
                                     <!-- Unidad -->
@@ -270,18 +331,19 @@ x-text="detalle.causa"
                                         <td class="text-center fw-semibold">Unidad:</td>
                                         <td class="p-0" colspan="2">
                                             <template x-if="inlineEditable">
-                                                <select class="form-select border-0 rounded-0 text-center" data-select2-inline="1" data-opcion="4" :data-detalle="fila.id_detalle">
+                                                <select class="form-select border-0 rounded-0 text-center" data-select2-inline="1" data-opcion="4" :data-detalle="fila.id_detalle" :data-required-detail="fila.id_detalle" data-required-field="unidad">
+                                                    <option value="" :selected="!String(fila.unidad || '').trim()"></option>
                                                     <template x-for="(op, oi) in opciones(unidades, fila.unidad)" :key="'uni-' + oi">
                                                         <option :value="op" :selected="op === String(fila.unidad)" x-text="op"></option>
                                                     </template>
                                                 </select>
                                             </template>
                                             <template x-if="!inlineEditable">
-                                                <div class="ps-2" x-text="fila.unidad"></div>
+                                                <div class="ps-2" x-text="fila.unidad" :data-required-detail="fila.id_detalle" data-required-field="unidad"></div>
                                             </template>
                                         </td>
                                         <td class="text-center fw-semibold">Unidad:</td>
-                                        <td colspan="2" x-text="fila.unidad"></td>
+                                        <td colspan="2" x-text="fila.unidad" :data-required-detail="fila.id_detalle" data-required-field="unidad"></td>
                                     </tr>
 
                                     <!-- Chofer -->
@@ -289,18 +351,19 @@ x-text="detalle.causa"
                                         <td class="text-center fw-semibold">Chofer:</td>
                                         <td class="p-0" colspan="2">
                                             <template x-if="inlineEditable">
-                                                <select class="form-select border-0 rounded-0 text-center" data-select2-inline="1" data-opcion="5" :data-detalle="fila.id_detalle">
+                                                <select class="form-select border-0 rounded-0 text-center" data-select2-inline="1" data-opcion="5" :data-detalle="fila.id_detalle" :data-required-detail="fila.id_detalle" data-required-field="chofer">
+                                                    <option value="" :selected="!String(fila.chofer || '').trim()"></option>
                                                     <template x-for="(op, oi) in opciones(choferes, fila.chofer)" :key="'chf-' + oi">
                                                         <option :value="op" :selected="op === String(fila.chofer)" x-text="op"></option>
                                                     </template>
                                                 </select>
                                             </template>
                                             <template x-if="!inlineEditable">
-                                                <div class="ps-2" x-text="fila.chofer"></div>
+                                                <div class="ps-2" x-text="fila.chofer" :data-required-detail="fila.id_detalle" data-required-field="chofer"></div>
                                             </template>
                                         </td>
                                         <td class="text-center fw-semibold">Chofer:</td>
-                                        <td colspan="2" x-text="fila.chofer"></td>
+                                        <td colspan="2" x-text="fila.chofer" :data-required-detail="fila.id_detalle" data-required-field="chofer"></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -342,6 +405,33 @@ x-text="detalle.causa"
         </div>
     </template>
 
+<div class="row mt-3" x-show="puedeFirmarElaborador" x-cloak>
+    <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-3">
+        <div class="card border-0 bg-white h-100">
+            <div class="card-header text-bg-primary py-3 border-0">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:45px;height:45px;">
+                        <i class="ti ti-signature fs-6"></i>
+                    </div>
+                    <div class="ms-3"><h5 class="mb-0 text-white">FIRMA DE QUIEN ELABORA</h5></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-3 pb-0">
+                <div id="pivoteo-signature-pad" class="signature-pad-wrapper" :style="firmaInvalida ? 'border:2px dashed #dc3545; border-radius:6px; cursor:crosshair;' : 'border:2px dashed #adb5bd; border-radius:6px; cursor:crosshair;'">
+                    <div class="signature-pad--body">
+                        <canvas id="pivoteo-signature-canvas" style="width:100%; height:250px; display:block; touch-action:none; user-select:none;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" style="border-bottom-left-radius:6px; border-bottom-right-radius:6px;" @click="limpiarFirmaElaborador()">
+                <i class="ti ti-eraser me-1"></i> Limpiar firma
+            </button>
+        </div>
+    </div>
+</div>
+
     <!-- Modal Agregar Línea -->
     <div class="modal fade" id="modalAgregar" tabindex="-1" x-ref="modalAgregar" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -354,8 +444,8 @@ x-text="detalle.causa"
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label mb-1">* Producto:</label>
-                            <select class="form-select" x-model="formAgregar.producto">
-                                <option value=""></option>
+                            <select class="form-select" x-model="formAgregar.producto" :class="{ 'is-invalid': erroresAgregar.producto }" @change="erroresAgregar.producto = false">
+                                <option value="">Selecciona una opción...</option>
                                 <template x-for="(op, oi) in productos" :key="'ap-' + oi">
                                     <option :value="op" x-text="op"></option>
                                 </template>
@@ -363,8 +453,8 @@ x-text="detalle.causa"
                         </div>
                         <div class="col-12">
                             <label class="form-label mb-1">* Tanque:</label>
-                            <select class="form-select" x-model="formAgregar.tanque">
-                                <option value=""></option>
+                            <select class="form-select" x-model="formAgregar.tanque" :class="{ 'is-invalid': erroresAgregar.tanque }" @change="erroresAgregar.tanque = false">
+                                <option value="">Selecciona una opción...</option>
                                 <template x-for="(op, oi) in tanques" :key="'at-' + oi">
                                     <option :value="op" x-text="op"></option>
                                 </template>
@@ -372,12 +462,14 @@ x-text="detalle.causa"
                         </div>
                         <div class="col-12">
                             <label class="form-label mb-1">* Litros:</label>
-                            <input type="number" step="any" min="0" class="form-control" x-model="formAgregar.litros">
+                            <input type="text" inputmode="decimal" class="form-control" x-model="formAgregar.litros"
+                                   :class="{ 'is-invalid': erroresAgregar.litros }"
+                                   @input="formatearNumeroInput($event, 'formAgregar', 'litros'); erroresAgregar.litros = false">
                         </div>
                         <div class="col-12">
                             <label class="form-label mb-1">* TAD:</label>
-                            <select class="form-select" x-model="formAgregar.tad">
-                                <option value=""></option>
+                            <select class="form-select" x-model="formAgregar.tad" :class="{ 'is-invalid': erroresAgregar.tad }" @change="erroresAgregar.tad = false">
+                                <option value="">Selecciona una opción...</option>
                                 <template x-for="(op, oi) in tads" :key="'atd-' + oi">
                                     <option :value="op" x-text="op"></option>
                                 </template>
@@ -385,9 +477,9 @@ x-text="detalle.causa"
                         </div>
                         <div class="col-md-12">
                             <label class="form-label mb-1">* Unidad:</label>
-                            <div class="select2-modal-field is-select2-pending" x-ref="wrapUnidadAgregar">
-                                <select class="form-select bg-transparent" x-ref="selUnidadAgregar">
-                                    <option value=""></option>
+                            <div class="select2-modal-field is-select2-pending" x-ref="wrapUnidadAgregar" :class="{ 'is-invalid': erroresAgregar.unidad }">
+                                <select class="form-select bg-transparent" x-ref="selUnidadAgregar" @change="erroresAgregar.unidad = false">
+                                    <option value="">Selecciona una opción...</option>
                                     <template x-for="(op, oi) in unidades" :key="'au-' + oi">
                                         <option :value="op" x-text="op"></option>
                                     </template>
@@ -396,9 +488,9 @@ x-text="detalle.causa"
                         </div>
                         <div class="col-md-12">
                             <label class="form-label mb-1">* Chofer:</label>
-                            <div class="select2-modal-field is-select2-pending" x-ref="wrapChoferAgregar">
-                                <select class="form-select bg-transparent" x-ref="selChoferAgregar">
-                                    <option value=""></option>
+                            <div class="select2-modal-field is-select2-pending" x-ref="wrapChoferAgregar" :class="{ 'is-invalid': erroresAgregar.chofer }">
+                                <select class="form-select bg-transparent" x-ref="selChoferAgregar" @change="erroresAgregar.chofer = false">
+                                    <option value="">Selecciona una opción...</option>
                                     <template x-for="(op, oi) in choferes" :key="'ac-' + oi">
                                         <option :value="op" x-text="op"></option>
                                     </template>
@@ -448,8 +540,9 @@ data-bs-backdrop="static"  data-bs-keyboard="false">
                             <label class="form-label">* Estación:</label>
                             <div class="select2-modal-field is-select2-pending" x-ref="wrapEstacion">
                                 <select class="form-select" x-ref="selEstacion" x-model="estacionForm.estacion"
-                                        @change="estacionForm.estacionOtro = ''; estacionForm.destinoOtro = '';">
-                                    <option value=""></option>
+                                        :class="{ 'is-invalid': erroresEstacion.estacion }"
+                                        @change="estacionForm.estacionOtro = ''; estacionForm.destinoOtro = ''; erroresEstacion = {}">
+                                    <option value="">Selecciona una opción...</option>
                                     <template x-for="(op, oi) in estaciones" :key="'es-' + oi">
                                         <option :value="op" x-text="op"></option>
                                     </template>
@@ -466,13 +559,15 @@ data-bs-backdrop="static"  data-bs-keyboard="false">
 
                             <label class="form-label mb-1">* Nombre:</label>
                                 <input type="text" class="form-control mb-3" x-model="estacionForm.estacionOtro"
+                                       :class="{ 'is-invalid': erroresEstacion.nombre }"
                                        :disabled="!!estacionForm.estacion"
-                                       @input="estacionForm.estacion = ''">
+                                       @input="estacionForm.estacion = ''; erroresEstacion.nombre = false; erroresEstacion.estacion = false">
 
-                                       <label class="form-label mb-1">* Destino:</label>
+                                       <label class="form-label mb-1" x-text="Number(estacionForm.categoria) === 1 ? '* Destino:' : 'Destino (opcional):'"></label>
                                     <input type="number" min="0" step="1" class="form-control mb-3" x-model="estacionForm.destinoOtro"
+                                       :class="{ 'is-invalid': erroresEstacion.destino }"
                                        :disabled="!!estacionForm.estacion"
-                                       @input="estacionForm.estacion = ''">
+                                       @input="estacionForm.estacion = ''; erroresEstacion.destino = false; erroresEstacion.estacion = false">
                             </div>
                         </div>
                     </div>
@@ -515,11 +610,11 @@ data-bs-backdrop="static"  data-bs-keyboard="false">
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label">Correo:</label>
-                            <input type="email" class="form-control" x-model="gmailForm.correo">
+                            <input type="email" class="form-control" x-model="gmailForm.correo" :class="{ 'is-invalid': erroresCorreo.correo }" @input="erroresCorreo.correo = false">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Asunto:</label>
-                            <input type="text" class="form-control" x-model="gmailForm.asunto">
+                            <input type="text" class="form-control" x-model="gmailForm.asunto" :class="{ 'is-invalid': erroresCorreo.asunto }" @input="erroresCorreo.asunto = false">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Contenido:</label>

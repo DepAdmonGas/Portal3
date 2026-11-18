@@ -28,9 +28,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const options = area.subareas_disponibles || [];
         if (options.length === 0) return;
         document.getElementById('orden-opciones-area-titulo').innerHTML = '<i class="ti ti-map-pin me-1"></i> ' + esc(area.area);
-        document.getElementById('orden-opciones-area-lista').innerHTML = '<table class="table table-striped table-bordered align-middle w-100 mb-0"><tbody>' + options.map(option =>
-            '<tr><td class="align-middle">' + esc(option.nombre) + '</td><td class="text-center align-middle" style="width:58px"><input class="form-check-input js-subarea-status m-0" type="checkbox" data-id="' + Number(option.id) + '" data-parent-area-id="' + Number(area.id) + '" aria-label="Seleccionar ' + esc(option.nombre) + '" ' + (!canEdit || ![0, 1].includes(Number(record.estatus)) ? 'disabled' : '') + ' ' + (Number(option.estatus) === 1 ? 'checked' : '') + '></td></tr>'
-        ).join('') + '</tbody></table>';
+        const checkbox = option => '<input class="form-check-input js-subarea-status m-0" type="checkbox" data-id="' + (Number(option.id) || 0) + '" data-parent-area-id="' + Number(area.id) + '" data-name="' + esc(option.nombre) + '" aria-label="Seleccionar ' + esc(option.nombre) + '" ' + (!canEdit || ![0, 1].includes(Number(record.estatus)) ? 'disabled' : '') + ' ' + (Number(option.estatus) === 1 ? 'checked' : '') + '>';
+        const hasPositions = options.some(option => Number(option.dispensario) > 0 && Number(option.posicion) > 0 && option.producto);
+        document.querySelector('#modal-opciones-area-orden .modal-body')?.classList.toggle('p-0', !hasPositions);
+        if (hasPositions) {
+            const dispensers = new Map();
+            options.forEach(option => {
+                const dispenser = Number(option.dispensario);
+                const position = Number(option.posicion);
+                if (!dispenser || !position || !option.producto) return;
+                if (!dispensers.has(dispenser)) dispensers.set(dispenser, new Map());
+                const positions = dispensers.get(dispenser);
+                if (!positions.has(position)) positions.set(position, []);
+                positions.get(position).push(option);
+            });
+            document.getElementById('orden-opciones-area-lista').innerHTML = Array.from(dispensers.entries()).map(([dispenser, positions], index) => {
+                const rows = Array.from(positions.entries()).map(([position, products]) => products.map((option, productIndex) =>
+                    '<tr>' + (productIndex === 0 ? '<td class="align-middle fw-semibold" rowspan="' + products.length + '">Posición: ' + position + '</td>' : '') + '<td class="align-middle">' + esc(option.producto) + '</td><td class="text-center align-middle" style="width:58px">' + checkbox(option) + '</td></tr>'
+                ).join('')).join('');
+                return '<details class="border rounded mb-2" ' + (index === 0 ? 'open' : '') + '><summary class="bg-light px-3 py-2 fw-semibold">Dispensario: ' + dispenser + '</summary><div class="table-responsive"><table class="table table-bordered align-middle w-100 mb-0" data-portal-table-selection="false"><thead><tr><th>Posición</th><th>Producto</th><th class="text-center" style="width:58px"></th></tr></thead><tbody>' + rows + '</tbody></table></div></details>';
+            }).join('');
+        } else {
+            document.getElementById('orden-opciones-area-lista').innerHTML = '<table class="table table-striped table-bordered align-middle w-100 mb-0"><tbody>' + options.map(option =>
+                '<tr><td class="align-middle">' + esc(option.nombre) + '</td><td class="text-center align-middle" style="width:58px">' + checkbox(option) + '</td></tr>'
+            ).join('') + '</tbody></table>';
+        }
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-opciones-area-orden')).show();
     };
 
@@ -152,9 +174,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     return '<span class="badge ' + color + '">' + esc(label) + '</span>';
                 } },
                 { title: 'Firma', data: null, className: 'text-center align-middle', orderable: false, searchable: false, width: '70px',
-                    render: (v, t, row) => row.puede_firmar
-                        ? '<a class="d-inline-flex align-items-center justify-content-center text-decoration-none" href="' + base + '-firma/' + Number(row.id) + '" title="Firmar ' + (row.tipo_firma_pendiente === 'B' ? 'VO.BO.' : 'autorización') + '" aria-label="Firmar ' + (row.tipo_firma_pendiente === 'B' ? 'VO.BO.' : 'autorización') + '"><i class="ti ti-signature text-primary fs-8"></i></a>'
-                        : (row.estatus < 1 ? '<i class="ti ti-clock text-muted fs-8" title="Firma pendiente" aria-label="Firma pendiente"></i>' : '<i class="ti ti-clock text-muted fs-8" title="Firma no disponible" aria-label="Firma no disponible"></i>') },
+                    render: (v, t, row) => {
+                        const status = Number(row.estatus);
+                        if (status >= 2) {
+                            return '<i class="ti ti-signature text-success fs-10" style="width:20px;height:20px;filter:grayscale(1) opacity(0.5);cursor:default;" title="Firmas completadas" aria-label="Firmas completadas"></i>';
+                        }
+                        if (status === 1 && row.puede_firmar) {
+                            const label = row.tipo_firma_pendiente === 'B' ? 'VO.BO.' : 'autorización';
+                            return '<a class="d-inline-flex align-items-center justify-content-center text-decoration-none" href="' + base + '-firma/' + Number(row.id) + '" title="Firmar ' + label + '" aria-label="Firmar ' + label + '"><i class="ti ti-writing text-primary fs-8"></i></a>';
+                        }
+                        if (status === 1) {
+                            const esperando = row.firma_b ? 'autorización' : 'VO.BO.';
+                            return '<i class="ti ti-clock-hour-4 fs-8" style="width:20px;height:20px;filter:grayscale(1) opacity(0.5);cursor:default;" title="En espera de ' + esperando + '" aria-label="En espera de ' + esperando + '"></i>';
+                        }
+                        return '<i class="ti ti-writing text-dark fs-8" title="Pendiente de firma" aria-label="Pendiente de firma"></i>';
+                    } },
                 { title: '<i class="ti ti-message fs-7" title="Comentarios"></i>', data: null, className: 'text-center align-middle', orderable: false, searchable: false, width: '42px',
                     render: (v, t, row) => {
                         const badge = row.comentarios > 0
@@ -767,13 +801,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (subarea && record) {
             subarea.disabled = true;
             try {
-                const { data } = await axios.post(base + '/areas/subareas/actualizar', { id_subarea: subarea.dataset.id, estatus: subarea.checked ? 1 : 0 }, {
+                const { data } = await axios.post(base + '/areas/subareas/actualizar', {
+                    id_subarea: subarea.dataset.id,
+                    id_area: subarea.dataset.parentAreaId,
+                    nombre: subarea.dataset.name,
+                    estatus: subarea.checked ? 1 : 0
+                }, {
                     headers: { 'X-Portal3-Skip-Action-Loader': '1' }
                 });
                 if (!data.success) throw new Error(data.message || 'No se pudo actualizar la subárea.');
                 const parent = (record.areas || []).find(area => Number(area.id) === Number(subarea.dataset.parentAreaId));
-                const option = (parent?.subareas_disponibles || []).find(item => Number(item.id) === Number(subarea.dataset.id));
-                if (option) option.estatus = subarea.checked ? 1 : 0;
+                const option = (parent?.subareas_disponibles || []).find(item =>
+                    Number(subarea.dataset.id) > 0
+                        ? Number(item.id) === Number(subarea.dataset.id)
+                        : item.nombre === subarea.dataset.name
+                );
+                if (option) {
+                    option.estatus = subarea.checked ? 1 : 0;
+                    if (Number(data.id) > 0) option.id = Number(data.id);
+                    subarea.dataset.id = String(option.id || 0);
+                }
                 const summary = document.querySelector('.js-area-selected-subareas[data-area-id="' + subarea.dataset.parentAreaId + '"]');
                 const selectedNames = parent && Number(parent.estatus) === 1
                     ? parent.subareas_disponibles.filter(item => Number(item.estatus) === 1).map(item => item.nombre)
@@ -873,7 +920,8 @@ document.addEventListener('DOMContentLoaded', () => {
             otherField.hidden = catalogMode;
             help.textContent = catalogMode ? 'Existencias disponibles en Almacen.' : 'Selecciona una refacción del catálogo o captura otra.';
             select.innerHTML = '<option value="">' + (catalogMode ? 'Selecciona una refacción de Almacen...' : 'Otra...') + '</option>' + (data.data || []).map(item => {
-                const text = catalogMode ? item.sku + ' — ' + item.nombre + ' (Disponible: ' + formatQuantity(item.existencia) + ' ' + item.unidad_medida + ')' : item.nombre + ' (' + item.estado + ')';
+                const nombreCompleto = item.nombre_completo || [item.nombre, item.medida, item.modelo, item.marca].filter(Boolean).join(' ');
+                const text = catalogMode ? item.sku + ' — ' + nombreCompleto + ' (Disponible: ' + formatQuantity(item.existencia) + ' ' + item.unidad_medida + ')' : item.nombre + ' (' + item.estado + ')';
                 return '<option value="' + item.id + '" data-stock="' + Number(item.existencia || 0) + '">' + esc(text) + '</option>';
             }).join('');
             document.getElementById('orden-otra-refaccion').value = '';

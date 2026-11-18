@@ -346,7 +346,13 @@ class AlmacenMaquinariaEquiposBitacoraController extends BaseController
     public function editarCosto(): void
     {
         $idOcurrencia = (int)Request::input('id', 0);
-        $costo        = (float)Request::input('costo', 0);
+        $costoRaw     = str_replace(',', '', trim((string)Request::input('costo', '')));
+
+        if ($costoRaw === '' || !is_numeric($costoRaw) || (float)$costoRaw < 0) {
+            JsonResponse::validation('Completa los campos obligatorios.');
+        }
+
+        $costo = (float)$costoRaw;
 
         $result = Service::editarCostoOcurrencia($idOcurrencia, $costo);
         JsonResponse::custom($result, (int)($result['code'] ?? 200));

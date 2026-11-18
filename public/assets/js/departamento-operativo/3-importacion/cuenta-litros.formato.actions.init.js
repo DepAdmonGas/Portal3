@@ -14,6 +14,8 @@ document.addEventListener('alpine:init', () => {
         guardando: false,
         form: {},
         fechaForm: { fecha: '' },
+        errores: {},
+        errorFecha: false,
 
         init() {
             const c = document.getElementById('container');
@@ -107,6 +109,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         resetearForm() {
+            this.errores = {};
             this.form = {
                 id_detalle: null,
                 hora: '',
@@ -132,6 +135,58 @@ document.addEventListener('alpine:init', () => {
             if (!this.puedeCrear) return;
             this.resetearForm();
             new bootstrap.Modal(document.getElementById('modalAgregar')).show();
+        },
+
+        normalizarNumero(valor) {
+            const numero = Number(String(valor ?? '').replace(/,/g, '').trim());
+            return Number.isFinite(numero) ? numero : NaN;
+        },
+
+        formatoNumero(valor) {
+            const texto = String(valor ?? '').replace(/,/g, '').trim();
+            if (texto === '') return '';
+            const partes = texto.split('.');
+            partes[0] = (partes[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return partes.join('.');
+        },
+
+        formatearCampoNumerico(evento, campo) {
+            const input = evento.target;
+            const original = input.value;
+            const cursor = input.selectionStart ?? original.length;
+            const caracteresAntes = original.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+            let normalizado = original.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const punto = normalizado.indexOf('.');
+            if (punto !== -1) normalizado = normalizado.slice(0, punto + 1) + normalizado.slice(punto + 1).replace(/\./g, '');
+            this.form[campo] = normalizado;
+            input.value = this.formatoNumero(normalizado);
+            let siguiente = 0;
+            let contados = 0;
+            while (siguiente < input.value.length && contados < caracteresAntes) {
+                if (/[0-9.]/.test(input.value[siguiente])) contados++;
+                siguiente++;
+            }
+            input.setSelectionRange(siguiente, siguiente);
+            this.errores[campo] = false;
+        },
+
+        validarDescarga(esNuevo) {
+            const campos = [
+                'hora', 'embarque', 'tanque', 'producto', 'tad', 'unidad',
+                'litros', 'descarga_neto', 'descarga_bruto', 'litros_c',
+                'venta_momento', 'folio_merma'
+            ];
+            const errores = {};
+            campos.forEach((campo) => {
+                const valor = this.form[campo];
+                errores[campo] = ['tanque', 'litros', 'descarga_neto', 'descarga_bruto', 'litros_c', 'venta_momento', 'folio_merma'].includes(campo)
+                    ? String(valor ?? '').trim() === '' || !Number.isFinite(this.normalizarNumero(valor))
+                    : String(valor ?? '').trim() === '';
+            });
+            errores.transporte = this.form.embarque !== 'Pemex' && !String(this.form.transporte || '').trim();
+            errores.archivo = esNuevo && !(this.$refs.archivoAgregar?.files?.length > 0);
+            this.errores = errores;
+            return Object.values(errores).some(Boolean);
         },
 
         asegurarOpcion(select, valor) {
@@ -197,14 +252,17 @@ document.addEventListener('alpine:init', () => {
         abrirFecha() {
             if (!this.puedeEditarFecha) return;
             this.fechaForm.fecha = document.getElementById('container').dataset.fecha || '';
+            this.errorFecha = false;
             new bootstrap.Modal(document.getElementById('modalFecha')).show();
         },
 
         guardarFecha() {
             if (!this.fechaForm.fecha) {
-                this.notify('error', 'La fecha es obligatoria.');
+                this.errorFecha = true;
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
+            this.errorFecha = false;
             this.guardando = true;
             return this.createAction({
                 url: '/departamento-operativo/importacion/cuenta-litros/editar-fecha',
@@ -215,9 +273,13 @@ document.addEventListener('alpine:init', () => {
         },
 
         async guardarDescarga() {
+            const esNuevo = !this.form.id_detalle;
+            if (this.validarDescarga(esNuevo)) {
+                this.notify('error', 'Completa los campos obligatorios.');
+                return;
+            }
             this.guardando = true;
             try {
-                const esNuevo = !this.form.id_detalle;
                 const archivoRef = esNuevo ? this.$refs.archivoAgregar : this.$refs.archivoEditar;
 
                 const cuerpo = {

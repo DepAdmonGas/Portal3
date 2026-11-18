@@ -38,6 +38,7 @@ class PreciosCombustibleService
         $sessionUsuario = Session::get('usuario');
         $idUsuario = (int)($sessionUsuario['id'] ?? 0);
         $idPuesto = (int)($usuario->id_puesto ?? 0);
+        $multiestacion = !empty($sessionUsuario['multiestacion']);
 
         $allPerms = ModuloDptoOperativoService::getPermisos($idUsuario, 'importacion');
         $permisosDb = $allPerms['importacion'] ?? [];
@@ -57,10 +58,11 @@ class PreciosCombustibleService
         return [
             'id_usuario'   => $idUsuario,
             'id_puesto'    => $idPuesto,
+            'multiestacion' => $multiestacion,
             'puedeVer'     => $tieneSubmenu && $leer,
             'puedeCrear'   => $tieneSubmenu && $crear,
             'puedeEditar'  => $tieneSubmenu && $editar,
-            'puedeDetalle' => $tieneSubmenu && $leer && $editar,
+            'puedeDetalle' => $tieneSubmenu && $leer,
             'esPuesto13'   => $idPuesto === 13,
         ];
     }
@@ -247,9 +249,9 @@ class PreciosCombustibleService
         }
 
         $precio = (float)$row->precio;
-        $iva = number_format($precio * 0.16, 4);
-        $retencion = number_format($precio * 0.04, 4);
-        return number_format($precio + $iva - $retencion, 4);
+        $iva = $precio * 0.16;
+        $retencion = $precio * 0.04;
+        return $precio + $iva - $retencion;
     }
 
     public static function getReporte(int $id): array
@@ -480,13 +482,13 @@ class PreciosCombustibleService
 
             if ($modo === 'editar') {
                 if ($editable) {
-                    $html .= '<td class="p-0"><input type="number" class="form-control rounded-0 border-0 p-3 text-center" value="' . htmlspecialchars((string)$t['precio']) . '" onkeyup="EditPrecio(this,' . (int)$t['id'] . ',14)"/></td>';
+                    $html .= '<td class="p-0"><div class="position-relative"><span class="precios-cell-save-indicator d-none" aria-live="polite"></span><input type="text" inputmode="decimal" class="form-control rounded-0 border-0 p-3 pe-5 text-center" value="' . number_format((float)$t['precio'], 4, '.', ',') . '" oninput="formatearPrecioInput(this)" onkeyup="EditPrecio(this,' . (int)$t['id'] . ',14)"/></div></td>';
                 } else {
                     $html .= '<td class="p-0"><span>$ ' . number_format((float)$t['precio'], 2) . '</span></td>';
                 }
-                $html .= '<td class="p-0"><input type="number" class="form-control rounded-0 border-0 p-3 text-center bg-transparent fw-semibold" id="inputIVA' . (int)$t['id'] . '" value="' . htmlspecialchars((string)$t['iva']) . '" disabled/></td>';
-                $html .= '<td class="p-0"><input type="number" class="form-control rounded-0 border-0 p-3 text-center bg-transparent fw-semibold" id="inputRetencion' . (int)$t['id'] . '" value="' . htmlspecialchars((string)$t['retencion']) . '" disabled/></td>';
-                $html .= '<td class="p-0"><input type="number" class="form-control rounded-0 border-0 p-3 text-center bg-transparent fw-semibold" id="input' . htmlspecialchars((string)$t['detalle']) . '" name="inputTotalPU' . (int)$t['id'] . '" value="' . htmlspecialchars((string)$t['tarifa']) . '" disabled/></td>';
+                $html .= '<td class="p-0"><input type="text" class="form-control rounded-0 border-0 p-3 text-center bg-transparent fw-semibold" id="inputIVA' . (int)$t['id'] . '" value="' . number_format((float)$t['iva'], 4, '.', ',') . '" disabled/></td>';
+                $html .= '<td class="p-0"><input type="text" class="form-control rounded-0 border-0 p-3 text-center bg-transparent fw-semibold" id="inputRetencion' . (int)$t['id'] . '" value="' . number_format((float)$t['retencion'], 4, '.', ',') . '" disabled/></td>';
+                $html .= '<td class="p-0"><input type="text" class="form-control rounded-0 border-0 p-3 text-center bg-transparent fw-semibold" id="input' . htmlspecialchars((string)$t['detalle']) . '" name="inputTotalPU' . (int)$t['id'] . '" value="' . number_format((float)$t['tarifa'], 4, '.', ',') . '" disabled/></td>';
             } else {
                 $html .= '<td class="">$ ' . number_format((float)$t['precio'], 2) . '</td>';
                 $html .= '<td class="">$ ' . number_format((float)$t['iva'], 4) . '</td>';
@@ -560,21 +562,21 @@ class PreciosCombustibleService
 
         $h .= '<td>' . self::celdaEditable($id, 'PemexV', $d['pemex'], 1, $editable, true, false, 'align-middle') . '</td>';
         $h .= '<td>' . self::celdaEditable($id, 'MonterraVD', $d['delivery_montera'], 2, $editable) . '</td>';
-        $h .= '<td class="table-light" ><input type="number" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="MonterraD' . $id . '" value="' . number_format((float)$d['dif_delivery_montera'], 4) . '" disabled/></td>';
+        $h .= '<td class="table-light" ><input type="text" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="MonterraD' . $id . '" value="' . number_format((float)$d['dif_delivery_montera'], 4, '.', ',') . '" disabled/></td>';
         $h .= '<td class=" ' . $vopakClass . '">' . self::celdaEditable($id, 'VopakVD', $d['delivery_vopak'], 4, $editable, false, false, 'align-middle') . '</td>';
-        $h .= '<td class=" ' . $vopakClass . '"><input type="number" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="VopakD' . $id . '" value="' . number_format((float)$d['dif_delivery_vopak'], 4) . '" disabled/></td>';
+        $h .= '<td class=" ' . $vopakClass . '"><input type="text" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="VopakD' . $id . '" value="' . number_format((float)$d['dif_delivery_vopak'], 4, '.', ',') . '" disabled/></td>';
         $h .= '<td>' . self::celdaEditable($id, 'TuxpanVD', $d['delivery_tuxpan'], 3, $editable, false, true, 'bg-white align-middle', 'onchange') . '</td>';
-        $h .= '<td class="table-light"><input type="number" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="TuxpanD' . $id . '" value="' . number_format((float)$d['dif_delivery_tuxpan'], 4) . '" disabled/></td>';
+        $h .= '<td class="table-light"><input type="text" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="TuxpanD' . $id . '" value="' . number_format((float)$d['dif_delivery_tuxpan'], 4, '.', ',') . '" disabled/></td>';
         $h .= '<td class=" ' . $vopakClass . '">' . self::celdaEditable($id, 'VopakVP', $d['pickup_vopak'], 10, $editable, false, false, 'align-middle') . '</td>';
-        $h .= '<td class=" ' . $vopakClass . '"><input type="number" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="VopakP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_vopak']) . '" value="' . number_format((float)$d['dif_pickup_vopak'], 4) . '" disabled/></td>';
+        $h .= '<td class=" ' . $vopakClass . '"><input type="text" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="VopakP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_vopak']) . '" value="' . number_format((float)$d['dif_pickup_vopak'], 4, '.', ',') . '" disabled/></td>';
         $h .= '<td >' . self::celdaEditable($id, 'TuxpanVP', $d['pickup_tuxpan'], 9, $editable, false, false, 'align-middle') . '</td>';
-        $h .= '<td class="table-light"><input type="number" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="TuxpanP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_tuxpan']) . '" value="' . number_format((float)$d['dif_pickup_tuxpan'], 4) . '" disabled/></td>';
+        $h .= '<td class="table-light"><input type="text" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="TuxpanP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_tuxpan']) . '" value="' . number_format((float)$d['dif_pickup_tuxpan'], 4, '.', ',') . '" disabled/></td>';
         $h .= '<td>' . self::celdaEditable($id, 'MonterraVP', $d['pickup_montera'], 8, $editable, false, true, 'bg-transparent') . '</td>';
-        $h .= '<td class="table-light"><input type="number" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="MonterraP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_tuxpan']) . '" value="' . number_format((float)$d['dif_pickup_montera'], 4) . '" disabled/></td>';
+        $h .= '<td class="table-light"><input type="text" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="MonterraP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_tuxpan']) . '" value="' . number_format((float)$d['dif_pickup_montera'], 4, '.', ',') . '" disabled/></td>';
         $h .= '<td>' . self::celdaEditable($id, 'TizayuVP', $d['pickup_tizayuca'], 12, $editable, false, false, 'align-middle') . '</td>';
-        $h .= '<td class="table-light"><input type="number" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="TizayuP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_tizayuca']) . '" value="' . number_format((float)$d['dif_pickup_tizayuca'], 4) . '" disabled/></td>';
+        $h .= '<td class="table-light"><input type="text" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="TizayuP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_tizayuca']) . '" value="' . number_format((float)$d['dif_pickup_tizayuca'], 4, '.', ',') . '" disabled/></td>';
         $h .= '<td>' . self::celdaEditable($id, 'PueblaVP', $d['pickup_puebla'], 13, $editable, false, false, 'align-middle') . '</td>';
-        $h .= '<td class="table-light"><input type="number" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="PueblaP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_puebla']) . '" value="' . number_format((float)$d['dif_pickup_puebla'], 4) . '" disabled/></td>';
+        $h .= '<td class="table-light"><input type="text" class="form-control rounded-0 border-0 p-3 text-center align-middle bg-transparent fw-semibold" id="PueblaP' . $id . '" data-tarifa="' . htmlspecialchars((string)$d['tarifa_puebla']) . '" value="' . number_format((float)$d['dif_pickup_puebla'], 4, '.', ',') . '" disabled/></td>';
 
         return $h;
     }
@@ -595,7 +597,10 @@ class PreciosCombustibleService
         }
 
         $clase = 'form-control rounded-0 border-0 p-3 text-center' . ($extraClass ? ' ' . $extraClass : '');
-        return '<input type="number" class="' . $clase . '" id="' . $prefix . $id . '" value="' . htmlspecialchars((string)$valor) . '" ' . $evento . '="EditPrecio(this,' . $id . ',' . $num . ')"' . ($disabled ? ' disabled fw-semibold' : '') . '/>';
+        $eventos = $evento === 'oninput'
+            ? 'oninput="formatearPrecioInput(this);EditPrecio(this,' . $id . ',' . $num . ')"'
+            : 'oninput="formatearPrecioInput(this)" onchange="EditPrecio(this,' . $id . ',' . $num . ')"';
+        return '<div class="position-relative"><span class="precios-cell-save-indicator d-none" aria-live="polite"></span><input type="text" inputmode="decimal" class="' . $clase . ' pe-5" id="' . $prefix . $id . '" value="' . number_format((float)$valor, 4, '.', ',') . '" ' . $eventos . ($disabled ? ' disabled fw-semibold' : '') . '/></div>';
     }
 
     private static function filaDetalleVer(array $d, string $color, string $vopakClass): string

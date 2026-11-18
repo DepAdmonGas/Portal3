@@ -8,6 +8,7 @@ document.addEventListener('alpine:init', () => {
         esMultiestacion: false,
         moduleStationKey: 'mediciones',
         guardando: false,
+        errors: { fecha: false, factura: false, neto: false, bruto: false, cuentaLitros: false, proveedor: false },
 
         nuevoForm: { fecha: '', factura: '', neto: '', bruto: '', cuentaLitros: '', proveedor: '' },
 
@@ -58,7 +59,44 @@ document.addEventListener('alpine:init', () => {
                 String(d.getDate()).padStart(2, '0');
         },
 
+        formatInputNumber(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const parts = normalized.split('.');
+            const integer = parts.shift() || '';
+            const decimals = parts.join('');
+            const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+        },
+
+        formatNumericInput(event, field) {
+            const input = event.target;
+            const raw = input.value;
+            const cursor = input.selectionStart ?? raw.length;
+            const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+            const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const parts = normalized.split('.');
+            const integer = parts.shift() || '';
+            const decimals = parts.join('');
+            const formatted = normalized.includes('.')
+                ? integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + decimals
+                : integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+            this.nuevoForm[field] = normalized;
+            this.errors[field] = false;
+            input.value = formatted;
+
+            let nextCursor = 0;
+            let numericChars = 0;
+            while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+                if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+                nextCursor++;
+            }
+            input.setSelectionRange(nextCursor, nextCursor);
+        },
+
         abrirNuevo() {
+            if (!this.puedeCrear) return;
             if (!this.contextoEspecifico()) {
                 this.notify('error', 'Selecciona una estación para registrar la medición.');
                 return;
@@ -72,41 +110,34 @@ document.addEventListener('alpine:init', () => {
                 cuentaLitros: '',
                 proveedor: ''
             };
+            this.errors = { fecha: false, factura: false, neto: false, bruto: false, cuentaLitros: false, proveedor: false };
 
             new bootstrap.Modal(document.getElementById('modalNuevo')).show();
         },
 
         async guardarNuevo() {
+            if (!this.puedeCrear) return;
             if (!this.getContextoId()) {
                 this.notify('error', 'Selecciona una estación para registrar la medición.');
                 return;
             }
-            if (!this.nuevoForm.fecha) {
-                this.notify('error', 'La fecha es obligatoria.');
-                return;
-            }
-            if (!this.nuevoForm.factura.trim()) {
-                this.notify('error', 'La factura es obligatoria.');
-                return;
-            }
-            if (this.nuevoForm.neto === '' || isNaN(this.nuevoForm.neto)) {
-                this.notify('error', 'El neto es obligatorio.');
-                return;
-            }
-            if (this.nuevoForm.bruto === '' || isNaN(this.nuevoForm.bruto)) {
-                this.notify('error', 'El bruto es obligatorio.');
-                return;
-            }
-            if (this.nuevoForm.cuentaLitros === '' || isNaN(this.nuevoForm.cuentaLitros)) {
-                this.notify('error', 'La cuenta de litros es obligatoria.');
-                return;
-            }
-            if (!this.nuevoForm.proveedor) {
-                this.notify('error', 'Selecciona un proveedor.');
+
+            this.errors = {
+                fecha: !this.nuevoForm.fecha,
+                factura: !this.nuevoForm.factura.trim(),
+                neto: this.nuevoForm.neto === '' || !Number.isFinite(Number(this.nuevoForm.neto)) || Number(this.nuevoForm.neto) < 0,
+                bruto: this.nuevoForm.bruto === '' || !Number.isFinite(Number(this.nuevoForm.bruto)) || Number(this.nuevoForm.bruto) < 0,
+                cuentaLitros: this.nuevoForm.cuentaLitros === '' || !Number.isFinite(Number(this.nuevoForm.cuentaLitros)) || Number(this.nuevoForm.cuentaLitros) < 0,
+                proveedor: !this.nuevoForm.proveedor
+            };
+
+            if (Object.values(this.errors).some(Boolean)) {
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 
             this.guardando = true;
+            window.loader?.show();
 
             try {
                 const res = await this.createAction({
@@ -114,9 +145,9 @@ document.addEventListener('alpine:init', () => {
                     data: {
                         fecha: this.nuevoForm.fecha,
                         factura: this.nuevoForm.factura.trim(),
-                        neto: this.nuevoForm.neto,
-                        bruto: this.nuevoForm.bruto,
-                        cuenta_litros: this.nuevoForm.cuentaLitros,
+                        neto: this.nuevoForm.neto.replace(/,/g, ''),
+                        bruto: this.nuevoForm.bruto.replace(/,/g, ''),
+                        cuenta_litros: this.nuevoForm.cuentaLitros.replace(/,/g, ''),
                         proveedor: this.nuevoForm.proveedor
                     },
                     table: '#tabla-mediciones',
@@ -129,6 +160,7 @@ document.addEventListener('alpine:init', () => {
                 }
             } finally {
                 this.guardando = false;
+                window.loader?.hide();
             }
         },
 

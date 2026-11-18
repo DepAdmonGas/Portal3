@@ -10,7 +10,7 @@ data-puede-firmar="<?= $puedeFirmarVoBo ? 'true' : 'false' ?>"
 data-es-encargado="<?= $esEncargado ? 'true' : 'false' ?>"
 data-id-usuario="<?= $idUsuario ?>"
 data-module-station-key="pedido-articulos-limpieza"
-x-data="{ ...actions(), ...pedidoLimpiezaComponent() }">
+x-data="{ ...actions(), ...window.PedidoLimpiezaForm(), ...pedidoLimpiezaComponent() }">
 
 <div class="row">
 
@@ -129,7 +129,7 @@ x-data="{ ...actions(), ...pedidoLimpiezaComponent() }">
 <td class="text-center align-middle" x-text="it.num"></td>
 <td class="text-center align-middle" x-text="it.unidad"></td>
 <td class="text-start align-middle" x-text="it.producto"></td>
-<td class="text-center align-middle" x-text="it.piezas"></td>
+<td class="text-center align-middle" x-text="displayQuantity(it.piezas)"></td>
 </tr>
 </template>
 <tr x-show="!pedidoActual.detalle.length">
@@ -139,7 +139,7 @@ x-data="{ ...actions(), ...pedidoLimpiezaComponent() }">
 <tfoot  x-show="pedidoActual.detalle.length">
 <tr class="table-dark">
 <td colspan="3" class="text-center align-middle fw-semibold text-white">Total de piezas</td>
-<td class="text-center align-middle fw-semibold text-white" x-text="pedidoActual.total_piezas"></td>
+<td class="text-center align-middle fw-semibold text-white" x-text="displayQuantity(pedidoActual.total_piezas)"></td>
 </tr>
 </tfoot>
 </table>
@@ -148,6 +148,17 @@ x-data="{ ...actions(), ...pedidoLimpiezaComponent() }">
 <!---------- FIRMAS ---------->
 <div class="mb-1 form-label">Firma:</div>
 <div class="row g-3">
+
+<div class="col-md-6">
+<div class="card border h-100">
+<div class="card-header bg-primary text-white py-3 border-0"><div class="d-flex align-items-center"><div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-user-check fs-6"></i></div><div class="ms-3"><h6 class="mb-0 text-white">ELABORÓ / ENCARGADO</h6></div></div></div>
+<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+<template x-if="pedidoActual.firmas?.A?.firma_img_url"><img :src="pedidoActual.firmas.A.firma_img_url" @error="if (pedidoActual.firmas.A) pedidoActual.firmas.A.firma_img_url = ''" class="img-fluid" style="max-height:90px;object-fit:contain;"></template>
+<template x-if="!pedidoActual.firmas?.A?.firma_img_url"><div class="d-flex flex-column align-items-center"><i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i><h6 class="text-muted mb-0 fw-normal" x-text="pedidoActual.firmas?.A ? 'La firma está registrada, pero su imagen no está disponible.' : 'Sin firma registrada.'"></h6></div></template>
+</div>
+<div class="card-footer bg-light text-center"><h6 class="mb-0 fw-semibold text-truncate" x-text="pedidoActual.firmas?.A?.usuario_nombre || pedidoActual.personal || ''"></h6><small class="text-muted" x-text="pedidoActual.firmas?.A?.fecha || ''"></small></div>
+</div>
+</div>
 
 <div class="col-md-6">
 <template x-if="pedidoActual.firmas && pedidoActual.firmas.B">

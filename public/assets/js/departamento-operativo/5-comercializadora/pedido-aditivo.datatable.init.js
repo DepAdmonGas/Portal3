@@ -52,9 +52,9 @@ return '<span class="text-muted" title="Pendiente de finalizar"><i class="ti ti-
 }
 if (row.status === 1) {
 if (puedeFirmar) {
-return '<a href="' + BASE + '-firma/' + row.id + '" title="Firmar el VoBo de la solicitud"><i class="ti ti-signature text-primary fs-10" style="width:20px;height:20px;cursor:pointer;"></i></a>';
+return '<a href="' + BASE + '-firma/' + row.id + '" title="Firmar VoBo" class="firma-link"><i class="ti ti-writing text-primary fs-8"></i></a>';
 }
-return '<span class="text-muted" title="En espera de firma de Autorización"><i class="ti ti-clock-hour-4 fs-8" style="width:20px;height:20px;filter:grayscale(1) opacity(0.5);cursor:default;"></i></span>';
+return '<span class="text-muted" title="En espera de VoBo"><i class="ti ti-clock-hour-4 fs-8" style="width:20px;height:20px;filter:grayscale(1) opacity(0.5);cursor:default;"></i></span>';
 }
 return '<i class="ti ti-signature text-success fs-10" style="width:20px;height:20px;filter:grayscale(1) opacity(0.5);cursor:default;"></i>';
 }
@@ -69,7 +69,9 @@ var pagosDisabled = row.status !== 2;
 
 var items = '';
 items += '<a class="dropdown-item pointer pa-btn-detalle' + (detalleDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
-items += '<a class="dropdown-item pointer pa-btn-pdf' + (pdfDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-file-text me-1"></i> Descargar PDF</a>';
+items += pdfDisabled
+? '<span class="dropdown-item disabled" aria-disabled="true"><i class="ti ti-file-text me-1"></i> Descargar PDF</span>'
+: '<a class="dropdown-item pointer pa-btn-pdf" href="' + BASE + '/pdf/' + row.id + '" title="Descargar PDF" download="Solicitud de Aditivo ' + row.id + '.pdf"><i class="ti ti-file-text me-1"></i> Descargar PDF</a>';
 items += '<a class="dropdown-item pointer pa-btn-pagos' + (pagosDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-moneybag me-1"></i> Pagos</a>';
 items += '<a class="dropdown-item pointer pa-btn-editar' + (editarDisabled ? ' disabled' : '') + '" data-id="' + row.id + '"><i class="ti ti-pencil me-1"></i> Editar</a>';
 items += '<a class="dropdown-item pointer pa-btn-eliminar' + (eliminarDisabled ? ' disabled' : '') + '" data-id="' + row.id + '" data-nombre="Solicitud #00' + row.id + '"><i class="ti ti-trash me-1"></i> Eliminar</a>';
@@ -84,9 +86,10 @@ return '<a href="javascript:void(0)" class="pa-btn-comentarios btn-badge-histori
 }
 
 var columnasPedidos = [
-{ title: '#', data: 'id', className: 'align-middle text-center', width: '40px',
+{ title: '#', data: 'id', className: 'align-middle text-center', width: '96px',
 render: function (data) { return '00' + data; } },
-{ title: 'Orden de compra', data: 'orden_compra', className: 'align-middle text-center text-nowrap' },
+{ title: 'Orden de compra', data: 'orden_compra', className: 'align-middle text-center text-nowrap',
+render: function (value, type) { return type === 'display' ? Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }) : value; } },
 { title: 'Solicitado por', data: 'personal', className: 'align-middle text-start text-nowrap' },
 { title: 'Estación / Departamento', data: 'nombre_estacion', className: 'align-middle text-center text-nowrap',
 visible: esTodasEstaciones() },
@@ -99,7 +102,7 @@ render: function (v, t, row) { return renderComentarios(row); } },
 render: function (v, t, row) { return renderFirma(row); } },
 { title: 'Estatus', data: 'status_label', className: 'align-middle text-center text-nowrap', width: '100px',
 render: function (v, t, row) { return estatusPedidoBadge(row.status); } },
-{ title: '<i class="ti ti-dots-vertical fs-5"></i>', data: null, className: 'align-middle text-center', orderable: false, searchable: false,
+{ title: '<i class="ti ti-dots-vertical fs-6"></i>', data: null, className: 'align-middle text-center',  width: '46px', orderable: false, searchable: false,
 render: function (v, t, row) { return renderAccionesPedido(row); } },
 ];
 
@@ -170,13 +173,6 @@ e.preventDefault();
 if (this.classList.contains('disabled')) return;
 var id = parseInt(this.dataset.id);
 window.location.href = BASE + '/' + id;
-});
-
-$('#tabla-pedidos').on('click', '.pa-btn-pdf', function (e) {
-e.preventDefault();
-if (this.classList.contains('disabled')) return;
-var id = parseInt(this.dataset.id);
-window.location.href = BASE + '/pdf/' + id;
 });
 
 $('#tabla-pedidos').on('click', '.pa-btn-pagos', function (e) {

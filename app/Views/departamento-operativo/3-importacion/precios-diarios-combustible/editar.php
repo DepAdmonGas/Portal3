@@ -29,6 +29,19 @@
         white-space: normal !important;
         overflow-wrap: normal;
     }
+
+    .precios-cell-save-indicator {
+        position: absolute;
+        z-index: 2;
+        top: 50%;
+        right: .4rem;
+        transform: translateY(-50%);
+        padding: 0 .2rem;
+        background: var(--bs-body-bg);
+        color: var(--bs-success);
+        pointer-events: none;
+    }
+    .precios-cell-save-indicator.text-danger { color: var(--bs-danger) !important; }
 </style>
 
 <div class="col-12 mb-3">

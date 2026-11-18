@@ -244,17 +244,22 @@ class PivoteoController extends BaseController
     {
         $input = Request::all();
         $id = (int)($input['id'] ?? 0);
+        $firmaBase64 = (string)($input['firma_base64'] ?? '');
         if ($id <= 0) {
             JsonResponse::error('ID inválido.');
         }
 
         try {
-            PivoteoService::finalizar($id);
+            $camposFaltantes = PivoteoService::camposFaltantesFinalizacion($id);
+            if ($camposFaltantes) {
+                JsonResponse::validation('Completa los campos obligatorios.', ['campos' => $camposFaltantes]);
+            }
+            PivoteoService::finalizar($id, $firmaBase64);
         } catch (\Throwable $e) {
             JsonResponse::error($e->getMessage());
         }
 
-        JsonResponse::success('Pivoteo finalizado exitosamente.');
+        JsonResponse::success('Firma de elaboración registrada. Pivoteo en proceso de Vo.Bo.');
     }
 
     public function eliminar()
@@ -319,7 +324,7 @@ class PivoteoController extends BaseController
         if ($id <= 0) {
             JsonResponse::error('ID inválido.');
         }
-        if (!in_array($tipoFirma, ['A', 'B', 'C'], true)) {
+        if ($tipoFirma !== 'B') {
             JsonResponse::error('El tipo de firma no es válido.');
         }
         if ($token <= 0) {
@@ -429,6 +434,7 @@ class PivoteoController extends BaseController
             'scripts' => [
                 '/assets/js/vendor.min.js?v=' . time(),
                 '/assets/libs/select2/dist/js/select2.full.min.js?v=' . time(),
+                '/assets/libs/signature_pad/docs/js/signature_pad.umd.min.js?v=' . time(),
                 '/assets/js/departamento-operativo/3-importacion/pivoteo.editar.init.js?v=' . time(),
             ],
         ], 'departamento-operativo');
@@ -475,7 +481,10 @@ class PivoteoController extends BaseController
         Breadcrumb::add($title, '');
 
         $detalle = array_merge($datos, [
-            'puede_firmar_ahora' => $permisos['puedeFirmar'] && (int)$datos['estatus'] === PivoteoService::ESTATUS_FINALIZADO,
+            'puede_firmar_ahora' => $permisos['puedeFirmar'] && (
+                (int)$datos['estatus'] === PivoteoService::ESTATUS_FINALIZADO
+                || ((int)$datos['estatus'] === PivoteoService::ESTATUS_FIRMADO && !PivoteoService::tieneFirmaVoBoValida($id))
+            ),
         ]);
 
         View::render('departamento-operativo/3-importacion/pivoteo/firmar', [

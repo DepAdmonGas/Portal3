@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
             stateSave: false,
             pageLength: 10,
             lengthMenu: [10, 25, 50, 100],
-            order: [[1, 'asc']],
+            order: [[0, 'asc']],
             language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
-            columnDefs: [{ targets: [0, 1, 3, 4, 5], className: 'text-center' }],
+            columnDefs: [{ targets: [0, 2, 3, 4], className: 'text-center' }],
         });
     }
 
