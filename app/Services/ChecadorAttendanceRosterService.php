@@ -432,16 +432,24 @@ final class ChecadorAttendanceRosterService
                 return self::result('unavailable', 'unknown', [], 'La localidad canónica no existe.');
             }
 
-            $directLocalityId = $workplaceId;
+            $physicalStationId = ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId);
+            $isDepartmentLocality = ChecadorAccessService::isDepartmentLocality($workplaceId);
+            $legacyRosterId = $physicalStationId ?? ($isDepartmentLocality ? $workplaceId : null);
+            $legacyMappingUnavailable = (int) ($locality->numlista ?? 0) > 0
+                && $physicalStationId === null
+                && !$isDepartmentLocality;
 
-            // Select the locality's active canonical roster and its versioned
-            // members before enforcing the safety ceiling. This prevents an
-            // unrelated global roster from consuming the first 250 rows.
+            // Translate a station locality through the validated numlista
+            // bridge before matching RhPersonal.id_estacion. A department
+            // locality has no physical station mapping and may use only its
+            // own explicit department id or versioned canonical memberships.
+            // Select those candidates before the safety ceiling so unrelated
+            // global rows cannot consume the first 250 entries.
             $candidates = RhPersonal::query()
                 ->where('estado', 1)
-                ->where(static function ($query) use ($directLocalityId, $workplaceId): void {
-                    if ($directLocalityId !== null) {
-                        $query->where('id_estacion', $directLocalityId)
+                ->where(static function ($query) use ($legacyRosterId, $workplaceId): void {
+                    if ($legacyRosterId !== null) {
+                        $query->where('id_estacion', $legacyRosterId)
                             ->orWhereIn('id', RhPersonalLocalidadVersion::query()
                                 ->where('workplace_id', $workplaceId)
                                 ->select('worker_id')
@@ -488,15 +496,15 @@ final class ChecadorAttendanceRosterService
 
                 if (!isset($versionedWorkerIds[$workerId])) {
                     $unversionedCandidates++;
-                    $currentBelongs = $directLocalityId !== null
-                        && (int) ($person->id_estacion ?? 0) === $directLocalityId;
+                    $currentBelongs = $legacyRosterId !== null
+                        && (int) ($person->id_estacion ?? 0) === $legacyRosterId;
                     // The current HR station can support only today's active
                     // roster. It is not a historical or future effective interval.
                     foreach ($weekDates as $day) {
                         if ($today !== null
                             && $day['date'] === $today
-                            && $directLocalityId !== null
-                            && (int) ($person->id_estacion ?? 0) === $directLocalityId) {
+                            && $legacyRosterId !== null
+                            && (int) ($person->id_estacion ?? 0) === $legacyRosterId) {
                             $verifiedDates[] = $day['date'];
                         } else {
                             $membershipGaps = true;
@@ -581,13 +589,15 @@ final class ChecadorAttendanceRosterService
                 static fn(array $worker): bool => ($worker['versioned_verified_dates'] ?? []) !== []
             ));
 
-            $partial = $truncated || $unversionedCandidates > 0 || $membershipGaps || $invalidMembership || $invalidCurrentMembership;
+            $partial = $truncated || $legacyMappingUnavailable || $unversionedCandidates > 0
+                || $membershipGaps || $invalidMembership || $invalidCurrentMembership;
             if (!$partial) {
                 return self::scheduleWeekResult('ready', 'versioned_weekly_membership', $workers, 'La pertenencia de los candidatos se validó para cada día de la semana.', $referenceRosterCount, $weekOnlyCount, $workersWithVersionedMembership, 0);
             }
 
             $reasons = [];
             if ($truncated) $reasons[] = 'La lista local de candidatos excede el límite seguro; se omiten filas no verificadas.';
+            if ($legacyMappingUnavailable) $reasons[] = 'No se pudo resolver de forma única la estación física de esta localidad; el padrón puede estar incompleto.';
             if ($unversionedCandidates > 0 || $membershipGaps) $reasons[] = 'El padrón activo de la localidad se conserva como referencia; la pertenencia de la semana sólo se confirma en las fechas con membresía verificable.';
             if ($invalidMembership || $invalidCurrentMembership) $reasons[] = 'Algunas membresías no pudieron validarse; se excluyeron de la atribución de localidad y de las fechas afectadas.';
 
