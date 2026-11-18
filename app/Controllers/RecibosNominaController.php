@@ -343,7 +343,11 @@ class RecibosNominaController extends BaseController
         // Solo se actualiza lo que llega en el payload: la UI ya aplicó la
         // matriz de permisos del legacy y omite lo que el rol no puede tocar.
         if (Request::has('importe')) {
-            $registro->importe_total = (float)Request::input('importe', 0);
+            $importe = str_replace(',', '', trim((string)Request::input('importe', '')));
+            if ($importe === '' || !is_numeric($importe) || (float)$importe < 0) {
+                JsonResponse::validation('Completa los campos obligatorios.');
+            }
+            $registro->importe_total = (float)$importe;
         }
         if (Request::has('original')) {
             $registro->nomina_original = (int)Request::input('original', 0);

@@ -580,9 +580,10 @@ $fechaF = !empty($fechaStr) ? substr($fechaStr, 0, 10) : '';
 $horaF = !empty($fechaStr) && strlen($fechaStr) > 11 ? date("g:i a", strtotime(substr($fechaStr, 11))) : '';
 if ($tipo === 'A') {
 $f['tipo_label'] = 'NOMBRE Y FIRMA DEL ENCARGADO';
-$f['firma_img_disponible'] = self::getFirmaPath((string)($f['firma'] ?? '')) !== null;
-$f['firma_img_url'] = $f['firma_img_disponible']
-    ? '/download?tipo=solicitud-cheque-firmas&file=' . rawurlencode((string)($f['firma'] ?? '')) . '&view=1'
+$firmaPath = self::getFirmaPath((string)($f['firma'] ?? ''));
+$f['firma_img_disponible'] = $firmaPath !== null;
+$f['firma_img_url'] = $firmaPath !== null
+    ? self::getFirmaDownloadUrl((string)($f['firma'] ?? ''), $firmaPath)
     : null;
 $f['firma_texto'] = null;
 } elseif ($tipo === 'B') {
@@ -2400,6 +2401,29 @@ foreach ($directorios as $directorio) {
 }
 
 return null;
+}
+
+private static function getFirmaDownloadUrl(string $nombreArchivo, string $ruta): string
+{
+    $nombreArchivo = basename($nombreArchivo);
+    $raiz = dirname(__DIR__, 2) . '/public';
+    $rutas = [
+        '/uploads/archivos/solicitud-cheque-firmas/' => 'solicitud-cheque-firmas',
+        '/uploads/archivos/' => 'solicitud-cheque-firmas-raiz',
+        '/uploads/firmas/solicitud-cheque/' => 'solicitud-cheque-firmas-legado',
+        '/imgs/firma/' => 'solicitud-cheque-firmas-imgs',
+    ];
+    $rutaReal = realpath($ruta);
+    $raizReal = realpath($raiz);
+    if ($rutaReal && $raizReal && str_starts_with($rutaReal, $raizReal . DIRECTORY_SEPARATOR)) {
+        $relativa = str_replace('\\', '/', substr($rutaReal, strlen($raizReal)));
+        foreach ($rutas as $prefijo => $tipo) {
+            if (str_starts_with($relativa, $prefijo)) {
+                return '/download?tipo=' . $tipo . '&file=' . rawurlencode($nombreArchivo) . '&view=1';
+            }
+        }
+    }
+    return '/download?tipo=solicitud-cheque-firmas&file=' . rawurlencode($nombreArchivo) . '&view=1';
 }
 
 private static function notificarCreacion(int $idSolicitud, int $idUsuario, string $nameEstacion, int $idEstacion, int $depto, string $fecha, float $monto, string $moneda, string $concepto, string $beneficiario, string $razonSocial = '', string $solicitante = '', string $noFactura = '', int $idYear = 0, int $idMes = 0): void

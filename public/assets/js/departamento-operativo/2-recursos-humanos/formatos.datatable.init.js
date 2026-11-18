@@ -10,6 +10,7 @@ const puedeCrear = c.dataset.puedeCrear === 'true';
 const puedeEditar = c.dataset.puedeEditar === 'true';
 const puedeEliminar = c.dataset.puedeEliminar === 'true';
 const puedeDescargar = c.dataset.puedeDescargar === 'true';
+const puedeFirmar = c.dataset.puedeFirmar === 'true';
 const esMultiestacion = c.dataset.multiestacion === 'true';
 const moduleStationKey = c.dataset.moduleStationKey || '';
 
@@ -48,33 +49,16 @@ return '<span class="badge bg-warning text-white">En proceso</span>';
 }
 
 function renderFirma(row) {
-var status = Number(row.status);
-var cls = 'fmt-btn-firmar';
-var icon = 'ti-writing fs-8';
+var finalizadas = row.firmas_completas === true || Number(row.status) === 4;
+var esTurnoUsuario = !finalizadas && puedeFirmar && row.es_turno_usuario === true;
+var claseColor = finalizadas ? ' text-muted opacity-50' : (esTurnoUsuario ? ' text-primary' : ' text-dark');
+var estadoAccion = finalizadas ? ' aria-disabled="true" tabindex="-1" title="Las cuatro firmas están completas"'
+    : ' role="button" tabindex="0" title="Firma pendiente"';
 
-switch (status) {
-case 0: 
-cls += ' text-muted opacity-50'; 
-break;
-case 1: 
-cls += ' text-dark'; 
-break;
-case 2: 
-cls += ' text-primary'; 
-break;
-case 3: 
-cls += ' text-success'; 
-break;
-case 4: 
-icon = 'ti-signature fs-10';
-cls += ' text-success opacity-50'; 
-break;
-}
-
-return '<i class="ti ' + icon + ' pointer ' + cls + '"'
+return '<i class="ti ti-writing fs-8 fmt-btn-firmar' + claseColor + (finalizadas ? ' disabled' : ' pointer') + '"'
 + ' data-id="' + row.id + '" data-id-localidad="' + row.id_localidad
 + '" data-formato="' + row.formato + '" data-status="' + row.status
-+ '" data-toggle="tooltip" title="Firmar formato"></i>';
++ '"' + estadoAccion + '></i>';
 }
 
 function renderComentarios(row) {
@@ -141,7 +125,7 @@ return json.data || [];
 },
 autoWidth: false,
 stateSave: false,
-order: [[0, 'asc']],
+order: [[0, 'desc']],
 pageLength: 10,
 lengthMenu: [10, 25, 50, 100],
 language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
@@ -168,7 +152,7 @@ dt.column(1).visible(isTodasEstaciones());
 $table.on('click', '.fmt-btn-firmar', function(e) {
 e.preventDefault();
 var el = $(this);
-if (el.hasClass('text-muted')) return;
+if (el.hasClass('disabled') || el.attr('aria-disabled') === 'true') return;
 var id = parseInt(this.dataset.id);
 var idLocalidad = parseInt(this.dataset.idLocalidad || '0');
 var formato = parseInt(this.dataset.formato || '0');

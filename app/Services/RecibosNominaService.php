@@ -719,9 +719,9 @@ $periodos = [];
 
             $comentariosCount = (int)$r->comentarios_count;
 
-            $docNom = !empty($r->doc_nomina);
-            $docFir = !empty($r->doc_nomina_firma);
-            $docAgui = !empty($r->doc_nomina_aguinaldo);
+            $docNom = self::existeArchivoNomina('acuses', (string)($r->doc_nomina ?? ''));
+            $docFir = self::existeArchivoNomina('firmados', (string)($r->doc_nomina_firma ?? ''));
+            $docAgui = self::existeArchivoNomina('aguinaldo', (string)($r->doc_nomina_aguinaldo ?? ''));
 
             $estatus = 'Pendiente';
             if ($esUltimoPeriodo) {
@@ -763,8 +763,11 @@ $periodos = [];
                 'puesto'               => $puestoNombre,
                 'importe_total'        => $importe,
                 'doc_nomina'           => $r->doc_nomina ?? '',
+                'doc_nomina_disponible' => self::existeArchivoNomina('acuses', (string)($r->doc_nomina ?? '')),
                 'doc_nomina_firma'     => $r->doc_nomina_firma ?? '',
+                'doc_nomina_firma_disponible' => self::existeArchivoNomina('firmados', (string)($r->doc_nomina_firma ?? '')),
                 'doc_nomina_aguinaldo' => $r->doc_nomina_aguinaldo ?? '',
+                'doc_nomina_aguinaldo_disponible' => self::existeArchivoNomina('aguinaldo', (string)($r->doc_nomina_aguinaldo ?? '')),
                 'nomina_original'      => (int)($r->nomina_original ?? 0),
                 'prima_vacacional'     => (int)($r->prima_vacacional ?? 0),
                 'alerta_bd'            => $usuariosConAlerta->has((int)$r->id_usuario) ? 0 : 1,
@@ -836,6 +839,7 @@ $periodos = [];
             'rango_fechas'             => formatearFecha($rango['inicio']) . ' al ' . formatearFecha($rango['fin']),
             'es_ultimo_periodo'        => $esUltimoPeriodo,
             'doc_nomina_acuse'         => $acuseMexdesa?->doc_nomina_acuse ?? '',
+            'doc_nomina_acuse_disponible' => self::existeArchivoNomina('recibos-mexdesa', (string)($acuseMexdesa?->doc_nomina_acuse ?? '')),
             'id_acuse_mexdesa'         => (int)($acuseMexdesa?->id ?? 0),
             'finalizado_mexdesa'       => $finalizadoMexdesa,
             'finalizado_estacion'      => $finalizadoEstacion,
@@ -851,6 +855,7 @@ $periodos = [];
             'aguinaldo'                => [
                 'id'     => $aguinaldo?->id ?? 0,
                 'doc'    => $aguinaldo?->doc_nomina_aguinaldo ?? '',
+                'disponible' => self::existeArchivoNomina('recibos-mexdesa', (string)($aguinaldo?->doc_nomina_aguinaldo ?? '')),
                 'status' => (int)($aguinaldo?->status ?? 0),
             ],
         ];
@@ -1185,6 +1190,9 @@ $periodos = [];
             return [
                 'id'       => $r->id,
                 'archivo'  => $r->archivo,
+                'disponible' => $r->archivo !== ''
+                    && basename((string)$r->archivo) === (string)$r->archivo
+                    && is_file(dirname(__DIR__, 2) . '/public/uploads/archivos/recibo-nomina-acuse/' . $r->archivo),
                 'fecha'    => $r->fecha ? formatearFecha($r->fecha)  : '',
             ];
         })->values()->toArray();
@@ -1381,9 +1389,9 @@ $periodos = [];
             'importe'        => number_format((float)$fila['importe_total'], 2),
             'bg_color'       => (string)$fila['bg_color'],
             'prima'          => self::BADGES_PRIMA[$primaVacacional] ?? self::BADGES_PRIMA[0],
-            'doc_nomina'     => self::presentarDocumento('recibos-nomina', (string)$fila['doc_nomina'], 'ti ti-file-text text-primary fs-7'),
-            'doc_firma'      => self::presentarDocumento('recibos-nomina-firma', (string)$fila['doc_nomina_firma'], 'ti ti-signature text-success fs-8'),
-            'doc_aguinaldo'  => self::presentarDocumento('recibos-aguinaldo', (string)$fila['doc_nomina_aguinaldo'], 'ti ti-gift text-warning fs-7'),
+            'doc_nomina'     => self::presentarDocumento('recibos-nomina', (string)$fila['doc_nomina'], 'ti ti-file-text text-primary fs-6'),
+            'doc_firma'      => self::presentarDocumento('recibos-nomina-firma', (string)$fila['doc_nomina_firma'], 'ti ti-signature text-success fs-6'),
+            'doc_aguinaldo'  => self::presentarDocumento('recibos-aguinaldo', (string)$fila['doc_nomina_aguinaldo'], 'ti ti-gift text-warning fs-6'),
             'estatus'        => self::BADGES_ESTATUS[$fila['estatus']] ?? self::BADGES_ESTATUS['Pendiente'],
         ];
     }
@@ -1394,7 +1402,14 @@ $periodos = [];
      */
     private static function presentarDocumento(string $tipo, string $archivo, string $claseIcono): array
     {
-        $tieneDocumento = $archivo !== '';
+        $carpetas = [
+            'recibos-nomina' => 'acuses',
+            'recibos-nomina-firma' => 'firmados',
+            'recibos-aguinaldo' => 'aguinaldo',
+        ];
+        $tieneDocumento = $archivo !== ''
+            && isset($carpetas[$tipo])
+            && self::existeArchivoNomina($carpetas[$tipo], $archivo);
 
         return [
             'tiene_documento' => $tieneDocumento,
@@ -1403,6 +1418,22 @@ $periodos = [];
                 : '',
             'icono'           => $tieneDocumento ? $claseIcono : 'ti ti-file-off text-muted fs-6',
         ];
+    }
+
+    /**
+     * Los archivos heredados mantienen la estructura de carpetas de la
+     * versión anterior debajo de public/uploads/archivos.
+     */
+    private static function existeArchivoNomina(string $carpeta, string $archivo): bool
+    {
+        if ($archivo === '' || basename($archivo) !== $archivo) {
+            return false;
+        }
+
+        $ruta = dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/'
+            . trim($carpeta, '/') . '/' . $archivo;
+
+        return is_file($ruta);
     }
 
     public static function getExcelDespachadores(int $idEstacion, int $year, int $mes): string

@@ -213,8 +213,17 @@ $firmaDRec = current(array_filter($firmas, fn($f) => $f['tipo_firma'] === 'D')) 
 </div>
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-<?php if ($firmaARec['tipo_firma'] === 'A' && $firmaARec['firma_img_url']): ?>
-<img src="<?= $firmaARec['firma_img_url'] ?>" onerror="this.style.display='none'" class="img-fluid" style="max-height:90px;object-fit:contain;">
+<?php if ($firmaARec['tipo_firma'] === 'A'): ?>
+<?php if (!empty($firmaARec['firma_img_disponible']) && $firmaARec['firma_img_url']): ?>
+<img src="<?= htmlspecialchars($firmaARec['firma_img_url'], ENT_QUOTES, 'UTF-8') ?>" class="img-fluid firma-registrada-img" data-firma-fallback="firma-a-fallback" style="max-height:90px;object-fit:contain;">
+<div id="firma-a-fallback" class="d-none flex-column align-items-center">
+<i class="ti ti-signature-off text-secondary mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+</div>
+<?php else: ?>
+<i class="ti ti-signature-off text-secondary mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+<?php endif; ?>
 <?php endif; ?>
 <small class="text-dark"><?= $firmaARec['firma_texto'] ?? '' ?></small>
 </div>
@@ -286,12 +295,12 @@ Si aún no cuenta con uno, haga clic en alguno de los siguientes botones para ge
 <div class="row w-100">
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-success w-100" @click="crearTokenTelegram()" :disabled="botonesDeshabilitados">
-<i class="ti ti-brand-telegram me-1"></i> Generar token vía Telegram
+<i class="ti ti-brand-telegram me-1"></i><span x-text="solicitandoToken && viaSolicitada === 'telegram' ? 'Enviando…' : (segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Telegram')"></span>
 </button>
 </div>
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-info text-white w-100" @click="crearTokenEmail()" :disabled="botonesDeshabilitados">
-<i class="ti ti-mail me-1"></i> Generar token vía Email
+<i class="ti ti-mail me-1"></i><span x-text="solicitandoToken && viaSolicitada === 'email' ? 'Enviando…' : (segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Email')"></span>
 </button>
 </div>
 <div class="col-12">
@@ -372,12 +381,12 @@ Si aún no cuenta con uno, haga clic en alguno de los siguientes botones para ge
 <div class="row w-100">
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-success w-100" @click="crearTokenTelegram()" :disabled="botonesDeshabilitados">
-<i class="ti ti-brand-telegram me-1"></i> Generar token vía Telegram
+<i class="ti ti-brand-telegram me-1"></i><span x-text="solicitandoToken && viaSolicitada === 'telegram' ? 'Enviando…' : (segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Telegram')"></span>
 </button>
 </div>
 <div class="col-md-6 mb-3">
 <button type="button" class="btn btn-info text-white w-100" @click="crearTokenEmail()" :disabled="botonesDeshabilitados">
-<i class="ti ti-mail me-1"></i> Generar token vía Email
+<i class="ti ti-mail me-1"></i><span x-text="solicitandoToken && viaSolicitada === 'email' ? 'Enviando…' : (segundosRestantes > 0 ? 'Espera ' + segundosRestantes + ' s' : 'Generar token vía Email')"></span>
 </button>
 </div>
 <div class="col-12">
@@ -432,8 +441,17 @@ Firmar formato
 </div>
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-<?php if ($firmaDRec['tipo_firma'] === 'D' && $firmaDRec['firma_img_url']): ?>
-<img src="<?= $firmaDRec['firma_img_url'] ?>" onerror="this.style.display='none'" class="img-fluid" style="max-height:90px;object-fit:contain;">
+<?php if ($firmaDRec['tipo_firma'] === 'D'): ?>
+<?php if (!empty($firmaDRec['firma_img_disponible']) && $firmaDRec['firma_img_url']): ?>
+<img src="<?= htmlspecialchars($firmaDRec['firma_img_url'], ENT_QUOTES, 'UTF-8') ?>" class="img-fluid firma-registrada-img" data-firma-fallback="firma-d-fallback" style="max-height:90px;object-fit:contain;">
+<div id="firma-d-fallback" class="d-none flex-column align-items-center">
+<i class="ti ti-signature-off text-secondary mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+</div>
+<?php else: ?>
+<i class="ti ti-signature-off text-secondary mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+<?php endif; ?>
 <?php endif; ?>
 </div>
 <div class="card-footer bg-light text-center">

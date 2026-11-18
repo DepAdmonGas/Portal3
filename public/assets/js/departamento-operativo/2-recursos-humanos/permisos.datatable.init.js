@@ -13,11 +13,14 @@ $(document).ready(function () {
     }
 
     function esContextoEspecifico() {
-        if (c.dataset.multiestacion === 'true') {
-            var sel = document.getElementById('module-station-selector-permisos');
-            return !!(sel && sel.value);
-        }
+        var sel = document.getElementById('module-station-selector-permisos');
+        if (sel) return /^(estacion|depto)_\d+$/.test(String(sel.value || ''));
         return parseInt(c.dataset.idEstacion || '0') > 0;
+    }
+
+    function formatoDias(valor) {
+        var numero = Number(String(valor == null ? '' : valor).replace(/,/g, ''));
+        return Number.isFinite(numero) ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(numero) : '';
     }
 
     function statusBadge(v, t, d) {
@@ -101,7 +104,7 @@ $(document).ready(function () {
             { data: 'estacion_cubre_nombre', title: 'Estación de quien cubre', className: 'text-center align-middle', render: function (d) { return escHtml(d); } },
             { data: 'fecha_inicio_label', title: 'Del', className: 'text-center align-middle', render: function (d) { return escHtml(d); } },
             { data: 'fecha_termino_label', title: 'Al', className: 'text-center align-middle', render: function (d) { return escHtml(d); } },
-            { data: 'dias_tomados', title: 'Días', className: 'text-center align-middle', render: function (d) { return escHtml(d); } },
+            { data: 'dias_tomados', title: 'Días', className: 'text-center align-middle', render: function (d, type) { return type === 'display' || type === 'filter' ? escHtml(formatoDias(d)) : Number(String(d || '').replace(/,/g, '')) || 0; } },
             { data: 'motivo', title: 'Motivo', className: 'align-middle', render: function (d) { return escHtml(d); } },
             {
                 data: 'observaciones',
