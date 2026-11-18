@@ -28,22 +28,25 @@
 <h5 class="mb-0">ORDEN DE COMPRA</h5>
 </td>
 <td class="text-center align-middle">Cargo:</td>
-<td class="p-0">
-<input type="text" class="form-control border-0 text-center align-middle" x-model="form.cargo" @change="editarOC(1, form.cargo)">
+<td class="p-0 position-relative">
+<input type="text" class="form-control border-0 text-center align-middle pe-4" x-model="form.cargo" @change="editarOC(1, form.cargo, $event.target)">
+<span class="orden-compra-save-indicator d-none" aria-live="polite"></span>
 </td>
 </tr>
 <tr>
 <td colspan="3" class="text-center align-middle">Ref. Operativa</td>
 <td class="text-center align-middle">Fecha:</td>
-<td class="p-0">
-<input type="date" class="form-control border-0 text-center align-middle" x-model="form.fecha" @change="editarOC(2, form.fecha)">
+<td class="p-0 position-relative">
+<input type="date" class="form-control border-0 text-center align-middle pe-4" x-model="form.fecha" @change="editarOC(2, form.fecha, $event.target)">
+<span class="orden-compra-save-indicator d-none" aria-live="polite"></span>
 </td>
 </tr>
 <tr>
 <td class="text-center align-middle">Refacturación:</td>
 <td class="p-0" colspan="2" >
 <div class="input-group input-group-sm">
-<input type="number" step="0.01" class="form-control border-0 text-center align-middle" x-model="form.porcentaje_total" @change="editarOC(3, form.porcentaje_total)">
+<input type="text" inputmode="decimal" class="form-control border-0 text-center align-middle pe-4" :value="formatoNumero(form.porcentaje_total)" @input="capturarNumero($event, form, 'porcentaje_total')" @change="editarOC(3, form.porcentaje_total, $event.target)">
+<span class="orden-compra-save-indicator d-none" aria-live="polite"></span>
 <span class="input-group-text border-0 bg-transparent fw-bold">%</span>
 </div>
 </td>
@@ -101,7 +104,7 @@ Debe registrar <b>más de 2 proveedores</b> para habilitar el cuadro comparativo
 </div>
 </div>
 </div>
-<button type="button" class="btn btn-success text-white fw-semibold align-self-start align-self-md-center" @click="abrirModalProveedor()">
+<button type="button" class="btn btn-success text-white align-self-start align-self-md-center" @click="abrirModalProveedor()">
 <i class="ti ti-plus me-1"></i> Nuevo
 </button>
 </div>
@@ -194,8 +197,9 @@ No se encontró información.
 type="radio" 
 name="radioMejorOferta" 
 :checked="prov.check_p == 1" 
-@change="seleccionarProveedor(prov.id)"
+@change="seleccionarProveedor(prov.id, $event.target)"
 style="transform: scale(1.2); border: 1px solid #454646 !important; cursor: pointer;">
+<span class="orden-compra-save-indicator d-none ms-2" aria-live="polite"></span>
 </div>
 </td>
 <td colspan="9" class="fw-semibold text-center align-middle table-primary">
@@ -248,7 +252,8 @@ No se encontró información para mostrar
 <td colspan="4" class="p-0 align-middle fw-semibold">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" x-model.number="prov.descuento" @change="actualizarCostos(prov.id, 1, prov.descuento)">
+<input type="text" inputmode="decimal" min="0" class="border-0 p-3 text-end w-100 bg-transparent pe-4" style="padding-left: 25px !important;" :value="formatoNumero(prov.descuento)" @input="capturarNumero($event, prov, 'descuento')" @change="actualizarCostos(prov.id, 1, prov.descuento, $event.target)">
+<span class="orden-compra-save-indicator d-none" aria-live="polite"></span>
 </div>
 </td>
 </tr>
@@ -260,7 +265,8 @@ No se encontró información para mostrar
 <td colspan="4" class="p-0 align-middle fw-semibold">
 <div class="position-relative">
 <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-<input type="number" min="0" step="any" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" x-model.number="prov.envio_cp" @change="actualizarCostos(prov.id, 2, prov.envio_cp)">
+<input type="text" inputmode="decimal" min="0" class="border-0 p-3 text-end w-100 bg-transparent pe-4" style="padding-left: 25px !important;" :value="formatoNumero(prov.envio_cp)" @input="capturarNumero($event, prov, 'envio_cp')" @change="actualizarCostos(prov.id, 2, prov.envio_cp, $event.target)">
+<span class="orden-compra-save-indicator d-none" aria-live="polite"></span>
 </div>
 </td>
 </tr>
@@ -437,7 +443,7 @@ No se encontró información para mostrar
                 </div>
                 <div class="modal-body">
                     <label class="form-label fw-semibold">* Nombre de la estación:</label>
-                    <select class="form-select" x-model="estacionSeleccionada">
+<select class="form-select" x-model="estacionSeleccionada" :style="errorEstacion ? 'border: 2px solid #A52525 !important;' : ''" @change="errorEstacion = false">
                         <option value="">Selecciona una opción...</option>
                         <?php foreach ($estacionesCatalogo as $est): ?>
                             <option value="<?= $est->id ?>"><?= $est->localidad ?></option>
@@ -447,7 +453,7 @@ No se encontró información para mostrar
                 <div class="modal-footer">
                                         <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1"></i> Cancelar</button>
 
-                    <button type="button" class="btn btn-success" @click="guardarEstacion()" :disabled="!estacionSeleccionada"><i class="ti ti-check me-1"></i> Guardar</button>
+                    <button type="button" class="btn btn-success" @click="guardarEstacion()"><i class="ti ti-check me-1"></i> Guardar</button>
                 </div>
             </div>
         </div>
@@ -517,7 +523,7 @@ No se encontró información para mostrar
                     <div class="row g-2 mb-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold">* Unidades:</label>
-                            <input type="number" step="any" class="form-control" x-model="formArt.Unidades" :style="errorsArt.Unidades ? 'border: 2px solid #A52525 !important;' : ''" @input="errorsArt.Unidades = false">
+                            <input type="text" inputmode="decimal" class="form-control" :value="formArt.Unidades" :style="errorsArt.Unidades ? 'border: 2px solid #A52525 !important;' : ''" @input="capturarNumero($event, formArt, 'Unidades'); errorsArt.Unidades = false">
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Estatus:</label>
@@ -529,7 +535,7 @@ No se encontró información para mostrar
                     </div>
                     <div>
                         <label class="form-label fw-semibold">* Precio Unitario:</label>
-                        <input type="number" step="0.01" class="form-control" x-model="formArt.PrecioUnitario" :style="errorsArt.PrecioUnitario ? 'border: 2px solid #A52525 !important;' : ''" @input="errorsArt.PrecioUnitario = false">
+                        <input type="text" inputmode="decimal" class="form-control" :value="formArt.PrecioUnitario" :style="errorsArt.PrecioUnitario ? 'border: 2px solid #A52525 !important;' : ''" @input="capturarNumero($event, formArt, 'PrecioUnitario'); errorsArt.PrecioUnitario = false">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -568,25 +574,25 @@ No se encontró información para mostrar
                     <div class="row g-2 mb-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold">* Cantidad:</label>
-                            <input type="number" step="any" class="form-control" x-model="formRef.Cantidad" :style="errorsRef.Cantidad ? 'border: 2px solid #A52525 !important;' : ''" @input="errorsRef.Cantidad = false">
+                            <input type="text" inputmode="decimal" class="form-control" :value="formRef.Cantidad" :style="errorsRef.Cantidad ? 'border: 2px solid #A52525 !important;' : ''" @input="capturarNumero($event, formRef, 'Cantidad'); errorsRef.Cantidad = false">
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">* Importe:</label>
-                            <input type="number" step="0.01" class="form-control" x-model="formRef.Importe" :style="errorsRef.Importe ? 'border: 2px solid #A52525 !important;' : ''" @input="errorsRef.Importe = false">
+                            <input type="text" inputmode="decimal" class="form-control" :value="formRef.Importe" :style="errorsRef.Importe ? 'border: 2px solid #A52525 !important;' : ''" @input="capturarNumero($event, formRef, 'Importe'); errorsRef.Importe = false">
                         </div>
                     </div>
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label small fw-semibold">Porcentaje:</label>
-                            <input type="number" step="0.01" class="form-control" x-model="formRef.Porcentaje">
+                            <input type="text" inputmode="decimal" class="form-control" :value="formRef.Porcentaje" @input="capturarNumero($event, formRef, 'Porcentaje')">
                         </div>
                         <div class="col-12">
                             <label class="form-label small fw-semibold">Estación:</label>
-                            <input type="number" step="any" class="form-control" x-model="formRef.CantidadES">
+                            <input type="text" inputmode="decimal" class="form-control" :value="formRef.CantidadES" @input="capturarNumero($event, formRef, 'CantidadES')">
                         </div>
                         <div class="col-12">
                             <label class="form-label small fw-semibold">Almacén:</label>
-                            <input type="number" step="any" class="form-control" x-model="formRef.CantidadAl">
+                            <input type="text" inputmode="decimal" class="form-control" :value="formRef.CantidadAl" @input="capturarNumero($event, formRef, 'CantidadAl')">
                         </div>
                     </div>
                 </div>

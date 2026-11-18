@@ -94,7 +94,10 @@ x-init="initNuevo()">
 
 <div class="col-12">
 <label class="form-label mb-1">* Estado actual:</label>
-<select class="form-select" x-model="nuevo.estadoActual">
+<select class="form-select"
+x-model="nuevo.estadoActual"
+:style="errores.estadoActual ? 'border: 2px solid #A52525 !important;' : ''"
+@change="errores.estadoActual = false">
 <option value="">Selecciona una opcion...</option>
 <template x-for="op in estados" :key="op">
 <option :value="op" x-text="op"></option>
@@ -104,12 +107,19 @@ x-init="initNuevo()">
 
 <div class="col-md-4">
 <label class="form-label mb-1">* Fecha de inicio:</label>
-<input type="date" class="form-control" x-model="nuevo.fechaInicio">
+<input type="date"
+class="form-control"
+x-model="nuevo.fechaInicio"
+:style="errores.fechaInicio ? 'border: 2px solid #A52525 !important;' : ''"
+@input="errores.fechaInicio = false">
 </div>
 
 <div class="col-md-4">
 <label class="form-label mb-1">* Tipo de mantenimiento:</label>
-<select class="form-select" x-model="nuevo.tipoMantenimiento" @change="cambioTipo()">
+<select class="form-select"
+x-model="nuevo.tipoMantenimiento"
+:style="errores.tipoMantenimiento ? 'border: 2px solid #A52525 !important;' : ''"
+@change="cambioTipo(); errores.tipoMantenimiento = false">
 <option value="">Selecciona una opcion...</option>
 <option value="1">Preventivo</option>
 <option value="2">Correctivo</option>
@@ -118,14 +128,24 @@ x-init="initNuevo()">
 
 <div class="col-md-4">
 <label class="form-label mb-1">Costo del mantenimiento:</label>
-<input type="number" step="0.01" min="0" class="form-control" x-model="nuevo.costoMantenimiento" placeholder="0.00">
+<input type="text"
+inputmode="decimal"
+autocomplete="off"
+class="form-control"
+:value="formatoCosto(nuevo.costoMantenimiento)"
+:style="errores.costoMantenimiento ? 'border: 2px solid #A52525 !important;' : ''"
+@input="capturarCosto($event)"
+placeholder="0.00">
 </div>
 
 <!-- FRECUENCIA: sólo Preventivo y sólo si la maquinaria la usa -->
 <?php if (!empty($usaFrecuencia)): ?>
 <div class="col-12" x-show="nuevo.tipoMantenimiento === '1'">
 <label class="form-label mb-1">* Frecuencia del mantenimiento:</label>
-<select class="form-select" x-model="nuevo.frecuencia" @change="cambioFrecuencia()">
+<select class="form-select"
+x-model="nuevo.frecuencia"
+:style="errores.frecuencia ? 'border: 2px solid #A52525 !important;' : ''"
+@change="cambioFrecuencia(); errores.frecuencia = false">
 <option value="">Selecciona una opcion...</option>
 <?php foreach ($frecuencias as $f): ?>
 <option value="<?= (int)$f['valor'] ?>"><?= htmlspecialchars($f['label'], ENT_QUOTES, 'UTF-8') ?></option>
@@ -137,7 +157,11 @@ x-init="initNuevo()">
 <!-- FALLA: sólo Correctivo -->
 <div class="col-12" x-show="nuevo.tipoMantenimiento === '2'">
 <label class="form-label mb-1">* Descripción de la falla:</label>
-<textarea class="form-control" rows="3" x-model="nuevo.fallaDescripcion"></textarea>
+<textarea class="form-control"
+rows="3"
+x-model="nuevo.fallaDescripcion"
+:style="errores.fallaDescripcion ? 'border: 2px solid #A52525 !important;' : ''"
+@input="errores.fallaDescripcion = false"></textarea>
 </div>
 
 </div>

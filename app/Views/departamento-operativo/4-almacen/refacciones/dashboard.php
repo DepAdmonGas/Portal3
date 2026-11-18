@@ -59,10 +59,9 @@ $upcomingEvents = is_array($dashboardData['proximos_eventos'] ?? null) ? $dashbo
                 <div class="datatables">
                     <div class="table-responsive overflow-x-auto pb-3">
                         <table id="tabla-refacciones-stock-bajo" class="table table-striped table-bordered mb-0 align-middle">
-                            <thead><tr><th>Estación / Departamento</th><th>SKU</th><th>Producto</th><th>Categoría</th><th>Stock actual</th><th>Mínimo</th></tr></thead>
+                            <thead><tr><th>SKU</th><th>Producto</th><th>Categoría</th><th>Stock actual</th><th>Mínimo</th></tr></thead>
                             <tbody><?php foreach ($lowStockRows as $row): ?>
                                 <tr>
-                                    <td><?= $escape($row['ubicacion']) ?></td>
                                     <td class="small text-muted"><?= $escape($row['sku']) ?></td>
                                     <td><?= $escape($row['nombre']) ?></td>
                                     <td><?= $escape($row['categoria']) ?></td>

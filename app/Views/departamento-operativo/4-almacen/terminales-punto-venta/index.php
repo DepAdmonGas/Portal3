@@ -170,7 +170,8 @@ x-model="form.estado"
 class="form-control"
 x-model="form.rollos"
 :style="errores.rollos ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.rollos = false">
+inputmode="numeric"
+@input="formatearCantidad('rollos', $event); errores.rollos = false">
 </div>
 
 <div class="col-md-6">
@@ -179,7 +180,8 @@ x-model="form.rollos"
 class="form-control"
 x-model="form.cargadores"
 :style="errores.cargadores ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.cargadores = false">
+inputmode="numeric"
+@input="formatearCantidad('cargadores', $event); errores.cargadores = false">
 </div>
 
 <div class="col-md-6">
@@ -188,17 +190,18 @@ x-model="form.cargadores"
 class="form-control"
 x-model="form.pedestales"
 :style="errores.pedestales ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.pedestales = false">
+inputmode="numeric"
+@input="formatearCantidad('pedestales', $event); errores.pedestales = false">
 </div>
 
 <div class="col-md-6">
 <label class="form-label mb-1">* No. de impresiones:</label>
-<input type="number"
+<input type="text"
 class="form-control"
-min="0"
 x-model="form.no_impresiones"
 :style="errores.no_impresiones ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.no_impresiones = false">
+inputmode="numeric"
+@input="formatearCantidad('no_impresiones', $event); errores.no_impresiones = false">
 </div>
 
 
@@ -343,7 +346,8 @@ x-model="form.estado"
 class="form-control"
 x-model="form.rollos"
 :style="errores.rollos ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.rollos = false">
+inputmode="numeric"
+@input="formatearCantidad('rollos', $event); errores.rollos = false">
 </div>
 
 <div class="col-md-6">
@@ -352,7 +356,8 @@ x-model="form.rollos"
 class="form-control"
 x-model="form.cargadores"
 :style="errores.cargadores ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.cargadores = false">
+inputmode="numeric"
+@input="formatearCantidad('cargadores', $event); errores.cargadores = false">
 </div>
 
 <div class="col-md-6">
@@ -361,17 +366,18 @@ x-model="form.cargadores"
 class="form-control"
 x-model="form.pedestales"
 :style="errores.pedestales ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.pedestales = false">
+inputmode="numeric"
+@input="formatearCantidad('pedestales', $event); errores.pedestales = false">
 </div>
 
 <div class="col-md-6">
 <label class="form-label mb-1">* No. de impresiones:</label>
-<input type="number"
+<input type="text"
 class="form-control"
-min="0"
 x-model="form.no_impresiones"
 :style="errores.no_impresiones ? 'border: 2px solid #A52525 !important;' : ''"
-@input="errores.no_impresiones = false">
+inputmode="numeric"
+@input="formatearCantidad('no_impresiones', $event); errores.no_impresiones = false">
 </div>
 
 

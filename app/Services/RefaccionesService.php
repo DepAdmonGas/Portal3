@@ -221,8 +221,22 @@ class RefaccionesService
 
         $valor = (clone $stockBase)->selectRaw('COALESCE(SUM(e.existencia * e.costo_promedio), 0) as total')->value('total');
         $productos = DB::table('op_refacciones_catalogo')->where('activo', 1)->where('tipo_articulo', 'refaccion')->count();
-        $stockBajo = (clone $stockBase)->whereRaw('COALESCE(NULLIF(e.stock_minimo, 0), c.stock_minimo) > 0')
-            ->whereRaw('e.existencia <= COALESCE(NULLIF(e.stock_minimo, 0), c.stock_minimo)')->count();
+        $lowStockBySku = DB::table('op_refacciones_catalogo as c')
+            ->leftJoin('op_refacciones_existencias as e', function ($join) use ($ubicaciones): void {
+                $join->on('e.id_refaccion', '=', 'c.id')->whereIn('e.id_estacion', $ubicaciones);
+            })
+            ->where('c.activo', 1)
+            ->where('c.tipo_articulo', 'refaccion')
+            ->where('c.stock_minimo', '>', 0)
+            ->groupBy('c.id', 'c.sku', 'c.nombre', 'c.medida', 'c.modelo', 'c.marca', 'c.categoria', 'c.stock_minimo')
+            ->havingRaw('COALESCE(SUM(e.existencia), 0) <= c.stock_minimo')
+            ->orderByRaw('COALESCE(SUM(e.existencia), 0) ASC')
+            ->get([
+                'c.sku', 'c.nombre', 'c.medida', 'c.modelo', 'c.marca', 'c.categoria',
+                DB::raw('COALESCE(SUM(e.existencia), 0) as existencia'),
+                'c.stock_minimo',
+            ]);
+        $stockBajo = $lowStockBySku->count();
 
         $desde = date('Y-m-01 00:00:00');
         $hasta = date('Y-m-01 00:00:00', strtotime('first day of next month'));
@@ -249,10 +263,7 @@ class RefaccionesService
                 : implode(', ', array_map(static fn (int $locationId): string => $locations[$locationId] ?? 'Ubicación', $eventLocationIds));
         }
         unset($calendarEvent);
-        $lowRows = (clone $stockBase)->whereRaw('COALESCE(NULLIF(e.stock_minimo, 0), c.stock_minimo) > 0')
-            ->whereRaw('e.existencia <= COALESCE(NULLIF(e.stock_minimo, 0), c.stock_minimo)')
-            ->orderBy('e.existencia')->limit(8)
-            ->get(['c.sku', 'c.nombre', 'c.categoria', 'e.existencia', DB::raw('COALESCE(NULLIF(e.stock_minimo, 0), c.stock_minimo) as stock_minimo'), 'e.id_estacion']);
+        $lowRows = $lowStockBySku->take(8);
 
         $categoryRows = (clone $stockBase)
             ->where('c.tipo_articulo', 'refaccion')
@@ -283,10 +294,11 @@ class RefaccionesService
                 'total' => (float) $row->total,
             ])->all(),
             'stock_bajo_detalle' => $lowRows->map(static fn ($row): array => [
-                'sku' => (string) $row->sku, 'nombre' => (string) $row->nombre,
+                'sku' => (string) $row->sku,
+                'nombre' => self::nombreCompletoProducto((string)$row->nombre, $row->medida, $row->modelo, $row->marca),
                 'categoria' => (string) ($row->categoria ?? 'Sin categoría'),
                 'existencia' => (float) $row->existencia, 'minimo' => (float) $row->stock_minimo,
-                'ubicacion' => $locations[(int) $row->id_estacion] ?? 'Ubicación',
+                'ubicacion' => 'Global',
             ])->all(),
             'proximos_eventos' => array_map(static fn (array $row): array => [
                 'titulo' => (string) $row['titulo'], 'tipo' => (string) $row['tipo_evento'],
@@ -294,6 +306,11 @@ class RefaccionesService
                 'ubicacion' => (string) ($row['ubicacion'] ?? ''),
             ], $proximosEventos),
         ];
+    }
+
+    private static function nombreCompletoProducto(string $nombre, ?string $medida, ?string $modelo, ?string $marca): string
+    {
+        return implode(' ', array_filter(array_map('trim', [$nombre, (string)$medida, (string)$modelo, (string)$marca])));
     }
 
     public static function getProductos(?string $tipo = null, bool $usarContexto = true): array
@@ -355,10 +372,14 @@ class RefaccionesService
             })
             ->whereIn('l.id_estacion', $ubicaciones)
             ->where('l.existencia', '>', 0)->where('c.activo', 1)
-            ->groupBy('l.id_estacion', 'c.id', 'c.sku', 'c.nombre', 'c.categoria', 'c.unidad_medida', 'l.costo_unitario', 'e.stock_minimo', 'c.stock_minimo')
+            ->groupBy('l.id_estacion', 'c.id', 'c.sku', 'c.nombre', 'c.medida', 'c.modelo', 'c.marca', 'c.categoria', 'c.unidad_medida', 'l.costo_unitario', 'e.stock_minimo', 'c.stock_minimo')
             ->orderBy('l.id_estacion')->orderBy('c.nombre')->orderBy('l.costo_unitario')
-            ->get(['l.id_estacion', 'c.id', 'c.sku', 'c.nombre', 'c.categoria', 'c.unidad_medida', 'l.costo_unitario', DB::raw('SUM(l.existencia) as existencia'), DB::raw('MAX(e.existencia) as existencia_total'), DB::raw('COALESCE(NULLIF(e.stock_minimo, 0), c.stock_minimo) as stock_minimo')])
-            ->map(static fn ($row): array => (array) $row)->all();
+            ->get(['l.id_estacion', 'c.id', 'c.sku', 'c.nombre', 'c.medida', 'c.modelo', 'c.marca', 'c.categoria', 'c.unidad_medida', 'l.costo_unitario', DB::raw('SUM(l.existencia) as existencia'), DB::raw('MAX(e.existencia) as existencia_total'), DB::raw('COALESCE(NULLIF(e.stock_minimo, 0), c.stock_minimo) as stock_minimo')])
+            ->map(static function ($row): array {
+                $item = (array)$row;
+                $item['nombre'] = self::nombreCompletoProducto((string)$row->nombre, $row->medida, $row->modelo, $row->marca);
+                return $item;
+            })->all();
     }
 
     /** Catálogo disponible en el almacén central para órdenes aún no autorizadas. */
@@ -373,10 +394,13 @@ class RefaccionesService
             })
             ->where('c.activo', 1)->where('c.tipo_articulo', 'refaccion')->where('e.existencia', '>', 0)
             ->orderBy('c.nombre')
-            ->get(['c.id', 'c.sku', 'c.nombre', 'c.unidad_medida', 'e.existencia'])
+            ->get(['c.id', 'c.sku', 'c.nombre', 'c.medida', 'c.modelo', 'c.marca', 'c.unidad_medida', 'e.existencia'])
             ->map(static fn ($row): array => [
                 'id' => (int)$row->id, 'sku' => (string)$row->sku,
                 'nombre' => (string)$row->nombre, 'unidad_medida' => (string)$row->unidad_medida,
+                'nombre_completo' => implode(' ', array_filter(array_map('trim', [
+                    (string)$row->nombre, (string)$row->medida, (string)$row->modelo, (string)$row->marca,
+                ]))),
                 'existencia' => (float)$row->existencia,
             ])->all();
     }
@@ -396,7 +420,7 @@ class RefaccionesService
                     ->orWhereIn('m.id_estacion_destino', $ubicaciones);
             })
             ->where('m.estado', 'confirmado')
-            ->selectRaw('m.id, m.folio, m.tipo, m.fecha, m.id_estacion_origen, m.id_estacion_destino, m.proveedor, m.motivo, m.referencia, MAX(m.notas) as notas, MIN(d.id_refaccion) as id_refaccion, SUM(d.cantidad) as cantidad, GROUP_CONCAT(c.nombre ORDER BY c.nombre SEPARATOR ", ") as productos')
+            ->selectRaw('m.id, m.folio, m.tipo, m.fecha, m.id_estacion_origen, m.id_estacion_destino, m.proveedor, m.motivo, m.referencia, MAX(m.notas) as notas, MIN(d.id_refaccion) as id_refaccion, SUM(d.cantidad) as cantidad, GROUP_CONCAT(CONCAT_WS(" ", NULLIF(TRIM(c.nombre), ""), NULLIF(TRIM(c.medida), ""), NULLIF(TRIM(c.modelo), ""), NULLIF(TRIM(c.marca), "")) ORDER BY c.nombre SEPARATOR ", ") as productos')
             ->groupBy('m.id', 'm.folio', 'm.tipo', 'm.fecha', 'm.id_estacion_origen', 'm.id_estacion_destino', 'm.proveedor', 'm.motivo', 'm.referencia');
 
         if ($tipo !== null && in_array($tipo, ['entrada', 'salida', 'traspaso', 'ajuste'], true)) {
@@ -463,7 +487,7 @@ class RefaccionesService
                     ->orWhereIn('m.id_estacion_destino', $ubicaciones);
             })
             ->where('m.tipo', 'traspaso')->where('m.estado', 'confirmado')
-            ->selectRaw('s.id, s.id_movimiento, s.estado_salida, s.fecha_retorno, s.id_proveedor_retorno, s.proveedor_retorno, s.referencia_retorno, s.notas_retorno, s.estatus, s.firma_elabora, s.firma_recibe, s.nombre_elabora, s.nombre_recibe, s.id_encargado_recibe, s.fecha_firma_elabora, s.fecha_firma_recibe, m.folio, m.fecha, m.id_estacion_origen, m.id_estacion_destino, m.motivo, m.notas, c.id as id_refaccion, c.nombre as producto, c.sku, d.cantidad, a.nombre_entrega, a.nombre_recibe as acuse_nombre_recibe, EXISTS(SELECT 1 FROM op_pedido_materiales_refacciones pr WHERE pr.id_movimiento_salida = m.id) as es_orden_mantenimiento')
+            ->selectRaw('s.id, s.id_movimiento, s.estado_salida, s.fecha_retorno, s.id_proveedor_retorno, s.proveedor_retorno, s.referencia_retorno, s.notas_retorno, s.estatus, s.firma_elabora, s.firma_recibe, s.nombre_elabora, s.nombre_recibe, s.id_encargado_recibe, s.fecha_firma_elabora, s.fecha_firma_recibe, m.folio, m.fecha, m.id_estacion_origen, m.id_estacion_destino, m.motivo, m.notas, c.id as id_refaccion, CONCAT_WS(" ", NULLIF(TRIM(c.nombre), ""), NULLIF(TRIM(c.medida), ""), NULLIF(TRIM(c.modelo), ""), NULLIF(TRIM(c.marca), "")) as producto, c.sku, d.cantidad, a.nombre_entrega, a.nombre_recibe as acuse_nombre_recibe, EXISTS(SELECT 1 FROM op_pedido_materiales_refacciones pr WHERE pr.id_movimiento_salida = m.id) as es_orden_mantenimiento')
             ->orderByDesc('s.id')->limit(500)->get()
             ->map(static fn ($row): array => (array) $row)->all();
     }
@@ -477,7 +501,7 @@ class RefaccionesService
             ->join('op_refacciones_catalogo as c', 'c.id', '=', 'd.id_refaccion')
             ->leftJoin('op_refacciones_acuses as a', 'a.id_movimiento', '=', 'm.id')
             ->where('s.id_movimiento', $id)->where('m.tipo', 'traspaso')
-            ->selectRaw('s.id, s.id_movimiento, s.estado_salida, s.fecha_retorno, s.estatus, s.firma_elabora, s.firma_recibe, s.nombre_elabora, s.nombre_recibe, s.id_encargado_recibe, s.fecha_firma_elabora, s.fecha_firma_recibe, m.folio, m.fecha, m.id_estacion_origen, m.id_estacion_destino, m.motivo, m.notas, m.id_usuario, c.id as id_refaccion, c.nombre as producto, c.sku, c.unidad_medida, d.cantidad, a.nombre_entrega, a.nombre_recibe as acuse_nombre_recibe, EXISTS(SELECT 1 FROM op_pedido_materiales_refacciones pr WHERE pr.id_movimiento_salida = m.id) as es_orden_mantenimiento')
+            ->selectRaw('s.id, s.id_movimiento, s.estado_salida, s.fecha_retorno, s.estatus, s.firma_elabora, s.firma_recibe, s.nombre_elabora, s.nombre_recibe, s.id_encargado_recibe, s.fecha_firma_elabora, s.fecha_firma_recibe, m.folio, m.fecha, m.id_estacion_origen, m.id_estacion_destino, m.motivo, m.notas, m.id_usuario, c.id as id_refaccion, CONCAT_WS(" ", NULLIF(TRIM(c.nombre), ""), NULLIF(TRIM(c.medida), ""), NULLIF(TRIM(c.modelo), ""), NULLIF(TRIM(c.marca), "")) as producto, c.sku, c.unidad_medida, d.cantidad, a.nombre_entrega, a.nombre_recibe as acuse_nombre_recibe, EXISTS(SELECT 1 FROM op_pedido_materiales_refacciones pr WHERE pr.id_movimiento_salida = m.id) as es_orden_mantenimiento')
             ->first();
         if (!$row) return null;
 
@@ -1220,14 +1244,14 @@ class RefaccionesService
                         ->whereIn('m.id_estacion_origen', $ubicaciones);
                 });
             })
-            ->selectRaw("c.id, c.sku, c.nombre, CASE WHEN m.tipo = 'entrada' THEN 'entrada' ELSE 'salida' END as tipo, SUM(d.cantidad) as cantidad, SUM(COALESCE(costo_fifo.valor_fifo, d.cantidad * d.costo_unitario)) as valor")
-            ->groupBy('c.id', 'c.sku', 'c.nombre', 'tipo')->get();
+            ->selectRaw("c.id, c.sku, c.nombre, c.medida, c.modelo, c.marca, CASE WHEN m.tipo = 'entrada' THEN 'entrada' ELSE 'salida' END as tipo, SUM(d.cantidad) as cantidad, SUM(COALESCE(costo_fifo.valor_fifo, d.cantidad * d.costo_unitario)) as valor")
+            ->groupBy('c.id', 'c.sku', 'c.nombre', 'c.medida', 'c.modelo', 'c.marca', 'tipo')->get();
 
         $detail = [];
         $totals = ['entradas' => 0.0, 'valor_entradas' => 0.0, 'salidas' => 0.0, 'valor_salidas' => 0.0];
         foreach ($rows as $row) {
             $id = (int) $row->id;
-            $detail[$id] ??= ['sku' => (string) $row->sku, 'nombre' => (string) $row->nombre, 'entradas' => 0.0, 'valor_entradas' => 0.0, 'salidas' => 0.0, 'valor_salidas' => 0.0];
+            $detail[$id] ??= ['sku' => (string) $row->sku, 'nombre' => self::nombreCompletoProducto((string)$row->nombre, $row->medida, $row->modelo, $row->marca), 'entradas' => 0.0, 'valor_entradas' => 0.0, 'salidas' => 0.0, 'valor_salidas' => 0.0];
             $key = $row->tipo === 'entrada' ? 'entradas' : 'salidas';
             $valueKey = $row->tipo === 'entrada' ? 'valor_entradas' : 'valor_salidas';
             $detail[$id][$key] = (float) $row->cantidad;
