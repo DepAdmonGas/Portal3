@@ -733,42 +733,45 @@ final class ChecadorController extends BaseController
                 // clear that this is not the calendar's real current day.
                 $date = ChecadorDailyReadService::demoReferenceDate();
             } else {
-                // Seed from UTC, then let the API-owned IANA timezone determine
-                // today's local work date. The normal read reuses this response
-                // when its date matches, or resolves the corrected date once.
+                // M03 resolves the canonical timezone from Portal3's SQL-backed
+                // versioned locality records. Other Checador reads retain their
+                // current owner-specific path until their slice is migrated.
                 $candidateDate = gmdate('Y-m-d');
                 $date = $candidateDate;
                 $defaultUser = Auth::user();
                 if ($defaultUser) {
                     try {
-                        $defaultReader = new ChecadorDailyReadService();
-                        $defaultTimezoneResolution = $defaultReader->resolveWorkplaceLocalDay(
-                            $defaultUser,
-                            $requestedWorkplace,
-                            $candidateDate
-                        );
-                        if (($defaultTimezoneResolution['ok'] ?? false) === true) {
-                            $localToday = ChecadorOperationalPeriod::currentLocalDate(
-                                (string) ($defaultTimezoneResolution['data']['timezone'] ?? ''),
-                                new \DateTimeImmutable('now', new \DateTimeZone('UTC'))
+                        if ($workspace === 'schedule-week') {
+                            $defaultTimezone = (new \App\Services\ChecadorWeeklyScheduleSqlReadService())
+                                ->timezoneForDate($requestedWorkplace, $candidateDate);
+                            if ($defaultTimezone !== null) {
+                                $date = ChecadorOperationalPeriod::currentLocalDate(
+                                    $defaultTimezone,
+                                    new \DateTimeImmutable('now', new \DateTimeZone('UTC'))
+                                ) ?? $candidateDate;
+                            }
+                        } else {
+                            $defaultReader = new ChecadorDailyReadService();
+                            $defaultTimezoneResolution = $defaultReader->resolveWorkplaceLocalDay(
+                                $defaultUser, $requestedWorkplace, $candidateDate
                             );
-                            if ($localToday === null) {
-                                $defaultTimezoneResolution = [
-                                    'ok' => false,
-                                    'error' => ['kind' => 'timezone_unresolved', 'status' => 502],
-                                ];
-                            } else {
-                                $date = $localToday;
-                                if ($localToday !== $candidateDate) {
-                                    $defaultTimezoneResolution = null;
+                            if (($defaultTimezoneResolution['ok'] ?? false) === true) {
+                                $localToday = ChecadorOperationalPeriod::currentLocalDate(
+                                    (string) ($defaultTimezoneResolution['data']['timezone'] ?? ''),
+                                    new \DateTimeImmutable('now', new \DateTimeZone('UTC'))
+                                );
+                                if ($localToday === null) {
+                                    $defaultTimezoneResolution = ['ok' => false, 'error' => ['kind' => 'timezone_unresolved', 'status' => 502]];
+                                } else {
+                                    $date = $localToday;
+                                    if ($localToday !== $candidateDate) $defaultTimezoneResolution = null;
                                 }
                             }
                         }
                     } catch (\Throwable) {
-                        $defaultTimezoneResolution = [
-                            'ok' => false,
-                            'error' => ['kind' => 'api_unavailable', 'status' => 0],
-                        ];
+                        if ($workspace !== 'schedule-week') {
+                            $defaultTimezoneResolution = ['ok' => false, 'error' => ['kind' => 'api_unavailable', 'status' => 0]];
+                        }
                     }
                 }
             }
@@ -2276,7 +2279,6 @@ final class ChecadorController extends BaseController
         $dateAssignmentsTruncated = false;
         $validityCheck = null;
         $currentUser = Auth::user();
-        $reader = null;
         $scheduleTemplates = [];
         $templateCatalogStatus = 'not_requested';
         $templateCatalogMessage = '';
@@ -2295,7 +2297,7 @@ final class ChecadorController extends BaseController
             $historyError = 'demo_history_unavailable';
             $effectiveScheduleError = 'demo_history_unavailable';
         } elseif ($scheduleHistoryAllowed && $workplaceId !== null && $workerId !== null && self::isCivilDate($date) && $currentUser !== null) {
-            $roster = self::scheduleHistoryWorkerRoster($workplaceId, $date, $currentUser, $workerId);
+            $roster = self::scheduleHistoryWorkerRoster($workplaceId, $date, $workerId);
             $selectedWorkerName = trim((string) ($roster['workers'][0]['full_name'] ?? ''));
             if (!($roster['ok'] ?? false) || $selectedWorkerName === '') {
                 $historyError = 'worker_scope_mismatch';
@@ -2303,42 +2305,22 @@ final class ChecadorController extends BaseController
                 $workerId = null;
             } else {
                 try {
-                    $reader = new ChecadorDailyReadService();
-                    $effectiveResult = $reader->getEffectiveSchedule($currentUser, $workerId, $workplaceId, $date);
-                    if ($effectiveResult['ok']) {
-                        $effectiveSchedule = $effectiveResult['data'];
+                    $assignmentHistory = (new \App\Services\ChecadorWeeklyScheduleSqlReadService())
+                        ->readAssignmentHistory($currentUser, $workplaceId, $workerId, $historyPage, 50, $date);
+                    if (($assignmentHistory['ok'] ?? false) === true) {
+                        $historyData = $assignmentHistory['data'];
+                        $historyItems = $historyData['items'];
+                        $historyHasNext = (bool) $historyData['has_next'];
+                        $dateAssignments = $historyData['date_assignment_facts'];
+                        $dateAssignmentsTruncated = (bool) $historyData['date_facts_truncated'];
                     } else {
-                        $effectiveScheduleError = (string) $effectiveResult['error']['kind'];
-                    }
-
-                    $historyResult = $reader->getShiftAssignments($currentUser, $workerId, $workplaceId, $historyPage, 50);
-                    if ($historyResult['ok']) {
-                        $historyItems = $historyResult['data']['items'];
-                        $historyHasNext = count($historyItems) === 50;
-                    } else {
-                        $historyError = (string) $historyResult['error']['kind'];
-                    }
-
-                    $dateResult = $reader->getShiftAssignments($currentUser, $workerId, $workplaceId, 1, 200, $date);
-                    if ($dateResult['ok']) {
-                        $dateAssignments = $dateResult['data']['items'];
-                        $dateAssignmentsTruncated = count($dateAssignments) === 200;
-                        if ($effectiveSchedule !== null) {
-                            $validityCheck = ChecadorDailyReadService::reconcileEffectiveScheduleValidity(
-                                $effectiveSchedule,
-                                $dateAssignments,
-                                $workerId,
-                                $workplaceId,
-                                $date,
-                                $dateAssignmentsTruncated
-                            );
-                        }
-                    } else {
+                        $historyError = (string) ($assignmentHistory['error']['kind'] ?? 'database_unavailable');
+                        $effectiveScheduleError = $historyError;
                         $validityCheck = ['status' => 'history_unavailable', 'weekday' => '', 'assignment' => null];
                     }
                 } catch (\Throwable) {
-                    $effectiveScheduleError ??= 'api_unavailable';
-                    $historyError ??= 'api_unavailable';
+                    $effectiveScheduleError ??= 'database_unavailable';
+                    $historyError ??= 'database_unavailable';
                 }
             }
         }
@@ -2474,6 +2456,8 @@ final class ChecadorController extends BaseController
                 'historyPage' => $historyPage,
                 'historyHasPrevious' => $historyPage > 1,
                 'historyHasNext' => $historyHasNext,
+                'dateAssignments' => $dateAssignments,
+                'dateAssignmentsTruncated' => $dateAssignmentsTruncated,
                 'validityCheck' => $validityCheck,
                 'scheduleTemplates' => $scheduleTemplates,
                 'templateCatalogStatus' => $templateCatalogStatus,
@@ -2518,7 +2502,6 @@ final class ChecadorController extends BaseController
         foreach ($workplaces as $workplace) {
             if ((int) ($workplace['id'] ?? 0) === (int) ($workplaceId ?? 0)) $workplaceName = (string) ($workplace['nombre'] ?? '');
         }
-        $timezone = '';
         $dates = \App\Services\ChecadorWeeklyScheduleService::dates($weekStart);
         $effectiveDateMin = $weekStart;
         $effectiveDateMax = (string) ($dates[6]['date'] ?? $weekStart);
@@ -2529,8 +2512,7 @@ final class ChecadorController extends BaseController
         $templates = [];
         $coverage = 'not_loaded';
         $rosterMessage = '';
-        $reader = null;
-        $scheduleReadDiagnostics = [];
+        $timezone = '';
         $currentUser = Auth::user();
         if (!$validWeek) {
             $errorMessage = 'Selecciona una semana actual o futura cuyo inicio sea lunes.';
@@ -2540,176 +2522,49 @@ final class ChecadorController extends BaseController
             $errorMessage = 'La sesión ya no es válida. Inicia sesión nuevamente.';
         } else {
             try {
-                $reader = new ChecadorDailyReadService();
-                // In demo this method is served only by the existing local
-                // fixture; in real mode it reads the API's Workplace timezone.
-                $timezoneResult = $reader->resolveWorkplaceLocalDay($currentUser, $workplaceId, $weekStart);
-                if (($timezoneResult['ok'] ?? false) !== true) {
+                $reader = new \App\Services\ChecadorWeeklyScheduleSqlReadService();
+                $timezone = $reader->timezoneForDate($workplaceId, $weekStart) ?? '';
+                if (!\App\Services\ChecadorOperationalPeriod::isIanaTimezone($timezone)) {
                     $errorMessage = 'No se pudo confirmar la zona horaria laboral del centro; no se cargó la programación semanal.';
-                } else {
-                    $timezone = (string) $timezoneResult['data']['timezone'];
-                    if (!\App\Services\ChecadorOperationalPeriod::isIanaTimezone($timezone)) {
-                        $errorMessage = 'La zona horaria laboral no cumple el contrato IANA.';
-                    } else {
-                        $today = \App\Services\ChecadorOperationalPeriod::currentLocalDate(
-                            $timezone,
-                            new \DateTimeImmutable('now', new \DateTimeZone('UTC'))
-                        );
-                        if ($today !== null) {
-                            $effectiveDateMin = max(
-                                $weekStart,
-                                (new \DateTimeImmutable($today, new \DateTimeZone('UTC')))->modify('+1 day')->format('Y-m-d')
-                            );
-                        }
-                    }
                 }
                 if ($errorMessage === '' && !\App\Services\ChecadorWeeklyScheduleService::isCurrentOrFutureWeek($weekStart, $timezone)) {
                     $errorMessage = 'Sólo se pueden consultar semanas actuales o futuras según la zona horaria laboral del centro.';
                 }
                 if ($errorMessage === '') {
-                    $roster = (new \App\Services\ChecadorAttendanceRosterService())->workersForScheduleWeek($workplaceId, $weekStart, $timezone, $demoMode);
-                    $workers = $roster['workers'];
+                    $today = \App\Services\ChecadorOperationalPeriod::currentLocalDate(
+                        $timezone, new \DateTimeImmutable('now', new \DateTimeZone('UTC'))
+                    );
+                    if ($today !== null) {
+                        $effectiveDateMin = max($weekStart,
+                            (new \DateTimeImmutable($today, new \DateTimeZone('UTC')))->modify('+1 day')->format('Y-m-d'));
+                    }
+                    $roster = (new \App\Services\ChecadorAttendanceRosterService())
+                        ->workersForScheduleWeek($workplaceId, $weekStart, $timezone, $demoMode);
+                    $workers = $roster['workers'] ?? [];
                     $coverage = (string) ($roster['status'] ?? 'unknown');
                     $rosterMessage = (string) ($roster['message'] ?? '');
                     if (!in_array($coverage, ['ready', 'demo_fixture'], true)
                         && !($coverage === 'partial' && $workers !== [])) {
                         $errorMessage = $rosterMessage !== '' ? $rosterMessage : 'El padrón no está disponible.';
                     }
-                    $templatePageSize = 200;
-                    $templatePageLimit = 50;
-                    $templatesById = [];
-                    $templatePagesRead = 0;
-                    $templatePaginationFailure = null;
-                    for ($templatePage = 1; $templatePage <= $templatePageLimit; $templatePage++) {
-                        $templateResult = $reader->getShiftTemplates($currentUser, $templatePage, $templatePageSize, $workplaceId);
-                        if (($templateResult['ok'] ?? false) !== true) {
-                            $templatePaginationFailure = [
-                                'kind' => (string) ($templateResult['error']['kind'] ?? 'unknown'),
-                                'status' => (int) ($templateResult['error']['status'] ?? 0),
-                            ];
-                            break;
-                        }
-                        $pageTemplates = $templateResult['data']['items'];
-                        $templatePagesRead++;
-                        foreach ($pageTemplates as $template) $templatesById[(int) $template['id']] = $template;
-                        if (count($pageTemplates) < $templatePageSize) break;
-                    }
-                    $templatePaginationCapped = $templatePagesRead === $templatePageLimit
-                        && $templatePaginationFailure === null
-                        && count($pageTemplates ?? []) === $templatePageSize;
-                    $templates = array_values($templatesById);
-                    if ($templatePagesRead === 0) {
-                        $errorMessage = 'El catálogo contractual de turnos no está disponible; no se puede ofrecer una asignación.';
-                    } elseif ($templatePaginationFailure !== null || $templatePaginationCapped) {
-                        $coverage = 'partial';
-                    }
-                    if ($templatePagesRead === 0 && $templatePaginationFailure !== null) {
-                        $scheduleReadDiagnostics = [
-                            'workplace_id' => $workplaceId,
-                            'week_start' => $weekStart,
-                            'coverage' => 'unavailable',
-                            'template_pages_read' => 0,
-                            'template_page_size' => $templatePageSize,
-                            'template_count' => 0,
-                            'template_pagination_failure_kind' => $templatePaginationFailure['kind'],
-                            'template_pagination_failure_status' => $templatePaginationFailure['status'],
-                        ];
-                    }
-                    $assignmentsByWorker = [];
-                    $assignmentReadFailures = 0;
-                    $assignmentReadFailedWorkers = [];
-                    $assignmentReadFailureKinds = [];
-                    $assignmentHistoryCapped = 0;
                     if ($errorMessage === '') {
-                        foreach (array_slice($workers, 0, 50) as $worker) {
-                            $workerId = (int) $worker['worker_id'];
-                            $assignmentResult = $reader->getShiftAssignments($currentUser, $workerId, $workplaceId, 1, 200);
-                            if (($assignmentResult['ok'] ?? false) !== true) {
-                                $assignmentsByWorker[$workerId] = [];
-                                $assignmentReadFailures++;
-                                $assignmentReadFailedWorkers[$workerId] = true;
-                                $failureKey = (string) ($assignmentResult['error']['kind'] ?? 'unknown') . ':' . (int) ($assignmentResult['error']['status'] ?? 0);
-                                $assignmentReadFailureKinds[$failureKey] = ($assignmentReadFailureKinds[$failureKey] ?? 0) + 1;
-                                $coverage = 'partial';
-                                continue;
-                            }
-                            $assignmentsByWorker[$workerId] = $assignmentResult['data']['items'];
-                            // The frozen list response has no total or continuation metadata.
-                            // Do not call a page complete; expose the returned schedule as partial.
-                            $coverage = 'partial';
-                            if (count($assignmentResult['data']['items']) === 200) {
-                                $assignmentHistoryCapped++;
-                            }
+                        $scheduleRead = $reader->readWeek($currentUser, $workplaceId, $weekStart, $workers);
+                        if (($scheduleRead['ok'] ?? false) !== true) {
+                            $errorMessage = match ((string) ($scheduleRead['error']['kind'] ?? '')) {
+                                'permission_denied' => 'No tienes autorización para consultar esta programación.',
+                                'database_unavailable' => 'No fue posible leer la programación persistida en Checador V2.',
+                                'assignment_template_incomplete', 'template_scope_conflict' => 'La programación contiene referencias incompletas o fuera de alcance; se bloqueó su presentación.',
+                                default => 'La programación semanal no está disponible.',
+                            };
+                        } else {
+                            $data = $scheduleRead['data'];
+                            $templates = $data['templates'];
+                            foreach ($workers as &$worker) $worker['schedule_read_status'] = 'available';
+                            unset($worker);
+                            $matrix = \App\Services\ChecadorWeeklyScheduleService::matrix(
+                                $workers, $data['assignments_by_worker'], $data['templates_by_id'], $weekStart
+                            );
                         }
-                        if (count($workers) > 50) $coverage = 'partial';
-                        $usedTemplateIds = [];
-                        foreach ($assignmentsByWorker as $items) foreach ($items as $assignment) {
-                            if (($assignment['id_plantilla'] ?? null) !== null) $usedTemplateIds[(int) $assignment['id_plantilla']] = true;
-                        }
-                        foreach ($workers as &$scheduleWorker) {
-                            $scheduleWorker['schedule_read_status'] = !isset($assignmentReadFailedWorkers[(int) ($scheduleWorker['worker_id'] ?? 0)])
-                                ? 'week_visible'
-                                : 'unavailable';
-                        }
-                        unset($scheduleWorker);
-                        $resolvedTemplatesById = [];
-                        $missingTemplateRefs = 0;
-                        $missingTemplateRefIds = [];
-                        $templateReferenceVersions = [];
-                        $templateDetailFailures = [];
-                        $templateDetailFailureRefs = [];
-                        foreach (array_slice(array_keys($usedTemplateIds), 0, 50) as $templateId) {
-                            $template = $templatesById[$templateId] ?? null;
-                            if ($template === null) {
-                                $missingTemplateRefs++;
-                                $missingTemplateRefIds[] = (int) $templateId;
-                                $coverage = 'partial';
-                                continue;
-                            }
-                            $templateReferenceVersions[] = ['template_id' => (int) $templateId, 'version' => (int) $template['version']];
-                            $detail = $reader->getShiftTemplateVersion($currentUser, (string) $template['clave'], (int) $template['version'], $workplaceId);
-                            if (($detail['ok'] ?? false) === true) {
-                                $resolvedTemplatesById[$templateId] = array_merge($template, $detail['data']);
-                            } else {
-                                $failureKey = (string) ($detail['error']['kind'] ?? 'unknown') . ':' . (int) ($detail['error']['status'] ?? 0);
-                                $templateDetailFailures[$failureKey] = ($templateDetailFailures[$failureKey] ?? 0) + 1;
-                                $templateDetailFailureRefs[] = [
-                                    'template_id' => (int) $templateId,
-                                    'version' => (int) $template['version'],
-                                    'kind' => (string) ($detail['error']['kind'] ?? 'unknown'),
-                                    'status' => (int) ($detail['error']['status'] ?? 0),
-                                ];
-                                $coverage = 'partial';
-                            }
-                        }
-                        if (count($usedTemplateIds) > 50) $coverage = 'partial';
-                        if ($coverage === 'partial') {
-                            $scheduleReadDiagnostics = [
-                                'workplace_id' => $workplaceId,
-                                'week_start' => $weekStart,
-                                'coverage' => $coverage,
-                                'worker_count' => count($workers),
-                                'worker_read_cap_reached' => count($workers) > 50,
-                                'template_pages_read' => $templatePagesRead,
-                                'template_page_size' => $templatePageSize,
-                                'template_count' => count($templates),
-                                'template_pagination_capped' => $templatePaginationCapped,
-                                'template_pagination_failure_kind' => $templatePaginationFailure['kind'] ?? null,
-                                'template_pagination_failure_status' => $templatePaginationFailure['status'] ?? null,
-                                'assignment_worker_count' => count($assignmentsByWorker),
-                                'assignment_failed_count' => $assignmentReadFailures,
-                                'assignment_failure_counts_by_code' => $assignmentReadFailureKinds,
-                                'assignment_history_capped_count' => $assignmentHistoryCapped,
-                                'used_template_reference_count' => count($usedTemplateIds),
-                                'catalog_reference_missing_count' => $missingTemplateRefs,
-                                'catalog_reference_missing_ids' => $missingTemplateRefIds,
-                                'template_reference_versions' => $templateReferenceVersions,
-                                'template_detail_failure_counts' => $templateDetailFailures,
-                                'template_detail_failure_refs' => $templateDetailFailureRefs,
-                                'template_detail_cap_reached' => count($usedTemplateIds) > 50,
-                            ];
-                        }
-                        $matrix = \App\Services\ChecadorWeeklyScheduleService::matrix($workers, $assignmentsByWorker, $resolvedTemplatesById, $weekStart);
                     }
                 }
             } catch (\Throwable) {
@@ -2717,54 +2572,39 @@ final class ChecadorController extends BaseController
             }
         }
 
-        if ($scheduleReadDiagnostics !== []) {
-            Logger::warning('Checador weekly schedule read is incomplete', $scheduleReadDiagnostics);
-        }
-
         $feedback = Session::pull('checador_schedule_feedback', null);
         if (!is_array($feedback) || (int) ($feedback['workplace_id'] ?? 0) !== (int) ($workplaceId ?? 0)
             || (string) ($feedback['week_start'] ?? '') !== $weekStart) $feedback = null;
         $assignableWorkers = \App\Services\ChecadorWeeklyScheduleService::workersWithAnyVerifiedMembership(
-            $workers,
-            array_column($dates, 'date')
+            $workers, array_column($dates, 'date')
         );
+        // Writes stay closed until the legacy API writer is cut off under the
+        // reconciled M03 contract; there is deliberately no HTTP fallback.
         $canEditSchedules = $workplaceId !== null && !$demoMode
-            && ChecadorDailyReadService::scheduleApiPostOperationsEnabled()
+            && \App\Services\ChecadorWeeklyScheduleSqlWriteService::enabled()
             && (ChecadorAccessService::authorizeScheduling($workplaceId, 'editar')['allowed'] ?? false);
         $canAssign = $canEditSchedules && $assignableWorkers !== [];
         $legalReference = \App\Services\ChecadorLaborPolicy::referenceForDate($weekStart);
         View::render(
             'departamento-operativo/2-recursos-humanos/checador/schedule-week',
             [
-                'title' => 'Programación semanal de turnos',
-                'workplaces' => $workplaces,
-                'selectedWorkplaceId' => $workplaceId,
-                'selectedWorkplaceName' => $workplaceName,
-                'weekStart' => $weekStart,
-                'effectiveDateMin' => $effectiveDateMin,
-                'effectiveDateMax' => $effectiveDateMax,
-                'weekDates' => $matrix['dates'],
-                'scheduleRows' => $matrix['workers'],
-                'habitualScheduleRows' => $matrix['habitual_workers'] ?? [],
-                'templates' => $templates,
-                'templateCatalogAvailable' => $templates !== [],
-                'assignableWorkers' => $assignableWorkers,
-                'timezone' => $timezone,
-                'coverage' => $coverage,
+                'title' => 'Programación semanal de turnos', 'workplaces' => $workplaces,
+                'selectedWorkplaceId' => $workplaceId, 'selectedWorkplaceName' => $workplaceName,
+                'weekStart' => $weekStart, 'effectiveDateMin' => $effectiveDateMin,
+                'effectiveDateMax' => $effectiveDateMax, 'weekDates' => $matrix['dates'],
+                'scheduleRows' => $matrix['workers'], 'habitualScheduleRows' => $matrix['habitual_workers'] ?? [],
+                'templates' => $templates, 'templateCatalogAvailable' => $templates !== [],
+                'assignableWorkers' => $assignableWorkers, 'timezone' => $timezone, 'coverage' => $coverage,
                 'rosterCoverage' => in_array($coverage, ['ready', 'demo_fixture'], true) ? 'ready' : $coverage,
-                'matrixCoverage' => $errorMessage !== '' ? 'unavailable' : 'partial',
-                'rosterMessage' => $rosterMessage,
-                'errorMessage' => $errorMessage,
-                'feedback' => $feedback,
-                'canAssign' => $canAssign,
-                'canEditSchedules' => $canEditSchedules,
-                'demoMode' => $demoMode,
+                'matrixCoverage' => $errorMessage !== '' ? 'unavailable'
+                    : (in_array($coverage, ['ready', 'demo_fixture'], true) ? 'ready' : 'partial'),
+                'rosterMessage' => $rosterMessage, 'errorMessage' => $errorMessage, 'feedback' => $feedback,
+                'canAssign' => $canAssign, 'canEditSchedules' => $canEditSchedules, 'demoMode' => $demoMode,
                 'legalReference' => $legalReference,
                 'dailyLimits' => \App\Services\ChecadorLaborPolicy::generalDailyReferences(),
                 'links' => [],
                 'scripts' => ['/assets/js/core/module-station-selector.js', '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261021-1', '/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-template.init.js', '/assets/js/departamento-operativo/2-recursos-humanos/checador.habitual-schedule.init.js', '/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-week-ui.init.js'],
-                'help' => false,
-                'moduleStationKey' => ChecadorAccessService::MODULE_KEY,
+                'help' => false, 'moduleStationKey' => ChecadorAccessService::MODULE_KEY,
             ],
             'departamento-operativo'
         );
@@ -2794,9 +2634,8 @@ final class ChecadorController extends BaseController
         }
 
         try {
-            $reader = new ChecadorDailyReadService();
-            $timezoneResult = $reader->resolveWorkplaceLocalDay($user, $workplaceId, $weekStart);
-            $timezone = ($timezoneResult['ok'] ?? false) === true ? (string) ($timezoneResult['data']['timezone'] ?? '') : '';
+            $reader = new \App\Services\ChecadorWeeklyScheduleSqlReadService();
+            $timezone = $reader->timezoneForDate($workplaceId, $weekStart) ?? '';
             if (!\App\Services\ChecadorOperationalPeriod::isIanaTimezone($timezone)
                 || !\App\Services\ChecadorWeeklyScheduleService::isCurrentOrFutureWeek($weekStart, $timezone)) {
                 $deny('workplace_unavailable', 'No se pudo confirmar la estación, la zona horaria o la semana.', 502);
@@ -2808,18 +2647,18 @@ final class ChecadorController extends BaseController
                 if ((int) ($candidate['worker_id'] ?? 0) === $workerId) { $worker = $candidate; break; }
             }
             if (!is_array($worker)) $deny('membership_unverified', 'La adscripción del trabajador no está confirmada para esta semana.', 403);
-
+            $read = $reader->readWeek($user, $workplaceId, $weekStart, [$worker]);
+            if (($read['ok'] ?? false) !== true) {
+                $deny('assignment_week_read_unavailable', 'No fue posible consultar la programación persistida; no se habilitó el formulario.', 502);
+            }
             $verifiedDates = is_array($worker['versioned_verified_dates'] ?? null)
                 ? array_values(array_filter($worker['versioned_verified_dates'], 'is_string')) : [];
             $existingDays = [];
             $existingDaysByDate = [];
             $replacementSources = [];
             foreach ($dates as $day) {
-                $read = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 200, (string) $day['date']);
-                if (($read['ok'] ?? false) !== true) {
-                    $deny('assignment_week_read_unavailable', 'No fue posible consultar cada fecha de la semana; no se habilitó el formulario.', 502);
-                }
-                foreach ($read['data']['items'] ?? [] as $assignment) {
+                $readRows = $read['data']['assignments_by_worker'][$workerId] ?? [];
+                foreach ($readRows as $assignment) {
                     if (($assignment['tipo_asignacion'] ?? '') !== 'HABITUAL'
                         || ($assignment['dia_semana'] ?? '') !== $day['weekday']
                         || (int) ($assignment['es_activo'] ?? 0) !== 1
@@ -2854,392 +2693,88 @@ final class ChecadorController extends BaseController
         }
     }
 
-    /** Mutates weekly schedule through approved API operations with canonical readback. */
+    /** Create one assignment through the single gated Portal3 SQL writer. */
+    /** Execute only the gated Portal3 SQL writer; no HTTP fallback exists. */
+    private function handleM03SqlWrite(string $operation, array $input): never
+    {
+        $workplaceId = $this->requestWorkplaceId($input);
+        $rawWorkplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        $weekStart = is_string($input['week_start'] ?? null) ? trim($input['week_start']) : '';
+        $user = Auth::user();
+        $result = ['ok' => false, 'error' => 'm03_writer_cutover_not_ready', 'status' => 503];
+        if ($user === null) {
+            $result = ['ok' => false, 'error' => 'unauthenticated', 'status' => 401];
+        } elseif ($workplaceId === null || $rawWorkplaceId !== $workplaceId) {
+            $result = ['ok' => false, 'error' => 'permission_denied', 'status' => 403];
+        } elseif (!in_array((string) ($input['confirm_action'] ?? ''), ['1', 'on'], true)) {
+            $result = ['ok' => false, 'error' => 'confirmation_required', 'status' => 422];
+        } elseif (!ChecadorDailyReadService::demoModeEnabled()) {
+            $writer = new \App\Services\ChecadorWeeklyScheduleSqlWriteService();
+            $result = match ($operation) {
+                'create' => $writer->create($user, $input),
+                'close' => $writer->close($user, $input),
+                'replace' => $writer->replace($user, $input),
+                default => ['ok' => false, 'error' => 'invalid_operation', 'status' => 422],
+            };
+        } else {
+            $result = ['ok' => false, 'error' => 'demo_mode', 'status' => 403];
+        }
+        $status = (int) ($result['status'] ?? (($result['ok'] ?? false) ? 200 : 422));
+        $labels = [
+            'm03_writer_cutover_not_ready' => 'La escritura SQL de M03 sigue cerrada hasta confirmar el corte del escritor API y la validación del esquema.',
+            'permission_denied' => 'No tienes permiso para modificar la programación de esta localidad.',
+            'worker_unavailable' => 'El trabajador no está disponible para programación.',
+            'membership_unverified' => 'No se confirmó la adscripción del trabajador para toda la vigencia solicitada.',
+            'membership_conflict' => 'La adscripción del trabajador es ambigua para la fecha solicitada.',
+            'assignment_conflict' => 'Ya existe una asignación incompatible para ese periodo.',
+            'template_not_allowed' => 'El turno no pertenece al catálogo autorizado de esta localidad.',
+            'invalid_template_segments' => 'El turno no tiene segmentos laborales válidos persistidos.',
+            'stale_assignment' => 'La asignación cambió desde que abriste el formulario. Actualiza la semana e inténtalo de nuevo.',
+            'invalid_close_date' => 'La fecha de cierre no coincide con la vigencia de la asignación.',
+            'invalid_validity' => 'La vigencia solicitada no es válida.',
+            'idempotency_conflict' => 'La clave de solicitud ya se usó con otros datos; vuelve a cargar el formulario.',
+            'concurrent_write_busy' => 'Hay otro cambio de programación en curso. Actualiza la página antes de reintentar.',
+            'readback_failed', 'readback_mismatch', 'audit_readback_failed' => 'La operación no se confirmó mediante lectura posterior; no se declara guardada.',
+            'database_write_failed' => 'No fue posible guardar la programación en MariaDB; no se declara guardada.',
+            'demo_mode' => 'La demostración es de consulta; no guarda asignaciones.',
+            'confirmation_required' => 'Confirma la operación antes de guardar.',
+        ];
+        $error = (string) ($result['error'] ?? 'database_write_failed');
+        $message = ($result['ok'] ?? false)
+            ? (($result['replayed'] ?? false) ? 'Cambio ya confirmado; se recuperó la asignación persistida.' : 'Cambio confirmado mediante lectura posterior de MariaDB.')
+            : ($labels[$error] ?? 'No fue posible confirmar el cambio de programación.');
+        if (Request::expectsJson()) {
+            JsonResponse::send([
+                'ok' => (bool) ($result['ok'] ?? false), 'code' => $error, 'message' => $message,
+                'workplace_id' => $workplaceId, 'assignment' => $result['assignment'] ?? null,
+                'replayed' => (bool) ($result['replayed'] ?? false),
+            ], $status, ['Cache-Control' => 'private, no-store']);
+        }
+        Session::set('checador_schedule_feedback', [
+            'type' => ($result['ok'] ?? false) ? 'success' : 'warning', 'message' => $message,
+            'workplace_id' => (int) ($workplaceId ?? 0), 'week_start' => $weekStart,
+        ]);
+        self::redirect(self::scheduleWeekHref($weekStart !== '' ? ['week_start' => $weekStart] : []));
+    }
+
     public function createScheduleAssignment(): void
     {
         $input = Request::all();
-        $workplaceId = $this->requestWorkplaceId($input);
-        $workerId = self::positiveInteger($input['worker_id'] ?? null);
-        $targetDate = is_string($input['target_date'] ?? null) ? trim($input['target_date']) : '';
-        $weekStart = is_string($input['week_start'] ?? null) ? trim($input['week_start']) : '';
-        $effectiveStartDate = is_string($input['effective_start_date'] ?? null) ? trim($input['effective_start_date']) : '';
-        $templateValue = is_string($input['template_id'] ?? null) ? trim($input['template_id']) : '';
-        $tipoAsignacion = strtoupper(trim((string) ($input['tipo_asignacion'] ?? 'HABITUAL')));
-        if (!in_array($tipoAsignacion, ['HABITUAL', 'TEMPORAL'], true)) $tipoAsignacion = 'HABITUAL';
-        $message = 'No se realizó la asignación.';
-        $type = 'warning';
-        $responseStatus = 422;
-        $demoMode = ChecadorDailyReadService::demoModeEnabled();
-        $user = Auth::user();
-        $wantsJson = Request::expectsJson();
-        $selectedWeekDates = array_column(\App\Services\ChecadorWeeklyScheduleService::dates($weekStart), 'date');
-        $validAssignmentDate = $tipoAsignacion === 'TEMPORAL'
-            ? in_array($targetDate, $selectedWeekDates, true)
-            : (self::isCivilDate($effectiveStartDate)
-                && in_array($effectiveStartDate, $selectedWeekDates, true)
-                && \App\Services\ChecadorWeeklyScheduleService::firstWeekdayOnOrAfter(
-                    (string) \App\Services\ChecadorWeeklyScheduleService::weekdayFor($targetDate),
-                    $effectiveStartDate
-                ) === $targetDate);
-        if ($workplaceId === null || $workerId === null || !self::isCivilDate($targetDate)
-            || !in_array((string) ($input['confirm_action'] ?? ''), ['1', 'on'], true)
-            || \App\Services\ChecadorWeeklyScheduleService::monday($weekStart) !== $weekStart
-            || !$validAssignmentDate) {
-            $message = $tipoAsignacion === 'HABITUAL'
-                ? 'Revisa el centro, la semana, la fecha de inicio, el primer día recurrente y la confirmación solicitada.'
-                : 'Revisa el centro, la semana, el día y la confirmación solicitada.';
-        } elseif ($demoMode) {
-            $message = 'La demostración es de consulta; no guarda asignaciones sintéticas ni llama al API.';
-            $responseStatus = 403;
-        } elseif (!ChecadorDailyReadService::scheduleApiPostOperationsEnabled()) {
-            $message = 'La escritura de programación permanece protegida por el gate local específico de horarios.';
-            $responseStatus = 403;
-        } elseif (!(ChecadorAccessService::authorizeScheduling($workplaceId, 'editar')['allowed'] ?? false)) {
-            if ($wantsJson) {
-                $message = 'No tienes permiso para modificar la programación de este centro.';
-                $responseStatus = 403;
-            } else {
-                self::renderAccessDenied('scheduling_permission_denied', $workplaceId);
-                return;
-            }
-        } elseif ($user === null) {
-            $message = 'La sesión ya no es válida.';
-            $responseStatus = 401;
-        } else {
-            try {
-                $reader = new ChecadorDailyReadService();
-                $timezoneResult = $reader->resolveWorkplaceLocalDay($user, $workplaceId, $targetDate);
-                $timezone = ($timezoneResult['ok'] ?? false) === true
-                    ? (string) ($timezoneResult['data']['timezone'] ?? '')
-                    : '';
-                $membershipWeekStart = \App\Services\ChecadorWeeklyScheduleService::monday($targetDate);
-                $todayAtWorkplace = \App\Services\ChecadorOperationalPeriod::isIanaTimezone($timezone)
-                    ? \App\Services\ChecadorOperationalPeriod::currentLocalDate($timezone, new \DateTimeImmutable('now', new \DateTimeZone('UTC')))
-                    : null;
-                if (!\App\Services\ChecadorOperationalPeriod::isIanaTimezone($timezone)
-                    || $membershipWeekStart === null
-                    || !\App\Services\ChecadorWeeklyScheduleService::isCurrentOrFutureWeek($weekStart, $timezone)
-                    || !\App\Services\ChecadorWeeklyScheduleService::isCurrentOrFutureWeek($membershipWeekStart, $timezone)
-                    || ($tipoAsignacion === 'HABITUAL' && ($todayAtWorkplace === null || $effectiveStartDate <= $todayAtWorkplace))) {
-                    $message = 'No se pudo confirmar la zona horaria, la fecha futura de inicio o una semana actual/futura; no se envió la asignación.';
-                    throw new \DomainException('Workplace timezone or week boundary is unavailable.');
-                }
-                $roster = (new \App\Services\ChecadorAttendanceRosterService())
-                    ->workersForScheduleWeek($workplaceId, $membershipWeekStart, $timezone, false);
-                $eligibleRoster = \App\Services\ChecadorWeeklyScheduleService::workersWithVerifiedMembership(
-                    $roster['workers'] ?? [],
-                    [$targetDate]
-                );
-                $workerVerifiedForDate = false;
-                foreach ($eligibleRoster as $eligibleWorker) {
-                    if ((int) ($eligibleWorker['worker_id'] ?? 0) === $workerId) {
-                        $workerVerifiedForDate = true;
-                        break;
-                    }
-                }
-                if (!in_array((string) ($roster['status'] ?? ''), ['ready', 'partial'], true) || !$workerVerifiedForDate) {
-                    $message = 'No se pudo confirmar que el trabajador pertenezca canónicamente a este centro en la fecha seleccionada; no se envió la asignación.';
-                } else {
-                    $templates = $reader->getShiftTemplates($user, 1, 200, $workplaceId);
-                    $templateId = $templateValue === 'REST' ? null : self::positiveInteger($templateValue);
-                    $templateAllowed = $templateId === null && $templateValue === 'REST';
-                    foreach ($templates['data']['items'] ?? [] as $template) {
-                        if ((int) ($template['id'] ?? 0) === (int) $templateId && (int) ($template['es_activo'] ?? 0) === 1) $templateAllowed = true;
-                    }
-                    if (!($templates['ok'] ?? false) || !$templateAllowed) {
-                        $message = 'La plantilla seleccionada no está disponible o activa en el catálogo API.';
-                        if (!($templates['ok'] ?? false)) $responseStatus = 502;
-                    } else {
-                        $weekday = \App\Services\ChecadorWeeklyScheduleService::weekdayFor($targetDate);
-                        // Read only the selected effective date. The API enforces
-                        // overlap and membership on create; no unapproved full-history
-                        // pagination claim is used as a write precondition.
-                        $existing = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 200, $targetDate);
-                        if (!($existing['ok'] ?? false)) {
-                            $message = 'No se pudo consultar la asignación existente; por seguridad no se envió el cambio.';
-                            $responseStatus = 502;
-                        } else {
-                            $historyItems = $existing['data']['items'];
-                            $effective = array_values(array_filter($historyItems, static fn(array $row): bool =>
-                                ($row['dia_semana'] ?? '') === $weekday
-                                && strtoupper((string) ($row['tipo_asignacion'] ?? 'HABITUAL')) === $tipoAsignacion
-                                && (string) ($row['valido_desde'] ?? '') <= $targetDate
-                                && (($row['valido_hasta'] ?? null) === null || $targetDate < (string) $row['valido_hasta'])
-                            ));
-                            $alreadySame = count($effective) === 1
-                                && (int) ($effective[0]['es_activo'] ?? 0) === 1
-                                && (($effective[0]['id_plantilla'] ?? null) === $templateId);
-                            if ($alreadySame) {
-                                $message = 'La asignación solicitada ya aparece vigente en la API; no se creó un registro duplicado.';
-                                $type = 'info';
-                                $responseStatus = 200;
-                            } elseif ($effective !== []) {
-                                $message = "El historial ya contiene una asignación {$tipoAsignacion} aplicable al {$targetDate}. No se creó otra; consulta el historial antes de elegir una fecha.";
-                                $responseStatus = 409;
-                            } else {
-                                $validTo = null;
-                                if ($tipoAsignacion === 'TEMPORAL') {
-                                    $validTo = (new \DateTimeImmutable($targetDate, new \DateTimeZone('UTC')))->modify('+1 day')->format('Y-m-d');
-                                } else {
-                                $interval = \App\Services\ChecadorWeeklyScheduleService::habitualAssignmentInterval(
-                                        [],
-                                        $workerId,
-                                        $workplaceId,
-                                        $weekday,
-                                        $targetDate
-                                    );
-                                    if (($interval['ok'] ?? false) !== true) {
-                                        $message = "No se pudo determinar una vigencia habitual segura para el {$targetDate}. No se envió la asignación.";
-                                        $responseStatus = 409;
-                                    } else {
-                                        $validTo = $interval['valid_to'];
-                                    }
-                                }
-                                if ($tipoAsignacion === 'TEMPORAL' || $responseStatus !== 409) {
-                                    $assignment = [
-                                        'id_personal' => $workerId, 'id_estacion' => $workplaceId, 'id_plantilla' => $templateId,
-                                        'tipo_asignacion' => $tipoAsignacion,
-                                        'dia_semana' => $weekday, 'valido_desde' => $targetDate, 'valido_hasta' => $validTo,
-                                    ];
-                                    $result = $reader->createShiftAssignment($user, $assignment, self::newIdempotencyKey());
-                                    if (!($result['ok'] ?? false)) {
-                                        $apiStatus = (int) ($result['error']['status'] ?? 0);
-                                        $responseStatus = $apiStatus >= 400 && $apiStatus < 500 ? $apiStatus : 502;
-                                        $message = ($result['error']['kind'] ?? '') === 'administrative_conflict'
-                                            ? "La API rechazó la asignación del {$targetDate} porque entra en conflicto con otra vigencia. No se creó ese registro."
-                                            : 'La API no aceptó la asignación. No se creó un registro.';
-                                    } elseif (!in_array((int) ($result['http_status'] ?? 0), [200, 201], true)) {
-                                        $message = 'La API no confirmó la creación o repetición idempotente; no se declara guardado.';
-                                        $responseStatus = 502;
-                                    } else {
-                                        $readback = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 200, $targetDate);
-                                        $confirmed = false;
-                                        foreach ($readback['data']['items'] ?? [] as $row) {
-                                            if ((int) ($row['id_personal'] ?? 0) === $workerId && (int) ($row['id_estacion'] ?? 0) === $workplaceId
-                                                && (string) ($row['dia_semana'] ?? '') === $weekday && ($row['id_plantilla'] ?? null) === $templateId
-                                                && strtoupper((string) ($row['tipo_asignacion'] ?? 'HABITUAL')) === $tipoAsignacion
-                                                && (string) ($row['valido_desde'] ?? '') === $targetDate
-                                                && (($row['valido_hasta'] ?? null) === $validTo) && (int) ($row['es_activo'] ?? 0) === 1) {
-                                                $confirmed = true;
-                                                break;
-                                            }
-                                        }
-                                        if ($confirmed) {
-                                            $message = ($tipoAsignacion === 'TEMPORAL' ? 'Excepción temporal' : 'Asignación habitual') . ' confirmada por lectura posterior de la API.';
-                                            $type = 'success';
-                                            $responseStatus = 201;
-                                        } else {
-                                            $message = 'La respuesta de escritura no pudo confirmarse mediante lectura posterior; no se declara guardado.';
-                                            $responseStatus = 502;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (\Throwable) {
-                if ($message === 'No se realizó la asignación.') {
-                    $message = 'No fue posible comprobar la pertenencia, guardar o releer la asignación. No se declara éxito.';
-                }
-                $responseStatus = 502;
-            }
-        }
-        if ($wantsJson) {
-            http_response_code($responseStatus);
-            header('Content-Type: application/json; charset=utf-8');
-            header('Cache-Control: no-store, private');
-            header('Vary: Accept');
-            echo json_encode([
-                'ok' => in_array($responseStatus, [200, 201], true),
-                'status' => $type,
-                'message' => $message,
-                'worker_id' => $workerId,
-                'workplace_id' => $workplaceId,
-                'target_date' => $targetDate,
-                'assignment_type' => $tipoAsignacion,
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            exit;
-        }
-
-        $feedbackWorkplaceId = $workplaceId;
-        if ($feedbackWorkplaceId === null) {
-            $feedbackScope = ChecadorAccessService::authorize(null);
-            if (($feedbackScope['allowed'] ?? false) === true) {
-                $feedbackWorkplaceId = $this->sessionWorkplaceId($feedbackScope);
-            }
-        }
-        Session::set('checador_schedule_feedback', [
-            'type' => $type, 'message' => $message, 'workplace_id' => (int) ($feedbackWorkplaceId ?? 0), 'week_start' => $weekStart,
-        ]);
-        $query = [];
-        if ($weekStart !== '') $query['week_start'] = $weekStart;
-        self::redirect(self::scheduleWeekHref($query));
+        $this->handleM03SqlWrite('create', $input);
     }
 
-    /** Close an existing assignment through the API and require a canonical history readback. */
+    /** Close an existing assignment through the single gated Portal3 SQL writer. */
     public function closeScheduleAssignment(): void
     {
         $input = Request::all();
-        $workplaceId = $this->requestWorkplaceId($input);
-        $workerId = self::positiveInteger($input['worker_id'] ?? null);
-        $assignmentId = self::positiveInteger($input['assignment_id'] ?? null);
-        $selectedDate = is_string($input['selected_date'] ?? null) ? trim($input['selected_date']) : '';
-        $closeDate = is_string($input['effective_close_date'] ?? null) ? trim($input['effective_close_date']) : '';
-        $expectedFrom = is_string($input['expected_valido_desde'] ?? null) ? trim($input['expected_valido_desde']) : '';
-        $expectedToRaw = $input['expected_valido_hasta'] ?? null;
-        $expectedTo = is_string($expectedToRaw) && $expectedToRaw !== '' ? trim($expectedToRaw) : null;
-        $weekStart = is_string($input['week_start'] ?? null) ? trim($input['week_start']) : '';
-        $message = 'No se cerró la asignación.';
-        $type = 'warning';
-        $user = Auth::user();
-
-        if ($workplaceId === null || $workerId === null || $assignmentId === null
-            || !self::isCivilDate($selectedDate) || !self::isCivilDate($closeDate)
-            || !self::isCivilDate($expectedFrom) || ($expectedTo !== null && !self::isCivilDate($expectedTo))
-            || \App\Services\ChecadorWeeklyScheduleService::monday($weekStart) !== $weekStart
-            || !in_array((string) ($input['confirm_action'] ?? ''), ['1', 'on'], true)) {
-            $message = 'Revisa la fecha efectiva, la versión de la asignación y la confirmación.';
-        } elseif (ChecadorDailyReadService::demoModeEnabled()) {
-            $message = 'La demostración es de consulta; no cierra asignaciones ni llama al API.';
-        } elseif (!ChecadorDailyReadService::scheduleApiPostOperationsEnabled()) {
-            $message = 'La escritura de programación permanece protegida por el gate local específico de horarios.';
-        } elseif (!(ChecadorAccessService::authorizeScheduling($workplaceId, 'editar')['allowed'] ?? false)) {
-            self::renderAccessDenied('scheduling_permission_denied', $workplaceId);
-            return;
-        } elseif ($user === null) {
-            $message = 'La sesión ya no es válida.';
-        } else {
-            try {
-                $reader = new ChecadorDailyReadService();
-                $before = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 200);
-                $source = null;
-                foreach ($before['data']['items'] ?? [] as $item) {
-                    if ((int) ($item['id'] ?? 0) === $assignmentId) $source = $item;
-                }
-                if (!($before['ok'] ?? false) || $source === null
-                    || (int) ($source['es_activo'] ?? 0) !== 1
-                    || (string) ($source['valido_desde'] ?? '') !== $expectedFrom
-                    || (($source['valido_hasta'] ?? null) !== $expectedTo)) {
-                    $message = 'La asignación cambió o no pudo corroborarse; no se envió el cierre.';
-                } else {
-                    $closeResult = $reader->closeShiftAssignment(
-                        $user, $assignmentId, $workplaceId, $closeDate, $expectedFrom, $expectedTo, self::newIdempotencyKey()
-                    );
-                    $readback = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 200);
-                    $confirmed = false;
-                    foreach ($readback['data']['items'] ?? [] as $item) {
-                        if ((int) ($item['id'] ?? 0) === $assignmentId
-                            && (int) ($item['es_activo'] ?? -1) === 0
-                            && (string) ($item['valido_hasta'] ?? '') === $closeDate) {
-                            $confirmed = true;
-                            break;
-                        }
-                    }
-                    if (($closeResult['ok'] ?? false) && ($readback['ok'] ?? false) && $confirmed) {
-                        $message = 'Cierre confirmado mediante lectura posterior de la API.';
-                        $type = 'success';
-                    } else {
-                        $message = 'El cierre no pudo confirmarse mediante historial posterior; no se declara guardado.';
-                    }
-                }
-            } catch (\Throwable) {
-                $message = 'No fue posible cerrar o releer la asignación; no se declara éxito.';
-            }
-        }
-        Session::set('checador_schedule_feedback', [
-            'type' => $type, 'message' => $message, 'workplace_id' => (int) ($workplaceId ?? 0), 'week_start' => $weekStart,
-        ]);
-        self::redirect(self::scheduleWeekHref(['week_start' => $weekStart]));
+        $this->handleM03SqlWrite('close', $input);
     }
 
-    /** Atomically replace an assignment through API V2 and verify both historical rows. */
+    /** Atomically replace an assignment and confirm both rows through SQL. */
     public function replaceScheduleAssignment(): void
     {
         $input = Request::all();
-        $workplaceId = $this->requestWorkplaceId($input);
-        $workerId = self::positiveInteger($input['worker_id'] ?? null);
-        $assignmentId = self::positiveInteger($input['assignment_id'] ?? null);
-        $selectedDate = is_string($input['selected_date'] ?? null) ? trim($input['selected_date']) : '';
-        $closeDate = is_string($input['effective_close_date'] ?? null) ? trim($input['effective_close_date']) : '';
-        $expectedFrom = is_string($input['expected_valido_desde'] ?? null) ? trim($input['expected_valido_desde']) : '';
-        $expectedToRaw = $input['expected_valido_hasta'] ?? null;
-        $expectedTo = is_string($expectedToRaw) && $expectedToRaw !== '' ? trim($expectedToRaw) : null;
-        $replacementToRaw = $input['replacement_valido_hasta'] ?? null;
-        $replacementTo = is_string($replacementToRaw) && $replacementToRaw !== '' ? trim($replacementToRaw) : null;
-        $templateValue = is_string($input['replacement_template_id'] ?? null) ? trim($input['replacement_template_id']) : '';
-        $templateId = $templateValue === 'REST' ? null : self::positiveInteger($templateValue);
-        $weekStart = is_string($input['week_start'] ?? null) ? trim($input['week_start']) : '';
-        $message = 'No se reemplazó la asignación.';
-        $type = 'warning';
-        $user = Auth::user();
-
-        if ($workplaceId === null || $workerId === null || $assignmentId === null
-            || !self::isCivilDate($selectedDate) || !self::isCivilDate($closeDate)
-            || !self::isCivilDate($expectedFrom) || ($expectedTo !== null && !self::isCivilDate($expectedTo))
-            || ($replacementTo !== null && !self::isCivilDate($replacementTo))
-            || ($templateValue !== 'REST' && $templateId === null)
-            || \App\Services\ChecadorWeeklyScheduleService::monday($weekStart) !== $weekStart
-            || !in_array((string) ($input['confirm_action'] ?? ''), ['1', 'on'], true)) {
-            $message = 'Revisa el turno, la vigencia, la fecha efectiva y la confirmación.';
-        } elseif (ChecadorDailyReadService::demoModeEnabled()) {
-            $message = 'La demostración es de consulta; no sustituye asignaciones ni llama al API.';
-        } elseif (!ChecadorDailyReadService::scheduleApiPostOperationsEnabled()) {
-            $message = 'La escritura de programación permanece protegida por el gate local específico de horarios.';
-        } elseif (!(ChecadorAccessService::authorizeScheduling($workplaceId, 'editar')['allowed'] ?? false)) {
-            self::renderAccessDenied('scheduling_permission_denied', $workplaceId);
-            return;
-        } elseif ($user === null) {
-            $message = 'La sesión ya no es válida.';
-        } else {
-            try {
-                $reader = new ChecadorDailyReadService();
-                $before = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 200);
-                $source = null;
-                foreach ($before['data']['items'] ?? [] as $item) {
-                    if ((int) ($item['id'] ?? 0) === $assignmentId) $source = $item;
-                }
-                if (!($before['ok'] ?? false) || $source === null
-                    || (int) ($source['es_activo'] ?? 0) !== 1
-                    || (string) ($source['valido_desde'] ?? '') !== $expectedFrom
-                    || (($source['valido_hasta'] ?? null) !== $expectedTo)) {
-                    $message = 'La asignación cambió o no pudo corroborarse; no se envió el reemplazo.';
-                } else {
-                    $replacement = $reader->replaceShiftAssignment(
-                        $user, $assignmentId, $workplaceId, $closeDate, $expectedFrom, $expectedTo,
-                        $templateId, $replacementTo, self::newIdempotencyKey()
-                    );
-                    $readback = $reader->getShiftAssignments($user, $workerId, $workplaceId, 1, 200);
-                    $closedConfirmed = false;
-                    $replacementConfirmed = false;
-                    $expectedReplacementId = (int) ($replacement['data']['replacement']['id'] ?? 0);
-                    foreach ($readback['data']['items'] ?? [] as $item) {
-                        if ((int) ($item['id'] ?? 0) === $assignmentId
-                            && (int) ($item['es_activo'] ?? -1) === 0
-                            && (string) ($item['valido_hasta'] ?? '') === $closeDate) $closedConfirmed = true;
-                        if ((int) ($item['id'] ?? 0) === $expectedReplacementId && $expectedReplacementId > 0
-                            && (int) ($item['id_personal'] ?? 0) === $workerId
-                            && (int) ($item['id_estacion'] ?? 0) === $workplaceId
-                            && (($item['id_plantilla'] ?? null) === $templateId)
-                            && (string) ($item['valido_desde'] ?? '') === $closeDate
-                            && (($item['valido_hasta'] ?? null) === $replacementTo)
-                            && (int) ($item['es_activo'] ?? -1) === 1) $replacementConfirmed = true;
-                    }
-                    if (($replacement['ok'] ?? false) && ($readback['ok'] ?? false) && $closedConfirmed && $replacementConfirmed) {
-                        $message = 'Cierre y reemplazo confirmados mediante lectura posterior de la API.';
-                        $type = 'success';
-                    } else {
-                        $message = 'El cierre y el reemplazo no pudieron confirmarse con el historial posterior; no se declara éxito.';
-                    }
-                }
-            } catch (\Throwable) {
-                $message = 'No fue posible reemplazar o releer la asignación; no se declara éxito.';
-            }
-        }
-        Session::set('checador_schedule_feedback', [
-            'type' => $type, 'message' => $message, 'workplace_id' => (int) ($workplaceId ?? 0), 'week_start' => $weekStart,
-        ]);
-        self::redirect(self::scheduleWeekHref(['week_start' => $weekStart]));
+        $this->handleM03SqlWrite('replace', $input);
     }
 
     /** Create one immutable version-1 template through the authorized V2 contract. */
@@ -5029,18 +4564,14 @@ final class ChecadorController extends BaseController
     private static function scheduleHistoryWorkerRoster(
         int $workplaceId,
         string $date,
-        \App\Models\Usuario $user,
         int $workerId
     ): array {
         try {
-            $reader = new ChecadorDailyReadService();
+            $reader = new \App\Services\ChecadorWeeklyScheduleSqlReadService();
             $candidateDate = $date !== '' ? $date : gmdate('Y-m-d');
             if (!self::isCivilDate($candidateDate)) return ['ok' => false, 'workers' => []];
-            $day = $reader->resolveWorkplaceLocalDay($user, $workplaceId, $candidateDate);
-            if (!($day['ok'] ?? false)) {
-                return ['ok' => false, 'workers' => []];
-            }
-            $timezone = (string) ($day['data']['timezone'] ?? '');
+            $timezone = $reader->timezoneForDate($workplaceId, $candidateDate) ?? '';
+            if (!\App\Services\ChecadorOperationalPeriod::isIanaTimezone($timezone)) return ['ok' => false, 'workers' => []];
             if ($date === '') {
                 $date = \App\Services\ChecadorOperationalPeriod::currentLocalDate(
                     $timezone,
@@ -5048,9 +4579,8 @@ final class ChecadorController extends BaseController
                 ) ?? '';
                 if ($date === '') return ['ok' => false, 'workers' => []];
                 if ($date !== $candidateDate) {
-                    $day = $reader->resolveWorkplaceLocalDay($user, $workplaceId, $date);
-                    if (!($day['ok'] ?? false)) return ['ok' => false, 'workers' => []];
-                    $timezone = (string) ($day['data']['timezone'] ?? '');
+                    $timezone = $reader->timezoneForDate($workplaceId, $date) ?? '';
+                    if (!\App\Services\ChecadorOperationalPeriod::isIanaTimezone($timezone)) return ['ok' => false, 'workers' => []];
                 }
             }
             $worker = (new \App\Services\ChecadorAttendanceRosterService())->scheduleHistoryWorkerForDate(

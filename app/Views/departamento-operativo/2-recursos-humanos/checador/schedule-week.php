@@ -235,7 +235,7 @@
                             <?php endforeach; ?>
                             </tbody>
                         </table>
-                        <p class="small text-muted mt-2 mb-0">La ausencia de una asignación visible no significa descanso. El historial puede estar incompleto; la API vuelve a validar conflictos, vigencia y adscripción antes de aceptar cada cambio.</p>
+                        <p class="small text-muted mt-2 mb-0">La ausencia de una asignación visible no significa descanso. El historial puede estar incompleto; Portal3 vuelve a validar conflictos, vigencia y adscripción en MariaDB antes de aceptar cada cambio.</p>
                     </div>
                     <p class="small text-muted mt-2 mb-0 d-none" data-schedule-no-results>No hay trabajadores que coincidan con la búsqueda.</p>
                 <?php endif; ?>
@@ -257,6 +257,7 @@
                         <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(\App\Core\CsrfToken::token(), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="workplace_id" value="<?= (int) $selectedWorkplaceId ?>">
                         <input type="hidden" name="week_start" value="<?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="idempotency_seed" value="<?= htmlspecialchars(bin2hex(random_bytes(24)), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="tipo_asignacion" value="HABITUAL">
                         <input type="hidden" name="worker_id" x-model="workerId">
                         <p class="mb-3">Trabajador: <strong x-text="workerName"></strong></p>
@@ -299,6 +300,7 @@
                         <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(\App\Core\CsrfToken::token(), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="workplace_id" value="<?= (int) $selectedWorkplaceId ?>">
                         <input type="hidden" name="week_start" value="<?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="idempotency_key" value="<?= htmlspecialchars(bin2hex(random_bytes(24)), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="worker_id" x-ref="workerId">
                         <input type="hidden" name="assignment_id" x-ref="assignmentId">
                         <input type="hidden" name="expected_valido_desde" x-ref="expectedFrom">
@@ -429,6 +431,7 @@
                         <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars(\App\Core\CsrfToken::token(), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="workplace_id" value="<?= (int) $selectedWorkplaceId ?>">
                         <input type="hidden" name="week_start" value="<?= htmlspecialchars((string) $weekStart, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="idempotency_seed" value="<?= htmlspecialchars(bin2hex(random_bytes(24)), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="tipo_asignacion" value="TEMPORAL">
                         <div class="row g-3">
                             <div class="col-12"><label class="form-label" for="temporary-assignment-date">Fecha del cambio</label><select class="form-select" id="temporary-assignment-date" name="target_date" data-schedule-target-date required><option value="">Selecciona una fecha</option><?php foreach ($weekDates as $weekday): ?><option value="<?= htmlspecialchars((string) $weekday['date'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) $weekday['label'] . ' · ' . (string) $weekday['date'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>

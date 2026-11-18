@@ -59,12 +59,17 @@ Capsule::table('op_rh_v2_turnos_plantillas')->insert([
     ['id' => 4, 'clave' => 'LOCAL_ONE', 'version' => 1, 'nombre' => 'Local v1', 'tipo_turno' => 'NOCTURNO', 'scope' => 'STATION', 'id_estacion' => 1, 'es_activo' => 1],
     ['id' => 5, 'clave' => 'LOCAL_ONE', 'version' => 2, 'nombre' => 'Local v2', 'tipo_turno' => 'NOCTURNO', 'scope' => 'STATION', 'id_estacion' => 1, 'es_activo' => 1],
     ['id' => 6, 'clave' => 'OUTSIDE', 'version' => 1, 'nombre' => 'Otra localidad', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 2, 'es_activo' => 1],
-    ['id' => 7, 'clave' => 'AUTOLAVADO_SHARED', 'version' => 1, 'nombre' => 'Autolavado', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 2, 'es_activo' => 1],
+    ['id' => 7, 'clave' => 'ST2_ONLY', 'version' => 1, 'nombre' => 'Palo Solo local', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 2, 'es_activo' => 1],
+    ['id' => 8, 'clave' => 'DEPT9_T1', 'version' => 1, 'nombre' => 'Fixture 9A', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 9, 'es_activo' => 1],
+    ['id' => 9, 'clave' => 'DEPT9_T2', 'version' => 1, 'nombre' => 'Fixture 9B', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 9, 'es_activo' => 1],
+    ['id' => 10, 'clave' => 'DEPT9_T3', 'version' => 1, 'nombre' => 'Fixture 9C', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 9, 'es_activo' => 1],
+    ['id' => 11, 'clave' => 'DEPT9_INTERMEDIATE', 'version' => 1, 'nombre' => 'Fixture 9D', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 9, 'es_activo' => 1],
 ]);
 Capsule::table('op_rh_v2_turnos_segmentos')->insert([
     ['id_plantilla' => 2, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '22:00:00', 'hora_fin_local' => '06:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 1],
     ['id_plantilla' => 5, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '21:00:00', 'hora_fin_local' => '06:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 1],
     ['id_plantilla' => 7, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00:00', 'hora_fin_local' => '17:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
+    ['id_plantilla' => 8, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '07:00:00', 'hora_fin_local' => '16:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
 ]);
 Capsule::table('op_rh_v2_shift_template_station_lineage')->insert([
     'id_estacion' => 1,
@@ -104,24 +109,38 @@ $assert(($wrongScopeDetail['error']['kind'] ?? '') === 'bad_request',
 $denied = $reader->getShiftTemplates($user, 2, 1, 200);
 $assert(($denied['error']['kind'] ?? '') === 'permission_denied' && ($denied['error']['status'] ?? 0) === 403,
     'server-side locality authorization denial is distinct from an empty catalog');
-$autolavadoReader = new ChecadorShiftTemplateSqlReadService(static fn(Usuario $actor, int $workplaceId): array =>
+$aliasReader = new ChecadorShiftTemplateSqlReadService(static fn(Usuario $actor, int $workplaceId): array =>
     $actor->id === 90 && $workplaceId === 9
         ? ['allowed' => true, 'catalog_workplace_id' => 2]
         : ['allowed' => false]);
+$aliasCatalog = $aliasReader->getShiftTemplates($user, 9, 1, 200);
+$assert(($aliasCatalog['error']['kind'] ?? '') === 'permission_denied',
+    'authorization cannot redirect department 9 to station 2 catalog');
+$autolavadoReader = new ChecadorShiftTemplateSqlReadService(static fn(Usuario $actor, int $workplaceId): bool =>
+    $actor->id === 90 && in_array($workplaceId, [1, 2, 9], true));
 $autolavadoCatalog = $autolavadoReader->getShiftTemplates($user, 9, 1, 200);
-$autolavadoTemplate = null;
-foreach ($autolavadoCatalog['data']['items'] ?? [] as $item) {
-    if (($item['clave'] ?? '') === 'AUTOLAVADO_SHARED') $autolavadoTemplate = $item;
-}
-$autolavadoDetail = $autolavadoTemplate === null ? [] : $autolavadoReader->getShiftTemplateVersion(
-    $user, 'AUTOLAVADO_SHARED', 1, 9, 7, 'STATION', 2
+$departmentItems = $autolavadoCatalog['data']['items'] ?? [];
+$departmentKeys = array_values(array_map(static fn(array $item): string => $item['clave'], $departmentItems));
+$paloCatalog = $autolavadoReader->getShiftTemplates($user, 2, 1, 200);
+$paloKeys = array_values(array_map(static fn(array $item): string => $item['clave'], array_filter(
+    $paloCatalog['data']['items'] ?? [], static fn(array $item): bool => $item['scope'] === 'STATION'
+)));
+$departmentDetail = $autolavadoReader->getShiftTemplateVersion(
+    $user, 'DEPT9_T1', 1, 9, 8, 'STATION', 9
 );
-$assert(($autolavadoCatalog['ok'] ?? false) && $autolavadoTemplate !== null
-    && ($autolavadoDetail['data']['segmentos'][0]['hora_inicio_local'] ?? '') === '08:00:00',
-    'explicit locality 9 authorization can read its established station 2 catalog alias and persisted segments');
+$assert(($autolavadoCatalog['ok'] ?? false) && $departmentKeys === ['DEPT9_INTERMEDIATE', 'DEPT9_T1', 'DEPT9_T2', 'DEPT9_T3']
+    && array_reduce($departmentItems, static fn(bool $valid, array $item): bool => $valid && $item['scope'] === 'STATION' && $item['id_estacion'] === 9, true)
+    && $departmentDetail['data']['segmentos'][0]['hora_inicio_local'] === '07:00:00',
+    'department 9 catalog and detail expose only its four station-scoped fixtures and persisted segment');
+$assert(($paloCatalog['ok'] ?? false) && $paloKeys === ['OUTSIDE', 'ST2_ONLY']
+    && array_intersect($departmentKeys, $paloKeys) === [],
+    'station 2 and department 9 catalogs remain disjoint');
+$globalDepartmentDetail = $autolavadoReader->getShiftTemplateVersion($user, 'GLOBAL_DAY', 2, 9, 2, 'GLOBAL', null);
+$assert(($globalDepartmentDetail['error']['kind'] ?? '') === 'schedule_template_not_found',
+    'department 9 cannot read shared global rows through M04');
 $crossLocalityDetail = $autolavadoReader->getShiftTemplateVersion($user, 'LOCAL_ONE', 2, 9, 5, 'STATION', 1);
 $assert(($crossLocalityDetail['error']['kind'] ?? '') === 'bad_request',
-    'department catalog alias cannot read a template attached to another station');
+    'department 9 cannot read a station 1 template');
 
 Capsule::table('op_rh_v2_shift_template_station_lineage')->delete();
 Capsule::table('op_rh_v2_turnos_segmentos')->delete();
@@ -140,8 +159,9 @@ $assert(($sqlFailure['error']['kind'] ?? '') === 'database_unavailable' && ($sql
     'missing lineage table produces an explicit database error instead of empty catalog');
 
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorShiftTemplateSqlReadService.php') ?: '';
-$assert(!str_contains($serviceSource, 'scope_id') && str_contains($serviceSource, 'authorizeShiftTemplateCatalogRead'),
-    'SQL reader uses no scope_id and enforces explicit M04 locality authorization');
+$assert(!str_contains($serviceSource, 'scope_id') && str_contains($serviceSource, 'authorizeShiftTemplateCatalogRead')
+    && str_contains($serviceSource, '$catalogWorkplaceId === $requestedWorkplaceId'),
+    'SQL reader uses no scope_id and rejects cross-locality catalog remapping');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/schedule-history.php') ?: '';
 $templatesJs = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js') ?: '';

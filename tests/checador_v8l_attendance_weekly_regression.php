@@ -234,9 +234,37 @@ $routes = file_get_contents($root . '/routes/web.php') ?: '';
 $roster = file_get_contents($root . '/app/Services/ChecadorAttendanceRosterService.php') ?: '';
 $access = file_get_contents($root . '/app/Services/ChecadorAccessService.php') ?: '';
 $routeAuth = file_get_contents($root . '/app/Core/Route.php') ?: '';
-$assert(str_contains($controller, 'resolveWorkplaceLocalDay($currentUser, $workplaceId, $weekStart)')
-    && str_contains($controller, 'resolveWorkplaceLocalDay($user, $workplaceId, $targetDate)')
-    && !str_contains($controller, "isCurrentOrFutureWeek(\$weekStart, 'America/Mexico_City')"), 'weekly view and assignment use API-resolved Workplace timezone rather than a hard-coded timezone');
+$weeklyRenderStart = strpos($controller, 'private function renderScheduleWeek(');
+$weeklyRenderEnd = strpos($controller, '/** Read the selected week date by date;', (int) $weeklyRenderStart);
+$weeklyRender = substr($controller, (int) $weeklyRenderStart, (int) $weeklyRenderEnd - (int) $weeklyRenderStart);
+$habitualReadbackStart = strpos($controller, 'public function habitualAssignmentReadback(): void');
+$habitualReadbackEnd = strpos($controller, '/** Create one assignment through the single gated Portal3 SQL writer.', (int) $habitualReadbackStart);
+$habitualReadback = substr($controller, (int) $habitualReadbackStart, (int) $habitualReadbackEnd - (int) $habitualReadbackStart);
+$assert(str_contains($weeklyRender, 'ChecadorWeeklyScheduleSqlReadService')
+    && str_contains($habitualReadback, 'ChecadorWeeklyScheduleSqlReadService')
+    && !str_contains($weeklyRender, 'resolveWorkplaceLocalDay(')
+    && !str_contains($weeklyRender, 'getShiftAssignments(')
+    && !str_contains($weeklyRender, 'getShiftTemplates(')
+    && !str_contains($habitualReadback, 'resolveWorkplaceLocalDay(')
+    && !str_contains($habitualReadback, 'getShiftAssignments('), 'M03 weekly view and readback use Portal3 SQL timezone/schedule reads without HTTP fallbacks');
+$assert(str_contains($weeklyRender, "in_array(\$coverage, ['ready', 'demo_fixture'], true) ? 'ready' : 'partial'")
+    && str_contains($weeklyRender, "'matrixCoverage' => \$errorMessage !== '' ? 'unavailable'"),
+    'complete SQL-backed roster reads are marked ready; partial roster and read failure remain distinct');
+$createPostStart = strpos($controller, 'public function createScheduleAssignment(): void');
+$createPostEnd = strpos($controller, '/** Close an existing assignment', (int) $createPostStart);
+$createPost = substr($controller, (int) $createPostStart, (int) $createPostEnd - (int) $createPostStart);
+$closePostStart = strpos($controller, 'public function closeScheduleAssignment(): void');
+$closePostEnd = strpos($controller, '/** Atomically replace an assignment', (int) $closePostStart);
+$closePost = substr($controller, (int) $closePostStart, (int) $closePostEnd - (int) $closePostStart);
+$replacePostStart = strpos($controller, 'public function replaceScheduleAssignment(): void');
+$replacePostEnd = strpos($controller, '/** Create one immutable version-1 template', (int) $replacePostStart);
+$replacePost = substr($controller, (int) $replacePostStart, (int) $replacePostEnd - (int) $replacePostStart);
+$assert(str_contains($createPost, "handleM03SqlWrite('create'")
+    && str_contains($closePost, "handleM03SqlWrite('close'")
+    && str_contains($replacePost, "handleM03SqlWrite('replace'")
+    && !str_contains($createPost, 'createShiftAssignment(')
+    && !str_contains($closePost, 'closeShiftAssignment(')
+    && !str_contains($replacePost, 'replaceShiftAssignment('), 'M03 POST routes use the gated Portal3 SQL writer and cannot fall back to the legacy API writer');
 $assert(str_contains($routes, "'/recursos-humanos/checador/programacion-semanal/asignar'")
     && !str_contains($routes, "'/departamento-operativo/recursos-humanos/checador/programacion-semanal/asignar'"), 'POST route is relative to the existing departamento-operativo route group');
 $assert(str_contains($roster, "where('estado', 1)")
