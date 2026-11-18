@@ -2564,9 +2564,11 @@ final class ChecadorDailyReadService
                 $response = $this->demoResponse($method, $path, [], $body, $user, $idempotencyKey, $demoLocalityId);
             } else {
                 $scheduleWrite = preg_match('#\Aapi/v2/shift-(?:assignments(?:/[1-9][0-9]*/(?:close|replace))?|templates(?:/[A-Za-z0-9_-]{1,64}/versions)?)\z#D', ltrim($path, '/')) === 1;
+                $attendancePolicyWrite = ltrim($path, '/') === 'api/v2/attendance-policies';
                 if (strtoupper($method) === 'POST'
                     && !self::realApiPostOperationsEnabled()
-                    && !($scheduleWrite && self::scheduleApiPostOperationsEnabled())) {
+                    && !($scheduleWrite && self::scheduleApiPostOperationsEnabled())
+                    && !($attendancePolicyWrite && self::attendancePolicyPostOperationsEnabled())) {
                     return self::failure('api_post_disabled', 403);
                 }
 
@@ -2601,7 +2603,12 @@ final class ChecadorDailyReadService
                 $kind = str_starts_with(ltrim($path, '/'), 'api/v2/temporary-access/')
                     ? self::mapTemporaryAccessApiError((string) $statusCode, $status)
                     : self::mapApiError((string) $statusCode, $status);
-                return self::failure($kind, $status);
+                $failure = self::failure($kind, $status);
+                $safeApiCode = self::safeApiErrorCode((string) $statusCode);
+                if ($safeApiCode !== null && ltrim($path, '/') === 'api/v2/attendance-policies') {
+                    $failure['error']['api_code'] = $safeApiCode;
+                }
+                return $failure;
             }
 
             return ['ok' => true, 'payload' => $payload];

@@ -7,13 +7,14 @@ namespace App\Services;
 use App\Models\Operativo\RhPuestos;
 use App\Models\Operativo\RhLocalidadesPerfil;
 use App\Models\Usuario;
+use Illuminate\Database\Capsule\Manager as Capsule;
 use Throwable;
 
 /** Read-only projection of the approved Checador V2 configuration sources. */
 final class ChecadorConfigurationReadService
 {
     /** @return array<string,mixed> */
-    public function read(Usuario $user, int $workplaceId, bool $demoMode, ?int $workerId = null, string $date = ''): array
+    public function read(Usuario $user, int $workplaceId, bool $demoMode, ?int $workerId = null, string $date = '', int $auditPage = 1): array
     {
         $scope = ChecadorAccessService::authorize($workplaceId);
         if (!($scope['allowed'] ?? false)) return self::emptyResult('workplace_out_of_scope');
@@ -77,6 +78,7 @@ final class ChecadorConfigurationReadService
                 $result['api_history'] = ['status' => 'permission_denied', 'effective_schedule' => null, 'assignments' => [], 'message' => 'Se requiere autorización de lectura de programación.'];
             }
             $result['positions'] = ['status' => 'not_read_in_demo', 'items' => []];
+            $result['audit_history'] = ['status' => 'not_read_in_demo', 'items' => [], 'pagination' => self::emptyAuditPagination()];
             return $result;
         }
 
@@ -113,7 +115,106 @@ final class ChecadorConfigurationReadService
             }
         }
 
+        $result['audit_history'] = self::readM11AuditHistory(
+            $workplaceId,
+            $auditPage,
+            (bool) ($positionRead['allowed'] ?? false),
+            (bool) ($readerRead['allowed'] ?? false)
+        );
+
         return $result;
+    }
+
+    /** Read only the event classes covered by independent, effective M11 read grants. */
+    private static function readM11AuditHistory(int $workplaceId, int $page, bool $canReadPositions, bool $canReadReaderProfiles): array
+    {
+        if (!$canReadPositions && !$canReadReaderProfiles) {
+            return ['status' => 'permission_denied', 'items' => [], 'pagination' => self::emptyAuditPagination()];
+        }
+
+        $filters = [];
+        if ($canReadPositions) {
+            $filters[] = static function ($query): void {
+                // This stored key describes the write that produced the event;
+                // the independent POSITION_CATALOG_READ grant was checked above.
+                $query->where('entity_type', 'POSITION')
+                    ->whereNull('workplace_id')
+                    ->where('permission_key', ChecadorV2PermissionService::POSITION_CATALOG_EDIT)
+                    ->whereIn('action', ['CREATE', 'UPDATE']);
+            };
+        }
+        if ($canReadReaderProfiles && $workplaceId > 0) {
+            $filters[] = static function ($query) use ($workplaceId): void {
+                // The current READER_PROFILE_READ grant authorizes this locality;
+                // the stored edit key is only event provenance.
+                $query->where('entity_type', 'READER_PROFILE')
+                    ->where('workplace_id', $workplaceId)
+                    ->where('permission_key', ChecadorV2PermissionService::READER_PROFILE_EDIT)
+                    ->whereIn('action', ['UPDATE_USERNAME', 'ROTATE_OR_UPDATE']);
+            };
+        }
+        if ($filters === []) {
+            return ['status' => 'permission_denied', 'items' => [], 'pagination' => self::emptyAuditPagination()];
+        }
+
+        try {
+            $query = Capsule::table('op_rh_v2_m11_configuration_audit')
+                ->select(['id', 'actor_portal_user_id', 'workplace_id', 'entity_type', 'entity_id', 'action', 'created_at_utc'])
+                ->where(static function ($scope) use ($filters): void {
+                    foreach ($filters as $index => $filter) {
+                        $scope->{$index === 0 ? 'where' : 'orWhere'}($filter);
+                    }
+                });
+            $total = (int) (clone $query)->count();
+            $pageSize = 15;
+            $totalPages = max(1, (int) ceil($total / $pageSize));
+            $page = min(max(1, $page), $totalPages);
+            $rows = $query->orderByDesc('created_at_utc')->orderByDesc('id')
+                ->offset(($page - 1) * $pageSize)->limit($pageSize)->get();
+
+            $items = [];
+            foreach ($rows as $row) {
+                $entity = (string) $row->entity_type;
+                $action = (string) $row->action;
+                $items[] = [
+                    'id' => (int) $row->id,
+                    'timestamp_utc' => (string) $row->created_at_utc,
+                    'actor_label' => (int) $row->actor_portal_user_id > 0
+                        ? 'Usuario #' . (int) $row->actor_portal_user_id
+                        : 'No disponible',
+                    'module' => $entity === 'POSITION' ? 'Puestos' : 'Perfil del lector',
+                    'action' => match ($action) {
+                        'CREATE' => 'Creación',
+                        'UPDATE' => 'Actualización',
+                        'UPDATE_USERNAME' => 'Cambio de usuario',
+                        'ROTATE_OR_UPDATE' => 'Actualización de perfil',
+                        default => 'Operación registrada',
+                    },
+                ];
+            }
+
+            return [
+                'status' => 'ready',
+                'items' => $items,
+                'pagination' => [
+                    'current_page' => $page,
+                    'page_size' => $pageSize,
+                    'total_records' => $total,
+                    'total_pages' => $totalPages,
+                    'has_previous' => $page > 1,
+                    'has_next' => $page < $totalPages,
+                ],
+            ];
+        } catch (Throwable) {
+            return ['status' => 'unavailable', 'items' => [], 'pagination' => self::emptyAuditPagination()];
+        }
+    }
+
+    /** @return array{current_page:int,page_size:int,total_records:int,total_pages:int,has_previous:bool,has_next:bool} */
+    private static function emptyAuditPagination(): array
+    {
+        return ['current_page' => 1, 'page_size' => 15, 'total_records' => 0, 'total_pages' => 1,
+            'has_previous' => false, 'has_next' => false];
     }
 
     /** @return array{status:string,items:list<array{id:int,usuario:string}>} */
@@ -244,6 +345,7 @@ final class ChecadorConfigurationReadService
             'policy' => ['status' => 'not_requested', 'data' => null],
             'api_templates' => ['status' => 'not_requested', 'items' => [], 'message' => ''],
             'api_history' => ['status' => 'not_requested', 'effective_schedule' => null, 'assignments' => [], 'message' => ''],
+            'audit_history' => ['status' => 'not_requested', 'items' => [], 'pagination' => self::emptyAuditPagination()],
             'legacy_schedules' => ['status' => 'not_used_as_v2_source', 'items' => []],
             'legacy_rules' => ['status' => 'not_used_as_v2_source', 'configured' => false, 'retardo' => null, 'incidencia' => null],
             'legacy_profiles' => ['status' => 'not_used_as_v2_source', 'active_count' => null],

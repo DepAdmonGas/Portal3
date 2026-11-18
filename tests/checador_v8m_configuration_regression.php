@@ -13,8 +13,8 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
 };
 
 $render = static function (array $configuration, bool $temporaryAccess = true, bool $demo = false, bool $canReadScheduling = true, bool $templateEdit = false, bool $m11Writes = false, bool $scheduleWrites = false): string {
-    $selectedWorkplaceId = 1;
-    $selectedWorkplaceName = 'Interlomas & Centro';
+    $selectedWorkplaceId = (int) ($configuration['workplace_id'] ?? 1);
+    $selectedWorkplaceName = (string) ($configuration['workplace_name'] ?? 'Interlomas & Centro');
     $workerId = 558;
     $date = '2026-10-19';
     $demoMode = $demo;
@@ -120,6 +120,18 @@ $fixture = [
     'legacy_profiles' => ['status' => 'legacy_metadata_only', 'active_count' => 2],
     'positions' => ['status' => 'current_catalog', 'items' => [['id' => 4, 'name' => 'Encargado']]],
     'reader_profiles' => ['status' => 'station_scoped', 'items' => [['id' => 9, 'usuario' => 'reader-test']]],
+    'audit_history' => [
+        'status' => 'ready',
+        'items' => [[
+            'id' => 1, 'timestamp_utc' => '2026-11-18 12:00:00', 'actor_label' => 'Usuario #42',
+            'module' => 'Puestos', 'action' => 'Creación',
+        ], [
+            'id' => 2, 'timestamp_utc' => '2026-11-18 11:00:00', 'actor_label' => 'Usuario #43',
+            'module' => 'Perfil del lector', 'action' => 'Cambio de usuario',
+        ]],
+        'pagination' => ['current_page' => 1, 'page_size' => 15, 'total_records' => 2, 'total_pages' => 1,
+            'has_previous' => false, 'has_next' => false],
+    ],
     'device_auth' => ['status' => 'ready', 'completeness' => 'COMPLETE', 'read_at_utc' => '2026-10-19T12:00:00Z', 'items' => [[
         'device' => ['id' => 2, 'name' => 'Lector de prueba', 'persisted_status' => 'ACTIVE'],
         'physical_station' => ['id' => 2, 'name' => 'Estación de prueba'],
@@ -143,10 +155,11 @@ $sectionOrder = array_map(static fn(string $id): int|false => strpos($html, 'id=
 $sortedSectionOrder = $sectionOrder;
 sort($sortedSectionOrder);
 $assert(!in_array(false, $sectionOrder, true) && $sectionOrder === $sortedSectionOrder, 'configuration restores original section order and keeps the catalog after the original sections');
-$assert(str_contains($html, '/departamento-operativo/recursos-humanos/checador/programacion-semanal')
-    && !str_contains($html, 'schedule_week=1') && !str_contains($html, 'id="configuration-navigation"'), 'configuration links to the clean weekly module and omits horizontal section navigation');
-$assert(!str_contains($html, 'Horarios y turnos') && !str_contains($html, 'Abrir Horarios y turnos')
-    && !str_contains($html, 'ti-calendar-time') && !str_contains($html, 'schedule-configuration'), 'M11 contains no duplicate schedule card, description, icon or access button');
+$assert(str_contains($html, '/departamento-operativo/recursos-humanos/checador/horarios-turnos')
+    && !str_contains($html, 'schedule_week=1') && !str_contains($html, 'id="configuration-navigation"'), 'configuration keeps a clean schedule route and omits horizontal section navigation');
+$assert(str_contains($html, 'href="/departamento-operativo/recursos-humanos/checador/horarios-turnos"')
+    && !str_contains($html, 'id="schedule-configuration"') && !str_contains($html, 'station-template-create-modal')
+    && !str_contains($html, 'ti-calendar-time'), 'M11 keeps only the original shortcut to the independent schedule view, without duplicate administration');
 $assert(!str_contains($html, 'Los horarios de catálogos anteriores no se convierten')
     && !str_contains($html, 'Abrir configuración anterior') && !str_contains($html, 'API V2 es la autoridad'), 'legacy schedules are not presented as Checador V2 configuration');
 $assert(!str_contains($html, 'pairing_role') && !str_contains($html, 'segment_ordinal')
@@ -154,10 +167,69 @@ $assert(!str_contains($html, 'pairing_role') && !str_contains($html, 'segment_or
 $assert(!str_contains($html, 'Estos registros conservan su propio centro seleccionado.') && !str_contains($html, '/biometricos/'), 'Checador configuration does not redirect to a Biométricos implementation');
 $assert(!str_contains($html, 'El catálogo de turnos') && !str_contains($html, 'acciones autorizadas')
     && !str_contains($html, 'station-template-create-modal') && !str_contains($html, 'data-bs-target="#station-template-version-'), 'M11 excludes the schedule administration card and its duplicated controls');
-$assert(substr_count($html, 'data-checador-configuration-datatable') === 5
-    && !str_contains($html, 'class="table-responsive"'), 'all configuration data tables are paginatable and use small-screen-only horizontal wrappers');
-$assert(str_contains($html, 'No hay una configuración vigente para la fecha consultada')
+$assert(str_contains($html, 'id="m11-position-table"'), 'original searchable position table is rendered from the authorized catalog');
+$assert(!str_contains($html, 'id="attendance-policy-history-table"')
+    && str_contains($html, 'no incluye el historial de versiones')
+    && str_contains($html, 'id="attendance-policy-history-modal"'), 'history modal reports that the current authorized policy read has no version-history contract instead of showing an empty table');
+$assert(str_contains($html, 'data-checador-configuration-datatable') && str_contains($html, 'id="m11-devices-table"')
+    && str_contains($html, 'class="table-responsive"'), 'server-read device list uses the existing institutional DataTable and responsive wrapper');
+$assert(str_contains($html, 'No hay una política V2 confirmada vigente')
     && !str_contains($html, '0 minutos</dd>') && !str_contains($html, '0 días</dd>'), 'missing V2 policy is not displayed as a persisted default');
+$scheduledFixture = $fixture;
+$scheduledFixture['policy']['data']['status'] = 'VERSIONED';
+$scheduledFixture['policy']['data']['policy'] = [
+    'id' => 70, 'workplace_id' => 1, 'policy_version' => 2,
+    'effective_from_local_date' => '2026-11-07',
+    'retardo_tolerance_minutes' => 30, 'incidence_deadline_days' => 6,
+    'timezone_id' => 'America/Mexico_City',
+];
+$scheduledFixture['policy']['data']['latest_scheduled_policy'] = [
+    'id' => 71, 'workplace_id' => 1, 'policy_version' => 3,
+    'effective_from_local_date' => '2026-11-19',
+    'retardo_tolerance_minutes' => 30, 'incidence_deadline_days' => 7,
+    'timezone_id' => 'America/Mexico_City',
+];
+$scheduledFixture['policy']['data']['current_local_date'] = '2026-11-18';
+$scheduledHtml = $render($scheduledFixture);
+$nextPolicyAttribute = preg_match('/data-next-policy="([^"]*)"/', $scheduledHtml, $nextPolicyMatch) === 1
+    ? json_decode(html_entity_decode($nextPolicyMatch[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'), true)
+    : null;
+$assert(is_array($nextPolicyAttribute)
+    && ($nextPolicyAttribute['id'] ?? 0) === 71
+    && ($nextPolicyAttribute['effective_from_local_date'] ?? '') === '2026-11-19'
+    && ($nextPolicyAttribute['incidence_deadline_days'] ?? 0) === 7,
+    'future API V2 policy remains visible in the configuration view after a full reload');
+$crossLocalityScheduled = $scheduledFixture;
+$crossLocalityScheduled['workplace_id'] = 2;
+$crossLocalityScheduled['workplace_name'] = 'Palo Solo';
+$crossLocalityScheduled['policy']['data']['workplace_id'] = 2;
+$crossLocalityScheduled['policy']['data']['policy']['workplace_id'] = 2;
+$crossLocalityScheduled['policy']['data']['latest_scheduled_policy']['workplace_id'] = 1;
+$crossLocalityHtml = $render($crossLocalityScheduled);
+$crossLocalityNextPolicy = preg_match('/data-next-policy="([^"]*)"/', $crossLocalityHtml, $crossLocalityMatch) === 1
+    ? json_decode(html_entity_decode($crossLocalityMatch[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'), true)
+    : null;
+$assert($crossLocalityNextPolicy === []
+    && str_contains($crossLocalityHtml, 'la respuesta no confirma la localidad seleccionada'),
+    'scheduled policy from another canonical workplace is withheld and reported');
+$departmentFixture = $fixture;
+$departmentFixture['workplace_id'] = 9;
+$departmentFixture['workplace_name'] = 'Autolavado';
+$departmentFixture['workplace_kind'] = 'department';
+$departmentFixture['permissions']['policy_read'] = false;
+$departmentFixture['permissions']['policy_edit'] = false;
+$departmentFixture['permissions']['reader_profile_read'] = false;
+$departmentFixture['permissions']['reader_profile_edit'] = false;
+$departmentFixture['permissions']['device_read'] = false;
+$departmentFixture['policy'] = ['status' => 'not_applicable', 'data' => null];
+$departmentFixture['reader_profiles'] = ['status' => 'not_applicable', 'items' => []];
+$departmentHtml = $render($departmentFixture);
+$assert(str_contains($departmentHtml, 'Configuración de asistencia: No aplica a esta localidad.')
+    && !str_contains($departmentHtml, 'id="attendance-policy-v2"')
+    && str_contains($departmentHtml, 'Perfil del lector: No aplica a esta localidad.')
+    && !str_contains($departmentHtml, 'id="reader-access"')
+    && !str_contains($departmentHtml, 'Editar configuración'),
+    'department view replaces non-applicable station administration cards and actions with concise status text');
 $assert(str_contains($html, 'Personal y puestos') && str_contains($html, 'Encargado'), 'positions section uses the existing institutional catalog projection');
 $noPositionAccess = $fixture;
 $noPositionAccess['permissions']['positions_read'] = false;
@@ -166,6 +238,28 @@ $assert(!str_contains($render($noPositionAccess), 'id="people-positions"'), 'pos
 $assert(str_contains($html, 'Perfil del lector') && str_contains($html, 'Administración de dispositivos')
     && str_contains($html, 'Estaciones y lectores asignados') && str_contains($html, 'Permisos efectivos')
     && str_contains($html, 'Historial de cambios'), 'reader, device, scope, permission and history sections render');
+$assert(str_contains($html, '2026-11-18 12:00:00') && str_contains($html, 'Usuario #42')
+    && str_contains($html, '<th scope="col">Módulo</th>') && str_contains($html, 'Puestos')
+    && str_contains($html, 'Creación') && str_contains($html, 'Cambio de usuario')
+    && !str_contains($html, 'no integrado'), 'history table renders only supplied audit event fields and known action labels');
+$pagedHistory = $fixture;
+$pagedHistory['audit_history']['pagination'] = ['current_page' => 1, 'page_size' => 15, 'total_records' => 16, 'total_pages' => 2,
+    'has_previous' => false, 'has_next' => true];
+$pagedHistoryHtml = $render($pagedHistory);
+$assert(str_contains($pagedHistoryHtml, 'Paginación del historial de cambios')
+    && str_contains($pagedHistoryHtml, 'Página 1 de 2 · 16 registros')
+    && str_contains($pagedHistoryHtml, 'audit_page=2'), 'history uses server pagination and preserves selected locality');
+$emptyHistory = $fixture;
+$emptyHistory['audit_history'] = ['status' => 'ready', 'items' => [], 'pagination' => []];
+$assert(str_contains($render($emptyHistory), 'No hay cambios auditados disponibles para esta localidad.'), 'authorized empty history has an explicit empty state');
+$deniedHistory = $fixture;
+$deniedHistory['audit_history'] = ['status' => 'permission_denied', 'items' => [], 'pagination' => []];
+$deniedHistoryHtml = $render($deniedHistory);
+$assert(str_contains($deniedHistoryHtml, 'No tienes autorización para consultar este historial.')
+    && !str_contains($deniedHistoryHtml, 'Usuario #42'), 'denied history does not render event rows');
+$demoHistory = $fixture;
+$demoHistory['audit_history'] = ['status' => 'not_read_in_demo', 'items' => [], 'pagination' => []];
+$assert(str_contains($render($demoHistory), 'no se consulta en modo demostración'), 'demo view does not expose persisted audit events');
 $assert(str_contains($html, 'Acceso temporal autorizado'), 'temporary access link is rendered only for the authorized fixture');
 $assert(!str_contains($html, 'Turno &lt;script&gt;alert(1)&lt;/script&gt;') && !str_contains($html, '<script>alert(1)</script>'), 'M11 no longer renders the schedule catalog or its duplicate administration surface');
 
@@ -200,6 +294,9 @@ $biometricController = file_get_contents(dirname(__DIR__) . '/app/Controllers/Bi
 $checadorController = file_get_contents(dirname(__DIR__) . '/app/Controllers/ChecadorController.php') ?: '';
 $routes = file_get_contents(dirname(__DIR__) . '/routes/web.php') ?: '';
 $profileJs = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/biometricos-config-perfil.actions.init.js') ?: '';
+$checadorReaderProfileJs = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-reader-profile.init.js') ?: '';
+$checadorPositionJs = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-positions.init.js') ?: '';
+$attendancePolicyJs = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance-policy.init.js') ?: '';
 $configurationJs = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.configuration.datatable.init.js') ?: '';
 $permissionsJs = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/permisos.datatable.init.js') ?: '';
 
@@ -213,12 +310,20 @@ $profileListMethod = $methodSlice($biometricService, 'public static function dat
 $rulesReadMethod = $methodSlice($biometricService, 'public static function getRetardoIncidencia(', 'public static function updateRetardoIncidencia(');
 $assert(str_contains($profileListMethod, "'usuario' => self::decrypt(" . '$r->usuario' . ")")
     && !str_contains($profileListMethod, '$r->password') && !str_contains($profileListMethod, "'password' =>"), 'profile listing returns username metadata but never decrypts or serializes password');
-$assert(str_contains($profileJs, "this.password = '';") && str_contains($profileJs, "password: this.password"), 'profile edit starts with a blank password so blank update preserves the stored credential');
+$assert(str_contains($checadorReaderProfileJs, "this.password = '';")
+    && str_contains($checadorReaderProfileJs, "this.passwordConfirm = '';")
+    && !str_contains($checadorReaderProfileJs, 'password: this.password'), 'original reader profile editor starts with blank, write-only credential fields');
 $assert(str_contains($configurationJs, "querySelectorAll('[data-checador-configuration-datatable]')")
     && str_contains($configurationJs, 'pageLength: 15') && str_contains($configurationJs, 'lengthMenu: [15, 30, 50, 100]')
     && str_contains($configurationJs, "scrollX: ''") && str_contains($configurationJs, "scrollY: ''")
     && str_contains($configurationJs, 'drawCallback')
     && str_contains($checadorController, 'checador.configuration.datatable.init.js'), 'positions DataTable reuses the Checador initializer and maintains dropdowns after redraw');
+$assert(str_contains($checadorController, 'checador.attendance-policy.init.js')
+    && str_contains($checadorController, 'checador.m11-positions.init.js')
+    && str_contains($checadorController, 'checador.m11-reader-profile.init.js')
+    && str_contains($attendancePolicyJs, "Alpine.data('attendancePolicyForm'")
+    && str_contains($checadorPositionJs, "Alpine.data('m11PositionCatalog'")
+    && str_contains($checadorReaderProfileJs, "Alpine.data('m11ReaderProfile'"), 'original configuration initializers are loaded for the restored modals and tables');
 $configurationMethod = $methodSlice($checadorController, 'public function configuration(): void', 'public function saveConfigurationPosition(): void');
 $assert(str_contains($permissionsJs, 'pageLength: 15') && str_contains($permissionsJs, 'lengthMenu: [15, 30, 50, 100]')
     && str_contains($permissionsJs, "url: '/assets/libs/datatables.net/js/es-ES.json'")
@@ -243,7 +348,9 @@ $assert(str_contains($checadorController, "ChecadorAccessService::authorize($" .
     && str_contains($routes, "'/recursos-humanos/checador/configuracion'"), 'configuration route revalidates canonical Checador scope and is present in the authenticated route group');
 $assert(str_contains($readService, 'getShiftTemplates') && str_contains($readService, 'getEffectiveSchedule')
     && str_contains($readService, 'getShiftAssignments')
-    && !preg_match('/\b(?:INSERT|UPDATE|DELETE)\b/i', $readService), 'V2 configuration reads reuse existing readers and never write schedule data locally');
+    && !preg_match('/\b(?:INSERT\s+INTO|UPDATE\s+[A-Za-z_]\w*\s+SET|DELETE\s+FROM)\b/i', $readService)
+    && !str_contains($readService, '->insert(') && !str_contains($readService, '->update(') && !str_contains($readService, '->delete('),
+    'V2 configuration reads reuse existing readers and never write schedule data locally');
 $assert(str_contains($readService, '$detailsComplete = false') && str_contains($readService, "'partial' : 'ready'")
     && str_contains($readService, "'demo_fixture_partial' : 'demo_fixture'")
     && str_contains($readService, "'partial' : 'ready'"), 'template-detail failures are reported as partial instead of appearing complete');
@@ -279,9 +386,9 @@ $templateAdminHtml = $renderTemplateAdmin($adminCatalog, true);
 $scheduleHeaderStart = strpos($templateAdminHtml, 'id="m04-template-catalog-heading"');
 $scheduleTableStart = strpos($templateAdminHtml, 'caption class="visually-hidden">Horarios disponibles');
 $readOnlyAdminHtml = $renderTemplateAdmin($adminCatalog, false);
-$assert(str_contains($writeHtml, 'Acciones') && str_contains($writeHtml, 'Consultar horarios y turnos')
-    && str_contains($writeHtml, 'data-bs-target="#policy-edit-modal"')
-    && substr_count($writeHtml, 'Consultar horarios y turnos') === 1, 'attendance policy actions share one permission-aware dropdown without changing their targets');
+$assert(str_contains($writeHtml, 'id="attendance-policy-edit-button"')
+    && str_contains($writeHtml, '@click="openHistoryModal()"')
+    && str_contains($writeHtml, 'href="/departamento-operativo/recursos-humanos/checador/horarios-turnos"'), 'original policy edit/history actions and schedule shortcut retain their independent targets');
 $assert(substr_count($templateAdminHtml, 'id="m04-btn-new-template"') === 1
     && $scheduleHeaderStart !== false && $scheduleTableStart !== false
     && strpos($templateAdminHtml, 'id="m04-btn-new-template"') < $scheduleTableStart,
@@ -307,7 +414,7 @@ $assert(!str_contains($readOnlyAdminHtml, 'id="m04-btn-new-template"')
 $assert(str_contains($writeHtml, '/configuracion/puestos') && str_contains($writeHtml, '/configuracion/perfiles-lector')
     && str_contains($templateAdminHtml, '/horarios-turnos/plantillas') && str_contains($templateAdminHtml, 'Guardar turno'), 'M11 settings remain separate while the original M04 form posts through its protected V2 adapter');
 $assert(str_contains($writeHtml, 'name="new_password"') && !str_contains($writeHtml, 'name="password" value=')
-    && str_contains($writeHtml, 'Deja ambos campos vacíos para conservar la credencial existente'), 'reader credentials are write-only and blank preserves the stored secret');
+    && str_contains($writeHtml, 'Deja vacío para conservar la contraseña actual.'), 'reader credentials are write-only and blank preserves the stored secret');
 $assert(str_contains($checadorController, 'saveConfigurationPosition') && str_contains($checadorController, 'updateConfigurationReaderProfile')
     && str_contains($checadorController, 'saveConfigurationScheduleTemplate')
     && str_contains($routes, "Route::auth(['ChecadorController', 'saveConfigurationPosition'])")

@@ -1583,6 +1583,7 @@ final class ChecadorController extends BaseController
             $historyInputInvalid = true;
             $date = '';
         }
+        $auditPage = self::positiveInteger($query['audit_page'] ?? null) ?? 1;
 
         $configuration = null;
         if ($workplaceId !== null && $user !== null && !$historyInputInvalid) {
@@ -1592,7 +1593,8 @@ final class ChecadorController extends BaseController
                     $workplaceId,
                     $demoMode,
                     $workerId,
-                    $date
+                    $date,
+                    $auditPage
                 );
             } catch (\Throwable) {
                 $configuration = ['status' => 'unavailable'];
@@ -1643,8 +1645,10 @@ final class ChecadorController extends BaseController
                     '/assets/js/vendor.min.js',
                     '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                     '/assets/js/core/module-station-selector.js',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance-policy.init.js?v=20261118-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-positions.init.js?v=20261103-4',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-reader-profile.init.js?v=20261103-2',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.configuration.datatable.init.js?v=20261117-2',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-template.init.js',
                 ],
                 'moduleStationKey' => ChecadorAccessService::MODULE_KEY,
                 'help' => false,
@@ -1656,25 +1660,53 @@ final class ChecadorController extends BaseController
     /** Save the Dirección-only institutional position catalog under the M11 gate. */
     public function saveConfigurationPosition(): void
     {
+        $wantsJson = str_contains(strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? '')), 'application/json');
         $input = Request::all();
         $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
         $positionId = self::positiveInteger($input['position_id'] ?? null);
-        $name = is_string($input['name'] ?? null) ? trim($input['name']) : '';
+        $nameValue = $input['name'] ?? $input['position_name'] ?? null;
+        $name = is_string($nameValue) ? trim($nameValue) : '';
         $redirect = self::configurationHref($workplaceId);
         $user = Auth::user();
+        $jsonFail = static function (int $status, string $message): never {
+            JsonResponse::send(['ok' => false, 'message' => $message], $status, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
+        };
         if (!$user) {
+            if ($wantsJson) $jsonFail(401, 'La sesión ya no es válida. Inicia sesión nuevamente.');
             self::configurationFeedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.', $workplaceId);
             self::redirect($redirect);
         }
-        if ($workplaceId === null || $name === '' || ($input['confirm_position'] ?? '') !== '1') {
+        if ($wantsJson && !\App\Core\CsrfToken::validate(trim((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')))) {
+            $jsonFail(419, 'Actualiza la página antes de guardar el puesto.');
+        }
+        if ($workplaceId === null || $name === '' || (!$wantsJson && ($input['confirm_position'] ?? '') !== '1')) {
+            if ($wantsJson) $jsonFail(422, 'Completa el nombre del puesto y vuelve a intentarlo.');
             self::configurationFeedback('error', 'Completa el nombre y confirma el cambio. No se guardó ningún puesto.', $workplaceId);
             self::redirect($redirect);
         }
         if (ChecadorDailyReadService::demoModeEnabled()) {
+            if ($wantsJson) $jsonFail(403, 'La demostración no permite modificar el catálogo operativo.');
             self::configurationFeedback('error', 'La demostración no permite modificar el catálogo operativo.', $workplaceId);
             self::redirect($redirect);
         }
         $saved = (new \App\Services\ChecadorConfigurationWriteService())->savePosition($user, $workplaceId, $positionId, $name);
+        if ($wantsJson) {
+            if ($saved['ok'] ?? false) JsonResponse::send(['ok' => true, 'item' => $saved['item']], 200, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
+            $error = (string) ($saved['error'] ?? '');
+            $status = match ($error) {
+                'permission_denied' => 403, 'duplicate_position', 'position_not_found' => 409,
+                'invalid_position_name' => 422, 'm11_write_disabled' => 503, default => 502,
+            };
+            $message = match ($error) {
+                'permission_denied' => 'No tienes permiso para administrar el catálogo institucional de puestos.',
+                'm11_write_disabled' => 'La escritura M11 está desactivada en este entorno.',
+                'duplicate_position' => 'Ya existe un puesto activo con ese nombre.',
+                'position_not_found' => 'El puesto seleccionado ya no está disponible.',
+                'invalid_position_name' => 'El nombre del puesto no es válido.',
+                default => 'No fue posible guardar y confirmar el puesto.',
+            };
+            $jsonFail($status, $message);
+        }
         if ($saved['ok'] ?? false) {
             self::configurationFeedback('success', 'El puesto se guardó y se confirmó mediante lectura posterior.', $workplaceId);
         } else {
@@ -1694,31 +1726,64 @@ final class ChecadorController extends BaseController
     /** Update an authorized station's reader profile; credentials are write-only. */
     public function updateConfigurationReaderProfile(): void
     {
+        $wantsJson = str_contains(strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? '')), 'application/json');
         $input = Request::all();
         $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
         $profileId = self::positiveInteger($input['profile_id'] ?? null);
         $username = is_string($input['username'] ?? null) ? trim($input['username']) : '';
         $newPassword = is_string($input['new_password'] ?? null) ? $input['new_password'] : '';
-        $passwordConfirmation = is_string($input['new_password_confirmation'] ?? null) ? $input['new_password_confirmation'] : '';
+        $passwordConfirmationValue = $input['new_password_confirmation'] ?? $input['new_password_confirm'] ?? null;
+        $passwordConfirmation = is_string($passwordConfirmationValue) ? $passwordConfirmationValue : '';
         $redirect = self::configurationHref($workplaceId);
         $user = Auth::user();
+        $jsonFail = static function (int $status, string $message): never {
+            JsonResponse::send(['ok' => false, 'message' => $message], $status, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
+        };
         if (!$user) {
+            if ($wantsJson) $jsonFail(401, 'La sesión ya no es válida. Inicia sesión nuevamente.');
             self::configurationFeedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.', $workplaceId);
             self::redirect($redirect);
         }
+        if ($wantsJson && !\App\Core\CsrfToken::validate(trim((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')))) {
+            $jsonFail(419, 'Actualiza la página antes de guardar el perfil.');
+        }
         if ($workplaceId === null || $profileId === null || $username === ''
             || ($newPassword !== '' && !hash_equals($newPassword, $passwordConfirmation))
-            || ($input['confirm_reader_profile'] ?? '') !== '1') {
+            || (!$wantsJson && ($input['confirm_reader_profile'] ?? '') !== '1')) {
+            if ($wantsJson) $jsonFail(422, 'Revisa el usuario y los campos de credencial.');
             self::configurationFeedback('error', 'Revisa el usuario, la confirmación y los campos de credencial. No se guardó el perfil.', $workplaceId);
             self::redirect($redirect);
         }
         if (ChecadorDailyReadService::demoModeEnabled()) {
+            if ($wantsJson) $jsonFail(403, 'La demostración no permite modificar perfiles operativos.');
             self::configurationFeedback('error', 'La demostración no permite modificar perfiles operativos.', $workplaceId);
             self::redirect($redirect);
         }
         $saved = (new \App\Services\ChecadorConfigurationWriteService())->updateReaderProfile(
             $user, $workplaceId, $profileId, $username, $newPassword
         );
+        if ($wantsJson) {
+            if ($saved['ok'] ?? false) JsonResponse::send([
+                'ok' => true,
+                'message' => 'El perfil se guardó y el usuario se confirmó mediante lectura posterior.',
+                'profile' => $saved['profile'],
+            ], 200, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
+            $error = (string) ($saved['error'] ?? '');
+            $status = match ($error) {
+                'permission_denied' => 403, 'profile_not_found', 'duplicate_profile_username' => 409,
+                'invalid_profile_input' => 422, 'm11_write_disabled' => 503, default => 502,
+            };
+            $message = match ($error) {
+                'permission_denied' => 'No tienes permiso para editar perfiles de lector en este centro.',
+                'm11_write_disabled' => 'La escritura M11 está desactivada en este entorno.',
+                'profile_not_found' => 'El perfil ya no está disponible en el centro seleccionado.',
+                'duplicate_profile_username' => 'Ya existe ese usuario para el lector del centro seleccionado.',
+                'station_mapping_unresolved' => 'No se pudo confirmar el mapeo único de la estación física.',
+                'invalid_profile_input' => 'Los datos del perfil no tienen un formato válido.',
+                default => 'No fue posible guardar y confirmar el perfil del lector.',
+            };
+            $jsonFail($status, $message);
+        }
         if ($saved['ok'] ?? false) {
             self::configurationFeedback('success', 'El perfil se guardó y el usuario se confirmó mediante lectura posterior.', $workplaceId);
         } else {
@@ -2049,6 +2114,7 @@ final class ChecadorController extends BaseController
     /** Create and verify a prospective, API-owned M11 attendance policy version. */
     public function saveAttendancePolicy(): void
     {
+        $wantsJson = str_contains(strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? '')), 'application/json');
         $input = Request::all();
         $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
         $effectiveDate = is_string($input['effective_from_local_date'] ?? null) ? trim($input['effective_from_local_date']) : '';
@@ -2064,11 +2130,43 @@ final class ChecadorController extends BaseController
                 'workplace_id' => $workplaceId,
             ]);
         };
+        $jsonFail = static function (int $status, string $code, string $message, array $metadata = []): never {
+            JsonResponse::send(array_merge(['ok' => false, 'code' => $code, 'message' => $message], $metadata), $status, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
+        };
+        $recoverable = static function (string $code, string $message, string $outcome = 'uncertain', array $metadata = []) use ($workplaceId, $effectiveDate, $tolerance, $deadline, $idempotencyKey): never {
+            Session::set('checador_configuration_feedback', [
+                'type' => 'warning',
+                'message' => $outcome === 'not_sent'
+                    ? 'No se envió el guardado porque no se pudo consultar el estado previo. Consulta esta fecha antes de reintentar.'
+                    : 'El resultado quedó pendiente de consulta. Revisa la política para la fecha antes de volver a guardar.',
+                'workplace_id' => $workplaceId,
+                'retry_idempotency_key' => $idempotencyKey,
+                'form_values' => [
+                    'effective_from_local_date' => $effectiveDate,
+                    'retardo_tolerance_minutes' => (string) $tolerance,
+                    'incidence_deadline_days' => (string) $deadline,
+                ],
+            ]);
+            $consultUrl = '/departamento-operativo/recursos-humanos/checador/configuracion?'
+                . http_build_query(['workplace_id' => $workplaceId, 'date' => $effectiveDate]);
+            JsonResponse::send(array_merge([
+                'ok' => false,
+                'code' => $code,
+                'outcome' => $outcome,
+                'message' => $message,
+                'consult_url' => $consultUrl,
+            ], $metadata), 503, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
+        };
+
+        if ($wantsJson && !\App\Core\CsrfToken::validate(trim((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $input['_csrf_token'] ?? '')))) {
+            $jsonFail(419, 'csrf_invalid', 'Actualiza la página antes de guardar la configuración.');
+        }
 
         if ($workplaceId === null || !self::isCivilDate($effectiveDate)
             || !is_scalar($tolerance) || !is_scalar($deadline)
             || !preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/', $idempotencyKey)
             || (string) ($input['confirm_policy'] ?? '') !== '1') {
+            if ($wantsJson) $jsonFail(422, 'invalid_input', 'Completa los valores y la fecha de vigencia solicitados.');
             $feedback('error', 'Completa los valores y la fecha de vigencia solicitados. No se guardó ningún cambio.');
             self::redirect($redirect);
         }
@@ -2076,26 +2174,77 @@ final class ChecadorController extends BaseController
         $authorization = ChecadorAccessService::authorizeAttendancePolicy($workplaceId, 'editar');
         $readAuthorization = ChecadorAccessService::authorizeAttendancePolicy($workplaceId, 'leer');
         if (!($authorization['allowed'] ?? false) || !($readAuthorization['allowed'] ?? false)) {
+            if ($wantsJson) $jsonFail(403, 'permission_denied', 'No tienes permiso específico para editar políticas en el centro seleccionado.');
             $feedback('error', 'No tienes permiso específico para editar políticas en el centro seleccionado.');
             self::redirect($redirect);
         }
         if (ChecadorDailyReadService::demoModeEnabled()) {
+            if ($wantsJson) $jsonFail(403, 'demo_mode', 'El modo demostración no permite guardar políticas operativas.');
             $feedback('error', 'El modo demostración no permite guardar políticas operativas.');
             self::redirect($redirect);
         }
         if (!ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()) {
+            if ($wantsJson) $jsonFail(503, 'write_gate_closed', 'La escritura M11 no está disponible en este entorno.');
             $feedback('error', 'La escritura M11 permanece deshabilitada en esta configuración local. No se guardó ningún cambio.');
             self::redirect($redirect);
         }
 
         $user = Auth::user();
         if (!$user) {
+            if ($wantsJson) $jsonFail(401, 'unauthenticated', 'La sesión ya no es válida. Inicia sesión nuevamente.');
             $feedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.');
             self::redirect($redirect);
         }
 
+        // Read the requested effective date first. This recovers a version
+        // created by an earlier response loss and prevents a duplicate POST.
         try {
             $reader = new ChecadorDailyReadService();
+            $preflight = $reader->readAttendancePolicy($user, $workplaceId, $effectiveDate);
+        } catch (\Throwable) {
+            $reader = null;
+            $preflight = ['ok' => false, 'error' => ['kind' => 'api_unavailable', 'status' => 503]];
+        }
+        if (!($preflight['ok'] ?? false)) {
+            $kind = (string) ($preflight['error']['kind'] ?? 'api_unavailable');
+            if ($wantsJson) {
+                $recoverable('preflight_' . $kind, 'No se pudo consultar la política para esta fecha; no se envió un nuevo guardado. Consulta de nuevo antes de reintentar.', 'not_sent');
+            }
+            $feedback('error', 'No se pudo consultar la política para esta fecha; no se envió un nuevo guardado.');
+            self::redirect($redirect . (str_contains($redirect, '?') ? '&' : '?') . 'date=' . rawurlencode($effectiveDate));
+        }
+        $preflightData = $preflight['data'] ?? [];
+        $existingCandidates = [
+            $preflightData['policy'] ?? null,
+            $preflightData['latest_scheduled_policy'] ?? null,
+        ];
+        foreach ($existingCandidates as $existingPolicy) {
+            if (!is_array($existingPolicy)
+                || (string) ($existingPolicy['effective_from_local_date'] ?? '') !== $effectiveDate) {
+                continue;
+            }
+            $matchesRequestedValues = (int) ($existingPolicy['workplace_id'] ?? 0) === $workplaceId
+                && (int) ($existingPolicy['retardo_tolerance_minutes'] ?? -1) === (int) $tolerance
+                && (int) ($existingPolicy['incidence_deadline_days'] ?? -1) === (int) $deadline;
+            if (!$matchesRequestedValues) {
+                if ($wantsJson) $jsonFail(409, 'policy_date_conflict', 'Ya existe una versión para esa fecha con otros valores. Actualiza la pantalla y revisa la política antes de cambiarla.');
+                $feedback('error', 'Ya existe una versión para esa fecha con otros valores. No se envió un nuevo guardado.');
+                self::redirect($redirect . (str_contains($redirect, '?') ? '&' : '?') . 'date=' . rawurlencode($effectiveDate));
+            }
+            if ($wantsJson) JsonResponse::send([
+                'ok' => true,
+                'message' => 'La política con esos valores ya existía y se confirmó mediante lectura de API V2; no se creó otra versión.',
+                'policy' => $existingPolicy,
+                'latest_scheduled_policy' => $preflightData['latest_scheduled_policy'] ?? null,
+                'current_local_date' => $preflightData['current_local_date'] ?? null,
+                'next_idempotency_key' => bin2hex(random_bytes(16)),
+            ], 200, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
+            $feedback('success', 'La política con esos valores ya existía y se confirmó mediante lectura de API V2.');
+            self::redirect($redirect);
+        }
+
+        try {
+            $reader ??= new ChecadorDailyReadService();
             $created = $reader->createAttendancePolicy($user, [
                 'workplace_id' => $workplaceId,
                 'effective_from_local_date' => $effectiveDate,
@@ -2103,11 +2252,35 @@ final class ChecadorController extends BaseController
                 'incidence_deadline_days' => $deadline,
             ], $idempotencyKey);
         } catch (\Throwable) {
-            $created = ['ok' => false];
-            $reader = null;
+            $created = ['ok' => false, 'error' => ['kind' => 'api_unavailable', 'status' => 503]];
         }
         if (!($created['ok'] ?? false)) {
-            $feedback('error', 'La política no pudo guardarse. Revisa permisos, vigencia y disponibilidad del servicio; no se confirmó ningún cambio.');
+            $kind = (string) ($created['error']['kind'] ?? 'api_unavailable');
+            $apiStatus = (int) ($created['error']['status'] ?? 503);
+            $uncertainResult = $apiStatus >= 500 || $kind === 'api_unavailable';
+            $publicStatus = match ($kind) {
+                'api_authentication' => 401,
+                'api_authorization' => 403,
+                'bad_request' => 422,
+                'idempotency_conflict', 'administrative_conflict' => 409,
+                default => $uncertainResult ? 503 : ($apiStatus >= 400 && $apiStatus < 500 ? $apiStatus : 502),
+            };
+            $message = match ($kind) {
+                'api_authentication' => 'API V2 rechazó la sesión de servicio. Inicia sesión nuevamente y vuelve a consultar.',
+                'api_authorization' => 'API V2 rechazó el permiso o alcance de esta localidad.',
+                'bad_request' => 'API V2 rechazó los valores o la fecha enviados. Revisa la información antes de intentar otra vez.',
+                'idempotency_conflict' => 'La clave de esta solicitud ya está asociada a otros valores. Consulta la política y conserva la clave sólo para reintentar esos mismos valores.',
+                'administrative_conflict' => 'API V2 rechazó la versión por un conflicto. Actualiza y consulta la política vigente antes de continuar.',
+                default => 'API V2 no confirmó el resultado. Consulta la política para esta fecha antes de reintentar.',
+            };
+            $apiMetadata = [
+                'api_error_kind' => $kind,
+                'api_http_status' => $apiStatus,
+                'api_error_code' => $created['error']['api_code'] ?? null,
+            ];
+            if ($wantsJson && $uncertainResult) $recoverable('write_' . $kind, $message, 'uncertain', $apiMetadata);
+            if ($wantsJson) $jsonFail($publicStatus, 'write_' . $kind, $message, $apiMetadata);
+            $feedback('error', $message);
             self::redirect($redirect);
         }
 
@@ -2127,10 +2300,19 @@ final class ChecadorController extends BaseController
             && (int) ($policy['retardo_tolerance_minutes'] ?? -1) === (int) $tolerance
             && (int) ($policy['incidence_deadline_days'] ?? -1) === (int) $deadline;
         if (!$confirmed) {
+            if ($wantsJson) $recoverable('readback_unconfirmed', 'API V2 aceptó la solicitud, pero la lectura posterior no confirmó los valores exactos. Consulta la política antes de reintentar.');
             $feedback('error', 'La solicitud se envió, pero la lectura posterior no confirmó los valores exactos. No se muestra como guardada.');
             self::redirect($redirect);
         }
 
+        if ($wantsJson) JsonResponse::send([
+            'ok' => true,
+            'message' => 'La política prospectiva se guardó y se confirmó mediante lectura de API V2.',
+            'policy' => $policy,
+            'latest_scheduled_policy' => $readback['data']['latest_scheduled_policy'] ?? null,
+            'current_local_date' => $readback['data']['current_local_date'] ?? null,
+            'next_idempotency_key' => bin2hex(random_bytes(16)),
+        ], 200, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
         $feedback('success', 'La política prospectiva se guardó y se confirmó mediante lectura de API V2.');
         self::redirect($redirect);
     }
